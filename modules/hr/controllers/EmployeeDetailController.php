@@ -12,6 +12,9 @@ use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\EmployeeDetail;
+use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeePositionGroup;
+use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\EmployeeDetailSearch;
 
 /**
@@ -112,6 +115,9 @@ class EmployeeDetailController extends Controller
             if ($model->load($this->request->post())) {
                 if (is_string($model->data_json)) {
                     $model->data_json = json_decode($model->data_json, true) ?: [];
+                }
+                if ($name === 'position') {
+                    $model->data_json = $this->enrichPositionDataJson($model->data_json);
                 }
                 $array2 = [
                     'date_start' => $this->normalizeDateForSave($model->data_json['date_start'] ?? null),
@@ -233,6 +239,9 @@ class EmployeeDetailController extends Controller
         if (is_string($model->data_json)) {
             $model->data_json = json_decode($model->data_json, true) ?: [];
         }
+        if ($model->name === 'position') {
+            $model->data_json = $this->enrichPositionDataJson($model->data_json);
+        }
         $arrayUpdate = [
             'date_start' => $this->normalizeDateForView($model->data_json['date_start'] ?? null),
             'date_end' => $this->normalizeDateForView($model->data_json['date_end'] ?? null),
@@ -249,6 +258,9 @@ class EmployeeDetailController extends Controller
         if ($this->request->isPost && $model->load($this->request->post())) {
             if (is_string($model->data_json)) {
                 $model->data_json = json_decode($model->data_json, true) ?: [];
+            }
+            if ($model->name === 'position') {
+                $model->data_json = $this->enrichPositionDataJson($model->data_json);
             }
             $array2 = [
                 'date_start' => $this->normalizeDateForSave($model->data_json['date_start'] ?? null),
@@ -301,71 +313,241 @@ class EmployeeDetailController extends Controller
     public function UpdatePosition($data)
     {
         try {
-
             $emp = Employees::findOne($data->emp_id);
-            // data_json from DB is string; decode for ArrayHelper::merge()
             if (is_string($emp->data_json)) {
                 $emp->data_json = json_decode($emp->data_json, true) ?: [];
             }
 
-            //หาตำแหน่งล่าสุดจากวันที่
-            $model = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => $data->emp_id])
-                ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc"))->one();
-            // get poditionBy Category design
+            $model = EmployeeDetail::find()
+                ->where(['name' => 'position', 'emp_id' => $data->emp_id])
+                ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') desc"))
+                ->one();
+
             if ($model) {
-                        $department_name = Organization::findOne($model->data_json['department']);
-                        $emp->position_name = $model->data_json['position_name'];
-                        $emp->position_group = $model->data_json['position_group'];
-                        $emp->position_type = $model->data_json['position_type'];
-                        if( $model->data_json['position_type_text'] != 'ข้าราชการ'){
-                            $emp->position_level = null;
-                        }
-                        $array2 = [
-                            'position_name_text' => $model->data_json['position_name_text'],
-                            'position_group' => $model->data_json['position_group_text'],
-                            'position_type' => $model->data_json['position_type_text'],
-                            'position_level_text' => $model->data_json['position_level_text'],
-                            'status_text' => $model->data_json['status_text'],
-                            'department_text' => $department_name ? $department_name->name : ''
-                        ];
-                        $emp->data_json = ArrayHelper::merge($emp->data_json, $array2);
+                $positionData = $this->enrichPositionDataJson(is_array($model->data_json) ? $model->data_json : []);
+                $departmentName = Organization::findOne($positionData['department'] ?? null);
+                $positionTypeText = $positionData['employee_type_text'] ?? '';
+                $expertise = trim((string) ($positionData['expertise'] ?? ''));
 
-                if (isset($model->data_json['status'])) {
-                    $emp->status = $model->data_json['status'];
+                $emp->employee_type_id = $positionData['employee_type_id'] ?? null;
+                $emp->employee_position_group_id = $positionData['employee_position_group_id'] ?? null;
+                $emp->employee_position_id = $positionData['employee_position_id'] ?? null;
+                $emp->position_level = $positionTypeText !== 'ข้าราชการ' ? null : ($positionData['position_level'] ?? null);
+                $emp->expertise = $expertise !== '' ? $expertise : $emp->expertise;
+                $emp->status = $positionData['status'] ?? $emp->status;
+                $emp->position_number = $positionData['position_number'] ?? $emp->position_number;
+                $emp->salary = $positionData['salary'] ?? $emp->salary;
+                $emp->department = $positionData['department'] ?? $emp->department;
+
+                foreach ($this->positionLegacyDataKeys() as $legacyKey) {
+                    unset($emp->data_json[$legacyKey]);
                 }
 
-                if (isset($model->data_json['position_number'])) {
-                    $emp->position_number = $model->data_json['position_number'];
-                }
-                if (isset($model->data_json['position_type'])) {
-                    $emp->position_type = $model->data_json['position_type'];
-                }
-                if (isset($model->data_json['position_level'])) {
-                    $emp->position_level = $model->data_json['position_level'];
-                }
-                if (isset($model->data_json['salary'])) {
-                    $emp->salary = $model->data_json['salary'];
-                }
-                $emp->department = $model->data_json['department'];
-                // return $emp->position_name;
-            } else {
-                $emp->position_name = null;
-                $emp->position_group = null;
-                $emp->position_type = null;
-                $emp->position_level = null;
                 $array2 = [
-                    'position_name_text' => '',
-                    'position_group' => '',
-                    'position_type' => ''
+                    'employee_type_id' => $positionData['employee_type_id'] ?? null,
+                    'employee_type_text' => $positionData['employee_type_text'] ?? '',
+                    'employee_position_group_id' => $positionData['employee_position_group_id'] ?? null,
+                    'employee_position_group_text' => $positionData['employee_position_group_text'] ?? '',
+                    'employee_position_id' => $positionData['employee_position_id'] ?? null,
+                    'employee_position_text' => $positionData['employee_position_text'] ?? '',
+                    'expertise' => $positionData['expertise'] ?? '',
+                    'position_level_text' => $positionData['position_level_text'] ?? '',
+                    'status_text' => $positionData['status_text'] ?? '',
+                    'department_text' => $departmentName ? $departmentName->name : '',
+                ];
+                $emp->data_json = ArrayHelper::merge($emp->data_json, $array2);
+            } else {
+                $emp->employee_type_id = null;
+                $emp->employee_position_group_id = null;
+                $emp->employee_position_id = null;
+                $emp->position_level = null;
+                $emp->expertise = null;
+                foreach ($this->positionLegacyDataKeys() as $legacyKey) {
+                    unset($emp->data_json[$legacyKey]);
+                }
+                $array2 = [
+                    'employee_type_id' => null,
+                    'employee_type_text' => '',
+                    'employee_position_group_id' => null,
+                    'employee_position_group_text' => '',
+                    'employee_position_id' => null,
+                    'employee_position_text' => '',
+                    'expertise' => '',
+                    'position_level_text' => '',
+                    'status_text' => '',
+                    'department_text' => '',
                 ];
                 $emp->data_json = ArrayHelper::merge($emp->data_json, $array2);
             }
+
             return $emp->save(false);
-            //code...
         } catch (\Throwable $th) {
             return throw $th;
-            //     return 'not save';
         }
+    }
+
+    private function enrichPositionDataJson(array $dataJson): array
+    {
+        $legacySource = $dataJson;
+
+        $type = $this->resolveEmployeeTypeModel($legacySource);
+        $group = $this->resolveEmployeePositionGroupModel($legacySource);
+        $position = $this->resolveEmployeePositionModel($legacySource);
+
+        if (!$group && $position && $position->employeePositionGroup) {
+            $group = $position->employeePositionGroup;
+        }
+
+        $dataJson = array_diff_key($dataJson, array_flip($this->positionLegacyDataKeys()));
+
+        return ArrayHelper::merge($dataJson, [
+            'employee_type_id' => $type?->id ?? ($legacySource['employee_type_id'] ?? null),
+            'employee_type_text' => $type?->title ?? ($legacySource['employee_type_text'] ?? ''),
+            'employee_position_group_id' => $group?->id ?? ($legacySource['employee_position_group_id'] ?? null),
+            'employee_position_group_text' => $group?->title ?? ($legacySource['employee_position_group_text'] ?? ''),
+            'employee_position_id' => $position?->id ?? ($legacySource['employee_position_id'] ?? null),
+            'employee_position_text' => $position?->title ?? ($legacySource['employee_position_text'] ?? ''),
+            'expertise' => trim((string) ($legacySource['expertise'] ?? '')),
+        ]);
+    }
+
+    private function resolveEmployeeTypeModel(array $dataJson): ?EmployeeType
+    {
+        $employeeTypeId = (int) ($dataJson['employee_type_id'] ?? 0);
+        if ($employeeTypeId > 0) {
+            return EmployeeType::findOne($employeeTypeId);
+        }
+
+        $legacyCode = $this->extractLegacyTypeCode($dataJson['position_type'] ?? null);
+        if ($legacyCode !== null) {
+            foreach (EmployeeType::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $type) {
+                if (in_array($legacyCode, $type->legacyCodes(), true)) {
+                    return $type;
+                }
+            }
+        }
+
+        $legacyTitle = trim((string) ($dataJson['position_type_text'] ?? $dataJson['employee_type_text'] ?? ($dataJson['position_type'] ?? '')));
+        if ($legacyTitle === '') {
+            return null;
+        }
+
+        foreach (EmployeeType::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $type) {
+            if (strcasecmp(trim((string) $type->title), $legacyTitle) === 0) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveEmployeePositionGroupModel(array $dataJson): ?EmployeePositionGroup
+    {
+        $groupId = (int) ($dataJson['employee_position_group_id'] ?? 0);
+        if ($groupId > 0) {
+            return EmployeePositionGroup::findOne($groupId);
+        }
+
+        $legacyCode = $this->normalizeLegacyCode($dataJson['position_group'] ?? null);
+        if ($legacyCode !== null) {
+            $group = EmployeePositionGroup::find()
+                ->where(['legacy_code' => $legacyCode])
+                ->one();
+            if ($group) {
+                return $group;
+            }
+        }
+
+        $legacyTitle = trim((string) ($dataJson['position_group_text'] ?? $dataJson['employee_position_group_text'] ?? ($dataJson['position_group'] ?? '')));
+        if ($legacyTitle === '') {
+            return null;
+        }
+
+        foreach (EmployeePositionGroup::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $group) {
+            if (strcasecmp(trim((string) $group->title), $legacyTitle) === 0) {
+                return $group;
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveEmployeePositionModel(array $dataJson): ?EmployeePosition
+    {
+        $positionId = (int) ($dataJson['employee_position_id'] ?? 0);
+        if ($positionId > 0) {
+            return EmployeePosition::find()
+                ->with(['employeeType', 'employeePositionGroup'])
+                ->where(['id' => $positionId])
+                ->one();
+        }
+
+        $legacyCode = $this->normalizeLegacyCode($dataJson['position_name'] ?? null);
+        if ($legacyCode !== null) {
+            $position = EmployeePosition::find()
+                ->with(['employeeType', 'employeePositionGroup'])
+                ->where(['legacy_code' => $legacyCode])
+                ->one();
+            if ($position) {
+                return $position;
+            }
+        }
+
+        $legacyTitle = trim((string) ($dataJson['position_name_text'] ?? $dataJson['employee_position_text'] ?? ($dataJson['position_name'] ?? '')));
+        if ($legacyTitle === '') {
+            return null;
+        }
+
+        foreach (EmployeePosition::find()->with(['employeeType', 'employeePositionGroup'])->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $position) {
+            if (strcasecmp(trim((string) $position->title), $legacyTitle) === 0) {
+                return $position;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function positionLegacyDataKeys(): array
+    {
+        return [
+            'position_name',
+            'position_name_text',
+            'position_group',
+            'position_group_text',
+            'position_type',
+            'position_type_text',
+        ];
+    }
+
+    private function extractLegacyTypeCode($value): ?string
+    {
+        $value = $this->normalizeLegacyCode($value);
+        if ($value === null) {
+            return null;
+        }
+
+        if (preg_match('/^(PT\d+)/i', $value, $matches)) {
+            return strtoupper($matches[1]);
+        }
+
+        return null;
+    }
+
+    private function normalizeLegacyCode($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '' || $value === '-') {
+            return null;
+        }
+
+        return $value;
     }
 
     public function UpdateEducation($data)
@@ -408,12 +590,27 @@ class EmployeeDetailController extends Controller
         $requiredName = "ต้องระบุ"; 
             //ตรวจสอบตำแหน่ง
         if($model->name == "position"){
+            $dataJson = $model->data_json;
+            if (is_string($dataJson)) {
+                $dataJson = json_decode($dataJson, true) ?: [];
+            }
+            if (!is_array($dataJson)) {
+                $dataJson = [];
+            }
+            $model->data_json = $this->enrichPositionDataJson($dataJson);
+
+            $typeValue = $model->data_json['employee_type_id'] ?? '';
+            $groupValue = $model->data_json['employee_position_group_id'] ?? '';
+            $positionValue = $model->data_json['employee_position_id'] ?? '';
             $model->data_json['statuslist'] == "" ? $model->addError('data_json[statuslist]',$requiredName) : null;
-            $model->data_json['position_name'] == "" ? $model->addError('data_json[position_name]',$requiredName) : null;
+            $typeValue == "" ? $model->addError('data_json[employee_type_id]',$requiredName) : null;
+            $groupValue == "" ? $model->addError('data_json[employee_position_group_id]',$requiredName) : null;
+            $positionValue == "" ? $model->addError('data_json[employee_position_id]',$requiredName) : null;
             $model->data_json['position_number'] == "" ? $model->addError('data_json[position_number]',$requiredName) : null;
             // $model->data_json['department'] == "" ? $model->addError('data_json[department]',$requiredName) : null;
 
-            if($model->data_json['position_type_text'] == 'ข้าราชการ')
+            $positionTypeText = $model->data_json['employee_type_text'] ?? $model->data_json['position_type_text'] ?? '';
+            if($positionTypeText == 'ข้าราชการ')
             {
                 $model->data_json['position_level'] == "" ? $model->addError('data_json[position_level]','ข้าราชการ'.$requiredName) : null;
             }

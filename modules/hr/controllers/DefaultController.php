@@ -246,7 +246,7 @@ class DefaultController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => 'ตั้งค่า',
-                'content' => $this->renderAjax('setting'),
+                'content' => $this->renderAjax('settings'),
             ];
         } else {
             return $this->render('settings');

@@ -34,19 +34,6 @@ $items = [
             <h5 class="card-title"><i class="fa-solid fa-people-group"></i> ตำแหน่ง</h5>
             <div class="btn-group dropup">
                 <?=Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/hr/employee-detail/create', 'emp_id' => $model->id, 'name' => 'position', 'title' => '<i class="fa-solid fa-user-tag"></i> ตำแหน่ง'], ['class' => 'btn btn-primary rounded-start-pill shadow open-modal', 'data' => ['size' => 'modal-lg']])?>
-                <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="visually-hidden"><i class="fa-solid fa-people-group"></i>Toggle Dropdown</span>
-                </button>
-                <ul class="dropdown-menu">
-                    <?php foreach ($items as $item): ?>
-                    <li><?=Html::a('<i class="fa-regular fa-circle-check me-1"></i>' . $item['title'], ['/hr/categorise', 'name' => $item['name'], 'title' => $item['title']], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']])?>
-                    </li>
-                    <?php endforeach;?>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                </ul>
             </div>
         </div>
         <div class="table-responsive" style="min-height:468px">

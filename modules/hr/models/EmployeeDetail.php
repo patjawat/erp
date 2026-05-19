@@ -167,7 +167,10 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     public function positionName()
     {
         try {
-            return isset($this->data_json['position_name_text']) ? $this->data_json['position_name_text'] : '-';
+            $data = is_array($this->data_json) ? $this->data_json : [];
+            return $data['employee_position_text']
+                ?? $data['position_name_text']
+                ?? '-';
             // return $this->positionName->positionGroup->positionType->title;
         } catch (\Throwable $th) {
             return false;
@@ -179,7 +182,10 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     public function positionTypeName()
     {
         try {
-            return isset($this->data_json['position_type_text']) ? $this->data_json['position_type_text'] : '-';
+            $data = is_array($this->data_json) ? $this->data_json : [];
+            return $data['employee_type_text']
+                ?? $data['position_type_text']
+                ?? '-';
             // return $this->positionName->positionGroup->positionType->title;
         } catch (\Throwable $th) {
             return false;
@@ -190,7 +196,10 @@ class EmployeeDetail extends \yii\db\ActiveRecord
     public function positionGroupName()
     {
         try {
-            return isset($this->data_json['position_group_text']) ? $this->data_json['position_group_text'] : '-';
+            $data = is_array($this->data_json) ? $this->data_json : [];
+            return $data['employee_position_group_text']
+                ?? $data['position_group_text']
+                ?? '-';
         } catch (\Throwable $th) {
             return false;
         }

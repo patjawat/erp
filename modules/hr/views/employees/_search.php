@@ -1,11 +1,9 @@
 <?php
 
 use app\modules\hr\models\Organization;
-use kartik\depdrop\DepDrop;
 use kartik\form\ActiveForm;
 use kartik\widgets\Select2;
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\web\JsExpression;
 
 /** @var yii\web\View $this */
@@ -18,6 +16,8 @@ $hasAdvancedFilters = !empty($model->q_department)
     || !empty($model->range2)
     || !empty($model->work_shift)
     || !empty($model->status)
+    || ($model->hasAttribute('employee_type_id') && !empty($model->employee_type_id))
+    || ($model->hasAttribute('employee_position_id') && !empty($model->employee_position_id))
     || !empty($model->position_type)
     || !empty($model->position_name);
 
@@ -64,47 +64,50 @@ $hasAdvancedFilters = !empty($model->q_department)
 
             <!-- 2. กลุ่มข้อมูลงาน -->
             <div class="border-top pt-3 mt-2">
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-6">
-                        <?= $form->field($model, 'position_type')->widget(Select2::classname(), [
-                            'data' => $model->ListPositionType(),
-                            'options' => ['placeholder' => '--ประเภททั้งหมด--'],
+                <div class="row g-3 mb-3">
+                    <?php if ($model->hasAttribute('employee_type_id')): ?>
+                        <div class="col-lg-4 col-md-6">
+                            <?= $form->field($model, 'employee_type_id')->widget(Select2::classname(), [
+                                'data' => $model->ListEmployeeType(),
+                                'options' => ['placeholder' => '--ประเภทพนักงาน (ใหม่)--'],
+                                'pluginOptions' => [
+                                    'allowClear' => true
+                                ],
+                            ])->label('ประเภทพนักงาน (ใหม่)') ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($model->hasAttribute('employee_position_id')): ?>
+                        <div class="col-lg-4 col-md-6">
+                            <?= $form->field($model, 'employee_position_id')->widget(Select2::classname(), [
+                                'data' => $model->ListEmployeePosition(),
+                                'options' => ['placeholder' => '--ชื่อตำแหน่ง (ใหม่)--'],
+                                'pluginOptions' => [
+                                    'allowClear' => true
+                                ],
+                            ])->label('ชื่อตำแหน่ง (ใหม่)') ?>
+                        </div>
+                    <?php endif; ?>
+                   <div class="col-lg-4 col-md-6">
+                        <?= $form->field($model, 'gender')->widget(Select2::classname(), [
+                            'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
+                            'options' => ['placeholder' => '---เพศทั้งหมด---'],
                             'pluginOptions' => [
                                 'allowClear' => true
                             ],
-                        ])->label('ประเภท') ?>
+                        ])->label('เพศ') ?>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <?php
-                        //  $form->field($model, 'position_name')->widget(Select2::classname(), [
-                        //     'data' => $model->ListPositionName(),
-                        //     'options' => ['placeholder' => '--ตำแหน่งทั้งหมด--'],
-                        //     'pluginOptions' => [
-                        //         'allowClear' => true
-                        //     ],
-                        // ])->label('ตำแหน่ง') 
-                        ?>
-                        <?php
-                        // DepDrop ของเดินเลือกตาม ประเภทตำแหน่ง
-                        echo $form->field($model, 'position_name')->widget(DepDrop::classname(), [
-                            'options' => [
-                                'placeholder' => 'ตำแหน่งทั้งหมด---',
-                            ],
-                            'type' => DepDrop::TYPE_SELECT2,
-                            'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                            'pluginOptions' => [
-                                'depends' => ['employeessearch-position_type'],
-                                'url' => Url::to(['/hr/employees/get-position-name']),
-                                'loadingText' => 'กำลังโหลด---',
-                                'params' => ['depdrop_all_params' => 'employeessearch-position_type'],
-                                'initDepends' => ['employeessearch-position_type'],
-                                'initialize' => true,
-                            ],
 
-                        ])->label('ตำแหน่ง') 
-                        ?>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-lg-2 col-md-6">
+                        <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label('ช่วงอายุเริ่มตั้น') ?>
                     </div>
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-2 col-md-6">
+                        <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label('จนถึงอายุ') ?>
+                    </div>
+                    <div class="col-lg-8 col-md-6">
                         <div class="d-flex align-items-end align-items-center gap-2">
                             <div class="flex-grow-1">
                                 <?= $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
@@ -151,26 +154,6 @@ $hasAdvancedFilters = !empty($model->q_department)
                 </div>
             </div>
 
-            <!-- 3. กลุ่มข้อมูลบุคคล -->
-            <div class="border-top pt-3 mt-3">
-                <div class="row g-3">
-                    <div class="col-lg-4 col-md-6">
-                        <?= $form->field($model, 'gender')->widget(Select2::classname(), [
-                            'data' => ['ชาย' => 'ชาย', 'หญิง' => 'หญิง'],
-                            'options' => ['placeholder' => '---เพศทั้งหมด---'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ],
-                        ])->label('เพศ') ?>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <?= $form->field($model, 'range1')->textInput(['type' => 'number', 'placeholder' => 'ช่วงอายุเริ่มตั้น'])->label('ช่วงอายุเริ่มตั้น') ?>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <?= $form->field($model, 'range2')->textInput(['type' => 'number', 'placeholder' => 'จนถึงอายุ'])->label('จนถึงอายุ') ?>
-                    </div>
-                </div>
-            </div>
 
             <!-- 4. กลุ่มการปฏิบัติงาน/สังกัด -->
             <div class="border-top pt-3 mt-3">

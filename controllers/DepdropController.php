@@ -10,10 +10,12 @@ use app\models\District;
 use app\models\Categorise;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
+use app\modules\hr\models\EmployeePosition;
 use app\modules\sm\models\Product;
 use app\components\CategoriseHelper;
 use app\components\DateFilterHelper;
 use app\modules\hr\models\Employees;
+use yii\helpers\Html;
 
 class DepdropController extends \yii\web\Controller
 {
@@ -348,6 +350,90 @@ class DepdropController extends \yii\web\Controller
             'results' => $data,
             'items' => $model
         ];
+    }
+
+    // ตำแหน่งพนักงานแบบใหม่
+    public function actionEmployeePositionList($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $query = EmployeePosition::find()
+            ->alias('p')
+            ->with(['employeePositionGroup'])
+            ->joinWith(['employeePositionGroup pg'])
+            ->where(['p.active' => 1]);
+
+        $q = trim((string) $q);
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'p.title', $q],
+                ['like', 'p.legacy_code', $q],
+                ['like', 'pg.title', $q],
+            ]);
+        }
+
+        $models = $query
+            ->orderBy(['pg.sort' => SORT_ASC, 'p.sort' => SORT_ASC, 'p.id' => SORT_ASC])
+            ->all();
+
+        $data = [['id' => '', 'text' => '']];
+        $uniqueModels = [];
+        foreach ($models as $model) {
+            $key = $this->normalizeEmployeePositionTitleKey($model->title ?? '');
+            if ($key === '' || isset($uniqueModels[$key])) {
+                continue;
+            }
+
+            $uniqueModels[$key] = $model;
+        }
+
+        foreach ($uniqueModels as $model) {
+            $groupTitle = trim((string) ($model->employeePositionGroup->title ?? ''));
+            $label = trim((string) $model->title);
+            if ($groupTitle !== '') {
+                $label .= ' (' . $groupTitle . ')';
+            }
+
+            $data[] = [
+                'id' => $model->id,
+                'text' => $label,
+                'html' => Html::tag(
+                    'div',
+                    Html::tag('div', Html::encode($model->title), ['class' => 'fw-semibold']) .
+                    ($groupTitle !== ''
+                        ? Html::tag('div', 'กลุ่ม: ' . Html::encode($groupTitle), ['class' => 'small text-muted'])
+                        : '')
+                ),
+                'title' => $model->title,
+                'employee_position_id' => $model->id,
+                'employee_position_text' => $label,
+                'employee_position_legacy_code' => $model->legacy_code ?? '',
+                'employee_position_group_id' => $model->employee_position_group_id,
+                'employee_position_group_text' => $groupTitle,
+            ];
+        }
+
+        return [
+            'results' => $data,
+            'items' => array_values($uniqueModels),
+            'total_count' => count($uniqueModels),
+        ];
+    }
+
+    private function normalizeEmployeePositionTitleKey($value): string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/\s+/u', ' ', $value);
+        if ($value === null) {
+            return '';
+        }
+
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 
     public function actionGetVendor()

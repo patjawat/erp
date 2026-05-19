@@ -1,11 +1,11 @@
 <?php
-use app\components\CategoriseHelper;
-use app\models\Categorise;
+use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeePositionGroup;
+use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\EmployeeDetail;
 use iamsaint\datetimepicker\Datetimepicker;
 use kartik\widgets\Select2;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\JsExpression;
 use yii\web\View;
@@ -25,7 +25,7 @@ var formatRepo = function (repo) {
     if (repo.description) {
       markup += '<p>' + repo.text + '</p>';
     }
-    return '<div style="overflow:hidden;">' + markup + '</div>';
+    return '<div style="overflow:hidden;">' + (repo.html || markup) + '</div>';
 };
 var formatRepoSelection = function (repo) {
     return repo.text || repo.text;
@@ -48,6 +48,122 @@ function (data, params) {
 }
 JS;
 
+$employeePositionId = $model->data_json['employee_position_id'] ?? null;
+$employeePositionText = $model->data_json['employee_position_text'] ?? $model->data_json['position_name_text'] ?? '';
+$employeePositionGroupId = $model->data_json['employee_position_group_id'] ?? null;
+$employeeTypeId = $model->data_json['employee_type_id'] ?? null;
+$employeeTypeText = $model->data_json['employee_type_text'] ?? $model->data_json['position_type_text'] ?? '';
+$showEmployeePositionGroupField = false;
+$employeeTypeColumnClass = $showEmployeePositionGroupField ? 'col-12 col-lg-4' : 'col-12 col-lg-6';
+$employeePositionColumnClass = $showEmployeePositionGroupField ? 'col-12 col-lg-4' : 'col-12 col-lg-6';
+$employeePositionGroupHiddenField = $form->field($model, 'data_json[employee_position_group_id]')->hiddenInput([
+    'value' => $employeePositionGroupId,
+])->label(false);
+
+if (empty($employeeTypeId) && !empty($model->data_json['position_type'])) {
+    foreach (EmployeeType::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $typeModel) {
+        if (in_array($model->data_json['position_type'], $typeModel->legacyCodes(), true)) {
+            $employeeTypeId = $typeModel->id;
+            $employeeTypeText = $typeModel->title;
+            break;
+        }
+    }
+}
+
+if (empty($employeeTypeId) && !empty($model->data_json['position_type_text'])) {
+    foreach (EmployeeType::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $typeModel) {
+        if (strcasecmp(trim((string) $typeModel->title), trim((string) $model->data_json['position_type_text'])) === 0) {
+            $employeeTypeId = $typeModel->id;
+            $employeeTypeText = $typeModel->title;
+            break;
+        }
+    }
+}
+
+if (empty($employeeTypeId) && !empty($model->data_json['position_type'])) {
+    foreach (EmployeeType::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $typeModel) {
+        if (strcasecmp(trim((string) $typeModel->title), trim((string) $model->data_json['position_type'])) === 0) {
+            $employeeTypeId = $typeModel->id;
+            $employeeTypeText = $typeModel->title;
+            break;
+        }
+    }
+}
+
+if (empty($employeePositionGroupId) && !empty($model->data_json['position_group'])) {
+    $legacyGroup = EmployeePositionGroup::find()->where(['legacy_code' => $model->data_json['position_group']])->one();
+    if ($legacyGroup) {
+        $employeePositionGroupId = $legacyGroup->id;
+    }
+}
+
+if (empty($employeePositionGroupId) && !empty($model->data_json['position_group_text'])) {
+    $legacyGroupTitle = trim((string) $model->data_json['position_group_text']);
+    foreach (EmployeePositionGroup::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $legacyGroup) {
+        if (strcasecmp(trim((string) $legacyGroup->title), $legacyGroupTitle) === 0) {
+            $employeePositionGroupId = $legacyGroup->id;
+            break;
+        }
+    }
+}
+
+if (empty($employeePositionGroupId) && !empty($model->data_json['position_group'])) {
+    $legacyGroupTitle = trim((string) $model->data_json['position_group']);
+    foreach (EmployeePositionGroup::find()->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $legacyGroup) {
+        if (strcasecmp(trim((string) $legacyGroup->title), $legacyGroupTitle) === 0) {
+            $employeePositionGroupId = $legacyGroup->id;
+            break;
+        }
+    }
+}
+
+if (empty($employeePositionId) && !empty($model->data_json['position_name'])) {
+    $legacyPosition = EmployeePosition::find()
+        ->with(['employeeType', 'employeePositionGroup'])
+        ->where(['legacy_code' => $model->data_json['position_name']])
+        ->one();
+
+    if ($legacyPosition) {
+        $employeePositionId = $legacyPosition->id;
+        $employeePositionText = $legacyPosition->title;
+        $employeePositionGroupId = $legacyPosition->employee_position_group_id;
+        $employeeTypeId = $legacyPosition->employee_type_id;
+        $employeeTypeText = $legacyPosition->employeeType?->title ?? $employeeTypeText;
+    }
+}
+
+if (empty($employeePositionId) && !empty($model->data_json['position_name_text'])) {
+    $legacyPositionTitle = trim((string) $model->data_json['position_name_text']);
+    foreach (EmployeePosition::find()->with(['employeeType', 'employeePositionGroup'])->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $legacyPosition) {
+        if (strcasecmp(trim((string) $legacyPosition->title), $legacyPositionTitle) === 0) {
+            $employeePositionId = $legacyPosition->id;
+            $employeePositionText = $legacyPosition->title;
+            $employeePositionGroupId = $legacyPosition->employee_position_group_id;
+            $employeeTypeId = $legacyPosition->employee_type_id;
+            $employeeTypeText = $legacyPosition->employeeType?->title ?? $employeeTypeText;
+            break;
+        }
+    }
+}
+
+if (empty($employeePositionId) && !empty($model->data_json['position_name'])) {
+    $legacyPositionTitle = trim((string) $model->data_json['position_name']);
+    foreach (EmployeePosition::find()->with(['employeeType', 'employeePositionGroup'])->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $legacyPosition) {
+        if (strcasecmp(trim((string) $legacyPosition->title), $legacyPositionTitle) === 0) {
+            $employeePositionId = $legacyPosition->id;
+            $employeePositionText = $legacyPosition->title;
+            $employeePositionGroupId = $legacyPosition->employee_position_group_id;
+            $employeeTypeId = $legacyPosition->employee_type_id;
+            $employeeTypeText = $legacyPosition->employeeType?->title ?? $employeeTypeText;
+            break;
+        }
+    }
+}
+
+$initEmployeePosition = $employeePositionId ? [
+    (string) $employeePositionId => $employeePositionText ?: 'ตำแหน่งพนักงาน (ใหม่)',
+] : [];
+
 //  debug sql query
 // $querySql = EmployeeDetail::find()->where(['name' => 'position', 'emp_id' => 1])
 // ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '$.date_start') asc"))->createCommand()->getRawSql();
@@ -56,13 +172,11 @@ JS;
 
 ?>
 <?=$form->field($model, 'data_json[fullname]')->hiddenInput(['value' => $model->employee->fullname])->label(false)?>
-<?php echo $form->field($model, 'data_json[position_name_text]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[position_group]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[position_group_text]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[position_type]')->hiddenInput()->label(false) ?>
-<?php echo $form->field($model, 'data_json[position_type_text]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[position_level_text]')->hiddenInput()->label(false) ?>
 <?php echo $form->field($model, 'data_json[status_text]')->hiddenInput()->label(false) ?>
+<?php if (!$showEmployeePositionGroupField): ?>
+    <?= $employeePositionGroupHiddenField ?>
+<?php endif; ?>
 
 <div class="row">
     <div class="col-3">
@@ -81,104 +195,104 @@ JS;
     <div class="col-9">
         <?=$form->field($model, 'data_json[statuslist]')->textInput(['placeholder' => 'เช่น จ้างเป็นลูกจ้าง/เลื่อนขั้นค่าจ้าง 0.5 ขั้น'])->label('รายการเคลื่อนไหว ')?>
     </div>
-    <div class="col-9">
 
-        <?php
-$initPositionName = ArrayHelper::map(CategoriseHelper::Categorise('position_name'), 'code', 'title');
-echo $form->field($model, 'data_json[position_name]')->widget(Select2::classname(), [
-    'initValueText' => $initPositionName,
-    'options' => ['placeholder' => 'เลือก ...'],
-    'pluginEvents' => [
-        "select2:unselect" => "function() {
-                        $('#employeedetail-data_json-position_name_text').val('')
-                        $('#employeedetail-data_json-position_group').val('')
-                        $('#employeedetail-data_json-position_group_text').val('')
-                        $('#employeedetail-data_json-position_type').val('')
-                        $('#employeedetail-data_json-position_type_text').val('')
-                        $('.position-group-label').text('')
-                        $('.position-type-label').text('')
+    <div class="col-12">
+        <div class="row g-3">
+            <div class="<?= $employeeTypeColumnClass ?>">
+                <?=
+                    $form->field($model, 'data_json[employee_type_id]')->widget(Select2::classname(), [
+                        'data' => EmployeeType::listItems(),
+                        'options' => ['placeholder' => 'เลือกประเภทพนักงาน (ใหม่) ...'],
+                        'pluginEvents' => [
+                            "select2:unselect" => "function() {
+                                $('#employeedetail-data_json-position_level').prop('disabled', true);
+                                $('#employeedetail-data_json-position_level').val('').trigger('change');
+                                $('#employeedetail-data_json-position_level_text').val('');
+                            }",
+                            "select2:select" => "function() {
+                                var data = $(this).select2('data')[0] || {};
+                                if (data.text === 'ข้าราชการ') {
+                                    $('#employeedetail-data_json-position_level').prop('disabled', false);
+                                } else {
+                                    $('#employeedetail-data_json-position_level').prop('disabled', true);
+                                    $('#employeedetail-data_json-position_level').val('').trigger('change');
+                                    $('#employeedetail-data_json-position_level_text').val('');
+                                }
+                            }",
+                        ],
+                        'pluginOptions' => [
+                            'dropdownParent' => '#main-modal',
+                            'allowClear' => true,
+                        ],
+                    ])->label('ประเภทพนักงาน (ใหม่)')
+                ?>
+            </div>
 
-         }",
-        "select2:select" => "function() {
-                // console.log($(this).val());
-                $.ajax({
-                    type: 'get',
-                    url: '" . Url::to(['/depdrop/categorise-by-code']) . "',
-                    data: {
-                        code: $(this).val(),
-                        name:'position_name'
-                    },
-                    dataType: 'json',
-                    success: function (res) {
-                        // console.log(response);
-                        $('#employeedetail-data_json-position_name_text').val(res.position_name)
-                        $('#employeedetail-data_json-position_group').val(res.position_group)
-                        $('#employeedetail-data_json-position_group_text').val(res.position_group_text)
-                        $('#employeedetail-data_json-position_type').val(res.position_type)
-                        $('#employeedetail-data_json-position_type_text').val(res.position_type_text)
+            <?php if ($showEmployeePositionGroupField): ?>
+                <div class="col-12 col-lg-4">
+                    <?=
+                        $form->field($model, 'data_json[employee_position_group_id]')->widget(Select2::classname(), [
+                            'data' => EmployeePositionGroup::listItems(),
+                            'options' => ['placeholder' => 'เลือกกลุ่มตำแหน่ง (ใหม่) ...'],
+                            'pluginOptions' => [
+                                'dropdownParent' => '#main-modal',
+                                'allowClear' => true,
+                            ],
+                        ])->label('กลุ่มตำแหน่งพนักงาน (ใหม่)')
+                    ?>
+                </div>
+            <?php endif; ?>
 
-                        $('.position-group-label').text(res.position_group_text)
-                        $('.position-type-label').text(res.position_type_text)
-                        if(res.position_type_text == 'ข้าราชการ'){
-                            $('#employeedetail-data_json-position_level').prop('disabled', false);
-                        }else{
-                            $('#employeedetail-data_json-position_level').prop('disabled', true);
-                            $('#employeedetail-data_json-position_level').val('').trigger('change');
-                            $('#employeedetail-data_json-position_level_text').val('')
-                        }
-                    }
-                });
-         }",
+            <div class="<?= $employeePositionColumnClass ?>">
+                <?=
+                    $form->field($model, 'data_json[employee_position_id]')->widget(Select2::classname(), [
+                        'initValueText' => $initEmployeePosition,
+                        'options' => ['placeholder' => 'เลือกชื่อตำแหน่ง (ใหม่) ...'],
+                        'pluginOptions' => [
+                            'dropdownParent' => '#main-modal',
+                            'allowClear' => true,
+                            'minimumInputLength' => 0,
+                            'ajax' => [
+                                'url' => Url::to(['/depdrop/employee-position-list']),
+                                'dataType' => 'json',
+                                'delay' => 250,
+                                'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                'processResults' => new JsExpression($resultsJs),
+                                'cache' => true,
+                            ],
+                            'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                            'templateResult' => new JsExpression('formatRepo'),
+                            'templateSelection' => new JsExpression('formatRepoSelection'),
+                        ],
+                        'pluginEvents' => [
+                            'select2:select' => new JsExpression("function() {
+                                var data = $(this).select2('data')[0] || {};
+                                $('#employeedetail-data_json-employee_position_group_id').val(data.employee_position_group_id || '');
+                            }"),
+                            'select2:unselect' => new JsExpression("function() {
+                                $('#employeedetail-data_json-employee_position_group_id').val('');
+                            }"),
+                            'select2:clear' => new JsExpression("function() {
+                                $('#employeedetail-data_json-employee_position_group_id').val('');
+                            }"),
+                        ],
+                    ])->label('ชื่อตำแหน่ง (ใหม่)')
+                ?>
+            </div>
+        </div>
 
-    ],
-    'pluginOptions' => [
-        'dropdownParent' => '#main-modal',
-        'allowClear' => true,
-        'minimumInputLength' => 1,
-        'ajax' => [
-            'url' => Url::to(['/depdrop/position-list']),
-            'dataType' => 'json',
-            'delay' => 250,
-            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-            'processResults' => new JsExpression($resultsJs),
-            'cache' => true,
-        ],
-        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-        'templateResult' => new JsExpression('formatRepo'),
-        'templateSelection' => new JsExpression('formatRepoSelection'),
-
-    ],
-])->label('ชื่อตำแหน่ง')?>
-
-        <div class="mb-3">
-            <?php if (isset($model->data_json['position_group_text'])): ?>
-            <label class=" test badge rounded-pill text-primary-emphasis bg-success-subtle">กลุ่ม : <i
-                    class="fa-solid fa-layer-group text-success me-1"></i><span
-                    class="position-group-label"><?=$model->data_json['position_group_text']?></span></label>
-            <?php else: ?>
-            <label class=" test badge rounded-pill text-primary-emphasis bg-success-subtle">กลุ่ม : <i
-                    class="fa-solid fa-layer-group text-success me-1"></i><span
-                    class="position-group-label"></span></label>
-            <?php endif;?>
-            <?php if (isset($model->data_json['position_type_text'])): ?>
-            <label class="badge rounded-pill text-primary-emphasis bg-primary-subtle me-1">ประเภ : <i
-                    class="fa-solid fa-tags ext-success text-primary"></i> <span
-                    class="position-type-label"><?=$model->data_json['position_type_text']?></span></label>
-            <?php else: ?>
-            <label class="badge rounded-pill text-primary-emphasis bg-primary-subtle me-1">ประเภ : <i
-                    class="fa-solid fa-tags ext-success text-primary"></i> <span
-                    class="position-type-label"></span></label>
-            <?php endif;?>
+        <div class="text-muted small mt-2">
+            ระบบจะกำหนดกลุ่มตำแหน่งจากชื่อตำแหน่งที่เลือกให้อัตโนมัติ และยังเก็บค่าไว้หลังบ้านเผื่อใช้ในอนาคต
         </div>
     </div>
 
 
-    <div class="col-3">
+    <div class="col-6">
         <?php echo $form->field($model, 'data_json[position_number]')->textInput()->label('เลขประจำตำแหน่ง') ?>
 
     </div>
 
-    <div class="col-3">
+    <div class="col-6">
         <?=$form->field($model, 'data_json[position_level]')->widget(Select2::classname(), [
     'data' => $model->employee->ListPositionLevel(),
     'options' => ['placeholder' => 'เลือก ...'],
@@ -198,25 +312,13 @@ echo $form->field($model, 'data_json[position_name]')->widget(Select2::classname
         'dropdownParent' => '#main-modal',
         'tags' => false,
         'maximumInputLength' => 10,
-        'disabled' => (isset($model->data_json['position_type_text']) && $model->data_json['position_type_text'] == 'ข้าราชการ') ? false : true
+        'disabled' => ($employeeTypeText === 'ข้าราชการ') ? false : true
 
     ],
-])->label('ระดับตำแหน่ง')?>
+])->label('ระดับความเชี่ยวชาญ')?>
     </div>
 
-
-    <div class="col-3">
-        <?=$form->field($model, 'data_json[expertise]')->widget(Select2::classname(), [
-    'data' => $model->employee->ListExpertise(),
-    'options' => ['placeholder' => 'เลือก ...'],
-    'pluginOptions' => [
-        'dropdownParent' => '#main-modal',
-        'tags' => false,
-        'maximumInputLength' => 10,
-    ],
-])->label('ความเชี่ยวชาญ')?>
-    </div>
-    <div class="col-6">
+    <div class="col-12">
 
     <?= $form->field($model, 'data_json[department]')->widget(\kartik\tree\TreeViewInput::className(), [
     'name' => 'department',
@@ -227,6 +329,7 @@ echo $form->field($model, 'data_json[position_name]')->widget(Select2::classname
     'fontAwesome' => true,
     'asDropdown' => true,
     'multiple' => false,
+    'showTooltips' => false,
     'dropdownConfig' => [
         'input' => [
             'placeholder' => '--หน่วยงานทั้งหมด--',

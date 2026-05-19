@@ -41,6 +41,7 @@ $menus = [
                         <div class="dropdown-menu" aria-labelledby="topnav-dashboard">
                             <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การตั้งค่าบุคลากร',['/hr/categorise','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal dropdown-item','data' => ['size' => 'modal-md']])?>
                             <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การกำหนดตำแหน่ง',['/hr/position','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal-x dropdown-item','data' => ['size' => 'modal-md']])?>
+                            <?=Html::a('<i class="fa-solid fa-sliders me-1"></i> ข้อมูลหลักพนักงานใหม่',['/hr/employee-master','title' => 'ตั้งค่าข้อมูลหลักพนักงาน'],['class' => 'dropdown-item','data' => ['pjax' => false]])?>
                             <?=Html::a('<i class="fa-solid fa-file-import me-1"></i> นำเข้า CSV',['/hr/employees/import-csv'],['class' => 'dropdown-item btn btn-outline-primary'])?>
                         </div>
                      </li>
@@ -61,6 +62,7 @@ $menus = [
         <div class="dropdown-menu dropdown-menu-right">
             <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การตั้งค่าบุคลากร',['/hr/categorise','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal dropdown-item','data' => ['size' => 'modal-md']])?>
             <?=Html::a('<i class="fa-solid fa-user-tag me-1"></i> การกำหนดตำแหน่ง',['/hr/position','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal-x dropdown-item','data' => ['size' => 'modal-md']])?>
+            <?=Html::a('<i class="fa-solid fa-sliders me-1"></i> ข้อมูลหลักพนักงานใหม่',['/hr/employee-master','title' => 'ตั้งค่าข้อมูลหลักพนักงาน'],['class' => 'dropdown-item','data' => ['pjax' => false]])?>
             <?=Html::a('<i class="fa-solid fa-file-import me-1"></i> นำเข้า CSV',['/hr/employees/import-csv'],['class' => 'dropdown-item btn btn-outline-primary'])?>
 
         </div>

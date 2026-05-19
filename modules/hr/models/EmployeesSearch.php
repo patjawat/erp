@@ -17,7 +17,7 @@ class EmployeesSearch extends Employees
     public function rules()
     {
         return [
-            [['id', 'user_id', 'province', 'amphure', 'district', 'zipcode',  'department', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'user_id', 'province', 'amphure', 'district', 'zipcode',  'department', 'created_by', 'updated_by', 'employee_type_id', 'employee_position_group_id', 'employee_position_id'], 'integer'],
             [[
                 'ref',
                 'avatar',
@@ -40,6 +40,10 @@ class EmployeesSearch extends Employees
                 'emergency_contact',
                 'updated_at',
                 'created_at',
+                'employee_type_id',
+                'employee_position_group_id',
+                'employee_position_id',
+                'position_group',
                 'position_type',
                 'position_name',
                 'show',
@@ -91,7 +95,7 @@ class EmployeesSearch extends Employees
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
+        $filterConditions = [
             'id' => $this->id,
             'branch' => $this->branch,
             'work_shift' => $this->work_shift,
@@ -104,14 +108,18 @@ class EmployeesSearch extends Employees
             'district' => $this->district,
             'zipcode' => $this->zipcode,
             'status' => $this->status,
-            'position_name' => $this->position_name,
-            'position_type' => $this->position_type,
             'department' => $this->department,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
-        ]);
+        ];
+
+        $query->andFilterWhere($filterConditions);
+
+        $this->applyEmployeeTypeFilter($query);
+        $this->applyEmployeePositionGroupFilter($query);
+        $this->applyEmployeePositionFilter($query);
 
         $query->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'avatar', $this->avatar])
@@ -130,5 +138,65 @@ class EmployeesSearch extends Employees
             ->andFilterWhere(['like', 'emergency_contact', $this->emergency_contact]);
 
         return $dataProvider;
+    }
+
+    private function applyEmployeeTypeFilter($query): void
+    {
+        $employeeTypeId = $this->normalizeFilterId($this->employee_type_id);
+        if ($employeeTypeId === null) {
+            $employeeTypeId = $this->normalizeFilterId($this->position_type);
+        }
+
+        if ($employeeTypeId === null) {
+            return;
+        }
+
+        $query->andWhere(['employee_type_id' => $employeeTypeId]);
+    }
+
+    private function applyEmployeePositionGroupFilter($query): void
+    {
+        $groupId = $this->normalizeFilterId($this->employee_position_group_id);
+        if ($groupId === null) {
+            $groupId = $this->normalizeFilterId($this->position_group);
+        }
+
+        if ($groupId === null) {
+            return;
+        }
+
+        $query->andWhere(['employee_position_group_id' => $groupId]);
+    }
+
+    private function applyEmployeePositionFilter($query): void
+    {
+        $positionId = $this->normalizeFilterId($this->employee_position_id);
+        if ($positionId === null) {
+            $positionId = $this->normalizeFilterId($this->position_name);
+        }
+
+        if ($positionId === null) {
+            return;
+        }
+
+        $query->andWhere(['employee_position_id' => $positionId]);
+    }
+
+    private function normalizeFilterId($value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_int($value)) {
+            return $value > 0 ? $value : null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        return ctype_digit($value) ? (int) $value : null;
     }
 }

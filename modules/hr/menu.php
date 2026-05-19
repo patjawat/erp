@@ -52,6 +52,13 @@ use yii\helpers\Url;
                 ) ?>
             </li>
             <li>
+                <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="sliders-horizontal" style="width:15px;height:15px" class="text-muted"></i> ข้อมูลหลักพนักงานใหม่</span>',
+                    ['/hr/employee-master', 'title' => 'ตั้งค่าข้อมูลหลักพนักงาน'],
+                    ['class' => 'dropdown-item', 'data' => ['pjax' => false]]
+                ) ?>
+            </li>
+            <li>
                 <?= Html::a('<i class="bi bi-file-earmark-text me-1"></i> Template คำอธิบายงาน (JD)', ['/jd/template/index'], ['class' => 'dropdown-item']) ?>
             </li>
 

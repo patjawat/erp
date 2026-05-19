@@ -47,6 +47,9 @@ use yii\helpers\Url;
  * @property int|null      $amphure           อำเภอ
  * @property int|null      $district          ตำบล
  * @property int|null      $zipcode           รหัสไปรษณีย์
+ * @property int|null      $employee_type_id  ประเภทพนักงาน (ใหม่)
+ * @property int|null      $employee_position_group_id กลุ่มตำแหน่งพนักงาน (ใหม่)
+ * @property int|null      $employee_position_id ตำแหน่งพนักงาน (ใหม่)
  * @property int|null      $position          ตำแหน่ง
  * @property int|null      $department        แผนก/ฝ่าย
  * @property string|null   $status            แผนก/ฝ่าย
@@ -111,7 +114,7 @@ class Employees extends Yii\db\ActiveRecord
     {
         return [
             [['user_id', 'fname', 'lname', 'phone', 'cid', 'branch'], 'required'],
-            [['user_id', 'province', 'amphure', 'district', 'zipcode', 'department', 'created_by', 'updated_by'], 'integer'],
+            [['user_id', 'province', 'amphure', 'district', 'zipcode', 'department', 'created_by', 'updated_by', 'employee_type_id', 'employee_position_group_id', 'employee_position_id'], 'integer'],
             [['photo'], 'string'],
             [[
                 'birthday',
@@ -122,6 +125,9 @@ class Employees extends Yii\db\ActiveRecord
                 'code',
                 'emp_id',
                 'education',
+                'employee_type_id',
+                'employee_position_group_id',
+                'employee_position_id',
                 'position_group',
                 'position_name',
                 'position_number',
@@ -224,6 +230,9 @@ class Employees extends Yii\db\ActiveRecord
             'amphure' => 'อำเภอ',
             'district' => 'ตำบล',
             'zipcode' => 'รหัสไปรษณีย์',
+            'employee_type_id' => 'ประเภทพนักงาน (ใหม่)',
+            'employee_position_group_id' => 'กลุ่มตำแหน่งพนักงาน (ใหม่)',
+            'employee_position_id' => 'ตำแหน่งพนักงาน (ใหม่)',
             'position' => 'ตำแหน่ง',
             'department' => 'แผนก/ฝ่าย',
             'position_manage' => 'ตำแหน่งบริหาร',
@@ -240,6 +249,145 @@ class Employees extends Yii\db\ActiveRecord
         ];
     }
 
+    private const LEGACY_EMPLOYEE_TYPE_MAP = [
+        'PT1' => 1,
+        'PT2' => 2,
+        'PT3' => 3,
+        'PT4' => 4,
+        'PT5' => 4,
+        'PT6' => 4,
+        'PT7' => 4,
+        '1' => 1,
+        '2' => 2,
+        '3' => 3,
+        '4' => 4,
+        '5' => 4,
+        '6' => 4,
+        '7' => 4,
+    ];
+
+    private function normalizeLegacyValue($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function legacyEmployeeTypeId($legacyValue)
+    {
+        $legacyValue = $this->normalizeLegacyValue($legacyValue);
+        if ($legacyValue === null) {
+            return null;
+        }
+
+        $legacyKey = strtoupper($legacyValue);
+        if (isset(self::LEGACY_EMPLOYEE_TYPE_MAP[$legacyKey])) {
+            return self::LEGACY_EMPLOYEE_TYPE_MAP[$legacyKey];
+        }
+        if (isset(self::LEGACY_EMPLOYEE_TYPE_MAP[$legacyValue])) {
+            return self::LEGACY_EMPLOYEE_TYPE_MAP[$legacyValue];
+        }
+
+        if (ctype_digit($legacyValue)) {
+            $code = Categorise::find()
+                ->select('code')
+                ->where(['id' => (int) $legacyValue, 'name' => 'position_type'])
+                ->scalar();
+            if ($code !== null) {
+                $code = strtoupper(trim((string) $code));
+                if (isset(self::LEGACY_EMPLOYEE_TYPE_MAP[$code])) {
+                    return self::LEGACY_EMPLOYEE_TYPE_MAP[$code];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function legacyCategoriseCode($legacyValue, string $name)
+    {
+        $legacyValue = $this->normalizeLegacyValue($legacyValue);
+        if ($legacyValue === null) {
+            return null;
+        }
+
+        if (ctype_digit($legacyValue)) {
+            $code = Categorise::find()
+                ->select('code')
+                ->where(['id' => (int) $legacyValue, 'name' => $name])
+                ->scalar();
+            if ($code !== null) {
+                $code = trim((string) $code);
+                if ($code !== '') {
+                    return $code;
+                }
+            }
+        }
+
+        return $legacyValue;
+    }
+
+    private function legacyEmployeePositionGroupId($legacyValue)
+    {
+        $legacyCode = $this->legacyCategoriseCode($legacyValue, 'position_group');
+        if ($legacyCode === null) {
+            return null;
+        }
+
+        $groupId = EmployeePositionGroup::find()
+            ->select('id')
+            ->where(['legacy_code' => $legacyCode])
+            ->scalar();
+
+        return $groupId !== null ? (int) $groupId : null;
+    }
+
+    private function legacyEmployeePositionId($legacyValue)
+    {
+        $legacyCode = $this->legacyCategoriseCode($legacyValue, 'position_name');
+        if ($legacyCode === null) {
+            return null;
+        }
+
+        $positionId = EmployeePosition::find()
+            ->select('id')
+            ->where(['legacy_code' => $legacyCode])
+            ->scalar();
+
+        return $positionId !== null ? (int) $positionId : null;
+    }
+
+    private function syncEmployeeMasterFields(): void
+    {
+        if (!$this->hasAttribute('employee_type_id') || !$this->hasAttribute('employee_position_group_id') || !$this->hasAttribute('employee_position_id')) {
+            return;
+        }
+
+        if (
+            Yii::$app->db->getTableSchema(EmployeeType::tableName(), true) === null ||
+            Yii::$app->db->getTableSchema(EmployeePositionGroup::tableName(), true) === null ||
+            Yii::$app->db->getTableSchema(EmployeePosition::tableName(), true) === null
+        ) {
+            return;
+        }
+
+        if (empty($this->employee_type_id)) {
+            $this->employee_type_id = $this->legacyEmployeeTypeId($this->position_type);
+        }
+
+        if (empty($this->employee_position_group_id)) {
+            $this->employee_position_group_id = $this->legacyEmployeePositionGroupId($this->position_group);
+        }
+
+        if (empty($this->employee_position_id)) {
+            $this->employee_position_id = $this->legacyEmployeePositionId($this->position_name);
+        }
+    }
+
     public function beforeSave($insert)
     {
         $this->birthday = AppHelper::DateToDb($this->birthday);
@@ -253,6 +401,7 @@ class Employees extends Yii\db\ActiveRecord
         } else {
             $this->gender = 'หญิง';
         }
+        $this->syncEmployeeMasterFields();
         // ป้องกัน Array to string conversion: คอลัมน์ data_json รับ string (JSON) แต่ฟอร์มโหลดเป็น array
         if (is_array($this->data_json)) {
             $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
@@ -331,6 +480,9 @@ class Employees extends Yii\db\ActiveRecord
                 'avatar' => $this->getAvatar(false),
                 'position' => $this->positionName(),
                 'position_type' => $this->positionTypeName(),
+                'employee_type' => $this->employeeTypeName(),
+                'employee_position_group' => $this->employeePositionGroupName(),
+                'employee_position' => $this->employeePositionName(),
                 'department' => $this->department,
                 'department_name' => $this->departmentName(),
                 'signature' => $this->signature(),
@@ -345,6 +497,9 @@ class Employees extends Yii\db\ActiveRecord
                 'avatar' => '',
                 'position' => '',
                 'position_type' => '',
+                'employee_type' => '',
+                'employee_position_group' => '',
+                'employee_position' => '',
                 'department' => '',
                 'department_name' => '',
                 'healthData' => ''
@@ -357,6 +512,9 @@ class Employees extends Yii\db\ActiveRecord
             'avatar' => $this->getAvatar(false),
             'position' => $this->positionName(),
             'position_type' => $this->positionTypeName(),
+            'employee_type' => $this->employeeTypeName(),
+            'employee_position_group' => $this->employeePositionGroupName(),
+            'employee_position' => $this->employeePositionName(),
             'department' => $this->department,
             'department_name' => $this->departmentName(),
         ];
@@ -509,7 +667,9 @@ class Employees extends Yii\db\ActiveRecord
     // การครลกำหนด
     public function due()
     {
-        if ($this->position_type == 5 || $this->position_type == 6 || $this->position_type == 7) {
+        $employeeTypeId = $this->hasAttribute('employee_type_id') ? ($this->employee_type_id ?: $this->legacyEmployeeTypeId($this->position_type)) : $this->legacyEmployeeTypeId($this->position_type);
+
+        if ((int) $employeeTypeId === 4) {
             $text = 'ครบกำหนดสัญญา';
         } else {
             $text = 'ครบกำหนดเกษียณ';
@@ -552,9 +712,8 @@ class Employees extends Yii\db\ActiveRecord
     public function WorkgroupSummary($dep_id)
     {
         $data = [];
-        foreach (CategoriseHelper::PositionType() as $key => $value) {
-            // SELECT count(e1.id) FROM employees e1 WHERE e1.department = e.department AND e1.position_type = 1
-            $data[] = self::find()->where(['department' => $dep_id, 'position_type' => $key])->count();
+        foreach (EmployeeType::listItems() as $key => $value) {
+            $data[] = self::find()->where(['department' => $dep_id, 'employee_type_id' => (int) $key])->count();
         }
 
         return $data;
@@ -805,9 +964,24 @@ class Employees extends Yii\db\ActiveRecord
         return CategoriseHelper::RenameType();
     }
 
+    public function ListEmployeeType()
+    {
+        return EmployeeType::listItems();
+    }
+
+    public function ListEmployeePositionGroup($employeeTypeId = null)
+    {
+        return EmployeePositionGroup::listItems();
+    }
+
+    public function ListEmployeePosition($employeeTypeId = null, $groupId = null)
+    {
+        return EmployeePosition::listItems($employeeTypeId, $groupId);
+    }
+
     public function ListPositionType()
     {
-        return CategoriseHelper::PositionType();
+        return EmployeeType::listItems();
     }
 
     // ระดับของข้าราชการ
@@ -819,7 +993,7 @@ class Employees extends Yii\db\ActiveRecord
     // กลุ่มงาน
     public function ListPositionGroup()
     {
-        return CategoriseHelper::PositionGroup();
+        return EmployeePositionGroup::listItems();
     }
 
     // ตำแหน่งบริหาร
@@ -837,14 +1011,13 @@ class Employees extends Yii\db\ActiveRecord
     // ชื่อตำแหน่ง
     public function ListPositionName()
     {
-        $array = Categorise::find()->where(['name' => 'position_name'])->groupBy('category_id')->all();
-        return  ArrayHelper::map($array, 'code', 'title');
+        return EmployeePosition::listItems();
     }
 
     // ชื่อตำแหน่ง Ajax Template
     public function ListPositionNameAjaxTemplate()
     {
-        return CategoriseHelper::PositionNameAjaxTemplate();
+        return EmployeePosition::listItems();
     }
 
     // สถานะ
@@ -1115,19 +1288,88 @@ class Employees extends Yii\db\ActiveRecord
         return isset($this->statusName) ? $this->statusName->title : $this->status;
     }
 
+    public function employeeTypeName()
+    {
+        try {
+            if (
+                $this->hasAttribute('employee_type_id')
+                && Yii::$app->db->getTableSchema(EmployeeType::tableName(), true) !== null
+                && isset($this->employeeType)
+                && isset($this->employeeType->title)
+                && $this->employeeType->title != ''
+            ) {
+                return $this->employeeType->title;
+            }
+
+            return $this->positionTypeName();
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
+    public function employeePositionGroupName()
+    {
+        try {
+            if (
+                $this->hasAttribute('employee_position_group_id')
+                && Yii::$app->db->getTableSchema(EmployeePositionGroup::tableName(), true) !== null
+                && isset($this->employeePositionGroup)
+                && isset($this->employeePositionGroup->title)
+                && $this->employeePositionGroup->title != ''
+            ) {
+                return $this->employeePositionGroup->title;
+            }
+
+            return $this->positionGroupName();
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
+    public function employeePositionName()
+    {
+        try {
+            if (
+                $this->hasAttribute('employee_position_id')
+                && Yii::$app->db->getTableSchema(EmployeePosition::tableName(), true) !== null
+                && isset($this->employeePosition)
+                && isset($this->employeePosition->title)
+                && $this->employeePosition->title != ''
+            ) {
+                return $this->employeePosition->title;
+            }
+
+            return $this->positionName();
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
     // แสดงชื่อตำแหน่ง
     public function positionName($arr = [])
     {
         try {
 
             $level = $this->positionLevelName() ? $this->positionLevelName() : '';
+            $title = '';
+            $position = $this->employeePosition;
+            if ((!isset($position) || empty($position->title)) && trim((string) $this->position_name) !== '') {
+                $legacyPositionId = $this->legacyEmployeePositionId($this->position_name);
+                if ($legacyPositionId !== null) {
+                    $position = EmployeePosition::findOne($legacyPositionId);
+                }
+            }
+
+            if (isset($position) && !empty($position->title)) {
+                $title = $position->title;
+            }
 
             if (array_key_exists('icon', $arr) && $arr['icon'] == true) {
                 $isIcon = '<i class="bi bi-check2-circle text-primary me-1"></i>';
             } else {
                 $isIcon = null;
             }
-            return (isset($this->status) && isset($this->positionName->title) && $this->positionName->title != '') ? $isIcon . $this->positionName->title . ' ' . $level : '-';
+            return (isset($this->status) && $title !== '') ? $isIcon . $title . ' ' . $level : '-';
             //code...
         } catch (\Throwable $th) {
             return '-';
@@ -1141,7 +1383,7 @@ class Employees extends Yii\db\ActiveRecord
      */
     public function hasPersonnelPositionConfigured(): bool
     {
-        if (trim((string) ($this->position_name ?? '')) !== '') {
+        if (trim((string) ($this->position_name ?? '')) !== '' || ($this->hasAttribute('employee_position_id') && !empty($this->employee_position_id))) {
             return true;
         }
         try {
@@ -1162,7 +1404,19 @@ class Employees extends Yii\db\ActiveRecord
     public function positionTypeName()
     {
         try {
-            return $this->positionType ? $this->positionType->title : $this->position_type;
+            $employeeType = $this->employeeType;
+            if ((!isset($employeeType) || empty($employeeType->title)) && trim((string) $this->position_type) !== '') {
+                $legacyTypeId = $this->legacyEmployeeTypeId($this->position_type);
+                if ($legacyTypeId !== null) {
+                    $employeeType = EmployeeType::findOne($legacyTypeId);
+                }
+            }
+
+            if (isset($employeeType) && !empty($employeeType->title)) {
+                return $employeeType->title;
+            }
+
+            return trim((string) $this->position_type) !== '' ? $this->position_type : '-';
         } catch (\Throwable $th) {
             return false;
         }
@@ -1172,7 +1426,19 @@ class Employees extends Yii\db\ActiveRecord
     public function positionGroupName()
     {
         try {
-            return isset($this->data_json['position_group']) ? $this->data_json['position_group'] : '-';
+            $group = $this->employeePositionGroup;
+            if ((!isset($group) || empty($group->title)) && trim((string) $this->position_group) !== '') {
+                $legacyGroupId = $this->legacyEmployeePositionGroupId($this->position_group);
+                if ($legacyGroupId !== null) {
+                    $group = EmployeePositionGroup::findOne($legacyGroupId);
+                }
+            }
+
+            if (isset($group) && !empty($group->title)) {
+                return $group->title;
+            }
+
+            return trim((string) $this->position_group) !== '' ? $this->position_group : '-';
         } catch (\Throwable $th) {
             return false;
         }
@@ -1184,16 +1450,6 @@ class Employees extends Yii\db\ActiveRecord
         return '-';
     }
 
-    //      //แสดงประเภทตำแหน่ง
-    //      public function positionType()
-    //      {
-    //          $model = CategoriseHelper::CategoriseByCodeName($this->status, 'position_type');
-    //          if ($model) {
-    //              return $model->title;
-    //          } else {
-    //              return null;
-    //          }
-    //      }
 
     // แสดงระดับของข้าราชการ
     public function positionLevelName()
@@ -1217,17 +1473,6 @@ class Employees extends Yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return 'ไม่ระบุ';
         }
-        // $model = Organization::findOne($this->department);
-        // return $model;
-        // if($model){
-        //     return $model->name;
-        // }else{
-        //     return 'ไม่ระบุ';
-        // }
-
-        // return isset($this->data_json['department_text']) ? $this->data_json['department_text'] : '';
-        // code...
-        // return isset($this->empDepartment) ? $this->empDepartment->title : $this->department;
     }
 
     public function expertiseName()
@@ -1251,20 +1496,14 @@ class Employees extends Yii\db\ActiveRecord
         return $this->hasOne(AuthAssignment::className(), ['user_id' => 'user_id']);
     }
 
-    // public function getWorkGroup(){
-    //         return $this->hasOne(Categorise::class, ['code' => 'department'])
-    //         ->andOnCondition(['name' => 'department'])
-    //         ->andOnCondition(['category_id' =>  $this->empDepartment->category_id]);
-    // }
-
     public function getPositionName()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'position_name'])->andOnCondition(['name' => 'position_name']);
+        return $this->hasOne(EmployeePosition::class, ['id' => 'employee_position_id']);
     }
 
     public function getPositionType()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'position_type'])->andOnCondition(['name' => 'position_type']);
+        return $this->hasOne(EmployeeType::class, ['id' => 'employee_type_id']);
     }
 
     public function getPositionLevel()
@@ -1275,7 +1514,22 @@ class Employees extends Yii\db\ActiveRecord
     // Relation ประเภท/กลุ่มงาน
     public function getPositionGroup()
     {
-        return $this->hasOne(Categorise::class, ['code' => 'position_group'])->andOnCondition(['name' => 'position_group']);
+        return $this->hasOne(EmployeePositionGroup::class, ['id' => 'employee_position_group_id']);
+    }
+
+    public function getEmployeeType()
+    {
+        return $this->hasOne(EmployeeType::class, ['id' => 'employee_type_id']);
+    }
+
+    public function getEmployeePositionGroup()
+    {
+        return $this->hasOne(EmployeePositionGroup::class, ['id' => 'employee_position_group_id']);
+    }
+
+    public function getEmployeePosition()
+    {
+        return $this->hasOne(EmployeePosition::class, ['id' => 'employee_position_id']);
     }
 
     public function getEmpExpertise()

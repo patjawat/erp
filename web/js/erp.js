@@ -12,22 +12,252 @@ function erpHidePageLoading() {
 window.erpShowPageLoading = erpShowPageLoading;
 window.erpHidePageLoading = erpHidePageLoading;
 
+if (typeof window.kvBs4InitForm !== "function") {
+  window.kvBs4InitForm = function () {};
+}
+
+function erpGetBootstrapClass(className) {
+  if (typeof window.bootstrap !== "undefined" && window.bootstrap && window.bootstrap[className]) {
+    return window.bootstrap[className];
+  }
+
+  if (typeof bootstrap !== "undefined" && bootstrap && bootstrap[className]) {
+    return bootstrap[className];
+  }
+
+  return undefined;
+}
+
+function erpBootstrapPluginShim(pluginName, bootstrapClassName) {
+  if (typeof $.fn[pluginName] === "function") {
+    return;
+  }
+
+  $.fn[pluginName] = function (option) {
+    var BootstrapClass = erpGetBootstrapClass(bootstrapClassName);
+
+    if (typeof BootstrapClass === "undefined") {
+      return this;
+    }
+
+    return this.each(function () {
+      var instance = BootstrapClass.getInstance(this);
+
+      if (typeof option === "string") {
+        if (instance && typeof instance[option] === "function") {
+          instance[option]();
+        }
+        return;
+      }
+
+      if (!instance) {
+        BootstrapClass.getOrCreateInstance(this, option || {});
+      }
+    });
+  };
+}
+
+erpBootstrapPluginShim("tooltip", "Tooltip");
+erpBootstrapPluginShim("popover", "Popover");
+
+function erpBootstrapModalShim() {
+  if (typeof $.fn.modal === "function") {
+    return;
+  }
+
+  $.fn.modal = function (option) {
+    var ModalClass = erpGetBootstrapClass("Modal");
+    if (typeof ModalClass === "undefined") {
+      return this;
+    }
+
+    var pluginArgs = Array.prototype.slice.call(arguments, 1);
+
+    return this.each(function () {
+      var instance = ModalClass.getInstance(this);
+
+      if (typeof option === "string") {
+        if (!instance) {
+          instance = ModalClass.getOrCreateInstance(this);
+        }
+
+        if (instance && typeof instance[option] === "function") {
+          instance[option].apply(instance, pluginArgs);
+        }
+        return;
+      }
+
+      var config = option && typeof option === "object" ? option : {};
+      instance = ModalClass.getOrCreateInstance(this, config);
+
+      if (!option || config.show !== false) {
+        instance.show();
+      }
+    });
+  };
+}
+
+erpBootstrapModalShim();
+
+function erpHideModal(modalTarget) {
+  var modalEl =
+    typeof modalTarget === "string" ? document.querySelector(modalTarget) : modalTarget;
+
+  if (!modalEl) {
+    return Promise.resolve();
+  }
+
+  return new Promise(function (resolve) {
+    var finished = false;
+    var timeoutId = null;
+
+    function cleanup() {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      resolve();
+    }
+
+    function forceCleanup() {
+      try {
+        if (modalEl.classList) {
+          modalEl.classList.remove("show");
+        }
+        modalEl.style.display = "none";
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("padding-right");
+        document.querySelectorAll(".modal-backdrop").forEach(function (backdrop) {
+          backdrop.remove();
+        });
+      } catch (e) {}
+      cleanup();
+    }
+
+    if (modalEl.addEventListener) {
+      modalEl.addEventListener("hidden.bs.modal", cleanup, { once: true });
+    }
+
+    timeoutId = setTimeout(forceCleanup, 900);
+
+    var ModalClass = erpGetBootstrapClass("Modal");
+    if (ModalClass && typeof ModalClass.getInstance === "function") {
+      try {
+        var modalInstance = ModalClass.getInstance(modalEl) || ModalClass.getOrCreateInstance(modalEl);
+        if (modalInstance && typeof modalInstance.hide === "function") {
+          modalInstance.hide();
+          return;
+        }
+      } catch (e) {}
+    }
+
+    if (typeof jQuery !== "undefined" && typeof jQuery.fn.modal === "function") {
+      try {
+        jQuery(modalEl).one("hidden.bs.modal", cleanup);
+        jQuery(modalEl).modal("hide");
+        return;
+      } catch (e) {}
+    }
+  });
+}
+window.erpHideModal = erpHideModal;
+
+function erpShowModal(modalTarget, config) {
+  var modalEl =
+    typeof modalTarget === "string" ? document.querySelector(modalTarget) : modalTarget;
+
+  if (!modalEl) {
+    return Promise.resolve();
+  }
+
+  return new Promise(function (resolve) {
+    function finish() {
+      resolve();
+    }
+
+    var ModalClass = erpGetBootstrapClass("Modal");
+    if (ModalClass && typeof ModalClass.getInstance === "function") {
+      try {
+        var modalInstance =
+          ModalClass.getInstance(modalEl) || ModalClass.getOrCreateInstance(modalEl, config || {});
+        if (modalInstance && typeof modalInstance.show === "function") {
+          modalInstance.show();
+          finish();
+          return;
+        }
+      } catch (e) {}
+    }
+
+    if (typeof jQuery !== "undefined" && typeof jQuery.fn.modal === "function") {
+      try {
+        jQuery(modalEl).modal("show");
+        finish();
+        return;
+      } catch (e) {}
+    }
+
+    try {
+      modalEl.classList.add("show");
+      modalEl.style.display = "block";
+      document.body.classList.add("modal-open");
+    } catch (e) {}
+
+    finish();
+  });
+}
+window.erpShowModal = erpShowModal;
+
+function erpReloadPjax(container, options) {
+  var pjaxApi = null;
+  if (typeof window.jQuery !== "undefined" && jQuery.pjax && typeof jQuery.pjax.reload === "function") {
+    pjaxApi = jQuery.pjax;
+  } else if (typeof $.pjax !== "undefined" && $.pjax && typeof $.pjax.reload === "function") {
+    pjaxApi = $.pjax;
+  }
+
+  if (!pjaxApi || !container) {
+    return false;
+  }
+
+  var reloadOptions = $.extend(
+    {
+      container: container,
+      history: false,
+      replace: false,
+      timeout: false,
+    },
+    options || {}
+  );
+
+  pjaxApi.reload(reloadOptions);
+  return true;
+}
+window.erpReloadPjax = erpReloadPjax;
+
 jQuery(document).on("pjax:send", function () {
   erpShowPageLoading();
 });
 jQuery(document).on("pjax:start", function () {
   erpShowPageLoading();
   const el = document.getElementById("offcanvasRight");
-  if (el) bootstrap.Offcanvas.getOrCreateInstance(el).hide();
+  const Offcanvas = erpGetBootstrapClass("Offcanvas");
+  if (el && Offcanvas) Offcanvas.getOrCreateInstance(el).hide();
 });
 jQuery(document).on("pjax:end", function () {
   erpHidePageLoading();
 
   if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
+  const Offcanvas = erpGetBootstrapClass("Offcanvas");
   if (offcanvasElList.length > 0) {
     offcanvasElList.map(function (offcanvasEl) {
-      return new bootstrap.Offcanvas(offcanvasEl);
+      if (!Offcanvas) {
+        return null;
+      }
+      return new Offcanvas(offcanvasEl);
     });
   }
 });
@@ -77,6 +307,74 @@ $("body").on("click", ".form-submit", async function (e) {
   var formId = $(this).data("id");
   $("#" + formId).submit();
 });
+
+function erpInjectModalContent($target, html) {
+  return new Promise(async function (resolve, reject) {
+    try {
+      var $wrapper = $("<div>").html(html || "");
+      var nodes = $wrapper.contents().toArray();
+      var scripts = [];
+      var fragment = document.createDocumentFragment();
+
+      nodes.forEach(function (node) {
+        if (node.nodeType === 1 && node.tagName && node.tagName.toLowerCase() === "script") {
+          scripts.push(node);
+        } else {
+          fragment.appendChild(node);
+        }
+      });
+
+      $target.empty().append(fragment);
+
+      for (var i = 0; i < scripts.length; i++) {
+        var script = scripts[i];
+        var src = script.src || script.getAttribute("src");
+
+        if (src) {
+          await erpLoadScript(src);
+          continue;
+        }
+
+        var scriptText = script.text || script.textContent || script.innerHTML || "";
+        if (scriptText.trim()) {
+          $.globalEval(scriptText);
+        }
+      }
+
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function erpLoadScript(src) {
+  window.__erpScriptLoadCache = window.__erpScriptLoadCache || {};
+
+  if (window.__erpScriptLoadCache[src]) {
+    return window.__erpScriptLoadCache[src];
+  }
+
+  window.__erpScriptLoadCache[src] = new Promise(function (resolve, reject) {
+    if (document.querySelector('script[src="' + src.replace(/"/g, '\\"') + '"]')) {
+      resolve();
+      return;
+    }
+
+    var scriptEl = document.createElement("script");
+    scriptEl.src = src;
+    scriptEl.async = false;
+    scriptEl.onload = function () {
+      resolve();
+    };
+    scriptEl.onerror = function () {
+      reject(new Error("Failed to load script: " + src));
+    };
+    document.head.appendChild(scriptEl);
+  });
+
+  return window.__erpScriptLoadCache[src];
+}
 /**
  * Handle AJAX form submission with confirmation and success feedback.
  * @param {string} formSelector - jQuery selector for the form.
@@ -84,7 +382,9 @@ $("body").on("click", ".form-submit", async function (e) {
  * @param {function} [successCallback] - Optional callback on success.
  */
 function handleFormSubmit(formSelector, actionUrl, successCallback) {
-  $(document).on("beforeSubmit", formSelector, function (e) {
+  $(document)
+    .off("beforeSubmit.handleFormSubmit", formSelector)
+    .on("beforeSubmit.handleFormSubmit", formSelector, function (e) {
     e.preventDefault();
     const form = $(this);
 
@@ -100,9 +400,6 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
       reverseButtons: false, // เอาปุ่มยกเลิกไว้ซ้าย ปุ่มยืนยันไว้ขวา (UX Standard)
     }).then((result) => {
       if (result.isConfirmed) {
-        // ปิด Modal เดิม (ถ้ามี)
-        $("#main-modal").modal("hide");
-
         // Loading State
         Swal.fire({
           title: "กำลังดำเนินการ",
@@ -118,8 +415,29 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
           type: "POST",
           data: form.serialize(),
           dataType: "json",
-          success: function (response) {
+          success: async function (response) {
+            if (response && typeof response === "object") {
+              var isValidationResponse =
+                response.status === undefined &&
+                response.message === undefined &&
+                response.redirect_url === undefined;
+
+              if (response.errors && typeof response.errors === "object") {
+                Swal.close();
+                form.yiiActiveForm('updateMessages', response.errors, true);
+                if (isValidationResponse) {
+                  return;
+                }
+              } else if (isValidationResponse) {
+                Swal.close();
+                form.yiiActiveForm('updateMessages', response, true);
+                return;
+              }
+            }
+
             if (response.status === "success") {
+              await erpHideModal("#main-modal");
+
               Swal.fire({
                 icon: "success",
                 title: "ดำเนินการสำเร็จ",
@@ -138,6 +456,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
                 }
               });
             } else {
+              Swal.close();
               Swal.fire({
                 icon: "error",
                 title: "ไม่สามารถบันทึกข้อมูลได้",
@@ -148,6 +467,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
             }
           },
           error: function (xhr) {
+            Swal.close();
             Swal.fire({
               icon: "error",
               title: "การเชื่อมต่อขัดข้อง",
@@ -161,6 +481,14 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
     return false;
   });
 }
+
+handleFormSubmit("#form-emp-detail", null, async function (response) {
+  if (response && response.container) {
+    if (!erpReloadPjax(response.container)) {
+      location.reload();
+    }
+  }
+});
 
 
 // // #### การอัพโหลดรูปภาพ ####
@@ -288,7 +616,7 @@ function hideLoading() {
 
 function beforLoadModal() {
   console.log("beforLoadModal");
-  $("#main-modal").modal("show");
+  erpShowModal("#main-modal");
   // $('#modal-dialog').modal('show');
   $("#main-modal-label").html("กำลังโหลด");
   $(".modal-dialog").removeClass(
@@ -302,12 +630,13 @@ function beforLoadModal() {
 }
 
 function closeModal() {
-  $("#main-modal").modal("toggle");
-  Swal.fire({
-    icon: "success",
-    title: "บันทึกสำเร็จ",
-    showConfirmButton: false,
-    timer: 1500,
+  erpHideModal("#main-modal").then(function () {
+    Swal.fire({
+      icon: "success",
+      title: "บันทึกสำเร็จ",
+      showConfirmButton: false,
+      timer: 1500,
+    });
   });
 }
 
@@ -375,16 +704,16 @@ $("body").on("click", ".open-modal", function (e) {
     type: "get",
     url: url,
     dataType: "json",
-    success: function (response) {
+    success: async function (response) {
       var modal = $("#main-modal");
       modal.find("#main-modal-label").html(response.title);
-      modal.find(".modal-body").html(response.content);
+      await erpInjectModalContent(modal.find(".modal-body"), response.content);
       modal.find(".modal-footer").html(response.footer);
 
       modal.find(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl modal-xxl")
         .addClass(size);
 
-      modal.modal("show");
+      await erpShowModal(modal);
       if (response.initCallback && typeof window[response.initCallback] === "function") {
         try { window[response.initCallback](); } catch (err) { console.warn("initCallback error", err); }
       }
@@ -405,10 +734,10 @@ $("body").on("click", ".open-modal-fullscreen", function (e) {
     type: "get",
     url: url,
     dataType: "json",
-    success: function (response) {
-      $("#fullscreen-modal").modal("show");
+    success: async function (response) {
+      await erpShowModal("#fullscreen-modal");
       $("#fullscreen-modal-label").html(response.title);
-      $(".modal-body").html(response.content);
+      await erpInjectModalContent($(".modal-body"), response.content);
       $(".modal-footer").html(response.footer);
       $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
       $(".modal-dialog").addClass(size);
@@ -487,14 +816,12 @@ $("body").off("click", ".delete-item").on("click", ".delete-item", async functio
         dataType: "json",
         success: function (response) {
           if (response.status == "success" && response.container) {
-            $.pjax.reload({
-              container: response.container,
-              history: false,
-              url: response.url,
-            });
+            if (!erpReloadPjax(response.container, { url: response.url })) {
+              location.reload();
+            }
           } else if (response.status == "success" && response.close) {
             success("ดำเนินการลบสำเร็จ!.");
-            $("#main-modal").modal("hide");
+            erpHideModal("#main-modal");
           } else if (response.status == "success" && response.url) {
             window.location.href = response.url;
           } else {
