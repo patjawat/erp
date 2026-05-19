@@ -370,6 +370,7 @@ use iamsaint\datetimepicker\Datetimepicker;
 $ref = $model->ref;
 $urlUpload = Url::to('/filemanager/uploads/single');
 $getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
+// $thaidFillUrl = Url::to(['/auth/thaid/fill-form?debug=1']);
 $thaidFillUrl = Url::to(['/auth/thaid/fill-form']);
 $js = <<<JS
         getAvatar()
@@ -548,7 +549,15 @@ $js = <<<JS
 
                 if (d.fname) \$('#employees-fname').val(d.fname);
                 if (d.lname) \$('#employees-lname').val(d.lname);
-                if (d.address) \$('#employees-address').val(d.address);
+                if (d.address) {
+                    var addressText = d.address;
+                    if (typeof addressText === 'object' && addressText !== null) {
+                        addressText = addressText.formatted || addressText.full_address || addressText.address || addressText.text || '';
+                    }
+                    if (addressText) {
+                        \$('#employees-address').val(addressText);
+                    }
+                }
                 if (d.cid) \$('#employees-cid').val(d.cid).trigger('input').trigger('change');
 
                 if (d.birthday) {

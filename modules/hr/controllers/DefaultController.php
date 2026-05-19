@@ -3,6 +3,8 @@
 namespace app\modules\hr\controllers;
 
 use app\modules\hr\models\EmployeesSearch;
+use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\models\Categorise;
@@ -262,17 +264,17 @@ class DefaultController extends Controller
     /**
      * Dashboard มุมมองผู้บริหาร
      * ใช้เฉพาะ branch = 'MAIN' และ status = '1' (ปฏิบัติราชการ)
-     * รองรับการกรองจากคลิก Chart: gender, department, position_type, workgroup, gen
+     * รองรับการกรองจากคลิก Chart: gender, department, employee_type_id, employee_position_id, workgroup, gen
      */
     public function actionDashboard()
     {
         $req = $this->request->get();
         $filterGender = isset($req['gender']) && in_array($req['gender'], ['ชาย', 'หญิง'], true) ? $req['gender'] : null;
         $filterDepartment = isset($req['department']) ? $req['department'] : null;
-        $filterPositionType = isset($req['position_type']) ? $req['position_type'] : null;
+        $filterPositionType = $this->normalizeDashboardEmployeeTypeFilter($req['employee_type_id'] ?? $req['position_type'] ?? null);
         $filterWorkgroup = isset($req['workgroup']) ? $req['workgroup'] : null;
         $filterGen = isset($req['gen']) ? $req['gen'] : null;
-        $filterPositionName = isset($req['position_name']) && $req['position_name'] !== '' ? $req['position_name'] : null;
+        $filterPositionName = $this->normalizeDashboardEmployeePositionFilter($req['employee_position_id'] ?? $req['position_name'] ?? null);
         $filterServiceBand = isset($req['service_band']) && $req['service_band'] !== '' ? $req['service_band'] : null;
         $genYearRanges = [
             'Gen B' => [1946, 1964],
@@ -293,10 +295,10 @@ class DefaultController extends Controller
                 $q->andWhere(['department' => $filterDepartment]);
             }
             if ($filterPositionType !== null && $filterPositionType !== '') {
-                $q->andWhere(['position_type' => $filterPositionType]);
+                $q->andWhere(['employee_type_id' => $filterPositionType]);
             }
             if ($filterPositionName !== null && $filterPositionName !== '') {
-                $q->andWhere(['position_name' => $filterPositionName]);
+                $q->andWhere(['employee_position_id' => $filterPositionName]);
             }
             if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
                 $deptCodes = Categorise::find()
@@ -324,33 +326,34 @@ class DefaultController extends Controller
         $countMale = (int) (clone $baseQuery())->andWhere(['gender' => 'ชาย'])->count();
         $countFemale = (int) (clone $baseQuery())->andWhere(['gender' => 'หญิง'])->count();
 
-        // ประเภทการจ้าง (position_type เป็น varchar ใน DB - ใช้ code จาก categorise)
-        $positionTypes = Categorise::find()
-            ->where(['name' => 'position_type'])
-            ->orderBy(['code' => SORT_ASC])
+        // ประเภทพนักงาน
+        $positionTypes = EmployeeType::find()
+            ->where(['active' => 1])
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
         $positionTypeLabels = [];
         $positionTypeCodes = [];
         foreach ($positionTypes as $pt) {
             $positionTypeLabels[] = $pt->title ?: 'ไม่ระบุ';
-            $positionTypeCodes[] = $pt->code;
+            $positionTypeCodes[] = (int) $pt->id;
         }
         $positionTypeCounts = [];
-        foreach ($positionTypeCodes as $code) {
-            $positionTypeCounts[] = (int) (clone $baseQuery())->andWhere(['position_type' => $code])->count();
+        foreach ($positionTypeCodes as $typeId) {
+            $positionTypeCounts[] = (int) (clone $baseQuery())->andWhere(['employee_type_id' => $typeId])->count();
         }
 
-        // ตำแหน่ง (position_name)
+        // ตำแหน่ง
         $positionNameQuery = (new Query())
-            ->select(['c.code as code', 'c.title as title', 'COUNT(e.id) as cnt'])
+            ->select(['p.id as id', 'p.title as title', 'COUNT(e.id) as cnt'])
             ->from(['e' => 'employees'])
-            ->leftJoin('categorise c', 'c.code = e.position_name AND c.name = :pname', [':pname' => 'position_name'])
+            ->leftJoin(['p' => EmployeePosition::tableName()], 'p.id = e.employee_position_id')
             ->where(['e.branch' => 'MAIN', 'e.status' => '1'])
-            ->andWhere(['not', ['e.id' => 1]]);
+            ->andWhere(['not', ['e.id' => 1]])
+            ->andWhere(['not', ['e.employee_position_id' => null]]);
         if ($filterGender !== null) $positionNameQuery->andWhere(['e.gender' => $filterGender]);
         if ($filterDepartment !== null && $filterDepartment !== '') $positionNameQuery->andWhere(['e.department' => $filterDepartment]);
-        if ($filterPositionType !== null && $filterPositionType !== '') $positionNameQuery->andWhere(['e.position_type' => $filterPositionType]);
-        if ($filterPositionName !== null && $filterPositionName !== '') $positionNameQuery->andWhere(['e.position_name' => $filterPositionName]);
+        if ($filterPositionType !== null && $filterPositionType !== '') $positionNameQuery->andWhere(['e.employee_type_id' => $filterPositionType]);
+        if ($filterPositionName !== null && $filterPositionName !== '') $positionNameQuery->andWhere(['e.employee_position_id' => $filterPositionName]);
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $wgDeptCodes = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($wgDeptCodes)) $positionNameQuery->andWhere(['in', 'e.department', $wgDeptCodes]);
@@ -362,7 +365,7 @@ class DefaultController extends Controller
         if ($filterServiceBand !== null && $filterServiceBand !== '') {
             $positionNameQuery->andWhere(new \yii\db\Expression(self::serviceBandWhereSql('e', $filterServiceBand)));
         }
-        $positionNameRows = $positionNameQuery->groupBy(['c.code', 'c.title'])->orderBy(['cnt' => SORT_DESC])->all();
+        $positionNameRows = $positionNameQuery->groupBy(['p.id', 'p.title'])->orderBy(['cnt' => SORT_DESC])->all();
         $positionNameMaxShow = 12; // แสดง Top N แล้วรวมที่เหลือเป็น "อื่นๆ" เพื่อให้กราฟอ่านง่าย
         if (count($positionNameRows) > $positionNameMaxShow) {
             $top = array_slice($positionNameRows, 0, $positionNameMaxShow);
@@ -370,20 +373,20 @@ class DefaultController extends Controller
             $restSum = array_sum(array_column($rest, 'cnt'));
             $positionNameRows = $top;
             if ($restSum > 0) {
-                $positionNameRows[] = ['code' => null, 'title' => 'อื่นๆ', 'cnt' => $restSum];
+                $positionNameRows[] = ['id' => null, 'title' => 'อื่นๆ', 'cnt' => $restSum];
             }
         }
         $positionNameCategories = array_map(function ($t) { return $t !== null && $t !== '' ? $t : 'ไม่ระบุ'; }, array_column($positionNameRows, 'title'));
-        $positionNameCodes = array_column($positionNameRows, 'code');
+        $positionNameCodes = array_column($positionNameRows, 'id');
         $positionNameValues = array_map('intval', array_column($positionNameRows, 'cnt'));
 
-        // กลุ่มงาน × ประเภทการจ้าง (dynamic ตาม position_type ใน DB)
+        // กลุ่มงาน × ประเภทพนักงาน
         $workgroupRows = [];
         $wgWhere = "e.branch = 'MAIN' AND e.status = '1' AND e.id <> 1";
         $wgParams = [];
         if ($filterGender !== null) { $wgWhere .= " AND e.gender = :gender"; $wgParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $wgWhere .= " AND e.department = :department"; $wgParams[':department'] = $filterDepartment; }
-        if ($filterPositionType !== null && $filterPositionType !== '') { $wgWhere .= " AND e.position_type = :position_type"; $wgParams[':position_type'] = $filterPositionType; }
+        if ($filterPositionType !== null && $filterPositionType !== '') { $wgWhere .= " AND e.employee_type_id = :employee_type_id"; $wgParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $wgDeptCodes = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($wgDeptCodes)) {
@@ -395,15 +398,15 @@ class DefaultController extends Controller
             $wgWhere .= " AND e.birthday IS NOT NULL AND YEAR(e.birthday) BETWEEN :gen0 AND :gen1";
             $wgParams[':gen0'] = $yr[0]; $wgParams[':gen1'] = $yr[1];
         }
-        if ($filterPositionName !== null && $filterPositionName !== '') { $wgWhere .= " AND e.position_name = :position_name"; $wgParams[':position_name'] = $filterPositionName; }
+        if ($filterPositionName !== null && $filterPositionName !== '') { $wgWhere .= " AND e.employee_position_id = :employee_position_id"; $wgParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $wgWhere .= " AND (" . self::serviceBandWhereSql('e', $filterServiceBand) . ")"; }
         $wgCounts = Yii::$app->db->createCommand(
-            "SELECT w.code AS wcode, w.title AS wtitle, e.position_type AS pt_code, COUNT(e.id) AS cnt
+            "SELECT w.code AS wcode, w.title AS wtitle, e.employee_type_id AS pt_id, COUNT(e.id) AS cnt
              FROM employees e
              INNER JOIN categorise c ON c.code = e.department
              INNER JOIN categorise w ON w.code = c.category_id AND w.name = 'workgroup'
              WHERE {$wgWhere}
-             GROUP BY w.code, w.title, e.position_type"
+             GROUP BY w.code, w.title, e.employee_type_id"
         )->bindValues($wgParams)->queryAll();
         $byWg = [];
         foreach ($wgCounts as $r) {
@@ -411,7 +414,7 @@ class DefaultController extends Controller
             if (!isset($byWg[$k])) {
                 $byWg[$k] = ['name' => $r['wtitle'] ?: 'ไม่ระบุ', 'code' => $r['wcode'], 'data' => array_fill(0, count($positionTypeCodes), 0)];
             }
-            $idx = array_search($r['pt_code'], $positionTypeCodes);
+            $idx = array_search((int) $r['pt_id'], $positionTypeCodes, true);
             if ($idx !== false) {
                 $byWg[$k]['data'][$idx] = (int) $r['cnt'];
             }
@@ -423,7 +426,7 @@ class DefaultController extends Controller
         $ageParams = [];
         if ($filterGender !== null) { $ageWhere .= " AND gender = :gender"; $ageParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $ageWhere .= " AND department = :department"; $ageParams[':department'] = $filterDepartment; }
-        if ($filterPositionType !== null && $filterPositionType !== '') { $ageWhere .= " AND position_type = :position_type"; $ageParams[':position_type'] = $filterPositionType; }
+        if ($filterPositionType !== null && $filterPositionType !== '') { $ageWhere .= " AND employee_type_id = :employee_type_id"; $ageParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $ageWgDepts = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($ageWgDepts)) { $ageWhere .= " AND department IN (" . implode(',', array_map('intval', $ageWgDepts)) . ")"; }
@@ -433,7 +436,7 @@ class DefaultController extends Controller
             $ageWhere .= " AND YEAR(birthday) BETWEEN :gen0 AND :gen1";
             $ageParams[':gen0'] = $yr[0]; $ageParams[':gen1'] = $yr[1];
         }
-        if ($filterPositionName !== null && $filterPositionName !== '') { $ageWhere .= " AND position_name = :position_name"; $ageParams[':position_name'] = $filterPositionName; }
+        if ($filterPositionName !== null && $filterPositionName !== '') { $ageWhere .= " AND employee_position_id = :employee_position_id"; $ageParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $ageWhere .= " AND (" . self::serviceBandWhereSql('', $filterServiceBand) . ")"; }
         $ageRows = Yii::$app->db->createCommand(
             "SELECT CONCAT(5 * FLOOR((YEAR(NOW()) - YEAR(birthday))/5), ' - ', 5 * FLOOR((YEAR(NOW()) - YEAR(birthday))/5) + 4) AS age_band,
@@ -481,7 +484,7 @@ class DefaultController extends Controller
             ->andWhere(['not', ['e.id' => 1]]);
         if ($filterGender !== null) $departmentQuery->andWhere(['e.gender' => $filterGender]);
         if ($filterDepartment !== null && $filterDepartment !== '') $departmentQuery->andWhere(['e.department' => $filterDepartment]);
-        if ($filterPositionType !== null && $filterPositionType !== '') $departmentQuery->andWhere(['e.position_type' => $filterPositionType]);
+        if ($filterPositionType !== null && $filterPositionType !== '') $departmentQuery->andWhere(['e.employee_type_id' => $filterPositionType]);
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $dwg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($dwg)) $departmentQuery->andWhere(['in', 'e.department', $dwg]);
@@ -490,7 +493,7 @@ class DefaultController extends Controller
             $yr = $genYearRanges[$filterGen];
             $departmentQuery->andWhere(['not', ['e.birthday' => null]])->andWhere(['between', 'YEAR(e.birthday)', (string)$yr[0], (string)$yr[1]]);
         }
-        if ($filterPositionName !== null && $filterPositionName !== '') $departmentQuery->andWhere(['e.position_name' => $filterPositionName]);
+        if ($filterPositionName !== null && $filterPositionName !== '') $departmentQuery->andWhere(['e.employee_position_id' => $filterPositionName]);
         if ($filterServiceBand !== null && $filterServiceBand !== '') {
             $departmentQuery->andWhere(new \yii\db\Expression(self::serviceBandWhereSql('e', $filterServiceBand)));
         }
@@ -504,7 +507,7 @@ class DefaultController extends Controller
         $sbParams = [];
         if ($filterGender !== null) { $sbWhere .= " AND gender = :gender"; $sbParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $sbWhere .= " AND department = :department"; $sbParams[':department'] = $filterDepartment; }
-        if ($filterPositionType !== null && $filterPositionType !== '') { $sbWhere .= " AND position_type = :position_type"; $sbParams[':position_type'] = $filterPositionType; }
+        if ($filterPositionType !== null && $filterPositionType !== '') { $sbWhere .= " AND employee_type_id = :employee_type_id"; $sbParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $sbWg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($sbWg)) { $sbWhere .= " AND department IN (" . implode(',', array_map('intval', $sbWg)) . ")"; }
@@ -514,7 +517,7 @@ class DefaultController extends Controller
             $sbWhere .= " AND birthday IS NOT NULL AND YEAR(birthday) BETWEEN :gen0 AND :gen1";
             $sbParams[':gen0'] = $yr[0]; $sbParams[':gen1'] = $yr[1];
         }
-        if ($filterPositionName !== null && $filterPositionName !== '') { $sbWhere .= " AND position_name = :position_name"; $sbParams[':position_name'] = $filterPositionName; }
+        if ($filterPositionName !== null && $filterPositionName !== '') { $sbWhere .= " AND employee_position_id = :employee_position_id"; $sbParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $sbWhere .= " AND (" . self::serviceBandWhereSql('', $filterServiceBand) . ")"; }
         $serviceBandRows = Yii::$app->db->createCommand(
             "SELECT
@@ -556,7 +559,7 @@ class DefaultController extends Controller
         $avgParams = [];
         if ($filterGender !== null) { $avgWhere .= " AND gender = :gender"; $avgParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $avgWhere .= " AND department = :department"; $avgParams[':department'] = $filterDepartment; }
-        if ($filterPositionType !== null && $filterPositionType !== '') { $avgWhere .= " AND position_type = :position_type"; $avgParams[':position_type'] = $filterPositionType; }
+        if ($filterPositionType !== null && $filterPositionType !== '') { $avgWhere .= " AND employee_type_id = :employee_type_id"; $avgParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
             $avgWg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
             if (!empty($avgWg)) { $avgWhere .= " AND department IN (" . implode(',', array_map('intval', $avgWg)) . ")"; }
@@ -566,7 +569,7 @@ class DefaultController extends Controller
             $avgWhere .= " AND birthday IS NOT NULL AND YEAR(birthday) BETWEEN :gen0 AND :gen1";
             $avgParams[':gen0'] = $yr[0]; $avgParams[':gen1'] = $yr[1];
         }
-        if ($filterPositionName !== null && $filterPositionName !== '') { $avgWhere .= " AND position_name = :position_name"; $avgParams[':position_name'] = $filterPositionName; }
+        if ($filterPositionName !== null && $filterPositionName !== '') { $avgWhere .= " AND employee_position_id = :employee_position_id"; $avgParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $avgWhere .= " AND (" . self::serviceBandWhereSql('', $filterServiceBand) . ")"; }
         $avgYearsService = Yii::$app->db->createCommand(
             "SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, join_date, CURDATE())), 1) AS avg_years FROM employees WHERE {$avgWhere}"
@@ -607,6 +610,73 @@ class DefaultController extends Controller
             'filterServiceBand' => $filterServiceBand,
             'positionNameCodes' => $positionNameCodes ?? [],
         ]);
+    }
+
+    private function normalizeDashboardEmployeeTypeFilter($value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (ctype_digit($value)) {
+            $typeId = (int) $value;
+            return EmployeeType::findOne($typeId) ? $typeId : null;
+        }
+
+        $needle = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        foreach (EmployeeType::find()->all() as $type) {
+            $title = trim((string) $type->title);
+            $typeTitle = function_exists('mb_strtolower') ? mb_strtolower($title, 'UTF-8') : strtolower($title);
+            if ($typeTitle !== '' && $typeTitle === $needle) {
+                return (int) $type->id;
+            }
+
+            foreach ((array) $type->legacyCodes() as $legacyCode) {
+                if (strcasecmp(trim((string) $legacyCode), $value) === 0) {
+                    return (int) $type->id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeDashboardEmployeePositionFilter($value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (ctype_digit($value)) {
+            $positionId = (int) $value;
+            return EmployeePosition::findOne($positionId) ? $positionId : null;
+        }
+
+        $needle = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        foreach (EmployeePosition::find()->all() as $position) {
+            $title = trim((string) $position->title);
+            $positionTitle = function_exists('mb_strtolower') ? mb_strtolower($title, 'UTF-8') : strtolower($title);
+            if ($positionTitle !== '' && $positionTitle === $needle) {
+                return (int) $position->id;
+            }
+
+            $legacyCode = trim((string) ($position->legacy_code ?? ''));
+            if ($legacyCode !== '' && strcasecmp($legacyCode, $value) === 0) {
+                return (int) $position->id;
+            }
+        }
+
+        return null;
     }
 
     /**

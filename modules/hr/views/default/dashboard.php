@@ -51,7 +51,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             foreach (($positionTypeCodes ?? []) as $i => $c) {
                 if ((string)$c === (string)$filterPositionType) { $ptIdx = $i; break; }
             }
-            $parts[] = 'ประเภทการจ้าง ' . ($ptIdx !== null ? Html::encode($positionTypeLabels[$ptIdx] ?? $filterPositionType) : Html::encode($filterPositionType));
+            $parts[] = 'ประเภทพนักงาน ' . ($ptIdx !== null ? Html::encode($positionTypeLabels[$ptIdx] ?? $filterPositionType) : Html::encode($filterPositionType));
         }
         if (!empty($filterWorkgroup) && !empty($workgroupRows)) {
             $wgName = $filterWorkgroup;
@@ -69,7 +69,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             foreach (($positionNameCodes ?? []) as $i => $c) {
                 if ((string)$c === (string)$filterPositionName) { $pnIdx = $i; break; }
             }
-            $parts[] = 'ตำแหน่ง ' . ($pnIdx !== null ? Html::encode($positionNameCategories[$pnIdx] ?? $filterPositionName) : Html::encode($filterPositionName));
+            $parts[] = 'ชื่อตำแหน่ง ' . ($pnIdx !== null ? Html::encode($positionNameCategories[$pnIdx] ?? $filterPositionName) : Html::encode($filterPositionName));
         }
         if (!empty($filterServiceBand)) $parts[] = 'ช่วงอายุงาน ' . Html::encode($filterServiceBand);
         echo implode(' · ', $parts);
@@ -92,7 +92,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             องค์กรมีบุคลากรปฏิบัติราชการ ทั้งหมด <strong><?= $totalCount ?></strong> คน
             (ชาย <?= $countMale ?> · หญิง <?= $countFemale ?> · สัดส่วน <?= $genderRatio ?>)
             กระจายใน <strong><?= (int)($numWorkgroups ?? 0) ?></strong> กลุ่มงาน
-            และ <strong><?= (int)($numPositionTypes ?? 0) ?></strong> ประเภทการจ้าง
+            และ <strong><?= (int)($numPositionTypes ?? 0) ?></strong> ประเภทพนักงาน
             <?php if (isset($newHiresThisYear) || isset($leftThisYear)): ?>
             · ปีนี้บรรจุใหม่ <strong><?= (int)($newHiresThisYear ?? 0) ?></strong> คน · ลาออก/สิ้นสุด <strong><?= (int)($leftThisYear ?? 0) ?></strong> คน
             <?php endif; ?>
@@ -231,7 +231,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
     <div class="col-12 <?= $donutCol ?>">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom py-2 px-3">
-                <h6 class="mb-0 small fw-normal text-muted">ประเภทการจ้าง</h6>
+                <h6 class="mb-0 small fw-normal text-muted">ประเภทพนักงาน</h6>
             </div>
             <div class="card-body d-flex align-items-center justify-content-center py-3">
                 <div id="dashboardPositionTypePie" class="w-100"></div>
@@ -241,13 +241,13 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
     <?php endif; ?>
 </div>
 
-<!-- แถวที่ 2: กลุ่มงาน × ประเภทการจ้าง — ข้อมูลหลัก ใช้พื้นที่เต็มความกว้าง -->
+<!-- แถวที่ 2: กลุ่มงาน × ประเภทพนักงาน — ข้อมูลหลัก ใช้พื้นที่เต็มความกว้าง -->
 <?php if (!empty($workgroupRows) && !empty($positionTypeLabels)): ?>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-bottom py-2 px-3">
-                <h6 class="mb-0 fw-normal">จำแนกตามกลุ่มงานและประเภทการจ้าง</h6>
+                <h6 class="mb-0 fw-normal">จำแนกตามกลุ่มงานและประเภทพนักงาน</h6>
                 <span class="small text-muted">คลิกแท่งเพื่อกรองตามกลุ่มงาน</span>
             </div>
             <div class="card-body pt-3 pb-2 px-3">
@@ -279,7 +279,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
     <div class="col-12 col-lg-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom py-2 px-3">
-                <h6 class="mb-0 fw-normal">จำนวนคนตามตำแหน่ง</h6>
+                <h6 class="mb-0 fw-normal">จำนวนคนตามชื่อตำแหน่ง</h6>
                 <span class="small text-muted">คลิกแท่งเพื่อกรอง</span>
                 <?php if ($hasPositionOthers): ?>
                 <span class="small text-muted d-block mt-1">แสดง 12 อันดับแรก ที่เหลือรวมเป็น อื่นๆ</span>
@@ -350,10 +350,10 @@ window.__hrDashboard = {
   filter: {
     gender: <?= Json::encode($filterGender ?? '') ?>,
     department: <?= Json::encode($filterDepartment ?? '') ?>,
-    position_type: <?= Json::encode($filterPositionType ?? '') ?>,
+    employee_type_id: <?= Json::encode($filterPositionType ?? '') ?>,
     workgroup: <?= Json::encode($filterWorkgroup ?? '') ?>,
     gen: <?= Json::encode($filterGen ?? '') ?>,
-    position_name: <?= Json::encode($filterPositionName ?? '') ?>,
+    employee_position_id: <?= Json::encode($filterPositionName ?? '') ?>,
     service_band: <?= Json::encode($filterServiceBand ?? '') ?>
   },
   positionTypeCodes: <?= $positionTypeCodesJson ?>,
@@ -408,10 +408,10 @@ $js = <<<'JS'
     var params = {};
     if (d.filter.gender) params.gender = d.filter.gender;
     if (d.filter.department) params.department = d.filter.department;
-    if (d.filter.position_type) params.position_type = d.filter.position_type;
+    if (d.filter.employee_type_id) params.employee_type_id = d.filter.employee_type_id;
     if (d.filter.workgroup) params.workgroup = d.filter.workgroup;
     if (d.filter.gen) params.gen = d.filter.gen;
-    if (d.filter.position_name) params.position_name = d.filter.position_name;
+    if (d.filter.employee_position_id) params.employee_position_id = d.filter.employee_position_id;
     if (d.filter.service_band) params.service_band = d.filter.service_band;
     if (key && value !== undefined && value !== '') params[key] = value;
     else if (key) delete params[key];
@@ -463,7 +463,7 @@ $js = <<<'JS'
       series: [{ name: 'จำนวนคน', data: d.positionNameValues }],
       chart: { type: 'bar', height: pnHeight, events: { dataPointSelection: function(e, chart, opts) {
         var code = d.positionNameCodes[opts.dataPointIndex];
-        if (code != null && code !== '') applyFilter('position_name', code);
+        if (code != null && code !== '') applyFilter('employee_position_id', code);
       } } },
       plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '78%', dataLabels: { position: 'top' } } },
       dataLabels: { enabled: true },
@@ -509,7 +509,7 @@ $js = <<<'JS'
     new ApexCharts(el, {
       chart: { type: 'donut', height: 260, events: { dataPointSelection: function(e, chart, opts) {
         var code = d.positionTypeCodes[opts.dataPointIndex];
-        if (code) applyFilter('position_type', code);
+        if (code) applyFilter('employee_type_id', code);
       } } },
       labels: d.positionTypeLabels,
       series: d.positionTypeCounts,
