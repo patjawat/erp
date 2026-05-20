@@ -39,8 +39,8 @@ class AppAsset extends AssetBundle
     public $js = [
         'js/erp.js',
         'js/waves.js',
-        'js/thai.datepicker.js',
         'libs/datepicker/jquery.datetimepicker.full.min.js',
+        'js/thai.datepicker.js',
         'js/fullcalendar.min.js',
         'sweetalert2/dist/sweetalert2.all.min.js',
         'aos/aos.js',

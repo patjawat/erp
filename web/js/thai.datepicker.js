@@ -1,9 +1,17 @@
 function thaiDatepicker(el) {
-    $.datetimepicker.setLocale('th');
-    $(el).attr('readonly', false);
-    $(el).addClass('date-readonly');
+    var jq = window.jQuery;
 
-    $(el).datetimepicker({
+    if (!jq || !jq.datetimepicker || typeof jq.datetimepicker.setLocale !== 'function' || !jq.fn || typeof jq.fn.datetimepicker !== 'function') {
+        return;
+    }
+
+    var $el = jq(el);
+
+    jq.datetimepicker.setLocale('th');
+    $el.attr('readonly', false);
+    $el.addClass('date-readonly');
+
+    $el.datetimepicker({
         timepicker: false,
         format: 'd/m/Y',
         lang: 'th',

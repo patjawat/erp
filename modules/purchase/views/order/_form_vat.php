@@ -43,6 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
     ],
     'options' => ['placeholder' => 'เลือกภาษี ...'],
     'pluginOptions' => [
+        'dropdownParent' => '#main-modal',
         'maximumInputLength' => 10
     ],
 ])->label(false) ?>

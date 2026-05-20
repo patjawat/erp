@@ -341,12 +341,18 @@ function erpInjectModalContent($target, html) {
     try {
       var $wrapper = $("<div>").html(html || "");
       var nodes = $wrapper.contents().toArray();
-      var scripts = [];
+      var externalScripts = [];
+      var inlineScripts = [];
       var fragment = document.createDocumentFragment();
 
       nodes.forEach(function (node) {
         if (node.nodeType === 1 && node.tagName && node.tagName.toLowerCase() === "script") {
-          scripts.push(node);
+          var src = node.src || node.getAttribute("src");
+          if (src) {
+            externalScripts.push(src);
+          } else {
+            inlineScripts.push(node);
+          }
         } else {
           fragment.appendChild(node);
         }
@@ -354,15 +360,13 @@ function erpInjectModalContent($target, html) {
 
       $target.empty().append(fragment);
 
-      for (var i = 0; i < scripts.length; i++) {
-        var script = scripts[i];
-        var src = script.src || script.getAttribute("src");
+      // Load dependency scripts first so inline modal init code runs after them.
+      for (var i = 0; i < externalScripts.length; i++) {
+        await erpLoadScript(externalScripts[i]);
+      }
 
-        if (src) {
-          await erpLoadScript(src);
-          continue;
-        }
-
+      for (var j = 0; j < inlineScripts.length; j++) {
+        var script = inlineScripts[j];
         var scriptText = script.text || script.textContent || script.innerHTML || "";
         if (scriptText.trim()) {
           $.globalEval(scriptText);

@@ -4,7 +4,7 @@ use yii\bootstrap5\Modal;
       Modal::begin([
          'options' => [
             'id' => 'main-modal',
-            // 'tabindex' => false // important for Select2 to work properly
+            'tabindex' => false, // important for Select2 to work properly
         ],
          'dialogOptions' => [
         'class' => 'modal-dialog modal-dialog-scrollable',
@@ -22,4 +22,3 @@ use yii\bootstrap5\Modal;
         Modal::end();
 
         ?>
-

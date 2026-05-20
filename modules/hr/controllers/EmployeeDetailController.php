@@ -317,6 +317,7 @@ class EmployeeDetailController extends Controller
             if (is_string($emp->data_json)) {
                 $emp->data_json = json_decode($emp->data_json, true) ?: [];
             }
+            $empDataJson = is_array($emp->data_json) ? $emp->data_json : [];
 
             $model = EmployeeDetail::find()
                 ->where(['name' => 'position', 'emp_id' => $data->emp_id])
@@ -340,7 +341,7 @@ class EmployeeDetailController extends Controller
                 $emp->department = $positionData['department'] ?? $emp->department;
 
                 foreach ($this->positionLegacyDataKeys() as $legacyKey) {
-                    unset($emp->data_json[$legacyKey]);
+                    unset($empDataJson[$legacyKey]);
                 }
 
                 $array2 = [
@@ -355,7 +356,7 @@ class EmployeeDetailController extends Controller
                     'status_text' => $positionData['status_text'] ?? '',
                     'department_text' => $departmentName ? $departmentName->name : '',
                 ];
-                $emp->data_json = ArrayHelper::merge($emp->data_json, $array2);
+                $emp->data_json = ArrayHelper::merge($empDataJson, $array2);
             } else {
                 $emp->employee_type_id = null;
                 $emp->employee_position_group_id = null;
@@ -363,7 +364,7 @@ class EmployeeDetailController extends Controller
                 $emp->position_level = null;
                 $emp->expertise = null;
                 foreach ($this->positionLegacyDataKeys() as $legacyKey) {
-                    unset($emp->data_json[$legacyKey]);
+                    unset($empDataJson[$legacyKey]);
                 }
                 $array2 = [
                     'employee_type_id' => null,
@@ -377,7 +378,7 @@ class EmployeeDetailController extends Controller
                     'status_text' => '',
                     'department_text' => '',
                 ];
-                $emp->data_json = ArrayHelper::merge($emp->data_json, $array2);
+                $emp->data_json = ArrayHelper::merge($empDataJson, $array2);
             }
 
             return $emp->save(false);

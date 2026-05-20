@@ -4,7 +4,7 @@ use yii\bootstrap5\Modal;
       Modal::begin([
          'options' => [
             'id' => 'sub-modal',
-            // 'tabindex' => false // important for Select2 to work properly
+            'tabindex' => false, // important for Select2 to work properly
         ],
             'title' => '',
             // 'size' => 'modal-sm',
@@ -14,4 +14,3 @@ use yii\bootstrap5\Modal;
         Modal::end();
 
         ?>
-
