@@ -16,6 +16,10 @@ $listApprove = Approve::find()
     ->orderBy(['level' => SORT_ASC]) // เรียงจากน้อยไปมาก 1 → 2
     ->all();
 ?>
+<?php
+$csrfParamJs = json_encode(Yii::$app->request->csrfParam, JSON_UNESCAPED_SLASHES);
+$csrfTokenJs = json_encode(Yii::$app->request->csrfToken, JSON_UNESCAPED_SLASHES);
+?>
 
 <style>
 .timeline {
@@ -177,8 +181,9 @@ $listApprove = Approve::find()
 
 
 <?php
-
 $js = <<<JS
+var csrfParam = {$csrfParamJs};
+var csrfToken = {$csrfTokenJs};
 
 //การอนุมัติ
 $("body").on("click", ".btn-approve", async function (e) {
@@ -188,6 +193,8 @@ $("body").on("click", ".btn-approve", async function (e) {
     var topic = $(this).data('label');
     var status = $(this).data('status');
     var url = $(this).attr('href');
+    var payload = { id: id, status: status };
+    payload[csrfParam] = csrfToken;
 
     Swal.fire({
         title: 'ยืนยัน?',
@@ -203,7 +210,8 @@ $("body").on("click", ".btn-approve", async function (e) {
             $.ajax({
                 type: "POST",
                 url: url,
-                data: { id: id, status: status },
+                headers: { 'X-CSRF-Token': csrfToken },
+                data: payload,
                 dataType: "json",
                 success: function (response) {
                     console.log('Response:', response);

@@ -133,6 +133,10 @@ $this->registerCss(<<<CSS
 }
 CSS);
 ?>
+<?php
+$csrfParamJs = json_encode(Yii::$app->request->csrfParam, JSON_UNESCAPED_SLASHES);
+$csrfTokenJs = json_encode(Yii::$app->request->csrfToken, JSON_UNESCAPED_SLASHES);
+?>
 <div class="leave-approval-panel">
     <div class="leave-approval-panel__header">
         <div>
@@ -231,12 +235,17 @@ CSS);
 
 <?php
 $js = <<<JS
+var csrfParam = {$csrfParamJs};
+var csrfToken = {$csrfTokenJs};
+
 $("body").on("click", ".btn-approve", function (e) {
     e.preventDefault();
     var id = $(this).data('id');
     var topic = $(this).data('label');
     var status = $(this).data('status');
     var url = $(this).attr('href');
+    var payload = { id: id, status: status };
+    payload[csrfParam] = csrfToken;
     Swal.fire({
         title: 'ยืนยัน?',
         text: topic + " ใช่หรือไม่!",
@@ -251,7 +260,8 @@ $("body").on("click", ".btn-approve", function (e) {
             $.ajax({
                 type: "POST",
                 url: url,
-                data: { id: id, status: status },
+                headers: { 'X-CSRF-Token': csrfToken },
+                data: payload,
                 dataType: "json",
                 success: function (response) {
                     if (response.status === 'success') {
