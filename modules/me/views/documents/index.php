@@ -220,6 +220,26 @@ $(document).ready(function() {
         return $('.js-document-select-row:checked');
     }
 
+    var hideUnreadOnOpen = new URLSearchParams(window.location.search).get('DocumentSearch[q_status]') === 'unread';
+
+    function hideUnreadDocumentItem(\$link) {
+        if (!hideUnreadOnOpen) {
+            return;
+        }
+
+        var \$container = \$link.closest('.js-document-row, .js-document-card');
+        if (!\$container.length) {
+            return;
+        }
+
+        if (String(\$container.data('isUnread')) !== '1') {
+            return;
+        }
+
+        \$container.remove();
+        updateBulkReadBar();
+    }
+
     window.syncDocumentDetailLinks = function () {
         var \$showReading = $('#documentsearch-show_reading');
         var showReadingEnabled = \$showReading.length && \$showReading.is(':checked');
@@ -238,6 +258,10 @@ $(document).ready(function() {
             }
         });
     };
+
+    $('body').off('click.meDocumentsHideUnread', '.js-document-view-link').on('click.meDocumentsHideUnread', '.js-document-view-link', function () {
+        hideUnreadDocumentItem($(this));
+    });
 
     function updateBulkReadBar() {
         var \$rows = $('.js-document-select-row');

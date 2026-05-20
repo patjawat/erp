@@ -99,6 +99,29 @@ function erpBootstrapModalShim() {
 
 erpBootstrapModalShim();
 
+function erpInitBootstrapWidgets(root) {
+  var $root = root && root.jquery ? root : $(root || document);
+
+  function init(selector, pluginName) {
+    if (typeof $.fn[pluginName] !== "function") {
+      return;
+    }
+
+    var $elements = $root.filter(selector).add($root.find(selector));
+    if (!$elements.length) {
+      return;
+    }
+
+    $elements.each(function () {
+      $(this)[pluginName]();
+    });
+  }
+
+  init('[data-bs-toggle="tooltip"]', "tooltip");
+  init('[data-bs-toggle="popover"]', "popover");
+}
+window.erpInitBootstrapWidgets = erpInitBootstrapWidgets;
+
 function erpHideModal(modalTarget) {
   var modalEl =
     typeof modalTarget === "string" ? document.querySelector(modalTarget) : modalTarget;
@@ -250,6 +273,7 @@ jQuery(document).on("pjax:end", function () {
   erpHidePageLoading();
 
   if (typeof lucide !== "undefined" && lucide.createIcons) lucide.createIcons();
+  erpInitBootstrapWidgets(document);
   var offcanvasElList = [].slice.call(document.querySelectorAll(".offcanvas"));
   const Offcanvas = erpGetBootstrapClass("Offcanvas");
   if (offcanvasElList.length > 0) {
@@ -277,6 +301,10 @@ $(document).on("click", "a[href]", function () {
     var sameOrigin = new URL(href, location.origin).origin === location.origin;
     if (sameOrigin) erpShowPageLoading();
   } catch (e) { }
+});
+
+$(function () {
+  erpInitBootstrapWidgets(document);
 });
 
 // ซ่อน loading เมื่อโหลดหน้าเสร็จ (ทั้งเปิดหน้าแรกและหลัง full page)
@@ -340,6 +368,8 @@ function erpInjectModalContent($target, html) {
           $.globalEval(scriptText);
         }
       }
+
+      erpInitBootstrapWidgets($target);
 
       resolve();
     } catch (error) {

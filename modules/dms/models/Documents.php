@@ -154,7 +154,7 @@ class Documents extends \yii\db\ActiveRecord
     public function getCreateBy()
     {
         return $this->hasOne(Employees::class, ['user_id' => 'created_by'])
-            ->select(['id', 'user_id', 'fname', 'lname', 'department']);
+            ->select(['id', 'user_id', 'ref', 'prefix', 'fname', 'lname', 'department']);
     }
 
     // สถานะ
@@ -501,27 +501,30 @@ class Documents extends \yii\db\ActiveRecord
                 $emp = $emps[$item->to_id] ?? null;
                 if (!$emp) continue;
 
-                // ตกแต่งเนื้อหาใน Popover
-                $popoverContent = "<strong>{$emp->fullname}</strong><br><p class='mb-0 small'>{$item->comment}</p>";
+                $comment = nl2br(Html::encode((string) ($item->comment ?? '')));
+                $popoverContent = '<p class="mb-0 small">' . $comment . '</p>';
 
                 $data .= Html::a(
                     Html::img($emp->showAvatar(), [
                         'class' => 'avatar-sm rounded-circle border border-2 border-white shadow-sm',
                         'style' => 'margin-left:-10px; cursor:pointer; object-fit:cover;',
-                        'data' => [
-                            'bs-toggle' => 'popover',
-                            'bs-trigger' => 'hover',
-                            'bs-placement' => 'top',
-                            'bs-html' => 'true',
-                            'bs-content' => $popoverContent,
-                            'bs-container' => 'body', // สำคัญมาก: เพื่อไม่ให้ popover เด้งไปมาใน stack
-                        ]
                     ]),
                     'javascript:void(0);',
                     [
-                        'class' => 'avatar-item-link',
-                        'data-target-tab' => '#comment-tab', // ID ของปุ่ม Tab
-                        'data-target-pane' => '#comment'     // ID ของเนื้อหา Tab
+                        'class' => 'avatar-item-link d-inline-block',
+                        'role' => 'button',
+                        'tabindex' => '0',
+                        'aria-label' => $emp->fullname,
+                        'data' => [
+                            'bs-toggle' => 'popover',
+                            'bs-trigger' => 'hover focus',
+                            'bs-placement' => 'top',
+                            'bs-html' => 'true',
+                            'bs-title'=>$emp->fullname,
+                            'bs-content' => $popoverContent,
+                            'bs-container' => 'body',
+                            'bs-custom-class'=>'custom-popover'
+                        ]
                     ]
                 );
             }
@@ -623,6 +626,8 @@ class Documents extends \yii\db\ActiveRecord
                 $emp = $emps[$item->to_id] ?? null;
                 if (!$emp) continue;
 
+                $comment = nl2br(Html::encode((string) ($item->comment ?? '')));
+
                 $data .= Html::a(
                     Html::img('@web/img/loading.gif', [
                         'class' => 'avatar-sm rounded-circle shadow lazyload',
@@ -642,7 +647,8 @@ class Documents extends \yii\db\ActiveRecord
                             'bs-placement' => 'top',
                             'bs-title' => '<i class="fa-regular fa-comment"></i> ความคิดเห็น',
                             'bs-html' => 'true',
-                            'bs-content' => $emp->fullname . '<br>' . $item->comment
+                            'bs-content' => '<strong>' . Html::encode($emp->fullname) . '</strong><br><p class="mb-0 small">' . $comment . '</p>',
+                            'bs-container' => 'body',
                         ]
                     ]
                 );
@@ -667,9 +673,25 @@ class Documents extends \yii\db\ActiveRecord
             }
 
             $createDate = ThaiDateHelper::formatThaiDate($this->doc_transactions_date) . ' ' . $this->doc_time;
+            $encodedFullname = Html::encode($employee->fullname ?? '');
+            $encodedCreateDate = Html::encode($createDate);
+            $avatarUrl = $employee->ShowAvatar();
+            $avatarHtml = Html::img($avatarUrl, [
+                'class' => 'avatar avatar-sm bg-primary text-white rounded-circle flex-shrink-0',
+                'alt' => $encodedFullname,
+            ]);
 
             return [
-                'avatar' => $employee->getAvatar(false, $createDate),
+                'photo' => $avatarUrl,
+                'avatar' => <<<HTML
+<div class="d-flex align-items-center">
+    {$avatarHtml}
+    <div class="avatar-detail">
+        <p class="mb-0 small fw-bold text-muted">{$encodedFullname}</p>
+        <p class="text-muted mb-0 fs-12">{$encodedCreateDate}</p>
+    </div>
+</div>
+HTML,
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
                 'position_name' => $employee->positionName(),
@@ -678,6 +700,7 @@ class Documents extends \yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return [
                 'avatar' => '',
+                'photo' => '',
                 'department' => '',
                 'fullname' => '',
                 'position_name' => '',

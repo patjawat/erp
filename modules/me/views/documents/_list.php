@@ -91,6 +91,7 @@ foreach ($models as $model) {
             <?php foreach ($models as $key => $item): ?>
                 <?php
                 $detailId = (int) ($item->detail_id ?? 0);
+                $isUnread = empty($item->doc_read);
                 if ($unreadOpenDetailIdByDocument !== [] && isset($unreadOpenDetailIdByDocument[$item->id])) {
                     $selectedDetailId = (int) $unreadOpenDetailIdByDocument[$item->id];
                     $doc = $unreadOpenDocumentsDetailById[$selectedDetailId] ?? ($item->documentTags ?? $item->documentDepartment ?? null);
@@ -98,9 +99,9 @@ foreach ($models as $model) {
                     $doc = $item->documentTags ?? $item->documentDepartment ?? null;
                 }
                 ?>
-                <tr class="js-document-row" data-detail-id="<?= $detailId ?>">
+                <tr class="js-document-row" data-detail-id="<?= $detailId ?>" data-is-unread="<?= $isUnread ? 1 : 0 ?>">
                     <td class="text-center">
-                        <?php if (empty($item->doc_read)): ?>
+                        <?php if ($isUnread): ?>
                             <input
                                 type="checkbox"
                                 class="form-check-input js-document-select-row"
