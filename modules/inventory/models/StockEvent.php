@@ -270,7 +270,7 @@ class StockEvent extends Yii\db\ActiveRecord
     // เชื่อมกับรายการ ทรัพสินและวัสดุ
     public function getProduct()
     {
-        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item']);
+        return $this->hasOne(Product::class, ['code' => 'asset_item'])->andOnCondition(['name' => 'asset_item','group_id' => 'MATER']);
     }
 
 

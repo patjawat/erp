@@ -95,6 +95,9 @@ class ImportController extends Controller
         if (!$filePath || !file_exists($filePath)) {
             return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
         }
+        if (!$stockOrder) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการออเดอร์'];
+        }
 
         $imported = 0;
         $demo = [];
@@ -104,9 +107,27 @@ class ImportController extends Controller
             while (($data = fgetcsv($handle, 1000, ",")) !== false) {
                 $row++;
                 if ($row == 1) continue; // ข้าม header
+
+                $data = array_pad($data, 6, '');
+                $code = trim((string) $data[0]);
+                $title = trim((string) $data[1]);
+                $unit = trim((string) $data[2]);
+                $qty = (float) str_replace(',', '', (string) $data[3]);
+                $totalPrice = (float) str_replace(',', '', (string) $data[4]);
+                $lotNumber = trim((string) $data[5]);
+
+                // ข้ามบรรทัดว่างเปล่า แต่ถ้าข้อมูลหลักหายให้มองว่าเป็นแถวผิดพลาด
+                if ($code === '' && $title === '' && $unit === '' && $qty == 0.0 && $totalPrice == 0.0 && $lotNumber === '') {
+                    continue;
+                }
+                if ($code === '' || $title === '') {
+                    $error++;
+                    continue;
+                }
+
                 $assetType = $stockOrder->asset_type_id;
 
-                $product = $this->findProduct($data[0], $data[1], $assetType, $data[2]);
+                $product = $this->findProduct($code, $title, $assetType, $unit);
                 if ($product['status'] == 'error') {
                     $error++;
                 } else {
@@ -114,23 +135,14 @@ class ImportController extends Controller
                     $checkInOrder = StockEvent::findOne(['name' => 'order_item', 'asset_item' => $assetItem, 'category_id' => $stockOrder->id]);
                     if (!$checkInOrder) {
 
-                        $lotNumber = $data[5] !== '' ? $data[5] : \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
-
-                        $totalPrice = 0;
-                        $unitPrice = 0;
-                        if (!empty($data[3])) {
-                            $unitPrice = (float) str_replace(',', '', $data[3]);
-                        }
-
-                        if (!empty($data[4])) {
-                            $totalPrice = (float) str_replace(',', '', $data[4]);
-                        }
+                        $lotNumber = $lotNumber !== '' ? $lotNumber : \mdm\autonumber\AutoNumber::generate('LOT' . substr(AppHelper::YearBudget(), 2) . '-?????');
+                        $unitPrice = $qty > 0 ? ($totalPrice / $qty) : 0;
 
                         $item = new StockEvent([
                             'name' => 'order_item',
                             'asset_item' => $assetItem,
-                            'qty' => $data[3],
-                            'unit_price' => ($totalPrice / $unitPrice),
+                            'qty' => $qty,
+                            'unit_price' => $unitPrice,
                             'total_price' => $totalPrice,
                             'order_status' => 'pending',
                             'transaction_type' => 'IN',
