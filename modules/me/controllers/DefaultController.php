@@ -57,8 +57,9 @@ class DefaultController extends Controller
             $empId = (int) $model->id;
             $depId = (int) ($model->department ?? 0);
 
-            $employeeNames = "'tags', 'employee_tag', 'employee', 'req_approve'";
-            $departmentNames = "'department'";
+            // ให้ชุดเงื่อนไขตรงกับหน้า /me/documents/show-home
+            $employeeNames = "'comment_emp', 'tags', 'employee_tag', 'employee', 'req_approve'";
+            $departmentNames = "'comment_dept', 'department'";
 
             $query = Documents::find()
                 ->leftJoin(

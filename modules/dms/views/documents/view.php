@@ -364,6 +364,28 @@ $saveCommentTemplate = Url::to(['/me/documents/save-comment-template']);
 $forwardingCardUrl = Url::to(['/dms/documents/forwarding-card', 'id' => $model->id]);
 $js = <<<JS
 (function () {
+    function initBootstrapWidgets(root) {
+        var scope = root || document;
+        var tooltipSelector = '[data-bs-toggle="tooltip"]';
+        var popoverSelector = '[data-bs-toggle="popover"]';
+
+        if (window.bootstrap && bootstrap.Tooltip && scope.querySelectorAll) {
+            scope.querySelectorAll(tooltipSelector).forEach(function (el) {
+                bootstrap.Tooltip.getOrCreateInstance(el);
+            });
+        } else if (typeof $.fn.tooltip === 'function') {
+            $(scope).find(tooltipSelector).tooltip();
+        }
+
+        if (window.bootstrap && bootstrap.Popover && scope.querySelectorAll) {
+            scope.querySelectorAll(popoverSelector).forEach(function (el) {
+                bootstrap.Popover.getOrCreateInstance(el);
+            });
+        } else if (typeof $.fn.popover === 'function') {
+            $(scope).find(popoverSelector).popover();
+        }
+    }
+
     if (window.pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = $pdfWorkerUrlJs;
     }
@@ -374,8 +396,7 @@ $js = <<<JS
     var mobilePdfRenderSeq = 0;
     var mobilePdfLoadTask = null;
 
-    $('[data-bs-toggle="popover"]').popover();
-    $('[data-bs-toggle="tooltip"]').tooltip();
+    initBootstrapWidgets(document);
     updateCharCount();
 
     function isMobilePdfMode() {
@@ -616,14 +637,8 @@ function reloadTimeline() {
     }).then(function (res) {
         if (res && res.card && \$detailWrap.length) { \$detailWrap.html(res.card); }
         if (res && res.summary && \$summaryWrap.length) { \$summaryWrap.html(res.summary); }
-        if (typeof \$.fn.tooltip === 'function') {
-            \$detailWrap.find('[data-bs-toggle="tooltip"]').tooltip();
-            \$summaryWrap.find('[data-bs-toggle="tooltip"]').tooltip();
-        }
-        if (typeof \$.fn.popover === 'function') {
-            \$detailWrap.find('[data-bs-toggle="popover"]').popover();
-            \$summaryWrap.find('[data-bs-toggle="popover"]').popover();
-        }
+        initBootstrapWidgets(\$detailWrap[0]);
+        initBootstrapWidgets(\$summaryWrap[0]);
     }, function () {
         window.location.reload();
     });

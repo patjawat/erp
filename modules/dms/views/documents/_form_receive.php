@@ -22,17 +22,17 @@ $this->params['breadcrumbs'][] = $this->title;
 /** @var yii\widgets\ActiveForm $form */
 ?>
 <style>
-    .form-label {
-        font-weight: 600 !important;
-    }
+.form-label {
+    font-weight: 600 !important;
+}
 
-    .file-upload-btn {
-        height: 100% !important;
-    }
+.file-upload-btn {
+    height: 100% !important;
+}
 
-    .file-upload {
-        height: 800px !important;
-    }
+.file-upload {
+    height: 800px !important;
+}
 </style>
 
 
@@ -160,7 +160,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                             <div class="col-6">
                                 <div class="d-flex gap-2">
-                                    <?php echo $form->field($model, 'doc_transactions_date')->textInput(['placeholder' => 'เลือกลงรับวันที่'])->label('ลงรับวันที่') ?>
+
+                                      <?= $form->field($model, 'doc_transactions_date')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                    'options' => ['placeholder' => 'เลือกลงรับวันที่'],
+                                ])->label('ลงรับวันที่'); ?>
                                     <?= $form->field($model, 'doc_time')->widget(\yii\widgets\MaskedInput::className(), [
                                         'mask' => '99:99',
                                     ]) ?>
@@ -170,15 +173,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                             <div class="col-6">
-                                <?php echo $form->field($model, 'doc_expire')->textInput(['placeholder' => 'เลือกวันหมดอายุ'])->label('วันหมดอายุ') ?>
+                                 <?= $form->field($model, 'doc_expire')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                    'options' => ['placeholder' => 'เลือกวันหมดอายุ'],
+                                ])->label('วันหมดอายุ'); ?>
                             </div>
 
                             <div class="col-6">
                                 <?= $form->field($model, 'doc_number')->textInput(['maxlength' => true]) ?>
                             </div>
                             <div class="col-6">
-                                <?= $form->field($model, 'doc_date')->textInput(['placeholder' => 'เลือกวันที่หนังสือ'])->label('วันที่หนังสือ')
-                                ?>
+                                <?= $form->field($model, 'doc_date')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                                    'options' => ['placeholder' => 'เลือกวันที่หนังสือ'],
+                                ])->label('วันที่หนังสือ'); ?>
+
                             </div>
                             <div class="col-12">
 
@@ -378,11 +385,6 @@ $js = <<< JS
         }
     });
 
-
-        
-        thaiDatepicker('#documents-doc_transactions_date,#documents-doc_expire,#documents-doc_date');
-           
-        
         // Initialize FloatType instances
         $(document).ready(function() {
             // Demo 4: AJAX simulation

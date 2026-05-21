@@ -104,14 +104,23 @@ class DocumentsController extends \yii\web\Controller
      * ฐาน query ของหน้า index สำหรับใช้ทั้งรายการและ KPI
      * หมายเหตุ: ไม่ใส่เงื่อนไขค้นหาเข้ามาในตัว helper นี้
      */
-    private function applyDocumentsIndexBaseQuery(\yii\db\ActiveQuery $query, int $empId, int $depId): \yii\db\ActiveQuery
+    private function applyDocumentsIndexBaseQuery(
+        \yii\db\ActiveQuery $query,
+        int $empId,
+        int $depId,
+        ?array $employeeDetailNames = null,
+        ?array $departmentDetailNames = null
+    ): \yii\db\ActiveQuery
     {
-        $indexEmployeeDetailNames = $this->quotedDetailNames(self::INDEX_EMPLOYEE_DETAIL_NAMES);
-        $indexDepartmentDetailNames = $this->quotedDetailNames(self::INDEX_DEPARTMENT_DETAIL_NAMES);
+        $employeeDetailNames = $employeeDetailNames ?? self::INDEX_EMPLOYEE_DETAIL_NAMES;
+        $departmentDetailNames = $departmentDetailNames ?? self::INDEX_DEPARTMENT_DETAIL_NAMES;
+
+        $employeeDetailNames = $this->quotedDetailNames($employeeDetailNames);
+        $departmentDetailNames = $this->quotedDetailNames($departmentDetailNames);
 
         $query->leftJoin(
             ['te' => 'documents_detail'],
-            "te.document_id = documents.id AND te.name IN ({$indexEmployeeDetailNames}) AND te.to_id = :empId",
+            "te.document_id = documents.id AND te.name IN ({$employeeDetailNames}) AND te.to_id = :empId",
             [
                 ':empId' => (string) $empId,
             ]
@@ -119,7 +128,7 @@ class DocumentsController extends \yii\web\Controller
 
         $query->leftJoin(
             ['td' => 'documents_detail'],
-            "td.document_id = documents.id AND td.name IN ({$indexDepartmentDetailNames}) AND td.to_id = :depId",
+            "td.document_id = documents.id AND td.name IN ({$departmentDetailNames}) AND td.to_id = :depId",
             [
                 ':depId' => (string) $depId,
             ]
@@ -306,13 +315,37 @@ class DocumentsController extends \yii\web\Controller
             'date_filter' => 'today',
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        $hasSearchCriteria =
+            trim((string) ($searchModel->q ?? '')) !== ''
+            || !empty($searchModel->q_status)
+            || !empty($searchModel->show_reading)
+            || !empty($searchModel->doc_speed);
+
+        // ค้นหาด้วยคำ/สถานะไม่ควรถูกล็อกด้วยค่าเริ่มต้น today
+        if ($hasSearchCriteria) {
+            $searchModel->date_filter = null;
+        }
+
         $q = trim($searchModel->q ?? '');
 
         [$dateStart, $dateEnd] = $this->hydrateDocumentSearchDates($searchModel);
 
         $query = $dataProvider->query;
-        $this->applyDocumentsIndexBaseQuery($query, (int) $empId, (int) $depId);
-        $summaryBaseQuery = $this->applyDocumentsIndexBaseQuery(Documents::find(), (int) $empId, (int) $depId);
+        $this->applyDocumentsIndexBaseQuery(
+            $query,
+            (int) $empId,
+            (int) $depId,
+            self::HOME_DETAIL_NAMES,
+            self::HOME_DETAIL_NAMES
+        );
+        $summaryBaseQuery = $this->applyDocumentsIndexBaseQuery(
+            Documents::find(),
+            (int) $empId,
+            (int) $depId,
+            self::HOME_DETAIL_NAMES,
+            self::HOME_DETAIL_NAMES
+        );
 
         $query
             ->andFilterWhere(['>=', 'documents.doc_transactions_date', $dateStart])
@@ -386,13 +419,29 @@ class DocumentsController extends \yii\web\Controller
         $searchModel = new DocumentSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $query = $dataProvider->query;
-        $this->applyDocumentsIndexBaseQuery($query, (int) $empId, (int) $depId);
+        $this->applyDocumentsIndexBaseQuery(
+            $query,
+            (int) $empId,
+            (int) $depId,
+            ['comment_emp', 'tags', 'employee_tag', 'employee', 'req_approve'],
+            ['comment_dept', 'department']
+        );
         $query->andWhere(['tr.id' => null]);
 
         $query->orderBy([
             'doc_transactions_date' => SORT_DESC,
             'doc_regis_number' => SORT_DESC,
         ]);
+
+        $debugSql = null;
+        if (defined('YII_DEBUG') && YII_DEBUG && $this->request->get('debug_sql')) {
+            $debugQuery = clone $query;
+            if ($dataProvider->pagination !== false) {
+                $debugQuery->limit($dataProvider->pagination->getLimit());
+                $debugQuery->offset($dataProvider->pagination->getOffset());
+            }
+            $debugSql = $debugQuery->createCommand()->getRawSql();
+        }
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -402,12 +451,14 @@ class DocumentsController extends \yii\web\Controller
                 'content' => $this->renderAjax('show_home', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'debugSql' => $debugSql,
                 ])
             ];
         } else {
             return $this->render('show_home', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'debugSql' => $debugSql,
             ]);
         }
     }

@@ -12,6 +12,7 @@ use yii\web\View;
 use yii\widgets\Pjax;
 
 $me = UserHelper::GetEmployee();
+$debugSql = $debugSql ?? null;
 
 $elapsedLabel = function ($date) {
     if (empty($date)) {
@@ -53,6 +54,15 @@ $elapsedLabel = function ($date) {
     }
 };
 ?>
+
+<?php if (!empty($debugSql)): ?>
+    <div class="alert alert-warning border-warning-subtle small mb-3">
+        <div class="fw-semibold mb-2">
+            <i class="fa-solid fa-bug me-1"></i>SQL Debug
+        </div>
+        <pre class="mb-0 small text-dark" style="white-space: pre-wrap; word-break: break-word;"><?= Html::encode($debugSql) ?></pre>
+    </div>
+<?php endif; ?>
 
 <?php Pjax::begin(['id' => 'document-container', 'enablePushState' => false, 'timeout' => 5000]); ?>
 
