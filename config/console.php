@@ -15,6 +15,11 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
         '@tests' => '@app/tests',
     ],
+    'controllerMap' => [
+        'purchase-v2' => [
+            'class' => 'app\commands\PurchaseV2Controller',
+        ],
+    ],
     'components' => [
         'image' => [  
             'class' => 'yii\image\ImageDriver',

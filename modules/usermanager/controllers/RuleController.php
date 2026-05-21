@@ -1,6 +1,6 @@
 <?php
 
-namespace sant\admin\controllers;
+namespace app\modules\usermanager\controllers;
 
 use Yii;
 use sant\admin\models\BizRule;
