@@ -74,7 +74,8 @@ class DefaultController extends Controller
             $q->orderBy(['level' => SORT_ASC])->with('employee');
         }]);
         $dataProvider->setSort(['defaultOrder' => ['created_at' => SORT_DESC]]);
-        $dataProvider->pagination = ['pageSize' => 10, 'pageParam' => 'leave-page'];
+        // $dataProvider->pagination = ['pageSize' => 10, 'pageParam' => 'leave-page'];
+        $dataProvider->pagination = false;
 
         $listThaiYear = (new Leave())->ListThaiYear();
 

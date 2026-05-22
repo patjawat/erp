@@ -330,9 +330,11 @@ $stats      = $stats ?? [];
                         </tbody>
                     </table>
                 </div>
+                <?php if ($dataProvider->pagination !== false && $dataProvider->pagination->getPageCount() > 1): ?>
                 <div class="card-footer bg-transparent border-0 py-2">
                     <?= \yii\bootstrap5\LinkPager::widget(['pagination' => $dataProvider->pagination]) ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

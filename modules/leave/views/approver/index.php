@@ -1,6 +1,5 @@
 <?php
 
-use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
@@ -8,9 +7,6 @@ use yii\helpers\Html;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 /** @var array $listLeaveType */
 /** @var array $listLeaveStatus */
-/** @var array $summaryByStatus */
-/** @var array $summaryByLeaveType */
-/** @var array $leaveTypeColors */
 
 $this->title = 'ผู้ตรวจสอบวันลา';
 $this->params['breadcrumbs'][] = $this->title;
@@ -59,14 +55,6 @@ $totalCount = (int) $dataProvider->getTotalCount();
         </div>
     </div>
 
-    <?= $this->render('_summary', [
-        'summaryByStatus' => $summaryByStatus ?? [],
-        'summaryByLeaveType' => $summaryByLeaveType ?? [],
-        'listLeaveStatus' => $listLeaveStatus ?? [],
-        'listLeaveType' => $listLeaveType ?? [],
-        'leaveTypeColors' => $leaveTypeColors ?? [],
-    ]) ?>
-
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-header bg-white border-bottom p-3">
             <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
@@ -98,13 +86,39 @@ $totalCount = (int) $dataProvider->getTotalCount();
                 'dataProvider' => $dataProvider,
             ]) ?>
         </div>
-       <div class="card-footer bg-body border-top py-3 px-4">
-        <?php
-        echo DataSummaryWidget::widget([
-            'dataProvider' => $dataProvider,
-            'pagerOptions' => [],
-        ]);
-        ?>
-    </div>
+        <div class="card-footer bg-body border-top py-3 px-4">
+            <?php
+            $pagination = $dataProvider->pagination;
+            $count = (int) $dataProvider->getCount();
+
+            if ($totalCount > 0) {
+                if ($pagination !== false) {
+                    $start = $pagination->getOffset() + 1;
+                    $end = $start + $count - 1;
+                } else {
+                    $start = 1;
+                    $end = $totalCount;
+                }
+                $summary = strtr('แสดง <strong>{start}</strong> ถึง <strong>{end}</strong> จาก <strong>{totalCount}</strong> รายการ', [
+                    '{start}' => $start,
+                    '{end}' => $end,
+                    '{totalCount}' => number_format($totalCount, 0),
+                ]);
+            ?>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 w-100">
+                <span class="text-muted small"><?= $summary ?></span>
+                <?php if ($pagination !== false && $pagination->getPageCount() > 1): ?>
+                    <?= \yii\bootstrap5\LinkPager::widget([
+                        'pagination' => $pagination,
+                        'firstPageLabel' => 'หน้าแรก',
+                        'lastPageLabel' => 'หน้าสุดท้าย',
+                        'options' => ['class' => 'pagination pagination-sm mb-0'],
+                    ]) ?>
+                <?php endif; ?>
+            </div>
+            <?php } else { ?>
+                <span class="text-muted small">ไม่พบรายการข้อมูล</span>
+            <?php } ?>
+        </div>
     </div>
 </div>

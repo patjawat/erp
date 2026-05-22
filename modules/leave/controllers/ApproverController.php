@@ -20,7 +20,6 @@ use app\modules\hr\models\Organization;
 use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\components\LeaveTelegramService;
 use app\modules\approveV2\models\Approve;
-use app\modules\approveV2\models\ApproveLevelSetting;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -46,10 +45,7 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/default/index']);
         }
 
-        $status = $this->request->get('status');
-        $searchModel = new LeaveSearch([
-            'status' => 'Checking2_pass'
-        ]);
+        $searchModel = new LeaveSearch();
         
         $params = $this->request->queryParams;
 
@@ -61,9 +57,10 @@ class ApproverController extends Controller
             'leaveStatus',
         ]);
 
-        if ($dataProvider->pagination !== false) {
-            $dataProvider->pagination->pageSize = 20;
-        }
+        $dataProvider->pagination = [
+            'pageSize' => 20,
+            'pageParam' => 'approver-page',
+        ];
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -74,9 +71,6 @@ class ApproverController extends Controller
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
         }
 
-        if ($status) {
-            $query->andFilterWhere(['leave.status' => $searchModel->status]);
-        }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
             $query->andFilterWhere(['employees.position_type' => $position_type_id]);
@@ -96,10 +90,6 @@ class ApproverController extends Controller
             ]);
         }
 
-        // สรุปตามตัวกรอง: ตามสถานะ และตามประเภทการลา (ใช้ query ชุดเดียวกัน)
-        $summaryByStatus = (clone $query)->select(['leave.status', 'COUNT(*) as cnt'])->groupBy('leave.status')->asArray()->all();
-        $summaryByLeaveType = (clone $query)->select(['leave.leave_type_id', 'COUNT(*) as cnt'])->groupBy('leave.leave_type_id')->asArray()->all();
-
         $query->with([
             'approves' => function ($q) {
                 $q->andWhere(['!=', 'approve.status', 'None'])->orderBy(['level' => SORT_ASC]);
@@ -114,26 +104,13 @@ class ApproverController extends Controller
             ->orderBy(['title' => SORT_ASC])
             ->all();
         $listLeaveType = ArrayHelper::map($leaveTypes, 'code', 'title');
-        $allowedColors = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
-        $leaveTypeColors = [];
-        foreach ($leaveTypes as $lt) {
-            $data = is_array($lt->data_json) ? $lt->data_json : (is_string($lt->data_json) ? json_decode($lt->data_json, true) : []);
-            $c = isset($data['color']) ? $data['color'] : 'info';
-            $leaveTypeColors[$lt->code] = in_array($c, $allowedColors, true) ? $c : 'info';
-        }
         $listLeaveStatus = (new Leave())->listStatus();
-
-        $levelSettings = ApproveLevelSetting::getLevelsBySystem('leave');
 
         return $this->render('index', [
             'searchModel'        => $searchModel,
             'dataProvider'       => $dataProvider,
             'listLeaveType'      => $listLeaveType,
             'listLeaveStatus'    => $listLeaveStatus,
-            'summaryByStatus'    => $summaryByStatus,
-            'summaryByLeaveType' => $summaryByLeaveType,
-            'leaveTypeColors'    => $leaveTypeColors,
-            'levelSettings'      => $levelSettings,
         ]);
     }
 

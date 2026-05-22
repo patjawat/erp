@@ -9,8 +9,8 @@ use app\modules\leave\models\Leave;
 /** @var app\modules\leave\models\LeaveSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$offset        = (int) ($dataProvider->pagination->offset ?? 0);
 $models        = $dataProvider->getModels();
+$offset        = (int) ($dataProvider->pagination->offset ?? 0);
 
 $bulkActionUrl = Url::to(['/leave/approver/bulk-action']);
 $bulkChangeApproverUrl = Url::to(['/leave/approver/bulk-change-approver', 'title' => '<i class="bi bi-person-gear me-1"></i> เปลี่ยนผู้อนุมัติ (หลายรายการ)']);
