@@ -328,6 +328,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
                                     <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
+                                    <?php $partsLegacyUrl = Url::to(['/helpdesk/repair-parts/create-legacy', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่จากคลัง (เดิม) #' . $model->repair_number]); ?>
+                                    <?= Html::a('<i class="fa-solid fa-boxes-stacked me-1"></i> เบิกอะไหล่จากคลัง', $partsLegacyUrl, ['class' => 'btn btn-sm btn-outline-primary btn-open-part-legacy']) ?>
                                     <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
                                     <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                 </div>
@@ -536,6 +538,16 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
     </div>
     <div class="offcanvas-body">
         <div id="expense-pos-offcanvas-content" class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="part-legacy-offcanvas" aria-labelledby="part-legacy-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="part-legacy-offcanvas-label">เบิกอะไหล่จากคลัง</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="part-legacy-offcanvas-content" class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>
     </div>
 </div>
 
@@ -821,6 +833,45 @@ function setPartOffcanvasWidth() {
 
 setPartOffcanvasWidth();
 window.addEventListener('resize', setPartOffcanvasWidth);
+
+function setPartLegacyOffcanvasWidth() {
+  var el = document.getElementById('part-legacy-offcanvas');
+  if (!el) return;
+  el.classList.remove('w-50', 'w-75', 'w-100');
+  var w = window.innerWidth || document.documentElement.clientWidth || 0;
+  if (w >= 1200) {
+    el.classList.add('w-50');
+  } else if (w >= 768) {
+    el.classList.add('w-75');
+  } else {
+    el.classList.add('w-100');
+  }
+}
+setPartLegacyOffcanvasWidth();
+window.addEventListener('resize', setPartLegacyOffcanvasWidth);
+
+$('body').off('click.partLegacyOpen').on('click.partLegacyOpen', 'a.btn-open-part-legacy', function (e) {
+  e.preventDefault();
+  var url = $(this).attr('href');
+  var offcanvasEl = document.getElementById('part-legacy-offcanvas');
+  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+  $('#part-legacy-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
+  offcanvas.show();
+
+  $.ajax({
+    type: 'get',
+    url: url,
+    dataType: 'json',
+    success: function (response) {
+      $('#part-legacy-offcanvas-label').html(response.title || 'เบิกอะไหล่จากคลัง');
+      $('#part-legacy-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
+    },
+    error: function () {
+      $('#part-legacy-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
+      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูเบิกอะไหล่ได้', icon: 'error' });
+    }
+  });
+});
 JS;
 $this->registerJs($js);
 ?>

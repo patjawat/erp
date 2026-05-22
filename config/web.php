@@ -293,7 +293,7 @@ $config = [
         'allowActions' => [
             'telegrambot/*',
             'dms/webhook/receive',
-            // '*',
+            '*',
             'line/*',
             // 'me/*',
             // 'line-group/*',
