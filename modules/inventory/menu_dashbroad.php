@@ -43,6 +43,20 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <li>
                 <?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออกรายงานวัสดุคงคลังรายตัว ', ['/inventory/export-stock'], ['class' => 'dropdown-item']) ?>
             </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-calendar-days me-2"></i> สรุปคงคลังรายเดือน <span class="text-dark fw-bold">(ปิดเดือน)</span>', ['/inventory/stock-monthly-report'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-chart-pie me-2"></i> สรุปปิดยอดเดือน <span class="text-dark fw-bold">(แยกประเภท)</span>', ['/inventory/stock-monthly-report/summary'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-id-card me-2"></i> สต๊อกการ์ด <span class="text-muted small">(เลือกสินค้า)</span>', ['/inventory/stock/stock-card'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-arrow-right-arrow-left me-2"></i> Sync ข้อมูลไป V2 <span class="badge bg-info text-dark ms-1">V2</span>', ['/inventoryV2/sync-from-v1'], ['class' => 'dropdown-item']) ?>
+            </li>
 
         </ul>
     </div>

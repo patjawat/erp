@@ -171,68 +171,206 @@ class StockController extends Controller
 
     public function actionViewStockCard($id)
     {
-
-        $warehouse = Yii::$app->session->get('warehouse');
-        if (!$warehouse) {
-            return $this->redirect(['/inventory']);
-        }
         $model = $this->findModel($id);
-        $searchModel = new StockEventSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->select([
-            't.*',
-            'o.category_id AS category_code',
-            'w.warehouse_name',
-            'o.code',
-            'o.data_json',
-            // new \yii\db\Expression('@running_total := IF(t.transaction_type = "IN", @running_total + t.qty, @running_total - t.qty) AS total'),
-            new \yii\db\Expression('ROUND(@running_total := IF(t.transaction_type = "IN", @running_total + t.qty, @running_total - t.qty), 2) AS total'),
-            new \yii\db\Expression('(t.unit_price * t.qty) AS total_price')
-        ]);
 
-        $dataProvider->query->from(['t' => 'stock_events'])
-            ->leftJoin('warehouses w', 'w.id = t.from_warehouse_id')
-            ->leftJoin('stock_events o', 'o.id = t.category_id AND o.name = "order"')
-            ->join('JOIN', ['r' => new \yii\db\Expression('(SELECT @running_total := 0)')])
-            ->where([
-                't.asset_item' => $model->asset_item,
-                't.name' => 'order_item',
-                't.warehouse_id' => $warehouse->id,
-                't.order_status' => 'success',
-                'o.order_status' => 'success'
-            ])
-            ->orderBy(['t.movement_date' => SORT_ASC, 't.id' => SORT_ASC]);
+        // ----- รับ filter จาก GET -----
+        $dateFrom = Yii::$app->request->get('date_from');
+        $dateTo   = Yii::$app->request->get('date_to');
+        // warehouse_id: query → Stock.warehouse_id → session (ไม่บังคับ session)
+        $whId = Yii::$app->request->get('warehouse_id');
+        if ($whId === '' || $whId === null) {
+            $whId = (int) $model->warehouse_id;
+            if (!$whId) {
+                $sessWh = Yii::$app->session->get('warehouse');
+                $whId = $sessWh ? (int) $sessWh->id : 0;
+            }
+        } else {
+            $whId = (int) $whId;
+        }
 
-    
-          if ($this->request->isAjax) {
-    // เตรียม Content ที่จะใช้ทั้งสองกรณี
-    $content = $this->renderAjax('view_stock_card-v2', [
-        'model' => $model,
-        'searchModel' => $searchModel,
-        'dataProvider' => $dataProvider,
-    ]);
+        // default: เดือนปัจจุบัน
+        if (empty($dateFrom)) {
+            $dateFrom = date('Y-m-01');
+        }
+        if (empty($dateTo)) {
+            $dateTo = date('Y-m-t');
+        }
 
-    // กรณีที่ 1: ถ้าเรียกผ่าน Pjax (เช่น ตอนบันทึกฟอร์มเสร็จแล้วสั่ง reload)
-    if ($this->request->isPjax) {
-        return $content; // ส่ง HTML ออกไปตรงๆ
+        $card = Stock::getStockCardData($model->asset_item, $whId, $dateFrom, $dateTo);
+
+        $renderParams = [
+            'model'    => $model,
+            'card'     => $card,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
+            'whId'     => $whId,
+        ];
+
+        if ($this->request->isAjax) {
+            $content = $this->renderAjax('view_stock_card-v2', $renderParams);
+            if ($this->request->isPjax) {
+                return $content;
+            }
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title'   => $this->request->get('title'),
+                'count'   => count($card['movements']),
+                'content' => $content,
+            ];
+        }
+
+        return $this->render('view_stock_card-v2', $renderParams);
     }
 
-    // กรณีที่ 2: ถ้าเรียกผ่าน AJAX ปกติ (ตอนคลิกเมนูทางซ้าย)
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    return [
-        'title' => $this->request->get('title'),
-        'count' => $dataProvider->getTotalCount(),
-        'content' => $content
-    ];
-} else {
-    // กรณีเข้าผ่าน URL ตรงๆ
-    return $this->render('view_stock_card-v2', [
-        'model' => $model,
-        'searchModel' => $searchModel,
-        'dataProvider' => $dataProvider,
-    ]);
-}
+    /**
+     * พิมพ์สต๊อกการ์ด A4 + ลายเซ็น
+     */
+    public function actionStockCardPrint($id)
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        $model    = $this->findModel($id);
+        $dateFrom = Yii::$app->request->get('date_from') ?: date('Y-m-01');
+        $dateTo   = Yii::$app->request->get('date_to') ?: date('Y-m-t');
+        $whId     = (int) (Yii::$app->request->get('warehouse_id') ?: ($warehouse->id ?? 0));
 
+        $card = Stock::getStockCardData($model->asset_item, $whId, $dateFrom, $dateTo);
+
+        $whName = '';
+        if ($whId) {
+            $wh = \app\modules\inventory\models\Warehouse::findOne($whId);
+            $whName = $wh ? $wh->warehouse_name : '';
+        }
+
+        $this->layout = false;
+        return $this->render('print_stock_card', [
+            'model'    => $model,
+            'card'     => $card,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
+            'whName'   => $whName,
+        ]);
+    }
+
+    /**
+     * Export สต๊อกการ์ดเป็น Excel
+     */
+    public function actionStockCardExcel($id)
+    {
+        $warehouse = Yii::$app->session->get('warehouse');
+        $model    = $this->findModel($id);
+        $dateFrom = Yii::$app->request->get('date_from') ?: date('Y-m-01');
+        $dateTo   = Yii::$app->request->get('date_to') ?: date('Y-m-t');
+        $whId     = (int) (Yii::$app->request->get('warehouse_id') ?: ($warehouse->id ?? 0));
+
+        $card = Stock::getStockCardData($model->asset_item, $whId, $dateFrom, $dateTo);
+        $whName = '';
+        if ($whId) {
+            $wh = \app\modules\inventory\models\Warehouse::findOne($whId);
+            $whName = $wh ? $wh->warehouse_name : '';
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Stock Card');
+        $spreadsheet->getDefaultStyle()->getFont()->setName('TH Sarabun New')->setSize(14);
+
+        $sheet->mergeCells('A1:I1');
+        $sheet->setCellValue('A1', 'สต๊อกการ์ด — ' . $card['item_info']['code'] . ' ' . $card['item_info']['title']);
+        $sheet->getStyle('A1')->getFont()->setSize(18)->setBold(true);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:I2');
+        $sheet->setCellValue('A2', 'คลัง: ' . ($whName ?: '-') . '  |  ช่วงวันที่: '
+            . \app\components\AppHelper::convertToThai($dateFrom) . ' — '
+            . \app\components\AppHelper::convertToThai($dateTo));
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // หัวตาราง row 4
+        $headers = ['วันที่', 'เลขที่เอกสาร', 'รายการ', 'หมายเลขล็อต', 'รับเข้า (qty)',
+                    'จ่าย รพ. (qty)', 'จ่าย รพ.สต. (qty)', 'ราคาต่อหน่วย', 'คงเหลือ (qty)'];
+        foreach ($headers as $i => $h) {
+            $col = chr(ord('A') + $i);
+            $sheet->setCellValue($col . '4', $h);
+        }
+        $sheet->getStyle('A4:I4')->getFont()->setBold(true);
+        $sheet->getStyle('A4:I4')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:I4')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFCCE5FF');
+        $sheet->getStyle('A4:I4')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        $row = 5;
+        $balanceQty = $card['opening']['qty'];
+
+        // Opening row
+        $sheet->setCellValue('A' . $row, \app\components\AppHelper::convertToThai($dateFrom));
+        $sheet->mergeCells('B' . $row . ':D' . $row);
+        $sheet->setCellValue('B' . $row, 'ยอดยกมา (' . ($card['opening']['source'] === 'monthly_close' ? 'จากปิดเดือนก่อน' : 'จากประวัติ stock_events') . ')');
+        $sheet->setCellValue('I' . $row, $balanceQty);
+        $sheet->getStyle('A' . $row . ':I' . $row)->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFFFF3CD');
+        $sheet->getStyle('A' . $row . ':I' . $row)->getFont()->setBold(true);
+        $row++;
+
+        // Movements
+        foreach ($card['movements'] as $m) {
+            $sheet->setCellValue('A' . $row, \app\components\AppHelper::convertToThai(date('Y-m-d', strtotime($m['movement_date']))));
+            $sheet->setCellValue('B' . $row, $m['code']);
+            $sheet->setCellValue('C' . $row, ($m['kind'] === 'IN' ? 'รับเข้า' : ($m['kind'] === 'OUT_HOSP' ? 'จ่ายให้ รพ.' : ($m['kind'] === 'OUT_BRANCH' ? 'จ่ายให้ รพ.สต.' : 'จ่ายอื่น ๆ'))) . ' ' . ($m['note'] ?? ''));
+            $sheet->setCellValue('D' . $row, $m['lot_number']);
+            $sheet->setCellValue('E' . $row, $m['kind'] === 'IN' ? $m['qty'] : null);
+            $sheet->setCellValue('F' . $row, $m['kind'] === 'OUT_HOSP' ? $m['qty'] : null);
+            $sheet->setCellValue('G' . $row, $m['kind'] === 'OUT_BRANCH' ? $m['qty'] : null);
+            $sheet->setCellValue('H' . $row, $m['unit_price']);
+
+            if ($m['kind'] === 'IN') $balanceQty += $m['qty'];
+            elseif (in_array($m['kind'], ['OUT', 'OUT_HOSP', 'OUT_BRANCH'])) $balanceQty -= $m['qty'];
+            $sheet->setCellValue('I' . $row, $balanceQty);
+            $row++;
+        }
+
+        // Adjustment rows
+        foreach ($card['adjustments'] as $a) {
+            $sheet->setCellValue('A' . $row, \app\components\AppHelper::convertToThai($a['shown_date']));
+            $sheet->mergeCells('B' . $row . ':D' . $row);
+            $sheet->setCellValue('B' . $row, 'ปรับยอด: ' . $a['note']);
+            $sheet->setCellValue($a['delta_qty'] >= 0 ? 'E' . $row : 'F' . $row, abs($a['delta_qty']));
+            $balanceQty += $a['delta_qty'];
+            $sheet->setCellValue('I' . $row, $balanceQty);
+            $sheet->getStyle('A' . $row . ':I' . $row)->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFFE0E0');
+            $row++;
+        }
+
+        // Closing row
+        $sheet->setCellValue('A' . $row, \app\components\AppHelper::convertToThai($dateTo));
+        $sheet->mergeCells('B' . $row . ':D' . $row);
+        $sheet->setCellValue('B' . $row, 'ยอดยกไป (คงเหลือสิ้นช่วง)');
+        $sheet->setCellValue('I' . $row, $card['closing']['qty']);
+        $sheet->getStyle('A' . $row . ':I' . $row)->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFFFF3CD');
+        $sheet->getStyle('A' . $row . ':I' . $row)->getFont()->setBold(true);
+
+        $bodyRange = 'A5:I' . $row;
+        $sheet->getStyle($bodyRange)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('E5:I' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+
+        foreach (range('A', 'I') as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $filename = 'stock_card_' . $card['item_info']['code'] . '_' . $dateFrom . '_' . $dateTo . '.xlsx';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        Yii::$app->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        Yii::$app->response->headers->set('Cache-Control', 'max-age=0');
+        ob_start();
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        return ob_get_clean();
     }
 
     public function actionUpdateStockCard($id)
@@ -312,15 +450,24 @@ class StockController extends Controller
 
     public function actionStockCard()
     {
-         $warehouse = Yii::$app->session->get('warehouse');
-        if (!$warehouse) {
-            return $this->redirect(['/inventory']);
+        // รับ warehouse_id จาก query (อิสระ ไม่ผูก session); fallback เป็น session warehouse ถ้ามี
+        $warehouseId = Yii::$app->request->get('warehouse_id');
+        if ($warehouseId === '' || $warehouseId === null) {
+            $sessWh = Yii::$app->session->get('warehouse');
+            $warehouseId = $sessWh ? (int) $sessWh->id : null;
+        } else {
+            $warehouseId = (int) $warehouseId;
         }
-        $searchModel = new StockSearch([
-            'warehouse_id' => $warehouse->id
-        ]);
+
+        $searchModel = new StockSearch();
+        if ($warehouseId) {
+            $searchModel->warehouse_id = $warehouseId;
+        }
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->leftJoin('categorise p', 'p.code=stock.asset_item');
+        if ($warehouseId) {
+            $dataProvider->query->andWhere(['stock.warehouse_id' => $warehouseId]);
+        }
         $dataProvider->query->andFilterWhere(['p.category_id' => $searchModel->asset_type]);
         $dataProvider->query->andFilterWhere([
             'or',
@@ -329,22 +476,28 @@ class StockController extends Controller
         ]);
         $dataProvider->query->groupBy('asset_item');
 
+        $warehouseOptions = \yii\helpers\ArrayHelper::map(
+            \app\modules\inventory\models\Warehouse::find()
+                ->orderBy(['warehouse_name' => SORT_ASC])->all(),
+            'id', 'warehouse_name'
+        );
+
+        $renderParams = [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'warehouseOptions' => $warehouseOptions,
+            'currentWarehouseId' => $warehouseId,
+        ];
+
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => $this->request->get('title'),
                 'count' => $dataProvider->getTotalCount(),
-                'content' => $this->renderAjax('stock_card', [
-                    'searchModel' => $searchModel,
-                    'dataProvider' => $dataProvider,
-                ])
+                'content' => $this->renderAjax('stock_card', $renderParams),
             ];
-        } else {
-            return $this->render('stock_card', [
-                'searchModel' => $searchModel,
-                'dataProvider' => $dataProvider,
-            ]);
         }
+        return $this->render('stock_card', $renderParams);
     }
 
     /**

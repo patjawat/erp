@@ -341,6 +341,241 @@ public function getLotDate()
     return $query ?: [];
 }
 
+    /**
+     * ดึงข้อมูลสำหรับสต๊อกการ์ด (asset_item × warehouse) ในช่วงเวลา [dateFrom, dateTo]
+     *
+     * @param string      $itemCode     รหัสสินค้า (asset_item / categorise.code)
+     * @param int         $warehouseId  รหัสคลังหลัก
+     * @param string      $dateFrom     'YYYY-MM-DD' (วันที่เริ่มต้นช่วง)
+     * @param string      $dateTo       'YYYY-MM-DD' (วันที่สุดท้ายของช่วง)
+     * @return array {
+     *     opening    : ['qty'=>float,'value'=>float,'source'=>'monthly_close'|'bootstrap'|'none'],
+     *     movements  : [ ['movement_date','code','note','lot_number','exp_date','transaction_type','wh_kind','qty','unit_price','value'], ... ],
+     *     adjustments: [ ['report_year','report_month','delta_qty','delta_value','note','adjusted_at'], ... ],
+     *     closing    : ['qty'=>float,'value'=>float],
+     *     item_info  : ['code','title','unit'],
+     * }
+     */
+    public static function getStockCardData($itemCode, $warehouseId, $dateFrom, $dateTo)
+    {
+        $itemCode    = (string) $itemCode;
+        $warehouseId = (int) $warehouseId;
+        $dateFromTs  = $dateFrom . ' 00:00:00';
+        $dateToTs    = $dateTo . ' 23:59:59';
+
+        // ----- 1. opening: หาว่า dateFrom ตรงกับวันที่ 1 ของเดือนไหม -----
+        $isMonthStart = (date('d', strtotime($dateFrom)) === '01');
+        $opening = ['qty' => 0.0, 'value' => 0.0, 'source' => 'none'];
+
+        if ($isMonthStart) {
+            $year  = (int) date('Y', strtotime($dateFrom));
+            $month = (int) date('n', strtotime($dateFrom));
+            $prevMonth = $month - 1;
+            $prevYear  = $year;
+            if ($prevMonth < 1) { $prevMonth += 12; $prevYear--; }
+
+            $prev = (new \yii\db\Query())
+                ->select(['closing_qty', 'closing_value'])
+                ->from('stock_monthly_report')
+                ->where([
+                    'report_year'  => $prevYear,
+                    'report_month' => $prevMonth,
+                    'warehouse_id' => $warehouseId,
+                    'item_code'    => $itemCode,
+                ])
+                ->one();
+            if ($prev) {
+                $opening = [
+                    'qty'    => (float) $prev['closing_qty'],
+                    'value'  => (float) $prev['closing_value'],
+                    'source' => 'monthly_close',
+                ];
+            }
+        }
+
+        // ถ้าไม่มี opening จาก monthly close → bootstrap คำนวณจาก stock_events ก่อน dateFrom
+        if ($opening['source'] === 'none') {
+            $bootstrapSql = "
+                SELECT
+                    SUM(CASE
+                        WHEN i.transaction_type = 'IN'
+                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                        THEN CAST(i.qty AS DECIMAL(20,5))
+                        WHEN i.transaction_type = 'OUT'
+                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                        THEN -CAST(i.qty AS DECIMAL(20,5))
+                        ELSE 0
+                    END) AS qty,
+                    SUM(CASE
+                        WHEN i.transaction_type = 'IN'
+                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) = 'MAIN'
+                        THEN CAST(i.qty AS DECIMAL(20,5)) * CAST(i.unit_price AS DECIMAL(20,5))
+                        WHEN i.transaction_type = 'OUT'
+                             AND COALESCE(wo.warehouse_type, wi.warehouse_type) IN ('SUB','BRANCH')
+                        THEN -CAST(i.qty AS DECIMAL(20,5)) * CAST(i.unit_price AS DECIMAL(20,5))
+                        ELSE 0
+                    END) AS value
+                FROM stock_events i
+                LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order'
+                LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+                LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+                WHERE i.name = 'order_item'
+                  AND i.order_status = 'success'
+                  AND i.asset_item = :item_code
+                  AND e.warehouse_id = :warehouse_id
+                  AND i.movement_date < :date_from
+            ";
+            $b = Yii::$app->db->createCommand($bootstrapSql, [
+                ':item_code'    => $itemCode,
+                ':warehouse_id' => $warehouseId,
+                ':date_from'    => $dateFromTs,
+            ])->queryOne();
+            $opening = [
+                'qty'    => (float) ($b['qty'] ?? 0),
+                'value'  => (float) ($b['value'] ?? 0),
+                'source' => 'bootstrap',
+            ];
+        }
+
+        // ----- 2. movements ในช่วง dateFrom..dateTo -----
+        $movementSql = "
+            SELECT
+                i.id,
+                e.movement_date,
+                e.code,
+                e.po_number,
+                e.data_json->>'$.note' AS note,
+                i.lot_number,
+                i.data_json->>'$.exp_date' AS exp_date,
+                i.qty,
+                i.unit_price,
+                i.transaction_type,
+                COALESCE(wo.warehouse_type, wi.warehouse_type) AS wh_type,
+                wo.warehouse_name AS from_warehouse,
+                wi.warehouse_name AS to_warehouse
+            FROM stock_events i
+            LEFT JOIN stock_events e ON e.id = i.category_id AND e.name = 'order'
+            LEFT JOIN warehouses wo ON wo.id = e.from_warehouse_id
+            LEFT JOIN warehouses wi ON wi.id = e.warehouse_id
+            WHERE i.name = 'order_item'
+              AND i.order_status = 'success'
+              AND i.asset_item = :item_code
+              AND e.warehouse_id = :warehouse_id
+              AND i.movement_date BETWEEN :date_from AND :date_to
+            ORDER BY i.movement_date ASC, i.id ASC
+        ";
+        $movRows = Yii::$app->db->createCommand($movementSql, [
+            ':item_code'    => $itemCode,
+            ':warehouse_id' => $warehouseId,
+            ':date_from'    => $dateFromTs,
+            ':date_to'      => $dateToTs,
+        ])->queryAll();
+
+        $movements = [];
+        foreach ($movRows as $r) {
+            $qty       = (float) $r['qty'];
+            $unitPrice = (float) $r['unit_price'];
+            $value     = $qty * $unitPrice;
+
+            // จัดประเภทแถวเพื่อแสดงในสต๊อกการ์ด
+            $kind = 'OTHER';
+            if ($r['transaction_type'] === 'IN' && $r['wh_type'] === 'MAIN') {
+                $kind = 'IN';
+            } elseif ($r['transaction_type'] === 'OUT' && $r['wh_type'] === 'SUB') {
+                $kind = 'OUT_HOSP';   // จ่ายส่วนของโรงพยาบาล
+            } elseif ($r['transaction_type'] === 'OUT' && $r['wh_type'] === 'BRANCH') {
+                $kind = 'OUT_BRANCH'; // จ่าย รพ.สต.
+            } elseif ($r['transaction_type'] === 'OUT') {
+                $kind = 'OUT';
+            }
+
+            $movements[] = [
+                'id'              => $r['id'],
+                'movement_date'   => $r['movement_date'],
+                'code'            => $r['code'],
+                'po_number'       => $r['po_number'],
+                'note'            => $r['note'],
+                'lot_number'      => $r['lot_number'],
+                'exp_date'        => $r['exp_date'],
+                'qty'             => $qty,
+                'unit_price'      => $unitPrice,
+                'value'           => $value,
+                'transaction_type'=> $r['transaction_type'],
+                'wh_type'         => $r['wh_type'],
+                'from_warehouse'  => $r['from_warehouse'],
+                'to_warehouse'    => $r['to_warehouse'],
+                'kind'            => $kind,
+            ];
+        }
+
+        // ----- 3. adjustments: ดึงแถวที่ถูกปรับยอดใน stock_monthly_report ของเดือนที่อยู่ในช่วง -----
+        $startYM = date('Y-m', strtotime($dateFrom));
+        $endYM   = date('Y-m', strtotime($dateTo));
+        $adjRows = (new \yii\db\Query())
+            ->select(['report_year', 'report_month',
+                'closing_qty', 'closing_value',
+                'original_closing_qty', 'original_closing_value',
+                'adjustment_note', 'adjusted_at'])
+            ->from('stock_monthly_report')
+            ->where([
+                'warehouse_id' => $warehouseId,
+                'item_code'    => $itemCode,
+            ])
+            ->andWhere(['IS NOT', 'adjusted_at', null])
+            ->andWhere(['>=', "CONCAT(report_year,'-',LPAD(report_month,2,'0'))", $startYM])
+            ->andWhere(['<=', "CONCAT(report_year,'-',LPAD(report_month,2,'0'))", $endYM])
+            ->orderBy(['report_year' => SORT_ASC, 'report_month' => SORT_ASC])
+            ->all();
+        $adjustments = [];
+        foreach ($adjRows as $r) {
+            $deltaQty   = (float) $r['closing_qty']   - (float) ($r['original_closing_qty']   ?? 0);
+            $deltaValue = (float) $r['closing_value'] - (float) ($r['original_closing_value'] ?? 0);
+            if ($deltaQty == 0 && $deltaValue == 0) continue;
+            $adjustments[] = [
+                'report_year'   => (int) $r['report_year'],
+                'report_month'  => (int) $r['report_month'],
+                'delta_qty'     => $deltaQty,
+                'delta_value'   => $deltaValue,
+                'note'          => $r['adjustment_note'],
+                'adjusted_at'   => $r['adjusted_at'],
+                // วันที่แสดงในการ์ด: สิ้นเดือนของ report_month
+                'shown_date'    => date('Y-m-t', strtotime(sprintf('%04d-%02d-01', $r['report_year'], $r['report_month']))),
+            ];
+        }
+
+        // ----- 4. closing: opening + sum(movements) + sum(adjustments) -----
+        $sumQty = $opening['qty']; $sumVal = $opening['value'];
+        foreach ($movements as $m) {
+            if ($m['kind'] === 'IN') {
+                $sumQty += $m['qty']; $sumVal += $m['value'];
+            } elseif (in_array($m['kind'], ['OUT', 'OUT_HOSP', 'OUT_BRANCH'])) {
+                $sumQty -= $m['qty']; $sumVal -= $m['value'];
+            }
+        }
+        foreach ($adjustments as $a) {
+            $sumQty += $a['delta_qty']; $sumVal += $a['delta_value'];
+        }
+
+        // ----- 5. item info -----
+        $itemInfo = (new \yii\db\Query())
+            ->select([
+                'code'  => 'a.code',
+                'title' => 'a.title',
+                'unit'  => new Expression("a.data_json->>'$.unit'"),
+            ])
+            ->from(['a' => 'categorise'])
+            ->where(['a.code' => $itemCode, 'a.name' => 'asset_item'])
+            ->one();
+
+        return [
+            'opening'     => $opening,
+            'movements'   => $movements,
+            'adjustments' => $adjustments,
+            'closing'     => ['qty' => $sumQty, 'value' => $sumVal],
+            'item_info'   => $itemInfo ?: ['code' => $itemCode, 'title' => $itemCode, 'unit' => ''],
+        ];
+    }
+
     // // จำนวนรับเข้าของคลังหลักปีงบประมานนี้
     // public function ReceiveMainSummary()
     // {
