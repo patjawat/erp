@@ -123,11 +123,16 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "yii\\composer\\Installer::postInstall"
+            "yii\\composer\\Installer::postInstall",
+            "@php scripts/fix-yii2-cart.php"
+        ],
+        "post-update-cmd": [
+            "@php scripts/fix-yii2-cart.php"
         ],
         "post-create-project-cmd": [
             "yii\\composer\\Installer::postCreateProject",
-            "yii\\composer\\Installer::postInstall"
+            "yii\\composer\\Installer::postInstall",
+            "@php scripts/fix-yii2-cart.php"
         ]
     },
     "extra": {
