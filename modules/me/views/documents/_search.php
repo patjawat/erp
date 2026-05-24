@@ -73,7 +73,7 @@ $hasAdvancedFilters = !empty($model->q_status) || !empty($model->show_reading) |
             <div class="row">
                 <div class="col-6 col-md-3">
       <?php
-                                $status = ArrayHelper::merge($model->listStatus(), ['Y' => 'บันทึกไว้ (ปักดาวแล้ว · bookmark=Y)','read' => 'อ่านแล้ว','unread' => 'ยังไม่ได้อ่าน']);
+                                $status = ArrayHelper::merge($model->listStatus(), ['Y' => 'บันทึกไว้ (ปักหมุด · bookmark=Y)','read' => 'อ่านแล้ว','unread' => 'ยังไม่ได้อ่าน']);
                                 echo $form->field($model, 'q_status')->widget(Select2::classname(), [
                                     'data' =>$status,
                                     'options' => ['placeholder' => 'สถานะทั้งหมด'],
