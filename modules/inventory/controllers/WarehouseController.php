@@ -123,17 +123,10 @@ class WarehouseController extends Controller
 
         // ใส่เงื่อนไขใหม่แบบกำหนด alias ถูกต้อง
         $query->andFilterWhere(['e.warehouse_id' => $searchModel->warehouse_id])
+            ->andFilterWhere(['e.from_warehouse_id' => $searchModel->from_warehouse_id])
             ->andFilterWhere(['e.transaction_type' => 'OUT'])
-            ->andFilterWhere(['e.order_status' => $searchModel->order_status]);
-        // ค้นหาตาม keyword q
-        if (!empty($searchModel->q)) {
-            $query->andFilterWhere([
-                'or',
-                ['like', 'e.code', $searchModel->q],
-                ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
-            ]);
-        }
-
+            ->andFilterWhere(['e.order_status' => $searchModel->order_status])
+            ->andFilterWhere(['e.thai_year' => $searchModel->thai_year]);
 
         /**
          * ---------------------------------------------------------
@@ -148,12 +141,15 @@ class WarehouseController extends Controller
             $query->andFilterWhere(['from_warehouse.warehouse_type' => $searchModel->q_warehouse_type]);
         }
 
-        $query->andFilterWhere([
-            'or',
-            ['like', 'e.code', $searchModel->q],
-            ['like', 'e.thai_year', $searchModel->q],
-            ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
-        ]);
+        // ค้นหาตาม keyword q
+        if (!empty($searchModel->q)) {
+            $query->andFilterWhere([
+                'or',
+                ['like', 'e.code', $searchModel->q],
+                ['like', 'e.thai_year', $searchModel->q],
+                ['like', new Expression("JSON_EXTRACT(e.data_json, '$.vendor_name')"), $searchModel->q],
+            ]);
+        }
 
 
         /**
@@ -161,11 +157,19 @@ class WarehouseController extends Controller
          * 3) เงื่อนไขวันที่
          * ---------------------------------------------------------
          */
-        $start = $searchModel->req_date_start ? AppHelper::convertToGregorian($searchModel->req_date_start) . ' 00:00:00' : null;
-        $end = $searchModel->req_date_end ? AppHelper::convertToGregorian($searchModel->req_date_end) . ' 23:59:59' : null;
+        // วันที่คำขอ (req_date_start/end) → e.created_at
+        $reqStart = $searchModel->req_date_start ? AppHelper::convertToGregorian($searchModel->req_date_start) . ' 00:00:00' : null;
+        $reqEnd = $searchModel->req_date_end ? AppHelper::convertToGregorian($searchModel->req_date_end) . ' 23:59:59' : null;
 
-        $query->andFilterWhere(['>=', 'e.created_at', $start])
-            ->andFilterWhere(['<=', 'e.created_at', $end]);
+        $query->andFilterWhere(['>=', 'e.created_at', $reqStart])
+            ->andFilterWhere(['<=', 'e.created_at', $reqEnd]);
+
+        // วันที่จ่าย (date_start/end) → e.movement_date
+        $movStart = $searchModel->date_start ? AppHelper::convertToGregorian($searchModel->date_start) : null;
+        $movEnd = $searchModel->date_end ? AppHelper::convertToGregorian($searchModel->date_end) : null;
+
+        $query->andFilterWhere(['>=', 'e.movement_date', $movStart])
+            ->andFilterWhere(['<=', 'e.movement_date', $movEnd]);
 
         if ($all) {
             $dataProvider->pagination = false;
