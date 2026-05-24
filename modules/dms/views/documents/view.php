@@ -131,6 +131,30 @@ $this->registerCss(<<<CSS
     border: 2px solid transparent;
     background-clip: content-box;
 }
+
+.bookmark-toggle {
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.bookmark-toggle:hover { transform: translateY(-1px); }
+.bookmark-toggle.is-on {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+    border: 1px solid transparent;
+}
+.bookmark-toggle.is-on i { color: #fff; }
+.bookmark-toggle.is-off {
+    background: #f1f5f9;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0;
+}
+.bookmark-toggle.is-off i { color: #94a3b8; }
 CSS);
 
 $currentDeptIds = DocumentsDetail::find()
@@ -164,7 +188,13 @@ $pdfUrlJs = json_encode($pdfUrl, JSON_UNESCAPED_SLASHES);
 $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED_SLASHES);
 
 $bookmarkDetailId = isset($detail) && $detail ? (int) $detail->id : 0;
-$bookmarkState = isset($detail) && $detail ? $detail->docRead() : ['status' => 'N', 'view' => '<i class="fa-regular fa-bookmark"></i>'];
+$bookmarkStatusRaw = isset($detail) && $detail ? ($detail->docRead()['status'] ?? 'N') : 'N';
+$bookmarkIsOn = $bookmarkStatusRaw === 'Y';
+$bookmarkState = [
+    'status' => $bookmarkIsOn ? 'Y' : 'N',
+    'label' => $bookmarkIsOn ? 'ปักหมุดแล้ว' : 'ปักหมุด',
+    'stateClass' => $bookmarkIsOn ? 'is-on' : 'is-off',
+];
 $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $bookmarkDetailId]) : null;
 ?>
 
@@ -256,15 +286,14 @@ $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $b
                         <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
                             <?php if ($bookmarkUrl): ?>
                                 <?= Html::a(
-                                    $bookmarkState['view'],
+                                    '<i class="fa-solid fa-thumbtack"></i> <span class="bookmark-label">' . Html::encode($bookmarkState['label']) . '</span>',
                                     $bookmarkUrl,
                                     [
-                                        'class' => 'btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center bookmark-toggle',
+                                        'class' => 'badge rounded-pill px-2 py-1 small bookmark-toggle ' . $bookmarkState['stateClass'],
                                         'id' => 'bookmark-toggle-' . $bookmarkDetailId,
                                         'data-detail-id' => $bookmarkDetailId,
                                         'data-state' => $bookmarkState['status'],
-                                        'style' => 'width:38px;height:38px;',
-                                        'title' => $bookmarkState['status'] === 'Y' ? 'ยกเลิกปักหมุด' : 'ปักหมุด',
+                                        'title' => $bookmarkIsOn ? 'ยกเลิกปักหมุด' : 'ปักหมุดเอกสาร',
                                         'aria-label' => 'ปักหมุดเอกสาร',
                                         'data-bs-toggle' => 'tooltip',
                                         'data-pjax' => '0',
@@ -812,12 +841,14 @@ function updateCharCount() {
                 var newState = res.data.bookmark === 'Y' ? 'Y' : 'N';
                 \$btn.data('state', newState).attr('data-state', newState);
                 if (newState === 'Y') {
-                    \$btn.html('<i class="fa-solid fa-bookmark text-warning"></i>');
+                    \$btn.removeClass('is-off').addClass('is-on');
+                    \$btn.find('.bookmark-label').text('ปักหมุดแล้ว');
                     \$btn.attr('title', 'ยกเลิกปักหมุด').attr('data-bs-original-title', 'ยกเลิกปักหมุด');
                     if (typeof success === 'function') { success('ปักหมุดเอกสารแล้ว'); }
                 } else {
-                    \$btn.html('<i class="fa-regular fa-bookmark"></i>');
-                    \$btn.attr('title', 'ปักหมุด').attr('data-bs-original-title', 'ปักหมุด');
+                    \$btn.removeClass('is-on').addClass('is-off');
+                    \$btn.find('.bookmark-label').text('ปักหมุด');
+                    \$btn.attr('title', 'ปักหมุดเอกสาร').attr('data-bs-original-title', 'ปักหมุดเอกสาร');
                     if (typeof success === 'function') { success('ยกเลิกปักหมุดแล้ว'); }
                 }
                 if (window.bootstrap && bootstrap.Tooltip) {
