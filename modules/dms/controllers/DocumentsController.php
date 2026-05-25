@@ -643,8 +643,14 @@ class DocumentsController extends Controller
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
-                //กำหนดสถานะครั้งแรก
-                if ($model->tags_department == "") {
+                // NEW LOGIC: Store original tags for internal send
+                $isInternalSend = false;
+                $originalTagsDepartment = $model->tags_department;
+                if ($model->document_group == 'send' && $model->tags_department != "") {
+                    $isInternalSend = true;
+                    $model->tags_department = ""; // Don't tag on the send side
+                    $model->status = 'DS2';
+                } elseif ($model->tags_department == "") {
                     $model->status = 'DS1';
                 } else {
                     $model->status =  "DS2";
@@ -684,6 +690,41 @@ class DocumentsController extends Controller
                     }
 
                     $model->UpdateDocumentTags();
+
+                    // NEW LOGIC: Create receive document if it was an internal send
+                    if ($isInternalSend) {
+                        $receiveModel = new Documents();
+                        $receiveModel->ref = $model->ref;
+                        $receiveModel->topic = $model->topic;
+                        $receiveModel->document_group = 'receive';
+                        $receiveModel->document_type = $model->document_type;
+                        $receiveModel->document_org = '26';
+                        $receiveModel->thai_year = $model->thai_year;
+                        
+                        // doc_number format for internal receive
+                        $receiveModel->doc_number = $model->thai_year . '-' . $model->doc_regis_number;
+                        
+                        // auto run doc_regis_number for receive
+                        $receiveModel->doc_regis_number = $receiveModel->runNumber();
+                        
+                        $receiveModel->doc_speed = $model->doc_speed;
+                        $receiveModel->secret = $model->secret;
+                        $receiveModel->doc_date = $model->doc_date;
+                        $receiveModel->doc_expire = $model->doc_expire;
+                        $receiveModel->doc_transactions_date = $model->doc_transactions_date;
+                        $receiveModel->req_approve = $model->req_approve;
+                        $receiveModel->doc_time = $model->doc_time;
+                        $receiveModel->status = 'DS2';
+                        $receiveModel->data_json = $model->data_json;
+                        $receiveModel->view_json = $model->view_json;
+                        $receiveModel->tags_department = $originalTagsDepartment;
+                        $receiveModel->tags_employee = $model->tags_employee;
+                        
+                        if ($receiveModel->save(false)) {
+                            $receiveModel->UpdateDocumentTags();
+                            PdfHelper::Stamp($receiveModel);
+                        }
+                    }
 
                     //ถ้าเป็นหนังสือรับต้องประทับตรา
                     if ($model->document_group == "receive") {
