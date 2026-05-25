@@ -698,7 +698,22 @@ class DocumentsController extends Controller
                         $receiveModel->topic = $model->topic;
                         $receiveModel->document_group = 'receive';
                         $receiveModel->document_type = $model->document_type;
-                        $receiveModel->document_org = '26';
+                        
+                        // Dynamic document_org lookup
+                        $orgCode = '1';
+                        $siteSetting = Categorise::findOne(['name' => 'site']);
+                        if ($siteSetting && !empty($siteSetting->data_json)) {
+                            $siteData = is_string($siteSetting->data_json) ? json_decode($siteSetting->data_json, true) : $siteSetting->data_json;
+                            if (is_array($siteData) && isset($siteData['company_name'])) {
+                                $companyName = $siteData['company_name'];
+                                $orgSetting = Categorise::findOne(['name' => 'document_org', 'title' => $companyName]);
+                                if ($orgSetting) {
+                                    $orgCode = (string) $orgSetting->code;
+                                }
+                            }
+                        }
+                        $receiveModel->document_org = $orgCode;
+
                         $receiveModel->thai_year = $model->thai_year;
                         
                         // doc_number format for internal receive
