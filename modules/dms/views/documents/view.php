@@ -250,7 +250,7 @@ $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $b
                         </span>
                         <div class="flex-grow-1 min-width-0">
                             <div class="text-uppercase small text-primary fw-semibold opacity-75" style="letter-spacing:.05em;">
-                                <?= Html::encode($model->documentOrg->title ?? '-') ?>
+                                <?= $model->document_type === 'DT2' ? 'หนังสือภายใน' : Html::encode($model->documentOrg->title ?? '-') ?>
                             </div>
                             <div class="fw-bold text-dark text-truncate" title="<?= Html::encode($model->topic) ?>">
                                 <?= Html::encode($model->topic) ?>

@@ -226,7 +226,13 @@ if (file_exists($dataFile)) {
 <?php echo $item->viewReceiveDate()?>
 </p>
             <span class="transaction-details">
-                <?php  echo $item->documentOrg->title ?? '-';?>
+                <?php 
+                if ($item->document_type === 'DT2') {
+                    echo $item->viewTagsDepartment() ?: 'หนังสือภายใน';
+                } else {
+                    echo $item->documentOrg->title ?? '-';
+                }
+                ?>
             </span>
         </div>
 
@@ -248,6 +254,17 @@ if (file_exists($dataFile)) {
 
 <!-- Interactive functionality -->
 <script>
+function initTooltips() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip && !bootstrap.Tooltip.getInstance(el)) {
+            new bootstrap.Tooltip(el);
+        }
+    });
+}
+initTooltips();
+document.addEventListener('pjax:end', initTooltips);
+
 // Add click functionality to dropdowns
 document.querySelectorAll('.dropdown-custom').forEach(dropdown => {
     dropdown.addEventListener('click', function() {
