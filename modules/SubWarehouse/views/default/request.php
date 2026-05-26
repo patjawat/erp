@@ -144,16 +144,6 @@ $urlOverview = Url::to(['/sub-warehouse/default/index']);
 
 <div class="sw-scope">
 
-<div class="mode-tabs">
-  <div class="mode-inner">
-    <a class="mode-tab" href="<?= $urlOverview ?>"><i class="bi bi-grid-1x2-fill"></i> ภาพรวม</a>
-    <a class="mode-tab <?= $mode === 'in' ? 'active' : '' ?>" href="<?= $urlIn ?>" id="sw-tab-in"><i class="bi bi-arrow-down-circle-fill"></i> เบิกจากคลังกลาง (รับเข้า)</a>
-    <a class="mode-tab <?= $mode === 'out' ? 'active' : '' ?>" href="<?= $urlOut ?>" id="sw-tab-out"><i class="bi bi-arrow-up-circle-fill"></i> จ่ายออกไปใช้</a>
-    <div style="flex:1;"></div>
-    <button type="button" class="mode-tab" id="sw-btn-new"><i class="bi bi-plus-lg"></i> สร้างใบใหม่</button>
-  </div>
-</div>
-
 <main class="page-wrap">
 
   <div id="sw-listView">
