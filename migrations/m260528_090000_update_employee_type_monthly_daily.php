@@ -1,7 +1,6 @@
 <?php
 
 use yii\db\Migration;
-use yii\helpers\Json;
 
 /**
  * ปรับปรุงประเภทพนักงานให้แยก ลูกจ้างชั่วคราวรายเดือน/รายวัน
@@ -44,7 +43,7 @@ class m260528_090000_update_employee_type_monthly_daily extends Migration
                 'title' => $title,
                 'sort' => $sort,
                 'active' => 1,
-                'data_json' => Json::encode(['legacy_codes' => $legacyCodes], JSON_UNESCAPED_UNICODE),
+                'data_json' => ['legacy_codes' => $legacyCodes],
             ];
 
             $this->upsert(
@@ -54,7 +53,7 @@ class m260528_090000_update_employee_type_monthly_daily extends Migration
                     'title' => $title,
                     'sort' => $sort,
                     'active' => 1,
-                    'data_json' => Json::encode(['legacy_codes' => $legacyCodes], JSON_UNESCAPED_UNICODE),
+                    'data_json' => ['legacy_codes' => $legacyCodes],
                 ]
             );
         }

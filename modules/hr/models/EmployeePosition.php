@@ -50,7 +50,7 @@ class EmployeePosition extends \yii\db\ActiveRecord
         return $this->hasOne(EmployeePositionGroup::className(), ['id' => 'employee_position_group_id']);
     }
 
-    private static function normalizeTitleValue($value): string
+    public static function normalizeTitleValue($value): string
     {
         $value = trim((string) $value);
         if ($value === '') {

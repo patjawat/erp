@@ -2,7 +2,6 @@
 
 use yii\db\Migration;
 use yii\db\Query;
-use yii\helpers\Json;
 
 /**
  * สร้าง master table ใหม่สำหรับประเภทพนักงาน/กลุ่มตำแหน่ง/ตำแหน่ง
@@ -199,12 +198,12 @@ class m260518_160000_create_employee_master_tables extends Migration
                 'title' => $title,
                 'sort' => $sort,
                 'active' => 1,
-                'data_json' => Json::encode($data, JSON_UNESCAPED_UNICODE),
+                'data_json' => $data,
             ], [
                 'title' => $title,
                 'sort' => $sort,
                 'active' => 1,
-                'data_json' => Json::encode($data, JSON_UNESCAPED_UNICODE),
+                'data_json' => $data,
             ]);
         }
     }
@@ -450,7 +449,30 @@ class m260518_160000_create_employee_master_tables extends Migration
         }
 
         if (is_array($value)) {
-            return Json::encode($value, JSON_UNESCAPED_UNICODE);
+            return $value;
+        }
+
+        if (is_object($value)) {
+            return (array) $value;
+        }
+
+        if (is_string($value)) {
+            $decoded = $value;
+            for ($i = 0; $i < 3 && is_string($decoded); $i++) {
+                $next = json_decode($decoded, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    break;
+                }
+                $decoded = $next;
+            }
+
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+
+            if (is_object($decoded)) {
+                return (array) $decoded;
+            }
         }
 
         return $value;
