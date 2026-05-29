@@ -651,13 +651,22 @@ $js = <<<JS
     getComment();
 })();
 
+function injectAjaxContent(\$target, html) {
+    if (typeof erpInjectModalContent === 'function') {
+        return erpInjectModalContent(\$target, html);
+    }
+
+    \$target.html(html);
+    return Promise.resolve();
+}
+
 async function getComment() {
     await \$.ajax({
         type: 'get',
         url: '$getCommentUrl',
         dataType: 'json',
-        success: function (res) {
-            \$('.viewFormComment').html(res.content);
+        success: async function (res) {
+            await injectAjaxContent(\$('.viewFormComment'), res.content);
             // composer มี #viewlistCommenttemplate อยู่ภายใน → load รายการ template หลัง composer มา
             if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
         }
@@ -700,8 +709,9 @@ function reloadTimeline() {
         type: 'get',
         url: \$(this).attr('href'),
         dataType: 'json',
-        success: function (res) {
-            \$('.viewFormComment').html(res.content);
+        success: async function (res) {
+            await injectAjaxContent(\$('.viewFormComment'), res.content);
+            if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
             // scroll work pane down to composer
             setTimeout(function () {
                 if (typeof updateIframeHeight === 'function') {
