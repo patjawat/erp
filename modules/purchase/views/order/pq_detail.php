@@ -29,7 +29,7 @@ use yii\widgets\DetailView;
             <td><?= isset($model->data_json['pq_method_get_name']) ? $model->data_json['pq_method_get_name'] : '' ?>
             </td>
             <td class="text-end">ลงวันที่</td>
-            <td> <?= isset($model->data_json['due_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['due_date'], 'long') : '' ?>
+            <td> <?= isset($model->data_json['pr_create_date']) ? Yii::$app->thaiFormatter->asDate($model->data_json['pr_create_date'], 'long') : '' ?>
             </td>
          
         </tr>

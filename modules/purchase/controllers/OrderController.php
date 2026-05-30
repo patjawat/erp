@@ -225,10 +225,10 @@ class OrderController extends Controller
         $numRow = $StartRow++;
 
         // A: วันที่ / เดือน / ปี
-        $sheet->setCellValue('A' . $numRow, isset($value->data_json['gr_date']) ? AppHelper::convertToThai($value->data_json['gr_date']) : '-');
+        $sheet->setCellValue('A' . $numRow, isset($value->data_json['pr_create_date']) ? AppHelper::convertToThai($value->data_json['pr_create_date']) : '-');
 
         // B: งานที่จัดซื้อจัดจ้าง 
-        $sheet->setCellValue('B' . $numRow, $value->getEmployee()->departmentName() ?? '-'); // ต้องหาข้อมูลที่เหมาะสมมาใส่ (เช่น $value->project_name)
+        $sheet->setCellValue('B' . $numRow, $value->assetType->title ?? '-'); // ต้องหาข้อมูลที่เหมาะสมมาใส่ (เช่น $value->project_name)
 
         // C: วงเงินที่จะซื้อหรือจ้าง (ราคารวม VAT)
         $sheet->setCellValue('C' . $numRow, $value->calculateVAT()['priceAfterVAT']);
