@@ -49,7 +49,7 @@ $js = <<<JS
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
             if (result.isConfirmed) {
-                $("#main-modal").modal("hide");
+                erpHideModal("#main-modal");
                 Swal.fire({
                     title: 'กำลังดำเนินการ...',
                     allowOutsideClick: false,
@@ -92,7 +92,7 @@ $js = <<<JS
             method: 'GET',
             xhrFields: { responseType: 'blob' },
             beforeSend: function() {
-                $("#main-modal").modal("show");
+                erpShowModal("#main-modal");
                 $("#main-modal-label").html("กำลังโหลด");
                 $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl").addClass("modal-sm");
                 $("#modal-dialog").removeClass("fade");
@@ -108,7 +108,7 @@ $js = <<<JS
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
-                $("#main-modal").modal("hide");
+                erpHideModal("#main-modal");
             },
             error: function() { alert('ไม่สามารถดาวน์โหลดไฟล์ได้'); }
         });

@@ -340,22 +340,29 @@ function erpInjectModalContent($target, html) {
   return new Promise(async function (resolve, reject) {
     try {
       var $wrapper = $("<div>").html(html || "");
-      var nodes = $wrapper.contents().toArray();
       var externalScripts = [];
       var inlineScripts = [];
-      var fragment = document.createDocumentFragment();
 
-      nodes.forEach(function (node) {
-        if (node.nodeType === 1 && node.tagName && node.tagName.toLowerCase() === "script") {
-          var src = node.src || node.getAttribute("src");
-          if (src) {
-            externalScripts.push(src);
-          } else {
-            inlineScripts.push(node);
-          }
+      // Collect ALL <script> tags (including nested ones) in document order,
+      // then remove them from the wrapper so jQuery's .append() does not
+      // auto-evaluate them out-of-order via domManip/DOMEval. We run them
+      // ourselves below: externals first, then inline scripts in order.
+      var scriptEls = $wrapper[0].querySelectorAll("script");
+      Array.prototype.forEach.call(scriptEls, function (node) {
+        var src = node.src || node.getAttribute("src");
+        if (src) {
+          externalScripts.push(src);
         } else {
-          fragment.appendChild(node);
+          inlineScripts.push(node);
         }
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      });
+
+      var fragment = document.createDocumentFragment();
+      $wrapper.contents().toArray().forEach(function (node) {
+        fragment.appendChild(node);
       });
 
       $target.empty().append(fragment);
