@@ -27,11 +27,16 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
 
 <div class="container-fluid py-4">
 
+    <?php
+    $extraParams = ['year' => $year, 'month' => $month]
+        + ($warehouseId ? ['warehouse_id' => $warehouseId] : [])
+        + ($assetType ? ['asset_type_id' => $assetType] : []);
+    ?>
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <h6 class="text-white mb-0 fw-normal"><i class="bi bi-search me-1"></i>การค้นหา</h6>
             <div>
-                <a href="<?= Url::to(array_merge(['/inventory-v2/report/material-summary'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-outline-light btn-sm">
+                <a href="<?= Url::to(array_merge(['/inventory-v2/report/material-summary'], $extraParams)) ?>" class="btn btn-outline-light btn-sm">
                     <i class="bi bi-pie-chart"></i> สรุปตามประเภท
                 </a>
             </div>
@@ -62,12 +67,20 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="col-auto">
+                    <label class="form-label mb-0">ประเภทวัสดุ</label>
+                    <select name="asset_type_id" class="form-select" style="min-width: 220px;">
+                        <?php foreach ($assetTypes as $tcode => $tname): ?>
+                            <option value="<?= $tcode === '' ? '' : Html::encode($tcode) ?>" <?= (string)$assetType === (string)$tcode ? 'selected' : '' ?>><?= Html::encode($tname) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="col-auto d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-search"></i> แสดงรายงาน
                     </button>
                     <?php if ($hasData): ?>
-                        <a href="<?= Url::to(array_merge(['/inventory-v2/report/export-excel-by-item'], ['year' => $year, 'month' => $month], $warehouseId ? ['warehouse_id' => $warehouseId] : [])) ?>" class="btn btn-success">
+                        <a href="<?= Url::to(array_merge(['/inventory-v2/report/export-excel-by-item'], $extraParams)) ?>" class="btn btn-success">
                             <i class="bi bi-file-earmark-excel"></i> Excel
                         </a>
                     <?php endif; ?>

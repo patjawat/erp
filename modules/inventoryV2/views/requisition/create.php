@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $this->title = 'สร้างใบขอเบิกวัสดุ';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2']];
@@ -16,6 +17,14 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::encode($this->title) ?>
     </h4>
     <p class="text-muted small mb-0">สร้างคำขอเบิกไปยังคลังหลักเพื่อรอการอนุมัติจ่ายสินค้า</p>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('action'); ?>
+<div class="container-fluid px-3 px-md-4">
+    <div class="d-flex justify-content-end">
+        <?= Html::a('<i class="bi bi-arrow-left"></i> กลับสู่รายการ', ['index'], ['class' => 'btn btn-light border rounded-pill px-3']) ?>
+    </div>
 </div>
 <?php $this->endBlock(); ?>
 

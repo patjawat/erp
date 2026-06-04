@@ -49,14 +49,28 @@ use yii\helpers\Url;
         <i class="bi bi-wrench-adjustable"></i>
         ปรับยอด stock
     </a>
-    <a href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" class="btn <?= ($active ?? '') !== 'report-material' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-file-earmark-bar-graph"></i>
-        สรุปรายงานวัสดุคงคลัง
-    </a>
     <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="btn <?= ($active ?? '') !== 'report-balance' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-boxes"></i>
         ยอดคงเหลือตามคลัง
     </a>
+
+    <!-- รายงาน (รวม V1 + V2 ต่อเนื่อง) -->
+    <div class="dropdown">
+        <button class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            รายงาน
+        </button>
+        <ul class="dropdown-menu shadow-sm">
+            <li><h6 class="dropdown-header small text-uppercase text-muted">ปิดเดือน / สรุป</h6></li>
+            <li><?= Html::a('<i class="bi bi-chart-pie me-2"></i> สรุปปิดยอดเดือน <span class="small text-muted">(แยกประเภท)</span>', ['/inventory-v2/report/material-summary'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-calendar-check me-2"></i> สรุปคงคลังรายเดือน <span class="small text-muted">(ปิดเดือน)</span>', ['/inventory-v2/report/stock-monthly'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header small text-uppercase text-muted">รายงานเคลื่อนไหว</h6></li>
+            <li><?= Html::a('<i class="bi bi-id-card me-2"></i> สต๊อกการ์ด <span class="small text-muted">(เลือกสินค้า)</span>', ['/inventory-v2/stock-card/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-clipboard-data me-2"></i> รายงานวัสดุคงคลังหลักรายตัว', ['/inventory-v2/report/list-by-item'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-arrow-left-right me-2"></i> รายงานวัสดุรับ-จ่าย', ['/inventory-v2/report/list-by-order'], ['class' => 'dropdown-item']) ?></li>
+        </ul>
+    </div>
     <a href="<?= Url::to(['/inventory-v2/default/setting']) ?>" class="btn <?= $active !== 'setting' ? 'btn-outline-secondary' : 'btn-secondary' ?>">
         <i class="bi bi-building"></i>
         ตั้งค่าคลังสินค้า

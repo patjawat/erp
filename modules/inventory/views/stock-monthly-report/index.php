@@ -80,6 +80,73 @@ $fmt = static function ($v) {
 </div>
 <?php endif; ?>
 
+<?php if (Yii::$app->session->hasFlash('seed_import_report')): $rep = Yii::$app->session->getFlash('seed_import_report'); ?>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-info bg-opacity-10 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0"><i class="fa-solid fa-upload me-1"></i> ผลการนำเข้ายอดยกมา — <?= Html::encode($rep['period']) ?></h6>
+        <div class="d-flex align-items-center gap-2">
+            <?php if (!empty($rep['skipped_token'])): ?>
+                <a class="btn btn-sm btn-outline-warning" href="<?= Url::to(['/inventory/stock-monthly-report/seed-skipped-download', 'token' => $rep['skipped_token']]) ?>">
+                    <i class="fa-solid fa-download me-1"></i> ดาวน์โหลด CSV รายการที่ข้าม
+                </a>
+            <?php endif; ?>
+            <span class="small text-muted">บันทึก = closing ของเดือนนี้ → opening ของเดือนถัดไป</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-2 mb-2">
+            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-success fs-5 fw-bold"><?= number_format($rep['inserted']) ?></div><small class="text-muted">เพิ่มใหม่</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-primary fs-5 fw-bold"><?= number_format($rep['updated']) ?></div><small class="text-muted">อัปเดตทับ</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-warning fs-5 fw-bold"><?= number_format($rep['skip_total']) ?></div><small class="text-muted">ข้ามแถวที่ผิด</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-muted fs-5 fw-bold"><?= number_format($rep['skip_empty']) ?></div><small class="text-muted">ข้ามแถวว่าง</small></div></div>
+        </div>
+        <?php
+        $skipCounts = [
+            'missing_wh' => $rep['skip_missing_wh_count'] ?? count($rep['skip_missing_wh'] ?? []),
+            'missing_item' => $rep['skip_missing_item_count'] ?? count($rep['skip_missing_item'] ?? []),
+            'bad_number' => $rep['skip_bad_number_count'] ?? count($rep['skip_bad_number'] ?? []),
+            'no_match' => $rep['skip_no_match_count'] ?? count($rep['skip_no_match'] ?? []),
+            'ambiguous' => $rep['skip_ambiguous_count'] ?? count($rep['skip_ambiguous'] ?? []),
+        ];
+        $hasSkips = array_sum($skipCounts) > 0;
+        ?>
+        <?php if ($hasSkips): ?>
+            <details class="mt-2">
+                <summary class="text-warning small" style="cursor:pointer;">ดูรายละเอียดแถวที่ข้าม (<?= number_format($rep['skip_total']) ?>)</summary>
+                <div class="mt-2 small">
+                    <?php if ($skipCounts['missing_wh'] > 0): $shown = $rep['skip_missing_wh'] ?? []; $more = $skipCounts['missing_wh'] - count($shown); ?>
+                        <div class="mb-2"><strong>ไม่พบคลัง (<?= number_format($skipCounts['missing_wh']) ?>)</strong>
+                            <ul class="mb-0"><?php foreach ($shown as $s): ?><li>แถว <?= (int)$s['row'] ?> — warehouse_name: <code><?= Html::encode($s['warehouse_name']) ?></code>, item_code: <code><?= Html::encode($s['item_code']) ?></code></li><?php endforeach; ?><?php if ($more > 0): ?><li class="text-muted">... และอีก <?= number_format($more) ?> แถว</li><?php endif; ?></ul>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($skipCounts['missing_item'] > 0): $shown = $rep['skip_missing_item'] ?? []; $more = $skipCounts['missing_item'] - count($shown); ?>
+                        <div class="mb-2"><strong>ไม่พบ item_code (<?= number_format($skipCounts['missing_item']) ?>)</strong>
+                            <ul class="mb-0"><?php foreach ($shown as $s): ?><li>แถว <?= (int)$s['row'] ?> — item_code: <code><?= Html::encode($s['item_code']) ?></code></li><?php endforeach; ?><?php if ($more > 0): ?><li class="text-muted">... และอีก <?= number_format($more) ?> แถว</li><?php endif; ?></ul>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($skipCounts['no_match'] > 0): $shown = $rep['skip_no_match'] ?? []; $more = $skipCounts['no_match'] - count($shown); ?>
+                        <div class="mb-2"><strong>ไม่พบคลังหลักที่รับประเภทวัสดุนี้ (<?= number_format($skipCounts['no_match']) ?>)</strong>
+                            <div class="text-muted">วิธีแก้: ระบุ <code>warehouse_name</code> ใน CSV หรือไปตั้งค่า "ประเภทวัสดุที่รับ" ที่หน้าคลังหลัก</div>
+                            <ul class="mb-0"><?php foreach ($shown as $s): ?><li>แถว <?= (int)$s['row'] ?> — item_code: <code><?= Html::encode($s['item_code']) ?></code> (category: <code><?= Html::encode($s['category_id'] ?? '—') ?></code>)</li><?php endforeach; ?><?php if ($more > 0): ?><li class="text-muted">... และอีก <?= number_format($more) ?> แถว</li><?php endif; ?></ul>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($skipCounts['ambiguous'] > 0): $shown = $rep['skip_ambiguous'] ?? []; $more = $skipCounts['ambiguous'] - count($shown); ?>
+                        <div class="mb-2"><strong>มีหลายคลังที่รับประเภทนี้ — ต้องระบุ warehouse_name (<?= number_format($skipCounts['ambiguous']) ?>)</strong>
+                            <ul class="mb-0"><?php foreach ($shown as $s): ?><li>แถว <?= (int)$s['row'] ?> — item_code: <code><?= Html::encode($s['item_code']) ?></code> (category: <code><?= Html::encode($s['category_id'] ?? '—') ?></code>) → คลังที่รับ: <em><?= Html::encode(implode(', ', $s['candidates'] ?? [])) ?></em></li><?php endforeach; ?><?php if ($more > 0): ?><li class="text-muted">... และอีก <?= number_format($more) ?> แถว</li><?php endif; ?></ul>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($skipCounts['bad_number'] > 0): $shown = $rep['skip_bad_number'] ?? []; $more = $skipCounts['bad_number'] - count($shown); ?>
+                        <div class="mb-2"><strong>จำนวน/มูลค่าไม่ใช่ตัวเลข (<?= number_format($skipCounts['bad_number']) ?>)</strong>
+                            <ul class="mb-0"><?php foreach ($shown as $s): ?><li>แถว <?= (int)$s['row'] ?> — item_code: <code><?= Html::encode($s['item_code']) ?></code></li><?php endforeach; ?><?php if ($more > 0): ?><li class="text-muted">... และอีก <?= number_format($more) ?> แถว</li><?php endif; ?></ul>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </details>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row g-3">
     <div class="col-12 col-lg-5">
         <div class="card h-100">
@@ -117,13 +184,38 @@ $fmt = static function ($v) {
 </div>
 
 <div class="card mt-3">
-    <div class="card-header bg-primary-gradient text-white d-flex align-items-center justify-content-between">
-        <h6 class="text-white mb-0"><i class="fa-solid fa-table"></i> รายการสรุปคงคลังรายเดือน</h6>
-        <a class="btn btn-success btn-sm shadow"
-            href="<?= Url::to(array_merge(['stock-monthly-report/export-excel'], Yii::$app->request->queryParams)) ?>">
-            <i class="fa-solid fa-file-excel me-1"></i> Excel
-        </a>
+    <div class="card-header bg-primary-gradient text-white d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h6 class="text-white mb-0">
+            <i class="fa-solid fa-table"></i> รายการสรุปคงคลังรายเดือน
+            <span class="badge bg-light text-primary ms-2 fs-6"><?= number_format(count($rows)) ?> รายการ</span>
+        </h6>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-light btn-sm shadow" data-bs-toggle="modal" data-bs-target="#modal-seed-import">
+                <i class="fa-solid fa-upload me-1"></i> นำเข้ายอดยกมา (CSV)
+            </button>
+            <a class="btn btn-success btn-sm shadow"
+                href="<?= Url::to(array_merge(['stock-monthly-report/export-excel'], Yii::$app->request->queryParams)) ?>">
+                <i class="fa-solid fa-file-excel me-1"></i> Excel
+            </a>
+        </div>
     </div>
+    <?php if (!empty($rows)):
+        $uWarehouses = []; $uItems = []; $uPeriods = [];
+        foreach ($rows as $r) {
+            $uWarehouses[$r->warehouse_id] = true;
+            $uItems[$r->item_code] = true;
+            $uPeriods[$r->report_year . '-' . $r->report_month] = true;
+        }
+    ?>
+    <div class="card-body py-2 bg-light border-bottom">
+        <div class="row g-2 text-center small">
+            <div class="col"><span class="text-muted">รายการทั้งหมด:</span> <strong class="text-primary"><?= number_format(count($rows)) ?></strong></div>
+            <div class="col"><span class="text-muted">คลัง:</span> <strong><?= number_format(count($uWarehouses)) ?></strong></div>
+            <div class="col"><span class="text-muted">รหัสพัสดุ (ไม่ซ้ำ):</span> <strong><?= number_format(count($uItems)) ?></strong></div>
+            <div class="col"><span class="text-muted">เดือนที่ครอบคลุม:</span> <strong><?= number_format(count($uPeriods)) ?></strong></div>
+        </div>
+    </div>
+    <?php endif; ?>
     <div class="card-body p-0 table-responsive">
         <table class="table table-bordered table-striped mb-0">
             <thead class="align-middle text-center">
@@ -247,6 +339,62 @@ $fmt = static function ($v) {
             <span class="spinner-border text-warning"></span>
             <div class="mt-2 small">กำลังโหลด...</div>
         </div>
+    </div>
+</div>
+
+<!-- Modal นำเข้ายอดยกมา (CSV) -->
+<div class="modal fade" id="modal-seed-import" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="post" action="<?= Url::to(['/inventory/stock-monthly-report/seed-import']) ?>" enctype="multipart/form-data">
+            <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa-solid fa-upload me-1"></i> นำเข้ายอดยกมา (CSV)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        <strong>วิธีใช้:</strong> CSV ที่นำเข้าจะเขียนเป็น <strong>ยอด closing ของเดือนที่เลือก</strong>
+                        เพื่อให้เดือนถัดไป (ตอน "สรุปข้อมูลเดือนนี้") ดึงไปเป็น <strong>ยอดยกมา (opening)</strong> โดยอัตโนมัติ
+                        <br>
+                        <strong>คอลัมน์ที่ต้องมี:</strong> <code>item_code</code>, <code>closing_qty</code>, <code>closing_value</code>
+                        <br>
+                        <strong>คอลัมน์ optional:</strong> <code>warehouse_name</code> — ถ้าเว้นว่าง ระบบจะ map คลังหลักให้อัตโนมัติตามประเภทวัสดุที่คลังตั้งค่าไว้ใน "ประเภทวัสดุที่รับ"
+                        <br>
+                        <a href="<?= Url::to(['/inventory/stock-monthly-report/seed-template']) ?>" class="btn btn-sm btn-outline-info mt-2">
+                            <i class="fa-solid fa-download me-1"></i> ดาวน์โหลดเทมเพลต CSV
+                        </a>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">เดือนของยอดยกมา</label>
+                            <select name="report_month" class="form-select" required>
+                                <?php foreach ($monthOptions as $m => $n): ?>
+                                    <option value="<?= (int)$m ?>" <?= (int)date('n') === (int)$m ? 'selected' : '' ?>><?= Html::encode($n) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">ปี</label>
+                            <select name="report_year" class="form-select" required>
+                                <?php foreach ($yearOptions as $y => $label): ?>
+                                    <option value="<?= (int)$y ?>" <?= (int)date('Y') === (int)$y ? 'selected' : '' ?>><?= Html::encode($label) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted">ไฟล์ CSV</label>
+                        <input type="file" name="csv_file" class="form-control" accept=".csv,text/csv" required>
+                        <div class="form-text small">ไฟล์ต้องเข้ารหัส UTF-8 (รองรับ BOM) — แถวที่ไม่ตรงกับฐานข้อมูลจะถูกข้ามและสรุปให้</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload me-1"></i> นำเข้า</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 

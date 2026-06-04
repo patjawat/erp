@@ -5,6 +5,7 @@ namespace app\modules\inventory\controllers;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
+use yii\web\UploadedFile;
 use yii\db\Query;
 use yii\db\Expression;
 use yii\filters\VerbFilter;
@@ -641,5 +642,331 @@ class StockMonthlyReportController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         return ob_get_clean();
+    }
+
+    /**
+     * เขียน CSV สรุปรายการที่ skip ตอน import ลงไฟล์ temp ที่ @runtime/seed-import-skipped/
+     * คืน token (สำหรับใส่ใน URL ดาวน์โหลด) หรือ null ถ้าไม่มี skip
+     */
+    private static function writeSeedSkippedCsv(array $skipMissingWh, array $skipMissingItem, array $skipBadNumber, array $skipNoMatch, array $skipAmbiguous)
+    {
+        $total = count($skipMissingWh) + count($skipMissingItem) + count($skipBadNumber) + count($skipNoMatch) + count($skipAmbiguous);
+        if ($total === 0) return null;
+
+        $dir = Yii::getAlias('@runtime') . '/seed-import-skipped';
+        if (!is_dir($dir)) @mkdir($dir, 0775, true);
+        $token = bin2hex(random_bytes(16));
+        $path = $dir . '/' . $token . '.csv';
+
+        $fp = fopen($path, 'w');
+        fwrite($fp, "\xEF\xBB\xBF");
+        fputcsv($fp, ['reason', 'row', 'item_code', 'warehouse_name', 'category_id', 'candidates']);
+        $writeRows = static function ($reason, array $rows) use ($fp) {
+            foreach ($rows as $r) {
+                fputcsv($fp, [
+                    $reason,
+                    (string) ($r['row'] ?? ''),
+                    (string) ($r['item_code'] ?? ''),
+                    (string) ($r['warehouse_name'] ?? ''),
+                    (string) ($r['category_id'] ?? ''),
+                    isset($r['candidates']) && is_array($r['candidates']) ? implode(' | ', $r['candidates']) : '',
+                ]);
+            }
+        };
+        $writeRows('ไม่พบคลัง', $skipMissingWh);
+        $writeRows('ไม่พบ item_code', $skipMissingItem);
+        $writeRows('ไม่พบคลังหลักที่รับประเภทวัสดุนี้', $skipNoMatch);
+        $writeRows('มีหลายคลังที่รับประเภทนี้ — ต้องระบุ warehouse_name', $skipAmbiguous);
+        $writeRows('จำนวน/มูลค่าไม่ใช่ตัวเลข', $skipBadNumber);
+        fclose($fp);
+
+        foreach (glob($dir . '/*.csv') ?: [] as $old) {
+            if (is_file($old) && (time() - filemtime($old)) > 86400) {
+                @unlink($old);
+            }
+        }
+        return $token;
+    }
+
+    /**
+     * ดาวน์โหลด CSV รายการ skip จาก import ครั้งล่าสุด
+     */
+    public function actionSeedSkippedDownload($token)
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/', (string) $token)) {
+            throw new NotFoundHttpException('Invalid token');
+        }
+        $path = Yii::getAlias('@runtime') . '/seed-import-skipped/' . $token . '.csv';
+        if (!is_file($path)) {
+            throw new NotFoundHttpException('File not found หรือหมดอายุแล้ว');
+        }
+        return Yii::$app->response->sendFile($path, 'seed-import-skipped.csv', [
+            'mimeType' => 'text/csv',
+            'inline' => false,
+        ]);
+    }
+
+    /**
+     * แปลงตัวเลขจาก CSV ที่อาจมีหลายรูปแบบ ให้เป็น float
+     * รองรับ: ทศนิยม, คั่นพัน (,), currency (฿ $ บาท THB € ¥), whitespace,
+     * non-breaking space, Excel leading apostrophe ('), ค่าติดลบ
+     * @return float|null null ถ้าแปลงไม่ได้
+     */
+    private static function parseNumberFlexible($raw)
+    {
+        if ($raw === null) return null;
+        $s = (string) $raw;
+        $s = preg_replace('/\xEF\xBB\xBF/', '', $s);                  // BOM
+        $s = preg_replace('/[\s\x{00A0}]+/u', '', $s);                // whitespace + NBSP
+        $s = ltrim($s, "'");                                          // Excel leading apostrophe
+        $s = str_replace(['฿', '$', 'บาท', 'THB', '€', '¥'], '', $s); // currency
+        $s = str_replace(',', '', $s);                                // thousand separators
+        // dash-only (-, –, —) แทนค่าว่าง ให้เป็น 0
+        if (in_array($s, ['-', '–', '—'], true)) {
+            return 0.0;
+        }
+        if ($s === '' || !is_numeric($s)) {
+            return null;
+        }
+        return (float) $s;
+    }
+
+    /**
+     * ดาวน์โหลดเทมเพลต CSV สำหรับ seed ยอดยกมา
+     */
+    public function actionSeedTemplate()
+    {
+        $rows = [
+            ['item_code', 'closing_qty', 'closing_value', 'warehouse_name'],
+            ['M001', '150', '4500.00', ''],
+            ['M002', '80',  '2400.00', ''],
+            ['D001', '30',  '900.00',  'คลังเวชภัณฑ์ (ระบุเอง เมื่อมีหลายคลังรับประเภทนี้)'],
+        ];
+
+        $filename = 'stock_monthly_seed_template.csv';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        Yii::$app->response->headers->set('Content-Disposition', "attachment; filename=\"{$filename}\"");
+
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        foreach ($rows as $r) {
+            fputcsv($out, $r);
+        }
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
+        return $csv;
+    }
+
+    /**
+     * Import CSV เพื่อ seed ยอดยกมา (opening balance) สำหรับเริ่มต้นใช้งานระบบ
+     * CSV header (case-insensitive): item_code, closing_qty, closing_value [, warehouse_name]
+     * - ถ้าระบุ warehouse_name → ใช้ตามนั้น
+     * - ถ้าเว้นว่าง → map คลังหลักอัตโนมัติจาก stock_item.category_id ที่ตรงกับ data_json.item_type ของคลัง
+     *   (เจอ 1 คลัง = ใช้, 0 คลัง = ข้าม, >1 คลัง = ข้าม)
+     * เขียนลง stock_monthly_report เป็น closing ของเดือนที่เลือก
+     */
+    public function actionSeedImport()
+    {
+        $reportYear  = (int) Yii::$app->request->post('report_year');
+        $reportMonth = (int) Yii::$app->request->post('report_month');
+
+        if (!$reportYear || !$reportMonth || $reportMonth < 1 || $reportMonth > 12) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุปีและเดือนของยอดยกมาให้ถูกต้อง');
+            return $this->redirect(['index']);
+        }
+
+        $file = UploadedFile::getInstanceByName('csv_file');
+        if (!$file || $file->error !== UPLOAD_ERR_OK) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกไฟล์ CSV');
+            return $this->redirect(['index']);
+        }
+
+        $handle = fopen($file->tempName, 'r');
+        if (!$handle) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอ่านไฟล์ CSV ได้');
+            return $this->redirect(['index']);
+        }
+
+        $firstBytes = fread($handle, 3);
+        if ($firstBytes !== "\xEF\xBB\xBF") {
+            rewind($handle);
+        }
+
+        $header = fgetcsv($handle);
+        if (!$header) {
+            fclose($handle);
+            Yii::$app->session->setFlash('error', 'ไฟล์ CSV ว่างหรือไม่มี header');
+            return $this->redirect(['index']);
+        }
+        $header = array_map(fn($h) => strtolower(trim((string) $h)), $header);
+        $required = ['item_code', 'closing_qty', 'closing_value'];
+        foreach ($required as $col) {
+            if (!in_array($col, $header, true)) {
+                fclose($handle);
+                Yii::$app->session->setFlash('error', "Header ไม่ครบ ต้องมีคอลัมน์: " . implode(', ', $required) . " (warehouse_name เป็น optional)");
+                return $this->redirect(['index']);
+            }
+        }
+        $idx = array_flip($header);
+        $hasWarehouseCol = isset($idx['warehouse_name']);
+
+        // โหลด lookup คลังหลัก + ประเภทวัสดุที่แต่ละคลังรับ (data_json.item_type)
+        $warehouseMap = [];
+        $mainWarehouses = [];
+        $categoryToWhIds = [];
+        foreach (Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all() as $w) {
+            $warehouseMap[mb_strtolower(trim((string) $w->warehouse_name))] = (int) $w->id;
+            $mainWarehouses[(int) $w->id] = $w;
+            $allowed = (is_array($w->data_json) && !empty($w->data_json['item_type']) && is_array($w->data_json['item_type']))
+                ? $w->data_json['item_type'] : [];
+            foreach ($allowed as $code) {
+                $categoryToWhIds[(string) $code][] = (int) $w->id;
+            }
+        }
+
+        // item_code → category_id
+        $itemCategoryMap = [];
+        foreach ((new Query())->select(['item_code', 'category_id'])->from('stock_item')->each() as $it) {
+            $itemCategoryMap[(string) $it['item_code']] = $it['category_id'] !== null ? (string) $it['category_id'] : null;
+        }
+
+        $rowNum = 1;
+        $okRows = [];
+        $skipMissingWh = [];
+        $skipMissingItem = [];
+        $skipBadNumber = [];
+        $skipNoMatch = [];
+        $skipAmbiguous = [];
+        $skipEmpty = 0;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            $rowNum++;
+            if (count(array_filter($data, fn($c) => $c !== null && trim((string) $c) !== '')) === 0) {
+                $skipEmpty++;
+                continue;
+            }
+            $wName = $hasWarehouseCol ? trim((string) ($data[$idx['warehouse_name']] ?? '')) : '';
+            $code  = trim((string) ($data[$idx['item_code']] ?? ''));
+            $qRaw  = trim((string) ($data[$idx['closing_qty']] ?? ''));
+            $vRaw  = trim((string) ($data[$idx['closing_value']] ?? ''));
+
+            if (!array_key_exists($code, $itemCategoryMap)) {
+                $skipMissingItem[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                continue;
+            }
+
+            $whId = null;
+            if ($wName !== '') {
+                $whId = $warehouseMap[mb_strtolower($wName)] ?? null;
+                if ($whId === null) {
+                    $skipMissingWh[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                    continue;
+                }
+            } else {
+                $cat = $itemCategoryMap[$code];
+                $candidates = $cat !== null && isset($categoryToWhIds[$cat]) ? array_unique($categoryToWhIds[$cat]) : [];
+                if (count($candidates) === 0) {
+                    $skipNoMatch[] = ['row' => $rowNum, 'item_code' => $code, 'category_id' => $cat];
+                    continue;
+                }
+                if (count($candidates) > 1) {
+                    $names = array_map(fn($id) => $mainWarehouses[$id]->warehouse_name ?? ('#' . $id), $candidates);
+                    $skipAmbiguous[] = ['row' => $rowNum, 'item_code' => $code, 'category_id' => $cat, 'candidates' => $names];
+                    continue;
+                }
+                $whId = (int) $candidates[0];
+            }
+
+            $qty = self::parseNumberFlexible($qRaw);
+            $val = self::parseNumberFlexible($vRaw);
+            if ($qty === null || $val === null) {
+                $skipBadNumber[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                continue;
+            }
+            $okRows[] = [
+                'warehouse_id' => $whId,
+                'item_code' => $code,
+                'closing_qty' => $qty,
+                'closing_value' => $val,
+            ];
+        }
+        fclose($handle);
+
+        $createdAt = time();
+        $createdBy = Yii::$app->user->id;
+        $inserted = 0;
+        $updated = 0;
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($okRows as $r) {
+                $existing = StockMonthlyReport::findOne([
+                    'report_year' => $reportYear,
+                    'report_month' => $reportMonth,
+                    'warehouse_id' => $r['warehouse_id'],
+                    'item_code' => $r['item_code'],
+                ]);
+                $isNew = !$existing;
+                $rec = $existing ?: new StockMonthlyReport();
+                $rec->report_year = $reportYear;
+                $rec->report_month = $reportMonth;
+                $rec->warehouse_id = $r['warehouse_id'];
+                $rec->item_code = $r['item_code'];
+                $rec->opening_qty = 0;
+                $rec->opening_value = 0;
+                $rec->in_qty = 0;
+                $rec->in_value = 0;
+                $rec->out_sub_qty = 0;
+                $rec->out_hosp_qty = 0;
+                $rec->total_out_qty = 0;
+                $rec->total_out_value = 0;
+                $rec->closing_qty = $r['closing_qty'];
+                $rec->closing_value = $r['closing_value'];
+                if ($isNew) {
+                    $rec->created_at = $createdAt;
+                    $rec->created_by = $createdBy;
+                }
+                $rec->save(false);
+                $isNew ? $inserted++ : $updated++;
+            }
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดระหว่างบันทึก: ' . $e->getMessage());
+            return $this->redirect(['index']);
+        }
+
+        $skipTotal = count($skipMissingWh) + count($skipMissingItem) + count($skipBadNumber)
+            + count($skipNoMatch) + count($skipAmbiguous);
+        $monthNames = [1=>'มกราคม',2=>'กุมภาพันธ์',3=>'มีนาคม',4=>'เมษายน',5=>'พฤษภาคม',6=>'มิถุนายน',7=>'กรกฎาคม',8=>'สิงหาคม',9=>'กันยายน',10=>'ตุลาคม',11=>'พฤศจิกายน',12=>'ธันวาคม'];
+        $periodLabel = ($monthNames[$reportMonth] ?? '') . ' ' . ($reportYear + 543);
+
+        $skippedToken = self::writeSeedSkippedCsv(
+            $skipMissingWh, $skipMissingItem, $skipBadNumber, $skipNoMatch, $skipAmbiguous
+        );
+
+        $maxList = 100; // จำกัดจำนวนรายการที่เก็บใน flash เพื่อไม่ให้ session.data ล้น
+        Yii::$app->session->setFlash('seed_import_report', [
+            'period' => $periodLabel,
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'skip_total' => $skipTotal,
+            'skip_empty' => $skipEmpty,
+            'skip_missing_wh' => array_slice($skipMissingWh, 0, $maxList),
+            'skip_missing_item' => array_slice($skipMissingItem, 0, $maxList),
+            'skip_bad_number' => array_slice($skipBadNumber, 0, $maxList),
+            'skip_no_match' => array_slice($skipNoMatch, 0, $maxList),
+            'skip_ambiguous' => array_slice($skipAmbiguous, 0, $maxList),
+            'skip_missing_wh_count' => count($skipMissingWh),
+            'skip_missing_item_count' => count($skipMissingItem),
+            'skip_bad_number_count' => count($skipBadNumber),
+            'skip_no_match_count' => count($skipNoMatch),
+            'skip_ambiguous_count' => count($skipAmbiguous),
+            'skipped_token' => $skippedToken,
+        ]);
+
+        return $this->redirect(['index']);
     }
 }

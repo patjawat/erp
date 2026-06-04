@@ -17,6 +17,7 @@ $incomingList = $incomingList ?? [];
 $chartData = $chartData ?? ['categories' => [], 'series' => []];
 $warehouses = $warehouses ?? [];
 $currentWarehouseId = $currentWarehouseId ?? null;
+$activeWid = (int) ($currentWarehouseId ?? 0);
 
 $currentWarehouseName = 'ทั้งหมด';
 if ($currentWarehouseId && $warehouses) {
@@ -28,11 +29,14 @@ if ($currentWarehouseId && $warehouses) {
     }
 }
 
-        $reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
-        if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
-            $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
-        }
-        ?>
+$monthlyValueLabel = '฿' . number_format($monthlyValue / 1000, 1) . 'K';
+$totalIncoming = is_array($incomingList) ? count($incomingList) : 0;
+
+$reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
+if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
+    $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
+}
+?>
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
@@ -49,18 +53,7 @@ if ($currentWarehouseId && $warehouses) {
 
 <?php $this->beginBlock('action'); ?>
 <div class="container-fluid px-3 px-md-4">
-    <div class="row g-3 align-items-center justify-content-between">
-        <div class="col-12 col-lg-auto">
-            <form method="get" action="<?= Url::to(['/inventory-v2/sub-stock/dashboard']) ?>" id="form-sub-warehouse" class="d-inline">
-                <label for="subWarehouseFilter" class="form-label visually-hidden">เลือกคลังย่อย</label>
-                <select name="warehouse_id" class="form-select form-select-sm border shadow-sm rounded-pill px-3" id="subWarehouseFilter" style="min-width: 180px;">
-                    <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังย่อยทั้งหมด</option>
-                    <?php foreach ($warehouses as $w): ?>
-                        <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </form>
-        </div>
+    <div class="row g-3 align-items-center justify-content-end">
         <div class="col-12 col-lg-auto">
             <?= $this->render('@app/modules/inventoryV2/views/default/_menu_sub', ['active' => 'dashboard', 'subWarehouseIds' => $subWarehouseIds ?? []]) ?>
         </div>
@@ -68,136 +61,200 @@ if ($currentWarehouseId && $warehouses) {
 </div>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4 px-3 px-md-4 sub-stock-dashboard">
-    <!-- KPI Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-info border-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">รอตรวจรับเข้า</p>
-                            <span class="fs-4 fw-bold text-dark"><?= (int)$pendingReceiveCount ?></span>
-                            <span class="text-muted small">ใบ</span>
-                        </div>
-                        <div class="erp-icon-box bg-info bg-opacity-10 text-info rounded-3">
-                            <i class="bi bi-truck fs-4"></i>
-                        </div>
-                    </div>
-                    <span class="badge text-bg-info mt-2">จากคลังหลัก</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <a href="<?= Url::to($reportBalanceUrl) ?>" class="text-decoration-none d-block h-100 kpi-card-link">
-                <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-danger border-3">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted small mb-1 fw-bold">ต่ำกว่าจุดวิกฤต</p>
-                                <span class="fs-4 fw-bold text-danger"><?= (int)$criticalCount ?></span>
-                                <span class="text-muted small">รายการ</span>
-                            </div>
-                            <div class="erp-icon-box bg-danger bg-opacity-10 text-danger rounded-3">
-                                <i class="bi bi-exclamation-triangle fs-4"></i>
-                            </div>
-                        </div>
-                        <span class="text-danger small fw-bold mt-2 d-inline-block">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></span>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-success border-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">มูลค่าเบิกใช้เดือนนี้</p>
-                            <span class="fs-4 fw-bold text-dark"><?= number_format($monthlyValue, 0) ?></span>
-                            <span class="text-muted small">฿</span>
-                        </div>
-                        <div class="erp-icon-box bg-success bg-opacity-10 text-success rounded-3">
-                            <i class="bi bi-wallet2 fs-4"></i>
-                        </div>
-                    </div>
-                    <p class="text-success small mb-0 mt-2"><i class="bi bi-graph-up me-1"></i>เทียบเดือนก่อน</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-3 border-top border-warning border-3">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 fw-bold">หมดอายุภายใน 30 วัน</p>
-                            <span class="fs-4 fw-bold text-warning"><?= (int)$expiringSoonCount ?></span>
-                            <span class="text-muted small">Lot</span>
-                        </div>
-                        <div class="erp-icon-box bg-warning bg-opacity-10 text-warning rounded-3">
-                            <i class="bi bi-hourglass-split fs-4"></i>
-                        </div>
-                    </div>
-                    <p class="text-muted small mb-0 mt-2">ควรนำออกมาใช้งานก่อน</p>
-                </div>
-            </div>
-        </div>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+.sw-scope{
+  --primary:#255FAE;--primary-dark:#1a3d6b;--primary-light:#eef5fc;--primary-mid:#2d72cc;
+  --gold:#f59e0b;--gold-light:#fef3c7;
+  --surface:#f8fafc;--card:#fff;--border:#e2e8f0;--border-soft:#f1f5f9;
+  --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+  --green:#16a34a;--green-light:#dcfce7;
+  --red:#dc2626;--red-light:#ffe4e6;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --teal:#0d9488;--teal-light:#ccfbf1;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;
+  --sh-sm:0 1px 3px rgba(15,23,42,.06);--sh-md:0 4px 16px rgba(15,23,42,.08);--sh-lg:0 12px 40px rgba(15,23,42,.14);
+  font-family:'Sarabun',sans-serif;color:var(--text);font-size:15px;
+}
+.sw-scope *{box-sizing:border-box;}
+.sw-scope .page-wrap{max-width:1500px;margin:0 auto;padding:18px 8px 40px;}
+.sw-scope .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.sw-scope .page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.sw-scope .page-subtitle{font-size:13px;color:var(--text-3);}
+
+.sw-scope .dept-picker{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--sh-sm);}
+.sw-scope .dept-label{font-size:12.5px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;}
+.sw-scope .dept-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.sw-scope .dept-pill{padding:6px 14px;border:1px solid var(--border);background:var(--surface);border-radius:20px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text-2);cursor:pointer;transition:all .12s;}
+.sw-scope .dept-pill:hover{border-color:var(--primary);color:var(--primary);}
+.sw-scope .dept-pill.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;}
+
+.sw-scope .sw-btn-primary{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-sm);font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s;}
+.sw-scope .sw-btn-primary:hover{background:var(--primary-dark);color:#fff;}
+.sw-scope .sw-btn-outline{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;background:transparent;color:var(--text-2);border:1px solid var(--border);border-radius:var(--r-sm);font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;text-decoration:none;}
+.sw-scope .sw-btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light);}
+
+.sw-scope .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.sw-scope .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;}
+.sw-scope a.kpi-card{text-decoration:none;color:inherit;display:block;}
+.sw-scope a.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+.sw-scope .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sw-scope .kpi-card.blue::before{background:var(--primary);}
+.sw-scope .kpi-card.green::before{background:var(--green);}
+.sw-scope .kpi-card.amber::before{background:var(--amber);}
+.sw-scope .kpi-card.red::before{background:var(--red);}
+.sw-scope .kpi-card.purple::before{background:var(--purple);}
+.sw-scope .kpi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.sw-scope .kpi-icon{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.sw-scope .kpi-icon.blue{background:var(--primary-light);color:var(--primary);}
+.sw-scope .kpi-icon.green{background:var(--green-light);color:var(--green);}
+.sw-scope .kpi-icon.amber{background:var(--amber-light);color:var(--amber);}
+.sw-scope .kpi-icon.red{background:var(--red-light);color:var(--red);}
+.sw-scope .kpi-icon.purple{background:var(--purple-light);color:var(--purple);}
+.sw-scope .kpi-val{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.sw-scope .kpi-label{font-size:11.5px;color:var(--text-3);margin-top:4px;}
+.sw-scope .kpi-foot{margin-top:8px;font-size:11px;color:var(--text-3);}
+.sw-scope .kpi-foot.danger{color:var(--red);font-weight:600;}
+
+.sw-scope .grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:18px;}
+.sw-scope .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden;}
+.sw-scope .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border-soft);}
+.sw-scope .panel-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.sw-scope .panel-title i{color:var(--primary);font-size:16px;}
+.sw-scope .panel-body{padding:14px 18px;}
+.sw-scope .panel-footer{padding:10px 18px;border-top:1px solid var(--border-soft);text-align:center;font-size:12px;}
+.sw-scope .panel-footer a{color:var(--text-3);text-decoration:none;}
+.sw-scope .panel-footer a:hover{color:var(--primary);}
+
+.sw-scope .act-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-soft);align-items:center;}
+.sw-scope .act-item:last-child{border-bottom:none;}
+.sw-scope .act-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--primary-light);color:var(--primary);}
+.sw-scope .act-body{flex:1;min-width:0;}
+.sw-scope .act-title{font-size:13px;font-weight:600;color:var(--text);}
+.sw-scope .act-meta{font-size:11.5px;color:var(--text-3);}
+.sw-scope .act-action{flex-shrink:0;}
+
+.sw-scope .empty-state{text-align:center;padding:30px 16px;color:var(--text-3);font-size:13px;}
+
+@media(max-width:1100px){.sw-scope .kpi-row{grid-template-columns:repeat(2,1fr);}.sw-scope .grid-2{grid-template-columns:1fr;}}
+@media(max-width:768px){.sw-scope .page-wrap{padding:12px 4px 32px;}}
+</style>
+
+<div class="sw-scope">
+<main class="page-wrap">
+  <div class="dept-picker">
+    <span class="dept-label"><i class="bi bi-building"></i> คลังย่อย:</span>
+    <div class="dept-pills">
+      <?= Html::a(
+          '<i class="bi bi-grid-fill"></i> ทุกคลัง',
+          ['/inventory-v2/sub-stock/dashboard', 'warehouse_id' => 'all'],
+          [
+              'class' => 'dept-pill' . ($activeWid === 0 ? ' active' : ''),
+              'style' => 'text-decoration:none;',
+          ]
+      ) ?>
+      <?php foreach ($warehouses as $w): ?>
+        <?= Html::a(
+            '<i class="bi bi-building"></i> ' . Html::encode($w->warehouse_name),
+            ['/inventory-v2/sub-stock/dashboard', 'warehouse_id' => $w->id],
+            [
+                'class' => 'dept-pill' . ((int) $w->id === $activeWid ? ' active' : ''),
+                'style' => 'text-decoration:none;',
+            ]
+        ) ?>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card blue">
+      <div class="kpi-top">
+        <div class="kpi-icon blue"><i class="bi bi-truck"></i></div>
+      </div>
+      <div class="kpi-val"><?= number_format($pendingReceiveCount) ?></div>
+      <div class="kpi-label">รอตรวจรับเข้า (ใบ)</div>
+      <div class="kpi-foot">จากคลังหลัก</div>
     </div>
 
-    <div class="row g-3">
-        <!-- แนวโน้มการตัดจ่าย (7 วันล่าสุด) -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary-gradient text-white py-2 px-3">
-                    <h6 class="text-white mb-0 fw-normal"><i class="bi bi-graph-up me-1"></i>แนวโน้มมูลค่าที่จ่ายมาคลังย่อย (7 วันล่าสุด)</h6>
-                </div>
-                <div class="card-body p-3">
-                    <div id="usageApexChart"></div>
-                </div>
-            </div>
-        </div>
+    <a class="kpi-card red" href="<?= Url::to($reportBalanceUrl) ?>">
+      <div class="kpi-top">
+        <div class="kpi-icon red"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      </div>
+      <div class="kpi-val" style="color:var(--red);"><?= number_format($criticalCount) ?></div>
+      <div class="kpi-label">ต่ำกว่าจุดวิกฤต (รายการ)</div>
+      <div class="kpi-foot danger">รีบกดเบิกทันที <i class="bi bi-arrow-right"></i></div>
+    </a>
 
-        <!-- รายการส่งของจากคลังหลัก -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h6 class="text-white mb-0 fw-normal"><i class="bi bi-box-seam me-1"></i>รายการส่งของจากคลังหลัก</h6>
-                    <span class="badge text-bg-light text-dark"><?= count($incomingList) ?></span>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        <?php if (!empty($incomingList)): ?>
-                            <?php foreach ($incomingList as $item): ?>
-                                <div class="list-group-item border-0 border-start border-3 border-primary px-3 py-2 incoming-item">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary bg-opacity-25 rounded p-2 flex-shrink-0"><i class="bi bi-file-earmark-text text-primary"></i></div>
-                                        <div class="flex-grow-1 min-w-0">
-                                            <div class="fw-bold"><?= Html::encode($item['doc_no'] ?? '-') ?></div>
-                                            <span class="text-muted"><?= (int)($item['detail_count'] ?? 0) ?> รายการ</span>
-                                            <?php if (!empty($item['main_warehouse_name'])): ?>
-                                                <span class="text-muted"> | <?= Html::encode($item['main_warehouse_name']) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?= Html::a('ดูใบส่ง', ['/inventory-v2/requisition/view', 'id' => $item['id'] ?? null], ['class' => 'btn btn-outline-primary rounded-pill flex-shrink-0']) ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="list-group-item border-0 px-3 py-4 text-center text-muted">
-                                ไม่มีรายการส่งของจากคลังหลักในขณะนี้
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="card-footer bg-transparent border-0 py-2 text-center">
-                    <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>" class="text-muted text-decoration-none">ดูทะเบียนใบขอเบิก <i class="bi bi-chevron-right"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="col-12">
-           <?= $this->render('use_history', ['usageHistory' => $usageHistory, 'currentWarehouseId' => $currentWarehouseId]) ?>
-
-        </div>
+    <div class="kpi-card green">
+      <div class="kpi-top">
+        <div class="kpi-icon green"><i class="bi bi-cash-stack"></i></div>
+      </div>
+      <div class="kpi-val"><?= Html::encode($monthlyValueLabel) ?></div>
+      <div class="kpi-label">มูลค่าเบิกใช้เดือนนี้</div>
+      <div class="kpi-foot"><i class="bi bi-graph-up"></i> เทียบเดือนก่อน</div>
     </div>
+
+    <div class="kpi-card amber">
+      <div class="kpi-top">
+        <div class="kpi-icon amber"><i class="bi bi-hourglass-split"></i></div>
+      </div>
+      <div class="kpi-val" style="color:var(--amber);"><?= number_format($expiringSoonCount) ?></div>
+      <div class="kpi-label">หมดอายุภายใน 30 วัน (Lot)</div>
+      <div class="kpi-foot">ควรนำออกมาใช้งานก่อน</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="bi bi-graph-up"></i> แนวโน้มมูลค่าที่จ่ายมาคลังย่อย (7 วันล่าสุด)</div>
+      </div>
+      <div class="panel-body">
+        <div id="usageApexChart"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="bi bi-box-seam"></i> รายการส่งของจากคลังหลัก</div>
+        <span class="dept-pill" style="cursor:default;font-size:11.5px;padding:2px 10px;"><?= number_format($totalIncoming) ?></span>
+      </div>
+      <div class="panel-body" style="padding:6px 18px;">
+        <?php if (!empty($incomingList)): ?>
+          <?php foreach ($incomingList as $item): ?>
+            <div class="act-item">
+              <div class="act-icon"><i class="bi bi-file-earmark-text"></i></div>
+              <div class="act-body">
+                <div class="act-title"><?= Html::encode($item['doc_no'] ?? '-') ?></div>
+                <div class="act-meta">
+                  <?= (int)($item['detail_count'] ?? 0) ?> รายการ
+                  <?php if (!empty($item['main_warehouse_name'])): ?>
+                    · <?= Html::encode($item['main_warehouse_name']) ?>
+                  <?php endif; ?>
+                </div>
+              </div>
+              <div class="act-action">
+                <?= Html::a('ดูใบส่ง', ['/inventory-v2/requisition/view', 'id' => $item['id'] ?? null], ['class' => 'sw-btn-outline', 'style' => 'padding:5px 10px;font-size:12px;']) ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div class="empty-state">ไม่มีรายการส่งของจากคลังหลักในขณะนี้</div>
+        <?php endif; ?>
+      </div>
+      <div class="panel-footer">
+        <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>">ดูทะเบียนใบขอเบิก <i class="bi bi-chevron-right"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <?= $this->render('use_history', ['usageHistory' => $usageHistory, 'currentWarehouseId' => $currentWarehouseId]) ?>
+  </div>
+</main>
 </div>
 
 <!-- Modal ตรวจรับพัสดุ -->
@@ -244,23 +301,6 @@ if ($currentWarehouseId && $warehouses) {
     </div>
 </div>
 
-<style>
-.sub-stock-dashboard .erp-icon-box {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.sub-stock-dashboard .kpi-card-link { color: inherit; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.sub-stock-dashboard .kpi-card-link:hover { color: inherit; transform: translateY(-2px); }
-.sub-stock-dashboard .kpi-card-link:hover .card { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
-.sub-stock-dashboard .kpi-card-link:focus-visible { outline: 2px solid #0d6efd; outline-offset: 2px; border-radius: 0.5rem; }
-.sub-stock-dashboard .incoming-item { transition: background-color 0.15s ease; }
-.sub-stock-dashboard .incoming-item:hover { background-color: rgba(13, 110, 253, 0.04); }
-</style>
-
 <?php
 $chartCategoriesJson = json_encode($chartData['categories']);
 $chartSeriesJson = json_encode($chartData['series']);
@@ -272,20 +312,16 @@ $(document).ready(function() {
     if (seriesData.length === 0) seriesData = [0];
     var options = {
         series: [{ name: 'มูลค่าที่จ่ายมา (บาท)', data: seriesData }],
-        chart: { height: 320, type: 'area', toolbar: { show: false }, fontFamily: 'inherit' },
-        colors: ['#0d6efd'],
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [0, 100] } },
+        chart: { height: 300, type: 'area', toolbar: { show: false }, fontFamily: 'Sarabun, sans-serif' },
+        colors: ['#255FAE'],
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
         stroke: { curve: 'smooth', width: 3 },
         xaxis: { categories: categories, axisBorder: { show: false }, axisTicks: { show: false } },
-        grid: { borderColor: '#f1f1f1', strokeDashArray: 4 },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
         tooltip: { theme: 'light', y: { formatter: function(v) { return v != null ? Number(v).toLocaleString('th-TH') + ' บาท' : ''; } } }
     };
     var chart = new ApexCharts(document.querySelector("#usageApexChart"), options);
     chart.render();
-});
-
-$('#subWarehouseFilter').on('change', function() {
-    $('#form-sub-warehouse').submit();
 });
 
 $('#receiveModal').on('show.bs.modal', function(e) {
@@ -295,7 +331,7 @@ $('#receiveModal').on('show.bs.modal', function(e) {
 
 $('#btnConfirmModal').on('click', function() {
     if (typeof Swal !== 'undefined') {
-        Swal.fire({ title: 'ยืนยันการรับ?', text: 'บันทึกการตรวจรับพัสดุ', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#0d6efd' })
+        Swal.fire({ title: 'ยืนยันการรับ?', text: 'บันทึกการตรวจรับพัสดุ', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#255FAE' })
             .then(function(result) {
                 if (result.isConfirmed) $('#receiveModal').modal('hide');
             });

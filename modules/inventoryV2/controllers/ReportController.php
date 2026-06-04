@@ -3,6 +3,7 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\models\Categorise;
+use app\modules\inventoryV2\components\MovementBridge;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockMonthlyReport;
 use app\modules\inventoryV2\models\StockOrder;
@@ -14,6 +15,7 @@ use yii\db\Expression;
 use yii\db\Query;
 use yii\web\Controller;
 use yii\web\Response;
+use yii\web\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -682,71 +684,74 @@ if ($categoryId || $status || $search) {
 
         $itemCodes = array_keys($prevClosing);
 
-        $inRows = (new Query())
-            ->select([
-                'sd.item_code',
-                'SUM(sd.qty) AS in_qty',
-                'SUM(sd.qty * COALESCE(sd.unit_price, 0)) AS in_value',
-            ])
-            ->from(['sd' => StockDetail::tableName()])
-            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-            ->where(['so.order_type' => StockOrder::ORDER_TYPE_IN])
-            ->andWhere(['so.main_warehouse_id' => $warehouseId])
-            ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
-            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
-            ->groupBy('sd.item_code')
-            ->all();
-        foreach ($inRows as $row) {
-            $itemCodes[] = $row['item_code'];
-        }
-        $itemCodes = array_unique($itemCodes);
-
-        $outQuery = StockDetail::find()
-            ->alias('sd')
-            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-            ->where(['so.order_type' => StockOrder::ORDER_TYPE_OUT])
-            ->andWhere(['so.main_warehouse_id' => $warehouseId])
-            ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
-            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED]);
-        $outQuery->select([
-            'sd.item_code',
-            'so.sub_warehouse_id',
-            'sd.qty',
-            'sd.unit_price',
+        // ดึง movement ในเดือนจากทั้ง V1 + V2 (ใช้ MovementBridge เพื่อความต่อเนื่อง)
+        $monthMoves = MovementBridge::movements([
+            'dateFrom'    => sprintf('%04d-%02d-01', $year, $month),
+            'dateTo'      => sprintf('%04d-%02d-%02d', $year, $month, $lastDay),
+            'warehouseId' => $warehouseId,
         ]);
-        $outRows = $outQuery->asArray()->all();
 
-        $outSub = [];
-        $outHosp = [];
-        foreach ($outRows as $row) {
-            $code = $row['item_code'];
-            $q = (float) $row['qty'];
-            $v = $q * (float) ($row['unit_price'] ?? 0);
-            if (!isset($outSub[$code])) {
-                $outSub[$code] = ['qty' => 0, 'value' => 0];
-            }
-            if (!isset($outHosp[$code])) {
-                $outHosp[$code] = ['qty' => 0, 'value' => 0];
-            }
-            $isSub = in_array((int) $row['sub_warehouse_id'], $subIds, true);
-            if ($isSub) {
-                $outSub[$code]['qty'] += $q;
-                $outSub[$code]['value'] += $v;
+        // ถ้าไม่มี prev_closing — อ่าน opening จากประวัติทั้งหมดก่อนเริ่มเดือน
+        $needBootstrap = empty($prevClosing);
+        $bootstrapMoves = [];
+        if ($needBootstrap) {
+            $bootstrapMoves = MovementBridge::movements([
+                'dateTo'      => date('Y-m-d', strtotime($dateStart . ' -1 day')),
+                'warehouseId' => $warehouseId,
+            ]);
+        }
+
+        $inMap = [];     // [item_code => ['in_qty','in_value']]
+        $outSub = [];    // จ่ายส่วนของ รพ.สต. (warehouses ใน getDisburseSubWarehouseIds)
+        $outHosp = [];   // จ่ายส่วนของโรงพยาบาล (ที่เหลือ)
+        $bootstrapMap = []; // [item_code => ['qty','value']] - opening จากประวัติทั้งหมด
+
+        foreach ($monthMoves as $m) {
+            $code = (string) $m['item_code'];
+            if ($code === '') continue;
+            $q = (float) $m['qty'];
+            $v = (float) $m['total_price'];
+            $itemCodes[] = $code;
+            if ($m['order_type'] === 'IN') {
+                if (!isset($inMap[$code])) {
+                    $inMap[$code] = ['in_qty' => 0.0, 'in_value' => 0.0];
+                }
+                $inMap[$code]['in_qty']   += $q;
+                $inMap[$code]['in_value'] += $v;
             } else {
-                $outHosp[$code]['qty'] += $q;
-                $outHosp[$code]['value'] += $v;
+                if (!isset($outSub[$code]))  $outSub[$code]  = ['qty' => 0.0, 'value' => 0.0];
+                if (!isset($outHosp[$code])) $outHosp[$code] = ['qty' => 0.0, 'value' => 0.0];
+                $cp = $m['counterparty_id'];
+                $isSub = $cp !== null && in_array((int) $cp, $subIds, true);
+                if ($isSub) {
+                    $outSub[$code]['qty']   += $q;
+                    $outSub[$code]['value'] += $v;
+                } else {
+                    $outHosp[$code]['qty']   += $q;
+                    $outHosp[$code]['value'] += $v;
+                }
+            }
+        }
+
+        foreach ($bootstrapMoves as $m) {
+            $code = (string) $m['item_code'];
+            if ($code === '') continue;
+            if (!isset($bootstrapMap[$code])) {
+                $bootstrapMap[$code] = ['qty' => 0.0, 'value' => 0.0];
+            }
+            $q = (float) $m['qty'];
+            $v = (float) $m['total_price'];
+            if ($m['order_type'] === 'IN') {
+                $bootstrapMap[$code]['qty']   += $q;
+                $bootstrapMap[$code]['value'] += $v;
+            } else {
+                $bootstrapMap[$code]['qty']   -= $q;
+                $bootstrapMap[$code]['value'] -= $v;
             }
             $itemCodes[] = $code;
         }
-        $itemCodes = array_unique($itemCodes);
 
-        $inMap = [];
-        foreach ($inRows as $row) {
-            $inMap[$row['item_code']] = [
-                'in_qty' => (float) $row['in_qty'],
-                'in_value' => (float) ($row['in_value'] ?? 0),
-            ];
-        }
+        $itemCodes = array_unique($itemCodes);
 
         StockMonthlyReport::deleteAll([
             'report_year' => $year,
@@ -760,8 +765,15 @@ if ($categoryId || $status || $search) {
 
         foreach ($itemCodes as $itemCode) {
             $prev = $prevClosing[$itemCode] ?? null;
-            $openingQty = $prev ? (float) $prev['closing_qty'] : 0;
-            $openingValue = $prev ? (float) $prev['closing_value'] : 0;
+            if ($prev) {
+                $openingQty   = (float) $prev['closing_qty'];
+                $openingValue = (float) $prev['closing_value'];
+            } else {
+                // bootstrap จากประวัติทั้งหมดก่อนเดือนนี้ (สำหรับเดือนแรกของระบบ)
+                $boot = $bootstrapMap[$itemCode] ?? null;
+                $openingQty   = $boot ? $boot['qty']   : 0;
+                $openingValue = $boot ? $boot['value'] : 0;
+            }
 
             $in = $inMap[$itemCode] ?? ['in_qty' => 0, 'in_value' => 0];
             $inQty = $in['in_qty'];
@@ -894,6 +906,7 @@ if ($categoryId || $status || $search) {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
         $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        $assetType = $this->request->get('asset_type_id') ?: null;
 
         $listWarehouse = Warehouse::find()
             ->where(['warehouse_type' => 'MAIN'])
@@ -901,14 +914,25 @@ if ($categoryId || $status || $search) {
             ->all();
         $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
 
-        $rows = $this->getRowsByItem($year, $month, $warehouseId);
+        $assetTypes = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'asset_type', 'group_id' => 'MATER'])
+                ->orderBy(['code' => SORT_ASC])
+                ->all(),
+            'code',
+            function ($m) { return '(' . $m->code . ') ' . $m->title; }
+        );
+
+        $rows = $this->getRowsByItem($year, $month, $warehouseId, $assetType);
         $hasData = !empty($rows);
 
         return $this->render('material-by-item', [
             'year' => $year,
             'month' => $month,
             'warehouseId' => $warehouseId,
+            'assetType' => $assetType,
             'warehouses' => $warehouses,
+            'assetTypes' => $assetTypes,
             'rows' => $rows,
             'hasData' => $hasData,
         ]);
@@ -917,7 +941,7 @@ if ($categoryId || $status || $search) {
     /**
      * ดึงรายงานระดับรายการ (ไม่รวมตาม category) จาก stock_monthly_report
      */
-    protected function getRowsByItem($year, $month, $warehouseId = null)
+    protected function getRowsByItem($year, $month, $warehouseId = null, $assetTypeId = null)
     {
         $query = (new Query())
             ->select([
@@ -945,6 +969,9 @@ if ($categoryId || $status || $search) {
         if ($warehouseId !== null && $warehouseId !== '') {
             $query->andWhere(['r.warehouse_id' => $warehouseId]);
         }
+        if ($assetTypeId !== null && $assetTypeId !== '') {
+            $query->andWhere(['i.category_id' => $assetTypeId]);
+        }
 
         return $query->all();
     }
@@ -957,8 +984,9 @@ if ($categoryId || $status || $search) {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
         $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        $assetType = $this->request->get('asset_type_id') ?: null;
 
-        $rows = $this->getRowsByItem($year, $month, $warehouseId);
+        $rows = $this->getRowsByItem($year, $month, $warehouseId, $assetType);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -1044,5 +1072,606 @@ if ($categoryId || $status || $search) {
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * รายงานวัสดุคงคลังหลักรายตัว — สรุปยอด ยกมา / รับเข้า / จ่ายออก / คงเหลือ ต่อรายการ
+     * ในช่วงเวลาที่เลือก (รวม V1 stock_events + V2 stock_order/stock_detail)
+     */
+    public function actionListByItem()
+    {
+        $request = $this->request;
+        $assetType = $request->get('asset_type_id') ?: null;
+        $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
+        $warehouseId = $warehouseId ? (int) $warehouseId : null;
+        $dateStart = $request->get('date_start') ?: date('Y-m-01');
+        $dateEnd   = $request->get('date_end')   ?: date('Y-m-t');
+
+        $rows = MovementBridge::aggregateByItem([
+            'dateFrom'      => $dateStart,
+            'dateTo'        => $dateEnd,
+            'warehouseId'   => $warehouseId,
+            'assetTypeCode' => $assetType,
+        ]);
+
+        $summary = [
+            'begin_qty' => 0, 'begin_price' => 0,
+            'qty_in' => 0,    'price_in' => 0,
+            'qty_out' => 0,   'price_out' => 0,
+            'end_qty' => 0,   'end_price' => 0,
+        ];
+        foreach ($rows as $r) {
+            foreach (array_keys($summary) as $k) {
+                $summary[$k] += (float) ($r[$k] ?? 0);
+            }
+        }
+
+        $assetTypeOptions = \yii\helpers\ArrayHelper::map(
+            \app\models\Categorise::find()
+                ->where(['name' => 'asset_type'])
+                ->orderBy(['code' => SORT_ASC])
+                ->all(),
+            'code',
+            function ($m) { return '(' . $m->code . ') ' . $m->title; }
+        );
+
+        $warehouseOptions = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map(
+            Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->orderBy(['warehouse_name' => SORT_ASC])
+                ->all(),
+            'id', 'warehouse_name'
+        );
+
+        return $this->render('list-by-item', [
+            'rows' => $rows,
+            'summary' => $summary,
+            'assetType' => $assetType,
+            'warehouseId' => $warehouseId,
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
+            'assetTypeOptions' => $assetTypeOptions,
+            'warehouseOptions' => $warehouseOptions,
+        ]);
+    }
+
+    /**
+     * รายงานวัสดุรับ-จ่าย — รายละเอียดบรรทัดต่อบรรทัด (รวม V1 + V2)
+     */
+    public function actionListByOrder()
+    {
+        $request = $this->request;
+        $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
+        $warehouseId = $warehouseId ? (int) $warehouseId : null;
+        $assetType = $request->get('asset_type_id') ?: null;
+        $assetItem = $request->get('asset_item') ?: null;
+        $transactionType = $request->get('transaction_type') ?: null;
+        $dateStart = $request->get('date_start') ?: date('Y-m-01');
+        $dateEnd   = $request->get('date_end')   ?: date('Y-m-t');
+
+        $rows = MovementBridge::movements([
+            'dateFrom'        => $dateStart,
+            'dateTo'          => $dateEnd,
+            'warehouseId'     => $warehouseId,
+            'assetTypeCode'   => $assetType,
+            'itemCode'        => $assetItem,
+            'transactionType' => $transactionType,
+            'orderBy'         => 'ASC',
+        ]);
+
+        $totalPrice = 0.0;
+        foreach ($rows as $r) {
+            $totalPrice += (float) $r['total_price'];
+        }
+
+        $assetTypeOptions = \yii\helpers\ArrayHelper::map(
+            \app\models\Categorise::find()
+                ->where(['name' => 'asset_type'])
+                ->orderBy(['code' => SORT_ASC])
+                ->all(),
+            'code',
+            function ($m) { return '(' . $m->code . ') ' . $m->title; }
+        );
+
+        $warehouseOptions = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map(
+            Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->orderBy(['warehouse_name' => SORT_ASC])
+                ->all(),
+            'id', 'warehouse_name'
+        );
+
+        return $this->render('list-by-order', [
+            'rows' => $rows,
+            'totalPrice' => $totalPrice,
+            'warehouseId' => $warehouseId,
+            'assetType' => $assetType,
+            'assetItem' => $assetItem,
+            'transactionType' => $transactionType,
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
+            'assetTypeOptions' => $assetTypeOptions,
+            'warehouseOptions' => $warehouseOptions,
+        ]);
+    }
+
+    /**
+     * รายงานสรุปคงคลังรายเดือน (ปิดเดือน) — ระดับรายการพัสดุ
+     * อ่านจาก stock_monthly_report (snapshot ที่กดปิดเดือนแล้ว — V1 + V2 ใช้ตารางเดียวกัน)
+     */
+    public function actionStockMonthly()
+    {
+        $request = $this->request;
+        $reportYear  = (int) ($request->get('report_year') ?: date('Y'));
+        $reportMonth = (int) ($request->get('report_month') ?: date('n'));
+        $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
+        $warehouseId = $warehouseId ? (int) $warehouseId : null;
+        $assetType   = $request->get('asset_type_id') ?: null;
+        $q           = trim((string) $request->get('q', ''));
+
+        $query = (new Query())
+            ->select([
+                'r.*',
+                'si.item_name',
+                'si.category_id AS asset_type_code',
+                't.title AS asset_type_name',
+                'w.warehouse_name',
+            ])
+            ->from(['r' => StockMonthlyReport::tableName()])
+            ->leftJoin(['si' => 'stock_item'], 'si.item_code = r.item_code')
+            ->leftJoin(['t'  => 'categorise'], "t.code = si.category_id AND t.name = 'asset_type'")
+            ->leftJoin(['w'  => 'warehouses'], 'w.id = r.warehouse_id')
+            ->where([
+                'r.report_year'  => $reportYear,
+                'r.report_month' => $reportMonth,
+            ]);
+
+        if ($warehouseId !== null) {
+            $query->andWhere(['r.warehouse_id' => $warehouseId]);
+        }
+        if ($assetType !== null && $assetType !== '') {
+            $query->andWhere(['si.category_id' => $assetType]);
+        }
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'r.item_code', $q],
+                ['like', 'si.item_name', $q],
+            ]);
+        }
+        $query->orderBy(['r.item_code' => SORT_ASC]);
+
+        $rows = $query->all();
+        $summary = [
+            'opening_qty' => 0, 'opening_value' => 0,
+            'in_qty' => 0, 'in_value' => 0,
+            'out_sub_qty' => 0, 'out_hosp_qty' => 0,
+            'total_out_qty' => 0, 'total_out_value' => 0,
+            'closing_qty' => 0, 'closing_value' => 0,
+        ];
+        foreach ($rows as $r) {
+            foreach (array_keys($summary) as $k) {
+                $summary[$k] += (float) ($r[$k] ?? 0);
+            }
+        }
+
+        $assetTypeOptions = \yii\helpers\ArrayHelper::map(
+            \app\models\Categorise::find()
+                ->where(['name' => 'asset_type'])
+                ->orderBy(['code' => SORT_ASC])
+                ->all(),
+            'code',
+            function ($m) { return '(' . $m->code . ') ' . $m->title; }
+        );
+
+        $warehouseOptions = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map(
+            Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->orderBy(['warehouse_name' => SORT_ASC])
+                ->all(),
+            'id', 'warehouse_name'
+        );
+
+        return $this->render('stock-monthly', [
+            'rows' => $rows,
+            'summary' => $summary,
+            'reportYear' => $reportYear,
+            'reportMonth' => $reportMonth,
+            'warehouseId' => $warehouseId,
+            'assetType' => $assetType,
+            'q' => $q,
+            'assetTypeOptions' => $assetTypeOptions,
+            'warehouseOptions' => $warehouseOptions,
+        ]);
+    }
+
+    /**
+     * Trigger ปิดเดือนจากหน้า stock-monthly (POST) — wrapper เรียก closeMonthForWarehouse
+     */
+    public function actionStockMonthlyGenerate()
+    {
+        $reportYear  = (int) $this->request->post('report_year');
+        $reportMonth = (int) $this->request->post('report_month');
+        $warehouseIdParam = $this->request->post('warehouse_id');
+
+        if (!$reportYear || !$reportMonth) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุปีและเดือน');
+            return $this->redirect(['stock-monthly']);
+        }
+
+        if ($warehouseIdParam === 'all' || $warehouseIdParam === '' || $warehouseIdParam === null) {
+            $warehouseIds = Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->select('id')
+                ->column();
+        } else {
+            $warehouseIds = [(int) $warehouseIdParam];
+        }
+
+        $total = 0;
+        try {
+            foreach ($warehouseIds as $wid) {
+                $r = $this->closeMonthForWarehouse((int) $wid, $reportYear, $reportMonth);
+                $total += $r['count'];
+            }
+            $monthNames = [1=>'มกราคม',2=>'กุมภาพันธ์',3=>'มีนาคม',4=>'เมษายน',5=>'พฤษภาคม',6=>'มิถุนายน',7=>'กรกฎาคม',8=>'สิงหาคม',9=>'กันยายน',10=>'ตุลาคม',11=>'พฤศจิกายน',12=>'ธันวาคม'];
+            $monthLabel = ($monthNames[$reportMonth] ?? '') . ' ' . ($reportYear + 543);
+            Yii::$app->session->setFlash('success', "ปิดเดือน $monthLabel เรียบร้อย — บันทึก $total รายการ (รวม V1+V2)");
+        } catch (\Throwable $e) {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        return $this->redirect([
+            'stock-monthly',
+            'report_year' => $reportYear,
+            'report_month' => $reportMonth,
+            'warehouse_id' => is_numeric($warehouseIdParam) ? (int) $warehouseIdParam : '',
+        ]);
+    }
+
+    /**
+     * เขียน CSV สรุปรายการที่ skip ตอน import ลงไฟล์ temp ที่ @runtime/seed-import-skipped/
+     * คืน token (สำหรับใส่ใน URL ดาวน์โหลด) หรือ null ถ้าไม่มี skip
+     */
+    private static function writeSeedSkippedCsv(array $skipMissingWh, array $skipMissingItem, array $skipBadNumber, array $skipNoMatch, array $skipAmbiguous)
+    {
+        $total = count($skipMissingWh) + count($skipMissingItem) + count($skipBadNumber) + count($skipNoMatch) + count($skipAmbiguous);
+        if ($total === 0) return null;
+
+        $dir = Yii::getAlias('@runtime') . '/seed-import-skipped';
+        if (!is_dir($dir)) @mkdir($dir, 0775, true);
+        $token = bin2hex(random_bytes(16));
+        $path = $dir . '/' . $token . '.csv';
+
+        $fp = fopen($path, 'w');
+        fwrite($fp, "\xEF\xBB\xBF");
+        fputcsv($fp, ['reason', 'row', 'item_code', 'warehouse_name', 'category_id', 'candidates']);
+        $writeRows = static function ($reason, array $rows) use ($fp) {
+            foreach ($rows as $r) {
+                fputcsv($fp, [
+                    $reason,
+                    (string) ($r['row'] ?? ''),
+                    (string) ($r['item_code'] ?? ''),
+                    (string) ($r['warehouse_name'] ?? ''),
+                    (string) ($r['category_id'] ?? ''),
+                    isset($r['candidates']) && is_array($r['candidates']) ? implode(' | ', $r['candidates']) : '',
+                ]);
+            }
+        };
+        $writeRows('ไม่พบคลัง', $skipMissingWh);
+        $writeRows('ไม่พบ item_code', $skipMissingItem);
+        $writeRows('ไม่พบคลังหลักที่รับประเภทวัสดุนี้', $skipNoMatch);
+        $writeRows('มีหลายคลังที่รับประเภทนี้ — ต้องระบุ warehouse_name', $skipAmbiguous);
+        $writeRows('จำนวน/มูลค่าไม่ใช่ตัวเลข', $skipBadNumber);
+        fclose($fp);
+
+        // เคลียร์ไฟล์เก่าที่เก็บเกิน 24 ชั่วโมง
+        foreach (glob($dir . '/*.csv') ?: [] as $old) {
+            if (is_file($old) && (time() - filemtime($old)) > 86400) {
+                @unlink($old);
+            }
+        }
+        return $token;
+    }
+
+    /**
+     * ดาวน์โหลด CSV รายการ skip จาก import ครั้งล่าสุด
+     */
+    public function actionStockMonthlySeedSkippedDownload($token)
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/', (string) $token)) {
+            throw new \yii\web\NotFoundHttpException('Invalid token');
+        }
+        $path = Yii::getAlias('@runtime') . '/seed-import-skipped/' . $token . '.csv';
+        if (!is_file($path)) {
+            throw new \yii\web\NotFoundHttpException('File not found หรือหมดอายุแล้ว');
+        }
+        return Yii::$app->response->sendFile($path, 'seed-import-skipped.csv', [
+            'mimeType' => 'text/csv',
+            'inline' => false,
+        ]);
+    }
+
+    /**
+     * แปลงตัวเลขจาก CSV ที่อาจมีหลายรูปแบบ ให้เป็น float
+     * รองรับ: ทศนิยม, คั่นพัน (,), currency (฿ $ บาท THB € ¥), whitespace,
+     * non-breaking space, Excel leading apostrophe ('), ค่าติดลบ
+     * @return float|null null ถ้าแปลงไม่ได้
+     */
+    private static function parseNumberFlexible($raw)
+    {
+        if ($raw === null) return null;
+        $s = (string) $raw;
+        $s = preg_replace('/\xEF\xBB\xBF/', '', $s);                  // BOM
+        $s = preg_replace('/[\s\x{00A0}]+/u', '', $s);                // whitespace + NBSP
+        $s = ltrim($s, "'");                                          // Excel leading apostrophe
+        $s = str_replace(['฿', '$', 'บาท', 'THB', '€', '¥'], '', $s); // currency
+        $s = str_replace(',', '', $s);                                // thousand separators
+        // dash-only (-, –, —) แทนค่าว่าง ให้เป็น 0
+        if (in_array($s, ['-', '–', '—'], true)) {
+            return 0.0;
+        }
+        if ($s === '' || !is_numeric($s)) {
+            return null;
+        }
+        return (float) $s;
+    }
+
+    /**
+     * ดาวน์โหลดเทมเพลต CSV สำหรับ seed ยอดยกมา
+     */
+    public function actionStockMonthlySeedTemplate()
+    {
+        // warehouse_name เป็น optional — ถ้าเว้นว่าง ระบบจะ map คลังหลักให้อัตโนมัติตาม
+        // ประเภทวัสดุ (stock_item.category_id) ที่คลังตั้งค่ารับใน data_json.item_type
+        $rows = [
+            ['item_code', 'closing_qty', 'closing_value', 'warehouse_name'],
+            ['M001', '150', '4500.00', ''],
+            ['M002', '80',  '2400.00', ''],
+            ['D001', '30',  '900.00',  'คลังเวชภัณฑ์ (ระบุเอง เมื่อมีหลายคลังรับประเภทนี้)'],
+        ];
+
+        $filename = 'stock_monthly_seed_template.csv';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        Yii::$app->response->headers->set('Content-Disposition', "attachment; filename=\"{$filename}\"");
+
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        foreach ($rows as $r) {
+            fputcsv($out, $r);
+        }
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
+        return $csv;
+    }
+
+    /**
+     * Import CSV เพื่อ seed ยอดยกมา (opening balance) สำหรับเริ่มต้นใช้งานระบบ
+     * CSV header: warehouse_name, item_code, closing_qty, closing_value
+     * ระบบจะเขียนลง stock_monthly_report ของ "เดือนก่อนหน้า" ที่ผู้ใช้เลือก
+     * โดยมี closing_qty/value = ค่าจาก CSV เพื่อให้เดือนถัดไปดึงไปเป็น opening อัตโนมัติ
+     */
+    public function actionStockMonthlySeedImport()
+    {
+        $reportYear  = (int) $this->request->post('report_year');
+        $reportMonth = (int) $this->request->post('report_month');
+
+        if (!$reportYear || !$reportMonth || $reportMonth < 1 || $reportMonth > 12) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุปีและเดือนของยอดยกมาให้ถูกต้อง');
+            return $this->redirect(['stock-monthly']);
+        }
+
+        $file = UploadedFile::getInstanceByName('csv_file');
+        if (!$file || $file->error !== UPLOAD_ERR_OK) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกไฟล์ CSV');
+            return $this->redirect(['stock-monthly']);
+        }
+
+        $handle = fopen($file->tempName, 'r');
+        if (!$handle) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอ่านไฟล์ CSV ได้');
+            return $this->redirect(['stock-monthly']);
+        }
+
+        // ข้าม BOM ถ้ามี
+        $firstBytes = fread($handle, 3);
+        if ($firstBytes !== "\xEF\xBB\xBF") {
+            rewind($handle);
+        }
+
+        $header = fgetcsv($handle);
+        if (!$header) {
+            fclose($handle);
+            Yii::$app->session->setFlash('error', 'ไฟล์ CSV ว่างหรือไม่มี header');
+            return $this->redirect(['stock-monthly']);
+        }
+        $header = array_map(fn($h) => strtolower(trim((string) $h)), $header);
+        $required = ['item_code', 'closing_qty', 'closing_value'];
+        foreach ($required as $col) {
+            if (!in_array($col, $header, true)) {
+                fclose($handle);
+                Yii::$app->session->setFlash('error', "Header ไม่ครบ ต้องมีคอลัมน์: " . implode(', ', $required) . " (warehouse_name เป็น optional)");
+                return $this->redirect(['stock-monthly']);
+            }
+        }
+        $idx = array_flip($header);
+        $hasWarehouseCol = isset($idx['warehouse_name']);
+
+        // โหลด lookup คลังหลัก + ประเภทวัสดุที่แต่ละคลังรับ
+        $warehouseMap = [];        // [lowercased name => id]
+        $mainWarehouses = [];      // [id => Warehouse]
+        $categoryToWhIds = [];     // [category_code => [warehouse_id, ...]] — เฉพาะคลังที่ระบุ item_type
+        foreach (Warehouse::find()->where(['warehouse_type' => 'MAIN'])->all() as $w) {
+            $warehouseMap[mb_strtolower(trim((string) $w->warehouse_name))] = (int) $w->id;
+            $mainWarehouses[(int) $w->id] = $w;
+            foreach ($w->getAllowedItemTypeCodes() as $code) {
+                $categoryToWhIds[(string) $code][] = (int) $w->id;
+            }
+        }
+
+        // โหลด item_code → category_id (asset_type) เพื่อใช้ map คลังอัตโนมัติ
+        $itemCategoryMap = [];
+        foreach ((new Query())->select(['item_code', 'category_id'])->from(StockItem::tableName())->each() as $it) {
+            $itemCategoryMap[(string) $it['item_code']] = $it['category_id'] !== null ? (string) $it['category_id'] : null;
+        }
+
+        $rowNum = 1;
+        $okRows = [];           // [['warehouse_id','item_code','qty','value']]
+        $skipMissingWh = [];    // CSV ระบุ warehouse_name แต่ไม่พบ
+        $skipMissingItem = [];  // item_code ไม่อยู่ใน stock_item
+        $skipBadNumber = [];    // closing_qty/value ไม่ใช่ตัวเลข
+        $skipNoMatch = [];      // ไม่ระบุ warehouse + map ตาม category ไม่ได้ (0 คลัง)
+        $skipAmbiguous = [];    // ไม่ระบุ warehouse + พบหลายคลัง
+        $skipEmpty = 0;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            $rowNum++;
+            if (count(array_filter($data, fn($c) => $c !== null && trim((string) $c) !== '')) === 0) {
+                $skipEmpty++;
+                continue;
+            }
+            $wName = $hasWarehouseCol ? trim((string) ($data[$idx['warehouse_name']] ?? '')) : '';
+            $code  = trim((string) ($data[$idx['item_code']] ?? ''));
+            $qRaw  = trim((string) ($data[$idx['closing_qty']] ?? ''));
+            $vRaw  = trim((string) ($data[$idx['closing_value']] ?? ''));
+
+            if (!array_key_exists($code, $itemCategoryMap)) {
+                $skipMissingItem[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                continue;
+            }
+
+            // หา warehouse_id
+            $whId = null;
+            if ($wName !== '') {
+                $whId = $warehouseMap[mb_strtolower($wName)] ?? null;
+                if ($whId === null) {
+                    $skipMissingWh[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                    continue;
+                }
+            } else {
+                $cat = $itemCategoryMap[$code];
+                $candidates = $cat !== null && isset($categoryToWhIds[$cat]) ? array_unique($categoryToWhIds[$cat]) : [];
+                if (count($candidates) === 0) {
+                    $skipNoMatch[] = ['row' => $rowNum, 'item_code' => $code, 'category_id' => $cat];
+                    continue;
+                }
+                if (count($candidates) > 1) {
+                    $names = array_map(fn($id) => $mainWarehouses[$id]->warehouse_name ?? ('#' . $id), $candidates);
+                    $skipAmbiguous[] = ['row' => $rowNum, 'item_code' => $code, 'category_id' => $cat, 'candidates' => $names];
+                    continue;
+                }
+                $whId = (int) $candidates[0];
+            }
+
+            $qty = self::parseNumberFlexible($qRaw);
+            $val = self::parseNumberFlexible($vRaw);
+            if ($qty === null || $val === null) {
+                $skipBadNumber[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
+                continue;
+            }
+            $okRows[] = [
+                'warehouse_id' => $whId,
+                'item_code' => $code,
+                'closing_qty' => $qty,
+                'closing_value' => $val,
+            ];
+        }
+        fclose($handle);
+
+        // เขียนลง stock_monthly_report (replace per warehouse_id+item_code+period)
+        $createdAt = time();
+        $createdBy = Yii::$app->user->id;
+        $inserted = 0;
+        $updated = 0;
+        $itemCache = [];
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($okRows as $r) {
+                $existing = StockMonthlyReport::findOne([
+                    'report_year' => $reportYear,
+                    'report_month' => $reportMonth,
+                    'warehouse_id' => $r['warehouse_id'],
+                    'item_code' => $r['item_code'],
+                ]);
+                $isNew = !$existing;
+                $rec = $existing ?: new StockMonthlyReport();
+                $rec->report_year = $reportYear;
+                $rec->report_month = $reportMonth;
+                $rec->warehouse_id = $r['warehouse_id'];
+                $rec->item_code = $r['item_code'];
+
+                if (!isset($itemCache[$r['item_code']])) {
+                    $itemCache[$r['item_code']] = StockItem::findOne(['item_code' => $r['item_code']]);
+                }
+                $item = $itemCache[$r['item_code']];
+                $rec->unit_name = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
+
+                $rec->opening_qty = 0;
+                $rec->opening_value = 0;
+                $rec->in_qty = 0;
+                $rec->in_value = 0;
+                $rec->out_sub_qty = 0;
+                $rec->out_hosp_qty = 0;
+                $rec->total_out_qty = 0;
+                $rec->total_out_value = 0;
+                $rec->closing_qty = $r['closing_qty'];
+                $rec->closing_value = $r['closing_value'];
+                if ($isNew) {
+                    $rec->created_at = $createdAt;
+                    $rec->created_by = $createdBy;
+                }
+                $rec->save(false);
+                $isNew ? $inserted++ : $updated++;
+            }
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดระหว่างบันทึก: ' . $e->getMessage());
+            return $this->redirect(['stock-monthly']);
+        }
+
+        $skipTotal = count($skipMissingWh) + count($skipMissingItem) + count($skipBadNumber)
+            + count($skipNoMatch) + count($skipAmbiguous);
+        $monthNames = [1=>'มกราคม',2=>'กุมภาพันธ์',3=>'มีนาคม',4=>'เมษายน',5=>'พฤษภาคม',6=>'มิถุนายน',7=>'กรกฎาคม',8=>'สิงหาคม',9=>'กันยายน',10=>'ตุลาคม',11=>'พฤศจิกายน',12=>'ธันวาคม'];
+        $periodLabel = ($monthNames[$reportMonth] ?? '') . ' ' . ($reportYear + 543);
+
+        $skippedToken = self::writeSeedSkippedCsv(
+            $skipMissingWh, $skipMissingItem, $skipBadNumber, $skipNoMatch, $skipAmbiguous
+        );
+
+        $maxList = 100; // จำกัดจำนวนรายการที่เก็บใน flash เพื่อไม่ให้ session.data ล้น
+        $report = [
+            'period' => $periodLabel,
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'skip_total' => $skipTotal,
+            'skip_empty' => $skipEmpty,
+            'skip_missing_wh' => array_slice($skipMissingWh, 0, $maxList),
+            'skip_missing_item' => array_slice($skipMissingItem, 0, $maxList),
+            'skip_bad_number' => array_slice($skipBadNumber, 0, $maxList),
+            'skip_no_match' => array_slice($skipNoMatch, 0, $maxList),
+            'skip_ambiguous' => array_slice($skipAmbiguous, 0, $maxList),
+            'skip_missing_wh_count' => count($skipMissingWh),
+            'skip_missing_item_count' => count($skipMissingItem),
+            'skip_bad_number_count' => count($skipBadNumber),
+            'skip_no_match_count' => count($skipNoMatch),
+            'skip_ambiguous_count' => count($skipAmbiguous),
+            'skipped_token' => $skippedToken,
+        ];
+        Yii::$app->session->setFlash('seed_import_report', $report);
+
+        // คำนวณเดือนถัดไปเพื่อ redirect ให้ผู้ใช้เห็นว่า opening พร้อมใช้
+        $nextMonth = $reportMonth + 1;
+        $nextYear = $reportYear;
+        if ($nextMonth > 12) { $nextMonth = 1; $nextYear++; }
+
+        return $this->redirect([
+            'stock-monthly',
+            'report_year' => $nextYear,
+            'report_month' => $nextMonth,
+        ]);
     }
 }
