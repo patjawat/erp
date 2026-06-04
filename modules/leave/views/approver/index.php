@@ -34,7 +34,7 @@ $totalCount = (int) $dataProvider->getTotalCount();
 <?php $this->endBlock(); ?>
 
 <div class="d-flex flex-column gap-3 gap-lg-4">
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-bottom p-3">
             <div class="d-flex align-items-start gap-3">
                 <span class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0">

@@ -90,7 +90,7 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
 
 
 
-        <div class="col-12 col-xl-5">
+        <div class="col-12 col-xl-5 position-relative" style="z-index: 1055;">
             <?php echo $form->field($model, 'q_department')->widget(\kartik\tree\TreeViewInput::className(), [
                 'name' => 'department',
                 'id' => 'treeID',

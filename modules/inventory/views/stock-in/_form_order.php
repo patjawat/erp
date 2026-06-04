@@ -102,7 +102,10 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 ?>
 <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-6">
-        <?= $form->field($model, 'movement_date')->textInput()->label('วันที่รับเข้า'); ?>
+        <?= $form->field($model, 'movement_date')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => 'วันที่รับเข้า'],
+])->label(false); ?>
+
     </div>
 </div>
 
@@ -112,7 +115,6 @@ echo $form->field($model, 'vendor_id')->widget(Select2::classname(), [
 <?php
 $js = <<< JS
 
-    thaiDatepicker('#stockevent-movement_date')
     console.log($("#stockevent-auto_lot").val())
     if($("#stockevent-auto_lot").val()){
     $( "#stockevent-auto_lot" ).prop( "checked", localStorage.getItem('lot_auto') == 1 ? true : false );

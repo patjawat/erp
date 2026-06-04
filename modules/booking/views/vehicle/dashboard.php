@@ -26,13 +26,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('sub-title'); ?>
 Dashboard
 <?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('menu')?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/vehicle_menu',['active' => 'dashboard']) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('menu',['active' => 'dashboard'])?>
-<?php $this->endBlock(); ?>
 
 
 <div class="d-flex justify-content-between">
