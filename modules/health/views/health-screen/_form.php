@@ -48,7 +48,12 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
     </div>
     <div class="row g-3 mb-4">
         <div class="col-md-6"><?= $form->field($model, 'thai_year')->textInput(['placeholder' => 'ระบุปีที่ตรวจ']) ?></div>
-        <div class="col-md-6"><?= $form->field($model, 'date_checkup')->textInput(['readonly' => true]) ?></div>
+        <div class="col-md-6">
+            <?= $form->field($model, 'date_checkup')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+                'options' => ['placeholder' => 'ระบุวันที่คัดกรอง'],
+                ]); ?>
+                </div>
+
     </div>
 
     <div class="row g-3 mb-4">
@@ -310,7 +315,6 @@ ActiveForm::end();
 <?php
 $this->registerJs(
     <<<JS
-thaiDatepicker('#healthscreen-date_checkup');
 
 // รสอาหาร — mutual exclusion กับ "ไม่ชอบทุกข้อ"
 $(document).on('change', '.food-taste-cb', function() {
