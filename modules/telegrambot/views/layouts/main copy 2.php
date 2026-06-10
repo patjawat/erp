@@ -111,7 +111,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> ขอลา<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> ขอลา<p></p>
                                 </h6></div>
                             </div>
                         </a>
@@ -124,7 +124,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> จองรถ<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> จองรถ<p></p>
                                 </h6></div>
                             </div>
                         </a>
@@ -137,7 +137,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> จองห้องประชุม<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> จองห้องประชุม<p></p>
                                 </h6></div>
                             </div>
                         </a>
@@ -150,7 +150,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> แจ้งซ่อม<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> แจ้งซ่อม<p></p>
                                 </h6></div>
                             </div>
                         </a>
@@ -163,7 +163,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> ขอซื้อขอจ้าง<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> ขอซื้อขอจ้าง<p></p>
                                 </h6></div>
                             </div>
                         </a>
@@ -176,7 +176,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
                                 </div>
                                 <div class="card-body p-1">
                     
-                                    <h6 class="text-center mb-0"><i class="fa-solid fa-plus"></i> ประชุม/อบรม<p></p>
+                                    <h6 class="text-center mb-0"><i data-lucide="circle-plus"></i> ประชุม/อบรม<p></p>
                                 </h6></div>
                             </div>
                         </a>

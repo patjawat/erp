@@ -63,7 +63,7 @@ $emp = UserHelper::GetEmployee();
                     <span type="button" class="plus btn btn-sm btn-light" id="plus"
                         data-lot_qty="<?php echo $item->SumLotQty();?>" data-id="<?php echo $item->id;?>"
                         data-total="<?php echo $item->SumStockQty();?>">
-                        <i class="fa-solid fa-plus"></i>
+                        <i data-lucide="circle-plus"></i>
                         <!-- <i class="fa-regular fa-square-plus fs-3"></i> -->
                     </span>
                 </div>
@@ -84,7 +84,7 @@ $emp = UserHelper::GetEmployee();
                     <span type="button" class="plus btn btn-sm btn-light" id="plus"
                         data-lot_qty="<?php echo $item->SumLotQty();?>" data-id="<?php echo $item->id;?>"
                         data-total="<?php echo $item->SumStockQty();?>">
-                        <i class="fa-solid fa-plus"></i>
+                        <i data-lucide="circle-plus"></i>
                         <!-- <i class="fa-regular fa-square-plus fs-3"></i> -->
                     </span>
                 </div>

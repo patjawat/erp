@@ -6,24 +6,20 @@ use yii;
 use yii\web\Response;
 use yii\db\Expression;
 use yii\web\Controller;
-use yii\web\UploadedFile;
 use app\models\Categorise;
-use app\models\UploadForm;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
-use app\components\SiteHelper;
-use app\components\AssetHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
 use app\modules\hr\models\Organization;
-use ruskid\csvimporter\MultipleImportStrategy;
+use app\modules\am\controllers\EquipController as Equip;
 
 /**
  * AssetController implements the CRUD actions for Asset model.
  */
-class AssetController extends Controller
+class AssetController extends Equip
 {
     /**
      * @inheritDoc
@@ -119,13 +115,12 @@ class AssetController extends Controller
         ]);
 
         return $this->render('index', [
-             'active' => 'asset',
-            'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'listAssetType' => $listAssetType,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+        
     }
 
     // ตรวจสอบความถูกต้อง
@@ -181,30 +176,21 @@ class AssetController extends Controller
         }
     }
 
-    /**
-     * Displays a single Asset model.
-     * @param int $id ID
-     * @return string
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionView($id)
+        public function actionView($id)
     {
-        // Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $model = $this->findModel($id);
-
+        $model = Asset::findOne($id);
         $searchModel = new AssetSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['in', 'asset.code', $model->device_items != null ? $model->device_items : '']);
 
-        return $this->render('view', [
+        return $this->render('@app/modules/helpdesk2/views/service/view_asset', [
             'model' => $model,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
 
-    
+
         protected function findModel($id)
     {
         if (($model = Asset::findOne(['id' => $id])) !== null) {

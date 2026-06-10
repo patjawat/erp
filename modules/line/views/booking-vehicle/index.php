@@ -44,7 +44,7 @@ if($searchModel->car_type == 'ambulance'){
     <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ทะเบียน<?php echo $this->title?> <span class="badge rounded-pill text-bg-primary"><?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
     <p>
-        <?php echo html::a('<i class="fa-solid fa-car-side"></i> ขอใช้รถยนต์ทั่วไป',['/me/booking-car/select-type','title' => '<i class="fa-solid fa-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
+        <?php echo html::a('<i class="fa-solid fa-car-side"></i> ขอใช้รถยนต์ทั่วไป',['/me/booking-car/select-type','title' => '<i data-lucide="circle-plus"></i> เพิ่มข้อมูลขอใช้รถยนต์'],['class' => 'btn btn-primary rounded-pill shadow open-modal','data' => ['size' => 'modal-md']])?>
     </p>
         </div>
         <table class="table table-striped table-hover">

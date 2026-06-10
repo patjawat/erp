@@ -100,7 +100,9 @@ $resultsJs = <<< JS
             <?= $form->field($model, 'data_json[location]')->textInput(['placeholder' => 'ระบุสถานที่ปลายทาง'])->label('2. สถานที่ปลายทาง') ?>
         </div>
         <div class="col-md-6">
-            <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'ระบุบวันที่ต้องการย้าย'])->label('3. วันที่ต้องการย้าย'); ?>
+                            <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => '--ระบุบวันที่ต้องการย้าย--'],
+])->label('3. วันที่ต้องการย้าย'); ?>
         </div>
 
         <!-- เหตุผลการย้าย -->
@@ -175,7 +177,6 @@ $resultsJs = <<< JS
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-date_start')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });
