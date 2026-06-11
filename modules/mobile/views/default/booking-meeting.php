@@ -22,17 +22,6 @@ $firstDay = (int) date('w', mktime(0, 0, 0, $month, 1, $year));
 $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
 ?>
 <style>
-.meeting-booking-card {
-    border: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-.meeting-booking-card .form-control,
-.meeting-booking-card .form-select {
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-}
-.meeting-booking-card .form-label { font-weight: 500; }
 .btn-meeting {
     border-radius: 12px;
     padding: 0.875rem 1rem;
@@ -40,14 +29,9 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
     font-weight: 600;
 }
 /* Calendar */
-.meeting-calendar {
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    background: #fff;
-}
+.meeting-calendar { overflow: hidden; background: #fff; }
 .meeting-calendar-header {
-    background: linear-gradient(135deg, #5D5FEF 0%, #4c4ed9 100%);
+    background: linear-gradient(135deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
     color: #fff;
     padding: 0.75rem 1rem;
     font-weight: 600;
@@ -84,16 +68,16 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
 }
 .meeting-calendar-day.other-month { color: #adb5bd; }
 .meeting-calendar-day.today {
-    background: rgba(93, 95, 239, 0.15);
-    color: #5D5FEF;
+    background: var(--mobile-primary-soft-border);
+    color: var(--mobile-primary);
     font-weight: 600;
 }
 .meeting-calendar-day.selected {
-    background: #5D5FEF;
+    background: var(--mobile-primary);
     color: #fff;
     font-weight: 600;
 }
-.meeting-calendar-day:not(.other-month):active { background: rgba(93, 95, 239, 0.25); }
+.meeting-calendar-day:not(.other-month):active { background: var(--mobile-primary-soft-strong); }
 /* Room cards */
 .room-card {
     border: 0;
@@ -116,11 +100,6 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
 .room-card .room-icon.occupied i { color: #dc3545; }
 .room-list-empty { padding: 2rem 1rem; text-align: center; color: #6c757d; font-size: 0.9375rem; }
 </style>
-
-<div class="booking-header mb-3">
-    <h1 class="h5 fw-semibold text-dark mb-0">จองห้องประชุม</h1>
-    <p class="small text-body-secondary mb-0">เลือกวันที่และห้อง แล้วตรวจสอบเวลาว่าง</p>
-</div>
 
 <?php if (Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
@@ -232,7 +211,7 @@ $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
 <div class="card meeting-booking-card mb-3" id="room-availability-card">
     <div class="card-body">
         <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i>
+            <i data-lucide="layout-grid" class="mi-md"></i>
             ห้องประชุมและสถานะ
         </h6>
         <div id="room-list-empty" class="room-list-empty">
@@ -283,7 +262,7 @@ $js = <<<JS
     var formMeeting = document.getElementById('mobile-booking-meeting-form');
     if (formMeeting) {
         formMeeting.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
+            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
         });
     }
     if (btnCheck && emptyEl && loadingEl && listEl) {
@@ -318,7 +297,7 @@ $js = <<<JS
                         html += '<div class="room-item mb-2" data-room-code="' + escapeHtml(r.code) + '">' +
                             '<div class="card room-card">' +
                             '<div class="card-body d-flex align-items-center gap-3">' +
-                            '<div class="' + iconCls + ' flex-shrink-0"><i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i></div>' +
+                            '<div class="' + iconCls + ' flex-shrink-0"><i data-lucide="layout-grid" class="mi-md"></i></div>' +
                             '<div class="flex-grow-1 min-w-0">' +
                             '<div class="fw-semibold">' + escapeHtml(r.title) + '</div>' +
                             '<div class="small text-body-secondary">' + escapeHtml(cap) + '</div>' +

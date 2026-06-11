@@ -78,9 +78,6 @@ $services[] = [
     text-align: center;
     text-decoration: none;
     color: inherit;
-    border: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     background: #fff;
     padding: 1.25rem 0.75rem;
     min-height: 7.5rem;

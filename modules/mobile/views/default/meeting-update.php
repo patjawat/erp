@@ -28,18 +28,15 @@ $timeStart = substr($meeting->time_start ?? '09:00', 0, 5);
 $timeEnd = substr($meeting->time_end ?? '10:00', 0, 5);
 ?>
 <style>
-.meeting-booking-card { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.meeting-booking-card .form-control, .meeting-booking-card .form-select { border-radius: 12px; padding: 0.75rem 1rem; }
-.meeting-booking-card .form-label { font-weight: 500; }
 .btn-meeting { border-radius: 12px; padding: 0.875rem 1rem; font-size: 1rem; font-weight: 600; }
-.meeting-calendar { border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); background: #fff; }
-.meeting-calendar-header { background: linear-gradient(135deg, #5D5FEF 0%, #4c4ed9 100%); color: #fff; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.9375rem; display: flex; align-items: center; justify-content: space-between; }
+.meeting-calendar { overflow: hidden; background: #fff; }
+.meeting-calendar-header { background: linear-gradient(135deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%); color: #fff; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.9375rem; display: flex; align-items: center; justify-content: space-between; }
 .meeting-calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.75rem; color: #6c757d; font-weight: 500; padding: 0.5rem 0.25rem 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
 .meeting-calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 0.5rem; }
 .meeting-calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.8125rem; border-radius: 10px; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
 .meeting-calendar-day.other-month { color: #adb5bd; }
-.meeting-calendar-day.today { background: rgba(93, 95, 239, 0.15); color: #5D5FEF; font-weight: 600; }
-.meeting-calendar-day.selected { background: #5D5FEF; color: #fff; font-weight: 600; }
+.meeting-calendar-day.today { background: var(--mobile-primary-soft-border); color: var(--mobile-primary); font-weight: 600; }
+.meeting-calendar-day.selected { background: var(--mobile-primary); color: #fff; font-weight: 600; }
 .room-card { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
 .room-card .room-icon { width: 2.5rem; height: 2.5rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .room-card .room-icon.available { background: rgba(25, 135, 84, 0.12); }
@@ -154,7 +151,7 @@ $timeEnd = substr($meeting->time_end ?? '10:00', 0, 5);
     <div class="card meeting-booking-card mb-3" id="room-availability-card">
         <div class="card-body">
             <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-                <i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i>
+                <i data-lucide="layout-grid" class="mi-md"></i>
                 ห้องประชุมและสถานะ
             </h6>
             <div id="room-list-empty" class="room-list-empty">
@@ -203,7 +200,7 @@ $js = <<<JS
     var formEl = document.getElementById('mobile-meeting-update-form');
     if (formEl) {
         formEl.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกการแก้ไขใช่หรือไม่?')) e.preventDefault();
+            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกการแก้ไขใช่หรือไม่?')) e.preventDefault();
         });
     }
     if (btnCheck && emptyEl && loadingEl && listEl) {
@@ -234,7 +231,7 @@ $js = <<<JS
                                 : 'badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0';
                             var badgeText = r.available ? 'ว่าง' : 'ไม่ว่าง';
                             html += '<div class="room-item mb-2"><div class="card room-card"><div class="card-body d-flex align-items-center gap-3">' +
-                                '<div class="' + iconCls + ' flex-shrink-0"><i data-lucide="layout-grid" style="width: 1.25rem; height: 1.25rem;"></i></div>' +
+                                '<div class="' + iconCls + ' flex-shrink-0"><i data-lucide="layout-grid" class="mi-md"></i></div>' +
                                 '<div class="flex-grow-1 min-w-0"><div class="fw-semibold">' + escapeHtml(r.title) + '</div><div class="small text-body-secondary">' + escapeHtml(cap) + '</div></div>' +
                                 '<span class="' + badgeCls + '">' + badgeText + '</span></div></div></div>';
                         });

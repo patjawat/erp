@@ -16,7 +16,9 @@ use yii\bootstrap5\Html;
     :root {
         --mobile-primary: #0d6efd;
         --mobile-primary-dark: #0a58ca;
-        --mobile-fab-shadow: 0 4px 14px rgba(13, 110, 253, 0.4);
+        --mobile-primary-soft: rgba(13, 110, 253, 0.06);
+        --mobile-primary-soft-border: rgba(13, 110, 253, 0.15);
+        --mobile-primary-soft-strong: rgba(13, 110, 253, 0.25);
     }
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -28,15 +30,70 @@ use yii\bootstrap5\Html;
         padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
         min-height: 100vh;
     }
-    .mobile-card {
+    /* Shared card shell — every mobile card variant. Add the class name here, skip the per-view block. */
+    .mobile-card,
+    .leave-card, .booking-card, .maint-card, .vehicle-card,
+    .meeting-booking-card, .meeting-calendar, .meeting-view-card,
+    .home-greeting-card, .home-quick-action, .service-menu-card,
+    .room-card, .room-manage-card,
+    .notif-card, .profile-card, .asset-card, .req-card {
         border: 0;
         border-radius: 16px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    /* Shared form-control radius inside any mobile-* card */
+    .mobile-card .form-control, .mobile-card .form-select,
+    .leave-card .form-control, .leave-card .form-select,
+    .booking-card .form-control, .booking-card .form-select,
+    .maint-card .form-control, .maint-card .form-select,
+    .meeting-booking-card .form-control, .meeting-booking-card .form-select {
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+    }
+    .leave-card .form-label,
+    .booking-card .form-label,
+    .maint-card .form-label,
+    .meeting-booking-card .form-label {
+        font-weight: 500;
     }
     .mobile-header {
         background: #fff;
         box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
         padding: 0.75rem 1rem;
+    }
+
+    /* Icon sizing utilities — replaces inline `style="width:...; height:...;"` */
+    .mi-xs { width: 1rem;    height: 1rem;    flex-shrink: 0; }
+    .mi-sm { width: 1.125rem; height: 1.125rem; flex-shrink: 0; }
+    .mi-md { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .mi-lg { width: 1.75rem; height: 1.75rem; flex-shrink: 0; }
+    .mi-xl { width: 2rem;    height: 2rem;    flex-shrink: 0; }
+    .mi-baseline { vertical-align: -0.2em; }
+
+    /* Keyboard focus — visible ring on every interactive surface in mobile module */
+    .mobile-nav-item:focus-visible,
+    .home-quick-action:focus-visible,
+    .service-menu-card:focus-visible,
+    .check-type-btn:focus-visible,
+    .btn-attach:focus-visible,
+    .maint-btn-camera:focus-visible,
+    .maint-btn-gallery:focus-visible,
+    .vehicle-card:focus-visible,
+    .room-card:focus-visible,
+    .home-request-item:focus-visible {
+        outline: 2px solid var(--mobile-primary);
+        outline-offset: -2px;
+        border-radius: 12px;
+    }
+
+    /* Reduced motion — disable transitions/animations for users who request it */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
 
     /* ---- Loading page ---- */
@@ -61,7 +118,7 @@ use yii\bootstrap5\Html;
     .mobile-loading-spinner {
         width: 2.75rem;
         height: 2.75rem;
-        border: 3px solid rgba(93, 95, 239, 0.2);
+        border: 3px solid rgba(13, 110, 253, 0.2);
         border-top-color: var(--mobile-primary);
         border-radius: 50%;
         animation: mobile-loading-spin 0.7s linear infinite;

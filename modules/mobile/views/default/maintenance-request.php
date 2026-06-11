@@ -21,17 +21,6 @@ $problemTypes = [
 ];
 ?>
 <style>
-.maint-card {
-    border: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-.maint-card .form-control,
-.maint-card .form-select {
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-}
-.maint-card .form-label { font-weight: 500; }
 .btn-maint-submit {
     border-radius: 12px;
     padding: 0.875rem 1.25rem;
@@ -48,9 +37,9 @@ $problemTypes = [
     transition: border-color 0.2s ease, background 0.2s ease;
 }
 .maint-btn-camera:hover, .maint-btn-gallery:hover {
-    border-color: #5D5FEF;
-    background: rgba(93, 95, 239, 0.06);
-    color: #5D5FEF;
+    border-color: var(--mobile-primary);
+    background: var(--mobile-primary-soft);
+    color: var(--mobile-primary);
 }
 .maint-preview-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
 .maint-preview-item {
@@ -84,15 +73,10 @@ $problemTypes = [
 .maint-qr-section {
     border-radius: 12px;
     padding: 0.75rem 1rem;
-    background: rgba(93, 95, 239, 0.06);
-    border: 1px solid rgba(93, 95, 239, 0.15);
+    background: var(--mobile-primary-soft);
+    border: 1px solid var(--mobile-primary-soft-border);
 }
 </style>
-
-<div class="booking-header mb-3">
-    <h1 class="h5 fw-semibold text-dark mb-0">แจ้งซ่อม</h1>
-    <p class="small text-body-secondary mb-0">แจ้งปัญหาอุปกรณ์หรือสถานที่ พร้อมแนบรูป</p>
-</div>
 
 <?php $form = ActiveForm::begin([
     'id' => 'mobile-maintenance-form',
@@ -124,7 +108,7 @@ $problemTypes = [
             <div class="d-flex gap-2 flex-wrap">
                 <input type="text" name="asset_code" id="asset-code" class="form-control flex-grow-1" style="min-width: 8rem;" placeholder="รหัสครุภัณฑ์">
                 <a href="<?= Html::encode(Url::to(['/mobile/default/scan', 'return' => 'maintenance'])) ?>" class="btn btn-outline-primary d-flex align-items-center gap-1" style="border-radius: 12px;">
-                    <i data-lucide="qr-code" style="width: 1.125rem; height: 1.125rem;"></i>
+                    <i data-lucide="qr-code" class="mi-sm"></i>
                     สแกน QR
                 </a>
             </div>
@@ -137,11 +121,11 @@ $problemTypes = [
             <input type="file" id="maint-photos-camera" class="d-none" accept="image/*" capture="environment" multiple>
             <div class="d-flex gap-2 flex-wrap">
                 <button type="button" class="btn maint-btn-camera d-flex align-items-center gap-2" id="btn-camera">
-                    <i data-lucide="camera" style="width: 1.25rem; height: 1.25rem;"></i>
+                    <i data-lucide="camera" class="mi-md"></i>
                     ถ่ายรูป
                 </button>
                 <button type="button" class="btn maint-btn-gallery d-flex align-items-center gap-2" id="btn-gallery">
-                    <i data-lucide="image" style="width: 1.25rem; height: 1.25rem;"></i>
+                    <i data-lucide="image" class="mi-md"></i>
                     เลือกจากแกลเลอรี
                 </button>
             </div>
@@ -211,7 +195,7 @@ $js = <<<'JS'
     var formMaint = document.getElementById('mobile-maintenance-form');
     if (formMaint) {
         formMaint.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
+            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
         });
     }
     if (btnCamera && cameraInput) {

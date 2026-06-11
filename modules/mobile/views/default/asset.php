@@ -137,7 +137,7 @@ $lifecycleColors = [
         <div class="card asset-card">
             <div class="card-body asset-empty-state">
                 <div class="icon-wrap">
-                    <i data-lucide="package-search" style="width: 2rem; height: 2rem;"></i>
+                    <i data-lucide="package-search" class="mi-xl"></i>
                 </div>
                 <h6 class="fw-semibold mb-2"><?= $code !== null && $code !== '' ? 'ไม่พบครุภัณฑ์' : 'สแกน QR เพื่อดูข้อมูลครุภัณฑ์' ?></h6>
                 <?php if ($code !== null && $code !== ''): ?>

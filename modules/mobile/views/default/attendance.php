@@ -43,7 +43,7 @@ $csrfTokenJs = json_encode(Yii::$app->request->csrfToken);
         <div class="card border-0 shadow-sm rounded-3">
             <div class="card-body py-3">
                 <div class="d-flex align-items-start gap-2">
-                    <i data-lucide="history" class="text-primary flex-shrink-0 mt-1" style="width: 1.25rem; height: 1.25rem;"></i>
+                    <i data-lucide="history" class="text-primary flex-shrink-0 mt-1 mi-md"></i>
                     <div class="min-w-0">
                         <p class="small text-body-secondary mb-1">ครั้งล่าสุด</p>
                         <p class="fw-semibold mb-0 small"><?= Html::encode($lastCheckin->getCheckTypeLabel()) ?> · <?= Html::encode($lastCheckin->checkin_at) ?></p>

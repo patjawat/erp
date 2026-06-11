@@ -98,11 +98,6 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
 .scan-hint-card .card-body { padding: 1rem; }
 </style>
 
-<div class="scan-page-header">
-    <h1 class="h5 fw-semibold text-dark mb-0">สแกน QR Code</h1>
-    <p class="small text-body-secondary mb-0">สแกนเพื่อเปิดข้อมูลในระบบ</p>
-</div>
-
 <div class="card scan-scanner-card">
     <div class="scan-scanner-wrap">
         <div class="scan-loading spin" id="scan-loading">

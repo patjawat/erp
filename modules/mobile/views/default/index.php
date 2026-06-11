@@ -143,11 +143,10 @@ usort($recentRequestItems, static function (array $a, array $b) {
 $recentRequestItems = array_slice($recentRequestItems, 0, 4);
 ?>
 <style>
-.home-greeting-card { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
 .home-greeting-avatar { width: 3rem; height: 3rem; border-radius: 50%; background: rgba(13, 110, 253, 0.12); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .home-greeting-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .home-greeting-avatar i { color: var(--mobile-primary); }
-.home-quick-action { border: 0; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0.5rem; min-height: 5rem; transition: box-shadow 0.2s ease, transform 0.15s ease; background: #fff; }
+.home-quick-action { text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem 0.5rem; min-height: 5rem; transition: box-shadow 0.2s ease, transform 0.15s ease; background: #fff; }
 .home-quick-action:hover { color: inherit; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
 .home-quick-action:active { transform: scale(0.98); }
 .home-quick-action .qa-icon { width: 2.25rem; height: 2.25rem; margin-bottom: 0.35rem; color: var(--mobile-primary); }
@@ -164,7 +163,7 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
                 <?php if ($avatarUrl): ?>
                     <img src="<?= Html::encode($avatarUrl) ?>" alt="" width="48" height="48">
                 <?php else: ?>
-                    <i data-lucide="user" style="width: 1.75rem; height: 1.75rem;"></i>
+                    <i data-lucide="user" class="mi-lg"></i>
                 <?php endif; ?>
             </div>
             <div class="min-w-0 flex-grow-1">
@@ -231,7 +230,7 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
                 <div class="d-flex flex-column gap-2">
                     <?php foreach ($homeNotifications as $item): ?>
                         <a href="<?= Html::encode($item['url']) ?>" class="d-flex align-items-start gap-2 py-1 text-decoration-none text-dark">
-                            <i data-lucide="<?= Html::encode($item['icon']) ?>" class="text-<?= Html::encode($item['iconColor']) ?> flex-shrink-0 mt-1" style="width: 1.125rem; height: 1.125rem;"></i>
+                            <i data-lucide="<?= Html::encode($item['icon']) ?>" class="text-<?= Html::encode($item['iconColor']) ?> flex-shrink-0 mt-1 mi-sm"></i>
                             <div class="min-w-0 flex-grow-1">
                                 <span class="fw-medium small d-block"><?= Html::encode($item['title']) ?></span>
                                 <p class="mb-0 small text-body-secondary"><?= Html::encode($item['desc']) ?></p>
@@ -304,7 +303,7 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
             <?php else: ?>
                 <?php foreach ($recentRequestItems as $item): ?>
                     <a href="<?= Html::encode($item['url']) ?>" class="home-request-item d-flex align-items-center gap-2 text-decoration-none text-dark">
-                        <i data-lucide="<?= Html::encode($item['icon']) ?>" class="text-body-secondary" style="width: 1.25rem; height: 1.25rem;"></i>
+                        <i data-lucide="<?= Html::encode($item['icon']) ?>" class="text-body-secondary mi-md"></i>
                         <div class="flex-grow-1 min-w-0">
                             <span class="small fw-medium"><?= Html::encode($item['title']) ?></span>
                             <p class="mb-0 small text-body-secondary"><?= Html::encode($item['desc']) ?></p>
@@ -318,97 +317,6 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
     </div>
 </div>
 <?php
-use yii\web\View;
-
-$js = <<<JS
-
-(function () {
-
-    // 🔥 กันยิงซ้ำ
-    if (window.__tg_login_done) return;
-    window.__tg_login_done = true;
-
-    // 🔥 กัน reload loop
-    if (localStorage.getItem("tg_logged_in") === "1") {
-        console.log("Already logged in");
-        return;
-    }
-
-    const tg = window.Telegram?.WebApp;
-
-    if (!tg) {
-        console.log("Not running inside Telegram Mini App");
-        return;
-    }
-
-    tg.ready();
-    tg.expand();
-
-    const user = tg.initDataUnsafe?.user;
-
-    if (!user || !user.id) {
-        console.log("No Telegram user detected");
-        return;
-    }
-
-    const debugBox = document.getElementById("debug");
-
-    function log(msg) {
-        console.log(msg);
-        if (debugBox) {
-            debugBox.innerText = JSON.stringify(msg, null, 2);
-        }
-    }
-
-    $.ajax({
-        url: "/mobile/auth/telegram-login",
-        type: "POST",
-        dataType: "json",
-        data: {
-            telegram_id: user.id,
-            initData: tg.initData ?? ''
-        },
-        headers: {
-            'X-CSRF-Token': yii.getCsrfToken()
-        },
-
-        success: function(res) {
-
-            log(res);
-
-            if (res.success) {
-
-                // 🔥 mark login success
-                localStorage.setItem("tg_logged_in", "1");
-
-                setTimeout(() => {
-                    window.location.href = res.redirect || "/mobile/default/index";
-                }, 200);
-
-            } else {
-
-                localStorage.removeItem("tg_logged_in");
-
-                setTimeout(() => {
-                    window.location.href = "/mobile/auth/login";
-                }, 200);
-
-            }
-        },
-
-        error: function(err) {
-
-            log({
-                error: true,
-                message: "AJAX error",
-                detail: err
-            });
-
-        }
-    });
-
-})();
-JS;
-
-$this->registerJs($js, View::POS_END);
+// Telegram MiniApp auto-login lives in web/js/mobile-shared.js, gated by
+// <body data-mobile-page="home"> (set in modules/mobile/views/layouts/main.php).
 ?>

@@ -1,7 +1,12 @@
 <?php
 /**
- * Shared footer: Lucide createIcons + ซ่อน loading overlay เมื่อพร้อม
+ * Shared footer: load mobile-shared.js, run Lucide createIcons, hide loading overlay.
  */
+$this->registerJsFile('@web/js/mobile-shared.js', [
+    'depends' => [\yii\web\JqueryAsset::class],
+    'position' => \yii\web\View::POS_END,
+]);
+
 $this->registerJs(<<<'JS'
 (function() {
     var overlay = document.getElementById('mobile-loading-overlay');
@@ -15,7 +20,12 @@ $this->registerJs(<<<'JS'
         }, delay);
     }
     function init() {
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+            if (typeof window.mobileMarkDecorativeIcons === 'function') {
+                window.mobileMarkDecorativeIcons();
+            }
+        }
         if (document.readyState === 'complete') hideLoading();
         else window.addEventListener('load', hideLoading);
     }

@@ -11,17 +11,6 @@ $this->params['mobileTitle']    = 'จองรถราชการ';
 $this->params['mobileSubtitle'] = 'กรอกข้อมูลเพื่อตรวจสอบรถว่างและส่งคำขอ';
 ?>
 <style>
-.booking-card {
-    border: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-.booking-card .form-control,
-.booking-card .form-select {
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-}
-.booking-card .form-label { font-weight: 500; }
 .btn-booking {
     border-radius: 12px;
     padding: 0.875rem 1rem;
@@ -48,11 +37,6 @@ $this->params['mobileSubtitle'] = 'กรอกข้อมูลเพื่อ
 .vehicle-card .vehicle-thumb { width: 3.5rem; height: 2.75rem; border-radius: 10px; object-fit: cover; background: #e9ecef; }
 .vehicle-list-empty { padding: 2rem 1rem; text-align: center; color: #6c757d; font-size: 0.9375rem; }
 </style>
-
-<div class="booking-header mb-3">
-    <h1 class="h5 fw-semibold text-dark mb-0">จองรถราชการ</h1>
-    <p class="small text-body-secondary mb-0">กรอกข้อมูลเพื่อตรวจสอบรถว่างและส่งคำขอ</p>
-</div>
 
 <?php $form = ActiveForm::begin([
     'id' => 'mobile-booking-vehicle-form',
@@ -116,53 +100,25 @@ $this->params['mobileSubtitle'] = 'กรอกข้อมูลเพื่อ
 <div class="card booking-card mb-3" id="vehicle-list-card">
     <div class="card-body">
         <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="car" style="width: 1.25rem; height: 1.25rem;"></i>
+            <i data-lucide="car" class="mi-md"></i>
             รถที่ว่าง
         </h6>
         <div id="vehicle-list-empty" class="vehicle-list-empty">
-            <i data-lucide="car-front" style="width: 2rem; height: 2rem; opacity: 0.4;" class="mb-2 d-block mx-auto"></i>
+            <i data-lucide="car-front" class="mi-xl mb-2 d-block mx-auto" style="opacity: 0.4;"></i>
             กด "ตรวจสอบรถว่าง" เพื่อดูรายการรถที่ว่างในวันและเวลาที่เลือก
         </div>
-        <div id="vehicle-list" class="d-none">
-            <div class="vehicle-item mb-2" data-vehicle-id="1">
-                <div class="card vehicle-card">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="flex-shrink-0">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 36' fill='%23adb5bd'%3E%3Cpath d='M8 22l4-8h24l4 8v6H8v-6zm4-6h20l-2 4H14l-2-4z'/%3E%3C/svg%3E" alt="" class="vehicle-thumb" width="56" height="44">
-                        </div>
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="fw-semibold">กก 1234 กรุงเทพ</div>
-                            <div class="small text-body-secondary">Toyota Camry · 5 ที่นั่ง</div>
-                            <div class="small text-body-secondary">คนขับ: นายสมชาย ใจดี</div>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1 mt-1">ว่าง</span>
-                        </div>
-                        <div class="form-check flex-shrink-0">
-                            <input class="form-check-input" type="radio" name="vehicle_id" value="1" id="v1">
-                            <label class="form-check-label small" for="v1">เลือก</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="vehicle-item mb-2" data-vehicle-id="2">
-                <div class="card vehicle-card">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="flex-shrink-0">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 36' fill='%23adb5bd'%3E%3Cpath d='M8 22l4-8h24l4 8v6H8v-6zm4-6h20l-2 4H14l-2-4z'/%3E%3C/svg%3E" alt="" class="vehicle-thumb" width="56" height="44">
-                        </div>
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="fw-semibold">กข 5678 กรุงเทพ</div>
-                            <div class="small text-body-secondary">Honda Accord · 5 ที่นั่ง</div>
-                            <div class="small text-body-secondary">คนขับ: นายวิชัย รถเร็ว</div>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1 mt-1">ว่าง</span>
-                        </div>
-                        <div class="form-check flex-shrink-0">
-                            <input class="form-check-input" type="radio" name="vehicle_id" value="2" id="v2">
-                            <label class="form-check-label small" for="v2">เลือก</label>
-                        </div>
-                    </div>
-                </div>
+        <div id="vehicle-list-loading" class="vehicle-list-empty d-none" role="status" aria-live="polite">
+            <i data-lucide="loader-2" class="mi-xl mb-2 d-block mx-auto" style="animation: mobile-loading-spin 0.7s linear infinite;"></i>
+            กำลังตรวจสอบรถที่ว่าง...
+        </div>
+        <div id="vehicle-list-error" class="vehicle-list-empty d-none text-danger" role="alert">
+            <i data-lucide="alert-circle" class="mi-xl mb-2 d-block mx-auto"></i>
+            <span id="vehicle-list-error-msg">โหลดรายการรถไม่สำเร็จ</span>
+            <div class="mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" id="btn-retry-vehicles">ลองอีกครั้ง</button>
             </div>
         </div>
+        <div id="vehicle-list-results" class="d-none" role="list" aria-label="รายการรถที่ว่าง"></div>
     </div>
 </div>
 
@@ -172,19 +128,40 @@ $js = <<<'JS'
     var form = document.getElementById('mobile-booking-vehicle-form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            if (!confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
+            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
         });
     }
     var btn = document.getElementById('btn-check-vehicles');
     var empty = document.getElementById('vehicle-list-empty');
-    var list = document.getElementById('vehicle-list');
-    if (btn && empty && list) {
-        btn.addEventListener('click', function() {
-            empty.classList.add('d-none');
-            list.classList.remove('d-none');
-            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    var loading = document.getElementById('vehicle-list-loading');
+    var errorBox = document.getElementById('vehicle-list-error');
+    var results = document.getElementById('vehicle-list-results');
+
+    function showOnly(el) {
+        [empty, loading, errorBox, results].forEach(function(n) {
+            if (n) n.classList.add('d-none');
         });
+        if (el) el.classList.remove('d-none');
     }
+
+    // TODO: wire up to /booking/vehicle/availability endpoint when available.
+    // For now, surface an honest "in development" message instead of demo cars.
+    function checkVehicles() {
+        showOnly(loading);
+        setTimeout(function() {
+            results.innerHTML = '<div class="text-center text-body-secondary py-3">'
+                + '<i data-lucide="info" class="mi-md mb-2 d-block mx-auto"></i>'
+                + 'ระบบตรวจสอบรถว่างแบบเรียลไทม์อยู่ระหว่างพัฒนา<br>'
+                + 'กรุณายืนยันคำขอ — เจ้าหน้าที่จะจัดสรรรถและแจ้งกลับ'
+                + '</div>';
+            showOnly(results);
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        }, 300);
+    }
+
+    if (btn) btn.addEventListener('click', checkVehicles);
+    var retry = document.getElementById('btn-retry-vehicles');
+    if (retry) retry.addEventListener('click', checkVehicles);
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_READY);

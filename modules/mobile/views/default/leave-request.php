@@ -46,22 +46,6 @@ $workflowSteps = [
 ];
 ?>
 <style>
-    .leave-card {
-        border: 0;
-        border-radius: 16px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    }
-
-    .leave-card .form-control,
-    .leave-card .form-select {
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
-    }
-
-    .leave-card .form-label {
-        font-weight: 500;
-    }
-
     .btn-leave-submit {
         border-radius: 12px;
         padding: 0.875rem 1.25rem;
@@ -72,14 +56,14 @@ $workflowSteps = [
     .balance-item {
         border-radius: 12px;
         padding: 0.75rem 1rem;
-        background: rgba(93, 95, 239, 0.06);
-        border: 1px solid rgba(93, 95, 239, 0.15);
+        background: var(--mobile-primary-soft);
+        border: 1px solid var(--mobile-primary-soft-border);
     }
 
     .balance-item .balance-days {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #5D5FEF;
+        color: var(--mobile-primary);
     }
 
     .workflow-step {
@@ -106,13 +90,13 @@ $workflowSteps = [
     }
 
     .workflow-step.done::after {
-        background: #5D5FEF;
+        background: var(--mobile-primary);
         opacity: 0.4;
     }
 
     .workflow-step .step-dot {
-        width: 2rem;
-        height: 2rem;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: 50%;
         background: #dee2e6;
         color: #6c757d;
@@ -126,25 +110,41 @@ $workflowSteps = [
     }
 
     .workflow-step.done .step-dot {
-        background: #5D5FEF;
+        background: var(--mobile-primary);
         color: #fff;
     }
 
+    /* Step label — 12px floor, 2-line wrap, no truncate.
+       At <360px, drop connector and bump label to 11.5px to fit Thai job titles. */
     .workflow-step .step-label {
-        font-size: 0.6875rem;
-        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        line-height: 1.25;
+        margin-top: 0.4rem;
         color: #6c757d;
+        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
     }
 
     .workflow-step.done .step-label {
-        color: #5D5FEF;
+        color: var(--mobile-primary);
         font-weight: 500;
-        
     }
 
-    .step-label{
-    max-width:100%;
-}
+    /* Connector starts after the dot, ends before next dot. Recalculated for 2.25rem dot. */
+    .workflow-step::after {
+        top: 1rem;
+        left: calc(50% + 1.4rem);
+        width: calc(100% - 2.8rem);
+    }
+
+    @media (max-width: 360px) {
+        .workflow-step::after { display: none; }
+        .workflow-step .step-label { font-size: 0.7188rem; }
+    }
 
     .btn-attach {
         border-radius: 12px;
@@ -157,9 +157,9 @@ $workflowSteps = [
     }
 
     .btn-attach:hover {
-        border-color: #5D5FEF;
-        background: rgba(93, 95, 239, 0.06);
-        color: #5D5FEF;
+        border-color: var(--mobile-primary);
+        background: var(--mobile-primary-soft);
+        color: var(--mobile-primary);
     }
 
     .attach-filename {
@@ -169,19 +169,11 @@ $workflowSteps = [
     }
 </style>
 
-<div class="booking-header mb-3">
-    <h1 class="h5 fw-semibold text-dark mb-0">ขอลาออนไลน์</h1>
-    <p class="small text-body-secondary mb-0">ตรวจสอบสิทธิ์และส่งคำขอลา</p>
-</div>
-
-
-</div>
-
 <!-- Approval workflow -->
 <div class="card leave-card mb-3">
     <div class="card-body">
         <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="git-branch" style="width: 1.25rem; height: 1.25rem;"></i>
+            <i data-lucide="git-branch" class="mi-md"></i>
             ขั้นตอนการอนุมัติ
         </h6>
         <div class="row g-0">
@@ -198,11 +190,11 @@ $workflowSteps = [
                     <div class="step-dot">
                         <?php
                         if ($approveEmployee) {
-                            echo Html::img($approveEmployee->showAvatar(), ['class' => 'rounded-circle', 'width' => 35, 'height' => 35, 'style' => 'min-width: 35px; min-height: 35px;', 'alt' => $approveEmployee->fullname]);
+                            echo Html::img($approveEmployee->showAvatar(), ['class' => 'rounded-circle w-100 h-100', 'alt' => $approveEmployee->fullname]);
                         }
                         ?>
                     </div>
-                    <span class="step-label d-block text-truncate">
+                    <span class="step-label d-block">
                         <?= Html::encode($step['title'] ?? $step['label']) ?>
                     </span>
 
@@ -337,7 +329,7 @@ $form = ActiveForm::begin([
 <div class="card leave-card mb-3">
     <div class="card-body">
         <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="wallet" style="width: 1.25rem; height: 1.25rem;"></i>
+            <i data-lucide="wallet" class="mi-md"></i>
             สรุปการลา
         </h6>
         <div class="d-flex flex-column gap-2">

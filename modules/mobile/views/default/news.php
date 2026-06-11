@@ -134,7 +134,7 @@ $documents = $dataProvider->getModels();
     <nav class="official-doc-tabs" role="tablist" aria-label="ตัวกรองหนังสือราชการ">
         <?php foreach ($tabs as $key => $tab): ?>
             <a href="<?= Html::encode(Url::to(['/mobile/default/news', 'filter' => $key])) ?>" class="official-doc-tab <?= $filter === $key ? 'active' : '' ?>">
-                <i data-lucide="<?= Html::encode($tab['icon']) ?>" style="width: 1rem; height: 1rem;"></i>
+                <i data-lucide="<?= Html::encode($tab['icon']) ?>" class="mi-xs"></i>
                 <?= Html::encode($tab['label']) ?>
                 <span class="tab-count"><?= Html::encode((string) $tab['count']) ?></span>
             </a>

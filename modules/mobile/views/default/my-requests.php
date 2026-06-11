@@ -96,7 +96,7 @@ function statusBadgeClass($code) {
                     <a href="<?= Html::encode($viewUrl) ?>" class="card req-card">
                         <div class="card-body d-flex align-items-center gap-3">
                             <div class="req-icon-wrap meeting">
-                                <i data-lucide="calendar" style="width: 1.25rem; height: 1.25rem;"></i>
+                                <i data-lucide="calendar" class="mi-md"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0 req-card-text">
                                 <div class="fw-semibold"><?= Html::encode($m->title ?: $m->code) ?></div>
@@ -106,7 +106,7 @@ function statusBadgeClass($code) {
                                 <div class="small text-body-secondary">รหัส <?= Html::encode($m->code) ?></div>
                             </div>
                             <span class="badge bg-<?= $badgeClass ?> bg-opacity-10 text-<?= $badgeClass ?> border border-<?= $badgeClass ?>-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0"><?= Html::encode($statusTitle) ?></span>
-                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0" style="width: 1rem; height: 1rem;"></i>
+                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0 mi-xs"></i>
                         </div>
                     </a>
                 <?php endforeach; ?>
@@ -144,7 +144,7 @@ function statusBadgeClass($code) {
                     <a href="<?= Html::encode($viewUrl) ?>" class="card req-card">
                         <div class="card-body d-flex align-items-center gap-3">
                             <div class="req-icon-wrap bg-warning bg-opacity-10 text-warning">
-                                <i data-lucide="calendar-off" style="width: 1.25rem; height: 1.25rem;"></i>
+                                <i data-lucide="calendar-off" class="mi-md"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0 req-card-text">
                                 <div class="fw-semibold"><?= Html::encode($leave->leaveType->title ?? 'คำขอลา') ?></div>
@@ -152,7 +152,7 @@ function statusBadgeClass($code) {
                                 <div class="small text-body-secondary">รหัสคำขอ <?= Html::encode((string) $leave->id) ?></div>
                             </div>
                             <span class="badge bg-<?= $badgeClass ?> bg-opacity-10 text-<?= $badgeClass ?> border border-<?= $badgeClass ?>-subtle rounded-pill fw-medium px-2 py-1 flex-shrink-0"><?= Html::encode($statusTitle) ?></span>
-                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0" style="width: 1rem; height: 1rem;"></i>
+                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0 mi-xs"></i>
                         </div>
                     </a>
                 <?php endforeach; ?>
