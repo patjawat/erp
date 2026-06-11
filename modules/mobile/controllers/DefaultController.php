@@ -534,12 +534,18 @@ class DefaultController extends Controller
             $model->save();
             $model->createApprove();
             return $this->redirect(['/mobile/default/leave-request-view', 'id' => $model->id]);
-           
+
         }
 
+        // Annual-leave balance: dedicated mobile endpoint not yet available, so the
+        // form skips the LT4 "remaining days" client-side warning (controller stays
+        // unchanged below). When a stats source becomes available pass it via `stats`.
         return $this->render('leave-request', [
             'current_page' => 'services',
-            'model' => $model,
+            'model'        => $model,
+            'employee'     => $me,
+            'draftRef'     => $ref,
+            'stats'        => [],
         ]);
     }
 

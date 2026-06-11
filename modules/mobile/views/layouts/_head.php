@@ -19,7 +19,74 @@ use yii\bootstrap5\Html;
         --mobile-primary-soft: rgba(13, 110, 253, 0.06);
         --mobile-primary-soft-border: rgba(13, 110, 253, 0.15);
         --mobile-primary-soft-strong: rgba(13, 110, 253, 0.25);
+
+        /* 4pt spacing scale — drive all margins, gaps, paddings off these. */
+        --space-2xs: 0.25rem;  /*  4px — chip gap */
+        --space-xs:  0.5rem;   /*  8px — tight grouping */
+        --space-sm:  0.75rem;  /* 12px — sibling rows */
+        --space-md:  1rem;     /* 16px — card padding, default gap */
+        --space-lg:  1.5rem;   /* 24px — between subsections */
+        --space-xl:  2rem;     /* 32px — between major sections */
+        --space-2xl: 3rem;     /* 48px — page-level breathing */
+
+        /* Type scale — 1.2 ratio, fixed rem per product register guidance. */
+        --fs-2xs: 0.6875rem; /* 11px — micro labels (rare) */
+        --fs-xs:  0.75rem;   /* 12px — captions, badges */
+        --fs-sm:  0.875rem;  /* 14px — secondary body */
+        --fs-md:  1rem;      /* 16px — body */
+        --fs-lg:  1.125rem;  /* 18px — section titles */
+        --fs-xl:  1.375rem;  /* 22px — page title */
+        --fs-2xl: 1.75rem;   /* 28px — hero/greeting name */
+        --fs-3xl: 2.25rem;   /* 36px — feature numbers */
+
+        /* Category palette — OKLCH harmonised at L 0.58, C 0.14-0.18.
+           Each service gets a distinct hue for wayfinding on dense menus
+           (the LINE / Grab pattern). Surfaces stay restrained; only the
+           icon medallion is coloured. Foreground tones are darker (L 0.40)
+           for 4.5:1+ contrast against the soft background tint. */
+        --cat-attendance-fg:    oklch(0.45 0.14 75);    /* warm amber — clock/time */
+        --cat-attendance-bg:    oklch(0.95 0.04 75);
+        --cat-vehicle-fg:       oklch(0.45 0.12 200);   /* teal — transport */
+        --cat-vehicle-bg:       oklch(0.95 0.04 200);
+        --cat-meeting-fg:       oklch(0.45 0.16 290);   /* violet — calendar */
+        --cat-meeting-bg:       oklch(0.95 0.05 290);
+        --cat-leave-fg:         oklch(0.50 0.16 15);    /* rose — personal time */
+        --cat-leave-bg:         oklch(0.96 0.04 15);
+        --cat-maintenance-fg:   oklch(0.45 0.10 30);    /* terracotta — repair */
+        --cat-maintenance-bg:   oklch(0.95 0.03 30);
+        --cat-asset-fg:         oklch(0.45 0.13 155);   /* emerald — inventory */
+        --cat-asset-bg:         oklch(0.95 0.04 155);
+        --cat-supply-fg:        oklch(0.45 0.13 260);   /* indigo — supplies */
+        --cat-supply-bg:        oklch(0.96 0.04 260);
+        --cat-document-fg:      oklch(0.45 0.10 250);   /* steel-blue — paperwork */
+        --cat-document-bg:      oklch(0.96 0.03 250);
+        --cat-issue-fg:         oklch(0.50 0.16 25);    /* red — escalation */
+        --cat-issue-bg:         oklch(0.96 0.04 25);
+        --cat-approval-fg:      oklch(0.45 0.16 250);   /* cobalt — approval (kin to primary) */
+        --cat-approval-bg:      oklch(0.95 0.05 250);
     }
+
+    /* Category medallion — circle around an icon, sized to match the icon utility. */
+    .cat-medallion {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        width: 2.75rem;
+        height: 2.75rem;
+        flex-shrink: 0;
+    }
+    .cat-medallion svg { stroke: currentColor; }
+    .cat-attendance  { background: var(--cat-attendance-bg);  color: var(--cat-attendance-fg); }
+    .cat-vehicle     { background: var(--cat-vehicle-bg);     color: var(--cat-vehicle-fg); }
+    .cat-meeting     { background: var(--cat-meeting-bg);     color: var(--cat-meeting-fg); }
+    .cat-leave       { background: var(--cat-leave-bg);       color: var(--cat-leave-fg); }
+    .cat-maintenance { background: var(--cat-maintenance-bg); color: var(--cat-maintenance-fg); }
+    .cat-asset       { background: var(--cat-asset-bg);       color: var(--cat-asset-fg); }
+    .cat-supply      { background: var(--cat-supply-bg);      color: var(--cat-supply-fg); }
+    .cat-document    { background: var(--cat-document-bg);    color: var(--cat-document-fg); }
+    .cat-issue       { background: var(--cat-issue-bg);       color: var(--cat-issue-fg); }
+    .cat-approval    { background: var(--cat-approval-bg);    color: var(--cat-approval-fg); }
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         background-color: #f0f2f5;
@@ -59,8 +126,93 @@ use yii\bootstrap5\Html;
     .mobile-header {
         background: #fff;
         box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-        padding: 0.75rem 1rem;
+        padding: var(--space-sm) var(--space-md);
     }
+
+    /* Stacked page rhythm — major sections separated by --space-xl, content within --space-md */
+    .mobile-stack { display: flex; flex-direction: column; gap: var(--space-xl); }
+    .mobile-stack-tight { display: flex; flex-direction: column; gap: var(--space-md); }
+
+    /* Section heading — distinct from card heading, no card wrapper needed */
+    .section-title {
+        display: flex; align-items: center; gap: var(--space-xs);
+        font-size: var(--fs-lg); font-weight: 700; color: #1a1f2c;
+        margin: 0 0 var(--space-sm); line-height: 1.2; letter-spacing: -0.01em;
+    }
+    .section-title svg { color: var(--mobile-primary); width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+    .section-action {
+        margin-left: auto; font-size: var(--fs-sm); font-weight: 500;
+        color: var(--mobile-primary); text-decoration: none;
+    }
+    .section-action:hover { color: var(--mobile-primary-dark); }
+
+    /* Segmented pill group — native-feeling 2-3 option selector (replaces select for short lists) */
+    .pill-group {
+        display: flex;
+        gap: var(--space-2xs);
+        padding: var(--space-2xs);
+        background: #f1f3f5;
+        border-radius: 12px;
+    }
+    .pill-group input[type="radio"] {
+        position: absolute; opacity: 0; pointer-events: none;
+    }
+    .pill-option {
+        flex: 1; min-height: 2.5rem;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: var(--space-xs) var(--space-sm);
+        font-size: var(--fs-sm); font-weight: 500; color: #495057;
+        background: transparent; border: 0; border-radius: 10px;
+        cursor: pointer; user-select: none;
+        transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .pill-option:hover { color: var(--mobile-primary); }
+    .pill-option.is-active,
+    .pill-group input[type="radio"]:checked + .pill-option {
+        background: #fff; color: var(--mobile-primary); font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .pill-option:focus-visible { outline: 2px solid var(--mobile-primary); outline-offset: -2px; }
+
+    /* Stat box — compact metric tile for summary readouts */
+    .stat-box {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: var(--space-sm);
+        background: var(--mobile-primary-soft);
+        border: 1px solid var(--mobile-primary-soft-border);
+        border-radius: 12px;
+        text-align: center;
+    }
+    .stat-box .stat-value { font-size: var(--fs-xl); font-weight: 700; color: var(--mobile-primary); line-height: 1; }
+    .stat-box .stat-value.is-warn { color: #b54708; }
+    .stat-box .stat-label { font-size: var(--fs-xs); color: #6c757d; margin-top: var(--space-2xs); }
+
+    /* Sticky bottom action bar — primary submit always reachable above safe area */
+    .mobile-form-actions {
+        position: sticky;
+        bottom: 0;
+        margin-inline: calc(var(--space-md) * -1);
+        padding: var(--space-sm) var(--space-md) calc(env(safe-area-inset-bottom, 0px) + var(--space-sm));
+        background: #fff;
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+        z-index: 10;
+    }
+    .mobile-form-actions .btn { width: 100%; min-height: 3rem; font-size: var(--fs-md); font-weight: 600; border-radius: 12px; }
+
+    /* Inline list row — replaces "card per item" for low-priority items */
+    .row-list { display: flex; flex-direction: column; gap: 0; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
+    .row-item {
+        display: flex; align-items: center; gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        text-decoration: none; color: inherit;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: background 0.15s ease;
+    }
+    .row-item:last-child { border-bottom: 0; }
+    .row-item:hover, .row-item:active { background: rgba(0, 0, 0, 0.03); color: inherit; }
+    .row-item .row-title { font-size: var(--fs-md); font-weight: 500; color: #1a1f2c; flex-grow: 1; min-width: 0; }
+    .row-item .row-desc { font-size: var(--fs-xs); color: #6c757d; }
+    .row-item .row-chevron { color: #adb5bd; flex-shrink: 0; }
 
     /* Icon sizing utilities — replaces inline `style="width:...; height:...;"` */
     .mi-xs { width: 1rem;    height: 1rem;    flex-shrink: 0; }

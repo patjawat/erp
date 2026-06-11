@@ -67,9 +67,21 @@ class HealthScreenController extends Controller
             }
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+          if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return [
+                    'title' => '',
+                    'content' => $this->renderAjax('create', [
+                  'model' => $model,
+                  ])
+                ];
+
+          }else{
+
+              return $this->render('create', [
+                  'model' => $model,
+                  ]);
+                  }
     }
 
     /**
