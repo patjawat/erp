@@ -34,6 +34,17 @@ AppAsset::register($this);
     <?= $this->render('_navbar') ?>
     <?= $this->render('_footer') ?>
 
+    <?php
+    // Shared modal target for .open-modal / handleFormSubmit AJAX flows.
+    \yii\bootstrap5\Modal::begin([
+        'options'       => ['id' => 'main-modal'],
+        'title'         => '',
+        'footer'        => '',
+        'clientOptions' => ['backdrop' => 'static', 'keyboard' => false],
+    ]);
+    \yii\bootstrap5\Modal::end();
+    ?>
+
     <?php $this->endBody() ?>
 
 </body>

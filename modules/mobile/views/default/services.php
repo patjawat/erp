@@ -1,6 +1,7 @@
 <?php
 /** @var yii\web\View $this */
 /** @var string $current_page */
+/** @var bool $canManageMeeting */
 
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -8,6 +9,21 @@ use yii\helpers\Url;
 $this->params['current_page']   = $current_page ?? 'services';
 $this->params['mobileTitle']    = 'บริการ';
 $this->params['mobileSubtitle'] = 'เลือกบริการที่ต้องการใช้งาน';
+
+// Admin tools — gated by RBAC permission. Pass `canManageMeeting` falls back
+// to the live auth check so the view also works if rendered out-of-band.
+$canManageMeeting = (bool) ($canManageMeeting ?? Yii::$app->user->can('meeting'));
+
+$adminTools = [];
+if ($canManageMeeting) {
+    $adminTools[] = [
+        'icon'  => 'calendar-check',
+        'cat'   => 'meeting',
+        'label' => 'จัดการห้องประชุม',
+        'desc'  => 'ดูคำขอจอง อนุมัติ หรือยกเลิก',
+        'url'   => Url::to(['/mobile/default/room-manage']),
+    ];
+}
 
 /**
  * Featured = primary services with their own large medallion card.
@@ -91,4 +107,28 @@ $secondary = [
             <?php endforeach; ?>
         </div>
     </section>
+
+    <?php if (!empty($adminTools)): ?>
+    <!-- Admin tools — visible only when user manages at least one resource -->
+    <section aria-label="เครื่องมือสำหรับผู้ดูแล">
+        <h3 class="section-title">
+            <i data-lucide="shield-check"></i>
+            เครื่องมือผู้ดูแล
+        </h3>
+        <div class="row-list">
+            <?php foreach ($adminTools as $t): ?>
+                <a href="<?= Html::encode($t['url']) ?>" class="row-item">
+                    <span class="cat-medallion cat-<?= Html::encode($t['cat']) ?>" aria-hidden="true" style="width: 2.25rem; height: 2.25rem; border-radius: 10px;">
+                        <i data-lucide="<?= Html::encode($t['icon']) ?>" class="mi-sm"></i>
+                    </span>
+                    <span class="row-title">
+                        <?= Html::encode($t['label']) ?>
+                        <span class="d-block row-desc" style="font-size: var(--fs-xs); color: #64748b; font-weight: 400; margin-top: 2px;"><?= Html::encode($t['desc']) ?></span>
+                    </span>
+                    <i data-lucide="chevron-right" class="row-chevron mi-sm" aria-hidden="true"></i>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 </div>
