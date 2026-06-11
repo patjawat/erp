@@ -763,6 +763,31 @@ if (count($datas) >= 1) {
         return $vehicles;
     }
 
+    // สรุปปริมาณงานพนักงานขับรถ (เรียงจากมากไปน้อย)
+    public function driverSummary($limit = null)
+    {
+        $query = Vehicle::find()
+            ->select([
+                'v.driver_id',
+                new Expression("TRIM(CONCAT(COALESCE(e.prefix, ''), COALESCE(e.fname, ''), ' ', COALESCE(e.lname, ''))) AS fullname"),
+                new Expression('COUNT(v.id) AS total'),
+            ])
+            ->from(['v' => Vehicle::tableName()])
+            ->leftJoin(['e' => Employees::tableName()], 'e.id = v.driver_id')
+            ->where(['IN', 'v.status', ['Approve', 'Pass', 'Success']])
+            ->andWhere(['IS NOT', 'v.driver_id', null])
+            ->andWhere(['<>', 'v.driver_id', ''])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year])
+            ->groupBy(['v.driver_id', 'e.prefix', 'e.fname', 'e.lname'])
+            ->orderBy(['total' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit((int) $limit);
+        }
+
+        return $query->asArray()->all();
+    }
+
     // รายงานค่าใช้จ่ายรถ
     public function getPriceSummary()
     {

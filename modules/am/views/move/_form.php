@@ -135,7 +135,7 @@ $resultsJs = <<< JS
         <div class="col-md-12">
 
                      <?php
-                            $url = Url::to(['/hr/leave/get-leader-approve']);
+                            $url = Url::to(['/depdrop/get-leader']);
                             $leader = empty($model->data_json['leader_id']) ? '' : Employees::findOne(['id' => $model->data_json['leader_id']])->fullname;
                             echo $form->field($model, 'data_json[leader_id]')->widget(Select2::classname(), [
                                 // 'data' => $model->ListEmployees(),

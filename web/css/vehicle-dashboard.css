@@ -1,0 +1,449 @@
+/* Vehicle booking dashboard
+ * Scoped styles for modules/booking/views/vehicle/dashboard.php and its partials.
+ */
+
+/* === Driver workload === */
+
+.driver-workload-list .driver-workload-item {
+    background: var(--bs-body-bg);
+    min-height: 44px;
+    transition: background-color .15s ease-in-out, transform .2s cubic-bezier(.22, 1, .36, 1);
+}
+
+.driver-workload-list a.driver-workload-item:hover,
+.driver-workload-list a.driver-workload-item:focus-visible {
+    background: var(--bs-tertiary-bg);
+    outline: none;
+}
+
+.driver-workload-list a.driver-workload-item:focus-visible {
+    box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .25);
+}
+
+.driver-workload-list a.driver-workload-item:hover .driver-workload-chevron,
+.driver-workload-list a.driver-workload-item:focus-visible .driver-workload-chevron {
+    color: var(--bs-primary) !important;
+    transform: translateX(3px);
+}
+
+.driver-workload-list .driver-workload-chevron {
+    transition: transform .2s cubic-bezier(.22, 1, .36, 1), color .15s ease-in-out;
+}
+
+.driver-workload-list .driver-rank-badge {
+    width: 28px;
+    height: 28px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.driver-workload-list .driver-workload-body {
+    min-width: 0;
+}
+
+.driver-workload-list .driver-progress {
+    height: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .driver-workload-list .driver-workload-item,
+    .driver-workload-list .driver-workload-chevron {
+        transition: none;
+    }
+
+    .driver-workload-list a.driver-workload-item:hover .driver-workload-chevron,
+    .driver-workload-list a.driver-workload-item:focus-visible .driver-workload-chevron {
+        transform: none;
+    }
+}
+
+/* === Expiring insurance alert === */
+
+.expiring-insurance-card .expiring-count-badge {
+    width: 26px;
+    height: 26px;
+    font-size: .8125rem;
+}
+
+.expiring-insurance-card .expiring-item {
+    background: var(--bs-body-bg);
+    transition: background-color .15s ease-in-out;
+    min-height: 44px;
+}
+
+.expiring-insurance-card .expiring-item:hover,
+.expiring-insurance-card .expiring-item:focus-visible {
+    background: var(--bs-tertiary-bg);
+}
+
+.expiring-insurance-card .expiring-item-main,
+.expiring-insurance-card .expiring-item-text {
+    min-width: 0;
+}
+
+.expiring-insurance-card .expiring-license {
+    font-size: .8125rem;
+    font-weight: 600;
+    padding: .375rem .75rem;
+}
+
+@media (min-width: 576px) {
+    .expiring-insurance-card .expiring-license {
+        min-width: 80px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .expiring-insurance-card .expiring-item {
+        transition: none;
+    }
+}
+
+/* === Vehicle schedule (ตารางการใช้รถยนต์) === */
+
+.schedule-card .schedule-heading-dot {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(var(--bs-primary-rgb), .12);
+}
+
+.schedule-card .schedule-day-toggle {
+    gap: .375rem;
+}
+
+.schedule-card .schedule-day-toggle .btn {
+    border-radius: 999px !important;
+}
+
+.schedule-card .schedule-type-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+    padding-top: .5rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.schedule-card .schedule-type-filter .btn {
+    border-radius: 999px !important;
+}
+
+.schedule-card .schedule-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.schedule-card .schedule-table thead th {
+    font-weight: 500;
+    font-size: .8125rem;
+    color: var(--bs-secondary);
+    background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    padding: .625rem .875rem;
+}
+
+.schedule-card .schedule-table tbody td {
+    padding: 1rem .875rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    vertical-align: middle;
+}
+
+.schedule-card .schedule-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.schedule-card .schedule-col-vehicle {
+    width: 260px;
+}
+
+.schedule-card .schedule-col-status {
+    width: 120px;
+    white-space: nowrap;
+}
+
+.schedule-card .schedule-col-timeline {
+    /* timeline column ใช้ที่เหลือ (auto-fill) */
+}
+
+/* รูปรถ (thumbnail) */
+.schedule-card .schedule-vehicle-thumb {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .75rem;
+    overflow: hidden;
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+}
+
+.schedule-card .schedule-vehicle-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.schedule-card .schedule-vehicle-thumb-fallback {
+    background: rgba(var(--bs-primary-rgb), .08);
+    color: var(--bs-primary);
+    font-size: 1.25rem;
+    border-color: transparent;
+}
+
+.schedule-card .schedule-vehicle-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.schedule-card .schedule-vehicle-plate {
+    font-weight: 600;
+    font-size: .9375rem;
+    color: var(--bs-body-color);
+}
+
+.schedule-card .schedule-vehicle-tag {
+    font-size: .6875rem;
+    font-weight: 500;
+    padding: .0625rem .5rem;
+    border-radius: 999px;
+    color: var(--bs-secondary);
+    background: rgba(var(--bs-secondary-rgb), .12);
+    line-height: 1.4;
+}
+
+/* ช่วงเวลา (timeline) */
+
+.schedule-card .schedule-timeline {
+    position: relative;
+    padding-bottom: 0;
+}
+
+.schedule-card .schedule-track {
+    position: relative;
+    height: 56px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.schedule-card .schedule-track-with-blocks {
+    overflow: visible;
+}
+
+.schedule-card .schedule-track-free {
+    color: var(--bs-secondary);
+    font-size: .8125rem;
+}
+
+.schedule-card .schedule-track-maintenance {
+    background: rgba(var(--bs-danger-rgb), .08);
+    color: var(--bs-danger);
+    font-size: .8125rem;
+    font-weight: 500;
+}
+
+.schedule-card .schedule-block {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 8px;
+    color: #fff;
+    line-height: 1.25;
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: var(--bs-box-shadow-sm, 0 .125rem .25rem rgba(0, 0, 0, .075));
+    transition: transform .15s ease-out, box-shadow .15s ease-out;
+}
+
+.schedule-card .schedule-block:hover,
+.schedule-card .schedule-block:focus-visible {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: var(--bs-box-shadow, 0 .5rem 1rem rgba(0, 0, 0, .15));
+    outline: none;
+}
+
+.schedule-card .schedule-block-time {
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.schedule-card .schedule-block-reason,
+.schedule-card .schedule-block-driver {
+    font-size: .6875rem;
+    font-weight: 500;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: .92;
+}
+
+.schedule-card .schedule-block-driver {
+    opacity: .85;
+    font-weight: 400;
+}
+
+/* block แคบ → ซ่อน reason บรรทัดที่ 2 ก่อน, driver บรรทัดที่ 3 ก่อนตามลำดับ */
+/* (ใช้ JS หรือ container query หากต้องการ control ละเอียดกว่านี้) */
+
+/* รายการสรุป (visible reason list ใต้ timeline) */
+
+.schedule-card .schedule-block-summary {
+    list-style: none;
+    margin: .5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.schedule-card .schedule-block-summary-item {
+    display: grid;
+    grid-template-columns: 8px 80px minmax(0, 1fr) minmax(0, 140px);
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    color: var(--bs-secondary);
+    line-height: 1.4;
+}
+
+.schedule-card .schedule-block-summary-driver {
+    min-width: 0;
+    color: var(--bs-body-color);
+    font-size: .75rem;
+}
+
+.schedule-card .schedule-block-summary-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.schedule-card .schedule-block-summary-time {
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.schedule-card .schedule-block-summary-reason {
+    min-width: 0;
+    color: var(--bs-body-color);
+}
+
+.schedule-card .schedule-block-0 {
+    background: var(--bs-purple, #6e81d9);
+}
+
+.schedule-card .schedule-block-1 {
+    background: var(--bs-orange, #fd7e14);
+}
+
+.schedule-card .schedule-block-2 {
+    background: var(--bs-teal, #20c997);
+}
+
+.schedule-card .schedule-block-3 {
+    background: var(--bs-pink, #f78fc3);
+}
+
+.schedule-card .schedule-ticks {
+    position: relative;
+    height: 14px;
+    margin-top: .25rem;
+}
+
+.schedule-card .schedule-tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-size: .6875rem;
+    color: var(--bs-tertiary-color, var(--bs-secondary));
+    white-space: nowrap;
+}
+
+.schedule-card .schedule-tick:first-child {
+    transform: translateX(0);
+}
+
+.schedule-card .schedule-tick:last-child {
+    transform: translateX(-100%);
+}
+
+/* สถานะ (status badge) */
+
+.schedule-card .schedule-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.schedule-card .schedule-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.schedule-card .schedule-status-free {
+    background: var(--bs-success-bg-subtle, rgba(var(--bs-success-rgb), .12));
+    color: var(--bs-success-text-emphasis, #146c43);
+}
+
+.schedule-card .schedule-status-booked {
+    background: var(--bs-warning-bg-subtle, rgba(var(--bs-warning-rgb), .18));
+    color: var(--bs-warning-text-emphasis, #b97700);
+}
+
+.schedule-card .schedule-status-maintenance {
+    background: var(--bs-danger-bg-subtle, rgba(var(--bs-danger-rgb), .12));
+    color: var(--bs-danger-text-emphasis, var(--bs-danger));
+}
+
+/* responsive: hide column header tweaks on small screens (table-responsive scrolls) */
+
+@media (max-width: 575.98px) {
+    .schedule-card .schedule-col-timeline {
+        min-width: 280px;
+    }
+
+    .schedule-card .schedule-vehicle-thumb {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .schedule-card .schedule-block {
+        transition: none;
+    }
+
+    .schedule-card .schedule-block:hover,
+    .schedule-card .schedule-block:focus-visible {
+        transform: none;
+    }
+}

@@ -15,7 +15,6 @@ use app\modules\booking\models\Vehicle;
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <h6 class="card-title"><i class="fa-solid fa-chart-simple"></i> จำนวนการใช้งานรถทั่วไป</h6>
-                    <?php echo $this->render('_search_year', ['model' => $searchModel]); ?>
                   </div>
                     <div id="ChartVehicle"></div>
             </div>

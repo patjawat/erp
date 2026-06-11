@@ -33,12 +33,12 @@ use yii\web\View;
     <h5><i class="fa-solid fa-tag"></i> ข้อมูลการต่อภาษี</h5>
     <div class="row">
         <div class="col-6">
-            <?php echo $form->field($model, 'date_start')->textInput()->label('วันที่ต่อภาษี') ?>
+            <?php echo $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class)->label('วันที่ต่อภาษี') ?>
 
             <?=$form->field($model, 'data_json[price]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('ค่าภาษี')?>
         </div>
         <div class="col-6">
-            <?php echo $form->field($model, 'date_end',['labelSpan' => 4])->textInput()->label('ครบกำหนด') ?>
+            <?php echo $form->field($model, 'date_end',['labelSpan' => 4])->widget(\app\widgets\datepicker\DatepickerThai::class)->label('ครบกำหนด') ?>
         </div>
 
     </div>
@@ -52,9 +52,9 @@ use yii\web\View;
 
         </div>
         <div class="col-6">
-            <?php echo $form->field($model, 'data_json[date_start1]', ['labelSpan' => 4])->textInput()->label('วันที่') ?>
+            <?php echo $form->field($model, 'data_json[date_start1]', ['labelSpan' => 4])->widget(\app\widgets\datepicker\DatepickerThai::class)->label('วันที่') ?>
 
-            <?php echo $form->field($model, 'data_json[date_end1]')->textInput()->label('ถึง') ?>
+            <?php echo $form->field($model, 'data_json[date_end1]')->widget(\app\widgets\datepicker\DatepickerThai::class)->label('ถึง') ?>
             <?=$form->field($model, 'data_json[sale1]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
             <?=$form->field($model, 'data_json[phone1]', ['labelSpan' => 4])->textInput(['type' => 'number','step' => 0.01])->label('โทร')?>
 
@@ -72,9 +72,9 @@ use yii\web\View;
         </div>
         <div class="col-6">
 
-            <?php echo $form->field($model, 'data_json[date_start2]',['labelSpan' => 4],)->textInput()->label('วันที่') ?>
+            <?php echo $form->field($model, 'data_json[date_start2]',['labelSpan' => 4],)->widget(\app\widgets\datepicker\DatepickerThai::class)->label('วันที่') ?>
 
-            <?php echo $form->field($model, 'data_json[date_end2]')->textInput()->label('ถึง') ?>
+            <?php echo $form->field($model, 'data_json[date_end2]')->widget(\app\widgets\datepicker\DatepickerThai::class)->label('ถึง') ?>
             <?=$form->field($model, 'data_json[sale2]')->textInput(['maxlength' => true])->label('ตัวแทน')?>
             <?=$form->field($model, 'data_json[phone2]', ['labelSpan' => 4])->textInput(['maxlength' => true])->label('โทร')?>
 
@@ -95,7 +95,6 @@ use yii\web\View;
 <?php
 $js = <<<JS
 
-thaiDatepicker('#assetdetail-date_start, #assetdetail-date_end, #assetdetail-data_json-date_start1, #assetdetail-data_json-date_end1, #assetdetail-data_json-date_start2, #assetdetail-data_json-date_end2');
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

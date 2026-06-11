@@ -709,7 +709,7 @@ class AssetController extends Controller
        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
 
-        return $this->render('update', [
+        return $this->render('@app/modules/am/views/equip/update', [
             'model' => $model,
             // 'group' => $model->asset_group_id
         ]);
