@@ -10,6 +10,7 @@ use app\models\Categorise as TelegramChannel;
 class Telegram extends Component
 {
     private $lastError = null;
+    private $requestTimeout = 5;
 
     public function sendMessage($groupCode, $message, array $options = [])
     {
@@ -51,6 +52,12 @@ class Telegram extends Component
     {
         $botToken = trim((string) $botToken);
         $chatId = trim((string) $chatId);
+        if ($botToken === '' || $chatId === '') {
+            $this->lastError = 'Missing bot token or chat id for Telegram message';
+            Yii::error($this->lastError, __METHOD__);
+            return false;
+        }
+
         $client = new Client([
             'baseUrl' => "https://api.telegram.org/bot{$botToken}/",
         ]);
@@ -71,6 +78,7 @@ class Telegram extends Component
                 ->setMethod('POST')
                 ->setUrl('sendMessage')
                 ->setFormat(Client::FORMAT_URLENCODED)
+                ->setOptions(['timeout' => $this->requestTimeout])
                 ->setData($payload)
                 ->send();
 
@@ -98,7 +106,7 @@ class Telegram extends Component
     protected function resolveDefaultBotToken()
     {
         $setting = TelegramChannel::findOne(['name' => 'telegram_setting']);
-        $settingData = $this->normalizeDataJson($setting->data_json ?? null);
+        $settingData = $setting ? $this->normalizeDataJson($setting->data_json) : [];
         if (!empty($settingData['bot_token'])) {
             return trim((string) $settingData['bot_token']);
         }
@@ -114,7 +122,7 @@ class Telegram extends Component
     protected function resolveDefaultBotUsername()
     {
         $setting = TelegramChannel::findOne(['name' => 'telegram_setting']);
-        $settingData = $this->normalizeDataJson($setting->data_json ?? null);
+        $settingData = $setting ? $this->normalizeDataJson($setting->data_json) : [];
         if (!empty($settingData['bot_username'])) {
             return ltrim((string) $settingData['bot_username'], '@');
         }

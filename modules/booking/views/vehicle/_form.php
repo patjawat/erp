@@ -12,6 +12,18 @@
 
     $me = UserHelper::GetEmployee();
 
+    // Reference-document list for the Select2 widget further down. Some
+    // entry points (e.g. update.php) don't pass $list explicitly; fall back
+    // to the model's listDocument() helper so the view doesn't crash when
+    // $model->vehicle_type_id == 'general'.
+    if (!isset($list) || !is_array($list)) {
+        try {
+            $list = method_exists($model, 'listDocument') ? (array) $model->listDocument() : [];
+        } catch (\Throwable $e) {
+            $list = [];
+        }
+    }
+
     $formatJs = <<<'JS'
     var formatRepo = function (repo) {
         if (repo.loading) {

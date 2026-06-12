@@ -16,18 +16,24 @@ class LeaveTelegramService
             return false;
         }
 
-        $chatId = $approve->employee->user->telegram_id ?? null;
+        $employee = $approve->employee;
+        $user = $employee ? $employee->user : null;
+        $chatId = $user ? $user->telegram_id : null;
         $leave  = $approve->leave;
         if (empty($chatId) || !$leave) {
             return false;
         }
 
-        $requesterName = $leave->employee->fullname ?? '-';
-        $leaveType     = $leave->leaveType->title ?? 'ใบลา';
+        $leaveEmployee = $leave->employee;
+        $leaveTypeModel = $leave->leaveType;
+        $requesterName = $leaveEmployee ? ($leaveEmployee->fullname ?? '-') : '-';
+        $leaveType     = $leaveTypeModel ? ($leaveTypeModel->title ?? 'ใบลา') : 'ใบลา';
         $totalDays     = (float) $leave->total_days;
         $dateRange     = trim(strip_tags((string) $leave->showLeaveDate()));
-        $levelLabel    = $approve->data_json['label'] ?? $approve->title ?? 'ผู้อนุมัติ';
-        $reason        = $leave->data_json['reason'] ?? '';
+        $approveData   = $this->normalizeDataJson($approve->data_json ?? null);
+        $leaveData     = $this->normalizeDataJson($leave->data_json ?? null);
+        $levelLabel    = $approveData['label'] ?? $approve->title ?? 'ผู้อนุมัติ';
+        $reason        = $leaveData['reason'] ?? '';
 
         // ระดับสุดท้าย ใช้คำว่า อนุมัติ/ไม่อนุมัติ, ระดับกลาง ใช้คำว่า เห็นชอบ/ไม่เห็นชอบ
         $isFinal     = (bool) $approve->maxLevel();
@@ -65,16 +71,19 @@ class LeaveTelegramService
 
     public function notifyLeaveResult(Leave $leave, string $status): bool
     {
-        $chatId = $leave->employee->user->telegram_id ?? null;
+        $employee = $leave->employee;
+        $user = $employee ? $employee->user : null;
+        $chatId = $user ? $user->telegram_id : null;
         if (empty($chatId)) {
             return false;
         }
 
+        $leaveTypeModel = $leave->leaveType;
         $statusText = $status === 'Approve' ? 'ได้รับการอนุมัติแล้ว' : 'ไม่ได้รับการอนุมัติ';
         $url = $this->buildMobileUrl(['/mobile/default/leave-request-view', 'id' => $leave->id]);
         $messageLines = [
             'สถานะใบลาของคุณอัปเดตแล้ว',
-            'ประเภท: ' . ($leave->leaveType->title ?? 'ใบลา'),
+            'ประเภท: ' . ($leaveTypeModel ? ($leaveTypeModel->title ?? 'ใบลา') : 'ใบลา'),
             'ผลการพิจารณา: ' . $statusText,
             'ช่วงเวลา: ' . trim(strip_tags((string) $leave->showLeaveDate())),
         ];
@@ -133,7 +142,7 @@ class LeaveTelegramService
     protected function resolveMiniAppBaseUrl(): ?string
     {
         $setting = Categorise::findOne(['name' => 'telegram_setting']);
-        $data = $this->normalizeDataJson($setting->data_json ?? null);
+        $data = $setting ? $this->normalizeDataJson($setting->data_json) : [];
         $miniAppUrl = trim((string) ($data['mini_app'] ?? ''));
         $enabled = (string) ($data['enable_mini_app'] ?? '0');
 

@@ -333,9 +333,62 @@ use yii\bootstrap5\Html;
         to { transform: rotate(360deg); }
     }
 
+    /* ── Navigation progress bar — instant tap-feedback ──────────────────
+       Sits above everything (including loading overlay) so the user sees
+       an immediate response the moment a link is tapped. The bar grows
+       quickly at first, then decelerates as it nears 100%, mimicking the
+       browser's own progress indicator. Pairs with mobile-shared.js
+       initNavLoading: bar paints instantly, full overlay appears after
+       250ms if navigation is still in flight. */
+    #mobile-nav-progress {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        z-index: 10000; /* above mobile-loading-overlay (9999) */
+        background: transparent;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    #mobile-nav-progress::after {
+        content: '';
+        display: block;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg,
+            var(--mobile-primary) 0%,
+            var(--mobile-primary-dark) 100%);
+        transform: scaleX(0);
+        transform-origin: 0 50%;
+        box-shadow: 0 0 6px rgba(13, 110, 253, 0.6);
+    }
+    #mobile-nav-progress.is-loading::after {
+        animation: mobile-nav-progress 6s cubic-bezier(0, 0.4, 0.6, 1) forwards;
+    }
+    #mobile-nav-progress.is-done::after {
+        animation: mobile-nav-progress-end 240ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes mobile-nav-progress {
+        0%   { transform: scaleX(0); }
+        30%  { transform: scaleX(0.4); }
+        60%  { transform: scaleX(0.7); }
+        90%  { transform: scaleX(0.92); }
+        100% { transform: scaleX(0.97); }
+    }
+    @keyframes mobile-nav-progress-end {
+        0%   { transform: scaleX(0.97); opacity: 1; }
+        50%  { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(1); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #mobile-nav-progress::after,
+        #mobile-nav-progress.is-loading::after,
+        #mobile-nav-progress.is-done::after { animation: none !important; transition: none !important; }
+        #mobile-nav-progress.is-loading::after { transform: scaleX(0.7); opacity: 1; }
+        #mobile-nav-progress.is-done::after { opacity: 0; }
+    }
+
     /* ─────────────────────────────────────────────────────────────────
        Shared "fixed shell" pattern — drenched blue Hero + optional
-       Stats overlay. Used by index.php, news.php, booking-vehicle.php
+       overlay card. Used by index.php, news.php, booking-vehicle.php
        and any future page that wants a pinned header.
 
        Render via the _partials/_hero_shell.php partial, then wrap your
@@ -355,7 +408,8 @@ use yii\bootstrap5\Html;
     .app-scroll {
         padding-top: var(--shell-h, 13rem);
     }
-    .app-scroll.has-stats {
+    .app-scroll.has-stats,
+    .app-scroll.has-overlay {
         padding-top: calc(var(--shell-h, 13rem) + var(--space-md));
     }
 
@@ -416,11 +470,14 @@ use yii\bootstrap5\Html;
         gap: 2px;
         padding: var(--space-sm) var(--space-2xs);
         text-decoration: none; color: inherit;
+        background: transparent; border: 0; /* reset for button tag */
         border-radius: 12px;
         position: relative;
         text-align: center;
+        cursor: pointer;
         transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1);
     }
+    button.app-stat { font: inherit; -webkit-appearance: none; appearance: none; }
     .app-stat + .app-stat::before {
         content: ''; position: absolute; left: 0; top: 18%; bottom: 18%;
         width: 1px; background: rgba(15, 23, 42, 0.07);

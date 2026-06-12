@@ -167,7 +167,7 @@ class FileManagerHelper extends Component
 
                 return [
                     'success' => 'true',
-                    'data' => $model,
+                    'data' => $model->toArray(),
                     'img' => self::getImg($model->id),
                 ];
             }

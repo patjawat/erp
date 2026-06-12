@@ -108,6 +108,157 @@
     }
     window.mobileInitAppShell = initAppShell;
 
+    // ---- Navigation loading feedback ---------------------------------------
+    // Problem: after a tap on a link there is a perceptible gap (200-800ms)
+    // before the new page paints. Without visual feedback the app feels
+    // frozen and users re-tap, which can double-submit forms or open the
+    // wrong screen.
+    //
+    // Solution — two layers of feedback:
+    //   1) Top progress bar (#mobile-nav-progress) — paints instantly via
+    //      a GPU transform animation. Gives immediate tap acknowledgement.
+    //   2) Full-screen overlay (#mobile-loading-overlay) — appears 250ms
+    //      after the tap if the page hasn't started rendering. Signals
+    //      "still working" for slower navigations.
+    //
+    // Both clear once the next page finishes loading or the bfcache
+    // restores a previous page.
+
+    var navLoaderTimer = null;
+
+    function ensureNavProgress() {
+        var bar = document.getElementById('mobile-nav-progress');
+        if (bar) return bar;
+        bar = document.createElement('div');
+        bar.id = 'mobile-nav-progress';
+        bar.setAttribute('aria-hidden', 'true');
+        (document.body || document.documentElement).appendChild(bar);
+        return bar;
+    }
+
+    function showNavProgress() {
+        var bar = ensureNavProgress();
+        bar.classList.remove('is-done');
+        // Force reflow so the animation restarts even on rapid taps
+        void bar.offsetWidth;
+        bar.classList.add('is-loading');
+    }
+    function hideNavProgress() {
+        var bar = document.getElementById('mobile-nav-progress');
+        if (!bar) return;
+        if (bar.classList.contains('is-loading')) {
+            bar.classList.remove('is-loading');
+            bar.classList.add('is-done');
+        }
+    }
+
+    function getLoadingOverlay() {
+        return document.getElementById('mobile-loading-overlay');
+    }
+
+    window.showMobileLoader = function (message) {
+        var overlay = getLoadingOverlay();
+        if (!overlay) return;
+        overlay.classList.remove('mobile-loading-hidden');
+        if (message) {
+            var t = overlay.querySelector('.mobile-loading-text');
+            if (t) t.textContent = message;
+        }
+    };
+    window.hideMobileLoader = function () {
+        clearTimeout(navLoaderTimer);
+        navLoaderTimer = null;
+        hideNavProgress();
+        var overlay = getLoadingOverlay();
+        if (overlay) overlay.classList.add('mobile-loading-hidden');
+    };
+    window.showMobileNavLoading = function (message) {
+        showNavProgress();
+        clearTimeout(navLoaderTimer);
+        navLoaderTimer = setTimeout(function () {
+            window.showMobileLoader(message);
+        }, 250);
+    };
+
+    // Auto-hide loaders once the page is fully loaded.
+    function hideOnReady() {
+        var run = function () {
+            requestAnimationFrame(function () {
+                requestAnimationFrame(window.hideMobileLoader);
+            });
+        };
+        if (document.readyState === 'complete') {
+            run();
+        } else {
+            window.addEventListener('load', run);
+        }
+    }
+    hideOnReady();
+
+    // Back/forward bfcache restore: page is instantly visible, no work to do
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) window.hideMobileLoader();
+    });
+
+    // Internal-link click → show loading before browser starts navigation.
+    // Filters out everything that shouldn't trigger nav feedback.
+    document.addEventListener('click', function (e) {
+        var link = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!link) return;
+        if (e.defaultPrevented) return;
+        // Modifier-click opens a new tab/window in the browser; let it pass
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (e.button !== 0) return;
+        if (link.target && link.target !== '_self') return;
+        if (link.hasAttribute('download')) return;
+        // Bootstrap toggles open modals / offcanvas; they don't navigate
+        if (link.dataset.bsToggle) return;
+        if (link.dataset.bsDismiss) return;
+        // Project-specific AJAX modal trigger
+        if (link.classList.contains('open-modal')) return;
+        // Opt-out attribute for any link that shouldn't show the loader
+        if (link.dataset.noLoader === 'true') return;
+
+        var href = link.getAttribute('href');
+        if (!href || href === '#') return;
+        if (href.charAt(0) === '#') return;
+        if (/^(javascript:|mailto:|tel:|sms:|whatsapp:)/i.test(href)) return;
+
+        try {
+            var url = new URL(link.href, location.href);
+            if (url.origin !== location.origin) return;
+            // Same-page hash change: browser stays on this page
+            if (url.pathname === location.pathname &&
+                url.search === location.search &&
+                url.hash !== location.hash) return;
+        } catch (err) {
+            return;
+        }
+
+        window.showMobileNavLoading();
+    }, true);
+
+    // Form submit → show loader for non-AJAX forms only. Forms using
+    // handleFormSubmit (Yii pattern: id matches mobile-*-form) already
+    // surface their own Swal-based loading state and should be skipped to
+    // avoid duplicate UI.
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (e.defaultPrevented) return;
+        if (form.dataset.ajax === 'true') return;
+        if (form.dataset.noLoader === 'true') return;
+        if (form.id && /^mobile-.+-form$/.test(form.id)) return;
+        try {
+            var action = form.getAttribute('action') || location.href;
+            var url = new URL(action, location.href);
+            if (url.origin !== location.origin) return;
+        } catch (err) {
+            return;
+        }
+        window.showMobileNavLoading('กำลังบันทึก...');
+    }, true);
+
     // ---- Telegram MiniApp auto-login ---------------------------------------
     // Only fires inside a Telegram WebApp environment. Idempotent: localStorage
     // flag prevents re-firing across navigations within the same session.

@@ -19,7 +19,6 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
-        // $this->layout = 'main';
 
         //  if (!$this->botToken) {
         //     throw new \Exception('Telegram bot token must be configured');
