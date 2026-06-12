@@ -39,6 +39,39 @@ use yii\bootstrap5\Html;
         --fs-2xl: 1.75rem;   /* 28px — hero/greeting name */
         --fs-3xl: 2.25rem;   /* 36px — feature numbers */
 
+        /* Ink scale — slate ramp for text. All pass WCAG AA on --surface. */
+        --ink:    #0f172a; /* slate-900 — primary headings */
+        --ink-2:  #334155; /* slate-700 — form labels */
+        --ink-3:  #475569; /* slate-600 — section headings, body-2 */
+        --ink-4:  #64748b; /* slate-500 — captions */
+        --ink-5:  #94a3b8; /* slate-400 — meta, disabled */
+        --ink-line: rgba(15, 23, 42, 0.06); /* hairline dividers */
+
+        /* Surface scale */
+        --surface:   #fff;     /* card / page */
+        --surface-2: #f5f7fa;  /* tinted page (drawer body, modal body) */
+        --surface-3: #f1f3f5;  /* pill-group bg, filter bar */
+
+        /* Semantic palette — solid + soft pair, 4.5:1 on white verified */
+        --danger:        #ef4444;
+        --danger-strong: #b91c1c;
+        --danger-soft:   rgba(239, 68, 68, 0.13);
+        --success:       #15803d;
+        --success-soft:  rgba(34, 197, 94, 0.13);
+        --warning:       #b54708;
+        --warning-soft:  rgba(255, 159, 28, 0.13);
+
+        /* Elevation — semantic shadow scale */
+        --shadow-sm: 0 1px 4px rgba(15, 23, 42, 0.04);
+        --shadow-md: 0 2px 12px rgba(15, 23, 42, 0.06);
+        --shadow-lg: 0 4px 24px rgba(15, 23, 42, 0.08);
+
+        /* Z-index scale — semantic, not arbitrary */
+        --z-sticky:  100;
+        --z-overlay: 1000;
+        --z-modal:   1050;
+        --z-toast:   1080;
+
         /* Category palette — OKLCH harmonised at L 0.58, C 0.14-0.18.
            Each service gets a distinct hue for wayfinding on dense menus
            (the LINE / Grab pattern). Surfaces stay restrained; only the
@@ -123,11 +156,27 @@ use yii\bootstrap5\Html;
     .meeting-booking-card .form-label {
         font-weight: 500;
     }
+    /* Sticky page header — drenched blue matching the home-hero so the brand
+       carries across every mobile screen. Text overrides force white over the
+       Bootstrap text-dark / text-body-secondary classes used in _header.php. */
     .mobile-header {
-        background: #fff;
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-        padding: var(--space-sm) var(--space-md);
+        background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
+        color: #fff;
+        box-shadow: 0 2px 12px rgba(13, 110, 253, 0.18);
+        padding: calc(env(safe-area-inset-top, 0px) + var(--space-sm)) var(--space-md) var(--space-sm);
     }
+    .mobile-header h1,
+    .mobile-header .h1, .mobile-header .h2, .mobile-header .h3,
+    .mobile-header .h4, .mobile-header .h5, .mobile-header .h6 {
+        color: #fff !important;
+    }
+    .mobile-header p,
+    .mobile-header .text-body-secondary,
+    .mobile-header .text-muted {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+    .mobile-header a { color: #fff; }
+    .mobile-header a:hover, .mobile-header a:focus { color: rgba(255, 255, 255, 0.85); }
 
     /* Stacked page rhythm — major sections separated by --space-xl, content within --space-md */
     .mobile-stack { display: flex; flex-direction: column; gap: var(--space-xl); }

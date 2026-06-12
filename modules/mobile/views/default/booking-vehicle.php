@@ -1,167 +1,470 @@
 <?php
 
-use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
 use app\widgets\datepicker\DatepickerThai;
+use kartik\select2\Select2;
+use yii\bootstrap5\ActiveForm;
+use yii\bootstrap5\Html;
+use yii\web\JsExpression;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
+/** @var \app\modules\booking\models\Vehicle $model */
+/** @var \app\modules\hr\models\Employees|null $employee */
+/** @var array $saveErrors */
+
 $this->params['current_page']   = $current_page ?? 'services';
 $this->params['mobileTitle']    = 'จองรถราชการ';
-$this->params['mobileSubtitle'] = 'กรอกข้อมูลเพื่อตรวจสอบรถว่างและส่งคำขอ';
+$this->params['mobileSubtitle'] = 'กรอกข้อมูลเดินทางและส่งคำขอ';
+
+$saveErrors = $saveErrors ?? [];
+
+// Existing values for pill groups (for update mode / failed POST re-render)
+$existingGoType = (int) ($model->go_type ?? 1);
+$existingDriver = is_array($model->data_json ?? null) ? (string) ($model->data_json['driver'] ?? '') : '';
 ?>
+
 <style>
-.btn-booking {
+/* Full-bleed escape so the drenched-blue hero reaches screen edges.
+   padding-bottom reserves space so the last section + 24px gap can
+   breathe above the sticky action bar (48px button + 32px padding +
+   up to 34px safe-area = ~7rem). */
+.bv-root {
+    margin-left: -1rem; margin-right: -1rem;
+    margin-top: -1rem;
+    display: flex; flex-direction: column;
+    padding-bottom: 7rem;
+}
+
+/* ── Hero (drenched blue) ────────────────────────────────────────── */
+.bv-hero {
+    position: relative;
+    padding: calc(env(safe-area-inset-top, 0px) + var(--space-md)) var(--space-md) calc(var(--space-2xl) + var(--space-xs));
+    color: #fff;
+    background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    overflow: hidden;
+}
+.bv-hero::before, .bv-hero::after {
+    content: ''; position: absolute; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+.bv-hero::before { top: -80px; right: -60px; width: 220px; height: 220px; }
+.bv-hero::after  { bottom: -60px; left: -40px; width: 180px; height: 180px; background: rgba(255, 255, 255, 0.06); }
+
+.bv-hero-row { display: flex; align-items: center; gap: var(--space-md); position: relative; z-index: 1; }
+.bv-hero-icon {
+    width: 3.25rem; height: 3.25rem; border-radius: 18px;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.bv-hero-icon svg { width: 1.5rem; height: 1.5rem; }
+.bv-hero-title { font-size: var(--fs-xl); font-weight: 700; margin: 0; letter-spacing: -0.015em; line-height: 1.2; }
+.bv-hero-sub   { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.88); margin: 4px 0 0; font-weight: 500; }
+
+/* ── Body stack ────────────────────────────────────────────────────
+   Body padding-top adds breathing room between hero curve and content.
+   Both .bv-body and the inner form become flex columns so sections
+   spread evenly (24px), giving each card its own breath zone. */
+.bv-body {
+    padding: var(--space-xl) var(--space-md) 0;
+    display: flex; flex-direction: column;
+    gap: var(--space-lg);
+}
+.bv-body form {
+    display: flex; flex-direction: column;
+    gap: var(--space-lg); /* 24px between Section 1/2/3 cards */
+}
+
+/* Section heading (outside card) — optional badge replaces inconsistent req-dot.
+   Icon-text gap 12px (within brief 8-12px range), heading-to-card 12px. */
+.bv-section-head {
+    display: flex; align-items: center; gap: var(--space-sm);
+    font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3);
+    margin: 0 0 var(--space-sm); padding: 0 var(--space-2xs);
+    letter-spacing: -0.005em;
+}
+.bv-section-head svg { color: var(--mobile-primary); width: 1rem; height: 1rem; }
+.bv-section-head .badge-optional {
+    margin-left: auto;
+    font-size: var(--fs-xs); font-weight: 500;
+    color: var(--ink-4);
+}
+
+/* Card padding 20px (upper end of brief 16-20px range) for comfortable feel.
+   Form groups inside use Bootstrap mb-3 = 16px. */
+.bv-card {
+    background: var(--surface); border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-md);
+}
+.bv-card .form-control, .bv-card .form-select { border-radius: 12px; padding: 0.75rem 1rem; min-height: 3rem; }
+.bv-card .form-label {
+    font-weight: 500; font-size: var(--fs-sm); color: var(--ink-2);
+    margin-bottom: var(--space-xs); /* 8px label→input — comfortable read */
+}
+.bv-card .invalid-feedback {
+    display: block; font-size: var(--fs-xs);
+    margin-top: var(--space-2xs); /* 4px input→error message — tight pair */
+    color: var(--danger-strong);
+}
+
+/* Required asterisk via pseudo-element — applied to label class, not inline HTML */
+.form-label.is-req::after { content: ' *'; color: var(--danger); font-weight: 700; }
+
+/* ── Select2 (Krajee) inside .bv-card — match form-control sizing/feel ───── */
+.bv-card .select2-container--krajee-bs5 .select2-selection,
+.bv-card .select2-container--krajee .select2-selection {
     border-radius: 12px;
-    padding: 0.875rem 1rem;
-    font-size: 1rem;
-    font-weight: 600;
+    min-height: 3rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #dee2e6;
+    box-shadow: none;
 }
-.vehicle-card {
-    border: 0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s ease;
+.bv-card .select2-container--krajee-bs5 .select2-selection__rendered,
+.bv-card .select2-container--krajee .select2-selection__rendered {
+    line-height: 2.15rem;
+    padding-left: 0;
+    color: var(--ink);
 }
-.vehicle-card:hover { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
-.vehicle-card .vehicle-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 12px;
-    background: rgba(13, 110, 253, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.bv-card .select2-container--krajee-bs5 .select2-selection__placeholder,
+.bv-card .select2-container--krajee .select2-selection__placeholder {
+    color: var(--ink-4);
 }
-.vehicle-card .vehicle-icon i { color: var(--mobile-primary, #0d6efd); }
-.vehicle-card .vehicle-thumb { width: 3.5rem; height: 2.75rem; border-radius: 10px; object-fit: cover; background: #e9ecef; }
-.vehicle-list-empty { padding: 2rem 1rem; text-align: center; color: #6c757d; font-size: 0.9375rem; }
+.bv-card .select2-container--krajee-bs5.select2-container--focus .select2-selection,
+.bv-card .select2-container--krajee.select2-container--focus .select2-selection {
+    border-color: var(--mobile-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.18);
+}
+.bv-card .select2-selection__arrow { height: 3rem !important; }
+/* Dropdown — touch-friendly options + search box */
+.select2-dropdown {
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-lg);
+    border-color: var(--ink-line) !important;
+    overflow: hidden;
+}
+.select2-search--dropdown .select2-search__field {
+    border-radius: 10px !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 0.6rem 0.75rem !important;
+    font-size: var(--fs-md);
+    min-height: 2.75rem;
+}
+.select2-results__option {
+    padding: 0.75rem 1rem !important;
+    font-size: var(--fs-sm);
+    min-height: 2.75rem;
+    display: flex; align-items: center;
+}
+.select2-container--krajee-bs5 .select2-results__option--highlighted,
+.select2-container--krajee .select2-results__option--highlighted {
+    background: var(--mobile-primary-soft) !important;
+    color: var(--mobile-primary) !important;
+}
+
+/* Two-col date+time on wider widths */
+/* Date+time paired field — 16px between the two columns / rows */
+.bv-row { display: grid; gap: var(--space-md); }
+@media (min-width: 360px) {
+    .bv-row.bv-row-2 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Sticky bottom submit bar — 16px breath top/bottom around the button */
+.bv-actions {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    padding: var(--space-md) var(--space-md) calc(env(safe-area-inset-bottom, 0px) + var(--space-md));
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+    border-top: 1px solid var(--ink-line);
+    z-index: var(--z-sticky);
+}
+.bv-actions .btn {
+    width: 100%; min-height: 3rem; border-radius: 12px;
+    font-size: var(--fs-md); font-weight: 600;
+    transition: opacity 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bv-actions .btn[disabled], .bv-actions .btn.is-busy { opacity: 0.7; cursor: wait; }
+
+/* Error summary alert */
+.bv-error-summary {
+    background: var(--danger-soft);
+    border-radius: 12px; padding: var(--space-sm) var(--space-md);
+    color: var(--danger-strong); font-size: var(--fs-sm);
+    display: flex; gap: var(--space-xs); align-items: flex-start;
+}
+.bv-error-summary ul { margin: 0; padding-left: 1.25rem; }
+
+/* Pill option labels: shrink-friendly on narrow widths (<360px Thai labels) */
+@media (max-width: 360px) {
+    .pill-option { padding: var(--space-xs) 0.4rem; font-size: var(--fs-xs); }
+}
+
+/* Motion */
+@keyframes bv-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bv-blob  { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-10px, 6px) scale(1.06); } }
+.bv-hero, .bv-body > * { animation: bv-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+.bv-body > *:nth-child(1) { animation-delay: 80ms; }
+.bv-body > *:nth-child(2) { animation-delay: 140ms; }
+.bv-body > *:nth-child(3) { animation-delay: 200ms; }
+.bv-body > *:nth-child(4) { animation-delay: 260ms; }
+.bv-hero::before { animation: bv-blob 9s ease-in-out infinite; }
+.bv-hero::after  { animation: bv-blob 11s ease-in-out infinite reverse; }
+
+@media (prefers-reduced-motion: reduce) {
+    .bv-hero, .bv-body > *, .bv-hero::before, .bv-hero::after { animation: none !important; }
+}
 </style>
 
-<?php $form = ActiveForm::begin([
-    'id' => 'mobile-booking-vehicle-form',
-    'options' => ['class' => ''],
-]); ?>
+<div class="bv-root">
 
-<div class="card booking-card mb-3">
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label fw-medium">วันที่เดินทาง <span class="text-danger">*</span></label>
-            <?= DatepickerThai::widget([
-                'name' => 'travel_date',
-                'value' => date('d/m/Y'),
-                'options' => [
-                    'id' => 'booking-travel-date',
-                    'placeholder' => 'เลือกวันที่เดินทาง',
-                    'class' => 'form-control',
-                ],
-            ]) ?>
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">เวลาเดินทาง <span class="text-danger">*</span></label>
-            <input type="time" name="travel_time" class="form-control" value="08:00" step="300">
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">จุดหมายปลายทาง <span class="text-danger">*</span></label>
-            <input type="text" name="destination" class="form-control" placeholder="ระบุจุดหมายปลายทาง" autocomplete="off">
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">วัตถุประสงค์ <span class="text-danger">*</span></label>
-            <textarea name="purpose" class="form-control" rows="2" placeholder="ระบุวัตถุประสงค์การเดินทาง"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">จำนวนผู้โดยสาร <span class="text-danger">*</span></label>
-            <input type="number" name="passengers" class="form-control" min="1" max="99" value="1" placeholder="จำนวนคน">
-        </div>
-        <div class="mb-0">
-            <label class="form-label fw-medium">คนขับรถ</label>
-            <select name="driver" class="form-select">
-                <option value="">— เลือกคนขับ (ถ้ามี) —</option>
-                <option value="self">ขับเอง</option>
-                <option value="driver">พนักงานขับรถ</option>
-            </select>
-        </div>
-    </div>
-</div>
-
-<div class="d-grid gap-2 mb-3">
-    <button type="button" class="btn btn-outline-primary btn-booking" id="btn-check-vehicles">
-        <i data-lucide="search" class="me-1" style="width: 1.15rem; height: 1.15rem; vertical-align: -0.25em;"></i>
-        ตรวจสอบรถว่าง
-    </button>
-    <button type="submit" class="btn btn-primary btn-booking" name="action" value="submit">
-        <i data-lucide="check-circle" class="me-1" style="width: 1.15rem; height: 1.15rem; vertical-align: -0.25em;"></i>
-        ยืนยันการจอง
-    </button>
-</div>
-
-<?php ActiveForm::end(); ?>
-
-<div class="card booking-card mb-3" id="vehicle-list-card">
-    <div class="card-body">
-        <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="car" class="mi-md"></i>
-            รถที่ว่าง
-        </h6>
-        <div id="vehicle-list-empty" class="vehicle-list-empty">
-            <i data-lucide="car-front" class="mi-xl mb-2 d-block mx-auto" style="opacity: 0.4;"></i>
-            กด "ตรวจสอบรถว่าง" เพื่อดูรายการรถที่ว่างในวันและเวลาที่เลือก
-        </div>
-        <div id="vehicle-list-loading" class="vehicle-list-empty d-none" role="status" aria-live="polite">
-            <i data-lucide="loader-2" class="mi-xl mb-2 d-block mx-auto" style="animation: mobile-loading-spin 0.7s linear infinite;"></i>
-            กำลังตรวจสอบรถที่ว่าง...
-        </div>
-        <div id="vehicle-list-error" class="vehicle-list-empty d-none text-danger" role="alert">
-            <i data-lucide="alert-circle" class="mi-xl mb-2 d-block mx-auto"></i>
-            <span id="vehicle-list-error-msg">โหลดรายการรถไม่สำเร็จ</span>
-            <div class="mt-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" id="btn-retry-vehicles">ลองอีกครั้ง</button>
+    <!-- ── Hero ───────────────────────────────────────────────── -->
+    <header class="bv-hero">
+        <div class="bv-hero-row">
+            <span class="bv-hero-icon" aria-hidden="true"><i data-lucide="car"></i></span>
+            <div class="min-w-0">
+                <h1 class="bv-hero-title">จองรถราชการ</h1>
+                <p class="bv-hero-sub">ระบุวัน เวลา และจุดหมาย เจ้าหน้าที่จะจัดสรรรถให้</p>
             </div>
         </div>
-        <div id="vehicle-list-results" class="d-none" role="list" aria-label="รายการรถที่ว่าง"></div>
+    </header>
+
+    <div class="bv-body">
+
+        <?php if (Yii::$app->session->hasFlash('success')): ?>
+            <div class="alert alert-success rounded-3 mb-0" role="alert">
+                <i data-lucide="check-circle" class="mi-sm mi-baseline me-1"></i>
+                <?= Yii::$app->session->getFlash('success') ?>
+            </div>
+        <?php endif; ?>
+        <?php if (Yii::$app->session->hasFlash('error')): ?>
+            <div class="alert alert-danger rounded-3 mb-0" role="alert">
+                <i data-lucide="alert-circle" class="mi-sm mi-baseline me-1"></i>
+                <?= Yii::$app->session->getFlash('error') ?>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($saveErrors)): ?>
+            <div class="bv-error-summary" role="alert">
+                <i data-lucide="alert-triangle" class="mi-sm flex-shrink-0 mt-1"></i>
+                <div>
+                    <strong class="d-block mb-1">กรุณาตรวจสอบฟิลด์ที่กรอก</strong>
+                    <ul>
+                        <?php foreach ($saveErrors as $attr => $msg): ?>
+                            <li><?= Html::encode(is_string($msg) ? $msg : (string) reset((array) $msg)) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php $form = ActiveForm::begin([
+            'id' => 'mobile-booking-vehicle-form',
+            'method' => 'post',
+            'options' => ['novalidate' => 'novalidate'],
+            'fieldConfig' => [
+                'options'      => ['class' => 'mb-3'],
+                'labelOptions' => ['class' => 'form-label'],
+                'errorOptions' => ['class' => 'invalid-feedback d-block'],
+            ],
+        ]); ?>
+
+        <!-- Section 1: ช่วงเวลา -->
+        <section>
+            <h2 class="bv-section-head">
+                <i data-lucide="calendar-range"></i>
+                ช่วงเวลาเดินทาง
+            </h2>
+            <div class="bv-card">
+                <div class="mb-3">
+                    <label class="form-label is-req">ประเภทการเดินทาง</label>
+                    <div class="pill-group" role="radiogroup" aria-label="ประเภทการเดินทาง" aria-required="true">
+                        <?php foreach ([1 => 'ไปกลับวันเดียว', 2 => 'ค้างคืน'] as $val => $lab): ?>
+                            <?php $checked = $existingGoType === $val; ?>
+                            <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
+                                <input type="radio"
+                                       name="<?= Html::encode(Html::getInputName($model, 'go_type')) ?>"
+                                       value="<?= $val ?>"
+                                       <?= $checked ? 'checked' : '' ?>
+                                       data-pill-target="bv-go-type">
+                                <?= Html::encode($lab) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <input type="hidden" id="bv-go-type" value="<?= $existingGoType ?>">
+                </div>
+
+                <div class="bv-row bv-row-2 mb-3">
+                    <?= $form->field($model, 'date_start', [
+                        'template' => '{label}{input}{error}',
+                        'options' => ['class' => 'mb-0'],
+                        'labelOptions' => ['class' => 'form-label is-req'],
+                    ])->widget(DatepickerThai::class, [
+                        'options' => ['class' => 'form-control', 'placeholder' => 'วันเริ่ม', 'autocomplete' => 'off', 'aria-required' => 'true'],
+                    ])->label('วันเริ่ม') ?>
+                    <?= $form->field($model, 'time_start', [
+                        'template' => '{label}{input}{error}',
+                        'options' => ['class' => 'mb-0'],
+                        'labelOptions' => ['class' => 'form-label is-req'],
+                    ])->input('time', ['step' => 300, 'aria-required' => 'true'])->label('เวลาเริ่ม') ?>
+                </div>
+
+                <div class="bv-row bv-row-2 mb-0" id="bv-end-row">
+                    <?= $form->field($model, 'date_end', [
+                        'template' => '{label}{input}{error}',
+                        'options' => ['class' => 'mb-0'],
+                    ])->widget(DatepickerThai::class, [
+                        'options' => ['class' => 'form-control', 'placeholder' => 'วันสิ้นสุด', 'autocomplete' => 'off'],
+                    ])->label('วันสิ้นสุด') ?>
+                    <?= $form->field($model, 'time_end', [
+                        'template' => '{label}{input}{error}',
+                        'options' => ['class' => 'mb-0'],
+                        'labelOptions' => ['class' => 'form-label is-req'],
+                    ])->input('time', ['step' => 300, 'aria-required' => 'true'])->label('เวลากลับ') ?>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: รายละเอียดการเดินทาง -->
+        <section>
+            <h2 class="bv-section-head">
+                <i data-lucide="map-pin"></i>
+                รายละเอียดการเดินทาง
+            </h2>
+            <div class="bv-card">
+                <?= $form->field($model, 'location', [
+                    'labelOptions' => ['class' => 'form-label is-req'],
+                ])->widget(Select2::class, [
+                    'data'    => $model->ListOrg(),
+                    'options' => [
+                        'placeholder'    => 'ค้นหาหรือพิมพ์จุดหมายปลายทาง',
+                        'aria-required'  => 'true',
+                        'aria-label'     => 'จุดหมายปลายทาง',
+                    ],
+                    'pluginOptions' => [
+                        'tags'                  => true,   // อนุญาตให้พิมพ์จุดหมายใหม่ที่ไม่อยู่ในรายการ
+                        'allowClear'            => true,
+                        'minimumResultsForSearch' => 0,    // แสดง search box เสมอ
+                        'tokenSeparators'       => [],
+                        'language'              => [
+                            'noResults'        => new JsExpression('function(){ return "ไม่พบในรายการ — กด Enter เพื่อใช้ข้อความนี้"; }'),
+                            'searching'        => new JsExpression('function(){ return "กำลังค้นหา..."; }'),
+                            'inputTooShort'    => new JsExpression('function(){ return "พิมพ์อย่างน้อย 1 ตัวอักษร"; }'),
+                        ],
+                    ],
+                ])->label('จุดหมายปลายทาง') ?>
+
+                <?= $form->field($model, 'reason', [
+                    'labelOptions' => ['class' => 'form-label is-req'],
+                ])->textarea([
+                    'rows' => 3,
+                    'placeholder' => 'ระบุวัตถุประสงค์ของการเดินทาง',
+                    'aria-required' => 'true',
+                ])->label('วัตถุประสงค์') ?>
+
+                <?= $form->field($model, 'data_json[passengers]', ['options' => ['class' => 'mb-0']])->input('number', [
+                    'min' => 1, 'max' => 99, 'value' => $model->data_json['passengers'] ?? 1,
+                    'placeholder' => 'จำนวนคน',
+                ])->label('จำนวนผู้โดยสาร') ?>
+            </div>
+        </section>
+
+        <!-- Section 3: คนขับ (optional) -->
+        <section>
+            <h2 class="bv-section-head">
+                <i data-lucide="user"></i>
+                คนขับ
+                <span class="badge-optional">ไม่บังคับ</span>
+            </h2>
+            <div class="bv-card">
+                <div class="pill-group" role="radiogroup" aria-label="ผู้ขับรถ">
+                    <?php foreach (['' => 'ไม่ระบุ', 'self' => 'ขับเอง', 'driver' => 'พนักงาน'] as $val => $lab): ?>
+                        <?php $checked = $existingDriver === (string) $val; ?>
+                        <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
+                            <input type="radio"
+                                   name="<?= Html::encode(Html::getInputName($model, 'data_json[driver]')) ?>"
+                                   value="<?= Html::encode((string) $val) ?>"
+                                   <?= $checked ? 'checked' : '' ?>
+                                   data-pill-target="bv-driver">
+                            <?= Html::encode($lab) ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <input type="hidden" id="bv-driver" value="<?= Html::encode($existingDriver) ?>">
+            </div>
+        </section>
+
+        <!-- Sticky bottom action -->
+        <div class="bv-actions">
+            <?= Html::submitButton(
+                '<i data-lucide="send" class="mi-sm mi-baseline me-2"></i> ส่งคำขอจองรถ',
+                ['class' => 'btn btn-primary', 'id' => 'bv-submit', 'name' => 'action', 'value' => 'submit']
+            ) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
     </div>
 </div>
 
 <?php
 $js = <<<'JS'
 (function() {
-    var form = document.getElementById('mobile-booking-vehicle-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
+    // ── Pill groups mirror radio value to a hidden input + active state
+    document.querySelectorAll('.pill-group').forEach(function(group) {
+        group.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                if (!this.checked) return;
+                group.querySelectorAll('.pill-option').forEach(function(opt) { opt.classList.remove('is-active'); });
+                var label = this.closest('label');
+                if (label) label.classList.add('is-active');
+                var targetId = this.dataset.pillTarget;
+                if (targetId) {
+                    var t = document.getElementById(targetId);
+                    if (t) { t.value = this.value; t.dispatchEvent(new Event('change', { bubbles: true })); }
+                }
+            });
+        });
+    });
+
+    // ── go_type toggles end-date row (ค้างคืน = แสดง, ไปกลับ = ซ่อน end date)
+    var goTypeEl = document.getElementById('bv-go-type');
+    var endRow   = document.getElementById('bv-end-row');
+    function syncEndDate() {
+        if (!goTypeEl || !endRow) return;
+        var isOvernight = String(goTypeEl.value) === '2';
+        // Always show time_end; only hide the date_end column when same-day trip.
+        var dateEndField = endRow.querySelector('.field-vehicle-date_end, [class*="field-vehicle-date_end"]');
+        if (dateEndField) dateEndField.style.display = isOvernight ? '' : 'none';
+    }
+    if (goTypeEl) goTypeEl.addEventListener('change', syncEndDate);
+    syncEndDate();
+
+    // ── Double-submit guard. Yii's beforeSubmit fires after client validation,
+    //    so between the click and Swal opening there's a small window the user
+    //    can double-tap. Flag + visual busy state during that window.
+    var submitting = false;
+    var formEl    = document.getElementById('mobile-booking-vehicle-form');
+    var submitBtn = document.getElementById('bv-submit');
+    if (formEl) {
+        formEl.addEventListener('submit', function(e) {
+            if (submitting) { e.preventDefault(); e.stopImmediatePropagation(); return false; }
+            submitting = true;
+            if (submitBtn) submitBtn.classList.add('is-busy');
+            // Reset after Swal has had time to open; handleFormSubmit takes over after that.
+            setTimeout(function() {
+                submitting = false;
+                if (submitBtn) submitBtn.classList.remove('is-busy');
+            }, 400);
         });
     }
-    var btn = document.getElementById('btn-check-vehicles');
-    var empty = document.getElementById('vehicle-list-empty');
-    var loading = document.getElementById('vehicle-list-loading');
-    var errorBox = document.getElementById('vehicle-list-error');
-    var results = document.getElementById('vehicle-list-results');
 
-    function showOnly(el) {
-        [empty, loading, errorBox, results].forEach(function(n) {
-            if (n) n.classList.add('d-none');
+    // ── handleFormSubmit (erp.js): Swal confirm + AJAX + inline ActiveForm errors
+    if (typeof handleFormSubmit === 'function') {
+        handleFormSubmit('#mobile-booking-vehicle-form', null, function(response) {
+            // handleFormSubmit redirects via response.redirect_url
         });
-        if (el) el.classList.remove('d-none');
     }
-
-    // TODO: wire up to /booking/vehicle/availability endpoint when available.
-    // For now, surface an honest "in development" message instead of demo cars.
-    function checkVehicles() {
-        showOnly(loading);
-        setTimeout(function() {
-            results.innerHTML = '<div class="text-center text-body-secondary py-3">'
-                + '<i data-lucide="info" class="mi-md mb-2 d-block mx-auto"></i>'
-                + 'ระบบตรวจสอบรถว่างแบบเรียลไทม์อยู่ระหว่างพัฒนา<br>'
-                + 'กรุณายืนยันคำขอ — เจ้าหน้าที่จะจัดสรรรถและแจ้งกลับ'
-                + '</div>';
-            showOnly(results);
-            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-        }, 300);
-    }
-
-    if (btn) btn.addEventListener('click', checkVehicles);
-    var retry = document.getElementById('btn-retry-vehicles');
-    if (retry) retry.addEventListener('click', checkVehicles);
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_READY);

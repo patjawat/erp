@@ -73,7 +73,7 @@ $bucketLabels = [
     display: flex; flex-direction: column; align-items: flex-start;
     gap: var(--space-2xs);
     background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.06);
+    border: 1px solid var(--ink-line);
     border-radius: 14px;
     padding: var(--space-sm) var(--space-md);
     text-decoration: none;
@@ -86,10 +86,10 @@ $bucketLabels = [
     box-shadow: inset 0 0 0 1px var(--mobile-primary);
 }
 .rm-stat-num { font-size: var(--fs-2xl); font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-.rm-stat-lbl { font-size: var(--fs-xs); color: #475569; font-weight: 500; }
-.rm-stat.is-pending   .rm-stat-num { color: #b54708; }
-.rm-stat.is-passed    .rm-stat-num { color: #15803d; }
-.rm-stat.is-cancelled .rm-stat-num { color: #b91c1c; }
+.rm-stat-lbl { font-size: var(--fs-xs); color: var(--ink-3); font-weight: 500; }
+.rm-stat.is-pending   .rm-stat-num { color: var(--warning); }
+.rm-stat.is-passed    .rm-stat-num { color: var(--success); }
+.rm-stat.is-cancelled .rm-stat-num { color: var(--danger-strong); }
 
 /* ── Filter bar — status pills + optional room dropdown ──────────────── */
 .rm-filter {
@@ -111,18 +111,18 @@ $bucketLabels = [
 
 /* ── Date bucket header ──────────────────────────────────────────────── */
 .rm-bucket {
-    font-size: var(--fs-sm); font-weight: 700; color: #475569;
+    font-size: var(--fs-sm); font-weight: 700; color: var(--ink-3);
     letter-spacing: -0.005em;
     margin: var(--space-md) 0 var(--space-xs);
     display: flex; align-items: center; gap: var(--space-xs);
 }
-.rm-bucket::after { content: ''; flex: 1; height: 1px; background: rgba(15, 23, 42, 0.06); }
+.rm-bucket::after { content: ''; flex: 1; height: 1px; background: var(--ink-line); }
 
 /* ── Meeting row card ─────────────────────────────────────────────────── */
 .rm-card {
     background: #fff;
     border-radius: 14px;
-    box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--shadow-sm);
     padding: var(--space-md);
     margin-bottom: var(--space-xs);
     transition: opacity 0.25s ease;
@@ -135,19 +135,19 @@ $bucketLabels = [
     flex-shrink: 0;
 }
 .rm-medal svg { width: 1.125rem; height: 1.125rem; }
-.rm-medal.is-pending   { background: rgba(255, 159, 28, 0.13);  color: #b54708; }
-.rm-medal.is-passed    { background: rgba(34, 197, 94, 0.13);   color: #15803d; }
-.rm-medal.is-cancelled { background: rgba(239, 68, 68, 0.13);   color: #b91c1c; }
-.rm-medal.is-other     { background: rgba(100, 116, 139, 0.13); color: #475569; }
+.rm-medal.is-pending   { background: var(--warning-soft);  color: var(--warning); }
+.rm-medal.is-passed    { background: var(--success-soft);   color: var(--success); }
+.rm-medal.is-cancelled { background: var(--danger-soft);   color: var(--danger-strong); }
+.rm-medal.is-other     { background: rgba(100, 116, 139, 0.13); color: var(--ink-3); }
 
 .rm-card-body { flex-grow: 1; min-width: 0; }
 .rm-card-title {
-    font-size: var(--fs-md); font-weight: 600; color: #0f172a;
+    font-size: var(--fs-md); font-weight: 600; color: var(--ink);
     margin: 0; line-height: 1.3;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .rm-card-meta {
-    font-size: var(--fs-xs); color: #475569;
+    font-size: var(--fs-xs); color: var(--ink-3);
     margin: 2px 0 0; line-height: 1.4;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
@@ -157,19 +157,19 @@ $bucketLabels = [
     font-size: var(--fs-2xs); font-weight: 600;
     padding: 4px 10px; border-radius: 999px;
 }
-.rm-card-pill.is-pending   { background: rgba(255, 159, 28, 0.13);  color: #b54708; }
-.rm-card-pill.is-passed    { background: rgba(34, 197, 94, 0.13);   color: #15803d; }
-.rm-card-pill.is-cancelled { background: rgba(239, 68, 68, 0.13);   color: #b91c1c; }
-.rm-card-pill.is-other     { background: rgba(100, 116, 139, 0.13); color: #475569; }
+.rm-card-pill.is-pending   { background: var(--warning-soft);  color: var(--warning); }
+.rm-card-pill.is-passed    { background: var(--success-soft);   color: var(--success); }
+.rm-card-pill.is-cancelled { background: var(--danger-soft);   color: var(--danger-strong); }
+.rm-card-pill.is-other     { background: rgba(100, 116, 139, 0.13); color: var(--ink-3); }
 
 .rm-card-detail {
-    font-size: var(--fs-xs); color: #64748b;
+    font-size: var(--fs-xs); color: var(--ink-4);
     margin: var(--space-sm) 0 0;
     padding-top: var(--space-sm);
-    border-top: 1px solid rgba(15, 23, 42, 0.05);
+    border-top: 1px solid var(--ink-line);
     display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-md);
 }
-.rm-card-detail strong { color: #334155; font-weight: 600; }
+.rm-card-detail strong { color: var(--ink-2); font-weight: 600; }
 
 /* Whole card clickable affordance — link wrapper */
 a.rm-card { display: block; text-decoration: none; color: inherit; cursor: pointer; }
@@ -194,7 +194,7 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
 /* ── Empty + no-results states ────────────────────────────────────────── */
 .rm-empty {
     text-align: center; padding: var(--space-2xl) var(--space-md);
-    color: #64748b;
+    color: var(--ink-4);
 }
 .rm-empty .rm-empty-icon {
     width: 4rem; height: 4rem; border-radius: 50%;
@@ -203,8 +203,8 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
     color: var(--mobile-primary);
     margin-bottom: var(--space-md);
 }
-.rm-empty-title { font-size: var(--fs-lg); font-weight: 700; color: #0f172a; margin: 0 0 var(--space-2xs); }
-.rm-empty-text { font-size: var(--fs-sm); color: #64748b; margin: 0; line-height: 1.5; }
+.rm-empty-title { font-size: var(--fs-lg); font-weight: 700; color: var(--ink); margin: 0 0 var(--space-2xs); }
+.rm-empty-text { font-size: var(--fs-sm); color: var(--ink-4); margin: 0; line-height: 1.5; }
 
 @media (prefers-reduced-motion: reduce) {
     .rm-stat, .rm-card { transition: none; }
@@ -564,7 +564,7 @@ $js = <<<JS
                 showCancelButton: true,
                 confirmButtonText: status === 'Pass' ? 'อนุมัติ' : 'ยกเลิกการจอง',
                 cancelButtonText: 'ปิด',
-                confirmButtonColor: status === 'Pass' ? '#15803d' : '#dc3545',
+                confirmButtonColor: status === 'Pass' ? 'var(--success)' : 'var(--danger)',
                 reverseButtons: true,
             }).then(function(r) { if (r.isConfirmed) doRequest(); });
         } else if (confirm(title)) {

@@ -55,13 +55,13 @@ try {
     flex-shrink: 0;
 }
 .md-d-medal svg { width: 1.25rem; height: 1.25rem; }
-.md-d-medal.is-pending   { background: rgba(255, 159, 28, 0.13);  color: #b54708; }
-.md-d-medal.is-passed    { background: rgba(34, 197, 94, 0.13);   color: #15803d; }
-.md-d-medal.is-cancelled { background: rgba(239, 68, 68, 0.13);   color: #b91c1c; }
-.md-d-medal.is-other     { background: rgba(100, 116, 139, 0.13); color: #475569; }
+.md-d-medal.is-pending   { background: var(--warning-soft);  color: var(--warning); }
+.md-d-medal.is-passed    { background: var(--success-soft);   color: var(--success); }
+.md-d-medal.is-cancelled { background: var(--danger-soft);   color: var(--danger-strong); }
+.md-d-medal.is-other     { background: rgba(100, 116, 139, 0.13); color: var(--ink-3); }
 
 .md-d-title {
-    font-size: 1.375rem; font-weight: 700; color: #0f172a;
+    font-size: 1.375rem; font-weight: 700; color: var(--ink);
     margin: 0; line-height: 1.25;
 }
 .md-d-pill {
@@ -69,10 +69,10 @@ try {
     font-size: 0.75rem; font-weight: 600;
     padding: 4px 10px; border-radius: 999px;
 }
-.md-d-pill.is-pending   { background: rgba(255, 159, 28, 0.13);  color: #b54708; }
-.md-d-pill.is-passed    { background: rgba(34, 197, 94, 0.13);   color: #15803d; }
-.md-d-pill.is-cancelled { background: rgba(239, 68, 68, 0.13);   color: #b91c1c; }
-.md-d-pill.is-other     { background: rgba(100, 116, 139, 0.13); color: #475569; }
+.md-d-pill.is-pending   { background: var(--warning-soft);  color: var(--warning); }
+.md-d-pill.is-passed    { background: var(--success-soft);   color: var(--success); }
+.md-d-pill.is-cancelled { background: var(--danger-soft);   color: var(--danger-strong); }
+.md-d-pill.is-other     { background: rgba(100, 116, 139, 0.13); color: var(--ink-3); }
 
 .md-d-section {
     background: #fff; border-radius: 14px;
@@ -80,22 +80,22 @@ try {
     margin-bottom: 0.5rem;
 }
 .md-d-section-label {
-    font-size: 0.75rem; color: #64748b;
+    font-size: 0.75rem; color: var(--ink-4);
     font-weight: 600; letter-spacing: 0.02em;
     margin: 0 0 0.5rem;
 }
 .md-d-row {
     display: flex; align-items: flex-start; justify-content: space-between;
     gap: 1rem; padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    border-bottom: 1px solid var(--ink-line);
 }
 .md-d-row:last-child { border-bottom: 0; }
 .md-d-row dt {
-    font-size: 0.875rem; color: #64748b; font-weight: 500;
+    font-size: 0.875rem; color: var(--ink-4); font-weight: 500;
     margin: 0; flex-shrink: 0;
 }
 .md-d-row dd {
-    font-size: 0.875rem; color: #0f172a; font-weight: 600;
+    font-size: 0.875rem; color: var(--ink); font-weight: 600;
     margin: 0; text-align: right;
     overflow-wrap: anywhere;
 }

@@ -123,7 +123,7 @@ $secondary = [
                     </span>
                     <span class="row-title">
                         <?= Html::encode($t['label']) ?>
-                        <span class="d-block row-desc" style="font-size: var(--fs-xs); color: #64748b; font-weight: 400; margin-top: 2px;"><?= Html::encode($t['desc']) ?></span>
+                        <span class="d-block row-desc" style="font-size: var(--fs-xs); color: var(--ink-4); font-weight: 400; margin-top: 2px;"><?= Html::encode($t['desc']) ?></span>
                     </span>
                     <i data-lucide="chevron-right" class="row-chevron mi-sm" aria-hidden="true"></i>
                 </a>

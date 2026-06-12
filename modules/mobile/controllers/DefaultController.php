@@ -78,7 +78,7 @@ class DefaultController extends Controller
     public function actionNews()
     {
         $filter = trim((string) Yii::$app->request->get('filter', 'all'));
-        if (!in_array($filter, ['all', 'unread'], true)) {
+        if (!in_array($filter, ['all', 'unread', 'read'], true)) {
             $filter = 'all';
         }
 
@@ -86,9 +86,9 @@ class DefaultController extends Controller
         return $this->render('news', [
             'current_page' => 'news',
             'filter' => $filter,
-            'dataProvider' => $this->buildOfficialDocumentsProvider($filter === 'unread'),
-            'officialUnreadCount' => $this->countOfficialDocuments(true),
-            'officialTotalCount' => $this->countOfficialDocuments(false),
+            'dataProvider' => $this->buildOfficialDocumentsProvider($filter),
+            'officialUnreadCount' => $this->countOfficialDocuments('unread'),
+            'officialTotalCount' => $this->countOfficialDocuments('all'),
         ]);
     }
 
@@ -123,9 +123,19 @@ class DefaultController extends Controller
 
     /**
      * สร้าง query หนังสือราชการที่ส่งถึงผู้ใช้ปัจจุบัน
+     *
+     * @param string|bool $filter 'all' | 'unread' | 'read' (bool true == 'unread' for legacy callers)
+     * @param bool $forCount      true เพื่อ skip select/groupBy ที่ไม่จำเป็นสำหรับ count
      */
-    protected function buildOfficialDocumentsQuery(bool $onlyUnread = false, bool $forCount = false)
+    protected function buildOfficialDocumentsQuery($filter = 'all', bool $forCount = false)
     {
+        // Legacy callers pass `true` to mean "unread only".
+        if (is_bool($filter)) {
+            $filter = $filter ? 'unread' : 'all';
+        }
+        if (!in_array($filter, ['all', 'unread', 'read'], true)) {
+            $filter = 'all';
+        }
         $me = UserHelper::GetEmployee();
         if (!$me) {
             return Documents::find()->where('0=1');
@@ -135,14 +145,17 @@ class DefaultController extends Controller
         $depId = (int) ($me->department ?? 0);
 
         $query = Documents::find();
+        // Match the dms/me index logic — include `comment_emp` so employee comments
+        // count as a "delivered to me" reference, and `comment_dept` likewise for
+        // department-level comments.
         $query->leftJoin('documents_detail te', "
             te.document_id = documents.id
-            AND te.name IN ('tags', 'employee_tag', 'employee', 'req_approve')
+            AND te.name IN ('comment_emp', 'tags', 'employee_tag', 'employee', 'req_approve')
             AND te.to_id = :empId
         ", [':empId' => $empId]);
         $query->leftJoin('documents_detail td', "
             td.document_id = documents.id
-            AND td.name = 'department'
+            AND td.name IN ('comment_dept', 'department')
             AND td.to_id = :depId
         ", [':depId' => $depId]);
         $query->leftJoin('documents_detail tr', "
@@ -158,8 +171,10 @@ class DefaultController extends Controller
             ['not', ['td.id' => null]],
         ]);
 
-        if ($onlyUnread) {
+        if ($filter === 'unread') {
             $query->andWhere(['tr.id' => null]);
+        } elseif ($filter === 'read') {
+            $query->andWhere(['not', ['tr.id' => null]]);
         }
 
         if ($forCount) {
@@ -181,10 +196,10 @@ class DefaultController extends Controller
     /**
      * DataProvider สำหรับรายการหนังสือราชการ
      */
-    protected function buildOfficialDocumentsProvider(bool $onlyUnread = false): ActiveDataProvider
+    protected function buildOfficialDocumentsProvider($filter = 'all'): ActiveDataProvider
     {
         return new ActiveDataProvider([
-            'query' => $this->buildOfficialDocumentsQuery($onlyUnread, false),
+            'query' => $this->buildOfficialDocumentsQuery($filter, false),
             'pagination' => [
                 'pageSize' => 10,
             ],
@@ -197,9 +212,9 @@ class DefaultController extends Controller
      *
      * @return array<int, Documents>
      */
-    protected function findOfficialDocuments(bool $onlyUnread = false, ?int $limit = null): array
+    protected function findOfficialDocuments($filter = 'all', ?int $limit = null): array
     {
-        $query = $this->buildOfficialDocumentsQuery($onlyUnread, false);
+        $query = $this->buildOfficialDocumentsQuery($filter, false);
         if ($limit !== null) {
             $query->limit($limit);
         }
@@ -208,11 +223,11 @@ class DefaultController extends Controller
     }
 
     /**
-     * นับจำนวนหนังสือราชการ
+     * นับจำนวนหนังสือราชการตาม filter ('all' | 'unread' | 'read')
      */
-    protected function countOfficialDocuments(bool $onlyUnread = false): int
+    protected function countOfficialDocuments($filter = 'all'): int
     {
-        $query = $this->buildOfficialDocumentsQuery($onlyUnread, true);
+        $query = $this->buildOfficialDocumentsQuery($filter, true);
         return (int) $query->count('DISTINCT documents.id');
     }
 
@@ -235,11 +250,14 @@ class DefaultController extends Controller
         $depId = (int) ($me->department ?? 0);
         $toId = (int) ($detail->to_id ?? 0);
 
+        // Whitelist must match buildOfficialDocumentsQuery so any document the
+        // user can SEE in the list, they can also OPEN. Adds comment_emp +
+        // comment_dept (canonical pattern from me/DocumentsController).
         $isAllowed = false;
-        if (in_array($detail->name, ['tags', 'employee_tag', 'employee', 'req_approve'], true) && $toId === $empId) {
+        if (in_array($detail->name, ['comment_emp', 'tags', 'employee_tag', 'employee', 'req_approve'], true) && $toId === $empId) {
             $isAllowed = true;
         }
-        if ($detail->name === 'department' && $toId === $depId) {
+        if (in_array($detail->name, ['comment_dept', 'department'], true) && $toId === $depId) {
             $isAllowed = true;
         }
 
@@ -383,13 +401,112 @@ class DefaultController extends Controller
     }
 
     /**
-     * จองรถราชการ (mobile-first form).
+     * จองรถราชการ (mobile-first: ActiveForm + Vehicle model + transaction).
      */
     public function actionBookingVehicle()
     {
         $this->view->title = 'จองรถราชการ';
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงานที่ล็อกอิน กรุณาติดต่อ HR');
+            return $this->redirect(['/mobile/default/index']);
+        }
+
+        $model = new \app\modules\booking\models\Vehicle();
+        // Sensible defaults so the form renders pre-filled fields the user can tweak.
+        $model->date_start = date('d/m/Y');
+        $model->date_end   = date('d/m/Y');
+        $model->time_start = '08:00';
+        $model->time_end   = '17:00';
+        $model->go_type    = 1; // ไปกลับวันเดียวกัน
+        // Defaults set programmatically (not user-facing fields).
+        $model->vehicle_type_id = 'general';
+        $model->urgent          = 'ปกติ';
+        $model->status          = 'Pending';
+
+        $saveErrors = [];
+
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            $isAjax = Yii::$app->request->isAjax;
+
+            // Convert Thai dates to Gregorian. For one-day trips (go_type=1) mirror end onto start.
+            $startGreg = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
+            $endGreg   = $model->date_end   ? AppHelper::convertToGregorian($model->date_end)   : $startGreg;
+            if ((int) $model->go_type === 1) {
+                $endGreg = $startGreg;
+            }
+            $model->date_start = $startGreg;
+            $model->date_end   = $endGreg;
+            $model->time_start = substr((string) $model->time_start, 0, 5);
+            $model->time_end   = substr((string) $model->time_end, 0, 5);
+
+            // System-managed fields.
+            $model->emp_id    = (string) $me->id;
+            $model->leader_id = (string) ($me->head_id ?? $me->id);
+            $model->thai_year = (int) AppHelper::YearBudget($startGreg);
+            $model->status    = 'Pending';
+            if (empty($model->vehicle_type_id)) $model->vehicle_type_id = 'general';
+            if (empty($model->urgent))          $model->urgent          = 'ปกติ';
+
+            try {
+                $model->code = \mdm\autonumber\AutoNumber::generate('VEH' . date('ymd') . '-???');
+            } catch (\Throwable $e) {
+                $model->code = 'VEH' . date('Ymd') . '-' . substr(uniqid(), -4);
+            }
+
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                if ($model->save()) {
+                    $tx->commit();
+                    $message = 'บันทึกคำขอจองรถเรียบร้อย (รหัส ' . $model->code . ')';
+                    if ($isAjax) {
+                        Yii::$app->response->format = Response::FORMAT_JSON;
+                        Yii::$app->session->setFlash('success', $message);
+                        return [
+                            'status'       => 'success',
+                            'message'      => $message,
+                            'redirect_url' => \yii\helpers\Url::to(['/mobile/default/booking-vehicle']),
+                        ];
+                    }
+                    Yii::$app->session->setFlash('success', $message);
+                    return $this->redirect(['booking-vehicle']);
+                }
+                $tx->rollBack();
+            } catch (\Throwable $e) {
+                $tx->rollBack();
+                if ($isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'error', 'message' => 'เกิดข้อผิดพลาดในการบันทึก: ' . $e->getMessage()];
+                }
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            }
+
+            // Validation / save failure path
+            if ($isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status'  => 'error',
+                    'message' => 'ไม่สามารถบันทึกได้ กรุณาตรวจสอบฟิลด์ที่กรอก',
+                    'errors'  => \yii\bootstrap5\ActiveForm::validate($model),
+                ];
+            }
+
+            // Restore Thai date form for re-display.
+            if ($startGreg) {
+                $ts = strtotime($startGreg); if ($ts) $model->date_start = date('d/m/Y', $ts);
+            }
+            if ($endGreg) {
+                $ts = strtotime($endGreg); if ($ts) $model->date_end = date('d/m/Y', $ts);
+            }
+            $saveErrors = $model->getFirstErrors();
+        }
+
         return $this->render('booking-vehicle', [
             'current_page' => 'services',
+            'model'        => $model,
+            'employee'     => $me,
+            'saveErrors'   => $saveErrors,
         ]);
     }
 

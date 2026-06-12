@@ -147,7 +147,7 @@ try {
 .lr-date-row .form-control { border-radius: 12px; padding: 0.75rem 1rem; }
 
 /* Required asterisk */
-.req::after { content: ' *'; color: #dc3545; }
+.req::after { content: ' *'; color: var(--danger); }
 
 /* Signature canvas — full-width inside section */
 .lr-sig-canvas-wrap {
@@ -164,7 +164,7 @@ try {
 /* Annual leave warning */
 .lr-annual-alert { display: none; padding: var(--space-sm) var(--space-md); border-radius: 12px; font-size: var(--fs-sm); margin-top: var(--space-sm); }
 .lr-annual-alert.is-info   { display: flex; gap: var(--space-xs); align-items: center; background: var(--mobile-primary-soft); color: #084298; }
-.lr-annual-alert.is-warn   { display: flex; gap: var(--space-xs); align-items: center; background: #fff4e6; color: #b54708; }
+.lr-annual-alert.is-warn   { display: flex; gap: var(--space-xs); align-items: center; background: #fff4e6; color: var(--warning); }
 .lr-annual-alert.is-error  { display: flex; gap: var(--space-xs); align-items: center; background: #fde8e8; color: #b42318; }
 
 /* Section helper — tighten gap between section-title and its first card */
@@ -304,7 +304,7 @@ try {
 }
 .mobile-upload .file-actions .btn:hover { background: rgba(0, 0, 0, 0.08); color: #1a1f2c; }
 .mobile-upload .file-actions .btn-kv-delete:hover,
-.mobile-upload .file-actions .btn-kv-remove:hover { color: #dc3545; background: rgba(220, 53, 69, 0.1); }
+.mobile-upload .file-actions .btn-kv-remove:hover { color: var(--danger); background: rgba(220, 53, 69, 0.1); }
 
 /* Upload progress bar */
 .mobile-upload .progress {

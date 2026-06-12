@@ -83,7 +83,7 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
     background: rgba(220, 53, 69, 0.1);
     border: 1px solid rgba(220, 53, 69, 0.3);
     border-radius: 12px;
-    color: #dc3545;
+    color: var(--danger);
     padding: 1rem;
     font-size: 0.875rem;
     margin-bottom: 1rem;

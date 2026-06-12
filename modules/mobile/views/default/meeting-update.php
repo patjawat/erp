@@ -42,7 +42,7 @@ $timeEnd = substr($meeting->time_end ?? '10:00', 0, 5);
 .room-card .room-icon.available { background: rgba(25, 135, 84, 0.12); }
 .room-card .room-icon.available i { color: #198754; }
 .room-card .room-icon.occupied { background: rgba(220, 53, 69, 0.12); }
-.room-card .room-icon.occupied i { color: #dc3545; }
+.room-card .room-icon.occupied i { color: var(--danger); }
 .room-list-empty { padding: 2rem 1rem; text-align: center; color: #6c757d; font-size: 0.9375rem; }
 .btn-back-mobile { border-radius: 12px; }
 </style>
