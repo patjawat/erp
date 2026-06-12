@@ -161,8 +161,8 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
 <style>
 /* ─────────────────────────────────────────────────────────────────────
    Full-bleed escape: this view sits inside .mobile-app-content which has
-   horizontal padding 1rem. We use negative margin to break out for the
-   blue hero, then re-apply normal spacing for everything below.
+   horizontal padding 1rem. We use negative margin to break out so the
+   shell (hero + stats) reaches screen edges.
    ───────────────────────────────────────────────────────────────────── */
 .home-root {
     margin-left: -1rem; margin-right: -1rem;
@@ -171,10 +171,16 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
     gap: 0;
 }
 
-/* ── Hero — drenched blue with bottom-corner curve ──────────────────── */
+/* Fixed shell + scroll area: see _head.php (.app-shell, .app-scroll).
+   Home uses its own .home-hero / .home-stats markup (different from the
+   simple icon+title pattern) wrapped in the shared shell wrapper. */
+
+/* ── Hero — drenched blue with bottom-corner curve. Top padding accounts
+   for status-bar safe-area plus a generous breathing zone now that the
+   sticky mobile-header has been removed from the layout. */
 .home-hero {
     position: relative;
-    padding: calc(env(safe-area-inset-top, 0px) + var(--space-md)) var(--space-md) calc(var(--space-2xl) + var(--space-md));
+    padding: calc(env(safe-area-inset-top, 0px) + 4.5rem) var(--space-md) calc(var(--space-2xl) + var(--space-md));
     color: #fff;
     background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
     border-bottom-left-radius: 32px;
@@ -549,6 +555,9 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
 
 <div class="home-root">
 
+    <!-- Fixed shell: Hero + Stats stay at viewport top while page scrolls -->
+    <div class="app-shell">
+
     <!-- ── Hero (drenched blue) ────────────────────────────────────── -->
     <header class="home-hero" style="--i: 0">
         <div class="home-hero-bar">
@@ -580,7 +589,7 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
         <p class="home-hero-greeting"><?= Html::encode($greetingWord) ?> · <?= Html::encode($todayThai) ?></p>
     </header>
 
-    <!-- ── Stats overlay (overlaps hero curve) ──────────────────────── -->
+    <!-- ── Stats overlay (overlaps hero curve, inside fixed shell) ──── -->
     <nav class="home-stats" aria-label="สรุปสถานะของคุณ" style="--i: 1">
         <?php foreach ($stats as $s): ?>
             <a href="<?= Html::encode($s['url']) ?>" class="home-stat">
@@ -591,6 +600,10 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
         <?php endforeach; ?>
     </nav>
 
+    </div><!-- /.app-shell -->
+
+    <!-- ── Scroll area (content under the fixed shell) ─────────────── -->
+    <div class="app-scroll has-stats">
     <!-- ── Below the fold ──────────────────────────────────────────── -->
     <div class="home-below">
 
@@ -702,7 +715,8 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
             </div>
         </section>
 
-    </div>
+    </div><!-- /.home-below -->
+    </div><!-- /.app-scroll -->
 </div>
 <?php
 // ── Profile drawer payload ──────────────────────────────────────────
@@ -831,6 +845,7 @@ $toneStyles = [
 $this->registerJs(<<<'JS'
 // Refresh lucide icons after Bootstrap shows the drawer (icons inside hidden
 // offcanvas are sometimes skipped during initial createIcons pass).
+// (Shell height measurement is handled by mobile-shared.js → initAppShell.)
 document.getElementById('profileDrawer')?.addEventListener('shown.bs.offcanvas', function() {
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 });

@@ -818,6 +818,17 @@ class AssetController extends Controller
         ];
     }
 
+        public function actionViewQr($id)
+{
+       $this->layout = '@app/views/layouts/none';
+     $model = $this->findModel($id);
+        
+        // ใช้ view เฉพาะสำหรับ PDF เพื่อแก้ปัญหาภาษาไทยและตัดปุ่มออก
+        return $this->render('qr-code/view_qrcode', [
+            'model' => $model
+        ]);
+
+}
     public function actionViewQrPdf($id)
     {
         $model = $this->findModel($id);

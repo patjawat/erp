@@ -215,9 +215,10 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
 
     <div class="card border-0 shadow-sm border-top border-4 border-primary mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: บิดาหรือมารดามีประวัติการเจ็บป่วยด้วย</h5>
+            <h5 class="mb-0 fw-bold text-primary">ส่วนที่ 3: ข้อมูลครอบครัว</h5>
         </div>
         <div class="card-body">
+            บิดาหรือมารดามีประวัติการเจ็บป่วยด้วย
             <?= $form->field($model, 'data_json[family_history]', [
                 'enableAjaxValidation' => true,
                 'template'     => "{input}\n{error}",
@@ -236,14 +237,8 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
                 },
                 'class' => 'row g-0 px-3',
             ])->label(false) ?>
-        </div>
-    </div>
 
-    <div class="card border-0 shadow-sm border-top border-4 border-info mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0 fw-bold text-info">ส่วนที่ 4: พี่น้อง (สายตรง) มีประวัติการเจ็บป่วยด้วย</h5>
-        </div>
-        <div class="card-body">
+พี่น้อง (สายตรง) มีประวัติการเจ็บป่วยด้วย
             <?= $form->field($model, 'data_json[sibling_history]', [
                 'enableAjaxValidation' => true,
                 'template'     => "{input}\n{error}",
@@ -265,10 +260,11 @@ $chronicDiseaseList = HealthChronicDisease::getActiveList();
         </div>
     </div>
 
+
     <?php if (!empty($chronicDiseaseList)): ?>
         <div class="card border-0 shadow-sm border-top border-4 border-danger mb-4">
             <div class="card-header bg-white d-flex justify-content-between">
-                <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 5: โรคประจำตัว</h5>
+                <h5 class="mb-0 fw-bold text-danger">ส่วนที่ 4: ประวัติเจ็บป่วยปีก่อน</h5>
                 <div class="d-flex align-items-center gap-2 small text-muted">
                     <span class="d-flex align-items-center gap-1"><span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ไม่มี</span></span>
                     <span class="d-flex align-items-center gap-1"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1">มี</span></span>

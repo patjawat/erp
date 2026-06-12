@@ -25,7 +25,7 @@ AppAsset::register($this);
         <p class="mobile-loading-text">กำลังโหลด...</p>
     </div>
 
-    <?= $this->render('_header') ?>
+    <?php //  $this->render('_header') ?>
 
     <main class="mobile-app-content flex-grow-1 px-3 py-3 mb-5">
         <?= $content ?>

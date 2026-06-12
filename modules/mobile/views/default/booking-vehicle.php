@@ -24,45 +24,20 @@ $existingDriver = is_array($model->data_json ?? null) ? (string) ($model->data_j
 ?>
 
 <style>
-/* Full-bleed escape so the drenched-blue hero reaches screen edges.
-   padding-bottom reserves space so the last section + 24px gap can
-   breathe above the sticky action bar (48px button + 32px padding +
-   up to 34px safe-area = ~7rem). */
+/* Full-bleed escape so the shared .app-shell can reach screen edges. */
 .bv-root {
     margin-left: -1rem; margin-right: -1rem;
     margin-top: -1rem;
     display: flex; flex-direction: column;
+}
+
+/* Form scroll area: shared .app-scroll handles the top offset for the
+   fixed Hero. Extra bottom padding reserves space so the last section
+   (24px gap) breathes above the sticky action bar (48px button +
+   32px padding + up to 34px safe-area ≈ 7rem). */
+.bv-scroll {
     padding-bottom: 7rem;
 }
-
-/* ── Hero (drenched blue) ────────────────────────────────────────── */
-.bv-hero {
-    position: relative;
-    padding: calc(env(safe-area-inset-top, 0px) + var(--space-md)) var(--space-md) calc(var(--space-2xl) + var(--space-xs));
-    color: #fff;
-    background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
-    border-bottom-left-radius: 28px;
-    border-bottom-right-radius: 28px;
-    overflow: hidden;
-}
-.bv-hero::before, .bv-hero::after {
-    content: ''; position: absolute; border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    pointer-events: none;
-}
-.bv-hero::before { top: -80px; right: -60px; width: 220px; height: 220px; }
-.bv-hero::after  { bottom: -60px; left: -40px; width: 180px; height: 180px; background: rgba(255, 255, 255, 0.06); }
-
-.bv-hero-row { display: flex; align-items: center; gap: var(--space-md); position: relative; z-index: 1; }
-.bv-hero-icon {
-    width: 3.25rem; height: 3.25rem; border-radius: 18px;
-    background: rgba(255, 255, 255, 0.18);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.bv-hero-icon svg { width: 1.5rem; height: 1.5rem; }
-.bv-hero-title { font-size: var(--fs-xl); font-weight: 700; margin: 0; letter-spacing: -0.015em; line-height: 1.2; }
-.bv-hero-sub   { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.88); margin: 4px 0 0; font-weight: 500; }
 
 /* ── Body stack ────────────────────────────────────────────────────
    Body padding-top adds breathing room between hero curve and content.
@@ -204,33 +179,27 @@ $existingDriver = is_array($model->data_json ?? null) ? (string) ($model->data_j
 
 /* Motion */
 @keyframes bv-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes bv-blob  { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-10px, 6px) scale(1.06); } }
-.bv-hero, .bv-body > * { animation: bv-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+.bv-body > * { animation: bv-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
 .bv-body > *:nth-child(1) { animation-delay: 80ms; }
 .bv-body > *:nth-child(2) { animation-delay: 140ms; }
 .bv-body > *:nth-child(3) { animation-delay: 200ms; }
 .bv-body > *:nth-child(4) { animation-delay: 260ms; }
-.bv-hero::before { animation: bv-blob 9s ease-in-out infinite; }
-.bv-hero::after  { animation: bv-blob 11s ease-in-out infinite reverse; }
 
 @media (prefers-reduced-motion: reduce) {
-    .bv-hero, .bv-body > *, .bv-hero::before, .bv-hero::after { animation: none !important; }
+    .bv-body > * { animation: none !important; }
 }
 </style>
 
 <div class="bv-root">
 
-    <!-- ── Hero ───────────────────────────────────────────────── -->
-    <header class="bv-hero">
-        <div class="bv-hero-row">
-            <span class="bv-hero-icon" aria-hidden="true"><i data-lucide="car"></i></span>
-            <div class="min-w-0">
-                <h1 class="bv-hero-title">จองรถราชการ</h1>
-                <p class="bv-hero-sub">ระบุวัน เวลา และจุดหมาย เจ้าหน้าที่จะจัดสรรรถให้</p>
-            </div>
-        </div>
-    </header>
+    <?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+        'icon'     => 'car',
+        'title'    => 'จองรถราชการ',
+        'subtitle' => 'ระบุวัน เวลา และจุดหมาย เจ้าหน้าที่จะจัดสรรรถให้',
+    ]) ?>
 
+    <!-- Scroll area: shared .app-scroll offsets fixed Hero; .bv-scroll adds clearance for sticky actions -->
+    <div class="app-scroll bv-scroll">
     <div class="bv-body">
 
         <?php if (Yii::$app->session->hasFlash('success')): ?>
@@ -404,7 +373,8 @@ $existingDriver = is_array($model->data_json ?? null) ? (string) ($model->data_j
         </div>
 
         <?php ActiveForm::end(); ?>
-    </div>
+    </div><!-- /.bv-body -->
+    </div><!-- /.app-scroll.bv-scroll -->
 </div>
 
 <?php

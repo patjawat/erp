@@ -76,6 +76,38 @@
     }
     window.mobileMarkDecorativeIcons = markDecorativeIcons;
 
+    // ---- App shell offset --------------------------------------------------
+    // Pages render <div class="app-shell"> at the top (fixed Hero + optional
+    // Stats overlay). This observer measures its height and writes it to
+    // --shell-h on the document root so a sibling <div class="app-scroll">
+    // gets matching top padding (defined in _head.php). Each page can render
+    // its own shell without duplicating the measurement code.
+    function initAppShell() {
+        var shell = document.querySelector('.app-shell');
+        if (!shell) return;
+        function sync() {
+            var h = shell.offsetHeight;
+            if (h > 0) document.documentElement.style.setProperty('--shell-h', h + 'px');
+        }
+        sync();
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(sync).observe(shell);
+        } else {
+            window.addEventListener('resize', sync);
+            window.addEventListener('orientationchange', sync);
+        }
+        // Re-measure after icons settle (lucide swaps <i> for <svg>).
+        if (document.readyState !== 'complete') {
+            window.addEventListener('load', function () { requestAnimationFrame(sync); });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAppShell);
+    } else {
+        initAppShell();
+    }
+    window.mobileInitAppShell = initAppShell;
+
     // ---- Telegram MiniApp auto-login ---------------------------------------
     // Only fires inside a Telegram WebApp environment. Idempotent: localStorage
     // flag prevents re-firing across navigations within the same session.

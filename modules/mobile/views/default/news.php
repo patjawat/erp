@@ -54,90 +54,12 @@ $bucketLabels = [
 ?>
 
 <style>
-/* ────────────────────────────────────────────────────────────────────
-   Full-bleed escape — same trick as index.php's home-hero, so this page
-   gets the drenched blue header that extends to screen edges.
-   ──────────────────────────────────────────────────────────────────── */
+/* Full-bleed escape so the shared .app-shell can reach screen edges. */
 .news-root {
     margin-left: -1rem; margin-right: -1rem;
     margin-top: -1rem;
     display: flex; flex-direction: column;
 }
-
-/* ── Hero (drenched blue) ───────────────────────────────────────────── */
-.news-hero {
-    position: relative;
-    padding: calc(env(safe-area-inset-top, 0px) + var(--space-md)) var(--space-md) calc(var(--space-2xl) + var(--space-sm));
-    color: #fff;
-    background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
-    border-bottom-left-radius: 28px;
-    border-bottom-right-radius: 28px;
-    overflow: hidden;
-}
-.news-hero::before {
-    content: ''; position: absolute;
-    top: -80px; right: -50px;
-    width: 220px; height: 220px; border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    pointer-events: none;
-}
-.news-hero::after {
-    content: ''; position: absolute;
-    bottom: -50px; left: -40px;
-    width: 170px; height: 170px; border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    pointer-events: none;
-}
-.news-hero-row { display: flex; align-items: center; gap: var(--space-md); position: relative; z-index: 1; }
-.news-hero-icon {
-    width: 3.25rem; height: 3.25rem; border-radius: 18px;
-    background: rgba(255, 255, 255, 0.18);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.news-hero-icon svg { width: 1.5rem; height: 1.5rem; }
-.news-hero-title {
-    font-size: var(--fs-xl); font-weight: 700; color: #fff;
-    margin: 0; line-height: 1.2; letter-spacing: -0.015em;
-}
-.news-hero-sub {
-    font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.88);
-    margin: 4px 0 0; font-weight: 500;
-}
-
-/* ── Stats chip row (overlaps hero curve) ───────────────────────────── */
-.news-stats {
-    position: relative; z-index: 2;
-    margin: -1.75rem var(--space-md) 0;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-2xs);
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(13, 110, 253, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
-    padding: var(--space-xs);
-}
-.news-stat {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 2px;
-    padding: var(--space-sm) var(--space-2xs);
-    text-decoration: none; color: inherit;
-    border-radius: 12px;
-    position: relative;
-    text-align: center;
-    transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.news-stat + .news-stat::before {
-    content: ''; position: absolute; left: 0; top: 18%; bottom: 18%;
-    width: 1px; background: rgba(15, 23, 42, 0.07);
-}
-.news-stat:hover { background: rgba(13, 110, 253, 0.04); color: inherit; }
-.news-stat.is-active { background: var(--mobile-primary-soft); }
-.news-stat-num { font-size: var(--fs-xl); font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: var(--ink); }
-.news-stat.is-all     .news-stat-num { color: var(--mobile-primary); }
-.news-stat.is-unread  .news-stat-num { color: var(--warning); }
-.news-stat.is-read    .news-stat-num { color: var(--success); }
-.news-stat-lbl { font-size: 0.6875rem; color: var(--ink-3); font-weight: 500; margin-top: 4px; }
 
 /* ── Below-hero stack ──────────────────────────────────────────────── */
 .news-body { padding: var(--space-lg) var(--space-md) 0; display: flex; flex-direction: column; gap: var(--space-md); }
@@ -256,63 +178,41 @@ $bucketLabels = [
 
 /* ── Motion ────────────────────────────────────────────────────── */
 @keyframes news-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes news-blob  { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-10px, 6px) scale(1.06); } }
 
-.news-root > .news-hero, .news-stats, .news-body > * {
-    animation: news-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-.news-stats { animation-delay: 80ms; }
+.news-body > * { animation: news-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
 .news-body > *:nth-child(1) { animation-delay: 140ms; }
 .news-body > *:nth-child(2) { animation-delay: 200ms; }
 .news-body > *:nth-child(3) { animation-delay: 260ms; }
-.news-hero::before { animation: news-blob 9s ease-in-out infinite; }
-.news-hero::after  { animation: news-blob 11s ease-in-out infinite reverse; }
 
 @media (prefers-reduced-motion: reduce) {
-    .news-root > .news-hero, .news-stats, .news-body > *,
-    .news-hero::before, .news-hero::after { animation: none !important; }
-    .news-card, .news-stat, .news-filter a { transition: none !important; }
+    .news-body > * { animation: none !important; }
+    .news-card { transition: none !important; }
 }
 </style>
 
 <div class="news-root">
 
-    <!-- ── Hero (drenched blue) ─────────────────────────────────── -->
-    <header class="news-hero">
-        <div class="news-hero-row">
-            <span class="news-hero-icon" aria-hidden="true">
-                <i data-lucide="mail"></i>
-            </span>
-            <div class="min-w-0 flex-grow-1">
-                <h1 class="news-hero-title">หนังสือราชการ</h1>
-                <p class="news-hero-sub">
-                    <?= $officialUnreadCount > 0
-                        ? 'มีหนังสือใหม่ ' . Html::encode((string) $officialUnreadCount) . ' ฉบับรอเปิดอ่าน'
-                        : 'ไม่มีหนังสือใหม่ในขณะนี้' ?>
-                </p>
-            </div>
-        </div>
-    </header>
+    <?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+        'icon'     => 'mail',
+        'title'    => 'หนังสือราชการ',
+        'subtitle' => $officialUnreadCount > 0
+            ? 'มีหนังสือใหม่ ' . $officialUnreadCount . ' ฉบับรอเปิดอ่าน'
+            : 'ไม่มีหนังสือใหม่ในขณะนี้',
+        'stats' => [
+            ['url' => Url::to(['/mobile/default/news', 'filter' => 'all']),
+             'value' => $officialTotalCount,  'label' => 'ทั้งหมด',   'tone' => 'primary',
+             'isActive' => $filter === 'all'],
+            ['url' => Url::to(['/mobile/default/news', 'filter' => 'unread']),
+             'value' => $officialUnreadCount, 'label' => 'ยังไม่อ่าน', 'tone' => 'warning',
+             'isActive' => $filter === 'unread'],
+            ['url' => Url::to(['/mobile/default/news', 'filter' => 'read']),
+             'value' => $officialReadCount,   'label' => 'อ่านแล้ว',   'tone' => 'success',
+             'isActive' => $filter === 'read'],
+        ],
+    ]) ?>
 
-    <!-- ── Stats chips (overlay hero curve, click to filter) ────── -->
-    <nav class="news-stats" aria-label="สรุปสถานะหนังสือ">
-        <a href="<?= Html::encode(Url::to(['/mobile/default/news', 'filter' => 'all'])) ?>"
-           class="news-stat is-all <?= $filter === 'all' ? 'is-active' : '' ?>">
-            <span class="news-stat-num"><?= Html::encode((string) $officialTotalCount) ?></span>
-            <span class="news-stat-lbl">ทั้งหมด</span>
-        </a>
-        <a href="<?= Html::encode(Url::to(['/mobile/default/news', 'filter' => 'unread'])) ?>"
-           class="news-stat is-unread <?= $filter === 'unread' ? 'is-active' : '' ?>">
-            <span class="news-stat-num"><?= Html::encode((string) $officialUnreadCount) ?></span>
-            <span class="news-stat-lbl">ยังไม่อ่าน</span>
-        </a>
-        <a href="<?= Html::encode(Url::to(['/mobile/default/news', 'filter' => 'read'])) ?>"
-           class="news-stat is-read <?= $filter === 'read' ? 'is-active' : '' ?>">
-            <span class="news-stat-num"><?= Html::encode((string) $officialReadCount) ?></span>
-            <span class="news-stat-lbl">อ่านแล้ว</span>
-        </a>
-    </nav>
-
+    <!-- ── Scroll area (content under the fixed shell) ─────────── -->
+    <div class="app-scroll has-stats">
     <!-- ── Below-hero stack ────────────────────────────────────── -->
     <div class="news-body">
 
@@ -442,5 +342,6 @@ $bucketLabels = [
 
         <?php endif; ?>
 
-    </div>
+    </div><!-- /.news-body -->
+    </div><!-- /.app-scroll -->
 </div>

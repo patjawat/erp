@@ -28,7 +28,7 @@ use yii\helpers\Html;
                 <path d="M16 12h1"></path>
                 <path d="M21 12v.01"></path>
                 <path d="M12 21v-1"></path>
-            </svg> QR-Code', ['/am/asset/view-qr-pdf', 'id' => $model->id], [
+            </svg> QR-Code', ['/am/asset/view-qr', 'id' => $model->id], [
                                     'class' => 'btn btn-white border shadow-sm text-secondary d-flex align-items-center gap-2 btn-sm px-3 py-2 bg-white',
                                     'title' => 'พิมพ์ QR-Code',
                                     'data-pjax' => 0,

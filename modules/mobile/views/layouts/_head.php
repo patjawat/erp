@@ -332,4 +332,120 @@ use yii\bootstrap5\Html;
     @keyframes mobile-loading-spin {
         to { transform: rotate(360deg); }
     }
+
+    /* ─────────────────────────────────────────────────────────────────
+       Shared "fixed shell" pattern — drenched blue Hero + optional
+       Stats overlay. Used by index.php, news.php, booking-vehicle.php
+       and any future page that wants a pinned header.
+
+       Render via the _partials/_hero_shell.php partial, then wrap your
+       page body in <div class="app-scroll">. mobile-shared.js detects
+       .app-shell and writes its height to --shell-h so .app-scroll
+       offsets correctly.
+       ───────────────────────────────────────────────────────────────── */
+    .app-shell {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 100; /* --z-sticky */
+        background: transparent;
+        pointer-events: none;
+    }
+    .app-shell > * { pointer-events: auto; }
+
+    .app-scroll {
+        padding-top: var(--shell-h, 13rem);
+    }
+    .app-scroll.has-stats {
+        padding-top: calc(var(--shell-h, 13rem) + var(--space-md));
+    }
+
+    /* ── Hero (drenched blue) ────────────────────────────────────── */
+    .app-hero {
+        position: relative;
+        padding: calc(env(safe-area-inset-top, 0px) + 4.25rem) var(--space-md) calc(var(--space-2xl) + var(--space-sm));
+        color: #fff;
+        background: linear-gradient(180deg, var(--mobile-primary) 0%, var(--mobile-primary-dark) 100%);
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
+        overflow: hidden;
+    }
+    .app-hero::before, .app-hero::after {
+        content: ''; position: absolute; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+    }
+    .app-hero::before { top: -80px; right: -50px; width: 220px; height: 220px; animation: app-hero-blob 9s ease-in-out infinite; }
+    .app-hero::after  { bottom: -50px; left: -40px; width: 170px; height: 170px; background: rgba(255, 255, 255, 0.06); animation: app-hero-blob 11s ease-in-out infinite reverse; }
+
+    .app-hero-row {
+        display: flex; align-items: center; gap: var(--space-md);
+        position: relative; z-index: 1;
+    }
+    .app-hero-icon {
+        width: 3.25rem; height: 3.25rem; border-radius: 18px;
+        background: rgba(255, 255, 255, 0.18);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .app-hero-icon svg { width: 1.5rem; height: 1.5rem; }
+    .app-hero-title {
+        font-size: var(--fs-xl); font-weight: 700; color: #fff;
+        margin: 0; line-height: 1.2; letter-spacing: -0.015em;
+    }
+    .app-hero-sub {
+        font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.88);
+        margin: 4px 0 0; font-weight: 500;
+    }
+
+    /* ── Stats overlay (overlaps hero curve) ─────────────────────── */
+    .app-stats {
+        position: relative; z-index: 2;
+        margin: -1.75rem var(--space-md) 0;
+        display: grid;
+        gap: var(--space-2xs);
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(13, 110, 253, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
+        padding: var(--space-xs);
+    }
+    .app-stats[data-cols="2"] { grid-template-columns: repeat(2, 1fr); }
+    .app-stats[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+    .app-stats[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
+    .app-stat {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 2px;
+        padding: var(--space-sm) var(--space-2xs);
+        text-decoration: none; color: inherit;
+        border-radius: 12px;
+        position: relative;
+        text-align: center;
+        transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .app-stat + .app-stat::before {
+        content: ''; position: absolute; left: 0; top: 18%; bottom: 18%;
+        width: 1px; background: rgba(15, 23, 42, 0.07);
+    }
+    .app-stat:hover { background: rgba(13, 110, 253, 0.04); color: inherit; }
+    .app-stat.is-active { background: var(--mobile-primary-soft); }
+    .app-stat-num {
+        font-size: var(--fs-xl); font-weight: 800;
+        line-height: 1; letter-spacing: -0.02em; color: var(--ink);
+    }
+    .app-stat-lbl {
+        font-size: 0.6875rem; color: var(--ink-3);
+        font-weight: 500; margin-top: 4px;
+    }
+    .app-stat[data-tone="primary"] .app-stat-num { color: var(--mobile-primary); }
+    .app-stat[data-tone="warning"] .app-stat-num { color: var(--warning); }
+    .app-stat[data-tone="success"] .app-stat-num { color: var(--success); }
+    .app-stat[data-tone="danger"]  .app-stat-num { color: var(--danger-strong); }
+
+    @keyframes app-hero-blob {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(-10px, 6px) scale(1.06); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .app-hero::before, .app-hero::after { animation: none !important; }
+        .app-stat { transition: none !important; }
+    }
 </style>
