@@ -1,17 +1,15 @@
 <?php
 
 use app\components\ThaiDateHelper;
-use app\widgets\datepicker\DatepickerThai;
-use kartik\select2\Select2;
-use yii\bootstrap5\ActiveForm;
+use app\modules\mobile\services\MobileBookingStatus;
 use yii\bootstrap5\Html;
 use yii\helpers\Url;
-use yii\web\JsExpression;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
 /** @var \app\modules\booking\models\Vehicle $model */
 /** @var \app\modules\hr\models\Employees|null $employee */
+/** @var \app\modules\booking\models\Vehicle[] $myBookings  รายการคำขอของผู้ใช้ปัจจุบัน (controller เตรียมให้) */
 /** @var array $saveErrors */
 /** @var string|null $forceMode */
 /** @var bool|null $isEdit */
@@ -19,14 +17,15 @@ use yii\web\JsExpression;
 $this->params['current_page'] = $current_page ?? 'services';
 $this->params['mobileTitle']  = 'จองรถราชการ';
 
+$myBookings = $myBookings ?? [];
 $saveErrors = $saveErrors ?? [];
 
 // ═══════════════════════════════════════════════════════════════════════
-// Mode detection
+// Mode detection — view คำนวณ mode จาก server-side state
 // ═══════════════════════════════════════════════════════════════════════
 // list    — entry: my requests with search + status filter
-// wizard  — create: 5-step form
-// success — exit:  confirmation after save
+// wizard  — create/edit: 5-step form
+// success — exit:  confirmation after save (flash success)
 $hasFlashSuccess = Yii::$app->session->hasFlash('success');
 $flashMessage    = $hasFlashSuccess ? (string) Yii::$app->session->getFlash('success') : '';
 $flashCode       = '';
@@ -35,7 +34,7 @@ if ($flashMessage && preg_match('/รหัส\s*([A-Z0-9\-]+)/u', $flashMessage
 }
 $actionParam = (string) (Yii::$app->request->get('action') ?? '');
 $hasErrors   = !empty($saveErrors);
-$isEdit       = (bool) ($isEdit ?? (!$model->isNewRecord));
+$isEdit      = (bool) ($isEdit ?? (!$model->isNewRecord));
 
 $mode = 'list';
 if (!empty($forceMode)) {
@@ -50,48 +49,10 @@ $this->params['mobileSubtitle'] = $mode === 'wizard'
     ? ($isEdit ? 'แก้ไขข้อมูลคำขอ' : 'กรอกข้อมูลทีละขั้นตอน')
     : ($mode === 'success' ? 'บันทึกคำขอเรียบร้อย' : 'รายการคำขอของฉัน');
 
-// ═══════════════════════════════════════════════════════════════════════
-// Query my bookings (only when list mode renders, to keep wizard fast)
-// ═══════════════════════════════════════════════════════════════════════
-$myBookings   = [];
-$currentEmpId = isset($employee) && $employee ? (string) $employee->id : null;
-if ($mode === 'list' && $currentEmpId) {
-    try {
-        $myBookings = \app\modules\booking\models\Vehicle::find()
-            ->where(['emp_id' => $currentEmpId])
-            ->andWhere(['IS', 'deleted_at', null])
-            ->orderBy(['created_at' => SORT_DESC])
-            ->limit(50)
-            ->all();
-    } catch (\Throwable $e) {
-        $myBookings = [];
-    }
-}
+// Status bucket counts สำหรับ hero stats (presentation — ใช้ helper เดียวกับ partial)
+$bucketCounts = MobileBookingStatus::bucketCounts($myBookings);
 
-// Status → (label, tone, bucket) for list badges and filter chips
-$statusInfo = static function (string $status): array {
-    static $map = [
-        'Pending' => ['lbl' => 'รออนุมัติ',  'tone' => 'warning', 'bucket' => 'pending'],
-        'รออนุมัติ' => ['lbl' => 'รออนุมัติ',  'tone' => 'warning', 'bucket' => 'pending'],
-        'Approve' => ['lbl' => 'อนุมัติแล้ว', 'tone' => 'success', 'bucket' => 'approved'],
-        'Pass'    => ['lbl' => 'อนุมัติแล้ว', 'tone' => 'success', 'bucket' => 'approved'],
-        'อนุมัติแล้ว' => ['lbl' => 'อนุมัติแล้ว', 'tone' => 'success', 'bucket' => 'approved'],
-        'Cancel'  => ['lbl' => 'ยกเลิก',     'tone' => 'danger',  'bucket' => 'cancelled'],
-        'Reject'  => ['lbl' => 'ปฏิเสธ',     'tone' => 'danger',  'bucket' => 'cancelled'],
-        'ยกเลิก'  => ['lbl' => 'ยกเลิก',     'tone' => 'danger',  'bucket' => 'cancelled'],
-        'ปฏิเสธ'  => ['lbl' => 'ปฏิเสธ',     'tone' => 'danger',  'bucket' => 'cancelled'],
-    ];
-    return $map[$status] ?? ['lbl' => $status ?: '-', 'tone' => 'secondary', 'bucket' => 'other'];
-};
-
-// Status bucket counts for filter chip badges
-$bucketCounts = ['all' => 0, 'pending' => 0, 'approved' => 0, 'cancelled' => 0, 'other' => 0];
-foreach ($myBookings as $b) {
-    $info = $statusInfo((string) $b->status);
-    $bucketCounts['all']++;
-    $bucketCounts[$info['bucket']]++;
-}
-
+// Thai date formatter (presentation — partial รับเป็น callable)
 $formatThaiDate = static function (?string $d): string {
     if (!$d) return '—';
     try {
@@ -103,7 +64,7 @@ $formatThaiDate = static function (?string $d): string {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
-// Wizard mode defaults (only loaded when wizard renders)
+// Wizard mode defaults (presentation layer — derived ค่าใน model ให้พร้อม render)
 // ═══════════════════════════════════════════════════════════════════════
 // Promote Gregorian-year defaults to Thai year so AppHelper::convertToGregorian
 // (which always subtracts 543) round-trips correctly.
@@ -117,11 +78,10 @@ foreach (['date_start', 'date_end'] as $attr) {
 $requesterName = '—';
 $requesterDept = '—';
 $prefillPhone  = '';
-if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Yii::$app->user->identity->employee) {
-    $emp = Yii::$app->user->identity->employee;
-    try { if (!empty($emp->fullname)) $requesterName = $emp->fullname; } catch (\Throwable $e) {}
-    try { if (method_exists($emp, 'departmentName') && $emp->departmentName()) $requesterDept = $emp->departmentName(); } catch (\Throwable $e) {}
-    try { if (!empty($emp->phone)) $prefillPhone = (string) $emp->phone; } catch (\Throwable $e) {}
+if (!empty($employee)) {
+    try { if (!empty($employee->fullname)) $requesterName = $employee->fullname; } catch (\Throwable $e) {}
+    try { if (method_exists($employee, 'departmentName') && $employee->departmentName()) $requesterDept = $employee->departmentName(); } catch (\Throwable $e) {}
+    try { if (!empty($employee->phone)) $prefillPhone = (string) $employee->phone; } catch (\Throwable $e) {}
 }
 
 $dataJson            = is_array($model->data_json ?? null) ? $model->data_json : [];
@@ -134,9 +94,9 @@ $existingPlate       = (string) ($model->license_plate   ?? '');
 $existingUrgent      = (string) ($model->urgent          ?? 'ปกติ');
 $existingNotes       = (string) ($dataJson['notes']      ?? '');
 
-$baseUrl   = Url::to(['/mobile/default/booking-vehicle']);
-$newUrl    = Url::to(['/mobile/default/booking-vehicle', 'action' => 'new']);
-$detailUrl = $isEdit ? Url::to(['/mobile/default/vehicle-view', 'id' => $model->id]) : $baseUrl;
+$baseUrl    = Url::to(['/mobile/default/booking-vehicle']);
+$newUrl     = Url::to(['/mobile/default/booking-vehicle', 'action' => 'new']);
+$detailUrl  = $isEdit ? Url::to(['/mobile/default/vehicle-view', 'id' => $model->id]) : $baseUrl;
 $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่งคำขอจองรถ';
 ?>
 
@@ -751,8 +711,6 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
 
     <?php
     // Hero shell stats — only meaningful in list mode (3 status buckets).
-    // In wizard/success modes we hide them so the hero stays focused on the
-    // current step / success message.
     $heroStats = [];
     if ($mode === 'list' && !empty($myBookings)) {
         $heroStats = [
@@ -785,489 +743,31 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
             </div>
         <?php endif; ?>
 
-        <!-- ════════════════════════════════════════════════════════════════
-             MODE 1 — LIST (entry: my requests + search)
-             ═══════════════════════════════════════════════════════════════ -->
-        <section class="bv-mode bv-mode-list" data-mode-section="list" <?= $mode !== 'list' ? 'hidden' : '' ?>>
-
-            <?php if (!empty($myBookings)): ?>
-                <div class="bv-list-toolbar rounded-3 mx-3 mt-4 mb-0">
-                    <input type="search"
-                    id="bv-list-search"
-                    class="bv-search"
-                    placeholder="ค้นหารหัส, สถานที่, วัตถุประสงค์"
-                    autocomplete="off"
-                    aria-label="ค้นหารายการคำขอ">
-                </div>
-            <?php endif; ?>
-
-            <?php if (empty($myBookings)): ?>
-                <div class="bv-list-empty">
-                    <span class="bv-list-empty-icon" aria-hidden="true">
-                        <i data-lucide="car" class="mi-xl"></i>
-                    </span>
-                    <p class="bv-list-empty-title">ยังไม่มีคำขอจองรถ</p>
-                    <p class="bv-list-empty-text">เริ่มคำขอแรกของคุณ เจ้าหน้าที่จะตรวจสอบและจัดสรรรถให้ตามเวลาที่ระบุ</p>
-                </div>
-            <?php else: ?>
-                <div class="bv-list" id="bv-list">
-                    <?php foreach ($myBookings as $b):
-                        $info       = $statusInfo((string) $b->status);
-                        $bucket     = $info['bucket'];
-                        $tone       = $info['tone'];
-                        $statusLbl  = $info['lbl'];
-                        $locTitle   = ($b->locationOrg && !empty($b->locationOrg->title)) ? $b->locationOrg->title : (string) $b->location;
-                        $reasonTxt  = trim((string) $b->reason);
-                        $title      = $locTitle !== '' ? 'ไป ' . $locTitle : ($reasonTxt !== '' ? $reasonTxt : 'คำขอจองรถ');
-                        $startThai  = $formatThaiDate((string) $b->date_start);
-                        $endThai    = $formatThaiDate((string) $b->date_end);
-                        $datesTxt   = ($b->date_start === $b->date_end || !$b->date_end) ? $startThai : ($startThai . ' → ' . $endThai);
-                        $timeTxt    = trim(substr((string) $b->time_start, 0, 5));
-                        $isUrgent   = in_array((string) $b->urgent, ['ด่วน', 'ด่วนที่สุด'], true);
-
-                        // searchable string (lowercased) for client filter
-                        $search = mb_strtolower(implode(' ', array_filter([
-                            (string) $b->code,
-                            $locTitle,
-                            $reasonTxt,
-                            $statusLbl,
-                            $datesTxt,
-                        ])), 'UTF-8');
-                    ?>
-                        <a class="bv-list-card"
-                           href="<?= Html::encode(Url::to(['/mobile/default/vehicle-view', 'id' => $b->id])) ?>"
-                           data-status="<?= Html::encode($bucket) ?>"
-                           data-search="<?= Html::encode($search) ?>">
-                            <header class="bv-list-card-head">
-                                <span class="bv-list-code"><?= Html::encode((string) $b->code) ?></span>
-                                <span class="bv-list-pill is-<?= Html::encode($tone) ?>"><?= Html::encode($statusLbl) ?></span>
-                            </header>
-                            <h3 class="bv-list-title"><?= Html::encode($title) ?></h3>
-                            <div class="bv-list-meta">
-                                <span class="bv-list-meta-item">
-                                    <i data-lucide="calendar" aria-hidden="true"></i>
-                                    <?= Html::encode($datesTxt) ?>
-                                </span>
-                                <?php if ($timeTxt): ?>
-                                    <span class="bv-list-meta-item">
-                                        <i data-lucide="clock" aria-hidden="true"></i>
-                                        <?= Html::encode($timeTxt) ?> น.
-                                    </span>
-                                <?php endif; ?>
-                                <?php if ($isUrgent): ?>
-                                    <span class="bv-list-urgent"><?= Html::encode((string) $b->urgent) ?></span>
-                                <?php endif; ?>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-                <p class="bv-list-no-results" id="bv-list-no-results" role="status" hidden>
-                    ไม่พบรายการที่ตรงกับการค้นหา
-                </p>
-            <?php endif; ?>
-        </section>
-
-        <!-- ════════════════════════════════════════════════════════════════
-             MODE 3 — SUCCESS (exit: confirmation after save)
-             ═══════════════════════════════════════════════════════════════ -->
-        <section class="bv-mode bv-mode-success" data-mode-section="success" <?= $mode !== 'success' ? 'hidden' : '' ?>>
-            <div class="bv-success">
-                <div class="bv-success-card">
-                    <span class="bv-success-icon" aria-hidden="true">
-                        <i data-lucide="check"></i>
-                    </span>
-                    <h2 class="bv-success-title">บันทึกคำขอเรียบร้อย</h2>
-                    <p class="bv-success-text">คำขอจองรถถูกส่งให้เจ้าหน้าที่ตรวจสอบแล้ว ระบบจะแจ้งผลผ่านการแจ้งเตือน</p>
-                    <?php if ($flashCode): ?>
-                        <span class="bv-success-code">
-                            <i data-lucide="hash" aria-hidden="true"></i>
-                            <?= Html::encode($flashCode) ?>
-                        </span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="bv-success-fineprint">
-                    <strong>ต่อไปนี้คืออะไร</strong><br>
-                    เจ้าหน้าที่งานยานพาหนะจะตรวจสอบและจัดสรรรถให้ตามเวลาที่ระบุ
-                    คุณสามารถดูสถานะคำขอได้จากหน้ารายการ
-                </div>
-            </div>
-        </section>
-
-        <!-- ════════════════════════════════════════════════════════════════
-             MODE 2 — WIZARD (create: 5-step form)
-             ═══════════════════════════════════════════════════════════════ -->
-        <section class="bv-mode bv-mode-wizard" data-mode-section="wizard" <?= $mode !== 'wizard' ? 'hidden' : '' ?>>
-
-            <nav class="bv-wizard" id="bv-wizard" aria-label="ขั้นตอนการจองรถ">
-                <div class="bv-wizard-track" role="progressbar"
-                     aria-valuemin="1" aria-valuemax="5" aria-valuenow="1"
-                     aria-label="ความคืบหน้า">
-                    <div class="bv-wizard-fill" id="bv-wizard-fill"></div>
-                </div>
-                <ol class="bv-wizard-steps">
-                    <?php foreach ([
-                        1 => 'เดินทาง',
-                        2 => 'ผู้ขอ',
-                        3 => 'รถและคนขับ',
-                        4 => 'ตรวจสอบ',
-                        5 => 'ยืนยัน',
-                    ] as $num => $lbl): ?>
-                        <li class="bv-wizard-step <?= $num === 1 ? 'is-active' : '' ?>" data-step="<?= $num ?>">
-                            <span class="bv-wizard-pip">
-                                <span class="bv-wizard-pip-num"><?= $num ?></span>
-                                <i data-lucide="check" class="bv-wizard-pip-check"></i>
-                            </span>
-                            <span><?= Html::encode($lbl) ?></span>
-                        </li>
-                    <?php endforeach; ?>
-                </ol>
-            </nav>
-
-            <div class="bv-body px-3">
-
-                <?php if (!empty($saveErrors)): ?>
-                    <div class="bv-error-summary mb-3" role="alert">
-                        <i data-lucide="alert-triangle" class="mi-sm flex-shrink-0 mt-1"></i>
-                        <div>
-                            <strong class="d-block mb-1">กรุณาตรวจสอบฟิลด์ที่กรอก</strong>
-                            <ul>
-                                <?php foreach ($saveErrors as $attr => $msg): ?>
-                                    <li><?= Html::encode(is_string($msg) ? $msg : (string) reset((array) $msg)) ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <?php $form = ActiveForm::begin([
-                    'id'      => 'mobile-booking-vehicle-form',
-                    'method'  => 'post',
-                    'options' => ['novalidate' => 'novalidate'],
-                    'fieldConfig' => [
-                        'options'      => ['class' => 'mb-3'],
-                        'labelOptions' => ['class' => 'form-label'],
-                        'errorOptions' => ['class' => 'invalid-feedback d-block'],
-                    ],
-                ]); ?>
-
-                <input type="hidden"
-                       name="<?= Html::encode(Html::getInputName($model, 'refer_type')) ?>"
-                       value="<?= Html::encode((string) ($model->refer_type ?? 'normal')) ?>">
-
-                <!-- ─── Step 1: ข้อมูลการเดินทาง ─── -->
-                <section class="bv-panel is-active" data-step-panel="1" data-step-title="การเดินทาง">
-                    <header class="bv-panel-head">
-                        <p class="bv-panel-eyebrow">ขั้นตอนที่ 1 จาก 5</p>
-                        <h2 class="bv-panel-title">ข้อมูลการเดินทาง</h2>
-                        <p class="bv-panel-desc">วัน เวลา จุดหมาย และวัตถุประสงค์ของการใช้รถ</p>
-                    </header>
-
-                    <div class="bv-card">
-                        <div class="mb-3">
-                            <label class="form-label is-req">ประเภทการเดินทาง</label>
-                            <div class="pill-group" role="radiogroup" aria-label="ประเภทการเดินทาง" aria-required="true">
-                                <?php foreach ([1 => 'ไปกลับวันเดียว', 2 => 'ค้างคืน'] as $val => $lab): ?>
-                                    <?php $checked = $existingGoType === $val; ?>
-                                    <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
-                                        <input type="radio"
-                                               name="<?= Html::encode(Html::getInputName($model, 'go_type')) ?>"
-                                               value="<?= $val ?>"
-                                               <?= $checked ? 'checked' : '' ?>
-                                               data-pill-target="bv-go-type">
-                                        <?= Html::encode($lab) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <input type="hidden" id="bv-go-type" value="<?= $existingGoType ?>">
-                        </div>
-
-                        <div class="bv-row bv-row-2 mb-3">
-                            <?= $form->field($model, 'date_start', [
-                                'template'     => '{label}{input}{error}',
-                                'options'      => ['class' => 'mb-0'],
-                                'labelOptions' => ['class' => 'form-label is-req'],
-                            ])->widget(DatepickerThai::class, [
-                                'options' => ['class' => 'form-control', 'placeholder' => 'วันเริ่ม', 'autocomplete' => 'off', 'aria-required' => 'true', 'required' => true],
-                            ])->label('วันที่ใช้งาน') ?>
-                            <?= $form->field($model, 'time_start', [
-                                'template'     => '{label}{input}{error}',
-                                'options'      => ['class' => 'mb-0'],
-                                'labelOptions' => ['class' => 'form-label is-req'],
-                            ])->input('time', ['step' => 300, 'aria-required' => 'true', 'required' => true])->label('เวลาออกเดินทาง') ?>
-                        </div>
-
-                        <div class="bv-row bv-row-2 mb-3" id="bv-end-row">
-                            <?= $form->field($model, 'date_end', [
-                                'template'     => '{label}{input}{error}',
-                                'options'      => ['class' => 'mb-0'],
-                            ])->widget(DatepickerThai::class, [
-                                'options' => ['class' => 'form-control', 'placeholder' => 'วันสิ้นสุด', 'autocomplete' => 'off'],
-                            ])->label('วันสิ้นสุด') ?>
-                            <?= $form->field($model, 'time_end', [
-                                'template'     => '{label}{input}{error}',
-                                'options'      => ['class' => 'mb-0'],
-                                'labelOptions' => ['class' => 'form-label is-req'],
-                            ])->input('time', ['step' => 300, 'aria-required' => 'true', 'required' => true])->label('เวลาเดินทางกลับ') ?>
-                        </div>
-
-                        <?= $form->field($model, 'location', [
-                            'labelOptions' => ['class' => 'form-label is-req'],
-                        ])->widget(Select2::class, [
-                            'data'    => $model->ListOrg(),
-                            'options' => [
-                                'placeholder'   => 'ค้นหาหรือพิมพ์จุดหมายปลายทาง',
-                                'aria-required' => 'true',
-                                'aria-label'    => 'จุดหมายปลายทาง',
-                                'required'      => true,
-                            ],
-                            'pluginOptions' => [
-                                'tags'                    => true,
-                                'allowClear'              => true,
-                                'minimumResultsForSearch' => 0,
-                                'tokenSeparators'         => [],
-                                'language'                => [
-                                    'noResults'     => new JsExpression('function(){ return "ไม่พบในรายการ — กด Enter เพื่อใช้ข้อความนี้"; }'),
-                                    'searching'     => new JsExpression('function(){ return "กำลังค้นหา..."; }'),
-                                    'inputTooShort' => new JsExpression('function(){ return "พิมพ์อย่างน้อย 1 ตัวอักษร"; }'),
-                                ],
-                            ],
-                        ])->label('จุดหมายปลายทาง') ?>
-
-                        <?= $form->field($model, 'reason', [
-                            'labelOptions' => ['class' => 'form-label is-req'],
-                            'options'      => ['class' => 'mb-0'],
-                        ])->textarea([
-                            'rows' => 3,
-                            'placeholder' => 'ระบุวัตถุประสงค์ของการใช้รถ',
-                            'aria-required' => 'true',
-                            'required' => true,
-                        ])->label('วัตถุประสงค์การใช้รถ') ?>
-                    </div>
-                </section>
-
-                <!-- ─── Step 2: รายละเอียดผู้ขอ ─── -->
-                <section class="bv-panel" data-step-panel="2" data-step-title="ผู้ขอใช้รถ" hidden>
-                    <header class="bv-panel-head">
-                        <p class="bv-panel-eyebrow">ขั้นตอนที่ 2 จาก 5</p>
-                        <h2 class="bv-panel-title">รายละเอียดผู้ขอใช้รถ</h2>
-                        <p class="bv-panel-desc">ตรวจสอบข้อมูลผู้ขอและช่องทางติดต่อ</p>
-                    </header>
-
-                    <div class="bv-card">
-                        <div class="bv-kv-list">
-                            <div class="bv-kv">
-                                <span class="bv-kv-icon" aria-hidden="true"><i data-lucide="user"></i></span>
-                                <div class="bv-kv-body">
-                                    <p class="bv-kv-key mb-0">ผู้ขอใช้รถ</p>
-                                    <p class="bv-kv-val mb-0"><?= Html::encode($requesterName) ?></p>
-                                </div>
-                            </div>
-                            <div class="bv-kv">
-                                <span class="bv-kv-icon" aria-hidden="true"><i data-lucide="building-2"></i></span>
-                                <div class="bv-kv-body">
-                                    <p class="bv-kv-key mb-0">หน่วยงาน</p>
-                                    <p class="bv-kv-val mb-0"><?= Html::encode($requesterDept) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bv-card">
-                        <div class="mb-3">
-                            <label for="bv-phone" class="form-label is-req">เบอร์โทรศัพท์ติดต่อ</label>
-                            <input type="tel"
-                                   id="bv-phone"
-                                   name="<?= Html::encode(Html::getInputName($model, 'data_json[phone]')) ?>"
-                                   value="<?= Html::encode($existingPhone) ?>"
-                                   class="form-control"
-                                   inputmode="tel"
-                                   autocomplete="tel"
-                                   placeholder="08X-XXX-XXXX"
-                                   aria-required="true"
-                                   required>
-                        </div>
-
-                        <div class="mb-0">
-                            <label for="bv-passengers" class="form-label is-req">จำนวนผู้โดยสาร</label>
-                            <input type="number"
-                                   id="bv-passengers"
-                                   name="<?= Html::encode(Html::getInputName($model, 'data_json[passengers]')) ?>"
-                                   value="<?= (int) $existingPassengers ?>"
-                                   class="form-control"
-                                   inputmode="numeric"
-                                   min="1" max="99"
-                                   aria-required="true"
-                                   required>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ─── Step 3: รถและคนขับ ─── -->
-                <section class="bv-panel" data-step-panel="3" data-step-title="รถและคนขับ" hidden>
-                    <header class="bv-panel-head">
-                        <p class="bv-panel-eyebrow">ขั้นตอนที่ 3 จาก 5</p>
-                        <h2 class="bv-panel-title">รายละเอียดรถและคนขับ</h2>
-                        <p class="bv-panel-desc">เลือกประเภทรถและระบุผู้ขับขี่ตามต้องการ</p>
-                    </header>
-
-                    <div class="bv-card">
-                        <div class="mb-3">
-                            <label class="form-label is-req">ประเภทรถ</label>
-                            <div class="pill-group" role="radiogroup" aria-label="ประเภทรถ" aria-required="true">
-                                <?php foreach (['general' => 'รถยนต์ทั่วไป', 'ambulance' => 'รถพยาบาล'] as $val => $lab): ?>
-                                    <?php $checked = $existingVehicleType === $val; ?>
-                                    <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
-                                        <input type="radio"
-                                               name="<?= Html::encode(Html::getInputName($model, 'vehicle_type_id')) ?>"
-                                               value="<?= Html::encode($val) ?>"
-                                               <?= $checked ? 'checked' : '' ?>
-                                               data-pill-target="bv-vehicle-type">
-                                        <?= Html::encode($lab) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <input type="hidden" id="bv-vehicle-type" value="<?= Html::encode($existingVehicleType) ?>">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="bv-plate" class="form-label">ทะเบียน / หมายเลขรถที่ต้องการ
-                                <span class="text-body-tertiary fw-normal">(ไม่บังคับ)</span>
-                            </label>
-                            <input type="text"
-                                   id="bv-plate"
-                                   name="<?= Html::encode(Html::getInputName($model, 'license_plate')) ?>"
-                                   value="<?= Html::encode($existingPlate) ?>"
-                                   class="form-control"
-                                   placeholder="เว้นว่างให้เจ้าหน้าที่จัดสรรอัตโนมัติ">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label is-req">ระดับความเร่งด่วน</label>
-                            <div class="pill-group" role="radiogroup" aria-label="ระดับความเร่งด่วน" aria-required="true">
-                                <?php foreach (['ปกติ' => 'ปกติ', 'ด่วน' => 'ด่วน', 'ด่วนที่สุด' => 'ด่วนที่สุด'] as $val => $lab): ?>
-                                    <?php $checked = $existingUrgent === $val; ?>
-                                    <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
-                                        <input type="radio"
-                                               name="<?= Html::encode(Html::getInputName($model, 'urgent')) ?>"
-                                               value="<?= Html::encode($val) ?>"
-                                               <?= $checked ? 'checked' : '' ?>
-                                               data-pill-target="bv-urgent">
-                                        <?= Html::encode($lab) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <input type="hidden" id="bv-urgent" value="<?= Html::encode($existingUrgent) ?>">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">ผู้ขับรถ
-                                <span class="text-body-tertiary fw-normal">(ไม่บังคับ)</span>
-                            </label>
-                            <div class="pill-group" role="radiogroup" aria-label="ผู้ขับรถ">
-                                <?php foreach (['' => 'ไม่ระบุ', 'self' => 'ขับเอง', 'driver' => 'พนักงาน'] as $val => $lab): ?>
-                                    <?php $checked = $existingDriver === (string) $val; ?>
-                                    <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
-                                        <input type="radio"
-                                               name="<?= Html::encode(Html::getInputName($model, 'data_json[driver]')) ?>"
-                                               value="<?= Html::encode((string) $val) ?>"
-                                               <?= $checked ? 'checked' : '' ?>
-                                               data-pill-target="bv-driver">
-                                        <?= Html::encode($lab) ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                            <input type="hidden" id="bv-driver" value="<?= Html::encode($existingDriver) ?>">
-                        </div>
-
-                        <div class="mb-0">
-                            <label for="bv-notes" class="form-label">หมายเหตุเพิ่มเติม
-                                <span class="text-body-tertiary fw-normal">(ไม่บังคับ)</span>
-                            </label>
-                            <textarea id="bv-notes"
-                                      name="<?= Html::encode(Html::getInputName($model, 'data_json[notes]')) ?>"
-                                      class="form-control"
-                                      rows="3"
-                                      placeholder="ข้อมูลเพิ่มเติมที่เจ้าหน้าที่ควรทราบ"><?= Html::encode($existingNotes) ?></textarea>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ─── Step 4: ตรวจสอบ ─── -->
-                <section class="bv-panel" data-step-panel="4" data-step-title="ตรวจสอบข้อมูล" hidden>
-                    <header class="bv-panel-head">
-                        <p class="bv-panel-eyebrow">ขั้นตอนที่ 4 จาก 5</p>
-                        <h2 class="bv-panel-title">ตรวจสอบข้อมูล</h2>
-                        <p class="bv-panel-desc">ยืนยันความถูกต้องก่อนส่งคำขอ กดแก้ไขเพื่อกลับไปแก้</p>
-                    </header>
-
-                    <div class="bv-summary-card">
-                        <header class="bv-summary-head">
-                            <h3 class="bv-summary-title"><i data-lucide="calendar-range"></i> การเดินทาง</h3>
-                            <button type="button" class="bv-summary-edit" data-jump-step="1">
-                                <i data-lucide="pencil" class="me-1" style="width:14px;height:14px;vertical-align:-2px;"></i> แก้ไข
-                            </button>
-                        </header>
-                        <div class="bv-summary-body">
-                            <dl class="bv-summary-dl" data-summary="trip"></dl>
-                        </div>
-                    </div>
-
-                    <div class="bv-summary-card">
-                        <header class="bv-summary-head">
-                            <h3 class="bv-summary-title"><i data-lucide="user"></i> ผู้ขอใช้รถ</h3>
-                            <button type="button" class="bv-summary-edit" data-jump-step="2">
-                                <i data-lucide="pencil" class="me-1" style="width:14px;height:14px;vertical-align:-2px;"></i> แก้ไข
-                            </button>
-                        </header>
-                        <div class="bv-summary-body">
-                            <dl class="bv-summary-dl" data-summary="requester"></dl>
-                        </div>
-                    </div>
-
-                    <div class="bv-summary-card">
-                        <header class="bv-summary-head">
-                            <h3 class="bv-summary-title"><i data-lucide="car"></i> รถและคนขับ</h3>
-                            <button type="button" class="bv-summary-edit" data-jump-step="3">
-                                <i data-lucide="pencil" class="me-1" style="width:14px;height:14px;vertical-align:-2px;"></i> แก้ไข
-                            </button>
-                        </header>
-                        <div class="bv-summary-body">
-                            <dl class="bv-summary-dl" data-summary="vehicle"></dl>
-                        </div>
-                    </div>
-
-                    <div class="bv-completeness" id="bv-completeness" role="status" aria-live="polite">
-                        <i data-lucide="check-circle"></i>
-                        <span id="bv-completeness-text">ข้อมูลครบถ้วน พร้อมส่งคำขอ</span>
-                    </div>
-                </section>
-
-                <!-- ─── Step 5: ยืนยัน ─── -->
-                <section class="bv-panel" data-step-panel="5" data-step-title="ยืนยันการจอง" hidden>
-                    <header class="bv-panel-head">
-                        <p class="bv-panel-eyebrow">ขั้นตอนสุดท้าย</p>
-                        <h2 class="bv-panel-title">ยืนยันการจอง</h2>
-                        <p class="bv-panel-desc">ตรวจสอบความถูกต้องครั้งสุดท้ายก่อนกดส่งคำขอ</p>
-                    </header>
-
-                    <div class="bv-confirm-card">
-                        <label class="bv-confirm-row" for="bv-confirm-chk">
-                            <input type="checkbox" id="bv-confirm-chk" aria-describedby="bv-confirm-fineprint">
-                            <span class="bv-confirm-text">
-                                ข้าพเจ้ายืนยันว่าข้อมูลที่กรอกถูกต้องและขอใช้รถเพื่อปฏิบัติงานราชการตามวัตถุประสงค์ที่ระบุ
-                            </span>
-                        </label>
-                        <p class="bv-confirm-fineprint" id="bv-confirm-fineprint">
-                            เจ้าหน้าที่จะตรวจสอบคำขอและแจ้งผลผ่านระบบ
-                            หากต้องการแก้ไขหลังส่งคำขอ ให้ติดต่องานยานพาหนะ
-                        </p>
-                    </div>
-                </section>
-
-                <?php ActiveForm::end(); ?>
-            </div>
-        </section>
+        <?php if ($mode === 'list'): ?>
+            <?= $this->render('_partials/_vehicle_list', [
+                'myBookings'     => $myBookings,
+                'formatThaiDate' => $formatThaiDate,
+            ]) ?>
+        <?php elseif ($mode === 'success'): ?>
+            <?= $this->render('_partials/_vehicle_success', [
+                'flashCode' => $flashCode,
+            ]) ?>
+        <?php elseif ($mode === 'wizard'): ?>
+            <?= $this->render('_partials/_vehicle_wizard', [
+                'model'               => $model,
+                'saveErrors'          => $saveErrors,
+                'existingGoType'      => $existingGoType,
+                'existingDriver'      => $existingDriver,
+                'existingPhone'       => $existingPhone,
+                'existingPassengers'  => $existingPassengers,
+                'existingVehicleType' => $existingVehicleType,
+                'existingPlate'       => $existingPlate,
+                'existingUrgent'      => $existingUrgent,
+                'existingNotes'       => $existingNotes,
+                'requesterName'       => $requesterName,
+                'requesterDept'       => $requesterDept,
+            ]) ?>
+        <?php endif; ?>
 
     </div>
 

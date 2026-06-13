@@ -1,8 +1,6 @@
 <?php
 
-use app\components\ApproveLevelResolver;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\models\Employees;
 use app\widgets\datepicker\DatepickerThai;
 use kartik\widgets\Select2;
 use yii\bootstrap5\ActiveForm;
@@ -18,6 +16,8 @@ use yii\web\View;
 /** @var array $stats */
 /** @var string|null $draftRef */
 /** @var string $leaveWorkSendInitText */
+/** @var string $leaveSendInitAvatar  controller pre-loads avatar (เลี่ยง DB query ใน view) */
+/** @var array $approveChain  controller pre-loads chain ([['step'=>array, 'employee'=>?Employees], ...]) แก้ N+1 */
 /** @var \app\modules\hr\models\Employees|null $employee */
 
 $this->params['current_page']   = $current_page ?? 'services';
@@ -29,6 +29,8 @@ $types                 = $types ?? [];
 $stats                 = $stats ?? [];
 $draftRef              = $draftRef ?? null;
 $leaveWorkSendInitText = $leaveWorkSendInitText ?? '';
+$leaveSendInitAvatar   = $leaveSendInitAvatar ?? '';
+$approveChain          = $approveChain ?? [];
 
 $isUpdate = $model instanceof \app\modules\leave\models\Leave && !$model->isNewRecord;
 
@@ -103,13 +105,7 @@ function (data, params) {
 }
 JS;
 
-$leaveSendInitAvatar = '';
-try {
-    if ($isUpdate && !empty($model->data_json['leave_work_send_id'])) {
-        $emp = Employees::find()->where(['id' => $model->data_json['leave_work_send_id']])->one();
-        if ($emp) $leaveSendInitAvatar = $emp->getAvatar(false);
-    }
-} catch (\Throwable $e) {}
+// $leaveSendInitAvatar เตรียมโดย controller (MobileLeaveService::loadWorkSendAvatar)
 ?>
 
 <style>
@@ -315,6 +311,14 @@ try {
 .mobile-upload .kv-upload-progress { padding: 0 !important; }
 </style>
 
+<?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+    'icon'     => 'calendar-off',
+    'title'    => $this->params['mobileTitle'],
+    'subtitle' => $this->params['mobileSubtitle'],
+]) ?>
+
+<div class="app-scroll">
+
 <div class="mobile-stack">
 
     <!-- Approval workflow preview -->
@@ -325,13 +329,12 @@ try {
         </h3>
         <div class="card mobile-card">
             <div class="card-body">
-                <?php $listApprove = ApproveLevelResolver::resolve('leave', $model->emp_id); ?>
-                <?php if (empty($listApprove)): ?>
+                <?php if (empty($approveChain)): ?>
                     <p class="small text-body-secondary mb-0 text-center py-2">ยังไม่ได้ตั้งค่าผู้อนุมัติสำหรับบุคลากรนี้</p>
                 <?php else: ?>
                     <div class="lr-workflow">
-                        <?php foreach ($listApprove as $step): ?>
-                            <?php $approveEmployee = Employees::findOne(['id' => $step['emp_id']]); ?>
+                        <?php foreach ($approveChain as $item): ?>
+                            <?php $step = $item['step']; $approveEmployee = $item['employee']; ?>
                             <div class="lr-step">
                                 <div class="lr-dot">
                                     <?php if ($approveEmployee): ?>
@@ -688,6 +691,8 @@ try {
     </div>
 
     <?php ActiveForm::end(); ?>
+
+</div>
 
 </div>
 

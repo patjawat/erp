@@ -78,6 +78,14 @@ $problemTypes = [
 }
 </style>
 
+<?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+    'icon'     => 'wrench',
+    'title'    => $this->params['mobileTitle'],
+    'subtitle' => $this->params['mobileSubtitle'],
+]) ?>
+
+<div class="app-scroll">
+
 <?php $form = ActiveForm::begin([
     'id' => 'mobile-maintenance-form',
     'options' => ['class' => '', 'enctype' => 'multipart/form-data'],
@@ -142,6 +150,8 @@ $problemTypes = [
 </div>
 
 <?php ActiveForm::end(); ?>
+
+</div>
 
 <?php
 $js = <<<'JS'

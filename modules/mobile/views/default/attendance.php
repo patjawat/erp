@@ -31,6 +31,15 @@ $saveUrlJs = json_encode($saveUrl);
 $csrfParamJs = json_encode(Yii::$app->request->csrfParam);
 $csrfTokenJs = json_encode(Yii::$app->request->csrfToken);
 ?>
+
+<?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+    'icon'     => 'clock',
+    'title'    => $this->params['mobileTitle'],
+    'subtitle' => $this->params['mobileSubtitle'],
+]) ?>
+
+<div class="app-scroll">
+
 <?php if ($msg = Yii::$app->session->getFlash('success')): ?>
     <div class="alert alert-success border-0 shadow-sm rounded-3 small mb-3"><?= Html::encode($msg) ?></div>
 <?php endif; ?>
@@ -109,6 +118,8 @@ $csrfTokenJs = json_encode(Yii::$app->request->csrfToken);
     <div id="checkin-result" class="alert rounded-3 mb-0 d-none" role="alert"></div>
 
     <p class="small text-body-secondary text-center mb-2 px-2">หลังบันทึกแล้วรอหัวหน้าอนุมัติตามกระบวนการขององค์กร</p>
+</div>
+
 </div>
 
 <?php

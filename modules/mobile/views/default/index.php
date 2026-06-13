@@ -143,8 +143,8 @@ $stats = [
 
 // ── Quick action tiles (8, grid 4×2) ──────────────────────────────────
 $quickServices = [
-    ['icon' => 'car',             'cat' => 'vehicle',     'label' => 'จองรถ',           'url' => Url::to(['/mobile/default/booking-vehicle'])],
-    ['icon' => 'calendar',        'cat' => 'meeting',     'label' => 'จองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting'])],
+    ['icon' => 'car',             'cat' => 'vehicle',     'label' => 'จองรถ',           'url' => Url::to(['/mobile/default/booking-vehicle', 'action' => 'new'])],
+    ['icon' => 'calendar',        'cat' => 'meeting',     'label' => 'จองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting', 'action' => 'new'])],
     ['icon' => 'wrench',          'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',        'url' => Url::to(['/mobile/default/maintenance-request'])],
     ['icon' => 'calendar-off',    'cat' => 'leave',       'label' => 'ขอลา',            'url' => Url::to(['/mobile/default/leave-request'])],
     ['icon' => 'clock',           'cat' => 'attendance',  'label' => 'ลงเวลา',          'url' => Url::to(['/mobile/default/attendance'])],
