@@ -8,14 +8,33 @@ use yii\helpers\Url;
 /** @var \app\modules\booking\models\Meeting[] $myBookings */
 /** @var array<string,string> $rooms code => title (เร็วกว่าเรียก $booking->room ต่อแถว) */
 /** @var callable $formatThaiDate Closure(?string $d): string */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
 
 $myBookings     = $myBookings ?? [];
 $rooms          = $rooms ?? [];
 $formatThaiDate = $formatThaiDate ?? static fn ($d) => (string) $d;
+$fiscalYears    = $fiscalYears ?? [];
+$filterYear     = (int) ($filterYear ?? 0);
+$baseUrl        = Url::to(['/mobile/default/booking-meeting']);
 ?>
 
 <section class="bm-mode bm-mode-list bm-panel" data-mode-section="list">
     <div class="bm-list-toolbar">
+        <form method="get" action="<?= Html::encode($baseUrl) ?>" class="mobile-year-filter">
+            <label for="bm-year-filter" class="mobile-year-filter-label">
+                <i data-lucide="calendar-days" aria-hidden="true"></i>
+                ปีงบประมาณ
+            </label>
+            <select name="year" id="bm-year-filter" class="mobile-year-filter-select" onchange="this.form.submit()" aria-label="กรองปีงบประมาณ">
+                <?php foreach ($fiscalYears as $year => $label): ?>
+                    <?php $year = (int) $year; ?>
+                    <option value="<?= $year ?>" <?= $filterYear === $year ? 'selected' : '' ?>>
+                        <?= Html::encode($label) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
         <input type="search"
                id="bm-list-search"
                class="bm-search"
@@ -30,7 +49,7 @@ $formatThaiDate = $formatThaiDate ?? static fn ($d) => (string) $d;
                 <i data-lucide="calendar-check"></i>
             </span>
             <p class="bm-list-empty-title">ยังไม่มีรายการจองห้องประชุม</p>
-            <p class="bm-list-empty-text">กดปุ่มจองห้องประชุมเพื่อเริ่มคำขอแรก ระบบจะส่งให้ผู้ดูแลตรวจสอบ</p>
+            <p class="bm-list-empty-text">ยังไม่มีรายการในปีงบประมาณนี้ กดปุ่มจองห้องประชุมเพื่อเริ่มคำขอแรก</p>
         </div>
     <?php else: ?>
         <div class="bm-list" id="bm-booking-list">

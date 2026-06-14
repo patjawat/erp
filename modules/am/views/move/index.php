@@ -22,7 +22,7 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
         <h6><?= Html::encode($this->title) ?></h6>
 
         <p>
-            <?= Html::a('<i data-lucide="circle-plus"></i> แจ้งย้ายใหม่', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' การบำรุงรักษา'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i data-lucide="circle-plus"></i> แจ้งย้ายใหม่', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' การเคลื่อนย้ายทรัพย์สิน'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </p>
     </div>
 

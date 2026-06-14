@@ -2,6 +2,7 @@
 
 namespace app\modules\mobile\services;
 
+use app\components\AppHelper;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
 
@@ -52,19 +53,39 @@ class MobileMeetingAdminService
      * Meeting list ทั้งหมดของห้องที่ระบุ เรียง date_start/time_start ใหม่→เก่า.
      * @return Meeting[]
      */
-    public function findMeetingsForOwnedRooms(array $roomCodes, int $limit = 200): array
+    public function findMeetingsForOwnedRooms(array $roomCodes, int $limit = 200, ?int $thaiYear = null): array
     {
         if (empty($roomCodes)) return [];
 
         try {
-            return Meeting::find()
+            $query = Meeting::find()
                 ->where(['room_id' => $roomCodes])
                 ->orderBy(['date_start' => SORT_DESC, 'time_start' => SORT_DESC])
-                ->limit($limit)
-                ->all();
+                ->limit($limit);
+
+            if ($thaiYear !== null) {
+                $query->andWhere(['thai_year' => $thaiYear]);
+            }
+
+            return $query->all();
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /**
+     * รายการปีงบประมาณสำหรับ filter dropdown.
+     *
+     * @return array<int,string>
+     */
+    public function listFiscalYears(int $back = 10): array
+    {
+        $current = (int) AppHelper::YearBudget();
+        $years = [];
+        for ($y = $current; $y > $current - $back; $y--) {
+            $years[$y] = 'พ.ศ. ' . $y;
+        }
+        return $years;
     }
 
     /**

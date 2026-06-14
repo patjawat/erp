@@ -12,7 +12,8 @@ use yii\helpers\Url;
 /** @var Meeting $model */
 /** @var array $rooms รายการห้องจาก booking (code => title) */
 /** @var array $roomCards metadata ห้องประชุมสำหรับ mobile card */
-/** @var array $roomLayouts รายการรูปแบบการจัดห้อง */
+/** @var array $roomLayouts รายการรูปแบบการจัดห้อง (code => label) */
+/** @var array $roomLayoutImages รูป layout (code => url, มี placeholder fallback) */
 /** @var array $urgentOptions รายการความเร่งด่วน */
 /** @var array $equipmentItems รายการอุปกรณ์ */
 /** @var \app\modules\hr\models\Employees|null $employee */
@@ -20,14 +21,24 @@ use yii\helpers\Url;
 /** @var array $saveErrors */
 /** @var bool|null $isEdit */
 /** @var string|null $forceMode */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var int $currentYear */
 
-$rooms          = $rooms ?? [];
-$roomCards      = $roomCards ?? [];
-$roomLayouts    = $roomLayouts ?? [];
-$urgentOptions  = $urgentOptions ?? [];
+$rooms             = $rooms ?? [];
+$roomCards         = $roomCards ?? [];
+$roomLayouts       = $roomLayouts ?? [];
+$roomLayoutImages  = $roomLayoutImages ?? [];
+$urgentOptions     = $urgentOptions ?? [];
 $equipmentItems = $equipmentItems ?? [];
 $myBookings     = $myBookings ?? [];
 $saveErrors     = $saveErrors ?? [];
+$fiscalYears    = $fiscalYears ?? [];
+$filterYear     = (int) ($filterYear ?? 0);
+$currentYear    = (int) ($currentYear ?? 0);
+if (empty($fiscalYears) && $filterYear > 0) {
+    $fiscalYears[$filterYear] = 'พ.ศ. ' . $filterYear;
+}
 
 $isEdit    = (bool) ($isEdit ?? (!$model->isNewRecord));
 $forceMode = isset($forceMode) ? (string) $forceMode : null;
@@ -51,7 +62,7 @@ $this->params['mobileSubtitle'] = $mode === 'wizard'
     ? ($isEdit
         ? ('แก้ไขคำขอ' . ($editCode !== '' ? ' ' . $editCode : ''))
         : 'กรอกข้อมูลทีละขั้นตอน')
-    : 'รายการจองห้องประชุมของฉัน';
+    : 'รายการจองห้องประชุมของฉัน' . ($filterYear > 0 ? ' ปีงบประมาณ ' . ($fiscalYears[$filterYear] ?? ('พ.ศ. ' . $filterYear)) : '');
 
 // Status taxonomy + bucket counts (presentation — ใช้ helper เดียวกับ vehicle)
 $bucketCounts = MobileBookingStatus::bucketCounts($myBookings);
@@ -144,16 +155,53 @@ $periodPresets = [
     font-size: var(--fs-sm);
     line-height: 1.45;
 }
-.bm-success { background: var(--success-soft); border-color: rgba(25, 135, 84, 0.18); color: var(--success); }
-.bm-alert { background: var(--danger-soft); border-color: rgba(220, 53, 69, 0.18); color: var(--danger-strong); }
+.bm-success { background: var(--success-soft); border-color: color-mix(in oklch, var(--success) 18%, transparent); color: var(--success); }
+.bm-alert { background: var(--danger-soft); border-color: color-mix(in oklch, var(--danger) 18%, transparent); color: var(--danger-strong); }
 .bm-alert ul { margin: 0; padding-left: 1.1rem; }
 .bm-stepper {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: var(--space-2xs);
+}
+/* Compact stepper สำหรับ viewport แคบ (slot swap กับ .bm-stepper) */
+.bm-stepper-compact { display: none; }
+.bm-stepper-compact-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+}
+.bm-stepper-compact-num strong {
+    color: var(--mobile-primary);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.bm-stepper-compact-name {
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+}
+.bm-progress-track {
+    position: relative;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    overflow: hidden;
+}
+.bm-progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 14.2857%; /* 1/7 default */
+    background: linear-gradient(90deg, var(--mobile-primary) 0%, color-mix(in oklch, var(--mobile-primary) 70%, white) 100%);
+    border-radius: 999px;
+    transition: width 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .bm-step-tab {
     min-width: 0;
+    min-height: 2.75rem; /* 44px touch target — เคยลืมไว้, ผู้ใช้แตะเป้าด้วยนิ้วโป้ง */
     border: 1px solid var(--ink-line);
     border-radius: 12px;
     background: var(--surface);
@@ -171,11 +219,11 @@ $periodPresets = [
 .bm-step-tab.is-active {
     background: var(--mobile-primary-soft);
     color: var(--mobile-primary);
-    border-color: rgba(13, 110, 253, 0.24);
+    border-color: var(--mobile-primary-soft-strong);
 }
 .bm-step-tab.is-done {
     color: var(--success);
-    border-color: rgba(25, 135, 84, 0.22);
+    border-color: color-mix(in oklch, var(--success) 22%, transparent);
 }
 .bm-mode[hidden] { display: none !important; }
 .bm-panel[hidden] { display: none !important; }
@@ -191,7 +239,10 @@ $periodPresets = [
     background: var(--surface);
     border-radius: 14px;
     padding: var(--space-sm);
-    box-shadow: 0 1px 0 var(--ink-line), 0 2px 8px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 1px 0 var(--ink-line), 0 2px 8px color-mix(in oklch, var(--ink) 4%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
 }
 .bm-search {
     display: block;
@@ -213,7 +264,7 @@ $periodPresets = [
     outline: 0;
     background-color: var(--surface);
     border-color: var(--mobile-primary);
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    box-shadow: 0 0 0 3px var(--mobile-primary-soft-border);
 }
 .bm-search::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .bm-list {
@@ -254,7 +305,7 @@ $periodPresets = [
 .bm-list-pill.is-warning { background: var(--warning-soft); color: var(--warning); }
 .bm-list-pill.is-success { background: var(--success-soft); color: var(--success); }
 .bm-list-pill.is-danger { background: var(--danger-soft); color: var(--danger-strong); }
-.bm-list-pill.is-secondary { background: rgba(100, 116, 139, 0.13); color: var(--ink-3); }
+.bm-list-pill.is-secondary { background: color-mix(in oklch, var(--ink-4) 18%, transparent); color: var(--ink-3); }
 .bm-list-title {
     margin: 0;
     color: var(--ink);
@@ -353,7 +404,7 @@ $periodPresets = [
     line-height: 1.45;
 }
 .bm-time-strip {
-    border: 1px solid rgba(13, 110, 253, 0.14);
+    border: 1px solid var(--mobile-primary-soft-border);
     border-radius: 14px;
     background: linear-gradient(180deg, var(--mobile-primary-soft) 0%, var(--surface) 100%);
     padding: var(--space-sm);
@@ -396,6 +447,47 @@ $periodPresets = [
 .bm-chip-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .bm-period-grid,
 .bm-layout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Layout-with-image: ใช้ auto-fit + min 140px เพื่อให้ tile มีรูปอ่านง่าย */
+.bm-layout-grid-images { grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr)); gap: var(--space-sm); }
+
+/* Tile chip = chip ที่มีรูป (vertical: thumb + label) */
+.bm-radio-chip-tile {
+    flex-direction: column;
+    min-height: auto;
+    padding: 0;
+    overflow: hidden;
+    gap: 0;
+    align-items: stretch;
+}
+.bm-tile-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-2);
+    overflow: hidden;
+}
+.bm-tile-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bm-radio-chip-tile.is-active .bm-tile-thumb img { transform: scale(1.04); }
+.bm-tile-thumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-4);
+}
+.bm-tile-thumb-empty svg { width: 1.75rem; height: 1.75rem; }
+.bm-tile-label {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+}
 .bm-chip,
 .bm-radio-chip,
 .bm-equipment-chip {
@@ -429,10 +521,10 @@ $periodPresets = [
 .bm-chip.is-active,
 .bm-radio-chip.is-active,
 .bm-equipment-chip.is-active {
-    border-color: rgba(13, 110, 253, 0.38);
+    border-color: color-mix(in oklch, var(--mobile-primary) 38%, transparent);
     background: var(--mobile-primary-soft);
     color: var(--mobile-primary);
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.08);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--mobile-primary) 8%, transparent);
 }
 .bm-chip:focus-visible,
 .bm-radio-chip:focus-visible,
@@ -474,7 +566,7 @@ $periodPresets = [
 }
 .bm-inline-fields {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: var(--space-xs);
 }
 .bm-field-note {
@@ -493,7 +585,7 @@ $periodPresets = [
     gap: var(--space-xs);
 }
 .bm-status-note.is-ready {
-    background: rgba(25, 135, 84, 0.10);
+    background: color-mix(in oklch, var(--success) 10%, transparent);
     color: var(--success);
 }
 .bm-status-note.is-error {
@@ -504,7 +596,7 @@ $periodPresets = [
     width: 100%;
     min-height: 2.75rem;
     border-radius: 12px;
-    border: 1px solid rgba(13, 110, 253, 0.24);
+    border: 1px solid var(--mobile-primary-soft-strong);
     background: var(--surface);
     color: var(--mobile-primary);
     font-weight: 700;
@@ -535,9 +627,32 @@ $periodPresets = [
                 background 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .bm-room-card.is-selected {
-    border-color: rgba(25, 135, 84, 0.5);
-    background: linear-gradient(180deg, rgba(25, 135, 84, 0.08) 0%, var(--surface) 100%);
-    box-shadow: 0 8px 22px rgba(25, 135, 84, 0.10);
+    border-color: color-mix(in oklch, var(--success) 50%, transparent);
+    background: linear-gradient(180deg, color-mix(in oklch, var(--success) 8%, var(--surface)) 0%, var(--surface) 100%);
+    box-shadow: 0 8px 22px color-mix(in oklch, var(--success) 10%, transparent);
+}
+/* Room card with image: stack thumbnail at top + body below */
+.bm-room-card.has-image {
+    padding: 0;
+    overflow: hidden;
+}
+.bm-room-card.has-image .bm-room-body {
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+}
+.bm-room-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--surface-2);
+}
+.bm-room-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .bm-room-card.is-unavailable {
     opacity: 0.68;
@@ -592,7 +707,7 @@ $periodPresets = [
     background: var(--surface-2);
     color: var(--ink-3);
 }
-.bm-badge.is-available { background: rgba(25, 135, 84, 0.12); color: var(--success); }
+.bm-badge.is-available { background: color-mix(in oklch, var(--success) 12%, transparent); color: var(--success); }
 .bm-badge.is-unavailable { background: var(--danger-soft); color: var(--danger-strong); }
 .bm-badge.is-selected { background: var(--mobile-primary-soft); color: var(--mobile-primary); }
 .bm-empty {
@@ -637,7 +752,7 @@ $periodPresets = [
     accent-color: var(--mobile-primary);
 }
 .bm-summary-card {
-    border: 1px solid rgba(13, 110, 253, 0.16);
+    border: 1px solid var(--mobile-primary-soft-border);
     border-radius: 16px;
     background: var(--surface);
     box-shadow: var(--shadow-sm);
@@ -706,7 +821,7 @@ $periodPresets = [
     gap: var(--space-xs);
     background: var(--surface);
     border-top: 1px solid var(--ink-line);
-    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 -4px 16px color-mix(in oklch, var(--ink) 8%, transparent);
     padding: var(--space-md);
 }
 .bm-actions[data-mode="list"] { grid-template-columns: 1fr; }
@@ -735,33 +850,83 @@ $periodPresets = [
     color: var(--ink-2);
 }
 .bm-actions[data-mode="wizard"] .bm-submit { display: none !important; }
-.bm-actions[data-mode="wizard"][data-step="4"] .bm-next { display: none !important; }
-.bm-actions[data-mode="wizard"][data-step="4"] .bm-submit { display: inline-flex !important; }
+.bm-actions[data-mode="wizard"][data-step="7"] .bm-next { display: none !important; }
+.bm-actions[data-mode="wizard"][data-step="7"] .bm-submit { display: inline-flex !important; }
 .bm-actions .btn[disabled],
 .bm-actions .btn.is-busy { opacity: 0.58; cursor: not-allowed; }
 .bm-cancel-edit { display: none !important; }
 .bm-actions[data-mode="wizard"][data-step="1"][data-is-edit="1"] { grid-template-columns: auto 1fr; }
 .bm-actions[data-mode="wizard"][data-step="1"][data-is-edit="1"] .bm-cancel-edit { display: inline-flex !important; }
+@media (max-width: 380px) {
+    /* ที่ viewport แคบ ซ่อน 7-tab stepper สลับเป็น progress bar + ชื่อขั้นปัจจุบัน
+       เพื่อหลีกเลี่ยง 7 col × ~54px = แน่นและอ่านไม่ออก */
+    .bm-stepper { display: none; }
+    .bm-stepper-compact { display: block; }
+}
 @media (max-width: 360px) {
     .bm-chip-grid { grid-template-columns: 1fr; }
     .bm-period-grid,
     .bm-layout-grid { grid-template-columns: 1fr; }
-    .bm-step-tab { font-size: 0.625rem; padding-left: 0.2rem; padding-right: 0.2rem; }
 }
+
+/* ───── Motion: step transition + selection feedback ─────────────────── */
+.bm-panel.is-entering {
+    animation: bm-step-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes bm-step-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Chip pulse เมื่อ tap เลือก (layout/urgent step) */
+.bm-radio-chip.is-pulse {
+    animation: bm-chip-pulse 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes bm-chip-pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+
+/* Equipment chip tick fade-in (ใช้ ::before เพราะ checkbox ตัวจริงซ่อนใน label) */
+.bm-equipment-chip {
+    position: relative;
+}
+.bm-equipment-chip.is-active::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--mobile-primary) 30%, transparent);
+    animation: bm-tick-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+@keyframes bm-tick-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .bm-chip,
     .bm-radio-chip,
     .bm-room-card,
     .bm-refresh,
     .bm-actions .btn { transition: none !important; }
+    .bm-panel.is-entering,
+    .bm-radio-chip.is-pulse,
+    .bm-equipment-chip.is-active::before,
+    .bm-progress-fill { animation: none !important; transition: none !important; }
 }
 </style>
 
 <div class="bm-root" data-mode="<?= Html::encode($mode) ?>">
 
     <?php
+    // Hero stats overlay เป็น filter chip — แต่แสดงเฉพาะเมื่อมีรายการมากพอ
+    // ที่จะทำให้การ filter มีความหมาย. ถ้ามีแค่ 1-2 รายการ ตัวเลข hero จะดูเป็น
+    // hero-metric cliche เปล่าๆ (ลด "ผลิตทรง dashboard" ตาม audit).
     $heroStats = [];
-    if ($mode === 'list') {
+    if ($mode === 'list' && (int) $bucketCounts['all'] >= 3) {
         $heroStats = [
             ['value' => (int) $bucketCounts['all'], 'label' => 'ทั้งหมด', 'tone' => 'primary', 'clickable' => true, 'isActive' => true, 'data' => ['status-filter' => 'all']],
             ['value' => (int) $bucketCounts['pending'], 'label' => 'รออนุมัติ', 'tone' => 'warning', 'clickable' => true, 'data' => ['status-filter' => 'pending']],
@@ -799,6 +964,8 @@ $periodPresets = [
                     'myBookings'     => $myBookings,
                     'rooms'          => $rooms,
                     'formatThaiDate' => $formatThaiDate,
+                    'fiscalYears'    => $fiscalYears,
+                    'filterYear'     => $filterYear,
                 ]) ?>
             <?php elseif ($mode === 'wizard'): ?>
                 <?= $this->render('_partials/_meeting_wizard', [
@@ -807,6 +974,7 @@ $periodPresets = [
                     'formAction'        => $formAction,
                     'roomCards'         => $roomCards,
                     'roomLayouts'       => $roomLayouts,
+                    'roomLayoutImages'  => $roomLayoutImages ?? [],
                     'urgentOptions'     => $urgentOptions,
                     'equipmentItems'    => $equipmentItems,
                     'quickDates'        => $quickDates,
@@ -848,7 +1016,7 @@ $periodPresets = [
                class="btn bm-prev bm-cancel-edit bm-mode-action"
                data-for-mode="wizard">
                 <i data-lucide="x" aria-hidden="true"></i>
-                <span>ยกเลิก</span>
+                <span>ยกเลิกการแก้ไข</span>
             </a>
         <?php endif; ?>
         <button type="button" class="btn bm-prev bm-mode-action" data-for-mode="wizard" id="bm-prev">
@@ -1138,6 +1306,18 @@ $js = <<<JS
             });
     }
 
+    // 7-step state machine: 1 date, 2 room, 3 details, 4 layout, 5 urgent, 6 equipment, 7 confirm
+    var TOTAL_STEPS = 7;
+    var STEP_NAMES = {
+        1: 'วันเวลา',
+        2: 'เลือกห้อง',
+        3: 'รายละเอียด',
+        4: 'รูปแบบการจัดห้อง',
+        5: 'ความเร่งด่วน',
+        6: 'อุปกรณ์ที่ต้องใช้',
+        7: 'ยืนยัน'
+    };
+
     function validateStep(step, show) {
         var message = '';
         if (step === 1) {
@@ -1161,7 +1341,10 @@ $js = <<<JS
             if (!val(titleInput)) message = 'กรุณาระบุหัวข้อประชุม';
             else if (!val(peopleInput) || parseInt(val(peopleInput), 10) < 1) message = 'กรุณาระบุจำนวนผู้เข้าร่วม';
             else if (!val(phoneInput)) message = 'กรุณาระบุเบอร์ติดต่อ';
-        } else if (step === 4) {
+        } else if (step === 4 || step === 5 || step === 6) {
+            // 4: layout, 5: urgent, 6: equipment — มี default (controller pre-set) หรือไม่บังคับ
+            // ผ่านเสมอ; ผู้ใช้กด "ถัดไป" ได้ทันที
+        } else if (step === 7) {
             if (!confirmCheck || !confirmCheck.checked) message = 'กรุณาติ๊กยืนยันข้อมูลก่อนส่งคำขอ';
         }
         if (show) setStepError(step, message);
@@ -1169,37 +1352,71 @@ $js = <<<JS
     }
 
     function firstInvalidStep() {
-        for (var i = 1; i <= 4; i++) {
+        for (var i = 1; i <= TOTAL_STEPS; i++) {
             if (!validateStep(i, false)) return i;
         }
         return 0;
     }
 
+    var progressFillEl = document.getElementById('bm-progress-fill');
+    var stepNumEl      = document.getElementById('bm-step-num');
+    var stepNameEl     = document.getElementById('bm-step-name');
+
     function goToStep(step) {
-        step = Math.max(1, Math.min(4, step));
+        step = Math.max(1, Math.min(TOTAL_STEPS, step));
         currentStep = step;
         maxStepVisited = Math.max(maxStepVisited, step);
+
+        // Step panel swap + entrance animation
         qsa('[data-step-panel]').forEach(function(panel) {
-            panel.hidden = Number(panel.dataset.stepPanel) !== currentStep;
+            var isCurrent = Number(panel.dataset.stepPanel) === currentStep;
+            panel.hidden = !isCurrent;
+            panel.classList.remove('is-entering');
+            if (isCurrent) {
+                // Re-trigger animation (force reflow)
+                void panel.offsetWidth;
+                panel.classList.add('is-entering');
+            }
         });
+
         qsa('[data-step-jump]').forEach(function(tab) {
             var s = Number(tab.dataset.stepJump);
-            tab.classList.toggle('is-active', s === currentStep);
+            var active = s === currentStep;
+            tab.classList.toggle('is-active', active);
             tab.classList.toggle('is-done', s < currentStep && validateStep(s, false));
+            if (active) {
+                tab.setAttribute('aria-current', 'step');
+            } else {
+                tab.removeAttribute('aria-current');
+            }
         });
+
+        // Compact stepper sync (สำหรับ <380px)
+        if (progressFillEl) progressFillEl.style.width = (currentStep / TOTAL_STEPS * 100).toFixed(4) + '%';
+        if (stepNumEl) stepNumEl.textContent = String(currentStep);
+        if (stepNameEl) stepNameEl.textContent = STEP_NAMES[currentStep] || '';
+
         if (actionsEl) actionsEl.dataset.step = String(currentStep);
         clearStepErrors();
+
         if (currentStep === 2 && currentKey() && lastCheckedKey !== currentKey()) {
             checkAvailability();
         }
-        if (currentStep === 4) updateSummary();
+        if (currentStep === TOTAL_STEPS) updateSummary();
+
         updateActions();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateActions() {
         if (nextBtn) nextBtn.disabled = !validateStep(currentStep, false);
-        if (submitBtn) submitBtn.disabled = !(validateStep(1, false) && validateStep(2, false) && validateStep(3, false) && validateStep(4, false));
+        if (submitBtn) {
+            var allValid = true;
+            for (var k = 1; k <= TOTAL_STEPS; k++) {
+                if (!validateStep(k, false)) { allValid = false; break; }
+            }
+            submitBtn.disabled = !allValid;
+        }
     }
 
     function updateSummary() {
@@ -1272,25 +1489,35 @@ $js = <<<JS
             if (!input) return;
             input.value = btn.dataset.choiceValue || '';
             var group = btn.closest('[data-choice-group]');
-            qsa('[data-choice-input]', group).forEach(function(b) { b.classList.toggle('is-active', b === btn); });
+            qsa('[data-choice-input]', group).forEach(function(b) {
+                var sel = b === btn;
+                b.classList.toggle('is-active', sel);
+                // a11y: sync aria-checked สำหรับ role="radio"
+                if (b.getAttribute('role') === 'radio') b.setAttribute('aria-checked', sel ? 'true' : 'false');
+            });
+            // Motion: ใส่ class pulse ชั่วคราว, ลบหลัง animation จบ
+            btn.classList.remove('is-pulse');
+            void btn.offsetWidth; /* force reflow ให้ animation re-run ตอนกดซ้ำ */
+            btn.classList.add('is-pulse');
+            setTimeout(function() { btn.classList.remove('is-pulse'); }, 220);
             updateSummary();
         });
     });
 
-    qsa('input, textarea').forEach(function(input) {
-        input.addEventListener('input', function() {
-            var equipmentChip = input.closest ? input.closest('.bm-equipment-chip') : null;
-            if (equipmentChip) equipmentChip.classList.toggle('is-active', input.checked);
-            updateSummary();
-            updateActions();
+    // Scope ที่ form element เท่านั้น (ไม่ใช่ทุก input ในเอกสาร) เพื่อลด overhead
+    // ถ้าหน้านี้มี input อื่นนอกฟอร์มในอนาคต (เช่น search box ของ list mode)
+    if (formEl) {
+        qsa('input, textarea', formEl).forEach(function(input) {
+            var onChange = function() {
+                var equipmentChip = input.closest ? input.closest('.bm-equipment-chip') : null;
+                if (equipmentChip) equipmentChip.classList.toggle('is-active', input.checked);
+                updateSummary();
+                updateActions();
+            };
+            input.addEventListener('input', onChange);
+            input.addEventListener('change', onChange);
         });
-        input.addEventListener('change', function() {
-            var equipmentChip = input.closest ? input.closest('.bm-equipment-chip') : null;
-            if (equipmentChip) equipmentChip.classList.toggle('is-active', input.checked);
-            updateSummary();
-            updateActions();
-        });
-    });
+    }
 
     if (checkBtn) checkBtn.addEventListener('click', checkAvailability);
     if (confirmCheck) confirmCheck.addEventListener('change', updateActions);

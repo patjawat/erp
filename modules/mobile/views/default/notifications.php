@@ -8,12 +8,21 @@ use yii\helpers\Url;
 /** @var string $current_page */
 /** @var app\modules\approveV2\models\Approve[] $pendingLeaveApprovals */
 /** @var app\modules\leave\models\Leave[] $recentLeaveRequests */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var int $currentYear */
 $this->params['current_page']   = $current_page ?? 'home';
 $this->params['mobileTitle']    = 'การแจ้งเตือน';
 $this->params['mobileSubtitle'] = 'รายการแจ้งเตือนทั้งหมด';
 
 $pendingLeaveApprovals = $pendingLeaveApprovals ?? [];
 $recentLeaveRequests = $recentLeaveRequests ?? [];
+$fiscalYears = $fiscalYears ?? [];
+$filterYear = (int) ($filterYear ?? 0);
+$currentYear = (int) ($currentYear ?? 0);
+if (empty($fiscalYears) && $filterYear > 0) {
+    $fiscalYears[$filterYear] = 'พ.ศ. ' . $filterYear;
+}
 
 $formatDateTimeText = static function ($datetime): string {
     if (empty($datetime)) {
@@ -96,11 +105,30 @@ usort($items, static function (array $a, array $b) {
 <div class="d-flex flex-column gap-3">
     <p class="small text-body-secondary mb-0">รายการแจ้งเตือนจากงานอนุมัติและสถานะใบลาล่าสุดของคุณ</p>
 
+    <div class="card notif-card">
+        <div class="card-body p-3">
+            <form method="get" action="<?= Html::encode(Url::to(['/mobile/default/notifications'])) ?>" class="mobile-year-filter">
+                <label for="notif-year-filter" class="mobile-year-filter-label">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    ปีงบประมาณ
+                </label>
+                <select name="year" id="notif-year-filter" class="mobile-year-filter-select" onchange="this.form.submit()" aria-label="กรองปีงบประมาณ">
+                    <?php foreach ($fiscalYears as $year => $label): ?>
+                        <?php $year = (int) $year; ?>
+                        <option value="<?= $year ?>" <?= $filterYear === $year ? 'selected' : '' ?>>
+                            <?= Html::encode($label) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+        </div>
+    </div>
+
     <?php if (empty($items)): ?>
         <div class="card notif-card">
             <div class="card-body py-5 text-center text-muted">
                 <div class="fw-semibold text-dark mb-2">ยังไม่มีการแจ้งเตือน</div>
-                <div class="small">เมื่อมีงานอนุมัติหรือสถานะใบลาเปลี่ยน รายการจะปรากฏที่หน้านี้</div>
+                <div class="small">เมื่อมีงานอนุมัติหรือสถานะใบลาเปลี่ยนในปีงบประมาณนี้ รายการจะปรากฏที่หน้านี้</div>
             </div>
         </div>
     <?php else: ?>

@@ -10,6 +10,9 @@ use yii\helpers\Url;
 /** @var string[] $ownedRoomCodes */
 /** @var array<string,string> $roomTitles */
 /** @var array<string,int> $statsCount */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var int $currentYear */
 /** @var string $filterStatus */
 /** @var string $filterRoom */
 
@@ -21,8 +24,26 @@ $meetings       = $meetings ?? [];
 $ownedRoomCodes = $ownedRoomCodes ?? [];
 $roomTitles     = $roomTitles ?? [];
 $statsCount     = $statsCount ?? ['pending' => 0, 'passed' => 0, 'cancelled' => 0, 'total' => 0];
+$fiscalYears    = $fiscalYears ?? [];
+$filterYear     = (int) ($filterYear ?? 0);
+$currentYear    = (int) ($currentYear ?? 0);
 $filterStatus   = in_array($filterStatus ?? 'pending', ['pending', 'passed', 'cancelled', 'all'], true) ? $filterStatus : 'pending';
 $filterRoom     = (string) ($filterRoom ?? '');
+if (empty($fiscalYears) && $filterYear > 0) {
+    $fiscalYears[$filterYear] = 'พ.ศ. ' . $filterYear;
+}
+
+$roomManageUrl = static function (array $overrides = []) use ($filterStatus, $filterRoom, $filterYear): string {
+    $params = array_merge([
+        'status' => $filterStatus,
+        'room' => $filterRoom,
+        'year' => $filterYear,
+    ], $overrides);
+    if (($params['room'] ?? '') === '') {
+        unset($params['room']);
+    }
+    return Url::to(array_merge(['/mobile/default/room-manage'], $params));
+};
 
 /**
  * Map a meeting status to a presentation bucket so the view doesn't repeat the
@@ -60,72 +81,145 @@ $bucketLabels = [
     'later'     => 'อนาคต',
     'past'      => 'ผ่านมาแล้ว',
 ];
+
+$heroStats = [
+    [
+        'url' => $roomManageUrl(['status' => 'pending']),
+        'value' => $statsCount['pending'] ?? 0,
+        'label' => 'รอดำเนินการ',
+        'tone' => 'warning',
+        'isActive' => $filterStatus === 'pending',
+        'data' => ['status-filter' => 'pending'],
+    ],
+    [
+        'url' => $roomManageUrl(['status' => 'passed']),
+        'value' => $statsCount['passed'] ?? 0,
+        'label' => 'อนุมัติแล้ว',
+        'tone' => 'success',
+        'isActive' => $filterStatus === 'passed',
+        'data' => ['status-filter' => 'passed'],
+    ],
+    [
+        'url' => $roomManageUrl(['status' => 'cancelled']),
+        'value' => $statsCount['cancelled'] ?? 0,
+        'label' => 'ยกเลิก',
+        'tone' => 'danger',
+        'isActive' => $filterStatus === 'cancelled',
+        'data' => ['status-filter' => 'cancelled'],
+    ],
+    [
+        'url' => $roomManageUrl(['status' => 'all']),
+        'value' => $statsCount['total'] ?? 0,
+        'label' => 'ทั้งหมด',
+        'tone' => 'primary',
+        'isActive' => $filterStatus === 'all',
+        'data' => ['status-filter' => 'all'],
+    ],
+];
+$heroSubtitle = 'ปีงบประมาณ ' . ($fiscalYears[$filterYear] ?? ('พ.ศ. ' . $filterYear));
 ?>
 
 <style>
-/* ── Sticky header — stats chips ────────────────────────────────────────── */
-.rm-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-xs);
+.rm-scroll {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
 }
-.rm-stat {
-    display: flex; flex-direction: column; align-items: flex-start;
-    gap: var(--space-2xs);
-    background: #fff;
-    border: 1px solid var(--ink-line);
-    border-radius: 14px;
-    padding: var(--space-sm) var(--space-md);
-    text-decoration: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+.rm-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
 }
-.rm-stat:hover { color: inherit; }
-.rm-stat:active { transform: scale(0.98); }
-.rm-stat.is-active {
-    border-color: var(--mobile-primary);
-    box-shadow: inset 0 0 0 1px var(--mobile-primary);
-}
-.rm-stat-num { font-size: var(--fs-2xl); font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-.rm-stat-lbl { font-size: var(--fs-xs); color: var(--ink-3); font-weight: 500; }
-.rm-stat.is-pending   .rm-stat-num { color: var(--warning); }
-.rm-stat.is-passed    .rm-stat-num { color: var(--success); }
-.rm-stat.is-cancelled .rm-stat-num { color: var(--danger-strong); }
-
-/* ── Filter bar — status pills + optional room dropdown ──────────────── */
 .rm-filter {
     position: sticky;
-    top: env(safe-area-inset-top, 0);
+    top: var(--shell-h, 13rem);
     z-index: 5;
-    background: #f0f2f5;
-    padding: var(--space-xs) 0;
-    margin-bottom: var(--space-sm);
+    background: color-mix(in oklch, #f8fafc 88%, transparent);
+    backdrop-filter: blur(14px);
+    padding: var(--space-sm) var(--space-md);
+    margin: calc(-1 * var(--space-xs)) calc(-1 * var(--space-md)) 0;
+    box-shadow: 0 1px 0 var(--ink-line), 0 10px 24px rgba(15, 23, 42, 0.04);
 }
-.rm-filter-row { display: flex; gap: var(--space-xs); align-items: center; }
-.rm-filter-row .pill-group { flex: 1; min-width: 0; overflow-x: auto; }
+.rm-filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: 0;
+}
+.rm-filter-top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+.rm-filter-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    flex-shrink: 0;
+    margin: 0;
+    color: var(--ink-3);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+}
+.rm-filter-year-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+.rm-filter-year,
 .rm-filter-room {
-    flex-shrink: 0; max-width: 9rem;
-    border-radius: 10px; padding: 0.4rem 0.6rem;
-    font-size: var(--fs-sm); border: 1px solid #e2e8f0;
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--ink-line);
+    border-radius: 12px;
     background: #fff;
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    padding: 0 var(--space-md);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: border-color 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rm-filter-year:focus,
+.rm-filter-room:focus {
+    border-color: var(--mobile-primary);
+    box-shadow: 0 0 0 3px var(--mobile-primary-soft);
+    outline: 0;
+}
+.rm-filter-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+.rm-filter-row .pill-group {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.rm-filter-row .pill-group::-webkit-scrollbar {
+    display: none;
+}
+.rm-filter-room {
+    flex-shrink: 0;
+    max-width: 9.75rem;
 }
 
-/* ── Date bucket header ──────────────────────────────────────────────── */
 .rm-bucket {
     font-size: var(--fs-sm); font-weight: 700; color: var(--ink-3);
     letter-spacing: -0.005em;
-    margin: var(--space-md) 0 var(--space-xs);
+    margin: var(--space-xs) 0 var(--space-xs);
     display: flex; align-items: center; gap: var(--space-xs);
 }
 .rm-bucket::after { content: ''; flex: 1; height: 1px; background: var(--ink-line); }
 
-/* ── Meeting row card ─────────────────────────────────────────────────── */
 .rm-card {
     background: #fff;
-    border-radius: 14px;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid color-mix(in oklch, var(--ink-line) 75%, transparent);
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
     padding: var(--space-md);
     margin-bottom: var(--space-xs);
-    transition: opacity 0.25s ease;
+    min-height: 5.25rem;
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
 }
 .rm-card[hidden] { display: none !important; }
 .rm-card-head { display: flex; align-items: center; gap: var(--space-sm); }
@@ -171,10 +265,12 @@ $bucketLabels = [
 }
 .rm-card-detail strong { color: var(--ink-2); font-weight: 600; }
 
-/* Whole card clickable affordance — link wrapper */
 a.rm-card { display: block; text-decoration: none; color: inherit; cursor: pointer; }
-.rm-card:hover { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
-.rm-card:active { transform: scale(0.995); }
+.rm-card:hover {
+    border-color: color-mix(in oklch, var(--mobile-primary) 18%, var(--ink-line));
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08), 0 2px 5px rgba(15, 23, 42, 0.05);
+}
+.rm-card:active { transform: scale(0.992); }
 .rm-card:focus-visible { outline: 2px solid var(--mobile-primary); outline-offset: 2px; }
 
 /* Main modal — fullscreen overrides for mobile booking details */
@@ -207,20 +303,42 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
 .rm-empty-text { font-size: var(--fs-sm); color: var(--ink-4); margin: 0; line-height: 1.5; }
 
 @media (prefers-reduced-motion: reduce) {
-    .rm-stat, .rm-card { transition: none; }
-    .rm-stat:active { transform: none; }
+    .rm-filter,
+    .rm-filter-year,
+    .rm-filter-room,
+    .rm-card { transition: none !important; animation: none !important; }
+    .rm-card:hover,
+    .rm-card:active { transform: none !important; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .rm-filter {
+        animation: rm-soft-drop 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .rm-card {
+        animation: rm-card-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: calc(var(--rm-i, 0) * 18ms);
+    }
+}
+@keyframes rm-soft-drop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes rm-card-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
-<div class="mobile-stack-tight">
+<?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+    'icon' => 'calendar-check',
+    'title' => $this->params['mobileTitle'],
+    'subtitle' => $heroSubtitle,
+    'stats' => $heroStats,
+    'statsLabel' => 'สรุปรายการจัดห้องประชุม',
+]) ?>
 
-    <!-- Back link -->
-    <div>
-        <a href="<?= Html::encode(Url::to(['/mobile/default/profile'])) ?>"
-           class="btn btn-sm btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-1">
-            <i data-lucide="arrow-left" class="mi-sm mi-baseline"></i> โปรไฟล์
-        </a>
-    </div>
+<div class="app-scroll has-stats rm-scroll">
+<div class="mobile-stack-tight rm-stack">
 
     <?php if (empty($ownedRoomCodes)): ?>
         <div class="rm-empty">
@@ -230,64 +348,62 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
         </div>
     <?php else: ?>
 
-        <!-- Stats chips — also act as status filters -->
-        <div class="rm-stats">
-            <?php
-            $statTiles = [
-                'pending'   => ['label' => 'รอดำเนินการ', 'count' => $statsCount['pending']],
-                'passed'    => ['label' => 'อนุมัติแล้ว',   'count' => $statsCount['passed']],
-                'cancelled' => ['label' => 'ยกเลิก',         'count' => $statsCount['cancelled']],
-            ];
-            foreach ($statTiles as $key => $tile):
-                $isActive = $filterStatus === $key;
-            ?>
-                <a href="?status=<?= Html::encode($key) ?><?= $filterRoom ? '&room=' . urlencode($filterRoom) : '' ?>"
-                   class="rm-stat is-<?= Html::encode($key) ?> <?= $isActive ? 'is-active' : '' ?>"
-                   data-status-filter="<?= Html::encode($key) ?>">
-                    <span class="rm-stat-num"><?= Html::encode((string) $tile['count']) ?></span>
-                    <span class="rm-stat-lbl"><?= Html::encode($tile['label']) ?></span>
-                </a>
-            <?php endforeach; ?>
-        </div>
-
-        <!-- Filter bar -->
         <div class="rm-filter">
-            <div class="rm-filter-row">
-                <div class="pill-group" role="radiogroup" aria-label="กรองตามสถานะ">
-                    <?php
-                    $statusOptions = [
-                        'pending'   => 'รอ',
-                        'passed'    => 'อนุมัติ',
-                        'cancelled' => 'ยกเลิก',
-                        'all'       => 'ทั้งหมด',
-                    ];
-                    foreach ($statusOptions as $key => $label):
-                        $checked = $filterStatus === $key;
-                    ?>
-                        <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
-                            <input type="radio" name="rm-status-filter" value="<?= Html::encode($key) ?>" <?= $checked ? 'checked' : '' ?>>
-                            <?= Html::encode($label) ?>
-                        </label>
-                    <?php endforeach; ?>
+            <form method="get" action="<?= Html::encode(Url::to(['/mobile/default/room-manage'])) ?>" class="rm-filter-form">
+                <div class="rm-filter-top">
+                    <label class="rm-filter-label" for="rm-year-filter">
+                        <i data-lucide="calendar-days" class="mi-sm" aria-hidden="true"></i>
+                        ปีงบประมาณ
+                    </label>
+                    <div class="rm-filter-year-wrap">
+                        <select class="rm-filter-year" id="rm-year-filter" name="year" aria-label="กรองปีงบประมาณ" onchange="this.form.submit()">
+                            <?php foreach ($fiscalYears as $year => $label): ?>
+                                <?php $year = (int) $year; ?>
+                                <option value="<?= $year ?>" <?= $filterYear === $year ? 'selected' : '' ?>>
+                                    <?= Html::encode($label) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
-                <?php if (count($roomTitles) > 1): ?>
-                    <select class="rm-filter-room" id="rm-room-filter" aria-label="กรองตามห้อง">
-                        <option value="">ทุกห้อง</option>
-                        <?php foreach ($roomTitles as $code => $title): ?>
-                            <option value="<?= Html::encode($code) ?>" <?= $filterRoom === $code ? 'selected' : '' ?>>
-                                <?= Html::encode($title) ?>
-                            </option>
+
+                <div class="rm-filter-row">
+                    <div class="pill-group" role="radiogroup" aria-label="กรองตามสถานะ">
+                        <?php
+                        $statusOptions = [
+                            'pending'   => 'รอ',
+                            'passed'    => 'อนุมัติ',
+                            'cancelled' => 'ยกเลิก',
+                            'all'       => 'ทั้งหมด',
+                        ];
+                        foreach ($statusOptions as $key => $label):
+                            $checked = $filterStatus === $key;
+                        ?>
+                            <label class="pill-option <?= $checked ? 'is-active' : '' ?>">
+                                <input type="radio" name="status" value="<?= Html::encode($key) ?>" <?= $checked ? 'checked' : '' ?>>
+                                <?= Html::encode($label) ?>
+                            </label>
                         <?php endforeach; ?>
-                    </select>
-                <?php endif; ?>
-            </div>
+                    </div>
+                    <?php if (count($roomTitles) > 1): ?>
+                        <select class="rm-filter-room" id="rm-room-filter" name="room" aria-label="กรองตามห้อง">
+                            <option value="">ทุกห้อง</option>
+                            <?php foreach ($roomTitles as $code => $title): ?>
+                                <option value="<?= Html::encode($code) ?>" <?= $filterRoom === $code ? 'selected' : '' ?>>
+                                    <?= Html::encode($title) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+                </div>
+            </form>
         </div>
 
         <?php if (empty($meetings)): ?>
             <div class="rm-empty">
                 <span class="rm-empty-icon"><i data-lucide="calendar-check" class="mi-lg"></i></span>
                 <p class="rm-empty-title">ยังไม่มีคำขอจอง</p>
-                <p class="rm-empty-text">คำขอจองห้องที่คุณดูแลจะปรากฏที่นี่</p>
+                <p class="rm-empty-text">คำขอจองห้องที่คุณดูแลในปีงบประมาณนี้จะปรากฏที่นี่</p>
             </div>
         <?php else: ?>
 
@@ -346,6 +462,7 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
                         ?>
                         <a class="rm-card open-modal"
                            href="<?= Html::encode(Url::to(['/mobile/default/meeting-detail', 'id' => $m->id])) ?>"
+                           style="--rm-i: <?= (int) min($visibleCount, 10) ?>"
                            data-size="modal-fullscreen"
                            aria-label="ดูรายละเอียดการจอง <?= Html::encode($m->title ?: $m->code) ?>"
                            data-meeting-id="<?= (int) $m->id ?>"
@@ -383,12 +500,13 @@ a.rm-card { display: block; text-decoration: none; color: inherit; cursor: point
                 <div id="rm-no-results" class="rm-empty d-none">
                     <span class="rm-empty-icon"><i data-lucide="search-x" class="mi-lg"></i></span>
                     <p class="rm-empty-title">ไม่มีรายการตามตัวกรอง</p>
-                    <p class="rm-empty-text">ลองเปลี่ยนสถานะหรือเลือกห้องอื่น</p>
+                    <p class="rm-empty-text">ลองเปลี่ยนสถานะ ห้อง หรือปีงบประมาณ</p>
                 </div>
             </div>
 
         <?php endif; ?>
     <?php endif; ?>
+</div>
 </div>
 
 <?php if (!empty($meetings)): ?>
@@ -412,7 +530,7 @@ $js = <<<JS
         room:   {$initialRoomFilter},
     };
 
-    // ── Apply filter (status + room) → toggle [hidden] on rows + bucket headers
+    // Apply filter (status + room), then toggle rows and date headers.
     function applyFilter() {
         var cards = listEl.querySelectorAll('.rm-card');
         var visibleByBucket = {};
@@ -424,8 +542,7 @@ $js = <<<JS
             var visible = matchStatus && matchRoom;
             card.hidden = !visible;
             if (visible) {
-                var bucket = card.closest('[data-meeting-id]');
-                // Track per-bucket — bucket header is the closest preceding .rm-bucket
+                // Track the closest preceding date bucket for this card.
                 var bucketHeader = card.previousElementSibling;
                 while (bucketHeader && !bucketHeader.classList.contains('rm-bucket')) {
                     bucketHeader = bucketHeader.previousElementSibling;
@@ -437,7 +554,6 @@ $js = <<<JS
             }
         });
 
-        // Hide bucket headers with no visible cards
         listEl.querySelectorAll('.rm-bucket').forEach(function(hdr) {
             hdr.hidden = !visibleByBucket[hdr.dataset.bucket];
         });
@@ -446,8 +562,7 @@ $js = <<<JS
         if (noResults) noResults.classList.toggle('d-none', totalVisible > 0);
     }
 
-    // ── Pill filter (status)
-    document.querySelectorAll('input[name="rm-status-filter"]').forEach(function(radio) {
+    document.querySelectorAll('input[name="status"]').forEach(function(radio) {
         radio.addEventListener('change', function() {
             if (!this.checked) return;
             state.status = this.value;
@@ -456,37 +571,33 @@ $js = <<<JS
             });
             this.closest('label').classList.add('is-active');
             applyFilter();
-            syncStatChip();
+            syncHeroStats();
         });
     });
 
-    // ── Stat chip active state mirrors current status
-    function syncStatChip() {
-        document.querySelectorAll('.rm-stat').forEach(function(chip) {
+    function syncHeroStats() {
+        document.querySelectorAll('.app-stat[data-status-filter]').forEach(function(chip) {
             chip.classList.toggle('is-active', chip.dataset.statusFilter === state.status);
         });
     }
 
-    // ── Stat chip click → set filter without page reload
-    document.querySelectorAll('.rm-stat').forEach(function(chip) {
+    document.querySelectorAll('.app-stat[data-status-filter]').forEach(function(chip) {
         chip.addEventListener('click', function(e) {
-            var s = this.dataset.statusFilter;
-            if (!s) return;
+            var status = this.dataset.statusFilter;
+            if (!status) return;
             e.preventDefault();
-            state.status = s;
-            // Sync pill group
-            var pill = document.querySelector('input[name="rm-status-filter"][value="' + s + '"]');
+            var pill = document.querySelector('input[name="status"][value="' + status + '"]');
             if (pill) {
                 pill.checked = true;
                 pill.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                applyFilter();
-                syncStatChip();
+                return;
             }
+            state.status = status;
+            applyFilter();
+            syncHeroStats();
         });
     });
 
-    // ── Room dropdown
     var roomFilter = document.getElementById('rm-room-filter');
     if (roomFilter) {
         roomFilter.addEventListener('change', function() {
@@ -495,14 +606,12 @@ $js = <<<JS
         });
     }
 
-    // ── Lucide refresh helper — called by .open-modal initCallback after
-    //    the modal body is injected, so any data-lucide icons get rendered.
+    // Called by .open-modal initCallback after the modal body is injected.
     window.lucideRefresh = function() {
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     };
 
-    // ── Action buttons → Swal confirm + AJAX (delegated at document level so
-    //    main-modal footer buttons share the same handler).
+    // Action buttons use delegated handlers because modal footer buttons share the same flow.
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.rm-action');
         if (!btn) return;
@@ -572,9 +681,8 @@ $js = <<<JS
         }
     });
 
-    // Initial filter pass — controller pre-renders all, JS hides per current state
     applyFilter();
-    syncStatChip();
+    syncHeroStats();
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_READY);

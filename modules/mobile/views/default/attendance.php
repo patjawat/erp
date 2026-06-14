@@ -1,5 +1,6 @@
 <?php
 
+use app\components\ThaiDateHelper;
 use yii\bootstrap5\Html;
 use yii\helpers\Url;
 use app\modules\attendance\models\CheckinRecord;
@@ -9,6 +10,7 @@ use app\modules\attendance\models\CheckinRecord;
 /** @var \app\modules\hr\models\Employees $employee */
 /** @var \app\modules\attendance\models\CheckinLocation[] $geofences */
 /** @var CheckinRecord|null $lastCheckin */
+/** @var CheckinRecord[] $history */
 
 $this->params['current_page'] = $current_page ?? 'attendance';
 $this->params['mobileTitle'] = 'ลงเวลา';
@@ -118,9 +120,181 @@ $csrfTokenJs = json_encode(Yii::$app->request->csrfToken);
     <div id="checkin-result" class="alert rounded-3 mb-0 d-none" role="alert"></div>
 
     <p class="small text-body-secondary text-center mb-2 px-2">หลังบันทึกแล้วรอหัวหน้าอนุมัติตามกระบวนการขององค์กร</p>
+
+    <!-- ────────── ประวัติบันทึกเวลา (14 วันล่าสุด) ────────── -->
+    <?php
+    $history = $history ?? [];
+    // group by date (Y-m-d), value = list of records
+    $grouped = [];
+    foreach ($history as $rec) {
+        $ts = strtotime((string) $rec->checkin_at);
+        if ($ts === false) continue;
+        $dateKey = date('Y-m-d', $ts);
+        $grouped[$dateKey][] = $rec;
+    }
+    krsort($grouped);
+    ?>
+    <section class="att-history" aria-labelledby="att-history-title">
+        <header class="att-history-head">
+            <h2 class="att-history-title" id="att-history-title">
+                <i data-lucide="history" aria-hidden="true"></i>
+                ประวัติบันทึกเวลา
+            </h2>
+            <span class="att-history-sub">14 วันล่าสุด</span>
+        </header>
+
+        <?php if (empty($grouped)): ?>
+            <div class="att-history-empty">
+                <i data-lucide="calendar-x" aria-hidden="true"></i>
+                <p class="mb-0 mt-2">ยังไม่มีบันทึกในช่วง 14 วันที่ผ่านมา</p>
+            </div>
+        <?php else: ?>
+            <ol class="att-day-list" aria-label="ประวัติรายวัน">
+                <?php $dayIdx = 0; foreach ($grouped as $dateKey => $records):
+                    $dayIdx++;
+                    try { $dateLabel = ThaiDateHelper::formatThaiDate($dateKey, 'long'); }
+                    catch (\Throwable $e) { $dateLabel = $dateKey; }
+                    $dayOfWeek = ['อา','จ','อ','พ','พฤ','ศ','ส'][(int) date('w', strtotime($dateKey))];
+                ?>
+                    <li class="att-day" style="--att-i: <?= $dayIdx ?>">
+                        <header class="att-day-head">
+                            <div class="att-day-date">
+                                <span class="att-day-dow"><?= Html::encode($dayOfWeek) ?></span>
+                                <span class="att-day-num"><?= (int) date('j', strtotime($dateKey)) ?></span>
+                            </div>
+                            <div class="att-day-label"><?= Html::encode($dateLabel) ?></div>
+                        </header>
+                        <ul class="att-record-list">
+                            <?php foreach ($records as $rec):
+                                $ts = strtotime((string) $rec->checkin_at);
+                                $time = $ts !== false ? date('H:i', $ts) : '-';
+                                $isIn = ($rec->check_type ?? '') === CheckinRecord::CHECK_TYPE_IN;
+                                $statusVal = (string) ($rec->status ?? '');
+                                $statusTone = 'secondary';
+                                if ($statusVal === CheckinRecord::STATUS_APPROVED)      $statusTone = 'success';
+                                elseif ($statusVal === CheckinRecord::STATUS_REJECTED)  $statusTone = 'danger';
+                                elseif ($statusVal === CheckinRecord::STATUS_PENDING)   $statusTone = 'warning';
+                                $methodLbl = $rec->getMethodLabel();
+                            ?>
+                                <li class="att-record" data-type="<?= $isIn ? 'in' : 'out' ?>">
+                                    <span class="att-record-icon" aria-hidden="true">
+                                        <i data-lucide="<?= $isIn ? 'log-in' : 'log-out' ?>"></i>
+                                    </span>
+                                    <div class="att-record-meta">
+                                        <div class="att-record-row">
+                                            <span class="att-record-type"><?= $isIn ? 'เข้างาน' : 'ออกงาน' ?></span>
+                                            <span class="att-record-time"><?= Html::encode($time) ?></span>
+                                        </div>
+                                        <div class="att-record-sub">
+                                            <span class="att-record-method"><?= Html::encode($methodLbl) ?></span>
+                                            <?php if ((int) ($rec->is_in_location ?? 0) === 0 && !empty($rec->location_id)): ?>
+                                                <span class="att-record-flag">นอกพื้นที่</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <span class="att-record-pill" data-tone="<?= Html::encode($statusTone) ?>">
+                                        <?= Html::encode($rec->getStatusLabel()) ?>
+                                    </span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+        <?php endif; ?>
+    </section>
 </div>
 
 </div>
+
+<style>
+.att-history { margin-top: var(--space-md); }
+.att-history-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--space-sm); padding: 0 var(--space-2xs);
+    margin-bottom: var(--space-sm);
+}
+.att-history-title {
+    margin: 0; font-size: var(--fs-lg); font-weight: 800; color: var(--ink);
+    line-height: 1.2; display: inline-flex; align-items: center; gap: var(--space-2xs);
+}
+.att-history-title svg { width: 1.125rem; height: 1.125rem; color: var(--mobile-primary); }
+.att-history-sub { font-size: var(--fs-xs); color: var(--ink-4); font-weight: 600; }
+
+.att-history-empty {
+    text-align: center; padding: var(--space-xl) var(--space-md);
+    background: var(--surface); border-radius: 16px;
+    color: var(--ink-3); font-size: var(--fs-sm);
+    box-shadow: var(--shadow-sm);
+}
+.att-history-empty svg { width: 2rem; height: 2rem; color: var(--ink-4); }
+
+.att-day-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.att-day {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    opacity: 0; transform: translateY(6px);
+    animation: att-day-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--att-i, 1) * 50ms);
+}
+@keyframes att-day-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+.att-day-head {
+    display: flex; align-items: center; gap: var(--space-sm);
+    padding-bottom: var(--space-xs); margin-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--ink-line);
+}
+.att-day-date {
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 12px;
+    background: var(--mobile-primary-soft); color: var(--mobile-primary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.att-day-dow { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.02em; }
+.att-day-num { font-size: 1.125rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.att-day-label { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+
+.att-record-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+.att-record {
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: 12px;
+    background: var(--surface-2);
+}
+.att-record-icon {
+    width: 2rem; height: 2rem; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.att-record-icon svg { width: 1rem; height: 1rem; }
+.att-record[data-type="in"]  .att-record-icon { background: var(--success-soft); color: var(--success); }
+.att-record[data-type="out"] .att-record-icon { background: color-mix(in oklch, var(--ink-4) 18%, transparent); color: var(--ink-3); }
+
+.att-record-meta { min-width: 0; }
+.att-record-row { display: flex; align-items: baseline; gap: var(--space-xs); }
+.att-record-type { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); }
+.att-record-time { font-size: var(--fs-md); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.att-record-sub { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-xs); margin-top: 2px; font-size: var(--fs-xs); color: var(--ink-3); }
+.att-record-flag { color: var(--warning); font-weight: 700; }
+.att-record-pill {
+    flex-shrink: 0; padding: 3px 10px; border-radius: 999px;
+    font-size: var(--fs-2xs); font-weight: 700; line-height: 1.4;
+}
+.att-record-pill[data-tone="success"]   { background: var(--success-soft);  color: var(--success); }
+.att-record-pill[data-tone="warning"]   { background: var(--warning-soft);  color: var(--warning); }
+.att-record-pill[data-tone="danger"]    { background: var(--danger-soft);   color: var(--danger-strong); }
+.att-record-pill[data-tone="secondary"] { background: color-mix(in oklch, var(--ink-4) 15%, transparent); color: var(--ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+    .att-day { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+</style>
 
 <?php
 $this->registerJs(<<<JS

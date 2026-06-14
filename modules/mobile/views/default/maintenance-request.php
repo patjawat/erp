@@ -1,230 +1,253 @@
 <?php
 
+use app\components\ThaiDateHelper;
+use app\modules\mobile\services\MobileMaintenanceService;
 use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
-$this->params['current_page']   = $current_page ?? 'services';
-$this->params['mobileTitle']    = 'แจ้งซ่อม';
-$this->params['mobileSubtitle'] = 'แจ้งปัญหาอุปกรณ์หรือสถานที่ พร้อมแนบรูป';
+/** @var MobileMaintenanceService $service */
+/** @var \app\modules\helpdesk2\models\Helpdesk[] $myRequests */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var array $bucketCounts */
 
-$problemTypes = [
-    ''  => '— เลือกประเภทปัญหา —',
-    '1' => 'ไฟฟ้า / ไฟดับ',
-    '2' => 'ประปา / น้ำรั่ว',
-    '3' => 'เครื่องปรับอากาศ',
-    '4' => 'อุปกรณ์สำนักงาน (เครื่องพิมพ์, คอมพิวเตอร์)',
-    '5' => 'อาคาร / ผนัง / ประตู',
-    '6' => 'อื่นๆ',
-];
+$this->params['current_page']   = $current_page ?? 'services';
+$this->params['mobileTitle']    = 'ประวัติแจ้งซ่อม';
+$this->params['mobileSubtitle'] = 'งานแจ้งซ่อมของฉัน';
+
+$myRequests    = $myRequests ?? [];
+$fiscalYears   = $fiscalYears ?? [];
+$filterYear    = (int) ($filterYear ?? 0);
+$bucketCounts  = $bucketCounts ?? ['all' => 0, 'pending' => 0, 'done' => 0, 'cancelled' => 0];
+
+$baseUrl  = Url::to(['/mobile/default/maintenance-request']);
+// ปุ่ม "แจ้งซ่อมใหม่" ไปที่ wizard เดียวกันกับเข้าจากหน้า asset (จากปลั๊กอินใหม่ repair-request)
+$newUrl   = Url::to(['/mobile/default/repair-request']);
+
+// Hero stats overlay (เปิดเมื่อมี ≥3 รายการ)
+$showHeroStats = (int) $bucketCounts['all'] >= 3;
+ob_start(); ?>
+<?php if ($showHeroStats): ?>
+<nav class="app-stats" data-cols="3" aria-label="สรุปงานแจ้งซ่อม">
+    <a href="<?= Html::encode(Url::to(['/mobile/default/maintenance-request', 'year' => $filterYear])) ?>"
+       class="app-stat" data-tone="primary">
+        <span class="app-stat-num"><?= (int) $bucketCounts['all'] ?></span>
+        <span class="app-stat-lbl">ทั้งหมด</span>
+    </a>
+    <span class="app-stat" data-tone="warning">
+        <span class="app-stat-num"><?= (int) $bucketCounts['pending'] ?></span>
+        <span class="app-stat-lbl">กำลังดำเนินการ</span>
+    </span>
+    <span class="app-stat" data-tone="success">
+        <span class="app-stat-num"><?= (int) $bucketCounts['done'] ?></span>
+        <span class="app-stat-lbl">ซ่อมเสร็จแล้ว</span>
+    </span>
+</nav>
+<?php endif; ?>
+<?php $overlayHtml = ob_get_clean();
+$overlayHtml = trim($overlayHtml) !== '' ? $overlayHtml : null;
 ?>
+
 <style>
-.btn-maint-submit {
-    border-radius: 12px;
-    padding: 0.875rem 1.25rem;
-    font-size: 1.0625rem;
-    font-weight: 600;
+/* ───── Maintenance list (bm-) ───── */
+.bm-root { margin: -1rem -1rem 0; display: flex; flex-direction: column; }
+.bm-scroll { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 9.5rem); }
+
+.bm-list-toolbar {
+    position: sticky; top: var(--shell-h, 13rem);
+    z-index: calc(var(--z-sticky) - 1);
+    background: var(--surface);
+    padding: var(--space-md);
+    box-shadow: 0 1px 0 var(--ink-line), 0 2px 8px color-mix(in oklch, var(--ink) 4%, transparent);
 }
-.maint-btn-camera, .maint-btn-gallery {
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    font-weight: 500;
-    border: 2px dashed #dee2e6;
-    background: #fff;
-    color: #6c757d;
-    transition: border-color 0.2s ease, background 0.2s ease;
+.bm-filter-form { display: flex; align-items: center; gap: var(--space-sm); margin: 0; }
+.bm-filter-label { font-size: var(--fs-sm); font-weight: 600; color: var(--ink-3); flex-shrink: 0; }
+.bm-filter-select {
+    flex-grow: 1; min-height: 2.75rem;
+    border-radius: 12px; border: 1px solid var(--ink-line);
+    background: var(--surface);
+    padding: 0 var(--space-md);
+    font-size: var(--fs-md); font-weight: 600;
+    color: var(--ink);
 }
-.maint-btn-camera:hover, .maint-btn-gallery:hover {
-    border-color: var(--mobile-primary);
-    background: var(--mobile-primary-soft);
-    color: var(--mobile-primary);
+
+.bm-list { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
+.bm-list-card {
+    display: flex; flex-direction: column; gap: var(--space-xs);
+    padding: var(--space-md);
+    border-radius: 14px; border: 1px solid var(--ink-line);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    color: inherit; text-decoration: none;
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.maint-preview-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-.maint-preview-item {
-    position: relative;
-    width: 4.5rem;
-    height: 4.5rem;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f1f3f5;
-    flex-shrink: 0;
+.bm-list-card:active { transform: scale(0.985); box-shadow: var(--shadow-md); }
+.bm-list-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.bm-list-title {
+    font-size: var(--fs-md); font-weight: 700; color: var(--ink); line-height: 1.3;
+    word-break: break-word; flex: 1; min-width: 0;
 }
-.maint-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-.maint-preview-item .maint-preview-remove {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: 0;
-    padding: 0;
-    font-size: 0.75rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.bm-list-pill {
+    flex-shrink: 0; border-radius: 999px; padding: 4px 10px;
+    font-size: var(--fs-2xs); font-weight: 700; line-height: 1.4;
 }
-.maint-qr-section {
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    background: var(--mobile-primary-soft);
-    border: 1px solid var(--mobile-primary-soft-border);
+.bm-list-pill[data-tone="warning"]   { background: var(--warning-soft);  color: var(--warning); }
+.bm-list-pill[data-tone="info"]      { background: var(--mobile-primary-soft); color: var(--mobile-primary); }
+.bm-list-pill[data-tone="success"]   { background: var(--success-soft);  color: var(--success); }
+.bm-list-pill[data-tone="danger"]    { background: var(--danger-soft);   color: var(--danger-strong); }
+.bm-list-pill[data-tone="secondary"] { background: color-mix(in oklch, var(--ink-4) 15%, transparent); color: var(--ink-3); }
+.bm-list-meta { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-md); font-size: var(--fs-xs); color: var(--ink-3); }
+.bm-list-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+.bm-list-meta-item svg { width: 12px; height: 12px; color: var(--ink-4); }
+.bm-list-rating {
+    display: inline-flex; align-items: center; gap: 2px;
+    color: #b45309; font-size: var(--fs-xs); font-weight: 700;
+}
+
+.bm-list-empty {
+    margin: var(--space-lg) var(--space-md) 0;
+    padding: var(--space-2xl) var(--space-md); text-align: center;
+    border-radius: 16px; background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+.bm-list-empty-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 4rem; height: 4rem; border-radius: 50%;
+    background: var(--mobile-primary-soft); color: var(--mobile-primary);
+    margin-bottom: var(--space-md);
+}
+.bm-list-empty-title { font-size: var(--fs-lg); font-weight: 700; color: var(--ink); margin: 0 0 var(--space-2xs); }
+.bm-list-empty-text { font-size: var(--fs-sm); color: var(--ink-3); margin: 0 auto; max-width: 30ch; line-height: 1.55; }
+
+/* Sticky bottom action — "แจ้งซ่อมใหม่" → wizard */
+.bm-actions {
+    position: fixed; left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4.75rem);
+    background: var(--surface); padding: var(--space-md);
+    box-shadow: 0 -4px 16px color-mix(in oklch, var(--ink) 8%, transparent);
+    border-top: 1px solid var(--ink-line);
+    z-index: 1031;
+    display: grid; gap: var(--space-xs);
+}
+.bm-actions .btn {
+    min-height: 3rem; border-radius: 12px;
+    font-size: var(--fs-md); font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: var(--space-2xs);
+    transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1),
+                background-color 180ms ease-out, transform 120ms ease-out;
+}
+.bm-actions .btn:active { transform: scale(0.985); }
+
+@media (prefers-reduced-motion: reduce) {
+    .bm-list-card, .bm-actions .btn { transition: none !important; }
 }
 </style>
 
-<?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
-    'icon'     => 'wrench',
-    'title'    => $this->params['mobileTitle'],
-    'subtitle' => $this->params['mobileSubtitle'],
-]) ?>
+<div class="bm-root">
 
-<div class="app-scroll">
+    <?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
+        'icon'        => 'wrench',
+        'title'       => $this->params['mobileTitle'],
+        'subtitle'    => $this->params['mobileSubtitle'],
+        'overlayHtml' => $overlayHtml,
+    ]) ?>
 
-<?php $form = ActiveForm::begin([
-    'id' => 'mobile-maintenance-form',
-    'options' => ['class' => '', 'enctype' => 'multipart/form-data'],
-]); ?>
+    <div class="app-scroll <?= $showHeroStats ? 'has-overlay' : '' ?> bm-scroll">
 
-<div class="card maint-card mb-3">
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label fw-medium">ประเภทปัญหา <span class="text-danger">*</span></label>
-            <select name="problem_type" id="problem-type" class="form-select" required>
-                <?php foreach ($problemTypes as $value => $label): ?>
-                    <option value="<?= Html::encode($value) ?>"><?= Html::encode($label) ?></option>
+        <?php if (Yii::$app->session->hasFlash('success')): ?>
+            <div class="alert alert-success rounded-3 mx-3 mt-3 mb-0" role="status"><?= Html::encode(Yii::$app->session->getFlash('success')) ?></div>
+        <?php endif; ?>
+        <?php if (Yii::$app->session->hasFlash('error')): ?>
+            <div class="alert alert-danger rounded-3 mx-3 mt-3 mb-0" role="alert"><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div>
+        <?php endif; ?>
+
+        <div class="bm-list-toolbar">
+            <form method="get" action="<?= Html::encode($baseUrl) ?>" class="bm-filter-form">
+                <label for="bm-year-filter" class="bm-filter-label">ปีงบประมาณ</label>
+                <select name="year" id="bm-year-filter" class="bm-filter-select"
+                        onchange="this.form.submit()" aria-label="กรองตามปีงบประมาณ">
+                    <?php foreach ($fiscalYears as $year => $label): ?>
+                        <option value="<?= (int) $year ?>" <?= (int) $year === $filterYear ? 'selected' : '' ?>>
+                            <?= Html::encode($label) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+        </div>
+
+        <?php if (empty($myRequests)): ?>
+            <div class="bm-list-empty">
+                <span class="bm-list-empty-icon" aria-hidden="true">
+                    <i data-lucide="wrench" class="mi-xl"></i>
+                </span>
+                <p class="bm-list-empty-title">ยังไม่มีงานแจ้งซ่อมในปีนี้</p>
+                <p class="bm-list-empty-text">เมื่อมีอุปกรณ์เสีย แตะปุ่ม "แจ้งซ่อมใหม่" ด้านล่างเพื่อเปิดฟอร์ม</p>
+            </div>
+        <?php else: ?>
+            <div class="bm-list">
+                <?php foreach ($myRequests as $row):
+                    $info       = $service->statusInfo((string) $row->status);
+                    $infoTone   = (string) $info['tone'];
+                    $infoLabel  = (string) $info['label'];
+                    $title      = (string) ($row->title ?? 'งานซ่อม');
+                    $repairNo   = (string) ($row->repair_number ?? '');
+                    $createdAt  = '';
+                    if (!empty($row->created_at)) {
+                        try { $createdAt = ThaiDateHelper::formatThaiDate((string) $row->created_at, 'short'); }
+                        catch (\Throwable $e) { $createdAt = (string) $row->created_at; }
+                    }
+                    $rating = trim((string) ($row->rating ?? ''));
+                    $location = (string) (is_array($row->data_json ?? null) ? ($row->data_json['location'] ?? '') : '');
+                ?>
+                    <a class="bm-list-card"
+                       href="<?= Html::encode(Url::to(['/mobile/default/maintenance-view', 'id' => $row->id])) ?>">
+                        <header class="bm-list-card-head">
+                            <span class="bm-list-title"><?= Html::encode($title) ?></span>
+                            <span class="bm-list-pill" data-tone="<?= Html::encode($infoTone) ?>">
+                                <?= Html::encode($infoLabel) ?>
+                            </span>
+                        </header>
+                        <div class="bm-list-meta">
+                            <?php if ($repairNo): ?>
+                                <span class="bm-list-meta-item">
+                                    <i data-lucide="hash" aria-hidden="true"></i>
+                                    <?= Html::encode($repairNo) ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if ($createdAt): ?>
+                                <span class="bm-list-meta-item">
+                                    <i data-lucide="calendar" aria-hidden="true"></i>
+                                    <?= Html::encode($createdAt) ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if ($location): ?>
+                                <span class="bm-list-meta-item">
+                                    <i data-lucide="map-pin" aria-hidden="true"></i>
+                                    <?= Html::encode($location) ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if ($rating !== '' && $rating !== '0'): ?>
+                                <span class="bm-list-rating" aria-label="คะแนน <?= Html::encode($rating) ?> จาก 5">
+                                    <i data-lucide="star" aria-hidden="true" style="width:12px;height:12px;fill:currentColor;"></i>
+                                    <?= Html::encode($rating) ?>/5
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </a>
                 <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">สถานที่ <span class="text-danger">*</span></label>
-            <input type="text" name="location" class="form-control" placeholder="เช่น ชั้น 3 ห้อง 301, อาคาร A" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-medium">รายละเอียดปัญหา <span class="text-danger">*</span></label>
-            <textarea name="description" class="form-control" rows="3" placeholder="อธิบายอาการหรือความเสียหายที่พบ" required></textarea>
-        </div>
-
-        <!-- QR ครุภัณฑ์ (optional) -->
-        <div class="mb-3 maint-qr-section">
-            <label class="form-label fw-medium mb-2">ครุภัณฑ์ที่เกี่ยวข้อง (ไม่บังคับ)</label>
-            <div class="d-flex gap-2 flex-wrap">
-                <input type="text" name="asset_code" id="asset-code" class="form-control flex-grow-1" style="min-width: 8rem;" placeholder="รหัสครุภัณฑ์">
-                <a href="<?= Html::encode(Url::to(['/mobile/default/scan', 'return' => 'maintenance'])) ?>" class="btn btn-outline-primary d-flex align-items-center gap-1" style="border-radius: 12px;">
-                    <i data-lucide="qr-code" class="mi-sm"></i>
-                    สแกน QR
-                </a>
             </div>
-        </div>
+        <?php endif; ?>
 
-        <!-- แนบรูปภาพ -->
-        <div class="mb-0">
-            <label class="form-label fw-medium">แนบรูปภาพ</label>
-            <input type="file" name="photos[]" id="maint-photos" class="d-none" accept="image/*" multiple>
-            <input type="file" id="maint-photos-camera" class="d-none" accept="image/*" capture="environment" multiple>
-            <div class="d-flex gap-2 flex-wrap">
-                <button type="button" class="btn maint-btn-camera d-flex align-items-center gap-2" id="btn-camera">
-                    <i data-lucide="camera" class="mi-md"></i>
-                    ถ่ายรูป
-                </button>
-                <button type="button" class="btn maint-btn-gallery d-flex align-items-center gap-2" id="btn-gallery">
-                    <i data-lucide="image" class="mi-md"></i>
-                    เลือกจากแกลเลอรี
-                </button>
-            </div>
-            <div id="maint-preview" class="maint-preview-list"></div>
-        </div>
+    </div>
+
+    <div class="bm-actions">
+        <a href="<?= Html::encode($newUrl) ?>" class="btn btn-primary">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            <span>แจ้งซ่อมใหม่</span>
+        </a>
     </div>
 </div>
-
-<div class="d-grid mb-3">
-    <button type="submit" class="btn btn-primary btn-maint-submit" name="action" value="submit">
-        <i data-lucide="send" class="me-2" style="width: 1.25rem; height: 1.25rem; vertical-align: -0.3em;"></i>
-        ส่งแจ้งซ่อม
-    </button>
-</div>
-
-<?php ActiveForm::end(); ?>
-
-</div>
-
-<?php
-$js = <<<'JS'
-(function() {
-    var cameraInput = document.getElementById('maint-photos-camera');
-    var galleryInput = document.getElementById('maint-photos');
-    var btnCamera = document.getElementById('btn-camera');
-    var btnGallery = document.getElementById('btn-gallery');
-    var previewEl = document.getElementById('maint-preview');
-
-    var collectedFiles = [];
-
-    function addFiles(files) {
-        for (var i = 0; i < files.length; i++) {
-            if (files[i].type.indexOf('image/') !== 0) continue;
-            collectedFiles.push(files[i]);
-        }
-        renderPreview();
-        syncHiddenInput();
-    }
-    function removeFile(index) {
-        collectedFiles.splice(index, 1);
-        renderPreview();
-        syncHiddenInput();
-    }
-    function renderPreview() {
-        previewEl.innerHTML = '';
-        collectedFiles.forEach(function(file, i) {
-            var div = document.createElement('div');
-            div.className = 'maint-preview-item';
-            var img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.alt = '';
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'maint-preview-remove';
-            btn.setAttribute('aria-label', 'ลบรูป');
-            btn.textContent = '×';
-            btn.addEventListener('click', function() { removeFile(i); });
-            div.appendChild(img);
-            div.appendChild(btn);
-            previewEl.appendChild(div);
-        });
-    }
-    function syncHiddenInput() {
-        var dt = new DataTransfer();
-        collectedFiles.forEach(function(f) { dt.items.add(f); });
-        if (galleryInput) galleryInput.files = dt.files;
-    }
-
-    var formMaint = document.getElementById('mobile-maintenance-form');
-    if (formMaint) {
-        formMaint.addEventListener('submit', function(e) {
-            if (!window.mobileConfirm(this, 'คุณต้องการบันทึกข้อมูลใช่หรือไม่?')) e.preventDefault();
-        });
-    }
-    if (btnCamera && cameraInput) {
-        btnCamera.addEventListener('click', function() { cameraInput.click(); });
-        cameraInput.addEventListener('change', function() {
-            if (this.files.length) addFiles(Array.prototype.slice.call(this.files));
-            this.value = '';
-        });
-    }
-    if (btnGallery && galleryInput) {
-        btnGallery.addEventListener('click', function() { galleryInput.click(); });
-        galleryInput.addEventListener('change', function() {
-            if (this.files.length) addFiles(Array.prototype.slice.call(this.files));
-            this.value = '';
-        });
-    }
-
-    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-})();
-JS;
-$this->registerJs($js, \yii\web\View::POS_READY);
-?>

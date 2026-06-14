@@ -5,6 +5,7 @@ namespace app\modules\mobile\services;
 use app\components\AppHelper;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
+use app\modules\booking\models\RoomLayout;
 use app\modules\hr\models\Employees;
 use Yii;
 
@@ -78,7 +79,7 @@ class MobileMeetingService
      *                          Default false (= behavior ของหน้า booking-meeting list).
      * @return Meeting[]
      */
-    public function findMyBookings(string $empId, int $limit = 50, bool $withDeleted = false): array
+    public function findMyBookings(string $empId, int $limit = 50, bool $withDeleted = false, ?int $thaiYear = null): array
     {
         try {
             $query = Meeting::find()
@@ -88,10 +89,28 @@ class MobileMeetingService
             if (!$withDeleted) {
                 $query->andWhere(['IS', 'deleted_at', null]);
             }
+            if ($thaiYear !== null) {
+                $query->andWhere(['thai_year' => $thaiYear]);
+            }
             return $query->all();
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /**
+     * รายการปีงบประมาณสำหรับ filter dropdown.
+     *
+     * @return array<int,string>
+     */
+    public function listFiscalYears(int $back = 10): array
+    {
+        $current = (int) AppHelper::YearBudget();
+        $years = [];
+        for ($y = $current; $y > $current - $back; $y--) {
+            $years[$y] = 'พ.ศ. ' . $y;
+        }
+        return $years;
     }
 
     /**
@@ -129,12 +148,20 @@ class MobileMeetingService
                     ''
                 );
 
+                $image = '';
+                try {
+                    $image = (string) $room->showImg();
+                } catch (\Throwable $e) {
+                    $image = '';
+                }
+
                 $cards[(string) $room->code] = [
                     'code'        => (string) $room->code,
                     'title'       => (string) $room->title,
                     'capacity'    => isset($data['seat_capacity']) ? (int) $data['seat_capacity'] : null,
                     'location'    => $location !== '' ? $location : 'ไม่ระบุอาคาร',
                     'accessories' => $accessories,
+                    'image'       => $image,
                 ];
             }
         } catch (\Throwable $e) {
@@ -183,6 +210,33 @@ class MobileMeetingService
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /**
+     * คืน URL รูปของแต่ละ room layout (code => url).
+     * รูปดึงผ่าน RoomLayout::ShowImg() (มี placeholder fallback ในตัว).
+     *
+     * @return array<string,string>
+     */
+    public function listRoomLayoutImages(): array
+    {
+        $map = [];
+        try {
+            $rows = RoomLayout::find()->where(['name' => 'room_layout'])->all();
+            foreach ($rows as $row) {
+                $url = '';
+                try {
+                    $img = $row->ShowImg();
+                    if (is_array($img) && !empty($img['image'])) $url = (string) $img['image'];
+                } catch (\Throwable $e) {
+                    $url = '';
+                }
+                $map[(string) $row->code] = $url;
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+        return $map;
     }
 
     /**

@@ -7,23 +7,42 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var \app\modules\booking\models\Vehicle[] $myBookings */
 /** @var callable $formatThaiDate Closure(?string $d): string */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
 
 $myBookings     = $myBookings ?? [];
 $formatThaiDate = $formatThaiDate ?? static fn ($d) => (string) $d;
+$fiscalYears    = $fiscalYears ?? [];
+$filterYear     = (int) ($filterYear ?? 0);
+$baseUrl        = Url::to(['/mobile/default/booking-vehicle']);
 ?>
 
 <section class="bv-mode bv-mode-list" data-mode-section="list">
 
-    <?php if (!empty($myBookings)): ?>
-        <div class="bv-list-toolbar rounded-3 mx-3 mt-4 mb-0">
+    <div class="bv-list-toolbar rounded-3 mx-3 mt-4 mb-0">
+        <form method="get" action="<?= Html::encode($baseUrl) ?>" class="mobile-year-filter">
+            <label for="bv-year-filter" class="mobile-year-filter-label">
+                <i data-lucide="calendar-days" aria-hidden="true"></i>
+                ปีงบประมาณ
+            </label>
+            <select name="year" id="bv-year-filter" class="mobile-year-filter-select" onchange="this.form.submit()" aria-label="กรองปีงบประมาณ">
+                <?php foreach ($fiscalYears as $year => $label): ?>
+                    <?php $year = (int) $year; ?>
+                    <option value="<?= $year ?>" <?= $filterYear === $year ? 'selected' : '' ?>>
+                        <?= Html::encode($label) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
+        <?php if (!empty($myBookings)): ?>
             <input type="search"
                    id="bv-list-search"
                    class="bv-search"
                    placeholder="ค้นหารหัส, สถานที่, วัตถุประสงค์"
                    autocomplete="off"
                    aria-label="ค้นหารายการคำขอ">
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
     <?php if (empty($myBookings)): ?>
         <div class="bv-list-empty">
@@ -31,7 +50,7 @@ $formatThaiDate = $formatThaiDate ?? static fn ($d) => (string) $d;
                 <i data-lucide="car" class="mi-xl"></i>
             </span>
             <p class="bv-list-empty-title">ยังไม่มีคำขอจองรถ</p>
-            <p class="bv-list-empty-text">เริ่มคำขอแรกของคุณ เจ้าหน้าที่จะตรวจสอบและจัดสรรรถให้ตามเวลาที่ระบุ</p>
+            <p class="bv-list-empty-text">ยังไม่มีคำขอในปีงบประมาณนี้ เริ่มคำขอแรกของคุณได้จากปุ่มด้านล่าง</p>
         </div>
     <?php else: ?>
         <div class="bv-list" id="bv-list">

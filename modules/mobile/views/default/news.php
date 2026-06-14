@@ -8,6 +8,9 @@ use yii\helpers\Url;
 /** @var string $current_page */
 /** @var string $filter */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var int $currentYear */
 
 $this->params['current_page'] = $current_page ?? 'news';
 
@@ -19,6 +22,16 @@ if (!in_array($filter, ['all', 'unread', 'read'], true)) {
 $officialUnreadCount = (int) ($officialUnreadCount ?? 0);
 $officialTotalCount  = (int) ($officialTotalCount ?? 0);
 $officialReadCount   = max(0, $officialTotalCount - $officialUnreadCount);
+$fiscalYears = $fiscalYears ?? [];
+$filterYear = (int) ($filterYear ?? 0);
+$currentYear = (int) ($currentYear ?? 0);
+if (empty($fiscalYears) && $filterYear > 0) {
+    $fiscalYears[$filterYear] = 'พ.ศ. ' . $filterYear;
+}
+$fiscalLabel = $fiscalYears[$filterYear] ?? ($filterYear > 0 ? 'พ.ศ. ' . $filterYear : '');
+$newsUrl = static function (string $nextFilter) use ($filterYear): string {
+    return Url::to(['/mobile/default/news', 'filter' => $nextFilter, 'year' => $filterYear]);
+};
 
 $this->params['mobileTitle']    = 'หนังสือราชการ';
 if ($filter === 'unread') {
@@ -63,6 +76,15 @@ $bucketLabels = [
 
 /* ── Below-hero stack ──────────────────────────────────────────────── */
 .news-body { padding: var(--space-lg) var(--space-md) 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.news-filterbar {
+    position: sticky;
+    top: var(--shell-h, 13rem);
+    z-index: calc(var(--z-sticky) - 1);
+    background: var(--surface);
+    border-radius: 14px;
+    padding: var(--space-sm);
+    box-shadow: 0 1px 0 var(--ink-line), 0 2px 8px color-mix(in oklch, var(--ink) 4%, transparent);
+}
 
 /* ── Date bucket header ───────────────────────────────────────────── */
 .news-bucket {
@@ -195,17 +217,17 @@ $bucketLabels = [
     <?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
         'icon'     => 'mail',
         'title'    => 'หนังสือราชการ',
-        'subtitle' => $officialUnreadCount > 0
+        'subtitle' => ($officialUnreadCount > 0
             ? 'มีหนังสือใหม่ ' . $officialUnreadCount . ' ฉบับรอเปิดอ่าน'
-            : 'ไม่มีหนังสือใหม่ในขณะนี้',
+            : 'ไม่มีหนังสือใหม่ในขณะนี้') . ($fiscalLabel !== '' ? ' ปีงบประมาณ ' . $fiscalLabel : ''),
         'stats' => [
-            ['url' => Url::to(['/mobile/default/news', 'filter' => 'all']),
+            ['url' => $newsUrl('all'),
              'value' => $officialTotalCount,  'label' => 'ทั้งหมด',   'tone' => 'primary',
              'isActive' => $filter === 'all'],
-            ['url' => Url::to(['/mobile/default/news', 'filter' => 'unread']),
+            ['url' => $newsUrl('unread'),
              'value' => $officialUnreadCount, 'label' => 'ยังไม่อ่าน', 'tone' => 'warning',
              'isActive' => $filter === 'unread'],
-            ['url' => Url::to(['/mobile/default/news', 'filter' => 'read']),
+            ['url' => $newsUrl('read'),
              'value' => $officialReadCount,   'label' => 'อ่านแล้ว',   'tone' => 'success',
              'isActive' => $filter === 'read'],
         ],
@@ -215,6 +237,23 @@ $bucketLabels = [
     <div class="app-scroll has-stats">
     <!-- ── Below-hero stack ────────────────────────────────────── -->
     <div class="news-body">
+        <div class="news-filterbar">
+            <form method="get" action="<?= Html::encode(Url::to(['/mobile/default/news'])) ?>" class="mobile-year-filter">
+                <input type="hidden" name="filter" value="<?= Html::encode($filter) ?>">
+                <label for="news-year-filter" class="mobile-year-filter-label">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    ปีงบประมาณ
+                </label>
+                <select name="year" id="news-year-filter" class="mobile-year-filter-select" onchange="this.form.submit()" aria-label="กรองปีงบประมาณ">
+                    <?php foreach ($fiscalYears as $year => $label): ?>
+                        <?php $year = (int) $year; ?>
+                        <option value="<?= $year ?>" <?= $filterYear === $year ? 'selected' : '' ?>>
+                            <?= Html::encode($label) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
+        </div>
 
         <?php if (empty($documents)): ?>
             <?php
@@ -232,7 +271,7 @@ $bucketLabels = [
                 <p class="news-empty-title"><?= Html::encode($cfg['title']) ?></p>
                 <p class="news-empty-text"><?= Html::encode($cfg['text']) ?></p>
                 <?php if ($filter !== 'all' && $officialTotalCount > 0): ?>
-                    <a href="<?= Html::encode(Url::to(['/mobile/default/news', 'filter' => 'all'])) ?>"
+                    <a href="<?= Html::encode($newsUrl('all')) ?>"
                        class="btn btn-outline-primary rounded-3 fw-medium">ดูหนังสือทั้งหมด</a>
                 <?php else: ?>
                     <a href="<?= Html::encode(Url::to(['/mobile/default/index'])) ?>"

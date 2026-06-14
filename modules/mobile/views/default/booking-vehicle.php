@@ -13,12 +13,25 @@ use yii\helpers\Url;
 /** @var array $saveErrors */
 /** @var string|null $forceMode */
 /** @var bool|null $isEdit */
+/** @var array $cars     รายการรถ (controller เตรียมให้ผ่าน MobileVehicleService::listCars) */
+/** @var array $drivers  รายการคนขับ (controller เตรียมให้ผ่าน MobileVehicleService::listDrivers) */
+/** @var array<int,string> $fiscalYears */
+/** @var int $filterYear */
+/** @var int $currentYear */
 
 $this->params['current_page'] = $current_page ?? 'services';
 $this->params['mobileTitle']  = 'จองรถราชการ';
 
 $myBookings = $myBookings ?? [];
 $saveErrors = $saveErrors ?? [];
+$cars       = $cars ?? [];
+$drivers    = $drivers ?? [];
+$fiscalYears = $fiscalYears ?? [];
+$filterYear = (int) ($filterYear ?? 0);
+$currentYear = (int) ($currentYear ?? 0);
+if (empty($fiscalYears) && $filterYear > 0) {
+    $fiscalYears[$filterYear] = 'พ.ศ. ' . $filterYear;
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // Mode detection — view คำนวณ mode จาก server-side state
@@ -47,7 +60,7 @@ if (!empty($forceMode)) {
 
 $this->params['mobileSubtitle'] = $mode === 'wizard'
     ? ($isEdit ? 'แก้ไขข้อมูลคำขอ' : 'กรอกข้อมูลทีละขั้นตอน')
-    : ($mode === 'success' ? 'บันทึกคำขอเรียบร้อย' : 'รายการคำขอของฉัน');
+    : ($mode === 'success' ? 'บันทึกคำขอเรียบร้อย' : 'รายการคำขอของฉัน' . ($filterYear > 0 ? ' ปีงบประมาณ ' . ($fiscalYears[$filterYear] ?? ('พ.ศ. ' . $filterYear)) : ''));
 
 // Status bucket counts สำหรับ hero stats (presentation — ใช้ helper เดียวกับ partial)
 $bucketCounts = MobileBookingStatus::bucketCounts($myBookings);
@@ -133,6 +146,9 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
     /* Soft hairline + drop shadow appears once cards scroll behind it */
     box-shadow: 0 1px 0 var(--ink-line),
                 0 2px 8px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
 }
 .bv-search {
     display: block;
@@ -394,8 +410,33 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
     list-style: none;
     margin: 0; padding: 0;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: var(--space-2xs);
+}
+/* Compact stepper (progress bar + ชื่อขั้น) สำหรับ <380px */
+.bv-stepper-compact { display: none; }
+.bv-stepper-compact-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: var(--space-xs); margin-top: var(--space-xs);
+    font-size: var(--fs-xs); color: var(--ink-3);
+}
+.bv-stepper-compact-num strong {
+    color: var(--mobile-primary); font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.bv-stepper-compact-name {
+    color: var(--ink-2); font-size: var(--fs-sm); font-weight: 700;
+}
+.bv-progress-track {
+    position: relative; height: 4px; border-radius: 999px;
+    background: var(--surface-3); overflow: hidden;
+}
+.bv-progress-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 14.2857%;
+    background: linear-gradient(90deg, var(--mobile-primary) 0%, color-mix(in oklch, var(--mobile-primary) 70%, white) 100%);
+    border-radius: 999px;
+    transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .bv-wizard-step {
     display: flex; flex-direction: column; align-items: center;
@@ -431,10 +472,10 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
 .bv-wizard-step:not(.is-done) .bv-wizard-pip-check { display: none; }
 
 @media (max-width: 380px) {
-    .bv-wizard-step span:not(.bv-wizard-pip):not(.bv-wizard-pip-num):not(.bv-wizard-pip-check) {
-        display: none;
-    }
-    .bv-wizard-steps { grid-template-columns: repeat(5, auto); justify-content: space-between; }
+    /* ที่ <380px สลับเป็น compact stepper (progress bar + ชื่อขั้นปัจจุบัน)
+       แทน 7-tab grid ที่จะแน่นเกินไป */
+    .bv-wizard { display: none; }
+    .bv-stepper-compact { display: block; padding: var(--space-md) var(--space-md) var(--space-sm); }
 }
 
 .bv-panel {
@@ -698,12 +739,165 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
 .bv-actions[data-mode="wizard"][data-step="1"] #bv-prev { display: none; }
 .bv-actions[data-mode="wizard"] #bv-next   { display: inline-flex; }
 .bv-actions[data-mode="wizard"] #bv-submit { display: none; }
-.bv-actions[data-mode="wizard"][data-step="5"] #bv-next   { display: none; }
-.bv-actions[data-mode="wizard"][data-step="5"] #bv-submit { display: inline-flex; }
+.bv-actions[data-mode="wizard"][data-step="7"] #bv-next   { display: none; }
+.bv-actions[data-mode="wizard"][data-step="7"] #bv-submit { display: inline-flex; }
+
+/* ───── Step error message (a11y aria-live) ───── */
+.bv-step-error {
+    display: none;
+    margin-top: var(--space-sm);
+    border-radius: 12px;
+    background: var(--danger-soft);
+    color: var(--danger-strong);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+}
+.bv-step-error.is-visible { display: block; }
+
+/* ───── Step 4/5 pick cards (car + driver) ───── */
+.bv-pick-clear {
+    display: flex; align-items: center; justify-content: center;
+    gap: var(--space-2xs);
+    width: 100%;
+    min-height: 2.75rem;
+    margin-bottom: var(--space-md);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: 12px;
+    border: 1px dashed var(--ink-line);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: var(--fs-sm); font-weight: 600;
+    transition: border-color 160ms, background 160ms;
+}
+.bv-pick-clear svg { width: 1rem; height: 1rem; }
+.bv-pick-clear.is-active {
+    border-style: solid;
+    border-color: color-mix(in oklch, var(--mobile-primary) 38%, transparent);
+    background: var(--mobile-primary-soft);
+    color: var(--mobile-primary);
+}
+
+.bv-pick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: var(--space-sm);
+}
+.bv-pick-card {
+    display: flex; flex-direction: column;
+    padding: 0; overflow: hidden;
+    border: 1px solid var(--ink-line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: inherit;
+    box-shadow: var(--shadow-sm);
+    text-align: left;
+    transition: border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1),
+                transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bv-pick-card.is-active {
+    border-color: color-mix(in oklch, var(--mobile-primary) 50%, transparent);
+    box-shadow: 0 6px 18px color-mix(in oklch, var(--mobile-primary) 14%, transparent);
+}
+.bv-pick-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-2);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-4);
+}
+.bv-pick-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bv-pick-thumb svg { width: 1.75rem; height: 1.75rem; }
+.bv-pick-body {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: var(--space-sm);
+}
+.bv-pick-title {
+    font-size: var(--fs-sm); font-weight: 700;
+    color: var(--ink); line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bv-pick-meta {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 0.25rem var(--space-xs);
+    font-size: var(--fs-xs); color: var(--ink-3);
+}
+.bv-pick-plate {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+}
+.bv-pick-tag {
+    color: var(--ink-4);
+    font-size: 0.6875rem;
+}
+
+/* Driver pick variant — รูป avatar กลม, layout horizontal-ish */
+.bv-pick-grid-driver {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+.bv-pick-card-driver {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-sm);
+    gap: var(--space-sm);
+}
+.bv-pick-avatar {
+    flex-shrink: 0;
+    width: 3rem; height: 3rem;
+    border-radius: 50%;
+    background: var(--surface-2);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-4);
+}
+.bv-pick-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bv-pick-avatar svg { width: 1.5rem; height: 1.5rem; }
+.bv-pick-card-driver .bv-pick-body { padding: 0; min-width: 0; flex-grow: 1; }
+.bv-pick-card-driver .bv-pick-title { white-space: normal; word-break: break-word; }
+.bv-pick-phone {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+}
+.bv-pick-phone svg { width: 0.8rem; height: 0.8rem; }
+
+/* Empty state (เมื่อไม่มีรถ/ไม่มีคนขับในระบบ) */
+.bv-empty {
+    padding: var(--space-xl) var(--space-md);
+    text-align: center;
+    color: var(--ink-3);
+    border: 1px dashed var(--ink-line);
+    border-radius: 14px;
+    background: var(--surface);
+}
+
+/* hint text ใต้ input */
+.bv-field-hint {
+    margin: 6px 0 0; font-size: var(--fs-xs); color: var(--ink-4);
+}
+
+/* ───── Motion: pick card pulse + tick ───── */
+.bv-pick-card.is-pulse {
+    animation: bv-pick-pulse 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes bv-pick-pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .bv-wizard-fill, .bv-wizard-pip { transition: none !important; }
     .bv-panel.is-active, .bv-success-icon { animation: none !important; }
+    .bv-pick-card, .bv-pick-clear, .bv-progress-fill { transition: none !important; }
+    .bv-pick-card.is-pulse { animation: none !important; }
 }
 </style>
 
@@ -747,6 +941,8 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
             <?= $this->render('_partials/_vehicle_list', [
                 'myBookings'     => $myBookings,
                 'formatThaiDate' => $formatThaiDate,
+                'fiscalYears'    => $fiscalYears,
+                'filterYear'     => $filterYear,
             ]) ?>
         <?php elseif ($mode === 'success'): ?>
             <?= $this->render('_partials/_vehicle_success', [
@@ -766,6 +962,8 @@ $submitText = $isEdit ? 'บันทึกการแก้ไข' : 'ส่�
                 'existingNotes'       => $existingNotes,
                 'requesterName'       => $requesterName,
                 'requesterDept'       => $requesterDept,
+                'cars'                => $cars ?? [],
+                'drivers'             => $drivers ?? [],
             ]) ?>
         <?php endif; ?>
 
@@ -908,7 +1106,16 @@ $js = <<<JS
     // ════════════════════════════════════════════════════════════════════
     // MODE 2 — wizard state machine (only runs when wizard mode is active)
     // ════════════════════════════════════════════════════════════════════
-    var TOTAL_STEPS = 5;
+    var TOTAL_STEPS = 7;
+    var STEP_NAMES = {
+        1: 'วันเวลาเดินทาง',
+        2: 'จุดหมายและวัตถุประสงค์',
+        3: 'ผู้ขอใช้รถ',
+        4: 'เลือกรถ',
+        5: 'คนขับรถ',
+        6: 'รายละเอียดเพิ่มเติม',
+        7: 'ตรวจสอบและยืนยัน'
+    };
     var currentStep = 1;
 
     var panels     = document.querySelectorAll('.bv-panel');
@@ -923,6 +1130,11 @@ $js = <<<JS
     var scrollEl   = document.querySelector('.app-scroll');
     var formEl     = document.getElementById('mobile-booking-vehicle-form');
 
+    // Compact stepper refs (เฉพาะ <380px)
+    var progressFillEl = document.getElementById('bv-progress-fill');
+    var stepNumEl      = document.getElementById('bv-step-num');
+    var stepNameEl     = document.getElementById('bv-step-name');
+
     function setStep(n) {
         n = Math.max(1, Math.min(TOTAL_STEPS, n));
         currentStep = n;
@@ -935,8 +1147,11 @@ $js = <<<JS
         });
         steps.forEach(function(s) {
             var sStep = Number(s.dataset.step);
-            s.classList.toggle('is-active', sStep === n);
+            var active = sStep === n;
+            s.classList.toggle('is-active', active);
             s.classList.toggle('is-done',   sStep < n);
+            if (active) s.setAttribute('aria-current', 'step');
+            else        s.removeAttribute('aria-current');
         });
 
         var pct = (n / TOTAL_STEPS) * 100;
@@ -944,11 +1159,16 @@ $js = <<<JS
         if (track) track.setAttribute('aria-valuenow', String(n));
         if (actions) actions.dataset.step = String(n);
 
+        // Compact stepper sync (สำหรับ <380px)
+        if (progressFillEl) progressFillEl.style.width = pct.toFixed(4) + '%';
+        if (stepNumEl) stepNumEl.textContent = String(n);
+        if (stepNameEl) stepNameEl.textContent = STEP_NAMES[n] || '';
+
         var isLast = (n === TOTAL_STEPS);
         if (submitBtn) submitBtn.disabled = isLast ? !(confirmChk && confirmChk.checked) : true;
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-        if (n === 4) populateSummary();
+        if (isLast) populateSummary();
 
         if (scrollEl) {
             var top = document.getElementById('bv-wizard');
@@ -964,14 +1184,28 @@ $js = <<<JS
         inputs.forEach(function(el) {
             el.classList.remove('bv-field-error');
             if (el.type === 'hidden' || el.disabled || el.hidden) return;
+            // skip visible-but-conditionally-hidden inputs (closest [hidden] wrapper)
+            if (el.closest('[hidden]')) return;
             if (el.willValidate && !el.checkValidity()) {
                 if (!firstInvalid) firstInvalid = el;
                 el.classList.add('bv-field-error');
             }
         });
-        if (n === 1) {
+        // Step 2: validate location ที่เป็น Select2 (Yii-rendered)
+        if (n === 2) {
             var loc = panel.querySelector('select[id\$="-location"]');
             if (loc && !loc.value && !firstInvalid) firstInvalid = loc;
+        }
+        // Step 4 (เลือกรถ): optional — ไม่ blocking (license_plate hidden เป็นค่าเดียวกัน)
+        // Step 5 (คนขับ): ถ้าเลือก "พนักงาน" ต้องเลือกพนักงานจริง
+        if (n === 5) {
+            var driverChoice = document.getElementById('bv-driver');
+            var driverIdEl   = document.getElementById('bv-driver-id');
+            if (driverChoice && String(driverChoice.value) === 'driver') {
+                if (!driverIdEl || !driverIdEl.value) {
+                    if (!firstInvalid) firstInvalid = driverIdEl;
+                }
+            }
         }
         if (firstInvalid) {
             try { firstInvalid.focus({ preventScroll: false }); } catch (e) {}
@@ -1047,13 +1281,24 @@ $js = <<<JS
             tripEnd = 'กลับ ' + timeEnd + ' น.';
         }
 
+        // Driver summary: ถ้าเลือก "พนักงาน" + มี driver_id → แสดงชื่อจาก selected card
+        var driverDetail = driver;
+        var driverIdEl   = document.getElementById('bv-driver-id');
+        if (driver === 'พนักงานขับรถ' && driverIdEl && driverIdEl.value) {
+            var picked = document.querySelector('[data-pick-group="driver"] .bv-pick-card.is-active .bv-pick-title');
+            if (picked) driverDetail = 'พนักงาน: ' + picked.textContent.trim();
+        }
+
         dl('trip', [
             { key: 'ประเภท',     val: goType },
             { key: 'วันที่ออก',   val: tripDate },
             { key: tripEnd ? 'เดินทางกลับ' : '',  val: tripEnd },
+        ].filter(function(r) { return r.key; }));
+
+        dl('destination', [
             { key: 'จุดหมาย',     val: location },
             { key: 'วัตถุประสงค์', val: reason },
-        ].filter(function(r) { return r.key; }));
+        ]);
 
         dl('requester', [
             { key: 'ผู้ขอ',     val: getReadonlyKv('ผู้ขอใช้รถ') },
@@ -1065,7 +1310,7 @@ $js = <<<JS
             { key: 'ประเภทรถ', val: vehicleType },
             { key: 'ทะเบียน',   val: plate },
             { key: 'ระดับด่วน', val: urgent },
-            { key: 'ผู้ขับ',    val: driver },
+            { key: 'ผู้ขับ',    val: driverDetail },
             { key: 'หมายเหตุ',  val: notes },
         ]);
 
@@ -1134,8 +1379,11 @@ $js = <<<JS
     // ════════════════════════════════════════════════════════════════════
     var FIELD_TO_STEP = {
         'vehicle-go_type': 1, 'vehicle-date_start': 1, 'vehicle-time_start': 1,
-        'vehicle-date_end': 1, 'vehicle-time_end': 1, 'vehicle-location': 1, 'vehicle-reason': 1,
-        'vehicle-vehicle_type_id': 3, 'vehicle-license_plate': 3, 'vehicle-urgent': 3
+        'vehicle-date_end': 1, 'vehicle-time_end': 1,
+        'vehicle-location': 2, 'vehicle-reason': 2,
+        'vehicle-license_plate': 4,
+        'vehicle-driver_id': 5,
+        'vehicle-vehicle_type_id': 6, 'vehicle-urgent': 6
     };
     var FIELD_LABEL = {
         'vehicle-go_type': 'ประเภทการเดินทาง', 'vehicle-date_start': 'วันที่ใช้งาน',
@@ -1216,6 +1464,123 @@ $js = <<<JS
             }
         });
     }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4 — car picker / "ไม่ระบุรถ" + Step 5 — driver pill + driver picker
+    // ════════════════════════════════════════════════════════════════════
+    (function initPickers() {
+        var plateInput      = document.getElementById('bv-plate');
+        var plateDisplay    = document.getElementById('bv-plate-display');
+        var carClearBtn     = document.getElementById('bv-car-clear');
+        var driverPillHidden= document.getElementById('bv-driver');
+        var driverIdHidden  = document.getElementById('bv-driver-id');
+        var selfPlateWrap   = document.getElementById('bv-self-plate-wrap');
+        var driverPickWrap  = document.getElementById('bv-driver-pick-wrap');
+
+        function pulseCard(el) {
+            if (!el) return;
+            el.classList.remove('is-pulse');
+            void el.offsetWidth;
+            el.classList.add('is-pulse');
+            setTimeout(function(){ el.classList.remove('is-pulse'); }, 230);
+        }
+
+        function syncCarSelection(plate) {
+            if (plateInput) plateInput.value = plate || '';
+            document.querySelectorAll('[data-pick-group="car"] .bv-pick-card').forEach(function(card){
+                var match = String(card.dataset.pickValue || '') === String(plate || '');
+                card.classList.toggle('is-active', match);
+                if (card.getAttribute('role') === 'radio') card.setAttribute('aria-checked', match ? 'true' : 'false');
+            });
+            if (carClearBtn) {
+                var unset = !plate;
+                carClearBtn.classList.toggle('is-active', unset);
+                carClearBtn.setAttribute('aria-pressed', unset ? 'true' : 'false');
+            }
+            // Mirror ไปยัง self-plate input ด้วย ถ้าผู้ใช้กำลังอยู่ใน self-drive
+            if (plateDisplay && driverPillHidden && driverPillHidden.value === 'self') {
+                plateDisplay.value = plate || '';
+            }
+        }
+
+        function syncDriverChoice(choice) {
+            if (selfPlateWrap)  selfPlateWrap.hidden  = choice !== 'self';
+            if (driverPickWrap) driverPickWrap.hidden = choice !== 'driver';
+            // ล้าง driver_id เมื่อไม่ใช่ "พนักงาน"
+            if (choice !== 'driver' && driverIdHidden) {
+                driverIdHidden.value = '';
+                document.querySelectorAll('[data-pick-group="driver"] .bv-pick-card').forEach(function(c){
+                    c.classList.remove('is-active');
+                    if (c.getAttribute('role') === 'radio') c.setAttribute('aria-checked', 'false');
+                });
+            }
+            // เมื่อเลือก self → mirror ทะเบียนจาก plateInput ไป display เพื่อให้แก้ได้
+            if (choice === 'self' && plateDisplay && plateInput) {
+                plateDisplay.value = plateInput.value || '';
+            }
+        }
+
+        // Car picker click
+        document.querySelectorAll('[data-pick-group="car"] .bv-pick-card').forEach(function(card){
+            card.addEventListener('click', function(){
+                syncCarSelection(card.dataset.pickValue || '');
+                pulseCard(card);
+            });
+        });
+
+        // "ไม่ระบุรถ" click
+        if (carClearBtn) {
+            carClearBtn.addEventListener('click', function(){
+                syncCarSelection('');
+            });
+        }
+
+        // Driver pill change — listen ที่ radio + hidden mirror
+        document.querySelectorAll('input[name="' + (driverPillHidden ? driverPillHidden.name || 'Vehicle[data_json][driver]' : 'Vehicle[data_json][driver]') + '"]').forEach(function(radio){
+            radio.addEventListener('change', function(){
+                if (this.checked) syncDriverChoice(this.value);
+            });
+        });
+        if (driverPillHidden) {
+            driverPillHidden.addEventListener('change', function(){
+                syncDriverChoice(this.value);
+            });
+        }
+
+        // Driver picker click
+        document.querySelectorAll('[data-pick-group="driver"] .bv-pick-card').forEach(function(card){
+            card.addEventListener('click', function(){
+                if (driverIdHidden) driverIdHidden.value = card.dataset.pickValue || '';
+                document.querySelectorAll('[data-pick-group="driver"] .bv-pick-card').forEach(function(c){
+                    var sel = c === card;
+                    c.classList.toggle('is-active', sel);
+                    if (c.getAttribute('role') === 'radio') c.setAttribute('aria-checked', sel ? 'true' : 'false');
+                });
+                pulseCard(card);
+            });
+        });
+
+        // Self-plate text input → mirror ไปยัง plateInput
+        if (plateDisplay && plateInput) {
+            plateDisplay.addEventListener('input', function(){
+                plateInput.value = this.value;
+                // ล้าง car selection ใน step 4 ถ้า text ไม่ตรงกับใบไหน
+                var found = false;
+                document.querySelectorAll('[data-pick-group="car"] .bv-pick-card').forEach(function(c){
+                    var match = String(c.dataset.pickValue || '') === String(this.value || '');
+                    c.classList.toggle('is-active', match);
+                    if (c.getAttribute('role') === 'radio') c.setAttribute('aria-checked', match ? 'true' : 'false');
+                    if (match) found = true;
+                }.bind(this));
+                if (carClearBtn) {
+                    carClearBtn.classList.toggle('is-active', !this.value && !found);
+                }
+            });
+        }
+
+        // Sync ตอนเริ่มต้น (สำหรับ edit mode)
+        if (driverPillHidden) syncDriverChoice(driverPillHidden.value);
+    })();
 
     // Initial wizard render (only if wizard mode active)
     if (WIZARD_ACTIVE) setStep(1);

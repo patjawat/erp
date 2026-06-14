@@ -428,95 +428,133 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
     .on("beforeSubmit.handleFormSubmit", formSelector, function (e) {
     e.preventDefault();
     const form = $(this);
+    const formEl = form.get(0);
+    const isMultipart =
+      formEl &&
+      String(formEl.enctype || "").toLowerCase().indexOf("multipart/form-data") !== -1 &&
+      typeof FormData !== "undefined";
+    const confirmTitle = form.data("confirmTitle") || "ยืนยันการบันทึกข้อมูล?";
+    const confirmText = form.data("confirmText") || "โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน";
+    const confirmButtonText = form.data("confirmButton") || '<i class="fa fa-save"></i> ยืนยันบันทึก';
+    const loadingTitle = form.data("loadingTitle") || "กำลังดำเนินการ";
+    const loadingText = form.data("loadingText") || "ระบบกำลังบันทึกข้อมูลของคุณลงฐานข้อมูล...";
 
-    Swal.fire({
-      title: "ยืนยันการบันทึกข้อมูล?",
-      text: "โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน",
-      icon: "question", // เปลี่ยนจาก warning เป็น question เพื่อความรู้สึกที่ซอฟต์ลง
-      showCancelButton: true,
-      confirmButtonColor: "#28a745", // สีเขียว Success (Bootstrap Standard)
-      cancelButtonColor: "#6c757d", // สีเทา Secondary (Bootstrap Standard)
-      confirmButtonText: '<i class="fa fa-save"></i> ยืนยันบันทึก',
-      cancelButtonText: "ยกเลิก",
-      reverseButtons: false, // เอาปุ่มยกเลิกไว้ซ้าย ปุ่มยืนยันไว้ขวา (UX Standard)
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Loading State
-        Swal.fire({
-          title: "กำลังดำเนินการ",
-          text: "ระบบกำลังบันทึกข้อมูลของคุณลงฐานข้อมูล...",
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
-        });
+    function submitAjax() {
+      var ajaxOptions = {
+        url: actionUrl || form.attr("action"),
+        type: "POST",
+        dataType: "json",
+        success: async function (response) {
+          if (response && typeof response === "object") {
+            var isValidationResponse =
+              response.status === undefined &&
+              response.message === undefined &&
+              response.redirect_url === undefined;
 
-        $.ajax({
-          url: actionUrl || form.attr("action"),
-          type: "POST",
-          data: form.serialize(),
-          dataType: "json",
-          success: async function (response) {
-            if (response && typeof response === "object") {
-              var isValidationResponse =
-                response.status === undefined &&
-                response.message === undefined &&
-                response.redirect_url === undefined;
-
-              if (response.errors && typeof response.errors === "object") {
-                Swal.close();
-                form.yiiActiveForm('updateMessages', response.errors, true);
-                if (isValidationResponse) {
-                  return;
-                }
-              } else if (isValidationResponse) {
-                Swal.close();
-                form.yiiActiveForm('updateMessages', response, true);
+            if (response.errors && typeof response.errors === "object") {
+              Swal.close();
+              if (typeof form.yiiActiveForm === "function") {
+                form.yiiActiveForm("updateMessages", response.errors, true);
+              }
+              if (isValidationResponse) {
                 return;
               }
-            }
-
-            if (response.status === "success") {
-              await erpHideModal("#main-modal");
-
-              Swal.fire({
-                icon: "success",
-                title: "ดำเนินการสำเร็จ",
-                text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
-                timer: 1500, // เพิ่มเวลาเล็กน้อยให้ User ได้อ่านชื่อชั้นตราที่บันทึก
-                showConfirmButton: false,
-              }).then(async () => {
-                if (typeof successCallback === "function") {
-                  await successCallback(response);
-                }
-
-                if (response.redirect_url) {
-                  window.location.href = response.redirect_url;
-                } else if (typeof successCallback !== "function") {
-                  location.reload();
-                }
-              });
-            } else {
+            } else if (isValidationResponse) {
               Swal.close();
-              Swal.fire({
-                icon: "error",
-                title: "ไม่สามารถบันทึกข้อมูลได้",
-                text: response.message || "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่อีกครั้ง",
-                confirmButtonText: "ตกลง",
-                confirmButtonColor: "#d33",
-              });
+              if (typeof form.yiiActiveForm === "function") {
+                form.yiiActiveForm("updateMessages", response, true);
+              }
+              return;
             }
-          },
-          error: function (xhr) {
+          }
+
+          if (response.status === "success") {
+            await erpHideModal("#main-modal");
+
+            Swal.fire({
+              icon: "success",
+              title: "ดำเนินการสำเร็จ",
+              text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
+              timer: 1500,
+              showConfirmButton: false,
+            }).then(async () => {
+              if (typeof successCallback === "function") {
+                await successCallback(response);
+              }
+
+              if (response.redirect_url) {
+                window.location.href = response.redirect_url;
+              } else if (typeof successCallback !== "function") {
+                location.reload();
+              }
+            });
+          } else {
             Swal.close();
             Swal.fire({
               icon: "error",
-              title: "การเชื่อมต่อขัดข้อง",
-              text: "ไม่สามารถติดต่อ Server ได้ (Error " + xhr.status + ")",
-              confirmButtonText: "รับทราบ",
+              title: "ไม่สามารถบันทึกข้อมูลได้",
+              text: response.message || "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่อีกครั้ง",
+              confirmButtonText: "ตกลง",
+              confirmButtonColor: "#d33",
             });
-          },
-        });
+          }
+        },
+        error: function (xhr) {
+          Swal.close();
+          Swal.fire({
+            icon: "error",
+            title: "การเชื่อมต่อขัดข้อง",
+            text: "ไม่สามารถติดต่อ Server ได้ (Error " + xhr.status + ")",
+            confirmButtonText: "รับทราบ",
+          });
+        },
+      };
+
+      if (isMultipart) {
+        ajaxOptions.data = new FormData(formEl);
+        ajaxOptions.processData = false;
+        ajaxOptions.contentType = false;
+      } else {
+        ajaxOptions.data = form.serialize();
+      }
+
+      $.ajax(ajaxOptions);
+    }
+
+    function showLoadingThenSubmit() {
+      Swal.fire({
+        title: loadingTitle,
+        text: loadingText,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      submitAjax();
+    }
+
+    if (typeof Swal === "undefined") {
+      if (window.confirm(confirmTitle)) {
+        if (formEl && typeof formEl.submit === "function") {
+          formEl.submit();
+        }
+      }
+      return false;
+    }
+
+    Swal.fire({
+      title: confirmTitle,
+      text: confirmText,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: false,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showLoadingThenSubmit();
       }
     });
     return false;

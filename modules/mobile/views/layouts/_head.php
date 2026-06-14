@@ -223,6 +223,58 @@ use yii\bootstrap5\Html;
     }
     .pill-option:focus-visible { outline: 2px solid var(--mobile-primary); outline-offset: -2px; }
 
+    /* Fiscal-year filter used by mobile list pages. */
+    .mobile-year-filter {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin: 0;
+    }
+    .mobile-year-filter-label {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2xs);
+        flex-shrink: 0;
+        margin: 0;
+        color: var(--ink-3);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .mobile-year-filter-label svg {
+        width: 1rem;
+        height: 1rem;
+        color: var(--mobile-primary);
+    }
+    .mobile-year-filter-select {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 2.75rem;
+        border: 1px solid var(--ink-line);
+        border-radius: 12px;
+        background: var(--surface);
+        color: var(--ink);
+        padding: 0 var(--space-md);
+        font-size: var(--fs-sm);
+        font-weight: 700;
+        transition: border-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+                    background-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mobile-year-filter-select:focus {
+        outline: 0;
+        border-color: var(--mobile-primary);
+        background-color: var(--surface);
+        box-shadow: 0 0 0 3px var(--mobile-primary-soft-border);
+    }
+    @media (max-width: 360px) {
+        .mobile-year-filter {
+            align-items: stretch;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+    }
+
     /* Stat box — compact metric tile for summary readouts */
     .stat-box {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -504,5 +556,6 @@ use yii\bootstrap5\Html;
     @media (prefers-reduced-motion: reduce) {
         .app-hero::before, .app-hero::after { animation: none !important; }
         .app-stat { transition: none !important; }
+        .mobile-year-filter-select { transition: none !important; }
     }
 </style>

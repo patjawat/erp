@@ -239,12 +239,14 @@ $canEdit = in_array($status, ['Pending', 'รออนุมัติ'], true);
                         <span>แก้ไข</span>
                     </a>
                     <?= Html::beginForm(['/mobile/default/vehicle-cancel', 'id' => $vehicle->id], 'post', [
+                        'id'    => 'vv-cancel-form',
                         'class' => 'm-0',
-                        'onsubmit' => "return window.mobileConfirm ? window.mobileConfirm(this, 'ยืนยันยกเลิกคำขอจองรถ?') : confirm('ยืนยันยกเลิกคำขอจองรถ?');",
+                        // กัน global loader (mobile-shared.js) ขึ้น overlay บัง SwAL dialog
+                        'data'  => ['no-loader' => 'true'],
                     ]) ?>
                         <button type="submit" class="btn btn-outline-danger w-100">
                             <i data-lucide="x-circle" aria-hidden="true"></i>
-                            <span>ยกเลิก</span>
+                            <span>ยกเลิกการจอง</span>
                         </button>
                     <?= Html::endForm() ?>
                 </div>
@@ -252,3 +254,40 @@ $canEdit = in_array($status, ['Pending', 'รออนุมัติ'], true);
         </div>
     </div>
 </div>
+
+<?php
+// Cancel confirmation: pattern เดียวกับ meeting-view.php (กัน Telegram WebView quirks)
+$this->registerJs(<<<'JS'
+(function(){
+    var form = document.getElementById('vv-cancel-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e){
+        if (form.dataset.confirmed === '1') return;
+        e.preventDefault();
+        var doSubmit = function(){
+            form.dataset.confirmed = '1';
+            if (typeof window.showMobileNavLoading === 'function') {
+                window.showMobileNavLoading('กำลังบันทึก...');
+            }
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        };
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'ยืนยันยกเลิกคำขอ?',
+                text: 'การยกเลิกไม่สามารถกู้คืน',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ยกเลิกการจอง',
+                cancelButtonText: 'ไม่, เก็บไว้',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true
+            }).then(function(r){ if (r.isConfirmed) doSubmit(); });
+        } else {
+            if (window.confirm('ยืนยันยกเลิกคำขอจองรถ? การยกเลิกไม่สามารถกู้คืน')) doSubmit();
+        }
+    });
+})();
+JS
+, \yii\web\View::POS_READY); ?>

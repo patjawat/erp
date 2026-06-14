@@ -3,6 +3,7 @@
 namespace app\modules\mobile\controllers;
 
 use app\components\AppHelper;
+use app\components\ApproveHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\modules\attendance\models\CheckinLocation;
@@ -10,6 +11,11 @@ use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Room;
 use app\modules\booking\models\Vehicle;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
+use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\mobile\services\MobileMaintenanceService;
+use app\modules\mobile\services\MobileRepairService;
 use app\modules\mobile\services\MobileMeetingAdminService;
 use app\modules\mobile\services\MobileMeetingService;
 use app\modules\mobile\services\MobileVehicleService;
@@ -28,6 +34,7 @@ use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 /**
  * Default controller for the `mobile` module.
@@ -61,19 +68,45 @@ class DefaultController extends Controller
     }
 
     /**
+     * รายการปีงบประมาณสำหรับ mobile list filters.
+     *
+     * @return array<int,string>
+     */
+    protected function mobileFiscalYears(int $back = 10): array
+    {
+        $current = (int) AppHelper::YearBudget();
+        $years = [];
+        for ($y = $current; $y > $current - $back; $y--) {
+            $years[$y] = 'พ.ศ. ' . $y;
+        }
+        return $years;
+    }
+
+    protected function resolveMobileFiscalYear(array $fiscalYears): int
+    {
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = (int) Yii::$app->request->get('year', $currentYear);
+        return isset($fiscalYears[$filterYear]) ? $filterYear : $currentYear;
+    }
+
+    /**
      * Dashboard with summary cards.
      */
     public function actionIndex()
     {
         $this->view->title = 'บริการออนไลน์';
         $officialUnreadCount = $this->countOfficialDocuments(true);
+        $canManageMeeting = !Yii::$app->user->isGuest && Yii::$app->user->can('meeting');
+
         return $this->render('index', [
             'current_page' => 'home',
+            'approvalInfo' => ApproveHelper::Info(),
             'pendingLeaveApprovals' => $this->findPendingLeaveApprovals(3),
             'recentLeaveRequests' => $this->findRecentLeaveRequests(3),
             'recentMeetings' => $this->findRecentMeetings(3),
             'officialDocumentsPreview' => $this->findOfficialDocuments(true, 3),
             'officialUnreadCount' => $officialUnreadCount,
+            'canManageMeeting' => $canManageMeeting,
         ]);
     }
 
@@ -87,13 +120,20 @@ class DefaultController extends Controller
             $filter = 'all';
         }
 
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
+
         $this->view->title = 'หนังสือราชการ';
         return $this->render('news', [
             'current_page' => 'news',
             'filter' => $filter,
-            'dataProvider' => $this->buildOfficialDocumentsProvider($filter),
-            'officialUnreadCount' => $this->countOfficialDocuments('unread'),
-            'officialTotalCount' => $this->countOfficialDocuments('all'),
+            'dataProvider' => $this->buildOfficialDocumentsProvider($filter, $filterYear),
+            'officialUnreadCount' => $this->countOfficialDocuments('unread', $filterYear),
+            'officialTotalCount' => $this->countOfficialDocuments('all', $filterYear),
+            'fiscalYears' => $fiscalYears,
+            'filterYear' => $filterYear,
+            'currentYear' => $currentYear,
         ]);
     }
 
@@ -132,7 +172,7 @@ class DefaultController extends Controller
      * @param string|bool $filter 'all' | 'unread' | 'read' (bool true == 'unread' for legacy callers)
      * @param bool $forCount      true เพื่อ skip select/groupBy ที่ไม่จำเป็นสำหรับ count
      */
-    protected function buildOfficialDocumentsQuery($filter = 'all', bool $forCount = false)
+    protected function buildOfficialDocumentsQuery($filter = 'all', bool $forCount = false, ?int $thaiYear = null)
     {
         // Legacy callers pass `true` to mean "unread only".
         if (is_bool($filter)) {
@@ -170,6 +210,9 @@ class DefaultController extends Controller
         ", [':empId' => $empId]);
 
         $query->andWhere(['documents.document_group' => 'receive']);
+        if ($thaiYear !== null) {
+            $query->andWhere(['documents.thai_year' => (string) $thaiYear]);
+        }
         $query->andWhere([
             'or',
             ['not', ['te.id' => null]],
@@ -201,10 +244,10 @@ class DefaultController extends Controller
     /**
      * DataProvider สำหรับรายการหนังสือราชการ
      */
-    protected function buildOfficialDocumentsProvider($filter = 'all'): ActiveDataProvider
+    protected function buildOfficialDocumentsProvider($filter = 'all', ?int $thaiYear = null): ActiveDataProvider
     {
         return new ActiveDataProvider([
-            'query' => $this->buildOfficialDocumentsQuery($filter, false),
+            'query' => $this->buildOfficialDocumentsQuery($filter, false, $thaiYear),
             'pagination' => [
                 'pageSize' => 10,
             ],
@@ -217,9 +260,9 @@ class DefaultController extends Controller
      *
      * @return array<int, Documents>
      */
-    protected function findOfficialDocuments($filter = 'all', ?int $limit = null): array
+    protected function findOfficialDocuments($filter = 'all', ?int $limit = null, ?int $thaiYear = null): array
     {
-        $query = $this->buildOfficialDocumentsQuery($filter, false);
+        $query = $this->buildOfficialDocumentsQuery($filter, false, $thaiYear);
         if ($limit !== null) {
             $query->limit($limit);
         }
@@ -230,9 +273,9 @@ class DefaultController extends Controller
     /**
      * นับจำนวนหนังสือราชการตาม filter ('all' | 'unread' | 'read')
      */
-    protected function countOfficialDocuments($filter = 'all'): int
+    protected function countOfficialDocuments($filter = 'all', ?int $thaiYear = null): int
     {
-        $query = $this->buildOfficialDocumentsQuery($filter, true);
+        $query = $this->buildOfficialDocumentsQuery($filter, true, $thaiYear);
         return (int) $query->count('DISTINCT documents.id');
     }
 
@@ -315,10 +358,19 @@ class DefaultController extends Controller
     public function actionNotifications()
     {
         $this->view->title = 'การแจ้งเตือน';
+        $me = UserHelper::GetEmployee();
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
+        $leaveService = new MobileLeaveService();
+
         return $this->render('notifications', [
             'current_page' => 'home',
-            'pendingLeaveApprovals' => $this->findPendingLeaveApprovals(),
-            'recentLeaveRequests' => $this->findRecentLeaveRequests(10),
+            'pendingLeaveApprovals' => $leaveService->findPendingApprovals($me, null, $filterYear),
+            'recentLeaveRequests' => $leaveService->findRecentRequests($me, 10, $filterYear),
+            'fiscalYears' => $fiscalYears,
+            'filterYear' => $filterYear,
+            'currentYear' => $currentYear,
         ]);
     }
 
@@ -329,13 +381,31 @@ class DefaultController extends Controller
     {
         $this->view->title = 'บริการ';
 
-        // RBAC gate for the meeting-room admin tool. The Yii auth manager
-        // returns false for guests, so this is safe pre-login as well.
-        $canManageMeeting = Yii::$app->user->can('meeting');
+        $me = UserHelper::GetEmployee();
+        $isDriver = !Yii::$app->user->isGuest && Yii::$app->user->can('driver');
+        $canManageMeeting = !Yii::$app->user->isGuest && Yii::$app->user->can('meeting');
+        $currentYear = (int) AppHelper::YearBudget();
+        $driverMissionCount = 0;
+        $managedMeetingPendingCount = 0;
+
+        if ($me && $isDriver) {
+            $driverMissionCount = (new MobileVehicleService())->countOpenDriverMissions((string) $me->id, $currentYear);
+        }
+
+        if ($me && $canManageMeeting) {
+            $meetingAdminService = new MobileMeetingAdminService();
+            $ownedRooms = $meetingAdminService->findOwnedRoomsForUser((string) $me->id);
+            $roomMeetings = $meetingAdminService->findMeetingsForOwnedRooms($ownedRooms['codes'], 200, $currentYear);
+            $roomCounts = $meetingAdminService->bucketCountsForRoomManage($roomMeetings);
+            $managedMeetingPendingCount = (int) $roomCounts['pending'];
+        }
 
         return $this->render('services', [
-            'current_page'     => 'services',
-            'canManageMeeting' => $canManageMeeting,
+            'current_page'               => 'services',
+            'isDriver'                   => $isDriver,
+            'driverMissionCount'         => $driverMissionCount,
+            'canManageMeeting'           => $canManageMeeting,
+            'managedMeetingPendingCount' => $managedMeetingPendingCount,
         ]);
     }
 
@@ -352,21 +422,32 @@ class DefaultController extends Controller
         }
         $geofences = [];
         $lastCheckin = null;
+        $history = [];
         try {
             $geofences = CheckinLocation::findActiveGeofenced();
             $lastCheckin = CheckinRecord::find()
                 ->andWhere(['emp_id' => $me->id])
                 ->orderBy(['checkin_at' => SORT_DESC])
                 ->one();
+            // ดึงประวัติย้อนหลัง 14 วัน (เฉพาะของผู้ใช้ปัจจุบัน)
+            $fromDate = date('Y-m-d 00:00:00', strtotime('-14 days'));
+            $history = CheckinRecord::find()
+                ->andWhere(['emp_id' => $me->id])
+                ->andWhere(['>=', 'checkin_at', $fromDate])
+                ->orderBy(['checkin_at' => SORT_DESC])
+                ->limit(60)
+                ->all();
         } catch (\Throwable $e) {
             $geofences = [];
             $lastCheckin = null;
+            $history = [];
         }
         return $this->render('attendance', [
             'current_page' => 'attendance',
             'employee' => $me,
             'geofences' => $geofences,
             'lastCheckin' => $lastCheckin,
+            'history' => $history,
         ]);
     }
 
@@ -421,6 +502,9 @@ class DefaultController extends Controller
         $service = new MobileVehicleService();
         $model   = $service->newWithDefaults();
         $saveErrors = [];
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
 
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $result = $service->prepareAndSave($model, $me);
@@ -454,7 +538,12 @@ class DefaultController extends Controller
             'current_page' => 'services',
             'model'        => $model,
             'employee'     => $me,
-            'myBookings'   => $service->findMyBookings((string) $me->id),
+            'myBookings'   => $service->findMyBookings((string) $me->id, 50, $filterYear),
+            'fiscalYears'  => $fiscalYears,
+            'filterYear'   => $filterYear,
+            'currentYear'  => $currentYear,
+            'cars'         => $service->listCars(),
+            'drivers'      => $service->listDrivers(),
             'saveErrors'   => $saveErrors,
         ]);
     }
@@ -527,6 +616,8 @@ class DefaultController extends Controller
             'model'        => $model,
             'employee'     => $me,
             'myBookings'   => [],
+            'cars'         => $service->listCars(),
+            'drivers'      => $service->listDrivers(),
             'saveErrors'   => $saveErrors,
             'forceMode'    => 'wizard',
             'isEdit'       => true,
@@ -562,6 +653,93 @@ class DefaultController extends Controller
     }
 
     /**
+     * ภารกิจขับรถที่พนักงานขับรถได้รับมอบหมาย.
+     */
+    public function actionDriverMissions()
+    {
+        $this->view->title = 'ภารกิจขับรถ';
+
+        $me = UserHelper::GetEmployee();
+        if (!$me || !Yii::$app->user->can('driver')) {
+            Yii::$app->session->setFlash('error', 'เมนูนี้สำหรับพนักงานขับรถเท่านั้น');
+            return $this->redirect(['/mobile/default/index']);
+        }
+
+        $service = new MobileVehicleService();
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
+        return $this->render('driver-missions', [
+            'current_page' => 'services',
+            'missions' => $service->findDriverMissions((string) $me->id, 100, $filterYear),
+            'openCount' => $service->countOpenDriverMissions((string) $me->id, $filterYear),
+            'fiscalYears' => $fiscalYears,
+            'filterYear' => $filterYear,
+            'currentYear' => $currentYear,
+        ]);
+    }
+
+    /**
+     * บันทึกผลภารกิจขับรถแบบ mobile.
+     */
+    public function actionDriverMission($id)
+    {
+        $this->view->title = 'บันทึกภารกิจขับรถ';
+
+        $me = UserHelper::GetEmployee();
+        $service = new MobileVehicleService();
+        $mission = $me && Yii::$app->user->can('driver')
+            ? $service->findDriverMissionById((int) $id, (string) $me->id)
+            : null;
+
+        if (!$mission) {
+            Yii::$app->session->setFlash('error', 'ไม่พบภารกิจขับรถ หรือคุณไม่มีสิทธิ์บันทึกรายการนี้');
+            return $this->redirect(['/mobile/default/driver-missions']);
+        }
+
+        $service->ensureDriverMissionRef($mission);
+        $saveErrors = [];
+        if (Yii::$app->request->isPost && $mission->load(Yii::$app->request->post())) {
+            $result = $service->prepareAndSaveDriverMission($mission);
+            if ($result['ok']) {
+                Yii::$app->session->setFlash('success', 'บันทึกภารกิจขับรถเรียบร้อย');
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกภารกิจขับรถเรียบร้อย',
+                        'redirect_url' => \yii\helpers\Url::to(['/mobile/default/driver-missions']),
+                    ];
+                }
+                return $this->redirect(['/mobile/default/driver-missions']);
+            }
+            $saveErrors = $result['errors'];
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                $message = reset($saveErrors) ?: 'ไม่สามารถบันทึกภารกิจได้ กรุณาตรวจสอบข้อมูลอีกครั้ง';
+                if ($result['exception']) {
+                    $message = 'เกิดข้อผิดพลาดในการบันทึก: ' . $result['exception']->getMessage();
+                }
+                return [
+                    'status' => 'error',
+                    'message' => $message,
+                    'errors' => $mission->getErrors(),
+                ];
+            }
+            if ($result['exception']) {
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึก: ' . $result['exception']->getMessage());
+            }
+        }
+
+        $service->restoreThaiDatesForDetail($mission);
+        return $this->render('driver-mission', [
+            'current_page' => 'services',
+            'mission' => $mission,
+            'saveErrors' => $saveErrors,
+        ]);
+    }
+
+    /**
      * แชร์ response shape สำหรับ vehicle save success ระหว่าง AJAX และ non-AJAX
      * (booking + update flows ใช้ shape นี้).
      */
@@ -589,12 +767,15 @@ class DefaultController extends Controller
             return ['status' => 'error', 'message' => $message];
         }
         Yii::$app->session->setFlash('error', $message);
-        (new MobileVehicleService())->restoreThaiDates($model);
+        $service = new MobileVehicleService();
+        $service->restoreThaiDates($model);
         return $this->render('booking-vehicle', [
             'current_page' => 'services',
             'model'        => $model,
             'employee'     => UserHelper::GetEmployee(),
             'myBookings'   => [],
+            'cars'         => $service->listCars(),
+            'drivers'      => $service->listDrivers(),
             'saveErrors'   => $model->getFirstErrors(),
         ]);
     }
@@ -614,12 +795,16 @@ class DefaultController extends Controller
 
         $service = new MobileMeetingService();
         $model   = $service->newWithDefaults($me);
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
 
         $roomCards      = $service->listRoomCards();
         $rooms          = $service->listRooms($roomCards);
-        $roomLayouts    = $service->listRoomLayouts($model);
-        $urgentOptions  = $service->listUrgentOptions($model);
-        $equipmentItems = $service->listEquipmentItems();
+        $roomLayouts       = $service->listRoomLayouts($model);
+        $roomLayoutImages  = $service->listRoomLayoutImages();
+        $urgentOptions     = $service->listUrgentOptions($model);
+        $equipmentItems    = $service->listEquipmentItems();
 
         $saveErrors = [];
 
@@ -643,12 +828,16 @@ class DefaultController extends Controller
             'current_page'   => 'services',
             'rooms'          => $rooms,
             'roomCards'      => $roomCards,
-            'roomLayouts'    => $roomLayouts,
-            'urgentOptions'  => $urgentOptions,
+            'roomLayouts'      => $roomLayouts,
+            'roomLayoutImages' => $roomLayoutImages,
+            'urgentOptions'    => $urgentOptions,
             'equipmentItems' => $equipmentItems,
             'employee'       => $me,
             'model'          => $model,
-            'myBookings'     => $service->findMyBookings((string) $me->id),
+            'myBookings'     => $service->findMyBookings((string) $me->id, 50, false, $filterYear),
+            'fiscalYears'    => $fiscalYears,
+            'filterYear'     => $filterYear,
+            'currentYear'    => $currentYear,
             'saveErrors'     => $saveErrors,
         ]);
     }
@@ -739,18 +928,29 @@ class DefaultController extends Controller
             Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกคำขอลาได้ กรุณาตรวจสอบฟิลด์ที่กรอก');
         }
 
+        // List mode data — filter by fiscal year (default = ปีปัจจุบัน)
+        $fiscalYears  = $service->listFiscalYears();
+        $currentYear  = (int) \app\components\AppHelper::YearBudget();
+        $filterYear   = (int) (Yii::$app->request->get('year', $currentYear));
+        if (!isset($fiscalYears[$filterYear])) $filterYear = $currentYear;
+        $myLeaves     = $service->findRequestsByYear($me, $filterYear);
+
         return $this->render('leave-request', [
             'current_page'         => 'services',
             'model'                => $model,
             'employee'             => $me,
             'draftRef'             => $draft['ref'],
             'stats'                => [],
-            // เตรียม view data ที่ก่อนหน้านี้ view query เอง (DB query out of presentation)
             'leaveSendInitAvatar'  => $service->loadWorkSendAvatar(
                 $model->data_json['leave_work_send_id'] ?? null,
                 !$model->isNewRecord
             ),
             'approveChain'         => $service->loadApproveChain($model->emp_id),
+            // List mode params (orchestrator ตรวจ ?action=new → wizard, ไม่งั้น = list)
+            'myLeaves'             => $myLeaves,
+            'fiscalYears'          => $fiscalYears,
+            'filterYear'           => $filterYear,
+            'currentYear'          => $currentYear,
         ]);
     }
 
@@ -767,6 +967,57 @@ class DefaultController extends Controller
         return $this->render('leave_request_view', [
             'current_page' => 'profile',
             'model'        => $model,
+        ]);
+    }
+
+    /**
+     * แก้ไขคำขอลา (เฉพาะเจ้าของ + สถานะที่ยังแก้ไขได้)
+     * Additive — ไม่กระทบ actionLeaveRequest เดิม
+     */
+    public function actionLeaveRequestEdit($id)
+    {
+        $this->view->title = 'แก้ไขคำขอลา';
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+
+        $service = new MobileLeaveService();
+        $model   = $service->findOwnedById((int) $id, $me->id);
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบคำขอลานี้ หรือคุณไม่มีสิทธิ์แก้ไขคำขอลานี้');
+            return $this->redirect(['/mobile/default/leave-request']);
+        }
+
+        // สถานะที่ยังให้แก้ไขได้: ก่อนเข้ากระบวนการอนุมัติเสร็จสมบูรณ์
+        $editableStatuses = ['Pending', 'Save', 'Draft'];
+        if (!in_array((string) $model->status, $editableStatuses, true)) {
+            Yii::$app->session->setFlash('error', 'คำขอลานี้อยู่ในสถานะที่ไม่สามารถแก้ไขได้แล้ว');
+            return $this->redirect(['/mobile/default/leave-request-view', 'id' => $model->id]);
+        }
+
+        $fiscalYears = $service->listFiscalYears();
+        $currentYear = (int) \app\components\AppHelper::YearBudget();
+        $filterYear  = (int) (Yii::$app->request->get('year', $currentYear));
+        if (!isset($fiscalYears[$filterYear])) $filterYear = $currentYear;
+
+        return $this->render('leave-request', [
+            'current_page'         => 'services',
+            'model'                => $model,
+            'employee'             => $me,
+            'draftRef'             => $model->ref,
+            'stats'                => [],
+            'leaveSendInitAvatar'  => $service->loadWorkSendAvatar(
+                $model->data_json['leave_work_send_id'] ?? null,
+                true
+            ),
+            'approveChain'         => $service->loadApproveChain($model->emp_id),
+            'myLeaves'             => [],
+            'fiscalYears'          => $fiscalYears,
+            'filterYear'           => $filterYear,
+            'currentYear'          => $currentYear,
         ]);
     }
 
@@ -838,9 +1089,16 @@ class DefaultController extends Controller
             return $this->redirect(['/mobile/default/index']);
         }
 
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
+
         return $this->render('leave-approvals', [
             'current_page' => 'services',
-            'approvals'    => (new MobileLeaveService())->findPendingApprovals($me),
+            'approvals'    => (new MobileLeaveService())->findPendingApprovals($me, null, $filterYear),
+            'fiscalYears'  => $fiscalYears,
+            'filterYear'   => $filterYear,
+            'currentYear'  => $currentYear,
         ]);
     }
 
@@ -880,12 +1138,237 @@ class DefaultController extends Controller
     /**
      * แจ้งซ่อม (mobile-first: type, location, description, camera/gallery upload, QR asset).
      */
+    /**
+     * รายการประวัติแจ้งซ่อมของผู้ใช้ (LIST/HISTORY only)
+     * Wizard form ส่งซ่อมถูกย้ายไป /mobile/default/repair-request แล้ว
+     * (ก่อนหน้านี้ action นี้รวม wizard+list อยู่ในตัวเอง ตอนนี้เหลือเฉพาะ list)
+     *
+     * Backward compat:
+     *  - ?asset=... หรือ ?action=new → redirect ไป wizard ใหม่
+     *  - ?id=X (asset edit เดิม) → redirect ไป wizard ใหม่พร้อม id
+     */
     public function actionMaintenanceRequest()
     {
-        $this->view->title = 'แจ้งซ่อม';
+        $me = UserHelper::GetEmployee();
+
+        // Backward compat: เก่ามี ?action=new / ?asset=... → ส่งต่อไป wizard ใหม่
+        $actionParam = (string) (Yii::$app->request->get('action') ?? '');
+        $assetParam  = trim((string) Yii::$app->request->get('asset', ''));
+        $assetCodeQs = trim((string) Yii::$app->request->get('asset_code', Yii::$app->request->get('code', '')));
+        if ($actionParam === 'new' || $assetParam !== '' || $assetCodeQs !== '') {
+            $code = $assetCodeQs;
+            if ($code === '' && $assetParam !== '') {
+                $asset = ctype_digit($assetParam)
+                    ? Asset::findOne(['id' => (int) $assetParam])
+                    : Asset::findOne(['code' => $assetParam]);
+                if ($asset) $code = (string) $asset->code;
+            }
+            $params = ['/mobile/default/repair-request', 'send_type' => 'asset'];
+            if ($code !== '') $params['asset_number'] = $code;
+            return $this->redirect($params);
+        }
+
+        $this->view->title = 'ประวัติแจ้งซ่อม';
+
+        $service     = new MobileMaintenanceService();
+        $fiscalYears = $service->listFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear  = (int) (Yii::$app->request->get('year', $currentYear));
+        if (!isset($fiscalYears[$filterYear])) $filterYear = $currentYear;
+        $myRequests   = $service->findRequestsByYear($me, $filterYear);
+        $bucketCounts = $service->bucketCounts($myRequests);
+
         return $this->render('maintenance-request', [
-            'current_page' => 'services',
+            'current_page'  => 'services',
+            'service'       => $service,
+            'myRequests'    => $myRequests,
+            'fiscalYears'   => $fiscalYears,
+            'filterYear'    => $filterYear,
+            'bucketCounts'  => $bucketCounts,
         ]);
+    }
+
+    /**
+     * รายละเอียดงานแจ้งซ่อม (เฉพาะเจ้าของ) — view + status tracker + rating gate.
+     */
+    public function actionMaintenanceView($id)
+    {
+        $me = UserHelper::GetEmployee();
+        $service = new MobileMaintenanceService();
+        $model = $me ? $service->findOwnedById((int) $id, $me->id) : null;
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบงานแจ้งซ่อมนี้ หรือคุณไม่มีสิทธิ์ดูรายการนี้');
+            return $this->redirect(['/mobile/default/maintenance-request']);
+        }
+
+        $this->view->title = 'รายละเอียดงานแจ้งซ่อม';
+        return $this->render('maintenance_view', [
+            'current_page' => 'services',
+            'model'        => $model,
+            'service'      => $service,
+        ]);
+    }
+
+    /**
+     * ลงคะแนนความพึงพอใจ — เปิดเฉพาะงานที่ "ซ่อมเสร็จแล้ว" และยังไม่เคยให้คะแนน.
+     */
+    public function actionMaintenanceRate($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request'];
+        }
+        $me = UserHelper::GetEmployee();
+        $service = new MobileMaintenanceService();
+        $model = $me ? $service->findOwnedById((int) $id, $me->id) : null;
+        if (!$model) {
+            return ['status' => 'error', 'message' => 'ไม่พบงานแจ้งซ่อมนี้ หรือคุณไม่มีสิทธิ์'];
+        }
+        if (!$service->canRate($model)) {
+            return ['status' => 'error', 'message' => 'งานนี้ยังลงคะแนนไม่ได้ (อาจซ่อมยังไม่เสร็จ หรือเคยลงคะแนนแล้ว)'];
+        }
+        $score = (int) Yii::$app->request->post('score', 0);
+        if ($score < 1 || $score > 5) {
+            return ['status' => 'error', 'message' => 'กรุณาให้คะแนน 1 ถึง 5 ดาว'];
+        }
+        $comment = trim((string) Yii::$app->request->post('comment', ''));
+        $model->rating = (string) $score;
+        $dataJson = is_array($model->data_json) ? $model->data_json : [];
+        $dataJson['rating_score'] = $score;
+        $dataJson['rating_comment'] = $comment;
+        $dataJson['rating_at'] = date('Y-m-d H:i:s');
+        $dataJson['rating_by'] = $me->id ?? null;
+        $model->data_json = $dataJson;
+        if (!$model->save(false)) {
+            return ['status' => 'error', 'message' => 'บันทึกคะแนนไม่สำเร็จ กรุณาลองใหม่'];
+        }
+        return ['status' => 'success', 'message' => 'บันทึกคะแนนเรียบร้อย ขอบคุณสำหรับ feedback'];
+    }
+
+    /**
+     * ขอยกเลิกงานแจ้งซ่อม (เจ้าของยกเลิกได้ก่อนเข้าซ่อม).
+     */
+    public function actionMaintenanceCancel($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request'];
+        }
+        $me = UserHelper::GetEmployee();
+        $service = new MobileMaintenanceService();
+        $model = $me ? $service->findOwnedById((int) $id, $me->id) : null;
+        if (!$model) {
+            return ['status' => 'error', 'message' => 'ไม่พบงานนี้ หรือคุณไม่มีสิทธิ์'];
+        }
+        if (!$service->canCancel($model)) {
+            return ['status' => 'error', 'message' => 'งานนี้อยู่ในสถานะที่ยกเลิกไม่ได้แล้ว'];
+        }
+        $model->status = '5'; // ยกเลิก ตาม taxonomy repair_status
+        $dataJson = is_array($model->data_json) ? $model->data_json : [];
+        $dataJson['cancel_at'] = date('Y-m-d H:i:s');
+        $dataJson['cancel_by'] = $me->id ?? null;
+        $model->data_json = $dataJson;
+        if (!$model->save(false)) {
+            return ['status' => 'error', 'message' => 'ยกเลิกไม่สำเร็จ กรุณาลองใหม่'];
+        }
+        return ['status' => 'success', 'message' => 'ยกเลิกงานแจ้งซ่อมเรียบร้อย'];
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ส่งซ่อม (Wizard mobile-first) — สร้างใหม่ คู่ขนานกับ /me/repair-v2/create
+    // ใช้ Helpdesk model เดิม + reuse workflow side effects (asset_status, Telegram)
+    // ผ่าน MobileRepairService — ไม่แตะ RepairV2Controller
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Wizard แจ้งส่งซ่อม
+     *   GET  /mobile/default/repair-request[?asset_number=...&send_type=asset]  → form
+     *   POST /mobile/default/repair-request                                     → save
+     */
+    public function actionRepairRequest()
+    {
+        $this->view->title = 'แจ้งส่งซ่อม';
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน กรุณาติดต่อ HR');
+            return $this->redirect(['/mobile/default/services']);
+        }
+
+        $service = new MobileRepairService();
+        $assetNumber = trim((string) Yii::$app->request->get('asset_number', ''));
+        $sendType    = (string) Yii::$app->request->get('send_type', '');
+
+        $model = $service->newDraft($me, $assetNumber !== '' ? $assetNumber : null);
+        $assetInfo = $assetNumber !== '' ? $service->lookupAsset($assetNumber) : null;
+
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            $result = $service->save($model);
+            if ($result['ok']) {
+                // อัปโหลดรูปแนบ (ไม่บังคับ)
+                $service->savePhotos($model);
+
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status'       => 'success',
+                        'message'      => 'ส่งคำขอซ่อมเรียบร้อย',
+                        'redirect_url' => \yii\helpers\Url::to(['/mobile/default/repair-success', 'id' => $model->id]),
+                    ];
+                }
+                return $this->redirect(['/mobile/default/repair-success', 'id' => $model->id]);
+            }
+
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status'  => 'error',
+                    'message' => 'ไม่สามารถบันทึกได้ กรุณาตรวจสอบฟิลด์ที่กรอก',
+                    'errors'  => $result['errors'],
+                ];
+            }
+            Yii::$app->session->setFlash('error', reset($result['errors']) ?: 'ไม่สามารถบันทึกได้');
+        }
+
+        return $this->render('repair-request', [
+            'current_page'  => 'services',
+            'model'         => $model,
+            'employee'      => $me,
+            'assetInfo'     => $assetInfo,
+            'sendType'      => $sendType,
+            'deviceTypes'   => $service->getDeviceTypes(),
+            'urgencyOpts'   => $service->getUrgencyOptions(),
+            'repairGroups'  => $service->getRepairGroups(),
+        ]);
+    }
+
+    /**
+     * หน้า success หลังบันทึกแจ้งซ่อมสำเร็จ (เฉพาะเจ้าของรายการ)
+     */
+    public function actionRepairSuccess($id)
+    {
+        $me = UserHelper::GetEmployee();
+        $service = new MobileRepairService();
+        $model = $me ? $service->findOwnedById((int) $id, $me->id) : null;
+        if (!$model) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการแจ้งซ่อมนี้');
+            return $this->redirect(['/mobile/default/services']);
+        }
+        $this->view->title = 'ส่งคำขอซ่อมเรียบร้อย';
+        return $this->render('repair_success', [
+            'current_page' => 'services',
+            'model'        => $model,
+        ]);
+    }
+
+    /**
+     * AJAX endpoint คืน repair_group code จาก asset_number (ใช้ใน wizard step 1)
+     */
+    public function actionRepairGetGroup($asset_number)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $group = (new MobileRepairService())->resolveRepairGroupByAsset((string) $asset_number);
+        return ['status' => 'success', 'repair_group' => $group];
     }
 
     /**
@@ -896,16 +1379,24 @@ class DefaultController extends Controller
         $this->view->title = 'คำขอของฉัน';
 
         $me = UserHelper::GetEmployee();
+        $fiscalYears = $this->mobileFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
 
         // Aggregate page รวมประวัติทั้งหมดของผู้ใช้ (รวม soft-deleted ก็ได้ → withDeleted=true)
-        $meetings = $me ? (new MobileMeetingService())->findMyBookings((string) $me->id, 100, true) : [];
-        $leaves   = (new MobileLeaveService())->findRecentRequests($me, 100);
+        $meetings = $me ? (new MobileMeetingService())->findMyBookings((string) $me->id, 100, true, $filterYear) : [];
+        $leaves   = (new MobileLeaveService())->findRecentRequests($me, 100, $filterYear);
+        $vehicles = $me ? (new MobileVehicleService())->findMyBookings((string) $me->id, 100, $filterYear) : [];
 
         return $this->render('my-requests', [
             'current_page' => 'profile',
             'type'         => $type,
             'meetings'     => $meetings,
             'leaves'       => $leaves,
+            'vehicles'     => $vehicles,
+            'fiscalYears'  => $fiscalYears,
+            'filterYear'   => $filterYear,
+            'currentYear'  => $currentYear,
         ]);
     }
 
@@ -953,9 +1444,10 @@ class DefaultController extends Controller
 
         $roomCards      = $service->listRoomCards();
         $rooms          = $service->listRooms($roomCards);
-        $roomLayouts    = $service->listRoomLayouts($meeting);
-        $urgentOptions  = $service->listUrgentOptions($meeting);
-        $equipmentItems = $service->listEquipmentItems();
+        $roomLayouts       = $service->listRoomLayouts($meeting);
+        $roomLayoutImages  = $service->listRoomLayoutImages();
+        $urgentOptions     = $service->listUrgentOptions($meeting);
+        $equipmentItems    = $service->listEquipmentItems();
 
         $saveErrors = [];
 
@@ -985,8 +1477,9 @@ class DefaultController extends Controller
             'current_page'   => 'services',
             'rooms'          => $rooms,
             'roomCards'      => $roomCards,
-            'roomLayouts'    => $roomLayouts,
-            'urgentOptions'  => $urgentOptions,
+            'roomLayouts'      => $roomLayouts,
+            'roomLayoutImages' => $roomLayoutImages,
+            'urgentOptions'    => $urgentOptions,
             'equipmentItems' => $equipmentItems,
             'employee'       => $me,
             'model'          => $meeting,
@@ -1027,7 +1520,7 @@ class DefaultController extends Controller
 
     /**
      * ผู้ดูแลห้องประชุม — รายการจองห้องที่ผู้ใช้เป็นผู้ดูแล (room.data_json.owner).
-     * GET filter: status (pending|passed|cancelled|all), room (room code).
+     * GET filter: year (fiscal year), status (pending|passed|cancelled|all), room (room code).
      */
     public function actionRoomManage()
     {
@@ -1035,9 +1528,15 @@ class DefaultController extends Controller
 
         $me = UserHelper::GetEmployee();
         $service = new MobileMeetingAdminService();
+        $fiscalYears = $service->listFiscalYears();
+        $currentYear = (int) AppHelper::YearBudget();
+        $filterYear = (int) Yii::$app->request->get('year', $currentYear);
+        if (!isset($fiscalYears[$filterYear])) {
+            $filterYear = $currentYear;
+        }
 
         $owned    = $me ? $service->findOwnedRoomsForUser((string) $me->id) : ['codes' => [], 'titles' => []];
-        $meetings = $service->findMeetingsForOwnedRooms($owned['codes']);
+        $meetings = $service->findMeetingsForOwnedRooms($owned['codes'], 200, $filterYear);
         $statsCount = $service->bucketCountsForRoomManage($meetings);
 
         return $this->render('room-manage', [
@@ -1046,6 +1545,9 @@ class DefaultController extends Controller
             'ownedRoomCodes' => $owned['codes'],
             'roomTitles'     => $owned['titles'],
             'statsCount'     => $statsCount,
+            'fiscalYears'    => $fiscalYears,
+            'filterYear'     => $filterYear,
+            'currentYear'    => $currentYear,
             'filterStatus'   => Yii::$app->request->get('status', 'pending'),
             'filterRoom'     => Yii::$app->request->get('room', ''),
         ]);

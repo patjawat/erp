@@ -84,7 +84,7 @@ class MobileLeaveService
      * รายการ Leave ของ employee ปัจจุบัน เรียงจากใหม่ไปเก่า.
      * @return Leave[]
      */
-    public function findRecentRequests(?Employees $me, ?int $limit = null): array
+    public function findRecentRequests(?Employees $me, ?int $limit = null, ?int $thaiYear = null): array
     {
         if (!$me) return [];
 
@@ -93,11 +93,57 @@ class MobileLeaveService
             ->where(['emp_id' => (int) $me->id])
             ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]);
 
+        if ($thaiYear !== null) {
+            $query->andWhere(['thai_year' => $thaiYear]);
+        }
+
         if ($limit !== null) {
             $query->limit($limit);
         }
 
         return $query->all();
+    }
+
+    /**
+     * รายการ Leave ของ employee กรองตามปีงบประมาณ (สำหรับหน้า list).
+     *
+     * @return Leave[]
+     */
+    public function findRequestsByYear(?Employees $me, int $thaiYear, ?int $limit = 100): array
+    {
+        if (!$me) return [];
+
+        try {
+            $query = Leave::find()
+                ->with(['leaveType', 'leaveStatus'])
+                ->where(['emp_id' => (int) $me->id])
+                ->andWhere(['thai_year' => $thaiYear])
+                ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]);
+
+            if ($limit !== null) {
+                $query->limit($limit);
+            }
+
+            return $query->all();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * รายการปีงบประมาณ (10 ปีย้อนหลังจากปัจจุบัน) สำหรับ filter dropdown.
+     * คืน [year => 'พ.ศ. 2568', ...] เรียงใหม่ไปเก่า.
+     *
+     * @return array<int,string>
+     */
+    public function listFiscalYears(int $back = 10): array
+    {
+        $current = (int) AppHelper::YearBudget();
+        $years = [];
+        for ($y = $current; $y > $current - $back; $y--) {
+            $years[$y] = 'พ.ศ. ' . $y;
+        }
+        return $years;
     }
 
     /**
@@ -108,14 +154,19 @@ class MobileLeaveService
      *
      * @return Approve[]
      */
-    public function findPendingApprovals(?Employees $me, ?int $limit = null): array
+    public function findPendingApprovals(?Employees $me, ?int $limit = null, ?int $thaiYear = null): array
     {
         if (!$me) return [];
 
         $query = Approve::find()
             ->with(['leave.leaveType', 'leave.employee', 'employee'])
-            ->andWhere(['name' => 'leave', 'status' => 'Pending'])
-            ->orderBy(['id' => SORT_DESC]);
+            ->joinWith(['leave'], false)
+            ->andWhere(['approve.name' => 'leave', 'approve.status' => 'Pending'])
+            ->orderBy(['approve.id' => SORT_DESC]);
+
+        if ($thaiYear !== null) {
+            $query->andWhere(['leave.thai_year' => $thaiYear]);
+        }
 
         if (Yii::$app->user->can('leave')) {
             $query->andWhere([

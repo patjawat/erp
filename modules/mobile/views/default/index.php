@@ -6,9 +6,11 @@ use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var string $current_page */
+/** @var array $approvalInfo */
 /** @var app\modules\approveV2\models\Approve[] $pendingLeaveApprovals */
 /** @var app\modules\leave\models\Leave[] $recentLeaveRequests */
 /** @var app\modules\booking\models\Meeting[] $recentMeetings */
+/** @var bool $canManageMeeting */
 $this->params['current_page']   = $current_page ?? 'home';
 $this->params['mobileTitle']    = 'บริการออนไลน์';
 $this->params['mobileSubtitle'] = 'หน้าหลัก';
@@ -33,6 +35,8 @@ $recentLeaveRequests      = $recentLeaveRequests ?? [];
 $recentMeetings           = $recentMeetings ?? [];
 $officialDocumentsPreview = $officialDocumentsPreview ?? [];
 $officialUnreadCount      = (int) ($officialUnreadCount ?? 0);
+$canManageMeeting         = (bool) ($canManageMeeting ?? false);
+$approvalInfo             = is_array($approvalInfo ?? null) ? $approvalInfo : [];
 
 $formatDateTimeText = static function ($datetime): string {
     if (empty($datetime)) return '-';
@@ -129,28 +133,56 @@ usort($recentRequestItems, static function (array $a, array $b) {
 $recentRequestItems = array_slice($recentRequestItems, 0, 4);
 
 // ── Stats (overlay card) ──────────────────────────────────────────────
-$pendingCount = count($pendingLeaveApprovals);
+$approvalTabs = [
+    ['key' => 'leave',         'label' => 'วันลา',              'icon' => 'calendar',         'url' => Url::to(['/approve-v2/leave'])],
+    ['key' => 'booking_car',   'label' => 'ใช้รถ',              'icon' => 'car-front',        'url' => Url::to(['/approve-v2/vehicle'])],
+    ['key' => 'purchase',      'label' => 'จัดซื้อจัดจ้าง',     'icon' => 'shopping-cart',    'url' => Url::to(['/approve-v2/purchase'])],
+    ['key' => 'stock',         'label' => 'เบิกวัสดุ',          'icon' => 'shopping-basket',  'url' => Url::to(['/approve-v2/main-stock'])],
+    ['key' => 'requisitionV2', 'label' => 'เบิกวัสดุ v2',       'icon' => 'clipboard-list',   'url' => Url::to(['/approve-v2/main-stock/requisition-v2'])],
+    ['key' => 'development',   'label' => 'อบรม/ประชุม/ดูงาน', 'icon' => 'user-star',        'url' => Url::to(['/approve-v2/development'])],
+    ['key' => 'assetMove',     'label' => 'เคลื่อนย้ายครุภัณฑ์', 'icon' => 'arrow-left-right', 'url' => Url::to(['/approve-v2/asset-move'])],
+];
+$approvalGroups = [];
+foreach ($approvalTabs as $tab) {
+    $count = (int) ($approvalInfo[$tab['key']]['total'] ?? 0);
+    $approvalGroups[] = $tab + ['count' => $count];
+}
+$activeApprovalGroups = array_values(array_filter($approvalGroups, static function (array $group): bool {
+    return ($group['count'] ?? 0) > 0;
+}));
+$pendingCount = array_sum(array_map(static function (array $group): int {
+    return (int) ($group['count'] ?? 0);
+}, $approvalGroups));
+if ($pendingCount <= 0) {
+    $pendingCount = (int) ($approvalInfo['total'] ?? count($pendingLeaveApprovals));
+}
+$pendingApprovalUrl = $activeApprovalGroups[0]['url'] ?? Url::to(['/approve-v2']);
+$approvalSummaryText = !empty($activeApprovalGroups)
+    ? implode(' · ', array_map(static function (array $group): string {
+        return $group['label'] . ' ' . number_format((int) $group['count']);
+    }, array_slice($activeApprovalGroups, 0, 3)))
+    : 'เปิดดูรายการจากศูนย์อนุมัติ';
 $leaveDaysRemaining = '—'; // future: hook to leave-balance source
 $recentCount  = count($recentRequestItems);
-$notifBadge   = $pendingCount > 0;
+$notifBadge   = count($pendingLeaveApprovals) > 0;
 
 $stats = [
-    ['icon' => 'check-square',   'label' => 'รออนุมัติ',   'value' => $pendingCount,        'url' => Url::to(['/mobile/default/leave-approvals'])],
+    ['icon' => 'check-square',   'label' => 'รออนุมัติ',   'value' => $pendingCount,        'url' => $pendingApprovalUrl],
     ['icon' => 'calendar-off',   'label' => 'ใบลา',         'value' => $leaveDaysRemaining,  'url' => Url::to(['/mobile/default/leave-request'])],
     ['icon' => 'mail',           'label' => 'หนังสือใหม่',  'value' => $officialUnreadCount, 'url' => Url::to(['/mobile/default/news'])],
     ['icon' => 'history',        'label' => 'คำขอล่าสุด',  'value' => $recentCount,         'url' => Url::to(['/mobile/default/my-requests'])],
 ];
 
-// ── Quick action tiles (8, grid 4×2) ──────────────────────────────────
+// ── Quick action tiles — base high-frequency services.
 $quickServices = [
     ['icon' => 'car',             'cat' => 'vehicle',     'label' => 'จองรถ',           'url' => Url::to(['/mobile/default/booking-vehicle', 'action' => 'new'])],
     ['icon' => 'calendar',        'cat' => 'meeting',     'label' => 'จองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting', 'action' => 'new'])],
-    ['icon' => 'wrench',          'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',        'url' => Url::to(['/mobile/default/maintenance-request'])],
+    ['icon' => 'wrench',          'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',        'url' => Url::to(['/mobile/default/repair-request'])],
     ['icon' => 'calendar-off',    'cat' => 'leave',       'label' => 'ขอลา',            'url' => Url::to(['/mobile/default/leave-request'])],
     ['icon' => 'clock',           'cat' => 'attendance',  'label' => 'ลงเวลา',          'url' => Url::to(['/mobile/default/attendance'])],
     ['icon' => 'qr-code',         'cat' => 'asset',       'label' => 'ครุภัณฑ์',        'url' => Url::to(['/mobile/default/scan'])],
     ['icon' => 'file-text',       'cat' => 'document',    'label' => 'เอกสารราชการ',    'url' => Url::to(['/mobile/default/news']), 'badge' => $officialUnreadCount > 0 ? $officialUnreadCount : null],
-    ['icon' => 'clipboard-check', 'cat' => 'approval',    'label' => 'อนุมัติใบลา',     'url' => Url::to(['/mobile/default/leave-approvals']), 'badge' => $pendingCount > 0 ? $pendingCount : null],
+    ['icon' => 'clipboard-check', 'cat' => 'approval',    'label' => 'งานอนุมัติ',      'url' => $pendingApprovalUrl, 'badge' => $pendingCount > 0 ? $pendingCount : null],
 ];
 
 $todayThai    = ThaiDateHelper::formatThaiDate(date('Y-m-d'));
@@ -333,6 +365,113 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
     border: 2px solid #fff;
 }
 
+/* ── Approval hub cue ──────────────────────────────────────────────── */
+.home-approval-card {
+    display: flex; align-items: center; gap: var(--space-sm);
+    padding: var(--space-md);
+    background: color-mix(in oklch, var(--surface) 86%, var(--cat-approval-bg));
+    border: 1px solid var(--mobile-primary-soft-border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-md);
+    color: inherit; text-decoration: none;
+    transition:
+        transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-approval-card:hover,
+.home-approval-card:focus {
+    color: inherit;
+    border-color: var(--mobile-primary-soft-strong);
+    box-shadow: 0 10px 28px rgba(13, 110, 253, 0.12);
+    transform: translateY(-1px);
+}
+.home-approval-card:active {
+    transform: scale(0.99);
+}
+.home-approval-card:focus-visible {
+    outline: 2px solid var(--mobile-primary);
+    outline-offset: 3px;
+}
+.home-approval-medal {
+    width: 3rem; height: 3rem; border-radius: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--cat-approval-bg);
+    color: var(--cat-approval-fg);
+}
+.home-approval-medal svg {
+    width: 1.35rem; height: 1.35rem;
+}
+.home-approval-body {
+    min-width: 0; flex: 1;
+}
+.home-approval-kicker {
+    display: block;
+    margin: 0 0 2px;
+    color: var(--mobile-primary);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    line-height: 1.2;
+}
+.home-approval-title {
+    display: block;
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--fs-md);
+    font-weight: 800;
+    line-height: 1.25;
+}
+.home-approval-desc {
+    display: block;
+    margin: 4px 0 0;
+    color: var(--ink-3);
+    font-size: var(--fs-xs);
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.home-approval-chips {
+    display: flex; gap: 6px;
+    margin-top: var(--space-xs);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.home-approval-chips::-webkit-scrollbar {
+    display: none;
+}
+.home-approval-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--ink-line);
+    color: var(--ink-3);
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    line-height: 1.2;
+}
+.home-approval-chip b {
+    color: var(--danger-strong);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.home-approval-arrow {
+    width: 2rem; height: 2rem; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--surface);
+    color: var(--mobile-primary);
+    box-shadow: var(--shadow-sm);
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-approval-card:hover .home-approval-arrow,
+.home-approval-card:focus .home-approval-arrow {
+    transform: translateX(2px);
+}
+
 /* ── Modern section headline ────────────────────────────────────────── */
 .m-headline {
     display: flex; align-items: flex-end; justify-content: space-between;
@@ -396,8 +535,8 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
 
 @media (prefers-reduced-motion: reduce) {
     .home-root > *, .home-hero::before, .home-hero::after, .m-row-medal.is-warning { animation: none !important; }
-    .home-service-tile, .m-row, .home-hero-btn, .m-headline-link, .m-headline-link svg { transition: none !important; }
-    .home-service-tile:hover { transform: none; }
+    .home-service-tile, .home-approval-card, .home-approval-arrow, .m-row, .home-hero-btn, .m-headline-link, .m-headline-link svg { transition: none !important; }
+    .home-service-tile:hover, .home-approval-card:hover, .home-approval-card:focus { transform: none; }
 }
 
 /* ── Profile Offcanvas drawer (slide-from-right) ─────────────────────── */
@@ -607,7 +746,7 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
     <!-- ── Below the fold ──────────────────────────────────────────── -->
     <div class="home-below">
 
-        <!-- บริการด่วน (4×2 grid) -->
+        <!-- บริการด่วน -->
         <section style="--i: 2">
             <header class="m-headline">
                 <div>
@@ -633,8 +772,38 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
             </div>
         </section>
 
-        <!-- การแจ้งเตือน -->
+        <?php if ($pendingCount > 0): ?>
+        <!-- งานอนุมัติรวมจาก approveV2 tab menu -->
         <section style="--i: 3">
+            <a href="<?= Html::encode($pendingApprovalUrl) ?>"
+               class="home-approval-card"
+               aria-label="เปิดงานที่ต้องอนุมัติ <?= Html::encode((string) $pendingCount) ?> รายการ">
+                <span class="home-approval-medal" aria-hidden="true">
+                    <i data-lucide="clipboard-check"></i>
+                </span>
+                <span class="home-approval-body">
+                    <span class="home-approval-kicker">ศูนย์อนุมัติ</span>
+                    <span class="home-approval-title">งานรออนุมัติ <?= Html::encode(number_format($pendingCount)) ?> รายการ</span>
+                    <span class="home-approval-desc"><?= Html::encode($approvalSummaryText) ?></span>
+                    <?php if (!empty($activeApprovalGroups)): ?>
+                        <span class="home-approval-chips" aria-hidden="true">
+                            <?php foreach (array_slice($activeApprovalGroups, 0, 4) as $group): ?>
+                                <span class="home-approval-chip">
+                                    <?= Html::encode($group['label']) ?> <b><?= Html::encode(number_format((int) $group['count'])) ?></b>
+                                </span>
+                            <?php endforeach; ?>
+                        </span>
+                    <?php endif; ?>
+                </span>
+                <span class="home-approval-arrow" aria-hidden="true">
+                    <i data-lucide="chevron-right"></i>
+                </span>
+            </a>
+        </section>
+        <?php endif; ?>
+
+        <!-- การแจ้งเตือน -->
+        <section style="--i: 4">
             <header class="m-headline">
                 <div>
                     <h3 class="m-headline-title">การแจ้งเตือน</h3>
@@ -671,7 +840,7 @@ $greetingWord = $hour < 12 ? 'อรุณสวัสดิ์' : ($hour < 17 ?
         </section>
 
         <!-- คำขอล่าสุด -->
-        <section style="--i: 4">
+        <section style="--i: 5">
             <header class="m-headline">
                 <div>
                     <h3 class="m-headline-title">คำขอล่าสุด</h3>
@@ -730,8 +899,6 @@ if (!Yii::$app->user->isGuest && isset(Yii::$app->user->identity->employee) && Y
         }
     } catch (\Throwable $e) {}
 }
-$canManageMeeting = Yii::$app->user->can('meeting');
-
 $drawerMenu = [
     [
         'icon'  => 'clipboard-list',
@@ -751,7 +918,7 @@ if ($canManageMeeting) {
     $drawerMenu[] = [
         'icon'  => 'calendar-check',
         'tone'  => 'meeting',
-        'label' => 'จัดการห้องประชุม',
+        'label' => 'จัดห้องประชุม',
         'url'   => Url::to(['/mobile/default/room-manage']),
     ];
 }
@@ -759,7 +926,7 @@ $drawerMenu[] = [
     'icon'  => 'check-square',
     'tone'  => 'warning',
     'label' => 'งานที่ต้องอนุมัติ',
-    'url'   => Url::to(['/mobile/default/leave-approvals']),
+    'url'   => $pendingApprovalUrl,
     'badge' => $pendingCount > 0 ? $pendingCount : null,
 ];
 $drawerMenu[] = [

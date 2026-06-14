@@ -190,12 +190,14 @@ $phone = is_array($meeting->data_json) && isset($meeting->data_json['phone']) ? 
                     <span>แก้ไข</span>
                 </a>
                 <?= Html::beginForm(['/mobile/default/meeting-cancel', 'id' => $meeting->id], 'post', [
+                    'id'    => 'mv-cancel-form',
                     'class' => 'm-0',
-                    'onsubmit' => "return window.mobileConfirm ? window.mobileConfirm(this, 'ยืนยันยกเลิกคำขอจองห้องประชุม?') : confirm('ยืนยันยกเลิกคำขอจองห้องประชุม?');",
+                    // กัน global loader (mobile-shared.js) ขึ้น overlay บัง SwAL dialog
+                    'data'  => ['no-loader' => 'true'],
                 ]) ?>
                     <button type="submit" class="btn btn-outline-danger w-100">
                         <i data-lucide="x-circle" aria-hidden="true"></i>
-                        <span>ยกเลิก</span>
+                        <span>ยกเลิกการจอง</span>
                     </button>
                 <?= Html::endForm() ?>
             </div>
@@ -203,3 +205,45 @@ $phone = is_array($meeting->data_json) && isset($meeting->data_json['phone']) ? 
         </div>
     </div>
 </div>
+
+<?php
+// ─── Cancel confirmation: explicit submit listener (กว่า inline onsubmit เพราะ
+//   ใน Telegram WebView รุ่นเก่า form.requestSubmit() อาจไม่มี + sync/async mix
+//   ของ mobileConfirm ทำให้ flow เพี้ยนได้). ใช้ flag-based: ครั้งแรก preventDefault
+//   + ถาม; ถ้ายืนยัน set flag + submit ซ้ำ; submit ครั้งที่ 2 เห็น flag → ปล่อยผ่าน
+$this->registerJs(<<<'JS'
+(function(){
+    var form = document.getElementById('mv-cancel-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e){
+        if (form.dataset.confirmed === '1') return; // ครั้งที่ 2 หลังยืนยัน
+        e.preventDefault();
+        var msg = 'ยืนยันยกเลิกคำขอจองห้องประชุม? การยกเลิกไม่สามารถกู้คืน';
+        var doSubmit = function(){
+            form.dataset.confirmed = '1';
+            // แสดง overlay เอง (form มี data-no-loader = global listener ข้าม) — ให้ feedback ระหว่าง POST
+            if (typeof window.showMobileNavLoading === 'function') {
+                window.showMobileNavLoading('กำลังบันทึก...');
+            }
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        };
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'ยืนยันยกเลิกคำขอ?',
+                text: 'การยกเลิกไม่สามารถกู้คืน',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ยกเลิกการจอง',
+                cancelButtonText: 'ไม่, เก็บไว้',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: false
+            }).then(function(r){ if (r.isConfirmed) doSubmit(); });
+        } else {
+            if (window.confirm(msg)) doSubmit();
+        }
+    });
+})();
+JS
+, \yii\web\View::POS_READY); ?>
