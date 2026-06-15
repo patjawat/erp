@@ -143,7 +143,7 @@ class LeaveTelegramService
     {
         $setting = Categorise::findOne(['name' => 'telegram_setting']);
         $data = $setting ? $this->normalizeDataJson($setting->data_json) : [];
-        $miniAppUrl = trim((string) ($data['mini_app'] ?? ''));
+        $miniAppUrl = trim((string) ($data['mini_app_base_url'] ?? $data['mini_app'] ?? ''));
         $enabled = (string) ($data['enable_mini_app'] ?? '0');
 
         if ($enabled !== '1' || $miniAppUrl === '') {

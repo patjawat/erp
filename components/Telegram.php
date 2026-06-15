@@ -15,6 +15,12 @@ class Telegram extends Component
     public function sendMessage($groupCode, $message, array $options = [])
     {
         $this->lastError = null;
+        if (!$this->isNotificationEnabled()) {
+            $this->lastError = 'Telegram notification is disabled';
+            Yii::info($this->lastError, __METHOD__);
+            return false;
+        }
+
         $channel = TelegramChannel::findOne(['name' => 'telegram', 'code' => $groupCode]);
         if (!$channel) {
             $this->lastError = "Telegram channel '{$groupCode}' not found";
@@ -37,6 +43,12 @@ class Telegram extends Component
     public function sendDirectMessage($chatId, $message, array $options = [])
     {
         $this->lastError = null;
+        if (!$this->isNotificationEnabled()) {
+            $this->lastError = 'Telegram personal notification is disabled';
+            Yii::info($this->lastError, __METHOD__);
+            return false;
+        }
+
         $botToken = trim((string) $this->resolveDefaultBotToken());
         $chatId = trim((string) $chatId);
         if ($botToken === '' || $chatId === '') {
@@ -130,6 +142,14 @@ class Telegram extends Component
         return null;
     }
 
+    protected function isNotificationEnabled(): bool
+    {
+        $setting = TelegramChannel::findOne(['name' => 'telegram_setting']);
+        $settingData = $setting ? $this->normalizeDataJson($setting->data_json) : [];
+
+        return (string) ($settingData['enable_notification'] ?? '1') === '1';
+    }
+
     protected function normalizeDataJson($data): array
     {
         if (is_array($data)) {
@@ -158,6 +178,18 @@ class Telegram extends Component
             $hint .= ' และเป็นการ bind จาก bot ตัวเดียวกับ token ที่ตั้งค่าอยู่';
 
             return $baseError . ' | ' . $hint;
+        }
+
+        if ((int) $errorCode === 403 && stripos((string) $description, 'blocked') !== false) {
+            return $baseError . ' | ผู้ใช้นี้บล็อก bot หรือปิดการรับข้อความจาก bot แล้ว';
+        }
+
+        if ((int) $errorCode === 403 && stripos((string) $description, 'initiate conversation') !== false) {
+            return $baseError . ' | ผู้ใช้ยังไม่ได้กด Start กับ bot จึงส่งข้อความรายบุคคลไม่ได้';
+        }
+
+        if ((int) $errorCode === 429) {
+            return $baseError . ' | Telegram จำกัดอัตราการส่งข้อความ กรุณารอสักครู่แล้วลองใหม่';
         }
 
         return $baseError;

@@ -24,17 +24,17 @@ class HomeController extends Controller
             ];
         }
 
+        $setting = \app\models\Categorise::findOne(['name' => 'telegram_setting']);
+        $data = $setting ? $this->normalizeDataJson($setting->data_json) : [];
         $webAppUrl = trim((string) Yii::$app->request->post('mini_app_url', ''));
         if ($webAppUrl === '') {
-            $setting = \app\models\Categorise::findOne(['name' => 'telegram_setting']);
-            $data = $setting ? $this->normalizeDataJson($setting->data_json) : [];
-            $webAppUrl = trim((string) ($data['mini_app'] ?? ''));
+            $webAppUrl = trim((string) ($data['mini_app_base_url'] ?? $data['mini_app'] ?? ''));
         }
 
         if (!$this->isValidTelegramWebAppUrl($webAppUrl)) {
             return [
                 'status' => 'error',
-                'message' => 'Mini App URL ต้องเป็น https ที่เข้าถึงได้จากภายนอก',
+                'message' => 'Mini App Base URL ต้องเป็น https ที่เข้าถึงได้จากภายนอก',
             ];
         }
 

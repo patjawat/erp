@@ -10,6 +10,7 @@ class TelegramBot
     protected $botToken;
     protected $apiUrl;
     protected $requestTimeout = 5;
+    protected $lastError = null;
 
     public function __construct($botToken = null)
     {
@@ -33,25 +34,32 @@ class TelegramBot
         return $this->dispatchRequest('getMe', [], []);
     }
 
-    public function getChat($chatId)
-    {
-        return $this->dispatchRequest('getChat', [
-            'chat_id' => trim((string) $chatId),
-        ], []);
-    }
-
-    public function getChatMemberCount($chatId)
-    {
-        return $this->dispatchRequest('getChatMemberCount', [
-            'chat_id' => trim((string) $chatId),
-        ], []);
-    }
-
     public function setChatMenuButton(array $menuButton)
     {
         return $this->dispatchRequest('setChatMenuButton', [
             'menu_button' => $menuButton,
         ], ['menu_button']);
+    }
+
+    public function setWebhook(string $url)
+    {
+        return $this->dispatchRequest('setWebhook', [
+            'url' => trim($url),
+            'allowed_updates' => [
+                'message',
+                'callback_query',
+            ],
+        ], ['allowed_updates']);
+    }
+
+    public function getWebhookInfo()
+    {
+        return $this->dispatchRequest('getWebhookInfo', [], []);
+    }
+
+    public function getLastError()
+    {
+        return $this->lastError;
     }
 
     protected function resolveBotToken()
@@ -75,8 +83,11 @@ class TelegramBot
 
     protected function dispatchRequest(string $endpoint, array $payload = [], array $jsonFields = [])
     {
+        $this->lastError = null;
+
         if ($this->apiUrl === '') {
-            Yii::error('Telegram bot token is not configured', __METHOD__);
+            $this->lastError = 'Telegram bot token is not configured';
+            Yii::error($this->lastError, __METHOD__);
             return false;
         }
 
@@ -101,16 +112,15 @@ class TelegramBot
             if (!$response->isOk || !($response->data['ok'] ?? false)) {
                 $description = $response->data['description'] ?? null;
                 $errorCode = $response->data['error_code'] ?? null;
-                Yii::error(
-                    $this->buildErrorMessage($endpoint, $errorCode, $description) . ' | ' . json_encode($response->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                    __METHOD__
-                );
+                $this->lastError = $this->buildErrorMessage($endpoint, $errorCode, $description);
+                Yii::error($this->lastError . ' | ' . json_encode($response->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), __METHOD__);
                 return false;
             }
 
             return $response->data;
         } catch (\Throwable $e) {
-            Yii::error('Telegram request failed for ' . $endpoint . ': ' . $e->getMessage(), __METHOD__);
+            $this->lastError = 'Telegram request failed for ' . $endpoint . ': ' . $e->getMessage();
+            Yii::error($this->lastError, __METHOD__);
             return false;
         }
     }
