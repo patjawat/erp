@@ -174,6 +174,54 @@ $csrfToken     = Yii::$app->request->csrfToken;
     width: 1.125rem; height: 1.125rem; color: var(--mobile-primary);
 }
 
+/* Person block — avatar + ชื่อผู้ขอ + ตำแหน่ง (อยู่ส่วนบนของ card "ข้อมูลคำขอ") */
+.lv-person {
+    display: flex; align-items: center; gap: var(--space-sm);
+    padding-bottom: var(--space-sm); margin-bottom: var(--space-sm);
+    border-bottom: 1px dashed var(--ink-line);
+}
+.lv-person-avatar {
+    position: relative;
+    width: 3.25rem; height: 3.25rem; border-radius: 16px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--ink-line);
+    background: var(--surface-2);
+    box-shadow: 0 4px 14px color-mix(in oklch, var(--ink) 7%, transparent);
+}
+.lv-person-avatar img {
+    width: 100%; height: 100%; display: block; object-fit: cover;
+}
+.lv-person-avatar-badge {
+    position: absolute; right: -2px; bottom: -2px;
+    width: 1.125rem; height: 1.125rem; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid var(--surface);
+    background: var(--mobile-primary); color: #fff;
+}
+.lv-person-avatar-badge svg { width: 0.625rem; height: 0.625rem; }
+.lv-person-meta { min-width: 0; flex: 1; }
+.lv-person-label {
+    color: var(--ink-4); font-size: var(--fs-2xs); font-weight: 700;
+    line-height: 1.3; letter-spacing: 0.02em;
+}
+.lv-person-name {
+    margin: 2px 0 0; color: var(--ink);
+    font-size: var(--fs-md); font-weight: 800; line-height: 1.3;
+    text-wrap: pretty; word-break: break-word;
+}
+.lv-person-role {
+    margin: 2px 0 0; color: var(--ink-3);
+    font-size: var(--fs-xs); line-height: 1.4;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .lv-person-avatar { animation: lv-person-rise 320ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+@keyframes lv-person-rise {
+    from { opacity: 0; transform: translateY(4px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* Definition list — label/value rows */
 .lv-dl {
     display: grid; grid-template-columns: minmax(7.5rem, 35%) 1fr;
@@ -346,6 +394,28 @@ ob_start(); ?>
                         ข้อมูลคำขอ
                     </h2>
                 </header>
+
+                <!-- ผู้ขอลา (avatar + ชื่อ + ตำแหน่ง) -->
+                <div class="lv-person" aria-label="ผู้ขอลา">
+                    <span class="lv-person-avatar" aria-hidden="true">
+                        <?= Html::img($requesterAvatarUrl, [
+                            'alt'      => '',
+                            'loading'  => 'eager',
+                            'decoding' => 'async',
+                        ]) ?>
+                        <span class="lv-person-avatar-badge">
+                            <i data-lucide="user" aria-hidden="true"></i>
+                        </span>
+                    </span>
+                    <div class="lv-person-meta">
+                        <div class="lv-person-label">ผู้ขอลา</div>
+                        <p class="lv-person-name"><?= Html::encode($requesterName) ?></p>
+                        <?php if ($requesterPosition !== ''): ?>
+                            <p class="lv-person-role"><?= Html::encode($requesterPosition) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <dl class="lv-dl">
                     <dt>เลขที่คำขอ</dt>
                     <dd>#<?= Html::encode((string) $model->id) ?></dd>

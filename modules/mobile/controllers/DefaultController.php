@@ -1036,16 +1036,34 @@ class DefaultController extends Controller
         $currentYear = (int) AppHelper::YearBudget();
         $filterYear  = $this->resolveMobileFiscalYear($fiscalYears);
 
-        $allowedBuckets = ['all', 'pending', 'approved', 'rejected', 'sendback'];
+        // เหลือเฉพาะ 3 สถานะตาม spec UI — รออนุมัติ / อนุมัติแล้ว / ไม่อนุมัติ
+        $allowedBuckets = ['pending', 'approved', 'rejected'];
         $bucket = (string) Yii::$app->request->get('bucket', 'pending');
         if (!in_array($bucket, $allowedBuckets, true)) {
             $bucket = 'pending';
         }
 
-        $service     = new MobileApprovalService();
-        $bucketArg   = $bucket === 'all' ? null : $bucket;
-        $approvals   = $service->findForEmployee($me, $bucketArg, $filterYear, 200);
-        $counts      = $service->bucketCounts($me, $filterYear);
+        // กรองตามประเภทงาน (leave / vehicle / asset-move / purchase / development / all)
+        $allowedTypes = array_merge(['all'], array_keys(MobileApprovalService::typeMeta()));
+        $type = (string) Yii::$app->request->get('type', 'all');
+        if (!in_array($type, $allowedTypes, true)) {
+            $type = 'all';
+        }
+
+        $service = new MobileApprovalService();
+        // "รออนุมัติ" คือคิวรอทำ ไม่ใช่ history — ไม่กรองปีงบ (ตรงกับ ApproveHelper::Info ที่ home ใช้)
+        // history buckets (approved/rejected) ใช้ปีงบตามปกติ
+        $yearForList = ($bucket === 'pending') ? null : $filterYear;
+        $approvals   = $service->findForEmployee($me, $bucket, $yearForList, 200);
+
+        // นับจำนวน: pending ข้ามปี, history ใช้ปีงบที่เลือก
+        $historyCounts = $service->bucketCounts($me, $filterYear);
+        $pendingTotal  = count($service->findForEmployee($me, 'pending', null, 500));
+        $counts        = [
+            'pending'  => $pendingTotal,
+            'approved' => (int) ($historyCounts['approved'] ?? 0),
+            'rejected' => (int) ($historyCounts['rejected'] ?? 0),
+        ];
 
         return $this->render('approvals', [
             'current_page' => 'services',
@@ -1053,6 +1071,7 @@ class DefaultController extends Controller
             'service'      => $service,
             'counts'       => $counts,
             'bucket'       => $bucket,
+            'type'         => $type,
             'fiscalYears'  => $fiscalYears,
             'filterYear'   => $filterYear,
             'currentYear'  => $currentYear,

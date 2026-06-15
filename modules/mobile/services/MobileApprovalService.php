@@ -118,12 +118,13 @@ class MobileApprovalService
             $query->andWhere(['approve.status' => 'SendBack']);
         }
 
-        // กรองตาม thai_year (จาก parent record) — ข้าม join ที่ซับซ้อน ใช้ year จาก created_at ของ approve
+        // กรองตามปีงบประมาณ — ปีงบ N ครอบคลุม Oct 1 (N-544) ถึง Sep 30 (N-543)
+        //   (สอดคล้องกับ AppHelper::YearBudget(): IF(MONTH>9, YEAR+1, YEAR) + 543)
         if ($thaiYear !== null) {
             $query->andWhere(['between',
                 'DATE(approve.created_at)',
-                ($thaiYear - 543) . '-10-01',
-                ($thaiYear - 542) . '-09-30',
+                ($thaiYear - 544) . '-10-01',
+                ($thaiYear - 543) . '-09-30',
             ]);
         }
 
