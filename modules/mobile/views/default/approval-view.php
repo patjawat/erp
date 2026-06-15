@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\web\View;
 use app\modules\mobile\services\MobileApprovalService;
@@ -27,17 +28,37 @@ $isPending   = (string) $approve->status === 'Pending';
 
 $approveData = is_array($approve->data_json ?? null) ? $approve->data_json : [];
 $levelLabel  = (string) ($approveData['label'] ?? $approve->title ?? ('ระดับ ' . (int) $approve->level));
+$actionBaseLabel = trim((string) ($approveData['label'] ?? ''));
+if ($actionBaseLabel === '') {
+    $actionBaseLabel = 'อนุมัติ';
+}
+$passActionLabel   = $actionBaseLabel;
+$rejectActionLabel = 'ไม่' . $actionBaseLabel;
 $comment     = trim((string) ($approve->comment ?? ''));
 
+$avatarPlaceholder = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
 $requesterName     = (string) ($meta['requester'] ?? '-');
 $requesterAvatar   = (string) ($meta['requesterAvatar'] ?? '');
 if ($requesterAvatar === '') {
-    $requesterAvatar = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
+    $requesterAvatar = $avatarPlaceholder;
 }
 $requesterPosition = '';
 try {
-    if ($parent && property_exists($parent, 'employee') && $parent->employee && method_exists($parent->employee, 'positionName')) {
-        $requesterPosition = (string) $parent->employee->positionName();
+    $requesterEmployee = null;
+    if ($name === 'leave' && $parent) {
+        $requesterEmployee = $parent->employee ?? null;
+    } elseif ($name === 'development' && $parent) {
+        $requesterEmployee = $parent->createdByEmp ?? null;
+    }
+    if ($requesterEmployee && method_exists($requesterEmployee, 'positionName')) {
+        $requesterPosition = (string) $requesterEmployee->positionName();
+    }
+    if ($requesterAvatar === $avatarPlaceholder && $requesterEmployee) {
+        if (method_exists($requesterEmployee, 'showAvatar')) {
+            $requesterAvatar = (string) $requesterEmployee->showAvatar();
+        } elseif (method_exists($requesterEmployee, 'ShowAvatar')) {
+            $requesterAvatar = (string) $requesterEmployee->ShowAvatar();
+        }
     }
 } catch (\Throwable $e) { $requesterPosition = ''; }
 
@@ -48,16 +69,27 @@ $backUrl = Url::to(['/mobile/default/approvals', 'bucket' => 'pending']);
 
 // Field rows for the request card — แต่ละประเภทใส่ข้อมูลที่เหมาะสม
 $fieldRows = [];
+$leaveTypeLabel = '';
+$leaveDateRange = '';
 try {
     if ($name === 'leave' && $parent) {
         $modelData = is_array($parent->data_json ?? null) ? $parent->data_json : [];
-        $leaveType = (string) ($parent->leaveType->title ?? 'ใบลา');
-        $dateRange = trim(preg_replace('/\s+/', ' ', strip_tags((string) $parent->showLeaveDate())));
+        $leaveTypeLabel = (string) ($parent->leaveType->title ?? 'ใบลา');
+        $leaveDateRange = method_exists($parent, 'showLeaveDate')
+            ? trim(preg_replace('/\s+/', ' ', strip_tags((string) $parent->showLeaveDate())))
+            : '';
+        if ($leaveDateRange === '' && !empty($parent->date_start)) {
+            $leaveDateRange = \app\components\ThaiDateHelper::formatThaiDateRange(
+                (string) $parent->date_start,
+                !empty($parent->date_end) ? (string) $parent->date_end : null,
+                'short'
+            );
+        }
         $totalDays = (float) ($parent->total_days ?? 0);
         $reason    = trim((string) ($modelData['reason'] ?? ''));
-        $fieldRows[] = ['label' => 'ประเภทการลา', 'value' => $leaveType, 'wide' => false];
+        $fieldRows[] = ['label' => 'ประเภทการลา', 'value' => $leaveTypeLabel, 'wide' => false];
         $fieldRows[] = ['label' => 'จำนวนวัน', 'value' => rtrim(rtrim(number_format($totalDays, 1), '0'), '.') . ' วัน', 'wide' => false];
-        if ($dateRange !== '') $fieldRows[] = ['label' => 'ช่วงเวลาที่ลา', 'value' => $dateRange, 'wide' => true];
+        if ($leaveDateRange !== '') $fieldRows[] = ['label' => 'ช่วงวันที่ลา', 'value' => $leaveDateRange, 'wide' => true];
         if ($reason !== '')    $fieldRows[] = ['label' => 'เหตุผล', 'value' => $reason, 'wide' => true];
     } elseif ($name === 'vehicle' && $parent) {
         $vData = is_array($parent->data_json ?? null) ? $parent->data_json : [];
@@ -87,8 +119,21 @@ try {
 } catch (\Throwable $e) { /* ignore */ }
 
 $fieldRows[] = ['label' => 'ขั้นตอนที่รออนุมัติ', 'value' => $levelLabel, 'wide' => true, 'primary' => true];
-if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
+if ($name !== 'leave' && !empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
     $fieldRows[] = ['label' => 'วันที่ส่งคำขอ', 'value' => (string) $meta['createdAt'], 'wide' => false];
+}
+
+$requestStats = [
+    ['value' => (string) $meta['createdAt'], 'label' => 'วันที่ส่งคำขอ', 'tone' => 'primary'],
+    ['value' => (string) $status['label'],   'label' => 'สถานะปัจจุบัน', 'tone' => $status['tone']],
+];
+$requestStatsLabel = 'สรุปงานอนุมัติ';
+if ($name === 'leave') {
+    $requestStats = [
+        ['value' => $leaveDateRange !== '' ? $leaveDateRange : '-', 'label' => 'ช่วงวันที่ลา', 'tone' => 'primary'],
+        ['value' => $leaveTypeLabel !== '' ? $leaveTypeLabel : 'ใบลา', 'label' => 'ประเภทการลา'],
+    ];
+    $requestStatsLabel = 'สรุปข้อมูลการลา';
 }
 ?>
 
@@ -96,8 +141,14 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
 .avd-root {
     margin: -1rem -1rem 0;
 }
+.avd-root .app-stat-num {
+    font-size: var(--fs-sm);
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-wrap: pretty;
+}
 .avd-scroll {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 9rem);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 13rem);
 }
 .avd-body {
     display: flex;
@@ -286,12 +337,13 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
 /* Sticky action bar */
 .avd-actions {
     position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: var(--z-sticky, 50);
+    left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4.75rem);
+    z-index: 1031;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md) calc(env(safe-area-inset-bottom, 0px) + var(--space-sm));
+    padding: var(--space-sm) var(--space-md);
     background: color-mix(in oklch, var(--surface) 92%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -308,9 +360,17 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
     gap: var(--space-2xs);
     line-height: 1.1;
     padding: 0 var(--space-xs);
+    min-width: 0;
+    white-space: normal;
     transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .avd-actions .btn svg { width: 1.125rem; height: 1.125rem; }
+.avd-actions .btn span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
 .avd-actions .btn:active { transform: translateY(1px) scale(0.985); }
 .avd-actions .btn-primary { box-shadow: 0 4px 12px color-mix(in oklch, var(--mobile-primary) 35%, transparent); }
 .avd-status-banner {
@@ -414,11 +474,8 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
         'icon'       => $typeIcon,
         'title'      => $typeLabel,
         'subtitle'   => $requesterName !== '-' ? 'ผู้ขอ ' . $requesterName : 'รายละเอียดคำขอ',
-        'stats'      => [
-            ['value' => (string) $meta['createdAt'], 'label' => 'วันที่ส่งคำขอ', 'tone' => 'primary'],
-            ['value' => (string) $status['label'],   'label' => 'สถานะปัจจุบัน', 'tone' => $status['tone']],
-        ],
-        'statsLabel' => 'สรุปงานอนุมัติ',
+        'stats'      => $requestStats,
+        'statsLabel' => $requestStatsLabel,
     ]) ?>
 
     <div class="app-scroll has-stats avd-scroll">
@@ -457,6 +514,7 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
                                 'alt' => '',
                                 'loading' => 'eager',
                                 'decoding' => 'async',
+                                'onerror' => "this.onerror=null;this.src='" . $avatarPlaceholder . "';",
                             ]) ?>
                             <span class="avd-person-avatar-badge">
                                 <i data-lucide="user-check" aria-hidden="true"></i>
@@ -550,17 +608,13 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
 
     <?php if ($isPending): ?>
         <div class="avd-actions" role="group" aria-label="ดำเนินการอนุมัติ">
-            <button type="button" class="btn btn-outline-danger avd-act" data-action="Reject">
-                <i data-lucide="x-circle" aria-hidden="true"></i>
-                ไม่อนุมัติ
-            </button>
-            <button type="button" class="btn btn-outline-warning avd-act" data-action="SendBack">
-                <i data-lucide="rotate-ccw" aria-hidden="true"></i>
-                ส่งคืน
-            </button>
-            <button type="button" class="btn btn-primary avd-act" data-action="Pass">
+            <button type="button" class="btn btn-primary avd-act" data-action="Pass" data-label="<?= Html::encode($passActionLabel) ?>">
                 <i data-lucide="check-circle-2" aria-hidden="true"></i>
-                อนุมัติ
+                <span><?= Html::encode($passActionLabel) ?></span>
+            </button>
+                        <button type="button" class="btn btn-outline-danger avd-act" data-action="Reject" data-label="<?= Html::encode($rejectActionLabel) ?>">
+                <i data-lucide="x-circle" aria-hidden="true"></i>
+                <span><?= Html::encode($rejectActionLabel) ?></span>
             </button>
         </div>
     <?php endif; ?>
@@ -569,18 +623,36 @@ if (!empty($meta['createdAt']) && $meta['createdAt'] !== '-') {
 <?php
 $updateUrl   = Url::to(['/mobile/default/approval-update', 'id' => (int) $approve->id]);
 $redirectUrl = Url::to(['/mobile/default/approvals', 'bucket' => 'pending']);
-$typeLabelJs = addslashes($typeLabel);
+$typeLabelJs = Json::htmlEncode($typeLabel);
 $js = <<<JS
 (function () {
     const updateUrl   = '{$updateUrl}';
     const redirectUrl = '{$redirectUrl}';
-    const typeLabel   = '{$typeLabelJs}';
+    const typeLabel   = {$typeLabelJs};
 
     const actionMeta = {
         Pass:     { label: 'อนุมัติ',      icon: 'success',  confirmText: 'ยืนยันการอนุมัติ', needsReason: false, confirmBtn: 'อนุมัติ', confirmColor: 'var(--mobile-primary)' },
         Reject:   { label: 'ไม่อนุมัติ',   icon: 'error',    confirmText: 'ยืนยันไม่อนุมัติ', needsReason: true,  confirmBtn: 'ไม่อนุมัติ', confirmColor: 'var(--danger)' },
-        SendBack: { label: 'ส่งคืนแก้ไข', icon: 'warning',  confirmText: 'ยืนยันส่งคืน',    needsReason: true,  confirmBtn: 'ส่งคืน',   confirmColor: 'var(--warning)' },
     };
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (char) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char];
+        });
+    }
+
+    function actionLabel(action, overrideLabel) {
+        const meta = actionMeta[action];
+        const label = String(overrideLabel || '').trim();
+        return label || (meta ? meta.label : '');
+    }
+
+    function confirmText(action, label) {
+        if (action === 'Pass' || action === 'Reject') {
+            return label + ' ใช่หรือไม่';
+        }
+        return actionMeta[action].confirmText;
+    }
 
     function showSuccess(message) {
         return Swal.fire({
@@ -598,8 +670,9 @@ $js = <<<JS
         });
     }
 
-    function submitApproval(action, comment) {
+    function submitApproval(action, comment, overrideLabel) {
         const meta = actionMeta[action];
+        const label = actionLabel(action, overrideLabel);
         Swal.fire({
             title: 'กำลังบันทึก…',
             html: '<div style="color:var(--ink-3);font-size:.9rem">โปรดรอสักครู่</div>',
@@ -616,7 +689,7 @@ $js = <<<JS
             dataType: 'json',
         }).done(function (resp) {
             if (resp && resp.status === 'success') {
-                showSuccess(resp.message || meta.label + 'เรียบร้อย').then(() => {
+                showSuccess(resp.message || label + 'เรียบร้อย').then(() => {
                     window.location.href = resp.redirect || redirectUrl;
                 });
                 return;
@@ -637,27 +710,30 @@ $js = <<<JS
         });
     }
 
-    function openConfirm(action) {
+    function openConfirm(action, overrideLabel) {
         const meta = actionMeta[action];
+        const label = actionLabel(action, overrideLabel);
+        const title = confirmText(action, label);
+        const confirmButtonText = (action === 'Pass' || action === 'Reject') ? label : meta.confirmBtn;
 
         if (!meta.needsReason) {
             Swal.fire({
-                title: meta.confirmText,
-                html: '<div style="color:var(--ink-3);font-size:.95rem;line-height:1.5">' + meta.label + ' ' + typeLabel + ' ของผู้ขอนี้ใช่หรือไม่?</div>',
+                title: title,
+                html: '<div style="color:var(--ink-3);font-size:.95rem;line-height:1.5">' + escapeHtml(label) + ' ' + escapeHtml(typeLabel) + ' ของผู้ขอนี้ใช่หรือไม่?</div>',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: meta.confirmBtn,
+                confirmButtonText: confirmButtonText,
                 cancelButtonText: 'ยกเลิก',
-                reverseButtons: true,
+                reverseButtons: false,
                 confirmButtonColor: meta.confirmColor,
             }).then((result) => {
-                if (result.isConfirmed) submitApproval(action, '');
+                if (result.isConfirmed) submitApproval(action, '', label);
             });
             return;
         }
 
         Swal.fire({
-            title: meta.confirmText,
+            title: title,
             html:
                 '<form class="avd-modal-form" autocomplete="off" onsubmit="return false;">'
                 + '<label for="avd-reason" style="display:block;text-align:left;font-weight:700;font-size:.85rem;color:var(--ink-2)">'
@@ -666,7 +742,7 @@ $js = <<<JS
                 + '<p class="avd-modal-hint" style="text-align:left;margin:0">ระบบจะบันทึกเหตุผลนี้ลงในประวัติการอนุมัติ และแจ้งผู้ขอ</p>'
                 + '</form>',
             showCancelButton: true,
-            confirmButtonText: meta.confirmBtn,
+            confirmButtonText: confirmButtonText,
             cancelButtonText: 'ยกเลิก',
             reverseButtons: true,
             confirmButtonColor: meta.confirmColor,
@@ -694,14 +770,14 @@ $js = <<<JS
                 return value;
             },
         }).then((result) => {
-            if (result.isConfirmed && result.value) submitApproval(action, result.value);
+            if (result.isConfirmed && result.value) submitApproval(action, result.value, label);
         });
     }
 
     $('body').on('click', '.avd-act', function () {
         const action = $(this).data('action');
         if (!actionMeta[action]) return;
-        openConfirm(action);
+        openConfirm(action, $(this).data('label'));
     });
 })();
 JS;

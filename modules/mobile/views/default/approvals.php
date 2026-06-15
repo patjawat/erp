@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
+use app\components\ThaiDateHelper;
 use app\modules\mobile\services\MobileApprovalService;
 
 /** @var yii\web\View $this */
@@ -32,6 +33,8 @@ $backUrl     = Url::to(['/mobile/default/services']);
 $baseUrl     = ['/mobile/default/approvals', 'year' => $filterYear, 'type' => $type];
 
 $typeMeta = MobileApprovalService::typeMeta();
+$typeScopeLabel = ($type !== 'all' && isset($typeMeta[$type]['label'])) ? (string) $typeMeta[$type]['label'] : '';
+$avatarPlaceholder = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
 
 /*
  * Timeline batch-load — instead of N queries (one per card), grab every approve row
@@ -77,6 +80,25 @@ foreach ($approvals as $approve) {
     $parent = $service->loadParent($approve);
     $info   = $service->buildMeta($approve, $parent);
     $status = $service->statusInfo((string) $approve->status);
+    $dateLabel = (string) ($info['createdAt'] ?? '');
+
+    if ($name === 'leave' && $parent) {
+        $dateLabel = '';
+        try {
+            if (method_exists($parent, 'showLeaveDate')) {
+                $dateLabel = trim(preg_replace('/\s+/', ' ', strip_tags((string) $parent->showLeaveDate())));
+            }
+            if ($dateLabel === '' && !empty($parent->date_start)) {
+                $dateLabel = ThaiDateHelper::formatThaiDateRange(
+                    (string) $parent->date_start,
+                    !empty($parent->date_end) ? (string) $parent->date_end : null,
+                    'short'
+                );
+            }
+        } catch (\Throwable $e) {
+            $dateLabel = (string) ($info['createdAt'] ?? '');
+        }
+    }
 
     $approveData = is_array($approve->data_json ?? null) ? $approve->data_json : [];
     $levelLabel  = (string) ($approveData['label'] ?? $approve->title ?? ('ระดับ ' . (int) $approve->level));
@@ -94,8 +116,11 @@ foreach ($approvals as $approve) {
         }
     }
 
-    // Avatar fallback — leave provides showAvatar(); others fall back to initials
+    // Avatar fallback — show the requester photo when available, otherwise use the shared placeholder.
     $avatarUrl = (string) ($info['requesterAvatar'] ?? '');
+    if ($avatarUrl === '') {
+        $avatarUrl = $avatarPlaceholder;
+    }
     $initials  = '';
     if ($avatarUrl === '' && $info['requester'] !== '' && $info['requester'] !== '-') {
         $parts = preg_split('/\s+/', trim($info['requester']));
@@ -117,6 +142,7 @@ foreach ($approvals as $approve) {
         $info['title'] ?? '',
         $info['summary'] ?? '',
         $levelLabel,
+        $dateLabel,
         (string) $approve->from_id,
     ])), 'UTF-8');
 
@@ -135,6 +161,7 @@ foreach ($approvals as $approve) {
         'currentIndex' => $currentIndex,
         'avatarUrl'    => $avatarUrl,
         'initials'     => $initials,
+        'dateLabel'    => $dateLabel,
         'comment'      => $commentPreview,
         'search'       => $searchHaystack,
         'isPending'    => $isPending,
@@ -746,7 +773,7 @@ $typesToRender = array_values(array_filter($sectionOrder, static fn($n) => !empt
     <?= $this->render('@app/modules/mobile/views/layouts/_partials/_hero_shell', [
         'icon'       => 'shield-check',
         'title'      => $this->params['mobileTitle'],
-        'subtitle'   => 'ปีงบประมาณ ' . $fiscalLabel . ' · รออนุมัติ ' . (int) $counts['pending'] . ' รายการ',
+        'subtitle'   => 'ปีงบประมาณ ' . $fiscalLabel . ($typeScopeLabel !== '' ? ' · ' . $typeScopeLabel : '') . ' · รออนุมัติ ' . (int) $counts['pending'] . ' รายการ',
         'stats'      => [
             [
                 'value'    => (int) $counts['pending'],
@@ -893,7 +920,9 @@ $typesToRender = array_values(array_filter($sectionOrder, static fn($n) => !empt
                                                 </span>
                                                 <div class="apv-card-head-body">
                                                     <div>
-                                                        <span class="apv-card-type"><?= Html::encode($c['typeLabel']) ?></span>
+                                                        <?php if ($c['name'] !== 'leave'): ?>
+                                                            <span class="apv-card-type"><?= Html::encode($c['typeLabel']) ?></span>
+                                                        <?php endif; ?>
                                                         <span class="apv-card-type-meta"><?= Html::encode($c['levelLabel']) ?></span>
                                                     </div>
                                                     <div class="apv-card-title-row">
@@ -910,7 +939,11 @@ $typesToRender = array_values(array_filter($sectionOrder, static fn($n) => !empt
                                             <div class="apv-card-requester">
                                                 <span class="apv-avatar" aria-hidden="true">
                                                     <?php if ($c['avatarUrl'] !== ''): ?>
-                                                        <img src="<?= Html::encode($c['avatarUrl']) ?>" alt="" loading="lazy" decoding="async">
+                                                        <img src="<?= Html::encode($c['avatarUrl']) ?>"
+                                                             alt=""
+                                                             loading="lazy"
+                                                             decoding="async"
+                                                             onerror="this.onerror=null;this.src='<?= Html::encode($avatarPlaceholder) ?>';">
                                                     <?php elseif ($c['initials'] !== ''): ?>
                                                         <?= Html::encode($c['initials']) ?>
                                                     <?php else: ?>
@@ -920,8 +953,8 @@ $typesToRender = array_values(array_filter($sectionOrder, static fn($n) => !empt
                                                 <span class="apv-card-requester-name">
                                                     <?= Html::encode($c['info']['title'] !== '-' && $c['info']['title'] !== '' ? $c['info']['title'] : $c['typeLabel']) ?>
                                                 </span>
-                                                <?php if (!empty($c['info']['createdAt']) && $c['info']['createdAt'] !== '-'): ?>
-                                                    <time class="apv-card-requester-date"><?= Html::encode($c['info']['createdAt']) ?></time>
+                                                <?php if (!empty($c['dateLabel']) && $c['dateLabel'] !== '-'): ?>
+                                                    <time class="apv-card-requester-date"><?= Html::encode($c['dateLabel']) ?></time>
                                                 <?php endif; ?>
                                             </div>
 

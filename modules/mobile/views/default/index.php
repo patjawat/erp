@@ -134,13 +134,8 @@ $recentRequestItems = array_slice($recentRequestItems, 0, 4);
 
 // ── Stats (overlay card) ──────────────────────────────────────────────
 $approvalTabs = [
-    ['key' => 'leave',         'label' => 'วันลา',              'icon' => 'calendar',         'url' => Url::to(['/approve-v2/leave'])],
-    ['key' => 'booking_car',   'label' => 'ใช้รถ',              'icon' => 'car-front',        'url' => Url::to(['/approve-v2/vehicle'])],
-    ['key' => 'purchase',      'label' => 'จัดซื้อจัดจ้าง',     'icon' => 'shopping-cart',    'url' => Url::to(['/approve-v2/purchase'])],
-    ['key' => 'stock',         'label' => 'เบิกวัสดุ',          'icon' => 'shopping-basket',  'url' => Url::to(['/approve-v2/main-stock'])],
-    ['key' => 'requisitionV2', 'label' => 'เบิกวัสดุ v2',       'icon' => 'clipboard-list',   'url' => Url::to(['/approve-v2/main-stock/requisition-v2'])],
-    ['key' => 'development',   'label' => 'อบรม/ประชุม/ดูงาน', 'icon' => 'user-star',        'url' => Url::to(['/approve-v2/development'])],
-    ['key' => 'assetMove',     'label' => 'เคลื่อนย้ายครุภัณฑ์', 'icon' => 'arrow-left-right', 'url' => Url::to(['/approve-v2/asset-move'])],
+    ['key' => 'leave',       'label' => 'ขอลา',                 'icon' => 'calendar',  'url' => Url::to(['/mobile/default/approvals', 'bucket' => 'pending', 'type' => 'leave'])],
+    ['key' => 'development', 'label' => 'อบรม/ประชุม/ดูงาน', 'icon' => 'user-star', 'url' => Url::to(['/mobile/default/approvals', 'bucket' => 'pending', 'type' => 'development'])],
 ];
 $approvalGroups = [];
 foreach ($approvalTabs as $tab) {
@@ -153,9 +148,6 @@ $activeApprovalGroups = array_values(array_filter($approvalGroups, static functi
 $pendingCount = array_sum(array_map(static function (array $group): int {
     return (int) ($group['count'] ?? 0);
 }, $approvalGroups));
-if ($pendingCount <= 0) {
-    $pendingCount = (int) ($approvalInfo['total'] ?? count($pendingLeaveApprovals));
-}
 $pendingApprovalUrl = Url::to(['/mobile/default/approvals', 'bucket' => 'pending']);
 // Expose counts to the shared profile drawer (rendered by main layout).
 $this->params['profileBadges'] = [

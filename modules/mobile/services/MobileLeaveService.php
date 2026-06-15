@@ -147,44 +147,13 @@ class MobileLeaveService
     }
 
     /**
-     * รายการ Approve ที่รออนุมัติ (สำหรับ employee ปัจจุบัน).
-     * Visibility:
-     * - User ที่มีสิทธิ์ 'leave' role: เห็นรายการของตัวเอง + unassigned (emp_id null)
-     * - User ทั่วไป: เห็นเฉพาะของตัวเอง
+     * รายการใบลาที่รออนุมัติ ตาม scope เดียวกับ approve-v2/leave.
      *
      * @return Approve[]
      */
     public function findPendingApprovals(?Employees $me, ?int $limit = null, ?int $thaiYear = null): array
     {
-        if (!$me) return [];
-
-        $query = Approve::find()
-            ->with(['leave.leaveType', 'leave.employee', 'employee'])
-            ->joinWith(['leave'], false)
-            ->andWhere(['approve.name' => 'leave', 'approve.status' => 'Pending'])
-            ->orderBy(['approve.id' => SORT_DESC]);
-
-        if ($thaiYear !== null) {
-            $query->andWhere(['leave.thai_year' => $thaiYear]);
-        }
-
-        if (Yii::$app->user->can('leave')) {
-            $query->andWhere([
-                'or',
-                ['approve.emp_id' => (int) $me->id],
-                ['approve.emp_id' => null],
-            ]);
-        } else {
-            $query->andWhere(['approve.emp_id' => (int) $me->id]);
-        }
-
-        if ($limit !== null) {
-            $query->limit($limit);
-        }
-
-        return array_values(array_filter($query->all(), static function (Approve $approve) {
-            return $approve->leave !== null;
-        }));
+        return (new MobileApprovalService())->findPendingLeaveApprovals($me, $limit);
     }
 
     /**

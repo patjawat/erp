@@ -7,21 +7,19 @@ use app\components\ThaiDateHelper;
 use app\modules\am\models\AssetDetail;
 use app\modules\approveV2\models\Approve;
 use app\modules\booking\models\Vehicle;
-use app\modules\development\models\Development;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Development;
 use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\models\Leave;
 use app\modules\purchase\models\Order as PurchaseOrder;
-use Yii;
 use yii\helpers\ArrayHelper;
 
 /**
- * รวมงานอนุมัติทุกประเภทจาก approve table มาให้มือถือใช้แสดงในที่เดียว
+ * รวมงานอนุมัติที่เปิดใช้งานบน mobile จาก approve table มาให้มือถือใช้แสดงในที่เดียว
  *
  * ใช้ pattern เดียวกับระบบเดิมเป็น "แนวทาง" — ไม่ redirect ไป controller/view ของ module อื่น
  * - LEAVE: ใช้ LeaveApprovalService (มี workflow ครบ: status map ตาม level, telegram notify, MsgApprove/Reject)
- * - VEHICLE / ASSET-MOVE / PURCHASE / DEVELOPMENT: ทำ minimal update ที่ approve.status + comment เท่านั้น
- *   (ระบบหลักของแต่ละโมดูลจะอ่าน approve.status ของตัวเองตามรอบของมัน — ไม่แตะ business logic หลัก)
+ * - DEVELOPMENT: ทำ workflow ให้ตรงกับ approve-v2/development (status map, next approver, parent status)
  */
 class MobileApprovalService
 {
@@ -36,11 +34,8 @@ class MobileApprovalService
     public static function typeMeta(): array
     {
         return [
-            'leave'       => ['label' => 'ขอลา',          'icon' => 'calendar-off',    'cat' => 'leave'],
-            'vehicle'     => ['label' => 'จองรถ',         'icon' => 'car',             'cat' => 'vehicle'],
-            'asset-move'  => ['label' => 'เคลื่อนย้ายครุภัณฑ์', 'icon' => 'arrow-left-right', 'cat' => 'asset'],
-            'purchase'    => ['label' => 'ขออนุมัติซื้อ',  'icon' => 'shopping-bag',    'cat' => 'document'],
-            'development' => ['label' => 'พัฒนาบุคลากร',  'icon' => 'graduation-cap',  'cat' => 'document'],
+            'leave'       => ['label' => 'ขอลา',                 'icon' => 'calendar-off',   'cat' => 'leave'],
+            'development' => ['label' => 'ขออบรม/ประชุม/ดูงาน', 'icon' => 'graduation-cap', 'cat' => 'document'],
         ];
     }
 
@@ -92,20 +87,39 @@ class MobileApprovalService
      *
      * @return Approve[]
      */
-    public function findForEmployee(?Employees $me, ?string $bucketFilter = null, ?int $thaiYear = null, int $limit = 200): array
+    public function findForEmployee(?Employees $me, ?string $bucketFilter = null, ?int $thaiYear = null, int $limit = 200, ?string $typeFilter = null): array
     {
         if (!$me) return [];
 
+        $typeFilter = $this->normalizeTypeFilter($typeFilter);
+        if ($bucketFilter === 'pending' && $typeFilter === 'leave') {
+            return $this->findPendingLeaveApprovals($me, $limit);
+        }
+        if ($bucketFilter === 'pending' && $typeFilter === 'development') {
+            return $this->findPendingDevelopmentApprovals($me, $limit);
+        }
+        if ($bucketFilter === 'pending' && $typeFilter === null) {
+            return $this->findPendingApprovalsForEnabledTypes($me, $limit);
+        }
+
         $query = Approve::find()
-            ->andWhere(['IS', 'deleted_at', null])
+            ->alias('approve')
+            ->andWhere(['IS', 'approve.deleted_at', null])
+            ->andWhere(['approve.name' => array_keys(self::typeMeta())])
             ->orderBy(['approve.id' => SORT_DESC])
             ->limit($limit);
+
+        if ($typeFilter !== null) {
+            $query->andWhere(['approve.name' => $typeFilter]);
+        }
 
         // visibility: ของฉันเอง + รายการที่ยังไม่มอบหมาย (เฉพาะ pending) + รายการที่เราเคย action ไปแล้ว
         $query->andWhere(['or',
             ['approve.emp_id' => (int) $me->id],
             ['and', ['approve.emp_id' => null], ['approve.status' => 'Pending']],
         ]);
+
+        $this->applyLeaveApprovalScope($query, $me);
 
         // กรองตาม bucket
         if ($bucketFilter === 'pending') {
@@ -136,15 +150,94 @@ class MobileApprovalService
     }
 
     /**
+     * ใบลาที่รออนุมัติของผู้ใช้ปัจจุบัน ตาม query ใน approve-v2/leave.
+     *
+     * @return Approve[]
+     */
+    public function findPendingLeaveApprovals(?Employees $me, ?int $limit = 200): array
+    {
+        if (!$me) return [];
+
+        $query = Approve::find()
+            ->alias('approve')
+            ->joinWith(['leave'])
+            ->joinWith(['leave.employee'])
+            ->andWhere(['like', 'approve.status', self::STATUS_PENDING])
+            ->andWhere(['<>', 'approve.status', 'None'])
+            ->andWhere(['<>', 'leave.status', 'Cancel'])
+            ->andFilterWhere(['approve.name' => 'leave'])
+            ->andFilterWhere(['approve.emp_id' => (int) $me->id])
+            ->groupBy(['approve.from_id'])
+            ->orderBy(['approve.id' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        try {
+            return $query->all();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * ขออบรม/ประชุม/ดูงานที่รออนุมัติ ตาม query ใน approve-v2/development.
+     *
+     * @return Approve[]
+     */
+    public function findPendingDevelopmentApprovals(?Employees $me, ?int $limit = 200): array
+    {
+        if (!$me) return [];
+
+        $query = Approve::find()
+            ->alias('approve')
+            ->joinWith(['development', 'development.developmentDetail'])
+            ->andFilterWhere(['like', 'approve.status', self::STATUS_PENDING])
+            ->andFilterWhere(['approve.name' => 'development'])
+            ->andFilterWhere(['approve.emp_id' => (int) $me->id])
+            ->groupBy(['development.id'])
+            ->orderBy(['development.id' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        try {
+            return $query->all();
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * หน้า mobile รวมทุกประเภทที่เปิดใช้ตอนนี้: ขอลา + ขออบรม/ประชุม/ดูงาน.
+     *
+     * @return Approve[]
+     */
+    private function findPendingApprovalsForEnabledTypes(Employees $me, int $limit): array
+    {
+        $leaveRows = $this->findPendingLeaveApprovals($me, $limit);
+        $developmentRows = $this->findPendingDevelopmentApprovals($me, $limit);
+        $rows = array_merge($leaveRows, $developmentRows);
+
+        usort($rows, static function (Approve $a, Approve $b): int {
+            return (int) $b->id <=> (int) $a->id;
+        });
+
+        return array_slice($rows, 0, $limit);
+    }
+
+    /**
      * นับ bucket จากรายการของ user
      * @return array{all:int,pending:int,approved:int,rejected:int,sendback:int}
      */
-    public function bucketCounts(?Employees $me, ?int $thaiYear = null): array
+    public function bucketCounts(?Employees $me, ?int $thaiYear = null, ?string $typeFilter = null): array
     {
         $counts = ['all' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0, 'sendback' => 0];
         if (!$me) return $counts;
 
-        $rows = $this->findForEmployee($me, null, $thaiYear, 500);
+        $rows = $this->findForEmployee($me, null, $thaiYear, 500, $typeFilter);
         foreach ($rows as $r) {
             $b = $this->bucket((string) $r->status);
             $counts['all']++;
@@ -158,10 +251,21 @@ class MobileApprovalService
         if (!$me) return null;
         $approve = Approve::findOne(['id' => $id]);
         if (!$approve) return null;
-        // owner check (เจ้าของแถวอนุมัติ หรือ unassigned ที่ยังรออนุมัติ)
+        if (!array_key_exists((string) $approve->name, self::typeMeta())) return null;
+
+        if ((string) $approve->name === 'leave') {
+            if ((int) ($approve->emp_id ?? 0) !== (int) $me->id) return null;
+            if ((string) $approve->status === 'None') return null;
+
+            $leave = $approve->leave;
+            if (!$leave || (string) ($leave->status ?? '') === 'Cancel') return null;
+
+            return $approve;
+        }
+
+        // owner check: ตอนนี้เปิดใช้งานเฉพาะ leave/development ตาม approve-v2 scope
         $isOwner = ((int) ($approve->emp_id ?? 0)) === (int) $me->id;
-        $isUnassignedPending = ($approve->emp_id === null && $approve->status === 'Pending');
-        if (!$isOwner && !$isUnassignedPending) return null;
+        if (!$isOwner) return null;
         return $approve;
     }
 
@@ -203,10 +307,17 @@ class MobileApprovalService
         $name = (string) $approve->name;
         try {
             if ($name === 'leave' && $parent) {
+                $requesterEmployee = $parent->employee ?? null;
+                if (!empty($parent->created_at)) {
+                    try {
+                        $createdAt = ThaiDateHelper::formatThaiDate((string) $parent->created_at, 'short');
+                    } catch (\Throwable $e) {
+                        $createdAt = (string) $parent->created_at;
+                    }
+                }
                 $title = ($parent->leaveType->title ?? 'ใบลา');
-                $requester = (string) ($parent->employee->fullname ?? '');
-                $requesterAvatar = method_exists($parent->employee ?? null, 'showAvatar')
-                    ? (string) $parent->employee->showAvatar() : '';
+                $requester = $this->employeeFullName($requesterEmployee);
+                $requesterAvatar = $this->employeeAvatar($requesterEmployee);
                 $summary = trim((string) ($parent->data_json['reason'] ?? ''));
                 if ($summary === '' && method_exists($parent, 'showLeaveDate')) {
                     $summary = strip_tags((string) $parent->showLeaveDate());
@@ -226,8 +337,10 @@ class MobileApprovalService
                 $requester = (string) ($parent->employee->fullname ?? '');
                 $summary = (string) ($parent->title ?? '');
             } elseif ($name === 'development' && $parent) {
-                $title = (string) ($parent->title ?: 'พัฒนาบุคลากร');
-                $requester = (string) ($parent->employee->fullname ?? '');
+                $requesterEmployee = $parent->createdByEmp ?? null;
+                $title = (string) (($parent->title ?? '') ?: ($parent->topic ?? '') ?: 'ขออบรม/ประชุม/ดูงาน');
+                $requester = $this->employeeFullName($requesterEmployee);
+                $requesterAvatar = $this->employeeAvatar($requesterEmployee);
                 $summary = (string) ($parent->topic ?? '');
             }
         } catch (\Throwable $e) {}
@@ -239,6 +352,38 @@ class MobileApprovalService
             'createdAt'       => $createdAt ?: '-',
             'summary'         => $summary,
         ];
+    }
+
+    private function employeeFullName($employee): string
+    {
+        if (!$employee) return '';
+
+        try {
+            if (isset($employee->fullname) && trim((string) $employee->fullname) !== '') {
+                return (string) $employee->fullname;
+            }
+            if (method_exists($employee, 'fullname')) {
+                return (string) $employee->fullname();
+            }
+        } catch (\Throwable $e) {}
+
+        return '';
+    }
+
+    private function employeeAvatar($employee): string
+    {
+        if (!$employee) return '';
+
+        try {
+            if (method_exists($employee, 'showAvatar')) {
+                return (string) $employee->showAvatar();
+            }
+            if (method_exists($employee, 'ShowAvatar')) {
+                return (string) $employee->ShowAvatar();
+            }
+        } catch (\Throwable $e) {}
+
+        return '';
     }
 
     /**
@@ -303,7 +448,11 @@ class MobileApprovalService
             return ['ok' => true, 'message' => $status === self::STATUS_PASS ? 'อนุมัติเรียบร้อย' : 'ไม่อนุมัติเรียบร้อย'];
         }
 
-        // อื่นๆ: minimal update approve.status + stamp date + เลื่อน level ถัดไป (ถ้า Pass)
+        if ($approve->name === 'development') {
+            return $this->processDevelopmentApproval($approve, $status, $actorEmpId);
+        }
+
+        // Fallback สำหรับประเภทที่จะเปิดใช้งานบน mobile ในอนาคต.
         $approve->status = $status;
         $approve->data_json = ArrayHelper::merge((array) $approve->data_json, ['approve_date' => date('Y-m-d H:i:s')]);
         if (!empty($actorEmpId) && empty($approve->emp_id)) $approve->emp_id = (int) $actorEmpId;
@@ -323,5 +472,106 @@ class MobileApprovalService
         }
 
         return ['ok' => true, 'message' => $status === self::STATUS_PASS ? 'อนุมัติเรียบร้อย' : 'ไม่อนุมัติเรียบร้อย'];
+    }
+
+    /**
+     * Workflow ขออบรม/ประชุม/ดูงาน ให้ตรงกับ approve-v2/development.
+     *
+     * @return array{ok:bool, message?:string}
+     */
+    private function processDevelopmentApproval(Approve $approve, string $status, ?int $actorEmpId): array
+    {
+        $approve->data_json = ArrayHelper::merge((array) $approve->data_json, ['approve_date' => date('Y-m-d H:i:s')]);
+        $approve->status = $status;
+        if (!empty($actorEmpId) && empty($approve->emp_id)) {
+            $approve->emp_id = (int) $actorEmpId;
+        }
+
+        if (!$approve->save(false)) {
+            return ['ok' => false, 'message' => 'บันทึกไม่สำเร็จ'];
+        }
+
+        $development = $approve->development;
+        if (!$development) {
+            return ['ok' => true, 'message' => $status === self::STATUS_PASS ? 'อนุมัติเรียบร้อย' : 'ไม่อนุมัติเรียบร้อย'];
+        }
+
+        if ($status === self::STATUS_REJECT) {
+            $development->status = 'Reject';
+            $development->save(false);
+            if (method_exists($development, 'MsgReject')) {
+                $development->MsgReject();
+            }
+            return ['ok' => true, 'message' => 'ไม่อนุมัติเรียบร้อย'];
+        }
+
+        if ($approve->maxLevel() && $status === self::STATUS_PASS) {
+            $development->status = 'Approve';
+            $development->save(false);
+            if (method_exists($development, 'MsgApprove')) {
+                $development->MsgApprove();
+            }
+            return ['ok' => true, 'message' => 'อนุมัติเรียบร้อย'];
+        }
+
+        $statusMap = [
+            1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
+            2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
+            3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
+            4 => ['Pass' => 'Approve', 'Reject' => 'Reject'],
+        ];
+
+        if (isset($statusMap[(int) $approve->level][$status])) {
+            $development->status = $statusMap[(int) $approve->level][$status];
+            $development->save(false);
+        }
+
+        if ($status === self::STATUS_PASS) {
+            $next = Approve::findOne([
+                'from_id' => $approve->from_id,
+                'name' => 'development',
+                'level' => $approve->level + 1,
+            ]);
+            if ($next && $next->status !== self::STATUS_PENDING) {
+                $next->status = self::STATUS_PENDING;
+                $next->save(false);
+            }
+        }
+
+        return ['ok' => true, 'message' => $status === self::STATUS_PASS ? 'อนุมัติเรียบร้อย' : 'ไม่อนุมัติเรียบร้อย'];
+    }
+
+    private function normalizeTypeFilter(?string $typeFilter): ?string
+    {
+        $typeFilter = trim((string) $typeFilter);
+        if ($typeFilter === '' || $typeFilter === 'all') return null;
+
+        return array_key_exists($typeFilter, self::typeMeta()) ? $typeFilter : null;
+    }
+
+    /**
+     * ให้รายการ leave ใน mobile ตรงกับ approve-v2/leave:
+     * approve.name = leave, approve.emp_id = me, approve.status != None,
+     * leave.status != Cancel และแสดงหนึ่งแถวต่อใบลา (from_id).
+     */
+    private function applyLeaveApprovalScope($query, Employees $me): void
+    {
+        $query
+            ->leftJoin(['mobile_leave' => Leave::tableName()], 'mobile_leave.id = approve.from_id AND approve.name = :mobileLeaveName', [
+                ':mobileLeaveName' => 'leave',
+            ])
+            ->andWhere(['or',
+                ['<>', 'approve.name', 'leave'],
+                ['and',
+                    ['approve.name' => 'leave'],
+                    ['approve.emp_id' => (int) $me->id],
+                    ['<>', 'approve.status', 'None'],
+                    ['<>', 'mobile_leave.status', 'Cancel'],
+                ],
+            ])
+            ->groupBy([
+                'approve.name',
+                new \yii\db\Expression("CASE WHEN approve.name = 'leave' THEN approve.from_id ELSE approve.id END"),
+            ]);
     }
 }

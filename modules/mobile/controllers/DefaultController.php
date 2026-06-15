@@ -1019,7 +1019,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * รวมงานอนุมัติทุกประเภท (ลา / จองรถ / เคลื่อนย้ายครุภัณฑ์ / จัดซื้อ / พัฒนาบุคลากร)
+     * งานอนุมัติบน mobile ที่เปิดใช้ตอนนี้ (ขอลา / ขออบรม-ประชุม-ดูงาน)
      * Dashboard + รายการในหน้าเดียว — กรอง bucket / ปีงบประมาณ
      */
     public function actionApprovals()
@@ -1043,22 +1043,23 @@ class DefaultController extends Controller
             $bucket = 'pending';
         }
 
-        // กรองตามประเภทงาน (leave / vehicle / asset-move / purchase / development / all)
+        // กรองตามประเภทงานที่เปิดใช้บน mobile (leave / development / all)
         $allowedTypes = array_merge(['all'], array_keys(MobileApprovalService::typeMeta()));
         $type = (string) Yii::$app->request->get('type', 'all');
         if (!in_array($type, $allowedTypes, true)) {
             $type = 'all';
         }
+        $typeFilter = $type === 'all' ? null : $type;
 
         $service = new MobileApprovalService();
         // "รออนุมัติ" คือคิวรอทำ ไม่ใช่ history — ไม่กรองปีงบ (ตรงกับ ApproveHelper::Info ที่ home ใช้)
         // history buckets (approved/rejected) ใช้ปีงบตามปกติ
         $yearForList = ($bucket === 'pending') ? null : $filterYear;
-        $approvals   = $service->findForEmployee($me, $bucket, $yearForList, 200);
+        $approvals   = $service->findForEmployee($me, $bucket, $yearForList, 200, $typeFilter);
 
         // นับจำนวน: pending ข้ามปี, history ใช้ปีงบที่เลือก
-        $historyCounts = $service->bucketCounts($me, $filterYear);
-        $pendingTotal  = count($service->findForEmployee($me, 'pending', null, 500));
+        $historyCounts = $service->bucketCounts($me, $filterYear, $typeFilter);
+        $pendingTotal  = count($service->findForEmployee($me, 'pending', null, 500, $typeFilter));
         $counts        = [
             'pending'  => $pendingTotal,
             'approved' => (int) ($historyCounts['approved'] ?? 0),
@@ -1079,7 +1080,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * รายละเอียดงานอนุมัติ + timeline ลำดับการอนุมัติ — ทุกประเภทใช้ view เดียวกัน
+     * รายละเอียดงานอนุมัติ + timeline ลำดับการอนุมัติ
      */
     public function actionApprovalView($id)
     {
