@@ -14,17 +14,14 @@ use app\modules\booking\models\Vehicle;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\mobile\services\MobileApprovalService;
 use app\modules\mobile\services\MobileMaintenanceService;
 use app\modules\mobile\services\MobileRepairService;
 use app\modules\mobile\services\MobileMeetingAdminService;
 use app\modules\mobile\services\MobileMeetingService;
 use app\modules\mobile\services\MobileVehicleService;
-use app\modules\approveV2\models\Approve as ApproveModel;
 use app\modules\dms\models\Documents;
 use app\modules\dms\models\DocumentsDetail;
-use app\modules\leave\components\LeaveApprovalService;
-use app\modules\leave\models\Leave;
-use app\modules\leave\models\LeaveType;
 use app\modules\mobile\services\MobileLeaveService;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -1021,67 +1018,13 @@ class DefaultController extends Controller
         ]);
     }
 
-    public function actionApproveLeave($id)
+    /**
+     * รวมงานอนุมัติทุกประเภท (ลา / จองรถ / เคลื่อนย้ายครุภัณฑ์ / จัดซื้อ / พัฒนาบุคลากร)
+     * Dashboard + รายการในหน้าเดียว — กรอง bucket / ปีงบประมาณ
+     */
+    public function actionApprovals()
     {
-        $this->view->title = 'อนุมัติใบลา';
-
-        $service = new MobileLeaveService();
-        $approve = $service->findApproveById((int) $id);
-        if ($approve === null) {
-            throw new NotFoundHttpException('ไม่พบรายการอนุมัติ');
-        }
-
-        $me = UserHelper::GetEmployee();
-        if (!$service->canActOnApprove($approve, $me)) {
-            Yii::$app->session->setFlash('error', 'คุณไม่มีสิทธิ์อนุมัติรายการนี้');
-            return $this->redirect(['/mobile/default/index']);
-        }
-
-        $leave = Leave::findOne((int) $approve->from_id);
-        if (!$leave) {
-            throw new NotFoundHttpException('ไม่พบข้อมูลใบลา');
-        }
-
-        return $this->render('leave_approve_view', [
-            'current_page' => 'services',
-            'approve'      => $approve,
-            'model'        => $leave,
-        ]);
-    }
-
-    public function actionApproveLeaveUpdate($id)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        if (!Yii::$app->request->isPost) {
-            return ['status' => 'error', 'message' => 'Invalid request'];
-        }
-
-        $service = new MobileLeaveService();
-        $approve = $service->findApproveById((int) $id);
-        if ($approve === null) {
-            return ['status' => 'error', 'message' => 'ไม่พบรายการอนุมัติ'];
-        }
-
-        $me = UserHelper::GetEmployee();
-        if (!$service->canActOnApprove($approve, $me)) {
-            return ['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์อนุมัติรายการนี้'];
-        }
-
-        $status = (string) Yii::$app->request->post('status');
-        $result = (new LeaveApprovalService())->process($approve, $status, $me ? (int) $me->id : null);
-        if (!($result['ok'] ?? false)) {
-            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
-        }
-
-        return [
-            'status'   => 'success',
-            'redirect' => \yii\helpers\Url::to(['/mobile/default/leave-approvals']),
-        ];
-    }
-
-    public function actionLeaveApprovals()
-    {
-        $this->view->title = 'รายการอนุมัติใบลา';
+        $this->view->title = 'งานอนุมัติ';
 
         $me = UserHelper::GetEmployee();
         if (!$me) {
@@ -1091,15 +1034,149 @@ class DefaultController extends Controller
 
         $fiscalYears = $this->mobileFiscalYears();
         $currentYear = (int) AppHelper::YearBudget();
-        $filterYear = $this->resolveMobileFiscalYear($fiscalYears);
+        $filterYear  = $this->resolveMobileFiscalYear($fiscalYears);
 
-        return $this->render('leave-approvals', [
+        $allowedBuckets = ['all', 'pending', 'approved', 'rejected', 'sendback'];
+        $bucket = (string) Yii::$app->request->get('bucket', 'pending');
+        if (!in_array($bucket, $allowedBuckets, true)) {
+            $bucket = 'pending';
+        }
+
+        $service     = new MobileApprovalService();
+        $bucketArg   = $bucket === 'all' ? null : $bucket;
+        $approvals   = $service->findForEmployee($me, $bucketArg, $filterYear, 200);
+        $counts      = $service->bucketCounts($me, $filterYear);
+
+        return $this->render('approvals', [
             'current_page' => 'services',
-            'approvals'    => (new MobileLeaveService())->findPendingApprovals($me, null, $filterYear),
+            'approvals'    => $approvals,
+            'service'      => $service,
+            'counts'       => $counts,
+            'bucket'       => $bucket,
             'fiscalYears'  => $fiscalYears,
             'filterYear'   => $filterYear,
             'currentYear'  => $currentYear,
         ]);
+    }
+
+    /**
+     * รายละเอียดงานอนุมัติ + timeline ลำดับการอนุมัติ — ทุกประเภทใช้ view เดียวกัน
+     */
+    public function actionApprovalView($id)
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
+            return $this->redirect(['/mobile/default/index']);
+        }
+
+        $service = new MobileApprovalService();
+        $approve = $service->findByIdForEmployee((int) $id, $me);
+        if ($approve === null) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการอนุมัติ หรือคุณไม่มีสิทธิ์ดูรายการนี้');
+            return $this->redirect(['/mobile/default/approvals']);
+        }
+
+        $parent   = $service->loadParent($approve);
+        $meta     = $service->buildMeta($approve, $parent);
+        $timeline = $service->loadTimeline($approve);
+
+        $this->view->title = 'อนุมัติ ' . $service->typeLabel((string) $approve->name);
+
+        return $this->render('approval-view', [
+            'current_page' => 'services',
+            'approve'      => $approve,
+            'parent'       => $parent,
+            'meta'         => $meta,
+            'timeline'     => $timeline,
+            'service'      => $service,
+        ]);
+    }
+
+    /**
+     * บันทึกผลการอนุมัติ — POST AJAX (status: Pass|Reject|SendBack, comment optional)
+     * ส่งต่อให้ MobileApprovalService::process ซึ่ง delegate workflow ให้ service เดิม
+     * ของ leave (Telegram + status map) — ไม่ duplicate business logic
+     */
+    public function actionApprovalUpdate($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะ POST'];
+        }
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลพนักงาน'];
+        }
+
+        $service = new MobileApprovalService();
+        $approve = $service->findByIdForEmployee((int) $id, $me);
+        if ($approve === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการอนุมัติ หรือคุณไม่มีสิทธิ์'];
+        }
+
+        $status  = (string) Yii::$app->request->post('status', '');
+        $comment = trim((string) Yii::$app->request->post('comment', ''));
+
+        $result = $service->process($approve, $status, $comment, (int) $me->id);
+        if (!($result['ok'] ?? false)) {
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
+        }
+
+        return [
+            'status'   => 'success',
+            'message'  => $result['message'] ?? 'บันทึกเรียบร้อย',
+            'redirect' => \yii\helpers\Url::to(['/mobile/default/approvals', 'bucket' => 'pending']),
+        ];
+    }
+
+    /**
+     * Backward-compat aliases — Telegram links เก่าอาจ hardcode URL เหล่านี้
+     * ทั้งหมด redirect ไปหน้าใหม่ ไม่ render view เก่าอีกแล้ว
+     */
+    public function actionLeaveApprovals()
+    {
+        return $this->redirect(['/mobile/default/approvals',
+            'bucket' => 'pending',
+            'year'   => (int) Yii::$app->request->get('year', AppHelper::YearBudget()),
+        ]);
+    }
+
+    public function actionApproveLeave($id)
+    {
+        return $this->redirect(['/mobile/default/approval-view', 'id' => (int) $id]);
+    }
+
+    public function actionApproveLeaveUpdate($id)
+    {
+        // เก่า: ใช้ POST status เท่านั้น — แมพไปยัง endpoint ใหม่ ผ่าน MobileApprovalService
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะ POST'];
+        }
+
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลพนักงาน'];
+        }
+
+        $service = new MobileApprovalService();
+        $approve = $service->findByIdForEmployee((int) $id, $me);
+        if ($approve === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการอนุมัติ หรือคุณไม่มีสิทธิ์'];
+        }
+
+        $status = (string) Yii::$app->request->post('status');
+        $result = $service->process($approve, $status, '', (int) $me->id);
+        if (!($result['ok'] ?? false)) {
+            return ['status' => 'error', 'message' => $result['message'] ?? 'บันทึกไม่สำเร็จ'];
+        }
+
+        return [
+            'status'   => 'success',
+            'redirect' => \yii\helpers\Url::to(['/mobile/default/approvals', 'bucket' => 'pending']),
+        ];
     }
 
     // Protected helpers — keep ระบบ legacy ของ actionIndex/Services ใช้ได้ต่อ
@@ -1168,23 +1245,33 @@ class DefaultController extends Controller
             return $this->redirect($params);
         }
 
-        $this->view->title = 'ประวัติแจ้งซ่อม';
+        $this->view->title = 'งานแจ้งซ่อมของฉัน';
 
         $service     = new MobileMaintenanceService();
         $fiscalYears = $service->listFiscalYears();
         $currentYear = (int) AppHelper::YearBudget();
         $filterYear  = (int) (Yii::$app->request->get('year', $currentYear));
         if (!isset($fiscalYears[$filterYear])) $filterYear = $currentYear;
-        $myRequests   = $service->findRequestsByYear($me, $filterYear);
-        $bucketCounts = $service->bucketCounts($myRequests);
+
+        $allowedBuckets = ['all', 'waiting', 'in_progress', 'done', 'cancelled'];
+        $bucket = (string) Yii::$app->request->get('bucket', 'all');
+        if (!in_array($bucket, $allowedBuckets, true)) {
+            $bucket = 'all';
+        }
+
+        $allRequests = $service->findRequestsByYear($me, $filterYear);
+        $kpi         = $service->kpiCounts($allRequests);
+        $myRequests  = $service->filterBySubBucket($allRequests, $bucket);
 
         return $this->render('maintenance-request', [
-            'current_page'  => 'services',
-            'service'       => $service,
-            'myRequests'    => $myRequests,
-            'fiscalYears'   => $fiscalYears,
-            'filterYear'    => $filterYear,
-            'bucketCounts'  => $bucketCounts,
+            'current_page' => 'services',
+            'service'      => $service,
+            'myRequests'   => $myRequests,
+            'fiscalYears'  => $fiscalYears,
+            'filterYear'   => $filterYear,
+            'currentYear'  => $currentYear,
+            'bucket'       => $bucket,
+            'kpi'          => $kpi,
         ]);
     }
 

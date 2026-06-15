@@ -24,18 +24,17 @@ $managedMeetingPendingCount = (int) ($managedMeetingPendingCount ?? 0);
  * Categories drive icon colour via the cat-medallion system in _head.php.
  */
 $featured = [
-    ['icon' => 'car',         'cat' => 'vehicle',     'label' => 'จองรถราชการ',  'desc' => 'จองรถสำหรับเดินทางราชการ',  'url' => Url::to(['/mobile/default/booking-vehicle'])],
+    ['icon' => 'car',         'cat' => 'vehicle',     'label' => 'จองรถ',         'desc' => 'จองรถสำหรับเดินทางราชการ',  'url' => Url::to(['/mobile/default/booking-vehicle'])],
     ['icon' => 'calendar',    'cat' => 'meeting',     'label' => 'จองห้องประชุม', 'desc' => 'ตรวจสอบและจองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting'])],
-    ['icon' => 'wrench',      'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',       'desc' => 'แจ้งซ่อมอุปกรณ์หรือสถานที่', 'url' => Url::to(['/mobile/default/repair-request'])],
+    ['icon' => 'wrench',      'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',       'desc' => 'ดูประวัติและแจ้งซ่อมใหม่',  'url' => Url::to(['/mobile/default/maintenance-request'])],
     ['icon' => 'user-check',  'cat' => 'leave',       'label' => 'ขอลาออนไลน์',   'desc' => 'ส่งคำขอลาประเภทต่างๆ',     'url' => Url::to(['/mobile/default/leave-request'])],
 ];
 
 $secondary = [
     ['icon' => 'clock',           'cat' => 'attendance', 'label' => 'ลงเวลาเข้า-ออกงาน',  'url' => Url::to(['/mobile/default/attendance'])],
-    ['icon' => 'clipboard-check', 'cat' => 'approval',   'label' => 'อนุมัติใบลา',         'url' => Url::to(['/mobile/default/leave-approvals'])],
+    ['icon' => 'clipboard-check', 'cat' => 'approval',   'label' => 'งานอนุมัติ',          'url' => Url::to(['/mobile/default/approvals'])],
     ['icon' => 'qr-code',         'cat' => 'asset',      'label' => 'ตรวจสอบครุภัณฑ์',    'url' => Url::to(['/mobile/default/scan'])],
-    ['icon' => 'file-text',       'cat' => 'document',   'label' => 'เอกสารราชการ',       'url' => '#'],
-    ['icon' => 'alert-circle',    'cat' => 'issue',      'label' => 'แจ้งปัญหาระบบ',       'url' => '#'],
+    ['icon' => 'alert-circle',    'cat' => 'issue',      'label' => 'แจ้งปัญหาระบบ',       'url' => '#', 'comingSoon' => true],
 ];
 if ($canManageMeeting) {
     array_unshift($secondary, [
@@ -405,7 +404,7 @@ if ($isDriver) {
         </div>
         <div class="svc-list" aria-label="บริการอื่น">
             <?php foreach ($secondary as $i => $s): ?>
-                <a href="<?= Html::encode($s['url']) ?>" class="svc-row-item" style="--svc-i: <?= (int) $i ?>">
+                <a href="<?= Html::encode($s['url']) ?>" class="svc-row-item<?= !empty($s['comingSoon']) ? ' is-coming-soon' : '' ?>" style="--svc-i: <?= (int) $i ?>"<?= !empty($s['comingSoon']) ? ' data-coming-soon="1"' : '' ?>>
                     <span class="cat-medallion svc-medallion-sm cat-<?= Html::encode($s['cat']) ?>" aria-hidden="true">
                         <i data-lucide="<?= Html::encode($s['icon']) ?>" class="mi-sm"></i>
                     </span>
@@ -428,3 +427,18 @@ if ($isDriver) {
 
 </div>
 </div>
+
+<?php
+$this->registerJs(<<<'JS'
+$(document).on('click', '.svc-row-item.is-coming-soon', function (e) {
+    e.preventDefault();
+    Swal.fire({
+        icon: 'info',
+        title: 'อยู่ระหว่างพัฒนา',
+        text: 'เมนูนี้กำลังอยู่ระหว่างพัฒนา จะเปิดให้ใช้งานเร็วๆ นี้',
+        confirmButtonText: 'รับทราบ',
+        confirmButtonColor: 'var(--mobile-primary)',
+    });
+});
+JS, \yii\web\View::POS_END);
+?>

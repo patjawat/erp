@@ -34,6 +34,8 @@ AppAsset::register($this);
     <?= $this->render('_navbar') ?>
     <?= $this->render('_footer') ?>
 
+    <?= $this->render('@app/modules/mobile/views/layouts/_partials/_profile_drawer') ?>
+
     <?php
     // Shared modal target for .open-modal / handleFormSubmit AJAX flows.
     \yii\bootstrap5\Modal::begin([

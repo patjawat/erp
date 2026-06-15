@@ -66,7 +66,7 @@ foreach ($pendingLeaveApprovals as $approve) {
         'title' => 'มีใบลารออนุมัติจากคุณ',
         'desc' => trim($requesterName . ' · ' . $leaveType . ($dateRange !== '' ? ' · ' . $dateRange : '')),
         'time' => $formatDateTimeText($approve->created_at ?: $leave->created_at),
-        'url' => Url::to(['/mobile/default/approve-leave', 'id' => $approve->id]),
+        'url' => Url::to(['/mobile/default/approval-view', 'id' => $approve->id]),
         'sortTs' => strtotime((string) ($approve->created_at ?: $leave->created_at)) ?: 0,
     ];
 }

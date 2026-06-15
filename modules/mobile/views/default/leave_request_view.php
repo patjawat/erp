@@ -26,6 +26,26 @@ if (!empty($model->created_at)) {
         . ' ' . date('H:i', strtotime((string) $model->created_at)) . ' น.';
 }
 
+// ── ข้อมูลผู้ขอ ────────────────────────────────────────────────
+$requesterName     = '-';
+$requesterPosition = '';
+$requesterAvatarUrl = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
+try {
+    $requesterEmployee = $model->employee ?? null;
+    if ($requesterEmployee) {
+        $requesterName = (string) ($requesterEmployee->fullname ?? '-');
+        if (method_exists($requesterEmployee, 'positionName')) {
+            $requesterPosition = (string) $requesterEmployee->positionName();
+        }
+        if (method_exists($requesterEmployee, 'ShowAvatar')) {
+            $avatar = (string) $requesterEmployee->ShowAvatar();
+            if ($avatar !== '') {
+                $requesterAvatarUrl = $avatar;
+            }
+        }
+    }
+} catch (\Throwable $e) { /* keep defaults */ }
+
 $contactPhone   = $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '';
 $contactAddress = $model->data_json['address'] ?? '';
 $placeGo        = $model->data_json['place_go'] ?? '';

@@ -129,6 +129,63 @@ class MobileMaintenanceService
         return $counts;
     }
 
+    /**
+     * แบ่ง sub-bucket ละเอียดกว่า bucket — ใช้สำหรับ KPI filter chips บนหน้า list
+     *  - waiting     = step 1 (รอรับเรื่อง)
+     *  - in_progress = step 2-3 (รับเรื่องแล้ว / กำลังซ่อม)
+     *  - done        = step 4 (ซ่อมเสร็จ)
+     *  - cancelled   = step 0 (ยกเลิก / จำหน่าย / ปฏิเสธ)
+     */
+    public function subBucket(string $status): string
+    {
+        $step = (int) ($this->statusInfo($status)['step'] ?? 0);
+        if ($step === 1) return 'waiting';
+        if ($step === 2 || $step === 3) return 'in_progress';
+        if ($step === 4) return 'done';
+        // step 0 includes cancelled/disposed/rejected; treat all as "cancelled" bucket
+        $tone = (string) ($this->statusInfo($status)['tone'] ?? '');
+        if ($tone === 'danger' || $tone === 'secondary') return 'cancelled';
+        return 'other';
+    }
+
+    /**
+     * นับจำนวนงานซ่อมตาม sub-bucket (5 ช่อง: ทั้งหมด/รอรับ/กำลังซ่อม/เสร็จ/ยกเลิก).
+     *
+     * @param Helpdesk[] $items
+     * @return array{all:int,waiting:int,in_progress:int,done:int,cancelled:int,other:int}
+     */
+    public function kpiCounts(iterable $items): array
+    {
+        $counts = ['all' => 0, 'waiting' => 0, 'in_progress' => 0, 'done' => 0, 'cancelled' => 0, 'other' => 0];
+        foreach ($items as $row) {
+            $sub = $this->subBucket((string) ($row->status ?? ''));
+            $counts['all']++;
+            $counts[$sub] = ($counts[$sub] ?? 0) + 1;
+        }
+        return $counts;
+    }
+
+    /**
+     * Filter รายการตาม sub-bucket (สำหรับ chip filter).
+     * คืน array ตามลำดับเดิม (ไม่ sort ใหม่).
+     *
+     * @param Helpdesk[] $items
+     * @return Helpdesk[]
+     */
+    public function filterBySubBucket(iterable $items, string $bucket): array
+    {
+        if ($bucket === 'all' || $bucket === '') {
+            return is_array($items) ? array_values($items) : iterator_to_array($items, false);
+        }
+        $out = [];
+        foreach ($items as $row) {
+            if ($this->subBucket((string) ($row->status ?? '')) === $bucket) {
+                $out[] = $row;
+            }
+        }
+        return $out;
+    }
+
     public function canEdit(Helpdesk $row): bool
     {
         $step = $this->statusInfo((string) $row->status)['step'];
