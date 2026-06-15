@@ -217,7 +217,7 @@ $('#emp_id').on('select2:select', function (e) {
     var thai_year = $('#leaveentitlements-thai_year').val();
     $.ajax({
         type: "get",
-        url: "/hr/leave-entitlements/leave-summary-by-emp",
+        url: "/leave/leave-entitlements/leave-summary-by-emp",
         data: {
             emp_id:emp_id,
             thai_year:thai_year
