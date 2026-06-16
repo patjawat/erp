@@ -162,7 +162,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h6 class="mb-0 fw-semibold"><i class="bi bi-car-front-fill me-1"></i> ตั้งค่าเทมเพลตสำหรับ ขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ</h6>
             </div>
             <div class="card-body p-3">
-                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ</p>
+                <p class="small text-muted mb-2">ใช้เมื่อพิมพ์เอกสารขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ (เรียกจากปุ่ม «พิมพ์ใบขอใช้รถยนต์ส่วนตัว» ในหน้ารายการขอไปราชการ /hr/development)</p>
                 <?php $formBookingOfficial = \yii\widgets\ActiveForm::begin(['action' => ['set-template-for-context'], 'method' => 'post', 'options' => ['class' => 'd-flex flex-wrap align-items-end gap-2']]); ?>
                 <input type="hidden" name="context" value="booking.vehicle.official">
                 <div class="flex-grow-1" style="min-width: 200px;">

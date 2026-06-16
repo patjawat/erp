@@ -1000,65 +1000,7 @@ class DevelopmentController extends Controller
             throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF กรุณาอัปโหลดที่ /pdf-template');
         }
 
-        $dataJson = $this->developmentDataJson($model);
-        $emp = $model->createdByEmp;
-        $officerName = '-';
-        $officerPosition = '-';
-        $officerSignature = '';
-        if ($emp) {
-            $officerName = !empty($emp->fullname) ? $emp->fullname : (method_exists($emp, 'fullname') ? $emp->fullname() : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname));
-            $officerPosition = method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
-            $sig = method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
-            $officerSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
-        }
-
-        $assignee = $model->assignedTo;
-        $assignedToFullname = '-';
-        $assignedToPosition = '-';
-        $assignedToSignature = '';
-        if ($assignee) {
-            $assignedToFullname = !empty($assignee->fullname) ? $assignee->fullname : ($assignee->prefix . ' ' . $assignee->fname . ' ' . $assignee->lname);
-            $assignedToPosition = method_exists($assignee, 'positionName') ? ($assignee->positionName() ?? '-') : '-';
-            $sig = method_exists($assignee, 'SignatureFilePath') ? ($assignee->SignatureFilePath() ?? '') : '';
-            $assignedToSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
-        }
-
-        $info = SiteHelper::getInfo();
-        $doc = $model->document;
-        $data = array_merge([
-            'organization_name' => (string) ($info['company_name'] ?? '-'),
-            'reference_document' => $doc ? (string) ($doc->topic ?? '') : '',
-            'document_number' => (string) ($dataJson['doc_number'] ?? $info['doc_number'] ?? '-'),
-            'thai_year' => (string) (int) $model->thai_year,
-            'custom_text' => (string) ($dataJson['custom_text'] ?? ''),
-            'officer_name' => $officerName,
-            'officer_position' => $officerPosition,
-            'officer_signature' => $officerSignature,
-            'assigned_to_fullname' => $assignedToFullname,
-            'assigned_to_position' => $assignedToPosition,
-            'assigned_to_signature' => $assignedToSignature,
-            'document_date' => date('Y-m-d'),
-            'topic' => (string) ($model->topic ?? ''),
-            'location' => (string) ($dataJson['location'] ?? '-'),
-            'location_org' => (string) ($dataJson['location_org'] ?? ''),
-            'province_name' => (string) ($dataJson['province_name'] ?? ''),
-            'vehicle_type_title' => $model->vehicleType ? (string) $model->vehicleType->title : '-',
-            'license_plate' => (string) ($dataJson['license_plate'] ?? ''),
-            'distance' => (string) ($dataJson['distance'] ?? ''),
-            'total_expense' => $this->getDevelopmentTotalExpense($model),
-        ], $this->getDevelopmentExpenseAmountsByCategory($model, $dataJson), [
-            'date_start' => $model->date_start ? (string) $model->date_start : '',
-            'date_end' => $model->date_end ? (string) $model->date_end : '',
-            'vehicle_date_start' => $model->vehicle_date_start ? (string) $model->vehicle_date_start : '',
-            'vehicle_date_end' => $model->vehicle_date_end ? (string) $model->vehicle_date_end : '',
-            'vehicle_time_start' => (string) ($dataJson['vehicle_time_start'] ?? ''),
-            'vehicle_time_end' => (string) ($dataJson['vehicle_time_end'] ?? ''),
-            'trip_days' => $this->getDevelopmentTripDays($model),
-            'travel_party' => (string) ($dataJson['travel_party'] ?? ''),
-            '__from_hr_print' => true,
-        ], $this->getDevelopmentApproversData($model), [
-            'travel_party_members' => $this->getDevelopmentTravelPartyMembersArray($model),
-        ]);
+        $data = $this->buildDevelopmentTemplateData($model);
 
         Yii::info('HR actionPrint: id=' . $id . ', officer=' . $data['officer_name'] . ', topic=' . ($data['topic'] ?? ''), __METHOD__);
 
@@ -1074,15 +1016,49 @@ class DevelopmentController extends Controller
     }
 
     /**
-     * คืนข้อมูลที่จะใส่ใน PDF เป็น JSON (ให้ editor ที่ /pdf-template ดึงไปแสดงตอนตั้งค่า).
+     * พิมพ์ใบขอใช้รถยนต์ส่วนตัวเดินทางไปราชการเป็น PDF
+     * ใช้เทมเพลตที่ตั้งค่า use_for_context = booking.vehicle.official ที่ /pdf-template (strict — ไม่ fallback).
+     *
+     * @param int $id Development ID
+     * @return \yii\web\Response binary PDF
+     * @throws NotFoundHttpException เมื่อไม่พบรายการหรือยังไม่ตั้งค่าเทมเพลต
      */
-    public function actionPrintData($id)
+    public function actionPrintPersonalVehicle($id)
     {
         $model = Development::find()->where(['id' => (int) $id])->with('createdByEmp', 'assignedTo', 'document')->one();
         if (!$model) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['error' => 'ไม่พบรายการ'];
+            throw new NotFoundHttpException('ไม่พบรายการขอไปราชการ');
         }
+
+        $pdfTemplate = PdfTemplate::find()
+            ->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])
+            ->one();
+        if (!$pdfTemplate) {
+            throw new NotFoundHttpException('ยังไม่ได้ตั้งค่าเทมเพลตสำหรับ «ใบขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ» — โปรดไปที่ /pdf-template แล้วเลือกเทมเพลตให้กับ context "booking.vehicle.official"');
+        }
+
+        $templateService = new PdfTemplateService();
+        $templatePath = $templateService->getTemplateFilePath($pdfTemplate);
+        if ($templatePath === null || !is_file($templatePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF ของใบขอใช้รถยนต์ส่วนตัว กรุณาอัปโหลดที่ /pdf-template');
+        }
+
+        $data = $this->buildDevelopmentTemplateData($model);
+        $pdfBinary = $templateService->generatePdfWithData((int) $pdfTemplate->id, $data);
+
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/pdf');
+        Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="personal-vehicle-' . $model->id . '.pdf"');
+        Yii::$app->response->headers->set('X-PDF-Source', 'hr-development-print-personal-vehicle');
+        Yii::$app->response->content = $pdfBinary;
+        return Yii::$app->response;
+    }
+
+    /**
+     * สร้าง array ข้อมูลสำหรับใส่ลง PDF เทมเพลต (ใช้ทั้งใน actionPrint, actionPrintPersonalVehicle, actionPrintData).
+     */
+    protected function buildDevelopmentTemplateData(Development $model): array
+    {
         $dataJson = $this->developmentDataJson($model);
         $emp = $model->createdByEmp;
         $officerName = '-';
@@ -1094,6 +1070,7 @@ class DevelopmentController extends Controller
             $sig = method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
             $officerSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
         }
+
         $assignee = $model->assignedTo;
         $assignedToFullname = '-';
         $assignedToPosition = '-';
@@ -1104,9 +1081,10 @@ class DevelopmentController extends Controller
             $sig = method_exists($assignee, 'SignatureFilePath') ? ($assignee->SignatureFilePath() ?? '') : '';
             $assignedToSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
         }
+
         $info = SiteHelper::getInfo();
         $doc = $model->document;
-        $data = array_merge([
+        return array_merge([
             'organization_name' => (string) ($info['company_name'] ?? '-'),
             'reference_document' => $doc ? (string) ($doc->topic ?? '') : '',
             'document_number' => (string) ($dataJson['doc_number'] ?? $info['doc_number'] ?? '-'),
@@ -1139,9 +1117,21 @@ class DevelopmentController extends Controller
         ], $this->getDevelopmentApproversData($model), [
             'travel_party_members' => $this->getDevelopmentTravelPartyMembersArray($model),
         ]);
+    }
+
+    /**
+     * คืนข้อมูลที่จะใส่ใน PDF เป็น JSON (ให้ editor ที่ /pdf-template ดึงไปแสดงตอนตั้งค่า).
+     */
+    public function actionPrintData($id)
+    {
+        $model = Development::find()->where(['id' => (int) $id])->with('createdByEmp', 'assignedTo', 'document')->one();
+        if (!$model) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['error' => 'ไม่พบรายการ'];
+        }
         Yii::$app->response->format = Response::FORMAT_JSON;
         Yii::$app->response->headers->set('Access-Control-Allow-Origin', Yii::$app->request->origin ?? '*');
-        return $data;
+        return $this->buildDevelopmentTemplateData($model);
     }
 
     public function actionPrintBackup($id)
