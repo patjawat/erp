@@ -377,7 +377,17 @@ class ImportController extends Controller
                 }
                 $model->license_plate = $data[17];
                 $model->useful_life = (int) ($data[$usefulLifeIdx] ?? 0); // อายุการใช้งาน (ปี)
-                $model->asset_status = 1;
+                if ($model->isNewRecord) {
+                    $model->asset_status = 'active';
+                    $model->asset_condition = 'good';
+                } else {
+                    if (empty($model->asset_status) || !in_array((string) $model->asset_status, ['active', 'borrowed', 'repair', 'wait_dispose', 'disposed'], true)) {
+                        $model->asset_status = 'active';
+                    }
+                    if (empty($model->asset_condition)) {
+                        $model->asset_condition = 'good';
+                    }
+                }
                 $model->asset_group_id = 4;
 
                 // validate ทั้งหมด
