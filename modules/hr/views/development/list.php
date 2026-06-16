@@ -15,7 +15,7 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                 <th scope="col" class="dev-col-topic">เรื่อง / ประเภท</th>
                 <th scope="col" class="dev-col-location d-none d-lg-table-cell">สถานที่</th>
                 <th scope="col" class="dev-col-date d-none d-md-table-cell">ช่วงวันที่</th>
-                <th scope="col" class="dev-col-approver d-none d-xl-table-cell">ผู้อนุมัติ</th>
+                <th scope="col" class="dev-col-approver d-none d-xl-table-cell" style="width: 147px;">ผู้อนุมัติ</th>
                 <th scope="col" class="dev-col-status text-center">สถานะ</th>
                 <th scope="col" class="dev-col-actions text-end">จัดการ</th>
             </tr>
