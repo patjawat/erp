@@ -125,8 +125,9 @@ class EquipController extends Controller
 
         $dataProvider->setSort([
             'defaultOrder' => [
-                'code' => 'SORT_DESC',
-                'receive_date' => 'SORT_DESC',
+                'receive_date' => SORT_DESC,
+                'code' => SORT_DESC,
+                'id' => SORT_DESC,
             ],
         ]);
 
