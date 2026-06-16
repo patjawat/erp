@@ -39,10 +39,14 @@ use kartik\widgets\ActiveForm;
             </div>
 
             <div class="col-md-6">
-                <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'วันที่ยืม...'])->label('วันที่ยืม'); ?>
+                <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => 'วันที่ยืม...'],
+])->label('วันที่ยืม'); ?>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'กำหนดคืน (โดยประมาณ)...'])->label('กำหนดคืน'); ?>
+                            <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => 'กำหนดคืน (โดยประมาณ)...'],
+])->label('กำหนดคืน'); ?>
             </div>
 
             <div class="col-12">
@@ -61,7 +65,6 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<< JS
- thaiDatepicker('#assetdetail-date_start,#assetdetail-date_end')
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });

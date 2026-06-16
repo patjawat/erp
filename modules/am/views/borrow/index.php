@@ -16,7 +16,7 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
 <div class="d-flex justify-content-between">
     <h6><?= Html::encode($this->title) ?></h6>
     <p>
-        <?= Html::a('<i class="fa-solid fa-plus"></i> บันทึกการยืม', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' บันทึกการยืม'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('<i data-lucide="circle-plus"></i> บันทึกการยืม', ['create', 'code' => $searchModel->code, 'title' => $iconClean . ' บันทึกการยืม'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     </p>
 </div>
 <div class="table-responsive">

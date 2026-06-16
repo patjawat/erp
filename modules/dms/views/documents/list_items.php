@@ -59,7 +59,13 @@ use yii\helpers\Url;
                     <span class="text-primary fw-normal fs-13">
                         |
                         <i class="fa-solid fa-inbox"></i>
-                        <?php echo $item->documentOrg->title ?? '-'; ?>
+                        <?php 
+                        if ($item->document_type === 'DT2') {
+                            echo $item->viewTagsDepartment() ?: '-';
+                        } else {
+                            echo $item->documentOrg->title ?? '-';
+                        }
+                        ?>
                         <span class="badge rounded-pill badge-soft-secondary text-primary fw-lighter fs-13">
                             <i class="fa-regular fa-eye"></i> <?php echo $item->viewCount() ?>
                         </span>
@@ -99,6 +105,19 @@ use yii\helpers\Url;
 
 <?php
 $js = <<< JS
+function initTooltips() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip && !bootstrap.Tooltip.getInstance(el)) {
+            new bootstrap.Tooltip(el);
+        }
+    });
+}
+initTooltips();
+$(document).on('pjax:end', function() {
+    initTooltips();
+});
+
 $("body").on("click", ".export-document", function (e) {
     e.preventDefault();
     let form = $('#w0');

@@ -15,12 +15,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
-<?php $this->beginBlock('page-action'); ?>
-    <?= $this->render('@app/modules/booking/views/vehicle/menu') ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-    <?= $this->render('@app/modules/booking/views/vehicle/menu', ['active' => 'asset']) ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/booking/vehicle_menu',['active' => 'asset']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -47,7 +43,8 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="card-body">
-<?=$this->render('@app/modules/am/views/asset/show/list', [
+
+<?=$this->render('@app/modules/am/views/equip/_list', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);?>

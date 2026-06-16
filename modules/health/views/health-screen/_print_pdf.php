@@ -12,7 +12,7 @@ $info = SiteHelper::getInfo();
 <div style="text-align: center;">วันที่ <?= Yii::$app->formatter->asDate(date('Y-m-d'), 'long') ?></div>
 
 <div style="margin-top: 30px; line-height: 1.8;">
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ข้าพเจ้า <b><?= $model->employee->prefix . $model->employee->fullname ?></b> 
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ข้าพเจ้า <b><?=$model->employee->fullname ?></b> 
     อายุ <b><?= $model->employee->age ?></b> ปี 
     หน่วยงานต้นสังกัด <b><?= $model->employee->departmentName() ?></b><br>
     เลขบัตร <b><?= $model->employee->cid ?></b> 

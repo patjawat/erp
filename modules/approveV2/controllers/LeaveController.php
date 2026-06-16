@@ -39,13 +39,6 @@ class LeaveController extends \yii\web\Controller
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
         $dataProvider->query->groupBy(['approve.from_id']);
-
-        // if ($searchModel->date_filter && $searchModel->date_start == '' && $searchModel->date_end == '') {
-        //     $range = DateFilterHelper::getRange($searchModel->date_filter);
-        //     $searchModel->date_start = AppHelper::convertToThai($range[0]);
-        //     $searchModel->date_end = AppHelper::convertToThai($range[1]);
-        // }
-
         $dataProvider->query->andFilterWhere(['>=', 'leave.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'leave.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
         
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);

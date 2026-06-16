@@ -4,6 +4,8 @@ use yii\helpers\Url;
 use yii\bootstrap5\Html;
 use app\components\ThaiDateHelper;
 use app\components\widgets\DataSummaryWidget;
+use app\components\UserHelper;
+use app\modules\dms\models\DocumentsDetail;
 
 /** @var yii\data\ActiveDataProvider $dataProvider */
 /** @var array<int,int> $unreadOpenDetailIdByDocument */
@@ -62,8 +64,52 @@ foreach ($models as $model) {
         break;
     }
 }
+
+$bookmarkedDocumentIds = [];
+$currentEmp = UserHelper::GetEmployee();
+$currentEmpId = $currentEmp ? (int) $currentEmp->id : 0;
+if ($currentEmpId > 0 && !empty($models)) {
+    $itemIds = [];
+    foreach ($models as $m) {
+        $mid = (int) ($m->id ?? 0);
+        if ($mid > 0) {
+            $itemIds[] = $mid;
+        }
+    }
+    if (!empty($itemIds)) {
+        $rows = DocumentsDetail::find()
+            ->select('document_id')
+            ->where([
+                'name' => 'read',
+                'to_id' => $currentEmpId,
+                'bookmark' => 'Y',
+                'document_id' => $itemIds,
+            ])
+            ->column();
+        foreach ($rows as $rid) {
+            $bookmarkedDocumentIds[(int) $rid] = true;
+        }
+    }
+}
 ?>
 
+<style>
+    tr.js-document-row.is-bookmarked > td {
+        background-color: rgba(245, 158, 11, 0.10) !important;
+        border-top: 1px solid rgba(245, 158, 11, 0.35);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    tr.js-document-row.is-bookmarked > td:first-child {
+        border-left: 4px solid #f59e0b !important;
+    }
+    .bookmark-indicator-badge {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff !important;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+    }
+    .bookmark-indicator-badge i { color: #fff; }
+</style>
 <div class="table-responsive">
     <table class="table table-hover align-middle table-striped mb-0">
         <thead class="table-light">
@@ -98,8 +144,15 @@ foreach ($models as $model) {
                 } else {
                     $doc = $item->documentTags ?? $item->documentDepartment ?? null;
                 }
+                $isBookmarked = isset($bookmarkedDocumentIds[(int) $item->id]);
+                $bookmarkInfo = [
+                    'status' => $isBookmarked ? 'Y' : 'N',
+                    'view' => $isBookmarked
+                        ? '<i class="fa-solid fa-bookmark text-warning fs-5"></i>'
+                        : '<i class="fa-regular fa-bookmark"></i>',
+                ];
                 ?>
-                <tr class="js-document-row" data-detail-id="<?= $detailId ?>" data-is-unread="<?= $isUnread ? 1 : 0 ?>">
+                <tr class="js-document-row<?= $isBookmarked ? ' is-bookmarked' : '' ?>" data-detail-id="<?= $detailId ?>" data-is-unread="<?= $isUnread ? 1 : 0 ?>" data-is-bookmarked="<?= $isBookmarked ? 1 : 0 ?>">
                     <td class="text-center">
                         <?php if ($isUnread): ?>
                             <input
@@ -141,6 +194,12 @@ foreach ($models as $model) {
                                         <?php if ($item->secret == 'ลับที่สุด'): ?>
                                             <span class="badge text-bg-dark small mb-1">ลับที่สุด</span>
                                         <?php endif; ?>
+
+                                        <?php if ($isBookmarked): ?>
+                                            <span class="badge bookmark-indicator-badge rounded-pill px-2 py-1 small mb-1">
+                                                <i class="fa-solid fa-thumbtack"></i> ปักหมุดแล้ว
+                                            </span>
+                                        <?php endif; ?>
                                     </div>
 
                                     <div>
@@ -167,6 +226,9 @@ foreach ($models as $model) {
                                 <a href="<?= Url::to(array_merge(['/me/documents/view', 'id' => $item->detail_id], $viewQueryParams)) ?>"
                                     class="open-modal js-document-view-link fw-medium d-block text-primary text-decoration-none"
                                     data-size="modal-fullscreen">
+                                    <?php if ($isBookmarked): ?>
+                                        <i class="fa-solid fa-thumbtack text-warning me-1" title="ปักหมุดแล้ว"></i>
+                                    <?php endif; ?>
                                     <?= Html::encode($item->topic) ?>
                                 </a>
 
@@ -200,9 +262,10 @@ foreach ($models as $model) {
                     <td class="text-center">
                         <?php if ($doc): ?>
                             <div class="d-flex flex-column align-items-center gap-1">
-                                <?= Html::a($doc->docRead('fs-5')['view'], ['/me/documents/bookmark', 'id' => $doc->id], [
-                                    'class' => 'bookmark bookmark-star-' . (int) $doc->id,
+                                <?= Html::a($bookmarkInfo['view'], ['/me/documents/bookmark', 'id' => $doc->id], [
+                                    'class' => 'bookmark bookmark-star-' . (int) $doc->id . ($isBookmarked ? ' fs-5' : ''),
                                     'id' => (string) $doc->id,
+                                    'title' => $isBookmarked ? 'ยกเลิกปักหมุด' : 'ปักหมุด',
                                 ]) ?>
                                 <span class="small text-nowrap"><?= Html::encode($item->documentStatus->title ?? '-') ?></span>
                             </div>

@@ -13,13 +13,13 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="d-flex gap-2">
                 <?= Html::a('<i class="fa-solid fa-circle-plus"></i> ทำแบบคัดกรองใหม่', ['/me/health/create','name' => 'health', 'title' => 'แบบคัดกรองสุขภาพ'], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl', 'pjax' => '0']]) ?>
                 <div class="dropdown">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <!-- <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
                             <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                         <span class="d-none d-sm-inline">ตั้งค่า</span>
-                    </button>
+                    </button> -->
 
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                         <li>
@@ -54,6 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <span class="badge bg-<?= $color ?> bg-opacity-10 text-<?= $color ?> border border-<?= $color ?>-subtle rounded-pill fw-medium px-2 py-1" style="font-size: 10px;"><?= $item->getBmiResult()['label'] ?></span>
                                 </td>
                                 <td class="text-center">
+                                    <?php if($item->health_status == 'SUCCESS'):?>
                                     <?php
                                     $sumKey   = $item->data_json['final_summary'] ?? 'healthy';
                                     $sumLabel = $item::getFinalSummaryDisplay($sumKey, 'label');
@@ -63,9 +64,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <span class="badge rounded-pill bg-<?= $sumColor ?>-subtle text-<?= $sumColor ?> border border-<?= $sumColor ?>-subtle px-3 py-2">
                                         <i class="<?= $sumIcon ?> me-1"></i> <?= $sumLabel ?>
                                     </span>
+                                    <?php endif;?>
                                 </td>
 
-                                <td class="text-muted small">
+                                <td class="text-muted small text-center">
                                     <?= $item->viewStatus()?>
                                 </td>
                                 <td class="text-center">

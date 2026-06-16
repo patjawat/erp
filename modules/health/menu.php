@@ -30,7 +30,7 @@ use yii\helpers\Url;
                 <?= Html::a('<i class="fas fa-dna me-1"></i> โรคประวัติครอบครัว', ['/health/health-family-disease'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>
-                <?= Html::a('<i class="fas fa-heartbeat me-1"></i> โรคประจำตัว', ['/health/health-chronic-disease'], ['class' => 'dropdown-item']) ?>
+                <?= Html::a('<i class="fas fa-heartbeat me-1"></i> ประวัติเจ็บป่วยปีก่อน', ['/health/health-chronic-disease'], ['class' => 'dropdown-item']) ?>
             </li>
         </ul>
     </div>

@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-primary-gradient text-white py-2 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 text-white small fw-normal">
-            <i class="bi bi-ui-checks me-1"></i> ทะเบียนตรวจสุขภาพพนักงาน
+            <i class="bi bi-ui-checks me-1"></i> ทะเบียนตรวจสุขภาพเจ้าหน้าที่
             <span class="badge bg-light bg-opacity-10 text-white border border-light-subtle rounded-pill fw-medium px-2 py-1">
                 <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ
             </span>

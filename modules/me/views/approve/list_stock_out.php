@@ -12,9 +12,9 @@ use yii\helpers\Html;
             <div class="d-flex justify-content-between">
             <h6><i class="bi bi-ui-checks"></i> ขอเบิกจำนวน <span class="badge rounded-pill text-bg-primary"> <?=$dataProvider->getTotalCount()?> </span> รายการ</h6>
                 <div>
-                    <!-- <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
+                    <!-- <button class="btn btn-sm btn-primary rounded-pill"><i data-lucide="circle-plus"></i>
                                 เลือกรายการ</button> -->
-                    <?php Html::a('<i class="fa-solid fa-plus"></i> เลือกรายการ', ['/inventory/stock-movement/create', 'name' => 'issue', 'title' => '<i class="fa-regular fa-pen-to-square"></i> ขอเบิกวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?php Html::a('<i data-lucide="circle-plus"></i> เลือกรายการ', ['/inventory/stock-movement/create', 'name' => 'issue', 'title' => '<i class="fa-regular fa-pen-to-square"></i> ขอเบิกวัสดุ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
 
             </div>

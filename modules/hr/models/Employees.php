@@ -254,14 +254,14 @@ class Employees extends Yii\db\ActiveRecord
         'PT2' => 2,
         'PT3' => 3,
         'PT4' => 4,
-        'PT5' => 4,
+        'PT5' => 5,
         'PT6' => 4,
         'PT7' => 4,
         '1' => 1,
         '2' => 2,
         '3' => 3,
         '4' => 4,
-        '5' => 4,
+        '5' => 5,
         '6' => 4,
         '7' => 4,
     ];
@@ -1291,17 +1291,10 @@ class Employees extends Yii\db\ActiveRecord
     public function employeeTypeName()
     {
         try {
-            if (
-                $this->hasAttribute('employee_type_id')
-                && Yii::$app->db->getTableSchema(EmployeeType::tableName(), true) !== null
-                && isset($this->employeeType)
-                && isset($this->employeeType->title)
-                && $this->employeeType->title != ''
-            ) {
-                return $this->employeeType->title;
-            }
 
-            return $this->positionTypeName();
+                return $this->employeeType->title;
+
+            // return $this->positionTypeName();
         } catch (\Throwable $th) {
             return false;
         }

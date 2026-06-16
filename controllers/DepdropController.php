@@ -679,4 +679,41 @@ class DepdropController extends \yii\web\Controller
         ];
     }
 
+
+
+    // บุคลากร ที่เป็นหัวหน้า
+    public function actionGetLeader($q = null, $id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $ids = (new \yii\db\Query())
+            ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1'))"))
+            ->from('tree')
+            ->union(
+                (new \yii\db\Query())
+                    ->select(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2'))"))
+                    ->from('tree')
+            )
+            ->column();
+
+        $models = Employees::find()
+            ->where(['like', 'fname', $q])
+            ->andWhere(['id' => $ids])
+            ->limit(10)
+            ->all();
+        $data = [['id' => '', 'text' => '']];
+        foreach ($models as $model) {
+            $data[] = [
+                'id' => $model->id,
+                'text' => $model->fullname,
+                'title' => $model->fname,
+                // 'avatar' => Html::img($model->showAvatar(), ['class' => 'avatar avatar-sm bg-primary text-white'])
+                'avatar' => $model->getAvatar(false)
+            ];
+        }
+        return [
+            'results' => $data,
+            'items' => $ids
+        ];
+    }
+
 }

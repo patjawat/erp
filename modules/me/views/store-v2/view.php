@@ -92,7 +92,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     data-item-id="<?php echo $item->id; ?>">
                                 <button class="btn btn-sm btn-light"
                                     onclick="updateQuantity(<?php echo $item->id; ?>, 1)">
-                                    <i class="fa-solid fa-plus"></i>
+                                    <i data-lucide="circle-plus"></i>
                                 </button>
                                 <?php else:?>
                                     <input type="number" class="form-control quantity-input" value="<?php echo isset($item->data_json['req_qty']) ? $item->data_json['req_qty'] : 0 ?>" disabled>

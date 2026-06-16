@@ -125,3 +125,29 @@ $avatar = $model->showAvatar();
 
     </div>
 </div>
+<?php
+$sql = "SELECT prefix,concat(e.fname,' ',e.lname) as fullname,
+position_name,
+position_type,
+position_name,
+e.data_json->>'$.position_type',
+t.title,
+e.employee_type_id
+FROM `employees` e
+LEFT JOIN employee_type t ON t.id = e.employee_type_id
+WHERE e.branch = 'MAIN';";
+
+
+$sql2="SELECT 
+prefix,concat(e.fname,' ',e.lname) as fullname,
+p.data_json->>'$.position_type_text',
+p.data_json->>'$.position_type'
+FROM employees e
+LEFT JOIN employee_detail p
+    ON p.emp_id = e.id
+    AND p.name = 'position'
+LEFT JOIN employee_type t ON t.id = e.employee_type_id
+WHERE e.id = 307
+GROUP BY e.id
+ORDER BY p.data_json->>'$.date_start' DESC;"
+?>

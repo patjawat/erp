@@ -32,13 +32,13 @@ $this->params['breadcrumbs'][] = $this->title;
              [
                 'label' => 'วันที่ตามแผน',
                 'value' => function($model){
-                    return Yii::$app->thaiDate->toThaiDate($model->plan_date, true, false);
+                    return Yii::$app->thaiDate->toThaiDate($model->date_start, true, false);
                 }
             ],
             [
                 'label' => 'วันที่ดำเนินการ',
                 'value' => function($model){
-                    return Yii::$app->thaiDate->toThaiDate($model->actual_date, true, false);
+                    return Yii::$app->thaiDate->toThaiDate($model->date_end, true, false);
                 }
             ],
              [

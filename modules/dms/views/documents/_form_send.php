@@ -7,6 +7,7 @@ use kartik\file\FileInput;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\hr\models\Organization;
 $this->registerJsFile('@web/js/float-type.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 if($model->document_group == 'receive'){
@@ -168,27 +169,40 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
                             <div class="col-12">
-            <?php
-            echo $form->field($model, 'document_org')->widget(Select2::classname(), [
-                'data' => $model->ListDocumentOrg(),
-                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                'pluginOptions' => [
-                    'allowClear' => true,
-                    'multiple' => true,
-                      'dropdownParent' => '#main-modal',
-                    'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                    // 'width' => '370px',
-                ],
-                'pluginEvents' => [
-                    'select2:select' => 'function(result) { 
-                                }',
-                    'select2:unselecting' => 'function() {
+                                <div id="div-document-org">
+                                    <?php
+                                    echo $form->field($model, 'document_org')->widget(Select2::classname(), [
+                                        'data' => $model->ListDocumentOrg(),
+                                        'options' => ['placeholder' => 'เลือกหน่วยงาน'],
+                                        'pluginOptions' => [
+                                            'allowClear' => true,
+                                            'multiple' => true,
+                                            'dropdownParent' => '#main-modal',
+                                            'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
+                                        ],
+                                        'pluginEvents' => [
+                                            'select2:select' => 'function(result) { 
+                                                        }',
+                                            'select2:unselecting' => 'function() {
 
-                                }',
-                ]
-            ])->label('ส่งถึงหน่วยงาน');
-            ?>
-          
+                                                        }',
+                                        ]
+                                    ])->label('ส่งถึงหน่วยงาน');
+                                    ?>
+                                </div>
+                                <div id="div-tags-department" style="display: none;">
+                                    <?php
+                                    echo $form->field($model, 'tags_department')->widget(\kartik\tree\TreeViewInput::className(), [
+                                        'query' => Organization::find()->addOrderBy('root, lft'),
+                                        'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                        'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                        'fontAwesome' => true,
+                                        'asDropdown' => true,
+                                        'multiple' => true,
+                                        'options' => ['disabled' => false],
+                                    ])->label('ส่งถึงหน่วยงาน');
+                                    ?>
+                                </div>
                             </div>
 
                      <div class="col-12">
@@ -415,6 +429,22 @@ $js = <<< JS
 
                 // Initialize FloatType instances
         $(document).ready(function() {
+            function toggleOrgFields() {
+                var docType = $('#documents-document_type').val();
+                if (docType === 'DT2') {
+                    $('#div-document-org').hide();
+                    $('#div-tags-department').show();
+                } else {
+                    $('#div-tags-department').hide();
+                    $('#div-document-org').show();
+                }
+            }
+
+            toggleOrgFields();
+            $('#documents-document_type').on('change', function() {
+                toggleOrgFields();
+            });
+
             // Demo 4: AJAX simulation
             new FloatType('#documents-topic', '#documents-topic-dropdown', {
                 triggers: {

@@ -5,7 +5,7 @@ use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'จัดการข้อมูลตรวจสุขภาพพนักงาน';
+$this->title = 'จัดการข้อมูลตรวจสุขภาพเจ้าหน้าที่';
 $this->params['breadcrumbs'][] = ['label' => 'ข้อมูลสุขภาพ', 'url' => ['/health']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -38,15 +38,15 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
-                <i class="bi bi-ui-checks"></i> ทะเบียนตรวจสุขภาพพนักงาน
+                <i class="bi bi-ui-checks"></i> ทะเบียนตรวจสุขภาพเจ้าหน้าที่
                 <span class="badge bg-light bg-opacity-10 text-white border border-light-subtle rounded-pill fw-medium px-2 py-1">
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
             </h6>
             <div class="d-flex justify-content-center gap-2">
-                <?= \yii\helpers\Html::a(
+                <?php \yii\helpers\Html::a(
                     '<i class="fas fa-plus me-1"></i> บันทึกข้อมูลสุขภาพ',
                     ['create'],
-                    ['class' => 'btn btn-light btn-sm rounded-pill px-3']
+                    ['class' => 'btn btn-light btn-sm rounded-pill px-3 open-modal','data' => ['size' => 'modal-xl']]
                 ) ?>
             </div>
         </div>
@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th>ปีที่ตรวจ</th>
                         <th>วันที่คัดกรอง</th>
-                        <th class="ps-4">พนักงาน</th>
+                        <th class="ps-4">เจ้าหน้าที่</th>
                         <th class="text-start" scope="col">หน่วยงาน</th>
                         <th class="text-center">สรุปผลสุขภาพ</th>
                         <th class="text-center">สถานะการตรวจ</th>

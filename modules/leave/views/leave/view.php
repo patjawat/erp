@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= ($model->status !== 'Cancel' && $model->status !== 'ReqCancel') ? Html::a('<i class="fa-solid fa-xmark"></i> ขอยกเลิก', ['/leave/leave/req-cancel', 'id' => $model->id], [
             'class' => 'req-cancel-btn btn btn-danger rounded-pill shadow', 'data' => ['title' => 'คุณต้องการขอยกเลิกใช่หรือไม!']
         ]) : '' ?>
-        <?php echo !$model->hasApprovalDecision() ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/leave/leave/update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow']) : '' ?>
+        <?php echo !$model->hasApprovalDecision() ? Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/leave/leave/update', 'id' => $model->id], ['class' => 'btn btn-warning rounded-pill shadow open-modal','data' => ['size' => 'modal-xl']]) : '' ?>
     <?php endif; ?>
     <button type="button" class="btn btn-secondary rounded-pill shadow" data-bs-dismiss="modal"><i class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
@@ -49,7 +49,7 @@ $js = <<<JS
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
             if (result.isConfirmed) {
-                $("#main-modal").modal("hide");
+                erpHideModal("#main-modal");
                 Swal.fire({
                     title: 'กำลังดำเนินการ...',
                     allowOutsideClick: false,
@@ -92,7 +92,7 @@ $js = <<<JS
             method: 'GET',
             xhrFields: { responseType: 'blob' },
             beforeSend: function() {
-                $("#main-modal").modal("show");
+                erpShowModal("#main-modal");
                 $("#main-modal-label").html("กำลังโหลด");
                 $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl").addClass("modal-sm");
                 $("#modal-dialog").removeClass("fade");
@@ -108,7 +108,7 @@ $js = <<<JS
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
-                $("#main-modal").modal("hide");
+                erpHideModal("#main-modal");
             },
             error: function() { alert('ไม่สามารถดาวน์โหลดไฟล์ได้'); }
         });

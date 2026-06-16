@@ -29,7 +29,9 @@ use kartik\widgets\ActiveForm;
     <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'ระบุบวันที่กำหนดแผน calibration'])->label('วันที่ตามแผน'); ?>
   </div>
     <div class="col-lg-6 col-md-6 col-sm-12">
-    <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'วันที่ดำเนินการ'])->label('วันที่ดำเนินการ'); ?>
+            <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['placeholder' => 'วันที่ดำเนินการ'],
+])->label('วันที่ดำเนินการ'); ?>
   </div>
   
 <div class="col-lg-6 col-md-6 col-sm-12">

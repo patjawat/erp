@@ -149,7 +149,7 @@ $compact = (bool) ($compact ?? false);
                             <span class="official-doc-hint">
                                 <?= $compact ? 'แตะเพื่อเปิดดู' : 'เปิดดู คอมเมนต์ และส่งต่อ' ?>
                             </span>
-                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0" style="width: 1rem; height: 1rem;"></i>
+                            <i data-lucide="chevron-right" class="text-secondary flex-shrink-0 mi-xs"></i>
                         </div>
                     </div>
                 </div>

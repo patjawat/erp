@@ -1,8 +1,11 @@
 <?php
 
-use yii\helpers\Html;
+use app\components\SiteHelper;
+use app\components\ThaiDateHelper;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+use yii\helpers\Html;
+$site = SiteHelper::getInfo();
 
 $code = $model->code;
 $result = Builder::create()
@@ -10,40 +13,33 @@ $result = Builder::create()
         ->data($code)
         ->size(300)
         ->build();
-    $base64 = base64_encode($result->getString());
+$base64 = base64_encode($result->getString());
 
 ?>
 
-<div class="d-flex align-items-center bg-primary bg-opacity-10  p-2 rounded">
-    <div class="flex-shrink-0">
-       <img src="data:image/png;base64,<?= $base64 ?>" width="140">
-    </div>
-    <div class="flex-grow-1 ms-3">
-        <ul class="list-inline">
-            <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <span class="text-danger"><?= $model->code ?><span>
-            </li>
-            <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?= $model->assetType->title ?>
-                <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?= $model->asset_name ?>
-                <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?= $model->departmentName() ?>
-            <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?= number_format($model->price, 2) ?> :: <?= Yii::$app->thaiFormatter->asDate($model->receive_date, 'short') ?>
-            </li>
-            <!-- <li><i class="bi bi-check2-circle text-primary fs-5"></i>
-                <?php if (isset($model->data_json['department_name']) && $model->data_json['department_name'] == ''): ?>
-                <?= isset($model->data_json['department_name_old']) ? $model->data_json['department_name_old'] : '' ?>
-                <?php else: ?>
-                <?= isset($model->data_json['department_name']) ? $model->data_json['department_name'] : '' ?>
-                <?php endif; ?>
-            </li> -->
-            <ul>
-    </div>
-</div>
-<div class="flex gap-2 mt-3">
-    <?= Html::a('<i class="fa-solid fa-print"></i> QR-Code', ['#'], ['class' => 'btn btn-primary']) ?>
-    <?= Html::a('<i class="fa-solid fa-print"></i> Barcode', ['#'], ['class' => 'btn btn-primary']) ?>
-    <?= Html::a('<i class="fa-solid fa-sliders"></i> ตั้งค่าหน้ากระดาษ', ['/am/asset/qrcode-setting', 'title' => '<i class="fa-solid fa-sliders"></i> กำหนดขนาดกระดาษา'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-</div>
+<table style="width: 100%; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+    <tr>
+        <td style="width: 150px; vertical-align: top;">
+            <img src="data:image/png;base64,<?= $base64 ?>" width="200">
+        </td>
+        <td style="vertical-align: top;">
+            <table style="width: 100%; border-collapse: collapse; line-height: 1.5;">
+                <tr>
+                    <td style="text-align: left; vertical-align: top; font-size: 35px;"><strong><?= $model->code ?></strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $model->asset_name ?></strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $model->departmentName() ?></strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= number_format($model->price, 2) ?> :: <?= ThaiDateHelper::formatThaiDate($model->receive_date,'numeric')?></strong></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; vertical-align: top;font-size: 20px;"><strong><?= $site['company_name']?></strong></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>

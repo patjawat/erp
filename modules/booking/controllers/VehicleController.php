@@ -19,7 +19,10 @@ use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\approve\models\Approve;
 use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
@@ -65,17 +68,209 @@ class VehicleController extends Controller
      */
     public function actionDashboard($date = null)
     {
+        $params = $this->request->queryParams;
+        $searchModel = new VehicleSearch();
 
-        $searchModel = new VehicleSearch([
-            // 'thai_year' => AppHelper::YearBudget(),
-        ]);
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        // ค่าเริ่มต้น: ปีงบประมาณปัจจุบัน (ถ้าผู้ใช้ไม่ได้ส่ง filter มา)
+        if (!isset($params['VehicleSearch']['thai_year'])) {
+            $searchModel->thai_year = AppHelper::YearBudget();
+        }
+
+        $dataProvider = $searchModel->search($params);
 
         return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-
         ]);
+    }
+
+    /**
+     * ตารางการใช้รถยนต์รายคันในช่วง 06:00-18:00 ของวันที่ระบุ
+     */
+    public function actionSchedule($date = null, $type = null)
+    {
+        $todayIso = date('Y-m-d');
+        $tomorrowIso = date('Y-m-d', strtotime('+1 day'));
+
+        $targetIso = $todayIso;
+        if (!empty($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $targetIso = $date;
+        }
+
+        // ประเภทรถที่อนุญาตให้ filter
+        $allowedTypes = ['official', 'ambulance'];
+        $activeType = in_array($type, $allowedTypes, true) ? $type : null;
+
+        // เวลาเริ่ม-สิ้นสุดของหน้าต่าง schedule
+        $timelineStartMin = 6 * 60;
+        $timelineEndMin = 18 * 60;
+        $timelineSpan = $timelineEndMin - $timelineStartMin;
+
+        $parseTime = function ($t) {
+            if (preg_match('/^(\d{1,2}):(\d{2})/', (string) $t, $m)) {
+                return ((int) $m[1]) * 60 + ((int) $m[2]);
+            }
+            return null;
+        };
+
+        // === STEP 1: ดึง Asset ของรถที่จะแสดง ===
+        // - official (รถยนต์ทั่วไป): asset_type_id='VEH' AND asset_category_id='TV'
+        // - ambulance (รถฉุกเฉิน):  asset_type_id='VEH' AND asset_category_id='VM'
+        // - null (ทั้งหมด):         asset_type_id='VEH'
+        $assetQuery = Asset::find()
+            ->where(['asset_type_id' => 'VEH'])
+            ->andWhere(['IS NOT', 'license_plate', null])
+            ->andWhere(['<>', 'license_plate', ''])
+            ->andWhere(['deleted_at' => null])
+            ->andWhere([
+                'or',
+                ['lifecycle_status' => null],
+                ['<>', 'lifecycle_status', Asset::LIFECYCLE_DISPOSED],
+            ]);
+
+        if ($activeType === 'official') {
+            $assetQuery->andWhere(['asset_category_id' => 'TV']);
+        } elseif ($activeType === 'ambulance') {
+            $assetQuery->andWhere(['asset_category_id' => 'VM']);
+        }
+
+        $assets = $assetQuery
+            ->orderBy(['license_plate' => SORT_ASC])
+            ->all();
+
+        // === STEP 2: ดึง booking ของวันนี้สำหรับรถเหล่านี้ ===
+        $plates = array_values(array_filter(array_map(fn($a) => $a->license_plate, $assets)));
+        $bookingsByLicense = [];
+
+        if (!empty($plates)) {
+            $details = VehicleDetail::find()
+                ->joinWith('vehicle')
+                ->andFilterWhere(['vehicle_detail.date_start' => $targetIso])
+                ->andWhere(['vehicle_detail.license_plate' => $plates])
+                ->andFilterWhere(['NOT IN', 'vehicle.status', ['Cancel']])
+                ->orderBy(['vehicle_detail.time_start' => SORT_ASC])
+                ->all();
+
+            foreach ($details as $d) {
+                $plate = trim((string) ($d->license_plate ?: $d->vehicle?->license_plate));
+                if ($plate === '') {
+                    continue;
+                }
+                $bookingsByLicense[$plate][] = $d;
+            }
+        }
+
+        // === STEP 3: Preload รูปรถทั้งหมดด้วย query เดียว (แก้ N+1 จาก showImg() แต่ละ row) ===
+        $assetImages = [];
+        $refs = array_values(array_filter(array_map(fn($a) => $a->ref, $assets)));
+        if (!empty($refs)) {
+            $uploads = Uploads::find()
+                ->where(['ref' => $refs, 'name' => 'asset'])
+                ->all();
+            foreach ($uploads as $up) {
+                // เก็บ id ของ upload ตัวแรกของแต่ละ ref
+                if (!isset($assetImages[$up->ref])) {
+                    $assetImages[$up->ref] = FileManagerHelper::getImg($up->id);
+                }
+            }
+        }
+
+        // === STEP 4: สร้าง vehicles list สำหรับ rendering (1 Asset = 1 row) ===
+        $vehicles = [];
+        foreach ($assets as $a) {
+            $vehicles[] = ['asset' => $a, 'row_key' => $a->license_plate];
+        }
+
+        $rows = [];
+        $fmtClock = fn(int $m) => sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+
+        foreach ($vehicles as $entry) {
+            $v = $entry['asset'];
+            $rowKey = $entry['row_key'];
+            $isMaintenance = ($v->lifecycle_status === Asset::LIFECYCLE_REPAIR);
+            $vehicleBookings = $bookingsByLicense[$rowKey] ?? [];
+
+            $blocks = [];
+            foreach ($vehicleBookings as $d) {
+                // ใช้เวลาของ vehicle_detail ก่อน fallback เป็นของ vehicle (parent booking)
+                // เพราะ user กรอกเวลาผ่านฟอร์มใบจอง (Vehicle) เป็นหลัก vehicle_detail
+                // อาจถูกสร้างหลัง assign และอาจ inherit เวลาเดียวกัน
+                $timeStartStr = !empty($d->time_start) ? $d->time_start : ($d->vehicle?->time_start ?? null);
+                $timeEndStr = !empty($d->time_end) ? $d->time_end : ($d->vehicle?->time_end ?? null);
+
+                $startMin = $parseTime($timeStartStr);
+                $endMin = $parseTime($timeEndStr);
+                if ($startMin === null || $endMin === null) {
+                    // ถ้าทั้ง detail และ parent ไม่มีเวลา ถือเป็นทั้งวัน
+                    $startMin = $timelineStartMin;
+                    $endMin = $timelineEndMin;
+                }
+                $clampedStart = max($timelineStartMin, min($timelineEndMin, $startMin));
+                $clampedEnd = max($timelineStartMin, min($timelineEndMin, $endMin));
+                if ($clampedEnd <= $clampedStart) {
+                    continue;
+                }
+                $startLabel = !empty($timeStartStr) ? substr((string) $timeStartStr, 0, 5) : $fmtClock($clampedStart);
+                $endLabel = !empty($timeEndStr) ? substr((string) $timeEndStr, 0, 5) : $fmtClock($clampedEnd);
+                $driverName = trim((string) ($d->driver?->fullname ?? ''));
+                $blocks[] = [
+                    'left' => ($clampedStart - $timelineStartMin) / $timelineSpan * 100,
+                    'width' => ($clampedEnd - $clampedStart) / $timelineSpan * 100,
+                    'label' => sprintf('%s-%s', $startLabel, $endLabel),
+                    'reason' => trim((string) ($d->vehicle?->reason ?? '')),
+                    'location' => trim((string) ($d->vehicle?->locationOrg?->title ?: ($d->vehicle?->location ?? ''))),
+                    'driver' => $driverName,
+                    'detail_id' => $d->id,
+                    'vehicle_id' => $d->vehicle_id,
+                ];
+            }
+
+            $rows[] = [
+                'asset' => $v,
+                'is_maintenance' => $isMaintenance,
+                'booking_count' => count($vehicleBookings),
+                'blocks' => $blocks,
+            ];
+        }
+
+        return $this->render('schedule', [
+            'rows' => $rows,
+            'targetIso' => $targetIso,
+            'todayIso' => $todayIso,
+            'tomorrowIso' => $tomorrowIso,
+            'timelineStartMin' => $timelineStartMin,
+            'timelineEndMin' => $timelineEndMin,
+            'activeType' => $activeType,
+            'assetImages' => $assetImages,
+        ]);
+    }
+
+    /**
+     * แสดงรายการภารกิจของพนักงานขับรถใน modal
+     */
+    public function actionDriverWork($driver_id)
+    {
+        $thaiYear = $this->request->get('thai_year');
+
+        $query = Vehicle::find()
+            ->where(['driver_id' => $driver_id])
+            ->andWhere(['IN', 'status', ['Approve', 'Pass', 'Success']])
+            ->andFilterWhere(['thai_year' => $thaiYear])
+            ->orderBy(['date_start' => SORT_DESC, 'time_start' => SORT_DESC]);
+
+        $trips = $query->all();
+        $driver = !empty($trips) ? $trips[0]->driver : null;
+        $driverName = $driver?->fullname ?: 'พนักงานขับรถ #' . $driver_id;
+
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => '<i class="fa-solid fa-user-tie"></i> รายการภารกิจ — ' . $driverName,
+            'content' => $this->renderAjax('_driver_work', [
+                'trips' => $trips,
+                'driverName' => $driverName,
+            ]),
+        ];
     }
 
     public function actionIndex()

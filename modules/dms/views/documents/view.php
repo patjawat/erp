@@ -131,6 +131,30 @@ $this->registerCss(<<<CSS
     border: 2px solid transparent;
     background-clip: content-box;
 }
+
+.bookmark-toggle {
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.bookmark-toggle:hover { transform: translateY(-1px); }
+.bookmark-toggle.is-on {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+    border: 1px solid transparent;
+}
+.bookmark-toggle.is-on i { color: #fff; }
+.bookmark-toggle.is-off {
+    background: #f1f5f9;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0;
+}
+.bookmark-toggle.is-off i { color: #94a3b8; }
 CSS);
 
 $currentDeptIds = DocumentsDetail::find()
@@ -162,6 +186,16 @@ $pdfUrl = Url::to(['/me/documents/show', 'ref' => $model->ref]);
 $pdfDownloadUrl = Url::to(['/me/documents/show', 'ref' => $model->ref, 'download' => 1]);
 $pdfUrlJs = json_encode($pdfUrl, JSON_UNESCAPED_SLASHES);
 $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED_SLASHES);
+
+$bookmarkDetailId = isset($detail) && $detail ? (int) $detail->id : 0;
+$bookmarkStatusRaw = isset($detail) && $detail ? ($detail->docRead()['status'] ?? 'N') : 'N';
+$bookmarkIsOn = $bookmarkStatusRaw === 'Y';
+$bookmarkState = [
+    'status' => $bookmarkIsOn ? 'Y' : 'N',
+    'label' => $bookmarkIsOn ? 'ปักหมุดแล้ว' : 'ปักหมุด',
+    'stateClass' => $bookmarkIsOn ? 'is-on' : 'is-off',
+];
+$bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $bookmarkDetailId]) : null;
 ?>
 
 <div class="container-fluid p-0 document-modal-shell">
@@ -216,7 +250,7 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
                         </span>
                         <div class="flex-grow-1 min-width-0">
                             <div class="text-uppercase small text-primary fw-semibold opacity-75" style="letter-spacing:.05em;">
-                                <?= Html::encode($model->documentOrg->title ?? '-') ?>
+                                <?= $model->document_type === 'DT2' ? 'หนังสือภายใน' : Html::encode($model->documentOrg->title ?? '-') ?>
                             </div>
                             <div class="fw-bold text-dark text-truncate" title="<?= Html::encode($model->topic) ?>">
                                 <?= Html::encode($model->topic) ?>
@@ -249,7 +283,23 @@ $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED
                                 ) ?>
                             </div>
                         </div>
-                        <div class="d-flex flex-column gap-1 flex-shrink-0">
+                        <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                            <?php if ($bookmarkUrl): ?>
+                                <?= Html::a(
+                                    '<i class="fa-solid fa-thumbtack"></i> <span class="bookmark-label">' . Html::encode($bookmarkState['label']) . '</span>',
+                                    $bookmarkUrl,
+                                    [
+                                        'class' => 'badge rounded-pill px-2 py-1 small bookmark-toggle ' . $bookmarkState['stateClass'],
+                                        'id' => 'bookmark-toggle-' . $bookmarkDetailId,
+                                        'data-detail-id' => $bookmarkDetailId,
+                                        'data-state' => $bookmarkState['status'],
+                                        'title' => $bookmarkIsOn ? 'ยกเลิกปักหมุด' : 'ปักหมุดเอกสาร',
+                                        'aria-label' => 'ปักหมุดเอกสาร',
+                                        'data-bs-toggle' => 'tooltip',
+                                        'data-pjax' => '0',
+                                    ]
+                                ) ?>
+                            <?php endif; ?>
                             <?php if ($model->doc_speed === 'ด่วนที่สุด'): ?>
                                 <span class="badge text-bg-danger rounded-pill"><i class="fa-solid fa-circle-exclamation me-1"></i>ด่วนที่สุด</span>
                             <?php endif; ?>
@@ -601,13 +651,22 @@ $js = <<<JS
     getComment();
 })();
 
+function injectAjaxContent(\$target, html) {
+    if (typeof erpInjectModalContent === 'function') {
+        return erpInjectModalContent(\$target, html);
+    }
+
+    \$target.html(html);
+    return Promise.resolve();
+}
+
 async function getComment() {
     await \$.ajax({
         type: 'get',
         url: '$getCommentUrl',
         dataType: 'json',
-        success: function (res) {
-            \$('.viewFormComment').html(res.content);
+        success: async function (res) {
+            await injectAjaxContent(\$('.viewFormComment'), res.content);
             // composer มี #viewlistCommenttemplate อยู่ภายใน → load รายการ template หลัง composer มา
             if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
         }
@@ -650,8 +709,9 @@ function reloadTimeline() {
         type: 'get',
         url: \$(this).attr('href'),
         dataType: 'json',
-        success: function (res) {
-            \$('.viewFormComment').html(res.content);
+        success: async function (res) {
+            await injectAjaxContent(\$('.viewFormComment'), res.content);
+            if (typeof listCommentTemplate === 'function') { listCommentTemplate(); }
             // scroll work pane down to composer
             setTimeout(function () {
                 if (typeof updateIframeHeight === 'function') {
@@ -776,6 +836,46 @@ function updateCharCount() {
 }
 
 \$(document).on('input keyup', '#documentsdetail-data_json-comment', updateCharCount);
+
+\$(document).off('click.bookmarkToggle').on('click.bookmarkToggle', '.bookmark-toggle', function (e) {
+    e.preventDefault();
+    var \$btn = \$(this);
+    if (\$btn.prop('disabled')) { return; }
+    \$btn.prop('disabled', true);
+    \$.ajax({
+        type: 'get',
+        url: \$btn.attr('href'),
+        dataType: 'json',
+        success: function (res) {
+            if (res && res.status === 'success' && res.data) {
+                var newState = res.data.bookmark === 'Y' ? 'Y' : 'N';
+                \$btn.data('state', newState).attr('data-state', newState);
+                if (newState === 'Y') {
+                    \$btn.removeClass('is-off').addClass('is-on');
+                    \$btn.find('.bookmark-label').text('ปักหมุดแล้ว');
+                    \$btn.attr('title', 'ยกเลิกปักหมุด').attr('data-bs-original-title', 'ยกเลิกปักหมุด');
+                    if (typeof success === 'function') { success('ปักหมุดเอกสารแล้ว'); }
+                } else {
+                    \$btn.removeClass('is-on').addClass('is-off');
+                    \$btn.find('.bookmark-label').text('ปักหมุด');
+                    \$btn.attr('title', 'ปักหมุดเอกสาร').attr('data-bs-original-title', 'ปักหมุดเอกสาร');
+                    if (typeof success === 'function') { success('ยกเลิกปักหมุดแล้ว'); }
+                }
+                if (window.bootstrap && bootstrap.Tooltip) {
+                    var tip = bootstrap.Tooltip.getInstance(\$btn[0]);
+                    if (tip) { tip.dispose(); }
+                    bootstrap.Tooltip.getOrCreateInstance(\$btn[0]);
+                }
+            }
+        },
+        error: function () {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถปักหมุดได้' });
+            }
+        },
+        complete: function () { \$btn.prop('disabled', false); }
+    });
+});
 
 \$(document).on('click', '.btn-delete-action', function (e) {
     e.preventDefault();

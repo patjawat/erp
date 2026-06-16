@@ -70,16 +70,7 @@ class AuthController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
 
             if ($model->load(Yii::$app->request->post()) && $model->login()) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return $model;
-                // bind telegram_id ครั้งแรก
-                // if ($telegram_id && Yii::$app->user->identity->telegram_id == null) {
-
-                //     $user = Yii::$app->user->identity;
-                //     $user->telegram_id = $telegram_id;
-                //     $user->save(false);
-
-                // }
+                $this->bindTelegramId($telegram_id);
 
                 return [
                     'success' => true,
@@ -106,10 +97,7 @@ class AuthController extends Controller
             $data = Yii::$app->request->post('LoginForm');
             /** @var User $user */
             $user = Yii::$app->user->identity;
-            if ($user->telegram_id == null) {
-                $user->telegram_id = $data['telegram_id'];
-                $user->save(false);
-            }
+            $this->bindTelegramId($data['telegram_id'] ?? null);
 
 
             return $this->goBack(Url::to(['/mobile/default/index']));
@@ -197,6 +185,25 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'redirect' => $redirect,
         ];
+    }
+
+    protected function bindTelegramId($telegramId): void
+    {
+        $telegramId = trim((string) $telegramId);
+        if ($telegramId === '' || Yii::$app->user->isGuest) {
+            return;
+        }
+
+        /** @var User|null $user */
+        $user = Yii::$app->user->identity;
+        if (!$user || trim((string) $user->telegram_id) === $telegramId) {
+            return;
+        }
+
+        $user->telegram_id = $telegramId;
+        if (!$user->save(false, ['telegram_id'])) {
+            Yii::warning('Cannot bind Telegram ID to user ' . $user->id, __METHOD__);
+        }
     }
 
 

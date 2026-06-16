@@ -90,6 +90,7 @@ class UpdateTableController extends Controller
             // การตรวจสุขภาพ
             ['name' => '/health/*', 'type' => 2, 'description' => ''],
             ['name' => '/health/me/*', 'type' => 2, 'description' => ''],
+            ['name' => '/health/health-screen/print', 'type' => 2, 'description' => ''],
 
             //การอนุมัติ
             ['name' => '/approve-v2/*', 'type' => 2, 'description' => ''],
@@ -445,6 +446,7 @@ class UpdateTableController extends Controller
 
             ['child' => '/plan/*', 'parent' => 'user'],
             ['child' => '/health/*', 'parent' => 'health'],
+            ['child' => '/health/health-screen/print', 'parent' => 'user'],
             ['child' => '/mobile/*', 'parent' => 'user'],
         ];
     }

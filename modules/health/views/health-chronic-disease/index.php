@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var HealthOption[] $models */
 
-$this->title = 'ตั้งค่าโรคประจำตัว';
+$this->title = 'ตั้งค่าประวัติเจ็บป่วยปีก่อน';
 $this->params['breadcrumbs'][] = ['label' => 'ข้อมูลสุขภาพ', 'url' => ['/health']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

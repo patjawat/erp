@@ -39,7 +39,7 @@ $this->title = 'ระบบจัดซื้อ';
                     </div>
                     <div>
                         <div>
-                            <button class="btn btn-sm btn-primary rounded-pill"><i class="fa-solid fa-plus"></i>
+                            <button class="btn btn-sm btn-primary rounded-pill"><i data-lucide="circle-plus"></i>
                                 สร้างใบสั่งซื้อ</button>
                         </div>
                     </div>

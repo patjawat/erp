@@ -1,22 +1,30 @@
 <?php
 
-use yii\web\View;
-use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\web\JsExpression;
-use kartik\select2\Select2;
-use kartik\field\FieldRange;
-use kartik\widgets\RadioButtonGroup;
-use yii\helpers\ArrayHelper;
-use app\components\UserHelper;
-use kartik\widgets\ActiveForm;
-use kartik\widgets\TimePicker;
-use app\modules\hr\models\Employees;
-use app\modules\dms\models\DocumentsDetail;
+    use app\components\UserHelper;
+    use app\modules\hr\models\Employees;
+    use kartik\select2\Select2;
+    use kartik\widgets\ActiveForm;
+    use kartik\widgets\TimePicker;
+    use yii\helpers\Html;
+    use yii\helpers\Url;
+    use yii\web\JsExpression;
+    use yii\web\View;
 
-$me = UserHelper::GetEmployee();
+    $me = UserHelper::GetEmployee();
 
-$formatJs = <<<'JS'
+    // Reference-document list for the Select2 widget further down. Some
+    // entry points (e.g. update.php) don't pass $list explicitly; fall back
+    // to the model's listDocument() helper so the view doesn't crash when
+    // $model->vehicle_type_id == 'general'.
+    if (!isset($list) || !is_array($list)) {
+        try {
+            $list = method_exists($model, 'listDocument') ? (array) $model->listDocument() : [];
+        } catch (\Throwable $e) {
+            $list = [];
+        }
+    }
+
+    $formatJs = <<<'JS'
     var formatRepo = function (repo) {
         if (repo.loading) {
             return repo.avatar;
@@ -38,11 +46,11 @@ $formatJs = <<<'JS'
     }
     JS;
 
-// Register the formatting script
-$this->registerJs($formatJs, View::POS_HEAD);
+    // Register the formatting script
+    $this->registerJs($formatJs, View::POS_HEAD);
 
-// script to parse the results into the format expected by Select2
-$resultsJs = <<<JS
+    // script to parse the results into the format expected by Select2
+    $resultsJs = <<<JS
     function (data, params) {
         params.page = params.page || 1;
         return {
@@ -54,13 +62,12 @@ $resultsJs = <<<JS
     }
     JS;
 
-/** @var yii\web\View $this */
-/** @var app\modules\booking\models\BookingCar $model */
-/** @var yii\widgets\ActiveForm $form */
+    /** @var yii\web\View $this */
+    /** @var app\modules\booking\models\BookingCar $model */
+    /** @var yii\widgets\ActiveForm $form */
 ?>
 
 <?php $form = ActiveForm::begin(['id' => 'form']); ?>
-
 <div class="row g-4">
     <div class="col-md-8">
         <div class="card border-0 shadow-sm mb-4">
@@ -68,11 +75,16 @@ $resultsJs = <<<JS
                 <h6 class="fw-bold mb-3 text-primary border-start border-4 border-primary ps-2">ข้อมูลการเดินทาง</h6>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <?= $form->field($model, 'date_start')->textInput(['placeholder' => 'เลือกวันที่ต้องการเดินทาง'])->label('วันออกเดินทาง') ?>
+                        <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['id' => 'dateStart', 'placeholder' => 'เลือกวันที่ต้องการเดินทาง'],
+])->label(false); ?>
 
-                    </div>
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'date_end')->textInput(['placeholder' => 'เลือกวันที่เดินทางกลับ'])->label('ถึงวันที่') ?>
+
+                                        </div>
+                                        <div class="col-md-6">
+                                            <?= $form->field($model, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, [
+    'options' => ['id' => 'dateEnd', 'placeholder' => 'เลือกวันที่เดินทางกลับ'],
+])->label(false); ?>
 
                     </div>
                     <!-- <div class="col-md-6">
@@ -88,74 +100,74 @@ $resultsJs = <<<JS
                         <label class="form-label has-star pt-2">เวลาไป - กลับ <span class="text-danger">*</span></label>
                         <div class="row g-2 align-items-center">
                             <div class="col">
-                                <?= $form->field($model, 'time_start', ['showLabels' => false])->widget(TimePicker::classname(), [
-                                    'pluginOptions' => ['showMeridian' => false]
-                                ]) ?>
+                                <?php echo $form->field($model, 'time_start', ['showLabels' => false])->widget(TimePicker::classname(), [
+    'pluginOptions' => ['showMeridian' => false],
+]) ?>
                             </div>
                             <div class="col-auto pb-3">
                                 <span class="fw-bold text-muted">ถึง</span>
                             </div>
                             <div class="col">
-                                <?= $form->field($model, 'time_end', ['showLabels' => false])->widget(TimePicker::classname(), [
-                                    'pluginOptions' => ['showMeridian' => false]
-                                ]) ?>
+                                <?php echo $form->field($model, 'time_end', ['showLabels' => false])->widget(TimePicker::classname(), [
+    'pluginOptions' => ['showMeridian' => false],
+]) ?>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6 text-center">
-                        <?= $form->field($model, 'refer_type')->widget(Select2::classname(), [
-                            'data' => $model->listReferType(),
-                            'options' => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
-                            'pluginOptions' => [
-                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                                'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
-                            ],
-                            'pluginEvents' => [
-                                'select2:select' => 'function(result) { 
+                        <?php echo $form->field($model, 'refer_type')->widget(Select2::classname(), [
+    'data'          => $model->listReferType(),
+    'options'       => ['placeholder' => 'เลือกประเภทการส่งผู้ป่วย'],
+    'pluginOptions' => [
+        'tags'           => true,  // เปิดให้เพิ่มค่าใหม่ได้
+        'allowClear'     => true,
+        'dropdownParent' => '#main-modal',
+    ],
+    'pluginEvents'  => [
+        'select2:select'      => 'function(result) {
                                             }',
-                                'select2:unselecting' => 'function() {
+        'select2:unselecting' => 'function() {
 
                                             }',
-                            ],
-                        ])->label('ประเภท REFER'); ?>
+    ],
+])->label('ประเภท REFER'); ?>
 
-                        <?= $form->field($model, 'go_type')->radioList(
-                            [
-                                '1' => 'ไป-กลับ',
-                                '2' => 'ค้างคืน'
-                            ],
-                            [
-                                'inline' => true,
-                                'item' => function ($index, $label, $name, $checked, $value) {
-                                    $active = $checked ? 'checked' : '';
-                                    return "
+                        <?php echo $form->field($model, 'go_type')->radioList(
+    [
+        '1' => 'ไป-กลับ',
+        '2' => 'ค้างคืน',
+    ],
+    [
+        'inline' => true,
+        'item'   => function ($index, $label, $name, $checked, $value){
+            $active = $checked ? 'checked' : '';
+            return "
                 <input type='radio' class='btn-check' name='{$name}' id='trip-type-{$value}' value='{$value}' {$active} autocomplete='off'>
                 <label class='btn btn-outline-primary w-50 py-2' for='trip-type-{$value}'>{$label}</label>
             ";
-                                },
-                                'class' => 'btn-group w-100 mt-2', // จัดการ Grouping และความกว้าง
-                                'role' => 'group'
-                            ]
-                        )->label('ลักษณะการไป'); ?>
+        },
+        'class' => 'btn-group w-100 mt-2', // จัดการ Grouping และความกว้าง
+        'role' => 'group',
+    ]
+)->label('ลักษณะการไป'); ?>
                     </div>
                     <div class="col-12">
-                        <?= $form->field($model, 'location')->widget(Select2::classname(), [
-                            'data' => $model->ListOrg(),
-                            'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                            'pluginOptions' => [
-                                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                                'allowClear' => true,
-                                'dropdownParent' => '#main-modal',
-                            ],
-                            'pluginEvents' => [
-                                'select2:select' => 'function(result) { 
+                        <?php echo $form->field($model, 'location')->widget(Select2::classname(), [
+    'data'          => $model->ListOrg(),
+    'options'       => ['placeholder' => 'เลือกหน่วยงาน'],
+    'pluginOptions' => [
+        'tags'           => true,  // เปิดให้เพิ่มค่าใหม่ได้
+        'allowClear'     => true,
+        'dropdownParent' => '#main-modal',
+    ],
+    'pluginEvents'  => [
+        'select2:select'      => 'function(result) {
                                             }',
-                                'select2:unselecting' => 'function() {
+        'select2:unselecting' => 'function() {
 
                                             }',
-                            ],
-                        ]) ?>
+    ],
+]) ?>
                     </div>
                 </div>
             </div>
@@ -164,16 +176,16 @@ $resultsJs = <<<JS
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="mb-3">
-                    <?= $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
+                    <?php echo $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
                 </div>
                 <div class="mb-3">
-                    <?= $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
+                    <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                 </div>
                 <div class="mb-3">
-                    <?= $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
+                    <?php echo $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
                 </div>
                 <div class="mb-0">
-                    <?= $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
+                    <?php echo $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
                 </div>
             </div>
         </div>
@@ -184,21 +196,21 @@ $resultsJs = <<<JS
             <div class="card-body">
                 <h6 class="fw-bold mb-3 text-secondary">ตั้งค่าการขอใช้รถ</h6>
                 <div class="mb-3">
-                    <?= $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
-                        'data' => [
-                            'official' => 'รถยนต์ราชการ',
-                            'personal' => 'รถยนต์ส่วนตัว',
-                            'ambulance' => 'รถพยาบาล',
-                        ],
-                        'options' => ['placeholder' => 'เลือกประเภทรถ'],
-                        'pluginOptions' => [
-                            'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
-                        ],
+                    <?php echo $form->field($model, 'vehicle_type_id')->widget(Select2::classname(), [
+    'data'          => [
+        'official'  => 'รถยนต์ราชการ',
+        'personal'  => 'รถยนต์ส่วนตัว',
+        'ambulance' => 'รถพยาบาล',
+    ],
+    'options'       => ['placeholder' => 'เลือกประเภทรถ'],
+    'pluginOptions' => [
+        'tags'           => true,  // เปิดให้เพิ่มค่าใหม่ได้
+        'allowClear'     => true,
+        'dropdownParent' => '#main-modal',
+    ],
 
-                        'pluginEvents' => [
-                            'select2:select' => new JsExpression('function(result) { 
+    'pluginEvents'  => [
+        'select2:select'      => new JsExpression('function(result) {
                     if ($(this).val() === "personal") {
                         $("#vehicle-driver_id").prop("disabled", true);
                         $("#vehicle-driver_id").val("").trigger("change");
@@ -208,7 +220,7 @@ $resultsJs = <<<JS
                         $("#vehicle-driver_id").val("").trigger("change");
                         $("#vehicle-driver_id").prop("disabled", false);
                     }
-        
+
                     if ($(this).val() === "ambulance") {
                         $(".field-vehicle-refer_type").show();
                          $(".field-vehicle-go_type").hide();
@@ -218,11 +230,11 @@ $resultsJs = <<<JS
                         $(".field-vehicle-go_type").show();
                     }
                 }'),
-                            'select2:unselecting' => new JsExpression('function() {
+        'select2:unselecting' => new JsExpression('function() {
                     // Add any additional logic for unselecting if needed
                 }'),
-                        ],
-                    ])->label('ประเภทรถที่ต้องการใช้') ?>
+    ],
+])->label('ประเภทรถที่ต้องการใช้') ?>
 
 
 
@@ -230,19 +242,19 @@ $resultsJs = <<<JS
 
 
                 <div class="mb-3">
-                    <?= $form->field($model, 'urgent')->widget(Select2::classname(), [
-                        'data' => $model->ListUrgent(),
-                        'options' => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                            // 'width' => '370px',
-                        ],
-                        'pluginEvents' => [
-                            'select2:select' => 'function(result) { 
+                    <?php echo $form->field($model, 'urgent')->widget(Select2::classname(), [
+    'data'          => $model->ListUrgent(),
+    'options'       => ['placeholder' => 'เลือกระดับความเร่งด่วน'],
+    'pluginOptions' => [
+        'allowClear' => true,
+        // 'width' => '370px',
+    ],
+    'pluginEvents'  => [
+        'select2:select'      => 'function(result) {
                                             }',
-                            'select2:unselecting' => 'function() {}',
-                        ]
-                    ]) ?>
+        'select2:unselecting' => 'function() {}',
+    ],
+]) ?>
 
                 </div>
             </div>
@@ -252,50 +264,50 @@ $resultsJs = <<<JS
             <div class="card-body text-primary-emphasis">
 
                 <?php
-                try {
-                    if ($model->isNewRecord) {
-                        $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
-                    } else {
-                        $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
+                    try {
+                        if ($model->isNewRecord) {
+                            $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
+                        } else {
+                            $initEmployee = Employees::find()->where(['id' => $model->leader_id])->one()->getAvatar(false);
+                        }
+                    } catch (\Throwable $th) {
+                        $initEmployee = '';
                     }
-                } catch (\Throwable $th) {
-                    $initEmployee = '';
-                }
 
-                echo $form->field($model, 'leader_id')->widget(Select2::classname(), [
-                    'initValueText' => $initEmployee,
-                    // 'initValueText' => $model->Approve()['leader']['avatar'],
-                    'options' => ['placeholder' => 'เลือกรายการ...'],
-                    'size' => Select2::LARGE,
-                    'pluginEvents' => [
-                        'select2:unselect' => 'function() {
+                    echo $form->field($model, 'leader_id')->widget(Select2::classname(), [
+                        'initValueText' => $initEmployee,
+                        // 'initValueText' => $model->Approve()['leader']['avatar'],
+                        'options'       => ['placeholder' => 'เลือกรายการ...'],
+                        'size'          => Select2::LARGE,
+                        'pluginEvents'  => [
+                            'select2:unselect' => 'function() {
                                     $("#order-data_json-board_fullname").val("")
                                     }',
-                        'select2:select' => 'function() {
+                            'select2:select'   => 'function() {
                                             var fullname = $(this).select2("data")[0].fullname;
                                             // var position_name = $(this).select2("data")[0].position_name;
                                             // $("#order-data_json-board_fullname").val(fullname)
                                             // $("#order-data_json-position_name").val(position_name)
-                                        
+
                                     }',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'dropdownParent' => '#main-modal',
-                        'minimumInputLength' => 1,
-                        'ajax' => [
-                            'url' => Url::to(['/depdrop/employee-by-id']),
-                            'dataType' => 'json',
-                            'delay' => 250,
-                            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                            'processResults' => new JsExpression($resultsJs),
-                            'cache' => true,
                         ],
-                        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                        'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                        'templateResult' => new JsExpression('formatRepo'),
-                    ],
-                ])->label('หัวหน้างาน')
+                        'pluginOptions' => [
+                            'allowClear'         => true,
+                            'dropdownParent'     => '#main-modal',
+                            'minimumInputLength' => 1,
+                            'ajax'               => [
+                                'url'            => Url::to(['/depdrop/employee-by-id']),
+                                'dataType'       => 'json',
+                                'delay'          => 250,
+                                'data'           => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+                                'processResults' => new JsExpression($resultsJs),
+                                'cache'          => true,
+                            ],
+                            'escapeMarkup'       => new JsExpression('function (markup) { return markup; }'),
+                            'templateSelection'  => new JsExpression('function (item) { return item.text; }'),
+                            'templateResult'     => new JsExpression('formatRepo'),
+                        ],
+                    ])->label('หัวหน้างาน');
                 ?>
 
             </div>
@@ -304,73 +316,73 @@ $resultsJs = <<<JS
 
         <?php
 
-        echo $form->field($model, 'license_plate', [
-            'addon' => [
-                'append' => [
-                    'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                        'class' => 'btn btn-primary list-car',
-                        'title' => 'Mark on map',
-                        'data-toggle' => 'tooltip',
-                        'data-driver_id' => $model->id,
-                        'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
-                        'data-bs-toggle' => 'offcanvas',
-                        'data-bs-target' => '#offcanvasRight',
-                        'aria-controls' => 'offcanvasRight'
-                    ]),
-                    'asButton' => true
-                ]
-            ]
-        ])->widget(Select2::classname(), [
-            'data' => $model->ListCarItems(),
-            'options' => ['placeholder' => 'เลือก...'],
-            'pluginOptions' => [
-                'tags' => true,  // เปิดให้เพิ่มค่าใหม่ได้
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ]
-        ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) ' . $model->license_plate);
+            echo $form->field($model, 'license_plate', [
+                'addon' => [
+                    'append' => [
+                        'content'  => Html::button('<i class="bi bi-ui-checks"></i>', [
+                            'class'                => 'btn btn-primary list-car',
+                            'title'                => 'Mark on map',
+                            'data-toggle'          => 'tooltip',
+                            'data-driver_id'       => $model->id,
+                            'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
+                            'data-bs-toggle'       => 'offcanvas',
+                            'data-bs-target'       => '#offcanvasRight',
+                            'aria-controls'        => 'offcanvasRight',
+                        ]),
+                        'asButton' => true,
+                    ],
+                ],
+            ])->widget(Select2::classname(), [
+                'data'          => $model->ListCarItems(),
+                'options'       => ['placeholder' => 'เลือก...'],
+                'pluginOptions' => [
+                    'tags'           => true, // เปิดให้เพิ่มค่าใหม่ได้
+                    'allowClear'     => true,
+                    'dropdownParent' => '#main-modal',
+                ],
+            ])->label('ทะเบียนยานพาหนะ (<code>รถยนต์ส่วนตัวกรอกทะเบียนรถ</code>) ' . $model->license_plate);
         ?>
 
 
         <?php
-        echo $form->field($model, 'driver_id', [
-            'addon' => [
-                'append' => [
-                    'content' => Html::button('<i class="bi bi-ui-checks"></i>', [
-                        'class' => 'btn btn-primary btn-driver',
-                        'title' => 'Mark on map',
-                        'data-toggle' => 'tooltip',
-                        'data-driver_id' => $model->id,
-                        'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
-                        'data-bs-toggle' => 'offcanvas',
-                        'data-bs-target' => '#offcanvasRightDriver',
-                        'aria-controls' => 'offcanvasRightDriver'
-                    ]),
-                    'asButton' => true
-                ]
-            ]
-        ])->widget(Select2::classname(), [
-            'data' => $model->listDriver(),
-            'options' => ['placeholder' => 'เลือก...'],
-            'pluginOptions' => [
-                'tags' => true,
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ]
-        ])->label('พนักงานขับรถ');
+            echo $form->field($model, 'driver_id', [
+                'addon' => [
+                    'append' => [
+                        'content'  => Html::button('<i class="bi bi-ui-checks"></i>', [
+                            'class'                => 'btn btn-primary btn-driver',
+                            'title'                => 'Mark on map',
+                            'data-toggle'          => 'tooltip',
+                            'data-driver_id'       => $model->id,
+                            'data-driver_fullname' => isset($model->data_json['req_driver_fullname']) ? $model->data_json['req_driver_fullname'] : '',
+                            'data-bs-toggle'       => 'offcanvas',
+                            'data-bs-target'       => '#offcanvasRightDriver',
+                            'aria-controls'        => 'offcanvasRightDriver',
+                        ]),
+                        'asButton' => true,
+                    ],
+                ],
+            ])->widget(Select2::classname(), [
+                'data'          => $model->listDriver(),
+                'options'       => ['placeholder' => 'เลือก...'],
+                'pluginOptions' => [
+                    'tags'           => true,
+                    'allowClear'     => true,
+                    'dropdownParent' => '#main-modal',
+                ],
+            ])->label('พนักงานขับรถ');
         ?>
         <?php if (Yii::$app->user->can('driver')): ?>
-            <?= $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
+            <?php echo $form->field($model, 'is_shared')->checkbox(['custom' => true, 'switch' => true, 'id' => 'is-shared'])->label('จัดสรรร่วม') ?>
         <?php endif; ?>
-        <!-- <?php if (!$model->isNewRecord): ?>
-<?= $form->field($model, 'status')->widget(Select2::classname(), [
-                        'data' => $model->ListStatus(),
-                        'options' => ['placeholder' => 'เลือกสถานะ'],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                            'dropdownParent' => '#main-modal',
-                        ],
-                    ]) ?>
+        <!-- <?php if (! $model->isNewRecord): ?>
+<?php echo $form->field($model, 'status')->widget(Select2::classname(), [
+    'data'          => $model->ListStatus(),
+    'options'       => ['placeholder' => 'เลือกสถานะ'],
+    'pluginOptions' => [
+        'allowClear'     => true,
+        'dropdownParent' => '#main-modal',
+    ],
+]) ?>
                     <?php endif; ?> -->
 
     </div>
@@ -384,18 +396,18 @@ $resultsJs = <<<JS
 
             <div class="row">
                 <div class="col-6">
-                    <?= $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
-                    <?= $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
-                    <?= $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
+                    <?php echo $form->field($model, 'data_json[patient_fullname]')->textInput(['placeholder' => 'ระบุบชื่อคนไข้...'])->label('ชื่อคนไข้') ?>
+                    <?php echo $form->field($model, 'data_json[patient_age]')->textInput(['placeholder' => 'ระบุบอายุ...'])->label('อายุ') ?>
+                    <?php echo $form->field($model, 'data_json[patient_nationality]')->textInput(['placeholder' => 'ระบุบเชื้อชาติ...'])->label('เชื้อชาติ') ?>
                 </div>
                 <div class="col-6">
-                    <?= $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
-                    <?= $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
-                    <?= $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
+                    <?php echo $form->field($model, 'data_json[patient_hn]')->textInput(['placeholder' => 'ระบุบ HN'])->label('HN') ?>
+                    <?php echo $form->field($model, 'data_json[patient_cid]')->textInput(['placeholder' => 'ระบุบเลขบัตรประชาชน'])->label('CID') ?>
+                    <?php echo $form->field($model, 'data_json[patient_citizenship]')->textInput(['placeholder' => 'ระบุบสัญชาติ...'])->label('สัญชาติ') ?>
 
                 </div>
             </div>
-            <?= $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
+            <?php echo $form->field($model, 'data_json[patient_symptom]')->textInput(['placeholder' => 'ระบุบป่วยด้วยโรค...'])->label('ป่วยด้วยโรค') ?>
 
         </div>
     </div>
@@ -403,14 +415,14 @@ $resultsJs = <<<JS
 
 <?php if ($model->vehicle_type_id == 'general'): ?>
     <?php
-    echo $form->field($model, 'document_id')->widget(Select2::classname(), [
-        'data' => $list,
-        'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
-        'pluginOptions' => [
-            'allowClear' => true,
-            'dropdownParent' => '#main-modal',
-        ],
-    ])->label('หนังสืออ้างอิง');
+        echo $form->field($model, 'document_id')->widget(Select2::classname(), [
+            'data'          => $list,
+            'options'       => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
+            'pluginOptions' => [
+                'allowClear'     => true,
+                'dropdownParent' => '#main-modal',
+            ],
+        ])->label('หนังสืออ้างอิง');
     ?>
 <?php endif; ?>
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
@@ -418,8 +430,8 @@ $resultsJs = <<<JS
     <button type="button" class="btn btn-secondary  rounded-pill shadow" data-bs-dismiss="modal"><i
             class="fa-regular fa-circle-xmark"></i> ปิด</button>
 </div>
-<?= $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
-<?= $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?php echo $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?php echo $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
 
 
 <?php ActiveForm::end(); ?>
@@ -432,7 +444,7 @@ $resultsJs = <<<JS
     </div>
     <div class="offcanvas-body">
         <div id="showListCar"></div>
-        <?PHP // echo $this->render('list_cars', ['model' => $model]) 
+        <?PHP // echo $this->render('list_cars', ['model' => $model])
         ?>
     </div>
 </div>
@@ -465,9 +477,8 @@ $resultsJs = <<<JS
 
 <?php
 
-$js = <<<JS
+    $js = <<<JS
 
-    thaiDatepicker('#vehicle-date_start,#vehicle-date_end')
 
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
@@ -494,7 +505,7 @@ $js = <<<JS
             url: "/me/booking-car/list-employee",
             dataType: "dataType",
             success: function (response) {
-                
+
             }
         });
     }
@@ -510,7 +521,7 @@ $js = <<<JS
 
     \$("body").on("click", ".list-car", function (e) {
         e.preventDefault();
-        
+
        \$.ajax({
         type: "get",
         url: "/booking/vehicle/list-cars",
@@ -523,7 +534,7 @@ $js = <<<JS
 
         }
        });
-        
+
     });
 
     \$("body").on("click", ".select-car", function (e) {
@@ -536,6 +547,6 @@ $js = <<<JS
 
 
     JS;
-$this->registerJS($js, View::POS_END);
+    $this->registerJS($js, View::POS_END);
 
 ?>

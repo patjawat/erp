@@ -336,7 +336,6 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
                 ?>
                 <div class="col-3 workflow-step ">
 
-
                     <div class="step-dot">
                         <?php
                         if ($approveEmployee) {
@@ -360,10 +359,10 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
             ])->label('สาเหตุการลา') ?>
         </div>
         <div class="mb-3">
-            <?= $form->field($model, $attrPhone)->textInput([
+            <?= $form->field($model, $attrPhone)->hiddenInput([
                 'class' => 'form-control rounded-3',
                 'placeholder' => 'เช่น 08x-xxx-xxxx',
-            ])->label('เบอร์โทรติดต่อ') ?>
+            ])->label(false) ?>
         </div>
         <div class="mb-3">
             <?= $form->field($model, $attrPlaceGo)->dropDownList(
@@ -376,11 +375,11 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
             )->label('สถานที่ไป') ?>
         </div>
         <div class="mb-4">
-            <?= $form->field($model, $attrAddress)->textarea([
+            <?= $form->field($model, $attrAddress)->hiddenInput([
                 'class' => 'form-control rounded-3',
                 'rows' => 3,
                 'placeholder' => 'บ้านเลขที่ หมู่ ถนน ตำบล อำเภอ....',
-            ])->label('ที่อยู่ที่ติดต่อได้') ?>
+            ])->label(false) ?>
         </div>
 
         <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>

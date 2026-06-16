@@ -232,7 +232,7 @@ class EquipController extends Controller
             SiteHelper::setDisplay($this->request->get('view'));
         }
 
-        return $this->render('index', [
+        return $this->render('@app/modules/am/views/equip/index', [
             'tabs' => 'asset',
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -480,7 +480,7 @@ class EquipController extends Controller
         $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
         $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
 
-        return $this->render('update', [
+        return $this->render('@app/modules/am/views/equip/update', [
             'model' => $model,
             // 'group' => $model->asset_group_id
         ]);
@@ -658,7 +658,7 @@ class EquipController extends Controller
     public function actionRepairHistory($id)
     {
         $model = $this->findModel($id);
-        return $this->render('_view_repair_history', [
+        return $this->render('@app/modules/am/views/equip/_view_repair_history', [
             'model' => $model,
         ]);
     }
@@ -666,7 +666,7 @@ class EquipController extends Controller
     public function actionDocument($id)
     {
         $model = $this->findModel($id);
-        return $this->render('_view_document', [
+        return $this->render('@app/modules/am/views/equip/_view_document', [
             'model' => $model,
         ]);
     }
@@ -675,7 +675,7 @@ class EquipController extends Controller
     public function actionMaintenance($id)
     {
         $model = $this->findModel($id);
-        return $this->render('maintenance', [
+        return $this->render('@app/modules/am/views/equip/maintenance', [
             'model' => $model,
         ]);
     }
@@ -684,7 +684,7 @@ class EquipController extends Controller
     public function actionVehicleTax($id)
     {
         $model = $this->findModel($id);
-        return $this->render('vehicle_tax', [
+        return $this->render('@app/modules/am/views/equip/vehicle_tax', [
             'model' => $model,
         ]);
     }
@@ -693,7 +693,7 @@ class EquipController extends Controller
     public function actionCalibration($id)
     {
         $model = $this->findModel($id);
-        return $this->render('calibration', [
+        return $this->render('@app/modules/am/views/equip/calibration', [
             'model' => $model,
         ]);
     }
@@ -702,7 +702,7 @@ class EquipController extends Controller
     public function actionBorrow($id)
     {
         $model = $this->findModel($id);
-        return $this->render('borrow', [
+        return $this->render('@app/modules/am/views/equip/borrow', [
             'model' => $model,
         ]);
     }
@@ -711,7 +711,7 @@ class EquipController extends Controller
     public function actionMove($id)
     {
         $model = $this->findModel($id);
-        return $this->render('move', [
+        return $this->render('@app/modules/am/views/equip/move', [
             'model' => $model,
         ]);
     }

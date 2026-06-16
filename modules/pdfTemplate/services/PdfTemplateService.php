@@ -314,20 +314,127 @@ class PdfTemplateService
     }
 
     /**
-    /**
-     * คืน path สัมบูรณ์ของไฟล์เทมเพลต (จาก filemanager เมื่อมี upload_id หรือจาก file_path เดิม).
+     * คืน path สัมบูรณ์ของไฟล์เทมเพลต.
+     *
+     * ลองตามลำดับ:
+     * - ไฟล์จาก filemanager (`upload_id`)
+     * - `file_path` เดิม
+     * - legacy fallback สำหรับเทมเพลตรถส่วนตัว (`web/files/vehicle_form.pdf`)
      */
     public function getTemplateFilePath(PdfTemplate $template): ?string
     {
+        $candidates = [];
+
         if (!empty($template->upload_id) && class_exists(FileManagerHelper::class)) {
-            $path = FileManagerHelper::getFilePath($template->upload_id);
-            return $path && is_file($path) ? $path : null;
+            $path = FileManagerHelper::getFilePath((int) $template->upload_id);
+            if (is_string($path) && $path !== '') {
+                $candidates[] = $path;
+            }
         }
-        if (!empty($template->file_path)) {
-            $path = Yii::getAlias('@webroot') . '/' . ltrim($template->file_path, '/');
-            return is_file($path) ? $path : null;
+
+        if (!empty($template->file_path) && is_string($template->file_path)) {
+            $candidates[] = $template->file_path;
         }
+
+        foreach ($this->getTemplateFallbackPaths($template) as $fallbackPath) {
+            $candidates[] = $fallbackPath;
+        }
+
+        foreach (array_values(array_unique(array_filter($candidates, static fn ($candidate) => is_string($candidate) && $candidate !== ''))) as $candidate) {
+            $resolved = $this->resolveExistingFilePath($candidate);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
         return null;
+    }
+
+    /**
+     * Resolve a raw path or alias into an existing filesystem path.
+     *
+     * รองรับ:
+     * - path แบบ absolute
+     * - alias เช่น `@webroot/...`, `@app/...`
+     * - path legacy แบบ `web/files/...` หรือ `files/...`
+     */
+    private function resolveExistingFilePath(string $path): ?string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return null;
+        }
+
+        $candidates = [$path];
+
+        if (str_starts_with($path, '@webroot/') || str_starts_with($path, '@app/')) {
+            try {
+                $candidates[] = Yii::getAlias($path);
+            } catch (\Throwable $e) {
+                // ignore invalid aliases and keep trying other candidates
+            }
+        } elseif (str_starts_with($path, '@web/')) {
+            $candidates[] = $this->getWebRootPath() . '/' . ltrim(substr($path, 4), '/');
+        } elseif (str_starts_with($path, 'web/')) {
+            $candidates[] = Yii::getAlias('@app/' . ltrim($path, '/'));
+            $candidates[] = $this->getWebRootPath() . '/' . substr($path, 4);
+        } elseif (!preg_match('#^(?:[A-Za-z]:[\\\\/]|/)#', $path)) {
+            $clean = ltrim($path, '/');
+            $candidates[] = $this->getWebRootPath() . '/' . $clean;
+            $candidates[] = Yii::getAlias('@app/' . $clean);
+        }
+
+        foreach (array_values(array_unique(array_filter($candidates, static fn ($candidate) => is_string($candidate) && $candidate !== ''))) as $candidate) {
+            if (is_file($candidate)) {
+                $real = realpath($candidate);
+                return $real !== false ? $real : $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Context-specific legacy fallback paths for templates that were previously stored outside filemanager.
+     *
+     * @return array<int, string>
+     */
+    private function getTemplateFallbackPaths(PdfTemplate $template): array
+    {
+        $context = (string) ($template->use_for_context ?? '');
+        if ($context === PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL) {
+            return [
+                $this->getWebRootPath() . '/files/vehicle_form.pdf',
+            ];
+        }
+
+        return [];
+    }
+
+    /**
+     * Resolve webroot filesystem path even when `@webroot` alias is not configured.
+     */
+    private function getWebRootPath(): string
+    {
+        try {
+            $webRoot = Yii::getAlias('@webroot');
+            if (is_string($webRoot) && $webRoot !== '') {
+                return rtrim($webRoot, DIRECTORY_SEPARATOR);
+            }
+        } catch (\Throwable $e) {
+            // fall through
+        }
+
+        try {
+            $appPath = Yii::getAlias('@app');
+            if (is_string($appPath) && $appPath !== '') {
+                return rtrim($appPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'web';
+            }
+        } catch (\Throwable $e) {
+            // fall through
+        }
+
+        return rtrim((string) getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'web';
     }
 
     /**
@@ -393,7 +500,7 @@ class PdfTemplateService
             throw new \RuntimeException('Template file not found');
         }
         if (!defined('FPDF_FONTPATH')) {
-            define('FPDF_FONTPATH', Yii::getAlias('@webroot/fonts/'));
+            define('FPDF_FONTPATH', $this->getWebRootPath() . '/fonts/');
         }
         $pdf = new Fpdi();
         $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
@@ -671,13 +778,13 @@ class PdfTemplateService
         }
         $parsed = parse_url($value);
         if (is_array($parsed) && isset($parsed['path']) && is_string($parsed['path'])) {
-            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($parsed['path'], '/');
+            $webPath = $this->getWebRootPath() . '/' . ltrim($parsed['path'], '/');
             if (is_file($webPath)) {
                 return $webPath;
             }
         }
         if (strpos($value, '/') === 0) {
-            $webPath = Yii::getAlias('@webroot') . '/' . ltrim($value, '/');
+            $webPath = $this->getWebRootPath() . '/' . ltrim($value, '/');
             if (is_file($webPath)) {
                 return $webPath;
             }

@@ -178,7 +178,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             <?= Html::a('สมัครสมาชิก', ['/site/sign-up'], ['class' => 'text-primary text-decoration-none']) ?>
         </div>
 
-        <div class="mobile-login-divider">หรือ</div>
+        <!-- <div class="mobile-login-divider">หรือ</div>
 
         <a href="<?= Html::encode($providerLoginUrl) ?>" class="mobile-login-provider" data-telegram-external-link="1">
             <?php if ($hasProviderLogo): ?>
@@ -198,7 +198,7 @@ $hasProviderLogo = $providerLogoPath && is_file($providerLogoPath);
             <?php endif; ?>
             เข้าสู่ระบบด้วย ThaiD
             <span class="thaid-desc">ยืนยันตัวตนผ่านแอป ThaiD</span>
-        </a>
+        </a> -->
     </div>
 </div>
 

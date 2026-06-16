@@ -709,7 +709,7 @@ class AssetController extends Controller
        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
        $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $viewDate);
 
-        return $this->render('update', [
+        return $this->render('@app/modules/am/views/equip/update', [
             'model' => $model,
             // 'group' => $model->asset_group_id
         ]);
@@ -818,6 +818,17 @@ class AssetController extends Controller
         ];
     }
 
+        public function actionViewQr($id)
+{
+       $this->layout = '@app/views/layouts/none';
+     $model = $this->findModel($id);
+        
+        // ใช้ view เฉพาะสำหรับ PDF เพื่อแก้ปัญหาภาษาไทยและตัดปุ่มออก
+        return $this->render('qr-code/view_qrcode', [
+            'model' => $model
+        ]);
+
+}
     public function actionViewQrPdf($id)
     {
         $model = $this->findModel($id);

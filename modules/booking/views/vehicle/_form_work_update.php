@@ -64,11 +64,17 @@ use kartik\widgets\ActiveForm;
         <div class="row">
             <div class="col-6">
                 <div class="d-flex gap-3">
-                    <?= $form->field($model, 'date_start')->textInput()->label('วันออกเดินทาง') ?>
+                      <?= $form->field($model, 'date_start')->textInput([
+                    'class' => 'form-control',
+                    'placeholder' => 'วันที่/เดือน/พ.ศ.',
+                ])->label('วันออกเดินทาง') ?>
                     <?= $form->field($model, 'time_start')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลาออกเดินทาง') ?>
                 </div>
                 <div class="d-flex gap-3">
-                    <?= $form->field($model, 'date_end')->textInput()->label('วันเดินทางกลับ') ?>
+                      <?= $form->field($model, 'date_end')->textInput([
+                    'class' => 'form-control',
+                    'placeholder' => 'วันที่/เดือน/พ.ศ.',
+                ])->label('วันเดินทางกลับ') ?>
                     <?= $form->field($model, 'time_end')->widget('yii\widgets\MaskedInput', ['mask' => '99:99'])->label('เวลากลับ') ?>
                 </div>
 
@@ -153,7 +159,7 @@ use kartik\widgets\ActiveForm;
 
 <?php
 $js = <<<JS
- thaiDatepicker('#vehicledetail-date_start,#vehicledetail-date_end')
+//  thaiDatepicker('#vehicledetail-date_start,#vehicledetail-date_end')
     handleFormSubmit('#booking-form', null, async function(response) {
         await location.reload();
     });

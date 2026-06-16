@@ -82,7 +82,7 @@ $('#btn-import').on('click', function() {
         showCancelButton: true,
         confirmButtonText: 'ใช่, นำเข้าเลย',
         cancelButtonText: 'ยกเลิก',
-        reverseButtons: true
+        reverseButtons: false
     }).then((result) => {
         if (result.isConfirmed) {
             // ซ่อน modal

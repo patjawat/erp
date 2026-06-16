@@ -4,6 +4,12 @@
 $this->params['current_page']   = $current_page ?? 'scan';
 $this->params['mobileTitle']    = 'สแกน QR Code';
 $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้อมูลในระบบ';
+
+$scanReturn = (string) Yii::$app->request->get('return', '');
+$isMaintenanceReturn = $scanReturn === 'maintenance';
+$hintText = $isMaintenanceReturn
+    ? 'สแกน QR Code ของครุภัณฑ์เพื่อแนบหมายเลขในใบแจ้งซ่อม'
+    : 'สแกน QR Code ของทรัพย์สิน หรือการยืม เพื่อเปิดดูข้อมูลในระบบ';
 ?>
 <style>
 .scan-page-header { padding: 0.75rem 0; }
@@ -83,7 +89,7 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
     background: rgba(220, 53, 69, 0.1);
     border: 1px solid rgba(220, 53, 69, 0.3);
     border-radius: 12px;
-    color: #dc3545;
+    color: var(--danger);
     padding: 1rem;
     font-size: 0.875rem;
     margin-bottom: 1rem;
@@ -97,11 +103,6 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
 }
 .scan-hint-card .card-body { padding: 1rem; }
 </style>
-
-<div class="scan-page-header">
-    <h1 class="h5 fw-semibold text-dark mb-0">สแกน QR Code</h1>
-    <p class="small text-body-secondary mb-0">สแกนเพื่อเปิดข้อมูลในระบบ</p>
-</div>
 
 <div class="card scan-scanner-card">
     <div class="scan-scanner-wrap">
@@ -120,14 +121,17 @@ $this->params['mobileSubtitle'] = 'สแกนเพื่อเปิดข้
     <div class="card-body">
         <p class="small text-body-secondary mb-0">
             <i data-lucide="info" class="me-1" style="width: 1rem; height: 1rem; vertical-align: -0.15em;"></i>
-            สแกน QR Code ของทรัพย์สิน เอกสาร สินค้า หรือการยืม เพื่อเปิดดูข้อมูลในระบบ
+            <?= \yii\helpers\Html::encode($hintText) ?>
         </p>
     </div>
 </div>
 
 <?php
-$assetUrlById   = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID__']);
-$assetUrlByCode = \yii\helpers\Url::to(['/mobile/default/asset', 'code' => '__CODE__']);
+$assetUrlById          = \yii\helpers\Url::to(['/mobile/default/asset', 'id' => '__ID__']);
+$assetUrlByCode        = \yii\helpers\Url::to(['/mobile/default/asset', 'code' => '__CODE__']);
+// scan QR แล้วไปฟอร์มแจ้งซ่อม (wizard) พร้อม prefill asset_number จากรหัสที่สแกนได้
+$maintenanceUrlById    = \yii\helpers\Url::to(['/mobile/default/repair-request', 'asset_number' => '__CODE__', 'send_type' => 'asset']);
+$maintenanceUrlByCode  = \yii\helpers\Url::to(['/mobile/default/repair-request', 'asset_number' => '__CODE__', 'send_type' => 'asset']);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
@@ -138,8 +142,11 @@ $assetUrlByCode = \yii\helpers\Url::to(['/mobile/default/asset', 'code' => '__CO
     var readerId = 'qr-reader';
     var html5QrCode = null;
     var lastRedirect = '';
-    var assetUrlById   = <?= json_encode($assetUrlById) ?>;
+    var scanReturn = <?= json_encode($scanReturn) ?>;
+    var assetUrlById = <?= json_encode($assetUrlById) ?>;
     var assetUrlByCode = <?= json_encode($assetUrlByCode) ?>;
+    var maintenanceUrlById = <?= json_encode($maintenanceUrlById) ?>;
+    var maintenanceUrlByCode = <?= json_encode($maintenanceUrlByCode) ?>;
 
     function hideLoading() {
         if (loadingEl) loadingEl.style.display = 'none';
@@ -156,24 +163,47 @@ $assetUrlByCode = \yii\helpers\Url::to(['/mobile/default/asset', 'code' => '__CO
     function vibrate() {
         if (navigator.vibrate) navigator.vibrate(100);
     }
+    function routeAssetById(id) {
+        if (scanReturn === 'maintenance') {
+            // wizard แจ้งซ่อมรับเฉพาะ asset_number (string) ไม่ใช่ asset.id ตัวเลข
+            // กรณีสแกน QR /q/asset/<id> ขณะอยู่โหมดแจ้งซ่อม → fallback ส่ง id ไปเป็น code
+            // (controller จะลองหา Asset by code ก่อน แล้วยังเปิดฟอร์มได้แม้ไม่เจอ)
+            return maintenanceUrlById ? maintenanceUrlById.replace('__CODE__', encodeURIComponent(id)) : null;
+        }
+        return assetUrlById ? assetUrlById.replace('__ID__', encodeURIComponent(id)) : null;
+    }
+    function routeAssetByCode(code) {
+        var template = scanReturn === 'maintenance' ? maintenanceUrlByCode : assetUrlByCode;
+        return template ? template.replace('__CODE__', encodeURIComponent(code)) : null;
+    }
+    function extractPath(raw) {
+        try {
+            return new URL(raw, window.location.origin).pathname;
+        } catch (e) {
+            var t = raw.indexOf('/') !== 0 ? '/' + raw : raw;
+            return t.replace(/\?.*$/, '');
+        }
+    }
     /**
      * แปลงข้อความจาก QR เป็น URL สำหรับ redirect
      * - /q/asset/{id} → หน้าครุภัณฑ์ด้วย id
      * - ข้อความธรรมดา (รหัสครุภัณฑ์) → หน้าครุภัณฑ์ด้วย code (สแกนสติกเกอร์ QR บนครุภัณฑ์)
      * - URL ภายนอก → ใช้ตามนั้น
+     * - return=maintenance → กลับไปฟอร์มแจ้งซ่อมพร้อม asset/asset_code
      */
     function toRedirectUrl(text) {
         var raw = (text || '').trim();
         if (!raw) return null;
-        if (/^https?:\/\//i.test(raw)) return raw;
-        var t = raw.indexOf('/') !== 0 ? '/' + raw : raw;
-        var path = t.replace(/\?.*$/, '');
+        var path = extractPath(raw);
+        var routePath = raw.indexOf('/') !== 0 ? '/' + raw : raw;
+        routePath = routePath.replace(/\?.*$/, '');
         var idMatch = path.match(/^\/q\/asset\/([^\/]+)/);
-        if (idMatch && assetUrlById) return assetUrlById.replace('__ID__', encodeURIComponent(idMatch[1]));
-        if (path.match(/^\/q\/document\//)) return t;
-        if (path.match(/^\/q\/stock\//)) return t;
+        if (idMatch) return routeAssetById(idMatch[1]);
+        if (/^https?:\/\//i.test(raw)) return raw;
+        if (path.match(/^\/q\/document\//)) return routePath;
+        if (path.match(/^\/q\/stock\//)) return routePath;
         // รหัสครุภัณฑ์โดยตรง (จากสติกเกอร์ QR ของระบบ) → เปิดหน้าครุภัณฑ์ด้วย code
-        if (assetUrlByCode && raw.length <= 80 && raw.indexOf(' ') < 0) return assetUrlByCode.replace('__CODE__', encodeURIComponent(raw));
+        if (raw.length <= 80 && raw.indexOf(' ') < 0) return routeAssetByCode(raw);
         return null;
     }
     function redirectTo(url) {
