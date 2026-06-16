@@ -1311,14 +1311,15 @@ class VehicleController extends Controller
         $model->ref = $model->ref ? $model->ref : substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         $model->save(false);
 
-        $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_OFFICIAL])->one();
-        if (!$template) {
-            $template = PdfTemplate::find()->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])->one();
-        }
+        // /booking/vehicle/print is for central vehicle requests.
+        // Personal vehicle official-travel forms are printed from /hr/development/print-personal-vehicle.
+        $template = PdfTemplate::find()
+            ->where(['use_for_context' => PdfTemplate::CONTEXT_BOOKING_VEHICLE_CENTRAL])
+            ->one();
         if ($template) {
             $data = $this->buildBookingTemplateData($model);
+            $templateService = new PdfTemplateService();
             if ((string) Yii::$app->request->get('debug', '') === '1') {
-                $templateService = new PdfTemplateService();
                 $layout = $templateService->loadLayout((int) $template->id);
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
@@ -1330,11 +1331,15 @@ class VehicleController extends Controller
                     'data' => $data,
                 ];
             }
-            $templateService = new PdfTemplateService();
+            $templatePath = $templateService->getTemplateFilePath($template);
+            if ($templatePath === null || !is_file($templatePath)) {
+                throw new NotFoundHttpException('ไม่พบไฟล์เทมเพลต PDF สำหรับ «ขอใช้รถยนต์ส่วนกลาง» กรุณาอัปโหลดหรือตั้งค่าเทมเพลตที่ /pdf-template');
+            }
             $pdfBinary = $templateService->generatePdfWithData((int) $template->id, $data);
             Yii::$app->response->format = Response::FORMAT_RAW;
             Yii::$app->response->headers->set('Content-Type', 'application/pdf');
             Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="booking-vehicle-' . (int) $model->id . '.pdf"');
+            Yii::$app->response->headers->set('X-PDF-Source', 'booking-vehicle-central');
             Yii::$app->response->content = $pdfBinary;
             return Yii::$app->response;
         }
