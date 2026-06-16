@@ -187,7 +187,7 @@ $equipSubtitle = static function ($item): string {
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                                         <li>
-                                              <?= Html::a('<i class="bi bi-qr-code-scan me-2"></i>พิมพ์สติกเกอร์', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                                              <?= Html::a('<i class="bi bi-qr-code-scan me-2"></i>พิมพ์สติกเกอร์', ['/am/asset/view-qr', 'id' => $item->id], [
                                     'class' => 'dropdown-item',
                                     'title' => 'พิมพ์',
                                     'data-pjax' => 0,
