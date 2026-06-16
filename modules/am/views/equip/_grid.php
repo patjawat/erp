@@ -59,7 +59,7 @@ use yii\helpers\Html;
                         </div>
                         <div class="d-flex gap-1">
                             <?= Html::a('<i class="fa fa-eye"></i>', ['view-asset', 'id' => $item->id], ['class' => 'btn btn-sm btn-primary', 'data-pjax' => 0]) ?>
-                             <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
+                             <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr', 'id' => $item->id], [
                                     'class' => 'btn btn-sm btn-secondary',
                                     'title' => 'พิมพ์',
                                     'data-pjax' => 0,
