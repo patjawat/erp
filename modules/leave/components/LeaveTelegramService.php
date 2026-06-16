@@ -35,11 +35,6 @@ class LeaveTelegramService
         $levelLabel    = $approveData['label'] ?? $approve->title ?? 'ผู้อนุมัติ';
         $reason        = $leaveData['reason'] ?? '';
 
-        // ระดับสุดท้าย ใช้คำว่า อนุมัติ/ไม่อนุมัติ, ระดับกลาง ใช้คำว่า เห็นชอบ/ไม่เห็นชอบ
-        $isFinal     = (bool) $approve->maxLevel();
-        $passLabel   = $isFinal ? '✅ อนุมัติ'    : '✅ เห็นชอบ';
-        $rejectLabel = $isFinal ? '❌ ไม่อนุมัติ' : '❌ ไม่เห็นชอบ';
-
         $lines = [
             '📋 <b>แจ้งเตือนการอนุมัติใบลา</b>',
             '',
@@ -54,18 +49,9 @@ class LeaveTelegramService
         $lines[] = '';
         $lines[] = '🔖 ขั้นตอน: ' . htmlspecialchars($levelLabel, ENT_QUOTES);
 
-        // inline keyboard: ปุ่มเห็นชอบ/ไม่เห็นชอบ
-        $keyboard = [
-            [
-                ['text' => $passLabel,   'callback_data' => 'leave_approve:' . $approve->id . ':Pass'],
-                ['text' => $rejectLabel, 'callback_data' => 'leave_approve:' . $approve->id . ':Reject'],
-            ],
-        ];
-
         return (bool) Yii::$app->telegram->sendDirectMessage(
             $chatId,
-            implode("\n", $lines),
-            ['reply_markup' => ['inline_keyboard' => $keyboard]]
+            implode("\n", $lines)
         );
     }
 

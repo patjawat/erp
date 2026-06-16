@@ -97,6 +97,18 @@ use yii\helpers\Url;
             <li>
                 <?= Html::a('<i data-lucide="receipt-text" class="me-1"></i> สภาพครุภัณฑ์', ['/am/asset-condition'], ['class' => 'dropdown-item']) ?>
             </li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-uppercase text-muted">การได้มาของทรัพย์สิน</li>
+            <li>
+                <?= Html::a('<i data-lucide="wallet" class="me-1" style="width:1rem;height:1rem;color:#047857;"></i> ประเภทเงิน', ['/am/budgetdetail'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i data-lucide="package-search" class="me-1" style="width:1rem;height:1rem;color:#4338ca;"></i> วิธีได้มา', ['/am/methodget'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i data-lucide="hand-coins" class="me-1" style="width:1rem;height:1rem;color:#b45309;"></i> วิธีการได้มา', ['/am/purchase'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
             <li>
                 <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน (ทั้งหมด)', ['/am/setting'], ['class' => 'dropdown-item']) ?>
             </li>

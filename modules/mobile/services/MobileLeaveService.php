@@ -54,11 +54,23 @@ class MobileLeaveService
 
     /**
      * รับ Leave ที่ load(post) แล้ว: Thai→Greg date conversion + status + save + createApprove.
+     * ถ้า browser ยิง POST ซ้ำด้วย draft ref เดิม ให้คืนรายการเดิมแทนการสร้าง approve/notify ซ้ำ.
      *
-     * @return array{ok:bool, errors:array}
+     * @return array{ok:bool, errors:array, model?:Leave, duplicate?:bool}
      */
     public function saveFromPost(Leave $model): array
     {
+        $ref = trim((string) ($model->ref ?? ''));
+        if ($model->isNewRecord && $ref !== '' && !empty($model->emp_id)) {
+            $existing = Leave::find()
+                ->where(['ref' => $ref, 'emp_id' => $model->emp_id])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+            if ($existing) {
+                return ['ok' => true, 'errors' => [], 'model' => $existing, 'duplicate' => true];
+            }
+        }
+
         $model->date_start = $model->date_start ? AppHelper::convertToGregorian($model->date_start) : null;
         $model->date_end   = $model->date_end ? AppHelper::convertToGregorian($model->date_end) : null;
         $model->status     = 'Pending';
@@ -71,7 +83,7 @@ class MobileLeaveService
                     // createApprove failed: leave row already saved; surface as soft error
                     Yii::warning('createApprove failed: ' . $e->getMessage(), __METHOD__);
                 }
-                return ['ok' => true, 'errors' => []];
+                return ['ok' => true, 'errors' => [], 'model' => $model];
             }
         } catch (\Throwable $e) {
             return ['ok' => false, 'errors' => $model->getFirstErrors()];

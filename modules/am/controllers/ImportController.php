@@ -205,35 +205,20 @@ class ImportController extends Controller
     }
 
 
-    // ตรวจสอบความถูกต้อง
+    /**
+     * AJAX validation สำหรับ ActiveForm — ตรวจฟิลด์ของ AssetImportForm เท่านั้น
+     * (ตรวจรหัสครุภัณฑ์ซ้ำในไฟล์ทำตอน actionImportCsv กับข้อมูลจริงทั้งไฟล์)
+     */
     public function actionValidate()
     {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $model = new AssetImportForm();
-        $result = [];
-
         if ($this->request->isPost && $model->load($this->request->post())) {
-
-            // ตรวจสอบค่า required
-            if (empty($model->asset_type_id)) {
-                $model->addError('asset_type_id', 'ต้องระบุ');
-            }
-
-            // ตรวจสอบรหัสซ้ำ (ตัวอย่าง)
-            if (!empty($model->code)) {
-                $exists = Asset::find()->where(['code' => $model->code])->exists();
-                if ($exists) {
-                    $model->addError('code', 'รหัสซ้ำ');
-                }
-            }
-
-            // เก็บ errors ในรูปแบบที่ ActiveForm ต้องการ
-            foreach ($model->getErrors() as $attribute => $errors) {
-                $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
-            }
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return \yii\widgets\ActiveForm::validate($model);
         }
 
-        return $result; // ถ้าไม่มี error → จะส่ง empty array → JS รู้ว่า valid
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [];
     }
 
 
@@ -294,15 +279,26 @@ class ImportController extends Controller
         $rowNumber = 0;
 
         if (($handle = fopen($filePath, "r")) !== false) {
-            $columnIndexes = null;
+            $columnMap = null;
             while (($data = fgetcsv($handle, 0, ",")) !== false) {
                 $rowNumber++;
                 if ($rowNumber == 1) {
-                    $columnIndexes = $this->equipImportColumnIndexes($data);
-                    continue; // ข้าม header
+                    $columnMap = $this->equipImportColumnMap($data);
+                    $missing = $this->missingRequiredColumns($columnMap);
+                    if (!empty($missing)) {
+                        fclose($handle);
+                        return [
+                            'status' => 'error',
+                            'message' => 'ไฟล์ CSV ขาดคอลัมน์ที่จำเป็น: ' . implode(', ', $missing) . ' — กรุณาดาวน์โหลดเทมเพลตล่าสุด',
+                        ];
+                    }
+                    continue;
+                }
+                if ($columnMap === null) {
+                    continue;
                 }
 
-                $code = trim((string) ($data[0] ?? ''));
+                $code = $this->cellAt($data, $columnMap, 'code');
 
                 $model = null;
                 if ($code !== '') {
@@ -324,14 +320,9 @@ class ImportController extends Controller
                     $model = new Asset();
                 }
 
-                $ci = $columnIndexes ?? $this->equipImportColumnIndexes([]);
-                $usefulLifeIdx = $ci['useful_life'];
-                $orderIdx = $ci['order_number'];
-                $noteIdx = $ci['note'];
-
                 $depreciationParsed = ['value' => null, 'error' => null];
-                if ($ci['depreciation'] !== null) {
-                    $depreciationParsed = $this->parseDepreciationRateForImport($data[$ci['depreciation']] ?? '');
+                if (($columnMap['depreciation'] ?? null) !== null) {
+                    $depreciationParsed = $this->parseDepreciationRateForImport($this->cellAt($data, $columnMap, 'depreciation'));
                     if ($depreciationParsed['error'] !== null) {
                         $errorRows[] = [
                             'row' => $rowNumber,
@@ -344,39 +335,38 @@ class ImportController extends Controller
 
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
-                $model->code = $data[0];
-                $model->fsn_number = $data[1]; // หมายเลข FSN ซ้ำได้
-                $model->asset_name = $data[2];
+                $model->code = $code;
+                $model->fsn_number = $this->cellAt($data, $columnMap, 'fsn_number'); // หมายเลข FSN ซ้ำได้
+                $model->asset_name = $this->cellAt($data, $columnMap, 'asset_name');
+                $vendorCode = $this->cellAt($data, $columnMap, 'vendor_code');
+                $vendorName = $this->cellAt($data, $columnMap, 'vendor_name');
                 $incomingJson = [
-                    'brand' => $data[3],
-                    'asset_model' => $data[4],
-                    'color_name' => $data[5],
-                    'unit' => $data[6],
-                    'serial_number' => $data[7],
-                    'budget_type' => $this->resolveBudgetTypeFromImport($data[9] ?? ''),
-                    'inspection_date' => $this->normalizeDateForDb($data[11] ?? ''),
-                    'expire_date' => $this->normalizeDateForDb($data[14] ?? ''),
-                    'location' => $data[16],
-                    'fsn_old' => $data[0],
-                    'vendor_id' => $this->resolveVendorFromImport($data[18] ?? '', $data[19] ?? ''),
-                    'vendor_name' => trim((string) ($data[19] ?? '')),
-                    'order_number' => trim((string) ($data[$orderIdx] ?? '')),
-                    'note' => trim((string) ($data[$noteIdx] ?? '')),
+                    'brand' => $this->cellAt($data, $columnMap, 'brand'),
+                    'asset_model' => $this->cellAt($data, $columnMap, 'asset_model'),
+                    'color_name' => $this->cellAt($data, $columnMap, 'color_name'),
+                    'unit' => $this->cellAt($data, $columnMap, 'unit'),
+                    'serial_number' => $this->cellAt($data, $columnMap, 'serial_number'),
+                    'budget_type' => $this->resolveBudgetTypeFromImport($this->cellAt($data, $columnMap, 'budget_type')),
+                    'inspection_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'inspection_date')),
+                    'expire_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'expire_date')),
+                    'location' => $this->cellAt($data, $columnMap, 'location'),
+                    'fsn_old' => $code,
+                    'vendor_id' => $this->resolveVendorFromImport($vendorCode, $vendorName),
+                    'vendor_name' => $vendorName,
+                    'order_number' => $this->cellAt($data, $columnMap, 'order_number'),
+                    'note' => $this->cellAt($data, $columnMap, 'note'),
                 ];
                 $baseJson = $model->isNewRecord ? [] : $this->assetImportDataJsonAsArray($model->data_json);
                 $model->data_json = array_merge($baseJson, $incomingJson);
                 if ($depreciationParsed['value'] !== null) {
                     $model->depreciation_rate = $depreciationParsed['value'];
                 }
-                $model->price = $data[8];
-                $model->purchase = $this->resolvePurchaseFromImport($data[10] ?? '');
-                $model->receive_date = $this->normalizeDateForDb($data[13] ?? '');
-                $model->on_year = $data[12];
-                if (!empty($data[15])) {
-                    $model->on_year = $data[15]; // ปีงบประมาณ (ซ้ำ) ถ้ามีให้ใช้ค่านี้แทน
-                }
-                $model->license_plate = $data[17];
-                $model->useful_life = (int) ($data[$usefulLifeIdx] ?? 0); // อายุการใช้งาน (ปี)
+                $model->price = $this->cellAt($data, $columnMap, 'price');
+                $model->purchase = $this->resolvePurchaseFromImport($this->cellAt($data, $columnMap, 'purchase'));
+                $model->receive_date = $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'receive_date'));
+                $model->on_year = $this->cellAt($data, $columnMap, 'on_year');
+                $model->license_plate = $this->cellAt($data, $columnMap, 'license_plate');
+                $model->useful_life = (int) $this->cellAt($data, $columnMap, 'useful_life', '0');
                 if ($model->isNewRecord) {
                     $model->asset_status = 'active';
                     $model->asset_condition = 'good';
@@ -427,9 +417,15 @@ class ImportController extends Controller
             $imported = 0;
             $created = 0;
             $updated = 0;
-            foreach ($rowsData as $model) {
-                $wasNew = $model->isNewRecord;
-                if ($model->save(false)) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                foreach ($rowsData as $model) {
+                    $wasNew = $model->isNewRecord;
+                    if (!$model->save(false)) {
+                        throw new \RuntimeException(
+                            'ไม่สามารถบันทึกครุภัณฑ์ ' . ($model->code !== '' ? $model->code : '(ไม่มีรหัส)')
+                        );
+                    }
                     $imported++;
                     if ($wasNew) {
                         $created++;
@@ -437,6 +433,16 @@ class ImportController extends Controller
                         $updated++;
                     }
                 }
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                Yii::error($e->getMessage(), __METHOD__);
+                return [
+                    'status' => 'error',
+                    'message' => 'เกิดข้อผิดพลาดระหว่างบันทึก: ' . $e->getMessage() . ' (ไม่มีการบันทึกข้อมูลใด ๆ)',
+                ];
             }
 
             $msg = "นำเข้าข้อมูลเรียบร้อย {$imported} แถว";
@@ -809,29 +815,64 @@ class ImportController extends Controller
     }
 
     /**
-     * แมปดัชนีคอลัมน์จากแถวหัวตาราง (รองรับเทมเพลตเก่าที่ไม่มีคอลัมน์อัตราค่าเสื่อม)
+     * แมปดัชนีคอลัมน์ของแถวหัวตารางตาม alias ใน equip_import_columns.php
      *
-     * @return array{useful_life: int, depreciation: int|null, order_number: int, note: int}
+     * @param array<int, string> $headerRow แถวหัวตารางจาก CSV
+     * @return array<string, int|null> logical key → column index (null ถ้าไม่พบ)
      */
-    protected function equipImportColumnIndexes(array $headerRow): array
+    protected function equipImportColumnMap(array $headerRow): array
     {
-        $norm = array_map(static fn ($h) => trim((string) $h), $headerRow);
-        $find = static function (string $name) use ($norm): ?int {
-            $i = array_search($name, $norm, true);
+        $config = require \Yii::getAlias('@app/modules/am/data/equip_import_columns.php');
+        $aliases = $config['aliases'] ?? [];
 
-            return $i === false ? null : (int) $i;
-        };
-        $idxDep = $find('อัตราค่าเสื่อม');
-        $idxOrder = $find('เลขที่ใบกำกับ/ใบส่งของ');
-        $idxNote = $find('หมายเหตุ');
-        $idxUseful = $find('อายุการใช้งาน');
+        $normalizedRow = array_map([$this, 'normalizeImportText'], $headerRow);
+        $map = [];
+        foreach ($aliases as $key => $aliasList) {
+            $normalizedAliases = array_map([$this, 'normalizeImportText'], (array) $aliasList);
+            $map[$key] = $this->findHeaderIndex($normalizedRow, $normalizedAliases);
+        }
 
-        return [
-            'useful_life' => $idxUseful ?? 20,
-            'depreciation' => $idxDep,
-            'order_number' => $idxOrder ?? ($idxDep !== null ? $idxDep + 1 : 21),
-            'note' => $idxNote ?? ($idxDep !== null ? $idxDep + 2 : 22),
+        return $map;
+    }
+
+    /**
+     * อ่านค่าจากแถวข้อมูล CSV ด้วย logical key อย่างปลอดภัย (ไม่มีคอลัมน์ → คืนค่า default)
+     *
+     * @param array<int, string> $row แถวข้อมูล
+     * @param array<string, int|null> $map ผลจาก equipImportColumnMap()
+     */
+    protected function cellAt(array $row, array $map, string $key, string $default = ''): string
+    {
+        $index = $map[$key] ?? null;
+        if ($index === null || !array_key_exists($index, $row)) {
+            return $default;
+        }
+
+        return trim((string) $row[$index]);
+    }
+
+    /**
+     * ตรวจสอบหัวคอลัมน์ที่จำเป็นต้องมีใน CSV ก่อนเริ่มอ่านข้อมูล
+     *
+     * @param array<string, int|null> $map
+     * @return array<int, string> รายชื่อ label คอลัมน์ที่ขาด (ว่าง = ผ่าน)
+     */
+    protected function missingRequiredColumns(array $map): array
+    {
+        $required = [
+            'code'        => 'หมายเลขครุภัณฑ์',
+            'asset_name'  => 'ชื่อ',
+            'price'       => 'มูลค่า',
+            'useful_life' => 'อายุการใช้งาน',
         ];
+        $missing = [];
+        foreach ($required as $key => $label) {
+            if (($map[$key] ?? null) === null) {
+                $missing[] = $label;
+            }
+        }
+
+        return $missing;
     }
 
     /**

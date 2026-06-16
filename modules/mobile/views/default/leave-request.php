@@ -917,68 +917,111 @@ $wizardJs = <<<JS
         formEl.addEventListener('change', updateActions);
     }
 
-    // Submit handler:
-    // 1) Block ขั้นกลาง wizard (currentStep !== TOTAL_STEPS) → เปลี่ยนเป็น "ถัดไป"
-    // 2) Hard guard: total > 0, annual leave ต้องไม่ติด blocked
-    // 3) Swal confirm สไตล์เดียวกับ handleFormSubmit (icon question, สีปุ่ม success/secondary)
-    //    เมื่อยืนยันแล้ว set flag form.dataset.confirmed='1' แล้ว submit ใหม่ — รอบที่สอง
-    //    จะข้าม Swal เพราะ flag = '1' (กัน infinite loop)
+    function validateSubmitReady(show) {
+        if (currentStep !== TOTAL_STEPS) {
+            if (show && validateStep(currentStep, true)) goToStep(currentStep + 1);
+            return false;
+        }
+        var total = parseFloat((document.getElementById('leave-total_days') || {}).value) || 0;
+        if (total <= 0) {
+            if (show) setStepError(7, 'วันลาต้องมากกว่า 0 กรุณากลับไปขั้นช่วงเวลา');
+            return false;
+        }
+        if (submitBtn && submitBtn.dataset.annualBlocked === '1') {
+            if (show) setStepError(7, 'วันลาพักผ่อนไม่เพียงพอ');
+            return false;
+        }
+        return validateStep(TOTAL_STEPS, show);
+    }
+
+    function resubmitConfirmed(form) {
+        form.dataset.confirmed = '1';
+        form.dataset.confirming = '';
+        if (submitBtn) submitBtn.disabled = true;
+
+        if (typeof jQuery !== 'undefined' && jQuery(form).data('yiiActiveForm')) {
+            jQuery(form).trigger('submit');
+        } else if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+    }
+
+    function openSubmitConfirm(form) {
+        if (form.dataset.confirming === '1') return;
+        form.dataset.confirming = '1';
+
+        if (typeof Swal === 'undefined') {
+            if (window.confirm('ยืนยันการบันทึกคำขอลา? โปรดตรวจสอบข้อมูลก่อนกดยืนยัน')) {
+                resubmitConfirmed(form);
+            } else {
+                form.dataset.confirming = '';
+            }
+            return;
+        }
+
+        Swal.fire({
+            title: 'ยืนยันการบันทึกคำขอลา?',
+            text: 'โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน ระบบจะส่งคำขอให้ผู้บังคับบัญชาตรวจสอบ',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fa fa-paper-plane me-1"></i> ยืนยันส่งคำขอ',
+            cancelButtonText: 'ยกเลิก',
+            reverseButtons: false,
+        }).then(function(r){
+            if (r.isConfirmed) {
+                Swal.fire({
+                    title: 'กำลังส่งคำขอลา',
+                    text: 'ระบบกำลังบันทึกข้อมูลและส่งให้ผู้อนุมัติ...',
+                    allowOutsideClick: false,
+                    didOpen: function(){ Swal.showLoading(); },
+                });
+                resubmitConfirmed(form);
+            } else {
+                form.dataset.confirming = '';
+            }
+        });
+    }
+
+    // Native submit ตรวจเงื่อนไข wizard เท่านั้น; confirm อยู่ที่ beforeSubmit ของ Yii ActiveForm
+    // เพื่อไม่ให้ ActiveForm validate แล้ว replay submit ข้าม Swal.
     if (formEl) {
         formEl.addEventListener('submit', function(e){
-            if (currentStep !== TOTAL_STEPS) {
-                e.preventDefault();
-                if (validateStep(currentStep, true)) goToStep(currentStep + 1);
-                return;
-            }
-            var total = parseFloat((document.getElementById('leave-total_days') || {}).value) || 0;
-            if (total <= 0) {
-                e.preventDefault();
-                setStepError(7, 'วันลาต้องมากกว่า 0 กรุณากลับไปขั้นช่วงเวลา');
-                return;
-            }
-            if (submitBtn && submitBtn.dataset.annualBlocked === '1') {
-                e.preventDefault();
-                setStepError(7, 'วันลาพักผ่อนไม่เพียงพอ');
-                return;
-            }
             if (this.dataset.confirmed === '1') {
-                this.dataset.confirmed = '';
-                return; // ปล่อยให้ submit ดำเนินต่อ
-            }
-            e.preventDefault();
-            var form = this;
-            if (typeof Swal === 'undefined') {
-                if (window.confirm('ยืนยันการบันทึกคำขอลา? โปรดตรวจสอบข้อมูลก่อนกดยืนยัน')) {
-                    form.dataset.confirmed = '1';
-                    if (typeof form.requestSubmit === 'function') form.requestSubmit(submitBtn || undefined);
-                    else form.submit();
-                }
                 return;
             }
-            Swal.fire({
-                title: 'ยืนยันการบันทึกคำขอลา?',
-                text: 'โปรดตรวจสอบความถูกต้องของข้อมูลก่อนกดยืนยัน ระบบจะส่งคำขอให้ผู้บังคับบัญชาตรวจสอบ',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="fa fa-paper-plane me-1"></i> ยืนยันส่งคำขอ',
-                cancelButtonText: 'ยกเลิก',
-                reverseButtons: false,
-            }).then(function(r){
-                if (r.isConfirmed) {
-                    Swal.fire({
-                        title: 'กำลังส่งคำขอลา',
-                        text: 'ระบบกำลังบันทึกข้อมูลและส่งให้ผู้อนุมัติ...',
-                        allowOutsideClick: false,
-                        didOpen: function(){ Swal.showLoading(); },
-                    });
-                    form.dataset.confirmed = '1';
-                    if (typeof form.requestSubmit === 'function') form.requestSubmit(submitBtn || undefined);
-                    else form.submit();
+
+            if (!validateSubmitReady(true)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return;
+            }
+
+            if (typeof jQuery === 'undefined' || !jQuery(this).data('yiiActiveForm')) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                openSubmitConfirm(this);
+            }
+        }, true);
+
+        if (typeof jQuery !== 'undefined') {
+            jQuery(formEl).off('beforeSubmit.mobileLeaveConfirm').on('beforeSubmit.mobileLeaveConfirm', function(){
+                if (this.dataset.confirmed === '1') {
+                    this.dataset.confirmed = '';
+                    this.dataset.confirming = '';
+                    if (submitBtn) submitBtn.disabled = true;
+                    return true;
                 }
+                if (!validateSubmitReady(true)) {
+                    return false;
+                }
+                openSubmitConfirm(this);
+                return false;
             });
-        });
+        }
     }
 
     goToStep(1);

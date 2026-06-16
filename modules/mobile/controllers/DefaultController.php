@@ -920,7 +920,8 @@ class DefaultController extends Controller
         if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
             $result = $service->saveFromPost($model);
             if ($result['ok']) {
-                return $this->redirect(['/mobile/default/leave-request-view', 'id' => $model->id]);
+                $savedModel = $result['model'] ?? $model;
+                return $this->redirect(['/mobile/default/leave-request-view', 'id' => $savedModel->id]);
             }
             Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกคำขอลาได้ กรุณาตรวจสอบฟิลด์ที่กรอก');
         }

@@ -217,6 +217,11 @@ class Leave extends \yii\db\ActiveRecord
      */
     public function createApprove()
     {
+        if (!$this->isNewRecord && Approve::find()->where(['from_id' => (string) $this->id, 'name' => 'leave'])->exists()) {
+            Yii::warning('Skip duplicate leave approve creation for leave id ' . $this->id, __METHOD__);
+            return;
+        }
+
         // $rows = LeaveApproveResolver::buildApproveRows((int) $this->emp_id, (string) $this->id);
         $rows = ApproveLevelResolver::resolve('leave',$this->emp_id);
 
