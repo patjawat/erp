@@ -1,8 +1,7 @@
 <?php
 
-
 use yii\widgets\Pjax;
-
+use app\components\widgets\DataSummaryWidget;
 
 /** @var yii\web\View $this */
 /** @var app\modules\booking\models\VehicleSearch $searchModel */
@@ -14,9 +13,9 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <?= $icon ?>
+<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
+    <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
+        <span class="text-primary"><?= $icon ?></span>
         <?= $this->title; ?>
     </h4>
 </div>
@@ -32,27 +31,53 @@ $this->params['breadcrumbs'][] = $this->title;
     'timeout' => 10000,
     'enablePushState' => true,
 ]); ?>
-<div class="card">
-    <div class="card-header">
-        <h6 class="mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
-    </div>
-    <div class="card-body">
+
+<?= $this->render('_kpi', [
+    'dataProvider' => $dataProvider,
+    'statusSummary' => $statusSummary ?? [],
+    'waitingAllocationCount' => $waitingAllocationCount ?? 0,
+    'allocatedCount' => $allocatedCount ?? 0,
+]) ?>
+
+<div class="card shadow-sm border-0 mb-3 mt-3">
+    <div class="card-body p-3">
         <?php echo $this->render('_search', ['model' => $searchModel, 'action' => $action]); ?>
     </div>
 </div>
 
-<?php
-$cacheKey = ['booking-vehicle-index-list', Yii::$app->request->queryParams];
-if ($this->beginCache($cacheKey, ['duration' => 60])):
-?>
-    <?php echo $this->render('@app/modules/booking/views/vehicle/list', [
+<div class="card shadow-sm border-0">
+    <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 vehicle-list-header">
+        <div class="d-flex align-items-center gap-2">
+            <div class="vehicle-list-header-icon p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+            </div>
+            <h5 class="m-0 fw-semibold">ทะเบียนการขอใช้รถยนต์</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+                <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <?php
+        $cacheKey = ['booking-vehicle-index-list', 'v4-typography', Yii::$app->request->queryParams];
+        if ($this->beginCache($cacheKey, ['duration' => 60])):
+        ?>
+            <?php echo $this->render('@app/modules/booking/views/vehicle/list', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-            'statusSummary' => $statusSummary ?? [],
-            'waitingAllocationCount' => $waitingAllocationCount ?? 0,
-            'allocatedCount' => $allocatedCount ?? 0,
             ]) ?>
-<?php $this->endCache(); endif; ?>
+        <?php $this->endCache(); endif; ?>
+    </div>
+
+    <div class="card-footer bg-body border-top py-3 px-4">
+        <?= DataSummaryWidget::widget([
+            'dataProvider' => $dataProvider,
+            'pagerOptions' => [],
+        ]) ?>
+    </div>
+</div>
+
 <?php Pjax::end(); ?>
 
 <?php
@@ -95,12 +120,34 @@ $(document).on('click', '.cancel-order', function(e) {
     });
 });
 
+function initVehicleListDropdowns() {
+    if (!window.bootstrap || !window.bootstrap.Dropdown) {
+        return;
+    }
+    document.querySelectorAll('.vehicle-list-table .action-dropdown-toggle').forEach(function (el) {
+        try {
+            bootstrap.Dropdown.getOrCreateInstance(el);
+        } catch (e) {
+            console.warn('Dropdown init failed', e);
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initVehicleListDropdowns);
+} else {
+    initVehicleListDropdowns();
+}
+
+$(document).off('pjax:success.vehicleListDropdowns').on('pjax:success.vehicleListDropdowns', initVehicleListDropdowns);
+$(document).off('shown.bs.modal.vehicleListDropdowns').on('shown.bs.modal.vehicleListDropdowns', initVehicleListDropdowns);
+
 $(document).on('click', '.export-leave', function(e) {
     e.preventDefault();
 
     Swal.fire({
         title: 'ยืนยันการส่งออก Excel?',
-        text: 'คุณต้องการดาวน์โหลดทะเบียนขอใช้รถยนต์ทั่วไปเป็นไฟล์ Excel ใช่หรือไม่?',
+        text: 'คุณต้องการดาวน์โหลดทะเบียนขอใช้รถยนต์เป็นไฟล์ Excel ใช่หรือไม่?',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',

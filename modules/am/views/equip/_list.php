@@ -27,6 +27,43 @@ $equipSubtitle = static function ($item): string {
     }
     return implode(', ', $segments);
 };
+
+$receiveAgeText = static function ($receiveDate): string {
+    if (empty($receiveDate)) {
+        return '';
+    }
+
+    try {
+        $dateText = substr((string) $receiveDate, 0, 10);
+        $receivedAt = \DateTimeImmutable::createFromFormat('!Y-m-d', $dateText) ?: new \DateTimeImmutable((string) $receiveDate);
+        $today = new \DateTimeImmutable('today');
+    } catch (\Throwable $e) {
+        return '';
+    }
+
+    if ($receivedAt > $today) {
+        return 'ยังไม่ถึงวันที่รับ';
+    }
+
+    $diff = $receivedAt->diff($today);
+    if ($diff->y === 0 && $diff->m === 0 && $diff->d === 0) {
+        return 'รับวันนี้';
+    }
+
+    $parts = [];
+    if ($diff->y > 0) {
+        $parts[] = $diff->y . ' ปี';
+    }
+    if ($diff->m > 0) {
+        $parts[] = $diff->m . ' เดือน';
+    }
+
+    if ($diff->d > 0) {
+        $parts[] = $diff->d . ' วัน';
+    }
+
+    return 'ผ่านมา ' . implode(' ', $parts);
+};
 ?>
 <style>
     /* เฉพาะเลย์เอาต์ตาราง — สีตามธีมผ่านตัวแปร Bootstrap */
@@ -161,7 +198,14 @@ $equipSubtitle = static function ($item): string {
                                     </svg><span class="text-truncate" style="font-size: 12px; max-width: 180px;"><?= $ownerName ?></span></div>
                             </div>
                         </td>
-                        <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;"><?= $item->receive_date ? Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) : '-' ?></td>
+                        <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;">
+                            <?php if ($item->receive_date): ?>
+                                <div><?= Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) ?></div>
+                                <div class="small text-primary mt-1"><?= Html::encode($receiveAgeText($item->receive_date)) ?></div>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
                         <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price, 2) ?></td>
                         <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
                         <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
