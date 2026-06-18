@@ -15,6 +15,8 @@ use app\modules\am\models\Asset;
 use app\components\ProductHelper;
 use app\modules\inventory\models\Product;
 use app\modules\am\models\AssetImportForm;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\inventory\models\StockEvent;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
@@ -276,6 +278,7 @@ class ImportController extends Controller
         $rowsByCode = []; // รหัสครุภัณฑ์ซ้ำในไฟล์ → แถวหลังแทนที่แถวก่อน (อัปเดตล่าสุด)
         $rowsNoCode = [];
         $errorRows = [];
+        $warningRows = []; // เตือนแต่ไม่ block (เช่น หา dept/owner ไม่พบ)
         $rowNumber = 0;
 
         if (($handle = fopen($filePath, "r")) !== false) {
@@ -333,11 +336,12 @@ class ImportController extends Controller
                     }
                 }
 
+                $isUpdate = !$model->isNewRecord;
                 $model->asset_type_id = $postData['asset_type_id'];
                 $model->asset_category_id = $postData['asset_category_id'];
                 $model->code = $code;
-                $model->fsn_number = $this->cellAt($data, $columnMap, 'fsn_number'); // หมายเลข FSN ซ้ำได้
-                $model->asset_name = $this->cellAt($data, $columnMap, 'asset_name');
+                $this->assignIfPresent($model, 'fsn_number', $this->cellAt($data, $columnMap, 'fsn_number'), $isUpdate); // หมายเลข FSN ซ้ำได้
+                $this->assignIfPresent($model, 'asset_name', $this->cellAt($data, $columnMap, 'asset_name'), $isUpdate);
                 $vendorCode = $this->cellAt($data, $columnMap, 'vendor_code');
                 $vendorName = $this->cellAt($data, $columnMap, 'vendor_name');
                 $incomingJson = [
@@ -356,24 +360,56 @@ class ImportController extends Controller
                     'order_number' => $this->cellAt($data, $columnMap, 'order_number'),
                     'note' => $this->cellAt($data, $columnMap, 'note'),
                 ];
-                $baseJson = $model->isNewRecord ? [] : $this->assetImportDataJsonAsArray($model->data_json);
-                $model->data_json = array_merge($baseJson, $incomingJson);
+                $baseJson = $isUpdate ? $this->assetImportDataJsonAsArray($model->data_json) : [];
+                $model->data_json = $this->mergeJsonSkipEmpty($baseJson, $incomingJson, $isUpdate);
                 if ($depreciationParsed['value'] !== null) {
                     $model->depreciation_rate = $depreciationParsed['value'];
                 }
-                $model->price = $this->cellAt($data, $columnMap, 'price');
-                $model->purchase = $this->resolvePurchaseFromImport($this->cellAt($data, $columnMap, 'purchase'));
-                $model->receive_date = $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'receive_date'));
-                $model->on_year = $this->cellAt($data, $columnMap, 'on_year');
-                $model->license_plate = $this->cellAt($data, $columnMap, 'license_plate');
-                $model->useful_life = (int) $this->cellAt($data, $columnMap, 'useful_life', '0');
-                if ($model->isNewRecord) {
+                $this->assignIfPresent($model, 'price', $this->cellAt($data, $columnMap, 'price'), $isUpdate);
+                $this->assignIfPresent($model, 'purchase', $this->resolvePurchaseFromImport($this->cellAt($data, $columnMap, 'purchase')), $isUpdate);
+                $this->assignIfPresent($model, 'receive_date', $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'receive_date')), $isUpdate);
+                $this->assignIfPresent($model, 'on_year', $this->cellAt($data, $columnMap, 'on_year'), $isUpdate);
+                $this->assignIfPresent($model, 'license_plate', $this->cellAt($data, $columnMap, 'license_plate'), $isUpdate);
+                $usefulLifeRaw = $this->cellAt($data, $columnMap, 'useful_life');
+                if ($usefulLifeRaw !== '' || !$isUpdate) {
+                    $model->useful_life = (int) ($usefulLifeRaw !== '' ? $usefulLifeRaw : 0);
+                }
+
+                // หน่วยงานผู้รับผิดชอบ — ค้นจากชื่อ → organization.id
+                $deptName = $this->cellAt($data, $columnMap, 'department');
+                if ($deptName !== '') {
+                    $deptId = $this->resolveDepartmentFromImport($deptName);
+                    if ($deptId !== null) {
+                        $model->department = $deptId;
+                    } else {
+                        $warningRows[] = [
+                            'row' => $rowNumber,
+                            'code' => $code,
+                            'message' => 'ไม่พบหน่วยงาน "' . $deptName . '" ในระบบ — ปล่อยว่าง',
+                        ];
+                    }
+                }
+
+                // ผู้รับผิดชอบ — ค้นจากชื่อ+นามสกุล → employees.id
+                $ownerFname = $this->cellAt($data, $columnMap, 'owner_fname');
+                $ownerLname = $this->cellAt($data, $columnMap, 'owner_lname');
+                if ($ownerFname !== '' || $ownerLname !== '') {
+                    $ownerId = $this->resolveOwnerFromImport($ownerFname, $ownerLname);
+                    if ($ownerId !== null) {
+                        $model->owner = (string) $ownerId;
+                    } else {
+                        $warningRows[] = [
+                            'row' => $rowNumber,
+                            'code' => $code,
+                            'message' => 'ไม่พบผู้รับผิดชอบ "' . trim($ownerFname . ' ' . $ownerLname) . '" ในระบบ — ปล่อยว่าง',
+                        ];
+                    }
+                }
+
+                if (!$isUpdate) {
                     $model->asset_status = 'active';
                     $model->asset_condition = 'good';
                 } else {
-                    if (empty($model->asset_status) || !in_array((string) $model->asset_status, ['active', 'borrowed', 'repair', 'wait_dispose', 'disposed'], true)) {
-                        $model->asset_status = 'active';
-                    }
                     if (empty($model->asset_condition)) {
                         $model->asset_condition = 'good';
                     }
@@ -455,6 +491,7 @@ class ImportController extends Controller
                 'message' => $msg,
                 'created' => $created,
                 'updated' => $updated,
+                'warnings' => $warningRows,
             ];
         }
 
@@ -1120,6 +1157,81 @@ class ImportController extends Controller
         return '';
     }
 
+
+    /**
+     * เซ็ตค่าเข้า $model->$attr — บน UPDATE จะ "ข้าม" เมื่อค่าใหม่ว่าง (null/'') เพื่อไม่ทับค่าเดิม
+     * บน CREATE จะเซ็ตเสมอ (รวมค่าว่าง) เพื่อรักษา default behavior เดิม
+     */
+    protected function assignIfPresent($model, string $attr, $value, bool $isUpdate): void
+    {
+        if ($isUpdate && ($value === null || $value === '')) {
+            return;
+        }
+        $model->$attr = $value;
+    }
+
+    /**
+     * รวม data_json — บน UPDATE จะข้าม key ที่ค่าใหม่ว่าง (null/'') ไม่ให้ทับของเดิม
+     * บน CREATE จะใช้ array_merge ปกติ
+     *
+     * @param array<string, mixed> $base
+     * @param array<string, mixed> $incoming
+     * @return array<string, mixed>
+     */
+    protected function mergeJsonSkipEmpty(array $base, array $incoming, bool $isUpdate): array
+    {
+        if (!$isUpdate) {
+            return array_merge($base, $incoming);
+        }
+        $merged = $base;
+        foreach ($incoming as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $merged[$key] = $value;
+        }
+        return $merged;
+    }
+
+    /**
+     * ชื่อหน่วยงานจาก CSV → organization.id
+     * คืน null ถ้าหาไม่พบ (caller เป็นผู้แจ้ง warning + ปล่อยฟิลด์ว่าง)
+     */
+    protected function resolveDepartmentFromImport(string $name): ?int
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return null;
+        }
+        $org = Organization::find()->where(['name' => $name])->one();
+        return $org ? (int) $org->id : null;
+    }
+
+    /**
+     * ชื่อ+นามสกุล ผู้รับผิดชอบจาก CSV → employees.id
+     * - ค้นแบบ exact ก่อน (fname AND lname)
+     * - คืน null ถ้าหาไม่พบหรือเจอมากกว่า 1 คน (กันเซ็ต owner ผิดคน)
+     */
+    protected function resolveOwnerFromImport(string $fname, string $lname): ?int
+    {
+        $fname = trim($fname);
+        $lname = trim($lname);
+        if ($fname === '' && $lname === '') {
+            return null;
+        }
+        $query = Employees::find();
+        if ($fname !== '') {
+            $query->andWhere(['fname' => $fname]);
+        }
+        if ($lname !== '') {
+            $query->andWhere(['lname' => $lname]);
+        }
+        $matches = $query->limit(2)->all();
+        if (count($matches) !== 1) {
+            return null;
+        }
+        return (int) $matches[0]->id;
+    }
 
     protected function findProduct($code = null, $title = null, $categoryId = null, $unit = null)
     {

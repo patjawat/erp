@@ -205,11 +205,29 @@ $js = <<<JS
                         Swal.close(); // ปิด loading
 
                         if(res.status === 'success'){
-                            Swal.fire('สำเร็จ', res.message || 'นำเข้าข้อมูลเรียบร้อย', 'success');
+                            const warnings = Array.isArray(res.warnings) ? res.warnings : [];
+                            if (warnings.length > 0) {
+                                let wHtml = '<div class="text-start">'
+                                    + '<div class="mb-2">' + (res.message || 'นำเข้าข้อมูลเรียบร้อย') + '</div>'
+                                    + '<div class="alert alert-warning small mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>มีคำเตือน ' + warnings.length + ' รายการ</div>'
+                                    + '<ul class="small mb-0" style="max-height:240px;overflow:auto;">';
+                                warnings.forEach(function(w){
+                                    wHtml += '<li>แถว ' + w.row + ' (รหัส: ' + (w.code || '-') + '): ' + w.message + '</li>';
+                                });
+                                wHtml += '</ul></div>';
+                                Swal.fire({
+                                    title: 'สำเร็จ (มีคำเตือน)',
+                                    html: wHtml,
+                                    icon: 'success',
+                                    width: 640,
+                                }).then(function(){ window.location.reload(true); });
+                            } else {
+                                Swal.fire('สำเร็จ', res.message || 'นำเข้าข้อมูลเรียบร้อย', 'success')
+                                    .then(function(){ window.location.reload(true); });
+                            }
                             $('#preview-table').html('');
                             $('#import-btn').hide();
                             $('#csvFile').val('');
-                            window.location.reload(true);
 
                         } else if(res.status === 'error' && res.errors){
                             let html = '<ul style="text-align:left;">';
