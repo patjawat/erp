@@ -10,6 +10,24 @@ $this->title = $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Asset Details', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+$maintenanceData = static function ($model): array {
+    if (is_array($model->data_json)) {
+        return $model->data_json;
+    }
+
+    if (is_string($model->data_json)) {
+        return json_decode($model->data_json, true) ?: [];
+    }
+
+    return [];
+};
+$operatorName = static function ($model): string {
+    $user = $model->createdBy;
+
+    return $user?->employee?->fullname
+        ?? $user?->username
+        ?? '-';
+};
 ?>
 
 
@@ -43,14 +61,17 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
              [
                 'label' => 'รายละเอียด/หมายเหตุ',
-                'value' => function($model){
-                    return $model->data_json['remark'] ?? '-';
+                'value' => function($model) use ($maintenanceData) {
+                    $data = $maintenanceData($model);
+                    $remark = trim((string) ($data['remark'] ?? ''));
+
+                    return $remark !== '' ? $remark : '-';
                 }
             ],
             [
                 'label' => 'ผู้ดำเนินการ',
-                'value' => function($model){
-                      return $model->createdBy->employee->fullname;
+                'value' => function($model) use ($operatorName) {
+                    return $operatorName($model);
                 }
             ],
            
@@ -60,4 +81,3 @@ $this->params['breadcrumbs'][] = $this->title;
      <label class="form-label fw-bold">รูปภาพหรือไฟล์ที่เกี่ยวข้อง</label>
 
  <?= $model->Upload(['view' => true]) ?>
-
