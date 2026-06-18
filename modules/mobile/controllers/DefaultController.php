@@ -484,6 +484,76 @@ class DefaultController extends Controller
     }
 
     /**
+     * อัปโหลด/เปลี่ยนรูปโปรไฟล์ของผู้ใช้ปัจจุบัน — บังคับ ref = employee.ref, name = 'avatar'
+     * เพื่อกันการปลอม ref ไปแก้ avatar ของผู้อื่นผ่าน endpoint filemanager โดยตรง
+     */
+    public function actionAvatarUpload()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะ POST'];
+        }
+
+        $me = UserHelper::GetEmployee();
+        if (!$me || empty($me->ref)) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลพนักงาน'];
+        }
+
+        $file = UploadedFile::getInstanceByName('avatar');
+        if (!$file) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกไฟล์รูปภาพ'];
+        }
+
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext = strtolower((string) $file->extension);
+        if (!in_array($ext, $allowed, true)) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะไฟล์รูปภาพ (jpg, png, webp, gif)'];
+        }
+
+        $maxBytes = 5 * 1024 * 1024;
+        if ($file->size > $maxBytes) {
+            return ['status' => 'error', 'message' => 'ไฟล์มีขนาดเกิน 5MB'];
+        }
+
+        $ref  = (string) $me->ref;
+        $name = 'avatar';
+
+        try {
+            FileManagerHelper::CreateDir($ref);
+            $realFileName = md5($file->baseName . microtime(true)) . '.' . $ext;
+            $savePath = FileManagerHelper::getUploadPath() . $ref . '/' . $realFileName;
+            if (!$file->saveAs($savePath)) {
+                return ['status' => 'error', 'message' => 'บันทึกไฟล์ไม่สำเร็จ'];
+            }
+
+            if (FileManagerHelper::isImage($savePath)) {
+                FileManagerHelper::createThumbnail($ref, $realFileName);
+            }
+
+            $old = Uploads::find()->where(['ref' => $ref, 'name' => $name])->one();
+            if ($old) {
+                FileManagerHelper::Deletefile($old->id);
+            }
+
+            $upload = new Uploads();
+            $upload->ref = $ref;
+            $upload->name = $name;
+            $upload->file_name = $file->baseName . '.' . $ext;
+            $upload->real_filename = $realFileName;
+            $upload->type = FileManagerHelper::checkFileType($ext);
+            $upload->save(false);
+
+            return [
+                'status'     => 'success',
+                'message'    => 'เปลี่ยนรูปโปรไฟล์เรียบร้อย',
+                'avatar_url' => \yii\helpers\Url::to(['/filemanager/uploads/get-image', 'id' => $upload->id, 'v' => time()]),
+            ];
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * จองรถราชการ (mobile-first: ActiveForm + Vehicle model + transaction).
      */
     public function actionBookingVehicle()
