@@ -98,6 +98,10 @@ $this->registerCss(<<<CSS
     overflow: hidden;
 }
 
+.document-modal-shell .min-width-0 {
+    min-width: 0;
+}
+
 .document-work-scroll {
     flex: 1 1 auto;
     min-height: 0;
