@@ -147,6 +147,32 @@ class Helpdesk extends \yii\db\ActiveRecord
         return parent::beforeSave($insert);
     }
 
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        if ($this->name !== 'repair') {
+            return;
+        }
+        if (!in_array((int) $this->repair_group, [1, 2, 3], true)) {
+            return;
+        }
+        $isDraft = is_array($this->data_json) && !empty($this->data_json['draft']);
+        if ($isDraft) {
+            return;
+        }
+
+        try {
+            if ($insert) {
+                \app\modules\telegrambot\components\HelpdeskTelegramNotify::notifyNewRepair($this);
+            } elseif (array_key_exists('status', $changedAttributes) && (string) $changedAttributes['status'] !== (string) $this->status) {
+                \app\modules\telegrambot\components\HelpdeskTelegramNotify::notifyStatusChanged($this, (string) $changedAttributes['status']);
+            }
+        } catch (\Throwable $e) {
+            \Yii::error('Helpdesk telegram notify failed: ' . $e->getMessage(), __METHOD__);
+        }
+    }
+
     public function UpdateStockYear() {}
 
     public function Upload($name)
@@ -500,6 +526,88 @@ class Helpdesk extends \yii\db\ActiveRecord
     {
         $list = Asset::find()->where(['asset_group_id' => 4])->all();
         return ArrayHelper::map($list, 'code', 'code');
+    }
+
+    /**
+     * รายการครุภัณฑ์สำหรับ Select2 picker (รูป + ชื่อ + รหัส + ประเภท)
+     * คืนค่า ['items' => [code => label], 'options' => [code => ['data-*' => ...]]]
+     *
+     * เลี่ยง N+1: ดึง Asset + Uploads ครั้งละชุด แล้ว cache 5 นาที
+     */
+    public function listAssetForPicker()
+    {
+        $cacheKey = 'helpdesk2:asset_picker:group:4:v1';
+        $cache    = Yii::$app->has('cache') ? Yii::$app->cache : null;
+        if ($cache && ($hit = $cache->get($cacheKey)) !== false) {
+            return $hit;
+        }
+
+        // 1) โหลด asset เฉพาะคอลัมน์ที่ใช้ (asArray = เร็วกว่า hydrate AR)
+        $assets = Asset::find()
+            ->select(['id', 'code', 'ref', 'data_json'])
+            ->where(['asset_group_id' => 4])
+            ->asArray()
+            ->all();
+
+        if (!$assets) {
+            $empty = ['items' => [], 'options' => []];
+            if ($cache) { $cache->set($cacheKey, $empty, 300); }
+            return $empty;
+        }
+
+        // 2) batch โหลด Uploads ทั้งหมดในคิวรีเดียว (index ด้วย ref)
+        $refs = array_values(array_unique(array_filter(array_column($assets, 'ref'))));
+        $uploadsByRef = [];
+        if ($refs) {
+            $uploadsByRef = Uploads::find()
+                ->select(['id', 'ref'])
+                ->where(['ref' => $refs, 'name' => 'asset'])
+                ->indexBy('ref')
+                ->asArray()
+                ->all();
+        }
+
+        $placeholder = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+        $items   = [];
+        $options = [];
+
+        foreach ($assets as $row) {
+            $code = (string) ($row['code'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+
+            $dj = $row['data_json'] ?? null;
+            if (is_string($dj)) {
+                $dj = json_decode($dj, true) ?: [];
+            }
+            if (!is_array($dj)) {
+                $dj = [];
+            }
+
+            $name = (string) ($dj['asset_name'] ?? '');
+            if ($name === '') { $name = 'ไม่ระบุชื่อครุภัณฑ์'; }
+            $type = (string) ($dj['asset_type_text'] ?? '');
+
+            $upload = $uploadsByRef[$row['ref']] ?? null;
+            $img = $upload
+                ? \yii\helpers\Url::to(['/filemanager/uploads/show', 'id' => $upload['id']], true)
+                : $placeholder;
+
+            $items[$code] = trim($name . ' ' . $code);
+            $options[$code] = [
+                'data-image' => $img,
+                'data-name'  => $name,
+                'data-type'  => $type,
+                'data-code'  => $code,
+            ];
+        }
+
+        $result = ['items' => $items, 'options' => $options];
+        if ($cache) {
+            $cache->set($cacheKey, $result, 300);
+        }
+        return $result;
     }
 
 
