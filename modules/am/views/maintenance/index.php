@@ -293,14 +293,8 @@ $iconClean = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" vie
                             <span class="maintenance-row-number"><?= Html::encode(($dataProvider->pagination->offset + 1) + $key) ?></span>
                         </td>
                         <td>
-                            <div class="maintenance-title"><?= Html::encode($title !== '' ? $title : '-') ?></div>
-                            <div class="maintenance-note">
-                                <i class="fa-regular fa-note-sticky" aria-hidden="true"></i>
-                                <span>
-                                    <span class="fw-semibold">รายละเอียด/หมายเหตุ:</span>
-                                    <?= Html::encode($remark !== '' ? StringHelper::truncate($remark, 150) : 'ไม่ได้ระบุ') ?>
-                                </span>
-                            </div>
+                            <?= Html::encode($remark !== '' ? StringHelper::truncate($remark, 150) : 'ไม่ได้ระบุ') ?>
+                           
                         </td>
                         <td class="maintenance-date-cell">
                             <span class="maintenance-date-pill">

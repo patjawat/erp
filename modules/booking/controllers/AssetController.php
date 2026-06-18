@@ -54,7 +54,7 @@ class AssetController extends Equip
              'asset_type_id' => $assetTypeItem
         ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere(['<>','asset_status',2]);
+        $dataProvider->query->andFilterWhere(['<>','asset_status','disposed']);
         $dataProvider->query->andFilterWhere([
             'or',
             ['like', 'asset_name', $searchModel->q],
