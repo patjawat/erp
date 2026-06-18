@@ -59,7 +59,7 @@ $canTestNotification = \Yii::$app->user->can('admin');
 
             <div class="collapse mt-2" id="composer-tag-dept">
                 <div class="px-2 pb-2">
-                    <div class="small text-muted mb-1"><i class="fa-solid fa-building me-1"></i>ส่งต่อถึงหน่วยงาน</div>
+                    <div class="small text-muted mb-1"><i class="fa-solid fa-building me-1"></i>ส่งต่อถึงหน่วยงานxxx</div>
                     <?= $form->field($model, 'tags_department', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
                         'data' => $departmentList,
                         'options' => ['placeholder' => 'พิมพ์ค้นหาหน่วยงาน...', 'multiple' => true],

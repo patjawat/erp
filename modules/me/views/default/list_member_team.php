@@ -3,9 +3,15 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
+
+$deptIds = array_filter([$me->department]);
+if ($me->department && ($org = Organization::findOne($me->department))) {
+    $deptIds = array_merge($deptIds, $org->children()->select('id')->column());
+}
 
 $listsMemberTeam = Employees::find()
-->where(['department' => $me->department,'status' => 1])
+->where(['department' => $deptIds, 'status' => 1])
 ->andWhere(['<>','id',1])->all();
 ?>
         <div class="row g-3 align-items-center justify-content-between mb-4">

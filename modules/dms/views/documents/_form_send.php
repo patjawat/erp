@@ -199,6 +199,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'fontAwesome' => true,
                                         'asDropdown' => true,
                                         'multiple' => true,
+                                        'cascadeSelectChildren' => false,
                                         'options' => ['disabled' => false],
                                     ])->label('ส่งถึงหน่วยงาน');
                                     ?>
