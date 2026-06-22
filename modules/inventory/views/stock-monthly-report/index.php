@@ -95,10 +95,13 @@ $fmt = static function ($v) {
     </div>
     <div class="card-body">
         <div class="row g-2 mb-2">
-            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-success fs-5 fw-bold"><?= number_format($rep['inserted']) ?></div><small class="text-muted">เพิ่มใหม่</small></div></div>
-            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-primary fs-5 fw-bold"><?= number_format($rep['updated']) ?></div><small class="text-muted">อัปเดตทับ</small></div></div>
-            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-warning fs-5 fw-bold"><?= number_format($rep['skip_total']) ?></div><small class="text-muted">ข้ามแถวที่ผิด</small></div></div>
-            <div class="col-md-3"><div class="border rounded p-2 text-center"><div class="text-muted fs-5 fw-bold"><?= number_format($rep['skip_empty']) ?></div><small class="text-muted">ข้ามแถวว่าง</small></div></div>
+            <div class="col"><div class="border rounded p-2 text-center"><div class="text-success fs-5 fw-bold"><?= number_format($rep['inserted']) ?></div><small class="text-muted">เพิ่มใหม่</small></div></div>
+            <div class="col"><div class="border rounded p-2 text-center"><div class="text-primary fs-5 fw-bold"><?= number_format($rep['updated']) ?></div><small class="text-muted">อัปเดตทับ</small></div></div>
+            <?php if (!empty($rep['auto_created'])): ?>
+            <div class="col"><div class="border rounded p-2 text-center"><div class="text-info fs-5 fw-bold"><?= number_format($rep['auto_created']) ?></div><small class="text-muted">สร้าง stock_item จาก legacy</small></div></div>
+            <?php endif; ?>
+            <div class="col"><div class="border rounded p-2 text-center"><div class="text-warning fs-5 fw-bold"><?= number_format($rep['skip_total']) ?></div><small class="text-muted">ข้ามแถวที่ผิด</small></div></div>
+            <div class="col"><div class="border rounded p-2 text-center"><div class="text-muted fs-5 fw-bold"><?= number_format($rep['skip_empty']) ?></div><small class="text-muted">ข้ามแถวว่าง</small></div></div>
         </div>
         <?php
         $skipCounts = [

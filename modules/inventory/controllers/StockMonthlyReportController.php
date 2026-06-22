@@ -832,8 +832,18 @@ class StockMonthlyReportController extends Controller
             $itemCategoryMap[(string) $it['item_code']] = $it['category_id'] !== null ? (string) $it['category_id'] : null;
         }
 
+        // legacy: รหัสพัสดุที่อยู่ใน categorise (name='asset_item') แต่ยังไม่มีใน stock_item
+        $legacyMap = []; // [code => title]
+        foreach ((new Query())->select(['code', 'title'])->from('categorise')->where(['name' => 'asset_item'])->each() as $c) {
+            $code = (string) $c['code'];
+            if ($code !== '' && !array_key_exists($code, $itemCategoryMap)) {
+                $legacyMap[$code] = (string) ($c['title'] ?? $code);
+            }
+        }
+
         $rowNum = 1;
         $okRows = [];
+        $autoCreateItems = []; // [item_code => item_name] รอ insert ลง stock_item
         $skipMissingWh = [];
         $skipMissingItem = [];
         $skipBadNumber = [];
@@ -852,9 +862,15 @@ class StockMonthlyReportController extends Controller
             $qRaw  = trim((string) ($data[$idx['closing_qty']] ?? ''));
             $vRaw  = trim((string) ($data[$idx['closing_value']] ?? ''));
 
-            if (!array_key_exists($code, $itemCategoryMap)) {
+            $inStock = array_key_exists($code, $itemCategoryMap);
+            $inLegacy = !$inStock && isset($legacyMap[$code]);
+            if (!$inStock && !$inLegacy) {
                 $skipMissingItem[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
                 continue;
+            }
+            if ($inLegacy) {
+                $autoCreateItems[$code] = $legacyMap[$code];
+                $itemCategoryMap[$code] = null;
             }
 
             $whId = null;
@@ -898,6 +914,28 @@ class StockMonthlyReportController extends Controller
         $createdBy = Yii::$app->user->id;
         $inserted = 0;
         $updated = 0;
+        $autoCreated = 0;
+
+        // auto-create stock_item สำหรับรหัส legacy (เฉพาะที่อยู่ใน okRows)
+        $usedCodes = array_unique(array_column($okRows, 'item_code'));
+        $codesToCreate = array_intersect($usedCodes, array_keys($autoCreateItems));
+        if (!empty($codesToCreate)) {
+            $batch = [];
+            foreach ($codesToCreate as $c) {
+                $batch[] = [$c, $autoCreateItems[$c], $createdAt, $createdBy];
+            }
+            try {
+                Yii::$app->db->createCommand()
+                    ->batchInsert('stock_item',
+                        ['item_code', 'item_name', 'created_at', 'created_by'],
+                        $batch)
+                    ->execute();
+                $autoCreated = count($batch);
+            } catch (\Throwable $e) {
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดตอนสร้าง stock_item จาก legacy: ' . $e->getMessage());
+                return $this->redirect(['index']);
+            }
+        }
 
         $tx = Yii::$app->db->beginTransaction();
         try {
@@ -952,6 +990,7 @@ class StockMonthlyReportController extends Controller
             'period' => $periodLabel,
             'inserted' => $inserted,
             'updated' => $updated,
+            'auto_created' => $autoCreated,
             'skip_total' => $skipTotal,
             'skip_empty' => $skipEmpty,
             'skip_missing_wh' => array_slice($skipMissingWh, 0, $maxList),

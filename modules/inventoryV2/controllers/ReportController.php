@@ -1517,10 +1517,21 @@ if ($categoryId || $status || $search) {
             $itemCategoryMap[(string) $it['item_code']] = $it['category_id'] !== null ? (string) $it['category_id'] : null;
         }
 
+        // legacy: รหัสพัสดุที่อยู่ใน categorise (name='asset_item') แต่ยังไม่มีใน stock_item
+        // เก็บ title ไว้ใช้สร้าง stock_item ตอน import
+        $legacyMap = []; // [code => title]
+        foreach ((new Query())->select(['code', 'title'])->from('categorise')->where(['name' => 'asset_item'])->each() as $c) {
+            $code = (string) $c['code'];
+            if ($code !== '' && !array_key_exists($code, $itemCategoryMap)) {
+                $legacyMap[$code] = (string) ($c['title'] ?? $code);
+            }
+        }
+
         $rowNum = 1;
         $okRows = [];           // [['warehouse_id','item_code','qty','value']]
+        $autoCreateItems = [];  // [item_code => item_name] รอ insert ลง stock_item
         $skipMissingWh = [];    // CSV ระบุ warehouse_name แต่ไม่พบ
-        $skipMissingItem = [];  // item_code ไม่อยู่ใน stock_item
+        $skipMissingItem = [];  // item_code ไม่อยู่ทั้ง stock_item และ categorise asset_item
         $skipBadNumber = [];    // closing_qty/value ไม่ใช่ตัวเลข
         $skipNoMatch = [];      // ไม่ระบุ warehouse + map ตาม category ไม่ได้ (0 คลัง)
         $skipAmbiguous = [];    // ไม่ระบุ warehouse + พบหลายคลัง
@@ -1537,9 +1548,15 @@ if ($categoryId || $status || $search) {
             $qRaw  = trim((string) ($data[$idx['closing_qty']] ?? ''));
             $vRaw  = trim((string) ($data[$idx['closing_value']] ?? ''));
 
-            if (!array_key_exists($code, $itemCategoryMap)) {
+            $inStock = array_key_exists($code, $itemCategoryMap);
+            $inLegacy = !$inStock && isset($legacyMap[$code]);
+            if (!$inStock && !$inLegacy) {
                 $skipMissingItem[] = ['row' => $rowNum, 'warehouse_name' => $wName, 'item_code' => $code];
                 continue;
+            }
+            if ($inLegacy) {
+                $autoCreateItems[$code] = $legacyMap[$code]; // จะสร้าง stock_item ก่อน insert
+                $itemCategoryMap[$code] = null; // ให้ผ่าน auto-map (จะ skipNoMatch ถ้าไม่ระบุ warehouse_name)
             }
 
             // หา warehouse_id
@@ -1585,7 +1602,29 @@ if ($categoryId || $status || $search) {
         $createdBy = Yii::$app->user->id;
         $inserted = 0;
         $updated = 0;
+        $autoCreated = 0;
         $itemCache = [];
+
+        // auto-create stock_item สำหรับรหัส legacy (เฉพาะที่อยู่ใน okRows)
+        $usedCodes = array_unique(array_column($okRows, 'item_code'));
+        $codesToCreate = array_intersect($usedCodes, array_keys($autoCreateItems));
+        if (!empty($codesToCreate)) {
+            $batch = [];
+            foreach ($codesToCreate as $c) {
+                $batch[] = [$c, $autoCreateItems[$c], $createdAt, $createdBy];
+            }
+            try {
+                Yii::$app->db->createCommand()
+                    ->batchInsert(StockItem::tableName(),
+                        ['item_code', 'item_name', 'created_at', 'created_by'],
+                        $batch)
+                    ->execute();
+                $autoCreated = count($batch);
+            } catch (\Throwable $e) {
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดตอนสร้าง stock_item จาก legacy: ' . $e->getMessage());
+                return $this->redirect(['stock-monthly']);
+            }
+        }
 
         $tx = Yii::$app->db->beginTransaction();
         try {
@@ -1647,6 +1686,7 @@ if ($categoryId || $status || $search) {
             'period' => $periodLabel,
             'inserted' => $inserted,
             'updated' => $updated,
+            'auto_created' => $autoCreated,
             'skip_total' => $skipTotal,
             'skip_empty' => $skipEmpty,
             'skip_missing_wh' => array_slice($skipMissingWh, 0, $maxList),
