@@ -1224,10 +1224,17 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             });
 
             var items = [];
+            var skipped = []; // [{row, reason, name, raw}]
             for (var i = 1; i < lines.length; i++) {
-                var values = lines[i].split(',').map(function(v) { return v.trim(); });
-                if (values.length < 4) continue;
-                
+                var rowNum = i + 1; // CSV row number (1-based, header = row 1)
+                var raw = lines[i];
+                var values = parseCsvLine(raw);
+
+                if (values.length < 4) {
+                    skipped.push({ row: rowNum, name: values[1] || '', reason: 'จำนวนคอลัมน์น้อยกว่า 4 (ตรวจ comma ใน CSV)', raw: raw.substring(0, 60) });
+                    continue;
+                }
+
                 var itemCode = values[0] || '';
                 var itemName = values[1] || '';
                 var unitName = values[2] || '';
@@ -1238,7 +1245,14 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 
                 // อนุญาตให้รหัสว่างได้ (server จะ match จากชื่อ / สร้างใหม่ให้)
                 // แต่ "ชื่อ" และ "จำนวน" ยังจำเป็น
-                if (!itemName || qty <= 0) continue;
+                if (!itemName) {
+                    skipped.push({ row: rowNum, name: '', reason: 'ไม่มีชื่อวัสดุ', raw: raw.substring(0, 60) });
+                    continue;
+                }
+                if (qty <= 0) {
+                    skipped.push({ row: rowNum, name: itemName, reason: 'จำนวนเป็น 0 หรือไม่ใช่ตัวเลข', raw: raw.substring(0, 60) });
+                    continue;
+                }
 
                 items.push({
                     item_code: itemCode,
@@ -1256,10 +1270,36 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 return;
             }
 
-            importCSVItems(items, warehouseId, categoryId);
+            importCSVItems(items, warehouseId, categoryId, skipped);
         }
 
-        function importCSVItems(items, warehouseId, categoryId) {
+        // Proper CSV parser — รองรับ quoted string ที่มี comma ข้างใน
+        // เช่น  "Paracetamol, 500mg",ชื่อ,หน่วย,...
+        function parseCsvLine(line) {
+            var result = [];
+            var cur = '';
+            var inQuotes = false;
+            for (var i = 0; i < line.length; i++) {
+                var c = line.charAt(i);
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (line.charAt(i + 1) === '"') { cur += '"'; i++; } // escaped ""
+                        else { inQuotes = false; }
+                    } else {
+                        cur += c;
+                    }
+                } else {
+                    if (c === ',') { result.push(cur); cur = ''; }
+                    else if (c === '"' && cur === '') { inQuotes = true; }
+                    else { cur += c; }
+                }
+            }
+            result.push(cur);
+            return result.map(function(v) { return v.trim(); });
+        }
+
+        function importCSVItems(items, warehouseId, categoryId, skipped) {
+            skipped = skipped || [];
             // 2-step flow: dry_run preview → confirm dialog (ถ้ามีการสร้างใหม่) → real import
             callImport(items, warehouseId, categoryId, true)
                 .then(function(preview) {
@@ -1273,7 +1313,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 
                     // ถ้าไม่มีการสร้างใหม่เลย → ไม่ต้อง confirm ทำได้เลย
                     if (wouldCreate.length === 0) {
-                        return doRealImport(items, warehouseId, categoryId);
+                        return doRealImport(items, warehouseId, categoryId, skipped);
                     }
 
                     // มีการสร้างใหม่ → แสดง confirm พร้อมรายชื่อ
@@ -1286,8 +1326,11 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     if (wouldReuse.length > 0) {
                         subInfo += '<div class="text-muted small mb-2">ใช้วัสดุเดิม ' + wouldReuse.length + ' รายการ (ไม่สร้างซ้ำ)</div>';
                     }
+                    if (skipped.length > 0) {
+                        subInfo += '<div class="text-warning small mb-2">มีรายการในไฟล์ที่ไม่ผ่านการอ่าน ' + skipped.length + ' แถว — ดูรายละเอียดใน "สรุปหลังบันทึก"</div>';
+                    }
                     if (errors.length > 0) {
-                        subInfo += '<div class="text-danger small mb-2">มีข้อผิดพลาด ' + errors.length + ' รายการ — จะไม่บันทึก</div>';
+                        subInfo += '<div class="text-danger small mb-2">ข้อผิดพลาดเชิง validation ' + errors.length + ' รายการ — จะไม่บันทึกรายการเหล่านั้น</div>';
                     }
 
                     Swal.fire({
@@ -1306,7 +1349,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                         focusCancel: true,
                     }).then(function(res) {
                         if (res.isConfirmed) {
-                            doRealImport(items, warehouseId, categoryId);
+                            doRealImport(items, warehouseId, categoryId, skipped);
                         }
                     });
                 })
@@ -1354,7 +1397,8 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             });
         }
 
-        function doRealImport(items, warehouseId, categoryId) {
+        function doRealImport(items, warehouseId, categoryId, skipped) {
+            skipped = skipped || [];
             Swal.fire({
                 title: 'กำลังบันทึก...',
                 allowOutsideClick: false,
@@ -1366,6 +1410,8 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                         Swal.fire({$msgError}, result.message || {$msgImportError}, 'error');
                         return;
                     }
+                    // ใส่ skipped เข้าไปใน result ก่อนแสดง summary
+                    result.skipped = skipped;
                     showImportSummary(result);
                 })
                 .catch(function(error) {
@@ -1378,14 +1424,19 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             var createdInfo = result.created_info || (result.created || []).map(function(c) { return { item_code: c, item_name: '-' }; });
             var reusedInfo  = result.reused_info  || (result.reused  || []).map(function(c) { return { item_code: c, item_name: '-' }; });
             var errors      = result.errors || [];
+            var skipped     = result.skipped || [];
 
-            // Summary stats inline (ไม่ใช่ tile card รก ๆ)
+            var totalProcessed = added.length + skipped.length + errors.length;
+            var hasIssues = skipped.length > 0 || errors.length > 0;
+
+            // Summary stats inline
             var stats =
                 '<div class="d-flex flex-wrap gap-4 justify-content-center mb-3 pb-3 border-bottom text-center">' +
-                    statCell('นำเข้าทั้งหมด', added.length, 'text-body') +
+                    statCell('รายการในไฟล์', totalProcessed, 'text-body') +
+                    statCell('นำเข้าสำเร็จ', added.length, 'text-success') +
                     (createdInfo.length > 0 ? statCell('สร้างใหม่', createdInfo.length, 'text-success') : '') +
                     (reusedInfo.length  > 0 ? statCell('ใช้เดิม',   reusedInfo.length,  'text-primary') : '') +
-                    (errors.length      > 0 ? statCell('ข้อผิดพลาด', errors.length,    'text-danger') : '') +
+                    (hasIssues          ? statCell('ไม่ผ่าน', skipped.length + errors.length, 'text-danger') : '') +
                 '</div>';
 
             var sections = '';
@@ -1395,21 +1446,49 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             if (reusedInfo.length > 0) {
                 sections += buildSection('ใช้วัสดุเดิม (match จากชื่อ) — ' + reusedInfo.length + ' รายการ', reusedInfo, 'primary');
             }
-            if (errors.length > 0) {
+
+            // รายการที่ไม่ผ่าน: skipped (ฝั่ง client) + errors (ฝั่ง server)
+            // เปิด default ถ้ามี — เพราะ user ต้องเห็นว่า "อะไรหายไป"
+            if (skipped.length > 0 || errors.length > 0) {
+                var rows = '';
+                skipped.forEach(function(s) {
+                    rows += '<tr>' +
+                        '<td class="text-muted small">' + s.row + '</td>' +
+                        '<td>' + escapeHtml(s.name || '-') + '</td>' +
+                        '<td class="small text-warning">' + escapeHtml(s.reason) + '</td>' +
+                    '</tr>';
+                });
+                errors.forEach(function(e) {
+                    rows += '<tr>' +
+                        '<td class="text-muted small">—</td>' +
+                        '<td colspan="2" class="small text-danger">' + escapeHtml(e) + '</td>' +
+                    '</tr>';
+                });
                 sections +=
-                    '<details class="mb-2">' +
-                        '<summary class="fw-semibold text-danger mb-2" style="cursor:pointer;">ข้อผิดพลาด ' + errors.length + ' รายการ</summary>' +
-                        '<ul class="small text-danger ps-3 mb-0">' +
-                            errors.map(function(e) { return '<li>' + escapeHtml(e) + '</li>'; }).join('') +
-                        '</ul>' +
+                    '<details class="mb-2" open>' +
+                        '<summary class="fw-semibold text-danger mb-2" style="cursor:pointer;">' +
+                            'รายการที่ไม่ผ่าน — ' + (skipped.length + errors.length) + ' แถว (กดเพื่อย่อ)' +
+                        '</summary>' +
+                        '<div class="border rounded" style="max-height: 240px; overflow-y: auto;">' +
+                            '<table class="table table-sm table-hover mb-0 align-middle">' +
+                                '<thead class="table-light position-sticky top-0">' +
+                                    '<tr>' +
+                                        '<th style="width: 60px;">แถวที่</th>' +
+                                        '<th>ชื่อ / รหัส</th>' +
+                                        '<th>เหตุผล</th>' +
+                                    '</tr>' +
+                                '</thead>' +
+                                '<tbody>' + rows + '</tbody>' +
+                            '</table>' +
+                        '</div>' +
                     '</details>';
             }
 
             Swal.fire({
-                icon: 'success',
-                title: 'นำเข้าสำเร็จ ' + added.length + ' รายการ',
+                icon: added.length > 0 && !hasIssues ? 'success' : (added.length > 0 ? 'warning' : 'error'),
+                title: 'นำเข้าสำเร็จ ' + added.length + ' / ' + totalProcessed + ' รายการ',
                 html: '<div class="text-start" style="font-size:0.875rem;">' + stats + sections + '</div>',
-                width: 640,
+                width: 720,
                 confirmButtonText: 'ตกลง',
             }).then(function() {
                 addCSVItemsToTable(result.items || []);
