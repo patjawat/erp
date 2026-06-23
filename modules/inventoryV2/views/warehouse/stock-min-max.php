@@ -33,6 +33,9 @@ $this->params['breadcrumbs'][] = $warehouse->warehouse_name;
 
 $saveUrl = Url::to(['/inventory-v2/warehouse/save-setting']);
 $deleteUrl = Url::to(['/inventory-v2/warehouse/delete-setting']);
+$saveBatchUrl = Url::to(['/inventory-v2/warehouse/save-setting-batch']);
+$copyPreviewUrl = Url::to(['/inventory-v2/warehouse/copy-from-preview']);
+$copyUrl = Url::to(['/inventory-v2/warehouse/copy-from']);
 $csrf = Yii::$app->request->csrfToken;
 ?>
 
@@ -187,10 +190,22 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         รายการวัสดุ
                         <span class="badge rounded-pill text-bg-secondary fw-normal"><?= number_format($pagination->totalCount) ?></span>
                     </h6>
-                    <small class="text-muted d-none d-md-inline">
-                        <i class="bi bi-info-circle me-1"></i>
-                        กรอกแล้วกด Tab/Enter → บันทึกอัตโนมัติ
-                    </small>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <!-- Mode toggle: ทีละช่อง autosave vs เลือกหลายรายการ manual -->
+                        <div class="btn-group btn-group-sm smm-mode-toggle" role="group" aria-label="โหมดบันทึก">
+                            <input type="radio" class="btn-check" name="smm-mode" id="smm-mode-auto" value="auto" checked>
+                            <label class="btn btn-outline-primary" for="smm-mode-auto" title="กรอกแล้ว Tab/Enter บันทึกทันที">
+                                <i class="bi bi-lightning-charge me-1"></i>ทีละช่อง · autosave
+                            </label>
+                            <input type="radio" class="btn-check" name="smm-mode" id="smm-mode-batch" value="batch">
+                            <label class="btn btn-outline-primary" for="smm-mode-batch" title="ติ๊กเลือกแล้วบันทึกพร้อมกัน">
+                                <i class="bi bi-check2-square me-1"></i>เลือกหลายรายการ
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-copy-from-modal" title="คัดลอกค่า Min/Max จากคลังอื่น">
+                            <i class="bi bi-clipboard-plus me-1"></i>คัดลอกจากคลัง
+                        </button>
+                    </div>
                 </div>
 
                 <div class="p-0">
@@ -228,6 +243,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                             <table class="table table-hover align-middle mb-0 stock-min-max-table">
                                 <thead class="table-light">
                                     <tr>
+                                        <th class="smm-batch-only text-center" style="width: 40px;">
+                                            <input type="checkbox" class="form-check-input js-select-all" aria-label="เลือกทั้งหน้า">
+                                        </th>
                                         <th style="width: 50px;">#</th>
                                         <th>รหัส / ชื่อวัสดุ</th>
                                         <th style="width: 80px;">หน่วย</th>
@@ -253,6 +271,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                         $rowNumber = $pagination->offset + $i + 1;
                                     ?>
                                         <tr data-item-code="<?= Html::encode($r['item_code']) ?>" data-balance="<?= htmlspecialchars((string) (float) ($r['balance_qty'] ?? 0)) ?>" class="<?= $isConfigured ? 'is-configured' : 'is-unconfigured' ?> smm-row-<?= $st['key'] ?>">
+                                            <td class="smm-batch-only text-center">
+                                                <input type="checkbox" class="form-check-input js-row-select" aria-label="เลือกรายการ">
+                                            </td>
                                             <td class="text-muted small"><?= $rowNumber ?></td>
                                             <td>
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
@@ -317,6 +338,12 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                     $st = $resolveStatus($isConfigured, $balance, $isConfigured ? (float) $minQty : 0, $isConfigured ? (float) $maxQty : 0);
                                 ?>
                                     <div class="list-group-item py-3 smm-row-<?= $st['key'] ?>" data-item-code="<?= Html::encode($r['item_code']) ?>" data-balance="<?= htmlspecialchars((string) (float) ($r['balance_qty'] ?? 0)) ?>">
+                                        <div class="smm-batch-only mb-2">
+                                            <label class="d-flex align-items-center gap-2 small text-muted">
+                                                <input type="checkbox" class="form-check-input js-row-select">
+                                                เลือกรายการนี้
+                                            </label>
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <div class="flex-grow-1 pe-2">
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
@@ -382,6 +409,109 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         ]) ?>
                     </div>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky bulk toolbar (โผล่เฉพาะ batch mode + มี row เลือก) -->
+<div id="smm-bulk-toolbar" class="smm-bulk-toolbar d-none" role="region" aria-label="ตั้งค่าหลายรายการพร้อมกัน">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-2 px-md-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge text-bg-primary rounded-pill" id="smm-selected-count">0</span>
+                <span class="text-muted small">รายการที่เลือก</span>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 ms-2" id="smm-clear-selection">
+                    ยกเลิกเลือก
+                </button>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="d-flex align-items-center gap-1">
+                    <label class="small text-muted mb-0" for="smm-bulk-min">Min</label>
+                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-min"
+                        class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
+                    <label class="small text-muted mb-0 ms-2" for="smm-bulk-max">Max</label>
+                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-max"
+                        class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
+                    <button type="button" class="btn btn-outline-secondary btn-sm ms-1" id="smm-bulk-apply" title="ใส่ค่า Min/Max ที่กรอกให้ทุกรายการที่เลือก">
+                        <i class="bi bi-arrow-down-square"></i> ใส่
+                    </button>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm fw-semibold" id="smm-bulk-save">
+                    <i class="bi bi-check2-circle me-1"></i>บันทึก (<span class="js-count">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy from warehouse modal -->
+<div class="modal fade" id="smm-copy-from-modal" tabindex="-1" aria-labelledby="smm-copy-from-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="smm-copy-from-title">
+                    <i class="bi bi-clipboard-plus text-primary me-1"></i>
+                    คัดลอกค่า Min/Max จากคลังอื่น
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="smm-copy-source" class="form-label small fw-semibold">คลังต้นทาง</label>
+                    <select id="smm-copy-source" class="form-select">
+                        <option value="">-- เลือกคลังต้นทาง --</option>
+                        <?php foreach ($groups as $type => $list): ?>
+                            <?php if (empty($list)) continue; ?>
+                            <optgroup label="<?= Html::encode($groupLabels[$type]) ?>">
+                                <?php foreach ($list as $w): ?>
+                                    <?php if ($w->id === $warehouse->id) continue; // ไม่ให้เลือกตัวเอง ?>
+                                    <option value="<?= (int) $w->id ?>"><?= Html::encode($w->warehouse_name) ?></option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div id="smm-copy-preview" class="d-none alert alert-light border small mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">มีในคลังต้นทาง (ที่ตรงประเภทคลังนี้):</span>
+                        <strong id="smm-copy-source-total">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">ยังไม่ตั้งในคลังนี้:</span>
+                        <strong id="smm-copy-target-new" class="text-success">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">ตั้งแล้วในคลังนี้:</span>
+                        <strong id="smm-copy-target-existing" class="text-warning">0</strong>
+                    </div>
+                </div>
+                <div id="smm-copy-empty" class="d-none alert alert-warning small mb-3">
+                    คลังต้นทางไม่มีรายการที่จะคัดลอกได้
+                </div>
+
+                <fieldset id="smm-copy-mode-group" class="mb-2">
+                    <legend class="form-label small fw-semibold">วิธีคัดลอก</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="smm-copy-mode" id="smm-copy-mode-skip" value="skip" checked>
+                        <label class="form-check-label small" for="smm-copy-mode-skip">
+                            คัดลอกเฉพาะที่ยังไม่ตั้งในคลังนี้ <span class="text-muted">(แนะนำ)</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="smm-copy-mode" id="smm-copy-mode-overwrite" value="overwrite">
+                        <label class="form-check-label small" for="smm-copy-mode-overwrite">
+                            คัดลอกทั้งหมด ทับค่าเดิม
+                        </label>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="smm-copy-confirm" disabled>
+                    <i class="bi bi-clipboard-check me-1"></i>คัดลอก
+                </button>
             </div>
         </div>
     </div>
@@ -482,6 +612,40 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
 .stock-min-max-mobile .list-group-item.smm-row-below { border-left: 3px solid var(--bs-danger); }
 .stock-min-max-mobile .list-group-item.smm-row-above { border-left: 3px solid var(--bs-warning); }
 
+/* ===== Mode toggle + batch UI ===== */
+.smm-mode-toggle .btn { font-size: 0.8rem; }
+.smm-mode-toggle .btn-check:checked + .btn { font-weight: 600; }
+/* Batch-only UI ซ่อนใน auto mode (default) */
+body:not(.smm-mode-batch) .smm-batch-only { display: none !important; }
+.stock-min-max-page.smm-mode-batch .stock-min-max-table tr.is-selected,
+.stock-min-max-page.smm-mode-batch .stock-min-max-mobile .list-group-item.is-selected {
+    background-color: rgba(13, 110, 253, 0.04);
+}
+/* Dirty (มีการเปลี่ยน ยังไม่ save) — เห็นทั้งสอง mode */
+.stock-min-max-table tr.is-dirty input,
+.stock-min-max-mobile .list-group-item.is-dirty input {
+    background-color: rgba(255, 193, 7, 0.06);
+    border-color: rgba(255, 193, 7, 0.5);
+}
+
+/* ===== Sticky bulk toolbar ===== */
+.smm-bulk-toolbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: #fff;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 -0.4rem 1rem rgba(0,0,0,0.06);
+    z-index: 1040;
+    animation: smmBulkSlide 200ms ease-out;
+}
+@keyframes smmBulkSlide {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+.smm-bulk-toolbar .form-control { font-variant-numeric: tabular-nums; }
+/* Spacing เพิ่มเมื่อ toolbar แสดงผล กันไม่ให้ทับ content ล่าง */
+body.smm-bulk-visible { padding-bottom: 90px; }
+
 /* ===== Touch targets (mobile a11y) ===== */
 @media (max-width: 575.98px) {
     .stock-min-max-page .smm-tile { padding: 0.75rem; }
@@ -502,10 +666,14 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
 <?php
 $js = <<<JS
 (function () {
-    const SAVE_URL   = '{$saveUrl}';
-    const DELETE_URL = '{$deleteUrl}';
-    const CSRF       = '{$csrf}';
-    const WAREHOUSE_ID = {$warehouse->id};
+    const SAVE_URL         = '{$saveUrl}';
+    const DELETE_URL       = '{$deleteUrl}';
+    const SAVE_BATCH_URL   = '{$saveBatchUrl}';
+    const COPY_PREVIEW_URL = '{$copyPreviewUrl}';
+    const COPY_URL         = '{$copyUrl}';
+    const CSRF             = '{$csrf}';
+    const WAREHOUSE_ID     = {$warehouse->id};
+    const MODE_PREF_KEY    = 'inv2:smm:mode';
 
     function showToast(message, type) {
         const container = document.getElementById('smm-toast-container');
@@ -665,11 +833,58 @@ $js = <<<JS
             .catch(() => showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error'));
     }
 
+    // ===== Mode state =====
+    function currentMode() {
+        const checked = document.querySelector('input[name="smm-mode"]:checked');
+        return checked ? checked.value : 'auto';
+    }
+
+    function applyModeUI(mode) {
+        document.body.classList.toggle('smm-mode-batch', mode === 'batch');
+        const page = document.querySelector('.stock-min-max-page');
+        if (page) page.classList.toggle('smm-mode-batch', mode === 'batch');
+        if (mode !== 'batch') {
+            clearSelection();
+        }
+        try { localStorage.setItem(MODE_PREF_KEY, mode); } catch (e) {}
+    }
+
+    // restore mode pref
+    try {
+        const saved = localStorage.getItem(MODE_PREF_KEY);
+        if (saved === 'batch') {
+            const r = document.getElementById('smm-mode-batch');
+            if (r) { r.checked = true; }
+        }
+    } catch (e) {}
+    applyModeUI(currentMode());
+
+    document.querySelectorAll('input[name="smm-mode"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            const next = this.value;
+            if (next !== 'batch' && hasDirtyRows()) {
+                if (!confirm('มีการเปลี่ยนแปลงที่ยังไม่บันทึก จะออกจากโหมดเลือกหลายรายการหรือไม่?')) {
+                    document.getElementById('smm-mode-batch').checked = true;
+                    return;
+                }
+                clearDirty();
+            }
+            applyModeUI(next);
+        });
+    });
+
+    // ===== Input change (autosave or mark dirty) =====
     document.addEventListener('change', function (e) {
         const t = e.target;
         if (!t.classList || (!t.classList.contains('js-min-input') && !t.classList.contains('js-max-input'))) return;
         const row = getRow(t);
-        if (row) trySave(row);
+        if (!row) return;
+        if (currentMode() === 'batch') {
+            row.classList.add('is-dirty');
+            updateBulkSaveCount();
+        } else {
+            trySave(row);
+        }
     });
 
     document.addEventListener('keydown', function (e) {
@@ -678,7 +893,13 @@ $js = <<<JS
         if (!t.classList || (!t.classList.contains('js-min-input') && !t.classList.contains('js-max-input'))) return;
         e.preventDefault();
         const row = getRow(t);
-        if (row) trySave(row);
+        if (!row) return;
+        if (currentMode() === 'batch') {
+            row.classList.add('is-dirty');
+            updateBulkSaveCount();
+        } else {
+            trySave(row);
+        }
     });
 
     document.addEventListener('click', function (e) {
@@ -691,8 +912,257 @@ $js = <<<JS
     const switcher = document.getElementById('smm-warehouse-switcher');
     if (switcher) {
         switcher.addEventListener('change', function () {
+            if (hasDirtyRows() && !confirm('มีการเปลี่ยนแปลงที่ยังไม่บันทึก จะเปลี่ยนคลังหรือไม่?')) {
+                this.value = window.location.pathname + window.location.search;
+                return;
+            }
             const target = this.value;
             if (target) window.location.href = target;
+        });
+    }
+
+    // ===== Row selection (batch mode) =====
+    function allRows() {
+        return Array.from(document.querySelectorAll('tr[data-item-code], .list-group-item[data-item-code]'));
+    }
+    function selectedRows() {
+        return allRows().filter(function (r) {
+            const cb = r.querySelector('.js-row-select');
+            return cb && cb.checked;
+        });
+    }
+    function dirtyRows() {
+        return allRows().filter(function (r) { return r.classList.contains('is-dirty'); });
+    }
+    function hasDirtyRows() { return dirtyRows().length > 0; }
+    function clearDirty() {
+        dirtyRows().forEach(function (r) { r.classList.remove('is-dirty'); });
+    }
+    function clearSelection() {
+        document.querySelectorAll('.js-row-select, .js-select-all').forEach(function (cb) { cb.checked = false; });
+        allRows().forEach(function (r) { r.classList.remove('is-selected'); });
+        updateBulkUI();
+    }
+    function updateBulkUI() {
+        const sel = selectedRows().length;
+        const dirty = dirtyRows().length;
+        const showToolbar = currentMode() === 'batch' && (sel > 0 || dirty > 0);
+        const toolbar = document.getElementById('smm-bulk-toolbar');
+        if (toolbar) toolbar.classList.toggle('d-none', !showToolbar);
+        document.body.classList.toggle('smm-bulk-visible', showToolbar);
+        const countEl = document.getElementById('smm-selected-count');
+        if (countEl) countEl.textContent = sel;
+        updateBulkSaveCount();
+    }
+    function updateBulkSaveCount() {
+        // กำหนดให้ "บันทึก (N)" นับเฉพาะ row ที่ dirty (มีการเปลี่ยน) — ตรงเจตนาผู้ใช้
+        const n = dirtyRows().length;
+        document.querySelectorAll('#smm-bulk-save .js-count').forEach(function (el) { el.textContent = n; });
+        const btn = document.getElementById('smm-bulk-save');
+        if (btn) btn.disabled = (n === 0);
+        // toggle toolbar by combined state
+        const sel = selectedRows().length;
+        const showToolbar = currentMode() === 'batch' && (sel > 0 || n > 0);
+        const toolbar = document.getElementById('smm-bulk-toolbar');
+        if (toolbar) toolbar.classList.toggle('d-none', !showToolbar);
+        document.body.classList.toggle('smm-bulk-visible', showToolbar);
+    }
+
+    document.addEventListener('change', function (e) {
+        const t = e.target;
+        if (t.classList && t.classList.contains('js-row-select')) {
+            const row = getRow(t);
+            if (row) row.classList.toggle('is-selected', t.checked);
+            updateBulkUI();
+        } else if (t.classList && t.classList.contains('js-select-all')) {
+            const checked = t.checked;
+            document.querySelectorAll('.js-row-select').forEach(function (cb) {
+                cb.checked = checked;
+                const row = getRow(cb);
+                if (row) row.classList.toggle('is-selected', checked);
+            });
+            updateBulkUI();
+        }
+    });
+
+    // ===== Bulk apply (set Min/Max ให้ทุกรายการที่เลือก) =====
+    const bulkApplyBtn = document.getElementById('smm-bulk-apply');
+    if (bulkApplyBtn) {
+        bulkApplyBtn.addEventListener('click', function () {
+            const min = document.getElementById('smm-bulk-min').value.trim();
+            const max = document.getElementById('smm-bulk-max').value.trim();
+            if (min === '' && max === '') {
+                showToast('กรอก Min หรือ Max ก่อน', 'error');
+                return;
+            }
+            const targets = selectedRows();
+            if (targets.length === 0) {
+                showToast('ยังไม่ได้เลือกรายการ', 'error');
+                return;
+            }
+            targets.forEach(function (row) {
+                const { min: minI, max: maxI } = getInputs(row);
+                if (min !== '' && minI) minI.value = min;
+                if (max !== '' && maxI) maxI.value = max;
+                row.classList.add('is-dirty');
+            });
+            updateBulkSaveCount();
+        });
+    }
+
+    // ===== Bulk save (POST batch) =====
+    const bulkSaveBtn = document.getElementById('smm-bulk-save');
+    if (bulkSaveBtn) {
+        bulkSaveBtn.addEventListener('click', function () {
+            const rows = dirtyRows();
+            if (rows.length === 0) return;
+            const items = [];
+            for (const row of rows) {
+                const { min, max } = getInputs(row);
+                if (!min || !max) continue;
+                const minVal = min.value.trim(), maxVal = max.value.trim();
+                if (minVal === '' || maxVal === '') {
+                    showToast('มีค่า Min/Max ที่ว่าง — บันทึกไม่ได้', 'error');
+                    return;
+                }
+                if (Number(maxVal) < Number(minVal)) {
+                    showToast('max ต้องไม่น้อยกว่า min', 'error');
+                    return;
+                }
+                items.push({
+                    item_code: row.getAttribute('data-item-code'),
+                    min_qty: minVal,
+                    max_qty: maxVal,
+                });
+            }
+            if (items.length === 0) return;
+
+            bulkSaveBtn.disabled = true;
+            const form = new FormData();
+            form.append('warehouse_id', String(WAREHOUSE_ID));
+            form.append('_csrf', CSRF);
+            // ส่งเป็น items[i][item_code] ฯลฯ ให้ Yii parse เป็น array ได้
+            items.forEach(function (it, i) {
+                form.append('items[' + i + '][item_code]', it.item_code);
+                form.append('items[' + i + '][min_qty]',  it.min_qty);
+                form.append('items[' + i + '][max_qty]',  it.max_qty);
+            });
+            fetch(SAVE_BATCH_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    bulkSaveBtn.disabled = false;
+                    if (data.status === 'success') {
+                        showToast('บันทึกแล้ว ' + (data.saved || items.length) + ' รายการ', 'success');
+                        // refresh page เพื่อให้ตาราง + summary + balance อัปเดต
+                        setTimeout(function () { window.location.reload(); }, 600);
+                    } else {
+                        showToast(data.message || 'บันทึกไม่สำเร็จ', 'error');
+                        if (data.failed && Array.isArray(data.failed)) {
+                            data.failed.slice(0, 3).forEach(function (f) {
+                                showToast(f.item_code + ': ' + f.message, 'error');
+                            });
+                        }
+                    }
+                })
+                .catch(() => {
+                    bulkSaveBtn.disabled = false;
+                    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                });
+        });
+    }
+
+    const clearBtn = document.getElementById('smm-clear-selection');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            if (hasDirtyRows() && !confirm('ยังมีการเปลี่ยนแปลงที่ยังไม่บันทึก ยกเลิกการเลือก?')) return;
+            clearSelection();
+            clearDirty();
+            allRows().forEach(function (r) {
+                // restore values from data attribute? — ทำง่ายๆ: refresh page
+            });
+            updateBulkUI();
+        });
+    }
+
+    // ก่อน leave page ที่มี dirty rows
+    window.addEventListener('beforeunload', function (e) {
+        if (currentMode() === 'batch' && hasDirtyRows()) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // ===== Copy from warehouse modal =====
+    const copySourceSelect = document.getElementById('smm-copy-source');
+    const copyConfirmBtn = document.getElementById('smm-copy-confirm');
+    const copyPreviewBox = document.getElementById('smm-copy-preview');
+    const copyEmptyBox = document.getElementById('smm-copy-empty');
+
+    function loadCopyPreview(sourceId) {
+        copyPreviewBox.classList.add('d-none');
+        copyEmptyBox.classList.add('d-none');
+        copyConfirmBtn.disabled = true;
+        if (!sourceId) return;
+        const u = COPY_PREVIEW_URL + '?source_warehouse_id=' + encodeURIComponent(sourceId)
+            + '&target_warehouse_id=' + WAREHOUSE_ID;
+        fetch(u, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    showToast(data.message || 'โหลด preview ไม่สำเร็จ', 'error');
+                    return;
+                }
+                if ((data.source_total || 0) === 0) {
+                    copyEmptyBox.classList.remove('d-none');
+                    return;
+                }
+                document.getElementById('smm-copy-source-total').textContent = data.source_total;
+                document.getElementById('smm-copy-target-new').textContent = data.target_new;
+                document.getElementById('smm-copy-target-existing').textContent = data.target_existing;
+                copyPreviewBox.classList.remove('d-none');
+                copyConfirmBtn.disabled = false;
+            })
+            .catch(() => showToast('เชื่อมต่อไม่ได้', 'error'));
+    }
+
+    if (copySourceSelect) {
+        copySourceSelect.addEventListener('change', function () { loadCopyPreview(this.value); });
+    }
+
+    if (copyConfirmBtn) {
+        copyConfirmBtn.addEventListener('click', function () {
+            const sourceId = copySourceSelect.value;
+            if (!sourceId) return;
+            const mode = (document.querySelector('input[name="smm-copy-mode"]:checked') || {}).value || 'skip';
+            copyConfirmBtn.disabled = true;
+            const form = new FormData();
+            form.append('source_warehouse_id', sourceId);
+            form.append('target_warehouse_id', String(WAREHOUSE_ID));
+            form.append('mode', mode);
+            form.append('_csrf', CSRF);
+            fetch(COPY_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    copyConfirmBtn.disabled = false;
+                    if (data.status === 'success') {
+                        showToast('คัดลอกแล้ว ' + (data.copied || 0) + ' รายการ (ข้าม ' + (data.skipped || 0) + ')', 'success');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('smm-copy-from-modal'));
+                        if (modal) modal.hide();
+                        setTimeout(function () { window.location.reload(); }, 700);
+                    } else {
+                        showToast(data.message || 'คัดลอกไม่สำเร็จ', 'error');
+                    }
+                })
+                .catch(() => {
+                    copyConfirmBtn.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
         });
     }
 })();

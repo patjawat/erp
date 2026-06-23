@@ -31,6 +31,8 @@ class WarehouseController extends Controller
                     'delete' => ['POST'],
                     'save-setting' => ['POST'],
                     'delete-setting' => ['POST'],
+                    'save-setting-batch' => ['POST'],
+                    'copy-from' => ['POST'],
                 ],
             ],
         ]);
@@ -355,6 +357,224 @@ class WarehouseController extends Controller
     }
 
     /**
+     * AJAX: บันทึก min/max หลายรายการพร้อมกัน (manual batch mode)
+     * Payload: warehouse_id, items[] = [{item_code, min_qty, max_qty}]
+     * จำกัด 500 รายการต่อ request (กัน DB heavy + timeout)
+     */
+    public function actionSaveSettingBatch()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouseId = (int) $this->request->post('warehouse_id');
+        $items = $this->request->post('items', []);
+        if (!is_array($items)) {
+            $items = [];
+        }
+
+        if (!$warehouseId) {
+            return ['status' => 'error', 'message' => 'ข้อมูลไม่ครบ (warehouse_id)'];
+        }
+        if (empty($items)) {
+            return ['status' => 'error', 'message' => 'ไม่มีรายการให้บันทึก'];
+        }
+        if (count($items) > 500) {
+            return ['status' => 'error', 'message' => 'บันทึกได้ครั้งละไม่เกิน 500 รายการ'];
+        }
+
+        $warehouse = Warehouse::findOne(['id' => $warehouseId]);
+        if (!$warehouse) {
+            return ['status' => 'error', 'message' => 'ไม่พบคลังนี้'];
+        }
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $saved = 0;
+        $failed = [];
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($items as $i => $item) {
+                $itemCode = trim((string) ($item['item_code'] ?? ''));
+                $minQty = $item['min_qty'] ?? null;
+                $maxQty = $item['max_qty'] ?? null;
+
+                if ($itemCode === '' || $minQty === null || $minQty === '' || $maxQty === null || $maxQty === '') {
+                    $failed[] = ['item_code' => $itemCode, 'message' => 'ข้อมูลไม่ครบ'];
+                    continue;
+                }
+                if ((float) $minQty < 0 || (float) $maxQty < 0) {
+                    $failed[] = ['item_code' => $itemCode, 'message' => 'ค่าต้องไม่ติดลบ'];
+                    continue;
+                }
+                if ((float) $maxQty < (float) $minQty) {
+                    $failed[] = ['item_code' => $itemCode, 'message' => 'max ต้องไม่น้อยกว่า min'];
+                    continue;
+                }
+
+                $model = StockItemWarehouseSetting::find()
+                    ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId])
+                    ->one();
+                if (!$model) {
+                    $model = new StockItemWarehouseSetting();
+                    $model->item_code = $itemCode;
+                    $model->warehouse_id = $warehouseId;
+                }
+                $model->min_qty = (float) $minQty;
+                $model->max_qty = (float) $maxQty;
+                $model->is_active = 1;
+
+                if (!$model->save()) {
+                    $failed[] = ['item_code' => $itemCode, 'message' => implode(' / ', $model->getFirstErrors())];
+                    continue;
+                }
+                $saved++;
+            }
+
+            if (!empty($failed)) {
+                $transaction->rollBack();
+                return [
+                    'status' => 'error',
+                    'message' => 'พบข้อผิดพลาด ' . count($failed) . ' รายการ — ยกเลิกการบันทึกทั้งหมด',
+                    'failed' => $failed,
+                ];
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+
+        return ['status' => 'success', 'saved' => $saved];
+    }
+
+    /**
+     * AJAX (GET): preview จำนวนรายการที่จะคัดลอกจากคลังต้นทาง
+     */
+    public function actionCopyFromPreview()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $sourceId = (int) $this->request->get('source_warehouse_id');
+        $targetId = (int) $this->request->get('target_warehouse_id');
+
+        $err = $this->validateCopyPair($sourceId, $targetId);
+        if ($err) return ['status' => 'error', 'message' => $err];
+
+        $target = Warehouse::findOne(['id' => $targetId]);
+        $counts = $this->computeCopyCounts($sourceId, $target);
+
+        return ['status' => 'success'] + $counts;
+    }
+
+    /**
+     * AJAX (POST): คัดลอก min/max setting จากคลังต้นทาง → ปลายทาง
+     * mode: skip (default) | overwrite | skip_manual
+     */
+    public function actionCopyFrom()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $sourceId = (int) $this->request->post('source_warehouse_id');
+        $targetId = (int) $this->request->post('target_warehouse_id');
+        $mode = (string) $this->request->post('mode', 'skip');
+
+        if (!in_array($mode, ['skip', 'overwrite', 'skip_manual'], true)) {
+            return ['status' => 'error', 'message' => 'mode ไม่ถูกต้อง'];
+        }
+        $err = $this->validateCopyPair($sourceId, $targetId);
+        if ($err) return ['status' => 'error', 'message' => $err];
+
+        $target = Warehouse::findOne(['id' => $targetId]);
+        $allowedTypes = $target->getAllowedItemTypeCodes();
+
+        // ดึง source settings เฉพาะ item ที่ active ใน categorise และ target รับเข้าได้
+        $sourceQuery = (new Query())
+            ->select(['s.item_code', 's.min_qty', 's.max_qty', 's.note'])
+            ->from(['s' => '{{%stock_item_warehouse_setting}}'])
+            ->innerJoin(['i' => '{{%categorise}}'],
+                'i.code = s.item_code AND i.name = :n AND i.group_id = :g AND i.active = 1',
+                [':n' => 'asset_item', ':g' => 'MATER'])
+            ->where(['s.warehouse_id' => $sourceId]);
+        if (!empty($allowedTypes)) {
+            $sourceQuery->andWhere(['i.category_id' => $allowedTypes]);
+        }
+        $sourceRows = $sourceQuery->all();
+
+        if (empty($sourceRows)) {
+            return ['status' => 'success', 'copied' => 0, 'skipped' => 0, 'message' => 'ไม่มีรายการให้คัดลอก'];
+        }
+
+        // ดึง existing setting ของ target → map ไว้เพื่อ check
+        $existing = (new Query())
+            ->select(['item_code', 'id', 'note'])
+            ->from('{{%stock_item_warehouse_setting}}')
+            ->where(['warehouse_id' => $targetId])
+            ->indexBy('item_code')
+            ->all();
+
+        $userId = Yii::$app->user->id;
+        $now = time();
+        $copied = 0;
+        $skipped = 0;
+        $batch = [];
+
+        foreach ($sourceRows as $r) {
+            $code = $r['item_code'];
+            $hasExisting = isset($existing[$code]);
+
+            if ($hasExisting) {
+                if ($mode === 'skip') {
+                    $skipped++;
+                    continue;
+                }
+                if ($mode === 'skip_manual' && ($existing[$code]['note'] ?? null) === '__manual') {
+                    $skipped++;
+                    continue;
+                }
+                // overwrite หรือ skip_manual ที่ไม่ใช่ manual → อัปเดต
+                Yii::$app->db->createCommand()->update(
+                    'stock_item_warehouse_setting',
+                    [
+                        'min_qty' => (float) $r['min_qty'],
+                        'max_qty' => (float) $r['max_qty'],
+                        'is_active' => 1,
+                        'updated_at' => $now,
+                        'updated_by' => $userId,
+                    ],
+                    ['id' => $existing[$code]['id']]
+                )->execute();
+                $copied++;
+            } else {
+                // INSERT
+                $batch[] = [
+                    $code, $targetId,
+                    (float) $r['min_qty'], (float) $r['max_qty'],
+                    1, $now, $now, $userId, $userId,
+                ];
+                $copied++;
+            }
+        }
+
+        if (!empty($batch)) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                Yii::$app->db->createCommand()->batchInsert(
+                    'stock_item_warehouse_setting',
+                    ['item_code', 'warehouse_id', 'min_qty', 'max_qty', 'is_active',
+                     'created_at', 'updated_at', 'created_by', 'updated_by'],
+                    $batch
+                )->execute();
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                return ['status' => 'error', 'message' => 'INSERT ล้มเหลว: ' . $e->getMessage()];
+            }
+        }
+
+        return ['status' => 'success', 'copied' => $copied, 'skipped' => $skipped];
+    }
+
+    /**
      * AJAX: ลบการตั้งค่า min/max ของ item + warehouse
      */
     public function actionDeleteSetting()
@@ -376,6 +596,94 @@ class WarehouseController extends Controller
         }
         $model->delete();
         return ['status' => 'success'];
+    }
+
+    /**
+     * เช็คว่า user ปัจจุบันเข้าถึงคลังนี้ได้หรือไม่
+     * inventory role = เห็นทุกคลัง / officer = เห็นคลังที่ตนรับผิดชอบเท่านั้น
+     */
+    protected function canAccessWarehouse(Warehouse $warehouse)
+    {
+        if (Warehouse::currentUserHasInventoryRole()) {
+            return true;
+        }
+        $accessible = Warehouse::findAllAccessibleWarehouses();
+        foreach ($accessible as $w) {
+            if ((int) $w->id === (int) $warehouse->id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validate source/target pair สำหรับ copy-from
+     * return error message หรือ null ถ้าผ่าน
+     */
+    protected function validateCopyPair($sourceId, $targetId)
+    {
+        if (!$sourceId || !$targetId) {
+            return 'ข้อมูลไม่ครบ (source/target)';
+        }
+        if ($sourceId === $targetId) {
+            return 'คลังต้นทางและปลายทางต้องไม่ใช่คลังเดียวกัน';
+        }
+        $source = Warehouse::findOne(['id' => $sourceId]);
+        $target = Warehouse::findOne(['id' => $targetId]);
+        if (!$source || !$target) {
+            return 'ไม่พบคลัง';
+        }
+        if (!$this->canAccessWarehouse($source) || !$this->canAccessWarehouse($target)) {
+            return 'ไม่มีสิทธิ์เข้าถึงคลัง';
+        }
+        return null;
+    }
+
+    /**
+     * นับ preview สำหรับ copy-from modal:
+     *   source_total = settings ในคลังต้นทาง (ถูกกรองด้วย allowed types ของ target)
+     *   target_existing = item_code ที่ตั้งใน target แล้ว (intersect source)
+     *   target_new = item_code ที่ยังไม่ได้ตั้งใน target (intersect source)
+     *   target_manual = ที่ตั้งใน target พร้อม note='__manual' (intersect source)
+     */
+    protected function computeCopyCounts($sourceId, Warehouse $target)
+    {
+        $allowedTypes = $target->getAllowedItemTypeCodes();
+
+        $sourceQ = (new Query())
+            ->select(['s.item_code'])
+            ->from(['s' => '{{%stock_item_warehouse_setting}}'])
+            ->innerJoin(['i' => '{{%categorise}}'],
+                'i.code = s.item_code AND i.name = :n AND i.group_id = :g AND i.active = 1',
+                [':n' => 'asset_item', ':g' => 'MATER'])
+            ->where(['s.warehouse_id' => $sourceId]);
+        if (!empty($allowedTypes)) {
+            $sourceQ->andWhere(['i.category_id' => $allowedTypes]);
+        }
+        $sourceCodes = $sourceQ->column();
+        $sourceTotal = count($sourceCodes);
+
+        if ($sourceTotal === 0) {
+            return ['source_total' => 0, 'target_existing' => 0, 'target_new' => 0, 'target_manual' => 0];
+        }
+
+        $existingRows = (new Query())
+            ->select(['item_code', 'note'])
+            ->from('{{%stock_item_warehouse_setting}}')
+            ->where(['warehouse_id' => $target->id, 'item_code' => $sourceCodes])
+            ->all();
+        $existing = 0;
+        $manual = 0;
+        foreach ($existingRows as $r) {
+            $existing++;
+            if (($r['note'] ?? null) === '__manual') $manual++;
+        }
+        return [
+            'source_total' => $sourceTotal,
+            'target_existing' => $existing,
+            'target_new' => $sourceTotal - $existing,
+            'target_manual' => $manual,
+        ];
     }
 
     protected function setWarehouse($id)
