@@ -1217,8 +1217,8 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             }
 
             Swal.fire({
-                title: 'กำลังประมวลผล...',
-                text: 'กำลังตรวจสอบและสร้างพัสดุจาก CSV',
+                title: 'กำลังตรวจสอบไฟล์...',
+                text: 'กำลังวิเคราะห์รายการในไฟล์ CSV',
                 allowOutsideClick: false,
                 didOpen: function() { Swal.showLoading(); }
             });
@@ -1260,20 +1260,83 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         }
 
         function importCSVItems(items, warehouseId, categoryId) {
+            // 2-step flow: dry_run preview → confirm dialog (ถ้ามีการสร้างใหม่) → real import
+            callImport(items, warehouseId, categoryId, true)
+                .then(function(preview) {
+                    if (!preview || !preview.success) {
+                        Swal.fire({$msgError}, (preview && preview.message) || {$msgImportError}, 'error');
+                        return;
+                    }
+                    var wouldCreate = preview.would_create || [];
+                    var wouldReuse  = preview.would_reuse || [];
+                    var errors      = preview.errors || [];
+
+                    // ถ้าไม่มีการสร้างใหม่เลย → ไม่ต้อง confirm ทำได้เลย
+                    if (wouldCreate.length === 0) {
+                        return doRealImport(items, warehouseId, categoryId);
+                    }
+
+                    // มีการสร้างใหม่ → แสดง confirm พร้อมรายชื่อ
+                    var listHtml = wouldCreate.map(function(it) {
+                        var code = it.item_code ? ' <code class="text-muted small">(' + escapeHtml(it.item_code) + ')</code>' : '';
+                        return '<li class="text-start">' + escapeHtml(it.item_name) + code + '</li>';
+                    }).join('');
+
+                    var subInfo = '';
+                    if (wouldReuse.length > 0) {
+                        subInfo += '<div class="text-muted small mb-2">ใช้วัสดุเดิม ' + wouldReuse.length + ' รายการ (ไม่สร้างซ้ำ)</div>';
+                    }
+                    if (errors.length > 0) {
+                        subInfo += '<div class="text-danger small mb-2">มีข้อผิดพลาด ' + errors.length + ' รายการ — จะไม่บันทึก</div>';
+                    }
+
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'จะสร้างวัสดุใหม่ ' + wouldCreate.length + ' รายการ',
+                        html:
+                            '<div class="text-start">' +
+                                subInfo +
+                                '<div class="fw-semibold mb-1">รายชื่อที่จะสร้าง:</div>' +
+                                '<ul class="mb-0 small" style="max-height: 240px; overflow-y: auto;">' + listHtml + '</ul>' +
+                            '</div>',
+                        showCancelButton: true,
+                        confirmButtonText: 'ยืนยันบันทึก',
+                        cancelButtonText: 'ยกเลิก',
+                        confirmButtonColor: '#0d6efd',
+                        focusCancel: true,
+                    }).then(function(res) {
+                        if (res.isConfirmed) {
+                            doRealImport(items, warehouseId, categoryId);
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    Swal.fire({$msgError}, ({$msgConnectionError}) + (error.message || ''), 'error');
+                });
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+            });
+        }
+
+        function callImport(items, warehouseId, categoryId, dryRun) {
             var importUrl = {$importCsvUrlJson};
-            fetch(importUrl, {
+            return fetch(importUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items: items,
                     warehouse_id: warehouseId,
-                    category_id: categoryId
+                    category_id: categoryId,
+                    dry_run: !!dryRun
                 })
             })
             .then(function(response) {
                 var ct = response.headers.get('Content-Type') || '';
                 if (!ct.includes('application/json')) {
-                    return response.text().then(function(text) {
+                    return response.text().then(function() {
                         var msg = response.status === 403 || response.status === 401
                             ? 'ไม่มีสิทธิ์หรือกรุณาเข้าสู่ระบบใหม่'
                             : 'เซิร์ฟเวอร์ส่งกลับข้อมูลที่ไม่ใช่ JSON (รหัส ' + response.status + ')';
@@ -1288,9 +1351,21 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     });
                 }
                 return response.json();
-            })
-            .then(function(result) {
-                if (result.success) {
+            });
+        }
+
+        function doRealImport(items, warehouseId, categoryId) {
+            Swal.fire({
+                title: 'กำลังบันทึก...',
+                allowOutsideClick: false,
+                didOpen: function() { Swal.showLoading(); }
+            });
+            return callImport(items, warehouseId, categoryId, false)
+                .then(function(result) {
+                    if (!result.success) {
+                        Swal.fire({$msgError}, result.message || {$msgImportError}, 'error');
+                        return;
+                    }
                     var added = result.added || [];
                     var created = result.created || [];
                     var reused = result.reused || [];
@@ -1301,7 +1376,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                         message += "\\nใช้วัสดุเดิม " + reused.length + " รายการ (match จากชื่อ): " + reused.join(", ");
                     }
                     if (created.length > 0) {
-                        message += "\\nสร้างพัสดุใหม่ " + created.length + " รายการ: " + created.join(", ");
+                        message += "\\nสร้างวัสดุใหม่ " + created.length + " รายการ: " + created.join(", ");
                     }
                     if (errors.length > 0) {
                         message += "\\nมีข้อผิดพลาด " + errors.length + " รายการ";
@@ -1310,13 +1385,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     Swal.fire({$msgImportSuccess}, message, 'success').then(function() {
                         addCSVItemsToTable(result.items || []);
                     });
-                } else {
-                    Swal.fire({$msgError}, result.message || {$msgImportError}, 'error');
-                }
-            })
-            .catch(function(error) {
-                Swal.fire({$msgError}, ({$msgConnectionError}) + (error.message || ''), 'error');
-            });
+                })
+                .catch(function(error) {
+                    Swal.fire({$msgError}, ({$msgConnectionError}) + (error.message || ''), 'error');
+                });
         }
 
         function ymdToThaiDisplay(ymd) {

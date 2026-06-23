@@ -732,6 +732,8 @@ class StockItemController extends Controller
         $items = $data['items'] ?? [];
         $warehouseId = $data['warehouse_id'] ?? null;
         $categoryId = $data['category_id'] ?? null;
+        // dry_run = true → คำนวณว่าจะเกิดอะไร แต่ไม่ save จริง (ใช้สำหรับ confirm dialog)
+        $dryRun = !empty($data['dry_run']);
 
         if (empty($items) || !$warehouseId || !$categoryId) {
             return ['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน'];
@@ -739,11 +741,12 @@ class StockItemController extends Controller
 
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
-        
+
         try {
             $added = [];
-            $created = [];   // สร้าง master ใหม่
-            $reused = [];    // match จากชื่อ — ใช้ master เดิม
+            $created = [];      // สร้าง master ใหม่ จริง (real run)
+            $createdInfo = [];  // [{item_code, item_name}] สำหรับ preview / confirm
+            $reused = [];       // match จากชื่อ — ใช้ master เดิม
             $errors = [];
             $resultItems = [];
 
@@ -815,12 +818,15 @@ class StockItemController extends Controller
                     if (!empty($unitName)) {
                         $stockItem->data_json = ['unit_name' => $unitName]; // array → Yii encode
                     }
-                    if (!$stockItem->save()) {
-                        $errors[] = $itemCode . ': ' . implode(', ', $stockItem->getFirstErrors());
-                        continue;
+                    if (!$dryRun) {
+                        if (!$stockItem->save()) {
+                            $errors[] = $itemCode . ': ' . implode(', ', $stockItem->getFirstErrors());
+                            continue;
+                        }
                     }
                     $created[] = $itemCode;
-                    // ใส่ใน nameIndex เพื่อไม่ให้ดับเบิลถ้าแถวถัดมาในไฟล์ชื่อเดียวกัน
+                    $createdInfo[] = ['item_code' => $itemCode, 'item_name' => $itemName];
+                    // ใส่ใน nameIndex เพื่อไม่ให้ดับเบิลถ้าแถวถัดมาในไฟล์ชื่อเดียวกัน (ใช้ทั้ง dry_run + real)
                     if ($nameIndex !== null) {
                         $nameIndex[mb_strtolower(trim($itemName), 'UTF-8')] = $stockItem;
                     }
@@ -840,18 +846,20 @@ class StockItemController extends Controller
                             $stockItem->data_json = $dataJson;
                             $stockItem->updated_at = time();
                             $stockItem->updated_by = Yii::$app->user->id ?? null;
-                            $stockItem->save(false);
+                            if (!$dryRun) {
+                                $stockItem->save(false);
+                            }
                         }
                     }
                 }
 
-                // สร้างหน่วยนับใน categorise ถ้ายังไม่มี
-                if (!empty($unitName)) {
+                // สร้างหน่วยนับใน categorise ถ้ายังไม่มี (skip ใน dry_run)
+                if (!$dryRun && !empty($unitName)) {
                     $unit = Categorise::findOne([
                         'name' => 'unit',
                         'title' => $unitName
                     ]);
-                    
+
                     if (!$unit) {
                         $unit = new Categorise();
                         $unit->name = 'unit';
@@ -885,12 +893,26 @@ class StockItemController extends Controller
                 ];
             }
 
+            // dry_run = preview only — rollback ทุกอย่าง ไม่บันทึกจริง
+            if ($dryRun) {
+                $transaction->rollBack();
+                return [
+                    'success' => true,
+                    'dry_run' => true,
+                    'would_create' => $createdInfo,   // [{item_code, item_name}, ...]
+                    'would_reuse' => $reused,         // [item_code, ...]
+                    'would_total' => count($added),
+                    'errors' => $errors,
+                ];
+            }
+
             $transaction->commit();
 
             return [
                 'success' => true,
                 'added' => $added,
                 'created' => $created,
+                'created_info' => $createdInfo,
                 'reused' => $reused,
                 'errors' => $errors,
                 'items' => $resultItems
