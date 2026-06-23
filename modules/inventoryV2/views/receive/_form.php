@@ -133,7 +133,8 @@ foreach ($items as $it) {
                 <div class="col-12">
                     <small class="text-muted">ต้องเลือกคลังสินค้า แล้วเลือกประเภทวัสดุก่อน จึงจะค้นหาและเพิ่มรายการพัสดุได้ (รับเข้าได้เฉพาะประเภทที่คลังกำหนด)</small>
                     <br>
-                    <small class="text-info"><i class="bi bi-info-circle"></i> รูปแบบ CSV: รหัสวัสดุ,ชื่อวัสดุ,หน่วยนับ,จำนวน,ราคา/หน่วย,Lot Number,วันหมดอายุ (YYYY-MM-DD)</small>
+                    <small class="text-info d-block"><i class="bi bi-info-circle"></i> รูปแบบ CSV: รหัสวัสดุ,ชื่อวัสดุ,หน่วยนับ,จำนวน,ราคา/หน่วย,Lot Number,วันหมดอายุ (YYYY-MM-DD)</small>
+                    <small class="text-success d-block mt-1"><i class="bi bi-stars"></i> หากเว้น <strong>รหัสวัสดุ</strong> ว่างไว้ ระบบจะสร้างวัสดุใหม่ในหมวดที่เลือกให้อัตโนมัติ (ถ้าชื่อตรงกับวัสดุเดิม จะใช้ตัวเดิม)</small>
                 </div>
             </div>
             <div class="row mb-2">
@@ -1158,9 +1159,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         $('#btnDownloadCsvTemplate').on('click', function() {
             var headers = {$csvHeadersJson};
             var headerLine = headers.join(',');
-            var exampleRow1 = 'ITEM001,ตัวอย่างพัสดุ 1,ชิ้น,10,5.50,LOT2024001,2025-12-31';
-            var exampleRow2 = 'ITEM002,ตัวอย่างพัสดุ 2,กล่อง,5,120.00,LOT2024002,2026-06-30';
-            var csvContent = '\\uFEFF' + headerLine + '\\n' + exampleRow1 + '\\n' + exampleRow2;
+            var exampleRow1 = 'ITEM001,ตัวอย่างวัสดุ 1,ชิ้น,10,5.50,LOT2024001,2025-12-31';
+            var exampleRow2 = 'ITEM002,ตัวอย่างวัสดุ 2,กล่อง,5,120.00,LOT2024002,2026-06-30';
+            var exampleRow3 = ',ตัวอย่างวัสดุ 3 (รหัสว่าง สร้างใหม่อัตโนมัติ),ขวด,3,80.00,LOT2024003,2026-12-31';
+            var csvContent = '\\uFEFF' + headerLine + '\\n' + exampleRow1 + '\\n' + exampleRow2 + '\\n' + exampleRow3;
             var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             var link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -1234,7 +1236,9 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 var lotNumber = values[5] || '';
                 var expiryDate = values[6] || '';
 
-                if (!itemCode || !itemName || qty <= 0) continue;
+                // อนุญาตให้รหัสว่างได้ (server จะ match จากชื่อ / สร้างใหม่ให้)
+                // แต่ "ชื่อ" และ "จำนวน" ยังจำเป็น
+                if (!itemName || qty <= 0) continue;
 
                 items.push({
                     item_code: itemCode,
@@ -1289,9 +1293,13 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 if (result.success) {
                     var added = result.added || [];
                     var created = result.created || [];
+                    var reused = result.reused || [];
                     var errors = result.errors || [];
-                    
+
                     var message = 'นำเข้าสำเร็จ ' + added.length + ' รายการ';
+                    if (reused.length > 0) {
+                        message += "\\nใช้วัสดุเดิม " + reused.length + " รายการ (match จากชื่อ): " + reused.join(", ");
+                    }
                     if (created.length > 0) {
                         message += "\\nสร้างพัสดุใหม่ " + created.length + " รายการ: " + created.join(", ");
                     }

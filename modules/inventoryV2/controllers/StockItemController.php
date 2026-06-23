@@ -742,9 +742,26 @@ class StockItemController extends Controller
         
         try {
             $added = [];
-            $created = [];
+            $created = [];   // สร้าง master ใหม่
+            $reused = [];    // match จากชื่อ — ใช้ master เดิม
             $errors = [];
             $resultItems = [];
+
+            // โหลด candidates สำหรับ name-match dedup ครั้งเดียว (ต่อหมวด) — ลด query ใน loop
+            $nameIndex = null;
+            $loadNameIndex = function () use ($categoryId, &$nameIndex) {
+                if ($nameIndex !== null) return;
+                $nameIndex = [];
+                $cands = StockItem::find()
+                    ->where(['category_id' => $categoryId, 'active' => 1])
+                    ->all();
+                foreach ($cands as $c) {
+                    $norm = mb_strtolower(trim((string) $c->item_name), 'UTF-8');
+                    if ($norm !== '' && !isset($nameIndex[$norm])) {
+                        $nameIndex[$norm] = $c;
+                    }
+                }
+            };
 
             foreach ($items as $itemData) {
                 $itemCode = trim($itemData['item_code'] ?? '');
@@ -755,16 +772,39 @@ class StockItemController extends Controller
                 $lotNumber = trim($itemData['lot_number'] ?? '');
                 $expiryDate = trim($itemData['expiry_date'] ?? '');
 
-                if (empty($itemCode) || empty($itemName) || $qty <= 0) {
-                    $errors[] = $itemCode . ': ข้อมูลไม่ครบถ้วน';
+                // validation ใหม่: ต้องมีชื่อ + qty>0 (รหัสว่างได้ — ระบบจะสร้าง/หาให้)
+                if (empty($itemName) || $qty <= 0) {
+                    $errors[] = ($itemCode ?: '(ไม่ระบุรหัส)') . ': ข้อมูลไม่ครบถ้วน — ต้องมีชื่อวัสดุและจำนวน>0';
                     continue;
                 }
 
-                // เช็คว่าพัสดุมีในระบบหรือไม่
-                $stockItem = StockItem::findOne(['item_code' => $itemCode]);
-                
+                $stockItem = null;
+                $matchedFromName = false;
+
+                if ($itemCode !== '') {
+                    // มี code → flow เดิม
+                    $stockItem = StockItem::findOne(['item_code' => $itemCode]);
+                } else {
+                    // ไม่มี code → match ด้วยชื่อ (case-insensitive + trim) ในหมวดเดียวกัน
+                    $loadNameIndex();
+                    $norm = mb_strtolower(trim($itemName), 'UTF-8');
+                    if (isset($nameIndex[$norm])) {
+                        $stockItem = $nameIndex[$norm];
+                        $itemCode = $stockItem->item_code;
+                        $matchedFromName = true;
+                        $reused[] = $itemCode;
+                    } else {
+                        // generate code ใหม่ตาม pattern {categoryId}-{seq}
+                        $itemCode = StockItem::nextCode($categoryId);
+                        if (empty($itemCode)) {
+                            $errors[] = '(ชื่อ: ' . $itemName . '): สร้างรหัสอัตโนมัติไม่สำเร็จ';
+                            continue;
+                        }
+                    }
+                }
+
                 if (!$stockItem) {
-                    // สร้างพัสดุใหม่
+                    // สร้าง master ใหม่ (ทั้งกรณี user ใส่ code เองที่ยังไม่มี + กรณี auto-gen)
                     $stockItem = new StockItem();
                     $stockItem->item_code = $itemCode;
                     $stockItem->item_name = $itemName;
@@ -772,20 +812,20 @@ class StockItemController extends Controller
                     $stockItem->is_active = 1;
                     $stockItem->created_at = time();
                     $stockItem->created_by = Yii::$app->user->id ?? null;
-                    
-                    // บันทึกหน่วยนับใน data_json ถ้ามี
                     if (!empty($unitName)) {
-                        $stockItem->data_json = json_encode(['unit_name' => $unitName]);
+                        $stockItem->data_json = ['unit_name' => $unitName]; // array → Yii encode
                     }
-                    
                     if (!$stockItem->save()) {
                         $errors[] = $itemCode . ': ' . implode(', ', $stockItem->getFirstErrors());
                         continue;
                     }
                     $created[] = $itemCode;
-                } else {
-                    // อัปเดตหน่วยนับถ้ามีและยังไม่มีใน data_json
-                    // data_json อาจมาเป็น array (Yii json column auto-cast) หรือ string ขึ้นกับ driver/version
+                    // ใส่ใน nameIndex เพื่อไม่ให้ดับเบิลถ้าแถวถัดมาในไฟล์ชื่อเดียวกัน
+                    if ($nameIndex !== null) {
+                        $nameIndex[mb_strtolower(trim($itemName), 'UTF-8')] = $stockItem;
+                    }
+                } elseif (!$matchedFromName) {
+                    // มี code อยู่แล้วใน DB → update หน่วยถ้ายังไม่มี (ไม่แตะ master ถ้า match จากชื่อ)
                     if (!empty($unitName)) {
                         $raw = $stockItem->data_json;
                         if (is_array($raw)) {
@@ -797,7 +837,7 @@ class StockItemController extends Controller
                         }
                         if (empty($dataJson['unit_name'])) {
                             $dataJson['unit_name'] = $unitName;
-                            $stockItem->data_json = $dataJson; // ส่ง array ให้ Yii encode เอง (รองรับ JSON column)
+                            $stockItem->data_json = $dataJson;
                             $stockItem->updated_at = time();
                             $stockItem->updated_by = Yii::$app->user->id ?? null;
                             $stockItem->save(false);
@@ -851,6 +891,7 @@ class StockItemController extends Controller
                 'success' => true,
                 'added' => $added,
                 'created' => $created,
+                'reused' => $reused,
                 'errors' => $errors,
                 'items' => $resultItems
             ];
