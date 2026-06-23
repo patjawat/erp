@@ -1241,8 +1241,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 var itemCode = values[0] || '';
                 var itemName = values[1] || '';
                 var unitName = values[2] || '';
-                var qty = parseFloat(values[3]) || 0;
-                var unitPrice = parseFloat(values[4]) || 0;
+                // toNumber: strip , (หลักพัน) + trim ก่อน parseFloat
+                // กัน edge case ที่ normalize หลุด เช่น "1,739.00" ที่อยู่ใน quote
+                var qty = toNumber(values[3]);
+                var unitPrice = toNumber(values[4]);
                 var lotNumber = values[5] || '';
                 var expiryDate = values[6] || '';
 
@@ -1274,6 +1276,16 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             }
 
             importCSVItems(items, warehouseId, categoryId, skipped);
+        }
+
+        // แปลงค่า cell เป็นตัวเลข — ทน comma หลักพัน + space ปะปน
+        // เช่น "1,739.00" → 1739, " 12.5 " → 12.5, "" → 0, "abc" → 0
+        function toNumber(s) {
+            if (s == null) return 0;
+            var clean = String(s).replace(/,/g, '').trim();
+            if (clean === '') return 0;
+            var n = parseFloat(clean);
+            return isFinite(n) ? n : 0;
         }
 
         // ตัด comma หลักพันออกจากตัวเลข (Excel export ชอบใส่)
