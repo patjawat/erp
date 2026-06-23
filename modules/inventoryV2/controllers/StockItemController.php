@@ -662,18 +662,17 @@ class StockItemController extends Controller
             ];
         }
 
-        // สร้างพัสดุใหม่
+        // สร้างวัสดุใหม่
+        // หมายเหตุ: categorise table ไม่มี created_at/updated_at/_by → ไม่ set
         $stockItem = new StockItem();
         $stockItem->item_code = $itemCode;
         $stockItem->item_name = $itemName;
         $stockItem->category_id = $categoryId;
         $stockItem->is_active = 1;
-        $stockItem->created_at = time();
-        $stockItem->created_by = Yii::$app->user->id ?? null;
-        
-        // บันทึกหน่วยนับใน data_json ถ้ามี
+
+        // บันทึกหน่วยนับใน data_json ถ้ามี (ส่ง array ให้ Yii encode เอง)
         if (!empty($unitName)) {
-            $stockItem->data_json = json_encode(['unit_name' => $unitName]);
+            $stockItem->data_json = ['unit_name' => $unitName];
         }
         
         if (!$stockItem->save()) {
@@ -810,13 +809,13 @@ class StockItemController extends Controller
 
                 if (!$stockItem) {
                     // สร้าง master ใหม่ (ทั้งกรณี user ใส่ code เองที่ยังไม่มี + กรณี auto-gen)
+                    // หมายเหตุ: categorise table ไม่มี created_at/updated_at/_by columns
+                    // จึงไม่ set ฟิลด์เหล่านี้ (เคยตั้ง → error "Setting unknown property")
                     $stockItem = new StockItem();
                     $stockItem->item_code = $itemCode;
                     $stockItem->item_name = $itemName;
                     $stockItem->category_id = $categoryId;
                     $stockItem->is_active = 1;
-                    $stockItem->created_at = time();
-                    $stockItem->created_by = Yii::$app->user->id ?? null;
                     if (!empty($unitName)) {
                         $stockItem->data_json = ['unit_name' => $unitName]; // array → Yii encode
                     }
@@ -846,8 +845,7 @@ class StockItemController extends Controller
                         if (empty($dataJson['unit_name'])) {
                             $dataJson['unit_name'] = $unitName;
                             $stockItem->data_json = $dataJson;
-                            $stockItem->updated_at = time();
-                            $stockItem->updated_by = Yii::$app->user->id ?? null;
+                            // categorise ไม่มี updated_at/_by — ไม่ set
                             if (!$dryRun) {
                                 $stockItem->save(false);
                             }
