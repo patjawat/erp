@@ -133,7 +133,7 @@ foreach ($items as $it) {
                 <div class="col-12">
                     <small class="text-muted">ต้องเลือกคลังสินค้า แล้วเลือกประเภทวัสดุก่อน จึงจะค้นหาและเพิ่มรายการพัสดุได้ (รับเข้าได้เฉพาะประเภทที่คลังกำหนด)</small>
                     <br>
-                    <small class="text-info"><i class="bi bi-info-circle"></i> รูปแบบ CSV: รหัสพัสดุ,ชื่อพัสดุ,หน่วยนับ,จำนวน,ราคา/หน่วย,Lot Number,วันหมดอายุ (YYYY-MM-DD)</small>
+                    <small class="text-info"><i class="bi bi-info-circle"></i> รูปแบบ CSV: รหัสวัสดุ,ชื่อวัสดุ,หน่วยนับ,จำนวน,ราคา/หน่วย,Lot Number,วันหมดอายุ (YYYY-MM-DD)</small>
                 </div>
             </div>
             <div class="row mb-2">
@@ -310,7 +310,12 @@ $initialWarehouseIdJson = json_encode($initialWarehouseId);
 $initialItemTypeJson = json_encode($initialItemType);
 $msgChangeWarehouse = json_encode('การเปลี่ยนคลังสินค้าจะล้างรายการที่เลือกไว้ทั้งหมด ต้องการดำเนินการหรือไม่?');
 $msgChangeItemType = json_encode('การเปลี่ยนประเภทวัสดุจะล้างรายการที่เลือกไว้ทั้งหมด ต้องการดำเนินการหรือไม่?');
-$csvHeadersJson = json_encode(['รหัสพัสดุ', 'ชื่อพัสดุ', 'หน่วยนับ', 'จำนวน', 'ราคา/หน่วย', 'Lot Number', 'วันหมดอายุ']);
+$csvHeadersJson = json_encode(['รหัสวัสดุ', 'ชื่อวัสดุ', 'หน่วยนับ', 'จำนวน', 'ราคา/หน่วย', 'Lot Number', 'วันหมดอายุ']);
+// alias สำหรับ backward compat — ไฟล์เก่าที่ใช้ "พัสดุ" ยัง upload ได้
+$csvHeaderAliasesJson = json_encode([
+    'รหัสพัสดุ' => 'รหัสวัสดุ',
+    'ชื่อพัสดุ' => 'ชื่อวัสดุ',
+]);
 $msgCsvInvalid = json_encode('ไฟล์ CSV ไม่ถูกต้อง (ต้องมีหัวตาราง)');
 $msgCsvFormatError = json_encode('รูปแบบ CSV ไม่ถูกต้อง\nต้องมีหัวตาราง: ');
 $msgSelectWarehouse = json_encode('กรุณาเลือกคลังสินค้าก่อน');
@@ -1190,10 +1195,14 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 return;
             }
 
-            var headers = lines[0].split(',').map(function(h) { return h.trim(); });
+            var headerAliases = {$csvHeaderAliasesJson};
+            var headers = lines[0].split(',').map(function(h) {
+                var t = h.trim();
+                return headerAliases[t] || t; // normalize alias เช่น "รหัสพัสดุ" → "รหัสวัสดุ"
+            });
             var expectedHeaders = {$csvHeadersJson};
             var hasAllHeaders = expectedHeaders.every(function(h) { return headers.indexOf(h) !== -1; });
-            
+
             if (!hasAllHeaders) {
                 Swal.fire({$msgError}, {$msgCsvFormatError} + expectedHeaders.join(', '), 'error');
                 return;
