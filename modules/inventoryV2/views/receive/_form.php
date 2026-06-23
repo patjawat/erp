@@ -1366,29 +1366,84 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                         Swal.fire({$msgError}, result.message || {$msgImportError}, 'error');
                         return;
                     }
-                    var added = result.added || [];
-                    var created = result.created || [];
-                    var reused = result.reused || [];
-                    var errors = result.errors || [];
-
-                    var message = 'นำเข้าสำเร็จ ' + added.length + ' รายการ';
-                    if (reused.length > 0) {
-                        message += "\\nใช้วัสดุเดิม " + reused.length + " รายการ (match จากชื่อ): " + reused.join(", ");
-                    }
-                    if (created.length > 0) {
-                        message += "\\nสร้างวัสดุใหม่ " + created.length + " รายการ: " + created.join(", ");
-                    }
-                    if (errors.length > 0) {
-                        message += "\\nมีข้อผิดพลาด " + errors.length + " รายการ";
-                    }
-
-                    Swal.fire({$msgImportSuccess}, message, 'success').then(function() {
-                        addCSVItemsToTable(result.items || []);
-                    });
+                    showImportSummary(result);
                 })
                 .catch(function(error) {
                     Swal.fire({$msgError}, ({$msgConnectionError}) + (error.message || ''), 'error');
                 });
+        }
+
+        function showImportSummary(result) {
+            var added       = result.added || [];
+            var createdInfo = result.created_info || (result.created || []).map(function(c) { return { item_code: c, item_name: '-' }; });
+            var reusedInfo  = result.reused_info  || (result.reused  || []).map(function(c) { return { item_code: c, item_name: '-' }; });
+            var errors      = result.errors || [];
+
+            // Summary stats inline (ไม่ใช่ tile card รก ๆ)
+            var stats =
+                '<div class="d-flex flex-wrap gap-4 justify-content-center mb-3 pb-3 border-bottom text-center">' +
+                    statCell('นำเข้าทั้งหมด', added.length, 'text-body') +
+                    (createdInfo.length > 0 ? statCell('สร้างใหม่', createdInfo.length, 'text-success') : '') +
+                    (reusedInfo.length  > 0 ? statCell('ใช้เดิม',   reusedInfo.length,  'text-primary') : '') +
+                    (errors.length      > 0 ? statCell('ข้อผิดพลาด', errors.length,    'text-danger') : '') +
+                '</div>';
+
+            var sections = '';
+            if (createdInfo.length > 0) {
+                sections += buildSection('สร้างวัสดุใหม่ (' + createdInfo.length + ')', createdInfo, 'success');
+            }
+            if (reusedInfo.length > 0) {
+                sections += buildSection('ใช้วัสดุเดิม (match จากชื่อ) — ' + reusedInfo.length + ' รายการ', reusedInfo, 'primary');
+            }
+            if (errors.length > 0) {
+                sections +=
+                    '<details class="mb-2">' +
+                        '<summary class="fw-semibold text-danger mb-2" style="cursor:pointer;">ข้อผิดพลาด ' + errors.length + ' รายการ</summary>' +
+                        '<ul class="small text-danger ps-3 mb-0">' +
+                            errors.map(function(e) { return '<li>' + escapeHtml(e) + '</li>'; }).join('') +
+                        '</ul>' +
+                    '</details>';
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'นำเข้าสำเร็จ ' + added.length + ' รายการ',
+                html: '<div class="text-start" style="font-size:0.875rem;">' + stats + sections + '</div>',
+                width: 640,
+                confirmButtonText: 'ตกลง',
+            }).then(function() {
+                addCSVItemsToTable(result.items || []);
+            });
+        }
+
+        function statCell(label, value, toneCls) {
+            return '<div>' +
+                '<div class="text-muted small mb-1">' + label + '</div>' +
+                '<div class="fs-5 fw-semibold ' + toneCls + '">' + Number(value).toLocaleString() + '</div>' +
+            '</div>';
+        }
+
+        function buildSection(title, rows, tone) {
+            var body = rows.map(function(r) {
+                return '<tr>' +
+                    '<td class="font-monospace text-muted" style="white-space:nowrap;">' + escapeHtml(r.item_code) + '</td>' +
+                    '<td>' + escapeHtml(r.item_name) + '</td>' +
+                '</tr>';
+            }).join('');
+            return '<div class="mb-3">' +
+                '<div class="fw-semibold mb-2 text-' + tone + '">' + escapeHtml(title) + '</div>' +
+                '<div class="border rounded" style="max-height: 240px; overflow-y: auto;">' +
+                    '<table class="table table-sm table-hover mb-0 align-middle">' +
+                        '<thead class="table-light position-sticky top-0">' +
+                            '<tr>' +
+                                '<th style="width: 110px;">รหัส</th>' +
+                                '<th>ชื่อวัสดุ</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' + body + '</tbody>' +
+                    '</table>' +
+                '</div>' +
+            '</div>';
         }
 
         function ymdToThaiDisplay(ymd) {

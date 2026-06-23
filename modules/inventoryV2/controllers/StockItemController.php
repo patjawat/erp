@@ -746,7 +746,8 @@ class StockItemController extends Controller
             $added = [];
             $created = [];      // สร้าง master ใหม่ จริง (real run)
             $createdInfo = [];  // [{item_code, item_name}] สำหรับ preview / confirm
-            $reused = [];       // match จากชื่อ — ใช้ master เดิม
+            $reused = [];       // match จากชื่อ — ใช้ master เดิม (codes only, backward compat)
+            $reusedInfo = [];   // [{item_code, item_name}] ใช้สำหรับตารางสรุป
             $errors = [];
             $resultItems = [];
 
@@ -796,6 +797,7 @@ class StockItemController extends Controller
                         $itemCode = $stockItem->item_code;
                         $matchedFromName = true;
                         $reused[] = $itemCode;
+                        $reusedInfo[] = ['item_code' => $itemCode, 'item_name' => (string) $stockItem->item_name];
                     } else {
                         // generate code ใหม่ตาม pattern {categoryId}-{seq}
                         $itemCode = StockItem::nextCode($categoryId);
@@ -901,6 +903,7 @@ class StockItemController extends Controller
                     'dry_run' => true,
                     'would_create' => $createdInfo,   // [{item_code, item_name}, ...]
                     'would_reuse' => $reused,         // [item_code, ...]
+                    'would_reuse_info' => $reusedInfo,
                     'would_total' => count($added),
                     'errors' => $errors,
                 ];
@@ -914,6 +917,7 @@ class StockItemController extends Controller
                 'created' => $created,
                 'created_info' => $createdInfo,
                 'reused' => $reused,
+                'reused_info' => $reusedInfo,
                 'errors' => $errors,
                 'items' => $resultItems
             ];
