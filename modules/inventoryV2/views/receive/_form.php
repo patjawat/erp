@@ -815,13 +815,24 @@ $js = <<< JS
                 var form = $('#receipt-form');
                 Swal.fire({
                     title: 'บันทึกฉบับร่าง?',
-                    text: 'บันทึกไว้ก่อน ยังไม่รับเข้าคลังและยอดสต็อกไม่เปลี่ยนแปลง',
-                    icon: 'question',
+                    html: '<div class="text-start small">'
+                        + '<div class="alert alert-warning border-0 mb-3" style="background:#fff8e1">'
+                        + '<strong><i class="bi bi-exclamation-triangle-fill me-1"></i> ฉบับร่างยังไม่เข้าคลัง</strong>'
+                        + '<ul class="mb-0 mt-2 ps-3">'
+                        + '<li>ยอดคงเหลือคลัง<strong>ไม่อัปเดต</strong></li>'
+                        + '<li>ใบเบิกที่ใช้วัสดุนี้จะ<strong>จ่ายไม่ได้</strong> (FIFO มองไม่เห็น)</li>'
+                        + '<li>ต้องเปิดเอกสารกลับมาแล้วกด<strong>"บันทึกและรับเข้าคลัง"</strong> เพื่อ commit เข้า stock จริง</li>'
+                        + '</ul></div>'
+                        + '<div class="text-muted">ใช้เมื่อยังเก็บข้อมูลไม่ครบ — ถ้าพร้อมแล้วให้กด <em>"ยกเลิก"</em> และกด <em>"บันทึกและรับเข้าคลัง"</em> แทน</div>'
+                        + '</div>',
+                    icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#6c757d',
                     cancelButtonColor: '#0d6efd',
-                    confirmButtonText: 'ใช่, บันทึกฉบับร่าง',
+                    confirmButtonText: 'บันทึกเป็นร่าง (ยังไม่เข้าคลัง)',
                     cancelButtonText: {$msgCancel},
+                    reverseButtons: true,
+                    width: 560,
                 }).then(function(result) {
                     if (result.isConfirmed) {
                         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });

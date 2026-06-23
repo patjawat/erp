@@ -148,9 +148,14 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
     <div class="card border-0 shadow-sm" style="min-height: 400px;">
         <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการวัสดุที่ต้องการเบิก</h6>
-            <button type="button" id="add-item" class="btn btn-light btn-sm">
-                <i class="bi bi-plus-lg me-1"></i> เพิ่มวัสดุ
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" id="load-below-max" class="btn btn-outline-light btn-sm" disabled title="เลือกคลังที่จ่ายและหน่วยงานที่รับให้ครบก่อน">
+                    <i class="bi bi-magic me-1"></i> เติมรายการตามเกณฑ์ Min/Max
+                </button>
+                <button type="button" id="add-item" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i> เพิ่มวัสดุ
+                </button>
+            </div>
         </div>
             <table class="table table-hover align-middle mb-0" id="item-table">
                 <thead class="table-light">
@@ -166,11 +171,21 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
                 if (!$model->isNewRecord && !empty($model->stockDetails)) {
                     foreach ($model->stockDetails as $i => $detail) {
                         $unitText = $detail->item ? ($detail->item->getUnitName() ?: '-') : '-';
+                        $itemImg = $detail->item && method_exists($detail->item, 'ShowImg') ? $detail->item->ShowImg() : '';
+                        $itemName = $detail->item->item_name ?? $detail->item_code;
                         echo '<tr class="item-row">';
-                        echo '<td><input type="hidden" name="StockDetail[' . $i . '][item_code]" value="' . Html::encode($detail->item_code) . '"><span class="item-name-display">' . Html::encode($detail->item->item_name ?? $detail->item_code) . '</span></td>';
+                        echo '<td><input type="hidden" name="StockDetail[' . $i . '][item_code]" value="' . Html::encode($detail->item_code) . '">';
+                        echo '<div class="d-flex align-items-center gap-2">';
+                        if ($itemImg) {
+                            echo '<img src="' . Html::encode($itemImg) . '" alt="" class="rounded border item-thumb" onerror="this.style.display=\'none\'">';
+                        }
+                        echo '<div class="min-w-0">';
+                        echo '<div class="item-name-display fw-semibold">' . Html::encode($itemName) . '</div>';
+                        echo '<div class="small text-muted font-monospace">' . Html::encode($detail->item_code) . '</div>';
+                        echo '</div></div></td>';
                         echo '<td class="text-center unit-cell text-muted small align-middle">' . Html::encode($unitText) . '</td>';
                         echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
-                        echo '<td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button></td>';
+                        echo '<td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>';
                         echo '</tr>';
                     }
                 }
@@ -204,10 +219,19 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
     </tbody>
     <tbody id="row-template-prefilled">
         <tr class="item-row">
-            <td><input type="hidden" name="StockDetail[{idx}][item_code]" value="{item_code}"><span class="item-name-display">{item_name}</span></td>
+            <td>
+                <input type="hidden" name="StockDetail[{idx}][item_code]" value="{item_code}">
+                <div class="d-flex align-items-center gap-2">
+                    {item_img_html}
+                    <div class="min-w-0">
+                        <div class="item-name-display fw-semibold">{item_name}</div>
+                        <div class="small text-muted font-monospace">{item_code}</div>
+                    </div>
+                </div>
+            </td>
             <td class="text-center unit-cell text-muted small align-middle">{unit_name}</td>
             <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="{qty}" required placeholder="0.00"></td>
-            <td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button></td>
+            <td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>
         </tr>
     </tbody>
 </table>
@@ -229,15 +253,44 @@ $this->registerCss(<<<CSS
 .requisition-form #item-table td:first-child { overflow: visible; position: relative; }
 .requisition-form #item-table .ts-wrapper { position: relative; }
 .requisition-form #item-table .ts-control { min-height: 38px; }
+.requisition-form #item-table .item-thumb {
+    width: 42px; height: 42px; object-fit: cover; flex-shrink: 0; background: #f8f9fa;
+}
+.requisition-form #item-table .item-name-display { line-height: 1.25; }
+.ts-dropdown.requisition-item-dropdown .ts-option-thumb {
+    width: 32px; height: 32px; object-fit: cover; border-radius: 4px;
+    border: 1px solid rgba(0,0,0,.1); flex-shrink: 0; background: #f8f9fa;
+}
 CSS
 );
 
 $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
 $itemsBelowMaxUrl = Url::to(['/inventory-v2/requisition/items-below-max']);
+$checkStockUrl = Url::to(['/inventory-v2/requisition/check-stock-availability']);
 $initialIdx = !$model->isNewRecord && !empty($model->stockDetails) ? count($model->stockDetails) : 0;
 
 $script = <<< JS
 let idx = {$initialIdx};
+
+function escapeAttr(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// สร้าง HTML ของ td แรก (รูป + ชื่อ + รหัส) — ใช้ทั้ง prefilled และหลังเลือกจาก TomSelect
+function buildItemDisplayCellHtml(rowIdx, code, name, img) {
+    var imgHtml = img
+        ? '<img src="' + escapeAttr(img) + '" alt="" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
+        : '';
+    return '<input type="hidden" name="StockDetail[' + rowIdx + '][item_code]" value="' + escapeAttr(code) + '">'
+        + '<div class="d-flex align-items-center gap-2">'
+        +     imgHtml
+        +     '<div class="min-w-0">'
+        +         '<div class="item-name-display fw-semibold">' + escapeAttr(name) + '</div>'
+        +         '<div class="small text-muted font-monospace">' + escapeAttr(code) + '</div>'
+        +     '</div>'
+        + '</div>';
+}
 
 // รหัสวัสดุที่ถูกเลือกแล้วในแถวอื่น (ไม่รวมแถวที่ส่งเข้า)
 function getSelectedItemCodes(excludeRow) {
@@ -300,16 +353,32 @@ function initItemSelect(elementId) {
         render: {
             option: function(item, escape) {
                 var unit = (item.unit_name && item.unit_name !== '-') ? ' <span class="text-muted">(' + escape(item.unit_name) + ')</span>' : '';
-                return '<div class="py-1"><div class="fw-bold">' + escape(item.item_name) + unit + '</div><small class="text-muted">รหัส: ' + escape(item.item_code) + '</small></div>';
+                var img = item.item_img
+                    ? '<img src="' + escape(item.item_img) + '" alt="" class="ts-option-thumb me-2" onerror="this.style.display=\\'none\\'">'
+                    : '';
+                return '<div class="d-flex align-items-center py-1">' + img
+                    + '<div class="min-w-0"><div class="fw-bold">' + escape(item.item_name) + unit + '</div>'
+                    + '<small class="text-muted font-monospace">รหัส: ' + escape(item.item_code) + '</small></div></div>';
             }
         },
         onChange: function(value) {
-            if (value) {
-                var opt = this.options[value];
-                var unitText = (opt && opt.unit_name) ? opt.unit_name : '-';
-                $(this.wrapper).closest('tr').find('.unit-cell').text(unitText);
-                $(this.wrapper).closest('tr').find('.qty-input').focus();
-            }
+            if (!value) return;
+            var opt = this.options[value];
+            var unitText = (opt && opt.unit_name) ? opt.unit_name : '-';
+            var name = (opt && opt.item_name) ? opt.item_name : value;
+            var img = (opt && opt.item_img) ? opt.item_img : '';
+            var \$row = $(this.wrapper).closest('tr');
+            \$row.find('.unit-cell').text(unitText);
+
+            // อ่าน idx จาก name ของ select เพื่อใช้สร้าง hidden input ใหม่
+            var selName = \$row.find('select[name*="[item_code]"]').attr('name') || '';
+            var idxMatch = selName.match(/\\[(\\d+)\\]/);
+            var rowIdx = idxMatch ? idxMatch[1] : '0';
+
+            // แทน <select> ด้วย display (ภาพ + ชื่อ + รหัส) — กันชื่อซ้ำสับสน
+            this.destroy();
+            \$row.find('td:first').html(buildItemDisplayCellHtml(rowIdx, value, name, img));
+            \$row.find('.qty-input').focus();
         }
     });
 }
@@ -357,17 +426,39 @@ $(document).on('keydown', '.qty-input', function(e) {
     }
 });
 
-// โหลดรายการที่ต่ำกว่า Max แล้วเพิ่มเข้า "รายการวัสดุที่ต้องการเบิก" โดยอัตโนมัติ (ไม่แสดงตัวเลือก)
+// เปิด/ปิดปุ่มเติมรายการตามสถานะการเลือกคลัง
+function updateLoadBelowMaxButtonState() {
+    var ready = !!$('#main-warehouse-id').val() && !!$('#sub-warehouse-id').val();
+    $('#load-below-max').prop('disabled', !ready);
+}
+
+// โหลดรายการที่ต่ำกว่า Min/Max แล้วเพิ่มเข้าตาราง — เรียกจากปุ่ม manual เท่านั้น
+// Policy: รายการที่มีอยู่แล้ว -> ข้าม (ไม่ทับจำนวนที่ผู้ใช้พิมพ์ไว้)
 function loadBelowMaxAndAddToTable() {
     var whId = $('#main-warehouse-id').val();
     var subId = $('#sub-warehouse-id').val();
-    if (!whId || !subId) return;
+    if (!whId || !subId) {
+        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของและหน่วยงานที่รับของก่อน', 'warning');
+        return;
+    }
     var url = '$itemsBelowMaxUrl'.replace(/\/$/, '') + '?warehouse_id=' + whId + '&sub_warehouse_id=' + encodeURIComponent(subId);
+
+    Swal.fire({
+        title: 'กำลังตรวจสอบเกณฑ์ Min/Max...',
+        didOpen: function() { Swal.showLoading(); },
+        allowOutsideClick: false,
+        showConfirmButton: false
+    });
+
     fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function(r) { return r.json(); })
         .then(function(list) {
-            if (!list || list.length === 0) return;
-            var added = 0, updated = 0;
+            Swal.close();
+            if (!list || list.length === 0) {
+                Swal.fire('ไม่พบรายการ', 'ไม่มีวัสดุที่ต่ำกว่าเกณฑ์ Min/Max ในขณะนี้', 'info');
+                return;
+            }
+            var added = 0, skipped = 0;
             list.forEach(function(row) {
                 var code = (row.item_code || '').toString();
                 var existing = $('#item-table tbody tr').filter(function() {
@@ -375,31 +466,44 @@ function loadBelowMaxAndAddToTable() {
                     return el.length && (el.val() === code || (el.find('option:selected').val() === code));
                 });
                 if (existing.length) {
-                    existing.find('.qty-input').val(row.qty_to_reach_max);
-                    updated++;
-                } else {
-                    var template = $('#row-template-prefilled').html();
-                    var html = template
-                        .replace(/{idx}/g, idx)
-                        .replace(/{item_code}/g, (row.item_code || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'))
-                        .replace(/{item_name}/g, (row.item_name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
-                        .replace(/{unit_name}/g, (row.unit_name || '-').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
-                        .replace(/{qty}/g, row.qty_to_reach_max);
-                    $('#item-table tbody').append(html);
-                    idx++;
-                    added++;
+                    skipped++;
+                    return;
                 }
+                var imgHtml = row.item_img
+                    ? '<img src="' + escapeAttr(row.item_img) + '" alt="" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
+                    : '';
+                var template = $('#row-template-prefilled').html();
+                var html = template
+                    .replace(/{idx}/g, idx)
+                    .replace(/{item_code}/g, escapeAttr(row.item_code || ''))
+                    .replace(/{item_name}/g, escapeAttr(row.item_name || ''))
+                    .replace(/{item_img_html}/g, imgHtml)
+                    .replace(/{unit_name}/g, escapeAttr(row.unit_name || '-'))
+                    .replace(/{qty}/g, row.qty_to_reach_max);
+                $('#item-table tbody').append(html);
+                idx++;
+                added++;
             });
-            if (added || updated) {
-                Swal.fire('โหลดรายการต่ำกว่า Max แล้ว', 'เพิ่ม ' + added + ' รายการ, อัปเดตจำนวน ' + updated + ' รายการ', 'success', { timer: 2000 });
-            }
+            var parts = [];
+            if (added) parts.push('เพิ่มใหม่ ' + added + ' รายการ');
+            if (skipped) parts.push('ข้าม ' + skipped + ' รายการ (มีอยู่แล้ว — ไม่ทับจำนวนเดิม)');
+            Swal.fire({
+                title: added ? 'เติมรายการเสร็จสิ้น' : 'ไม่มีรายการใหม่ให้เพิ่ม',
+                text: parts.join(' · '),
+                icon: added ? 'success' : 'info'
+            });
         })
-        .catch(function() {});
+        .catch(function() {
+            Swal.close();
+            Swal.fire('ผิดพลาด', 'ดึงข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
+        });
 }
 
-$('#main-warehouse-id, #sub-warehouse-id').on('change', function() {
+// เปลี่ยนคลังหลัก: ยังคง confirm-then-clear แต่ไม่ auto-reload — ให้ผู้ใช้กดปุ่มเอง
+$('#main-warehouse-id').on('change', function() {
     $(this).removeClass('is-invalid');
-    if ($(this).attr('id') === 'main-warehouse-id' && $('#item-table tbody tr').length > 0) {
+    updateLoadBelowMaxButtonState();
+    if ($('#item-table tbody tr').length > 0) {
         Swal.fire({
             title: 'ยืนยันการเปลี่ยนคลัง?',
             text: "รายการวัสดุเดิมจะถูกล้างออกทั้งหมด เนื่องจากวัสดุถูกจำกัดตามคลัง",
@@ -411,13 +515,24 @@ $('#main-warehouse-id, #sub-warehouse-id').on('change', function() {
             if (result.isConfirmed) {
                 $('#item-table tbody').empty();
                 idx = 0;
-                loadBelowMaxAndAddToTable();
             }
         });
-    } else {
-        loadBelowMaxAndAddToTable();
     }
 });
+
+// เปลี่ยนหน่วยงานที่รับของ: แค่อัปเดตสถานะปุ่ม ไม่ trigger reload
+$('#sub-warehouse-id').on('change', function() {
+    $(this).removeClass('is-invalid');
+    updateLoadBelowMaxButtonState();
+});
+
+$(document).on('click', '#load-below-max', function(e) {
+    e.preventDefault();
+    loadBelowMaxAndAddToTable();
+});
+
+// init เมื่อโหลดหน้า
+updateLoadBelowMaxButtonState();
 
 $(document).on('click', '.remove-item', function() {
     $(this).closest('tr').remove();
@@ -430,33 +545,138 @@ $(document).on('click', '.issue-reason-option', function(e) {
     if (reason) $('#issue_reason').val(reason);
 });
 
-// Submit Form ด้วย AJAX
+function escapeHtmlPreflight(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function submitRequisitionForm(form) {
+    Swal.fire({
+        title: 'กำลังบันทึก...',
+        didOpen: function() { Swal.showLoading(); },
+        allowOutsideClick: false,
+        showConfirmButton: false
+    });
+    $.post(form.attr('action'), form.serialize())
+        .done(function(res) {
+            if (res && res.success) {
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success')
+                    .then(function() { window.location.href = res.redirect; });
+            } else {
+                Swal.fire('ผิดพลาด', (res && res.message) || 'บันทึกไม่สำเร็จ', 'error');
+            }
+        })
+        .fail(function() {
+            Swal.fire('ผิดพลาด', 'เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่', 'error');
+        });
+}
+
+// Submit Form ด้วย AJAX — preflight ตรวจยอดคลังก่อน เพื่อกัน user ส่งใบเบิกที่จ่ายไม่ได้
 $('#requisition-form').on('beforeSubmit', function(e) {
-    let form = $(this);
+    var form = $(this);
     if ($('#item-table tbody tr').length === 0) {
         Swal.fire('คำเตือน', 'กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ', 'warning');
         return false;
     }
 
-    Swal.fire({
-        title: 'ส่งใบขอเบิก?',
-        text: "ยืนยันการส่งข้อมูลไปยังคลังที่เลือก",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'ยืนยัน',
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            return $.post(form.attr('action'), form.serialize())
-                .done(function(res) { return res; });
-        }
-    }).then((result) => {
-        if (result.isConfirmed && result.value.success) {
-            Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success')
-                .then(() => { window.location.href = result.value.redirect; });
-        } else if (result.value) {
-            Swal.fire('ผิดพลาด', result.value.message, 'error');
+    var whId = $('#main-warehouse-id').val();
+    var items = [];
+    $('#item-table tbody tr').each(function() {
+        var code = $(this).find('input[name*="[item_code]"], select[name*="[item_code]"]').val();
+        var qty = parseFloat($(this).find('.qty-input').val()) || 0;
+        if (code && qty > 0) {
+            items.push({ item_code: code, qty: qty });
         }
     });
+
+    if (!whId || items.length === 0) {
+        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายและกรอกจำนวนให้ครบ', 'warning');
+        return false;
+    }
+
+    Swal.fire({
+        title: 'กำลังตรวจสอบยอดคลัง...',
+        didOpen: function() { Swal.showLoading(); },
+        allowOutsideClick: false,
+        showConfirmButton: false
+    });
+
+    $.post('$checkStockUrl', { main_warehouse_id: whId, items: items })
+        .done(function(checkRes) {
+            Swal.close();
+            if (!checkRes || !checkRes.success) {
+                Swal.fire('ผิดพลาด', (checkRes && checkRes.message) || 'ตรวจสอบยอดคลังไม่สำเร็จ', 'error');
+                return;
+            }
+
+            if (!checkRes.has_issue) {
+                Swal.fire({
+                    title: 'ส่งใบขอเบิก?',
+                    text: 'ยอดคลังพอจ่ายทุกรายการ — ยืนยันการส่ง',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                }).then(function(result) {
+                    if (result.isConfirmed) submitRequisitionForm(form);
+                });
+                return;
+            }
+
+            // มีรายการที่ติด — แสดงตารางสรุป
+            var statusBadge = {
+                ok: '<span class="badge bg-success-subtle text-success">พอจ่าย</span>',
+                balance_only: '<span class="badge bg-warning-subtle text-warning-emphasis">ยอดคลังพอ Lot ไม่พร้อม</span>',
+                insufficient: '<span class="badge bg-danger-subtle text-danger">คงเหลือไม่พอ</span>',
+                not_in_warehouse: '<span class="badge bg-danger-subtle text-danger">ไม่มีในคลัง</span>'
+            };
+            var rows = checkRes.items.map(function(it) {
+                var badge = statusBadge[it.status] || '';
+                var rowClass = it.status === 'ok' ? '' : 'table-warning';
+                return '<tr class="' + rowClass + '">'
+                    + '<td class="text-start small">' + escapeHtmlPreflight(it.item_name) + '<div class="text-muted" style="font-size:11px">' + escapeHtmlPreflight(it.item_code) + '</div></td>'
+                    + '<td class="text-end small">' + it.qty_requested + '</td>'
+                    + '<td class="text-end small">' + it.balance + '</td>'
+                    + '<td class="text-end small">' + it.fifo_remain + '</td>'
+                    + '<td class="text-center">' + badge + '</td>'
+                    + '</tr>';
+            }).join('');
+
+            var html = '<div class="small text-muted mb-2 text-start">'
+                + 'คลังที่จ่ายของมียอดไม่ครบ หรือ Lot ใน FIFO ไม่พอจ่าย ตรวจสอบก่อนยืนยัน:'
+                + '</div>'
+                + '<div class="table-responsive">'
+                + '<table class="table table-sm table-bordered align-middle mb-0">'
+                + '<thead class="table-light"><tr>'
+                + '<th class="text-start small">รายการ</th>'
+                + '<th class="text-end small">ขอเบิก</th>'
+                + '<th class="text-end small">ยอดคลัง</th>'
+                + '<th class="text-end small">FIFO ใช้ได้</th>'
+                + '<th class="text-center small">สถานะ</th>'
+                + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+                + '<div class="small text-muted mt-2 text-start">'
+                + '<strong>หมายเหตุ:</strong> "ยอดคลัง" คือยอดที่เห็นในรายงาน "FIFO ใช้ได้" คือยอดที่ระบบจ่ายได้จริง '
+                + 'ถ้าไม่เท่ากัน อาจมีใบรับเข้าฉบับร่างที่ยังไม่ได้ confirm'
+                + '</div>';
+
+            Swal.fire({
+                title: 'พบรายการที่อาจจ่ายไม่ได้',
+                html: html,
+                icon: 'warning',
+                width: 760,
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันส่งต่อ',
+                cancelButtonText: 'แก้ไขก่อน',
+                reverseButtons: true,
+                customClass: { confirmButton: 'btn btn-warning', cancelButton: 'btn btn-light' }
+            }).then(function(result) {
+                if (result.isConfirmed) submitRequisitionForm(form);
+            });
+        })
+        .fail(function() {
+            Swal.fire('ผิดพลาด', 'เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่', 'error');
+        });
+
     return false;
 });
 JS;

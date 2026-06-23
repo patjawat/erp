@@ -3,6 +3,8 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\models\Categorise;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockMonthlyReport;
 use app\modules\inventoryV2\models\StockOrder;
@@ -202,6 +204,26 @@ if ($categoryId || $status || $search) {
         foreach ($listSub as $w) {
             $warehouseNames[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
         }
+
+        // Batch resolve image URLs (avoid N+1 + avoid base64 placeholder bloat)
+        $itemCodes = array_values(array_unique(array_map(fn($r) => (string) $r['item_code'], $raw)));
+        $items = empty($itemCodes)
+            ? []
+            : StockItem::find()->where(['code' => $itemCodes])->indexBy('code')->all();
+        $refs = array_values(array_filter(array_map(fn($i) => $i->ref ?? null, $items)));
+        $uploadsByRef = empty($refs)
+            ? []
+            : Uploads::find()->where(['ref' => $refs])->indexBy('ref')->all();
+        $placeholderUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+
+        $resolveImage = function ($itemCode) use ($items, $uploadsByRef, $placeholderUrl) {
+            $item = $items[$itemCode] ?? null;
+            if (!$item || empty($item->ref) || !isset($uploadsByRef[$item->ref])) {
+                return $placeholderUrl;
+            }
+            return FileManagerHelper::getImg($uploadsByRef[$item->ref]->id);
+        };
+
         $rows = [];
         $totalValue = 0;
         $belowMinCount = 0;
@@ -221,7 +243,7 @@ if ($categoryId || $status || $search) {
                 $belowMaxCount++;
             }
             $totalValue += $value;
-            $item = StockItem::findOne($r['item_code']);
+            $item = $items[$r['item_code']] ?? null;
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
             $rows[] = [
                 'warehouse_id' => (int) $r['warehouse_id'],
@@ -230,6 +252,7 @@ if ($categoryId || $status || $search) {
                 'item_name' => (string) $r['item_name'],
                 'category_title' => (string) ($r['category_title'] ?? 'อื่นๆ'),
                 'unit_name' => $unitName ? (string) $unitName : '-',
+                'image_url' => $resolveImage($r['item_code']),
                 'balance_qty' => $balance,
                 'value' => $value,
                 'min_qty' => $minQty,
@@ -254,6 +277,311 @@ if ($categoryId || $status || $search) {
                 'items_count' => $itemsCount,
             ],
         ];
+    }
+
+    /**
+     * ประวัติการเคลื่อนไหวของวัสดุ 1 รายการ ภายในคลังที่ระบุ (modal popup)
+     * รองรับทั้งคลังหลัก (main_warehouse_id = X) และคลังย่อย (sub_warehouse_id = X)
+     */
+    public function actionItemHistory($item_code, $warehouse_id, $start_date = null, $end_date = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->getItemHistoryData($item_code, $warehouse_id, $start_date, $end_date);
+    }
+
+    /**
+     * ดึงข้อมูลประวัติการเคลื่อนไหววัสดุ — ใช้ทั้ง modal (JSON) และ Excel export
+     * @return array{meta: array, summary: array, transactions: array}
+     */
+    protected function getItemHistoryData($item_code, $warehouse_id, $start_date = null, $end_date = null)
+    {
+        $warehouseId = (int) $warehouse_id;
+        $startDate = $start_date ?: date('Y-m-01');
+        $endDate = $end_date ?: date('Y-m-d');
+
+        $warehouse = Warehouse::findOne($warehouseId);
+        $warehouseLabel = $warehouse
+            ? (($warehouse->warehouse_type === 'MAIN' ? 'คลังหลัก: ' : 'คลังย่อย: ') . $warehouse->warehouse_name)
+            : (string) $warehouseId;
+
+        $item = StockItem::find()->where(['code' => $item_code])->one();
+        $itemName = $item->title ?? (string) $item_code;
+        $unitName = ($item && method_exists($item, 'getUnitName')) ? (string) $item->getUnitName() : '-';
+
+        $imageUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+        if ($item && !empty($item->ref)) {
+            $upload = Uploads::find()->where(['ref' => $item->ref])->one();
+            if ($upload) {
+                $imageUrl = FileManagerHelper::getImg($upload->id);
+            }
+        }
+
+        $baseSelect = [
+            'so.id',
+            'so.order_no',
+            'so.order_type',
+            'so.source_type',
+            'so.order_date',
+            'so.main_warehouse_id',
+            'so.sub_warehouse_id',
+            'sd.qty',
+            'sd.unit_price',
+            'sd.lot_number',
+        ];
+
+        $perspective = function ($row) use ($warehouseId) {
+            $isMain = (int) $row['main_warehouse_id'] === $warehouseId;
+            $isSub = (int) ($row['sub_warehouse_id'] ?? 0) === $warehouseId;
+            if ($row['order_type'] === 'IN' && $isMain) return 'in';
+            if ($row['order_type'] === 'OUT' && $isSub && !$isMain) return 'in';
+            if ($row['order_type'] === 'OUT' && $isMain) return 'out';
+            if ($row['order_type'] === 'IN' && $isSub && !$isMain) return 'out';
+            return 'out';
+        };
+
+        // 1) ยอดยกมาก่อนวันที่เริ่มต้น
+        $bfRows = (new Query())
+            ->select($baseSelect)
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where(['sd.item_code' => $item_code])
+            ->andWhere(['or',
+                ['so.main_warehouse_id' => $warehouseId],
+                ['so.sub_warehouse_id' => $warehouseId],
+            ])
+            ->andWhere(['<', 'so.order_date', $startDate . ' 00:00:00'])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->all();
+
+        $qtyBF = 0.0;
+        $valueBF = 0.0;
+        foreach ($bfRows as $r) {
+            $q = (float) $r['qty'];
+            $p = (float) $r['unit_price'];
+            if ($perspective($r) === 'in') {
+                $qtyBF += $q;
+                $valueBF += $q * $p;
+            } else {
+                $qtyBF -= $q;
+                $valueBF -= $q * $p;
+            }
+        }
+
+        // 2) Transactions ในช่วงเวลา
+        $txRows = (new Query())
+            ->select($baseSelect)
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where(['sd.item_code' => $item_code])
+            ->andWhere(['or',
+                ['so.main_warehouse_id' => $warehouseId],
+                ['so.sub_warehouse_id' => $warehouseId],
+            ])
+            ->andWhere(['between', 'so.order_date', $startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->orderBy(['so.order_date' => SORT_ASC, 'so.id' => SORT_ASC])
+            ->all();
+
+        $sourceLabel = [
+            'PO' => 'รับเข้าจาก PO',
+            'NORMAL' => 'รับเข้าทั่วไป',
+            'DONATE' => 'รับบริจาค',
+            'INITIAL' => 'ยอดยกมา (ตั้งต้น)',
+            'FREE_GIFT' => 'ของแถม',
+            'REQUEST' => 'จ่ายตามใบขอเบิก',
+            'ADJUST' => 'ปรับยอด',
+            'TRANSFER' => 'โอนย้ายคลัง',
+            'ISSUE' => 'จ่ายออก',
+        ];
+
+        $runningQty = $qtyBF;
+        $runningValue = $valueBF;
+        $totalIn = 0.0;
+        $totalOut = 0.0;
+        $transactions = [];
+
+        foreach ($txRows as $r) {
+            $q = (float) $r['qty'];
+            $p = (float) $r['unit_price'];
+            $direction = $perspective($r);
+            $delta = $q * $p;
+
+            if ($direction === 'in') {
+                $runningQty += $q;
+                $runningValue += $delta;
+                $totalIn += $q;
+            } else {
+                $runningQty -= $q;
+                $runningValue -= $delta;
+                $totalOut += $q;
+            }
+
+            $transactions[] = [
+                'date' => date('d/m/Y', strtotime($r['order_date'])),
+                'time' => date('H:i', strtotime($r['order_date'])),
+                'order_no' => (string) $r['order_no'],
+                'order_type' => (string) $r['order_type'],
+                'source_label' => $sourceLabel[$r['source_type']] ?? ($r['source_type'] ?? '-'),
+                'direction' => $direction,
+                'qty' => $q,
+                'unit_price' => $p,
+                'balance_qty' => $runningQty,
+                'balance_value' => $runningValue,
+                'lot' => (string) ($r['lot_number'] ?? '-'),
+            ];
+        }
+
+        // 3) ยอดคงเหลือปัจจุบันที่ stock_balance (truth source)
+        $currentBalance = (float) (new Query())
+            ->from(StockBalance::tableName())
+            ->where(['item_code' => $item_code, 'warehouse_id' => $warehouseId])
+            ->sum('balance_qty');
+
+        return [
+            'meta' => [
+                'item_code' => (string) $item_code,
+                'item_name' => $itemName,
+                'unit_name' => $unitName,
+                'image_url' => $imageUrl,
+                'warehouse_label' => $warehouseLabel,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+            'summary' => [
+                'qty_bf' => $qtyBF,
+                'value_bf' => $valueBF,
+                'total_in' => $totalIn,
+                'total_out' => $totalOut,
+                'current_qty' => $currentBalance,
+                'current_value' => $runningValue,
+                'tx_count' => count($transactions),
+            ],
+            'transactions' => $transactions,
+        ];
+    }
+
+    /**
+     * Export ประวัติการเคลื่อนไหววัสดุ 1 รายการ ภายในคลัง — Excel
+     */
+    public function actionExportItemHistory($item_code, $warehouse_id, $start_date = null, $end_date = null)
+    {
+        $data = $this->getItemHistoryData($item_code, $warehouse_id, $start_date, $end_date);
+        $meta = $data['meta'];
+        $summary = $data['summary'];
+        $transactions = $data['transactions'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ประวัติเคลื่อนไหววัสดุ');
+
+        // Header block
+        $sheet->setCellValue('A1', 'ประวัติการเคลื่อนไหววัสดุ');
+        $sheet->mergeCells('A1:I1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        $sheet->setCellValue('A2', 'รหัสวัสดุ: ' . $meta['item_code'] . '  |  ชื่อ: ' . $meta['item_name'] . '  |  หน่วย: ' . $meta['unit_name']);
+        $sheet->mergeCells('A2:I2');
+        $sheet->getStyle('A2')->getFont()->setSize(10);
+
+        $sheet->setCellValue('A3', 'คลัง: ' . $meta['warehouse_label'] . '  |  ช่วง: ' . $meta['start_date'] . ' ถึง ' . $meta['end_date']);
+        $sheet->mergeCells('A3:I3');
+        $sheet->getStyle('A3')->getFont()->setSize(10);
+
+        // Summary row
+        $sheet->setCellValue('A5', 'ยอดยกมา (จำนวน)');
+        $sheet->setCellValue('B5', $summary['qty_bf']);
+        $sheet->setCellValue('C5', 'มูลค่ายกมา');
+        $sheet->setCellValue('D5', $summary['value_bf']);
+        $sheet->setCellValue('E5', 'รับเข้ารวม');
+        $sheet->setCellValue('F5', $summary['total_in']);
+        $sheet->setCellValue('G5', 'จ่ายออกรวม');
+        $sheet->setCellValue('H5', $summary['total_out']);
+        $sheet->setCellValue('I5', 'คงเหลือปัจจุบัน');
+        $sheet->setCellValue('J5', $summary['current_qty']);
+        $sheet->getStyle('A5:J5')->getFont()->setBold(true);
+        $sheet->getStyle('A5:J5')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('FFF3CD');
+        $sheet->getStyle('B5')->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('D5')->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('F5')->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('H5')->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('J5')->getNumberFormat()->setFormatCode('#,##0.00');
+
+        // Headers
+        $headers = ['ลำดับ', 'วันที่', 'เวลา', 'เลขที่เอกสาร', 'รายการ', 'ทิศทาง', 'จำนวน', 'ราคา/หน่วย', 'ยอดสะสม', 'มูลค่าสะสม', 'Lot'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '7', $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A7:' . $lastCol . '7')->getFont()->setBold(true);
+        $sheet->getStyle('A7:' . $lastCol . '7')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A7:' . $lastCol . '7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Opening row (BF)
+        $rowNum = 8;
+        $sheet->setCellValue('A' . $rowNum, '');
+        $sheet->setCellValue('B' . $rowNum, $meta['start_date']);
+        $sheet->setCellValue('C' . $rowNum, '');
+        $sheet->setCellValue('D' . $rowNum, '');
+        $sheet->setCellValue('E' . $rowNum, 'ยอดยกมา');
+        $sheet->setCellValue('F' . $rowNum, '');
+        $sheet->setCellValue('G' . $rowNum, '');
+        $sheet->setCellValue('H' . $rowNum, '');
+        $sheet->setCellValue('I' . $rowNum, $summary['qty_bf']);
+        $sheet->setCellValue('J' . $rowNum, $summary['value_bf']);
+        $sheet->setCellValue('K' . $rowNum, '');
+        $sheet->getStyle('A' . $rowNum . ':K' . $rowNum)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('F8F9FA');
+        $sheet->getStyle('A' . $rowNum . ':K' . $rowNum)->getFont()->setItalic(true);
+        $rowNum++;
+
+        foreach ($transactions as $i => $t) {
+            $direction = $t['direction'] === 'in' ? 'รับเข้า' : 'จ่ายออก';
+            $signedQty = $t['direction'] === 'in' ? $t['qty'] : -$t['qty'];
+            $sheet->setCellValue('A' . $rowNum, $i + 1);
+            $sheet->setCellValue('B' . $rowNum, $t['date']);
+            $sheet->setCellValue('C' . $rowNum, $t['time']);
+            $sheet->setCellValue('D' . $rowNum, $t['order_no']);
+            $sheet->setCellValue('E' . $rowNum, $t['source_label']);
+            $sheet->setCellValue('F' . $rowNum, $direction);
+            $sheet->setCellValue('G' . $rowNum, $signedQty);
+            $sheet->setCellValue('H' . $rowNum, $t['unit_price']);
+            $sheet->setCellValue('I' . $rowNum, $t['balance_qty']);
+            $sheet->setCellValue('J' . $rowNum, $t['balance_value']);
+            $sheet->setCellValue('K' . $rowNum, $t['lot']);
+            $rowNum++;
+        }
+
+        // Number format for numeric columns
+        $sheet->getStyle('G8:J' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+
+        // Auto-size columns
+        foreach (range('A', 'K') as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+        $sheet->getStyle('A7:' . $lastCol . ($rowNum - 1))->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+
+        // Output
+        $filename = 'item-history-' . preg_replace('/[^A-Za-z0-9_\-]/', '', $meta['item_code']) . '-w' . (int) $warehouse_id . '-' . date('Ymd-His') . '.xlsx';
+        $tempPath = Yii::getAlias('@runtime') . '/item_history_' . uniqid('', true) . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        Yii::$app->response->sendFile($tempPath, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ])->on(Response::EVENT_AFTER_SEND, function ($event) use ($tempPath) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        });
     }
 
     /**

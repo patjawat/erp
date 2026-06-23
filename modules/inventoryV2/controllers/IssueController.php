@@ -122,8 +122,29 @@ class IssueController extends Controller
                     // 1. ตรวจสอบเบื้องต้น: ถ้าจำนวนเป็น 0 หรือไม่มีข้อมูลให้ข้าม
                     if (empty($item['qty_issued']) || $item['qty_issued'] <= 0) continue;
 
-                    $detail = StockDetail::findOne($item['detail_id']);
-                    if (!$detail) continue;
+                    $detailId = $item['detail_id'] ?? null;
+                    $isNewRow = ($detailId === 'new' || $detailId === '' || $detailId === null);
+
+                    if ($isNewRow) {
+                        // รายการเพิ่มเติม (กดปุ่ม "เพิ่มวัสดุ" ในหน้า process) — สร้าง StockDetail ใหม่ผูกกับใบเบิกนี้
+                        $itemCode = trim((string) ($item['item_code'] ?? ''));
+                        $lotNumber = trim((string) ($item['lot_number'] ?? ''));
+                        if ($itemCode === '' || $lotNumber === '') {
+                            throw new \Exception('รายการเพิ่มเติม: กรุณาเลือกวัสดุและ Lot ให้ครบ');
+                        }
+                        $detail = new StockDetail();
+                        $detail->stock_order_id = $model->id;
+                        $detail->item_code = $itemCode;
+                        $detail->lot_number = $lotNumber;
+                        $detail->qty = (float) $item['qty_issued']; // จะถูกเขียนทับด้วย qtyActuallyIssued ในขั้น 4
+                        if (!$detail->save(false)) {
+                            $errors = implode(', ', $detail->getFirstErrors());
+                            throw new \Exception("ไม่สามารถสร้างรายการเพิ่มเติม: {$errors}");
+                        }
+                    } else {
+                        $detail = StockDetail::findOne($detailId);
+                        if (!$detail) continue;
+                    }
 
                     $qtyToProcess = (float)$item['qty_issued'];
                     $selectedLot = $item['lot_number'];

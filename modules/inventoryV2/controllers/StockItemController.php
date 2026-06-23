@@ -4,9 +4,12 @@ namespace app\modules\inventoryV2\controllers;
 
 use app\models\Categorise;
 use app\modules\inventoryV2\models\StockBalance;
+use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockItemSearch;
+use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\Warehouse;
+use yii\db\Query;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -543,11 +546,189 @@ class StockItemController extends Controller
             $results[] = [
                 'item_code' => (string) $row['item_code'],
                 'item_name' => (string) $row['item_name'],
+                'item_img' => $item && method_exists($item, 'ShowImg') ? (string) $item->ShowImg() : '',
                 'unit_name' => $unitName ? (string) $unitName : '-',
                 'balance_qty' => $balance,
             ];
         }
         return $results;
+    }
+
+    /**
+     * หน้าจัดการ master items ซ้ำชื่อ — Stage 1 ของ duplicate cleanup
+     * GET → แสดง preview ของรายการที่ปลอดภัยจะปิด (active=0)
+     * เกณฑ์ "ปลอดภัยปิด":
+     *   - กลุ่มซ้ำต้องมีอย่างน้อย 1 ตัวที่ยังใช้งาน (KEEP) เพื่อไม่ wipe ทั้งกลุ่ม
+     *   - ตัวที่จะปิด: total_balance = 0 และไม่มี IN/OUT history
+     */
+    public function actionDuplicateCleanup()
+    {
+        if (!Yii::$app->user->can('inventory')) {
+            throw new \yii\web\ForbiddenHttpException('เฉพาะผู้มีสิทธิ inventory เท่านั้น');
+        }
+
+        $preview = $this->collectDeactivationCandidates();
+
+        return $this->render('duplicate-cleanup', [
+            'groups' => $preview['groups'],
+            'totalGroups' => $preview['total_groups'],
+            'totalCandidates' => $preview['total_candidates'],
+            'skippedGroups' => $preview['skipped_groups'],
+        ]);
+    }
+
+    /**
+     * ปิด (active=0) master items ซ้ำชื่อที่ปลอดภัย — POST + permission gate
+     * ใช้ transaction + บันทึก audit log ลง data_json (เปิดกลับได้)
+     */
+    public function actionBulkDeactivateDuplicates()
+    {
+        if (!Yii::$app->user->can('inventory')) {
+            throw new \yii\web\ForbiddenHttpException('เฉพาะผู้มีสิทธิ inventory เท่านั้น');
+        }
+        if (!Yii::$app->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['success' => false, 'message' => 'POST only'];
+        }
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $preview = $this->collectDeactivationCandidates();
+        if ($preview['total_candidates'] === 0) {
+            return ['success' => true, 'deactivated' => 0, 'message' => 'ไม่มีรายการที่ปลอดภัยจะปิด'];
+        }
+
+        $codes = [];
+        foreach ($preview['groups'] as $group) {
+            foreach ($group['candidates'] as $c) {
+                $codes[] = $c['code'];
+            }
+        }
+
+        $userId = Yii::$app->user->id;
+        $now = date('Y-m-d H:i:s');
+        $deactivated = 0;
+        $errors = [];
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($codes as $code) {
+                $item = StockItem::findOne(['code' => $code]);
+                if (!$item || (int) $item->active === 0) {
+                    continue;
+                }
+                $j = is_array($item->data_json) ? $item->data_json : (json_decode((string) $item->data_json, true) ?: []);
+                $j['duplicate_cleanup'] = [
+                    'deactivated_at' => $now,
+                    'deactivated_by' => $userId,
+                    'reason' => 'bulk_deactivate_duplicate',
+                    'previous_active' => (int) $item->active,
+                ];
+                $item->data_json = $j;
+                $item->active = 0;
+                if ($item->save(false)) {
+                    $deactivated++;
+                } else {
+                    $errors[] = $code;
+                }
+            }
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+
+        return [
+            'success' => true,
+            'deactivated' => $deactivated,
+            'failed' => count($errors),
+            'failed_codes' => $errors,
+            'redirect' => \yii\helpers\Url::to(['duplicate-cleanup']),
+        ];
+    }
+
+    /**
+     * รวบรวมรายการ master items ที่ปลอดภัยจะปิด (DEACTIVATE candidates)
+     * คืน: groups[] (เฉพาะกลุ่มที่มี ≥1 KEEP), total_groups, total_candidates, skipped_groups
+     */
+    private function collectDeactivationCandidates()
+    {
+        $duplicateTitles = (new Query())
+            ->select(['title', 'cnt' => 'COUNT(*)'])
+            ->from(StockItem::tableName())
+            ->where(['name' => 'asset_item', 'group_id' => 'MATER', 'active' => 1])
+            ->groupBy('title')
+            ->having(['>', 'COUNT(*)', 1])
+            ->orderBy(['cnt' => SORT_DESC, 'title' => SORT_ASC])
+            ->all();
+
+        $totalGroups = 0;
+        $totalCandidates = 0;
+        $skippedGroups = 0;
+        $groups = [];
+
+        foreach ($duplicateTitles as $g) {
+            $title = $g['title'];
+            $items = (new Query())
+                ->select(['code', 'title', 'active'])
+                ->from(StockItem::tableName())
+                ->where(['name' => 'asset_item', 'group_id' => 'MATER', 'active' => 1, 'title' => $title])
+                ->orderBy(['code' => SORT_ASC])
+                ->all();
+
+            $keepers = [];
+            $candidates = [];
+            foreach ($items as $it) {
+                $code = $it['code'];
+                $balance = (float) (new Query())
+                    ->from(StockBalance::tableName())
+                    ->where(['item_code' => $code])
+                    ->sum('balance_qty');
+                $hasIn = (bool) (new Query())
+                    ->from(['d' => StockDetail::tableName()])
+                    ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+                    ->where(['d.item_code' => $code, 'o.order_type' => 'IN'])
+                    ->exists();
+                $hasOut = (bool) (new Query())
+                    ->from(['d' => StockDetail::tableName()])
+                    ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+                    ->where(['d.item_code' => $code, 'o.order_type' => 'OUT'])
+                    ->exists();
+
+                $row = [
+                    'code' => $code,
+                    'total_balance' => round($balance, 2),
+                    'has_in' => $hasIn,
+                    'has_out' => $hasOut,
+                ];
+                if ($balance <= 0 && !$hasIn && !$hasOut) {
+                    $candidates[] = $row;
+                } else {
+                    $keepers[] = $row;
+                }
+            }
+
+            // เกณฑ์ปลอดภัย: ต้องมี keeper ≥1 ในกลุ่ม ไม่งั้นข้าม (กันทำให้ "หาไม่เจอ")
+            if (empty($keepers) || empty($candidates)) {
+                if (!empty($candidates)) $skippedGroups++;
+                continue;
+            }
+
+            $groups[] = [
+                'title' => $title,
+                'total_codes' => count($items),
+                'keepers' => $keepers,
+                'candidates' => $candidates,
+            ];
+            $totalGroups++;
+            $totalCandidates += count($candidates);
+        }
+
+        return [
+            'groups' => $groups,
+            'total_groups' => $totalGroups,
+            'total_candidates' => $totalCandidates,
+            'skipped_groups' => $skippedGroups,
+        ];
     }
 
     /**

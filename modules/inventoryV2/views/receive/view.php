@@ -12,6 +12,22 @@ $statusLabel = StatusBadgeHelper::getLabel($model->status);
 ?>
 <div class="stock-order-view">
 
+    <?php if ($model->status === 'DRAFT'): ?>
+    <div class="alert alert-warning d-flex align-items-start gap-3 mb-4 border-0 shadow-sm" role="alert" style="background:#fff8e1">
+        <i class="bi bi-exclamation-triangle-fill fs-4 text-warning flex-shrink-0 mt-1"></i>
+        <div class="flex-grow-1">
+            <h6 class="alert-heading mb-1 fw-bold">เอกสารนี้ยังเป็นฉบับร่าง — ยังไม่อัปเดตยอดคลัง</h6>
+            <p class="mb-2 small">
+                ยอดคงเหลือคลังยังไม่เปลี่ยน และใบเบิกที่ใช้วัสดุในเอกสารนี้จะ<strong>จ่ายไม่ได้</strong>
+                จนกว่าจะเปิดและกด <em>"บันทึกและรับเข้าคลัง"</em>
+            </p>
+            <?= Html::a('<i class="bi bi-pencil-square me-1"></i> เปิดเพื่อยืนยันรับเข้าคลัง', ['update', 'id' => $model->id], [
+                'class' => 'btn btn-warning btn-sm fw-semibold',
+            ]) ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-body"><?= Html::encode($model->order_no) ?></h4>

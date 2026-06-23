@@ -341,15 +341,11 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
 </div>
 
 <?php
-// URL สำหรับดึง Lot เมื่อเลือกสินค้าใหม่ (ต้องไปสร้าง Action นี้ใน Controller)
+// URL สำหรับดึง Lot เมื่อเลือกสินค้าใหม่
 $getLotUrl = Url::to(['get-available-lots', 'warehouse_id' => $model->main_warehouse_id]);
-// URL สำหรับค้นหาสินค้า (แนะนำใช้ Select2 หรือดึงรายการสินค้ามาพักไว้)
-$itemsJson = json_encode(\app\modules\inventoryV2\models\StockItem::find()->select(['item_code', 'item_name'])->asArray()->all());
-
-$getLotUrl = Url::to(['get-available-lots', 'warehouse_id' => $model->main_warehouse_id]);
-// เตรียมข้อมูลสินค้าสำหรับ Tom-select
+// เตรียมข้อมูลสินค้าสำหรับ Tom-select (categorise table ใช้ code/title — alias ให้ JS ใช้ value/text)
 $items = \app\modules\inventoryV2\models\StockItem::find()
-    ->select(['item_code as value', 'item_name as text'])
+    ->select(['code as value', 'title as text'])
     ->asArray()
     ->all();
 

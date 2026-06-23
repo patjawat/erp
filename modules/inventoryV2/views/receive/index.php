@@ -159,8 +159,14 @@ $currentStatus = $searchModel->status ?? '';
                     }
                     $pageTotalValue += $rowTotal;
                     ?>
-                    <tr>
-                        <td><?= Html::a(Html::encode($item->order_no), ['view', 'id' => $item->id], ['class' => 'fw-semibold text-decoration-none', 'data' => ['pjax' => 0]]) ?></td>
+                    <?php $isDraft = $item->status === 'DRAFT'; ?>
+                    <tr class="<?= $isDraft ? 'table-warning' : '' ?>" <?= $isDraft ? 'title="ฉบับร่าง — ยังไม่อัปเดตยอดคลัง คลิกเพื่อแก้ไขแล้วบันทึกรับเข้า"' : '' ?>>
+                        <td>
+                            <?php if ($isDraft): ?>
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-1" data-bs-toggle="tooltip" title="ฉบับร่าง — ยังไม่เข้าคลัง"></i>
+                            <?php endif; ?>
+                            <?= Html::a(Html::encode($item->order_no), ['view', 'id' => $item->id], ['class' => 'fw-semibold text-decoration-none', 'data' => ['pjax' => 0]]) ?>
+                        </td>
                         <td class="text-secondary"><?= $item->order_date ? \app\components\ThaiDateHelper::formatThaiDate($item->order_date) : '-' ?></td>
                         <td><?= $item->main_warehouse_id ? $warehouseName : '<span class="text-muted">-</span>' ?></td>
                         <td class="text-end text-muted"><?= $detailCount ?></td>

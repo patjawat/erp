@@ -9,6 +9,7 @@ use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockItemWarehouseSetting;
 use app\modules\inventoryV2\models\Warehouse;
 use Yii;
 use yii\db\Query;
@@ -206,17 +207,19 @@ public function behaviors()
     /**
      * รายการวัสดุที่หน่วยงานที่รับของ (คลังย่อย) เหลือต่ำกว่า Min — เติมให้ถึง Max
      * GET warehouse_id (คลังที่จ่ายของ), sub_warehouse_id (หน่วยงานที่รับของ)
-     * - คำนวณจากยอดคงเหลือที่หน่วยงานที่รับของ (sub) ถ้า sub_warehouse_id ส่งมา
+     * - ดึง min/max จาก stock_item_warehouse_setting ตามหน่วยงานที่รับของ (sub_warehouse_id)
+     *   เฉพาะรายการที่ admin ตั้งค่าและเปิดใช้งานไว้ (is_active = 1)
+     * - คำนวณจากยอดคงเหลือที่หน่วยงานที่รับของ
      * - แสดงเฉพาะรายการที่ยอดที่หน่วยงานรับของ < min_qty (เหลือน้อยเกินกว่า min)
      * - เบิกให้พอดี = max_qty - ยอดที่หน่วยงานรับของ
-     * - ถ้า max_qty เป็น 0 ไม่โหลด โหลดเฉพาะประเภทที่คลังหลักรับได้
+     * - กรองเฉพาะประเภทที่คลังหลักรับได้
      */
     public function actionItemsBelowMax($warehouse_id, $sub_warehouse_id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $warehouse_id = (int) $warehouse_id;
         $sub_warehouse_id = $sub_warehouse_id !== null && $sub_warehouse_id !== '' ? (int) $sub_warehouse_id : null;
-        if ($warehouse_id <= 0) {
+        if ($warehouse_id <= 0 || !$sub_warehouse_id || $sub_warehouse_id <= 0) {
             return [];
         }
 
@@ -234,37 +237,35 @@ public function behaviors()
             $allowedTypes = [];
         }
 
-        $balanceWarehouseId = $sub_warehouse_id > 0 ? $sub_warehouse_id : $warehouse_id;
         $balanceSubQuery = (new Query())
             ->select(['item_code', 'SUM([[balance_qty]]) AS total_balance'])
             ->from(StockBalance::tableName())
-            ->where(['warehouse_id' => $balanceWarehouseId])
+            ->where(['warehouse_id' => $sub_warehouse_id])
             ->groupBy('item_code');
 
         $query = (new Query())
             ->select([
                 'item_code' => 'i.code',
                 'item_name' => 'i.title',
-                'min_qty' => 'i.qty_min',
-                'max_qty' => 'i.qty_max',
+                'min_qty' => 's.min_qty',
+                'max_qty' => 's.max_qty',
                 'COALESCE(b.total_balance, 0) AS balance_qty',
             ])
             ->from(['i' => StockItem::tableName()])
+            ->innerJoin(
+                ['s' => StockItemWarehouseSetting::tableName()],
+                's.item_code = i.code AND s.warehouse_id = :setting_wh AND s.is_active = 1',
+                [':setting_wh' => $sub_warehouse_id]
+            )
             ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = i.code')
             ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
             ->andWhere(['i.active' => 1])
-            ->andWhere(['>', 'i.qty_max', 0])
-            ->andWhere('COALESCE(b.total_balance, 0) < i.qty_max');
-
-        if ($sub_warehouse_id > 0) {
-            $query->andWhere('(
-                (i.qty_min IS NOT NULL AND i.qty_min > 0 AND COALESCE(b.total_balance, 0) < i.qty_min)
+            ->andWhere(['>', 's.max_qty', 0])
+            ->andWhere('(
+                (s.min_qty > 0 AND COALESCE(b.total_balance, 0) < s.min_qty)
                 OR
-                ((i.qty_min IS NULL OR i.qty_min <= 0) AND COALESCE(b.total_balance, 0) < i.qty_max)
+                (s.min_qty <= 0 AND COALESCE(b.total_balance, 0) < s.max_qty)
             )');
-        } else {
-            $query->andWhere('COALESCE(b.total_balance, 0) < i.qty_max');
-        }
 
         if (!empty($allowedTypes)) {
             $query->andWhere(['i.category_id' => $allowedTypes]);
@@ -286,6 +287,7 @@ public function behaviors()
             $results[] = [
                 'item_code' => (string) $r['item_code'],
                 'item_name' => (string) $r['item_name'],
+                'item_img' => $item && method_exists($item, 'ShowImg') ? (string) $item->ShowImg() : '',
                 'unit_name' => $unitName ? (string) $unitName : '-',
                 'balance_qty' => round($balance, 2),
                 'min_qty' => $minQty !== null ? round($minQty, 2) : null,
@@ -294,6 +296,382 @@ public function behaviors()
             ];
         }
         return $results;
+    }
+
+    /**
+     * Preflight check: ตรวจว่ายอดในคลังที่จ่ายของพอจ่ายตามรายการที่ขอเบิกหรือไม่
+     * POST: main_warehouse_id, items[]: [{item_code, qty}]
+     * คืน: { success, has_issue, items: [{item_code, item_name, qty_requested, balance, fifo_remain, status, message}] }
+     *
+     * เปรียบเทียบ 2 แหล่ง:
+     * - stock_balance รวมทุก Lot ในคลังนั้น (ที่ผู้ใช้เห็นในหน้ายอดคงเหลือ)
+     * - Σ stock_detail.remain_qty ของ order_type=IN ในคลังนั้น (ที่ FIFO ใช้จ่ายได้จริง)
+     * ถ้าไม่ตรงกัน = มีใบรับเข้าฉบับร่างที่ยังไม่ confirm หรือมี data drift
+     */
+    public function actionCheckStockAvailability()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $req = Yii::$app->request;
+        if (!$req->isPost) {
+            return ['success' => false, 'message' => 'POST only'];
+        }
+
+        $warehouseId = (int) $req->post('main_warehouse_id', 0);
+        $items = $req->post('items', []);
+        if ($warehouseId <= 0 || !is_array($items) || empty($items)) {
+            return ['success' => false, 'message' => 'ข้อมูลไม่ครบ'];
+        }
+
+        $results = [];
+        $hasIssue = false;
+
+        foreach ($items as $item) {
+            $code = trim((string) ($item['item_code'] ?? ''));
+            $qty = (float) ($item['qty'] ?? 0);
+            if ($code === '' || $qty <= 0) {
+                continue;
+            }
+
+            $balance = (float) (new Query())
+                ->from(StockBalance::tableName())
+                ->where(['item_code' => $code, 'warehouse_id' => $warehouseId])
+                ->sum('balance_qty');
+
+            $fifoRemain = (float) (new Query())
+                ->from(['d' => StockDetail::tableName()])
+                ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+                ->where([
+                    'd.item_code' => $code,
+                    'o.main_warehouse_id' => $warehouseId,
+                    'o.order_type' => 'IN',
+                ])
+                ->andWhere(['>', 'd.remain_qty', 0])
+                ->sum('d.remain_qty');
+
+            $stockItem = StockItem::findOne(['code' => $code]);
+            $itemName = $stockItem ? $stockItem->title : $code;
+
+            $status = 'ok';
+            $message = 'พอจ่าย';
+            if ($balance <= 0 && $fifoRemain <= 0) {
+                $status = 'not_in_warehouse';
+                $message = 'ไม่มีในคลังนี้';
+                $hasIssue = true;
+            } elseif ($fifoRemain < $qty) {
+                if ($balance >= $qty) {
+                    $status = 'balance_only';
+                    $message = 'ยอดคลังพอ แต่ไม่มี Lot ใน FIFO (ใบรับเข้าอาจยังเป็นฉบับร่าง)';
+                } else {
+                    $status = 'insufficient';
+                    $message = 'คงเหลือไม่พอ';
+                }
+                $hasIssue = true;
+            }
+
+            $results[] = [
+                'item_code' => $code,
+                'item_name' => $itemName,
+                'qty_requested' => round($qty, 2),
+                'balance' => round($balance, 2),
+                'fifo_remain' => round($fifoRemain, 2),
+                'status' => $status,
+                'message' => $message,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'has_issue' => $hasIssue,
+            'items' => $results,
+        ];
+    }
+
+    /**
+     * Diagnostic: ดู stock_balance + stock_detail (FIFO) ของวัสดุนี้ทั่วระบบ
+     * เปิดผ่าน: /inventory-v2/requisition/debug-stock?item_code=XXX
+     * ใช้วินิจฉัยเคส "preflight แจ้งจ่ายไม่ได้ ทั้งที่เพิ่งรับเข้า"
+     */
+    public function actionDebugStock($item_code)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $code = trim((string) $item_code);
+        if ($code === '') {
+            return ['error' => 'item_code required'];
+        }
+
+        // 0. ค้น stock_item แบบ exact และ fuzzy (case/space/dash variations)
+        $exactItem = StockItem::findOne(['code' => $code]);
+        $fuzzyItems = (new Query())
+            ->select(['code', 'title', 'active', 'name', 'group_id'])
+            ->from(StockItem::tableName())
+            ->where(['or',
+                ['code' => $code],
+                ['like', 'code', $code],
+                ['like', 'code', str_replace('-', '', $code)],
+                ['like', 'code', str_replace('-', '.', $code)],
+                ['like', 'title', '%' . str_replace(['-', '.'], '', $code) . '%'],
+            ])
+            ->limit(20)
+            ->all();
+
+        // ค้น stock_balance ทั้งแบบ exact และ LIKE (เผื่อ trailing space)
+        $balanceLikeRows = (new Query())
+            ->select(['item_code', 'warehouse_id', 'lot_number', 'balance_qty'])
+            ->from(StockBalance::tableName())
+            ->where(['like', 'item_code', $code])
+            ->limit(20)
+            ->all();
+        $detailLikeRows = (new Query())
+            ->select([
+                'd.item_code',
+                'order_no' => 'o.order_no',
+                'order_status' => 'o.status',
+                'main_warehouse_id' => 'o.main_warehouse_id',
+                'lot_number' => 'd.lot_number',
+                'qty' => 'd.qty',
+                'remain_qty' => 'd.remain_qty',
+                'order_date' => 'o.order_date',
+            ])
+            ->from(['d' => StockDetail::tableName()])
+            ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+            ->where(['like', 'd.item_code', $code])
+            ->andWhere(['o.order_type' => 'IN'])
+            ->orderBy(['o.order_date' => SORT_DESC])
+            ->limit(20)
+            ->all();
+
+        $itemName = $exactItem ? $exactItem->title : ($fuzzyItems[0]['title'] ?? null);
+
+        // 1. stock_balance ทุกคลัง ทุก Lot
+        $balances = (new Query())
+            ->select(['warehouse_id', 'lot_number', 'balance_qty'])
+            ->from(StockBalance::tableName())
+            ->where(['item_code' => $code])
+            ->all();
+        $balancesOut = [];
+        foreach ($balances as $b) {
+            $wh = Warehouse::findOne($b['warehouse_id']);
+            $balancesOut[] = [
+                'warehouse_id' => (int) $b['warehouse_id'],
+                'warehouse_name' => $wh ? $wh->warehouse_name : '?',
+                'warehouse_type' => $wh ? $wh->warehouse_type : '?',
+                'lot_number' => $b['lot_number'],
+                'balance_qty' => (float) $b['balance_qty'],
+            ];
+        }
+
+        // 2. stock_detail IN ทุกใบ ทุก Lot
+        $rows = (new Query())
+            ->select([
+                'order_no' => 'o.order_no',
+                'order_status' => 'o.status',
+                'main_warehouse_id' => 'o.main_warehouse_id',
+                'lot_number' => 'd.lot_number',
+                'qty' => 'd.qty',
+                'remain_qty' => 'd.remain_qty',
+                'order_date' => 'o.order_date',
+            ])
+            ->from(['d' => StockDetail::tableName()])
+            ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+            ->where(['d.item_code' => $code, 'o.order_type' => 'IN'])
+            ->orderBy(['o.order_date' => SORT_DESC])
+            ->all();
+        $detailsOut = [];
+        foreach ($rows as $r) {
+            $wh = Warehouse::findOne($r['main_warehouse_id']);
+            $detailsOut[] = [
+                'order_no' => $r['order_no'],
+                'order_status' => $r['order_status'],
+                'warehouse_id' => (int) $r['main_warehouse_id'],
+                'warehouse_name' => $wh ? $wh->warehouse_name : '?',
+                'lot_number' => $r['lot_number'],
+                'qty_received' => (float) $r['qty'],
+                'remain_qty' => (float) $r['remain_qty'],
+                'order_date' => $r['order_date'],
+            ];
+        }
+
+        return [
+            'item_code_queried' => $code,
+            'item_code_queried_bytes' => strlen($code),
+            'item_name' => $itemName,
+            'stock_item_master' => [
+                'exact_match' => $exactItem ? [
+                    'code' => $exactItem->code,
+                    'code_bytes' => strlen($exactItem->code),
+                    'title' => $exactItem->title,
+                    'active' => (int) $exactItem->active,
+                ] : null,
+                'fuzzy_matches' => $fuzzyItems,
+            ],
+            'stock_balance_exact' => $balancesOut,
+            'stock_balance_like' => $balanceLikeRows,
+            'stock_detail_in_exact' => $detailsOut,
+            'stock_detail_in_like' => $detailLikeRows,
+            'hint' => [
+                'no_exact_item' => $exactItem === null,
+                'has_fuzzy_item' => count($fuzzyItems) > 0,
+                'has_balance_like' => count($balanceLikeRows) > 0,
+                'has_detail_like' => count($detailLikeRows) > 0,
+            ],
+            'note' => 'ดู stock_item_master.fuzzy_matches: ถ้ามีรหัสคล้ายกัน = master ใช้คนละรูปแบบกับใบเบิก. ดู stock_balance_like / stock_detail_in_like: ถ้ามีแต่ exact ไม่มี = trailing space หรือรหัสคล้ายกัน',
+        ];
+    }
+
+    /**
+     * Diagnostic: หา master items (stock_item) ที่ "ชื่อซ้ำกัน" — root cause ของเคส
+     * "เลือก code ผิด" / "preflight บอกไม่มี ทั้งที่ชื่อตรง"
+     *
+     * เกณฑ์ซ้ำ:
+     *   - exact:  title เท่ากันเป๊ะ
+     *   - normalized: trim + ลด whitespace ซ้อน → ตัดสินใจเสริมว่าซ้ำเชิงสายตา
+     *
+     * สำหรับแต่ละ code แสดง:
+     *   - active, total_balance (รวมทุกคลัง), has_in_history, has_out_history
+     *   → ตัดสินได้ว่า code ไหนคือ "ตัวจริง" (มีกิจกรรม) vs "ตัวซ้ำ" (ปล่อยไว้/ปิด active)
+     */
+    public function actionDebugDuplicateItems($mode = 'exact')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $normalizeExpr = "TRIM(REPLACE(REPLACE(REPLACE(title, '  ', ' '), '  ', ' '), '  ', ' '))";
+        $groupExpr = $mode === 'normalized' ? $normalizeExpr : 'title';
+
+        $duplicateTitles = (new Query())
+            ->select(['title_key' => $groupExpr, 'cnt' => 'COUNT(*)'])
+            ->from(StockItem::tableName())
+            ->where(['name' => 'asset_item', 'group_id' => 'MATER'])
+            ->groupBy([$groupExpr])
+            ->having(['>', 'COUNT(*)', 1])
+            ->orderBy(['cnt' => SORT_DESC, 'title_key' => SORT_ASC])
+            ->all();
+
+        $totalGroups = count($duplicateTitles);
+        $totalAffected = 0;
+        $groups = [];
+
+        foreach ($duplicateTitles as $g) {
+            $titleKey = $g['title_key'];
+            $itemsQuery = (new Query())
+                ->select(['code', 'title', 'active'])
+                ->from(StockItem::tableName())
+                ->where(['name' => 'asset_item', 'group_id' => 'MATER']);
+            if ($mode === 'normalized') {
+                $itemsQuery->andWhere([$normalizeExpr => $titleKey]);
+            } else {
+                $itemsQuery->andWhere(['title' => $titleKey]);
+            }
+            $items = $itemsQuery->orderBy(['code' => SORT_ASC])->all();
+
+            $codes = [];
+            foreach ($items as $it) {
+                $code = $it['code'];
+
+                $balance = (float) (new Query())
+                    ->from(StockBalance::tableName())
+                    ->where(['item_code' => $code])
+                    ->sum('balance_qty');
+
+                $hasIn = (bool) (new Query())
+                    ->from(['d' => StockDetail::tableName()])
+                    ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+                    ->where(['d.item_code' => $code, 'o.order_type' => 'IN'])
+                    ->exists();
+
+                $hasOut = (bool) (new Query())
+                    ->from(['d' => StockDetail::tableName()])
+                    ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+                    ->where(['d.item_code' => $code, 'o.order_type' => 'OUT'])
+                    ->exists();
+
+                $codes[] = [
+                    'code' => $code,
+                    'title_exact' => $it['title'],
+                    'active' => (int) $it['active'],
+                    'total_balance' => round($balance, 2),
+                    'has_in_history' => $hasIn,
+                    'has_out_history' => $hasOut,
+                    'suggested_action' => self::suggestDuplicateAction($it['active'], $balance, $hasIn, $hasOut),
+                ];
+            }
+            $totalAffected += count($codes);
+            $groups[] = [
+                'title_key' => $titleKey,
+                'count' => (int) $g['cnt'],
+                'codes' => $codes,
+            ];
+        }
+
+        return [
+            'mode' => $mode,
+            'mode_hint' => 'ใช้ ?mode=normalized ถ้าอยากเทียบแบบลด whitespace ซ้อน',
+            'total_duplicate_groups' => $totalGroups,
+            'total_affected_items' => $totalAffected,
+            'duplicates' => $groups,
+            'legend' => [
+                'KEEP' => 'มี balance หรือกิจกรรม — ควรเก็บเป็นตัวจริง',
+                'DEACTIVATE' => 'ไม่มี balance ไม่มีกิจกรรม — ปิด active ได้ปลอดภัย',
+                'REVIEW' => 'มี IN/OUT history แต่ balance = 0 — ตรวจสอบก่อนตัดสินใจ',
+            ],
+        ];
+    }
+
+    private static function suggestDuplicateAction($active, $balance, $hasIn, $hasOut)
+    {
+        if ($balance > 0 || $hasOut) {
+            return 'KEEP';
+        }
+        if (!$hasIn && !$hasOut && $balance <= 0) {
+            return 'DEACTIVATE';
+        }
+        return 'REVIEW';
+    }
+
+    /**
+     * Diagnostic: แสดงใบรับเข้า 10 ใบล่าสุด พร้อม item_code ใน detail แต่ละ row
+     * ใช้วินิจฉัยเคส "รับเข้าแล้วแต่ระบบหาไม่เจอ" — ดูว่าใบรับเข้าจริง ๆ ใช้ item_code อะไร
+     */
+    public function actionDebugRecentReceives()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $orders = (new Query())
+            ->select(['id', 'order_no', 'status', 'order_date', 'main_warehouse_id', 'created_at'])
+            ->from(StockOrder::tableName())
+            ->where(['order_type' => 'IN'])
+            ->orderBy(['id' => SORT_DESC])
+            ->limit(10)
+            ->all();
+
+        $results = [];
+        foreach ($orders as $o) {
+            $details = (new Query())
+                ->select(['item_code', 'lot_number', 'qty', 'remain_qty'])
+                ->from(StockDetail::tableName())
+                ->where(['stock_order_id' => $o['id']])
+                ->all();
+            foreach ($details as &$d) {
+                $masterItem = StockItem::findOne(['code' => $d['item_code']]);
+                $d['item_code_bytes'] = strlen($d['item_code']);
+                $d['master_title'] = $masterItem ? $masterItem->title : '*** ไม่มีใน master ***';
+            }
+            unset($d);
+            $wh = Warehouse::findOne($o['main_warehouse_id']);
+            $results[] = [
+                'order_id' => (int) $o['id'],
+                'order_no' => $o['order_no'],
+                'status' => $o['status'],
+                'order_date' => $o['order_date'],
+                'created_at' => $o['created_at'],
+                'warehouse_id' => (int) $o['main_warehouse_id'],
+                'warehouse_name' => $wh ? $wh->warehouse_name : '?',
+                'warehouse_type' => $wh ? $wh->warehouse_type : '?',
+                'detail_count' => count($details),
+                'details' => $details,
+            ];
+        }
+
+        return ['recent_receives' => $results];
     }
 
     /**
