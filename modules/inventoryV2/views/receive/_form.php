@@ -1228,7 +1228,10 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             for (var i = 1; i < lines.length; i++) {
                 var rowNum = i + 1; // CSV row number (1-based, header = row 1)
                 var raw = lines[i];
-                var values = parseCsvLine(raw);
+                // ตัดเครื่องหมาย , หลักพันออกก่อน split (เช่น 1,500 → 1500, 12,345.67 → 12345.67)
+                // แล้วค่อย parse CSV เพื่อกัน split() แตก row ผิด
+                var preprocessed = normalizeThousandsSeparator(raw);
+                var values = parseCsvLine(preprocessed);
 
                 if (values.length < 4) {
                     skipped.push({ row: rowNum, name: values[1] || '', reason: 'จำนวนคอลัมน์น้อยกว่า 4 (ตรวจ comma ใน CSV)', raw: raw.substring(0, 60) });
@@ -1271,6 +1274,18 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             }
 
             importCSVItems(items, warehouseId, categoryId, skipped);
+        }
+
+        // ตัด comma หลักพันออกจากตัวเลข (Excel export ชอบใส่)
+        // - "ITEM,1,500,..." → "ITEM,1500,..."  (1,500 = หนึ่งพันห้าร้อย ไม่ใช่ 2 column)
+        // - "ITEM,1,500.50,..." → "ITEM,1500.50,..."
+        // - "ITEM,1,000,000,..." → "ITEM,1000000,..."
+        // เงื่อนไข match: 1-3 digit + , + 3 digit (+ optional decimal) ที่ขึ้นต้นด้วย non-digit
+        // ใช้ capture group แทน lookbehind (compat กับ Safari เก่า)
+        function normalizeThousandsSeparator(line) {
+            return line.replace(/(^|[^\d.])(\d{1,3}(?:,\d{3})+(?:\.\d+)?)/g, function(_, prefix, num) {
+                return prefix + num.replace(/,/g, '');
+            });
         }
 
         // Proper CSV parser — รองรับ quoted string ที่มี comma ข้างใน
