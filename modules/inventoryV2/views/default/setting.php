@@ -42,36 +42,30 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4 px-3 px-md-4" style="font-family: 'Sarabun', sans-serif;">
-    <!-- การค้นหา -->
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white py-2 px-3">
-                    <h6 class="mb-0"><i class="bi bi-search me-2"></i>การค้นหา</h6>
-                </div>
-                <div class="card-body">
-                    <?= $this->render('_search_warehouse', ['model' => $searchModel]) ?>
-                </div>
-            </div>
+<div class="container-fluid py-4 px-3 px-md-4 setting-warehouse-page" style="font-family: 'Sarabun', sans-serif;">
+    <!-- Inline toolbar: ค้นหา + สร้างคลัง -->
+    <div class="setting-toolbar mb-3 d-flex flex-wrap align-items-end justify-content-between gap-2">
+        <div class="flex-grow-1">
+            <?= $this->render('_search_warehouse', ['model' => $searchModel]) ?>
+        </div>
+        <div>
+            <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [
+                'class' => 'btn btn-primary btn-sm open-modal',
+                'data' => ['size' => 'modal-xl'],
+            ]) ?>
         </div>
     </div>
 
     <!-- รายการคลัง -->
     <div class="row g-3">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center py-2 px-3">
-                    <h6 class="mb-0">
-                        <i class="bi bi-ui-checks me-2"></i>รายการคลัง
-                        <span class="badge text-bg-light text-dark ms-2"><?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ</span>
-                    </h6>
-                    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [
-                        'class' => 'btn btn-light btn-sm open-modal',
-                        'data' => ['size' => 'modal-xl'],
-                    ]) ?>
-                </div>
-                <div class="card-body">
+            <div class="setting-list-header d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
+                <h6 class="mb-0 text-body fw-semibold d-flex align-items-center gap-2">
+                    <i class="bi bi-shop text-primary"></i>
+                    รายการคลัง
+                    <span class="badge rounded-pill text-bg-secondary fw-normal"><?= number_format($dataProvider->getTotalCount(), 0) ?></span>
+                </h6>
+            </div>
             <?php if ($dataProvider->getTotalCount() === 0): ?>
                 <p class="text-muted mb-0">ไม่พบรายการคลังสินค้า</p>
             <?php else: ?>
@@ -82,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         $reqCount = $reqCounts[$model->id] ?? 0;
                     ?>
                         <div class="col">
-                            <div class="card h-100 border shadow-sm setting-warehouse-card">
+                            <div class="card h-100 border-0 shadow-sm setting-warehouse-card">
                                 <div class="position-relative">
                                     <?= Html::img($imgUrl, [
                                         'class' => 'card-img-top object-fit-cover',
@@ -91,29 +85,31 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ]) ?>
                                     <div class="position-absolute top-0 end-0 p-2">
                                         <div class="dropdown">
-                                            <button class="btn btn-light btn-sm rounded-circle shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <button class="btn btn-light btn-sm rounded-circle shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูคลัง">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li>
-                                                    <?= Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข', ['/inventory-v2/warehouse/update', 'id' => $model->id, 'title' => 'แก้ไขคลัง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                                </li>
-                                                <li>
-                                                    <?= Html::a('<i class="bi bi-sliders2 me-2 text-primary"></i>ตั้ง min/max วัสดุ', ['/inventory-v2/warehouse/stock-min-max', 'id' => $model->id], ['class' => 'dropdown-item']) ?>
+                                                    <?= Html::a('<i class="bi bi-pencil me-2"></i>แก้ไขข้อมูลคลัง', ['/inventory-v2/warehouse/update', 'id' => $model->id, 'title' => 'แก้ไขคลัง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
-                                                    <?= Html::a('<i class="bi bi-trash me-2 text-danger"></i>ลบ', ['/inventory-v2/warehouse/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?>
+                                                    <?= Html::a('<i class="bi bi-trash me-2 text-danger"></i>ลบคลัง', ['/inventory-v2/warehouse/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?>
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
+                                    <?php if ($reqCount > 0): ?>
+                                        <span class="badge rounded-pill text-bg-primary position-absolute top-0 start-0 m-2 shadow-sm">
+                                            <i class="bi bi-bell me-1"></i><?= (int) $reqCount ?> รอดำเนินการ
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title fw-bold mb-1"><?= Html::encode($model->warehouse_name) ?></h6>
                                     <p class="text-muted small mb-2"><?= Html::encode($deptName) ?></p>
-                                    <div class="mb-2"><?= $model->viewWarehouseType() ?></div>
-                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-2">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                        <?= $model->viewWarehouseType() ?>
                                         <div class="avatar-stack d-flex flex-wrap gap-1">
                                             <?php
                                             if (!empty($model->data_json['officer']) && is_array($model->data_json['officer'])) {
@@ -128,13 +124,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                             }
                                             ?>
                                         </div>
-                                        <?php if ($reqCount > 0): ?>
-                                            <span class="badge rounded-pill text-bg-primary"><?= (int) $reqCount ?> รอดำเนินการ</span>
-                                        <?php endif; ?>
                                     </div>
-                                    <div class="mt-auto pt-2">
-                                        <?= Html::a('<i class="bi bi-shop me-1"></i> เลือกคลัง', ['/inventory-v2/warehouse/view', 'id' => $model->id], [
-                                            'class' => 'btn btn-primary btn-sm w-100 select-warehouse-btn',
+                                    <div class="mt-auto pt-2 d-grid gap-2">
+                                        <?= Html::a('<i class="bi bi-sliders2 me-1"></i> ตั้ง Min/Max วัสดุ', ['/inventory-v2/warehouse/stock-min-max', 'id' => $model->id], [
+                                            'class' => 'btn btn-primary btn-sm fw-semibold',
+                                            'title' => 'กำหนดจุดสั่งซื้อขั้นต่ำ/สูงของวัสดุในคลังนี้',
+                                        ]) ?>
+                                        <?= Html::a('เข้าใช้คลัง <i class="bi bi-arrow-right ms-1"></i>', ['/inventory-v2/warehouse/view', 'id' => $model->id], [
+                                            'class' => 'btn btn-link btn-sm text-decoration-none text-secondary select-warehouse-btn p-1',
                                             'data' => ['title' => $model->warehouse_name, 'img' => $imgUrl],
                                         ]) ?>
                                     </div>
@@ -155,8 +152,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 <?php endif; ?>
             <?php endif; ?>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -191,9 +186,25 @@ $this->registerJs($js, View::POS_END);
 ?>
 
 <style>
-.setting-warehouse-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.setting-warehouse-card:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important; }
-.avatar-stack .avatar-sm { width: 28px; height: 28px; object-fit: cover; }
-.avatar-stack a { text-decoration: none; }
-.bg-primary-subtle { background-color: #cfe2ff !important; }
+.setting-warehouse-page .setting-warehouse-card {
+    transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.setting-warehouse-page .setting-warehouse-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.6rem 1.25rem rgba(0,0,0,0.08) !important;
+}
+.setting-warehouse-page .setting-warehouse-card .btn-primary { min-height: 38px; }
+.setting-warehouse-page .avatar-stack .avatar-sm { width: 26px; height: 26px; object-fit: cover; }
+.setting-warehouse-page .avatar-stack a { text-decoration: none; }
+.setting-toolbar .warehouse-search .form-control,
+.setting-toolbar .warehouse-search .form-select { min-height: 34px; }
+@media (prefers-reduced-motion: reduce) {
+    .setting-warehouse-page .setting-warehouse-card,
+    .setting-warehouse-page .setting-warehouse-card:hover {
+        transition: none;
+        transform: none;
+    }
+}
 </style>

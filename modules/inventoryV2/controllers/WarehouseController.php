@@ -37,18 +37,14 @@ class WarehouseController extends Controller
     }
 
     /**
-     * รายการคลัง หรือ redirect ไป dashboard ถ้าเลือกคลังแล้ว
+     * Legacy table view — รวมเป็นหน้าเดียวที่ default/setting (card grid)
+     * รักษา bookmark/legacy link ให้ยังทำงาน
      */
     public function actionIndex()
     {
-
-        $searchModel = new WarehouseSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['delete' => null]);
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        return $this->redirect(
+            array_merge(['/inventory-v2/default/setting'], $this->request->queryParams)
+        );
     }
 
     /**
@@ -167,10 +163,18 @@ class WarehouseController extends Controller
         $warehouse = $this->findModel($id);
 
         $q = trim((string) $this->request->get('q', ''));
-        $status = $this->request->get('status', 'all'); // all | configured | unconfigured
-        $categoryId = $this->request->get('category_id', '');
+        // all | configured | unconfigured | below_min | above_max
+        $status = $this->request->get('status', 'all');
+        $categoryId = trim((string) $this->request->get('category_id', ''));
 
         $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+
+        // balance subquery: SUM(balance_qty) per item_code ในคลังนี้ (รวมทุก lot)
+        $balanceSub = (new Query())
+            ->select(['item_code', 'balance_total' => new Expression('SUM(balance_qty)')])
+            ->from('{{%stock_balance}}')
+            ->where(['warehouse_id' => $warehouse->id])
+            ->groupBy('item_code');
 
         $query = (new Query())
             ->select([
@@ -184,6 +188,7 @@ class WarehouseController extends Controller
                 's.max_qty AS setting_max_qty',
                 's.note AS setting_note',
                 's.is_active AS setting_is_active',
+                'balance_qty' => new Expression('COALESCE(b.balance_total, 0)'),
             ])
             ->from(['i' => '{{%categorise}}'])
             ->leftJoin(
@@ -191,6 +196,7 @@ class WarehouseController extends Controller
                 's.item_code = i.code AND s.warehouse_id = :wid',
                 [':wid' => $warehouse->id]
             )
+            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
             ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
             ->andWhere(['i.active' => 1]);
 
@@ -204,13 +210,19 @@ class WarehouseController extends Controller
                 ['like', 'i.title', $q],
             ]);
         }
-        if ($categoryId !== '' && $categoryId !== null) {
+        if ($categoryId !== '') {
             $query->andWhere(['i.category_id' => $categoryId]);
         }
         if ($status === 'configured') {
             $query->andWhere(['IS NOT', 's.id', null]);
         } elseif ($status === 'unconfigured') {
             $query->andWhere(['s.id' => null]);
+        } elseif ($status === 'below_min') {
+            $query->andWhere(['IS NOT', 's.id', null])
+                ->andWhere(new Expression('COALESCE(b.balance_total, 0) < s.min_qty'));
+        } elseif ($status === 'above_max') {
+            $query->andWhere(['IS NOT', 's.id', null])
+                ->andWhere(new Expression('COALESCE(b.balance_total, 0) > s.max_qty'));
         }
 
         $countQuery = clone $query;
@@ -225,11 +237,13 @@ class WarehouseController extends Controller
             ->limit($pagination->limit)
             ->all();
 
-        // นับสรุปสำหรับ header badge
-        $totals = (new Query())
+        // นับสรุป (รวม below_min / above_max) — query ครั้งเดียว
+        $totalsQuery = (new Query())
             ->select([
                 'total' => 'COUNT(DISTINCT i.code)',
                 'configured' => 'COUNT(DISTINCT s.item_code)',
+                'below_min' => new Expression('SUM(CASE WHEN s.id IS NOT NULL AND COALESCE(b.balance_total, 0) < s.min_qty THEN 1 ELSE 0 END)'),
+                'above_max' => new Expression('SUM(CASE WHEN s.id IS NOT NULL AND COALESCE(b.balance_total, 0) > s.max_qty THEN 1 ELSE 0 END)'),
             ])
             ->from(['i' => '{{%categorise}}'])
             ->leftJoin(
@@ -237,10 +251,24 @@ class WarehouseController extends Controller
                 's.item_code = i.code AND s.warehouse_id = :wid',
                 [':wid' => $warehouse->id]
             )
+            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
             ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
-            ->andWhere(['i.active' => 1])
-            ->andFilterWhere(['i.category_id' => $allowedTypes ?: null])
-            ->one();
+            ->andWhere(['i.active' => 1]);
+        if (!empty($allowedTypes)) {
+            $totalsQuery->andWhere(['i.category_id' => $allowedTypes]);
+        }
+        $totals = $totalsQuery->one();
+
+        // หมวดวัสดุที่คลังนี้รับเข้า — สำหรับ dropdown filter
+        $categoryOptions = [];
+        if (!empty($allowedTypes)) {
+            $categoryOptions = (new Query())
+                ->select(['code', 'title'])
+                ->from('{{%categorise}}')
+                ->where(['name' => 'asset_type', 'code' => $allowedTypes])
+                ->orderBy(['title' => SORT_ASC])
+                ->all();
+        }
 
         $accessibleWarehouses = Warehouse::findAllAccessibleWarehouses();
         $hasInventoryRole = Warehouse::currentUserHasInventoryRole();
@@ -253,6 +281,7 @@ class WarehouseController extends Controller
             'q' => $q,
             'status' => $status,
             'categoryId' => $categoryId,
+            'categoryOptions' => $categoryOptions,
             'accessibleWarehouses' => $accessibleWarehouses,
             'hasInventoryRole' => $hasInventoryRole,
         ];
