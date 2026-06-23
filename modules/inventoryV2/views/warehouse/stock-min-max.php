@@ -36,6 +36,7 @@ $deleteUrl = Url::to(['/inventory-v2/warehouse/delete-setting']);
 $saveBatchUrl = Url::to(['/inventory-v2/warehouse/save-setting-batch']);
 $copyPreviewUrl = Url::to(['/inventory-v2/warehouse/copy-from-preview']);
 $copyUrl = Url::to(['/inventory-v2/warehouse/copy-from']);
+$importPreviewUrl = Url::to(['/inventory-v2/warehouse/import-preview', 'id' => $warehouse->id]);
 $csrf = Yii::$app->request->csrfToken;
 ?>
 
@@ -205,6 +206,30 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-copy-from-modal" title="คัดลอกค่า Min/Max จากคลังอื่น">
                             <i class="bi bi-clipboard-plus me-1"></i>คัดลอกจากคลัง
                         </button>
+                        <!-- Excel dropdown -->
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'template']) ?>">
+                                        <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Template (ว่าง)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'snapshot']) ?>">
+                                        <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Snapshot (ค่าปัจจุบัน)
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#smm-import-modal">
+                                        <i class="bi bi-upload me-2 text-primary"></i>นำเข้า Excel...
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -517,6 +542,98 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
     </div>
 </div>
 
+<!-- Excel Import modal -->
+<div class="modal fade" id="smm-import-modal" tabindex="-1" aria-labelledby="smm-import-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="smm-import-title">
+                    <i class="bi bi-upload text-primary me-1"></i>
+                    นำเข้า Min/Max จาก Excel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Upload -->
+                <div id="smm-import-step1" class="mb-3">
+                    <label for="smm-import-file" class="form-label small fw-semibold">
+                        <span class="badge text-bg-primary me-1">1</span>เลือกไฟล์ Excel/CSV
+                    </label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="file" id="smm-import-file" class="form-control" accept=".xlsx,.xls,.csv">
+                        <button type="button" class="btn btn-primary" id="smm-import-upload">
+                            <i class="bi bi-search me-1"></i>ตรวจสอบ
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        แนะนำให้ดาวน์โหลด Template หรือ Snapshot ก่อน แล้วแก้ค่า Min/Max ในคอลัมน์ที่กำหนด — รองรับไฟล์ขนาดไม่เกิน 5MB / 2000 รายการ
+                    </small>
+                </div>
+
+                <!-- Step 2: Preview -->
+                <div id="smm-import-step2" class="d-none">
+                    <div class="mb-2">
+                        <span class="badge text-bg-primary me-1">2</span>
+                        <strong>ตรวจรายการก่อนบันทึก</strong>
+                    </div>
+                    <div class="row g-2 mb-3" id="smm-import-summary">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 border rounded-3 text-center">
+                                <div class="text-muted small">รายการใหม่</div>
+                                <div class="fs-5 fw-semibold text-success" id="smm-cnt-new">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 border rounded-3 text-center">
+                                <div class="text-muted small">จะอัปเดต</div>
+                                <div class="fs-5 fw-semibold text-primary" id="smm-cnt-update">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 border rounded-3 text-center">
+                                <div class="text-muted small">ไม่เปลี่ยน</div>
+                                <div class="fs-5 fw-semibold text-secondary" id="smm-cnt-unchanged">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 border rounded-3 text-center">
+                                <div class="text-muted small">ข้อผิดพลาด</div>
+                                <div class="fs-5 fw-semibold text-danger" id="smm-cnt-error">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 380px;">
+                        <table class="table table-sm table-hover align-middle mb-0 smm-import-table">
+                            <thead class="table-light position-sticky top-0">
+                                <tr>
+                                    <th style="width:60px;">แถว</th>
+                                    <th>รหัส / ชื่อ</th>
+                                    <th class="text-end" style="width:90px;">Min</th>
+                                    <th class="text-end" style="width:90px;">Max</th>
+                                    <th class="text-center" style="width:110px;">สถานะ</th>
+                                    <th>หมายเหตุ / ปัญหา</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smm-import-preview-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer flex-wrap gap-2">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-outline-secondary d-none" id="smm-import-reset">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>เลือกไฟล์ใหม่
+                </button>
+                <button type="button" class="btn btn-primary d-none" id="smm-import-apply">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    บันทึก <span class="js-apply-count">0</span> รายการ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="smm-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;"></div>
 
 <style>
@@ -671,6 +788,7 @@ $js = <<<JS
     const SAVE_BATCH_URL   = '{$saveBatchUrl}';
     const COPY_PREVIEW_URL = '{$copyPreviewUrl}';
     const COPY_URL         = '{$copyUrl}';
+    const IMPORT_PREVIEW_URL = '{$importPreviewUrl}';
     const CSRF             = '{$csrf}';
     const WAREHOUSE_ID     = {$warehouse->id};
     const MODE_PREF_KEY    = 'inv2:smm:mode';
@@ -1130,6 +1248,146 @@ $js = <<<JS
 
     if (copySourceSelect) {
         copySourceSelect.addEventListener('change', function () { loadCopyPreview(this.value); });
+    }
+
+    // ===== Excel Import =====
+    const importFile = document.getElementById('smm-import-file');
+    const importUpload = document.getElementById('smm-import-upload');
+    const importStep1 = document.getElementById('smm-import-step1');
+    const importStep2 = document.getElementById('smm-import-step2');
+    const importReset = document.getElementById('smm-import-reset');
+    const importApply = document.getElementById('smm-import-apply');
+    const importPreviewBody = document.getElementById('smm-import-preview-body');
+    let importPreviewRows = [];
+
+    const STATUS_PILL = {
+        new:       { label: 'ใหม่',         cls: 'text-bg-success-subtle text-success border border-success-subtle' },
+        update:    { label: 'จะอัปเดต',     cls: 'text-bg-primary-subtle text-primary border border-primary-subtle' },
+        unchanged: { label: 'ไม่เปลี่ยน',   cls: 'text-bg-light text-secondary border' },
+        error:     { label: 'ข้อผิดพลาด',   cls: 'text-bg-danger-subtle text-danger border border-danger-subtle' },
+    };
+
+    function renderImportPreview(data) {
+        const rows = data.rows || [];
+        const sum = data.summary || {};
+        document.getElementById('smm-cnt-new').textContent       = sum.new || 0;
+        document.getElementById('smm-cnt-update').textContent    = sum.update || 0;
+        document.getElementById('smm-cnt-unchanged').textContent = sum.unchanged || 0;
+        document.getElementById('smm-cnt-error').textContent     = sum.error || 0;
+
+        const html = rows.map(function (r) {
+            const pill = STATUS_PILL[r.status] || STATUS_PILL.error;
+            const issue = (r.errors && r.errors.length) ? r.errors.join(', ')
+                        : (r.status === 'update' ? 'เดิม Min=' + (r.current_min ?? '-') + ' Max=' + (r.current_max ?? '-') : '');
+            const escape = function (s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+                });
+            };
+            return '<tr>' +
+                '<td class="text-muted small">' + r.row_index + '</td>' +
+                '<td><div class="fw-semibold">' + escape(r.item_name) + '</div>' +
+                    '<code class="text-muted small">' + escape(r.item_code) + '</code></td>' +
+                '<td class="text-end font-monospace">' + (r.min_qty != null ? Number(r.min_qty).toLocaleString() : '—') + '</td>' +
+                '<td class="text-end font-monospace">' + (r.max_qty != null ? Number(r.max_qty).toLocaleString() : '—') + '</td>' +
+                '<td class="text-center"><span class="badge ' + pill.cls + '">' + pill.label + '</span></td>' +
+                '<td class="small text-muted">' + escape(issue) + '</td>' +
+            '</tr>';
+        }).join('');
+        importPreviewBody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการ</td></tr>';
+
+        const applyCount = rows.filter(r => r.status === 'new' || r.status === 'update').length;
+        importApply.querySelector('.js-apply-count').textContent = applyCount;
+        importApply.classList.toggle('d-none', applyCount === 0);
+        importReset.classList.remove('d-none');
+        importPreviewRows = rows;
+    }
+
+    function resetImportModal() {
+        importStep1.classList.remove('d-none');
+        importStep2.classList.add('d-none');
+        importReset.classList.add('d-none');
+        importApply.classList.add('d-none');
+        importPreviewBody.innerHTML = '';
+        importFile.value = '';
+        importPreviewRows = [];
+    }
+
+    if (importUpload) {
+        importUpload.addEventListener('click', function () {
+            const f = importFile.files && importFile.files[0];
+            if (!f) {
+                showToast('กรุณาเลือกไฟล์ก่อน', 'error');
+                return;
+            }
+            importUpload.disabled = true;
+            const form = new FormData();
+            form.append('file', f);
+            form.append('_csrf', CSRF);
+            fetch(IMPORT_PREVIEW_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    importUpload.disabled = false;
+                    if (data.status !== 'success') {
+                        showToast(data.message || 'อ่านไฟล์ไม่สำเร็จ', 'error');
+                        return;
+                    }
+                    importStep1.classList.add('d-none');
+                    importStep2.classList.remove('d-none');
+                    renderImportPreview(data);
+                })
+                .catch(() => {
+                    importUpload.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
+        });
+    }
+
+    if (importReset) importReset.addEventListener('click', resetImportModal);
+
+    // เคลียร์ state ทุกครั้งที่ปิด modal
+    const importModalEl = document.getElementById('smm-import-modal');
+    if (importModalEl) importModalEl.addEventListener('hidden.bs.modal', resetImportModal);
+
+    if (importApply) {
+        importApply.addEventListener('click', function () {
+            const valid = importPreviewRows.filter(r => r.status === 'new' || r.status === 'update');
+            if (valid.length === 0) return;
+            if (!confirm('ยืนยันบันทึก ' + valid.length + ' รายการ?')) return;
+
+            importApply.disabled = true;
+            const form = new FormData();
+            form.append('warehouse_id', String(WAREHOUSE_ID));
+            form.append('_csrf', CSRF);
+            valid.forEach(function (r, i) {
+                form.append('items[' + i + '][item_code]', r.item_code);
+                form.append('items[' + i + '][min_qty]',  r.min_qty);
+                form.append('items[' + i + '][max_qty]',  r.max_qty);
+            });
+            fetch(SAVE_BATCH_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    importApply.disabled = false;
+                    if (data.status === 'success') {
+                        showToast('นำเข้าแล้ว ' + (data.saved || valid.length) + ' รายการ', 'success');
+                        const modal = bootstrap.Modal.getInstance(importModalEl);
+                        if (modal) modal.hide();
+                        setTimeout(function () { window.location.reload(); }, 700);
+                    } else {
+                        showToast(data.message || 'บันทึกไม่สำเร็จ', 'error');
+                    }
+                })
+                .catch(() => {
+                    importApply.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
+        });
     }
 
     if (copyConfirmBtn) {

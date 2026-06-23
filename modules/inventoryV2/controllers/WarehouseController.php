@@ -15,6 +15,9 @@ use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\WarehouseSearch;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockItemWarehouseSetting;
+use app\modules\inventoryV2\services\StockMinMaxImportService;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use yii\web\UploadedFile;
 
 /**
  * Warehouse CRUD ใน inventoryV2 (ย้ายมาจาก modules/inventory)
@@ -33,6 +36,7 @@ class WarehouseController extends Controller
                     'delete-setting' => ['POST'],
                     'save-setting-batch' => ['POST'],
                     'copy-from' => ['POST'],
+                    'import-preview' => ['POST'],
                 ],
             ],
         ]);
@@ -572,6 +576,80 @@ class WarehouseController extends Controller
         }
 
         return ['status' => 'success', 'copied' => $copied, 'skipped' => $skipped];
+    }
+
+    /**
+     * Download Excel: template (ว่าง) หรือ snapshot (เติมค่าเดิม)
+     */
+    public function actionExportSettings($id)
+    {
+        $warehouse = $this->findModel($id);
+        if (!$this->canAccessWarehouse($warehouse)) {
+            throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์เข้าถึงคลังนี้');
+        }
+        $mode = $this->request->get('mode') === StockMinMaxImportService::MODE_SNAPSHOT
+            ? StockMinMaxImportService::MODE_SNAPSHOT
+            : StockMinMaxImportService::MODE_TEMPLATE;
+
+        $svc = new StockMinMaxImportService();
+        $spread = $svc->generateTemplate((int) $warehouse->id, $mode);
+
+        $modeLabel = $mode === StockMinMaxImportService::MODE_SNAPSHOT ? 'snapshot' : 'template';
+        $filename = 'min-max-' . $warehouse->warehouse_name . '-' . $modeLabel . '-' . date('Y-m-d') . '.xlsx';
+        $filename = preg_replace('/[\\/\\\\:*?"<>|]/u', '-', $filename); // sanitize
+
+        $resp = Yii::$app->response;
+        $resp->format = Response::FORMAT_RAW;
+        $resp->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $resp->headers->set('Content-Disposition',
+            'attachment; filename="' . rawurlencode($filename) . '"; filename*=UTF-8\'\'' . rawurlencode($filename));
+        $resp->headers->set('Cache-Control', 'no-cache, must-revalidate');
+
+        ob_start();
+        $writer = new XlsxWriter($spread);
+        $writer->save('php://output');
+        $resp->content = ob_get_clean();
+        $spread->disconnectWorksheets();
+        return $resp;
+    }
+
+    /**
+     * Upload file → parse → return preview JSON (ยังไม่บันทึก)
+     */
+    public function actionImportPreview($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse = $this->findModel($id);
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $file = UploadedFile::getInstanceByName('file');
+        if (!$file) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์ที่อัปโหลด'];
+        }
+        $ext = strtolower($file->extension);
+        if (!in_array($ext, ['xlsx', 'xls', 'csv'], true)) {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะไฟล์ .xlsx / .xls / .csv'];
+        }
+        if ($file->size > 5 * 1024 * 1024) { // 5 MB
+            return ['status' => 'error', 'message' => 'ไฟล์ใหญ่เกิน 5 MB'];
+        }
+
+        $tmp = $file->tempName;
+        try {
+            $svc = new StockMinMaxImportService();
+            $result = $svc->parseFile($tmp, (int) $warehouse->id);
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'อ่านไฟล์ไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        $totalRows = $result['summary']['total'] ?? 0;
+        if ($totalRows > 2000) {
+            return ['status' => 'error', 'message' => 'รายการเกิน 2000 — ขอให้ตัดแบ่งไฟล์'];
+        }
+
+        return ['status' => 'success'] + $result;
     }
 
     /**
