@@ -785,11 +785,19 @@ class StockItemController extends Controller
                     $created[] = $itemCode;
                 } else {
                     // อัปเดตหน่วยนับถ้ามีและยังไม่มีใน data_json
+                    // data_json อาจมาเป็น array (Yii json column auto-cast) หรือ string ขึ้นกับ driver/version
                     if (!empty($unitName)) {
-                        $dataJson = $stockItem->data_json ? json_decode($stockItem->data_json, true) : [];
+                        $raw = $stockItem->data_json;
+                        if (is_array($raw)) {
+                            $dataJson = $raw;
+                        } elseif (is_string($raw) && $raw !== '') {
+                            $dataJson = json_decode($raw, true) ?: [];
+                        } else {
+                            $dataJson = [];
+                        }
                         if (empty($dataJson['unit_name'])) {
                             $dataJson['unit_name'] = $unitName;
-                            $stockItem->data_json = json_encode($dataJson);
+                            $stockItem->data_json = $dataJson; // ส่ง array ให้ Yii encode เอง (รองรับ JSON column)
                             $stockItem->updated_at = time();
                             $stockItem->updated_by = Yii::$app->user->id ?? null;
                             $stockItem->save(false);
