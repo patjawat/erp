@@ -18,13 +18,13 @@ use yii\db\ActiveQuery;
  */
 class StockItemQuery extends ActiveQuery
 {
-    private static $aliases = [
-        'item_code' => 'code',
-        'item_name' => 'title',
-        'min_qty'   => 'qty_min',
-        'max_qty'   => 'qty_max',
-        'is_active' => 'active',
-    ];
+    /**
+     * อ้างอิงจาก StockItem::COLUMN_ALIASES (single source of truth)
+     */
+    private static function aliases(): array
+    {
+        return StockItem::COLUMN_ALIASES;
+    }
 
     public function init()
     {
@@ -72,8 +72,8 @@ class StockItemQuery extends ActiveQuery
         }
         $out = [];
         foreach ($condition as $key => $value) {
-            if (is_string($key) && isset(self::$aliases[$key])) {
-                $out[self::$aliases[$key]] = $value;
+            if (is_string($key) && isset(self::aliases()[$key])) {
+                $out[self::aliases()[$key]] = $value;
             } else {
                 $out[$key] = $value;
             }

@@ -40,6 +40,18 @@ class StockItem extends \yii\db\ActiveRecord
     public $unit_name;
     public $q;
 
+    /**
+     * Map alias → real column (ใช้ทั้ง findOne, findAll, และ StockItemQuery)
+     * ต้องตรงกับ StockItemQuery::$aliases
+     */
+    public const COLUMN_ALIASES = [
+        'item_code' => 'code',
+        'item_name' => 'title',
+        'min_qty'   => 'qty_min',
+        'max_qty'   => 'qty_max',
+        'is_active' => 'active',
+    ];
+
     /** ส่งคำสั่ง SELECT/UPDATE/INSERT ไปที่ตาราง categorise */
     public static function tableName()
     {
@@ -55,7 +67,7 @@ class StockItem extends \yii\db\ActiveRecord
     /**
      * Override findOne — รองรับ pattern เดิม:
      *   StockItem::findOne($itemCode)            -> หาด้วย code
-     *   StockItem::findOne(['item_code' => ...]) -> alias เป็น code (ผ่าน Query)
+     *   StockItem::findOne(['item_code' => ...]) -> alias เป็น code (ก่อน parent validate กับ schema)
      *   StockItem::findOne(['id' => $id])        -> หาด้วย categorise.id ตามปกติ
      *   StockItem::findOne($intId)               -> หาด้วย categorise.id (PK)
      */
@@ -65,7 +77,39 @@ class StockItem extends \yii\db\ActiveRecord
             // string ที่ไม่ใช่ตัวเลข -> ถือเป็น item_code
             return static::find()->andWhere(['code' => $condition])->one();
         }
+        if (is_array($condition)) {
+            $condition = static::translateAliasKeys($condition);
+        }
         return parent::findOne($condition);
+    }
+
+    /**
+     * Override findAll เพื่อ translate alias เช่นเดียวกับ findOne
+     */
+    public static function findAll($condition)
+    {
+        if (is_array($condition)) {
+            $condition = static::translateAliasKeys($condition);
+        }
+        return parent::findAll($condition);
+    }
+
+    /**
+     * แปลง alias key ใน hash condition → real column
+     * จำเป็นเพราะ parent::findByCondition() เรียก filterCondition() ที่ validate กับ table schema
+     * ก่อนที่ andWhere จะถูกเรียก (StockItemQuery::translateCondition จึงไม่ทันช่วย)
+     */
+    public static function translateAliasKeys(array $condition): array
+    {
+        $out = [];
+        foreach ($condition as $key => $value) {
+            if (is_string($key) && isset(self::COLUMN_ALIASES[$key])) {
+                $out[self::COLUMN_ALIASES[$key]] = $value;
+            } else {
+                $out[$key] = $value;
+            }
+        }
+        return $out;
     }
 
     public function init()
