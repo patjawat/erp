@@ -70,7 +70,7 @@ class StockBalance extends \yii\db\ActiveRecord
 
         public function getItem()
         {
-            return $this->hasOne(StockItem::class, ['item_code' => 'item_code']);
+            return $this->hasOne(StockItem::class, ['code' => 'item_code']);
         }
 
 }

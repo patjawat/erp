@@ -80,16 +80,16 @@ class MainStockController extends \yii\web\Controller
 
         $itemsQuery = (new Query())
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->select([
                 'sb.item_code',
-                'i.item_name',
+                'item_name' => 'i.title',
                 'total_qty' => new Expression('SUM(sb.balance_qty)'),
             ])
             ->where(['sb.warehouse_id' => $warehouseIds])
             ->andWhere(['>', 'sb.balance_qty', 0])
-            ->groupBy(['sb.item_code', 'i.item_name'])
-            ->orderBy(['i.item_name' => SORT_ASC]);
+            ->groupBy(['sb.item_code', 'i.title'])
+            ->orderBy(['i.title' => SORT_ASC]);
 
         $totalCount = (int) (clone $itemsQuery)->count();
         $pagination = new Pagination([
@@ -172,32 +172,32 @@ class MainStockController extends \yii\web\Controller
 
             $itemsQuery = (new Query())
                 ->from(['i' => StockItem::tableName()])
-                ->leftJoin(['b' => $balanceSub], 'b.item_code = i.item_code')
+                ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
                 ->select([
-                    'i.item_code',
-                    'i.item_name',
-                    'i.min_qty',
+                    'item_code' => 'i.code',
+                    'item_name' => 'i.title',
+                    'min_qty' => 'i.qty_min',
                     'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
-                    'shortfall' => new Expression('i.min_qty - COALESCE(b.total_qty, 0)'),
+                    'shortfall' => new Expression('i.qty_min - COALESCE(b.total_qty, 0)'),
                 ])
                 ->where([
-                    'i.is_active' => 1,
+                    'i.active' => 1,
                 ])
-                ->andWhere(['not', ['i.min_qty' => null]])
-                ->andWhere(['>', 'i.min_qty', 0])
-                ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+                ->andWhere(['not', ['i.qty_min' => null]])
+                ->andWhere(['>', 'i.qty_min', 0])
+                ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
 
             if ($q !== '') {
                 $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
-                $codeCond = ['like', 'i.item_code', $q];
+                $codeCond = ['like', 'i.code', $q];
 
                 if (!empty($tokens)) {
                     $nameCond = ['and'];
                     foreach ($tokens as $t) {
-                        $nameCond[] = ['like', 'i.item_name', $t];
+                        $nameCond[] = ['like', 'i.title', $t];
                     }
                 } else {
-                    $nameCond = ['like', 'i.item_name', $q];
+                    $nameCond = ['like', 'i.title', $q];
                 }
 
                 $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
@@ -206,7 +206,7 @@ class MainStockController extends \yii\web\Controller
             $totalCount = (int) (clone $itemsQuery)->count();
 
             $rows = (clone $itemsQuery)
-                ->orderBy(['i.min_qty' => SORT_DESC, 'i.item_name' => SORT_ASC])
+                ->orderBy(['i.qty_min' => SORT_DESC, 'i.title' => SORT_ASC])
                 ->limit(20)
                 ->all();
 
@@ -290,28 +290,28 @@ class MainStockController extends \yii\web\Controller
 
         $itemsQuery = (new Query())
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->select([
                 'sb.item_code',
-                'i.item_name',
+                'item_name' => 'i.title',
                 'total_qty' => new Expression('SUM(sb.balance_qty)'),
             ])
             ->where(['sb.warehouse_id' => $warehouseIds])
             ->andWhere(['>', 'sb.balance_qty', 0])
-            ->groupBy(['sb.item_code', 'i.item_name'])
-            ->orderBy(['i.item_name' => SORT_ASC]);
+            ->groupBy(['sb.item_code', 'i.title'])
+            ->orderBy(['i.title' => SORT_ASC]);
 
         if ($q !== '') {
             $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
-            $codeCond = ['like', 'i.item_code', $q];
+            $codeCond = ['like', 'i.code', $q];
 
             if (!empty($tokens)) {
                 $nameCond = ['and'];
                 foreach ($tokens as $t) {
-                    $nameCond[] = ['like', 'i.item_name', $t];
+                    $nameCond[] = ['like', 'i.title', $t];
                 }
             } else {
-                $nameCond = ['like', 'i.item_name', $q];
+                $nameCond = ['like', 'i.title', $q];
             }
 
             $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
@@ -408,37 +408,37 @@ class MainStockController extends \yii\web\Controller
 
         $itemsQuery = (new Query())
             ->from(['i' => StockItem::tableName()])
-            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.item_code')
+            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
             ->select([
-                'i.item_code',
-                'i.item_name',
-                'i.min_qty',
+                'item_code' => 'i.code',
+                'item_name' => 'i.title',
+                'min_qty' => 'i.qty_min',
                 'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
-                'shortfall' => new Expression('i.min_qty - COALESCE(b.total_qty, 0)'),
+                'shortfall' => new Expression('i.qty_min - COALESCE(b.total_qty, 0)'),
             ])
-            ->where(['i.is_active' => 1])
-            ->andWhere(['not', ['i.min_qty' => null]])
-            ->andWhere(['>', 'i.min_qty', 0])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+            ->where(['i.active' => 1])
+            ->andWhere(['not', ['i.qty_min' => null]])
+            ->andWhere(['>', 'i.qty_min', 0])
+            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
 
         if ($q !== '') {
             $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
-            $codeCond = ['like', 'i.item_code', $q];
+            $codeCond = ['like', 'i.code', $q];
 
             if (!empty($tokens)) {
                 $nameCond = ['and'];
                 foreach ($tokens as $t) {
-                    $nameCond[] = ['like', 'i.item_name', $t];
+                    $nameCond[] = ['like', 'i.title', $t];
                 }
             } else {
-                $nameCond = ['like', 'i.item_name', $q];
+                $nameCond = ['like', 'i.title', $q];
             }
 
             $itemsQuery->andWhere(['or', $codeCond, $nameCond]);
         }
 
         $rows = $itemsQuery
-            ->orderBy(['i.min_qty' => SORT_DESC, 'i.item_name' => SORT_ASC])
+            ->orderBy(['i.qty_min' => SORT_DESC, 'i.title' => SORT_ASC])
             ->all();
 
         $itemCodes = array_values(array_unique(array_filter(array_map(function ($r) {
@@ -581,14 +581,14 @@ class MainStockController extends \yii\web\Controller
                     ->from(StockBalance::tableName())
                     ->where($warehouseId ? ['warehouse_id' => $warehouseId] : ['warehouse_id' => $mainWarehouseIds])
                     ->groupBy('item_code')],
-                'b.item_code = i.item_code'
+                'b.item_code = i.code'
             )
             ->where(['and',
-                ['i.is_active' => 1],
-                ['not', ['i.min_qty' => null]],
-                ['>', 'i.min_qty', 0],
+                ['i.active' => 1],
+                ['not', ['i.qty_min' => null]],
+                ['>', 'i.qty_min', 0],
             ])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
         $criticalCount = (int) $criticalQuery->count();
 
         $valueQuery = (new Query())
@@ -615,7 +615,7 @@ class MainStockController extends \yii\web\Controller
 
         $usageQuery = (new Query())
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->where($warehouseId ? ['sb.warehouse_id' => $warehouseId] : ['sb.warehouse_id' => $mainWarehouseIds])
             ->andWhere(['>', 'sb.balance_qty', 0]);
         $lotsCount = (int) (clone $usageQuery)->count();

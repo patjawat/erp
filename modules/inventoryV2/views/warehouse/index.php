@@ -49,7 +49,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">แผนก/ฝ่าย</th>
                     <th scope="col">ประเภทคลัง</th>
                     <th scope="col">ผู้รับผิดชอบคลัง</th>
-                    <th scope="col" style="width:150px">ดำเนินการ</th>
+                    <th scope="col" style="width:180px">ดำเนินการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
@@ -62,6 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $model->avatarStack() ?></td>
                         <td class="d-flex justify-content-center gap-2">
                             <?= Html::a('<i class="bi bi-pencil"></i>', ['/inventory-v2/warehouse/update', 'id' => $model->id, 'title' => 'แก้ไข'], ['class' => 'btn btn-warning btn-sm open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a('<i class="bi bi-sliders2"></i>', ['/inventory-v2/warehouse/stock-min-max', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm', 'title' => 'ตั้ง min/max วัสดุ', 'data-bs-toggle' => 'tooltip']) ?>
                             <?= Html::a('<i class="bi bi-trash"></i>', ['/inventory-v2/warehouse/delete', 'id' => $model->id], ['class' => 'btn btn-danger btn-sm delete-item']) ?>
                         </td>
                     </tr>

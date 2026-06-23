@@ -99,6 +99,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     <?= Html::a('<i class="bi bi-pencil me-2"></i>แก้ไข', ['/inventory-v2/warehouse/update', 'id' => $model->id, 'title' => 'แก้ไขคลัง'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                                 </li>
                                                 <li>
+                                                    <?= Html::a('<i class="bi bi-sliders2 me-2 text-primary"></i>ตั้ง min/max วัสดุ', ['/inventory-v2/warehouse/stock-min-max', 'id' => $model->id], ['class' => 'dropdown-item']) ?>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
                                                     <?= Html::a('<i class="bi bi-trash me-2 text-danger"></i>ลบ', ['/inventory-v2/warehouse/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?>
                                                 </li>
                                             </ul>

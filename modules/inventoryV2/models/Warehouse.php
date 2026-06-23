@@ -179,19 +179,41 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
     /**
+     * เช็คว่า user ปัจจุบันมีสิทธิ์ระดับ inventory หรือไม่
+     * ถ้ามีจะข้ามการกรอง officer / department ในทุก method
+     * @return bool
+     */
+    public static function currentUserHasInventoryRole()
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        try {
+            return Yii::$app->user->can('inventory');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * คลังหลักสำหรับ dropdown ใบรับเข้า
-     * แสดงเฉพาะคลังที่ผู้ใช้ล็อกอินถูกกำหนดเป็นเจ้าหน้าที่รับผิดชอบคลัง (data_json.officer)
+     * - ปกติ: แสดงเฉพาะคลังที่ผู้ใช้ล็อกอินถูกกำหนดเป็นเจ้าหน้าที่ (data_json.officer)
+     * - ถ้ามี role 'inventory': แสดงทุกคลัง MAIN
      * @return Warehouse[]
      */
     public static function findMainWarehousesForReceive()
     {
-        $userId = (string) Yii::$app->user->id;
-        return self::find()
+        $query = self::find()
             ->where(['warehouse_type' => 'MAIN'])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"))
-            ->orderBy('warehouse_name')
-            ->all();
+            ->orderBy('warehouse_name');
+
+        if (!self::currentUserHasInventoryRole()) {
+            $userId = (string) Yii::$app->user->id;
+            $query->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"));
+        }
+
+        return $query->all();
     }
 
     /**
@@ -229,12 +251,22 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
     /**
-     * คลังย่อยสำหรับ dropdown / รายการ ตาม user ที่ล็อกอินและกำหนดคลัง "กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก"
-     * แสดงเฉพาะคลังย่อยที่แผนกของพนักงาน (user) อยู่ในรายการแผนก/ฝ่ายที่มีสิทธิเบิกของคลังนั้น
+     * คลังย่อยสำหรับ dropdown / รายการ
+     * - ปกติ: แสดงเฉพาะคลังย่อยที่แผนกของ user (Employees.department) อยู่ในรายการแผนกที่มีสิทธิเบิก
+     * - ถ้ามี role 'inventory': แสดงทุกคลัง SUB
      * @return Warehouse[]
      */
     public static function findSubWarehousesForUser()
     {
+        $query = self::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy('warehouse_name');
+
+        if (self::currentUserHasInventoryRole()) {
+            return $query->all();
+        }
+
         $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
         $departmentId = null;
         if ($userId && class_exists(Employees::class)) {
@@ -243,10 +275,6 @@ class Warehouse extends \yii\db\ActiveRecord
                 $departmentId = (int) $emp->department;
             }
         }
-        $query = self::find()
-            ->where(['warehouse_type' => 'SUB'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy('warehouse_name');
         if ($departmentId === null || $departmentId === 0) {
             return [];
         }
@@ -254,6 +282,38 @@ class Warehouse extends \yii\db\ActiveRecord
         return array_values(array_filter($all, function (Warehouse $w) use ($departmentId) {
             return $w->allowsDepartment($departmentId);
         }));
+    }
+
+    /**
+     * คลังทั้งหมดที่ user เข้าถึงได้ (MAIN + SUB + BRANCH)
+     * ใช้สำหรับ dropdown สลับคลังในหน้า admin (เช่น stock-min-max)
+     * - role 'inventory': เห็นทุกคลัง
+     * - คนอื่น: รวมเฉพาะคลังที่ตัวเองรับผิดชอบ (officer) หรือคลังย่อยที่แผนกตัวเองมีสิทธิ
+     * @return Warehouse[]
+     */
+    public static function findAllAccessibleWarehouses()
+    {
+        if (self::currentUserHasInventoryRole()) {
+            return self::find()
+                ->where(['or', ['delete' => null], ['delete' => '']])
+                ->orderBy(['warehouse_type' => SORT_ASC, 'warehouse_name' => SORT_ASC])
+                ->all();
+        }
+
+        $main = self::findMainWarehousesForReceive();
+        $sub = self::findSubWarehousesForUser();
+        $merged = array_merge($main, $sub);
+
+        $seen = [];
+        $result = [];
+        foreach ($merged as $w) {
+            if (isset($seen[$w->id])) {
+                continue;
+            }
+            $seen[$w->id] = true;
+            $result[] = $w;
+        }
+        return $result;
     }
 
     /**

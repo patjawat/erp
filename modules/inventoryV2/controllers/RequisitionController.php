@@ -243,33 +243,34 @@ public function behaviors()
 
         $query = (new Query())
             ->select([
-                'i.item_code',
-                'i.item_name',
-                'i.min_qty',
-                'i.max_qty',
+                'item_code' => 'i.code',
+                'item_name' => 'i.title',
+                'min_qty' => 'i.qty_min',
+                'max_qty' => 'i.qty_max',
                 'COALESCE(b.total_balance, 0) AS balance_qty',
             ])
             ->from(['i' => StockItem::tableName()])
-            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = i.item_code')
-            ->where(['i.is_active' => 1])
-            ->andWhere(['>', 'i.max_qty', 0])
-            ->andWhere('COALESCE(b.total_balance, 0) < i.max_qty');
+            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = i.code')
+            ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
+            ->andWhere(['i.active' => 1])
+            ->andWhere(['>', 'i.qty_max', 0])
+            ->andWhere('COALESCE(b.total_balance, 0) < i.qty_max');
 
         if ($sub_warehouse_id > 0) {
             $query->andWhere('(
-                (i.min_qty IS NOT NULL AND i.min_qty > 0 AND COALESCE(b.total_balance, 0) < i.min_qty)
+                (i.qty_min IS NOT NULL AND i.qty_min > 0 AND COALESCE(b.total_balance, 0) < i.qty_min)
                 OR
-                ((i.min_qty IS NULL OR i.min_qty <= 0) AND COALESCE(b.total_balance, 0) < i.max_qty)
+                ((i.qty_min IS NULL OR i.qty_min <= 0) AND COALESCE(b.total_balance, 0) < i.qty_max)
             )');
         } else {
-            $query->andWhere('COALESCE(b.total_balance, 0) < i.max_qty');
+            $query->andWhere('COALESCE(b.total_balance, 0) < i.qty_max');
         }
 
         if (!empty($allowedTypes)) {
             $query->andWhere(['i.category_id' => $allowedTypes]);
         }
 
-        $rows = $query->orderBy(['i.item_code' => SORT_ASC])->all();
+        $rows = $query->orderBy(['i.code' => SORT_ASC])->all();
 
         $results = [];
         foreach ($rows as $r) {

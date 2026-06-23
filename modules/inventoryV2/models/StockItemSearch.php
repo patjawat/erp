@@ -9,7 +9,17 @@ use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockBalance;
 
 /**
- * StockItemSearch represents the model behind the search form of `app\modules\inventoryV2\models\StockItem`.
+ * StockItemSearch — Phase 2 refactor
+ *
+ * Map กับ categorise table:
+ *   item_code  -> code         (alias ผ่าน StockItemQuery)
+ *   item_name  -> title
+ *   min_qty    -> qty_min
+ *   max_qty    -> qty_max
+ *   is_active  -> active
+ *
+ * เนื่องจาก categorise table ไม่มีคอลัมน์ created_at/created_by/updated_at/updated_by
+ * จึงตัด field เหล่านั้นออกจาก search rules
  */
 class StockItemSearch extends StockItem
 {
@@ -25,24 +35,17 @@ class StockItemSearch extends StockItem
     /** กรองจำนวนคงเหลือ: ยอดไม่เกิน (<=) ใช้ได้เมื่อเลือกคลัง */
     public $balance_max;
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['id','is_asset', 'is_innovation', 'is_active', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['item_code', 'item_name', 'ref', 'data_json','category_id','q', 'warehouse_id', 'balance_status'], 'safe'],
+            [['id', 'is_asset', 'is_innovation', 'is_active'], 'integer'],
+            [['item_code', 'item_name', 'ref', 'data_json', 'category_id', 'q', 'warehouse_id', 'balance_status'], 'safe'],
             [['min_qty', 'max_qty', 'balance_min', 'balance_max'], 'number'],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
@@ -58,8 +61,6 @@ class StockItemSearch extends StockItem
     {
         $query = StockItem::find();
 
-        // add conditions that should always apply here
-
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
@@ -67,36 +68,43 @@ class StockItemSearch extends StockItem
         $this->load($params, $formName);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
+            // uncomment to return empty results when invalid:
             // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $formName = $formName ?? $this->formName();
         $subParams = $params[$formName] ?? [];
+
+        // Hash filters — translate ผ่าน StockItemQuery::andFilterWhere โดยอัตโนมัติ
         $query->andFilterWhere([
             'id' => $this->id,
             'category_id' => $this->category_id,
-            'min_qty' => $this->min_qty,
-            'max_qty' => $this->max_qty,
-            'is_asset' => $this->is_asset,
-            'is_innovation' => $this->is_innovation,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
+            'qty_min' => $this->min_qty,
+            'qty_max' => $this->max_qty,
         ]);
-        // สถานะ: กรองตาม dropdown (ทั้งหมด / เปิดใช้งาน / ปิดใช้งาน)
-        $isActiveRaw = $subParams['is_active'] ?? $this->is_active ?? null;
-        if ($isActiveRaw !== null && $isActiveRaw !== '') {
-            $query->andWhere(['stock_item.is_active' => (int) $isActiveRaw]);
+
+        // is_asset / is_innovation — เก็บใน data_json (ใช้ JSON_EXTRACT)
+        if ($this->is_asset !== null && $this->is_asset !== '') {
+            $query->andWhere("JSON_EXTRACT(categorise.data_json, '$.is_asset') = :is_asset",
+                [':is_asset' => (int) $this->is_asset]);
+        }
+        if ($this->is_innovation !== null && $this->is_innovation !== '') {
+            $query->andWhere("JSON_EXTRACT(categorise.data_json, '$.is_innovation') = :is_inno",
+                [':is_inno' => (int) $this->is_innovation]);
         }
 
-        $query->andFilterWhere(['like', 'item_code', $this->item_code])
-            ->andFilterWhere(['like', 'item_name', $this->item_name])
-            ->andFilterWhere(['like', 'ref', $this->ref])
-            ->andFilterWhere(['like', 'data_json', $this->data_json]);
+        // สถานะ active: กรองตาม dropdown (ทั้งหมด / เปิดใช้งาน / ปิดใช้งาน)
+        $isActiveRaw = $subParams['is_active'] ?? $this->is_active ?? null;
+        if ($isActiveRaw !== null && $isActiveRaw !== '') {
+            $query->andWhere(['categorise.active' => (int) $isActiveRaw]);
+        }
+
+        // Like filters — ใช้ column name จริง (operator form ไม่ผ่าน translator)
+        $query->andFilterWhere(['like', 'categorise.code', $this->item_code])
+              ->andFilterWhere(['like', 'categorise.title', $this->item_name])
+              ->andFilterWhere(['like', 'categorise.ref', $this->ref])
+              ->andFilterWhere(['like', 'categorise.data_json', $this->data_json]);
 
         $warehouseId = $this->warehouse_id ? (int) $this->warehouse_id : 0;
         $balanceStatus = $this->balance_status === 'below' || $this->balance_status === 'above' ? $this->balance_status : '';
@@ -110,13 +118,14 @@ class StockItemSearch extends StockItem
                 ->from(StockBalance::tableName())
                 ->where(['warehouse_id' => $warehouseId])
                 ->groupBy('item_code');
-            $query->leftJoin(['b' => $balanceSubQuery], 'b.item_code = stock_item.item_code');
+            // join b.item_code (stock_balance) = categorise.code (StockItem)
+            $query->leftJoin(['b' => $balanceSubQuery], 'b.item_code = categorise.code');
             if ($balanceStatus === 'below') {
-                $query->andWhere('stock_item.min_qty IS NOT NULL AND stock_item.min_qty > 0')
-                    ->andWhere('COALESCE(b.balance_qty, 0) < stock_item.min_qty');
+                $query->andWhere('categorise.qty_min IS NOT NULL AND categorise.qty_min > 0')
+                      ->andWhere('COALESCE(b.balance_qty, 0) < categorise.qty_min');
             } elseif ($balanceStatus === 'above') {
-                $query->andWhere('stock_item.max_qty IS NOT NULL AND stock_item.max_qty > 0')
-                    ->andWhere('COALESCE(b.balance_qty, 0) > stock_item.max_qty');
+                $query->andWhere('categorise.qty_max IS NOT NULL AND categorise.qty_max > 0')
+                      ->andWhere('COALESCE(b.balance_qty, 0) > categorise.qty_max');
             }
             if ($balanceMin !== null) {
                 $query->andWhere('COALESCE(b.balance_qty, 0) >= :bal_min', [':bal_min' => $balanceMin]);

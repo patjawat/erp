@@ -17,6 +17,11 @@ use yii\helpers\FileHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 /**
  * StockOrderController implements the CRUD actions for StockOrder model.
@@ -143,6 +148,101 @@ class ReceiveController extends Controller
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
+    }
+
+    /**
+     * ส่งออกใบรับเข้า 1 ใบเป็น Excel (รายละเอียดหัวเอกสาร + รายการพัสดุ)
+     */
+    public function actionExportExcel($id)
+    {
+        $model = $this->findModel($id);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ใบรับเข้า');
+
+        // --- หัวเอกสาร ---
+        $sheet->setCellValue('A1', 'ใบรับเข้าวัสดุ');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $orderDateThai = '-';
+        if (!empty($model->order_date)) {
+            $ts = is_numeric($model->order_date) ? (int) $model->order_date : strtotime($model->order_date);
+            $orderDateThai = \app\components\ThaiDateHelper::formatThaiDate($model->order_date) . ' ' . date('H:i', $ts);
+        }
+
+        $sheet->setCellValue('A3', 'เลขที่ใบรับเข้า:');
+        $sheet->setCellValue('B3', $model->order_no);
+        $sheet->setCellValue('A4', 'วันที่รับเข้า:');
+        $sheet->setCellValue('B4', $orderDateThai);
+        $sheet->setCellValue('A5', 'คลังที่รับเข้า:');
+        $sheet->setCellValue('B5', $model->mainWarehouse ? $model->mainWarehouse->warehouse_name : '-');
+        $sheet->setCellValue('A6', 'สถานะ:');
+        $sheet->setCellValue('B6', $model->status);
+        $sheet->getStyle('A3:A6')->getFont()->setBold(true);
+
+        // --- ตารางรายการ ---
+        $headerRow = 8;
+        $headers = ['ลำดับ', 'รหัสพัสดุ', 'ชื่อพัสดุ', 'เลข Lot', 'วันหมดอายุ', 'จำนวน', 'ราคา/หน่วย (บาท)', 'รวม (บาท)'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . $headerRow, $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $rowNum = $headerRow + 1;
+        $grandTotal = 0;
+        foreach ($model->stockDetails as $index => $item) {
+            $qty = (float) $item->qty;
+            $price = (float) ($item->unit_price ?? 0);
+            $total = $qty * $price;
+            $grandTotal += $total;
+            $itemName = $item->item ? $item->item->item_name : $item->item_code;
+
+            $sheet->setCellValue('A' . $rowNum, $index + 1);
+            $sheet->setCellValue('B' . $rowNum, $item->item_code);
+            $sheet->setCellValue('C' . $rowNum, $itemName);
+            $sheet->setCellValue('D' . $rowNum, $item->lot_number ?: '-');
+            $sheet->setCellValue('E' . $rowNum, $item->expiry_date ?: '-');
+            $sheet->setCellValue('F' . $rowNum, $qty);
+            $sheet->setCellValue('G' . $rowNum, $price);
+            $sheet->setCellValue('H' . $rowNum, $total);
+            $rowNum++;
+        }
+
+        // แถวรวมยอดท้ายตาราง
+        $sheet->setCellValue('A' . $rowNum, 'รวมยอดเงินทั้งหมด');
+        $sheet->mergeCells('A' . $rowNum . ':G' . $rowNum);
+        $sheet->setCellValue('H' . $rowNum, $grandTotal);
+        $sheet->getStyle('A' . $rowNum . ':H' . $rowNum)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        // จัด format ตัวเลข + border + width
+        $dataLastRow = $rowNum;
+        $sheet->getStyle('F' . ($headerRow + 1) . ':H' . $dataLastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $dataLastRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $filenameUtf8 = 'ใบรับเข้า-' . $model->order_no . '-' . date('Ymd-His') . '.xlsx';
+        $filenameAscii = 'receive-' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $model->order_no) . '-' . date('Ymd-His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8));
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     /**

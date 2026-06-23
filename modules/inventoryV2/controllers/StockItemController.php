@@ -61,11 +61,13 @@ class StockItemController extends Controller
     {
         $searchModel = new StockItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'stock_item.item_code', $searchModel->q],
-            ['like', 'stock_item.item_name', $searchModel->q],
-        ]);
+        if ($searchModel->q !== null && $searchModel->q !== '') {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'categorise.code', $searchModel->q],
+                ['like', 'categorise.title', $searchModel->q],
+            ]);
+        }
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
         $warehouseId = $searchModel->warehouse_id ? (int) $searchModel->warehouse_id : null;
@@ -114,11 +116,13 @@ class StockItemController extends Controller
     {
         $searchModel = new StockItemSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andFilterWhere([
-            'or',
-            ['like', 'stock_item.item_code', $searchModel->q],
-            ['like', 'stock_item.item_name', $searchModel->q],
-        ]);
+        if ($searchModel->q !== null && $searchModel->q !== '') {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'categorise.code', $searchModel->q],
+                ['like', 'categorise.title', $searchModel->q],
+            ]);
+        }
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
         $dataProvider->pagination = false;
 
@@ -514,19 +518,19 @@ class StockItemController extends Controller
 
         $query = StockItem::find()
             ->select([
-                'stock_item.item_code',
-                'stock_item.item_name',
+                'categorise.code AS item_code',
+                'categorise.title AS item_name',
                 'COALESCE(b.balance_qty, 0) AS balance_qty',
             ])
-            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = stock_item.item_code')
-            ->where(['stock_item.is_active' => 1])
-            ->orderBy(['stock_item.item_code' => SORT_ASC]);
+            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = categorise.code')
+            ->andWhere(['categorise.active' => 1])
+            ->orderBy(['categorise.code' => SORT_ASC]);
 
         if ($q !== '') {
             $query->andWhere([
                 'or',
-                ['like', 'stock_item.item_name', $q],
-                ['like', 'stock_item.item_code', $q],
+                ['like', 'categorise.title', $q],
+                ['like', 'categorise.code', $q],
             ]);
         }
 

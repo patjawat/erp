@@ -179,20 +179,20 @@ if ($categoryId || $status || $search) {
             ->select([
                 'sb.warehouse_id',
                 'sb.item_code',
-                'i.item_name',
-                'i.min_qty',
-                'i.max_qty',
+                new Expression('i.title AS item_name'),
+                new Expression('i.qty_min AS min_qty'),
+                new Expression('i.qty_max AS max_qty'),
                 new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
                 new Expression('SUM(sb.balance_qty) AS balance_qty'),
                 new Expression('SUM(sb.balance_qty * COALESCE(lp.unit_price, 0)) AS value'),
             ])
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
             ->where(['sb.warehouse_id' => $warehouseIds])
             // ->andWhere(['>', 'sb.balance_qty', 0]) // แสดงรายการที่มียอดคงเหลือ 0 ด้วย (เพื่อให้เห็นว่ามีรายการอะไรบ้างที่เคยมีการรับเข้ามาในคลัง แต่ตอนนี้หมดแล้ว)
-            ->groupBy('sb.item_code', 'i.item_name', 'i.min_qty', 'i.max_qty', 'cat.title', 'i.category_id');
+            ->groupBy('sb.item_code', 'i.title', 'i.qty_min', 'i.qty_max', 'cat.title', 'i.category_id');
 
         $raw = $query->all();
         $warehouseNames = [];
@@ -240,7 +240,7 @@ if ($categoryId || $status || $search) {
         }
         $itemsCountQuery = (new Query())
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->where(['sb.warehouse_id' => $warehouseIds])
             ->andWhere(['>', 'sb.balance_qty', 0]);
         $itemsCount = (int) (clone $itemsCountQuery)->select('sb.item_code')->groupBy('sb.item_code')->count();
@@ -495,12 +495,12 @@ if ($categoryId || $status || $search) {
                     'req.requested_qty',
                     'balance_qty' => new Expression('COALESCE(bal.balance_qty, 0)'),
                     'shortfall' => new Expression('req.requested_qty - COALESCE(bal.balance_qty, 0)'),
-                    'item_name' => new Expression("COALESCE(i.item_name, req.item_code)"),
+                    'item_name' => new Expression("COALESCE(i.title, req.item_code)"),
                     'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
                 ])
                 ->from(['req' => $reqSub])
                 ->leftJoin(['bal' => $balSub], 'bal.main_warehouse_id = req.main_warehouse_id AND bal.item_code = req.item_code')
-                ->leftJoin(['i' => StockItem::tableName()], 'i.item_code = req.item_code')
+                ->leftJoin(['i' => StockItem::tableName()], 'i.code = req.item_code')
                 ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
                 ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
         } else {
@@ -511,12 +511,12 @@ if ($categoryId || $status || $search) {
                     'req.requested_qty',
                     'balance_qty' => new Expression('COALESCE(bal.balance_qty, 0)'),
                     'shortfall' => new Expression('req.requested_qty - COALESCE(bal.balance_qty, 0)'),
-                    'item_name' => new Expression("COALESCE(i.item_name, req.item_code)"),
+                    'item_name' => new Expression("COALESCE(i.title, req.item_code)"),
                     'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
                 ])
                 ->from(['req' => $reqSub])
                 ->leftJoin(['bal' => $balSub], 'bal.item_code = req.item_code')
-                ->leftJoin(['i' => StockItem::tableName()], 'i.item_code = req.item_code')
+                ->leftJoin(['i' => StockItem::tableName()], 'i.code = req.item_code')
                 ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
                 ->andWhere(new Expression('req.requested_qty > COALESCE(bal.balance_qty, 0)'));
         }
@@ -568,7 +568,7 @@ if ($categoryId || $status || $search) {
                 'SUM(r.closing_value) AS closing_value',
             ])
             ->from(['r' => StockMonthlyReport::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = r.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = r.item_code')
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->where([
                 'r.report_year' => $year,
@@ -922,7 +922,7 @@ if ($categoryId || $status || $search) {
         $query = (new Query())
             ->select([
                 'r.item_code',
-                'i.item_name',
+                'i.title',
                 new Expression("COALESCE(cat.title, i.category_id, '') AS category_title"),
                 'r.opening_qty',
                 'r.opening_value',
@@ -934,7 +934,7 @@ if ($categoryId || $status || $search) {
                 'r.closing_value',
             ])
             ->from(['r' => StockMonthlyReport::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = r.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = r.item_code')
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->where([
                 'r.report_year' => $year,

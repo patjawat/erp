@@ -19,6 +19,10 @@ $statusLabel = StatusBadgeHelper::getLabel($model->status);
         </div>
         <div class="d-flex flex-wrap gap-2">
             <?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('<i class="bi bi-file-earmark-excel me-1"></i> ส่งออก Excel', ['export-excel', 'id' => $model->id], [
+                'class' => 'btn btn-success',
+                'target' => '_blank',
+            ]) ?>
             <?php if ($model->status !== 'CANCELLED'): ?>
                 <?= Html::a('<i class="bi bi-pencil me-1"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?= Html::a('<i class="bi bi-x-circle me-1"></i> ยกเลิกใบรับเข้า', ['cancel', 'id' => $model->id], [

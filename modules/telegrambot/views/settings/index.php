@@ -10,6 +10,7 @@ use yii\web\View;
 /** @var app\models\Categorise $model */
 /** @var array $data */
 /** @var app\modules\usermanager\models\User[] $bindings */
+/** @var array $notificationTestScenarios */
 /** @var int $activeUserCount */
 /** @var int $linkedUserCount */
 /** @var string $defaultWebhookUrl */
@@ -19,6 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $data = is_array($data ?? null) ? $data : [];
 $bindings = is_array($bindings ?? null) ? $bindings : [];
+$notificationTestScenarios = is_array($notificationTestScenarios ?? null) ? $notificationTestScenarios : [];
 
 $botTokenValue = trim((string) ($data['bot_token'] ?? ''));
 $botUsernameValue = ltrim(trim((string) ($data['bot_username'] ?? '')), '@');
@@ -44,6 +46,24 @@ foreach ($bindings as $binding) {
     $employeeName = trim((string) ($binding->fullname ?: ($employee ? ($employee->fullname ?? '') : $binding->username)));
     $departmentName = $employee ? trim((string) ($employee->departmentName() ?: '-')) : '-';
     $testUserOptions[(int) $binding->id] = ($employeeName !== '' ? $employeeName : $binding->username) . ' (' . $departmentName . ')';
+}
+
+$testScenarioOptions = [];
+foreach ($notificationTestScenarios as $scenarioKey => $scenario) {
+    $testScenarioOptions[(string) $scenarioKey] = (string) ($scenario['label'] ?? $scenarioKey);
+}
+$defaultTestScenario = '';
+if (!empty($testScenarioOptions)) {
+    reset($testScenarioOptions);
+    $defaultTestScenario = (string) key($testScenarioOptions);
+}
+$testScenarioSelectOptions = [
+    'id' => 'telegram-test-scenario',
+    'class' => 'form-select',
+    'disabled' => empty($testScenarioOptions),
+];
+if (empty($testScenarioOptions)) {
+    $testScenarioSelectOptions['prompt'] = 'ยังไม่มี scenario สำหรับทดสอบ';
 }
 
 $this->registerCss(<<<CSS
@@ -266,6 +286,67 @@ $this->registerCss(<<<CSS
     background: #f8fbff;
 }
 
+.telegram-personal-shell .test-suite {
+    border-top: 1px solid var(--tg-border);
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+}
+
+.telegram-personal-shell .test-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.telegram-personal-shell .scenario-preview {
+    min-height: 100%;
+    border: 1px solid #cdd9ea;
+    border-radius: 1rem;
+    background: #f8fbff;
+    padding: 1rem;
+    transition: border-color 180ms cubic-bezier(0.25, 1, 0.5, 1), background-color 180ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.telegram-personal-shell .scenario-preview.is-updated {
+    animation: scenario-preview-pulse 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.telegram-personal-shell .scenario-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    border-radius: 999px;
+    background: var(--tg-primary-soft);
+    color: var(--tg-primary);
+    padding: .25rem .6rem;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.telegram-personal-shell .scenario-message {
+    color: var(--tg-ink);
+    font-size: .9rem;
+    line-height: 1.55;
+    white-space: pre-line;
+}
+
+.telegram-personal-shell .scenario-route {
+    color: #526177;
+    font-size: .82rem;
+    overflow-wrap: anywhere;
+}
+
+@keyframes scenario-preview-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(33, 85, 214, .18);
+        border-color: #9bb7ea;
+    }
+    100% {
+        box-shadow: 0 0 0 .65rem rgba(33, 85, 214, 0);
+        border-color: #cdd9ea;
+    }
+}
+
 @media (max-width: 767.98px) {
     .telegram-personal-shell {
         padding-inline: .25rem;
@@ -288,8 +369,13 @@ $this->registerCss(<<<CSS
     .telegram-personal-shell .status-pill,
     .telegram-personal-shell .form-control,
     .telegram-personal-shell .form-select,
-    .telegram-personal-shell .btn {
+    .telegram-personal-shell .btn,
+    .telegram-personal-shell .scenario-preview {
         transition-duration: .01ms;
+    }
+
+    .telegram-personal-shell .scenario-preview.is-updated {
+        animation: none;
     }
 }
 CSS);
@@ -300,6 +386,8 @@ $config = Json::encode([
     'setWebhookUrl' => Url::to(['/telegrambot/settings/set-webhook']),
     'testMessageUrl' => Url::to(['/telegrambot/settings/test-message']),
     'testMiniAppUrl' => Url::to(['/telegrambot/settings/test-mini-app']),
+    'testNotificationScenarioUrl' => Url::to(['/telegrambot/settings/test-notification-scenario']),
+    'notificationScenarios' => $notificationTestScenarios,
     'botQrImageUrl' => $botQrImageUrl,
     'botQrDownloadUrl' => $botQrDownloadUrl,
     'botQrImageName' => $botQrImageName,
@@ -320,6 +408,14 @@ window.telegramPersonalConfig = {$config};
     const setWebhookButton = document.getElementById('btn-set-webhook');
     const testMessageButton = document.getElementById('btn-test-message');
     const testMiniAppButton = document.getElementById('btn-test-mini-app');
+    const testScenarioField = document.getElementById('telegram-test-scenario');
+    const testScenarioButton = document.getElementById('btn-test-notification-scenario');
+    const scenarioPreview = document.getElementById('telegram-scenario-preview');
+    const scenarioPreviewLabel = document.getElementById('telegram-scenario-preview-label');
+    const scenarioPreviewTitle = document.getElementById('telegram-scenario-preview-title');
+    const scenarioPreviewDescription = document.getElementById('telegram-scenario-preview-description');
+    const scenarioPreviewMessage = document.getElementById('telegram-scenario-preview-message');
+    const scenarioPreviewRoute = document.getElementById('telegram-scenario-preview-route');
     const botQrFrame = document.getElementById('telegram-bot-qr-frame');
     const botQrImage = document.getElementById('telegram-bot-qr-image');
     const botQrPlaceholder = document.getElementById('telegram-bot-qr-placeholder');
@@ -336,6 +432,7 @@ window.telegramPersonalConfig = {$config};
     let savedQrImageUrl = safeText(config.botQrImageUrl);
     let savedQrDownloadUrl = safeText(config.botQrDownloadUrl);
     let savedQrImageName = safeText(config.botQrImageName);
+    const notificationScenarios = config.notificationScenarios || {};
 
     function safeText(value) {
         return value === null || value === undefined ? '' : String(value);
@@ -381,6 +478,74 @@ window.telegramPersonalConfig = {$config};
 
     function getBotUsername() {
         return safeText(botUsernameField ? botUsernameField.value : '').trim().replace(/^@/, '').replace(/[^A-Za-z0-9_]/g, '');
+    }
+
+    function stripTelegramHtml(value) {
+        return safeText(value).replace(/<[^>]+>/g, '');
+    }
+
+    function routeToText(route) {
+        if (Array.isArray(route)) {
+            return route.filter(function (item) {
+                return item !== null && item !== undefined && item !== '';
+            }).map(function (item) {
+                return safeText(item);
+            }).join(' ');
+        }
+        if (route && typeof route === 'object') {
+            return Object.keys(route).map(function (key) {
+                return key + '=' + route[key];
+            }).join(', ');
+        }
+        return safeText(route);
+    }
+
+    function getSelectedScenario() {
+        const scenarioKey = safeText(testScenarioField ? testScenarioField.value : '').trim();
+        return notificationScenarios[scenarioKey] || null;
+    }
+
+    function renderScenarioPreview(animate) {
+        const scenario = getSelectedScenario();
+        if (!scenario) {
+            if (scenarioPreviewTitle) {
+                scenarioPreviewTitle.textContent = 'เลือกรูปแบบการแจ้งเตือน';
+            }
+            if (scenarioPreviewDescription) {
+                scenarioPreviewDescription.textContent = 'เลือก scenario เพื่อดูตัวอย่างข้อความและปุ่ม Mini App';
+            }
+            if (scenarioPreviewMessage) {
+                scenarioPreviewMessage.textContent = '';
+            }
+            if (scenarioPreviewRoute) {
+                scenarioPreviewRoute.textContent = '';
+            }
+            return;
+        }
+
+        if (scenarioPreviewLabel) {
+            scenarioPreviewLabel.textContent = safeText(scenario.short_label || scenario.label || 'ทดสอบ');
+        }
+        if (scenarioPreviewTitle) {
+            scenarioPreviewTitle.textContent = safeText(scenario.label || 'ทดสอบการแจ้งเตือน');
+        }
+        if (scenarioPreviewDescription) {
+            scenarioPreviewDescription.textContent = safeText(scenario.description || '');
+        }
+        if (scenarioPreviewMessage) {
+            const lines = Array.isArray(scenario.lines) ? scenario.lines : [];
+            scenarioPreviewMessage.textContent = lines.map(stripTelegramHtml).join('\\n');
+        }
+        if (scenarioPreviewRoute) {
+            scenarioPreviewRoute.textContent = scenario.button_text
+                ? 'ปุ่ม Mini App: ' + scenario.button_text + ' | Route: ' + routeToText(scenario.route || '')
+                : 'Route: ' + routeToText(scenario.route || '');
+        }
+        if (animate && scenarioPreview) {
+            scenarioPreview.classList.remove('is-updated');
+            void scenarioPreview.offsetWidth;
+            scenarioPreview.classList.add('is-updated');
+        }
     }
 
     function setQrLinkState(element, href, disabled) {
@@ -600,6 +765,52 @@ window.telegramPersonalConfig = {$config};
                 flash('success', 'ส่งปุ่ม Mini App แล้ว', result.message || 'ผู้ใช้จะเห็นปุ่มเปิด ERP Mobile');
             } catch (error) {
                 flash('error', 'ส่งปุ่ม Mini App ไม่สำเร็จ', error.message || 'กรุณาตรวจสอบ URL หรือผู้รับ');
+            }
+        });
+    }
+
+    if (testScenarioField) {
+        testScenarioField.addEventListener('change', function () {
+            renderScenarioPreview(true);
+        });
+        renderScenarioPreview(false);
+    }
+
+    if (testScenarioButton) {
+        testScenarioButton.addEventListener('click', async function () {
+            const token = requireToken();
+            const userId = safeText(testUserField ? testUserField.value : '').trim();
+            const miniAppBaseUrl = safeText(miniAppBaseUrlField ? miniAppBaseUrlField.value : '').trim();
+            const scenarioKey = safeText(testScenarioField ? testScenarioField.value : '').trim();
+            if (!token) {
+                return;
+            }
+            if (!userId) {
+                flash('warning', 'เลือกผู้รับก่อน', 'ต้องมีผู้ใช้ที่ผูก Telegram แล้ว');
+                return;
+            }
+            if (!scenarioKey) {
+                flash('warning', 'เลือกระบบที่จะทดสอบ', 'เลือก scenario เช่น ใบลา จองห้อง จองรถ หรือแจ้งซ่อม');
+                return;
+            }
+            if (!miniAppBaseUrl) {
+                flash('warning', 'กรุณาระบุ Mini App Base URL', 'ต้องเป็น HTTPS ที่เปิดจาก Telegram ได้');
+                return;
+            }
+
+            try {
+                const result = await postJson(config.testNotificationScenarioUrl, {
+                    bot_token: token,
+                    user_id: userId,
+                    mini_app_base_url: miniAppBaseUrl,
+                    scenario: scenarioKey,
+                }, testScenarioButton, 'กำลังส่ง...');
+                if (result.status !== 'success') {
+                    throw new Error(result.message || 'ส่งการแจ้งเตือนทดสอบไม่สำเร็จ');
+                }
+                flash('success', 'ส่งการแจ้งเตือนทดสอบแล้ว', result.message || 'ผู้ใช้จะได้รับข้อความพร้อมปุ่ม Mini App');
+            } catch (error) {
+                flash('error', 'ส่งการแจ้งเตือนไม่สำเร็จ', error.message || 'กรุณาตรวจสอบ URL, token หรือผู้รับ');
             }
         });
     }
@@ -1003,16 +1214,16 @@ JS, View::POS_END);
             <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-testing">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
                     <div>
-                        <h2 class="panel-title">Testing</h2>
-                        <p class="panel-desc mb-0">ทดสอบการส่งข้อความและปุ่ม Mini App กับผู้ใช้ที่ผูก Telegram แล้ว</p>
+                        <h2 class="panel-title">ทดสอบการแจ้งเตือน</h2>
+                        <p class="panel-desc mb-0">ส่งข้อความ ปุ่ม Mini App และตัวอย่าง notification ตามระบบงานให้ผู้ใช้ที่ผูก Telegram แล้ว</p>
                     </div>
                     <span class="status-pill <?= $linkedUserCount > 0 ? 'is-success' : 'is-warning' ?>">
                         <?= $linkedUserCount > 0 ? number_format($linkedUserCount) . ' users' : 'ยังไม่มีผู้รับ' ?>
                     </span>
                 </div>
 
-                <div class="row g-3 align-items-end">
-                    <div class="col-lg-7">
+                <div class="row g-3 align-items-end mb-2">
+                    <div class="col-lg-6">
                         <label for="telegram-test-user-id" class="form-label">ผู้รับสำหรับทดสอบ</label>
                         <?= Html::dropDownList('telegram_test_user_id', '', $testUserOptions, [
                             'id' => 'telegram-test-user-id',
@@ -1021,14 +1232,50 @@ JS, View::POS_END);
                             'disabled' => empty($testUserOptions),
                         ]) ?>
                     </div>
-                    <div class="col-lg-5">
-                        <div class="d-flex flex-wrap gap-2">
+                    <div class="col-lg-6">
+                        <div class="test-actions">
                             <button type="button" class="btn btn-outline-primary rounded-3" id="btn-test-message"<?= empty($testUserOptions) ? ' disabled' : '' ?>>
-                                <i class="fa-regular fa-paper-plane me-1"></i> Test Send Message
+                                <i class="fa-regular fa-paper-plane me-1"></i> ทดสอบส่งข้อความ
                             </button>
                             <button type="button" class="btn btn-primary rounded-3" id="btn-test-mini-app"<?= empty($testUserOptions) ? ' disabled' : '' ?>>
-                                <i class="fa-solid fa-mobile-screen-button me-1"></i> Test Mini App Button
+                                <i class="fa-solid fa-mobile-screen-button me-1"></i> ทดสอบปุ่ม Mini App
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="test-suite">
+                    <div class="row g-3 align-items-stretch">
+                        <div class="col-lg-5">
+                            <label for="telegram-test-scenario" class="form-label">ระบบแจ้งเตือนที่ต้องการทดสอบ</label>
+                            <?= Html::dropDownList('telegram_test_scenario', $defaultTestScenario, $testScenarioOptions, $testScenarioSelectOptions) ?>
+                            <div class="muted-note mt-2">
+                                ข้อความเป็นข้อมูลจำลองเพื่อทดสอบการส่งจริง ไม่สร้างใบลา การจอง หรือใบแจ้งซ่อมในระบบ
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-success rounded-3 mt-3"
+                                id="btn-test-notification-scenario"
+                                <?= empty($testUserOptions) || empty($testScenarioOptions) ? 'disabled' : '' ?>
+                            >
+                                <i class="fa-regular fa-bell me-1"></i> ส่งทดสอบตามระบบ
+                            </button>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="scenario-preview" id="telegram-scenario-preview" aria-live="polite">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <span class="scenario-chip mb-2" id="telegram-scenario-preview-label">ทดสอบ</span>
+                                        <div class="fw-bold" id="telegram-scenario-preview-title">เลือกรูปแบบการแจ้งเตือน</div>
+                                    </div>
+                                    <i class="fa-brands fa-telegram text-primary fs-4" aria-hidden="true"></i>
+                                </div>
+                                <div class="muted-note mb-3" id="telegram-scenario-preview-description">
+                                    เลือก scenario เพื่อดูตัวอย่างข้อความและปุ่ม Mini App
+                                </div>
+                                <div class="scenario-message mb-3" id="telegram-scenario-preview-message"></div>
+                                <div class="scenario-route" id="telegram-scenario-preview-route"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

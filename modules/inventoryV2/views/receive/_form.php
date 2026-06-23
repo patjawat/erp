@@ -150,20 +150,36 @@ foreach ($items as $it) {
                 </div>
             </div>
 
-            <div class="table-responsive mt-4">
+            <div class="d-flex flex-wrap gap-2 align-items-center mt-4 mb-2" id="selectionToolbar" style="display:none !important;">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    เลือกแล้ว <span id="selectedCount">0</span> รายการ
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btnViewSelected">
+                    <i class="bi bi-eye"></i> ดูรายการที่เลือก
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteSelected">
+                    <i class="bi bi-trash"></i> ลบรายการที่เลือก
+                </button>
+                <button type="button" class="btn btn-sm btn-link text-muted" id="btnClearSelection">
+                    ล้างการเลือก
+                </button>
+            </div>
+
+            <div class="table-responsive mt-2">
                 <table class="table table-hover align-middle mb-0" id="inboundTable">
                     <thead class="table-light">
                         <tr class="text-center">
-                            <th style="width: 4%;">#</th>
-                            <th style="width: 18%;">รายการวัสดุ</th>
-                            <th style="width: 10%;">หน่วยนับ</th>
-                            <th style="width: 12%;">ประเภทวัสดุ</th>
-                            <th style="width: 12%;">Lot Number</th>
-                            <th style="width: 12%;">วันหมดอายุ</th>
+                            <th style="width: 3%;"><input type="checkbox" id="chkAll" class="form-check-input" title="เลือกทั้งหมด"></th>
+                            <th style="width: 3%;">#</th>
+                            <th style="width: 17%;">รายการวัสดุ</th>
+                            <th style="width: 9%;">หน่วยนับ</th>
+                            <th style="width: 11%;">ประเภทวัสดุ</th>
+                            <th style="width: 11%;">Lot Number</th>
+                            <th style="width: 11%;">วันหมดอายุ</th>
                             <th style="width: 8%;">จำนวน</th>
                             <th style="width: 10%;">ราคา/หน่วย</th>
                             <th style="width: 12%;">รวม</th>
-                            <th style="width: 4%;"></th>
+                            <th style="width: 5%;"></th>
                         </tr>
                     </thead>
                     <tbody id="detail-body" class="align-middle table-group-divider">
@@ -174,6 +190,7 @@ foreach ($items as $it) {
                                 if (!isset($item) || !is_object($item) || empty($item->item_code)) continue;
                                 ?>
                                 <tr class="item-row">
+                                    <td class="text-center"><input type="checkbox" class="form-check-input row-check"></td>
                                     <td class="text-center text-muted"><?= $index + 1 ?></td>
                                     <td>
                                         <input type="hidden" name="StockDetail[<?= $index ?>][item_code]" value="<?= $item->item_code ?>">
@@ -203,12 +220,12 @@ foreach ($items as $it) {
                         <?php endif; ?>
 
                         <tr id="emptyRow" style="<?= (!empty($items) && is_array($items) && count($items) > 0 && isset($items[0]) && is_object($items[0]) && !empty($items[0]->item_code)) ? 'display:none' : '' ?>">
-                            <td colspan="10" class="text-center py-4 text-muted">ยังไม่มีรายการที่ถูกเพิ่ม</td>
+                            <td colspan="11" class="text-center py-4 text-muted">ยังไม่มีรายการที่ถูกเพิ่ม</td>
                         </tr>
                     </tbody>
                     <tfoot class="table-light fw-bold text-end">
                         <tr>
-                            <td colspan="8">ยอดรวมสุทธิ</td>
+                            <td colspan="9">ยอดรวมสุทธิ</td>
                             <td id="grandTotal">0.00</td>
                             <td>บาท</td>
                         </tr>
@@ -229,6 +246,50 @@ foreach ($items as $it) {
     </div>
 
     <?php ActiveForm::end(); ?>
+</div>
+
+<div class="modal fade" id="selectedItemsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary-gradient text-white py-2">
+                <h6 class="modal-title text-white mb-0"><i class="bi bi-list-check me-1"></i> รายการที่เลือกไว้ (<span id="modalSelectedCount">0</span> รายการ)</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-2"><i class="bi bi-info-circle"></i> ตรวจสอบรายการที่เลือก — หากนำเข้าผิด สามารถกดปุ่ม <span class="text-danger">ลบ</span> ในแต่ละแถว หรือปิด modal แล้วกด "ลบรายการที่เลือก" เพื่อลบทั้งหมด</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="text-center small">
+                                <th style="width:4%;">#</th>
+                                <th>รายการวัสดุ</th>
+                                <th style="width:12%;">หน่วยนับ</th>
+                                <th style="width:14%;">Lot</th>
+                                <th style="width:10%;">จำนวน</th>
+                                <th style="width:12%;">ราคา/หน่วย</th>
+                                <th style="width:12%;">รวม</th>
+                                <th style="width:6%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="selectedItemsBody"></tbody>
+                        <tfoot class="table-light fw-bold text-end">
+                            <tr>
+                                <td colspan="6">ยอดรวมที่เลือก</td>
+                                <td id="modalGrandTotal">0.00</td>
+                                <td>บาท</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnDeleteSelectedModal">
+                    <i class="bi bi-trash"></i> ลบรายการที่เลือกทั้งหมด
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 <?php
 $itemListUrl = Url::to(['stock-item/item-list']);
@@ -529,9 +590,131 @@ $js = <<< JS
         
     function reOrder(){
     $('#detail-body tr.item-row').each(function(index) {
-        $(this).find('td:first').text(index + 1);
+        $(this).find('td').eq(1).text(index + 1);
     });
 }
+
+    // --- Checkbox + ดูรายการที่เลือก ---
+    function updateSelectionUi() {
+        var rows = $('#detail-body tr.item-row');
+        var checked = rows.find('.row-check:checked');
+        var total = rows.length;
+        var n = checked.length;
+        $('#selectedCount').text(n);
+        if (n > 0) {
+            $('#selectionToolbar').attr('style', 'display:flex !important;');
+        } else {
+            $('#selectionToolbar').attr('style', 'display:none !important;');
+        }
+        var chkAll = document.getElementById('chkAll');
+        if (chkAll) {
+            chkAll.checked = (total > 0 && n === total);
+            chkAll.indeterminate = (n > 0 && n < total);
+        }
+    }
+
+    $(document).on('change', '#chkAll', function() {
+        $('#detail-body tr.item-row .row-check').prop('checked', this.checked);
+        updateSelectionUi();
+    });
+
+    $(document).on('change', '.row-check', function() {
+        updateSelectionUi();
+    });
+
+    $(document).on('click', '#btnClearSelection', function() {
+        $('#detail-body tr.item-row .row-check').prop('checked', false);
+        updateSelectionUi();
+    });
+
+    function renderSelectedItemsModal() {
+        var \$tbody = $('#selectedItemsBody').empty();
+        var grand = 0;
+        var rows = $('#detail-body tr.item-row').filter(function() {
+            return $(this).find('.row-check').is(':checked');
+        });
+        rows.each(function(idx) {
+            var \$r = $(this);
+            var name = \$r.find('td').eq(2).find('strong').text() || '-';
+            var code = \$r.find('input[name*="[item_code]"]').val() || '';
+            var unit = \$r.find('input[name*="[unit_name]"]').val() || '-';
+            var lot = \$r.find('input[name*="[lot_number]"]').val() || '-';
+            var qty = parseFloat(\$r.find('.qty-input').val()) || 0;
+            var price = parseFloat(\$r.find('.price-input').val()) || 0;
+            var sub = qty * price;
+            grand += sub;
+            var rowHtml = '<tr data-row-key="' + \$r.index() + '">' +
+                '<td class="text-center">' + (idx + 1) + '</td>' +
+                '<td><strong>' + \$('<div>').text(name).html() + '</strong> <small class="text-muted">[' + \$('<div>').text(code).html() + ']</small></td>' +
+                '<td class="text-center">' + \$('<div>').text(unit).html() + '</td>' +
+                '<td>' + \$('<div>').text(lot).html() + '</td>' +
+                '<td class="text-center">' + qty + '</td>' +
+                '<td class="text-end">' + price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
+                '<td class="text-end fw-bold">' + sub.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger border-0 btn-modal-remove" data-code="' + \$('<div>').text(code).html() + '"><i class="bi bi-trash"></i></button></td>' +
+                '</tr>';
+            \$tbody.append(rowHtml);
+        });
+        $('#modalSelectedCount').text(rows.length);
+        $('#modalGrandTotal').text(grand.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+        if (rows.length === 0) {
+            \$tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">ยังไม่ได้เลือกรายการ</td></tr>');
+        }
+    }
+
+    $(document).on('click', '#btnViewSelected', function() {
+        renderSelectedItemsModal();
+        var modalEl = document.getElementById('selectedItemsModal');
+        if (modalEl) {
+            var m = bootstrap.Modal.getOrCreateInstance(modalEl);
+            m.show();
+        }
+    });
+
+    $(document).on('click', '.btn-modal-remove', function() {
+        var code = $(this).data('code');
+        if (!code) return;
+        $('#detail-body tr.item-row').each(function() {
+            var v = $(this).find('input[name*="[item_code]"]').val();
+            if (v === String(code)) $(this).remove();
+        });
+        reOrder();
+        if ($('.item-row').length === 0) $('#emptyRow').show();
+        if (typeof calculateTotal === 'function') calculateTotal();
+        updateSelectionUi();
+        renderSelectedItemsModal();
+    });
+
+    function deleteSelectedRows() {
+        var checked = $('#detail-body tr.item-row').filter(function() {
+            return $(this).find('.row-check').is(':checked');
+        });
+        if (checked.length === 0) return;
+        Swal.fire({
+            title: {$msgAlert},
+            text: 'ลบ ' + checked.length + ' รายการที่เลือกหรือไม่?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'ใช่, ลบ',
+            cancelButtonText: {$msgCancel}
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+            checked.remove();
+            reOrder();
+            if ($('.item-row').length === 0) $('#emptyRow').show();
+            if (typeof calculateTotal === 'function') calculateTotal();
+            updateSelectionUi();
+            var modalEl = document.getElementById('selectedItemsModal');
+            if (modalEl) {
+                var m = bootstrap.Modal.getInstance(modalEl);
+                if (m) m.hide();
+            }
+        });
+    }
+
+    $(document).on('click', '#btnDeleteSelected, #btnDeleteSelectedModal', deleteSelectedRows);
 
         $('#btnSaveDraft').on('click', function() {
             $('#save_as_draft').val('1');
@@ -839,6 +1022,7 @@ $js = <<< JS
         else { itemSelect.enable(); itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...'; }
 
         if ($('.item-row').length) { reOrder(); calculateTotal(); }
+        updateSelectionUi();
 
         // 3. ปุ่มเพิ่มแถว (เหมือนเดิม)
        // เปลี่ยนจาก $('#btnAddRow').click(function() { ... });
@@ -878,6 +1062,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
     const unitValue = (itemData.unit_name && itemData.unit_name !== '-') ? itemData.unit_name : '-';
     var lotVal = ($('input[name="lotMode"]:checked').val() === 'auto') ? getAutoLotNumber(currentIndex) : '';
     const row = '<tr class="item-row">' +
+        '<td class="text-center"><input type="checkbox" class="form-check-input row-check"></td>' +
         '<td class="text-center text-muted"></td>' +
         '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (itemId || '') + '"><strong>' + (itemData.item_name || '') + '</strong></td>' +
         '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
@@ -956,6 +1141,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             reOrder();
             if ($('.item-row').length === 0) $('#emptyRow').show();
             calculateTotal();
+            updateSelectionUi();
         });
 
         // 4. ฟังก์ชันอัปโหลด CSV
@@ -1135,6 +1321,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 var unitValue = item.unit_name || '-';
                 var lotVal = useAutoLot ? getAutoLotNumber(currentIndex + i) : (item.lot_number || '');
                 var row = '<tr class="item-row">' +
+                    '<td class="text-center"><input type="checkbox" class="form-check-input row-check"></td>' +
                     '<td class="text-center text-muted"></td>' +
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (item.item_code || '') + '"><strong>' + (item.item_name || '') + '</strong></td>' +
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +

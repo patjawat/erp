@@ -96,7 +96,7 @@ public function getItem()
 {
     // เปลี่ยน StockItem เป็นชื่อ Class ของตารางวัสดุของคุณ
     // และ item_code คือฟิลด์ที่ใช้เชื่อมในตาราง stock_detail
-    return $this->hasOne(StockItem::class, ['item_code' => 'item_code']);
+    return $this->hasOne(StockItem::class, ['code' => 'item_code']);
 }
 
 }

@@ -166,14 +166,14 @@ class SubStockController extends \yii\web\Controller
                     ->from(StockBalance::tableName())
                     ->where(['warehouse_id' => $subWarehouseIds])
                     ->groupBy('item_code')],
-                'b.item_code = i.item_code'
+                'b.item_code = i.code'
             )
             ->where(['and',
-                ['i.is_active' => 1],
-                ['not', ['i.min_qty' => null]],
-                ['>', 'i.min_qty', 0],
+                ['i.active' => 1],
+                ['not', ['i.qty_min' => null]],
+                ['>', 'i.qty_min', 0],
             ])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.min_qty');
+            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
         $criticalCount = (int) $criticalQuery->count();
 
         $monthStart = date('Y-m-01 00:00:00');
@@ -359,15 +359,15 @@ class SubStockController extends \yii\web\Controller
         $rows = (new Query())
             ->select([
                 'sb.item_code',
-                'i.item_name',
+                'i.title',
                 'sb.lot_number',
                 'sb.balance_qty',
             ])
             ->from(['sb' => StockBalance::tableName()])
-            ->innerJoin(['i' => StockItem::tableName()], 'i.item_code = sb.item_code')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->where(['sb.warehouse_id' => $wid])
             ->andWhere(['>', 'sb.balance_qty', 0])
-            ->orderBy(['i.item_name' => SORT_ASC, 'sb.lot_number' => SORT_ASC])
+            ->orderBy(['i.title' => SORT_ASC, 'sb.lot_number' => SORT_ASC])
             ->all();
         $out = [];
         foreach ($rows as $r) {

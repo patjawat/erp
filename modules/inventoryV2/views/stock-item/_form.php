@@ -89,22 +89,12 @@ $ref = isset($ref) ? Html::encode($ref) : '';
         ])->label('ประเภทวัสดุ')
         ?>
     </div>
-    <div class="col-3">
-        <?= $form->field($model, 'max_qty')->textInput([
-            'type' => 'number',
-            'maxlength' => true,
-            'placeholder' => 'ระบุจำนวนสูงสุด',
-            'min' => 0
-        ])->label('จำนวนสูงสุด') ?>
-    </div>
-
-    <div class="col-3">
-        <?= $form->field($model, 'min_qty')->textInput([
-            'type' => 'number',
-            'maxlength' => true,
-            'placeholder' => 'ระบุจำนวนต่ำสุด',
-            'min' => 0
-        ])->label('จำนวนต่ำสุด') ?>
+    <div class="col-6">
+        <div class="alert alert-info py-2 px-3 small mb-3" role="alert">
+            <i class="bi bi-info-circle me-1"></i>
+            จำนวนสูงสุด/ต่ำสุดสำหรับสั่งซื้อ ให้ตั้งค่าแยกตามคลังที่หน้า
+            <strong>ตั้งค่าคลัง → กำหนดจุดสั่งซื้อต่อคลัง</strong>
+        </div>
     </div>
 
     <div class="col-6">
