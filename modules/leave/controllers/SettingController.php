@@ -481,6 +481,26 @@ class SettingController extends Controller
     /**
      * สร้างชุดค่า key => value สำหรับเติมใน PDF ใบลา (ใช้ทั้ง actionLeavePdf และ actionLeavePrintData).
      */
+    protected function resolvePdfEmployeeTypeName($employee): string
+    {
+        if (!$employee) {
+            return '';
+        }
+
+        foreach (['employeeTypeName', 'positionTypeName'] as $method) {
+            if (!method_exists($employee, $method)) {
+                continue;
+            }
+            $value = $employee->$method();
+            $text = trim((string) ($value === false ? '' : $value));
+            if ($text !== '' && $text !== '-') {
+                return $text;
+            }
+        }
+
+        return '';
+    }
+
     protected function getLeavePdfValues(Leave $model, string $dateFormat = 'medium'): array
     {
         $fmtDate = function ($date) use ($dateFormat) {
@@ -493,6 +513,7 @@ class SettingController extends Controller
         $author = $model->getAvatar($model->emp_id, '');
         $emp = $model->employee;
         $empPositionText = $emp ? ('ตำแหน่ง' . $emp->positionName()) : '';
+        $empEmployeeType = $this->resolvePdfEmployeeTypeName($emp);
         $levelName = $emp && method_exists($emp, 'positionLevelName') ? ($emp->positionLevelName() ? 'ระดับ' . $emp->positionLevelName() : '') : '';
         $lastDaysData = $model->LastDays();
         $lastLeave = is_object($lastDaysData['data'] ?? null) ? $lastDaysData['data'] : $model->getLastLeaveBeforeThis();
@@ -540,6 +561,7 @@ class SettingController extends Controller
         $hr = $model->checkerName(3);
         $direc = $model->checkerName(4);
         $sendEmp = $model->leaveWorkSend();
+        $sendEmployeeType = $this->resolvePdfEmployeeTypeName($sendEmp);
         $empSignature = '';
         if ($emp && method_exists($emp, 'signature')) {
             $empSignature = (string) $emp->signature();
@@ -575,8 +597,10 @@ class SettingController extends Controller
             'leaveType'       => $model->leaveType ? $model->leaveType->title : '',
             'address'         => isset($model->data_json['address']) ? strip_tags((string) $model->data_json['address']) : '',
             'status'          => $model->status === 'Approve' ? 'อนุญาต' : 'ไม่อนุญาต',
+            'employee_type'   => $empEmployeeType,
             'emp_fullname'    => $author['fullname'] ?? ($emp ? $emp->fullname : ''),
             'emp_position'    => $empPositionText,
+            'emp_employee_type' => $empEmployeeType,
             'phone'           => $emp && method_exists($emp, 'getAttribute') ? (string) ($emp->getAttribute('phone') ?? $model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '-') : (string) ($model->data_json['phone'] ?? $model->data_json['leave_contact_phone'] ?? '-'),
             'leader_fullname' => (string) ($leader['fullname'] ?? ''),
             'leader_position' => isset($leader['position']) ? 'ตำแหน่ง' . $leader['position'] : '',
@@ -589,6 +613,7 @@ class SettingController extends Controller
             'direc_date'      => (string) ($direc['approve_date'] ?? ''),
             'send_fullname'   => $sendEmp ? (string) $sendEmp->fullname : '',
             'send_position'   => $sendEmp && method_exists($sendEmp, 'positionName') ? 'ตำแหน่ง' . $sendEmp->positionName() : '',
+            'send_employee_type' => $sendEmployeeType,
         ];
         $values['create_date'] = $values['createDate'];
         $values['leave_type_title'] = $values['leaveType'];
@@ -602,12 +627,16 @@ class SettingController extends Controller
         for ($level = 1; $level <= 8; $level++) {
             $c = $model->checkerName($level);
             $approveDateRaw = $model->getApproveDateRaw($level);
+            $checkerEmployeeType = $this->resolvePdfEmployeeTypeName($c['employee'] ?? null);
             $values['approve_' . $level . '_name'] = (string) ($c['fullname'] ?? '');
             $values['approve_' . $level . '_position'] = (string) ($c['position'] ?? '');
+            $values['approve_' . $level . '_employee_type'] = $checkerEmployeeType;
+            $values['approver_' . $level . '_employee_type'] = $checkerEmployeeType;
             $values['approve_date_' . $level] = $approveDateRaw ? $fmtDate($approveDateRaw) : (string) ($c['approve_date'] ?? '');
         }
         $values['approver_fullname'] = $values['approve_1_name'] ?? '';
         $values['approver_position'] = $values['approve_1_position'] ?? '';
+        $values['approver_employee_type'] = $values['approver_1_employee_type'] ?? '';
         $values['approver_approve_date'] = $values['approve_date_1'] ?? '';
         $values['approver_signature'] = (string) ($model->checkerName(1)['signature'] ?? '');
         $values['leave_type_id'] = (string) ($model->leave_type_id ?? '');

@@ -26,9 +26,13 @@ class PdfTemplateService
         'ชื่อผู้รับผิดชอบ' => 'officer_name',
         'ชื่อผู้ขอ' => 'officer_name',
         'ตำแหน่งผู้ขอ' => 'officer_position',
+        'ประเภทพนักงาน' => 'employee_type',
+        'ประเภทพนักงานผู้ขอ' => 'officer_employee_type',
+        'ประเภทพนักงานผู้รับผิดชอบ' => 'officer_employee_type',
         'ลายเซ็นผู้ขอ' => 'officer_signature',
         'ชื่อสกุลผู้มอบหมายงาน' => 'assigned_to_fullname',
         'ตำแหน่งผู้มอบหมายงาน' => 'assigned_to_position',
+        'ประเภทพนักงานผู้มอบหมายงาน' => 'assigned_to_employee_type',
         'ลายเซ็นผู้มอบหมายงาน' => 'assigned_to_signature',
         'วันที่เอกสาร' => 'document_date',
         'เรื่อง' => 'topic',
@@ -56,6 +60,7 @@ class PdfTemplateService
         'นับวัน' => 'trip_days',
         'ผู้อนุมัติ (ชื่อ-นามสกุล)' => 'approver_fullname',
         'ผู้อนุมัติ (ตำแหน่ง)' => 'approver_position',
+        'ผู้อนุมัติ (ประเภทพนักงาน)' => 'approver_employee_type',
         'ผู้อนุมัติ (วันที่อนุมัติ)' => 'approver_approve_date',
         'ผู้อนุมัติ (ลายเซ็น)' => 'approver_signature',
         'สถานะผู้อนุมัติ' => 'approval_status',
@@ -63,6 +68,7 @@ class PdfTemplateService
         'ชื่อผู้ขอ' => 'officer_name',
         'ชื่อผู้ขอใช้รถ' => 'officer_name',
         'ตำแหน่งผู้ขอ' => 'officer_position',
+        'ประเภทพนักงานผู้ขอใช้รถ' => 'officer_employee_type',
         'สังกัดผู้ขอ' => 'officer_department',
         'หน่วยงานผู้ขอ' => 'officer_department',
         'เบอร์โทรผู้ขอ' => 'phone',
@@ -84,6 +90,12 @@ class PdfTemplateService
         'leader_sign' => 'approver_2_signature',
         'hr_sign' => 'approver_3_signature',
         'direc_sign' => 'approver_4_signature',
+        'ประเภทพนักงานผู้ขอลา' => 'emp_employee_type',
+        'ประเภทพนักงานผู้ปฏิบัติหน้าที่แทน' => 'send_employee_type',
+        'ประเภทพนักงานผู้แจ้งซ่อม' => 'requester_employee_type',
+        'ประเภทพนักงานช่างผู้ดำเนินการ' => 'technician_employee_type',
+        'ประเภทพนักงานหัวหน้ารับรอง' => 'leader_employee_type',
+        'ประเภทพนักงานขับ' => 'driver_employee_type',
     ];
 
     /**
@@ -641,7 +653,7 @@ class PdfTemplateService
                 }
 
                 $level = null;
-                if (in_array($lookupKey, ['approver_fullname', 'approver_position', 'approver_approve_date', 'approver_signature'], true)) {
+                if (in_array($lookupKey, ['approver_fullname', 'approver_position', 'approver_employee_type', 'approver_approve_date', 'approver_signature'], true)) {
                     // approval levels in leave module can be 1..8, but templates usually use 1..4.
                     $level = isset($item['approval_level']) && is_numeric($item['approval_level']) && (int) $item['approval_level'] >= 1 && (int) $item['approval_level'] <= 8 ? (int) $item['approval_level'] : 1;
                     $suffix = str_replace('approver_', '', $lookupKey);
@@ -655,6 +667,8 @@ class PdfTemplateService
                         $candidates[] = 'approve_' . $level . '_fullname';
                     } elseif ($suffix === 'position') {
                         $candidates[] = 'approve_' . $level . '_position';
+                    } elseif ($suffix === 'employee_type') {
+                        $candidates[] = 'approve_' . $level . '_employee_type';
                     } elseif ($suffix === 'approve_date') {
                         $candidates[] = 'approve_date_' . $level;
                         $candidates[] = 'approve_' . $level . '_date';
@@ -663,7 +677,9 @@ class PdfTemplateService
                     }
                     // global fallbacks without level
                     $candidates[] = 'approver_' . $suffix;
-                    $candidates[] = 'approve_' . $level . '_name';
+                    if ($suffix !== 'employee_type') {
+                        $candidates[] = 'approve_' . $level . '_name';
+                    }
 
                     $text = '';
                     foreach ($candidates as $k) {

@@ -190,12 +190,35 @@ foreach ($items as $it) {
                                 // กรณีหน้า Create รุ่นใหม่จะเป็น Model เปล่า item_code จะไม่มีค่า
                                 if (!isset($item) || !is_object($item) || empty($item->item_code)) continue;
                                 ?>
+                                <?php
+                                $rowItemName = $item->item->item_name ?? 'ไม่พบชื่อวัสดุ';
+                                $rowItemCode = $item->item_code;
+                                $rowImgUrl = '';
+                                if ($item->item && !empty($item->item->ref)) {
+                                    $rowUpload = \app\modules\filemanager\models\Uploads::find()->where(['ref' => $item->item->ref])->one();
+                                    if ($rowUpload) {
+                                        $rowImgUrl = \app\modules\filemanager\components\FileManagerHelper::getImg($rowUpload->id);
+                                    }
+                                }
+                                ?>
                                 <tr class="item-row">
                                     <td class="text-center"><input type="checkbox" class="form-check-input row-check"></td>
                                     <td class="text-center text-muted"><?= $index + 1 ?></td>
                                     <td>
-                                        <input type="hidden" name="StockDetail[<?= $index ?>][item_code]" value="<?= $item->item_code ?>">
-                                        <strong><?= $item->item->item_name ?? 'ไม่พบชื่อวัสดุ' ?></strong>
+                                        <input type="hidden" name="StockDetail[<?= $index ?>][item_code]" value="<?= Html::encode($rowItemCode) ?>">
+                                        <div class="item-cell">
+                                            <?php if ($rowImgUrl): ?>
+                                                <img src="<?= Html::encode($rowImgUrl) ?>" alt="" class="item-cell__img" loading="lazy">
+                                            <?php else: ?>
+                                                <span class="item-cell__img item-cell__img--placeholder"><i class="bi bi-box"></i></span>
+                                            <?php endif; ?>
+                                            <div class="item-cell__body">
+                                                <div class="item-cell__name"><?= Html::encode($rowItemName) ?></div>
+                                                <?php if ($rowItemCode): ?>
+                                                    <div class="item-cell__code"><?= Html::encode($rowItemCode) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <?php $currentUnit = $item->item && $item->item->unitName ? $item->item->unitName : '-'; ?>
@@ -1209,12 +1232,21 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             }
 
             var headerAliases = {$csvHeaderAliasesJson};
-            var headers = lines[0].split(',').map(function(h) {
-                var t = h.trim();
-                return headerAliases[t] || t; // normalize alias เช่น "รหัสพัสดุ" → "รหัสวัสดุ"
+            // ใช้ parseCsvLine + normalize ตัด BOM (\\uFEFF), white space, ช่องว่างใน "ราคา / หน่วย" → "ราคา/หน่วย"
+            var rawHeaderCells = parseCsvLine(lines[0].replace(/^\\uFEFF/, ''));
+            var headers = rawHeaderCells.map(function(h) {
+                var t = String(h || '').trim().replace(/\\s+/g, '');
+                return headerAliases[t] || t;
             });
             var expectedHeaders = {$csvHeadersJson};
-            var hasAllHeaders = expectedHeaders.every(function(h) { return headers.indexOf(h) !== -1; });
+            var normalizedExpected = expectedHeaders.map(function(h) { return h.replace(/\\s+/g, ''); });
+            // colIndex: { "รหัสวัสดุ": 0, "ชื่อวัสดุ": 1, ... } — lookup ตามชื่อ ไม่ใช่ตำแหน่ง
+            var colIndex = {};
+            normalizedExpected.forEach(function(h, i) {
+                var idx = headers.indexOf(h);
+                if (idx !== -1) colIndex[expectedHeaders[i]] = idx;
+            });
+            var hasAllHeaders = expectedHeaders.every(function(h) { return colIndex[h] !== undefined; });
 
             if (!hasAllHeaders) {
                 Swal.fire({$msgError}, {$msgCsvFormatError} + expectedHeaders.join(', '), 'error');
@@ -1239,25 +1271,26 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             for (var i = 1; i < lines.length; i++) {
                 var rowNum = i + 1; // CSV row number (1-based, header = row 1)
                 var raw = lines[i];
-                // ตัดเครื่องหมาย , หลักพันออกก่อน split (เช่น 1,500 → 1500, 12,345.67 → 12345.67)
-                // แล้วค่อย parse CSV เพื่อกัน split() แตก row ผิด
-                var preprocessed = normalizeThousandsSeparator(raw);
-                var values = parseCsvLine(preprocessed);
+                // ไม่ pre-process หลักพัน — regex แยกไม่ออกระหว่าง "6,130" (qty=6, price=130 = 2 คอลัมน์)
+                // กับ "6,130" (= 6130 หลักพันคำเดียว) ทำให้แถว qty 1 หลัก + price 3 หลักโดน merge ผิด
+                // ปล่อยให้ parseCsvLine ตัดตามไวยากรณ์ CSV จริง แล้ว toNumber ตัด , ราย cell เอง
+                // (ถ้าผู้ใช้ต้องการใส่ 1,500 ในเซลล์เดียว ต้องคร่อมด้วย " เช่น "1,500" ตาม RFC 4180)
+                var values = parseCsvLine(raw);
 
                 if (values.length < 4) {
-                    skipped.push({ row: rowNum, name: values[1] || '', reason: 'จำนวนคอลัมน์น้อยกว่า 4 (ตรวจ comma ใน CSV)', raw: raw.substring(0, 60) });
+                    skipped.push({ row: rowNum, name: values[colIndex['ชื่อวัสดุ']] || '', reason: 'จำนวนคอลัมน์น้อยกว่า 4 (ตรวจ comma ใน CSV)', raw: raw.substring(0, 60) });
                     continue;
                 }
 
-                var itemCode = values[0] || '';
-                var itemName = values[1] || '';
-                var unitName = values[2] || '';
-                // toNumber: strip , (หลักพัน) + trim ก่อน parseFloat
-                // กัน edge case ที่ normalize หลุด เช่น "1,739.00" ที่อยู่ใน quote
-                var qty = toNumber(values[3]);
-                var unitPrice = toNumber(values[4]);
-                var lotNumber = values[5] || '';
-                var expiryDate = values[6] || '';
+                // อ่านค่าจากตำแหน่งคอลัมน์จริง (ตาม header) — ไม่ใช่ตำแหน่งคงที่
+                // กันกรณีผู้ใช้สลับคอลัมน์ในไฟล์ CSV เช่น เอา "ราคา/หน่วย" มาก่อน "จำนวน"
+                var itemCode = values[colIndex['รหัสวัสดุ']] || '';
+                var itemName = values[colIndex['ชื่อวัสดุ']] || '';
+                var unitName = values[colIndex['หน่วยนับ']] || '';
+                var qty = toNumber(values[colIndex['จำนวน']]);
+                var unitPrice = toNumber(values[colIndex['ราคา/หน่วย']]);
+                var lotNumber = values[colIndex['Lot Number']] || '';
+                var expiryDate = values[colIndex['วันหมดอายุ']] || '';
 
                 // อนุญาตให้รหัสว่างได้ (server จะ match จากชื่อ / สร้างใหม่ให้)
                 // แต่ "ชื่อ" และ "จำนวน" ยังจำเป็น
@@ -1338,8 +1371,12 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 
         function importCSVItems(items, warehouseId, categoryId, skipped) {
             skipped = skipped || [];
-            // 2-step flow: dry_run preview → confirm dialog (ถ้ามีการสร้างใหม่) → real import
-            callImport(items, warehouseId, categoryId, true)
+            // flow:
+            // 1) dry_run preview
+            // 2) ถ้ามี category_mismatches → mismatch warning dialog (update / keep / cancel)
+            // 3) ถ้ามี would_create → confirm dialog (สร้างใหม่ N รายการ)
+            // 4) real import (ส่ง update_categories ถ้า user เลือกปรับ)
+            callImport(items, warehouseId, categoryId, true, false, [])
                 .then(function(preview) {
                     if (!preview || !preview.success) {
                         Swal.fire({$msgError}, (preview && preview.message) || {$msgImportError}, 'error');
@@ -1347,53 +1384,145 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     }
                     var wouldCreate = preview.would_create || [];
                     var wouldReuse  = preview.would_reuse || [];
+                    var mismatches  = preview.category_mismatches || [];
+                    var targetTitle = preview.target_category_title || '';
                     var errors      = preview.errors || [];
 
-                    // ถ้าไม่มีการสร้างใหม่เลย → ไม่ต้อง confirm ทำได้เลย
-                    if (wouldCreate.length === 0) {
-                        return doRealImport(items, warehouseId, categoryId, skipped);
-                    }
+                    // Step 2: mismatch dialog (ถ้ามี)
+                    var mismatchPromise = (mismatches.length === 0)
+                        ? Promise.resolve({ proceed: true, updateCategories: false, codes: [] })
+                        : showMismatchDialog(mismatches, targetTitle);
 
-                    // มีการสร้างใหม่ → แสดง confirm พร้อมรายชื่อ
-                    var listHtml = wouldCreate.map(function(it) {
-                        var code = it.item_code ? ' <code class="text-muted small">(' + escapeHtml(it.item_code) + ')</code>' : '';
-                        return '<li class="text-start">' + escapeHtml(it.item_name) + code + '</li>';
-                    }).join('');
+                    mismatchPromise.then(function(decision) {
+                        if (!decision || !decision.proceed) return; // user cancelled
 
-                    var subInfo = '';
-                    if (wouldReuse.length > 0) {
-                        subInfo += '<div class="text-muted small mb-2">ใช้วัสดุเดิม ' + wouldReuse.length + ' รายการ (ไม่สร้างซ้ำ)</div>';
-                    }
-                    if (skipped.length > 0) {
-                        subInfo += '<div class="text-warning small mb-2">มีรายการในไฟล์ที่ไม่ผ่านการอ่าน ' + skipped.length + ' แถว — ดูรายละเอียดใน "สรุปหลังบันทึก"</div>';
-                    }
-                    if (errors.length > 0) {
-                        subInfo += '<div class="text-danger small mb-2">ข้อผิดพลาดเชิง validation ' + errors.length + ' รายการ — จะไม่บันทึกรายการเหล่านั้น</div>';
-                    }
+                        // Step 3: confirm "สร้างใหม่"
+                        var createPromise = (wouldCreate.length === 0)
+                            ? Promise.resolve(true)
+                            : showCreateConfirmDialog(wouldCreate, wouldReuse, skipped, errors);
 
-                    Swal.fire({
-                        icon: 'question',
-                        title: 'จะสร้างวัสดุใหม่ ' + wouldCreate.length + ' รายการ',
-                        html:
-                            '<div class="text-start">' +
-                                subInfo +
-                                '<div class="fw-semibold mb-1">รายชื่อที่จะสร้าง:</div>' +
-                                '<ul class="mb-0 small" style="max-height: 240px; overflow-y: auto;">' + listHtml + '</ul>' +
-                            '</div>',
-                        showCancelButton: true,
-                        confirmButtonText: 'ยืนยันบันทึก',
-                        cancelButtonText: 'ยกเลิก',
-                        confirmButtonColor: '#0d6efd',
-                        focusCancel: true,
-                    }).then(function(res) {
-                        if (res.isConfirmed) {
-                            doRealImport(items, warehouseId, categoryId, skipped);
-                        }
+                        createPromise.then(function(confirmed) {
+                            if (!confirmed) return;
+                            // Step 4: real import
+                            doRealImport(items, warehouseId, categoryId, skipped, decision.updateCategories, decision.codes);
+                        });
                     });
                 })
                 .catch(function(error) {
                     Swal.fire({$msgError}, ({$msgConnectionError}) + (error.message || ''), 'error');
                 });
+        }
+
+        // ─── Category mismatch warning dialog ───
+        function showMismatchDialog(mismatches, targetTitle) {
+            return new Promise(function(resolve) {
+                // group by current_category_title
+                var grouped = {};
+                var codesAll = [];
+                mismatches.forEach(function(m) {
+                    var key = m.current_category_title || '(ไม่ระบุ)';
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(m);
+                    if (m.item_code) codesAll.push(m.item_code);
+                });
+
+                var groupsHtml = Object.keys(grouped).map(function(catTitle) {
+                    var rows = grouped[catTitle].map(function(m) {
+                        return '<li class="mismatch-row">' +
+                            '<code class="mismatch-row__code">' + escapeHtml(m.item_code) + '</code>' +
+                            '<span class="mismatch-row__name">' + escapeHtml(m.item_name) + '</span>' +
+                        '</li>';
+                    }).join('');
+                    return '<section class="mismatch-group">' +
+                        '<header class="mismatch-group__head">' +
+                            '<span class="mismatch-group__title">' + escapeHtml(catTitle) + '</span>' +
+                            '<span class="mismatch-group__count">' + grouped[catTitle].length + ' รายการ</span>' +
+                        '</header>' +
+                        '<ul class="mismatch-group__list">' + rows + '</ul>' +
+                    '</section>';
+                }).join('');
+
+                var html =
+                    '<div class="mismatch-dialog text-start">' +
+                        '<div class="mismatch-banner">' +
+                            '<i class="bi bi-exclamation-triangle-fill"></i>' +
+                            '<div>' +
+                                '<div class="mismatch-banner__title">วัสดุในไฟล์มีประเภทเดิมไม่ตรงกับที่เลือก</div>' +
+                                '<div class="mismatch-banner__caption">ประเภทที่เลือกตอนนี้: <strong>' + escapeHtml(targetTitle) + '</strong></div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="mismatch-help">' +
+                            'เลือกได้ว่าจะ <strong>ปรับประเภทของวัสดุในระบบ</strong> ให้เป็น "' + escapeHtml(targetTitle) + '" เพื่อให้รายงานในอนาคตตรงกัน หรือจะ <strong>คงไว้เหมือนเดิม</strong> แล้วบันทึกการรับเข้าต่อไป' +
+                        '</div>' +
+                        '<div class="mismatch-groups">' + groupsHtml + '</div>' +
+                    '</div>';
+
+                Swal.fire({
+                    icon: undefined,
+                    title: 'พบ ' + mismatches.length + ' รายการที่ประเภทไม่ตรง',
+                    html: html,
+                    width: 640,
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    showCloseButton: false,
+                    confirmButtonText: '<i class="bi bi-arrow-repeat"></i> ปรับประเภทให้เป็น "' + escapeHtml(targetTitle) + '"',
+                    denyButtonText: 'คงประเภทเดิม',
+                    cancelButtonText: 'ยกเลิกการนำเข้า',
+                    confirmButtonColor: '#b45309', // warning ink — destructive-ish
+                    denyButtonColor: '#475569',    // muted neutral
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: false,
+                    focusDeny: true, // ค่า default ที่ปลอดภัยกว่า
+                    customClass: { popup: 'mismatch-popup' }
+                }).then(function(res) {
+                    if (res.isConfirmed) {
+                        resolve({ proceed: true, updateCategories: true, codes: codesAll });
+                    } else if (res.isDenied) {
+                        resolve({ proceed: true, updateCategories: false, codes: [] });
+                    } else {
+                        resolve({ proceed: false });
+                    }
+                });
+            });
+        }
+
+        // ─── Confirm "สร้างใหม่" dialog (เดิม แยกออกมาเป็นฟังก์ชัน) ───
+        function showCreateConfirmDialog(wouldCreate, wouldReuse, skipped, errors) {
+            return new Promise(function(resolve) {
+                var listHtml = wouldCreate.map(function(it) {
+                    var code = it.item_code ? ' <code class="text-muted small">(' + escapeHtml(it.item_code) + ')</code>' : '';
+                    return '<li class="text-start">' + escapeHtml(it.item_name) + code + '</li>';
+                }).join('');
+
+                var subInfo = '';
+                if (wouldReuse.length > 0) {
+                    subInfo += '<div class="text-muted small mb-2">ใช้วัสดุเดิม ' + wouldReuse.length + ' รายการ (ไม่สร้างซ้ำ)</div>';
+                }
+                if (skipped.length > 0) {
+                    subInfo += '<div class="text-warning small mb-2">มีรายการในไฟล์ที่ไม่ผ่านการอ่าน ' + skipped.length + ' แถว — ดูรายละเอียดใน "สรุปหลังบันทึก"</div>';
+                }
+                if (errors.length > 0) {
+                    subInfo += '<div class="text-danger small mb-2">ข้อผิดพลาดเชิง validation ' + errors.length + ' รายการ — จะไม่บันทึกรายการเหล่านั้น</div>';
+                }
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'จะสร้างวัสดุใหม่ ' + wouldCreate.length + ' รายการ',
+                    html:
+                        '<div class="text-start">' +
+                            subInfo +
+                            '<div class="fw-semibold mb-1">รายชื่อที่จะสร้าง:</div>' +
+                            '<ul class="mb-0 small" style="max-height: 240px; overflow-y: auto;">' + listHtml + '</ul>' +
+                        '</div>',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยันบันทึก',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#0d6efd',
+                    focusCancel: true,
+                }).then(function(res) {
+                    resolve(!!res.isConfirmed);
+                });
+            });
         }
 
         function escapeHtml(s) {
@@ -1402,7 +1531,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             });
         }
 
-        function callImport(items, warehouseId, categoryId, dryRun) {
+        function callImport(items, warehouseId, categoryId, dryRun, updateCategories, applyCategoryToCodes) {
             var importUrl = {$importCsvUrlJson};
             return fetch(importUrl, {
                 method: 'POST',
@@ -1411,7 +1540,9 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     items: items,
                     warehouse_id: warehouseId,
                     category_id: categoryId,
-                    dry_run: !!dryRun
+                    dry_run: !!dryRun,
+                    update_categories: !!updateCategories,
+                    apply_category_to_codes: applyCategoryToCodes || []
                 })
             })
             .then(function(response) {
@@ -1435,14 +1566,14 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             });
         }
 
-        function doRealImport(items, warehouseId, categoryId, skipped) {
+        function doRealImport(items, warehouseId, categoryId, skipped, updateCategories, applyCategoryToCodes) {
             skipped = skipped || [];
             Swal.fire({
                 title: 'กำลังบันทึก...',
                 allowOutsideClick: false,
                 didOpen: function() { Swal.showLoading(); }
             });
-            return callImport(items, warehouseId, categoryId, false)
+            return callImport(items, warehouseId, categoryId, false, updateCategories, applyCategoryToCodes)
                 .then(function(result) {
                     if (!result.success) {
                         Swal.fire({$msgError}, result.message || {$msgImportError}, 'error');
@@ -1461,6 +1592,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             var added       = result.added || [];
             var createdInfo = result.created_info || (result.created || []).map(function(c) { return { item_code: c, item_name: '-' }; });
             var reusedInfo  = result.reused_info  || (result.reused  || []).map(function(c) { return { item_code: c, item_name: '-' }; });
+            var categoryUpdated = result.category_updated || [];
             var errors      = result.errors || [];
             var skipped     = result.skipped || [];
 
@@ -1474,10 +1606,39 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     statCell('นำเข้าสำเร็จ', added.length, 'text-success') +
                     (createdInfo.length > 0 ? statCell('สร้างใหม่', createdInfo.length, 'text-success') : '') +
                     (reusedInfo.length  > 0 ? statCell('ใช้เดิม',   reusedInfo.length,  'text-primary') : '') +
+                    (categoryUpdated.length > 0 ? statCell('ปรับประเภท', categoryUpdated.length, 'text-warning') : '') +
                     (hasIssues          ? statCell('ไม่ผ่าน', skipped.length + errors.length, 'text-danger') : '') +
                 '</div>';
 
             var sections = '';
+            if (categoryUpdated.length > 0) {
+                var updRows = categoryUpdated.map(function(u) {
+                    return '<tr>' +
+                        '<td class="font-monospace text-muted" style="white-space:nowrap;">' + escapeHtml(u.item_code) + '</td>' +
+                        '<td>' + escapeHtml(u.item_name) + '</td>' +
+                        '<td class="small text-muted">' + escapeHtml(u.from_title || '-') + '</td>' +
+                        '<td class="small text-muted text-center" aria-hidden="true">→</td>' +
+                        '<td class="small text-warning fw-semibold">' + escapeHtml(u.to_title || '-') + '</td>' +
+                    '</tr>';
+                }).join('');
+                sections += '<div class="mb-3">' +
+                    '<div class="fw-semibold mb-2 text-warning">ปรับประเภทวัสดุในระบบ (' + categoryUpdated.length + ' รายการ)</div>' +
+                    '<div class="border rounded" style="max-height: 240px; overflow-y: auto;">' +
+                        '<table class="table table-sm table-hover mb-0 align-middle">' +
+                            '<thead class="table-light position-sticky top-0">' +
+                                '<tr>' +
+                                    '<th style="width: 110px;">รหัส</th>' +
+                                    '<th>ชื่อวัสดุ</th>' +
+                                    '<th style="width: 130px;">จากประเภท</th>' +
+                                    '<th style="width: 28px;"></th>' +
+                                    '<th style="width: 130px;">เป็นประเภท</th>' +
+                                '</tr>' +
+                            '</thead>' +
+                            '<tbody>' + updRows + '</tbody>' +
+                        '</table>' +
+                    '</div>' +
+                '</div>';
+            }
             if (createdInfo.length > 0) {
                 sections += buildSection('สร้างวัสดุใหม่ (' + createdInfo.length + ')', createdInfo, 'success');
             }
@@ -1581,10 +1742,23 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 var expiryDisplay = expiryDateInput ? ymdToThaiDisplay(expiryDateInput) : '';
                 var unitValue = item.unit_name || '-';
                 var lotVal = useAutoLot ? getAutoLotNumber(currentIndex + i) : (item.lot_number || '');
+                var imgUrl = item.image_url || '';
+                var itemCode = escapeHtml(item.item_code || '');
+                var itemName = escapeHtml(item.item_name || '');
+                var itemCell =
+                    '<div class="item-cell">' +
+                        (imgUrl
+                            ? '<img src="' + escapeHtml(imgUrl) + '" alt="" class="item-cell__img" loading="lazy" onerror="this.style.display=\\'none\\'">'
+                            : '<span class="item-cell__img item-cell__img--placeholder"><i class="bi bi-box"></i></span>') +
+                        '<div class="item-cell__body">' +
+                            '<div class="item-cell__name">' + itemName + '</div>' +
+                            (itemCode ? '<div class="item-cell__code">' + itemCode + '</div>' : '') +
+                        '</div>' +
+                    '</div>';
                 var row = '<tr class="item-row">' +
                     '<td class="text-center"><input type="checkbox" class="form-check-input row-check"></td>' +
                     '<td class="text-center text-muted"></td>' +
-                    '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (item.item_code || '') + '"><strong>' + (item.item_name || '') + '</strong></td>' +
+                    '<td><input type="hidden" name="StockDetail[' + currentIndex + '][item_code]" value="' + (item.item_code || '') + '">' + itemCell + '</td>' +
                     '<td><input type="hidden" name="StockDetail[' + currentIndex + '][unit_name]" value="' + (unitValue || '-') + '"><span class="text-muted">' + (unitValue || '-') + '</span></td>' +
                     '<td class="text-muted small">' + (item.category_title || '-') + '</td>' +
                     '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
@@ -1607,4 +1781,149 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
     });
 JS;
 $this->registerJs($js, \yii\web\View::POS_END);
+
+$this->registerCss(<<<CSS
+.receive-create .item-cell {
+    display: flex; align-items: center; gap: 0.6rem;
+    min-width: 0;
+}
+.receive-create .item-cell__img {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    flex-shrink: 0;
+}
+.receive-create .item-cell__img--placeholder {
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #94a3b8;
+    background: #f1f5f9;
+    font-size: 1.1rem;
+}
+.receive-create .item-cell__body { min-width: 0; flex: 1; }
+.receive-create .item-cell__name {
+    font-weight: 600; color: #1a202c;
+    line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.receive-create .item-cell__code {
+    font-size: 0.72rem; color: #718096;
+    font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
+    line-height: 1.2; margin-top: 0.1rem;
+}
+
+/* ─── Category mismatch dialog ─── */
+/* Strategy: ตัด popup ทั้งก้อนให้ไม่เกิน 90vh, แล้วบังคับให้ html-container เป็น scroll ตัวเดียว
+   ปุ่ม actions ของ SweetAlert จะอยู่ใต้ html-container เสมอ (grid layout) ไม่หลุดขอบ */
+.mismatch-popup {
+    max-height: 90vh !important;
+    width: 640px !important;
+    max-width: 95vw !important;
+}
+.mismatch-popup .swal2-html-container {
+    margin: 0.5rem 1rem 0 !important;
+    padding: 0 0.25rem 0.25rem !important;
+    max-height: 62vh !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    text-align: left !important;
+}
+.mismatch-popup .swal2-html-container::-webkit-scrollbar { width: 8px; }
+.mismatch-popup .swal2-html-container::-webkit-scrollbar-thumb {
+    background: rgba(15,23,42,0.22); border-radius: 999px;
+}
+.mismatch-popup .swal2-html-container::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.35); }
+.mismatch-popup .swal2-html-container::-webkit-scrollbar-track { background: transparent; }
+.mismatch-popup .swal2-actions { gap: 0.4rem; flex-wrap: wrap; }
+.mismatch-popup .swal2-confirm,
+.mismatch-popup .swal2-deny,
+.mismatch-popup .swal2-cancel {
+    font-size: 0.85rem !important;
+    padding: 0.5rem 0.85rem !important;
+}
+.mismatch-dialog { font-size: 0.86rem; color: #1a202c; }
+.mismatch-banner {
+    display: flex; align-items: flex-start; gap: 0.65rem;
+    background: rgba(180, 83, 9, 0.08);
+    border: 1px solid rgba(180, 83, 9, 0.18);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
+    margin-bottom: 0.75rem;
+}
+.mismatch-banner i {
+    color: #b45309; font-size: 1.15rem; margin-top: 0.1rem;
+    flex-shrink: 0;
+}
+.mismatch-banner__title { font-weight: 700; color: #1a202c; line-height: 1.3; }
+.mismatch-banner__caption { font-size: 0.78rem; color: #4a5568; margin-top: 0.1rem; }
+.mismatch-help {
+    font-size: 0.8rem; color: #4a5568;
+    background: #f7f9fc;
+    border-left: 1px solid rgba(15,23,42,0.08); /* hairline only — not a side stripe */
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.5;
+}
+.mismatch-help strong { color: #1a202c; }
+/* ไม่ใส่ max-height ที่นี่ — ปล่อยให้ .swal2-html-container เป็นตัว scroll
+   วิธีนี้กัน double-scroll-container และให้ปุ่ม sweetalert อยู่กับที่เสมอ */
+.mismatch-groups {
+    display: block;
+}
+.mismatch-group + .mismatch-group { margin-top: 0.6rem; }
+.mismatch-group:first-child { margin-top: 0; }
+.mismatch-group {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.mismatch-group__head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    background: #f7f9fc;
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+.mismatch-group__title { font-weight: 600; color: #1a202c; font-size: 0.85rem; }
+.mismatch-group__count {
+    background: #eef2f7;
+    color: #4a5568;
+    font-size: 0.7rem; font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+.mismatch-group__list {
+    list-style: none; margin: 0; padding: 0.35rem 0;
+}
+.mismatch-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+}
+.mismatch-row + .mismatch-row {
+    border-top: 1px solid rgba(15, 23, 42, 0.04);
+}
+.mismatch-row__code {
+    background: #eef2f7;
+    color: #4a5568;
+    font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+    min-width: 5.5rem; text-align: center;
+}
+.mismatch-row__name {
+    color: #1a202c;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mismatch-popup, .mismatch-popup * { animation: none !important; transition: none !important; }
+}
+CSS
+);
 ?>

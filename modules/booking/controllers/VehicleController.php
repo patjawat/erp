@@ -1424,6 +1424,9 @@ class VehicleController extends Controller
         $driver = $model->driver;
         $vehicleStatus = $model->vehicleStatus;
         $carType = $model->carType;
+        $employeeTypeName = $this->resolvePdfEmployeeTypeName($employee);
+        $leaderEmployeeTypeName = $this->resolvePdfEmployeeTypeName($leader);
+        $driverEmployeeTypeName = $this->resolvePdfEmployeeTypeName($driver);
 
         $approverData = [];
         $approveRows = Approve::find()
@@ -1465,6 +1468,7 @@ class VehicleController extends Controller
             }
             $approverData['approver_' . $index . '_fullname'] = (string) ($approveEmp->fullname ?? '');
             $approverData['approver_' . $index . '_position'] = $approveEmp && method_exists($approveEmp, 'positionName') ? (string) ($approveEmp->positionName() ?? '') : '';
+            $approverData['approver_' . $index . '_employee_type'] = $this->resolvePdfEmployeeTypeName($approveEmp);
             $approverData['approver_' . $index . '_approve_date'] = $approveDate;
             $approverData['approver_' . $index . '_signature'] = $approveSignature;
             $approverData['approver_' . $index . '_status'] = (string) ($approveRow->status ?? '');
@@ -1473,6 +1477,7 @@ class VehicleController extends Controller
         if (!empty($approverData['approver_1_fullname'])) {
             $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
             $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_employee_type'] = (string) ($approverData['approver_1_employee_type'] ?? '');
             $approverData['approver_approve_date'] = (string) ($approverData['approver_1_approve_date'] ?? '');
             $approverData['approver_signature'] = (string) ($approverData['approver_1_signature'] ?? '');
             $approverData['approval_status'] = (string) ($approverData['approver_1_status'] ?? '');
@@ -1486,11 +1491,13 @@ class VehicleController extends Controller
             }
             $approverData['approver_1_fullname'] = (string) ($leader->fullname ?? '');
             $approverData['approver_1_position'] = method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '';
+            $approverData['approver_1_employee_type'] = $leaderEmployeeTypeName;
             $approverData['approver_1_approve_date'] = '';
             $approverData['approver_1_signature'] = $leaderSignature;
             $approverData['approver_1_status'] = '';
             $approverData['approver_fullname'] = (string) ($approverData['approver_1_fullname'] ?? '');
             $approverData['approver_position'] = (string) ($approverData['approver_1_position'] ?? '');
+            $approverData['approver_employee_type'] = (string) ($approverData['approver_1_employee_type'] ?? '');
             $approverData['approver_approve_date'] = '';
             $approverData['approver_signature'] = $leaderSignature;
             $approverData['approval_status'] = '';
@@ -1549,15 +1556,21 @@ class VehicleController extends Controller
             'fullname' => (string) ($employee->fullname ?? ''),
             'position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
             'department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'employee_type' => $employeeTypeName,
             'officer_name' => (string) ($employee->fullname ?? ''),
             'officer_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'officer_employee_type' => $employeeTypeName,
             'officer_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
             'requester_fullname' => (string) ($employee->fullname ?? ''),
             'requester_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'requester_employee_type' => $employeeTypeName,
             'requester_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
             'employee_fullname' => (string) ($employee->fullname ?? ''),
             'employee_position' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+            'employee_employee_type' => $employeeTypeName,
             'employee_department' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
+            'leader_employee_type' => $leaderEmployeeTypeName,
+            'driver_employee_type' => $driverEmployeeTypeName,
             'time_go' => (string) ($model->time_start ?? ''),
             'time_back' => (string) ($model->time_end ?? ''),
             'emp_id' => (string) ($model->emp_id ?? ''),
@@ -1574,14 +1587,17 @@ class VehicleController extends Controller
             'employee' => [
                 'fullname' => (string) ($employee->fullname ?? ''),
                 'positionName' => $employee && method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?? '') : '',
+                'employeeTypeName' => $employeeTypeName,
                 'departmentName' => $employee && method_exists($employee, 'departmentName') ? (string) ($employee->departmentName() ?? '') : '',
             ],
             'leader' => [
                 'fullname' => (string) ($leader->fullname ?? ''),
                 'positionName' => $leader && method_exists($leader, 'positionName') ? (string) ($leader->positionName() ?? '') : '',
+                'employeeTypeName' => $leaderEmployeeTypeName,
             ],
             'driver' => [
                 'fullname' => (string) ($driver->fullname ?? ''),
+                'employeeTypeName' => $driverEmployeeTypeName,
             ],
             'data_json' => [
                 'phone' => (string) ($dataJson['phone'] ?? ''),
@@ -1591,6 +1607,26 @@ class VehicleController extends Controller
                 'req_driver_id' => (string) ($dataJson['req_driver_id'] ?? ''),
             ],
         ] + $approverData;
+    }
+
+    private function resolvePdfEmployeeTypeName($employee): string
+    {
+        if (!$employee) {
+            return '';
+        }
+
+        foreach (['employeeTypeName', 'positionTypeName'] as $method) {
+            if (!method_exists($employee, $method)) {
+                continue;
+            }
+            $value = $employee->$method();
+            $text = trim((string) ($value === false ? '' : $value));
+            if ($text !== '' && $text !== '-') {
+                return $text;
+            }
+        }
+
+        return '';
     }
 
 

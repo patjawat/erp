@@ -694,6 +694,26 @@ class DevelopmentController extends Controller
         return is_array($v) ? $v : (json_decode((string) $v, true) ?: []);
     }
 
+    protected function resolvePdfEmployeeTypeName($employee): string
+    {
+        if (!$employee) {
+            return '';
+        }
+
+        foreach (['employeeTypeName', 'positionTypeName'] as $method) {
+            if (!method_exists($employee, $method)) {
+                continue;
+            }
+            $value = $employee->$method();
+            $text = trim((string) ($value === false ? '' : $value));
+            if ($text !== '' && $text !== '-') {
+                return $text;
+            }
+        }
+
+        return '';
+    }
+
     /**
      * รายการผู้อนุมัติจากตาราง approve (ชื่อนามสกุล ตำแหน่ง วันที่อนุมัติ path ลายเซ็น) สำหรับใส่ใน PDF.
      * คืน array แบบแบน: approver_1_fullname, approver_1_position, approver_1_approve_date, approver_1_signature, ...
@@ -712,6 +732,7 @@ class DevelopmentController extends Controller
             $emp = $a->employee;
             $fullname = $emp ? (!empty($emp->fullname) ? $emp->fullname : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname)) : '-';
             $position = $emp && method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $employeeType = $this->resolvePdfEmployeeTypeName($emp);
             $dataJson = is_array($a->data_json) ? $a->data_json : (json_decode((string) $a->data_json, true) ?: []);
             $approveDate = isset($dataJson['approve_date']) ? (string) $dataJson['approve_date'] : '';
             $signaturePath = $emp && method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
@@ -720,6 +741,7 @@ class DevelopmentController extends Controller
             }
             $out['approver_' . $n . '_fullname'] = $fullname;
             $out['approver_' . $n . '_position'] = $position;
+            $out['approver_' . $n . '_employee_type'] = $employeeType;
             $out['approver_' . $n . '_approve_date'] = $approveDate;
             $out['approver_' . $n . '_signature'] = $signaturePath;
             $out['approver_' . $n . '_status'] = (string) ($a->status ?? '');
@@ -743,7 +765,11 @@ class DevelopmentController extends Controller
             $label = trim((string) ($dataJson['label'] ?? ''));
             $fullname = $emp ? (!empty($emp->fullname) ? $emp->fullname : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname)) : ($label ?: '-');
             $position = $emp && method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
-            $list[] = ['fullname' => $fullname, 'position' => $position];
+            $list[] = [
+                'fullname' => $fullname,
+                'position' => $position,
+                'employee_type' => $this->resolvePdfEmployeeTypeName($emp),
+            ];
         }
         return $list;
     }
@@ -1063,10 +1089,12 @@ class DevelopmentController extends Controller
         $emp = $model->createdByEmp;
         $officerName = '-';
         $officerPosition = '-';
+        $officerEmployeeType = '';
         $officerSignature = '';
         if ($emp) {
             $officerName = !empty($emp->fullname) ? $emp->fullname : (method_exists($emp, 'fullname') ? $emp->fullname() : ($emp->prefix . ' ' . $emp->fname . ' ' . $emp->lname));
             $officerPosition = method_exists($emp, 'positionName') ? ($emp->positionName() ?? '-') : '-';
+            $officerEmployeeType = $this->resolvePdfEmployeeTypeName($emp);
             $sig = method_exists($emp, 'SignatureFilePath') ? ($emp->SignatureFilePath() ?? '') : '';
             $officerSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
         }
@@ -1074,10 +1102,12 @@ class DevelopmentController extends Controller
         $assignee = $model->assignedTo;
         $assignedToFullname = '-';
         $assignedToPosition = '-';
+        $assignedToEmployeeType = '';
         $assignedToSignature = '';
         if ($assignee) {
             $assignedToFullname = !empty($assignee->fullname) ? $assignee->fullname : ($assignee->prefix . ' ' . $assignee->fname . ' ' . $assignee->lname);
             $assignedToPosition = method_exists($assignee, 'positionName') ? ($assignee->positionName() ?? '-') : '-';
+            $assignedToEmployeeType = $this->resolvePdfEmployeeTypeName($assignee);
             $sig = method_exists($assignee, 'SignatureFilePath') ? ($assignee->SignatureFilePath() ?? '') : '';
             $assignedToSignature = ($sig !== '' && is_file($sig)) ? $sig : '';
         }
@@ -1090,11 +1120,14 @@ class DevelopmentController extends Controller
             'document_number' => (string) ($dataJson['doc_number'] ?? $info['doc_number'] ?? '-'),
             'thai_year' => (string) (int) $model->thai_year,
             'custom_text' => (string) ($dataJson['custom_text'] ?? ''),
+            'employee_type' => $officerEmployeeType,
             'officer_name' => $officerName,
             'officer_position' => $officerPosition,
+            'officer_employee_type' => $officerEmployeeType,
             'officer_signature' => $officerSignature,
             'assigned_to_fullname' => $assignedToFullname,
             'assigned_to_position' => $assignedToPosition,
+            'assigned_to_employee_type' => $assignedToEmployeeType,
             'assigned_to_signature' => $assignedToSignature,
             'document_date' => date('Y-m-d'),
             'topic' => (string) ($model->topic ?? ''),

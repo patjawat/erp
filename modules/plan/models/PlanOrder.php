@@ -19,7 +19,7 @@ use app\modules\plan\models\PlanOrderItem;
  * @property string $plan_group_id ประเภทแผน: material, personnel, expenses
  * @property string|null $asset_group_id แยกประเภทพัสดุ/ครุภัณฑ์
  * @property string|null $asset_type_id แยกประเภทพัสดุ/ครุภัณฑ์
- * @property string|null $asset_category_id หมวดหมู่ของประเภททรัพย์สินย์
+ * @property string|null $asset_category_id หมวดหมู่ของประเภททรัพย์สิน
  * @property string $title ชื่อแผน
  * @property string|null $description รายละเอียด
  * @property string $start_date วันที่เริ่มแผน

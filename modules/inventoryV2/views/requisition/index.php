@@ -4,7 +4,15 @@ use yii\grid\GridView;
 
 $this->title = 'รายการใบขอเบิกวัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
+
+$currentWarehouseId = Yii::$app->request->get('warehouse_id');
+$currentWarehouseId = is_numeric($currentWarehouseId) ? (int) $currentWarehouseId : null;
 ?>
+
+<?= $this->render('@app/modules/inventoryV2/views/sub-stock/_menu_sub_stock', [
+    'active' => 'requisition',
+    'currentWarehouseId' => $currentWarehouseId,
+]) ?>
 
 <div class="requisition-index">
     <div class="card shadow-sm">

@@ -17,7 +17,7 @@ class m231203_123323_create_asset_table extends Migration
             'ref' => $this->string(255),
             'asset_group_id' => $this->string(255)->comment('แยกประเภทพัสดุ/ครุภัณฑ์'),
             'asset_type_id' => $this->string(255)->comment('แยกประเภทพัสดุ/ครุภัณฑ์'),
-            'asset_category_id' => $this->string(255)->comment('หมวดหมู่ของประเภททรัพย์สินย์'),
+            'asset_category_id' => $this->string(255)->comment('หมวดหมู่ของประเภททรัพย์สิน'),
             'asset_item_id' => $this->string(255)->comment('หมายเลขรายการ'),
             'license_plate' => $this->string()->comment('เลขทะเบียน (ถ้าเป็นรถยนต์)'),
             'car_type' => $this->string()->comment('ประเภทของรถ general หรือ ambulance'),

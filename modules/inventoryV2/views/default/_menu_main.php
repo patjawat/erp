@@ -31,6 +31,7 @@ $active = $active ?? '';
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>"><i class="bi bi-boxes me-2"></i>ยอดคงเหลือตามคลัง</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>"><i class="bi bi-journal-check me-2"></i>สรุปรายงานวัสดุคงคลัง</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/disbursement-by-month']) ?>"><i class="bi bi-calendar3-week me-2"></i>ประวัติจ่ายวัสดุ × เดือน</a></li>
             </ul>
         </div>
         <div class="dropdown">

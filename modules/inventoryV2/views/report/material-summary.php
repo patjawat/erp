@@ -94,37 +94,37 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
                             <tr class="text-center">
                                 <th style="width: 4%;">#</th>
                                 <th style="width: 22%;">รายการ</th>
-                                <th style="width: 10%;" class="text-end">สินค้าคงเหลือ</th>
-                                <th style="width: 10%;" class="text-end">ซื้อระหว่างเดือน</th>
-                                <th style="width: 10%;" class="text-end">รวม</th>
-                                <th style="width: 10%;" class="text-end">จ่ายส่วนของ รพ.aq</th>
-                                <th style="width: 12%;" class="text-end">จ่ายส่วนของโรงพยาบาล</th>
-                                <th style="width: 10%;" class="text-end">รวมจ่าย</th>
-                                <th style="width: 12%;" class="text-end">ยอดยกไป</th>
+                                <th style="width: 10%;" class="text-end">สินค้าคงเหลือ (บาท)</th>
+                                <th style="width: 10%;" class="text-end">ซื้อระหว่างเดือน (บาท)</th>
+                                <th style="width: 10%;" class="text-end">รวม (บาท)</th>
+                                <th style="width: 10%;" class="text-end">จ่ายส่วนของ รพ.aq (บาท)</th>
+                                <th style="width: 12%;" class="text-end">จ่ายส่วนของโรงพยาบาล (บาท)</th>
+                                <th style="width: 10%;" class="text-end">รวมจ่าย (บาท)</th>
+                                <th style="width: 12%;" class="text-end">ยอดยกไป (บาท)</th>
                             </tr>
                         </thead>
                         <tbody class="align-middle table-group-divider">
                             <?php
                             $totOpening = $totIn = $totOutSub = $totOutHosp = $totOut = $totClosing = 0;
                             foreach ($rows as $i => $r):
-                                $totOpening += $r['opening_qty'];
-                                $totIn += $r['in_qty'];
-                                $totOutSub += $r['out_sub_qty'];
-                                $totOutHosp += $r['out_hosp_qty'];
-                                $totOut += $r['total_out_qty'];
-                                $totClosing += $r['closing_qty'];
-                                $totalAvail = $r['opening_qty'] + $r['in_qty'];
+                                $totOpening += $r['opening_value'];
+                                $totIn += $r['in_value'];
+                                $totOutSub += $r['out_sub_value'];
+                                $totOutHosp += $r['out_hosp_value'];
+                                $totOut += $r['total_out_value'];
+                                $totClosing += $r['closing_value'];
+                                $totalAvail = $r['opening_value'] + $r['in_value'];
                             ?>
                                 <tr>
                                     <td class="text-center"><?= $i + 1 ?></td>
                                     <td><?= Html::encode($r['category_label']) ?></td>
-                                    <td class="text-end"><?= number_format($r['opening_qty'], 5) ?></td>
-                                    <td class="text-end"><?= number_format($r['in_qty'], 5) ?></td>
-                                    <td class="text-end"><?= number_format($totalAvail, 5) ?></td>
-                                    <td class="text-end"><?= number_format($r['out_sub_qty'], 5) ?></td>
-                                    <td class="text-end"><?= number_format($r['out_hosp_qty'], 5) ?></td>
-                                    <td class="text-end"><?= number_format($r['total_out_qty'], 5) ?></td>
-                                    <td class="text-end"><?= number_format($r['closing_qty'], 5) ?></td>
+                                    <td class="text-end"><?= number_format($r['opening_value'], 2) ?></td>
+                                    <td class="text-end"><?= number_format($r['in_value'], 2) ?></td>
+                                    <td class="text-end"><?= number_format($totalAvail, 2) ?></td>
+                                    <td class="text-end"><?= number_format($r['out_sub_value'], 2) ?></td>
+                                    <td class="text-end"><?= number_format($r['out_hosp_value'], 2) ?></td>
+                                    <td class="text-end"><?= number_format($r['total_out_value'], 2) ?></td>
+                                    <td class="text-end"><?= number_format($r['closing_value'], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -132,13 +132,13 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
                             <tr class="table-warning fw-bold">
                                 <td class="text-center"></td>
                                 <td>รวม</td>
-                                <td class="text-end"><?= number_format($totOpening, 5) ?></td>
-                                <td class="text-end"><?= number_format($totIn, 5) ?></td>
-                                <td class="text-end"><?= number_format($totOpening + $totIn, 5) ?></td>
-                                <td class="text-end"><?= number_format($totOutSub, 5) ?></td>
-                                <td class="text-end"><?= number_format($totOutHosp, 5) ?></td>
-                                <td class="text-end"><?= number_format($totOut, 5) ?></td>
-                                <td class="text-end"><?= number_format($totClosing, 5) ?></td>
+                                <td class="text-end"><?= number_format($totOpening, 2) ?></td>
+                                <td class="text-end"><?= number_format($totIn, 2) ?></td>
+                                <td class="text-end"><?= number_format($totOpening + $totIn, 2) ?></td>
+                                <td class="text-end"><?= number_format($totOutSub, 2) ?></td>
+                                <td class="text-end"><?= number_format($totOutHosp, 2) ?></td>
+                                <td class="text-end"><?= number_format($totOut, 2) ?></td>
+                                <td class="text-end"><?= number_format($totClosing, 2) ?></td>
                             </tr>
                         </tfoot>
                     </table>

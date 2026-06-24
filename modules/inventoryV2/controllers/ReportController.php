@@ -889,7 +889,9 @@ if ($categoryId || $status || $search) {
                 'SUM(r.in_qty) AS in_qty',
                 'SUM(r.in_value) AS in_value',
                 'SUM(r.out_sub_qty) AS out_sub_qty',
+                'SUM(r.out_sub_value) AS out_sub_value',
                 'SUM(r.out_hosp_qty) AS out_hosp_qty',
+                'SUM(r.out_hosp_value) AS out_hosp_value',
                 'SUM(r.total_out_qty) AS total_out_qty',
                 'SUM(r.total_out_value) AS total_out_value',
                 'SUM(r.closing_qty) AS closing_qty',
@@ -929,7 +931,9 @@ if ($categoryId || $status || $search) {
                 'in_qty' => (float) $r['in_qty'],
                 'in_value' => (float) $r['in_value'],
                 'out_sub_qty' => (float) $r['out_sub_qty'],
+                'out_sub_value' => (float) $r['out_sub_value'],
                 'out_hosp_qty' => (float) $r['out_hosp_qty'],
+                'out_hosp_value' => (float) $r['out_hosp_value'],
                 'total_out_qty' => (float) $r['total_out_qty'],
                 'total_out_value' => (float) $r['total_out_value'],
                 'closing_qty' => (float) $r['closing_qty'],
@@ -1029,27 +1033,46 @@ if ($categoryId || $status || $search) {
         }
         $itemCodes = array_unique($itemCodes);
 
-        $outQuery = StockDetail::find()
-            ->alias('sd')
+        // ราคาทุนต่อหน่วยต่อ lot — ใช้ unit_price จาก IN detail ล่าสุดของ (item_code, lot_number) ในคลังหลักนี้
+        // เพื่อให้ "มูลค่าจ่ายออก" คำนวณตาม lot ที่จ่ายจริง (ไม่ขึ้นกับ sd.unit_price ของ OUT row)
+        $latestInPrice = (new Query())
+            ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+            ->from(['sd_in' => StockDetail::tableName()])
+            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+            ->innerJoin(
+                ['latest' => (new Query())
+                    ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                    ->from(['sd_l' => StockDetail::tableName()])
+                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                    ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
+                    ->andWhere(['so_l.main_warehouse_id' => $warehouseId])
+                    ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+            );
+
+        $outRows = (new Query())
+            ->select([
+                'item_code' => 'sd.item_code',
+                'sub_warehouse_id' => 'so.sub_warehouse_id',
+                'qty' => 'sd.qty',
+                'lot_number' => 'sd.lot_number',
+                'in_unit_price' => new Expression('COALESCE(in_lot.unit_price, sd.unit_price, 0)'),
+            ])
+            ->from(['sd' => StockDetail::tableName()])
             ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
             ->where(['so.order_type' => StockOrder::ORDER_TYPE_OUT])
             ->andWhere(['so.main_warehouse_id' => $warehouseId])
             ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
-            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED]);
-        $outQuery->select([
-            'sd.item_code',
-            'so.sub_warehouse_id',
-            'sd.qty',
-            'sd.unit_price',
-        ]);
-        $outRows = $outQuery->asArray()->all();
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->all();
 
         $outSub = [];
         $outHosp = [];
         foreach ($outRows as $row) {
             $code = $row['item_code'];
             $q = (float) $row['qty'];
-            $v = $q * (float) ($row['unit_price'] ?? 0);
+            $v = $q * (float) ($row['in_unit_price'] ?? 0);
             if (!isset($outSub[$code])) {
                 $outSub[$code] = ['qty' => 0, 'value' => 0];
             }
@@ -1098,9 +1121,11 @@ if ($categoryId || $status || $search) {
             $sub = $outSub[$itemCode] ?? ['qty' => 0, 'value' => 0];
             $hosp = $outHosp[$itemCode] ?? ['qty' => 0, 'value' => 0];
             $outSubQty = $sub['qty'];
+            $outSubValue = $sub['value'];
             $outHospQty = $hosp['qty'];
+            $outHospValue = $hosp['value'];
             $totalOutQty = $outSubQty + $outHospQty;
-            $totalOutValue = $sub['value'] + $hosp['value'];
+            $totalOutValue = $outSubValue + $outHospValue;
 
             $closingQty = $openingQty + $inQty - $totalOutQty;
             $closingValue = $openingValue + $inValue - $totalOutValue;
@@ -1119,7 +1144,9 @@ if ($categoryId || $status || $search) {
             $r->in_qty = $inQty;
             $r->in_value = $inValue;
             $r->out_sub_qty = $outSubQty;
+            $r->out_sub_value = $outSubValue;
             $r->out_hosp_qty = $outHospQty;
+            $r->out_hosp_value = $outHospValue;
             $r->total_out_qty = $totalOutQty;
             $r->total_out_value = $totalOutValue;
             $r->closing_qty = $closingQty;
@@ -1152,7 +1179,7 @@ if ($categoryId || $status || $search) {
         $sheet->mergeCells('A1:I1');
         $sheet->getStyle('A1')->getFont()->setBold(true);
 
-        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ', 'ซื้อระหว่างเดือน', 'รวม', 'จ่ายส่วนของ รพ.aq', 'จ่ายส่วนของโรงพยาบาล', 'รวมจ่าย', 'ยอดยกไป'];
+        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.aq (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
         $col = 'A';
         foreach ($headers as $h) {
             $sheet->setCellValue($col . '3', $h);
@@ -1167,25 +1194,25 @@ if ($categoryId || $status || $search) {
         foreach ($rows as $i => $r) {
             $sheet->setCellValue('A' . $rowNum, $i + 1);
             $sheet->setCellValue('B' . $rowNum, $r['category_label']);
-            $totalAvail = $r['opening_qty'] + $r['in_qty'];
-            $sheet->setCellValue('C' . $rowNum, $r['opening_qty']);
-            $sheet->setCellValue('D' . $rowNum, $r['in_qty']);
+            $totalAvail = $r['opening_value'] + $r['in_value'];
+            $sheet->setCellValue('C' . $rowNum, $r['opening_value']);
+            $sheet->setCellValue('D' . $rowNum, $r['in_value']);
             $sheet->setCellValue('E' . $rowNum, $totalAvail);
-            $sheet->setCellValue('F' . $rowNum, $r['out_sub_qty']);
-            $sheet->setCellValue('G' . $rowNum, $r['out_hosp_qty']);
-            $sheet->setCellValue('H' . $rowNum, $r['total_out_qty']);
-            $sheet->setCellValue('I' . $rowNum, $r['closing_qty']);
+            $sheet->setCellValue('F' . $rowNum, $r['out_sub_value']);
+            $sheet->setCellValue('G' . $rowNum, $r['out_hosp_value']);
+            $sheet->setCellValue('H' . $rowNum, $r['total_out_value']);
+            $sheet->setCellValue('I' . $rowNum, $r['closing_value']);
             $rowNum++;
         }
 
         if (!empty($rows)) {
             $tot = [
-                'opening' => array_sum(array_column($rows, 'opening_qty')),
-                'in' => array_sum(array_column($rows, 'in_qty')),
-                'out_sub' => array_sum(array_column($rows, 'out_sub_qty')),
-                'out_hosp' => array_sum(array_column($rows, 'out_hosp_qty')),
-                'total_out' => array_sum(array_column($rows, 'total_out_qty')),
-                'closing' => array_sum(array_column($rows, 'closing_qty')),
+                'opening' => array_sum(array_column($rows, 'opening_value')),
+                'in' => array_sum(array_column($rows, 'in_value')),
+                'out_sub' => array_sum(array_column($rows, 'out_sub_value')),
+                'out_hosp' => array_sum(array_column($rows, 'out_hosp_value')),
+                'total_out' => array_sum(array_column($rows, 'total_out_value')),
+                'closing' => array_sum(array_column($rows, 'closing_value')),
             ];
             $sheet->setCellValue('A' . $rowNum, '');
             $sheet->setCellValue('B' . $rowNum, 'รวม');
@@ -1372,5 +1399,406 @@ if ($categoryId || $status || $search) {
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * รายงาน "ประวัติจ่ายวัสดุ × เดือน"
+     * — Pivot: rows = item, columns = 12 เดือนของปี พ.ศ., cells = qty / value
+     * — Filter: ปี พ.ศ., คลังต้นทาง (main), คลังปลายทาง (sub), category, ค้นหา item
+     * — มูลค่า = qty × IN-lot unit_price (ตาม lot_number)
+     */
+    public function actionDisbursementByMonth()
+    {
+        $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
+        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
+            ? (int) $this->request->get('main_warehouse_id') : null;
+        $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
+            ? (int) $this->request->get('sub_warehouse_id') : null;
+        $categoryId = trim((string) $this->request->get('category_id', ''));
+        $search = trim((string) $this->request->get('q', ''));
+
+        $listMain = Warehouse::find()->where(['warehouse_type' => 'MAIN'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy(['warehouse_name' => SORT_ASC])->all();
+        $listSub = Warehouse::find()->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->orderBy(['warehouse_name' => SORT_ASC])->all();
+
+        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
+        $subWarehouses = ['' => '-- ทุกคลังปลายทาง --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
+        $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
+            Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->orderBy('title')->all(),
+            'code', 'title'
+        );
+
+        $yearOptions = [];
+        $currentBE = (int) \app\components\AppHelper::YearBudget();
+        for ($y = $currentBE; $y >= $currentBE - 3; $y--) {
+            $yearOptions[$y] = $y;
+        }
+
+        $data = $this->getDisbursementByMonthData($thaiYear, $mainWarehouseId, $subWarehouseId, $categoryId, $search);
+
+        return $this->render('disbursement-by-month', [
+            'year' => $thaiYear,
+            'mainWarehouseId' => $mainWarehouseId,
+            'subWarehouseId' => $subWarehouseId,
+            'categoryId' => $categoryId,
+            'search' => $search,
+            'mainWarehouses' => $mainWarehouses,
+            'subWarehouses' => $subWarehouses,
+            'categories' => $categories,
+            'yearOptions' => $yearOptions,
+            'rows' => $data['rows'],
+            'monthTotals' => $data['monthTotals'],
+            'grandQty' => $data['grandQty'],
+            'grandValue' => $data['grandValue'],
+        ]);
+    }
+
+    /**
+     * Pivot data รายเดือน — qty + value ต่อ item × เดือน
+     * @return array{rows: array, monthTotals: array, grandQty: float, grandValue: float}
+     */
+    protected function getDisbursementByMonthData($thaiYear, $mainWarehouseId, $subWarehouseId, $categoryId, $search)
+    {
+        $yearAD = $thaiYear - 543;
+        $fromDate = sprintf('%04d-01-01 00:00:00', $yearAD);
+        $toDate = sprintf('%04d-12-31 23:59:59', $yearAD);
+
+        $mainIds = $mainWarehouseId
+            ? [$mainWarehouseId]
+            : Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])->column();
+        if (empty($mainIds)) {
+            return ['rows' => [], 'monthTotals' => [], 'grandQty' => 0, 'grandValue' => 0];
+        }
+
+        // ราคาทุน IN lot ล่าสุดต่อ (item_code, lot_number, main_warehouse) — same pattern เดียวกับ close-month
+        $latestInPrice = (new Query())
+            ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+            ->from(['sd_in' => StockDetail::tableName()])
+            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+            ->innerJoin(
+                ['latest' => (new Query())
+                    ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                    ->from(['sd_l' => StockDetail::tableName()])
+                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                    ->where(['so_l.order_type' => 'IN'])
+                    ->andWhere(['so_l.main_warehouse_id' => $mainIds])
+                    ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+            );
+
+        $query = (new Query())
+            ->select([
+                'item_code' => 'sd.item_code',
+                'item_name' => new Expression('MAX(i.title)'),
+                'category_code' => new Expression("MAX(COALESCE(cat.code, i.category_id, 'OTHER'))"),
+                'category_title' => new Expression("MAX(COALESCE(cat.title, i.category_id, 'อื่นๆ'))"),
+                'm' => new Expression('MONTH(so.order_date)'),
+                'qty' => new Expression('SUM(sd.qty)'),
+                'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
+            ])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
+            ->where(['so.order_type' => 'OUT'])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['so.main_warehouse_id' => $mainIds])
+            ->andWhere(['between', 'so.order_date', $fromDate, $toDate]);
+
+        if ($subWarehouseId !== null) {
+            $query->andWhere(['so.sub_warehouse_id' => $subWarehouseId]);
+        } else {
+            $query->andWhere(['is not', 'so.sub_warehouse_id', null]);
+        }
+        if ($categoryId !== '') {
+            $query->andWhere(['i.category_id' => $categoryId]);
+        }
+        if ($search !== '') {
+            $query->andWhere(['or',
+                ['like', 'sd.item_code', $search],
+                ['like', 'i.title', $search],
+            ]);
+        }
+
+        $query->groupBy(['sd.item_code', new Expression('MONTH(so.order_date)')]);
+
+        $rawRows = $query->all();
+
+        // Pivot: [item_code => ['name', 'category', 'unit', 'monthly' => [1..12 => ['qty','value']], 'total_qty', 'total_value']]
+        $items = [];
+        $monthTotals = array_fill(1, 12, ['qty' => 0.0, 'value' => 0.0]);
+        $grandQty = 0.0;
+        $grandValue = 0.0;
+
+        foreach ($rawRows as $r) {
+            $code = (string) $r['item_code'];
+            $m = (int) $r['m'];
+            $q = (float) $r['qty'];
+            $v = (float) $r['value'];
+            if ($m < 1 || $m > 12) continue;
+
+            if (!isset($items[$code])) {
+                $items[$code] = [
+                    'item_code' => $code,
+                    'item_name' => (string) $r['item_name'],
+                    'category_code' => (string) $r['category_code'],
+                    'category_title' => (string) $r['category_title'],
+                    'unit_name' => '',
+                    'monthly' => array_fill(1, 12, ['qty' => 0.0, 'value' => 0.0]),
+                    'total_qty' => 0.0,
+                    'total_value' => 0.0,
+                ];
+            }
+            $items[$code]['monthly'][$m] = ['qty' => $q, 'value' => $v];
+            $items[$code]['total_qty'] += $q;
+            $items[$code]['total_value'] += $v;
+            $monthTotals[$m]['qty'] += $q;
+            $monthTotals[$m]['value'] += $v;
+            $grandQty += $q;
+            $grandValue += $v;
+        }
+
+        // resolve unit_name PHP-side (categorise table ไม่มีคอลัมน์ unit; เก็บใน data_json)
+        if (!empty($items)) {
+            $stockItems = StockItem::find()
+                ->where(['code' => array_keys($items)])
+                ->indexBy('code')
+                ->all();
+            foreach ($items as $code => &$row) {
+                $si = $stockItems[$code] ?? null;
+                if ($si && method_exists($si, 'getUnitName')) {
+                    $u = (string) $si->getUnitName();
+                    $row['unit_name'] = $u !== '' ? $u : '-';
+                }
+            }
+            unset($row);
+        }
+
+        // sort by total_value desc, fallback by item_code
+        usort($items, function ($a, $b) {
+            $cmp = $b['total_value'] <=> $a['total_value'];
+            return $cmp !== 0 ? $cmp : strcmp($a['item_code'], $b['item_code']);
+        });
+
+        return [
+            'rows' => array_values($items),
+            'monthTotals' => $monthTotals,
+            'grandQty' => $grandQty,
+            'grandValue' => $grandValue,
+        ];
+    }
+
+    /**
+     * Drill-down: รายการเอกสารใบเบิกในเดือนนั้น สำหรับ 1 item × 1 sub (optional) × ปี พ.ศ.
+     */
+    public function actionDisbursementDetail($item_code, $year, $month, $main_warehouse_id = null, $sub_warehouse_id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $thaiYear = (int) $year;
+        $month = max(1, min(12, (int) $month));
+        $yearAD = $thaiYear - 543;
+        $fromDate = sprintf('%04d-%02d-01 00:00:00', $yearAD, $month);
+        $lastDay = (int) date('t', strtotime($fromDate));
+        $toDate = sprintf('%04d-%02d-%02d 23:59:59', $yearAD, $month, $lastDay);
+
+        $mainIds = ($main_warehouse_id !== null && $main_warehouse_id !== '')
+            ? [(int) $main_warehouse_id]
+            : Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])->column();
+        if (empty($mainIds)) {
+            return ['rows' => [], 'total_qty' => 0, 'total_value' => 0];
+        }
+
+        $latestInPrice = (new Query())
+            ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+            ->from(['sd_in' => StockDetail::tableName()])
+            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+            ->innerJoin(
+                ['latest' => (new Query())
+                    ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                    ->from(['sd_l' => StockDetail::tableName()])
+                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                    ->where(['so_l.order_type' => 'IN'])
+                    ->andWhere(['so_l.main_warehouse_id' => $mainIds])
+                    ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+            );
+
+        $q = (new Query())
+            ->select([
+                'order_no' => 'so.order_no',
+                'order_date' => 'so.order_date',
+                'main_warehouse_id' => 'so.main_warehouse_id',
+                'sub_warehouse_id' => 'so.sub_warehouse_id',
+                'qty' => 'sd.qty',
+                'lot_number' => 'sd.lot_number',
+                'unit_price' => new Expression('COALESCE(in_lot.unit_price, sd.unit_price, 0)'),
+            ])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
+            ->where(['so.order_type' => 'OUT'])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['sd.item_code' => (string) $item_code])
+            ->andWhere(['so.main_warehouse_id' => $mainIds])
+            ->andWhere(['between', 'so.order_date', $fromDate, $toDate]);
+
+        if ($sub_warehouse_id !== null && $sub_warehouse_id !== '') {
+            $q->andWhere(['so.sub_warehouse_id' => (int) $sub_warehouse_id]);
+        } else {
+            $q->andWhere(['is not', 'so.sub_warehouse_id', null]);
+        }
+
+        $q->orderBy(['so.order_date' => SORT_ASC]);
+        $rows = $q->all();
+
+        // resolve warehouse names
+        $whIds = array_unique(array_filter(array_merge(
+            array_column($rows, 'main_warehouse_id'),
+            array_column($rows, 'sub_warehouse_id')
+        )));
+        $whMap = empty($whIds) ? [] : \yii\helpers\ArrayHelper::map(
+            Warehouse::find()->where(['id' => $whIds])->all(), 'id', 'warehouse_name'
+        );
+
+        $totalQty = 0;
+        $totalValue = 0;
+        $out = [];
+        foreach ($rows as $r) {
+            $qty = (float) $r['qty'];
+            $price = (float) $r['unit_price'];
+            $val = $qty * $price;
+            $totalQty += $qty;
+            $totalValue += $val;
+            $out[] = [
+                'order_no' => (string) $r['order_no'],
+                'order_date' => date('d/m/', strtotime($r['order_date'])) . ((int) date('Y', strtotime($r['order_date'])) + 543),
+                'main_warehouse' => $whMap[$r['main_warehouse_id']] ?? '-',
+                'sub_warehouse' => $whMap[$r['sub_warehouse_id']] ?? '-',
+                'lot_number' => (string) ($r['lot_number'] ?? '-'),
+                'qty' => round($qty, 2),
+                'unit_price' => round($price, 2),
+                'value' => round($val, 2),
+            ];
+        }
+
+        return [
+            'rows' => $out,
+            'total_qty' => round($totalQty, 2),
+            'total_value' => round($totalValue, 2),
+        ];
+    }
+
+    /**
+     * Export "ประวัติจ่ายวัสดุ × เดือน" เป็น Excel (pivot)
+     */
+    public function actionExportDisbursementByMonth()
+    {
+        $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
+        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
+            ? (int) $this->request->get('main_warehouse_id') : null;
+        $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
+            ? (int) $this->request->get('sub_warehouse_id') : null;
+        $categoryId = trim((string) $this->request->get('category_id', ''));
+        $search = trim((string) $this->request->get('q', ''));
+
+        $data = $this->getDisbursementByMonthData($thaiYear, $mainWarehouseId, $subWarehouseId, $categoryId, $search);
+        $rows = $data['rows'];
+        $monthTotals = $data['monthTotals'];
+        $monthLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('จ่ายวัสดุรายเดือน');
+
+        $sheet->setCellValue('A1', 'ประวัติจ่ายวัสดุ × เดือน  ปี ' . $thaiYear);
+        $sheet->mergeCells('A1:N1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        // header row 1 (group): item info | month labels (merged across qty+value) | รวม
+        $sheet->setCellValue('A3', 'ลำดับ'); $sheet->mergeCells('A3:A4');
+        $sheet->setCellValue('B3', 'รหัส'); $sheet->mergeCells('B3:B4');
+        $sheet->setCellValue('C3', 'รายการ'); $sheet->mergeCells('C3:C4');
+        $sheet->setCellValue('D3', 'ประเภท'); $sheet->mergeCells('D3:D4');
+        $sheet->setCellValue('E3', 'หน่วย'); $sheet->mergeCells('E3:E4');
+
+        $startCol = 6; // F
+        for ($m = 1; $m <= 12; $m++) {
+            $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
+            $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+            $sheet->setCellValue($c1 . '3', $monthLabels[$m - 1]);
+            $sheet->mergeCells($c1 . '3:' . $c2 . '3');
+            $sheet->setCellValue($c1 . '4', 'จำนวน');
+            $sheet->setCellValue($c2 . '4', 'มูลค่า');
+        }
+        $totalCol1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + 24);
+        $totalCol2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + 25);
+        $sheet->setCellValue($totalCol1 . '3', 'รวม');
+        $sheet->mergeCells($totalCol1 . '3:' . $totalCol2 . '3');
+        $sheet->setCellValue($totalCol1 . '4', 'จำนวน');
+        $sheet->setCellValue($totalCol2 . '4', 'มูลค่า');
+
+        $sheet->getStyle('A3:' . $totalCol2 . '4')->getFont()->setBold(true);
+        $sheet->getStyle('A3:' . $totalCol2 . '4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A3:' . $totalCol2 . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $rowNum = 5;
+        foreach ($rows as $i => $r) {
+            $sheet->setCellValue('A' . $rowNum, $i + 1);
+            $sheet->setCellValue('B' . $rowNum, $r['item_code']);
+            $sheet->setCellValue('C' . $rowNum, $r['item_name']);
+            $sheet->setCellValue('D' . $rowNum, $r['category_title']);
+            $sheet->setCellValue('E' . $rowNum, $r['unit_name']);
+            for ($m = 1; $m <= 12; $m++) {
+                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
+                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+                $sheet->setCellValue($c1 . $rowNum, $r['monthly'][$m]['qty']);
+                $sheet->setCellValue($c2 . $rowNum, $r['monthly'][$m]['value']);
+            }
+            $sheet->setCellValue($totalCol1 . $rowNum, $r['total_qty']);
+            $sheet->setCellValue($totalCol2 . $rowNum, $r['total_value']);
+            $rowNum++;
+        }
+
+        // footer total
+        if (!empty($rows)) {
+            $sheet->setCellValue('A' . $rowNum, '');
+            $sheet->setCellValue('B' . $rowNum, 'รวมทั้งหมด');
+            for ($m = 1; $m <= 12; $m++) {
+                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
+                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+                $sheet->setCellValue($c1 . $rowNum, $monthTotals[$m]['qty']);
+                $sheet->setCellValue($c2 . $rowNum, $monthTotals[$m]['value']);
+            }
+            $sheet->setCellValue($totalCol1 . $rowNum, $data['grandQty']);
+            $sheet->setCellValue($totalCol2 . $rowNum, $data['grandValue']);
+            $sheet->getStyle('A' . $rowNum . ':' . $totalCol2 . $rowNum)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $rowNum . ':' . $totalCol2 . $rowNum)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFF59D');
+        }
+
+        // number format
+        $firstDataCell = 'F5';
+        $lastDataCell = $totalCol2 . ($rowNum);
+        $sheet->getStyle($firstDataCell . ':' . $lastDataCell)->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $filename = 'disbursement-by-month-' . $thaiYear . '.xlsx';
+        $tempPath = Yii::getAlias('@runtime') . '/disb_' . uniqid('', true) . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        Yii::$app->response->sendFile($tempPath, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ])->on(Response::EVENT_AFTER_SEND, function ($event) use ($tempPath) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        });
     }
 }

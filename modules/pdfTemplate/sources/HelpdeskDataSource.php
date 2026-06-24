@@ -62,6 +62,8 @@ class HelpdeskDataSource implements DataSourceInterface
             // ผู้แจ้งซ่อม
             ['source' => 'requester_fullname', 'label' => 'ชื่อผู้แจ้งซ่อม'],
             ['source' => 'requester_position', 'label' => 'ตำแหน่งผู้แจ้งซ่อม'],
+            ['source' => 'employee_type', 'label' => 'ประเภทพนักงาน'],
+            ['source' => 'requester_employee_type', 'label' => 'ประเภทพนักงานผู้แจ้งซ่อม'],
             ['source' => 'requester_phone', 'label' => 'เบอร์ติดต่อผู้แจ้งซ่อม'],
             // ข้อมูลที่ระบบ helpdesk2 เก็บใน data_json
             ['source' => 'phone', 'label' => 'โทร'],
@@ -71,6 +73,7 @@ class HelpdeskDataSource implements DataSourceInterface
             // ช่างผู้ดำเนินการ
             ['source' => 'technician_fullname', 'label' => 'ชื่อช่างผู้ดำเนินการ'],
             ['source' => 'technician_position', 'label' => 'ตำแหน่งช่างผู้ดำเนินการ'],
+            ['source' => 'technician_employee_type', 'label' => 'ประเภทพนักงานช่างผู้ดำเนินการ'],
             ['source' => 'technician_department', 'label' => 'แผนกช่าง'],
 
             // รายละเอียดปัญหาและการแก้ไข
@@ -81,4 +84,3 @@ class HelpdeskDataSource implements DataSourceInterface
         ];
     }
 }
-

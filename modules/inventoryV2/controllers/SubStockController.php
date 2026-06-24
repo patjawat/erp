@@ -160,7 +160,7 @@ class SubStockController extends \yii\web\Controller
 
         $criticalQuery = (new Query())
             ->from(['i' => StockItem::tableName()])
-            ->leftJoin(
+            ->innerJoin(
                 ['b' => (new Query())
                     ->select(['item_code', 'SUM(balance_qty) as total_qty'])
                     ->from(StockBalance::tableName())
@@ -173,7 +173,7 @@ class SubStockController extends \yii\web\Controller
                 ['not', ['i.qty_min' => null]],
                 ['>', 'i.qty_min', 0],
             ])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
+            ->andWhere('b.total_qty < i.qty_min');
         $criticalCount = (int) $criticalQuery->count();
 
         $monthStart = date('Y-m-01 00:00:00');
@@ -359,7 +359,7 @@ class SubStockController extends \yii\web\Controller
         $rows = (new Query())
             ->select([
                 'sb.item_code',
-                'i.title',
+                'i.title AS item_name',
                 'sb.lot_number',
                 'sb.balance_qty',
             ])
@@ -370,18 +370,21 @@ class SubStockController extends \yii\web\Controller
             ->orderBy(['i.title' => SORT_ASC, 'sb.lot_number' => SORT_ASC])
             ->all();
         $out = [];
+        $unitCache = [];
         foreach ($rows as $r) {
-            $unit = '';
-            if (!empty($r['item_name']) && isset($r['item_code'])) {
-                $item = StockItem::findOne($r['item_code']);
-                $unit = $item && method_exists($item, 'getUnitName') ? ($item->getUnitName() ?: '') : '';
+            $code = $r['item_code'];
+            if (!array_key_exists($code, $unitCache)) {
+                $item = StockItem::findOne($code);
+                $unitCache[$code] = ($item && method_exists($item, 'getUnitName'))
+                    ? ((string) ($item->getUnitName() ?: ''))
+                    : '';
             }
             $out[] = [
-                'item_code' => $r['item_code'],
+                'item_code' => $code,
                 'item_name' => $r['item_name'],
                 'lot_number' => $r['lot_number'],
                 'balance_qty' => (float) $r['balance_qty'],
-                'unit' => $unit,
+                'unit' => $unitCache[$code],
             ];
         }
         return $out;

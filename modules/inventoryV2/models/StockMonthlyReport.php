@@ -17,7 +17,9 @@ use Yii;
  * @property float $in_qty
  * @property float $in_value
  * @property float $out_sub_qty จ่ายส่วนของ รพ.aq
+ * @property float $out_sub_value มูลค่าจ่ายส่วนของ รพ.aq
  * @property float $out_hosp_qty จ่ายส่วนของโรงพยาบาล
+ * @property float $out_hosp_value มูลค่าจ่ายส่วนของโรงพยาบาล
  * @property float $total_out_qty
  * @property float $total_out_value
  * @property float $closing_qty
@@ -35,7 +37,7 @@ class StockMonthlyReport extends \yii\db\ActiveRecord
         return [
             [['report_year', 'report_month', 'warehouse_id', 'item_code'], 'required'],
             [['report_year', 'report_month', 'warehouse_id', 'created_at', 'created_by'], 'integer'],
-            [['opening_qty', 'opening_value', 'in_qty', 'in_value', 'out_sub_qty', 'out_hosp_qty', 'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value'], 'number'],
+            [['opening_qty', 'opening_value', 'in_qty', 'in_value', 'out_sub_qty', 'out_sub_value', 'out_hosp_qty', 'out_hosp_value', 'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value'], 'number'],
             [['item_code'], 'string', 'max' => 50],
             [['unit_name'], 'string', 'max' => 100],
         ];

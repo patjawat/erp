@@ -416,7 +416,7 @@ SET data_json = JSON_SET(data_json, '$.label', 'ผ่าน')
 WHERE `name` = 'leave' AND `level` = 3
 
 
-<!-- แก้ไขการเก็บข้อมูลผู้รับผิดชอทรัพย์สินย์ -->
+<!-- แก้ไขการเก็บข้อมูลผู้รับผิดชอทรัพย์สิน -->
 UPDATE `asset` a
 INNER JOIN employees e ON e.cid = a.owner
 SET a.owner = e.id

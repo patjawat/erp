@@ -25,7 +25,7 @@ class m250815_084637_create_plan_order_table extends Migration
             'pay_type_id' => $this->string(50)->comment('แหล่งเงิน'),
             'asset_group_id' => $this->string(255)->comment('แยกประเภทพัสดุ/ครุภัณฑ์'),
             'asset_type_id' => $this->string(255)->comment('แยกประเภทพัสดุ/ครุภัณฑ์'),
-            'asset_category_id' => $this->string(255)->comment('หมวดหมู่ของประเภททรัพย์สินย์'),
+            'asset_category_id' => $this->string(255)->comment('หมวดหมู่ของประเภททรัพย์สิน'),
             'fiscal_year' => $this->boolean()->defaultValue(1)->comment('การดำเนินการ 1 = ภายในปีงบประมาณ, 0 = นอกปีงบประมาณ'),
             'price_ref' => $this->string(255)->comment('อ้างอิงตามราคา'),
             'title' => $this->string(255)->comment('ชื่อแผน'),

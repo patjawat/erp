@@ -3,6 +3,7 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\components\AppHelper;
+use app\models\Categorise;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
@@ -49,7 +50,13 @@ class MainStockController extends \yii\web\Controller
         $stats = $this->getDashboardStats($warehouseId, $mainWarehouseIds);
         $warehouses = $this->getMainWarehousesList();
         $pendingRequisitions = $this->getPendingRequisitions($warehouseId, $mainWarehouseIds, 10);
-        $chartData = $this->getChartData($warehouseId, $mainWarehouseIds);
+
+        $thaiYear = (int) AppHelper::YearBudget();
+        $yearOptions = [];
+        for ($y = $thaiYear; $y >= $thaiYear - 3; $y--) {
+            $yearOptions[] = $y;
+        }
+        $chartData = $this->getMovementChartData($warehouseId, $mainWarehouseIds, $thaiYear, null, 'IN');
 
         return $this->render('dashboard', [
             'stats' => $stats,
@@ -57,7 +64,256 @@ class MainStockController extends \yii\web\Controller
             'pendingRequisitions' => $pendingRequisitions,
             'chartData' => $chartData,
             'currentWarehouseId' => $warehouseId,
+            'yearOptions' => $yearOptions,
+            'defaultYear' => $thaiYear,
         ]);
+    }
+
+    /**
+     * AJAX endpoint: ส่งข้อมูล chart มูลค่ารับเข้า/จ่ายออก แยกตามประเภท
+     * Params: warehouse_id, year (พ.ศ.), month (1-12, optional), direction (IN|OUT|NET)
+     */
+    public function actionMovementChart()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $mainWarehouseIds = $this->getMainWarehouseIds();
+        if (empty($mainWarehouseIds)) {
+            $mainWarehouseIds = [-1];
+        }
+
+        $warehouseIdParam = $this->request->get('warehouse_id');
+        $warehouseId = ($warehouseIdParam === null || $warehouseIdParam === '' || $warehouseIdParam === 'all')
+            ? null : (int) $warehouseIdParam;
+        if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+            $warehouseId = null;
+        }
+
+        $year = (int) ($this->request->get('year') ?: AppHelper::YearBudget());
+        $month = $this->request->get('month');
+        $month = ($month === null || $month === '' || $month === 'all') ? null : max(1, min(12, (int) $month));
+        $direction = strtoupper((string) $this->request->get('direction', 'IN'));
+        if (!in_array($direction, ['IN', 'OUT', 'NET'], true)) {
+            $direction = 'IN';
+        }
+
+        return $this->getMovementChartData($warehouseId, $mainWarehouseIds, $year, $month, $direction);
+    }
+
+    /**
+     * AJAX endpoint: รายการพัสดุในประเภทที่เลือก (drill-down จาก movement chart)
+     * Params: warehouse_id, year (พ.ศ.), month (1-12, required), direction (IN|OUT), category (code)
+     * Return: { items: [{code, name, unit, qty, value}], summary: {count, total, period_label, category_name, category_color, direction_label} }
+     */
+    public function actionMovementItems()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        try {
+            $mainWarehouseIds = $this->getMainWarehouseIds();
+            if (empty($mainWarehouseIds)) {
+                $mainWarehouseIds = [-1];
+            }
+
+            $warehouseIdParam = $this->request->get('warehouse_id');
+            $warehouseId = ($warehouseIdParam === null || $warehouseIdParam === '' || $warehouseIdParam === 'all')
+                ? null : (int) $warehouseIdParam;
+            if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+                $warehouseId = null;
+            }
+            $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+            if (empty($warehouseIds)) {
+                $warehouseIds = [-1];
+            }
+
+            $thaiYear = (int) ($this->request->get('year') ?: AppHelper::YearBudget());
+            $yearAD = $thaiYear - 543;
+            $month = max(1, min(12, (int) $this->request->get('month', 0)));
+            if ($month < 1) {
+                return ['status' => 'error', 'message' => 'ต้องระบุเดือน'];
+            }
+            $direction = strtoupper((string) $this->request->get('direction', 'IN'));
+            if (!in_array($direction, ['IN', 'OUT'], true)) {
+                $direction = 'IN';
+            }
+            $categoryCode = (string) $this->request->get('category', '');
+            if ($categoryCode === '') {
+                return ['status' => 'error', 'message' => 'ต้องระบุประเภทพัสดุ'];
+            }
+
+            $fromDate = sprintf('%04d-%02d-01 00:00:00', $yearAD, $month);
+            $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $yearAD));
+            $toDate = sprintf('%04d-%02d-%02d 23:59:59', $yearAD, $month, $daysInMonth);
+
+            $categoryFilterSql = "COALESCE(cat.code, i.category_id, 'OTHER') = :category_code";
+            $categoryFilterParams = [':category_code' => $categoryCode];
+
+            if ($direction === 'IN') {
+                $query = (new Query())
+                    ->select([
+                        'item_code' => 'i.code',
+                        'item_name' => 'i.title',
+                        'qty' => new Expression('SUM(sd.qty)'),
+                        'value' => new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'),
+                    ])
+                    ->from(['sd' => StockDetail::tableName()])
+                    ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                    ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                    ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                    ->where(['so.order_type' => 'IN'])
+                    ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                    ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                    ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                    ->andWhere($categoryFilterSql, $categoryFilterParams)
+                    ->groupBy(['i.code', 'i.title'])
+                    ->orderBy(['value' => SORT_DESC, 'i.title' => SORT_ASC]);
+            } else {
+                // OUT: ใช้ราคา IN lot ล่าสุดตาม lot_number (ตรรกะเดียวกับ getMovementChartData)
+                $latestInPrice = (new Query())
+                    ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+                    ->from(['sd_in' => StockDetail::tableName()])
+                    ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+                    ->innerJoin(
+                        ['latest' => (new Query())
+                            ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                            ->from(['sd_l' => StockDetail::tableName()])
+                            ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                            ->where(['so_l.order_type' => 'IN'])
+                            ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
+                            ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                        'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+                    );
+
+                $query = (new Query())
+                    ->select([
+                        'item_code' => 'i.code',
+                        'item_name' => 'i.title',
+                        'qty' => new Expression('SUM(sd.qty)'),
+                        'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
+                    ])
+                    ->from(['sd' => StockDetail::tableName()])
+                    ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                    ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                    ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                    ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
+                    ->where(['so.order_type' => 'OUT'])
+                    ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                    ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                    ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                    ->andWhere($categoryFilterSql, $categoryFilterParams)
+                    ->groupBy(['i.code', 'i.title'])
+                    ->orderBy(['value' => SORT_DESC, 'i.title' => SORT_ASC]);
+            }
+
+            $rows = $query->all();
+
+            $itemCodes = array_values(array_unique(array_filter(array_map(fn($r) => $r['item_code'] ?? null, $rows))));
+            $itemModels = [];
+            if (!empty($itemCodes)) {
+                $itemModels = StockItem::find()
+                    ->where(['code' => $itemCodes])
+                    ->indexBy('code')
+                    ->all();
+            }
+
+            // Batch-fetch primary upload per item ref → avoid N+1 from ShowImg()
+            $refToImgUrl = [];
+            $refs = array_values(array_unique(array_filter(array_map(
+                fn($m) => $m && !empty($m->ref) ? (string) $m->ref : null,
+                $itemModels
+            ))));
+            if (!empty($refs)) {
+                $uploads = \app\modules\filemanager\models\Uploads::find()
+                    ->where(['ref' => $refs])
+                    ->orderBy(['id' => SORT_ASC])
+                    ->all();
+                foreach ($uploads as $u) {
+                    $ref = (string) $u->ref;
+                    if (!isset($refToImgUrl[$ref])) {
+                        $refToImgUrl[$ref] = \app\modules\filemanager\components\FileManagerHelper::getImg($u->id);
+                    }
+                }
+            }
+
+            $items = [];
+            $totalValue = 0.0;
+            $totalQty = 0.0;
+            foreach ($rows as $r) {
+                $model = $itemModels[$r['item_code']] ?? null;
+                $qty = (float) $r['qty'];
+                $value = (float) $r['value'];
+                $img = null;
+                if ($model && !empty($model->ref) && isset($refToImgUrl[(string) $model->ref])) {
+                    $img = $refToImgUrl[(string) $model->ref];
+                }
+                $items[] = [
+                    'code' => (string) $r['item_code'],
+                    'name' => (string) $r['item_name'],
+                    'unit' => $model ? ($model->getUnitName() ?? '') : '',
+                    'img' => $img,
+                    'qty' => round($qty, 2),
+                    'value' => round($value, 2),
+                ];
+                $totalQty += $qty;
+                $totalValue += $value;
+            }
+
+            // category meta
+            $catRow = Categorise::find()
+                ->where(['name' => 'asset_type', 'group_id' => 'MATER', 'code' => $categoryCode])
+                ->one();
+            $categoryName = $catRow ? (string) $catRow->title : ($categoryCode === 'OTHER' ? 'อื่นๆ' : $categoryCode);
+
+            // resolve category color (must match chart palette)
+            $allCats = Categorise::find()
+                ->where(['name' => 'asset_type', 'group_id' => 'MATER'])
+                ->orderBy(['code' => SORT_ASC])
+                ->all();
+            $palette = self::categoryColorPalette();
+            $categoryColor = '#9ca3af';
+            foreach ($allCats as $idx => $c) {
+                if ((string) $c->code === $categoryCode) {
+                    $categoryColor = $palette[$idx % count($palette)];
+                    break;
+                }
+            }
+
+            $monthFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            $periodLabel = $monthFull[$month - 1] . ' ' . $thaiYear;
+            $directionLabel = $direction === 'IN' ? 'รับเข้า' : 'จ่ายออก';
+
+            $currentWarehouseName = 'ทั้งหมด';
+            if ($warehouseId !== null) {
+                foreach ($this->getMainWarehousesList() as $w) {
+                    if ((int) $w->id === (int) $warehouseId) {
+                        $currentWarehouseName = $w->warehouse_name;
+                        break;
+                    }
+                }
+            }
+
+            return [
+                'status' => 'success',
+                'items' => $items,
+                'summary' => [
+                    'count' => count($items),
+                    'total_value' => round($totalValue, 2),
+                    'total_qty' => round($totalQty, 2),
+                    'period_label' => $periodLabel,
+                    'category_code' => $categoryCode,
+                    'category_name' => $categoryName,
+                    'category_color' => $categoryColor,
+                    'direction' => $direction,
+                    'direction_label' => $directionLabel,
+                    'warehouse_name' => $currentWarehouseName,
+                ],
+            ];
+        } catch (\Throwable $e) {
+            Yii::error('movement-items failed: ' . $e->getMessage(), __METHOD__);
+            return [
+                'status' => 'error',
+                'message' => 'โหลดข้อมูลไม่สำเร็จ: ' . $e->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -141,6 +397,322 @@ class MainStockController extends \yii\web\Controller
 
 
     /**
+     * Offcanvas: ใบเบิกที่รอจัดของ (APPROVED) — รายชื่อสำหรับการ์ดบน dashboard
+     */
+    public function actionPendingRequisitionsOffcanvas()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        try {
+            $q = trim((string) $this->request->get('q', ''));
+            $limit = 30;
+
+            $mainWarehouseIds = $this->getMainWarehouseIds();
+            if (empty($mainWarehouseIds)) $mainWarehouseIds = [-1];
+            $warehouseId = $this->getFilterWarehouseId();
+            if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+                Yii::$app->session->remove('dashboard_warehouse_id');
+                $warehouseId = null;
+            }
+
+            $query = StockOrder::find()
+                ->with(['mainWarehouse', 'subWarehouse', 'stockDetails'])
+                ->where([
+                    'order_type' => 'OUT',
+                    'source_type' => 'REQUEST',
+                    'status' => StockOrder::STATUS_APPROVED,
+                ])
+                ->andWhere(['main_warehouse_id' => $warehouseId ? [$warehouseId] : $mainWarehouseIds]);
+
+            if ($q !== '') {
+                $query->andWhere(['or',
+                    ['like', 'order_no', $q],
+                ]);
+            }
+
+            $totalCount = (int) (clone $query)->count();
+            $rows = (clone $query)->orderBy(['order_date' => SORT_DESC])->limit($limit)->all();
+
+            return [
+                'status' => 'success',
+                'content' => $this->renderPartial('_pending_requisitions_offcanvas_content', [
+                    'items' => $rows,
+                    'totalCount' => $totalCount,
+                    'shownCount' => count($rows),
+                    'q' => $q,
+                    'currentWarehouseName' => $this->resolveWarehouseName($warehouseId),
+                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/issue/index']),
+                ]),
+                'total_count' => $totalCount,
+                'shown_count' => count($rows),
+            ];
+        } catch (\Throwable $e) {
+            Yii::error('pending-requisitions-offcanvas failed: ' . $e->getMessage(), __METHOD__);
+            return ['status' => 'error', 'message' => 'โหลดข้อมูลไม่สำเร็จ: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Offcanvas: วัสดุที่ขอเบิกแต่ยอดไม่พอจ่าย — ใช้ตรรกะเดียวกับ getInsufficientToDisburseCount
+     */
+    public function actionInsufficientOffcanvas()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        try {
+            $q = trim((string) $this->request->get('q', ''));
+            $limit = 30;
+
+            $mainWarehouseIds = $this->getMainWarehouseIds();
+            if (empty($mainWarehouseIds)) $mainWarehouseIds = [-1];
+            $warehouseId = $this->getFilterWarehouseId();
+            if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+                Yii::$app->session->remove('dashboard_warehouse_id');
+                $warehouseId = null;
+            }
+            $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+            if (empty($warehouseIds)) $warehouseIds = [-1];
+
+            $reqSub = (new Query())
+                ->select(['sd.item_code', 'SUM(sd.qty) AS requested_qty'])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->where([
+                    'so.order_type' => 'OUT',
+                    'so.source_type' => 'REQUEST',
+                    'so.status' => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+                ])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->groupBy('sd.item_code');
+
+            $balSub = (new Query())
+                ->select(['item_code', 'SUM(balance_qty) AS balance_qty'])
+                ->from(StockBalance::tableName())
+                ->where(['warehouse_id' => $warehouseIds])
+                ->groupBy('item_code');
+
+            $base = (new Query())
+                ->from(['req' => $reqSub])
+                ->leftJoin(['bal' => $balSub], 'bal.item_code = req.item_code')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = req.item_code')
+                ->select([
+                    'item_code' => 'req.item_code',
+                    'item_name' => 'i.title',
+                    'requested_qty' => 'req.requested_qty',
+                    'balance_qty' => new Expression('COALESCE(bal.balance_qty, 0)'),
+                    'shortfall' => new Expression('req.requested_qty - COALESCE(bal.balance_qty, 0)'),
+                ])
+                ->where('req.requested_qty > COALESCE(bal.balance_qty, 0)');
+
+            if ($q !== '') {
+                $base->andWhere(['or',
+                    ['like', 'i.code', $q],
+                    ['like', 'i.title', $q],
+                ]);
+            }
+
+            $totalCount = (int) (clone $base)->count();
+            $rows = (clone $base)->orderBy(['shortfall' => SORT_DESC])->limit($limit)->all();
+
+            $itemCodes = array_values(array_unique(array_filter(array_column($rows, 'item_code'))));
+            $itemModels = !empty($itemCodes)
+                ? StockItem::find()->where(['code' => $itemCodes])->indexBy('code')->all()
+                : [];
+
+            // ผูกรูป + หน่วยจาก master
+            $refs = [];
+            foreach ($itemModels as $m) {
+                if (!empty($m->ref)) $refs[] = (string) $m->ref;
+            }
+            $refToImg = [];
+            if (!empty($refs)) {
+                $uploads = \app\modules\filemanager\models\Uploads::find()
+                    ->where(['ref' => array_values(array_unique($refs))])
+                    ->orderBy(['id' => SORT_ASC])->all();
+                foreach ($uploads as $u) {
+                    if (!isset($refToImg[(string) $u->ref])) {
+                        $refToImg[(string) $u->ref] = \app\modules\filemanager\components\FileManagerHelper::getImg($u->id);
+                    }
+                }
+            }
+
+            $items = [];
+            foreach ($rows as $r) {
+                $m = $itemModels[$r['item_code']] ?? null;
+                $img = ($m && !empty($m->ref) && isset($refToImg[(string) $m->ref])) ? $refToImg[(string) $m->ref] : null;
+                $items[] = [
+                    'item_code' => (string) $r['item_code'],
+                    'item_name' => (string) $r['item_name'],
+                    'requested_qty' => (float) $r['requested_qty'],
+                    'balance_qty' => (float) $r['balance_qty'],
+                    'shortfall' => (float) $r['shortfall'],
+                    'unit_name' => $m ? ($m->getUnitName() ?? '') : '',
+                    'img' => $img,
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'content' => $this->renderPartial('_insufficient_offcanvas_content', [
+                    'items' => $items,
+                    'totalCount' => $totalCount,
+                    'shownCount' => count($items),
+                    'q' => $q,
+                    'currentWarehouseName' => $this->resolveWarehouseName($warehouseId),
+                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/report/insufficient-to-disburse']),
+                ]),
+                'total_count' => $totalCount,
+                'shown_count' => count($items),
+            ];
+        } catch (\Throwable $e) {
+            Yii::error('insufficient-offcanvas failed: ' . $e->getMessage(), __METHOD__);
+            return ['status' => 'error', 'message' => 'โหลดข้อมูลไม่สำเร็จ: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Offcanvas: Top N พัสดุเรียงตามมูลค่ารวม (qty × ราคา IN lot ล่าสุด) — 5 นาที cache ต่อคลัง
+     */
+    public function actionTopValueOffcanvas()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        try {
+            $q = trim((string) $this->request->get('q', ''));
+            $limit = 30;
+
+            $mainWarehouseIds = $this->getMainWarehouseIds();
+            if (empty($mainWarehouseIds)) $mainWarehouseIds = [-1];
+            $warehouseId = $this->getFilterWarehouseId();
+            if ($warehouseId !== null && !in_array($warehouseId, $mainWarehouseIds, true)) {
+                Yii::$app->session->remove('dashboard_warehouse_id');
+                $warehouseId = null;
+            }
+            $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+            if (empty($warehouseIds)) $warehouseIds = [-1];
+
+            $cacheKey = 'top-value-offcanvas:' . md5(json_encode([$warehouseIds, $q, $limit]));
+            $payload = Yii::$app->cache->getOrSet($cacheKey, function () use ($warehouseIds, $q, $limit) {
+                // sb.balance_qty × latest IN lot unit_price ต่อ item
+                $latestInPrice = (new Query())
+                    ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+                    ->from(['sd_in' => StockDetail::tableName()])
+                    ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+                    ->innerJoin(
+                        ['latest' => (new Query())
+                            ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                            ->from(['sd_l' => StockDetail::tableName()])
+                            ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                            ->where(['so_l.order_type' => 'IN'])
+                            ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
+                            ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                        'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+                    );
+
+                $base = (new Query())
+                    ->from(['sb' => StockBalance::tableName()])
+                    ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
+                    ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sb.item_code AND in_lot.lot_number = sb.lot_number')
+                    ->select([
+                        'item_code' => 'sb.item_code',
+                        'item_name' => 'i.title',
+                        'total_qty' => new Expression('SUM(sb.balance_qty)'),
+                        'total_value' => new Expression('SUM(sb.balance_qty * COALESCE(in_lot.unit_price, 0))'),
+                    ])
+                    ->where(['sb.warehouse_id' => $warehouseIds])
+                    ->andWhere(['>', 'sb.balance_qty', 0])
+                    ->groupBy(['sb.item_code', 'i.title']);
+
+                if ($q !== '') {
+                    $base->andWhere(['or',
+                        ['like', 'i.code', $q],
+                        ['like', 'i.title', $q],
+                    ]);
+                }
+
+                // total count (distinct items)
+                $totalCount = (int) (new Query())
+                    ->from(['sb2' => StockBalance::tableName()])
+                    ->innerJoin(['i2' => StockItem::tableName()], 'i2.code = sb2.item_code')
+                    ->where(['sb2.warehouse_id' => $warehouseIds])
+                    ->andWhere(['>', 'sb2.balance_qty', 0])
+                    ->select('sb2.item_code')
+                    ->groupBy('sb2.item_code')
+                    ->count();
+
+                $rows = $base->orderBy(['total_value' => SORT_DESC])->limit($limit)->all();
+                return ['rows' => $rows, 'total' => $totalCount];
+            }, 300);
+
+            $rows = $payload['rows'];
+            $totalCount = $payload['total'];
+
+            $itemCodes = array_values(array_unique(array_filter(array_column($rows, 'item_code'))));
+            $itemModels = !empty($itemCodes)
+                ? StockItem::find()->where(['code' => $itemCodes])->indexBy('code')->all()
+                : [];
+            $refs = [];
+            foreach ($itemModels as $m) {
+                if (!empty($m->ref)) $refs[] = (string) $m->ref;
+            }
+            $refToImg = [];
+            if (!empty($refs)) {
+                $uploads = \app\modules\filemanager\models\Uploads::find()
+                    ->where(['ref' => array_values(array_unique($refs))])
+                    ->orderBy(['id' => SORT_ASC])->all();
+                foreach ($uploads as $u) {
+                    if (!isset($refToImg[(string) $u->ref])) {
+                        $refToImg[(string) $u->ref] = \app\modules\filemanager\components\FileManagerHelper::getImg($u->id);
+                    }
+                }
+            }
+
+            $grandTotal = 0.0;
+            foreach ($rows as $r) { $grandTotal += (float) $r['total_value']; }
+            $items = [];
+            foreach ($rows as $r) {
+                $m = $itemModels[$r['item_code']] ?? null;
+                $img = ($m && !empty($m->ref) && isset($refToImg[(string) $m->ref])) ? $refToImg[(string) $m->ref] : null;
+                $value = (float) $r['total_value'];
+                $items[] = [
+                    'item_code' => (string) $r['item_code'],
+                    'item_name' => (string) $r['item_name'],
+                    'total_qty' => (float) $r['total_qty'],
+                    'total_value' => $value,
+                    'percent' => $grandTotal > 0.005 ? round(($value / $grandTotal) * 100, 1) : 0,
+                    'unit_name' => $m ? ($m->getUnitName() ?? '') : '',
+                    'img' => $img,
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'content' => $this->renderPartial('_top_value_offcanvas_content', [
+                    'items' => $items,
+                    'totalCount' => $totalCount,
+                    'shownCount' => count($items),
+                    'shownValueSum' => $grandTotal,
+                    'q' => $q,
+                    'currentWarehouseName' => $this->resolveWarehouseName($warehouseId),
+                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/main-stock/items-with-stock']),
+                ]),
+                'total_count' => $totalCount,
+                'shown_count' => count($items),
+            ];
+        } catch (\Throwable $e) {
+            Yii::error('top-value-offcanvas failed: ' . $e->getMessage(), __METHOD__);
+            return ['status' => 'error', 'message' => 'โหลดข้อมูลไม่สำเร็จ: ' . $e->getMessage()];
+        }
+    }
+
+    /** Helper: resolve warehouse display name */
+    protected function resolveWarehouseName($warehouseId)
+    {
+        if ($warehouseId === null) return 'ทั้งหมด';
+        foreach ($this->getMainWarehousesList() as $w) {
+            if ((int) $w->id === (int) $warehouseId) return $w->warehouse_name;
+        }
+        return 'ทั้งหมด';
+    }
+
+    /**
      * Offcanvas: ส่งรายการพัสดุที่ "ต่ำกว่าจุดสั่งซื้อ" (ยอดคงเหลือ < min_qty) เป็น JSON (content เป็น HTML)
      */
     public function actionCriticalItemsOffcanvas()
@@ -170,22 +742,23 @@ class MainStockController extends \yii\web\Controller
                 ->where(['warehouse_id' => $warehouseIds])
                 ->groupBy('item_code');
 
+            // INNER JOIN: เฉพาะพัสดุที่อยู่ใน scope ของคลังนี้ (มี row ใน stock_balance)
             $itemsQuery = (new Query())
                 ->from(['i' => StockItem::tableName()])
-                ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
+                ->innerJoin(['b' => $balanceSub], 'b.item_code = i.code')
                 ->select([
                     'item_code' => 'i.code',
                     'item_name' => 'i.title',
                     'min_qty' => 'i.qty_min',
-                    'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
-                    'shortfall' => new Expression('i.qty_min - COALESCE(b.total_qty, 0)'),
+                    'current_qty' => 'b.total_qty',
+                    'shortfall' => new Expression('i.qty_min - b.total_qty'),
                 ])
                 ->where([
                     'i.active' => 1,
                 ])
                 ->andWhere(['not', ['i.qty_min' => null]])
                 ->andWhere(['>', 'i.qty_min', 0])
-                ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
+                ->andWhere('b.total_qty < i.qty_min');
 
             if ($q !== '') {
                 $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
@@ -251,13 +824,16 @@ class MainStockController extends \yii\web\Controller
 
             return [
                 'status' => 'success',
-                'content' => $this->renderPartial('_critical_items_offcanvas_content', [
+                'content' => $this->renderPartial('_critical_offcanvas_content', [
                     'items' => $items,
                     'totalCount' => $totalCount,
+                    'shownCount' => count($items),
                     'currentWarehouseName' => $currentWarehouseName,
-                    'warehouseIdParam' => $warehouseIdParam,
                     'q' => $q,
+                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/report/balance-by-warehouse', 'warehouse_id' => $warehouseId]),
                 ]),
+                'total_count' => $totalCount,
+                'shown_count' => count($items),
             ];
         } catch (\Throwable $e) {
             Yii::error('critical-items-offcanvas failed: ' . $e->getMessage(), __METHOD__);
@@ -406,20 +982,21 @@ class MainStockController extends \yii\web\Controller
             ->where(['warehouse_id' => $warehouseIds])
             ->groupBy('item_code');
 
+        // INNER JOIN: เฉพาะพัสดุที่อยู่ใน scope ของคลังนี้ (มี row ใน stock_balance)
         $itemsQuery = (new Query())
             ->from(['i' => StockItem::tableName()])
-            ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
+            ->innerJoin(['b' => $balanceSub], 'b.item_code = i.code')
             ->select([
                 'item_code' => 'i.code',
                 'item_name' => 'i.title',
                 'min_qty' => 'i.qty_min',
-                'current_qty' => new Expression('COALESCE(b.total_qty, 0)'),
-                'shortfall' => new Expression('i.qty_min - COALESCE(b.total_qty, 0)'),
+                'current_qty' => 'b.total_qty',
+                'shortfall' => new Expression('i.qty_min - b.total_qty'),
             ])
             ->where(['i.active' => 1])
             ->andWhere(['not', ['i.qty_min' => null]])
             ->andWhere(['>', 'i.qty_min', 0])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
+            ->andWhere('b.total_qty < i.qty_min');
 
         if ($q !== '') {
             $tokens = preg_split('/\s+/', $q, -1, PREG_SPLIT_NO_EMPTY);
@@ -573,9 +1150,11 @@ class MainStockController extends \yii\web\Controller
 
         $pendingCount = (int) (clone $baseRequisition)->count();
 
+        // INNER JOIN: นับเฉพาะพัสดุที่อยู่ใน scope ของคลังที่เลือก (มี row ใน stock_balance)
+        // กัน false positive จาก master ที่ตั้ง qty_min ไว้แต่ไม่เคยรับเข้าคลังนี้
         $criticalQuery = (new Query())
             ->from(['i' => StockItem::tableName()])
-            ->leftJoin(
+            ->innerJoin(
                 ['b' => (new Query())
                     ->select(['item_code', 'SUM(balance_qty) as total_qty'])
                     ->from(StockBalance::tableName())
@@ -588,7 +1167,7 @@ class MainStockController extends \yii\web\Controller
                 ['not', ['i.qty_min' => null]],
                 ['>', 'i.qty_min', 0],
             ])
-            ->andWhere('COALESCE(b.total_qty, 0) < i.qty_min');
+            ->andWhere('b.total_qty < i.qty_min');
         $criticalCount = (int) $criticalQuery->count();
 
         $valueQuery = (new Query())
@@ -682,72 +1261,206 @@ class MainStockController extends \yii\web\Controller
     /**
      * ข้อมูลกราฟ: การรับเข้าและจ่ายออกต่อเดือน ในปีงบประมาณไทย (ต.ค. - ก.ย.)
      */
-    protected function getChartData($warehouseId, array $mainWarehouseIds)
+    /** Palette สำหรับ category (OKLCH-derived) — index คงที่ตาม alphabetical category code */
+    protected static function categoryColorPalette()
     {
-        $thaiYear = (int) AppHelper::YearBudget();
-        $range = AppHelper::BudgetYearRange($thaiYear);
-        $from = $range['start'] . ' 00:00:00';
-        $to = $range['end'] . ' 23:59:59';
+        return [
+            '#2563eb', // blue
+            '#0d9488', // teal
+            '#16a34a', // green
+            '#d97706', // amber
+            '#dc2626', // red
+            '#7c3aed', // violet
+            '#0891b2', // cyan
+            '#db2777', // pink
+            '#475569', // slate
+            '#65a30d', // lime
+        ];
+    }
 
+    /**
+     * ข้อมูล chart มูลค่ารับเข้า/จ่ายออก แยกตามประเภทวัสดุ ตามปี พ.ศ.
+     *
+     * @param int|null $warehouseId  null = ทุกคลังหลัก
+     * @param int[] $mainWarehouseIds
+     * @param int $thaiYear ปี พ.ศ. (ม.ค.-ธ.ค.)
+     * @param int|null $month 1-12 หรือ null = ทั้งปี
+     * @param string $direction IN | OUT | NET
+     */
+    protected function getMovementChartData($warehouseId, array $mainWarehouseIds, $thaiYear, $month = null, $direction = 'IN')
+    {
+        $yearAD = $thaiYear - 543;
+        $monthLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
         $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+        if (empty($warehouseIds)) {
+            $warehouseIds = [-1];
+        }
 
-        $monthOrder = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        $monthLabels = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+        $fromDate = sprintf('%04d-01-01 00:00:00', $yearAD);
+        $toDate = sprintf('%04d-12-31 23:59:59', $yearAD);
 
-        $inByMonth = array_fill_keys($monthOrder, 0);
-        $outByMonth = array_fill_keys($monthOrder, 0);
+        $needIn = ($direction === 'IN' || $direction === 'NET');
+        $needOut = ($direction === 'OUT' || $direction === 'NET');
 
-        $inRows = (new Query())
-            ->select(['MONTH(so.order_date) as m', 'COUNT(*) as cnt'])
-            ->from(['so' => StockOrder::tableName()])
-            ->where([
-                'so.order_type' => 'IN',
-                'so.status' => 'CONFIRMED',
-            ])
-            ->andWhere(['so.main_warehouse_id' => $warehouseIds])
-            ->andWhere(['>=', 'so.order_date', $from])
-            ->andWhere(['<=', 'so.order_date', $to])
-            ->groupBy('m')
+        // category index: code → ['title', 'color']
+        $catRows = Categorise::find()
+            ->where(['name' => 'asset_type', 'group_id' => 'MATER'])
+            ->orderBy(['code' => SORT_ASC])
             ->all();
+        $palette = self::categoryColorPalette();
+        $catIndex = [];
+        foreach ($catRows as $idx => $cat) {
+            $catIndex[(string) $cat->code] = [
+                'title' => (string) $cat->title,
+                'color' => $palette[$idx % count($palette)],
+            ];
+        }
+        $otherColor = '#9ca3af';
 
-        foreach ($inRows as $r) {
-            $m = (int) $r['m'];
-            if (isset($inByMonth[$m])) {
-                $inByMonth[$m] = (int) $r['cnt'];
+        // bucket: [category_code][month_1-12] = value
+        $bucket = [];
+        $ensureBucket = function ($code) use (&$bucket) {
+            if (!isset($bucket[$code])) {
+                $bucket[$code] = array_fill(1, 12, 0.0);
+            }
+        };
+
+        // IN: qty * sd.unit_price
+        if ($needIn) {
+            $inQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->where(['so.order_type' => 'IN'])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($inQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                $bucket[$code][$m] += ($direction === 'NET') ? $v : $v;
             }
         }
 
-        $outRows = (new Query())
-            ->select(['MONTH(so.order_date) as m', 'COUNT(*) as cnt'])
-            ->from(['so' => StockOrder::tableName()])
-            ->where([
-                'so.order_type' => 'OUT',
-                'so.source_type' => 'REQUEST',
-                'so.status' => 'CONFIRMED',
-            ])
-            ->andWhere(['so.main_warehouse_id' => $warehouseIds])
-            ->andWhere(['>=', 'so.order_date', $from])
-            ->andWhere(['<=', 'so.order_date', $to])
-            ->groupBy('m')
-            ->all();
+        // OUT: qty * IN lot unit_price (ตาม lot_number) — ตรรกะเดียวกับ close-month
+        if ($needOut) {
+            $latestInPrice = (new Query())
+                ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+                ->from(['sd_in' => StockDetail::tableName()])
+                ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+                ->innerJoin(
+                    ['latest' => (new Query())
+                        ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                        ->from(['sd_l' => StockDetail::tableName()])
+                        ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                        ->where(['so_l.order_type' => 'IN'])
+                        ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
+                        ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                    'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+                );
 
-        foreach ($outRows as $r) {
-            $m = (int) $r['m'];
-            if (isset($outByMonth[$m])) {
-                $outByMonth[$m] = (int) $r['cnt'];
+            $outQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
+                ->where(['so.order_type' => 'OUT'])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($outQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                // NET = IN - OUT; subtract here (IN was added positive above)
+                $bucket[$code][$m] += ($direction === 'NET') ? -$v : $v;
             }
         }
 
-        $inData = array_values($inByMonth);
-        $outData = array_values($outByMonth);
+        // ถ้าโหมดรายเดือน — กรองเหลือเฉพาะเดือนนั้น (สำหรับ totals)
+        $series = [];
+        $totalsByCategory = [];
+        $grandTotal = 0.0;
+
+        foreach ($bucket as $code => $monthlyData) {
+            $info = $catIndex[$code] ?? ['title' => $code, 'color' => $otherColor];
+            $data12 = array_values($monthlyData);  // index 0..11 = ม.ค...ธ.ค.
+            $totalForPeriod = ($month === null)
+                ? array_sum($data12)
+                : ($monthlyData[$month] ?? 0);
+
+            // skip ถ้าเป็น 0 ทั้งหมด
+            if (abs($totalForPeriod) < 0.005 && array_sum(array_map('abs', $data12)) < 0.005) {
+                continue;
+            }
+
+            $series[] = [
+                'code' => $code,
+                'name' => $info['title'],
+                'color' => $info['color'],
+                'data' => array_map(fn($v) => round($v, 2), $data12),
+            ];
+            $totalsByCategory[] = [
+                'code' => $code,
+                'name' => $info['title'],
+                'color' => $info['color'],
+                'value' => round($totalForPeriod, 2),
+            ];
+            $grandTotal += $totalForPeriod;
+        }
+
+        // sort series + totals by descending total
+        usort($totalsByCategory, fn($a, $b) => $b['value'] <=> $a['value']);
+        $orderByCode = [];
+        foreach ($totalsByCategory as $idx => $t) {
+            $orderByCode[$t['code']] = $idx;
+        }
+        usort($series, fn($a, $b) => ($orderByCode[$a['code']] ?? 99) <=> ($orderByCode[$b['code']] ?? 99));
+
+        foreach ($totalsByCategory as &$t) {
+            $t['percent'] = (abs($grandTotal) > 0.005) ? round(($t['value'] / $grandTotal) * 100, 1) : 0;
+        }
+        unset($t);
 
         return [
-            'categories' => $monthLabels,
-            'series' => [
-                ['name' => 'รับเข้า', 'data' => $inData],
-                ['name' => 'จ่ายออก', 'data' => $outData],
-            ],
-            'fiscal_year' => $thaiYear,
+            'mode' => $month === null ? 'year' : 'month',
+            'year' => (int) $thaiYear,
+            'month' => $month,
+            'direction' => $direction,
+            'months' => $monthLabels,
+            'series' => $series,
+            'totals' => $totalsByCategory,
+            'total' => round($grandTotal, 2),
+            'is_empty' => empty($series),
         ];
     }
     //     public function actionReceive()

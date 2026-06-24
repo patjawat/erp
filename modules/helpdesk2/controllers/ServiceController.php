@@ -49,6 +49,26 @@ class ServiceController extends \yii\web\Controller
         return $value;
     }
 
+    private function resolvePdfEmployeeTypeName($employee): string
+    {
+        if (!$employee) {
+            return '';
+        }
+
+        foreach (['employeeTypeName', 'positionTypeName'] as $method) {
+            if (!method_exists($employee, $method)) {
+                continue;
+            }
+            $value = $employee->$method();
+            $text = trim((string) ($value === false ? '' : $value));
+            if ($text !== '' && $text !== '-') {
+                return $text;
+            }
+        }
+
+        return '';
+    }
+
     /**
      * Asset lookup for TomSelect (repair form).
      * Route: /helpdesk/service/asset-lookup?q=...
@@ -1241,6 +1261,8 @@ class ServiceController extends \yii\web\Controller
 
         $senderEmp = Employees::find()->where(['user_id' => $model->created_by])->one();
         $technicianEmp = $model->emp;
+        $requesterEmployeeType = $this->resolvePdfEmployeeTypeName($senderEmp);
+        $technicianEmployeeType = $this->resolvePdfEmployeeTypeName($technicianEmp);
 
         $noticeDate = null;
         if (!empty($model->created_at)) {
@@ -1270,8 +1292,10 @@ class ServiceController extends \yii\web\Controller
             'repair_type' => (string) ($model->repair_type ?? ''),
             'status_title' => (string) ($model->repairStatus?->title ?? ''),
             'org_name' => (string) ($senderEmp ? $senderEmp->departmentName() : ''),
+            'employee_type' => $requesterEmployeeType,
             'requester_fullname' => (string) ($senderEmp ? $senderEmp->fullname : ''),
             'requester_position' => (string) ($senderEmp && is_array($senderEmp->data_json) ? (($senderEmp->data_json['position_name_text'] ?? '') . ($senderEmp->data_json['position_level_text'] ?? '')) : ''),
+            'requester_employee_type' => $requesterEmployeeType,
             // helpdesk2 stores phone/note in data_json
             'phone' => (string) (is_array($model->data_json) ? ($model->data_json['phone'] ?? '') : ''),
             'requester_phone' => (string) (is_array($model->data_json) ? ($model->data_json['phone'] ?? '') : ''),
@@ -1279,6 +1303,7 @@ class ServiceController extends \yii\web\Controller
             // technician info (from assigned emp_id)
             'technician_fullname' => (string) ($technicianEmp ? $technicianEmp->fullname : ''),
             'technician_position' => (string) ($technicianEmp && is_array($technicianEmp->data_json) ? (($technicianEmp->data_json['position_name_text'] ?? '') . ($technicianEmp->data_json['position_level_text'] ?? '')) : ''),
+            'technician_employee_type' => $technicianEmployeeType,
             'technician_department' => (string) ($technicianEmp ? $technicianEmp->departmentName() : ''),
             'sender_signature' => $senderEmp ? $senderEmp->signature() : null,
             'location' => is_array($model->data_json) ? (string) ($model->data_json['location'] ?? '') : '',

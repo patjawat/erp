@@ -13,55 +13,277 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <i class="bi bi-boxes fs-4 text-primary"></i>
+<div class="balance-page-head">
+    <h4 class="balance-page-head__title">
+        <i class="bi bi-boxes" aria-hidden="true"></i>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted mb-0">คลังหลักดูสถานะวัสดุคงเหลือของคลังย่อยได้ — คลังย่อยดูสถานะของตัวเองได้ คลิก <span class="badge text-bg-light border">ดูประวัติ</span> ที่แต่ละแถวเพื่อเปิดบัตรเคลื่อนไหว</p>
+    <p class="balance-page-head__caption">คลังหลักดูสถานะวัสดุคงเหลือของคลังย่อยได้ — คลังย่อยดูสถานะของตัวเองได้ คลิก <span class="balance-page-head__inline-badge">ดูประวัติ</span> ที่แต่ละแถวเพื่อเปิดบัตรเคลื่อนไหว</p>
 </div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
-    <?= Html::a('<i class="bi bi-arrow-left"></i> กลับ', ['/inventory-v2/sub-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/sub-stock/_menu_sub_stock', [
+    'active' => 'balance',
+    'currentWarehouseId' => $warehouseId ?: null,
+]) ?>
 
-    <form method="get" action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="row g-2 align-items-center">
-        <div class="col-auto">
-            <?= Html::dropDownList('warehouse_id', $warehouseId, $warehouses, ['class' => 'form-select border shadow-sm', 'style' => 'width: 200px;']) ?>
+<div class="container-fluid px-3 px-md-4">
+    <form method="get"
+          action="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>"
+          id="balance-filter-form"
+          class="balance-toolbar"
+          role="search"
+          aria-label="ตัวกรองยอดคงเหลือ">
+        <div class="balance-toolbar__fields">
+            <label class="balance-toolbar__field" title="คลัง">
+                <span class="visually-hidden">คลัง</span>
+                <i class="bi bi-shop balance-toolbar__icon" aria-hidden="true"></i>
+                <?= Html::dropDownList('warehouse_id', $warehouseId, $warehouses, [
+                    'id' => 'balance-warehouse',
+                    'class' => 'balance-toolbar__select',
+                    'aria-label' => 'คลัง',
+                ]) ?>
+            </label>
+            <label class="balance-toolbar__field" title="ประเภทวัสดุ">
+                <span class="visually-hidden">ประเภทวัสดุ</span>
+                <i class="bi bi-tag balance-toolbar__icon" aria-hidden="true"></i>
+                <?= Html::dropDownList('category_id', $categoryId, $categories, [
+                    'id' => 'balance-category',
+                    'prompt' => 'ทุกประเภท',
+                    'class' => 'balance-toolbar__select',
+                    'aria-label' => 'ประเภทวัสดุ',
+                ]) ?>
+            </label>
+            <label class="balance-toolbar__field" title="สถานะ">
+                <span class="visually-hidden">สถานะ</span>
+                <i class="bi bi-flag balance-toolbar__icon" aria-hidden="true"></i>
+                <?= Html::dropDownList('status', $status, [
+                    'below_min' => 'ต่ำกว่า Min',
+                    'below_max' => 'ต่ำกว่า Max',
+                    'normal' => 'ปกติ (พอดี)',
+                ], [
+                    'id' => 'balance-status',
+                    'prompt' => 'ทุกสถานะ',
+                    'class' => 'balance-toolbar__select',
+                    'aria-label' => 'สถานะ',
+                ]) ?>
+            </label>
         </div>
-
-        <div class="col-auto">
-            <?= Html::dropDownList('category_id', $categoryId, $categories, [
-                'prompt' => '-- ทุกประเภท --',
-                'class' => 'form-select border shadow-sm',
-                'style' => 'width: 160px;'
-            ]) ?>
-        </div>
-
-        <div class="col-auto">
-            <?= Html::dropDownList('status', $status, [
-                'below_min' => 'ต่ำกว่า Min',
-                'below_max' => 'ต่ำกว่า Max',
-                'normal' => 'ปกติ (พอดี)',
-            ], [
-                'prompt' => '-- ทุกสถานะ --',
-                'class' => 'form-select border shadow-sm',
-                'style' => 'width: 140px;'
-            ]) ?>
-        </div>
-
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary px-3">แสดงผล</button>
-            <?= Html::a('<i class="bi bi-file-earmark-excel"></i>',
+        <div class="balance-toolbar__actions">
+            <?php $hasActiveFilter = !empty($warehouseId) || !empty($categoryId) || !empty($status); ?>
+            <?php if ($hasActiveFilter): ?>
+                <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>"
+                   class="balance-toolbar__btn"
+                   title="ล้างค่าตัวกรอง"
+                   aria-label="ล้างค่าตัวกรอง">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span class="d-none d-md-inline">ล้างค่า</span>
+                </a>
+            <?php endif; ?>
+            <?= Html::a('<i class="bi bi-file-earmark-excel" aria-hidden="true"></i><span class="d-none d-md-inline">Excel</span>',
                 array_merge(['/inventory-v2/report/export-balance-by-warehouse'], Yii::$app->request->getQueryParams()),
-                ['class' => 'btn btn-success', 'title' => 'Export Excel']
+                [
+                    'class' => 'balance-toolbar__btn balance-toolbar__btn--accent',
+                    'title' => 'ดาวน์โหลด Excel',
+                    'aria-label' => 'ดาวน์โหลด Excel',
+                ]
             ) ?>
-            <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="btn btn-outline-danger" title="ล้างค่า"><i class="bi bi-x-lg"></i></a>
+            <noscript>
+                <button type="submit" class="balance-toolbar__btn balance-toolbar__btn--accent">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span>แสดงผล</span>
+                </button>
+            </noscript>
         </div>
     </form>
 </div>
-<?php $this->endBlock(); ?>
+
+<style>
+.balance-page-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 70ch;
+}
+.balance-page-head__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0;
+    line-height: 1.2;
+}
+.balance-page-head__title i {
+    color: #0d6efd;
+    font-size: 1.15rem;
+}
+.balance-page-head__caption {
+    font-size: 0.85rem;
+    color: #4a5568;
+    margin: 0;
+    line-height: 1.5;
+}
+.balance-page-head__inline-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.05rem 0.4rem;
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.balance-toolbar {
+    --bt-ink-1: #1a202c;
+    --bt-ink-2: #4a5568;
+    --bt-ink-3: #718096;
+    --bt-surface: #ffffff;
+    --bt-surface-hover: #f1f5f9;
+    --bt-line: rgba(15, 23, 42, 0.08);
+    --bt-line-strong: rgba(15, 23, 42, 0.14);
+    --bt-primary: #0d6efd;
+    --bt-primary-ink: #0a58ca;
+    --bt-primary-soft: rgba(13, 110, 253, 0.08);
+    --bt-success-ink: #15803d;
+    --bt-success-soft: rgba(21, 128, 61, 0.10);
+    --bt-radius-sm: 8px;
+    --bt-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid var(--bt-line);
+}
+
+.balance-toolbar__fields {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.balance-toolbar__field {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    flex: 0 1 auto;
+    margin: 0;
+}
+.balance-toolbar__icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bt-ink-3);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+.balance-toolbar__select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 38px;
+    padding: 0 2.1rem 0 2.2rem;
+    background-color: var(--bt-surface);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m4 6 4 4 4-4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 14px;
+    border: 1px solid var(--bt-line-strong);
+    border-radius: var(--bt-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bt-ink-1);
+    cursor: pointer;
+    max-width: 100%;
+    transition: border-color 120ms var(--bt-ease), background-color 120ms var(--bt-ease), box-shadow 120ms var(--bt-ease);
+}
+.balance-toolbar__select:hover {
+    border-color: var(--bt-ink-3);
+    background-color: var(--bt-surface-hover);
+}
+.balance-toolbar__select:focus-visible {
+    outline: none;
+    border-color: var(--bt-primary);
+    box-shadow: 0 0 0 3px var(--bt-primary-soft);
+}
+/* Selected (non-default) state */
+.balance-toolbar__select:not([value=""]):not([data-default="1"]) {
+    color: var(--bt-ink-1);
+}
+
+.balance-toolbar__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.balance-toolbar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 0.85rem;
+    min-height: 38px;
+    background: var(--bt-surface);
+    border: 1px solid var(--bt-line-strong);
+    border-radius: var(--bt-radius-sm);
+    color: var(--bt-ink-2);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 120ms var(--bt-ease), border-color 120ms var(--bt-ease), color 120ms var(--bt-ease);
+}
+.balance-toolbar__btn:hover {
+    background: var(--bt-surface-hover);
+    color: var(--bt-ink-1);
+    border-color: var(--bt-ink-3);
+}
+.balance-toolbar__btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--bt-primary-soft);
+    color: var(--bt-ink-1);
+}
+.balance-toolbar__btn i { font-size: 0.95rem; line-height: 1; }
+
+.balance-toolbar__btn--accent {
+    color: var(--bt-success-ink);
+    border-color: rgba(21, 128, 61, 0.22);
+}
+.balance-toolbar__btn--accent:hover {
+    background: var(--bt-success-soft);
+    color: var(--bt-success-ink);
+    border-color: rgba(21, 128, 61, 0.35);
+}
+
+@media (max-width: 767.98px) {
+    .balance-toolbar { gap: 0.5rem; padding: 0.5rem 0 0.6rem; }
+    .balance-toolbar__fields { flex: 1 1 100%; gap: 0.35rem; }
+    .balance-toolbar__field { flex: 1 1 auto; min-width: 130px; }
+    .balance-toolbar__field .balance-toolbar__select { width: 100%; }
+    .balance-toolbar__actions {
+        flex: 1 1 100%;
+        justify-content: flex-end;
+    }
+    .balance-toolbar__btn { padding: 0 0.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .balance-toolbar__select,
+    .balance-toolbar__btn { transition: none; }
+}
+</style>
 
 <style>
 /* Balance-by-warehouse: layout + motion */
@@ -671,4 +893,16 @@ $js = <<<JS
 })();
 JS;
 $this->registerJs($js, View::POS_END);
+
+$this->registerJs(<<<JS
+(function () {
+    var form = document.getElementById('balance-filter-form');
+    if (!form) return;
+    form.addEventListener('change', function (e) {
+        if (e.target && e.target.tagName === 'SELECT') {
+            form.submit();
+        }
+    });
+})();
+JS, View::POS_READY);
 ?>

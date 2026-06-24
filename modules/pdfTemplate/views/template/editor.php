@@ -425,9 +425,13 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         'ชื่อผู้รับผิดชอบ': 'officer_name',
         'ชื่อผู้ขอ': 'officer_name',
         'ตำแหน่งผู้ขอ': 'officer_position',
+        'ประเภทพนักงาน': 'employee_type',
+        'ประเภทพนักงานผู้ขอ': 'officer_employee_type',
+        'ประเภทพนักงานผู้รับผิดชอบ': 'officer_employee_type',
         'ลายเซ็นผู้ขอ': 'officer_signature',
         'ชื่อสกุลผู้มอบหมายงาน': 'assigned_to_fullname',
         'ตำแหน่งผู้มอบหมายงาน': 'assigned_to_position',
+        'ประเภทพนักงานผู้มอบหมายงาน': 'assigned_to_employee_type',
         'ลายเซ็นผู้มอบหมายงาน': 'assigned_to_signature',
         'วันที่เอกสาร': 'document_date',
         'เรื่อง': 'topic',
@@ -455,13 +459,21 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
         'นับวัน': 'trip_days',
         'ผู้อนุมัติ (ชื่อ-นามสกุล)': 'approver_fullname',
         'ผู้อนุมัติ (ตำแหน่ง)': 'approver_position',
+        'ผู้อนุมัติ (ประเภทพนักงาน)': 'approver_employee_type',
         'ผู้อนุมัติ (วันที่อนุมัติ)': 'approver_approve_date',
         'ผู้อนุมัติ (ลายเซ็น)': 'approver_signature',
-        'สถานะผู้อนุมัติ': 'approval_status'
+        'สถานะผู้อนุมัติ': 'approval_status',
+        'ประเภทพนักงานผู้ขอใช้รถ': 'officer_employee_type',
+        'ประเภทพนักงานผู้ขอลา': 'emp_employee_type',
+        'ประเภทพนักงานผู้ปฏิบัติหน้าที่แทน': 'send_employee_type',
+        'ประเภทพนักงานผู้แจ้งซ่อม': 'requester_employee_type',
+        'ประเภทพนักงานช่างผู้ดำเนินการ': 'technician_employee_type',
+        'ประเภทพนักงานหัวหน้ารับรอง': 'leader_employee_type',
+        'ประเภทพนักงานขับ': 'driver_employee_type'
     };
 
     function isApproverOrStatusField(lookupKey) {
-        return lookupKey === 'approval_status' || ['approver_fullname', 'approver_position', 'approver_approve_date', 'approver_signature'].indexOf(lookupKey) >= 0;
+        return lookupKey === 'approval_status' || ['approver_fullname', 'approver_position', 'approver_employee_type', 'approver_approve_date', 'approver_signature'].indexOf(lookupKey) >= 0;
     }
 
     function isSignatureField(lookupKey) {

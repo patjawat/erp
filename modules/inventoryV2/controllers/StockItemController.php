@@ -3,6 +3,8 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\models\Categorise;
+use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\filemanager\models\Uploads;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
@@ -914,6 +916,12 @@ class StockItemController extends Controller
         $categoryId = $data['category_id'] ?? null;
         // dry_run = true → คำนวณว่าจะเกิดอะไร แต่ไม่ save จริง (ใช้สำหรับ confirm dialog)
         $dryRun = !empty($data['dry_run']);
+        // category mismatch recovery: เมื่อ user ตอบ "ปรับประเภทให้ตรง" จาก dialog
+        $updateCategories = !empty($data['update_categories']);
+        $applyCategoryToCodes = is_array($data['apply_category_to_codes'] ?? null)
+            ? array_map('strval', $data['apply_category_to_codes'])
+            : [];
+        $applyCategoryToSet = array_flip($applyCategoryToCodes);
 
         if (empty($items) || !$warehouseId || !$categoryId) {
             return ['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน'];
@@ -930,6 +938,17 @@ class StockItemController extends Controller
             $reusedInfo = [];   // [{item_code, item_name}] ใช้สำหรับตารางสรุป
             $errors = [];
             $resultItems = [];
+            $categoryMismatches = []; // [{item_code, item_name, current_category_id, current_category_title, target_category_title}]
+            $categoryUpdated = [];    // real-run: [{item_code, item_name, from_id, from_title, to_id, to_title}]
+
+            // ดึง title ของหมวดเป้าหมาย (ใช้ทั้ง mismatch detection + update)
+            $targetCategoryTitle = $categoryId;
+            $targetCat = Categorise::find()
+                ->where(['name' => 'asset_type', 'code' => $categoryId])
+                ->one();
+            if ($targetCat) {
+                $targetCategoryTitle = (string) $targetCat->title;
+            }
 
             // โหลด candidates สำหรับ name-match dedup ครั้งเดียว (ต่อหมวด) — ลด query ใน loop
             $nameIndex = null;
@@ -968,6 +987,46 @@ class StockItemController extends Controller
                 if ($itemCode !== '') {
                     // มี code → flow เดิม
                     $stockItem = StockItem::findOne(['item_code' => $itemCode]);
+
+                    // ── Category mismatch detection ──
+                    // master มีอยู่แล้ว แต่ category_id ไม่ตรงกับที่ user เลือกใน UI
+                    if ($stockItem && (string) $stockItem->category_id !== (string) $categoryId) {
+                        $fromId = (string) $stockItem->category_id;
+                        $fromTitle = $fromId;
+                        if ($stockItem->categoryType) {
+                            $fromTitle = (string) $stockItem->categoryType->title;
+                        } else {
+                            $fromCat = Categorise::find()
+                                ->where(['name' => 'asset_type', 'code' => $fromId])
+                                ->one();
+                            if ($fromCat) $fromTitle = (string) $fromCat->title;
+                        }
+                        $categoryMismatches[] = [
+                            'item_code' => $itemCode,
+                            'item_name' => (string) $stockItem->item_name,
+                            'current_category_id' => $fromId,
+                            'current_category_title' => $fromTitle,
+                            'target_category_id' => (string) $categoryId,
+                            'target_category_title' => $targetCategoryTitle,
+                        ];
+
+                        // Real run + user opted-in → update master ก่อนใช้งานต่อ
+                        if (!$dryRun && $updateCategories && isset($applyCategoryToSet[$itemCode])) {
+                            $stockItem->category_id = $categoryId;
+                            if ($stockItem->save(false)) {
+                                $categoryUpdated[] = [
+                                    'item_code' => $itemCode,
+                                    'item_name' => (string) $stockItem->item_name,
+                                    'from_id' => $fromId,
+                                    'from_title' => $fromTitle,
+                                    'to_id' => (string) $categoryId,
+                                    'to_title' => $targetCategoryTitle,
+                                ];
+                            } else {
+                                $errors[] = $itemCode . ': ปรับประเภทไม่สำเร็จ (' . implode(', ', $stockItem->getFirstErrors()) . ')';
+                            }
+                        }
+                    }
                 } else {
                     // ไม่มี code → match ด้วยชื่อ (case-insensitive + trim) ในหมวดเดียวกัน
                     $loadNameIndex();
@@ -1061,12 +1120,22 @@ class StockItemController extends Controller
                     $categoryTitle = $stockItem->categoryType->title;
                 }
 
+                // resolve รูปภาพจาก ref → uploads (fallback: placeholder)
+                $imageUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+                if (!empty($stockItem->ref)) {
+                    $upload = Uploads::find()->where(['ref' => $stockItem->ref])->one();
+                    if ($upload) {
+                        $imageUrl = FileManagerHelper::getImg($upload->id);
+                    }
+                }
+
                 $added[] = $itemCode;
                 $resultItems[] = [
                     'item_code' => $itemCode,
                     'item_name' => $itemName,
                     'unit_name' => $unitName ?: '-',
                     'category_title' => $categoryTitle,
+                    'image_url' => $imageUrl,
                     'qty' => $qty,
                     'unit_price' => $unitPrice,
                     'lot_number' => $lotNumber,
@@ -1084,6 +1153,8 @@ class StockItemController extends Controller
                     'would_reuse' => $reused,         // [item_code, ...]
                     'would_reuse_info' => $reusedInfo,
                     'would_total' => count($added),
+                    'category_mismatches' => $categoryMismatches,
+                    'target_category_title' => $targetCategoryTitle,
                     'errors' => $errors,
                 ];
             }
@@ -1097,6 +1168,7 @@ class StockItemController extends Controller
                 'created_info' => $createdInfo,
                 'reused' => $reused,
                 'reused_info' => $reusedInfo,
+                'category_updated' => $categoryUpdated,
                 'errors' => $errors,
                 'items' => $resultItems
             ];
