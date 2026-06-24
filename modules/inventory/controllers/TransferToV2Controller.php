@@ -238,4 +238,264 @@ class TransferToV2Controller extends \yii\web\Controller
         } while (StockOrder::findOne(['order_no' => $no]) !== null);
         return $no;
     }
+
+    /**
+     * แสดงรายการใบเบิก V1 ที่ยังไม่จ่ายของ (transaction_type=OUT, order_status=pending)
+     * พร้อม preview line items และ flag รายการที่ map กับ V2 master ไม่ได้
+     */
+    public function actionRequisitionIndex()
+    {
+        $orders = (new \yii\db\Query())
+            ->select(['id', 'code', 'movement_date', 'warehouse_id', 'from_warehouse_id', 'ref', 'created_at', 'created_by'])
+            ->from(StockEvent::tableName())
+            ->where([
+                'name' => 'order',
+                'transaction_type' => 'OUT',
+                'order_status' => 'pending',
+            ])
+            ->orderBy(['movement_date' => SORT_DESC, 'id' => SORT_DESC])
+            ->all();
+
+        if (empty($orders)) {
+            return $this->render('requisition-index', [
+                'rows' => [],
+                'warehouseMap' => [],
+                'existingOrderNos' => [],
+            ]);
+        }
+
+        $orderIds = array_column($orders, 'id');
+        $items = (new \yii\db\Query())
+            ->select(['category_id AS parent_id', 'asset_item', 'qty', 'unit_price', 'lot_number'])
+            ->from(StockEvent::tableName())
+            ->where(['name' => 'order_item', 'category_id' => $orderIds])
+            ->all();
+
+        $itemsByOrder = [];
+        $itemCodes = [];
+        foreach ($items as $it) {
+            $itemsByOrder[(int) $it['parent_id']][] = $it;
+            if (!empty($it['asset_item'])) {
+                $itemCodes[$it['asset_item']] = true;
+            }
+        }
+
+        $existingV2Items = [];
+        if (!empty($itemCodes)) {
+            $found = StockItem::find()
+                ->select('code')
+                ->where(['code' => array_keys($itemCodes)])
+                ->column();
+            $existingV2Items = array_flip($found);
+        }
+
+        $warehouseIds = [];
+        foreach ($orders as $o) {
+            if (!empty($o['warehouse_id'])) $warehouseIds[(int) $o['warehouse_id']] = true;
+            if (!empty($o['from_warehouse_id'])) $warehouseIds[(int) $o['from_warehouse_id']] = true;
+        }
+        $warehouseMap = [];
+        if (!empty($warehouseIds)) {
+            $warehouseMap = ArrayHelper::map(
+                Warehouse::find()
+                    ->select(['id', 'warehouse_name', 'warehouse_type'])
+                    ->where(['id' => array_keys($warehouseIds)])
+                    ->asArray()
+                    ->all(),
+                'id',
+                function ($w) { return $w; }
+            );
+        }
+
+        $existingOrderNos = array_flip(
+            StockOrder::find()
+                ->select('order_no')
+                ->where(['order_no' => array_column($orders, 'code')])
+                ->column()
+        );
+
+        $rows = [];
+        $alreadyMigrated = 0;
+        foreach ($orders as $o) {
+            if (isset($existingOrderNos[$o['code']])) {
+                $alreadyMigrated++;
+                continue;
+            }
+            $oid = (int) $o['id'];
+            $lines = $itemsByOrder[$oid] ?? [];
+            $matched = 0;
+            $skipped = 0;
+            $skippedCodes = [];
+            foreach ($lines as $l) {
+                $code = trim((string) ($l['asset_item'] ?? ''));
+                if ($code === '' || !isset($existingV2Items[$code])) {
+                    $skipped++;
+                    if ($code !== '') $skippedCodes[$code] = true;
+                } else {
+                    $matched++;
+                }
+            }
+            $rows[] = [
+                'id' => $oid,
+                'code' => $o['code'],
+                'movement_date' => $o['movement_date'] ?: $o['created_at'],
+                'main_warehouse_id' => $o['warehouse_id'],
+                'sub_warehouse_id' => $o['from_warehouse_id'],
+                'ref' => $o['ref'],
+                'line_total' => count($lines),
+                'line_matched' => $matched,
+                'line_skipped' => $skipped,
+                'skipped_codes' => array_keys($skippedCodes),
+                'transferable' => $matched > 0,
+            ];
+        }
+
+        return $this->render('requisition-index', [
+            'rows' => $rows,
+            'warehouseMap' => $warehouseMap,
+            'alreadyMigrated' => $alreadyMigrated,
+        ]);
+    }
+
+    /**
+     * ย้ายใบเบิก V1 ที่เลือกไป V2 (stock_order OUT/REQUEST/PENDING + stock_detail)
+     * เก็บค่า order_no เดิม, ไม่แก้ไข stock_events ใน V1
+     */
+    public function actionCreateRequisitions()
+    {
+        if (!Yii::$app->request->isPost) {
+            return $this->redirect(['requisition-index']);
+        }
+
+        $selectedIds = (array) Yii::$app->request->post('order_ids', []);
+        $selectedIds = array_values(array_filter(array_map('intval', $selectedIds)));
+        if (empty($selectedIds)) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกใบเบิกอย่างน้อย 1 ใบ');
+            return $this->redirect(['requisition-index']);
+        }
+
+        $orders = (new \yii\db\Query())
+            ->select(['id', 'code', 'movement_date', 'warehouse_id', 'from_warehouse_id', 'ref', 'created_at'])
+            ->from(StockEvent::tableName())
+            ->where([
+                'name' => 'order',
+                'transaction_type' => 'OUT',
+                'order_status' => 'pending',
+                'id' => $selectedIds,
+            ])
+            ->all();
+
+        if (empty($orders)) {
+            Yii::$app->session->setFlash('error', 'ไม่พบใบเบิกที่เลือก');
+            return $this->redirect(['requisition-index']);
+        }
+
+        $orderIds = array_column($orders, 'id');
+        $items = (new \yii\db\Query())
+            ->select(['category_id AS parent_id', 'asset_item', 'qty', 'unit_price', 'lot_number'])
+            ->from(StockEvent::tableName())
+            ->where(['name' => 'order_item', 'category_id' => $orderIds])
+            ->all();
+        $itemsByOrder = [];
+        foreach ($items as $it) {
+            $itemsByOrder[(int) $it['parent_id']][] = $it;
+        }
+
+        $itemCodes = array_unique(array_filter(array_column($items, 'asset_item')));
+        $existingV2Items = !empty($itemCodes)
+            ? array_flip(StockItem::find()->select('code')->where(['code' => $itemCodes])->column())
+            : [];
+
+        $existingOrderNos = array_flip(
+            StockOrder::find()->select('order_no')->where(['order_no' => array_column($orders, 'code')])->column()
+        );
+
+        $createdCount = 0;
+        $skippedDuplicate = [];
+        $skippedNoItems = [];
+        $skippedItemCodes = [];
+
+        foreach ($orders as $o) {
+            $code = (string) $o['code'];
+            if (isset($existingOrderNos[$code])) {
+                $skippedDuplicate[] = $code;
+                continue;
+            }
+
+            $lines = $itemsByOrder[(int) $o['id']] ?? [];
+            $validLines = [];
+            foreach ($lines as $l) {
+                $itemCode = trim((string) ($l['asset_item'] ?? ''));
+                if ($itemCode === '' || !isset($existingV2Items[$itemCode])) {
+                    if ($itemCode !== '') $skippedItemCodes[$itemCode] = true;
+                    continue;
+                }
+                $validLines[] = $l;
+            }
+            if (empty($validLines)) {
+                $skippedNoItems[] = $code;
+                continue;
+            }
+
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                $orderDate = !empty($o['movement_date'])
+                    ? $o['movement_date'] . ' 12:00:00'
+                    : ($o['created_at'] ?: date('Y-m-d H:i:s'));
+
+                $stockOrder = new StockOrder();
+                $stockOrder->order_no = $code;
+                $stockOrder->order_type = StockOrder::ORDER_TYPE_OUT;
+                $stockOrder->source_type = 'REQUEST';
+                $stockOrder->status = StockOrder::STATUS_PENDING;
+                $stockOrder->order_date = $orderDate;
+                $stockOrder->main_warehouse_id = (int) $o['warehouse_id'] ?: null;
+                $stockOrder->sub_warehouse_id = (int) $o['from_warehouse_id'] ?: null;
+                $stockOrder->ref = 'ย้ายจาก Inventory V1 (ใบเบิก ' . $code . ')';
+
+                if (!$stockOrder->save(false)) {
+                    throw new \RuntimeException('บันทึก stock_order ไม่สำเร็จ: ' . $code);
+                }
+
+                foreach ($validLines as $l) {
+                    $detail = new StockDetail();
+                    $detail->stock_order_id = $stockOrder->id;
+                    $detail->item_code = $l['asset_item'];
+                    $detail->qty = (float) $l['qty'];
+                    $detail->unit_price = $l['unit_price'] !== null ? (float) $l['unit_price'] : null;
+                    $detail->lot_number = !empty($l['lot_number']) ? $l['lot_number'] : ('V1-REQ-' . $code);
+                    $detail->remain_qty = (float) $l['qty'];
+                    if (!$detail->save(false)) {
+                        throw new \RuntimeException('บันทึก stock_detail ไม่สำเร็จ: ' . $code . ' / ' . $l['asset_item']);
+                    }
+                }
+
+                $tx->commit();
+                $createdCount++;
+            } catch (\Throwable $e) {
+                $tx->rollBack();
+                Yii::error('[TransferToV2/Requisition] ' . $code . ': ' . $e->getMessage(), __METHOD__);
+                $skippedNoItems[] = $code . ' (' . $e->getMessage() . ')';
+            }
+        }
+
+        $messages = ['ย้ายใบเบิกสำเร็จ ' . $createdCount . ' ใบ'];
+        if (!empty($skippedDuplicate)) {
+            $messages[] = 'ข้าม (order_no ซ้ำใน V2): ' . implode(', ', $skippedDuplicate);
+        }
+        if (!empty($skippedNoItems)) {
+            $messages[] = 'ข้าม (ไม่มีรายการที่ map ได้ / error): ' . implode(', ', $skippedNoItems);
+        }
+        if (!empty($skippedItemCodes)) {
+            $messages[] = 'item_code ที่ไม่มีใน V2 master: ' . implode(', ', array_keys($skippedItemCodes));
+        }
+
+        if ($createdCount > 0) {
+            Yii::$app->session->setFlash('success', implode('<br>', $messages));
+        } else {
+            Yii::$app->session->setFlash('error', implode('<br>', $messages));
+        }
+
+        return $this->redirect(['requisition-index']);
+    }
 }

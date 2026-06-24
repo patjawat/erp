@@ -28,6 +28,12 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 <?php endif; ?>
 
+<div class="d-flex justify-content-end mb-2">
+    <?= Html::a('<i class="fa-solid fa-clipboard-list me-1"></i> ย้ายใบเบิกค้างจ่าย → V2', ['requisition-index'], [
+        'class' => 'btn btn-outline-primary btn-sm',
+    ]) ?>
+</div>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2 mb-0"><i class="fa-solid fa-filter"></i> เงื่อนไข</h6>
