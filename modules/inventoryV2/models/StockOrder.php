@@ -602,6 +602,94 @@ public function getToWarehouse()
     }
 
     /**
+     * ผู้อนุมัติแก้รายการได้เมื่อ status = PENDING และผู้ใช้คือ approver-emp
+     * หรือมีสิทธิ์ inventory (เหมือนเงื่อนไข actionApprove)
+     * @param int|null $userId user.id ที่ล็อกอินอยู่
+     * @param bool $hasInventoryPermission ผลของ Yii::$app->user->can('inventory')
+     * @return bool
+     */
+    public function canEditByApprover($userId, $hasInventoryPermission = false)
+    {
+        if ($this->status !== self::STATUS_PENDING && $this->status !== self::STATUS_DRAFT) {
+            return false;
+        }
+        if ($hasInventoryPermission) {
+            return true;
+        }
+        $approverEmpId = $this->getIssueSignatureEmpId('approver');
+        if (!$approverEmpId || !$userId) {
+            return false;
+        }
+        $approverEmp = \app\modules\hr\models\Employees::findOne($approverEmpId);
+        return $approverEmp && (int) $approverEmp->user_id === (int) $userId;
+    }
+
+    /**
+     * บันทึก snapshot การปรับรายการโดยผู้อนุมัติลงใน data_json
+     * เก็บใน data_json['approver_revisions'][] — ไม่เพิ่มคอลัมน์
+     *
+     * แต่ละ revision: {at, by_user_id, by_emp_id, by_name, before:[{item_code,qty}], after:[{item_code,qty}]}
+     *
+     * @param array $before [{item_code,qty},...]
+     * @param array $after  [{item_code,qty},...]
+     * @param int|null $byUserId
+     * @param int|null $byEmpId
+     * @param string $byName
+     */
+    public function recordApproverRevision(array $before, array $after, $byUserId = null, $byEmpId = null, $byName = '')
+    {
+        $json = is_array($this->data_json) ? $this->data_json : (is_string($this->data_json) ? (json_decode($this->data_json, true) ?: []) : []);
+        if (!is_array($json)) {
+            $json = [];
+        }
+        if (!isset($json['approver_revisions']) || !is_array($json['approver_revisions'])) {
+            $json['approver_revisions'] = [];
+        }
+        $normalize = function ($rows) {
+            $out = [];
+            foreach ($rows as $r) {
+                $code = trim((string) ($r['item_code'] ?? ''));
+                if ($code === '') {
+                    continue;
+                }
+                $out[] = [
+                    'item_code' => $code,
+                    'qty' => round((float) ($r['qty'] ?? 0), 2),
+                ];
+            }
+            return $out;
+        };
+        $beforeN = $normalize($before);
+        $afterN = $normalize($after);
+        if ($beforeN === $afterN) {
+            return;
+        }
+        $json['approver_revisions'][] = [
+            'at' => date('Y-m-d H:i:s'),
+            'by_user_id' => $byUserId ? (int) $byUserId : null,
+            'by_emp_id' => $byEmpId ? (int) $byEmpId : null,
+            'by_name' => trim($byName),
+            'before' => $beforeN,
+            'after' => $afterN,
+        ];
+        $this->data_json = $json;
+    }
+
+    /**
+     * อ่านประวัติการปรับรายการโดยผู้อนุมัติ
+     * @return array
+     */
+    public function getApproverRevisions()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        $rows = isset($json['approver_revisions']) && is_array($json['approver_revisions']) ? $json['approver_revisions'] : [];
+        return $rows;
+    }
+
+    /**
      * ตรวจสอบว่าเอกสารนี้ยกเลิกได้หรือไม่
      * ยกเลิกได้ทุกสถานะยกเว้น CANCELLED
      * @return bool

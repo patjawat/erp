@@ -29,10 +29,48 @@ public function behaviors()
                 'delete' => ['POST'],
                 'cancel' => ['POST'],
                 'approve' => ['POST'],
+                'approve-with-edits' => ['POST'],
+                'save-draft' => ['POST'],
             ],
         ],
     ];
 }
+
+    /**
+     * ตรวจสิทธิ์ผู้อนุมัติของใบนี้ (approver-emp ที่ระบุไว้ หรือผู้มีสิทธิ inventory)
+     * @return bool
+     */
+    protected function isApproverOrInventoryStaff(StockOrder $model)
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        if (Yii::$app->user->can('inventory')) {
+            return true;
+        }
+        $approverEmpId = $model->getIssueSignatureEmpId('approver');
+        if (!$approverEmpId) {
+            return false;
+        }
+        $approverEmp = Employees::findOne($approverEmpId);
+        return $approverEmp && (int) $approverEmp->user_id === (int) Yii::$app->user->id;
+    }
+
+    /**
+     * snapshot รายการปัจจุบันสำหรับเก็บใน approver_revisions
+     * @return array [{item_code, qty}, ...]
+     */
+    protected function snapshotDetails(StockOrder $model)
+    {
+        $rows = [];
+        foreach ($model->stockDetails as $d) {
+            $rows[] = [
+                'item_code' => (string) $d->item_code,
+                'qty' => (float) $d->qty,
+            ];
+        }
+        return $rows;
+    }
 
     /**
      * รายการใบขอเบิกทั้งหมด
@@ -744,6 +782,11 @@ public function behaviors()
 
     /**
      * แก้ไขใบขอเบิก (ได้เฉพาะสถานะ DRAFT หรือ PENDING)
+     *
+     * สิทธิ์การแก้:
+     * - DRAFT: ผู้สร้างใบเอง (created_by) หรือผู้มีสิทธิ inventory
+     * - PENDING: ผู้อนุมัติของใบ (approver-emp) หรือผู้มีสิทธิ inventory
+     *   (ผู้ขอที่ส่งใบไปแล้ว ต้องการแก้ ต้องให้หัวหน้าตีกลับเป็น DRAFT — ยังไม่อยู่ในขอบเขตงานนี้)
      */
     public function actionUpdate($id)
     {
@@ -752,6 +795,21 @@ public function behaviors()
             Yii::$app->session->setFlash('warning', 'แก้ไขได้เฉพาะใบที่ยังไม่ได้รับการอนุมัติ (ฉบับร่าง หรือ รอหัวหน้าอนุมัติ)');
             return $this->redirect(['view', 'id' => $model->id]);
         }
+        $isInventoryStaff = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+        $isCreator = !Yii::$app->user->isGuest && (int) $model->created_by === (int) Yii::$app->user->id;
+        $isApprover = $this->isApproverOrInventoryStaff($model);
+        $allowed = false;
+        if ($model->status === StockOrder::STATUS_DRAFT) {
+            $allowed = $isCreator || $isInventoryStaff;
+        } elseif ($model->status === StockOrder::STATUS_PENDING) {
+            $allowed = $isApprover;
+        }
+        if (!$allowed) {
+            Yii::$app->session->setFlash('warning', 'ไม่มีสิทธิ์แก้ไขใบนี้');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+        $isApproverEditing = $model->status === StockOrder::STATUS_PENDING && $isApprover;
+        $beforeSnapshot = $isApproverEditing ? $this->snapshotDetails($model) : null;
 
         if ($this->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -801,6 +859,33 @@ public function behaviors()
                         }
                     }
 
+                    if ($isApproverEditing && $beforeSnapshot !== null) {
+                        $afterSnapshot = array_map(function ($d) {
+                            return [
+                                'item_code' => (string) ($d['item_code'] ?? ''),
+                                'qty' => (float) ($d['qty'] ?? 0),
+                            ];
+                        }, $details);
+                        $byEmpId = null;
+                        $byName = '';
+                        $editorEmp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+                        if ($editorEmp) {
+                            $byEmpId = (int) $editorEmp->id;
+                            $info = StockOrder::getEmployeeNameAndPosition($editorEmp->id);
+                            $byName = $info['name'];
+                        }
+                        $model->recordApproverRevision(
+                            $beforeSnapshot,
+                            $afterSnapshot,
+                            Yii::$app->user->id,
+                            $byEmpId,
+                            $byName
+                        );
+                        if (!$model->save(false)) {
+                            throw new \Exception('ไม่สามารถบันทึกประวัติการปรับรายการได้');
+                        }
+                    }
+
                     $transaction->commit();
                     return [
                         'success' => true,
@@ -817,6 +902,189 @@ public function behaviors()
         }
 
         return $this->render('update', ['model' => $model]);
+    }
+
+    /**
+     * บันทึก & อนุมัติในจังหวะเดียว (สำหรับ inline edit ที่หน้า view)
+     * POST: items[] = [{item_code, qty}, ...]
+     * - status ปัจจุบันต้องเป็น DRAFT หรือ PENDING
+     * - เฉพาะ approver-emp หรือผู้มีสิทธิ inventory
+     * - transaction: snapshot → ลบ stock_detail → สร้างใหม่ → record revision → set APPROVED + approver.date
+     */
+    public function actionApproveWithEdits($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if (!in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING])) {
+            return ['success' => false, 'message' => 'เอกสารนี้ไม่อยู่ในสถานะที่อนุมัติได้'];
+        }
+        if (!$this->isApproverOrInventoryStaff($model)) {
+            return ['success' => false, 'message' => 'เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิคลังสินค้าเท่านั้นที่อนุมัติได้'];
+        }
+
+        $itemsPost = $this->request->post('items', []);
+        if (!is_array($itemsPost)) {
+            $itemsPost = [];
+        }
+        $items = [];
+        foreach ($itemsPost as $row) {
+            $code = trim((string) ($row['item_code'] ?? ''));
+            $qty = (float) ($row['qty'] ?? 0);
+            if ($code === '' || $qty <= 0) {
+                continue;
+            }
+            $items[] = [
+                'item_code' => $code,
+                'qty' => $qty,
+                'lot_number' => trim((string) ($row['lot_number'] ?? '-')) ?: '-',
+            ];
+        }
+        if (empty($items)) {
+            return ['success' => false, 'message' => 'ต้องมีรายการอย่างน้อย 1 รายการ'];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $beforeSnapshot = $this->snapshotDetails($model);
+
+            StockDetail::deleteAll(['stock_order_id' => $model->id]);
+            foreach ($items as $data) {
+                $detail = new StockDetail();
+                $detail->stock_order_id = $model->id;
+                $detail->item_code = $data['item_code'];
+                $detail->qty = $data['qty'];
+                $detail->lot_number = $data['lot_number'];
+                if (!$detail->save()) {
+                    throw new \Exception('ไม่สามารถบันทึกรายการวัสดุได้: ' . implode(', ', $detail->getFirstErrors()));
+                }
+            }
+
+            $afterSnapshot = array_map(function ($d) {
+                return ['item_code' => $d['item_code'], 'qty' => (float) $d['qty']];
+            }, $items);
+            $byEmpId = null;
+            $byName = '';
+            $editorEmp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+            if ($editorEmp) {
+                $byEmpId = (int) $editorEmp->id;
+                $info = StockOrder::getEmployeeNameAndPosition($editorEmp->id);
+                $byName = $info['name'];
+            }
+            $model->recordApproverRevision(
+                $beforeSnapshot,
+                $afterSnapshot,
+                Yii::$app->user->id,
+                $byEmpId,
+                $byName
+            );
+
+            $approverSig = $model->getIssueSignature('approver');
+            $model->setIssueSignatures([
+                'approver' => [
+                    'name' => $approverSig['name'],
+                    'position' => $approverSig['position'],
+                    'date' => date('Y-m-d H:i:s'),
+                    'emp_id' => $model->getIssueSignatureEmpId('approver'),
+                ],
+            ]);
+            $model->status = StockOrder::STATUS_APPROVED;
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกสถานะอนุมัติได้');
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'บันทึกการปรับรายการและอนุมัติแล้ว — คลังสามารถดำเนินการจ่ายได้',
+                'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+            ];
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * บันทึกรายการที่แก้แล้ว แต่ยังไม่อนุมัติ (เก็บไว้ให้หัวหน้าทบทวนต่อ)
+     * POST: items[] เหมือน actionApproveWithEdits
+     */
+    public function actionSaveDraft($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if (!in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING])) {
+            return ['success' => false, 'message' => 'เอกสารนี้ไม่อยู่ในสถานะที่แก้ไขได้'];
+        }
+        if (!$this->isApproverOrInventoryStaff($model)) {
+            return ['success' => false, 'message' => 'ไม่มีสิทธิ์แก้ไขใบนี้'];
+        }
+
+        $itemsPost = $this->request->post('items', []);
+        $items = [];
+        foreach ((array) $itemsPost as $row) {
+            $code = trim((string) ($row['item_code'] ?? ''));
+            $qty = (float) ($row['qty'] ?? 0);
+            if ($code === '' || $qty <= 0) {
+                continue;
+            }
+            $items[] = [
+                'item_code' => $code,
+                'qty' => $qty,
+                'lot_number' => trim((string) ($row['lot_number'] ?? '-')) ?: '-',
+            ];
+        }
+        if (empty($items)) {
+            return ['success' => false, 'message' => 'ต้องมีรายการอย่างน้อย 1 รายการ'];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $beforeSnapshot = $this->snapshotDetails($model);
+
+            StockDetail::deleteAll(['stock_order_id' => $model->id]);
+            foreach ($items as $data) {
+                $detail = new StockDetail();
+                $detail->stock_order_id = $model->id;
+                $detail->item_code = $data['item_code'];
+                $detail->qty = $data['qty'];
+                $detail->lot_number = $data['lot_number'];
+                if (!$detail->save()) {
+                    throw new \Exception('ไม่สามารถบันทึกรายการวัสดุได้: ' . implode(', ', $detail->getFirstErrors()));
+                }
+            }
+
+            $afterSnapshot = array_map(function ($d) {
+                return ['item_code' => $d['item_code'], 'qty' => (float) $d['qty']];
+            }, $items);
+            $byEmpId = null;
+            $byName = '';
+            $editorEmp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+            if ($editorEmp) {
+                $byEmpId = (int) $editorEmp->id;
+                $info = StockOrder::getEmployeeNameAndPosition($editorEmp->id);
+                $byName = $info['name'];
+            }
+            $model->recordApproverRevision(
+                $beforeSnapshot,
+                $afterSnapshot,
+                Yii::$app->user->id,
+                $byEmpId,
+                $byName
+            );
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกประวัติการปรับรายการได้');
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'บันทึกแล้ว — ยังไม่ได้อนุมัติ',
+                'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+            ];
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     /**
