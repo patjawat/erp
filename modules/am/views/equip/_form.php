@@ -613,15 +613,29 @@ $js = <<< JS
 
  function fetchNextAssetNumber(showConfirm) {
     var categoryId = ($('#asset-fsn_number').val() || '').toString().trim();
+    var onYear = ($('#asset-on_year').val() || '').toString().trim();
+    $('#form-asset .is-invalid').removeClass('is-invalid');
     if (!categoryId) {
-        $('#form-asset .is-invalid').removeClass('is-invalid');
         $('#asset-fsn_number').addClass('is-invalid');
         if (typeof Swal !== 'undefined') {
             Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาระบุ FSN ก่อน', showConfirmButton: false, timer: 3000 });
         }
         return;
     }
-    $.get('$nextAssetNumberUrl', { category_id: categoryId }, function (res) {
+    if (!onYear) {
+        $('#asset-on_year').addClass('is-invalid');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาระบุปีงบประมาณก่อน', showConfirmButton: false, timer: 3000 });
+        }
+        return;
+    }
+    $.get('$nextAssetNumberUrl', { category_id: categoryId, on_year: onYear }, function (res) {
+        if (res.error) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: res.error, showConfirmButton: false, timer: 3000 });
+            }
+            return;
+        }
         if (res.asset_number) {
             $('#asset-fsn_number').removeClass('is-invalid');
             if (showConfirm && typeof Swal !== 'undefined') {
@@ -649,7 +663,14 @@ $js = <<< JS
  }
 
  $('#asset-fsn_number').on('blur', function () {
-    if (($(this).val() || '').toString().trim() && !$('#asset-code').val()) { fetchNextAssetNumber(false); }
+    var hasFsn = ($(this).val() || '').toString().trim();
+    var hasYear = ($('#asset-on_year').val() || '').toString().trim();
+    if (hasFsn && hasYear && !$('#asset-code').val()) { fetchNextAssetNumber(false); }
+ });
+ $('#asset-on_year').on('blur', function () {
+    var hasFsn = ($('#asset-fsn_number').val() || '').toString().trim();
+    var hasYear = ($(this).val() || '').toString().trim();
+    if (hasFsn && hasYear && !$('#asset-code').val()) { fetchNextAssetNumber(false); }
  });
  $('.next-code').on('click', function (e) {
     e.preventDefault();

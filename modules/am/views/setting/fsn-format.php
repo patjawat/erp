@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\helpers\Json;
+use app\modules\am\services\AssetNumberGenerator;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AmAssetNumberFormat[] $formats */
@@ -61,13 +63,16 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <h6 class="text-uppercase text-secondary m-0">รูปแบบหมายเลขครุภัณฑ์ (FSN)</h6>
             <div class="ms-auto">
-                <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มรูปแบบ', ['fsn-format-create'], ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มรูปแบบ', ['fsn-format-create'], [
+                    'class' => 'btn btn-primary open-modal',
+                    'data-size' => 'modal-xl',
+                ]) ?>
             </div>
         </div>
         <div class="card-body">
             <p class="text-muted small mb-3">
-                ระบบจะใช้ <strong>รูปแบบที่เลือก</strong> เท่านั้นในการสร้างหมายเลขอัตโนมัติ
-                ตัวแปร: <code>{category}</code> = รหัส FSN หมวด, <code>{year}</code> = ปี พ.ศ. 2 หลัก, <code>{seq}</code> = ลำดับในปี
+                ระบบจะใช้ <strong>รูปแบบที่เลือก</strong> เท่านั้นในการสร้างหมายเลขอัตโนมัติ<br>
+                Token ที่ใช้ได้: <code>{category}</code>, <code>{year}</code> / <code>{year:2}</code> / <code>{year:4}</code> / <code>{year:ad:4}</code>, <code>{seq}</code> / <code>{seq:0}</code> / <code>{seq:3}</code>
             </p>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -75,6 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th class="border-0">ชื่อรูปแบบ</th>
                             <th class="border-0">รูปแบบ (Pattern)</th>
+                            <th class="border-0">ตัวอย่าง</th>
                             <th class="border-0 text-center" style="width: 120px;">สถานะ</th>
                             <th class="border-0 text-end" style="width: 200px;">ดำเนินการ</th>
                         </tr>
@@ -90,10 +96,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                         foreach ($formats as $fmt):
                             $isEffectiveActive = ($activeFormatId !== null && $fmt->id == $activeFormatId);
+                            $exampleRow = AssetNumberGenerator::preview($fmt->pattern, 1);
                         ?>
                             <tr>
                                 <td class="fw-medium"><?= Html::encode($fmt->name) ?></td>
                                 <td><code class="text-body"><?= Html::encode($fmt->pattern) ?></code></td>
+                                <td><code class="text-body-secondary"><?= Html::encode($exampleRow) ?></code></td>
                                 <td class="text-center">
                                     <?php if ($isEffectiveActive): ?>
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ใช้อยู่</span>
@@ -104,12 +112,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="text-end">
                                     <div class="d-flex flex-wrap gap-1 justify-content-end">
                                         <?php if (!$isEffectiveActive): ?>
-                                            <?= Html::a('<i class="fa-solid fa-check me-1"></i> ใช้', ['set-active-format', 'id' => $fmt->id], ['class' => 'btn btn-primary btn-sm']) ?>
+                                            <?= Html::a('<i class="fa-solid fa-check me-1"></i> ใช้', ['set-active-format', 'id' => $fmt->id], [
+                                                'class' => 'btn btn-primary btn-sm js-set-active',
+                                                'data-name' => $fmt->name,
+                                            ]) ?>
                                         <?php endif; ?>
-                                        <?= Html::a('<i class="fa-solid fa-pen me-1"></i> แก้ไข', ['fsn-format-update', 'id' => $fmt->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-pen me-1"></i> แก้ไข', ['fsn-format-update', 'id' => $fmt->id], [
+                                            'class' => 'btn btn-outline-secondary btn-sm open-modal',
+                                            'data-size' => 'modal-xl',
+                                        ]) ?>
                                         <?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบ', ['fsn-format-delete', 'id' => $fmt->id], [
-                                            'class' => 'btn btn-outline-danger btn-sm',
-                                            'data' => ['method' => 'post', 'confirm' => 'ยืนยันลบรูปแบบ «' . Html::encode($fmt->name) . '»?']
+                                            'class' => 'btn btn-outline-danger btn-sm js-delete-row',
+                                            'data-name' => $fmt->name,
+                                            'data-kind' => 'รูปแบบ',
                                         ]) ?>
                                     </div>
                                 </td>
@@ -119,12 +134,23 @@ $this->params['breadcrumbs'][] = $this->title;
                 </table>
             </div>
             <?php
-            $activePattern = \app\modules\am\services\AssetNumberGenerator::getActivePattern();
-            $example = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-0003', '66', '01'], $activePattern);
+            $activePattern = AssetNumberGenerator::getActivePattern();
+            $previews = [
+                1   => AssetNumberGenerator::preview($activePattern, 1),
+                15  => AssetNumberGenerator::preview($activePattern, 15),
+                120 => AssetNumberGenerator::preview($activePattern, 120),
+            ];
             ?>
             <div class="mt-3 p-3 rounded-2 bg-primary bg-opacity-10 border border-primary border-opacity-25">
-                <small class="text-muted d-block mb-1">ตัวอย่างหมายเลขที่ได้จากรูปแบบที่ใช้อยู่</small>
-                <code class="fs-6"><?= Html::encode($example) ?></code>
+                <small class="text-muted d-block mb-2">ตัวอย่างหมายเลขที่ได้จากรูปแบบที่ใช้อยู่ <code class="ms-1"><?= Html::encode($activePattern) ?></code></small>
+                <div class="d-flex flex-wrap gap-3">
+                    <?php foreach ($previews as $seq => $value): ?>
+                        <div>
+                            <small class="text-muted">ลำดับที่ <?= $seq ?></small>
+                            <div><code class="fs-6"><?= Html::encode($value) ?></code></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -138,7 +164,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <h6 class="text-uppercase text-secondary m-0">ลำดับปัจจุบัน (ต่อปีต่อหมวด)</h6>
             <?php if ($tableSeqsExists): ?>
                 <div class="ms-auto">
-                    <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มลำดับ', ['fsn-sequence-create'], ['class' => 'btn btn-primary']) ?>
+                    <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มลำดับ', ['fsn-sequence-create'], [
+                        'class' => 'btn btn-primary open-modal',
+                        'data-size' => 'modal-md',
+                    ]) ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -147,7 +176,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <p class="text-muted mb-0">ยังไม่มีตารางเก็บลำดับ (รัน migration แล้วลำดับจะรีเซ็ตต่อปีต่อหมวดอัตโนมัติ)</p>
             <?php elseif (empty($sequences)): ?>
                 <p class="text-muted mb-0">ยังไม่มีข้อมูลลำดับ เมื่อมีการสร้างครุภัณฑ์ใหม่ระบบจะเริ่มนับให้เอง หรือกด «เพิ่มลำดับ» เพื่อกำหนดเอง</p>
-                <p class="mb-0"><?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มลำดับ', ['fsn-sequence-create'], ['class' => 'btn btn-outline-primary']) ?></p>
+                <p class="mb-0"><?= Html::a('<i class="fa-solid fa-plus me-1"></i> เพิ่มลำดับ', ['fsn-sequence-create'], [
+                    'class' => 'btn btn-outline-primary open-modal',
+                    'data-size' => 'modal-md',
+                ]) ?></p>
             <?php else: ?>
                 <p class="text-muted small mb-3">ลำดับจะรีเซ็ตทุกปี (ปี พ.ศ.) ต่อหมวด FSN สามารถเพิ่ม แก้ไข ลบ ได้</p>
                 <div class="table-responsive">
@@ -170,10 +202,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <td class="text-muted small"><?= $row->updated_at ? date('d/m/Y H:i', strtotime($row->updated_at)) : '-' ?></td>
                                     <td class="text-end">
                                         <div class="d-flex flex-wrap gap-1 justify-content-end">
-                                            <?= Html::a('<i class="fa-solid fa-pen me-1"></i> แก้ไข', ['fsn-sequence-update', 'id' => $row->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                                            <?= Html::a('<i class="fa-solid fa-pen me-1"></i> แก้ไข', ['fsn-sequence-update', 'id' => $row->id], [
+                                                'class' => 'btn btn-outline-secondary btn-sm open-modal',
+                                                'data-size' => 'modal-md',
+                                            ]) ?>
                                             <?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบ', ['fsn-sequence-delete', 'id' => $row->id], [
-                                                'class' => 'btn btn-outline-danger btn-sm',
-                                                'data' => ['method' => 'post', 'confirm' => 'ยืนยันลบลำดับหมวด «' . Html::encode($row->category_id) . '» ปี ' . $row->year . '?']
+                                                'class' => 'btn btn-outline-danger btn-sm js-delete-row',
+                                                'data-name' => $row->category_id . ' ปี ' . $row->year,
+                                                'data-kind' => 'ลำดับหมวด',
                                             ]) ?>
                                         </div>
                                     </td>
@@ -187,3 +223,75 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
 </div>
+
+<?php
+$csrf = Yii::$app->request->csrfToken;
+$js = <<<JS
+(function () {
+    function postAndReload(url, successTitle) {
+        \$.ajax({
+            type: 'POST',
+            url: url,
+            dataType: 'json',
+            data: { _csrf: %CSRF% },
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: successTitle || 'ดำเนินการสำเร็จ',
+                        text: res.message || '',
+                        timer: 1500,
+                        showConfirmButton: false,
+                    }).then(function () { location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: (res && res.message) || 'เกิดข้อผิดพลาด' });
+                }
+            },
+            error: function (xhr) {
+                Swal.fire({ icon: 'error', title: 'การเชื่อมต่อขัดข้อง', text: 'ไม่สามารถติดต่อ Server ได้ (' + xhr.status + ')' });
+            }
+        });
+    }
+
+    \$(document).off('click.fsnDelete').on('click.fsnDelete', '.js-delete-row', function (e) {
+        e.preventDefault();
+        var \$btn = \$(this);
+        var url = \$btn.attr('href');
+        var kind = \$btn.data('kind') || 'รายการ';
+        var name = \$btn.data('name') || '';
+        Swal.fire({
+            icon: 'warning',
+            title: 'ยืนยันลบ' + kind + '?',
+            html: name ? '<code>' + name + '</code>' : '',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fa-solid fa-trash me-1"></i> ลบ',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function (r) {
+            if (r.isConfirmed) postAndReload(url, 'ลบเรียบร้อย');
+        });
+    });
+
+    \$(document).off('click.fsnSetActive').on('click.fsnSetActive', '.js-set-active', function (e) {
+        e.preventDefault();
+        var \$btn = \$(this);
+        var url = \$btn.attr('href');
+        var name = \$btn.data('name') || '';
+        Swal.fire({
+            icon: 'question',
+            title: 'ใช้รูปแบบนี้?',
+            html: 'หมายเลขครุภัณฑ์ที่สร้างต่อจากนี้จะใช้รูปแบบ <code>' + name + '</code>',
+            showCancelButton: true,
+            confirmButtonColor: '#0d6efd',
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> ใช้รูปแบบนี้',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function (r) {
+            if (r.isConfirmed) postAndReload(url, 'เปลี่ยนรูปแบบแล้ว');
+        });
+    });
+})();
+JS;
+$js = strtr($js, ['%CSRF%' => Json::encode($csrf)]);
+$this->registerJs($js);
+?>

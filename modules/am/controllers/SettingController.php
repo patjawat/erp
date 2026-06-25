@@ -50,41 +50,56 @@ class SettingController extends \yii\web\Controller
 
     /**
      * ตั้งค่ารูปแบบที่ใช้งาน (ใช้รูปแบบนี้เท่านั้น)
+     * Supports AJAX (JSON status) and full-page fallback.
      */
     public function actionSetActiveFormat($id)
     {
         $tableExists = Yii::$app->db->getSchema()->getTableSchema(AmAssetNumberFormat::tableName()) !== null;
         if (!$tableExists) {
-            Yii::$app->session->setFlash('error', 'ตารางรูปแบบยังไม่มีในระบบ');
-            return $this->redirect(['fsn-format']);
+            return $this->jsonOrRedirect('error', 'ตารางรูปแบบยังไม่มีในระบบ');
         }
         $model = AmAssetNumberFormat::findOne($id);
         if (!$model) {
-            Yii::$app->session->setFlash('error', 'ไม่พบรูปแบบนี้');
-            return $this->redirect(['fsn-format']);
+            return $this->jsonOrRedirect('error', 'ไม่พบรูปแบบนี้');
         }
         $model->setAsActive();
-        Yii::$app->session->setFlash('success', 'ตั้งค่ารูปแบบ «' . $model->name . '» เป็นรูปแบบที่ใช้สร้างหมายเลขครุภัณฑ์แล้ว');
-        return $this->redirect(['fsn-format']);
+        return $this->jsonOrRedirect('success', 'ตั้งค่ารูปแบบ «' . $model->name . '» เป็นรูปแบบที่ใช้สร้างหมายเลขครุภัณฑ์แล้ว');
     }
 
     /**
-     * เพิ่มรูปแบบ FSN ใหม่
+     * เพิ่มรูปแบบ FSN ใหม่ (รองรับ modal GET = title+content, POST = JSON status)
      */
     public function actionFsnFormatCreate()
     {
         $this->ensureFsnFormatTable();
         $model = new AmAssetNumberFormat(['is_active' => 0]);
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            $model->is_active = !empty($this->request->post('set_active')) ? 1 : 0;
-            if ($model->save()) {
-                if ($model->is_active) {
-                    $model->setAsActive();
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                $model->is_active = !empty($this->request->post('set_active')) ? 1 : 0;
+                if ($model->save()) {
+                    if ($model->is_active) {
+                        $model->setAsActive();
+                    }
+                    return [
+                        'status' => 'success',
+                        'message' => 'เพิ่มรูปแบบ «' . $model->name . '» แล้ว',
+                    ];
                 }
-                Yii::$app->session->setFlash('success', 'เพิ่มรูปแบบ «' . $model->name . '» แล้ว');
-                return $this->redirect(['fsn-format']);
+                return \yii\widgets\ActiveForm::validate($model);
             }
+            return ['status' => 'error', 'message' => 'ข้อมูลไม่ครบ'];
         }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-plus me-1"></i> เพิ่มรูปแบบหมายเลข FSN',
+                'content' => $this->renderAjax('fsn-format/form', ['model' => $model]),
+            ];
+        }
+
         return $this->render('fsn-format/form', ['model' => $model]);
     }
 
@@ -95,24 +110,41 @@ class SettingController extends \yii\web\Controller
     {
         $this->ensureFsnFormatTable();
         $model = $this->findFormatModel($id);
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            $setActive = !empty($this->request->post('set_active'));
-            if ($setActive) {
-                $model->is_active = 1;
-            }
-            if ($model->save()) {
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post())) {
+                $setActive = !empty($this->request->post('set_active'));
                 if ($setActive) {
-                    $model->setAsActive();
+                    $model->is_active = 1;
                 }
-                Yii::$app->session->setFlash('success', 'บันทึกรูปแบบ «' . $model->name . '» แล้ว');
-                return $this->redirect(['fsn-format']);
+                if ($model->save()) {
+                    if ($setActive) {
+                        $model->setAsActive();
+                    }
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกรูปแบบ «' . $model->name . '» แล้ว',
+                    ];
+                }
+                return \yii\widgets\ActiveForm::validate($model);
             }
+            return ['status' => 'error', 'message' => 'ข้อมูลไม่ครบ'];
         }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-pen me-1"></i> แก้ไขรูปแบบ «' . \yii\helpers\Html::encode($model->name) . '»',
+                'content' => $this->renderAjax('fsn-format/form', ['model' => $model]),
+            ];
+        }
+
         return $this->render('fsn-format/form', ['model' => $model]);
     }
 
     /**
-     * ลบรูปแบบ FSN
+     * ลบรูปแบบ FSN (POST only)
      */
     public function actionFsnFormatDelete($id)
     {
@@ -122,20 +154,30 @@ class SettingController extends \yii\web\Controller
         $wasActive = (int) $model->is_active === 1;
         $count = AmAssetNumberFormat::find()->count();
         if ($count <= 1) {
-            Yii::$app->session->setFlash('error', 'ต้องมีอย่างน้อย 1 รูปแบบ ไม่สามารถลบได้');
-            return $this->redirect(['fsn-format']);
+            return $this->jsonOrRedirect('error', 'ต้องมีอย่างน้อย 1 รูปแบบ ไม่สามารถลบได้');
         }
-        if ($model->delete()) {
-            if ($wasActive) {
-                $first = AmAssetNumberFormat::find()->orderBy(['id' => SORT_ASC])->one();
-                if ($first) {
-                    $first->setAsActive();
-                }
+        if (!$model->delete()) {
+            return $this->jsonOrRedirect('error', 'ลบรูปแบบไม่สำเร็จ');
+        }
+        if ($wasActive) {
+            $first = AmAssetNumberFormat::find()->orderBy(['id' => SORT_ASC])->one();
+            if ($first) {
+                $first->setAsActive();
             }
-            Yii::$app->session->setFlash('success', 'ลบรูปแบบ «' . $name . '» แล้ว');
-        } else {
-            Yii::$app->session->setFlash('error', 'ลบรูปแบบไม่สำเร็จ');
         }
+        return $this->jsonOrRedirect('success', 'ลบรูปแบบ «' . $name . '» แล้ว');
+    }
+
+    /**
+     * Helper: return JSON for AJAX or session-flash redirect for full page.
+     */
+    private function jsonOrRedirect($status, $message)
+    {
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['status' => $status, 'message' => $message];
+        }
+        Yii::$app->session->setFlash($status, $message);
         return $this->redirect(['fsn-format']);
     }
 
@@ -163,10 +205,26 @@ class SettingController extends \yii\web\Controller
         $this->ensureSequenceTable();
         $model = new AmAssetSequence(['current_sequence' => 0]);
         $model->year = (int) (\app\components\AppHelper::YearBudget());
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'เพิ่มลำดับสำหรับหมวด «' . $model->category_id . '» ปี ' . $model->year . ' แล้ว');
-            return $this->redirect(['fsn-format']);
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post()) && $model->save()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'เพิ่มลำดับสำหรับหมวด «' . $model->category_id . '» ปี ' . $model->year . ' แล้ว',
+                ];
+            }
+            return \yii\widgets\ActiveForm::validate($model);
         }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-plus me-1"></i> เพิ่มลำดับ FSN',
+                'content' => $this->renderAjax('fsn-sequence/form', ['model' => $model]),
+            ];
+        }
+
         return $this->render('fsn-sequence/form', ['model' => $model]);
     }
 
@@ -177,10 +235,23 @@ class SettingController extends \yii\web\Controller
     {
         $this->ensureSequenceTable();
         $model = $this->findSequenceModel($id);
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'บันทึกลำดับแล้ว');
-            return $this->redirect(['fsn-format']);
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if ($model->load($this->request->post()) && $model->save()) {
+                return ['status' => 'success', 'message' => 'บันทึกลำดับแล้ว'];
+            }
+            return \yii\widgets\ActiveForm::validate($model);
         }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="fa-solid fa-pen me-1"></i> แก้ไขลำดับหมวด «' . \yii\helpers\Html::encode($model->category_id) . '»',
+                'content' => $this->renderAjax('fsn-sequence/form', ['model' => $model]),
+            ];
+        }
+
         return $this->render('fsn-sequence/form', ['model' => $model]);
     }
 
@@ -193,12 +264,10 @@ class SettingController extends \yii\web\Controller
         $model = $this->findSequenceModel($id);
         $categoryId = $model->category_id;
         $year = $model->year;
-        if ($model->delete()) {
-            Yii::$app->session->setFlash('success', 'ลบลำดับหมวด «' . $categoryId . '» ปี ' . $year . ' แล้ว');
-        } else {
-            Yii::$app->session->setFlash('error', 'ลบลำดับไม่สำเร็จ');
+        if (!$model->delete()) {
+            return $this->jsonOrRedirect('error', 'ลบลำดับไม่สำเร็จ');
         }
-        return $this->redirect(['fsn-format']);
+        return $this->jsonOrRedirect('success', 'ลบลำดับหมวด «' . $categoryId . '» ปี ' . $year . ' แล้ว');
     }
 
     protected function findSequenceModel($id)

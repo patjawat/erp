@@ -226,40 +226,104 @@ class ImportController extends Controller
 
     /**
      * AJAX: แสดงตัวอย่าง CSV
+     * - ไม่แจ้งเตือนรหัสซ้ำ (ทำตอนนำเข้าจริง)
+     * - แจ้งเตือนหน่วยงาน/ผู้รับผิดชอบ ที่กรอกมาแต่หาไม่พบในระบบ เพื่อให้ผู้ใช้ตัดสินใจก่อนนำเข้า
      */
     public function actionPreview()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = new AssetImportForm();
         $model->csvFile = UploadedFile::getInstanceByName('csvFile');
-        if ($model) {
-            // บันทึกไฟล์ชั่วคราว
-            $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
-            $model->csvFile->saveAs($filePath);
+        if (!$model->csvFile) {
+            return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
+        }
 
-            // อ่าน CSV — ไม่แจ้งเตือนรหัสซ้ำใน preview; การตรวจหมายเลขครุภัณฑ์ซ้ำทำตอนนำเข้าจริง
-            $previewData = [];
+        $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
+        $model->csvFile->saveAs($filePath);
 
-            if (($handle = fopen($filePath, "r")) !== false) {
-                $row = 0;
-                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $previewData[] = $data;
-                    $row++;
-                }
-                fclose($handle);
-                return [
-                    'status' => 'success',
-                    'preview' => $previewData,
-                    'duplicates' => [], // ยกเลิกการแจ้งเตือนรหัสซ้ำใน preview
-                    'filePath' => $filePath,
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            return ['status' => 'error', 'errors' => $model->getErrors()];
+        }
+
+        $previewData = [];
+        $warnings = [];
+        $columnMap = null;
+        $rowNumber = 0;
+        while (($data = fgetcsv($handle, 0, ',')) !== false) {
+            $rowNumber++;
+            $previewData[] = $data;
+
+            if ($rowNumber === 1) {
+                $columnMap = $this->equipImportColumnMap($data);
+                continue;
+            }
+            if ($columnMap === null) {
+                continue;
+            }
+
+            $code = $this->cellAt($data, $columnMap, 'code');
+
+            // ตรวจชื่อหน่วยงานผู้รับผิดชอบ — กรอกมาแต่หาไม่พบ → เตือน
+            $deptName = $this->cellAt($data, $columnMap, 'department');
+            if ($deptName !== '' && $this->resolveDepartmentFromImport($deptName) === null) {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'field' => 'department',
+                    'value' => $deptName,
+                    'message' => 'ไม่พบหน่วยงาน "' . $deptName . '" ในระบบ',
                 ];
-            } else {
-                return [
-                    'status' => 'error',
-                    'errors' => $model->getErrors(),
+            }
+
+            // ตรวจชื่อผู้รับผิดชอบ — กรอกมาแต่หาไม่พบ → เตือน
+            $ownerFname = $this->cellAt($data, $columnMap, 'owner_fname');
+            $ownerLname = $this->cellAt($data, $columnMap, 'owner_lname');
+            if (($ownerFname !== '' || $ownerLname !== '')
+                && $this->resolveOwnerFromImport($ownerFname, $ownerLname) === null) {
+                $fullName = trim($ownerFname . ' ' . $ownerLname);
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'field' => 'owner',
+                    'value' => $fullName,
+                    'message' => 'ไม่พบผู้รับผิดชอบ "' . $fullName . '" ในระบบ',
+                ];
+            }
+
+            // ตรวจประเภทเงิน — กรอกมาแต่หาไม่พบใน categorise (name=budget_type) → เตือน
+            $budgetType = $this->cellAt($data, $columnMap, 'budget_type');
+            if ($budgetType !== '' && $this->resolveBudgetTypeFromImport($budgetType) === '') {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'field' => 'budget_type',
+                    'value' => $budgetType,
+                    'message' => 'ไม่พบประเภทเงิน "' . $budgetType . '" ในระบบ',
+                ];
+            }
+
+            // ตรวจวิธีการได้มา — กรอกมาแต่หาไม่พบใน categorise (name=purchase) → เตือน
+            $purchase = $this->cellAt($data, $columnMap, 'purchase');
+            if ($purchase !== '' && $this->resolvePurchaseFromImport($purchase) === '') {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'field' => 'purchase',
+                    'value' => $purchase,
+                    'message' => 'ไม่พบวิธีการได้มา "' . $purchase . '" ในระบบ',
                 ];
             }
         }
+        fclose($handle);
+
+        return [
+            'status' => 'success',
+            'preview' => $previewData,
+            'duplicates' => [],
+            'warnings' => $warnings,
+            'filePath' => $filePath,
+        ];
     }
 
     /**
@@ -344,13 +408,22 @@ class ImportController extends Controller
                 $this->assignIfPresent($model, 'asset_name', $this->cellAt($data, $columnMap, 'asset_name'), $isUpdate);
                 $vendorCode = $this->cellAt($data, $columnMap, 'vendor_code');
                 $vendorName = $this->cellAt($data, $columnMap, 'vendor_name');
+                $budgetTypeRaw = $this->cellAt($data, $columnMap, 'budget_type');
+                $budgetTypeResolved = $this->resolveBudgetTypeFromImport($budgetTypeRaw);
+                if ($budgetTypeRaw !== '' && $budgetTypeResolved === '') {
+                    $warningRows[] = [
+                        'row' => $rowNumber,
+                        'code' => $code,
+                        'message' => 'ไม่พบประเภทเงิน "' . $budgetTypeRaw . '" ในระบบ — ปล่อยว่าง',
+                    ];
+                }
                 $incomingJson = [
                     'brand' => $this->cellAt($data, $columnMap, 'brand'),
                     'asset_model' => $this->cellAt($data, $columnMap, 'asset_model'),
                     'color_name' => $this->cellAt($data, $columnMap, 'color_name'),
                     'unit' => $this->cellAt($data, $columnMap, 'unit'),
                     'serial_number' => $this->cellAt($data, $columnMap, 'serial_number'),
-                    'budget_type' => $this->resolveBudgetTypeFromImport($this->cellAt($data, $columnMap, 'budget_type')),
+                    'budget_type' => $budgetTypeResolved,
                     'inspection_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'inspection_date')),
                     'expire_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'expire_date')),
                     'location' => $this->cellAt($data, $columnMap, 'location'),
@@ -366,7 +439,16 @@ class ImportController extends Controller
                     $model->depreciation_rate = $depreciationParsed['value'];
                 }
                 $this->assignIfPresent($model, 'price', $this->cellAt($data, $columnMap, 'price'), $isUpdate);
-                $this->assignIfPresent($model, 'purchase', $this->resolvePurchaseFromImport($this->cellAt($data, $columnMap, 'purchase')), $isUpdate);
+                $purchaseRaw = $this->cellAt($data, $columnMap, 'purchase');
+                $purchaseResolved = $this->resolvePurchaseFromImport($purchaseRaw);
+                if ($purchaseRaw !== '' && $purchaseResolved === '') {
+                    $warningRows[] = [
+                        'row' => $rowNumber,
+                        'code' => $code,
+                        'message' => 'ไม่พบวิธีการได้มา "' . $purchaseRaw . '" ในระบบ — ปล่อยว่าง',
+                    ];
+                }
+                $this->assignIfPresent($model, 'purchase', $purchaseResolved, $isUpdate);
                 $this->assignIfPresent($model, 'receive_date', $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'receive_date')), $isUpdate);
                 $this->assignIfPresent($model, 'on_year', $this->cellAt($data, $columnMap, 'on_year'), $isUpdate);
                 $this->assignIfPresent($model, 'license_plate', $this->cellAt($data, $columnMap, 'license_plate'), $isUpdate);

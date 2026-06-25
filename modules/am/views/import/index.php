@@ -176,9 +176,52 @@ $js = <<<JS
                     $('#preview-table').html(html);
                     $('#filePath').val(res.filePath);
 
+                    var warnings = Array.isArray(res.warnings) ? res.warnings : [];
+
                     if (duplicateRows.length > 0) {
                         $('#import-btn').hide();
                         $('#container-duplicate').removeClass('d-none').find('div:last').text('รหัสทรัพย์สินซ้ำ ' + duplicateRows.length + ' รายการ');
+                    } else if (warnings.length > 0) {
+                        $('#container-duplicate').addClass('d-none');
+                        var fieldLabels = {
+                            department: 'หน่วยงาน',
+                            owner: 'ผู้รับผิดชอบ',
+                            budget_type: 'ประเภทเงิน',
+                            purchase: 'วิธีการได้มา'
+                        };
+                        var fieldCounts = {};
+                        warnings.forEach(function(w){
+                            fieldCounts[w.field] = (fieldCounts[w.field] || 0) + 1;
+                        });
+                        var summaryParts = [];
+                        ['department', 'owner', 'budget_type', 'purchase'].forEach(function(k){
+                            if (fieldCounts[k]) summaryParts.push(fieldLabels[k] + ' ' + fieldCounts[k] + ' รายการ');
+                        });
+
+                        var wHtml = '<div class="alert alert-warning mt-3" id="preview-warnings">'
+                            + '<div class="fw-semibold mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>'
+                            + 'พบรายการที่ไม่ตรงกับข้อมูลในระบบ (' + summaryParts.join(', ') + ')</div>'
+                            + '<ul class="small mb-3" style="max-height:240px;overflow:auto;">';
+                        warnings.forEach(function(w){
+                            var fieldLabel = fieldLabels[w.field] || w.field;
+                            wHtml += '<li>แถว ' + w.row + ' (รหัส: ' + (w.code || '-') + '): '
+                                + fieldLabel + ' <span class="fw-semibold">"' + $('<div/>').text(w.value).html() + '"</span> ไม่พบในระบบ</li>';
+                        });
+                        wHtml += '</ul>'
+                            + '<div class="small text-muted mb-2">'
+                            + 'เลือก <span class="fw-semibold">ยอมรับ</span> เพื่อนำเข้าต่อ (ฟิลด์เหล่านี้จะถูกบันทึกเป็นค่าว่าง) '
+                            + 'หรือ <span class="fw-semibold">ยกเลิก</span> เพื่อกลับไปแก้ไขไฟล์'
+                            + '</div>'
+                            + '<div class="d-flex flex-wrap gap-2">'
+                            + '<button type="button" class="btn btn-warning" id="btn-accept-warnings">'
+                            + '<i class="fa-solid fa-check me-1"></i>ยอมรับ แจ้งเตือน และนำเข้าต่อ'
+                            + '</button>'
+                            + '<button type="button" class="btn btn-outline-secondary" id="btn-cancel-warnings">'
+                            + '<i class="fa-solid fa-xmark me-1"></i>ยกเลิก เพื่อแก้ไขไฟล์'
+                            + '</button>'
+                            + '</div></div>';
+                        $('#preview-table').append(wHtml);
+                        $('#import-btn').addClass('d-none').hide();
                     } else {
                         $('#import-btn').removeClass('d-none').show();
                         $('#container-duplicate').addClass('d-none');
@@ -194,6 +237,21 @@ $js = <<<JS
                 alert('เกิดข้อผิดพลาดในการอัปโหลด');
             }
         });
+    });
+
+    // ยอมรับคำเตือนหน่วยงาน/ผู้รับผิดชอบ → ปลดล็อกปุ่มนำเข้า
+    $('body').on('click', '#btn-accept-warnings', function() {
+        $('#preview-warnings').remove();
+        $('#import-btn').removeClass('d-none').show();
+    });
+
+    // ยกเลิก → ล้างไฟล์เพื่อให้ผู้ใช้แก้แล้วอัปโหลดใหม่
+    $('body').on('click', '#btn-cancel-warnings', function() {
+        $('#csvFile').val('');
+        $('#filePath').val('');
+        $('#preview-table').html('');
+        $('#import-btn').addClass('d-none').hide();
+        $(".modal-dialog").removeClass('modal-xxl');
     });
 
     $('body').on("beforeSubmit", '#upload-form', function (e) {

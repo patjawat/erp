@@ -21,9 +21,10 @@ class AssetBulkCreateService
      * @param int $quantity
      * @param array $template ['asset_item_id' => string, 'brand' => ?, 'model' => ?, 'specification' => ?, 'purchase_price' => float, 'useful_life' => int, 'residual_value' => float]
      * @param array|null $serialList List of serial numbers (or [serial, name, remark] per row). If shorter than quantity, rest get empty serial.
+     * @param int|null $yearBe Buddhist year that asset numbers should be issued under (defaults to current budget year).
      * @return array [['code' => string, 'serial_number' => string, 'asset_name' => string, 'remark' => string], ...]
      */
-    public function buildPreviewRows(int $quantity, array $template, ?array $serialList = null): array
+    public function buildPreviewRows(int $quantity, array $template, ?array $serialList = null, ?int $yearBe = null): array
     {
         $categoryId = $template['fsn_number'] ?? $template['asset_item_id'] ?? '';
         if ($categoryId === '') {
@@ -32,7 +33,7 @@ class AssetBulkCreateService
         $rows = [];
         $baseName = $template['asset_name'] ?? '';
         for ($i = 0; $i < $quantity; $i++) {
-            $code = AssetNumberGenerator::generate($categoryId);
+            $code = AssetNumberGenerator::generate($categoryId, $yearBe);
             $serial = '';
             $name = $baseName;
             $remark = '';

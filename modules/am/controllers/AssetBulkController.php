@@ -74,7 +74,15 @@ class AssetBulkController extends Controller
                     Yii::$app->session->setFlash('error', 'จำนวนต้องอยู่ระหว่าง 1–500');
                     return $this->redirect(['bulk-create', 'step' => 3]);
                 }
-                $rows = $service->buildPreviewRows($quantity, $template, $serialList);
+                $purchaseForRows = $session->get(self::SESSION_KEY . '_purchase', []);
+                $budgetYear = isset($purchaseForRows['budget_year']) && $purchaseForRows['budget_year']
+                    ? (int) $purchaseForRows['budget_year']
+                    : null;
+                if ($budgetYear === null) {
+                    Yii::$app->session->setFlash('error', 'กรุณาระบุปีงบประมาณในขั้นที่ 1 ก่อนสร้างหมายเลข');
+                    return $this->redirect(['bulk-create', 'step' => 1]);
+                }
+                $rows = $service->buildPreviewRows($quantity, $template, $serialList, $budgetYear);
                 $session->set(self::SESSION_KEY . '_rows', $rows);
                 $session->set(self::SESSION_KEY . '_quantity', $quantity);
                 return $this->redirect(['bulk-create', 'step' => 4]);

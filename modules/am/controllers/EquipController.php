@@ -577,9 +577,13 @@ class EquipController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $categoryId = trim((string) Yii::$app->request->get('category_id', ''));
         if ($categoryId === '') {
-            return ['asset_number' => '', 'error' => 'category_id required'];
+            return ['asset_number' => '', 'error' => 'กรุณาระบุ FSN ก่อน'];
         }
-        $assetNumber = AssetNumberGenerator::generate($categoryId);
+        $onYear = trim((string) Yii::$app->request->get('on_year', ''));
+        if ($onYear === '') {
+            return ['asset_number' => '', 'error' => 'กรุณาระบุปีงบประมาณก่อนสร้างหมายเลข'];
+        }
+        $assetNumber = AssetNumberGenerator::generate($categoryId, $onYear);
         return ['asset_number' => $assetNumber];
     }
 
@@ -594,6 +598,9 @@ class EquipController extends Controller
             if ($model->fsn_number === '') {
                 $model->addError('fsn_number', 'ต้องระบุ หมายเลข FSN ก่อน');
             }
+            if ($model->on_year === '' || $model->on_year === null) {
+                $model->addError('on_year', 'ต้องระบุปีงบประมาณก่อนสร้างหมายเลข');
+            }
         }
 
         foreach ($model->getErrors() as $attribute => $errors) {
@@ -607,7 +614,7 @@ class EquipController extends Controller
         }
         return [
             'status' => 'success',
-            'data' => AssetNumberGenerator::generate($model->fsn_number)
+            'data' => AssetNumberGenerator::generate($model->fsn_number, $model->on_year)
         ];
     }
 
