@@ -866,13 +866,14 @@ class ApproverController extends Controller
             'G1' => 'วันที่สิ้นสุด',
             'H1' => 'หน่วยงาน',
             'I1' => 'สถานะใบลา',
+            'J1' => 'ใบรับรองแพทย์',
         ];
         foreach ($headers as $cell => $label) {
             $sheet->setCellValue($cell, $label);
             $sheet->getStyle($cell)->getFont()->setBold(true);
             $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
-        $colWidths = ['A' => 8, 'B' => 28, 'C' => 18, 'D' => 10, 'E' => 36, 'F' => 14, 'G' => 14, 'H' => 24, 'I' => 16];
+        $colWidths = ['A' => 8, 'B' => 28, 'C' => 18, 'D' => 10, 'E' => 36, 'F' => 14, 'G' => 14, 'H' => 24, 'I' => 16, 'J' => 18];
         foreach ($colWidths as $col => $w) {
             $sheet->getColumnDimension($col)->setWidth($w);
         }
@@ -890,12 +891,18 @@ class ApproverController extends Controller
             $sheet->setCellValue('G' . $row, $item->date_end ? ThaiDateHelper::formatThaiDate($item->date_end) : '-');
             $sheet->setCellValue('H' . $row, $emp ? $emp->departmentName() : '-');
             $sheet->setCellValue('I' . $row, $item->leaveStatus ? $item->leaveStatus->title : $item->status);
+            $hasMedicalCert = !empty($item->getAttachmentList());
+            $sheet->setCellValue('J' . $row, $hasMedicalCert ? 'มี ใบรับรองแพทย์' : '');
+            if ($hasMedicalCert) {
+                $sheet->getStyle('J' . $row)->getFont()->setBold(true);
+                $sheet->getStyle('J' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
             $row++;
         }
 
         $lastRow = $row - 1;
         if ($lastRow >= 2) {
-            $sheet->getStyle('A1:I' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A1:J' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         }
 
         $writer = new Xlsx($spreadsheet);
