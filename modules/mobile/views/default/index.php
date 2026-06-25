@@ -178,7 +178,7 @@ $quickServices = [
     ['icon' => 'calendar-off',    'cat' => 'leave',       'label' => 'ขอลา',            'url' => Url::to(['/mobile/default/leave-request'])],
     ['icon' => 'clock',           'cat' => 'attendance',  'label' => 'ลงเวลา',          'url' => Url::to(['/mobile/default/attendance'])],
     ['icon' => 'qr-code',         'cat' => 'asset',       'label' => 'ครุภัณฑ์',        'url' => Url::to(['/mobile/default/scan'])],
-    ['icon' => 'file-text',       'cat' => 'document',    'label' => 'หนังสือราชการ',    'url' => Url::to(['/mobile/default/news']), 'badge' => $officialUnreadCount > 0 ? $officialUnreadCount : null],
+    ['icon' => 'layout-dashboard','cat' => 'document',    'label' => 'ภาพรวม',          'url' => Url::to(['/mobile/default/overview'])],
     ['icon' => 'clipboard-check', 'cat' => 'approval',    'label' => 'งานอนุมัติ',      'url' => $pendingApprovalUrl, 'badge' => $pendingCount > 0 ? $pendingCount : null],
 ];
 

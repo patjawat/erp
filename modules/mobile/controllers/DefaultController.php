@@ -6,6 +6,13 @@ use app\components\AppHelper;
 use app\components\ApproveHelper;
 use app\components\UserHelper;
 use app\modules\am\models\Asset;
+use app\modules\am\models\AssetCategory;
+use app\modules\am\models\AssetCondition;
+use app\modules\am\models\AssetStatus;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeePositionGroup;
+use app\modules\hr\models\EmployeeType;
 use app\modules\attendance\models\CheckinLocation;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\booking\models\Meeting;
@@ -1838,5 +1845,604 @@ class DefaultController extends Controller
             'code' => $code,
             'asset' => $asset,
         ]);
+    }
+
+    /**
+     * Hub ภาพรวม — เลือกแดชบอร์ดบุคลากร / ทรัพย์สิน
+     */
+    public function actionOverview()
+    {
+        $this->view->title = 'ภาพรวม';
+        return $this->render('overview', [
+            'current_page' => 'home',
+            'hrTotal'    => $this->overviewHrTotal(),
+            'assetTotal' => $this->overviewAssetTotal(),
+        ]);
+    }
+
+    /**
+     * แดชบอร์ดบุคลากร — KPI, สัดส่วนประเภท, ตำแหน่งยอดนิยม, รายการล่าสุด
+     */
+    public function actionOverviewHr()
+    {
+        $this->view->title = 'ภาพรวมบุคลากร';
+        $total = $this->overviewHrTotal();
+        return $this->render('overview-hr', [
+            'current_page'   => 'home',
+            'total'          => $total,
+            'typeBreakdown'  => $this->overviewHrTypeBreakdown(),
+            'groupBreakdown' => $this->overviewHrGroupBreakdown(8),
+            'topPositions'   => $this->overviewHrTopPositions(6),
+            'recent'         => $this->overviewHrRecent(5),
+        ]);
+    }
+
+    /**
+     * แดชบอร์ดทรัพย์สิน — status KPI, donut, หมวด, รายการล่าสุด
+     */
+    public function actionOverviewAsset()
+    {
+        $this->view->title = 'ภาพรวมทรัพย์สิน';
+        $statusBreakdown = $this->overviewAssetStatusBreakdown();
+        $total = 0;
+        foreach ($statusBreakdown as $row) { $total += (int) $row['count']; }
+        return $this->render('overview-asset', [
+            'current_page'        => 'home',
+            'total'               => $total,
+            'statusBreakdown'     => $statusBreakdown,
+            'conditionBreakdown'  => $this->overviewAssetConditionBreakdown(),
+            'riskBreakdown'       => $this->overviewAssetRiskBreakdown(),
+            'categoryBreakdown'   => $this->overviewAssetCategoryBreakdown(6),
+            'budgetTypeBreakdown' => $this->overviewAssetMoneyBreakdown('budget_type', 'budget_type'),
+            'methodGetBreakdown'  => $this->overviewAssetMoneyBreakdown('method_get', 'method_get'),
+            'purchaseBreakdown'   => $this->overviewAssetMoneyBreakdown('purchase', 'purchase'),
+            'totalAmount'         => $this->overviewAssetTotalAmount(),
+            'recent'              => $this->overviewAssetRecent(5),
+        ]);
+    }
+
+    /** @return int รวมบุคลากร (active เท่านั้น) */
+    protected function overviewHrTotal(): int
+    {
+        try {
+            $q = Employees::find();
+            if (Yii::$app->db->getTableSchema(Employees::tableName(), true)
+                && Yii::$app->db->getTableSchema(Employees::tableName())->getColumn('active')) {
+                $q->andWhere(['or', ['active' => 1], ['active' => null]]);
+            }
+            return (int) $q->count();
+        } catch (\Throwable $e) { return 0; }
+    }
+
+    /** @return array<int,array{label:string,count:int}> สัดส่วนตาม EmployeeType */
+    protected function overviewHrTypeBreakdown(): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(EmployeeType::tableName(), true);
+            if (!$schema) return [];
+            $types = EmployeeType::find()->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+            $out = [];
+            foreach ($types as $t) {
+                $cnt = (int) Employees::find()->andWhere(['employee_type_id' => $t->id])->count();
+                if ($cnt > 0) $out[] = ['label' => (string) $t->title, 'count' => $cnt];
+            }
+            usort($out, static fn($a,$b) => $b['count'] <=> $a['count']);
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /** @return array<int,array{label:string,count:int}> สัดส่วนตาม EmployeePositionGroup */
+    protected function overviewHrGroupBreakdown(int $limit = 8): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(EmployeePositionGroup::tableName(), true);
+            if (!$schema) return [];
+            $rows = (new \yii\db\Query())
+                ->select(['gid' => 'employee_position_group_id', 'cnt' => 'COUNT(*)'])
+                ->from(Employees::tableName())
+                ->andWhere(['not', ['employee_position_group_id' => null]])
+                ->groupBy(['employee_position_group_id'])
+                ->orderBy(['cnt' => SORT_DESC])
+                ->limit($limit)
+                ->all();
+            if (!$rows) return [];
+            $ids = array_column($rows, 'gid');
+            $titles = EmployeePositionGroup::find()
+                ->select(['id','title'])->where(['id' => $ids])->asArray()->all();
+            $titleMap = array_column($titles, 'title', 'id');
+            $out = [];
+            foreach ($rows as $r) {
+                $label = (string) ($titleMap[(int) $r['gid']] ?? 'ไม่ระบุ');
+                $out[] = ['label' => $label, 'count' => (int) $r['cnt']];
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /** @return array<int,array{label:string,count:int}> ตำแหน่ง top */
+    protected function overviewHrTopPositions(int $limit = 6): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(EmployeePosition::tableName(), true);
+            if (!$schema) return [];
+            $rows = (new \yii\db\Query())
+                ->select(['pid' => 'employee_position_id', 'cnt' => 'COUNT(*)'])
+                ->from(Employees::tableName())
+                ->andWhere(['not', ['employee_position_id' => null]])
+                ->groupBy(['employee_position_id'])
+                ->orderBy(['cnt' => SORT_DESC])
+                ->limit($limit)
+                ->all();
+            if (!$rows) return [];
+            $ids = array_column($rows, 'pid');
+            $titles = EmployeePosition::find()
+                ->select(['id','title'])->where(['id' => $ids])->asArray()->all();
+            $titleMap = array_column($titles, 'title', 'id');
+            $out = [];
+            foreach ($rows as $r) {
+                $label = (string) ($titleMap[(int) $r['pid']] ?? 'ไม่ระบุ');
+                $out[] = ['label' => $label, 'count' => (int) $r['cnt']];
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /** @return Employees[] รายการล่าสุด */
+    protected function overviewHrRecent(int $limit = 5): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Employees::tableName(), true);
+            if (!$schema) return [];
+            $order = $schema->getColumn('created_at') ? ['created_at' => SORT_DESC] : ['id' => SORT_DESC];
+            return Employees::find()->orderBy($order)->limit($limit)->all();
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /**
+     * แสดงรายการครุภัณฑ์ตามระดับความเสี่ยง (drill-down จาก KPI tile)
+     * รองรับ: H, M, L, unassessed (null/empty)
+     */
+    public function actionOverviewAssetByRisk(string $level = 'H')
+    {
+        $level = strtoupper(trim($level));
+        $meta = [
+            'H' => ['label' => 'สูง',  'tone' => 'danger',    'icon' => 'octagon-alert',  'desc' => 'ต้องเฝ้าระวัง'],
+            'M' => ['label' => 'กลาง', 'tone' => 'warning',   'icon' => 'alert-triangle', 'desc' => 'ระดับปานกลาง'],
+            'L' => ['label' => 'ต่ำ',  'tone' => 'success',   'icon' => 'shield-check',   'desc' => 'อยู่ในเกณฑ์'],
+        ];
+        $isUnassessed = !isset($meta[$level]);
+        if ($isUnassessed) {
+            $level = 'UNASSESSED';
+            $current = ['label' => 'ยังไม่ประเมิน', 'tone' => 'secondary', 'icon' => 'circle-help', 'desc' => 'รอประเมิน'];
+        } else {
+            $current = $meta[$level];
+        }
+
+        $this->view->title = 'ครุภัณฑ์ความเสี่ยง' . $current['label'];
+
+        $assets = $this->overviewAssetByRisk($level, 200);
+        return $this->render('overview-asset-by-risk', [
+            'current_page' => 'home',
+            'level'        => $level,
+            'meta'         => $current,
+            'assets'       => $assets,
+        ]);
+    }
+
+    /**
+     * คืนค่าครุภัณฑ์กรองตามระดับความเสี่ยง
+     * level: 'H' | 'M' | 'L' | 'UNASSESSED'
+     *
+     * @return Asset[]
+     */
+    protected function overviewAssetByRisk(string $level, int $limit = 200): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('risk_level')) return [];
+            $q = Asset::find();
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            if ($level === 'UNASSESSED') {
+                $q->andWhere([
+                    'or',
+                    ['risk_level' => null],
+                    ['risk_level' => ''],
+                    ['not in', 'risk_level', ['H', 'M', 'L', 'h', 'm', 'l']],
+                ]);
+            } else {
+                $q->andWhere(['risk_level' => $level]);
+            }
+            $order = $schema->getColumn('updated_at')
+                ? ['updated_at' => SORT_DESC]
+                : ($schema->getColumn('created_at') ? ['created_at' => SORT_DESC] : ['id' => SORT_DESC]);
+            return $q->orderBy($order)->limit($limit)->all();
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /** @return int รวมครุภัณฑ์ (ไม่นับที่ถูกลบ) */
+    protected function overviewAssetTotal(): int
+    {
+        try {
+            $q = Asset::find();
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if ($schema && $schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            return (int) $q->count();
+        } catch (\Throwable $e) { return 0; }
+    }
+
+    /**
+     * นับครุภัณฑ์ตามสถานะ (asset_status) — แสดงสถานะทั้งหมดจาก master
+     * รวมรายการที่ count = 0 ด้วย, เรียงตาม sort_order ของ master
+     * tone/icon mapping ตาม Asset::viewStatus() (1=ปกติ, 2=จำหน่าย, 3=รอจำหน่าย, 4=ถูกยืม, 5=เตือน)
+     *
+     * @return array<int,array{id:string,label:string,count:int,tone:string,icon:string}>
+     */
+    protected function overviewAssetStatusBreakdown(): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('asset_status')) return [];
+
+            // นับครุภัณฑ์ตามสถานะ
+            $countQ = (new \yii\db\Query())
+                ->select(['s' => 'asset_status', 'cnt' => 'COUNT(*)'])
+                ->from(Asset::tableName())
+                ->andWhere(['not', ['asset_status' => null]])
+                ->andWhere(['<>', 'asset_status', '']);
+            if ($schema->getColumn('deleted_at')) {
+                $countQ->andWhere(['deleted_at' => null]);
+            }
+            $countRows = $countQ->groupBy(['asset_status'])->all();
+            $countMap = [];
+            foreach ($countRows as $r) {
+                $countMap[(string) $r['s']] = (int) $r['cnt'];
+            }
+
+            // master statuses — asset_status table ก่อน
+            $masters = [];
+            try {
+                $assetStatusSchema = Yii::$app->db->getTableSchema(AssetStatus::tableName(), true);
+                if ($assetStatusSchema) {
+                    $q = AssetStatus::find()->select(['id', 'name']);
+                    $orderBy = [];
+                    if ($assetStatusSchema->getColumn('sort_order')) $orderBy['sort_order'] = SORT_ASC;
+                    $orderBy['id'] = SORT_ASC;
+                    if ($assetStatusSchema->getColumn('is_active')) {
+                        $q->andWhere(['or', ['is_active' => 1], ['is_active' => null]]);
+                    }
+                    $rows = $q->orderBy($orderBy)->asArray()->all();
+                    foreach ($rows as $r) {
+                        $id   = (string) ($r['id'] ?? '');
+                        $name = trim((string) ($r['name'] ?? ''));
+                        if ($id === '') continue;
+                        $masters[$id] = $name !== '' ? $name : ('สถานะ ' . $id);
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
+            // fallback / supplement จาก categorise(name=asset_status)
+            try {
+                $cats = (new \yii\db\Query())
+                    ->select(['code', 'title'])
+                    ->from(AssetCategory::tableName())
+                    ->where(['name' => 'asset_status'])
+                    ->andFilterWhere(['active' => 1])
+                    ->orderBy(['code' => SORT_ASC])
+                    ->all();
+                foreach ($cats as $c) {
+                    $code  = (string) ($c['code'] ?? '');
+                    $title = trim((string) ($c['title'] ?? ''));
+                    if ($code === '') continue;
+                    if (!isset($masters[$code])) {
+                        $masters[$code] = $title !== '' ? $title : ('สถานะ ' . $code);
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
+            // เพิ่ม id ที่อยู่ใน asset แต่ไม่ได้อยู่ใน master (orphan) ท้ายลิสต์
+            foreach ($countMap as $id => $_cnt) {
+                if (!isset($masters[$id])) {
+                    $masters[$id] = $id !== '' ? ('สถานะ ' . $id) : 'ไม่ระบุ';
+                }
+            }
+
+            if (!$masters) return [];
+
+            $toneMap = [
+                '1' => ['tone' => 'success',   'icon' => 'check-circle'],
+                '2' => ['tone' => 'secondary', 'icon' => 'archive'],
+                '3' => ['tone' => 'danger',    'icon' => 'pause-circle'],
+                '4' => ['tone' => 'primary',   'icon' => 'refresh-cw'],
+                '5' => ['tone' => 'warning',   'icon' => 'alert-triangle'],
+            ];
+            $fallbackPalette = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
+
+            $out = [];
+            $idx = 0;
+            foreach ($masters as $id => $label) {
+                $tone = $toneMap[$id]['tone'] ?? $fallbackPalette[$idx % count($fallbackPalette)];
+                $icon = $toneMap[$id]['icon'] ?? 'circle-dot';
+                $out[] = [
+                    'id'    => (string) $id,
+                    'label' => $label,
+                    'count' => (int) ($countMap[$id] ?? 0),
+                    'tone'  => $tone,
+                    'icon'  => $icon,
+                ];
+                $idx++;
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /**
+     * นับครุภัณฑ์ตามสภาพ (asset_condition) — แสดงทุกสภาพจาก master เรียงตาม sort_order
+     * tone/icon mapping ตาม Asset::getConditionBadge()
+     *
+     * @return array<int,array{id:string,label:string,count:int,tone:string,icon:string}>
+     */
+    protected function overviewAssetConditionBreakdown(): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('asset_condition')) return [];
+
+            $countQ = (new \yii\db\Query())
+                ->select(['s' => 'asset_condition', 'cnt' => 'COUNT(*)'])
+                ->from(Asset::tableName())
+                ->andWhere(['not', ['asset_condition' => null]])
+                ->andWhere(['<>', 'asset_condition', '']);
+            if ($schema->getColumn('deleted_at')) {
+                $countQ->andWhere(['deleted_at' => null]);
+            }
+            $countRows = $countQ->groupBy(['asset_condition'])->all();
+            $countMap = [];
+            foreach ($countRows as $r) {
+                $countMap[(string) $r['s']] = (int) $r['cnt'];
+            }
+
+            $masters = [];
+            try {
+                $cs = Yii::$app->db->getTableSchema(AssetCondition::tableName(), true);
+                if ($cs) {
+                    $q = AssetCondition::find()->select(['id', 'name']);
+                    $orderBy = [];
+                    if ($cs->getColumn('sort_order')) $orderBy['sort_order'] = SORT_ASC;
+                    $orderBy['id'] = SORT_ASC;
+                    if ($cs->getColumn('is_active')) {
+                        $q->andWhere(['or', ['is_active' => 1], ['is_active' => null]]);
+                    }
+                    foreach ($q->orderBy($orderBy)->asArray()->all() as $r) {
+                        $id = (string) ($r['id'] ?? '');
+                        if ($id === '') continue;
+                        $masters[$id] = trim((string) ($r['name'] ?? '')) ?: $id;
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
+            foreach ($countMap as $id => $_cnt) {
+                if (!isset($masters[$id])) $masters[$id] = $id;
+            }
+            if (!$masters) return [];
+
+            // mapping ตาม Asset::getConditionBadge()
+            $toneMap = [
+                'good'    => ['tone' => 'success', 'icon' => 'thumbs-up'],
+                'fair'    => ['tone' => 'info',    'icon' => 'circle-dot'],
+                'worn'    => ['tone' => 'warning', 'icon' => 'alert-triangle'],
+                'damaged' => ['tone' => 'danger',  'icon' => 'wrench'],
+            ];
+            $fallbackPalette = ['primary', 'success', 'warning', 'danger', 'info', 'secondary'];
+
+            $out = [];
+            $idx = 0;
+            foreach ($masters as $id => $label) {
+                $tone = $toneMap[$id]['tone'] ?? $fallbackPalette[$idx % count($fallbackPalette)];
+                $icon = $toneMap[$id]['icon'] ?? 'circle-dot';
+                $out[] = [
+                    'id'    => $id,
+                    'label' => $label,
+                    'count' => (int) ($countMap[$id] ?? 0),
+                    'tone'  => $tone,
+                    'icon'  => $icon,
+                ];
+                $idx++;
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /**
+     * นับครุภัณฑ์ตามระดับความเสี่ยง (risk_level) — H/M/L + ยังไม่ประเมิน
+     *
+     * @return array<int,array{id:string,label:string,count:int,tone:string,icon:string,desc:string}>
+     */
+    protected function overviewAssetRiskBreakdown(): array
+    {
+        $blueprint = [
+            ['id' => 'H', 'label' => 'สูง',  'tone' => 'danger',    'icon' => 'octagon-alert',  'desc' => 'ต้องเฝ้าระวัง'],
+            ['id' => 'M', 'label' => 'กลาง', 'tone' => 'warning',   'icon' => 'alert-triangle', 'desc' => 'ระดับปานกลาง'],
+            ['id' => 'L', 'label' => 'ต่ำ',  'tone' => 'success',   'icon' => 'shield-check',   'desc' => 'อยู่ในเกณฑ์'],
+            ['id' => '-', 'label' => 'ยังไม่ประเมิน', 'tone' => 'secondary', 'icon' => 'circle-help', 'desc' => 'รอประเมิน'],
+        ];
+
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('risk_level')) {
+                return array_map(static fn($b) => $b + ['count' => 0], $blueprint);
+            }
+
+            $base = (new \yii\db\Query())->from(Asset::tableName());
+            if ($schema->getColumn('deleted_at')) {
+                $base->andWhere(['deleted_at' => null]);
+            }
+
+            $countMap = ['H' => 0, 'M' => 0, 'L' => 0, '-' => 0];
+            $rows = (clone $base)
+                ->select(['lvl' => 'risk_level', 'cnt' => 'COUNT(*)'])
+                ->groupBy(['risk_level'])
+                ->all();
+            foreach ($rows as $r) {
+                $lvl = strtoupper(trim((string) ($r['lvl'] ?? '')));
+                $cnt = (int) $r['cnt'];
+                if ($lvl === 'H' || $lvl === 'M' || $lvl === 'L') {
+                    $countMap[$lvl] += $cnt;
+                } else {
+                    $countMap['-'] += $cnt;
+                }
+            }
+
+            $out = [];
+            foreach ($blueprint as $b) {
+                $out[] = $b + ['count' => (int) ($countMap[$b['id']] ?? 0)];
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            return array_map(static fn($b) => $b + ['count' => 0], $blueprint);
+        }
+    }
+
+    /** @return array<int,array{label:string,count:int}> หมวดครุภัณฑ์ top */
+    protected function overviewAssetCategoryBreakdown(int $limit = 6): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('asset_category_id')) return [];
+            $q = (new \yii\db\Query())
+                ->select(['code' => 'asset_category_id', 'cnt' => 'COUNT(*)'])
+                ->from(Asset::tableName())
+                ->andWhere(['not', ['asset_category_id' => null]])
+                ->andWhere(['<>', 'asset_category_id', '']);
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            $rows = $q->groupBy(['asset_category_id'])
+                ->orderBy(['cnt' => SORT_DESC])
+                ->limit($limit)
+                ->all();
+            if (!$rows) return [];
+
+            // asset.asset_category_id เก็บ `code` (string) ไม่ใช่ id
+            // เชื่อมกับ categorise.code WHERE name='asset_category'
+            $codes = array_values(array_filter(array_map(static fn($r) => (string) $r['code'], $rows), static fn($v) => $v !== ''));
+            $titleMap = [];
+            if ($codes) {
+                $cats = AssetCategory::find()
+                    ->select(['code', 'title', 'name'])
+                    ->where(['name' => 'asset_category', 'code' => $codes])
+                    ->asArray()->all();
+                foreach ($cats as $c) {
+                    $titleMap[(string) $c['code']] = trim((string) ($c['title'] ?? '')) !== ''
+                        ? (string) $c['title']
+                        : (string) ($c['name'] ?? '');
+                }
+            }
+            $out = [];
+            foreach ($rows as $r) {
+                $code  = (string) $r['code'];
+                $label = $titleMap[$code] ?? '';
+                if ($label === '') $label = $code !== '' ? $code : 'ไม่ระบุ';
+                $out[] = ['label' => $label, 'count' => (int) $r['cnt']];
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /**
+     * รวมจำนวนเงินครุภัณฑ์ทั้งหมด (sum ของ price)
+     */
+    protected function overviewAssetTotalAmount(): float
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('price')) return 0.0;
+            $q = (new \yii\db\Query())
+                ->select(['s' => 'COALESCE(SUM(price), 0)'])
+                ->from(Asset::tableName());
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            $row = $q->one();
+            return (float) ($row['s'] ?? 0);
+        } catch (\Throwable $e) { return 0.0; }
+    }
+
+    /**
+     * นับจำนวน + รวมเงินครุภัณฑ์ตาม lookup column ใด ๆ ที่เชื่อมกับ categorise(name=$masterName)
+     * เช่น: budget_type / method_get / purchase
+     *
+     * @return array<int,array{code:string,label:string,count:int,amount:float}>
+     */
+    protected function overviewAssetMoneyBreakdown(string $assetColumn, string $masterName): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn($assetColumn)) return [];
+
+            $hasPrice = (bool) $schema->getColumn('price');
+
+            $q = (new \yii\db\Query())
+                ->select([
+                    'code'   => $assetColumn,
+                    'cnt'    => 'COUNT(*)',
+                    'amount' => $hasPrice ? 'COALESCE(SUM(price), 0)' : '0',
+                ])
+                ->from(Asset::tableName())
+                ->andWhere(['not', [$assetColumn => null]])
+                ->andWhere(['<>', $assetColumn, '']);
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            $rows = $q->groupBy([$assetColumn])
+                ->orderBy(['cnt' => SORT_DESC])
+                ->all();
+            if (!$rows) return [];
+
+            $codes = array_values(array_filter(array_map(static fn($r) => (string) $r['code'], $rows), static fn($v) => $v !== ''));
+            $titleMap = [];
+            if ($codes) {
+                $cats = (new \yii\db\Query())
+                    ->select(['code', 'title'])
+                    ->from(AssetCategory::tableName())
+                    ->where(['name' => $masterName, 'code' => $codes])
+                    ->all();
+                foreach ($cats as $c) {
+                    $title = trim((string) ($c['title'] ?? ''));
+                    if ($title !== '') $titleMap[(string) $c['code']] = $title;
+                }
+            }
+
+            $out = [];
+            foreach ($rows as $r) {
+                $code  = (string) $r['code'];
+                $label = $titleMap[$code] ?? ($code !== '' ? $code : 'ไม่ระบุ');
+                $out[] = [
+                    'code'   => $code,
+                    'label'  => $label,
+                    'count'  => (int) $r['cnt'],
+                    'amount' => (float) ($r['amount'] ?? 0),
+                ];
+            }
+            return $out;
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /** @return Asset[] ครุภัณฑ์ล่าสุด */
+    protected function overviewAssetRecent(int $limit = 5): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema) return [];
+            $q = Asset::find();
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            $order = $schema->getColumn('created_at') ? ['created_at' => SORT_DESC] : ['id' => SORT_DESC];
+            return $q->orderBy($order)->limit($limit)->all();
+        } catch (\Throwable $e) { return []; }
     }
 }

@@ -6,8 +6,8 @@ use yii\helpers\Html;
 /** @var app\modules\am\models\AssetItem $model */
 
 $this->title = 'ฟอร์มบันทึกสิ่งปลูกสร้าง';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบทรัพย์สิน', 'url' => ['/am/building']];
-$this->params['breadcrumbs'][] = ['label' => 'สิ่งปลูกสร้าง', 'url' => ['/am/building']];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบทรัพย์สิน', 'url' => ['/am/structure']];
+$this->params['breadcrumbs'][] = ['label' => 'สิ่งปลูกสร้าง', 'url' => ['/am/structure']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
