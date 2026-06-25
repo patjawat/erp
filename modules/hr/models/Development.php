@@ -515,6 +515,85 @@ class Development extends \yii\db\ActiveRecord
         // }
     }
 
+    /**
+     * แจ้งเตือนหัวหน้าของสมาชิกคณะเดินทางทุกคนผ่าน Telegram
+     * - dedupe ตาม telegram_id เพื่อกัน push ซ้ำ
+     * - ข้ามหัวหน้าที่ได้รับ "ขออนุมัติ" จาก createApprove() ไปแล้ว
+     *
+     * @param array    $memberEmpIds         รหัสพนักงานของสมาชิกในคณะเดินทาง (รวมผู้ขอ)
+     * @param int|null $excludeLeaderEmpId   รหัสหัวหน้าที่จะข้าม เช่น $this->leader_id
+     * @return array รายการ telegram_id ที่ส่งสำเร็จ
+     */
+    public function notifyMembersLeaders(array $memberEmpIds, $excludeLeaderEmpId = null)
+    {
+        $sentChatIds = [];
+
+        $memberEmpIds = array_values(array_unique(array_filter(array_map('intval', $memberEmpIds))));
+        if (empty($memberEmpIds)) {
+            return $sentChatIds;
+        }
+
+        $leaderToMembers = [];
+        foreach ($memberEmpIds as $empId) {
+            try {
+                $emp = Employees::findOne($empId);
+                if (!$emp) {
+                    continue;
+                }
+                $leaderInfo = $emp->leaderUser();
+                $leaderEmpId = (int) ($leaderInfo['leader1'] ?? 0);
+                if (!$leaderEmpId) {
+                    continue;
+                }
+                if ($excludeLeaderEmpId && $leaderEmpId === (int) $excludeLeaderEmpId) {
+                    continue;
+                }
+                $leaderToMembers[$leaderEmpId][] = $emp->fullname;
+            } catch (\Throwable $th) {
+                continue;
+            }
+        }
+
+        if (empty($leaderToMembers)) {
+            return $sentChatIds;
+        }
+
+        $opt = [
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+        ];
+        $esc = function ($s) {
+            return htmlspecialchars((string) $s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        };
+        $requester = $this->createdByEmp;
+
+        foreach ($leaderToMembers as $leaderEmpId => $memberNames) {
+            try {
+                $leaderEmp = Employees::findOne($leaderEmpId);
+                $chatId = trim((string) ($leaderEmp?->user?->telegram_id ?? ''));
+                if ($chatId === '' || in_array($chatId, $sentChatIds, true)) {
+                    continue;
+                }
+
+                $names = implode(', ', array_values(array_unique($memberNames)));
+                $msg  = '📣 <b>แจ้งให้ทราบ</b> ผู้ใต้บังคับบัญชามีกำหนดเดินทาง';
+                $msg .= "\n" . '📝 <b>หัวข้อ:</b> ' . $esc($this->topic);
+                $msg .= "\n" . '📅 <b>วันที่:</b> ' . $esc(ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short'));
+                $msg .= "\n" . '➡️ <b>ถึงวันที่:</b> ' . $esc(ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short'));
+                $msg .= "\n" . '👤 <b>ผู้ขอ:</b> ' . $esc($requester?->fullname ?? '-');
+                $msg .= "\n" . '👥 <b>สมาชิกในสังกัด:</b> ' . $esc($names);
+
+                Yii::$app->telegram->sendDirectMessage($chatId, $msg, $opt);
+                $sentChatIds[] = $chatId;
+            } catch (\Throwable $th) {
+                Yii::error('notifyMembersLeaders telegram fail (emp ' . $leaderEmpId . '): ' . $th->getMessage(), __METHOD__);
+                continue;
+            }
+        }
+
+        return $sentChatIds;
+    }
+
     // ผู้ขอบริการ
 
     //แสดงวันเวลาที่แสดง

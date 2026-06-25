@@ -13,6 +13,7 @@ use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetDetail;
 use app\modules\am\models\AssetDetailSearch;
+use app\modules\am\services\CalibrationRiskSyncService;
 
 /**
  * calibrationController implements the CRUD actions for AssetDetail model.
@@ -122,8 +123,14 @@ class CalibrationController extends Controller
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
+
+                // Push risk_level to the asset register, but only when this is the
+                // latest calibration for the asset.
+                $sync = CalibrationRiskSyncService::syncIfLatest($model);
+
                 return [
-                    'status' => 'success'
+                    'status' => 'success',
+                    'risk_sync' => $sync,
                 ];
             }
         } else {
@@ -177,8 +184,12 @@ class CalibrationController extends Controller
                 $asset = Asset::findOne(['code' => $model->code]);
                 $model->asset_id = $asset->id ?? 0;
                 $model->save();
+
+                $sync = CalibrationRiskSyncService::syncIfLatest($model);
+
                 return [
-                    'status' => 'success'
+                    'status' => 'success',
+                    'risk_sync' => $sync,
                 ];
             }
         } else {

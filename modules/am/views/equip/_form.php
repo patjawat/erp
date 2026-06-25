@@ -85,15 +85,68 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                         </div>
                         <div class="col-12">
                             <?php
-                            echo $form->field($model, 'data_json[vendor_id]')->widget(Select2::classname(), [
+                            $vendorAddUrl = Url::to(['/am/vendor/create', 'quick' => 1, 'title' => '<i class="fa-solid fa-plus me-1"></i> เพิ่มผู้ขาย/ผู้จำหน่าย/ผู้บริจาคใหม่']);
+                            $vendorManageUrl = Url::to(['/am/vendor/index']);
+                            $vendorActions = '<div class="vendor-quick-actions">'
+                                . Html::a('<i class="fa-solid fa-plus"></i><span>เพิ่มผู้ขายใหม่</span>', $vendorAddUrl, [
+                                    'class' => 'vendor-quick-actions__add open-modal',
+                                    'data-size' => 'modal-md',
+                                    'id' => 'btn-add-vendor-quick',
+                                ])
+                                . Html::a('จัดการรายชื่อ<i class="fa-solid fa-up-right-from-square"></i>', $vendorManageUrl, [
+                                    'class' => 'vendor-quick-actions__manage',
+                                    'target' => '_blank',
+                                    'rel' => 'noopener',
+                                    'title' => 'เปิดหน้าจัดการในแท็บใหม่',
+                                ])
+                                . Html::a('<i class="fa-solid fa-arrows-rotate"></i>รีเฟรชรายชื่อ', '#', [
+                                    'class' => 'vendor-quick-actions__refresh',
+                                    'id' => 'btn-refresh-vendors',
+                                    'title' => 'โหลดรายชื่อผู้ขายล่าสุดจากระบบ',
+                                ])
+                                . '</div>';
+                            echo $form->field($model, 'data_json[vendor_id]', [
+                                'template' => '{label}{input}{hint}{error}' . $vendorActions,
+                            ])->widget(Select2::classname(), [
                                 'data' => $model->ListVendor(),
-                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย/ผู้ขาย'],
+                                'options' => ['placeholder' => 'เลือกผู้จำหน่าย/ผู้ขาย', 'id' => 'asset-data_json-vendor_id'],
                                 'pluginOptions' => ['allowClear' => true],
                                 'pluginEvents' => [
                                     "select2:select" => "function(result) { var data = $(this).select2('data')[0]; $('#asset-data_json-vendor_text').val(data.text); }",
                                 ]
                             ])->label('ผู้ขาย/ผู้จำหน่าย/ผู้บริจาค');
                             ?>
+                            <style>
+                                .vendor-quick-actions {
+                                    display: inline-flex; flex-wrap: wrap; align-items: center;
+                                    gap: 0.15rem 0.85rem;
+                                    margin-top: 0.4rem;
+                                    font-size: 0.8rem;
+                                }
+                                .vendor-quick-actions__add,
+                                .vendor-quick-actions__manage,
+                                .vendor-quick-actions__refresh {
+                                    display: inline-flex; align-items: center; gap: 0.32rem;
+                                    padding: 0.15rem 0;
+                                    text-decoration: none;
+                                    transition: color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+                                    font-weight: 500;
+                                }
+                                .vendor-quick-actions__add { color: #0a58ca; }
+                                .vendor-quick-actions__add:hover { color: #084298; text-decoration: underline; text-underline-offset: 3px; }
+                                .vendor-quick-actions__add i { font-size: 0.72rem; }
+                                .vendor-quick-actions__manage { color: #4a5568; }
+                                .vendor-quick-actions__manage:hover { color: #1a202c; text-decoration: underline; text-underline-offset: 3px; }
+                                .vendor-quick-actions__manage i { font-size: 0.7rem; opacity: 0.7; }
+                                .vendor-quick-actions__refresh { color: #4a5568; }
+                                .vendor-quick-actions__refresh:hover { color: #0a58ca; text-decoration: underline; text-underline-offset: 3px; }
+                                .vendor-quick-actions__refresh i { font-size: 0.72rem; }
+                                .vendor-quick-actions a:focus-visible {
+                                    outline: none;
+                                    box-shadow: 0 0 0 3px rgba(13,110,253,.18);
+                                    border-radius: 4px;
+                                }
+                            </style>
                         </div>
                         <div class="col-12">
                             <?= $form->field($model, 'data_json[order_number]')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบกำกับ/ใบส่งของ'])->label('เลขที่ใบกำกับ/ใบส่งของ'); ?>
@@ -204,6 +257,36 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header border-bottom d-flex align-items-center gap-2">
+                <div class="erp-icon-box bg-primary bg-opacity-10">
+                    <i data-lucide="shield-alert"></i>
+                </div>
+                <h6 class="text-uppercase text-secondary m-0">การประเมินความเสี่ยง</h6>
+            </div>
+            <div class="card-body">
+                <?php
+                $assetDataJson = $model->data_json;
+                if (is_string($assetDataJson)) {
+                    $assetDataJson = json_decode($assetDataJson, true) ?: [];
+                }
+                $assetRiskHint = 'ระบบจะอัพเดตค่านี้อัตโนมัติเมื่อมีการบันทึกผลสอบเทียบครั้งใหม่ที่ระบุระดับความเสี่ยง';
+                if (is_array($assetDataJson) && ($assetDataJson['risk_level_source'] ?? null) === 'calibration') {
+                    $syncedAt = $assetDataJson['risk_level_synced_at'] ?? null;
+                    $assetRiskHint = 'ค่าปัจจุบันมาจากผลสอบเทียบครั้งล่าสุด'
+                        . ($syncedAt ? ' (อัพเดตเมื่อ ' . Yii::$app->thaiDate->toThaiDate($syncedAt, true, true) . ')' : '');
+                }
+                ?>
+                <?= $this->render('@app/modules/am/views/_partials/_risk_chips', [
+                    'name'  => 'Asset[risk_level]',
+                    'id'    => 'asset-risk_level',
+                    'value' => $model->risk_level,
+                    'label' => 'ระดับความเสี่ยงของทรัพย์สิน',
+                    'hint'  => $assetRiskHint,
+                ]) ?>
             </div>
         </div>
 
@@ -521,6 +604,7 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
 $ref = Json::encode($model->ref);
 $urlUpload = Url::to('/filemanager/uploads/single');
 $nextAssetNumberUrl = Url::to(['/am/equip/next-asset-number']);
+$vendorOptionsUrl = Url::to(['/am/vendor/options']);
 
 $js = <<< JS
 
@@ -570,6 +654,102 @@ $js = <<< JS
  $('.next-code').on('click', function (e) {
     e.preventDefault();
     fetchNextAssetNumber(true);
+ });
+
+ // -- Vendor inline-add: refetch full list from server + rebuild Select2 + auto-select new --
+ // Find the actual vendor <select> element. Prefer the explicit id, but fall back to
+ // the [name] attribute so this stays robust even if the widget renames the id.
+ function findVendorSelect() {
+    var \$sel = \$('#asset-data_json-vendor_id');
+    if (\$sel.length) return \$sel;
+    var \$byName = \$('select[name="Asset[data_json][vendor_id]"]');
+    if (\$byName.length) return \$byName;
+    return \$();
+ }
+
+ function reloadVendorOptions(targetId, targetText, opts) {
+    opts = opts || {};
+    var silent = !!opts.silent;
+    var \$sel = findVendorSelect();
+    if (!\$sel.length) {
+        console.warn('[vendor] select element not found');
+        return;
+    }
+    var preserveVal = \$sel.val();
+    var wanted = (targetId != null && targetId !== '') ? String(targetId)
+                 : (preserveVal || '');
+    console.log('[vendor] reload options', { url: '$vendorOptionsUrl', wanted: wanted });
+
+    \$.ajax({
+        url: '$vendorOptionsUrl',
+        type: 'GET',
+        dataType: 'json',
+        cache: false
+    }).done(function (items) {
+        console.log('[vendor] got items', items && items.length);
+        if (!Array.isArray(items)) { items = []; }
+
+        \$sel.empty();
+        \$sel.append(new Option('', '', false, false));   // placeholder for allowClear
+        var matched = false;
+        items.forEach(function (it) {
+            var id = String(it.id);
+            var isSel = id === String(wanted);
+            if (isSel) { matched = true; }
+            \$sel.append(new Option(it.text, id, isSel, isSel));
+        });
+        if (!matched && targetId && targetText) {
+            \$sel.append(new Option(targetText, String(targetId), true, true));
+            wanted = String(targetId);
+            matched = true;
+        }
+        \$sel.val(wanted || null).trigger('change');
+        if (targetText) {
+            \$('#asset-data_json-vendor_text').val(targetText);
+        }
+        if (!silent && typeof Swal !== 'undefined' && targetId) {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: 'เพิ่มผู้ขายและเลือกใช้แล้ว',
+                showConfirmButton: false, timer: 1800
+            });
+        }
+    }).fail(function (xhr, status, err) {
+        console.error('[vendor] options fetch failed', status, err, xhr && xhr.status);
+        // Inline-append fallback so the new vendor is at least usable now
+        if (targetId) {
+            var idStr = String(targetId);
+            if (!\$sel.find('option[value="' + idStr.replace(/"/g, '\\\\"') + '"]').length) {
+                \$sel.append(new Option(targetText || idStr, idStr, true, true));
+            }
+            \$sel.val(idStr).trigger('change');
+            if (targetText) {
+                \$('#asset-data_json-vendor_text').val(targetText);
+            }
+        }
+        if (!silent && typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'warning',
+                title: 'โหลดรายชื่อล้มเหลว ใช้ค่าที่เพิ่มล่าสุดได้',
+                showConfirmButton: false, timer: 2400
+            });
+        }
+    });
+ }
+ window.reloadVendorOptions = reloadVendorOptions;
+
+ \$(document).off('vendor:saved.assetForm').on('vendor:saved.assetForm', function (e, vendor) {
+    console.log('[vendor] vendor:saved event received', vendor);
+    var id = (vendor && vendor.id != null) ? vendor.id : null;
+    var text = (vendor && vendor.text != null) ? vendor.text : null;
+    reloadVendorOptions(id, text);
+ });
+
+ // Manual refresh link handler
+ \$(document).off('click.vendorRefresh', '#btn-refresh-vendors')
+            .on('click.vendorRefresh', '#btn-refresh-vendors', function (e) {
+    e.preventDefault();
+    reloadVendorOptions(null, null, { silent: false });
  });
 
 

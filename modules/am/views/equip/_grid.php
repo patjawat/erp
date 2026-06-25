@@ -43,7 +43,14 @@ use yii\helpers\Html;
                             <div class="small text-muted mb-0"><?= Html::encode($item->code ?: '-') ?></div>
                             <div class="small text-muted mb-0">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
                             <div class="fw-semibold text-truncate"><?= Html::encode($titleName) ?></div>
-                            <div class="mt-1">สภาพ : <?= $item->getConditionBadge() ?></div>
+                            <div class="mt-1 d-flex align-items-center flex-wrap gap-1">
+                                <span class="text-body-secondary small">สภาพ :</span>
+                                <?= $item->getConditionBadge() ?>
+                            </div>
+                            <div class="mt-1 d-flex align-items-center flex-wrap gap-1">
+                                <span class="text-body-secondary small">ความเสี่ยง :</span>
+                                <?= $item->getRiskLevelBadge() ?>
+                            </div>
                         </div>
                     </div>
                     <div class="mt-1"><?= $item->getStatusBadge() ?></div>

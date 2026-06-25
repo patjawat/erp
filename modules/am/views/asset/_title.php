@@ -47,6 +47,10 @@ use yii\helpers\Html;
                         <div class="text-secondary small mb-1">สภาพ</div>
                         <?= $model->getConditionBadge() ?>
                     </div>
+                    <div class="col">
+                        <div class="text-secondary small mb-1">ระดับความเสี่ยง</div>
+                        <?= $model->getRiskLevelBadge() ?>
+                    </div>
                      <div class="col">
                         <div class="text-secondary small mb-1">สถานะ</div>
                         <?= $model->getStatusBadge() ?>

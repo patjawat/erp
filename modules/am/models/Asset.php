@@ -106,7 +106,8 @@ class Asset extends \yii\db\ActiveRecord
     {
         return [
             [['price', 'asset_status','useful_life','asset_condition'], 'required'],
-            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'gfmis', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind'], 'safe'],
+            [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'gfmis', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind','risk_level'], 'safe'],
+            [['risk_level'], 'in', 'range' => ['H', 'M', 'L', null], 'strict' => false],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
             [['department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
@@ -150,6 +151,7 @@ class Asset extends \yii\db\ActiveRecord
             'lifecycle_status' => 'สถานะวงจรชีวิต',
             'qr_code_path' => 'QR Code',
             'asset_kind' => 'ประเภททรัพย์สิน',
+            'risk_level' => 'ระดับความเสี่ยง',
             'asset_condition' => 'สภาพครุภัณฑ์',
         ];
     }
@@ -1057,6 +1059,39 @@ class Asset extends \yii\db\ActiveRecord
         
         $colorCss = $conditionColors[$this->asset_condition] ?? 'secondary';
         return $this->renderBadge($this->assetCondition->name, $colorCss);
+    }
+
+    /**
+     * Badge แสดง "ระดับความเสี่ยง" — ใช้ไอคอนนำ (ต่างจาก status/condition ที่ใช้จุด) เพื่อให้สแกนแยกหมวดได้
+     */
+    public function getRiskLevelBadge()
+    {
+        $level = (string) ($this->risk_level ?? '');
+
+        $map = [
+            'L' => ['label' => 'ต่ำ',   'theme' => 'success', 'icon' => 'fa-shield-halved'],
+            'M' => ['label' => 'กลาง', 'theme' => 'warning', 'icon' => 'fa-triangle-exclamation'],
+            'H' => ['label' => 'สูง',  'theme' => 'danger',  'icon' => 'fa-circle-exclamation'],
+        ];
+
+        if (!isset($map[$level])) {
+            return '<span class="text-body-tertiary small" title="ยังไม่ประเมิน">—</span>';
+        }
+
+        $info = $map[$level];
+        $themes = [
+            'success' => ['bg' => 'rgb(236, 253, 245)', 'text' => 'rgb(4, 120, 87)',  'border' => 'rgb(167, 243, 208)'],
+            'warning' => ['bg' => 'rgb(254, 252, 232)', 'text' => 'rgb(161, 98, 7)',  'border' => 'rgb(254, 240, 138)'],
+            'danger'  => ['bg' => 'rgb(255, 241, 242)', 'text' => 'rgb(190, 18, 60)', 'border' => 'rgb(254, 205, 211)'],
+        ];
+        $color = $themes[$info['theme']];
+
+        return '<span class="badge rounded-pill fw-bold border d-inline-flex align-items-center justify-content-center gap-1" '
+             . 'title="ระดับความเสี่ยง: ' . $info['label'] . '" '
+             . 'style="background-color: ' . $color['bg'] . '; color: ' . $color['text'] . '; border-color: ' . $color['border'] . '; font-size: 11px; padding: 4px 10px; line-height: 1;">'
+             . '<i class="fa-solid ' . $info['icon'] . '" aria-hidden="true" style="font-size: 10px;"></i>'
+             . '<span>' . $info['label'] . '</span>'
+             . '</span>';
     }
 
     /**

@@ -52,6 +52,329 @@ $listDocumentMe  = $emp->listDocumentMe();
     line-height: 1.5;
     padding: 0.1rem 0.1rem 0.5rem 0.1rem;
 }
+
+/* === Travel party section: tokens เทียบเคียงกับ DESIGN.md === */
+:root {
+    --tp-ink-1: #1a202c;
+    --tp-ink-2: #4a5568;
+    --tp-ink-3: #718096;
+    --tp-ink-4: #a0aec0;
+    --tp-surface: #ffffff;
+    --tp-surface-2: #f7f9fc;
+    --tp-surface-3: #eef2f7;
+    --tp-surface-hover: #f1f5f9;
+    --tp-line: rgba(15, 23, 42, 0.08);
+    --tp-line-strong: rgba(15, 23, 42, 0.14);
+    --tp-primary: #0d6efd;
+    --tp-primary-ink: #0a58ca;
+    --tp-primary-soft: rgba(13, 110, 253, 0.08);
+    --tp-success: #15803d;
+    --tp-success-soft: rgba(21, 128, 61, 0.10);
+    --tp-warning: #b45309;
+    --tp-warning-soft: rgba(180, 83, 9, 0.10);
+    --tp-radius-sm: 8px;
+    --tp-radius-xs: 6px;
+    --tp-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+    --tp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --tp-t-fast: 120ms;
+    --tp-t-mid: 180ms;
+    --tp-t-slow: 240ms;
+}
+
+.travel-party-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.travel-party-section__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tp-ink-2);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.travel-party-section__label .bi {
+    color: var(--tp-ink-3);
+    font-size: 0.95rem;
+}
+
+#travel-party-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.1rem 0;
+}
+
+#travel-party-members-list:empty::before {
+    content: 'ยังไม่มีสมาชิกอื่นในคณะ — ค้นหาเพิ่มได้ด้านล่าง';
+    display: block;
+    padding: 0.75rem 0.9rem;
+    color: var(--tp-ink-3);
+    font-size: 0.85rem;
+    background: var(--tp-surface-2);
+    border: 1px dashed var(--tp-line-strong);
+    border-radius: var(--tp-radius-sm);
+}
+
+.travel-party-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid var(--tp-line) !important;
+    transition: background var(--tp-t-fast) var(--tp-ease);
+    /* เข้าแบบนุ่ม — transform + opacity เท่านั้น */
+    animation: tp-row-in var(--tp-t-slow) var(--tp-ease) both;
+}
+
+.travel-party-row:hover {
+    background: var(--tp-surface-hover);
+}
+
+.travel-party-row:last-child {
+    border-bottom: 0 !important;
+}
+
+@keyframes tp-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.travel-party-row.is-leaving {
+    animation: tp-row-out 160ms var(--tp-ease) both;
+}
+
+@keyframes tp-row-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+}
+
+.travel-party-row .btn-remove-member {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--tp-line);
+    background: var(--tp-surface);
+    color: var(--tp-ink-4);
+    transition: color var(--tp-t-fast) var(--tp-ease),
+                background var(--tp-t-fast) var(--tp-ease),
+                border-color var(--tp-t-fast) var(--tp-ease);
+    line-height: 1;
+}
+
+.travel-party-row .btn-remove-member:hover,
+.travel-party-row .btn-remove-member:focus-visible {
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.08);
+    border-color: rgba(185, 28, 28, 0.22);
+    outline: none;
+}
+
+.travel-party-add-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.travel-party-add-row > .flex-grow-1 {
+    min-width: 240px;
+}
+
+#btn-add-travel-member {
+    border-radius: var(--tp-radius-sm);
+    padding: 0.4rem 0.9rem;
+    border-color: var(--tp-line-strong);
+    color: var(--tp-primary-ink);
+    background: var(--tp-surface);
+    transition: background var(--tp-t-fast) var(--tp-ease),
+                border-color var(--tp-t-fast) var(--tp-ease),
+                color var(--tp-t-fast) var(--tp-ease);
+}
+
+#btn-add-travel-member:hover,
+#btn-add-travel-member:focus-visible {
+    background: var(--tp-primary-soft);
+    border-color: rgba(13, 110, 253, 0.32);
+    color: var(--tp-primary-ink);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--tp-primary-soft);
+}
+
+.travel-party-hint {
+    font-size: 0.78rem;
+    color: var(--tp-ink-3);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* === Leader preview chip area === */
+#travel-party-leaders {
+    margin-top: 0.25rem;
+    padding: 0.85rem 0.9rem;
+    background: var(--tp-surface-2);
+    border: 1px solid var(--tp-line);
+    border-radius: var(--tp-radius-sm);
+    transition: opacity var(--tp-t-mid) var(--tp-ease);
+}
+
+#travel-party-leaders.is-loading {
+    opacity: 0.55;
+}
+
+.tp-leaders__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+}
+
+.tp-leaders__title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tp-ink-2);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+}
+
+.tp-leaders__title .bi {
+    color: var(--tp-primary);
+    font-size: 1rem;
+}
+
+.tp-leaders__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--tp-ink-2);
+    background: var(--tp-surface-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.tp-leaders__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.tp-leader-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem 0.25rem 0.5rem;
+    background: var(--tp-surface);
+    border: 1px solid var(--tp-line-strong);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: var(--tp-ink-1);
+    line-height: 1.4;
+    max-width: 16rem;
+    /* stagger entry */
+    animation: tp-chip-in var(--tp-t-mid) var(--tp-ease) both;
+    animation-delay: calc(var(--tp-i, 0) * 40ms);
+}
+
+.tp-leader-chip__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--tp-success);
+    flex-shrink: 0;
+}
+
+.tp-leader-chip.is-no-line {
+    background: var(--tp-warning-soft);
+    border-color: rgba(180, 83, 9, 0.22);
+    color: var(--tp-warning);
+}
+
+.tp-leader-chip.is-no-line .tp-leader-chip__dot {
+    background: var(--tp-warning);
+}
+
+.tp-leader-chip__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tp-leader-chip__badge {
+    font-size: 0.7rem;
+    color: var(--tp-ink-3);
+    background: var(--tp-surface-3);
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes tp-chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(-2px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tp-leaders__empty {
+    font-size: 0.8rem;
+    color: var(--tp-ink-3);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.tp-leaders__foot {
+    font-size: 0.72rem;
+    color: var(--tp-ink-3);
+    margin: 0.55rem 0 0 0;
+    line-height: 1.4;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .travel-party-row,
+    .travel-party-row.is-leaving,
+    .tp-leader-chip {
+        animation: none !important;
+    }
+    #travel-party-leaders,
+    .travel-party-row,
+    .travel-party-row .btn-remove-member,
+    #btn-add-travel-member {
+        transition-duration: 80ms !important;
+    }
+}
 </style>
 
 <?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
@@ -128,42 +451,66 @@ $listDocumentMe  = $emp->listDocumentMe();
             <!-- สมาชิกคณะเดินทาง (เพิ่มจากฟอร์มได้) -->
             <div class="row g-3 mt-2">
                 <div class="col-12">
-                    <label class="form-label d-block mb-2">รายชื่อสมาชิกคณะเดินทาง</label>
-                    <div id="travel-party-members-list" class="mb-3" data-emp-search-url="<?= Html::encode(Url::to(['/depdrop/employee-by-id'])) ?>">
-                        <?php
-                        $existingMembers = $model->isNewRecord ? [] : $model->listMember();
-                        foreach ($existingMembers as $detail):
-                            $emp = $detail->emp;
-                            if (!$emp) {
-                                $label = trim((string)($detail->data_json['label'] ?? '')) ?: $detail->emp_id;
-                        ?>
-                        <div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light">
-                            <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
-                            <span class="text-body flex-grow-1"><?= Html::encode($label) ?></span>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>
+                    <div class="travel-party-section"
+                         data-leaders-url="<?= Html::encode(Url::to(['/me/development/leaders-by-members'])) ?>">
+                        <label class="travel-party-section__label">
+                            <i class="bi bi-people"></i> รายชื่อสมาชิกคณะเดินทาง
+                        </label>
+
+                        <div id="travel-party-members-list" data-emp-search-url="<?= Html::encode(Url::to(['/depdrop/employee-by-id'])) ?>">
+                            <?php
+                            $existingMembers = $model->isNewRecord ? [] : $model->listMember();
+                            foreach ($existingMembers as $detail):
+                                $emp = $detail->emp;
+                                if (!$emp) {
+                                    $label = trim((string)($detail->data_json['label'] ?? '')) ?: $detail->emp_id;
+                            ?>
+                            <div class="travel-party-row">
+                                <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
+                                <span class="text-body flex-grow-1"><?= Html::encode($label) ?></span>
+                                <button type="button" class="btn-remove-member" title="ลบ" aria-label="ลบสมาชิก"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <?php
+                                    continue;
+                                }
+                            ?>
+                            <div class="travel-party-row">
+                                <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
+                                <div class="flex-grow-1"><?= $emp->getAvatar(false) ?></div>
+                                <button type="button" class="btn-remove-member" title="ลบ" aria-label="ลบสมาชิก"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php
-                                continue;
-                            }
-                        ?>
-                        <div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light">
-                            <input type="hidden" name="member_emp_ids[]" value="<?= Html::encode($detail->emp_id) ?>">
-                            <div class="flex-grow-1"><?= $emp->getAvatar(false) ?></div>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>
+
+                        <div class="travel-party-add-row">
+                            <div class="flex-grow-1">
+                                <select id="member-emp-select-new" class="form-control" style="width: 100%;">
+                                    <option value="">เลือกบุคลากรเพื่อเพิ่มในคณะเดินทาง ...</option>
+                                </select>
+                            </div>
+                            <button type="button" id="btn-add-travel-member" class="btn btn-outline-primary">
+                                <i class="bi bi-person-plus me-1"></i> เพิ่มสมาชิก
+                            </button>
                         </div>
-                        <?php endforeach; ?>
+                        <p class="travel-party-hint">เลือกบุคลากรจากรายการแล้วกด «เพิ่มสมาชิก» หรือกด Enter</p>
+
+                        <!-- Preview หัวหน้าที่จะได้รับแจ้งเตือนผ่าน Telegram เมื่อบันทึก -->
+                        <div id="travel-party-leaders" aria-live="polite" hidden>
+                            <div class="tp-leaders__head">
+                                <p class="tp-leaders__title">
+                                    <i class="bi bi-send"></i> หัวหน้าที่จะได้รับแจ้งเตือนผ่าน Telegram
+                                </p>
+                                <span class="tp-leaders__count" id="tp-leaders-count">0</span>
+                            </div>
+                            <div class="tp-leaders__list" id="tp-leaders-list"></div>
+                            <p class="tp-leaders__empty" id="tp-leaders-empty" hidden>
+                                ระบบไม่พบหัวหน้างานของสมาชิกในระบบ — ข้ามการแจ้งเตือน
+                            </p>
+                            <p class="tp-leaders__foot" id="tp-leaders-foot" hidden>
+                                ป้าย <span style="color: var(--tp-warning); font-weight: 600;">สีส้ม</span> = ยังไม่ผูก Telegram จะถูกข้าม
+                            </p>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <div class="flex-grow-1" style="min-width: 260px;">
-                            <select id="member-emp-select-new" class="form-control" style="width: 100%;">
-                                <option value="">เลือกบุคลากรเพื่อเพิ่มในคณะเดินทาง ...</option>
-                            </select>
-                        </div>
-                        <button type="button" id="btn-add-travel-member" class="btn btn-outline-primary rounded-pill align-self-end">
-                            <i class="bi bi-person-plus me-1"></i> เพิ่มสมาชิก
-                        </button>
-                    </div>
-                    <p class="small text-muted mt-1 mb-0">เลือกบุคลากรจากรายการแล้วกด «เพิ่มสมาชิก» หรือเลือกแล้วกด Enter</p>
                 </div>
             </div>
 
@@ -549,11 +896,12 @@ if (\$memberSelectUrl && \$('#member-emp-select-new').length) {
     function appendTravelMemberRow(id, avatarHtml) {
         var exists = \$('#travel-party-members-list input[name="member_emp_ids[]"]').filter(function() { return \$(this).val() === String(id); }).length;
         if (exists) return;
-        var row = \$('<div class="travel-party-row d-flex align-items-center gap-2 py-2 border-bottom border-light"></div>');
+        var row = \$('<div class="travel-party-row"></div>');
         row.append(\$('<input type="hidden" name="member_emp_ids[]">').val(id));
         row.append(\$('<div class="flex-grow-1"></div>').html(avatarHtml || ('<span class="text-body">' + id + '</span>')));
-        row.append(\$('<button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-remove-member" title="ลบ"><i class="bi bi-trash"></i></button>'));
+        row.append(\$('<button type="button" class="btn-remove-member" title="ลบ" aria-label="ลบสมาชิก"><i class="bi bi-trash"></i></button>'));
         \$('#travel-party-members-list').append(row);
+        refreshLeadersPreview();
     }
     \$('#member-emp-select-new').on('select2:select', function(e) {
         var data = e.params.data;
@@ -574,8 +922,108 @@ if (\$memberSelectUrl && \$('#member-emp-select-new').length) {
     });
 }
 \$('#travel-party-members-list').on('click', '.btn-remove-member', function() {
-    \$(this).closest('.travel-party-row').remove();
+    var row = \$(this).closest('.travel-party-row');
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+        row.remove();
+        refreshLeadersPreview();
+        return;
+    }
+    row.addClass('is-leaving');
+    setTimeout(function() {
+        row.remove();
+        refreshLeadersPreview();
+    }, 160);
 });
+
+/* === Preview หัวหน้าที่จะได้รับแจ้งเตือน LINE === */
+var \$leadersBox = \$('#travel-party-leaders');
+var \$leadersList = \$('#tp-leaders-list');
+var \$leadersCount = \$('#tp-leaders-count');
+var \$leadersEmpty = \$('#tp-leaders-empty');
+var \$leadersFoot = \$('#tp-leaders-foot');
+var leadersUrl = \$('.travel-party-section').data('leaders-url') || '';
+var leadersReqToken = 0;
+var leadersDebounceT = null;
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+function collectMemberIds() {
+    var ids = [];
+    \$('#travel-party-members-list input[name="member_emp_ids[]"]').each(function() {
+        var v = \$(this).val();
+        if (v) ids.push(v);
+    });
+    return ids;
+}
+
+function renderLeaders(leaders) {
+    \$leadersList.empty();
+    if (!leaders || !leaders.length) {
+        \$leadersBox.prop('hidden', false);
+        \$leadersCount.text('0');
+        \$leadersEmpty.prop('hidden', false);
+        \$leadersFoot.prop('hidden', true);
+        return;
+    }
+    \$leadersBox.prop('hidden', false);
+    \$leadersEmpty.prop('hidden', true);
+    \$leadersCount.text(String(leaders.length));
+    var anyNoLine = false;
+    leaders.forEach(function(l, i) {
+        var noTg = !l.has_telegram;
+        if (noTg) anyNoLine = true;
+        var memberCount = (l.members && l.members.length) || 0;
+        var memberLabel = memberCount > 1 ? ('×' + memberCount) : '';
+        var titleAttr = memberCount ? 'รับแจ้งเตือนจาก: ' + l.members.join(', ') : '';
+        var chip = \$(
+            '<span class="tp-leader-chip' + (noTg ? ' is-no-line' : '') + '" style="--tp-i:' + i + '" title="' + escapeHtml(titleAttr) + '">'
+            + '<span class="tp-leader-chip__dot"></span>'
+            + '<span class="tp-leader-chip__name">' + escapeHtml(l.fullname) + '</span>'
+            + (memberLabel ? '<span class="tp-leader-chip__badge">' + escapeHtml(memberLabel) + '</span>' : '')
+            + '</span>'
+        );
+        \$leadersList.append(chip);
+    });
+    \$leadersFoot.prop('hidden', !anyNoLine);
+}
+
+function refreshLeadersPreview() {
+    if (!leadersUrl) return;
+    if (leadersDebounceT) clearTimeout(leadersDebounceT);
+    leadersDebounceT = setTimeout(function() {
+        var ids = collectMemberIds();
+        if (!ids.length) {
+            \$leadersBox.prop('hidden', true);
+            \$leadersList.empty();
+            return;
+        }
+        var myReq = ++leadersReqToken;
+        \$leadersBox.addClass('is-loading');
+        \$.ajax({
+            url: leadersUrl,
+            method: 'GET',
+            data: { ids: ids },
+            traditional: true,
+            dataType: 'json'
+        }).done(function(res) {
+            if (myReq !== leadersReqToken) return; // stale
+            renderLeaders((res && res.leaders) || []);
+        }).fail(function() {
+            if (myReq !== leadersReqToken) return;
+            \$leadersBox.prop('hidden', true);
+        }).always(function() {
+            if (myReq === leadersReqToken) \$leadersBox.removeClass('is-loading');
+        });
+    }, 250);
+}
+
+// โหลดครั้งแรก (สำหรับ update mode ที่มีสมาชิกอยู่แล้ว)
+refreshLeadersPreview();
 
 // คำนวณรวมประมาณค่าใช้จ่าย
 function updateEstimatedCostTotal() {

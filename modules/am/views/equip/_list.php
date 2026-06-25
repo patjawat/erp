@@ -135,7 +135,7 @@ $receiveAgeText = static function ($receiveDate): string {
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 224px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 128px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">วันที่รับ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ</th>
+                    <th class="px-3 py-3 border-0 text-uppercase fw-bold text-center" style="width: 140px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ · ความเสี่ยง</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
                     <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
                 </tr>
@@ -207,7 +207,12 @@ $receiveAgeText = static function ($receiveDate): string {
                             <?php endif; ?>
                         </td>
                         <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price, 2) ?></td>
-                        <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
+                        <td class="px-3 py-3 border-0 text-center">
+                            <div class="d-inline-flex flex-column align-items-stretch gap-1" style="min-width: 92px;">
+                                <?= $item->getConditionBadge() ?>
+                                <?= $item->getRiskLevelBadge() ?>
+                            </div>
+                        </td>
                         <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
                         <td class="text-center align-middle equip-actions-cell px-2 px-md-3  border-0">
                             <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">

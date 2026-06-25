@@ -59,7 +59,7 @@ use kartik\widgets\ActiveForm;
 
           return "
                 <div class=\"form-check form-check-inline\">
-                    <input class=\"form-check-input\" type=\"radio\" name=\"{$name}\" 
+                    <input class=\"form-check-input\" type=\"radio\" name=\"{$name}\"
                            value=\"{$value}\" id=\"res_{$value}\" {$check}>
                     <label class=\"form-check-label {$colorClass} fw-bold\" for=\"res_{$value}\">
                         {$label}
@@ -68,6 +68,25 @@ use kartik\widgets\ActiveForm;
         }
       ]
     )->label('ผลการสอบเทียบ', ['class' => 'form-label fw-bold']) ?>
+  </div>
+
+  <div class="col-lg-12 col-md-12 col-sm-12">
+    <?php
+    $calDataJson = $model->data_json;
+    if (is_string($calDataJson)) {
+        $calDataJson = json_decode($calDataJson, true) ?: [];
+    }
+    $calRiskValue = is_array($calDataJson) && isset($calDataJson['risk_level'])
+        ? $calDataJson['risk_level']
+        : null;
+    ?>
+    <?= $this->render('@app/modules/am/views/_partials/_risk_chips', [
+        'name'  => 'AssetDetail[data_json][risk_level]',
+        'id'    => 'assetdetail-data_json-risk_level',
+        'value' => $calRiskValue,
+        'label' => 'ระดับความเสี่ยงของผลสอบเทียบ',
+        'hint'  => 'หากเป็นการสอบเทียบครั้งล่าสุดของทรัพย์สิน ระบบจะอัพเดตค่านี้ไปที่ทะเบียนทรัพย์สินด้วยอัตโนมัติ',
+    ]) ?>
   </div>
 
     <div class="col-lg-12 col-md-12 col-sm-12">

@@ -20,6 +20,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
+use app\modules\hr\models\Employees;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -132,8 +133,15 @@ class DevelopmentController extends Controller
                     $addMember->name = 'member';
                     $addMember->emp_id = $me->id;
                     $addMember->save(false);
-                    $this->syncTravelPartyMembers($model, array_merge([$me->id], $this->request->post('member_emp_ids', [])));
+                    $allMemberEmpIds = array_merge([$me->id], $this->request->post('member_emp_ids', []));
+                    $this->syncTravelPartyMembers($model, $allMemberEmpIds);
                     $model->createApprove();
+                    // แจ้งเตือนหัวหน้าของสมาชิกคณะเดินทางทุกคน (ยกเว้น leader_id ที่ createApprove แจ้งแล้ว)
+                    try {
+                        $model->notifyMembersLeaders($allMemberEmpIds, $model->leader_id);
+                    } catch (\Throwable $th) {
+                        Yii::error('notifyMembersLeaders failed: ' . $th->getMessage(), __METHOD__);
+                    }
                 }
 
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -260,6 +268,56 @@ class DevelopmentController extends Controller
             $detail->emp_id = $empId;
             $detail->save(false);
         }
+    }
+
+    /**
+     * Preview รายชื่อหัวหน้าที่จะได้รับแจ้งเตือน LINE จากรายชื่อสมาชิกคณะเดินทาง
+     * รับ ids[] (รหัสพนักงาน) → ส่งกลับ JSON หัวหน้า dedupe พร้อม fullname/has_line/members[]
+     */
+    public function actionLeadersByMembers()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $ids = $this->request->get('ids', []);
+        if (!is_array($ids)) {
+            $ids = [];
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+
+        $leaders = [];
+        foreach ($ids as $empId) {
+            try {
+                $emp = Employees::findOne($empId);
+                if (!$emp) {
+                    continue;
+                }
+                $leaderInfo = $emp->leaderUser();
+                $leaderEmpId = (int) ($leaderInfo['leader1'] ?? 0);
+                if (!$leaderEmpId) {
+                    continue;
+                }
+                if (!isset($leaders[$leaderEmpId])) {
+                    $leaderEmp = Employees::findOne($leaderEmpId);
+                    if (!$leaderEmp) {
+                        continue;
+                    }
+                    $leaders[$leaderEmpId] = [
+                        'id' => $leaderEmpId,
+                        'fullname' => $leaderEmp->fullname,
+                        'has_telegram' => !empty(trim((string) ($leaderEmp->user?->telegram_id ?? ''))),
+                        'members' => [],
+                    ];
+                }
+                $leaders[$leaderEmpId]['members'][] = $emp->fullname;
+            } catch (\Throwable $th) {
+                continue;
+            }
+        }
+
+        return [
+            'leaders' => array_values($leaders),
+            'count' => count($leaders),
+        ];
     }
 
     // การตอบรับเป็นวิทบาการ
