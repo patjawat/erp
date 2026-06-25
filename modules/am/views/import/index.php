@@ -10,6 +10,43 @@ use app\modules\am\components\AssetHelper;
 $this->title = 'นำเข้าไฟล์ CSV';
 ?>
 
+<details class="alert alert-warning mb-3" open>
+    <summary class="fw-semibold" style="cursor:pointer;">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>เงื่อนไขสำคัญก่อนนำเข้า (กรุณาอ่าน)
+    </summary>
+    <hr class="my-2">
+    <div class="row small">
+        <div class="col-md-6">
+            <div class="fw-semibold mb-1"><i class="fa-solid fa-arrows-rotate me-1"></i>กรณีรหัสครุภัณฑ์ซ้ำกับในระบบ</div>
+            <ul class="mb-2 ps-3">
+                <li>ระบบจะ <span class="text-success fw-semibold">อัปเดตทับ</span> รายการเดิม (ไม่สร้างใหม่)</li>
+                <li>อัปเดตได้เฉพาะรายการที่อยู่ใน <u>กลุ่มครุภัณฑ์</u> เท่านั้น — ถ้ารหัสตรงกับกลุ่มอื่น (ที่ดิน/อาคาร/สิ่งก่อสร้าง) จะถูกปฏิเสธ</li>
+                <li><span class="text-danger fw-semibold">ช่องที่เว้นว่างใน CSV จะไม่ลบค่าเดิมทิ้ง</span> (เช่น ยี่ห้อ รุ่น Serial วันหมดอายุ ฯลฯ)</li>
+                <li>สถานะ (asset_status) และสภาพ (asset_condition) ของเดิม <u>จะไม่ถูกแก้ไข</u></li>
+            </ul>
+            <div class="fw-semibold mb-1"><i class="fa-solid fa-file-circle-plus me-1"></i>กรณีรหัสยังไม่มีในระบบ / รหัสว่าง</div>
+            <ul class="mb-0 ps-3">
+                <li>ไม่มีในระบบ → สร้างใหม่</li>
+                <li><span class="text-danger">ถ้าไม่ระบุรหัสในไฟล์ CSV จะสร้างใหม่ทุกครั้ง (เสี่ยงซ้ำซ้อน)</span></li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <div class="fw-semibold mb-1"><i class="fa-solid fa-list-check me-1"></i>คอลัมน์บังคับในไฟล์ CSV</div>
+            <ul class="mb-2 ps-3">
+                <li>หมายเลขครุภัณฑ์, ชื่อ, มูลค่า, อายุการใช้งาน — ขาดข้อใดข้อหนึ่ง <span class="text-danger">ปฏิเสธทั้งไฟล์</span></li>
+            </ul>
+            <div class="fw-semibold mb-1"><i class="fa-solid fa-circle-info me-1"></i>เงื่อนไขอื่น</div>
+            <ul class="mb-0 ps-3">
+                <li>ต้องเลือก <u>ประเภท</u> และ <u>หมวด</u> ของครุภัณฑ์ก่อนอัปโหลด (จะถูกใช้กับทุกแถวในไฟล์)</li>
+                <li>รหัสซ้ำกันภายในไฟล์เดียว — ระบบจะเก็บเฉพาะ <span class="fw-semibold">แถวล่างสุด</span> (overwrite แถวก่อนหน้า)</li>
+                <li>หน่วยงาน/ผู้รับผิดชอบ ใช้การค้นแบบตรงตัว (exact match) — ถ้าหาไม่พบจะ <u>เว้นว่าง</u> และแจ้งเตือน (ไม่ปฏิเสธ)</li>
+                <li>ถ้ามีแถวใดบันทึกไม่สำเร็จ ระบบจะ <span class="text-danger fw-semibold">ยกเลิกทั้งหมด</span> (rollback) — ไม่มีการบันทึกบางส่วน</li>
+                <li>วันที่รองรับทั้ง ค.ศ. และ พ.ศ. (YYYY-MM-DD หรือ DD/MM/YYYY)</li>
+            </ul>
+        </div>
+    </div>
+</details>
+
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <?= Html::a(
         '<i class="fa-solid fa-download me-2"></i>ดาวน์โหลดเทมเพลต CSV',
