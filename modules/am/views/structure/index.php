@@ -161,8 +161,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             if ($location === '') {
                                 $location = $item->departmentName();
                             }
-                            $catTitle = $item->assetCategory?->title ?? $item->assetType?->title ?? '-';
-                            $titleName = $item->asset_name ?: ($item->AssetitemName() ?: '-');
+                            $structureGroupName = is_array($item->data_json) ? ($item->data_json['structure_group_name'] ?? '') : '';
+                            $structureTypeName  = is_array($item->data_json) ? ($item->data_json['structure_type_name']  ?? '') : '';
+                            $structureOtherNote = is_array($item->data_json) ? ($item->data_json['structure_type_other'] ?? '') : '';
+                            $catTitle           = $structureGroupName !== '' ? $structureGroupName : ($item->assetCategory?->title ?? $item->assetType?->title ?? '-');
+                            $titleName          = $item->asset_name ?: ($item->AssetitemName() ?: '-');
                             ?>
                             <tr style="border-bottom: 1px solid rgb(241, 245, 249);">
                                 <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139);"><?= (($dataProvider->pagination->offset + 1) + $key) ?></td>
@@ -190,7 +193,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 border-0">
-                                    <span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= Html::encode($catTitle) ?></span>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge rounded-2 fw-medium border align-self-start text-truncate" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px; max-width: 160px;" title="<?= Html::encode($catTitle) ?>"><?= Html::encode($catTitle) ?></span>
+                                        <?php if ($structureTypeName !== ''): ?>
+                                            <span class="text-truncate" style="font-size: 12px; color: rgb(100, 116, 139); max-width: 160px;" title="<?= Html::encode($structureTypeName) ?><?= $structureOtherNote !== '' ? ' · ' . Html::encode($structureOtherNote) : '' ?>">
+                                                <?= Html::encode($structureTypeName) ?><?php if ($structureOtherNote !== ''): ?> · <?= Html::encode($structureOtherNote) ?><?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 border-0">
                                     <div class="d-flex flex-column gap-1">

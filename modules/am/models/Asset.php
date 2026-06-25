@@ -804,6 +804,76 @@ class Asset extends \yii\db\ActiveRecord
         return ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->all(), 'code', 'title');
     }
 
+    /** หมวดสิ่งปลูกสร้าง (level 1) — ใช้ใน seg-control */
+    public function ListStructureGroup()
+    {
+        return ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'structure_type', 'category_id' => null, 'active' => 1])
+                ->orderBy(['id' => SORT_ASC])
+                ->all(),
+            'code',
+            'title'
+        );
+    }
+
+    /** รายการ leaf ภายใต้หมวด (level 2) — ใช้ใน select cascade */
+    public function ListStructureTypeByGroup($groupCode)
+    {
+        if (empty($groupCode)) {
+            return [];
+        }
+        return ArrayHelper::map(
+            Categorise::find()
+                ->where(['name' => 'structure_type', 'category_id' => $groupCode, 'active' => 1])
+                ->orderBy(['id' => SORT_ASC])
+                ->all(),
+            'code',
+            'title'
+        );
+    }
+
+    /**
+     * คืนค่า default ค่าเสื่อมของ leaf — ถ้า data_json เปล่าให้ดึงจากหมวด
+     * @return array{useful_life:?int, depreciation_rate:?float, group_code:?string, group_title:?string, allow_other_note:bool}
+     */
+    public function getStructureDefaults($leafCode)
+    {
+        $empty = [
+            'useful_life' => null,
+            'depreciation_rate' => null,
+            'group_code' => null,
+            'group_title' => null,
+            'allow_other_note' => false,
+        ];
+        if (empty($leafCode)) {
+            return $empty;
+        }
+        $leaf = Categorise::find()->where(['name' => 'structure_type', 'code' => $leafCode])->one();
+        if (!$leaf) {
+            return $empty;
+        }
+
+        $leafJson = is_array($leaf->data_json)
+            ? $leaf->data_json
+            : (is_string($leaf->data_json) ? (json_decode($leaf->data_json, true) ?: []) : []);
+
+        $parent = !empty($leaf->category_id)
+            ? Categorise::find()->where(['name' => 'structure_type', 'code' => $leaf->category_id])->one()
+            : null;
+        $parentJson = $parent && is_array($parent->data_json)
+            ? $parent->data_json
+            : ($parent && is_string($parent->data_json) ? (json_decode($parent->data_json, true) ?: []) : []);
+
+        return [
+            'useful_life'       => $leafJson['useful_life']       ?? $parentJson['useful_life']       ?? null,
+            'depreciation_rate' => $leafJson['depreciation_rate'] ?? $parentJson['depreciation_rate'] ?? null,
+            'group_code'        => $parent->code  ?? null,
+            'group_title'       => $parent->title ?? null,
+            'allow_other_note'  => !empty($leafJson['allow_other_note']),
+        ];
+    }
+
     public function ListAssetstatus()
     {
         return ArrayHelper::map(AssetStatus::find()->all(), 'id', 'name');

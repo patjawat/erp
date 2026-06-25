@@ -82,6 +82,60 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
+     * Cascade endpoint: คืน leaf ภายใต้หมวด + ค่า default ค่าเสื่อมของหมวด
+     * รับ POST/GET group_code, ตอบ JSON { items:[{id,text}], defaults:{useful_life,depreciation_rate} }
+     */
+    public function actionStructureDepdrop()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $groupCode = (string) ($this->request->post('group_code') ?? $this->request->get('group_code') ?? '');
+
+        $model = new Asset();
+        $leaves = $model->ListStructureTypeByGroup($groupCode);
+
+        $items = [];
+        foreach ($leaves as $code => $title) {
+            $items[] = ['id' => $code, 'text' => $title];
+        }
+
+        $defaults = ['useful_life' => null, 'depreciation_rate' => null];
+        if ($groupCode !== '') {
+            $row = \app\models\Categorise::find()
+                ->where(['name' => 'structure_type', 'code' => $groupCode])
+                ->one();
+            $json = $row && is_array($row->data_json)
+                ? $row->data_json
+                : ($row && is_string($row->data_json) ? (json_decode($row->data_json, true) ?: []) : []);
+            $defaults['useful_life']       = $json['useful_life']       ?? null;
+            $defaults['depreciation_rate'] = $json['depreciation_rate'] ?? null;
+        }
+
+        return [
+            'status'   => 'success',
+            'items'    => $items,
+            'defaults' => $defaults,
+        ];
+    }
+
+    /**
+     * Endpoint: คืนค่า default ค่าเสื่อมของ leaf (รวม allow_other_note flag)
+     * ใช้ตอน user เลือก leaf ใน select
+     */
+    public function actionStructureLeafDefaults()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $leafCode = (string) ($this->request->post('leaf_code') ?? $this->request->get('leaf_code') ?? '');
+
+        $model = new Asset();
+        return [
+            'status'   => 'success',
+            'defaults' => $model->getStructureDefaults($leafCode),
+        ];
+    }
+
+    /**
      * ดาวน์โหลดเทมเพลต CSV สำหรับนำเข้าทะเบียนสิ่งปลูกสร้าง
      * คอลัมน์อ้างอิงจาก modules/am/data/structure_import_columns.php (20 คอลัมน์)
      */
