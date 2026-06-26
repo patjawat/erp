@@ -314,6 +314,18 @@ class ImportController extends Controller
                     'message' => 'ไม่พบวิธีการได้มา "' . $purchase . '" ในระบบ',
                 ];
             }
+
+            // ตรวจวิธีได้มา — กรอกมาแต่หาไม่พบใน categorise (name=method_get) → เตือน
+            $methodGet = $this->cellAt($data, $columnMap, 'method_get');
+            if ($methodGet !== '' && $this->resolveMethodGetFromImport($methodGet) === '') {
+                $warnings[] = [
+                    'row' => $rowNumber,
+                    'code' => $code,
+                    'field' => 'method_get',
+                    'value' => $methodGet,
+                    'message' => 'ไม่พบวิธีได้มา "' . $methodGet . '" ในระบบ',
+                ];
+            }
         }
         fclose($handle);
 
@@ -417,6 +429,15 @@ class ImportController extends Controller
                         'message' => 'ไม่พบประเภทเงิน "' . $budgetTypeRaw . '" ในระบบ — ปล่อยว่าง',
                     ];
                 }
+                $methodGetRaw = $this->cellAt($data, $columnMap, 'method_get');
+                $methodGetResolved = $this->resolveMethodGetFromImport($methodGetRaw);
+                if ($methodGetRaw !== '' && $methodGetResolved === '') {
+                    $warningRows[] = [
+                        'row' => $rowNumber,
+                        'code' => $code,
+                        'message' => 'ไม่พบวิธีได้มา "' . $methodGetRaw . '" ในระบบ — ปล่อยว่าง',
+                    ];
+                }
                 $incomingJson = [
                     'brand' => $this->cellAt($data, $columnMap, 'brand'),
                     'asset_model' => $this->cellAt($data, $columnMap, 'asset_model'),
@@ -424,6 +445,7 @@ class ImportController extends Controller
                     'unit' => $this->cellAt($data, $columnMap, 'unit'),
                     'serial_number' => $this->cellAt($data, $columnMap, 'serial_number'),
                     'budget_type' => $budgetTypeResolved,
+                    'method_get' => $methodGetResolved,
                     'inspection_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'inspection_date')),
                     'expire_date' => $this->normalizeDateForDb($this->cellAt($data, $columnMap, 'expire_date')),
                     'location' => $this->cellAt($data, $columnMap, 'location'),
@@ -1165,6 +1187,22 @@ class ImportController extends Controller
         }
         $cat = Categorise::find()
             ->andWhere(['name' => 'purchase'])
+            ->andWhere(['or', ['code' => $value], ['title' => $value]])
+            ->one();
+        return $cat ? (string) $cat->code : '';
+    }
+
+    /**
+     * นำชื่อหรือรหัส (จาก CSV) ไปค้นใน categorise (name=method_get) แล้วคืน code
+     */
+    protected function resolveMethodGetFromImport($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $cat = Categorise::find()
+            ->andWhere(['name' => 'method_get'])
             ->andWhere(['or', ['code' => $value], ['title' => $value]])
             ->one();
         return $cat ? (string) $cat->code : '';

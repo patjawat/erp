@@ -58,11 +58,22 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
                 'order_type' => StockOrder::ORDER_TYPE_OUT,
                 'source_type' => 'REQUEST',
             ])
+            ->andWhere(['<>', 'status', StockOrder::STATUS_DRAFT])
             ->with(['mainWarehouse', 'subWarehouse'])
             ->orderBy(['id' => SORT_DESC]);
 
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            $query->andWhere('0=1');
+        } else {
+            $query->andWhere(new \yii\db\Expression(
+                "CAST(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.issue_approver.emp_id')) AS UNSIGNED) = :empId",
+                [':empId' => (int) $me->id]
+            ));
+        }
+
         if ($filterStatus === 'pending') {
-            $query->andWhere(['status' => [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING]]);
+            $query->andWhere(['status' => StockOrder::STATUS_PENDING]);
         } elseif (in_array($filterStatus, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED, StockOrder::STATUS_CANCELLED], true)) {
             $query->andWhere(['status' => $filterStatus]);
         }

@@ -476,21 +476,46 @@ $js = <<< JS
                     clearDetailRows();
                     prevItemType = newVal;
                     itemTypeTomSelect.setValue(newVal, true);
+                    resetItemSelectForCategory(newVal);
                 });
                 itemTypeTomSelect.setValue(prevItemType, true);
                 return;
             }
             prevItemType = newVal;
-            if (typeof itemSelect !== 'undefined' && itemSelect) {
-                if (newVal) { itemSelect.enable(); itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...'; } else { itemSelect.disable(); itemSelect.placeholder = 'กรุณาเลือกประเภทวัสดุก่อน'; }
-            }
+            resetItemSelectForCategory(newVal);
         }
     });
+
+    /**
+     * ล้าง cache + options ของ itemSelect เมื่อสลับประเภทวัสดุหรือคลัง
+     * จำเป็นเพราะ TomSelect cache ผล load() ภายใน:
+     *   - this.options: เก็บผลการค้นเดิม (ทำให้ dropdown โชว์ของประเภทเก่า)
+     *   - this.loadedSearches: tracker ของ query ที่เคยโหลด (ทำให้ไม่ refire เมื่อพิมพ์ query เดิม)
+     */
+    function resetItemSelectForCategory(cat) {
+        if (typeof itemSelect === 'undefined' || !itemSelect) return;
+        try { itemSelect.clear(true); } catch(e) {}
+        try { itemSelect.clearOptions(); } catch(e) {}
+        if (itemSelect.loadedSearches) itemSelect.loadedSearches = {};
+        if (typeof itemSelect.clearCache === 'function') {
+            try { itemSelect.clearCache(); } catch(e) {}
+        }
+        if (cat) {
+            itemSelect.enable();
+            itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...';
+        } else {
+            itemSelect.disable();
+            itemSelect.placeholder = 'กรุณาเลือกประเภทวัสดุก่อน';
+        }
+        try { itemSelect.refreshOptions(false); } catch(e) {}
+    }
 
     function loadItemTypesByWarehouse(warehouseId, preferredItemType) {
         var url = itemTypeListUrl + (warehouseId ? '?warehouse_id=' + encodeURIComponent(warehouseId) : '');
         itemTypeTomSelect.placeholder = warehouseId ? 'เลือกประเภทวัสดุ' : 'กรุณาเลือกคลังก่อน';
-        if (typeof itemSelect !== 'undefined' && itemSelect) { itemSelect.disable(); itemSelect.placeholder = 'กรุณาเลือกประเภทวัสดุก่อน'; }
+        // คลังเปลี่ยน = ล้าง cache ของ itemSelect ทันที (กันค้างของคลัง/ประเภทก่อนหน้า)
+        resetItemSelectForCategory('');
+        prevItemType = '';
         fetch(url).then(function(r) { return r.json(); }).then(function(res) {
             itemTypeTomSelect.clearOptions();
             if (res.results && res.results.length) {
@@ -502,10 +527,7 @@ $js = <<< JS
             if (preferredItemType && res.results && res.results.some(function(o) { return o.value == preferredItemType; })) {
                 itemTypeTomSelect.setValue(preferredItemType, true);
                 prevItemType = preferredItemType;
-                if (typeof itemSelect !== 'undefined' && itemSelect) {
-                    itemSelect.enable();
-                    itemSelect.placeholder = 'พิมพ์ชื่อหรือรหัสพัสดุ...';
-                }
+                resetItemSelectForCategory(preferredItemType);
             }
         }).catch(function() {
             itemTypeTomSelect.clearOptions();
@@ -893,8 +915,8 @@ $js = <<< JS
                 confirmButtonColor: '#198754', // สีเขียว Success
                 cancelButtonColor: '#d33',
                 confirmButtonText: '<i class="bi bi-check-lg"></i> ' + {$msgConfirmYes},
-                cancelButtonText: {$msgCancel},
-                reverseButtons: true // ให้ปุ่มยกเลิกอยู่ซ้าย
+                cancelButtonText: {$msgCancel}
+                // default order: ปุ่มยืนยันซ้าย ปุ่มยกเลิกขวา
             }).then(function(result) {
                 if (result.isConfirmed) {
                     // แสดง Loading ระหว่างรอ Server ประมวลผล

@@ -187,22 +187,106 @@ public function behaviors()
             }
         }
 
-        // ดึงผู้เห็นชอบ (หัวหน้า) จากการตั้งค่าผังโครงสร้างองค์กร ถ้ายังไม่ได้ตั้ง
-        if (!$model->getIssueSignatureEmpId('approver')) {
-            $defaultApprover = static::getDefaultApproverFromOrgDiagram();
-            if ($defaultApprover && !empty($defaultApprover['emp_id'])) {
-                $model->setIssueSignatures([
-                    'approver' => [
-                        'name' => $defaultApprover['name'],
-                        'position' => $defaultApprover['position'],
-                        'date' => '',
-                        'emp_id' => $defaultApprover['emp_id'],
-                    ],
-                ]);
+        // Resolve context อัตโนมัติจาก user ที่ล็อกอิน:
+        //   - ผู้เบิก (current employee)
+        //   - หน่วยงานที่รับของ (eligible sub-warehouses; auto-pick แรก)
+        //   - ผู้เห็นชอบ (หัวหน้าหน่วยงาน → org diagram → null)
+        $ctx = $this->resolveCreateContext();
+
+        if ($ctx['approver'] && !$model->getIssueSignatureEmpId('approver')) {
+            $model->setIssueSignatures([
+                'approver' => [
+                    'name' => $ctx['approver']['name'],
+                    'position' => $ctx['approver']['position'],
+                    'date' => '',
+                    'emp_id' => $ctx['approver']['emp_id'],
+                ],
+            ]);
+        }
+
+        if (empty($model->sub_warehouse_id) && !empty($ctx['sub_warehouses'])) {
+            $model->sub_warehouse_id = $ctx['sub_warehouses'][0]->id;
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+            'ctx' => $ctx,
+        ]);
+    }
+
+    /**
+     * Resolve context อัตโนมัติสำหรับฟอร์มสร้างใบขอเบิก
+     *
+     * @return array{
+     *   requester: array{emp: \app\modules\hr\models\Employees|null, name: string, position: string, department_id: int|null, department_name: string, avatar: string},
+     *   sub_warehouses: \app\modules\inventoryV2\models\Warehouse[],
+     *   approver: array{name: string, position: string, emp_id: int|null, source: string}|null
+     * }
+     */
+    protected function resolveCreateContext()
+    {
+        $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+        $emp = $userId ? Employees::findOne(['user_id' => $userId]) : null;
+
+        $requester = [
+            'emp' => $emp,
+            'name' => '',
+            'position' => '',
+            'department_id' => null,
+            'department_name' => '',
+            'avatar' => '',
+        ];
+        if ($emp) {
+            $info = StockOrder::getEmployeeNameAndPosition($emp->id);
+            $requester['name'] = $info['name'];
+            $requester['position'] = $info['position'];
+            $requester['department_id'] = $emp->department !== null && $emp->department !== '' ? (int) $emp->department : null;
+            $requester['avatar'] = method_exists($emp, 'getAvatar') ? (string) $emp->getAvatar(false) : '';
+            if ($requester['department_id']) {
+                $org = Organization::findOne(['id' => $requester['department_id']]);
+                $requester['department_name'] = $org ? (string) $org->name : '';
             }
         }
 
-        return $this->render('create', ['model' => $model]);
+        $subWarehouses = Warehouse::findSubWarehousesForUser();
+
+        $approver = null;
+        if ($requester['department_id']) {
+            $org = Organization::findOne(['id' => $requester['department_id']]);
+            $dj = $org ? $org->data_json : null;
+            if (is_string($dj)) {
+                $dj = json_decode($dj, true) ?: [];
+            }
+            $leader1 = is_array($dj) && !empty($dj['leader1']) ? (int) $dj['leader1'] : 0;
+            if ($leader1 > 0) {
+                $info = StockOrder::getEmployeeNameAndPosition($leader1);
+                if ($info['name'] !== '' || $info['position'] !== '') {
+                    $approver = [
+                        'name' => $info['name'],
+                        'position' => $info['position'],
+                        'emp_id' => $leader1,
+                        'source' => 'department',
+                    ];
+                }
+            }
+        }
+        if (!$approver) {
+            $fallback = static::getDefaultApproverFromOrgDiagram();
+            if ($fallback && !empty($fallback['emp_id'])) {
+                $approver = [
+                    'name' => $fallback['name'],
+                    'position' => $fallback['position'],
+                    'emp_id' => (int) $fallback['emp_id'],
+                    'source' => 'org_diagram',
+                ];
+            }
+        }
+
+        return [
+            'requester' => $requester,
+            'sub_warehouses' => $subWarehouses,
+            'approver' => $approver,
+        ];
     }
 
     /**

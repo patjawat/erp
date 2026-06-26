@@ -424,12 +424,15 @@ class StockItemController extends Controller
     /**
      * รายการพัสดุสำหรับ Tom-Select (รับเข้า/เบิก ฯลฯ)
      * warehouse_id = กรองเฉพาะประเภทที่คลังรับเข้าได้, category_id = กรองตามประเภทวัสดุที่เลือก
+     *
+     * หมายเหตุ: ใช้ column name จริงของตาราง categorise (code, title, active)
+     * เพราะ StockItemQuery แปลง alias ให้เฉพาะ hash condition; SELECT/LIKE/operator ยังต้องใช้ของจริง
      */
     public function actionItemList($q = null, $warehouse_id = null, $category_id = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $query = StockItem::find()
-            ->select(['item_code', 'item_name', 'item_code', 'category_id', 'data_json'])
+            ->select(['code', 'title', 'category_id', 'data_json'])
             ->where(['is_active' => 1]);
 
         if (!empty($warehouse_id)) {
@@ -449,8 +452,8 @@ class StockItemController extends Controller
         if (!empty($q)) {
             $query->andWhere([
                 'or',
-                ['like', 'item_name', $q],
-                ['like', 'item_code', $q]
+                ['like', 'title', $q],
+                ['like', 'code', $q]
             ]);
         }
 
@@ -506,7 +509,9 @@ class StockItemController extends Controller
     }
 
     /**
-     * รายการวัสดุสำหรับเลือกในใบขอเบิก (แสดงทุกวัสดุที่เปิดใช้ พร้อมยอดคงเหลือในคลังที่เลือก)
+     * รายการวัสดุสำหรับเลือกในใบขอเบิก
+     * แสดงเฉพาะวัสดุที่มียอดคงเหลือ > 0 ในคลังที่เลือก (คลังที่จ่ายของ)
+     * กรองตามประเภทวัสดุที่คลังนั้นรับไว้ (ถ้ามีการตั้งค่า)
      * GET warehouse_id, q (optional ค้นหาชื่อ/รหัส)
      */
     public function actionGetItemsByWarehouse($warehouse_id, $q = '')
@@ -515,21 +520,36 @@ class StockItemController extends Controller
         $warehouse_id = (int) $warehouse_id;
         $q = trim((string) $q, " \t\n\r\0\x0B\"'");
 
+        if ($warehouse_id <= 0) {
+            return [];
+        }
+
+        // ยอดรวมต่อ item ในคลังนี้ (สรุป StockBalance ที่ warehouse_id เดียวกัน)
         $balanceSubQuery = (new \yii\db\Query())
             ->select(['item_code', 'SUM([[balance_qty]]) AS balance_qty'])
             ->from(StockBalance::tableName())
             ->where(['warehouse_id' => $warehouse_id])
-            ->groupBy('item_code');
+            ->groupBy('item_code')
+            ->having(['>', 'SUM([[balance_qty]])', 0]);
 
         $query = StockItem::find()
             ->select([
                 'categorise.code AS item_code',
                 'categorise.title AS item_name',
-                'COALESCE(b.balance_qty, 0) AS balance_qty',
+                'b.balance_qty AS balance_qty',
             ])
-            ->leftJoin(['b' => $balanceSubQuery], 'b.item_code = categorise.code')
+            ->innerJoin(['b' => $balanceSubQuery], 'b.item_code = categorise.code')
             ->andWhere(['categorise.active' => 1])
             ->orderBy(['categorise.code' => SORT_ASC]);
+
+        // กรองตามประเภทที่คลังกำหนดไว้ (ถ้ามี)
+        $warehouse = Warehouse::findOne($warehouse_id);
+        if ($warehouse) {
+            $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+            if (!empty($allowedTypes)) {
+                $query->andWhere(['categorise.category_id' => array_map('strval', $allowedTypes)]);
+            }
+        }
 
         if ($q !== '') {
             $query->andWhere([
@@ -539,7 +559,7 @@ class StockItemController extends Controller
             ]);
         }
 
-        $models = $query->asArray()->all();
+        $models = $query->limit(50)->asArray()->all();
         $results = [];
         foreach ($models as $row) {
             $item = StockItem::findOne($row['item_code']);

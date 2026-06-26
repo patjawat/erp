@@ -159,8 +159,8 @@ $js = <<< JS
                 confirmButtonColor: '#198754', // สีเขียว Success
                 cancelButtonColor: '#d33',
                 confirmButtonText: '<i class="bi bi-check-lg"></i> ใช่, บันทึกเลย!',
-                cancelButtonText: 'ยกเลิก',
-                reverseButtons: true // ให้ปุ่มยกเลิกอยู่ซ้าย
+                cancelButtonText: 'ยกเลิก'
+                // default order: ปุ่มยืนยันซ้าย ปุ่มยกเลิกขวา
             }).then((result) => {
                 if (result.isConfirmed) {
                     // แสดง Loading ระหว่างรอ Server ประมวลผล

@@ -14,17 +14,41 @@ $formatRepoJs = "var formatRepo=function(repo){if(repo.loading)return repo.avata
 $this->registerJs($formatRepoJs, View::POS_HEAD);
 $resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagination:{more:(p.page*30)<(data.total_count||999)}};}";
 
-// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานที่รับของ) — คลังย่อยแสดงตาม user ที่ล็อกอินและกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก
+/** @var \app\modules\inventoryV2\models\StockOrder $model */
+/** @var array|null $ctx */
+
+// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานที่รับของ)
+// — คลังย่อยดึงจาก context ที่ controller resolve ให้แล้ว (ตามแผนกของผู้เบิก)
 $mainWarehousesList = Warehouse::find()
     ->where(['warehouse_type' => 'MAIN'])
     ->andWhere(['or', ['delete' => null], ['delete' => '']])
     ->orderBy(['warehouse_name' => SORT_ASC])
     ->all();
-$mainWarehouseIds = array_column($mainWarehousesList, 'id');
 $mainWarehouses = ArrayHelper::map($mainWarehousesList, 'id', 'warehouse_name');
 $warehouseList = ArrayHelper::map(Warehouse::find()->andWhere(['or', ['delete' => null], ['delete' => '']])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
-$subWarehousesList = Warehouse::findSubWarehousesForUser();
+
+// sub-warehouses: ถ้า controller ส่ง $ctx มา ใช้จาก ctx (auto), ไม่มีก็โหลดเอง (เช่นในหน้า update)
+$subWarehousesList = $ctx['sub_warehouses'] ?? null;
+if ($subWarehousesList === null) {
+    $subWarehousesList = Warehouse::findSubWarehousesForUser();
+}
 $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
+
+// auto-select คลังย่อยตัวแรก ถ้ายังไม่ได้เลือกไว้
+$autoSubId = $model->sub_warehouse_id ?: (!empty($subWarehousesList) ? $subWarehousesList[0]->id : null);
+
+// ผู้เห็นชอบ — ใช้ค่าใน model ก่อน (กรณี post error/update) แล้ว fallback ไป $ctx
+$approverSig = $model->getIssueSignature('approver');
+$approverEmpId = $model->getIssueSignatureEmpId('approver');
+if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
+    $approverEmpId = (int) $ctx['approver']['emp_id'];
+    if (empty($approverSig['name'])) {
+        $approverSig['name'] = $ctx['approver']['name'] ?? '';
+    }
+    if (empty($approverSig['position'])) {
+        $approverSig['position'] = $ctx['approver']['position'] ?? '';
+    }
+}
 ?>
 
 <div class="requisition-form">
@@ -41,6 +65,7 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
                         'id' => 'sub-warehouse-id',
                         'prompt' => '-- เลือกหน่วยงานที่รับของ --',
                         'class' => 'form-select',
+                        'options' => $autoSubId ? [$autoSubId => ['selected' => true]] : [],
                     ]) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
@@ -88,17 +113,6 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
                         <div class="form-text">เช่น เบิกเพื่อใช้ในหน่วยงาน, เติมสต็อกคลังย่อย หรือกดตัวเลือกเพื่อเลือกเหตุผลที่ใช้บ่อย</div>
                     </div>
                 </div>
-                <?php
-                $approverSig = $model->getIssueSignature('approver');
-                $approverEmpId = '';
-                $dj = $model->data_json;
-                if (is_string($dj)) {
-                    $dj = json_decode($dj, true) ?: [];
-                }
-                if (!empty($dj['issue_approver']['emp_id'])) {
-                    $approverEmpId = $dj['issue_approver']['emp_id'];
-                }
-                ?>
                 <div class="col-12">
                     <div class="form-group">
                         <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร <a href="<?= \yii\helpers\Url::to(['/hr/organization/diagram']) ?>" target="_blank" class="small">ตั้งค่า <i class="bi bi-box-arrow-up-right"></i></a> หรือเลือกด้านล่าง)</label>
@@ -138,7 +152,7 @@ $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
                                 'templateResult' => new JsExpression('formatRepo'),
                             ],
                         ]) ?>
-                        <div class="form-text">ตำแหน่งจะดึงจากระบบพนักงานอัตโนมัติ</div>
+                        <div class="form-text">ตำแหน่งจะดึงจากระบบพนักงานอัตโนมัติ — ค่าเริ่มต้นคือหัวหน้าหน่วยงานของผู้เบิก (สามารถเปลี่ยนได้)</div>
                     </div>
                 </div>
             </div>
@@ -499,10 +513,45 @@ function loadBelowMaxAndAddToTable() {
         });
 }
 
+// Probe ว่าคลังนี้ยังมีของให้เบิกหรือไม่ — ถ้าไม่มี แสดงเตือนและล็อกปุ่มเพิ่มวัสดุ
+var warehouseHasStock = true;
+function checkWarehouseStock(whId) {
+    if (!whId) {
+        warehouseHasStock = true;
+        $('#add-item').prop('disabled', false).removeAttr('title');
+        return;
+    }
+    var url = '$getItemInWhUrl' + '?warehouse_id=' + encodeURIComponent(whId) + '&q=';
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(json) {
+            var list = Array.isArray(json) ? json : (json && (json.results || json.data)) || [];
+            if (list.length === 0) {
+                warehouseHasStock = false;
+                $('#add-item').prop('disabled', true).attr('title', 'คลังนี้ยังไม่มีของให้เบิก');
+                Swal.fire({
+                    title: 'คลังนี้ยังไม่มีของให้เบิก',
+                    text: 'ยอดคงเหลือของคลังที่จ่ายของที่เลือกเป็น 0 ทุกรายการ กรุณาเลือกคลังอื่น หรือติดต่อผู้ดูแลคลังให้รับเข้าก่อน',
+                    icon: 'warning',
+                    confirmButtonText: 'รับทราบ'
+                });
+            } else {
+                warehouseHasStock = true;
+                $('#add-item').prop('disabled', false).removeAttr('title');
+            }
+        })
+        .catch(function() {
+            warehouseHasStock = true;
+            $('#add-item').prop('disabled', false).removeAttr('title');
+        });
+}
+
 // เปลี่ยนคลังหลัก: ยังคง confirm-then-clear แต่ไม่ auto-reload — ให้ผู้ใช้กดปุ่มเอง
 $('#main-warehouse-id').on('change', function() {
     $(this).removeClass('is-invalid');
     updateLoadBelowMaxButtonState();
+    var whId = $(this).val();
+    checkWarehouseStock(whId);
     if ($('#item-table tbody tr').length > 0) {
         Swal.fire({
             title: 'ยืนยันการเปลี่ยนคลัง?',
@@ -519,6 +568,11 @@ $('#main-warehouse-id').on('change', function() {
         });
     }
 });
+
+// init: ถ้ามีคลังถูก preselect ไว้ตั้งแต่โหลดหน้า → probe ทันที
+if ($('#main-warehouse-id').val()) {
+    checkWarehouseStock($('#main-warehouse-id').val());
+}
 
 // เปลี่ยนหน่วยงานที่รับของ: แค่อัปเดตสถานะปุ่ม ไม่ trigger reload
 $('#sub-warehouse-id').on('change', function() {

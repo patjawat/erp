@@ -22,5 +22,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="requisition-create">
     <?= $this->render('_form', [
         'model' => $model,
+        'ctx' => $ctx ?? null,
     ]) ?>
 </div>
