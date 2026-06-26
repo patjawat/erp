@@ -10,7 +10,7 @@ use yii\helpers\Url;
 /** @var array<int,array{id:string,label:string,count:int,tone:string,icon:string}> $statusBreakdown */
 /** @var array<int,array{id:string,label:string,count:int,tone:string,icon:string}> $conditionBreakdown */
 /** @var array<int,array{id:string,label:string,count:int,tone:string,icon:string,desc:string}> $riskBreakdown */
-/** @var array<int,array{label:string,count:int}> $categoryBreakdown */
+/** @var array<int,array{label:string,count:int}> $typeBreakdown */
 /** @var array<int,array{code:string,label:string,count:int,amount:float}> $budgetTypeBreakdown */
 /** @var array<int,array{code:string,label:string,count:int,amount:float}> $methodGetBreakdown */
 /** @var array<int,array{code:string,label:string,count:int,amount:float}> $purchaseBreakdown */
@@ -25,7 +25,7 @@ $total              = (int) $total;
 $statusBreakdown    = is_array($statusBreakdown ?? null)    ? $statusBreakdown    : [];
 $conditionBreakdown = is_array($conditionBreakdown ?? null) ? $conditionBreakdown : [];
 $riskBreakdown      = is_array($riskBreakdown ?? null)      ? $riskBreakdown      : [];
-$categoryBreakdown    = is_array($categoryBreakdown ?? null)    ? $categoryBreakdown    : [];
+$typeBreakdown        = is_array($typeBreakdown ?? null)        ? $typeBreakdown        : [];
 $budgetTypeBreakdown  = is_array($budgetTypeBreakdown ?? null)  ? $budgetTypeBreakdown  : [];
 $methodGetBreakdown   = is_array($methodGetBreakdown ?? null)   ? $methodGetBreakdown   : [];
 $purchaseBreakdown    = is_array($purchaseBreakdown ?? null)    ? $purchaseBreakdown    : [];
@@ -68,8 +68,8 @@ foreach ($statusBreakdown as $s) {
 $statusTotal = 0;
 foreach ($statusBreakdown as $s) { $statusTotal += (int) $s['count']; }
 
-$catMax = 0;
-foreach ($categoryBreakdown as $c) { if ($c['count'] > $catMax) $catMax = (int) $c['count']; }
+$typeMax = 0;
+foreach ($typeBreakdown as $c) { if ($c['count'] > $typeMax) $typeMax = (int) $c['count']; }
 
 // คำนวณ donut segments (เริ่มจาก 12 นาฬิกา) — ใช้ statusBreakdown ตาม sort_order/count จาก controller
 $donutRadius = 56;
@@ -568,6 +568,46 @@ a.ov-risk__tile:focus-visible .ov-risk__chev {
     animation-delay: calc(var(--i, 0) * 60ms + 120ms);
 }
 
+/* Scrollable bar list — เลื่อนดูทุกประเภทใน area จำกัด */
+.ov-barlist--scroll {
+    max-height: 18rem;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-right: -4px;
+    /* fade ขอบล่างเพื่อบอกใบ้ว่ามีของต่อ ใช้ mask แทน overlay
+       เพื่อให้ scrollbar / pointer event ใช้ได้ตามปกติ */
+    -webkit-mask-image: linear-gradient(to bottom,
+        #000 0, #000 calc(100% - 1.5rem),
+        rgba(0,0,0,0.08) 100%);
+            mask-image: linear-gradient(to bottom,
+        #000 0, #000 calc(100% - 1.5rem),
+        rgba(0,0,0,0.08) 100%);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15,23,42,0.18) transparent;
+}
+.ov-barlist--scroll:focus-visible {
+    outline: 2px solid var(--mobile-primary, #0d6efd);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+.ov-barlist--scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.ov-barlist--scroll::-webkit-scrollbar-thumb {
+    background: rgba(15,23,42,0.18);
+    border-radius: 999px;
+}
+.ov-barlist--scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+/* เมื่อ scroll ถึงล่างสุด ปิด fade เพื่อบอกชัดว่าจบรายการ */
+.ov-barlist--scroll.is-bottom {
+    -webkit-mask-image: none;
+            mask-image: none;
+}
+
 /* Recent list */
 .ov-recent { display: flex; flex-direction: column; }
 .ov-recent__row {
@@ -812,17 +852,29 @@ a.ov-risk__tile:focus-visible .ov-risk__chev {
             </div>
         </section>
 
-        <!-- ── หมวดครุภัณฑ์ ─────────────────────────────────── -->
+        <!-- ── ประเภทครุภัณฑ์ ─────────────────────────────────── -->
+        <?php
+        $typeCount = count($typeBreakdown);
+        $typeSum   = array_sum(array_column($typeBreakdown, 'count'));
+        ?>
         <section class="ov-card" style="--i: 3">
             <header class="ov-card__head">
-                <h3 class="ov-card__title">หมวดครุภัณฑ์</h3>
-                <span class="ov-card__sub">Top <?= Html::encode((string) count($categoryBreakdown)) ?></span>
+                <h3 class="ov-card__title">ประเภทครุภัณฑ์</h3>
+                <span class="ov-card__sub">
+                    <?php if ($typeCount > 0): ?>
+                        <?= Html::encode((string) $typeCount) ?> ประเภท ·
+                        <?= Html::encode(number_format($typeSum)) ?> รายการ
+                    <?php else: ?>
+                        ยังไม่มีข้อมูล
+                    <?php endif; ?>
+                </span>
             </header>
             <div class="ov-card__body">
-                <?php if (!empty($categoryBreakdown)): ?>
-                    <div class="ov-barlist">
-                        <?php foreach ($categoryBreakdown as $i => $c):
-                            $pct = $catMax > 0 ? min(1, $c['count'] / $catMax) : 0;
+                <?php if (!empty($typeBreakdown)): ?>
+                    <div class="ov-barlist ov-barlist--scroll" tabindex="0"
+                         aria-label="ประเภทครุภัณฑ์ <?= Html::encode((string) $typeCount) ?> รายการ เลื่อนเพื่อดู">
+                        <?php foreach ($typeBreakdown as $i => $c):
+                            $pct = $typeMax > 0 ? min(1, $c['count'] / $typeMax) : 0;
                         ?>
                             <div class="ov-barlist__row">
                                 <div class="ov-barlist__label" title="<?= Html::encode($c['label']) ?>">
@@ -839,7 +891,7 @@ a.ov-risk__tile:focus-visible .ov-risk__chev {
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="ov-empty">ยังไม่ได้กำหนดหมวดของครุภัณฑ์</div>
+                    <div class="ov-empty">ยังไม่ได้กำหนดประเภทของครุภัณฑ์</div>
                 <?php endif; ?>
             </div>
         </section>
@@ -955,3 +1007,21 @@ a.ov-risk__tile:focus-visible .ov-risk__chev {
 
     </div>
 </div>
+
+<script>
+// ตั้ง class .is-bottom เมื่อ scroll ถึงท้ายลิสต์ประเภทครุภัณฑ์
+// → ปิด fade mask เพื่อสื่อชัดว่ารายการจบแล้ว
+(function () {
+    var scrollers = document.querySelectorAll('.ov-barlist--scroll');
+    scrollers.forEach(function (el) {
+        var sync = function () {
+            var atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 4;
+            el.classList.toggle('is-bottom', atBottom);
+        };
+        sync();
+        el.addEventListener('scroll', sync, { passive: true });
+        // ใน case ที่รายการน้อย ไม่จำเป็นต้อง scroll เลย ก็จัดเป็น is-bottom ทันที
+        if (el.scrollHeight <= el.clientHeight + 1) el.classList.add('is-bottom');
+    });
+})();
+</script>

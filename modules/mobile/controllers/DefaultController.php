@@ -1892,7 +1892,7 @@ class DefaultController extends Controller
             'statusBreakdown'     => $statusBreakdown,
             'conditionBreakdown'  => $this->overviewAssetConditionBreakdown(),
             'riskBreakdown'       => $this->overviewAssetRiskBreakdown(),
-            'categoryBreakdown'   => $this->overviewAssetCategoryBreakdown(6),
+            'typeBreakdown'       => $this->overviewAssetTypeBreakdown(0),
             'budgetTypeBreakdown' => $this->overviewAssetMoneyBreakdown('budget_type', 'budget_type'),
             'methodGetBreakdown'  => $this->overviewAssetMoneyBreakdown('method_get', 'method_get'),
             'purchaseBreakdown'   => $this->overviewAssetMoneyBreakdown('purchase', 'purchase'),
@@ -2421,44 +2421,48 @@ class DefaultController extends Controller
         }
     }
 
-    /** @return array<int,array{label:string,count:int}> หมวดครุภัณฑ์ top */
-    protected function overviewAssetCategoryBreakdown(int $limit = 6): array
+    /**
+     * ประเภทครุภัณฑ์ — group asset โดย asset_type_id (เก็บเป็น code)
+     * แล้ว join กับ categorise WHERE name='asset_type' เพื่อดึง title
+     * $limit <= 0 หมายถึงไม่จำกัด
+     *
+     * @return array<int,array{label:string,count:int}>
+     */
+    protected function overviewAssetTypeBreakdown(int $limit = 0): array
     {
         try {
             $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
-            if (!$schema || !$schema->getColumn('asset_category_id')) return [];
+            if (!$schema || !$schema->getColumn('asset_type_id')) return [];
             $q = (new \yii\db\Query())
-                ->select(['code' => 'asset_category_id', 'cnt' => 'COUNT(*)'])
+                ->select(['code' => 'asset_type_id', 'cnt' => 'COUNT(*)'])
                 ->from(Asset::tableName())
-                ->andWhere(['not', ['asset_category_id' => null]])
-                ->andWhere(['<>', 'asset_category_id', '']);
+                ->andWhere(['not', ['asset_type_id' => null]])
+                ->andWhere(['<>', 'asset_type_id', '']);
             $this->applyAssetOverviewFilter($q, $schema);
-            $rows = $q->groupBy(['asset_category_id'])
-                ->orderBy(['cnt' => SORT_DESC])
-                ->limit($limit)
-                ->all();
+            $q = $q->groupBy(['asset_type_id'])
+                ->orderBy(['cnt' => SORT_DESC]);
+            if ($limit > 0) $q->limit($limit);
+            $rows = $q->all();
             if (!$rows) return [];
 
-            // asset.asset_category_id เก็บ `code` (string) ไม่ใช่ id
-            // เชื่อมกับ categorise.code WHERE name='asset_category'
+            // asset.asset_type_id เก็บ `code` (string) — join กับ categorise WHERE name='asset_type'
             $codes = array_values(array_filter(array_map(static fn($r) => (string) $r['code'], $rows), static fn($v) => $v !== ''));
             $titleMap = [];
             if ($codes) {
-                $cats = AssetCategory::find()
-                    ->select(['code', 'title', 'name'])
-                    ->where(['name' => 'asset_category', 'code' => $codes])
-                    ->asArray()->all();
+                $cats = (new \yii\db\Query())
+                    ->select(['code', 'title'])
+                    ->from(AssetCategory::tableName())
+                    ->where(['name' => 'asset_type', 'code' => $codes])
+                    ->all();
                 foreach ($cats as $c) {
-                    $titleMap[(string) $c['code']] = trim((string) ($c['title'] ?? '')) !== ''
-                        ? (string) $c['title']
-                        : (string) ($c['name'] ?? '');
+                    $title = trim((string) ($c['title'] ?? ''));
+                    if ($title !== '') $titleMap[(string) $c['code']] = $title;
                 }
             }
             $out = [];
             foreach ($rows as $r) {
                 $code  = (string) $r['code'];
-                $label = $titleMap[$code] ?? '';
-                if ($label === '') $label = $code !== '' ? $code : 'ไม่ระบุ';
+                $label = $titleMap[$code] ?? ($code !== '' ? $code : 'ไม่ระบุ');
                 $out[] = ['label' => $label, 'count' => (int) $r['cnt']];
             }
             return $out;
