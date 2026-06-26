@@ -133,6 +133,12 @@ class Approve extends \yii\db\ActiveRecord
         return $this->hasOne(StockEvent::class, ['id' => 'from_id'])->andOnCondition(['stock_events.name' => 'order']);
     }
 
+    public function getStockOrder()
+    {
+        return $this->hasOne(\app\modules\inventoryV2\models\StockOrder::class, ['id' => 'from_id'])
+            ->andOnCondition(['approve.name' => 'requisition_v2']);
+    }
+
     public function getDevelopment()
     {
         return $this->hasOne(Development::class, ['id' => 'from_id']);

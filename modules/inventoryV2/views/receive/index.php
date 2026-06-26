@@ -18,7 +18,7 @@ if ($pagination) {
 }
 
 $this->title = 'รับเข้าวัสดุ';
-$this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventoryV2']];
+$this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $statusLabels = [

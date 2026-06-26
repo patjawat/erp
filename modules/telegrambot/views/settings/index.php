@@ -537,9 +537,13 @@ window.telegramPersonalConfig = {$config};
             scenarioPreviewMessage.textContent = lines.map(stripTelegramHtml).join('\\n');
         }
         if (scenarioPreviewRoute) {
-            scenarioPreviewRoute.textContent = scenario.button_text
-                ? 'ปุ่ม Mini App: ' + scenario.button_text + ' | Route: ' + routeToText(scenario.route || '')
-                : 'Route: ' + routeToText(scenario.route || '');
+            if (scenario.attach_web_app === false) {
+                scenarioPreviewRoute.textContent = 'ข้อความล้วน: ไม่มีปุ่ม Mini App';
+            } else {
+                scenarioPreviewRoute.textContent = scenario.button_text
+                    ? 'ปุ่ม Mini App: ' + scenario.button_text + ' | Route: ' + routeToText(scenario.route || '')
+                    : 'Route: ' + routeToText(scenario.route || '');
+            }
         }
         if (animate && scenarioPreview) {
             scenarioPreview.classList.remove('is-updated');
@@ -793,7 +797,9 @@ window.telegramPersonalConfig = {$config};
                 flash('warning', 'เลือกระบบที่จะทดสอบ', 'เลือก scenario เช่น ใบลา จองห้อง จองรถ หรือแจ้งซ่อม');
                 return;
             }
-            if (!miniAppBaseUrl) {
+            const scenario = getSelectedScenario();
+            const requiresMiniApp = !(scenario && scenario.attach_web_app === false);
+            if (requiresMiniApp && !miniAppBaseUrl) {
                 flash('warning', 'กรุณาระบุ Mini App Base URL', 'ต้องเป็น HTTPS ที่เปิดจาก Telegram ได้');
                 return;
             }
@@ -808,7 +814,7 @@ window.telegramPersonalConfig = {$config};
                 if (result.status !== 'success') {
                     throw new Error(result.message || 'ส่งการแจ้งเตือนทดสอบไม่สำเร็จ');
                 }
-                flash('success', 'ส่งการแจ้งเตือนทดสอบแล้ว', result.message || 'ผู้ใช้จะได้รับข้อความพร้อมปุ่ม Mini App');
+                flash('success', 'ส่งการแจ้งเตือนทดสอบแล้ว', result.message || (requiresMiniApp ? 'ผู้ใช้จะได้รับข้อความพร้อมปุ่ม Mini App' : 'ผู้ใช้จะได้รับข้อความล้วนใน Telegram'));
             } catch (error) {
                 flash('error', 'ส่งการแจ้งเตือนไม่สำเร็จ', error.message || 'กรุณาตรวจสอบ URL, token หรือผู้รับ');
             }

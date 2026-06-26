@@ -423,13 +423,24 @@ $this->registerCss(<<<CSS
     font-size: 0.72rem;
     font-weight: 600;
 }
-/* selected-row highlight already from TomSelect — keep balance readable on hover */
-.ts-dropdown.ae-item-dropdown .active .ae-opt__name,
-.ts-dropdown.ae-item-dropdown .active .ae-opt-bal { color: #fff; }
-.ts-dropdown.ae-item-dropdown .active .ae-opt__code,
-.ts-dropdown.ae-item-dropdown .active .ae-opt__bal-label { color: rgba(255,255,255,0.75); }
-.ts-dropdown.ae-item-dropdown .active .ae-opt__bal-wrap { border-left-color: rgba(255,255,255,0.25); }
-.ts-dropdown.ae-item-dropdown .active .ae-opt-bal.is-empty { color: #ffd6a5; }
+/* TomSelect active row: keep search results readable even when theme background stays light. */
+.ts-dropdown.ae-item-dropdown .option.active {
+    background: var(--ae-primary-soft) !important;
+}
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt__name,
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt-bal {
+    color: var(--ae-primary-ink);
+}
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt__code,
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt__bal-label {
+    color: var(--ae-ink-2);
+}
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt__bal-wrap {
+    border-left-color: var(--ae-primary-soft);
+}
+.ts-dropdown.ae-item-dropdown .option.active .ae-opt-bal.is-empty {
+    color: var(--ae-warning);
+}
 
 @media (prefers-reduced-motion: reduce) {
     #ae-table tbody tr.ae-row-enter td,

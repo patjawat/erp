@@ -277,7 +277,6 @@ class WarehouseController extends Controller
         }
 
         $accessibleWarehouses = Warehouse::findAllAccessibleWarehouses();
-        $hasInventoryRole = Warehouse::currentUserHasInventoryRole();
 
         $viewParams = [
             'warehouse' => $warehouse,
@@ -289,7 +288,6 @@ class WarehouseController extends Controller
             'categoryId' => $categoryId,
             'categoryOptions' => $categoryOptions,
             'accessibleWarehouses' => $accessibleWarehouses,
-            'hasInventoryRole' => $hasInventoryRole,
         ];
 
         if ($this->request->isAjax) {
@@ -678,13 +676,10 @@ class WarehouseController extends Controller
 
     /**
      * เช็คว่า user ปัจจุบันเข้าถึงคลังนี้ได้หรือไม่
-     * inventory role = เห็นทุกคลัง / officer = เห็นคลังที่ตนรับผิดชอบเท่านั้น
+     * เห็นเฉพาะคลังที่ตนรับผิดชอบ (officer) หรือคลังย่อยที่แผนกตัวเองมีสิทธิ
      */
     protected function canAccessWarehouse(Warehouse $warehouse)
     {
-        if (Warehouse::currentUserHasInventoryRole()) {
-            return true;
-        }
         $accessible = Warehouse::findAllAccessibleWarehouses();
         foreach ($accessible as $w) {
             if ((int) $w->id === (int) $warehouse->id) {

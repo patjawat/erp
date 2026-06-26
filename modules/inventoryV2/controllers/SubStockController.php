@@ -25,12 +25,13 @@ class SubStockController extends \yii\web\Controller
      */
     public function actionDashboard()
     {
-        $allSubIds = $this->getSubWarehouseIds();
+        $allowedSubIds = $this->getSubWarehouseIds();
+        $allSubIds = $allowedSubIds;
         if (empty($allSubIds)) {
             $allSubIds = [-1];
         }
 
-        $warehouseId = $this->getFilterWarehouseId();
+        $warehouseId = $this->getFilterWarehouseId($allowedSubIds);
         if ($warehouseId !== null && !in_array($warehouseId, $allSubIds, true)) {
             $warehouseId = null;
         }
@@ -38,7 +39,7 @@ class SubStockController extends \yii\web\Controller
         $subWarehouseIds = $warehouseId !== null ? [$warehouseId] : $allSubIds;
 
         $stats = $this->getDashboardStats($subWarehouseIds);
-        $incomingList = $this->getIncomingList($subWarehouseIds, 10);
+        $pendingIssueList = $this->getPendingDisbursementList($subWarehouseIds, 10);
         $chartData = $this->getChartDataLast7Days($subWarehouseIds);
         $warehouses = $this->getSubWarehousesList();
 
@@ -103,11 +104,11 @@ class SubStockController extends \yii\web\Controller
 
 
         return $this->render('dashboard', [
-            'pendingReceiveCount' => $stats['pending_receive'],
+            'pendingDisbursementCount' => $stats['pending_disbursement'],
             'criticalCount' => $stats['critical_count'],
             'monthlyValue' => $stats['monthly_value'],
             'expiringSoonCount' => $stats['expiring_soon'],
-            'incomingList' => $incomingList,
+            'pendingIssueList' => $pendingIssueList,
             'chartData' => $chartData,
             'subWarehouseIds' => $subWarehouseIds,
             'warehouses' => $warehouses,
@@ -120,7 +121,7 @@ class SubStockController extends \yii\web\Controller
     protected function getSubWarehouseIds()
     {
         $list = Warehouse::findSubWarehousesForUser();
-        return array_column($list, 'id');
+        return array_values(array_map('intval', array_column($list, 'id')));
     }
 
     /** รายการคลังย่อยสำหรับ dropdown (ตาม user ที่ล็อกอินและกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก) */
@@ -130,30 +131,38 @@ class SubStockController extends \yii\web\Controller
     }
 
     /** warehouse_id จาก query หรือ session (all = null) */
-    protected function getFilterWarehouseId()
+    protected function getFilterWarehouseId(array $allowedWarehouseIds = [])
     {
         $get = Yii::$app->request->get('warehouse_id');
-        if ($get === 'all' || $get === null || $get === '') {
-            if ($get === 'all') {
-                Yii::$app->session->remove('sub_dashboard_warehouse_id');
-            }
-            return Yii::$app->session->get('sub_dashboard_warehouse_id');
+        if ($get === 'all') {
+            Yii::$app->session->remove('sub_dashboard_warehouse_id');
+            return null;
         }
+
+        if ($get === null || $get === '') {
+            $sessionId = Yii::$app->session->get('sub_dashboard_warehouse_id');
+            if ($sessionId !== null && $sessionId !== '' && in_array((int) $sessionId, $allowedWarehouseIds, true)) {
+                return (int) $sessionId;
+            }
+
+            return !empty($allowedWarehouseIds) ? (int) reset($allowedWarehouseIds) : null;
+        }
+
         $id = (int) $get;
         Yii::$app->session->set('sub_dashboard_warehouse_id', $id);
         return $id;
     }
 
     /**
-     * สถิติ: รอตรวจรับ, ต่ำกว่าจุดวิกฤต, มูลค่าเบิกใช้เดือนนี้, หมดอายุภายใน 30 วัน
+     * สถิติ: รอคลังหลักจ่าย, ต่ำกว่าจุดวิกฤต, มูลค่าเบิกใช้เดือนนี้, หมดอายุภายใน 30 วัน
      */
     protected function getDashboardStats(array $subWarehouseIds)
     {
-        $pendingReceive = (int) StockOrder::find()
+        $pendingDisbursement = (int) StockOrder::find()
             ->where([
                 'order_type' => 'OUT',
                 'source_type' => 'REQUEST',
-                'status' => StockOrder::STATUS_CONFIRMED,
+                'status' => StockOrder::STATUS_APPROVED,
             ])
             ->andWhere(['sub_warehouse_id' => $subWarehouseIds])
             ->count();
@@ -193,22 +202,22 @@ class SubStockController extends \yii\web\Controller
             ->scalar();
 
         return [
-            'pending_receive' => $pendingReceive,
+            'pending_disbursement' => $pendingDisbursement,
             'critical_count' => $criticalCount,
             'monthly_value' => $monthlyValue,
             'expiring_soon' => 0,
         ];
     }
 
-    /** รายการส่งของจากคลังหลัก (ใบจ่ายที่ CONFIRMED ส่งมาที่คลังย่อยนี้) */
-    protected function getIncomingList(array $subWarehouseIds, $limit = 10)
+    /** รายการใบขอเบิกที่หัวหน้าอนุมัติแล้ว รอคลังหลักจ่าย */
+    protected function getPendingDisbursementList(array $subWarehouseIds, $limit = 10)
     {
         $orders = StockOrder::find()
             ->with('stockDetails')
             ->where([
                 'order_type' => 'OUT',
                 'source_type' => 'REQUEST',
-                'status' => StockOrder::STATUS_CONFIRMED,
+                'status' => StockOrder::STATUS_APPROVED,
             ])
             ->andWhere(['sub_warehouse_id' => $subWarehouseIds])
             ->orderBy(['order_date' => SORT_DESC])
@@ -274,11 +283,11 @@ class SubStockController extends \yii\web\Controller
             $subIds = [];
         }
 
-        // ถ้าไม่ส่ง warehouse_id มา ให้แสดงประวัติรวมทุกคลังย่อย (กันกรณีเลือกคลังไม่ตรงกับที่ตัดจริง)
+        // ถ้าไม่ส่ง warehouse_id มา ให้เลือกคลังย่อยแรกที่ผู้ใช้มีสิทธิ์เป็นค่าเริ่มต้น
         $requestedWarehouseId = (int) $this->request->get('warehouse_id', 0);
         $currentWarehouseId = ($requestedWarehouseId > 0 && in_array($requestedWarehouseId, $subIds, true))
             ? $requestedWarehouseId
-            : null;
+            : (!empty($subWarehouses) ? (int) $subWarehouses[0]->id : null);
 
         $usageHistory = [];
         $helpdeskIdFilter = (int) $this->request->get('helpdesk_id', 0);

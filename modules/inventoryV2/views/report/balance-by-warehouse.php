@@ -13,13 +13,11 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="balance-page-head">
-    <h4 class="balance-page-head__title">
-        <i class="bi bi-boxes" aria-hidden="true"></i>
-        <?= Html::encode($this->title) ?>
-    </h4>
-    <p class="balance-page-head__caption">คลังหลักดูสถานะวัสดุคงเหลือของคลังย่อยได้ — คลังย่อยดูสถานะของตัวเองได้ คลิก <span class="balance-page-head__inline-badge">ดูประวัติ</span> ที่แต่ละแถวเพื่อเปิดบัตรเคลื่อนไหว</p>
-</div>
+<?= $this->render('@app/modules/inventoryV2/views/sub-stock/_page_head', [
+    'icon'    => 'bi-boxes',
+    'title'   => $this->title,
+    'caption' => 'คลังหลักดูสถานะวัสดุคงเหลือของคลังย่อยได้ — คลังย่อยดูสถานะของตัวเองได้ คลิก <span class="inline-badge">ดูประวัติ</span> ที่แต่ละแถวเพื่อเปิดบัตรเคลื่อนไหว',
+]) ?>
 <?php $this->endBlock(); ?>
 
 <?= $this->render('@app/modules/inventoryV2/views/sub-stock/_menu_sub_stock', [
@@ -35,6 +33,17 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
           role="search"
           aria-label="ตัวกรองยอดคงเหลือ">
         <div class="balance-toolbar__fields">
+            <label class="balance-toolbar__field balance-toolbar__field--search" title="ค้นหา">
+                <span class="visually-hidden">ค้นหา</span>
+                <i class="bi bi-search balance-toolbar__icon" aria-hidden="true"></i>
+                <?= Html::input('search', 'search', $search, [
+                    'id' => 'balance-search',
+                    'class' => 'balance-toolbar__input',
+                    'placeholder' => 'ค้นหาชื่อ / รหัส / จำนวน / มูลค่า',
+                    'aria-label' => 'ค้นหา',
+                    'autocomplete' => 'off',
+                ]) ?>
+            </label>
             <label class="balance-toolbar__field" title="คลัง">
                 <span class="visually-hidden">คลัง</span>
                 <i class="bi bi-shop balance-toolbar__icon" aria-hidden="true"></i>
@@ -70,7 +79,7 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
             </label>
         </div>
         <div class="balance-toolbar__actions">
-            <?php $hasActiveFilter = !empty($warehouseId) || !empty($categoryId) || !empty($status); ?>
+            <?php $hasActiveFilter = !empty($warehouseId) || !empty($categoryId) || !empty($status) || !empty($search); ?>
             <?php if ($hasActiveFilter): ?>
                 <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>"
                    class="balance-toolbar__btn"
@@ -99,44 +108,6 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
 </div>
 
 <style>
-.balance-page-head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    max-width: 70ch;
-}
-.balance-page-head__title {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #1a202c;
-    margin: 0;
-    line-height: 1.2;
-}
-.balance-page-head__title i {
-    color: #0d6efd;
-    font-size: 1.15rem;
-}
-.balance-page-head__caption {
-    font-size: 0.85rem;
-    color: #4a5568;
-    margin: 0;
-    line-height: 1.5;
-}
-.balance-page-head__inline-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.05rem 0.4rem;
-    background: #f1f5f9;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 6px;
-    font-size: 0.78rem;
-    color: #4a5568;
-    font-weight: 500;
-}
-
 .balance-toolbar {
     --bt-ink-1: #1a202c;
     --bt-ink-2: #4a5568;
@@ -187,6 +158,26 @@ $exportHistoryUrl = Url::to(['/inventory-v2/report/export-item-history']);
     color: var(--bt-ink-3);
     font-size: 0.95rem;
     pointer-events: none;
+}
+.balance-toolbar__field--search { flex: 1 1 240px; min-width: 200px; }
+.balance-toolbar__input {
+    width: 100%;
+    min-height: 38px;
+    padding: 0 0.85rem 0 2.2rem;
+    background-color: var(--bt-surface);
+    border: 1px solid var(--bt-line-strong);
+    border-radius: var(--bt-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bt-ink-1);
+    transition: border-color 120ms var(--bt-ease), background-color 120ms var(--bt-ease), box-shadow 120ms var(--bt-ease);
+}
+.balance-toolbar__input::placeholder { color: var(--bt-ink-3); font-weight: 400; }
+.balance-toolbar__input:hover { border-color: var(--bt-ink-3); }
+.balance-toolbar__input:focus-visible {
+    outline: none;
+    border-color: var(--bt-primary);
+    box-shadow: 0 0 0 3px var(--bt-primary-soft);
 }
 .balance-toolbar__select {
     appearance: none;
@@ -903,6 +894,25 @@ $this->registerJs(<<<JS
             form.submit();
         }
     });
+
+    var searchInput = document.getElementById('balance-search');
+    if (searchInput) {
+        var initial = searchInput.value;
+        var timer = null;
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                if (searchInput.value !== initial) form.submit();
+            }, 450);
+        });
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(timer);
+                form.submit();
+            }
+        });
+    }
 })();
 JS, View::POS_READY);
 ?>

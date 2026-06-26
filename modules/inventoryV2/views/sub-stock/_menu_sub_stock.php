@@ -10,13 +10,35 @@
  */
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\inventoryV2\models\StockOrder;
 
 $active = $active ?? '';
 $currentWarehouseId = $currentWarehouseId ?? null;
 $warehouses = $warehouses ?? [];
 $filterAction = $filterAction ?? ['/inventory-v2/sub-stock/dashboard'];
 
+$requestedWarehouseId = Yii::$app->request->get('warehouse_id');
+if ($currentWarehouseId === null && $requestedWarehouseId !== 'all' && !empty($warehouses)) {
+    $firstWarehouse = reset($warehouses);
+    if ($firstWarehouse && isset($firstWarehouse->id)) {
+        $currentWarehouseId = (int) $firstWarehouse->id;
+    }
+}
+
 $wParam = $currentWarehouseId ? ['warehouse_id' => (int) $currentWarehouseId] : [];
+
+// นับใบขอเบิกที่อยู่ระหว่างรออนุมัติ (status = PENDING)
+try {
+    $requisitionPendingCount = (int) StockOrder::find()
+        ->where([
+            'order_type'  => StockOrder::ORDER_TYPE_OUT,
+            'source_type' => 'REQUEST',
+            'status'      => StockOrder::STATUS_PENDING,
+        ])
+        ->count();
+} catch (\Throwable $e) {
+    $requisitionPendingCount = 0;
+}
 
 $items = [
     [
@@ -36,6 +58,8 @@ $items = [
         'label' => 'ใบขอเบิก',
         'icon'  => 'bi-file-earmark-plus',
         'url'   => ['/inventory-v2/requisition'],
+        'badge' => $requisitionPendingCount,
+        'badge_title' => 'รออนุมัติ',
     ],
     [
         'key'   => 'balance',
@@ -68,6 +92,11 @@ $hasFilter = !empty($warehouses);
                            class="sub-nav__item<?= $isActive ? ' is-active' : '' ?>">
                             <i class="bi <?= Html::encode($item['icon']) ?>" aria-hidden="true"></i>
                             <span><?= Html::encode($item['label']) ?></span>
+                            <?php if (!empty($item['badge']) && (int) $item['badge'] > 0): ?>
+                                <span class="sub-nav__badge" title="<?= Html::encode($item['badge_title'] ?? '') ?>" aria-label="<?= Html::encode(($item['badge_title'] ?? '') . ' ' . (int) $item['badge']) ?>">
+                                    <?= (int) $item['badge'] ?>
+                                </span>
+                            <?php endif; ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -79,7 +108,7 @@ $hasFilter = !empty($warehouses);
                   action="<?= Url::to($filterAction) ?>"
                   id="form-sub-warehouse"
                   class="sub-nav__filter">
-                <label for="subWarehouseFilter" class="sub-nav__filter-label">คลัง</label>
+                <label for="subWarehouseFilter" class="sub-nav__filter-label">คลังย่อย</label>
                 <div class="sub-nav__filter-field">
                     <i class="bi bi-shop" aria-hidden="true"></i>
                     <select name="warehouse_id" id="subWarehouseFilter" aria-label="เลือกคลังย่อย">
@@ -174,6 +203,24 @@ $hasFilter = !empty($warehouses);
 .sub-nav__item i {
     font-size: 1rem;
     line-height: 1;
+}
+.sub-nav__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.4rem;
+    margin-left: 0.15rem;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 999px;
+}
+.sub-nav__item.is-active .sub-nav__badge {
+    background: var(--sn-primary);
 }
 
 /* Warehouse filter (right of tabs) */

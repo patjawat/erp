@@ -15,7 +15,6 @@ use yii\bootstrap5\LinkPager;
 /** @var string $categoryId */
 /** @var array $categoryOptions [['code' => '...', 'title' => '...'], ...] */
 /** @var app\modules\inventoryV2\models\Warehouse[] $accessibleWarehouses */
-/** @var bool $hasInventoryRole */
 
 $totals = $totals ?: ['total' => 0, 'configured' => 0, 'below_min' => 0, 'above_max' => 0];
 $totalItems = (int) ($totals['total'] ?? 0);
@@ -96,11 +95,6 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         </optgroup>
                     <?php endforeach; ?>
                 </select>
-                <?php if ($hasInventoryRole): ?>
-                    <span class="badge text-bg-primary-subtle text-primary border border-primary-subtle d-none d-lg-inline-flex align-items-center" title="คุณมีสิทธิ์ระดับ inventory จึงเห็นทุกคลัง">
-                        <i class="bi bi-shield-check me-1"></i>inventory
-                    </span>
-                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>

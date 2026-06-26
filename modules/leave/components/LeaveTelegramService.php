@@ -38,16 +38,16 @@ class LeaveTelegramService
         $lines = [
             '📋 <b>แจ้งเตือนการอนุมัติใบลา</b>',
             '',
-            '👤 ผู้ขอ: '    . htmlspecialchars($requesterName, ENT_QUOTES),
-            '📌 ประเภท: '   . htmlspecialchars($leaveType, ENT_QUOTES),
-            '📅 ช่วงเวลา: ' . htmlspecialchars($dateRange, ENT_QUOTES),
-            '🗓 จำนวน: '    . $totalDays . ' วัน',
+            'ผู้ขอ: ' . htmlspecialchars($requesterName, ENT_QUOTES),
+            'ประเภท: ' . htmlspecialchars($leaveType, ENT_QUOTES),
+            'ช่วงเวลา: ' . htmlspecialchars($dateRange, ENT_QUOTES),
+            'จำนวน: ' . $totalDays . ' วัน',
         ];
         if ($reason !== '') {
-            $lines[] = '📝 เหตุผล: ' . htmlspecialchars(mb_substr($reason, 0, 80), ENT_QUOTES);
+            $lines[] = 'เหตุผล: ' . htmlspecialchars(mb_substr($reason, 0, 80), ENT_QUOTES);
         }
         $lines[] = '';
-        $lines[] = '🔖 ขั้นตอน: ' . htmlspecialchars($levelLabel, ENT_QUOTES);
+        $lines[] = 'ขั้นตอน: ' . htmlspecialchars($levelLabel, ENT_QUOTES);
 
         return (bool) Yii::$app->telegram->sendDirectMessage(
             $chatId,

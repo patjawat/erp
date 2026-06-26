@@ -5,6 +5,7 @@ namespace app\modules\inventoryV2\controllers;
 use app\components\AppHelper;
 use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\components\InventoryService;
+use app\modules\inventoryV2\components\InventoryTelegramNotify;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
@@ -250,6 +251,7 @@ class IssueController extends Controller
                 }
 
                 $transaction->commit();
+                InventoryTelegramNotify::notifyRequisitionDisbursed($model);
                 return ['success' => true];
             } catch (\Exception $e) {
                 $transaction->rollBack();

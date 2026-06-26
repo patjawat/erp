@@ -4,7 +4,9 @@ namespace app\modules\inventoryV2\controllers;
 
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\approveV2\models\Approve;
 use app\modules\inventoryV2\components\InventoryService;
+use app\modules\inventoryV2\components\InventoryTelegramNotify;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
@@ -57,6 +59,24 @@ public function behaviors()
     }
 
     /**
+     * ตรวจว่า user ปัจจุบันคือผู้อนุมัติที่ระบุไว้ในใบเบิกนี้จริง
+     * ใช้กับ panel แก้จำนวนในหน้า view และปุ่มบันทึก/อนุมัติจาก panel
+     * @return bool
+     */
+    protected function isAssignedRequisitionApprover(StockOrder $model)
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        $approverEmpId = $model->getIssueSignatureEmpId('approver');
+        if (!$approverEmpId) {
+            return false;
+        }
+        $approverEmp = Employees::findOne($approverEmpId);
+        return $approverEmp && (int) $approverEmp->user_id === (int) Yii::$app->user->id;
+    }
+
+    /**
      * snapshot รายการปัจจุบันสำหรับเก็บใน approver_revisions
      * @return array [{item_code, qty}, ...]
      */
@@ -72,24 +92,104 @@ public function behaviors()
         return $rows;
     }
 
+    protected function syncApproveRow(StockOrder $model): void
+    {
+        if ($model->order_type !== StockOrder::ORDER_TYPE_OUT || $model->source_type !== 'REQUEST') {
+            return;
+        }
+
+        $fromId = (string) $model->id;
+        $row = Approve::findOne(['name' => 'requisition_v2', 'from_id' => $fromId, 'level' => 1])
+            ?: Approve::findOne(['name' => 'requisition_v2', 'from_id' => $fromId]);
+
+        $approveStatus = $this->mapStockOrderStatusToApproveStatus($model->status);
+        $approverEmpId = $model->getIssueSignatureEmpId('approver');
+
+        if ($approveStatus === null || !$approverEmpId) {
+            if ($row) {
+                $row->delete();
+            }
+            return;
+        }
+
+        if ($row === null) {
+            $row = new Approve([
+                'name' => 'requisition_v2',
+                'from_id' => $fromId,
+                'level' => 1,
+                'created_at' => date('Y-m-d H:i:s'),
+                'created_by' => Yii::$app->user->isGuest ? null : Yii::$app->user->id,
+            ]);
+        }
+
+        $currentData = $this->normalizeApproveDataJson($row->data_json);
+        $approverSig = $model->getIssueSignature('approver');
+        $approveDate = null;
+        if ($approveStatus === 'Pass') {
+            $approveDate = $approverSig['date'] ?: ($currentData['approve_date'] ?? date('Y-m-d H:i:s'));
+        } elseif ($approveStatus === 'Reject') {
+            $approveDate = $currentData['approve_date'] ?? date('Y-m-d H:i:s');
+        }
+
+        $row->name = 'requisition_v2';
+        $row->from_id = $fromId;
+        $row->level = 1;
+        $row->emp_id = (int) $approverEmpId;
+        $row->title = $model->order_no;
+        $row->status = $approveStatus;
+        $row->data_json = [
+            'label' => 'อนุมัติเบิกวัสดุ',
+            'order_no' => $model->order_no,
+            'main_warehouse_id' => $model->main_warehouse_id !== null ? (int) $model->main_warehouse_id : null,
+            'sub_warehouse_id' => $model->sub_warehouse_id !== null ? (int) $model->sub_warehouse_id : null,
+            'approve_date' => $approveDate,
+        ];
+        $row->updated_at = date('Y-m-d H:i:s');
+        $row->updated_by = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+
+        if (!$row->save(false)) {
+            throw new \RuntimeException('ไม่สามารถ sync รายการอนุมัติได้');
+        }
+    }
+
+    protected function mapStockOrderStatusToApproveStatus($status): ?string
+    {
+        switch ($status) {
+            case StockOrder::STATUS_PENDING:
+                return 'Pending';
+            case StockOrder::STATUS_APPROVED:
+            case StockOrder::STATUS_CONFIRMED:
+                return 'Pass';
+            case StockOrder::STATUS_CANCELLED:
+                return 'Reject';
+            default:
+                return null;
+        }
+    }
+
+    protected function normalizeApproveDataJson($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
     /**
-     * รายการใบขอเบิกทั้งหมด
+     * รายการใบขอเบิกทั้งหมด — รองรับ quick search filter
+     * @see \app\modules\inventoryV2\models\RequisitionSearch
      */
     public function actionIndex()
     {
-        // เปลี่ยนจาก 'REQUISITION' เป็น 'OUT' ตามค่า ENUM ใน DB 
-        // และใช้ source_type ช่วยกรองถ้าคุณระบุไว้ตอน Save
-        $query = StockOrder::find()->where([
-            'order_type' => 'OUT',
-            'source_type' => 'REQUEST' // ถ้าคุณบันทึกค่านี้ไว้ใน Controller ตอน actionCreate
-        ]);
-
-        $dataProvider = new \yii\data\ActiveDataProvider([
-            'query' => $query,
-            'sort' => ['defaultOrder' => ['id' => SORT_DESC]] // เปลี่ยนเป็น id ถ้ายังไม่ได้เก็บ created_at
-        ]);
+        $searchModel = new \app\modules\inventoryV2\models\RequisitionSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
@@ -112,7 +212,7 @@ public function behaviors()
             try {
                 if ($model->load($this->request->post())) {
                     $model->order_type = StockOrder::ORDER_TYPE_OUT;
-                    $model->status = StockOrder::STATUS_DRAFT;
+                    $model->status = StockOrder::STATUS_PENDING;
                     $model->source_type = 'REQUEST';
                     if (!empty($model->order_date) && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', trim($model->order_date), $m)) {
                         $y = (int) $m[3];
@@ -172,10 +272,13 @@ public function behaviors()
                         }
                     }
 
+                    $this->syncApproveRow($model);
+
                     $transaction->commit();
+                    InventoryTelegramNotify::notifyRequisitionCreated($model);
                     return [
                         'success' => true,
-                        'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+                        'redirect' => \yii\helpers\Url::to(['index']),
                     ];
                 }
             } catch (\Exception $e) {
@@ -189,7 +292,7 @@ public function behaviors()
 
         // Resolve context อัตโนมัติจาก user ที่ล็อกอิน:
         //   - ผู้เบิก (current employee)
-        //   - หน่วยงานที่รับของ (eligible sub-warehouses; auto-pick แรก)
+        //   - คลังที่รับของ (eligible sub-warehouses; auto-pick แรก)
         //   - ผู้เห็นชอบ (หัวหน้าหน่วยงาน → org diagram → null)
         $ctx = $this->resolveCreateContext();
 
@@ -327,11 +430,11 @@ public function behaviors()
     }
 
     /**
-     * รายการวัสดุที่หน่วยงานที่รับของ (คลังย่อย) เหลือต่ำกว่า Min — เติมให้ถึง Max
-     * GET warehouse_id (คลังที่จ่ายของ), sub_warehouse_id (หน่วยงานที่รับของ)
-     * - ดึง min/max จาก stock_item_warehouse_setting ตามหน่วยงานที่รับของ (sub_warehouse_id)
+     * รายการวัสดุที่คลังที่รับของ (คลังย่อย) เหลือต่ำกว่า Min — เติมให้ถึง Max
+     * GET warehouse_id (คลังที่จ่ายของ), sub_warehouse_id (คลังที่รับของ)
+     * - ดึง min/max จาก stock_item_warehouse_setting ตามคลังที่รับของ (sub_warehouse_id)
      *   เฉพาะรายการที่ admin ตั้งค่าและเปิดใช้งานไว้ (is_active = 1)
-     * - คำนวณจากยอดคงเหลือที่หน่วยงานที่รับของ
+     * - คำนวณจากยอดคงเหลือที่คลังที่รับของ
      * - แสดงเฉพาะรายการที่ยอดที่หน่วยงานรับของ < min_qty (เหลือน้อยเกินกว่า min)
      * - เบิกให้พอดี = max_qty - ยอดที่หน่วยงานรับของ
      * - กรองเฉพาะประเภทที่คลังหลักรับได้
@@ -818,21 +921,29 @@ public function behaviors()
             Yii::$app->session->setFlash('warning', 'เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิคลังสินค้าเท่านั้นที่อนุมัติได้');
             return $this->redirect(['view', 'id' => $model->id]);
         }
-        $model->status = StockOrder::STATUS_APPROVED;
-        // บันทึกวันที่อนุมัติใน issue_approver.date
-        $approverSig = $model->getIssueSignature('approver');
-        $model->setIssueSignatures([
-            'approver' => [
-                'name' => $approverSig['name'],
-                'position' => $approverSig['position'],
-                'date' => date('Y-m-d H:i:s'),
-                'emp_id' => $model->getIssueSignatureEmpId('approver'),
-            ],
-        ]);
-        if ($model->save(false)) {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model->status = StockOrder::STATUS_APPROVED;
+            // บันทึกวันที่อนุมัติใน issue_approver.date
+            $approverSig = $model->getIssueSignature('approver');
+            $model->setIssueSignatures([
+                'approver' => [
+                    'name' => $approverSig['name'],
+                    'position' => $approverSig['position'],
+                    'date' => date('Y-m-d H:i:s'),
+                    'emp_id' => $model->getIssueSignatureEmpId('approver'),
+                ],
+            ]);
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถบันทึกการอนุมัติได้');
+            }
+            $this->syncApproveRow($model);
+            $transaction->commit();
+            InventoryTelegramNotify::notifyRequisitionApproved($model);
             Yii::$app->session->setFlash('success', 'อนุมัติใบขอเบิกแล้ว — คลังสามารถดำเนินการจ่ายที่เมนู "รายการจ่ายพัสดุ"');
-        } else {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกการอนุมัติได้');
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
         }
         return $this->redirect(['view', 'id' => $model->id]);
     }
@@ -970,10 +1081,12 @@ public function behaviors()
                         }
                     }
 
+                    $this->syncApproveRow($model);
+
                     $transaction->commit();
                     return [
                         'success' => true,
-                        'redirect' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+                        'redirect' => \yii\helpers\Url::to(['index']),
                     ];
                 }
             } catch (\Exception $e) {
@@ -992,7 +1105,7 @@ public function behaviors()
      * บันทึก & อนุมัติในจังหวะเดียว (สำหรับ inline edit ที่หน้า view)
      * POST: items[] = [{item_code, qty}, ...]
      * - status ปัจจุบันต้องเป็น DRAFT หรือ PENDING
-     * - เฉพาะ approver-emp หรือผู้มีสิทธิ inventory
+     * - เฉพาะผู้อนุมัติที่ระบุไว้ในใบเบิกนี้
      * - transaction: snapshot → ลบ stock_detail → สร้างใหม่ → record revision → set APPROVED + approver.date
      */
     public function actionApproveWithEdits($id)
@@ -1002,8 +1115,8 @@ public function behaviors()
         if (!in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING])) {
             return ['success' => false, 'message' => 'เอกสารนี้ไม่อยู่ในสถานะที่อนุมัติได้'];
         }
-        if (!$this->isApproverOrInventoryStaff($model)) {
-            return ['success' => false, 'message' => 'เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิคลังสินค้าเท่านั้นที่อนุมัติได้'];
+        if (!$this->isAssignedRequisitionApprover($model)) {
+            return ['success' => false, 'message' => 'เฉพาะผู้อนุมัติใบเบิกนี้เท่านั้นที่บันทึกและอนุมัติได้'];
         }
 
         $itemsPost = $this->request->post('items', []);
@@ -1075,8 +1188,10 @@ public function behaviors()
             if (!$model->save(false)) {
                 throw new \Exception('ไม่สามารถบันทึกสถานะอนุมัติได้');
             }
+            $this->syncApproveRow($model);
 
             $transaction->commit();
+            InventoryTelegramNotify::notifyRequisitionApproved($model);
             return [
                 'success' => true,
                 'message' => 'บันทึกการปรับรายการและอนุมัติแล้ว — คลังสามารถดำเนินการจ่ายได้',
@@ -1099,8 +1214,8 @@ public function behaviors()
         if (!in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING])) {
             return ['success' => false, 'message' => 'เอกสารนี้ไม่อยู่ในสถานะที่แก้ไขได้'];
         }
-        if (!$this->isApproverOrInventoryStaff($model)) {
-            return ['success' => false, 'message' => 'ไม่มีสิทธิ์แก้ไขใบนี้'];
+        if (!$this->isAssignedRequisitionApprover($model)) {
+            return ['success' => false, 'message' => 'เฉพาะผู้อนุมัติใบเบิกนี้เท่านั้นที่แก้ไขจำนวนที่ขอเบิกได้'];
         }
 
         $itemsPost = $this->request->post('items', []);
@@ -1224,10 +1339,12 @@ public function behaviors()
             if (!$model->save(false)) {
                 throw new \Exception("ไม่สามารถบันทึกการยกเลิกได้");
             }
+            $this->syncApproveRow($model);
             $transaction->commit();
             Yii::$app->session->setFlash('success', $wasConfirmed
                 ? 'ยกเลิกใบเบิกและคืนพัสดุเข้าคลังเรียบร้อยแล้ว'
                 : 'ยกเลิกใบขอเบิกเรียบร้อยแล้ว');
+            return $this->redirect(['index']);
         } catch (\Exception $e) {
             $transaction->rollBack();
             Yii::$app->session->setFlash('error', 'ข้อผิดพลาด: ' . $e->getMessage());

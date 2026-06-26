@@ -65,22 +65,32 @@ class ReportController extends Controller
 {
     $request = $this->request;
     $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
-    
+
     // รับค่าตัวกรองใหม่
     $categoryId = $request->get('category_id');
     $status = $request->get('status');
     $search = $request->get('search');
 
-    // ... (ส่วนการดึง $warehouses เหมือนเดิม) ...
-    $listMain = Warehouse::find()->where(['warehouse_type' => 'MAIN'])->orderBy(['warehouse_name' => SORT_ASC])->all();
-    $listSub = Warehouse::find()->where(['warehouse_type' => 'SUB'])->andWhere(['or', ['delete' => null], ['delete' => '']])->orderBy(['warehouse_name' => SORT_ASC])->all();
-    
-    $warehouses = ['' => '-- ทุกคลัง --'];
-    foreach ($listMain as $w) $warehouses[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
-    foreach ($listSub as $w) $warehouses[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
+    // กรองเฉพาะคลังย่อยที่ user มีสิทธิ (ไม่รวมคลังหลัก)
+    $listMain = [];
+    $listSub = Warehouse::findSubWarehousesForUser();
 
-    $allWarehouses = array_merge($listMain, $listSub);
-    $warehouseIds = $warehouseId ? [$warehouseId] : array_column($allWarehouses, 'id');
+    $warehouses = ['' => '-- ทุกคลังย่อย --'];
+    foreach ($listSub as $w) $warehouses[$w->id] = $w->warehouse_name;
+
+    $accessibleIds = array_map('intval', array_column($listSub, 'id'));
+
+    // ถ้า user ระบุ warehouse_id ที่ไม่อยู่ในสิทธิ → ignore (ไม่ให้ดูทะลุผ่าน URL ตรง)
+    if ($warehouseId !== null && !in_array((int) $warehouseId, $accessibleIds, true)) {
+        $warehouseId = null;
+    }
+
+    // ถ้ามีคลังเดียวให้ default เลือกอัตโนมัติ
+    if ($warehouseId === null && count($accessibleIds) === 1) {
+        $warehouseId = $accessibleIds[0];
+    }
+
+    $warehouseIds = $warehouseId ? [$warehouseId] : $accessibleIds;
 
     // ดึงข้อมูลดิบมาก่อน
     $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
@@ -109,13 +119,23 @@ if ($categoryId || $status || $search) {
             if ($status == 'normal' && ($isBelowMin || $isBelowMax)) $match = false;
         }
         
-        // 3. ค้นหาแบบเร็ว (ป้องกันค่า null ใน item_code/item_name)
+        // 3. ค้นหาแบบเร็ว — ชื่อ / รหัส / จำนวนคงเหลือ / มูลค่า
         if ($search && $match) {
-            $s = mb_strtolower($search, 'UTF-8');
+            $s = mb_strtolower(trim($search), 'UTF-8');
             $itemCode = mb_strtolower($item['item_code'] ?? '', 'UTF-8');
             $itemName = mb_strtolower($item['item_name'] ?? '', 'UTF-8');
-            
-            if (strpos($itemCode, $s) === false && strpos($itemName, $s) === false) {
+
+            // ส่วนตัวเลข: ตัดเครื่องหมาย comma ออกทั้งฝั่งคำค้นและค่าจริง
+            $sDigits = preg_replace('/[^0-9.]/', '', $s);
+            $balanceStr = (string) ($item['balance_qty'] ?? '');
+            $valueStr = (string) ($item['value'] ?? '');
+
+            $hit = strpos($itemCode, $s) !== false
+                || strpos($itemName, $s) !== false
+                || ($sDigits !== '' && strpos($balanceStr, $sDigits) !== false)
+                || ($sDigits !== '' && strpos($valueStr, $sDigits) !== false);
+
+            if (!$hit) {
                 $match = false;
             }
         }
@@ -134,8 +154,32 @@ if ($categoryId || $status || $search) {
         $summary = $data['summary'];
     }
 
-    // ดึงรายการประเภทวัสดุไปแสดงใน Dropdown
-    $categories = \yii\helpers\ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => 'MATER'])->all(), '', 'title');
+    // ดึงรายการประเภทวัสดุ — scope ตามคลังที่เลือก (อ่านจาก data_json.item_type ของคลัง)
+    $warehousesForCategory = $warehouseId
+        ? array_values(array_filter($listSub, fn($w) => (int) $w->id === (int) $warehouseId))
+        : $listSub;
+
+    $allowedCodes = null; // null = ไม่จำกัด (แสดงทุกประเภท)
+    foreach ($warehousesForCategory as $w) {
+        $codes = $w->getAllowedItemTypeCodes();
+        if (empty($codes)) {
+            // คลังใดคลังหนึ่งไม่จำกัด → แสดงทุกประเภท
+            $allowedCodes = null;
+            break;
+        }
+        $allowedCodes = $allowedCodes === null ? $codes : array_unique(array_merge($allowedCodes, $codes));
+    }
+
+    $categoryQuery = Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER']);
+    if (is_array($allowedCodes)) {
+        $categoryQuery->andWhere(['code' => $allowedCodes]);
+    }
+    $categories = \yii\helpers\ArrayHelper::map($categoryQuery->orderBy('title')->all(), 'code', 'title');
+
+    // ถ้าค่า category_id ที่ user เลือกอยู่ ไม่ได้อยู่ในรายการที่ scope ใหม่ → reset
+    if ($categoryId !== null && $categoryId !== '' && !isset($categories[$categoryId])) {
+        $categoryId = null;
+    }
 
     return $this->render('balance-by-warehouse', [
         'warehouseId' => $warehouseId,
@@ -182,6 +226,7 @@ if ($categoryId || $status || $search) {
                 'sb.warehouse_id',
                 'sb.item_code',
                 new Expression('i.title AS item_name'),
+                new Expression('i.category_id AS category_id'),
                 new Expression('i.qty_min AS min_qty'),
                 new Expression('i.qty_max AS max_qty'),
                 new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
@@ -202,7 +247,7 @@ if ($categoryId || $status || $search) {
             $warehouseNames[$w->id] = 'คลังหลัก: ' . $w->warehouse_name;
         }
         foreach ($listSub as $w) {
-            $warehouseNames[$w->id] = 'คลังย่อย: ' . $w->warehouse_name;
+            $warehouseNames[$w->id] = $w->warehouse_name;
         }
 
         // Batch resolve image URLs (avoid N+1 + avoid base64 placeholder bloat)
@@ -250,6 +295,7 @@ if ($categoryId || $status || $search) {
                 'warehouse_name' => $warehouseNames[(int) $r['warehouse_id']] ?? (string) $r['warehouse_id'],
                 'item_code' => (string) $r['item_code'],
                 'item_name' => (string) $r['item_name'],
+                'category_id' => $r['category_id'] !== null ? (string) $r['category_id'] : null,
                 'category_title' => (string) ($r['category_title'] ?? 'อื่นๆ'),
                 'unit_name' => $unitName ? (string) $unitName : '-',
                 'image_url' => $resolveImage($r['item_code']),
@@ -593,17 +639,21 @@ if ($categoryId || $status || $search) {
             ? (int) $this->request->get('warehouse_id')
             : null;
 
-        $listMain = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $listSub = Warehouse::find()
-            ->where(['warehouse_type' => 'SUB'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $allWarehouses = array_merge($listMain, $listSub);
-        $warehouseIds = $warehouseId ? [$warehouseId] : array_column($allWarehouses, 'id');
+        // กรองเฉพาะคลังย่อยที่ user มีสิทธิ (ไม่รวมคลังหลัก) — เช่นเดียวกับหน้ารายงาน
+        $listMain = [];
+        $listSub = Warehouse::findSubWarehousesForUser();
+        $accessibleIds = array_map('intval', array_column($listSub, 'id'));
+
+        if ($warehouseId !== null && !in_array((int) $warehouseId, $accessibleIds, true)) {
+            $warehouseId = null;
+        }
+
+        // ถ้ามีคลังเดียวให้ default เลือกอัตโนมัติ
+        if ($warehouseId === null && count($accessibleIds) === 1) {
+            $warehouseId = $accessibleIds[0];
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $accessibleIds;
 
         $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
         $rows = $data['rows'];

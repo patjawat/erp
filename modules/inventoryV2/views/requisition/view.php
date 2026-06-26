@@ -10,25 +10,23 @@ YiiAsset::register($this);
 $this->title = 'รายละเอียดใบขอเบิก: ' . $model->order_no;
 
 $userId = Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
-$hasInventoryPermission = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
 $approverEmpId = $model->getIssueSignatureEmpId('approver');
 $isCurrentUserApprover = false;
 if ($approverEmpId && $userId) {
     $approverEmp = \app\modules\hr\models\Employees::findOne($approverEmpId);
     $isCurrentUserApprover = $approverEmp && (int) $approverEmp->user_id === $userId;
 }
-$isApproverOrInv = $isCurrentUserApprover || $hasInventoryPermission;
-$canApproverEdit = $model->canEditByApprover($userId, $hasInventoryPermission);
+$canApproverEdit = in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING], true)
+    && $isCurrentUserApprover;
 $revisions = $model->getApproverRevisions();
 ?>
 <div class="requisition-view">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4 mb-0 fw-semibold"><?= Html::encode($this->title) ?></h1>
         <div class="d-flex gap-2">
-            <?php if ($model->canEdit() && !$canApproverEdit): ?>
+            <?php if ($model->canEdit() && $isCurrentUserApprover && !$canApproverEdit): ?>
                 <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
             <?php endif; ?>
-            <?= Html::a('ย้อนกลับ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
 
@@ -46,7 +44,7 @@ $revisions = $model->getApproverRevisions();
                 <strong>คลังที่จ่ายของ:</strong> <?= $model->mainWarehouse ? Html::encode($model->mainWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
             </div>
             <div class="col-md-4">
-                <strong>หน่วยงานที่รับของ:</strong> <?= $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
+                <strong>คลังที่รับของ:</strong> <?= $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '(ไม่ได้ระบุ)' ?>
             </div>
         </div>
         <?php if ($model->getIssueReason() !== ''): ?>
@@ -145,7 +143,7 @@ $revisions = $model->getApproverRevisions();
 
     <?php if (!$canApproverEdit): ?>
         <hr>
-        <?php $showApproveButton = in_array($model->status, ['DRAFT', 'PENDING']) && $isApproverOrInv; ?>
+        <?php $showApproveButton = in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING], true) && $isCurrentUserApprover; ?>
         <div class="form-group d-flex justify-content-between">
             <div>
                 <?php if ($showApproveButton): ?>
@@ -157,11 +155,7 @@ $revisions = $model->getApproverRevisions();
                         ]
                     ]) ?>
                 <?php endif; ?>
-                <?php if ($model->status === 'APPROVED'): ?>
-                    <?= Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['/inventory-v2/issue/process', 'id' => $model->id], [
-                        'class' => 'btn btn-primary btn-lg',
-                    ]) ?>
-                <?php endif; ?>
+              
             </div>
 
             <div>

@@ -205,17 +205,29 @@ class ApproveHelper extends Component
     public static function RequisitionV2()
     {
         try {
-            $count = (int) \app\modules\inventoryV2\models\StockOrder::find()
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return ['title' => 'ขออนุมัติเบิกวัสดุ', 'total' => 0, 'datas' => []];
+            }
+
+            $count = (int) Approve::find()
+                ->alias('a')
+                ->innerJoin('stock_order so', 'so.id = a.from_id')
                 ->where([
-                    'order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_OUT,
-                    'source_type' => 'REQUEST',
+                    'a.name' => 'requisition_v2',
+                    'a.emp_id' => (int) $me->id,
+                    'a.status' => 'Pending',
+                    'so.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_OUT,
+                    'so.source_type' => 'REQUEST',
+                    'so.status' => \app\modules\inventoryV2\models\StockOrder::STATUS_PENDING,
                 ])
-                ->andWhere(['status' => [\app\modules\inventoryV2\models\StockOrder::STATUS_DRAFT, \app\modules\inventoryV2\models\StockOrder::STATUS_PENDING]])
                 ->count();
+
             return [
                 'title' => 'ขออนุมัติเบิกวัสดุ',
                 'total' => $count,
                 'datas' => [],
+                'emp_id' => $me->id,
             ];
         } catch (\Throwable $th) {
             return [

@@ -4,14 +4,14 @@
  * ใช้ semantic CSS variable ไม่ใช้ Bootstrap warning/info defaults (#ffc107/#0dcaf0)
  *
  * @var int $criticalCount
- * @var int $pendingReceiveCount
+ * @var int $pendingDisbursementCount
  * @var int $expiringSoonCount
  * @var string $size 'sm' | 'lg' (default 'sm')
  */
 use yii\helpers\Html;
 
 $criticalCount = (int) ($criticalCount ?? 0);
-$pendingReceiveCount = (int) ($pendingReceiveCount ?? 0);
+$pendingDisbursementCount = (int) ($pendingDisbursementCount ?? ($pendingReceiveCount ?? 0));
 $expiringSoonCount = (int) ($expiringSoonCount ?? 0);
 $size = $size ?? 'sm';
 
@@ -23,7 +23,7 @@ if ($criticalCount >= 5) {
     $level = 'warning';
     $thLabel = 'ต้องระวัง';
     $icon = 'bi-exclamation-triangle-fill';
-} elseif ($pendingReceiveCount > 0) {
+} elseif ($pendingDisbursementCount > 0) {
     $level = 'good';
     $thLabel = 'ปกติ';
     $icon = 'bi-check-circle-fill';

@@ -17,7 +17,7 @@ $resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagi
 /** @var \app\modules\inventoryV2\models\StockOrder $model */
 /** @var array|null $ctx */
 
-// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (หน่วยงานที่รับของ)
+// คลังหลัก (ต้นทางที่จ่าย) และคลังย่อย (คลังที่รับของ)
 // — คลังย่อยดึงจาก context ที่ controller resolve ให้แล้ว (ตามแผนกของผู้เบิก)
 $mainWarehousesList = Warehouse::find()
     ->where(['warehouse_type' => 'MAIN'])
@@ -61,9 +61,9 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                     <?= $form->field($model, 'order_no', ['labelOptions' => ['label' => 'เลขที่ใบขอเบิก']])->textInput(['readonly' => true, 'class' => 'form-control', 'placeholder' => 'REQ-AUTO']) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'หน่วยงานที่รับของ']])->dropDownList($subWarehouses, [
+                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'คลังที่รับของ']])->dropDownList($subWarehouses, [
                         'id' => 'sub-warehouse-id',
-                        'prompt' => '-- เลือกหน่วยงานที่รับของ --',
+                        'prompt' => '-- เลือกคลังที่รับของ --',
                         'class' => 'form-select',
                         'options' => $autoSubId ? [$autoSubId => ['selected' => true]] : [],
                     ]) ?>
@@ -115,7 +115,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 </div>
                 <div class="col-12">
                     <div class="form-group">
-                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร <a href="<?= \yii\helpers\Url::to(['/hr/organization/diagram']) ?>" target="_blank" class="small">ตั้งค่า <i class="bi bi-box-arrow-up-right"></i></a> หรือเลือกด้านล่าง)</label>
+                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร </label>
                         <input type="hidden" name="approver_name" id="approver_name" value="<?= Html::encode($approverSig['name']) ?>">
                         <input type="hidden" name="approver_position" id="approver_position" value="<?= Html::encode($approverSig['position']) ?>">
                         <?= Select2::widget([
@@ -307,13 +307,13 @@ function buildItemDisplayCellHtml(rowIdx, code, name, img) {
 }
 
 // รหัสวัสดุที่ถูกเลือกแล้วในแถวอื่น (ไม่รวมแถวที่ส่งเข้า)
+// หลังเลือก <select> จะถูกแทนด้วย <input type="hidden"> → ต้องเช็คทั้งคู่
 function getSelectedItemCodes(excludeRow) {
     var codes = [];
     $('#item-table tbody tr').each(function() {
-        if (excludeRow && this !== excludeRow[0]) {
-            var v = $(this).find('select[name*="[item_code]"]').val();
-            if (v) codes.push(v);
-        }
+        if (excludeRow && this === excludeRow[0]) return;
+        var v = $(this).find('select[name*="[item_code]"], input[type="hidden"][name*="[item_code]"]').val();
+        if (v) codes.push(v);
     });
     return codes;
 }
@@ -452,7 +452,7 @@ function loadBelowMaxAndAddToTable() {
     var whId = $('#main-warehouse-id').val();
     var subId = $('#sub-warehouse-id').val();
     if (!whId || !subId) {
-        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของและหน่วยงานที่รับของก่อน', 'warning');
+        Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของและคลังที่รับของก่อน', 'warning');
         return;
     }
     var url = '$itemsBelowMaxUrl'.replace(/\/$/, '') + '?warehouse_id=' + whId + '&sub_warehouse_id=' + encodeURIComponent(subId);
@@ -574,7 +574,7 @@ if ($('#main-warehouse-id').val()) {
     checkWarehouseStock($('#main-warehouse-id').val());
 }
 
-// เปลี่ยนหน่วยงานที่รับของ: แค่อัปเดตสถานะปุ่ม ไม่ trigger reload
+// เปลี่ยนคลังที่รับของ: แค่อัปเดตสถานะปุ่ม ไม่ trigger reload
 $('#sub-warehouse-id').on('change', function() {
     $(this).removeClass('is-invalid');
     updateLoadBelowMaxButtonState();

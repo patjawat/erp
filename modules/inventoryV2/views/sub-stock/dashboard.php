@@ -2,6 +2,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
+use app\modules\inventoryV2\models\StockOrder;
 
 $this->title = 'ภาพรวมคลังย่อย';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
@@ -9,11 +10,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
 
-$pendingReceiveCount = (int) ($pendingReceiveCount ?? 0);
+$pendingDisbursementCount = (int) ($pendingDisbursementCount ?? ($pendingReceiveCount ?? 0));
 $criticalCount = (int) ($criticalCount ?? 0);
 $monthlyValue = (float) ($monthlyValue ?? 0);
 $expiringSoonCount = (int) ($expiringSoonCount ?? 0);
-$incomingList = $incomingList ?? [];
+$pendingIssueList = $pendingIssueList ?? ($incomingList ?? []);
 $chartData = $chartData ?? ['categories' => [], 'series' => []];
 $warehouses = $warehouses ?? [];
 $currentWarehouseId = $currentWarehouseId ?? null;
@@ -40,6 +41,15 @@ if ($currentWarehouseId) {
     $issueUrl['warehouse_id'] = (int) $currentWarehouseId;
 }
 
+$pendingRequisitionUrl = [
+    '/inventory-v2/requisition/index',
+    'RequisitionSearch' => ['status' => StockOrder::STATUS_APPROVED],
+];
+if ($currentWarehouseId) {
+    $pendingRequisitionUrl['warehouse_id'] = (int) $currentWarehouseId;
+    $pendingRequisitionUrl['RequisitionSearch']['sub_warehouse_id'] = (int) $currentWarehouseId;
+}
+
 $thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 $thaiDows   = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 $nowTs   = time();
@@ -47,21 +57,16 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="sub-stock-page-head">
-    <div class="sub-stock-page-head__title">
-        <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
-        <h4 class="mb-0"><?= Html::encode($this->title) ?></h4>
-    </div>
-    <span class="sub-stock-page-head__sep" aria-hidden="true">·</span>
-    <span class="sub-stock-page-head__meta"><?= Html::encode($currentWarehouseName) ?></span>
-    <span class="sub-stock-page-head__sep" aria-hidden="true">·</span>
-    <span class="sub-stock-page-head__meta"><?= $todayLabel ?></span>
-    <?= $this->render('_health_badge', [
+<?= $this->render('_page_head', [
+    'icon'  => 'bi-grid-1x2-fill',
+    'title' => $this->title,
+    'metas' => [$currentWarehouseName, $todayLabel],
+    'extra' => $this->render('_health_badge', [
         'criticalCount' => $criticalCount,
-        'pendingReceiveCount' => $pendingReceiveCount,
+        'pendingDisbursementCount' => $pendingDisbursementCount,
         'expiringSoonCount' => $expiringSoonCount,
-    ]) ?>
-</div>
+    ]),
+]) ?>
 <?php $this->endBlock(); ?>
 
 <?= $this->render('_menu_sub_stock', [
@@ -99,13 +104,13 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
                 'hint' => 'รวมจากคลังหลักทั้งเดือน',
             ]) ?>
             <?= $this->render('_kpi_card', [
-                'label' => 'ใบขอเบิกที่กำลังมา',
-                'value' => number_format($pendingReceiveCount),
+                'label' => 'รอคลังหลักจ่าย',
+                'value' => number_format($pendingDisbursementCount),
                 'unit' => 'ใบ',
                 'icon' => 'bi-truck',
-                'color' => 'primary',
-                'hint' => $pendingReceiveCount > 0 ? 'รอคลังหลักจ่าย' : 'ไม่มีรายการคงค้าง',
-                'url' => ['/inventory-v2/requisition'],
+                'color' => $pendingDisbursementCount > 0 ? 'warning' : 'success',
+                'hint' => $pendingDisbursementCount > 0 ? 'หัวหน้าอนุมัติแล้ว ยังไม่ตัดสต็อก' : 'ไม่มีใบที่รอจ่าย',
+                'url' => $pendingRequisitionUrl,
             ]) ?>
             <?= $this->render('_kpi_card', [
                 'label' => 'ใกล้หมดอายุ',
@@ -123,24 +128,27 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
         <section class="surface-card" id="section-incoming" aria-labelledby="incoming-heading">
             <div class="surface-card__head">
                 <div class="surface-card__head-text">
-                    <h2 id="incoming-heading" class="surface-card__title">ของที่ได้รับล่าสุด</h2>
-                    <span class="surface-card__caption">เข้าคลังย่อยอัตโนมัติเมื่อคลังหลักจ่าย</span>
+                    <h2 id="incoming-heading" class="surface-card__title">ใบขอเบิกที่รอคลังหลักจ่าย</h2>
+                    <span class="surface-card__caption">หัวหน้าอนุมัติแล้ว รอคลังหลักดำเนินการจ่าย</span>
                 </div>
-                <?php if (!empty($incomingList)): ?>
-                    <a href="<?= Url::to(['/inventory-v2/requisition/index']) ?>" class="surface-card__link">
+                <?php if (!empty($pendingIssueList)): ?>
+                    <a href="<?= Url::to($pendingRequisitionUrl) ?>" class="surface-card__link">
                         ทะเบียนทั้งหมด <i class="bi bi-arrow-right" aria-hidden="true"></i>
                     </a>
                 <?php endif; ?>
             </div>
             <div class="surface-card__body">
-                <?php if (!empty($incomingList)): ?>
+                <?php if (!empty($pendingIssueList)): ?>
                     <ul class="incoming-list">
-                        <?php foreach ($incomingList as $item):
+                        <?php foreach ($pendingIssueList as $item):
                             $orderTs = !empty($item['order_date']) ? strtotime($item['order_date']) : null;
                             $orderLabel = $orderTs ? date('d/m/Y', $orderTs) : '-';
                         ?>
                             <li>
-                                <a href="<?= Url::to(['/inventory-v2/requisition/view', 'id' => $item['id'] ?? null]) ?>" class="incoming-item">
+                                <a href="<?= Url::to(['/inventory-v2/requisition/view', 'id' => $item['id'] ?? null]) ?>"
+                                   class="incoming-item open-modal"
+                                   data-size="modal-xl"
+                                   data-pjax="0">
                                     <span class="incoming-item__icon" aria-hidden="true">
                                         <i class="bi bi-file-earmark-text"></i>
                                     </span>
@@ -149,7 +157,7 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
                                             <?= Html::encode($item['doc_no'] ?? '-') ?>
                                         </div>
                                         <div class="incoming-item__meta">
-                                            <span><i class="bi bi-calendar3" aria-hidden="true"></i><?= $orderLabel ?></span>
+                                            <span><i class="bi bi-calendar3" aria-hidden="true"></i>ขอเบิก <?= $orderLabel ?></span>
                                             <span><i class="bi bi-list-check" aria-hidden="true"></i><?= (int)($item['detail_count'] ?? 0) ?> รายการ</span>
                                             <?php if (!empty($item['main_warehouse_name'])): ?>
                                                 <span class="incoming-item__meta-truncate"><i class="bi bi-buildings" aria-hidden="true"></i><?= Html::encode($item['main_warehouse_name']) ?></span>
@@ -166,11 +174,11 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
                         <div class="empty-block__icon">
                             <i class="bi bi-inbox" aria-hidden="true"></i>
                         </div>
-                        <div class="empty-block__title">ยังไม่มีของส่งมา</div>
-                        <div class="empty-block__caption">เมื่อคลังหลักจ่ายของให้ ของจะเข้าคลังนี้อัตโนมัติ</div>
-                        <a href="<?= Url::to(['/inventory-v2/requisition']) ?>" class="empty-block__action">
+                        <div class="empty-block__title">ไม่มีใบที่รอคลังหลักจ่าย</div>
+                        <div class="empty-block__caption">เมื่อหัวหน้าอนุมัติใบขอเบิก รายการจะแสดงที่นี่จนกว่าคลังหลักจะจ่ายของ</div>
+                        <a href="<?= Url::to(['/inventory-v2/requisition/create']) ?>" class="empty-block__action">
                             <i class="bi bi-file-earmark-plus" aria-hidden="true"></i>
-                            <span>สร้างใบขอเบิก</span>
+                            <span>สร้างใบขอเบิกใหม่</span>
                         </a>
                     </div>
                 <?php endif; ?>
@@ -245,35 +253,6 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
     --t-fast: 120ms;
     --t-mid: 180ms;
     color: var(--ink-1);
-}
-
-/* Page head — ใน block page-title */
-.sub-stock-page-head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.25rem;
-}
-.sub-stock-page-head__title {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.sub-stock-page-head__title i {
-    color: #0d6efd;
-    font-size: 1.15rem;
-}
-.sub-stock-page-head__title h4 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #1a202c;
-    line-height: 1.2;
-}
-.sub-stock-page-head__sep { color: #a0aec0; }
-.sub-stock-page-head__meta {
-    font-size: 0.82rem;
-    color: #4a5568;
 }
 
 /* Surface card */

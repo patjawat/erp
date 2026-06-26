@@ -54,44 +54,42 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
         $searchModel->load($this->request->get(), '');
 
         $query = StockOrder::find()
+            ->innerJoin('approve a', 'a.from_id = stock_order.id AND a.name = :approveName', [':approveName' => 'requisition_v2'])
             ->where([
-                'order_type' => StockOrder::ORDER_TYPE_OUT,
-                'source_type' => 'REQUEST',
+                'stock_order.order_type' => StockOrder::ORDER_TYPE_OUT,
+                'stock_order.source_type' => 'REQUEST',
             ])
-            ->andWhere(['<>', 'status', StockOrder::STATUS_DRAFT])
+            ->andWhere(['<>', 'stock_order.status', StockOrder::STATUS_DRAFT])
             ->with(['mainWarehouse', 'subWarehouse'])
-            ->orderBy(['id' => SORT_DESC]);
+            ->orderBy(['stock_order.id' => SORT_DESC]);
 
         $me = UserHelper::GetEmployee();
         if (!$me) {
             $query->andWhere('0=1');
         } else {
-            $query->andWhere(new \yii\db\Expression(
-                "CAST(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.issue_approver.emp_id')) AS UNSIGNED) = :empId",
-                [':empId' => (int) $me->id]
-            ));
+            $query->andWhere(['a.emp_id' => (int) $me->id]);
         }
 
         if ($filterStatus === 'pending') {
-            $query->andWhere(['status' => StockOrder::STATUS_PENDING]);
+            $query->andWhere(['stock_order.status' => StockOrder::STATUS_PENDING]);
         } elseif (in_array($filterStatus, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED, StockOrder::STATUS_CANCELLED], true)) {
-            $query->andWhere(['status' => $filterStatus]);
+            $query->andWhere(['stock_order.status' => $filterStatus]);
         }
 
         if (trim($searchModel->order_no ?? '') !== '') {
-            $query->andWhere(['like', 'order_no', trim($searchModel->order_no)]);
+            $query->andWhere(['like', 'stock_order.order_no', trim($searchModel->order_no)]);
         }
         if (isset($searchModel->main_warehouse_id) && $searchModel->main_warehouse_id !== '' && $searchModel->main_warehouse_id !== null) {
-            $query->andWhere(['main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
+            $query->andWhere(['stock_order.main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
         }
         if (isset($searchModel->sub_warehouse_id) && $searchModel->sub_warehouse_id !== '' && $searchModel->sub_warehouse_id !== null) {
-            $query->andWhere(['sub_warehouse_id' => (int) $searchModel->sub_warehouse_id]);
+            $query->andWhere(['stock_order.sub_warehouse_id' => (int) $searchModel->sub_warehouse_id]);
         }
         if (trim($searchModel->date_start ?? '') !== '') {
             try {
                 $from = AppHelper::convertToGregorian($searchModel->date_start);
                 if ($from) {
-                    $query->andWhere(['>=', 'order_date', $from]);
+                    $query->andWhere(['>=', 'stock_order.order_date', $from]);
                 }
             } catch (\Throwable $e) {
             }
@@ -100,7 +98,7 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
             try {
                 $to = AppHelper::convertToGregorian($searchModel->date_end);
                 if ($to) {
-                    $query->andWhere(['<=', 'order_date', $to]);
+                    $query->andWhere(['<=', 'stock_order.order_date', $to]);
                 }
             } catch (\Throwable $e) {
             }

@@ -204,10 +204,6 @@ class SettingsController extends Controller
             return $this->jsonError('ไม่พบรูปแบบการแจ้งเตือนที่เลือก', 'invalid_scenario');
         }
 
-        if (!$this->isValidPublicHttpsUrl($miniAppBaseUrl)) {
-            return $this->jsonError('Mini App Base URL ต้องเป็น https ที่เข้าถึงได้จากภายนอก', 'invalid_url');
-        }
-
         try {
             $user = $this->findTestUser((int) Yii::$app->request->post('user_id', 0));
         } catch (NotFoundHttpException $e) {
@@ -215,30 +211,41 @@ class SettingsController extends Controller
         }
 
         $scenario = $scenarios[$scenarioKey];
-        $webAppUrl = $this->buildScenarioWebAppUrl($miniAppBaseUrl, $scenario['route'] ?? ['/mobile/default/index']);
-        if (!$this->isValidPublicHttpsUrl($webAppUrl)) {
-            return $this->jsonError('ไม่สามารถสร้าง URL สำหรับปุ่ม Mini App ได้ กรุณาตรวจสอบ Base URL', 'invalid_url');
+        $attachWebApp = (bool) ($scenario['attach_web_app'] ?? true);
+        $webAppUrl = null;
+        $options = [
+            'parse_mode' => 'HTML',
+        ];
+
+        if ($attachWebApp) {
+            if (!$this->isValidPublicHttpsUrl($miniAppBaseUrl)) {
+                return $this->jsonError('Mini App Base URL ต้องเป็น https ที่เข้าถึงได้จากภายนอก', 'invalid_url');
+            }
+
+            $webAppUrl = $this->buildScenarioWebAppUrl($miniAppBaseUrl, $scenario['route'] ?? ['/mobile/default/index']);
+            if (!$this->isValidPublicHttpsUrl($webAppUrl)) {
+                return $this->jsonError('ไม่สามารถสร้าง URL สำหรับปุ่ม Mini App ได้ กรุณาตรวจสอบ Base URL', 'invalid_url');
+            }
+
+            $options['reply_markup'] = [
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => (string) ($scenario['button_text'] ?? 'เปิด ERP Mobile'),
+                            'web_app' => [
+                                'url' => $webAppUrl,
+                            ],
+                        ],
+                    ],
+                ],
+            ];
         }
 
         $telegram = new TelegramBot($botToken !== '' ? $botToken : null);
         $sent = $telegram->sendMessage(
             $user->telegram_id,
             $this->buildScenarioTestMessage($scenario, $user),
-            [
-                'parse_mode' => 'HTML',
-                'reply_markup' => [
-                    'inline_keyboard' => [
-                        [
-                            [
-                                'text' => (string) ($scenario['button_text'] ?? 'เปิด ERP Mobile'),
-                                'web_app' => [
-                                    'url' => $webAppUrl,
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ]
+            $options
         );
 
         if (!$sent) {
@@ -250,6 +257,7 @@ class SettingsController extends Controller
             'message' => 'ส่งการแจ้งเตือนทดสอบระบบ ' . ($scenario['label'] ?? '') . ' สำเร็จ',
             'scenario' => $scenarioKey,
             'web_app_url' => $webAppUrl,
+            'attach_web_app' => $attachWebApp,
         ];
     }
 
@@ -346,11 +354,70 @@ class SettingsController extends Controller
                 'route' => ['/mobile/default/leave-approvals'],
                 'lines' => [
                     '📋 <b>แจ้งเตือนการอนุมัติใบลา</b>',
-                    '👤 ผู้ขอ: เจ้าหน้าที่ทดสอบ ระบบ ERP',
-                    '📌 ประเภท: ลาพักผ่อน',
-                    '📅 ช่วงเวลา: วันนี้ 08:30-16:30',
-                    '🗓 จำนวน: 1 วัน',
-                    '🔖 ขั้นตอน: ผู้อนุมัติลำดับถัดไป',
+                    'ผู้ขอ: เจ้าหน้าที่ทดสอบ ระบบ ERP',
+                    'ประเภท: ลาพักผ่อน',
+                    'ช่วงเวลา: วันนี้ 08:30-16:30',
+                    'จำนวน: 1 วัน',
+                    'ขั้นตอน: ผู้อนุมัติลำดับถัดไป',
+                ],
+            ],
+            'inventory_requisition_pending' => [
+                'label' => 'เบิกวัสดุ: รออนุมัติ',
+                'short_label' => 'เบิกวัสดุ',
+                'description' => 'จำลองข้อความถึงผู้อนุมัติเมื่อมีใบขอเบิกวัสดุใหม่',
+                'attach_web_app' => false,
+                'lines' => [
+                    '📦 <b>ใบขอเบิกวัสดุรออนุมัติ</b>',
+                    'เลขที่: REQ-TEST-001',
+                    'ผู้ขอ: เจ้าหน้าที่ทดสอบ ระบบ ERP',
+                    'คลังที่จ่าย: คลังวัสดุกลาง',
+                    'คลังที่รับ: คลังย่อยงานบริการ',
+                    'วันที่ขอ: วันนี้',
+                    'จำนวนรายการ: 3 รายการ',
+                    'วัตถุประสงค์: เติมสต็อกคลังย่อย',
+                ],
+            ],
+            'inventory_requisition_approved' => [
+                'label' => 'เบิกวัสดุ: อนุมัติแล้ว',
+                'short_label' => 'อนุมัติ',
+                'description' => 'จำลองข้อความถึงผู้ขอหลังผู้อนุมัติดำเนินการอนุมัติแล้ว',
+                'attach_web_app' => false,
+                'lines' => [
+                    '✅ <b>ผลการอนุมัติใบขอเบิกวัสดุ</b>',
+                    'เลขที่: REQ-TEST-001',
+                    'ผลการพิจารณา: อนุมัติแล้ว',
+                    'ผู้อนุมัติ: หัวหน้าหน่วยงานทดสอบ',
+                    'สถานะต่อไป: รอคลังหลักดำเนินการจ่าย',
+                ],
+            ],
+            'inventory_requisition_issue_queue' => [
+                'label' => 'เบิกวัสดุ: รอคลังจ่าย',
+                'short_label' => 'รอจ่าย',
+                'description' => 'จำลองข้อความถึงผู้ดูแลคลังเมื่อใบขอเบิกได้รับอนุมัติ',
+                'attach_web_app' => false,
+                'lines' => [
+                    '📦 <b>ใบขอเบิกวัสดุรอจ่ายจากคลังหลัก</b>',
+                    'เลขที่: REQ-TEST-001',
+                    'ผู้ขอ: เจ้าหน้าที่ทดสอบ ระบบ ERP',
+                    'คลังที่จ่าย: คลังวัสดุกลาง',
+                    'คลังที่รับ: คลังย่อยงานบริการ',
+                    'วันที่อนุมัติ: วันนี้',
+                    'จำนวนรายการ: 3 รายการ',
+                ],
+            ],
+            'inventory_requisition_disbursed' => [
+                'label' => 'เบิกวัสดุ: จ่ายแล้ว',
+                'short_label' => 'จ่ายแล้ว',
+                'description' => 'จำลองข้อความถึงผู้ขอเมื่อคลังหลักจ่ายพัสดุเสร็จ',
+                'attach_web_app' => false,
+                'lines' => [
+                    '✅ <b>คลังหลักจ่ายพัสดุแล้ว</b>',
+                    'เลขที่: REQ-TEST-001',
+                    'คลังที่จ่าย: คลังวัสดุกลาง',
+                    'คลังที่รับ: คลังย่อยงานบริการ',
+                    'วันที่จ่าย: วันนี้',
+                    'ผู้จ่าย: เจ้าหน้าที่คลังทดสอบ',
+                    'จำนวนรายการ: 3 รายการ',
                 ],
             ],
             'official_travel' => [

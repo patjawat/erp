@@ -39,13 +39,10 @@ $jobOptions = [
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex flex-column align-items-center align-items-lg-start gap-1 mb-2 text-center text-lg-start">
-    <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
-        <i class="bi bi-box-arrow-up-right fs-5 text-primary"></i>
-        <?= Html::encode($this->title) ?>
-    </h4>
-    <p class="text-muted small mb-0">ค้นหา · เพิ่มรายการเป็นชุด · ยืนยันบันทึกครั้งเดียว</p>
-</div>
+<?= $this->render('_page_head', [
+    'icon'  => 'bi-box-arrow-up-right',
+    'title' => $this->title,
+]) ?>
 <?php $this->endBlock(); ?>
 
 <div class="sticky-context-bar" id="stickyContextBar" hidden role="region" aria-label="บริบทการเบิก">

@@ -279,6 +279,59 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 - Status badge: soft tinted bg + filled icon + ≤3 colors ต่อหน้า; ไม่มีกรอบ (ใช้ bg ตัวเองเป็น containment)
 - "ไม่มีค่า": แสดง `—` (em dash) สีอ่อน `--ink-4` ไม่ใช่ `null` หรือ `-` ธรรมดา (em dash ในที่นี้คือ glyph ในข้อมูลแสดงผล ไม่เกี่ยวกับการห้ามใน body copy)
 
+### List page pattern (canonical)
+
+Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](modules/inventoryV2/views/requisition/index.php) — ทุกหน้าแสดง list (ใบขอเบิก, ใบลา, ใบจอง, ใบแจ้งซ่อม, รายการพัสดุ, ฯลฯ) ต้อง reuse pattern นี้ก่อนสร้างใหม่
+
+**Structural rules**
+1. **ไม่ใช้ GridView** — เขียน markup เองด้วย `<table>` (desktop) + `<ul>` (mobile) เพื่อ control density และ semantic ครบ; LinkPager ใช้แบบ widget ปกติ ห่อใน `.req-pager`
+2. **Container** — `card shadow-sm` (Bootstrap) + `card-body p-0` รอบ table — ไม่ใช้ `.surface-card` ที่มีหัวการ์ดสำหรับ list (overkill); หัวเรื่องอยู่ที่ page-head ของหน้าแล้ว
+3. **Layout** — desktop table `.d-none .d-lg-block` + mobile cards `.d-lg-none` แสดงคู่กัน ไม่ใช้ table responsive scroll
+4. **Pager** — custom `.req-pager` 2 ส่วน: `หน้า X จาก Y` ซ้าย + Bootstrap `pagination pagination-sm` ขวา; bg `--surface-2`, border-top
+
+**Content rules (anti-redundancy)**
+1. **Status ใช้ของ model เท่านั้น** — เรียก `Model::getStatusBadgeConfigFor($status)` ตรง ๆ ห้ามสร้าง custom palette ในหน้า list
+2. **ห้าม caption ที่ duplicate status** — เช่นเมื่อ badge แสดง "รอหัวหน้าอนุมัติ" อยู่แล้ว ห้ามมี text "รอกดอนุมัติ" ใต้ avatar; เมื่อ badge แสดง "ยกเลิก" ห้ามมี "ใบนี้ถูกยกเลิก"; status badge คือ single source of truth
+3. **ห้าม decoration ที่ไม่ใช่ data** — ไม่มี dot indicator, pulse animation, revision/edit chip, "หัวหน้าปรับ" tag, count chip ที่ header เว้นแต่ผู้ใช้ขอ
+4. **ไอคอนเฉพาะที่ scan ได้เร็วขึ้นจริง** — date column ไม่ต้องมี calendar icon, warehouse column ไม่ต้องมี warehouse icon; ไอคอนใช้กับ status badge และ action button (`bi-search`, `bi-pencil`) เท่านั้น
+5. **Action button ใช้ Bootstrap default** — `btn btn-sm btn-outline-primary` (view) + `btn btn-sm btn-outline-secondary` (edit) + `btn-outline-secondary rounded-pill` (back) + `btn-success rounded-pill` (create); ห้ามสร้าง custom `req-icon-btn` หรือ ghost variant ใหม่
+
+**Performance rule (mandatory)**
+- **Batch prefetch ก่อน loop** — เก็บ `warehouseIds`, `empIds`, `userIds` จาก `$models` แล้วยิง query เดียวต่อ table indexBy('id') / indexBy('user_id') แทน `findOne()` ต่อ row; ตัด N+1 ที่ view-layer โดยไม่แตะ controller (ดู `requisition/index.php` บรรทัด prefetch ตอนต้น)
+
+**Column rules**
+- Desktop columns: `#` (38-42px center, `--ink-3`, tabular-nums) → doc-no (link primary-ink fw 600) → people (avatar + ชื่อ + ตำแหน่ง) → warehouse/dept (max-width 14rem, no harsh ellipsis, ใช้ `title=""` เพื่อ tooltip ชื่อเต็ม) → date (tabular-nums, ขวา) → status badge → action (right-align, gap 0.25rem)
+- Cell padding `0.65rem 0.9rem`, font-size `0.88rem`, header `--surface-2` sticky + `--ink-2` fw 600 0.78rem
+- Hover row → `--surface-hover` (transition fast); ห้าม row stagger / enter animation
+
+**Mobile card rules**
+- `<ul role="list">` + `<li class="req-card">` padding `0.6rem`, gap `0.5rem` ระหว่าง card
+- Card head: doc-no ซ้าย + status badge ขวา
+- Meta line: date · warehouse-from → warehouse-to (text + `·` separator, ไม่มีไอคอน)
+- People section: `border-top: 1px dashed --line` แล้ว 2 แถว (ผู้ขอ, ผู้อนุมัติ) แต่ละแถวมี label เล็ก ๆ + person block
+- Edit button อยู่นอก link (`req-card__actions`) เพื่อไม่ trap focus ใน main link
+
+**Person block (shared)**
+- Avatar 32px `border-radius: 50%` + `--surface-3` bg + `1px --line` border + lazyload
+- ชื่อ `--ink-1` fw 600 `0.86rem`, ตำแหน่ง `--ink-3` `0.74rem`, ทั้งคู่ ellipsis ที่ `max-width: 14rem` + `title=""`
+- ไม่มี caption ใต้ (ดูข้อ 2 ของ Content rules)
+- Empty: `<span class="req-empty">—</span>` (`--ink-4`)
+
+**Empty state**
+- Padding `3.5rem 1.5rem`, center align
+- ไม่มี icon decoration (text-only)
+- Title fw 600 `1.05rem` + caption `--ink-3` `0.88rem` + CTA button หลัก (`btn-success rounded-pill`)
+
+**Anti-pattern check (ก่อน merge)**
+- ❌ caption text ใต้ avatar ที่อธิบาย status เดียวกับ badge → ลบ
+- ❌ custom status palette / status dot / pulse → กลับไปใช้ `getStatusBadgeConfigFor()`
+- ❌ "X ปรับ" / "Y แก้" indicator chip บน row → ตัด (UI สำหรับ revision อยู่ที่หน้า view ไม่ใช่ list)
+- ❌ row stagger / fade-in animation → ลบ; transition เฉพาะ hover
+- ❌ meta chip bar (รออนุมัติ X · อนุมัติแล้ว X) ที่ header card → ลบ; ถ้าต้องการ summary ให้ผู้ใช้ขอเฉพาะ
+- ❌ custom `req-icon-btn` / `req-page-btn` → ใช้ Bootstrap `btn` ที่มี
+- ❌ ไอคอน calendar/warehouse/arrow ใน cell → ลบ; text + `·` + `→` พอ
+- ❌ N+1 ใน loop (`Model::findOne()` ใน foreach) → batch prefetch
+
 ## The enterprise slop test
 
 ก่อน merge — ถามตัวเองว่า "ผู้ใช้ที่คุ้นกับ Linear / Notion / Stripe / Figma นั่งใช้หน้านี้แล้วจะเชื่อมั่นในการกระทำ หรือพะวงทุก component?"
