@@ -172,14 +172,14 @@ $stats = [
 
 // ── Quick action tiles — base high-frequency services.
 $quickServices = [
-    ['icon' => 'car',             'cat' => 'vehicle',     'label' => 'จองรถ',           'url' => Url::to(['/mobile/default/booking-vehicle', 'action' => 'new'])],
-    ['icon' => 'calendar',        'cat' => 'meeting',     'label' => 'จองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting', 'action' => 'new'])],
-    ['icon' => 'wrench',          'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',        'url' => Url::to(['/mobile/default/repair-request'])],
-    ['icon' => 'calendar-off',    'cat' => 'leave',       'label' => 'ขอลา',            'url' => Url::to(['/mobile/default/leave-request'])],
-    ['icon' => 'clock',           'cat' => 'attendance',  'label' => 'ลงเวลา',          'url' => Url::to(['/mobile/default/attendance'])],
-    ['icon' => 'qr-code',         'cat' => 'asset',       'label' => 'ครุภัณฑ์',        'url' => Url::to(['/mobile/default/scan'])],
     ['icon' => 'layout-dashboard','cat' => 'document',    'label' => 'ภาพรวม',          'url' => Url::to(['/mobile/default/overview'])],
     ['icon' => 'clipboard-check', 'cat' => 'approval',    'label' => 'งานอนุมัติ',      'url' => $pendingApprovalUrl, 'badge' => $pendingCount > 0 ? $pendingCount : null],
+    ['icon' => 'car',             'cat' => 'vehicle',     'label' => 'จองรถ',           'url' => Url::to(['/mobile/default/booking-vehicle', 'action' => 'new'])],
+    ['icon' => 'calendar',        'cat' => 'meeting',     'label' => 'จองห้องประชุม',   'url' => Url::to(['/mobile/default/booking-meeting', 'action' => 'new'])],
+    ['icon' => 'calendar-off',    'cat' => 'leave',       'label' => 'ขอลา',            'url' => Url::to(['/mobile/default/leave-request'])],
+    ['icon' => 'clock',           'cat' => 'attendance',  'label' => 'ลงเวลา',          'url' => Url::to(['/mobile/default/attendance'])],
+    ['icon' => 'wrench',          'cat' => 'maintenance', 'label' => 'แจ้งซ่อม',        'url' => Url::to(['/mobile/default/repair-request'])],
+    ['icon' => 'qr-code',         'cat' => 'asset',       'label' => 'ครุภัณฑ์',        'url' => Url::to(['/mobile/default/scan'])],
 ];
 
 $todayThai    = ThaiDateHelper::formatThaiDate(date('Y-m-d'));

@@ -1999,6 +1999,58 @@ class DefaultController extends Controller
     }
 
     /**
+     * แสดงรายการครุภัณฑ์ตามสถานะ (drill-down จาก donut legend)
+     */
+    public function actionOverviewAssetByStatus(string $id = '')
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return $this->redirect(['/mobile/default/overview-asset']);
+        }
+
+        // หา meta ของ status นี้จาก breakdown
+        $breakdown = $this->overviewAssetStatusBreakdown();
+        $meta = null;
+        foreach ($breakdown as $row) {
+            if ((string) $row['id'] === $id) { $meta = $row; break; }
+        }
+        if (!$meta) {
+            // fallback meta — ไม่อยู่ใน master แล้ว
+            $meta = ['id' => $id, 'label' => 'สถานะ ' . $id, 'tone' => 'secondary', 'icon' => 'circle-dot', 'count' => 0];
+        }
+
+        $this->view->title = 'ครุภัณฑ์สถานะ ' . $meta['label'];
+        $assets = $this->overviewAssetByStatus($id, 200);
+        return $this->render('overview-asset-by-status', [
+            'current_page' => 'home',
+            'statusId'     => $id,
+            'meta'         => $meta,
+            'assets'       => $assets,
+        ]);
+    }
+
+    /**
+     * คืนค่าครุภัณฑ์ตาม asset_status id
+     *
+     * @return Asset[]
+     */
+    protected function overviewAssetByStatus(string $id, int $limit = 200): array
+    {
+        try {
+            $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
+            if (!$schema || !$schema->getColumn('asset_status')) return [];
+            $q = Asset::find()->andWhere(['asset_status' => $id]);
+            if ($schema->getColumn('deleted_at')) {
+                $q->andWhere(['deleted_at' => null]);
+            }
+            $order = $schema->getColumn('updated_at')
+                ? ['updated_at' => SORT_DESC]
+                : ($schema->getColumn('created_at') ? ['created_at' => SORT_DESC] : ['id' => SORT_DESC]);
+            return $q->orderBy($order)->limit($limit)->all();
+        } catch (\Throwable $e) { return []; }
+    }
+
+    /**
      * แสดงรายการครุภัณฑ์ตามระดับความเสี่ยง (drill-down จาก KPI tile)
      * รองรับ: H, M, L, unassessed (null/empty)
      */
@@ -2041,9 +2093,7 @@ class DefaultController extends Controller
             $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
             if (!$schema || !$schema->getColumn('risk_level')) return [];
             $q = Asset::find();
-            if ($schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             if ($level === 'UNASSESSED') {
                 $q->andWhere([
                     'or',
@@ -2061,15 +2111,86 @@ class DefaultController extends Controller
         } catch (\Throwable $e) { return []; }
     }
 
-    /** @return int รวมครุภัณฑ์ (ไม่นับที่ถูกลบ) */
+    /**
+     * Cached ids ของสถานะ "จำหน่ายแล้ว" (asset_status เป็นได้ทั้ง asset_status table หรือ categorise)
+     * @var array<int,string>|null
+     */
+    private ?array $_disposedAssetStatusIds = null;
+
+    /**
+     * คืน id ของสถานะที่หมายถึง "จำหน่ายแล้ว" — เพื่อตัดออกจากภาพรวม
+     * รวมจาก asset_status table + categorise(name=asset_status)
+     *
+     * @return array<int,string>
+     */
+    protected function getDisposedAssetStatusIds(): array
+    {
+        if ($this->_disposedAssetStatusIds !== null) {
+            return $this->_disposedAssetStatusIds;
+        }
+        $ids = [];
+        try {
+            $schema = Yii::$app->db->getTableSchema(AssetStatus::tableName(), true);
+            if ($schema) {
+                $rows = AssetStatus::find()
+                    ->select(['id'])
+                    ->andWhere(['name' => 'จำหน่ายแล้ว'])
+                    ->asArray()->all();
+                foreach ($rows as $r) {
+                    $v = (string) ($r['id'] ?? '');
+                    if ($v !== '') $ids[] = $v;
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+        try {
+            $rows = (new \yii\db\Query())
+                ->select(['code'])
+                ->from(AssetCategory::tableName())
+                ->where(['name' => 'asset_status', 'title' => 'จำหน่ายแล้ว'])
+                ->all();
+            foreach ($rows as $r) {
+                $v = (string) ($r['code'] ?? '');
+                if ($v !== '') $ids[] = $v;
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+
+        $this->_disposedAssetStatusIds = array_values(array_unique($ids));
+        return $this->_disposedAssetStatusIds;
+    }
+
+    /**
+     * เพิ่มเงื่อนไข "ครุภัณฑ์ที่มองเห็นในภาพรวม" — soft-delete safe + ตัดสถานะจำหน่าย
+     * ใช้ได้ทั้ง \yii\db\Query กับ \yii\db\ActiveQuery
+     */
+    protected function applyAssetOverviewFilter($query, ?\yii\db\TableSchema $schema = null): void
+    {
+        $schema = $schema ?? Yii::$app->db->getTableSchema(Asset::tableName(), true);
+        if (!$schema) return;
+
+        if ($schema->getColumn('deleted_at')) {
+            $query->andWhere(['deleted_at' => null]);
+        }
+        if ($schema->getColumn('asset_status')) {
+            $disposed = $this->getDisposedAssetStatusIds();
+            if ($disposed) {
+                $query->andWhere(['not in', 'asset_status', $disposed]);
+            }
+        }
+        if ($schema->getColumn('lifecycle_status')) {
+            $query->andWhere(['or',
+                ['lifecycle_status' => null],
+                ['<>', 'lifecycle_status', Asset::LIFECYCLE_DISPOSED],
+            ]);
+        }
+    }
+
+    /** @return int รวมครุภัณฑ์ที่มองเห็นในภาพรวม (ตัด soft-delete + สถานะจำหน่าย) */
     protected function overviewAssetTotal(): int
     {
         try {
             $q = Asset::find();
             $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
-            if ($schema && $schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             return (int) $q->count();
         } catch (\Throwable $e) { return 0; }
     }
@@ -2087,15 +2208,13 @@ class DefaultController extends Controller
             $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
             if (!$schema || !$schema->getColumn('asset_status')) return [];
 
-            // นับครุภัณฑ์ตามสถานะ
+            // นับครุภัณฑ์ตามสถานะ (ตัดจำหน่ายผ่าน applyAssetOverviewFilter)
             $countQ = (new \yii\db\Query())
                 ->select(['s' => 'asset_status', 'cnt' => 'COUNT(*)'])
                 ->from(Asset::tableName())
                 ->andWhere(['not', ['asset_status' => null]])
                 ->andWhere(['<>', 'asset_status', '']);
-            if ($schema->getColumn('deleted_at')) {
-                $countQ->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($countQ, $schema);
             $countRows = $countQ->groupBy(['asset_status'])->all();
             $countMap = [];
             foreach ($countRows as $r) {
@@ -2196,9 +2315,7 @@ class DefaultController extends Controller
                 ->from(Asset::tableName())
                 ->andWhere(['not', ['asset_condition' => null]])
                 ->andWhere(['<>', 'asset_condition', '']);
-            if ($schema->getColumn('deleted_at')) {
-                $countQ->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($countQ, $schema);
             $countRows = $countQ->groupBy(['asset_condition'])->all();
             $countMap = [];
             foreach ($countRows as $r) {
@@ -2277,9 +2394,7 @@ class DefaultController extends Controller
             }
 
             $base = (new \yii\db\Query())->from(Asset::tableName());
-            if ($schema->getColumn('deleted_at')) {
-                $base->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($base, $schema);
 
             $countMap = ['H' => 0, 'M' => 0, 'L' => 0, '-' => 0];
             $rows = (clone $base)
@@ -2317,9 +2432,7 @@ class DefaultController extends Controller
                 ->from(Asset::tableName())
                 ->andWhere(['not', ['asset_category_id' => null]])
                 ->andWhere(['<>', 'asset_category_id', '']);
-            if ($schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             $rows = $q->groupBy(['asset_category_id'])
                 ->orderBy(['cnt' => SORT_DESC])
                 ->limit($limit)
@@ -2353,7 +2466,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * รวมจำนวนเงินครุภัณฑ์ทั้งหมด (sum ของ price)
+     * รวมจำนวนเงินครุภัณฑ์ทั้งหมด (sum ของ price) — ตัดสถานะจำหน่ายแล้ว
      */
     protected function overviewAssetTotalAmount(): float
     {
@@ -2363,9 +2476,7 @@ class DefaultController extends Controller
             $q = (new \yii\db\Query())
                 ->select(['s' => 'COALESCE(SUM(price), 0)'])
                 ->from(Asset::tableName());
-            if ($schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             $row = $q->one();
             return (float) ($row['s'] ?? 0);
         } catch (\Throwable $e) { return 0.0; }
@@ -2394,9 +2505,7 @@ class DefaultController extends Controller
                 ->from(Asset::tableName())
                 ->andWhere(['not', [$assetColumn => null]])
                 ->andWhere(['<>', $assetColumn, '']);
-            if ($schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             $rows = $q->groupBy([$assetColumn])
                 ->orderBy(['cnt' => SORT_DESC])
                 ->all();
@@ -2431,16 +2540,14 @@ class DefaultController extends Controller
         } catch (\Throwable $e) { return []; }
     }
 
-    /** @return Asset[] ครุภัณฑ์ล่าสุด */
+    /** @return Asset[] ครุภัณฑ์ล่าสุด (ตัดสถานะจำหน่าย) */
     protected function overviewAssetRecent(int $limit = 5): array
     {
         try {
             $schema = Yii::$app->db->getTableSchema(Asset::tableName(), true);
             if (!$schema) return [];
             $q = Asset::find();
-            if ($schema->getColumn('deleted_at')) {
-                $q->andWhere(['deleted_at' => null]);
-            }
+            $this->applyAssetOverviewFilter($q, $schema);
             $order = $schema->getColumn('created_at') ? ['created_at' => SORT_DESC] : ['id' => SORT_DESC];
             return $q->orderBy($order)->limit($limit)->all();
         } catch (\Throwable $e) { return []; }

@@ -263,6 +263,44 @@ foreach ($statsRanked as $s) {
     font-weight: 600;
 }
 
+/* Linkable legend rows */
+a.ov-donut-legend__item.is-link {
+    text-decoration: none; color: inherit;
+    grid-template-columns: auto 1fr auto auto;
+    padding: 6px 8px; margin: -6px -8px;
+    border-radius: 8px;
+    transition: background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+a.ov-donut-legend__item.is-link:hover,
+a.ov-donut-legend__item.is-link:focus-visible {
+    background: color-mix(in oklch, var(--seg-color, var(--surface-3)) 8%, var(--surface-2));
+    color: inherit;
+}
+a.ov-donut-legend__item.is-link:focus-visible {
+    outline: 2px solid var(--seg-color, var(--mobile-primary));
+    outline-offset: 2px;
+}
+.ov-donut-legend__nums {
+    display: inline-flex; align-items: baseline;
+    gap: 0;
+    white-space: nowrap;
+}
+.ov-donut-legend__chev {
+    width: 14px; height: 14px;
+    color: var(--ink-4, #a0aec0);
+    opacity: 0.6;
+    margin-left: 4px;
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+}
+a.ov-donut-legend__item.is-link:hover .ov-donut-legend__chev,
+a.ov-donut-legend__item.is-link:focus-visible .ov-donut-legend__chev {
+    opacity: 0.95;
+    transform: translateX(2px);
+    color: var(--seg-color, var(--ink-3));
+}
+
 /* Condition stacked bar */
 .ov-condbar {
     display: flex;
@@ -654,23 +692,24 @@ a.ov-risk__tile:focus-visible .ov-risk__chev {
                         <div class="ov-donut-legend">
                             <?php foreach ($statusBreakdown as $s):
                                 $count = (int) $s['count'];
+                                if ($count <= 0) continue;
                                 $pct   = $statusTotal > 0 ? ($count / $statusTotal) * 100 : 0;
                                 $color = $toneColor[$s['tone']] ?? $toneColor['secondary'];
-                                $isZero = $count === 0;
+                                $url   = Url::to(['/mobile/default/overview-asset-by-status', 'id' => (string) $s['id']]);
+                                $aria  = 'ดูครุภัณฑ์สถานะ ' . $s['label'] . ' ' . $count . ' รายการ';
                             ?>
-                                <div class="ov-donut-legend__item<?= $isZero ? ' is-empty' : '' ?>"
-                                     style="--seg-color: <?= Html::encode($color) ?>;">
+                                <a href="<?= Html::encode($url) ?>"
+                                   class="ov-donut-legend__item is-link"
+                                   style="--seg-color: <?= Html::encode($color) ?>;"
+                                   aria-label="<?= Html::encode($aria) ?>">
                                     <span class="ov-donut-legend__dot" aria-hidden="true"></span>
                                     <span class="ov-donut-legend__label"><?= Html::encode($s['label']) ?></span>
-                                    <span>
+                                    <span class="ov-donut-legend__nums">
                                         <span class="ov-donut-legend__num"><?= Html::encode(number_format($count)) ?></span>
-                                        <?php if (!$isZero): ?>
-                                            <span class="ov-donut-legend__pct"><?= Html::encode(number_format($pct, $pct >= 10 ? 0 : 1)) ?>%</span>
-                                        <?php else: ?>
-                                            <span class="ov-donut-legend__pct">—</span>
-                                        <?php endif; ?>
+                                        <span class="ov-donut-legend__pct"><?= Html::encode(number_format($pct, $pct >= 10 ? 0 : 1)) ?>%</span>
                                     </span>
-                                </div>
+                                    <i data-lucide="chevron-right" class="ov-donut-legend__chev" aria-hidden="true"></i>
+                                </a>
                             <?php endforeach; ?>
                         </div>
                     </div>
