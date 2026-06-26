@@ -583,6 +583,7 @@ class Leave extends \yii\db\ActiveRecord
     public function viewStatus()
     {
         try {
+            $extraText = '';
             switch ($this->status) {
                 case 'Pending':
                     $color = 'warning';
@@ -608,6 +609,9 @@ class Leave extends \yii\db\ActiveRecord
                 case 'ReqCancel':
                     $color = 'warning';
                     $icon = '<i class="bi bi-exclamation-triangle text-danger"></i>';
+                    if (!empty($this->updated_at)) {
+                        $extraText = ' (เมื่อ ' . Yii::$app->thaiDate->toThaiDate($this->updated_at, true, false) . ')';
+                    }
                     break;
                 case 'Cancel':
                     $color = 'secondary';
@@ -623,7 +627,7 @@ class Leave extends \yii\db\ActiveRecord
                     $icon = '';
             }
 
-            return '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.'-subtle rounded-pill fw-medium px-2 py-1">' . $icon . ' ' . $this->leaveStatus->title . '</span>';
+            return '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.'-subtle rounded-pill fw-medium px-2 py-1">' . $icon . ' ' . $this->leaveStatus->title . $extraText . '</span>';
         } catch (\Throwable $th) {
             return null;
         }
