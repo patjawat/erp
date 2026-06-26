@@ -151,7 +151,7 @@ class StockItem extends \yii\db\ActiveRecord
             [['title'], 'string'],
             [['name', 'group_id', 'category_id', 'ref'], 'string', 'max' => 255],
             [['data_json', 'ma_items'], 'safe'],
-            [['qty_min', 'qty_max', 'qty', 'min_stock', 'max_stock'], 'number'],
+            [['qty_min', 'qty_max', 'qty'], 'number'],
             [['active'], 'integer'],
             [['code'], 'unique', 'targetAttribute' => ['code', 'name', 'group_id']],
             // virtual / alias attrs — เปิดให้ form load ได้ (ผ่าน __set magic)

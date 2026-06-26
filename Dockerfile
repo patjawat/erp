@@ -60,6 +60,13 @@ RUN sed -i "s/defined('YII_ENV') or define('YII_ENV', 'dev');/defined('YII_ENV')
 # Set memory_limit to 2048M
 RUN echo "memory_limit = 2048M" > /usr/local/etc/php/conf.d/memory-limit.ini
 
+# PHP input/post limits — กันฟอร์มหลายแถว (เช่น receive/create > 160 รายการ) ถูก PHP ตัด POST เงียบ ๆ เมื่อเกิน max_input_vars (default 1000)
+RUN { \
+        echo "max_input_vars = 50000"; \
+        echo "post_max_size = 64M"; \
+        echo "upload_max_filesize = 64M"; \
+    } > /usr/local/etc/php/conf.d/php-input-limits.ini
+
 # Step 6: เปิดพอร์ต 80 สำหรับ HTTP
 EXPOSE 80
 
