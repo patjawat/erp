@@ -70,6 +70,41 @@ class MainStockController extends \yii\web\Controller
     }
 
     /**
+     * รายงานสรุปยอดคงเหลือ — มุมผู้ดูแลคลังหลัก
+     * Scope: เฉพาะคลังหลัก (MAIN) ที่ user เป็น officer ใน data_json.officer
+     */
+    public function actionBalance()
+    {
+        $accessible = $this->getMainWarehousesList();
+        $context = \app\modules\inventoryV2\controllers\ReportController::buildBalanceContext(
+            $accessible,
+            $this->request->getQueryParams(),
+            '-- ทุกคลังหลัก --'
+        );
+
+        return $this->render('balance', array_merge($context, [
+            'accessibleWarehouseCount' => count($accessible),
+        ]));
+    }
+
+    /**
+     * Export Excel ของยอดคงเหลือ — มุมผู้ดูแลคลังหลัก
+     */
+    public function actionExportBalance()
+    {
+        $accessible = $this->getMainWarehousesList();
+        $context = \app\modules\inventoryV2\controllers\ReportController::buildBalanceContext(
+            $accessible,
+            $this->request->getQueryParams(),
+            '-- ทุกคลังหลัก --'
+        );
+        \app\modules\inventoryV2\controllers\ReportController::streamBalanceXlsx(
+            $context['rows'],
+            'balance-main-warehouse'
+        );
+    }
+
+    /**
      * AJAX endpoint: ส่งข้อมูล chart มูลค่ารับเข้า/จ่ายออก แยกตามประเภท
      * Params: warehouse_id, year (พ.ศ.), month (1-12, optional), direction (IN|OUT|NET)
      */
@@ -830,7 +865,7 @@ class MainStockController extends \yii\web\Controller
                     'shownCount' => count($items),
                     'currentWarehouseName' => $currentWarehouseName,
                     'q' => $q,
-                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/report/balance-by-warehouse', 'warehouse_id' => $warehouseId]),
+                    'fullPageUrl' => \yii\helpers\Url::to(['/inventory-v2/main-stock/balance', 'warehouse_id' => $warehouseId]),
                 ]),
                 'total_count' => $totalCount,
                 'shown_count' => count($items),

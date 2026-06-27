@@ -15,7 +15,7 @@ if ($criticalCount === 0) {
     return;
 }
 
-$reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
+$reportBalanceUrl = ['/inventory-v2/sub-stock/balance'];
 if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
     $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
 }

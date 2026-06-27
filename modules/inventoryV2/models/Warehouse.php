@@ -234,10 +234,32 @@ class Warehouse extends \yii\db\ActiveRecord
 
     /**
      * คลังย่อยสำหรับ dropdown / รายการ
-     * แสดงเฉพาะคลังย่อยที่แผนกของ user (Employees.department) อยู่ในรายการแผนกที่มีสิทธิเบิก
+     * แสดงเฉพาะคลังย่อยที่ user ที่ล็อกอินถูกกำหนดเป็นเจ้าหน้าที่ (data_json.officer)
+     * ใช้สำหรับ "คลังที่รับของ" ในใบขอเบิก — เจ้าหน้าที่คลังย่อยเบิกของจากคลังหลักมาคลังตัวเอง
      * @return Warehouse[]
      */
     public static function findSubWarehousesForUser()
+    {
+        if (Yii::$app->user->isGuest) {
+            return [];
+        }
+
+        $userId = (string) Yii::$app->user->id;
+        return self::find()
+            ->where(['warehouse_type' => 'SUB'])
+            ->andWhere(['or', ['delete' => null], ['delete' => '']])
+            ->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"))
+            ->orderBy('warehouse_name')
+            ->all();
+    }
+
+    /**
+     * คลังย่อยที่ user ที่ล็อกอินมีสิทธิ "บันทึกการจ่ายพัสดุ" (เบิกของไปใช้งาน)
+     * แสดงเฉพาะคลังย่อยที่แผนกของ user (Employees.department)
+     * อยู่ใน warehouses.department (กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก)
+     * @return Warehouse[]
+     */
+    public static function findSubWarehousesForDepartment()
     {
         $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
         $departmentId = null;

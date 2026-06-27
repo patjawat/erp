@@ -14,6 +14,8 @@ use app\modules\inventoryV2\models\Warehouse;
 $this->title = 'รายการใบขอเบิกวัสดุ';
 $this->params['breadcrumbs'][] = $this->title;
 
+$canCreateRequisition = (bool) ($canCreateRequisition ?? false);
+
 $currentWarehouseId = Yii::$app->request->get('warehouse_id');
 $currentWarehouseId = is_numeric($currentWarehouseId) ? (int) $currentWarehouseId : null;
 if ($currentWarehouseId === null && !empty($searchModel->sub_warehouse_id)) {
@@ -116,20 +118,35 @@ $recipientUnitLabel = $searchModel->getAttributeLabel('sub_warehouse_id');
 ]) ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary rounded-pill']) ?>
-<?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบขอเบิกใหม่', ['create'], ['class' => 'btn btn-success rounded-pill']) ?>
-<?php $this->endBlock(); ?>
-
-<?= $this->render('@app/modules/inventoryV2/views/sub-stock/_menu_sub_stock', [
+<?php
+$subStockActionMenu = $this->render('@app/modules/inventoryV2/views/sub-stock/_menu_sub_stock', [
     'active' => 'requisition',
     'currentWarehouseId' => $currentWarehouseId,
-]) ?>
+]);
+$createRequisitionButton = $canCreateRequisition
+    ? Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบขอเบิกใหม่', ['create'], ['class' => 'btn btn-success rounded-pill'])
+    : '';
+$subStockActions = Html::tag('div', $subStockActionMenu, [
+    'class' => 'd-flex flex-wrap gap-2 justify-content-center justify-content-lg-end align-items-center',
+]);
+foreach (['action', 'page-action'] as $actionBlock) {
+    $this->beginBlock($actionBlock);
+    echo $subStockActions;
+    $this->endBlock();
+}
+?>
 
 <div class="requisition-index">
     <?= $this->render('_search', ['searchModel' => $searchModel]) ?>
 
     <div class="card shadow-sm">
+        <div class="req-list-head">
+            <div class="req-list-head__text">
+                <h2 class="req-list-head__title">รายการใบขอเบิก</h2>
+                <span class="req-list-head__caption"><?= number_format($totalCount) ?> รายการ</span>
+            </div>
+            <?= $createRequisitionButton ?>
+        </div>
         <div class="card-body p-0">
 
             <?php if (empty($models)): ?>
@@ -152,7 +169,6 @@ $recipientUnitLabel = $searchModel->getAttributeLabel('sub_warehouse_id');
                     <?php else: ?>
                         <h3 class="req-empty-state__title">ยังไม่มีใบขอเบิก</h3>
                         <p class="req-empty-state__caption">สร้างใบขอเบิกใบแรก ระบบจะส่งให้หัวหน้าหน่วยงานอนุมัติอัตโนมัติ</p>
-                        <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใบขอเบิกใหม่', ['create'], ['class' => 'btn btn-success rounded-pill']) ?>
                     <?php endif; ?>
                 </div>
             <?php else: ?>
@@ -317,6 +333,33 @@ $recipientUnitLabel = $searchModel->getAttributeLabel('sub_warehouse_id');
     --primary-soft: rgba(13, 110, 253, 0.08);
     --radius-xs: 6px;
     color: var(--ink-1);
+}
+
+.req-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.req-list-head__text {
+    min-width: 0;
+}
+.req-list-head__title {
+    margin: 0;
+    color: var(--ink-1);
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+.req-list-head__caption {
+    display: block;
+    margin-top: 0.1rem;
+    color: var(--ink-3);
+    font-size: 0.78rem;
+    line-height: 1.3;
 }
 
 /* desktop table */
@@ -500,6 +543,13 @@ $recipientUnitLabel = $searchModel->getAttributeLabel('sub_warehouse_id');
     display: flex; gap: 0.4rem;
 }
 @media (max-width: 575.98px) {
+    .req-list-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .req-list-head .btn {
+        width: 100%;
+    }
     .req-card__route {
         display: grid;
         grid-template-columns: minmax(0, 1fr);

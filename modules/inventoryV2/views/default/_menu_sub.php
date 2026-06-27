@@ -18,7 +18,7 @@ $subWarehouseIds = $subWarehouseIds ?? [];
             <i class="bi bi-box-arrow-up-right me-1"></i>บันทึกการจ่าย
         </a>
         <?php
-        $reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
+        $reportBalanceUrl = ['/inventory-v2/sub-stock/balance'];
         if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
             $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
         }

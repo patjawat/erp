@@ -21,6 +21,74 @@ $defaultImg = \Yii::getAlias('@web') . '/images/store1.jpg';
 
 $this->title = 'ตั้งค่าคลังสินค้า';
 $this->params['breadcrumbs'][] = $this->title;
+
+$this->registerCss(<<<CSS
+.setting-toolbar > .flex-grow-1 {
+    min-width: 0;
+}
+.warehouse-search {
+    width: 100%;
+}
+.warehouse-search-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(230px, 1.15fr) minmax(280px, 1.35fr) minmax(145px, 0.75fr) auto;
+    gap: 0.5rem;
+    align-items: end;
+}
+.warehouse-search-form .form-group,
+.warehouse-search-form .mb-3 {
+    margin-bottom: 0 !important;
+}
+.warehouse-search-form .form-control-sm,
+.warehouse-search-form .form-select-sm,
+.warehouse-search-form .btn-sm {
+    min-height: 32px;
+}
+.warehouse-filter {
+    min-width: 0;
+}
+.warehouse-filter-actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    white-space: nowrap;
+}
+.warehouse-filter-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+.warehouse-search .select2-container {
+    width: 100% !important;
+}
+.warehouse-search .select2-container .select2-selection--single {
+    min-height: 32px;
+}
+.setting-toolbar .warehouse-search .select2-container .select2-selection--single,
+.setting-toolbar .warehouse-search .warehouse-filter-actions .btn-sm {
+    min-height: 34px;
+}
+@media (max-width: 1199.98px) {
+    .warehouse-search-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .warehouse-filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 575.98px) {
+    .warehouse-search-form {
+        grid-template-columns: 1fr;
+    }
+    .warehouse-filter-actions {
+        flex-wrap: wrap;
+    }
+    .warehouse-filter-actions .btn {
+        flex: 1 1 120px;
+    }
+}
+CSS);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -36,7 +104,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="container-fluid px-3 px-md-4">
     <div class="row g-3">
         <div class="col-12">
-            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_setting', ['active' => 'setting']) ?>
+            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'setting']) ?>
         </div>
     </div>
 </div>
@@ -46,7 +114,10 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- Inline toolbar: ค้นหา + สร้างคลัง -->
     <div class="setting-toolbar mb-3 d-flex flex-wrap align-items-end justify-content-between gap-2">
         <div class="flex-grow-1">
-            <?= $this->render('_search_warehouse', ['model' => $searchModel]) ?>
+            <?= $this->render('_search_warehouse', [
+                'model' => $searchModel,
+                'departmentOptions' => $departmentOptions,
+            ]) ?>
         </div>
         <div>
             <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างคลังใหม่', ['/inventory-v2/warehouse/create', 'title' => 'สร้างคลังใหม่'], [

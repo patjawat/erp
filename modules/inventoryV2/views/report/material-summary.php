@@ -25,7 +25,7 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/main-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'report']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid py-4">

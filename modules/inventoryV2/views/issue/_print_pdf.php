@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\components\SiteHelper;
 
 $mainWh = $model->mainWarehouse;
 $subWh = $model->subWarehouse;
@@ -9,7 +10,10 @@ $orderTime = $model->order_date ? date('H:i', is_numeric($model->order_date) ? $
 $thaiDateFormatted = $model->order_date && Yii::$app->has('thaiDate') ? Yii::$app->thaiDate->toThaiDate($model->order_date, false, false) : '-';
 $thaiDateTime = $model->order_date && Yii::$app->has('thaiDate') ? Yii::$app->thaiDate->toThaiDate($model->order_date, true, false) : '-';
 $grandTotal = 0;
-$recipient = isset($model->data_json['recipient']) ? $model->data_json['recipient'] : 'ผู้อำนวยการโรงพยาบาล';
+$companyName = trim((string) (SiteHelper::getInfo()['company_name'] ?? ''));
+$recipient = isset($model->data_json['recipient']) && trim((string) $model->data_json['recipient']) !== ''
+    ? $model->data_json['recipient']
+    : 'ผู้อำนวยการ' . ($companyName !== '' ? $companyName : 'โรงพยาบาล');
 $sig = function ($role) use ($model) {
     return $model->getIssueSignature($role);
 };
@@ -93,46 +97,48 @@ function generateDottedLine()
 }
 ?>
 <!-- <table class="table border-1" style="width: 100%;"> -->
-    <table class="table table-sm table-bordered item-table">
-    <tr>
+<table class="table table-sm item-table issue-signature-footer">
+    <tr class="signature-row--large">
         <td class="text-center">
-            <p>ลงชื่อ <?= generateDottedLine() ?> ผู้เบิก</p>
-            <p>&nbsp;</p>
-            <p><?= $sig('requester')['name'] ? Html::encode($sig('requester')['name']) : '&nbsp;' ?></p>
-            <p>&nbsp;</p>
-
-            <p>ตำแหน่ง <?= Html::encode($sig('requester')['position'] ?: '-') ?></p>
-            <p>&nbsp;</p>
-
-            <p class="sign-subtext">วันที่ <?= $sig('requester')['date'] ? (Yii::$app->has('thaiDate') ? Yii::$app->thaiDate->toThaiDate($sig('requester')['date'], true, false) : $sig('requester')['date']) : Html::encode($thaiDateTime) ?></p>
+            <div class="signature-block">
+                <div class="signature-line">ลงชื่อ <span class="signature-dots"><?= generateDottedLine() ?></span> ผู้เบิก</div>
+                <div class="signature-name"><?= $sig('requester')['name'] ? Html::encode($sig('requester')['name']) : '&nbsp;' ?></div>
+                <div class="signature-position">ตำแหน่ง <?= Html::encode($sig('requester')['position'] ?: '-') ?></div>
+                <div class="signature-date sign-subtext">วันที่ <?= $sig('requester')['date'] ? (Yii::$app->has('thaiDate') ? Yii::$app->thaiDate->toThaiDate($sig('requester')['date'], true, false) : $sig('requester')['date']) : Html::encode($thaiDateTime) ?></div>
+            </div>
         </td>
         <td class="text-center">
-            <p>ลงชื่อ <?= generateDottedLine() ?> ผู้จ่ายพัสดุ</p>
-            <p>&nbsp;</p>
-            <p>(<span class="dot-line"><?= $sig('disbursing')['name'] ? Html::encode($sig('disbursing')['name']) : '&nbsp;' ?></span>)</p>
-            <p>&nbsp;</p>
-            <p>ตำแหน่ง <?= Html::encode($sig('disbursing')['position'] ?: '-') ?></p>
-            <p>&nbsp;</p>
+            <div class="signature-block">
+                <div class="signature-line">ลงชื่อ <span class="signature-dots"><?= generateDottedLine() ?></span> ผู้จ่ายพัสดุ</div>
+                <div class="signature-name">(<span class="dot-line"><?= $sig('disbursing')['name'] ? Html::encode($sig('disbursing')['name']) : '&nbsp;' ?></span>)</div>
+                <div class="signature-position">ตำแหน่ง <?= Html::encode($sig('disbursing')['position'] ?: '-') ?></div>
+            </div>
         </td>
     </tr>
     <tr>
         <td class="text-center">
-            <div style="padding-bottom: 10px; !important;">ลงชื่อ <?= generateDottedLine() ?> ผู้เห็นชอบ</div>
-            <div style="padding-bottom: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="dot-line"><?= $sig('approver')['name'] ? Html::encode($sig('approver')['name']) : '&nbsp;' ?></span>)</div>
-            <div class="sign-subtext">ตำแหน่ง <?= Html::encode($sig('approver')['position'] ?: '-') ?></div>
+            <div class="signature-block">
+                <div class="signature-line">ลงชื่อ <span class="signature-dots"><?= generateDottedLine() ?></span> ผู้เห็นชอบ</div>
+                <div class="signature-name">(<span class="dot-line"><?= $sig('approver')['name'] ? Html::encode($sig('approver')['name']) : '&nbsp;' ?></span>)</div>
+                <div class="signature-position sign-subtext">ตำแหน่ง <?= Html::encode($sig('approver')['position'] ?: '-') ?></div>
+            </div>
         </td>
         <td class="text-center">
-            <div style="padding-bottom: 10px;">ลงชื่อ <?= generateDottedLine() ?> ผู้รับวัสดุ</div>
-            <div style="padding-bottom: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="dot-line"><?= $sig('recipient')['name'] ? Html::encode($sig('recipient')['name']) : '&nbsp;' ?></span>)</div>
-            <div class="sign-subtext">ตำแหน่ง <?= Html::encode($sig('recipient')['position'] ?: '-') ?></div>
+            <div class="signature-block">
+                <div class="signature-line">ลงชื่อ <span class="signature-dots"><?= generateDottedLine() ?></span> ผู้รับวัสดุ</div>
+                <div class="signature-name">(<span class="dot-line"><?= $sig('recipient')['name'] ? Html::encode($sig('recipient')['name']) : '&nbsp;' ?></span>)</div>
+                <div class="signature-position sign-subtext">ตำแหน่ง <?= Html::encode($sig('recipient')['position'] ?: '-') ?></div>
+            </div>
         </td>
     </tr>
     <tr>
-        <td style="border: none !important;"></td>
+        <td class="signature-cell--blank"></td>
         <td class="text-center">
-            <div style="padding-bottom: 10px;">ลงชื่อ <?= generateDottedLine() ?> ผู้สั่งจ่าย</div>
-            <div style="padding-bottom: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="dot-line"><?= Html::encode($authorizer['name']) ?></span>)</div>
-            <div class="sign-subtext">ตำแหน่ง <?= Html::encode($authorizer['position'] ?: '-') ?></div>
+            <div class="signature-block">
+                <div class="signature-line">ลงชื่อ <span class="signature-dots"><?= generateDottedLine() ?></span> ผู้สั่งจ่าย</div>
+                <div class="signature-name">(<span class="dot-line"><?= Html::encode($authorizer['name']) ?></span>)</div>
+                <div class="signature-position sign-subtext">ตำแหน่ง <?= Html::encode($authorizer['position'] ?: '-') ?></div>
+            </div>
         </td>
     </tr>
 </table>

@@ -286,7 +286,7 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                     <td>
                                         <input type="number" name="Issue[<?= $index ?>][qty_issued]" 
                                                class="form-control text-center fw-bold border-primary qty-issued" 
-                                               value="<?= $detail->qty ?>" min="0" max="<?= $detail->qty ?>" step="0.01" <?= $canProcess ? '' : 'readonly' ?>>
+                                               value="<?= $detail->qty ?>" min="0" max="<?= $detail->qty ?>" step="1" <?= $canProcess ? '' : 'readonly' ?>>
                                     </td>
                                     <td>
                                         <?php if ($isInsufficient): ?>
@@ -434,7 +434,7 @@ $(document).ready(function() {
             </td>
             <td class="text-center text-muted">-</td>
             <td>
-                <input type="number" name="Issue[\${itemIndex}][qty_issued]" class="form-control text-center fw-bold border-primary qty-issued" value="1" min="0.01" step="0.01">
+                <input type="number" name="Issue[\${itemIndex}][qty_issued]" class="form-control text-center fw-bold border-primary qty-issued" value="1" min="0" step="1">
             </td>
             <td>
                 <select id="lot-select-\${itemIndex}" name="Issue[\${itemIndex}][lot_number]" class="form-select border-warning lot-selector" required>

@@ -61,147 +61,165 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Legacy route — redirect ตามสิทธิ์ของ user
+     * - ถ้าเป็นเจ้าหน้าที่คลังหลัก → main-stock/balance
+     * - ถ้าเป็นเจ้าหน้าที่คลังย่อย → sub-stock/balance
+     * เก็บไว้เพื่อ backward compatibility (bookmark / external link)
+     */
     public function actionBalanceByWarehouse()
-{
-    $request = $this->request;
-    $warehouseId = $request->get('warehouse_id') !== '' ? $request->get('warehouse_id') : null;
-
-    // รับค่าตัวกรองใหม่
-    $categoryId = $request->get('category_id');
-    $status = $request->get('status');
-    $search = $request->get('search');
-
-    // กรองเฉพาะคลังย่อยที่ user มีสิทธิ (ไม่รวมคลังหลัก)
-    $listMain = [];
-    $listSub = Warehouse::findSubWarehousesForUser();
-
-    $warehouses = ['' => '-- ทุกคลังย่อย --'];
-    foreach ($listSub as $w) $warehouses[$w->id] = $w->warehouse_name;
-
-    $accessibleIds = array_map('intval', array_column($listSub, 'id'));
-
-    // ถ้า user ระบุ warehouse_id ที่ไม่อยู่ในสิทธิ → ignore (ไม่ให้ดูทะลุผ่าน URL ตรง)
-    if ($warehouseId !== null && !in_array((int) $warehouseId, $accessibleIds, true)) {
-        $warehouseId = null;
+    {
+        $params = $this->request->getQueryParams();
+        return $this->redirect(array_merge(
+            [self::resolveBalanceRoute()],
+            $params
+        ));
     }
 
-    // ถ้ามีคลังเดียวให้ default เลือกอัตโนมัติ
-    if ($warehouseId === null && count($accessibleIds) === 1) {
-        $warehouseId = $accessibleIds[0];
+    /**
+     * เลือก route ของหน้ายอดคงเหลือตามสิทธิ์ user
+     * - มี main warehouse → ไป main, ไม่มีก็ไป sub (default)
+     */
+    public static function resolveBalanceRoute(): string
+    {
+        $hasMain = !empty(Warehouse::findMainWarehousesForReceive());
+        return $hasMain
+            ? '/inventory-v2/main-stock/balance'
+            : '/inventory-v2/sub-stock/balance';
     }
 
-    $warehouseIds = $warehouseId ? [$warehouseId] : $accessibleIds;
+    /**
+     * สร้าง context สำหรับหน้าสรุปยอดคงเหลือตามคลัง (ใช้ร่วมกันระหว่าง main-stock/balance และ sub-stock/balance)
+     *
+     * @param Warehouse[] $accessibleWarehouses คลังที่ user มีสิทธิ์ใน scope ของหน้านั้น (MAIN หรือ SUB)
+     * @param array $query query params (warehouse_id, category_id, status, search)
+     * @param string $allLabel label สำหรับ option "ทุกคลัง" ของ dropdown
+     * @return array view context (warehouseId, warehouses, rows, summary, categories, categoryId, status, search)
+     */
+    public static function buildBalanceContext(array $accessibleWarehouses, array $query, string $allLabel = '-- ทุกคลัง --'): array
+    {
+        $rawWarehouseId = $query['warehouse_id'] ?? null;
+        $warehouseId = ($rawWarehouseId !== null && $rawWarehouseId !== '')
+            ? (int) $rawWarehouseId
+            : null;
+        $categoryId = $query['category_id'] ?? null;
+        $status = $query['status'] ?? null;
+        $search = $query['search'] ?? null;
 
-    // ดึงข้อมูลดิบมาก่อน
-    $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
-    $rows = $data['rows'];
+        $accessibleIds = array_map('intval', array_column($accessibleWarehouses, 'id'));
 
-    // --- ส่วนการกรองข้อมูล (แก้ไขเพื่อป้องกัน Error) ---
-if ($categoryId || $status || $search) {
-    $rows = array_filter($rows, function($item) use ($categoryId, $status, $search) {
-        $match = true;
-        
-        // 1. กรองประเภท (เพิ่มการเช็ก isset หรือใช้ ?? null)
-        if ($categoryId) {
-            $itemCatId = $item['category_id'] ?? null; // ป้องกัน Undefined array key
-            if ($itemCatId != $categoryId) {
-                $match = false;
+        // ห้ามดูทะลุคลังที่ไม่ได้รับสิทธิ์ผ่าน URL ตรง
+        if ($warehouseId !== null && !in_array($warehouseId, $accessibleIds, true)) {
+            $warehouseId = null;
+        }
+        // ถ้ามีคลังเดียวให้ default เลือกอัตโนมัติ
+        if ($warehouseId === null && count($accessibleIds) === 1) {
+            $warehouseId = $accessibleIds[0];
+        }
+
+        $warehouses = ['' => $allLabel];
+        foreach ($accessibleWarehouses as $w) {
+            $warehouses[$w->id] = $w->warehouse_name;
+        }
+
+        $warehouseIds = $warehouseId ? [$warehouseId] : $accessibleIds;
+        $data = self::loadBalanceData($warehouseIds, $accessibleWarehouses);
+        $rows = $data['rows'];
+
+        if ($categoryId || $status || $search) {
+            $rows = self::applyBalanceFilters($rows, $categoryId, $status, $search);
+            $summary = [
+                'total_value' => array_sum(array_column($rows, 'value')),
+                'items_count' => count($rows),
+                'below_min_count' => count(array_filter($rows, fn($r) => $r['below_min'])),
+                'below_max_count' => count(array_filter($rows, fn($r) => $r['below_max'] && !$r['below_min'])),
+            ];
+        } else {
+            $summary = $data['summary'];
+        }
+
+        // Scope ประเภทวัสดุตามคลังที่เลือก (อ่านจาก data_json.item_type ของคลัง)
+        $warehousesForCategory = $warehouseId
+            ? array_values(array_filter($accessibleWarehouses, fn($w) => (int) $w->id === (int) $warehouseId))
+            : $accessibleWarehouses;
+
+        $allowedCodes = null;
+        foreach ($warehousesForCategory as $w) {
+            $codes = $w->getAllowedItemTypeCodes();
+            if (empty($codes)) {
+                $allowedCodes = null;
+                break;
             }
+            $allowedCodes = $allowedCodes === null ? $codes : array_unique(array_merge($allowedCodes, $codes));
         }
-        
-        // 2. กรองสถานะ
-        if ($status && $match) {
-            $isBelowMin = $item['below_min'] ?? false;
-            $isBelowMax = $item['below_max'] ?? false;
 
-            if ($status == 'below_min' && !$isBelowMin) $match = false;
-            if ($status == 'below_max' && (!$isBelowMax || $isBelowMin)) $match = false;
-            if ($status == 'normal' && ($isBelowMin || $isBelowMax)) $match = false;
+        $categoryQuery = Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER']);
+        if (is_array($allowedCodes)) {
+            $categoryQuery->andWhere(['code' => $allowedCodes]);
         }
-        
-        // 3. ค้นหาแบบเร็ว — ชื่อ / รหัส / จำนวนคงเหลือ / มูลค่า
-        if ($search && $match) {
-            $s = mb_strtolower(trim($search), 'UTF-8');
-            $itemCode = mb_strtolower($item['item_code'] ?? '', 'UTF-8');
-            $itemName = mb_strtolower($item['item_name'] ?? '', 'UTF-8');
+        $categories = \yii\helpers\ArrayHelper::map($categoryQuery->orderBy('title')->all(), 'code', 'title');
 
-            // ส่วนตัวเลข: ตัดเครื่องหมาย comma ออกทั้งฝั่งคำค้นและค่าจริง
-            $sDigits = preg_replace('/[^0-9.]/', '', $s);
-            $balanceStr = (string) ($item['balance_qty'] ?? '');
-            $valueStr = (string) ($item['value'] ?? '');
-
-            $hit = strpos($itemCode, $s) !== false
-                || strpos($itemName, $s) !== false
-                || ($sDigits !== '' && strpos($balanceStr, $sDigits) !== false)
-                || ($sDigits !== '' && strpos($valueStr, $sDigits) !== false);
-
-            if (!$hit) {
-                $match = false;
-            }
+        if ($categoryId !== null && $categoryId !== '' && !isset($categories[$categoryId])) {
+            $categoryId = null;
         }
-        
-        return $match;
-    });
-        
-        // คำนวณ Summary ใหม่หลังจากกรอง
-        $summary = [
-            'total_value' => array_sum(array_column($rows, 'value')),
-            'items_count' => count($rows),
-            'below_min_count' => count(array_filter($rows, fn($r) => $r['below_min'])),
-            'below_max_count' => count(array_filter($rows, fn($r) => $r['below_max'] && !$r['below_min'])),
+
+        return [
+            'warehouseId' => $warehouseId,
+            'warehouses' => $warehouses,
+            'rows' => $rows,
+            'summary' => $summary,
+            'categories' => $categories,
+            'categoryId' => $categoryId,
+            'status' => $status,
+            'search' => $search,
         ];
-    } else {
-        $summary = $data['summary'];
     }
 
-    // ดึงรายการประเภทวัสดุ — scope ตามคลังที่เลือก (อ่านจาก data_json.item_type ของคลัง)
-    $warehousesForCategory = $warehouseId
-        ? array_values(array_filter($listSub, fn($w) => (int) $w->id === (int) $warehouseId))
-        : $listSub;
-
-    $allowedCodes = null; // null = ไม่จำกัด (แสดงทุกประเภท)
-    foreach ($warehousesForCategory as $w) {
-        $codes = $w->getAllowedItemTypeCodes();
-        if (empty($codes)) {
-            // คลังใดคลังหนึ่งไม่จำกัด → แสดงทุกประเภท
-            $allowedCodes = null;
-            break;
-        }
-        $allowedCodes = $allowedCodes === null ? $codes : array_unique(array_merge($allowedCodes, $codes));
+    /**
+     * Filter rows ตาม category / status / search — ใช้ใน buildBalanceContext
+     */
+    protected static function applyBalanceFilters(array $rows, $categoryId, $status, $search): array
+    {
+        return array_values(array_filter($rows, function ($item) use ($categoryId, $status, $search) {
+            if ($categoryId) {
+                if (($item['category_id'] ?? null) != $categoryId) {
+                    return false;
+                }
+            }
+            if ($status) {
+                $isBelowMin = $item['below_min'] ?? false;
+                $isBelowMax = $item['below_max'] ?? false;
+                if ($status === 'below_min' && !$isBelowMin) return false;
+                if ($status === 'below_max' && (!$isBelowMax || $isBelowMin)) return false;
+                if ($status === 'normal' && ($isBelowMin || $isBelowMax)) return false;
+            }
+            if ($search) {
+                $s = mb_strtolower(trim($search), 'UTF-8');
+                $itemCode = mb_strtolower($item['item_code'] ?? '', 'UTF-8');
+                $itemName = mb_strtolower($item['item_name'] ?? '', 'UTF-8');
+                $sDigits = preg_replace('/[^0-9.]/', '', $s);
+                $balanceStr = (string) ($item['balance_qty'] ?? '');
+                $valueStr = (string) ($item['value'] ?? '');
+                $hit = strpos($itemCode, $s) !== false
+                    || strpos($itemName, $s) !== false
+                    || ($sDigits !== '' && strpos($balanceStr, $sDigits) !== false)
+                    || ($sDigits !== '' && strpos($valueStr, $sDigits) !== false);
+                if (!$hit) return false;
+            }
+            return true;
+        }));
     }
-
-    $categoryQuery = Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER']);
-    if (is_array($allowedCodes)) {
-        $categoryQuery->andWhere(['code' => $allowedCodes]);
-    }
-    $categories = \yii\helpers\ArrayHelper::map($categoryQuery->orderBy('title')->all(), 'code', 'title');
-
-    // ถ้าค่า category_id ที่ user เลือกอยู่ ไม่ได้อยู่ในรายการที่ scope ใหม่ → reset
-    if ($categoryId !== null && $categoryId !== '' && !isset($categories[$categoryId])) {
-        $categoryId = null;
-    }
-
-    return $this->render('balance-by-warehouse', [
-        'warehouseId' => $warehouseId,
-        'warehouses' => $warehouses,
-        'rows' => $rows,
-        'summary' => $summary,
-        'categories' => $categories,
-        'categoryId' => $categoryId,
-        'status' => $status,
-        'search' => $search,
-    ]);
-}
 
     /**
      * ดึงข้อมูลรายการวัสดุคงเหลือตามคลัง (ใช้ทั้งหน้าแสดงและ export Excel)
      * @param int[] $warehouseIds
-     * @param \app\modules\inventoryV2\models\Warehouse[] $listMain
-     * @param \app\modules\inventoryV2\models\Warehouse[] $listSub
+     * @param \app\modules\inventoryV2\models\Warehouse[] $accessibleWarehouses คลังที่ user มีสิทธิ์ใน scope ของหน้านั้น (MAIN หรือ SUB)
      * @return array{rows: array, summary: array}
      */
-    protected function getBalanceByWarehouseData($warehouseIds, $listMain, $listSub)
+    public static function loadBalanceData(array $warehouseIds, array $accessibleWarehouses): array
     {
+        $listMain = array_values(array_filter($accessibleWarehouses, fn($w) => ($w->warehouse_type ?? null) === 'MAIN'));
+        $listSub = array_values(array_filter($accessibleWarehouses, fn($w) => ($w->warehouse_type ?? null) !== 'MAIN'));
         if (empty($warehouseIds)) {
             return [
                 'rows' => [],
@@ -631,33 +649,24 @@ if ($categoryId || $status || $search) {
     }
 
     /**
-     * Export รายงานยอดคงเหลือตามคลังเป็น Excel
+     * Legacy export route — redirect ไปยัง main/sub ตามสิทธิ์
      */
     public function actionExportBalanceByWarehouse()
     {
-        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
-            ? (int) $this->request->get('warehouse_id')
-            : null;
+        $route = self::resolveBalanceRoute() === '/inventory-v2/main-stock/balance'
+            ? '/inventory-v2/main-stock/export-balance'
+            : '/inventory-v2/sub-stock/export-balance';
+        $params = $this->request->getQueryParams();
+        return $this->redirect(array_merge([$route], $params));
+    }
 
-        // กรองเฉพาะคลังย่อยที่ user มีสิทธิ (ไม่รวมคลังหลัก) — เช่นเดียวกับหน้ารายงาน
-        $listMain = [];
-        $listSub = Warehouse::findSubWarehousesForUser();
-        $accessibleIds = array_map('intval', array_column($listSub, 'id'));
-
-        if ($warehouseId !== null && !in_array((int) $warehouseId, $accessibleIds, true)) {
-            $warehouseId = null;
-        }
-
-        // ถ้ามีคลังเดียวให้ default เลือกอัตโนมัติ
-        if ($warehouseId === null && count($accessibleIds) === 1) {
-            $warehouseId = $accessibleIds[0];
-        }
-
-        $warehouseIds = $warehouseId ? [$warehouseId] : $accessibleIds;
-
-        $data = $this->getBalanceByWarehouseData($warehouseIds, $listMain, $listSub);
-        $rows = $data['rows'];
-
+    /**
+     * Stream Excel ของรายการยอดคงเหลือ (ใช้ร่วมกันระหว่าง main/sub)
+     * @param array $rows ผลลัพธ์จาก buildBalanceContext()['rows']
+     * @param string $filenamePrefix prefix ของชื่อไฟล์
+     */
+    public static function streamBalanceXlsx(array $rows, string $filenamePrefix = 'balance-by-warehouse'): void
+    {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('ยอดคงเหลือตามคลัง');
@@ -700,10 +709,10 @@ if ($categoryId || $status || $search) {
             $sheet->getStyle('I4:J' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
-        $filename = 'balance-by-warehouse-' . date('Ymd-His') . '.xlsx';
-        $this->response->format = Response::FORMAT_RAW;
-        $this->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $this->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        $filename = $filenamePrefix . '-' . date('Ymd-His') . '.xlsx';
+        Yii::$app->response->format = Response::FORMAT_RAW;
+        Yii::$app->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        Yii::$app->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         Yii::$app->end();

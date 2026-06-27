@@ -21,7 +21,7 @@ use yii\web\Response;
 class IssueController extends Controller
 {
     /**
-     * แสดงรายการใบขอเบิกที่อนุมัติแล้ว (รอคลังจ่าย) และที่จ่ายแล้ว
+     * แสดงรายการใบขอเบิกที่รออนุมัติ อนุมัติแล้ว (รอคลังจ่าย) และที่จ่ายแล้ว
      */
     public function actionIndex()
     {
@@ -31,7 +31,11 @@ class IssueController extends Controller
         $dataProvider->query->andWhere([
             'order_type' => 'OUT',
             'source_type' => 'REQUEST',
-        ])->andWhere(['status' => [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED]]);
+        ])->andWhere(['status' => [
+            StockOrder::STATUS_PENDING,
+            StockOrder::STATUS_APPROVED,
+            StockOrder::STATUS_CONFIRMED,
+        ]]);
         $dataProvider->query->with(['mainWarehouse', 'subWarehouse']);
 
         // วันที่เบิก (order_date)
@@ -433,6 +437,83 @@ class IssueController extends Controller
         }
 
         // 2. เขียน HTML เนื้อหาหลักลงใน PDF
+        $signatureFooterCss = <<<'CSS'
+.issue-signature-footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.issue-signature-footer td {
+    width: 50%;
+    height: 88px;
+    padding: 8px 14px 6px;
+    vertical-align: top;
+    border-color: #777 !important;
+}
+
+.issue-signature-footer .signature-row--large td {
+    height: 118px;
+}
+
+.issue-signature-footer .signature-cell--blank {
+    border: none !important;
+}
+
+.issue-signature-footer .signature-block {
+    width: 100%;
+    text-align: center;
+}
+
+.issue-signature-footer .signature-line,
+.issue-signature-footer .signature-name,
+.issue-signature-footer .signature-position,
+.issue-signature-footer .signature-date {
+    margin: 0;
+}
+
+.issue-signature-footer .signature-line {
+    margin-bottom: 14px;
+    white-space: nowrap;
+}
+
+.issue-signature-footer .signature-dots {
+    display: inline-block;
+    min-width: 135px;
+    color: #444;
+    letter-spacing: 1px;
+}
+
+.issue-signature-footer .signature-name {
+    min-height: 20px;
+    margin-bottom: 8px;
+}
+
+.issue-signature-footer .signature-position {
+    color: #222;
+}
+
+.issue-signature-footer .signature-date {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+.issue-signature-footer .dot-line {
+    display: inline-block;
+    min-width: 150px;
+    border-bottom: 1px dotted #555;
+    line-height: 1.2;
+}
+CSS;
+        $mpdf->WriteHTML($signatureFooterCss, \Mpdf\HTMLParserMode::HEADER_CSS);
+
         $mpdf->WriteHTML($content, \Mpdf\HTMLParserMode::HTML_BODY);
 
         // ป้องกันอักขระพิเศษในชื่อไฟล์

@@ -258,7 +258,13 @@ class StockItem extends \yii\db\ActiveRecord
     public function getUnitName()
     {
         $j = $this->parseDataJson();
-        return $j['unit_name'] ?? null;
+        $unitName = trim((string) ($j['unit_name'] ?? ''));
+        if ($unitName !== '') {
+            return $unitName;
+        }
+
+        $unit = trim((string) ($j['unit'] ?? ''));
+        return $unit !== '' ? $unit : null;
     }
 
     public function getStockBalance($warehouse_id)

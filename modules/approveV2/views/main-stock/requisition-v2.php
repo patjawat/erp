@@ -12,7 +12,6 @@ use app\modules\inventoryV2\models\StockOrder;
 /** @var string $filterStatus */
 /** @var \yii\base\DynamicModel $searchModel */
 /** @var array $mainWarehouses */
-/** @var array $subWarehouses */
 
 $this->title = 'ขออนุมัติเบิกวัสดุ';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบการอนุมัติ', 'url' => ['/me']];
@@ -22,7 +21,6 @@ $filterStatus = $filterStatus ?? 'all';
 $searchParams = array_filter([
     'order_no' => $searchModel->order_no ?? '',
     'main_warehouse_id' => $searchModel->main_warehouse_id ?? '',
-    'sub_warehouse_id' => $searchModel->sub_warehouse_id ?? '',
     'date_start' => $searchModel->date_start ?? '',
     'date_end' => $searchModel->date_end ?? '',
 ], function ($v) { return $v !== '' && $v !== null; });
@@ -35,7 +33,6 @@ $statusFilters = [
     'CANCELLED' => ['label' => 'ยกเลิก', 'url' => array_merge($baseUrl, ['status' => 'CANCELLED'])],
 ];
 $mainWarehouses = $mainWarehouses ?? [];
-$subWarehouses = $subWarehouses ?? [];
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
@@ -77,13 +74,6 @@ $subWarehouses = $subWarehouses ?? [];
             <div class="col-auto">
                 <label class="form-label small text-muted mb-0">คลังที่จ่ายของ</label>
                 <?= Html::dropDownList('main_warehouse_id', $searchModel->main_warehouse_id ?? '', ['' => '-- ทั้งหมด --'] + $mainWarehouses, [
-                    'class' => 'form-select form-select-sm',
-                    'style' => 'min-width: 160px;',
-                ]) ?>
-            </div>
-            <div class="col-auto">
-                <label class="form-label small text-muted mb-0">หน่วยงานที่รับของ</label>
-                <?= Html::dropDownList('sub_warehouse_id', $searchModel->sub_warehouse_id ?? '', ['' => '-- ทั้งหมด --'] + $subWarehouses, [
                     'class' => 'form-select form-select-sm',
                     'style' => 'min-width: 160px;',
                 ]) ?>

@@ -55,7 +55,7 @@ AND group_id = 'MATER';
 </div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/default/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'stock-item']) ?>
 <?php $this->endBlock(); ?>
 
 

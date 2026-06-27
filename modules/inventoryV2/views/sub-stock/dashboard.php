@@ -4,10 +4,6 @@ use yii\helpers\Url;
 use yii\web\View;
 use app\modules\inventoryV2\models\StockOrder;
 
-$this->title = 'ภาพรวมคลังย่อย';
-$this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
-$this->params['breadcrumbs'][] = $this->title;
-
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
 
 $pendingDisbursementCount = (int) ($pendingDisbursementCount ?? ($pendingReceiveCount ?? 0));
@@ -20,6 +16,10 @@ $warehouses = $warehouses ?? [];
 $currentWarehouseId = $currentWarehouseId ?? null;
 $subWarehouseIds = $subWarehouseIds ?? [];
 $usageHistory = $usageHistory ?? [];
+$permissionBlocked = (bool) ($permissionBlocked ?? false);
+$permissionMessage = $permissionMessage ?? 'หน่วยงานของคุณยังไม่ได้กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก ในคลังย่อย';
+$permissionSettingUrl = ['/inventory-v2/default/setting'];
+$canCreateRequisition = (bool) ($canCreateRequisition ?? false);
 
 $currentWarehouseName = 'คลังย่อยทั้งหมด';
 if ($currentWarehouseId && $warehouses) {
@@ -31,7 +31,11 @@ if ($currentWarehouseId && $warehouses) {
     }
 }
 
-$reportBalanceUrl = ['/inventory-v2/report/balance-by-warehouse'];
+$this->title = $permissionBlocked ? 'คลังย่อยยังไม่พร้อมใช้งาน' : 'ภาพรวม' . $currentWarehouseName;
+$this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
+$this->params['breadcrumbs'][] = $this->title;
+
+$reportBalanceUrl = ['/inventory-v2/sub-stock/balance'];
 if (!empty($subWarehouseIds) && count($subWarehouseIds) === 1) {
     $reportBalanceUrl['warehouse_id'] = $subWarehouseIds[0];
 }
@@ -60,7 +64,7 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
 <?= $this->render('_page_head', [
     'icon'  => 'bi-grid-1x2-fill',
     'title' => $this->title,
-    'metas' => [$currentWarehouseName, $todayLabel],
+    'metas' => [$permissionBlocked ? 'รอตั้งค่าสิทธิเบิก' : $currentWarehouseName, $todayLabel],
     'extra' => $this->render('_health_badge', [
         'criticalCount' => $criticalCount,
         'pendingDisbursementCount' => $pendingDisbursementCount,
@@ -69,14 +73,47 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
 ]) ?>
 <?php $this->endBlock(); ?>
 
-<?= $this->render('_menu_sub_stock', [
-    'active' => 'dashboard',
-    'currentWarehouseId' => $currentWarehouseId,
-    'warehouses' => $warehouses,
-    'filterAction' => ['/inventory-v2/sub-stock/dashboard'],
-]) ?>
+<?php
+$subStockActionMenu = $permissionBlocked
+    ? Html::a('<i class="bi bi-gear-fill me-1"></i> ตั้งค่าคลังสินค้า', $permissionSettingUrl, [
+        'class' => 'btn btn-warning text-dark rounded-pill px-3',
+    ])
+    : $this->render('_menu_sub_stock', [
+        'active' => 'dashboard',
+        'currentWarehouseId' => $currentWarehouseId,
+    ]);
+foreach (['action', 'page-action'] as $actionBlock) {
+    $this->beginBlock($actionBlock);
+    echo $subStockActionMenu;
+    $this->endBlock();
+}
+?>
 
 <div class="container-fluid py-3 py-md-4 px-3 px-md-4 sub-stock-dashboard">
+
+    <?php if ($permissionBlocked): ?>
+        <section class="sub-stock-blocked" aria-labelledby="sub-stock-blocked-heading">
+            <div class="sub-stock-blocked__icon" aria-hidden="true">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div class="sub-stock-blocked__content">
+                <span class="sub-stock-blocked__eyebrow">ต้องตั้งค่าสิทธิก่อนเข้าใช้งาน</span>
+                <h2 id="sub-stock-blocked-heading"><?= Html::encode($permissionMessage) ?></h2>
+                <p>กรุณาไปที่ตั้งค่าคลังสินค้า และกำหนดแผนก/ฝ่ายที่มีสิทธิเบิกให้เรียบร้อยก่อนเข้าใช้งานคลังย่อย</p>
+                <div class="sub-stock-blocked__note">
+                    หากคุณไม่มีสิทธิ์ตั้งค่า โปรดแจ้งผู้ดูแลระบบคลังสินค้าให้กำหนดแผนก/ฝ่ายของคุณในคลังย่อยที่ต้องใช้งาน
+                </div>
+                <div class="sub-stock-blocked__actions">
+                    <?= Html::a('<i class="bi bi-gear-fill me-1"></i> ไปตั้งค่าคลังสินค้า', $permissionSettingUrl, [
+                        'class' => 'btn btn-warning text-dark rounded-pill px-4',
+                    ]) ?>
+                    <?= Html::a('<i class="bi bi-grid-1x2-fill me-1"></i> กลับเมนูคลังสินค้า', ['/inventory-v2/default/index'], [
+                        'class' => 'btn btn-outline-secondary rounded-pill px-4',
+                    ]) ?>
+                </div>
+            </div>
+        </section>
+    <?php else: ?>
 
     <?= $this->render('_critical_strip', [
         'criticalCount' => $criticalCount,
@@ -176,10 +213,12 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
                         </div>
                         <div class="empty-block__title">ไม่มีใบที่รอคลังหลักจ่าย</div>
                         <div class="empty-block__caption">เมื่อหัวหน้าอนุมัติใบขอเบิก รายการจะแสดงที่นี่จนกว่าคลังหลักจะจ่ายของ</div>
+                        <?php if ($canCreateRequisition): ?>
                         <a href="<?= Url::to(['/inventory-v2/requisition/create']) ?>" class="empty-block__action">
                             <i class="bi bi-file-earmark-plus" aria-hidden="true"></i>
                             <span>สร้างใบขอเบิกใหม่</span>
                         </a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -215,12 +254,15 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
             'currentWarehouseId' => $currentWarehouseId,
         ]) ?>
     </div>
+    <?php endif; ?>
 </div>
 
-<a href="<?= Url::to($issueUrl) ?>" class="sub-stock-fab" aria-label="บันทึกการจ่ายพัสดุ">
-    <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-    <span>บันทึกการจ่าย</span>
-</a>
+<?php if (!$permissionBlocked): ?>
+    <a href="<?= Url::to($issueUrl) ?>" class="sub-stock-fab" aria-label="ตัดจ่ายคลังย่อย">
+        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+        <span>บันทึกการจ่าย</span>
+    </a>
+<?php endif; ?>
 
 <style>
 .sub-stock-dashboard {
@@ -253,6 +295,89 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
     --t-fast: 120ms;
     --t-mid: 180ms;
     color: var(--ink-1);
+}
+
+.sub-stock-blocked {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    max-width: 920px;
+    min-height: 280px;
+    margin: 8px auto 0;
+    padding: 28px;
+    border: 1px solid rgba(180, 83, 9, 0.24);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 251, 235, 0.92) 0%, rgba(255, 255, 255, 0.98) 48%, rgba(239, 246, 255, 0.9) 100%);
+    box-shadow: var(--shadow-2);
+}
+
+.sub-stock-blocked__icon {
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #92400e;
+    background: rgba(245, 158, 11, 0.16);
+    font-size: 28px;
+}
+
+.sub-stock-blocked__content {
+    min-width: 0;
+}
+
+.sub-stock-blocked__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    color: #92400e;
+    background: rgba(245, 158, 11, 0.14);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.sub-stock-blocked h2 {
+    margin: 12px 0 8px;
+    color: var(--ink-1);
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.sub-stock-blocked p {
+    max-width: 680px;
+    margin: 0;
+    color: var(--ink-2);
+    line-height: 1.7;
+}
+
+.sub-stock-blocked__note {
+    max-width: 680px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    color: #5f4b16;
+    background: rgba(255, 251, 235, 0.9);
+    line-height: 1.65;
+}
+
+.sub-stock-blocked__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.sub-stock-blocked__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
 }
 
 /* Surface card */
@@ -678,6 +803,28 @@ $todayLabel = $thaiDows[(int)date('w', $nowTs)] . ' ' . (int)date('j', $nowTs) .
 }
 .sub-stock-fab i { font-size: 1.15rem; line-height: 1; }
 @media (max-width: 575.98px) {
+    .sub-stock-blocked {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        min-height: 0;
+        padding: 20px;
+    }
+
+    .sub-stock-blocked__icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+
+    .sub-stock-blocked h2 {
+        font-size: 1.18rem;
+    }
+
+    .sub-stock-blocked__actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
     .sub-stock-fab {
         right: 1rem;
         bottom: 1rem;

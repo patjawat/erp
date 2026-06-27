@@ -1,7 +1,7 @@
 <?php
 /**
  * Shared page header for inventoryV2 sub-stock pages
- * ใช้ภายใน $this->beginBlock('page-title') ของทุกเพจที่ render _menu_sub_stock
+ * ใช้ภายใน $this->beginBlock('page-title') ของทุกเพจในกลุ่ม sub-stock
  *
  * @var string       $icon     bi-* icon class (default: bi-grid-1x2-fill)
  * @var string       $title    หัวเรื่อง (default: $this->title)

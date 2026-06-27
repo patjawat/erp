@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\grid\GridView;
 use app\components\ThaiDateHelper;
+use app\modules\inventoryV2\models\StockOrder;
 
 $this->title = 'รายการจ่ายพัสดุ (Stock Issue)';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
@@ -26,13 +27,13 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> ย้อนกลับ', ['/inventory-v2/main-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'issue']) ?>
 <?php $this->endBlock(); ?>
 
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <?php if ($searchModel): ?>
     <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-light py-2 px-3">
+        <div class="card-header py-2 px-3">
             <h6 class="mb-0 text-muted fw-normal"><i class="bi bi-funnel me-1"></i> ค้นหา / กรอง</h6>
         </div>
         <div class="card-body py-3">
@@ -108,6 +109,22 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                             'contentOptions' => ['class' => 'fw-bold'],
                         ],
                         [
+                            'label' => 'เหตุผลในการเบิก',
+                            'format' => 'raw',
+                            'value' => function ($model) {
+                                $reason = trim((string) $model->getIssueReason());
+                                if ($reason === '') {
+                                    return '<span class="text-muted">-</span>';
+                                }
+                                return Html::tag('span', Html::encode($reason), [
+                                    'class' => 'd-inline-block',
+                                    'style' => 'max-width: 280px; white-space: normal;',
+                                    'title' => $reason,
+                                ]);
+                            },
+                            'contentOptions' => ['class' => 'small text-muted'],
+                        ],
+                        [
                             'label' => 'แผนก/ฝ่ายที่เบิก',
                             'value' => function($model) {
                                 return $model->subWarehouse ? Html::encode($model->subWarehouse->warehouse_name) : '-';
@@ -147,12 +164,30 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                             'header' => 'จัดการ',
                             'headerOptions' => ['class' => 'text-end'],
                             'contentOptions' => ['class' => 'text-end'],
-                            'template' => '{process} {print} {printdoc}',
+                            'template' => '{approve} {process} {print} {printdoc}',
                             'buttons' => [
+                                'approve' => function($url, $model) {
+                                    if ($model->status !== StockOrder::STATUS_PENDING || !Yii::$app->user->can('inventory')) {
+                                        return '';
+                                    }
+                                    return Html::a('<i class="bi bi-check-circle"></i> อนุมัติแทน', ['/inventory-v2/requisition/approve', 'id' => $model->id, 'returnUrl' => Url::current()], [
+                                        'class' => 'btn btn-success btn-sm',
+                                        'title' => 'อนุมัติแทนหัวหน้า',
+                                        'data' => [
+                                            'confirm' => 'ยืนยันอนุมัติใบเบิกนี้แทนหัวหน้า?',
+                                            'method' => 'post',
+                                        ],
+                                    ]);
+                                },
                                 'process' => function($url, $model) {
-                                    if ($model->status === 'APPROVED') {
+                                    if ($model->status === StockOrder::STATUS_APPROVED) {
                                         return Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['process', 'id' => $model->id], [
                                             'class' => 'btn btn-primary btn-sm'
+                                        ]);
+                                    }
+                                    if ($model->status === StockOrder::STATUS_PENDING) {
+                                        return Html::a('<i class="bi bi-file-earmark-text"></i> ดูใบเบิก', ['/inventory-v2/requisition/view', 'id' => $model->id], [
+                                            'class' => 'btn btn-outline-secondary btn-sm'
                                         ]);
                                     }
                                     return Html::a('<i class="bi bi-file-earmark-text"></i> ดูรายละเอียด', ['process', 'id' => $model->id], [
@@ -166,13 +201,13 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                                         'target' => '_blank',
                                     ]);
                                 },
-                                'printdoc' => function($url, $model) {
-                                    return Html::a('<i class="bi bi-printer"></i>', ['/inventory-v2/document/print-issu', 'id' => $model->id], [
-                                        'class' => 'btn btn-outline-secondary btn-sm border-0',
-                                        'title' => 'พิมพ์ใบเบิกวัสดุ',
-                                        'target' => '_blank',
-                                    ]);
-                                },
+                                // 'printdoc' => function($url, $model) {
+                                //     return Html::a('<i class="bi bi-printer"></i>', ['/inventory-v2/document/print-issu', 'id' => $model->id], [
+                                //         'class' => 'btn btn-outline-secondary btn-sm border-0',
+                                //         'title' => 'พิมพ์ใบเบิกวัสดุ',
+                                //         'target' => '_blank',
+                                //     ]);
+                                // },
                             ]
                         ],
                     ],

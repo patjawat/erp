@@ -37,6 +37,8 @@ class WarehouseController extends Controller
                     'save-setting-batch' => ['POST'],
                     'copy-from' => ['POST'],
                     'import-preview' => ['POST'],
+                    'add-items' => ['POST'],
+                    'delete-settings-batch' => ['POST'],
                 ],
             ],
         ]);
@@ -169,8 +171,12 @@ class WarehouseController extends Controller
         $warehouse = $this->findModel($id);
 
         $q = trim((string) $this->request->get('q', ''));
-        // all | configured | unconfigured | below_min | above_max
-        $status = $this->request->get('status', 'all');
+        // configured | below_min | above_max — หน้านี้แสดงเฉพาะ items ที่ตั้งค่าแล้ว
+        // unconfigured ถูกนำออก: รายการที่ยังไม่ตั้งให้เข้ามาผ่าน modal "เพิ่มวัสดุเข้าตาราง"
+        $status = $this->request->get('status', 'configured');
+        if (!in_array($status, ['configured', 'below_min', 'above_max'], true)) {
+            $status = 'configured';
+        }
         $categoryId = trim((string) $this->request->get('category_id', ''));
 
         $allowedTypes = $warehouse->getAllowedItemTypeCodes();
@@ -675,11 +681,197 @@ class WarehouseController extends Controller
     }
 
     /**
+     * AJAX (GET): list วัสดุที่ "ยังไม่ตั้งค่า min/max" ในคลังนี้ — สำหรับ modal เพิ่มวัสดุ
+     * filter ตามหมวด (category_id) + ค้นหารหัส/ชื่อ
+     * limit 500 row/request (ส่งทั้งหมดในหมวด เพื่อ select all ได้)
+     */
+    public function actionCandidateItems($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse = $this->findModel($id);
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $categoryId = trim((string) $this->request->get('category_id', ''));
+        $q = trim((string) $this->request->get('q', ''));
+        $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+
+        $query = (new Query())
+            ->select([
+                'item_code' => 'i.code',
+                'item_name' => 'i.title',
+                'i.category_id',
+                'i.data_json AS item_data_json',
+                'category_title' => 'cat.title',
+            ])
+            ->from(['i' => '{{%categorise}}'])
+            ->leftJoin(['cat' => '{{%categorise}}'], 'cat.code = i.category_id AND cat.name = :cn', [':cn' => 'asset_type'])
+            ->leftJoin(
+                ['s' => '{{%stock_item_warehouse_setting}}'],
+                's.item_code = i.code AND s.warehouse_id = :wid',
+                [':wid' => $warehouse->id]
+            )
+            ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER', 'i.active' => 1])
+            ->andWhere(['s.id' => null]);
+
+        if (!empty($allowedTypes)) {
+            $query->andWhere(['i.category_id' => $allowedTypes]);
+        }
+        if ($categoryId !== '') {
+            $query->andWhere(['i.category_id' => $categoryId]);
+        }
+        if ($q !== '') {
+            $query->andWhere(['or', ['like', 'i.code', $q], ['like', 'i.title', $q]]);
+        }
+
+        $totalCount = (int) (clone $query)->count('*', Yii::$app->db);
+        $rows = $query->orderBy(['i.code' => SORT_ASC])->limit(500)->all();
+
+        foreach ($rows as &$r) {
+            $j = $r['item_data_json'];
+            if (is_string($j)) $j = json_decode($j, true);
+            $r['unit_name'] = is_array($j) ? ($j['unit_name'] ?? '') : '';
+            unset($r['item_data_json']);
+        }
+
+        return [
+            'status' => 'success',
+            'rows' => $rows,
+            'total' => $totalCount,
+            'limited' => $totalCount > count($rows),
+        ];
+    }
+
+    /**
+     * AJAX (POST): batch insert StockItemWarehouseSetting แบบ default min=0 max=0
+     * payload: warehouse_id, item_codes[]
+     * จำกัด 500 รายการ/request
+     */
+    public function actionAddItems()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouseId = (int) $this->request->post('warehouse_id');
+        $codes = $this->request->post('item_codes', []);
+        if (!is_array($codes)) $codes = [];
+        $codes = array_values(array_filter(array_map(static fn($c) => trim((string) $c), $codes), static fn($c) => $c !== ''));
+
+        if (!$warehouseId || empty($codes)) {
+            return ['status' => 'error', 'message' => 'ไม่มีรายการให้เพิ่ม'];
+        }
+        if (count($codes) > 500) {
+            return ['status' => 'error', 'message' => 'เพิ่มได้ครั้งละไม่เกิน 500 รายการ'];
+        }
+
+        $warehouse = Warehouse::findOne(['id' => $warehouseId]);
+        if (!$warehouse) {
+            return ['status' => 'error', 'message' => 'ไม่พบคลังนี้'];
+        }
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        // validate ว่า code อยู่ใน categorise + allowedTypes ของคลังนี้
+        $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+        $validQ = (new Query())
+            ->select(['code'])
+            ->from('{{%categorise}}')
+            ->where(['name' => 'asset_item', 'group_id' => 'MATER', 'active' => 1, 'code' => $codes]);
+        if (!empty($allowedTypes)) {
+            $validQ->andWhere(['category_id' => $allowedTypes]);
+        }
+        $validCodes = $validQ->column();
+        if (empty($validCodes)) {
+            return ['status' => 'error', 'message' => 'ไม่มีรหัสที่ใช้ได้ในคลังนี้'];
+        }
+
+        // skip ตัวที่มี setting อยู่แล้ว (กัน race condition / double submit)
+        $exists = (new Query())
+            ->select(['item_code'])
+            ->from('{{%stock_item_warehouse_setting}}')
+            ->where(['warehouse_id' => $warehouseId, 'item_code' => $validCodes])
+            ->column();
+        $toInsert = array_values(array_diff($validCodes, $exists));
+
+        if (empty($toInsert)) {
+            return ['status' => 'success', 'added' => 0, 'skipped' => count($validCodes), 'message' => 'รายการที่เลือกตั้งค่าไว้แล้วทั้งหมด'];
+        }
+
+        $userId = Yii::$app->user->id;
+        $now = time();
+        $batch = [];
+        foreach ($toInsert as $code) {
+            $batch[] = [$code, $warehouseId, 0, 0, 1, $now, $now, $userId, $userId];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            Yii::$app->db->createCommand()->batchInsert(
+                'stock_item_warehouse_setting',
+                ['item_code', 'warehouse_id', 'min_qty', 'max_qty', 'is_active',
+                 'created_at', 'updated_at', 'created_by', 'updated_by'],
+                $batch
+            )->execute();
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'เพิ่มไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        return [
+            'status' => 'success',
+            'added' => count($toInsert),
+            'skipped' => count($validCodes) - count($toInsert),
+        ];
+    }
+
+    /**
+     * AJAX (POST): ลบ settings หลายรายการพร้อมกัน
+     * payload: warehouse_id, item_codes[]
+     */
+    public function actionDeleteSettingsBatch()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouseId = (int) $this->request->post('warehouse_id');
+        $codes = $this->request->post('item_codes', []);
+        if (!is_array($codes)) $codes = [];
+        $codes = array_values(array_filter(array_map(static fn($c) => trim((string) $c), $codes), static fn($c) => $c !== ''));
+
+        if (!$warehouseId || empty($codes)) {
+            return ['status' => 'error', 'message' => 'ไม่มีรายการให้ลบ'];
+        }
+        if (count($codes) > 500) {
+            return ['status' => 'error', 'message' => 'ลบได้ครั้งละไม่เกิน 500 รายการ'];
+        }
+
+        $warehouse = Warehouse::findOne(['id' => $warehouseId]);
+        if (!$warehouse) {
+            return ['status' => 'error', 'message' => 'ไม่พบคลังนี้'];
+        }
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $deleted = StockItemWarehouseSetting::deleteAll([
+            'warehouse_id' => $warehouseId,
+            'item_code' => $codes,
+        ]);
+
+        return ['status' => 'success', 'deleted' => (int) $deleted];
+    }
+
+    /**
      * เช็คว่า user ปัจจุบันเข้าถึงคลังนี้ได้หรือไม่
-     * เห็นเฉพาะคลังที่ตนรับผิดชอบ (officer) หรือคลังย่อยที่แผนกตัวเองมีสิทธิ
+     * - เจ้าหน้าที่พัสดุ (role 'inventory') เข้าถึงได้ทุกคลัง (ใช้สำหรับ admin/setting)
+     * - นอกนั้น เห็นเฉพาะคลังที่ตนรับผิดชอบ (officer) หรือคลังย่อยที่แผนกตัวเองมีสิทธิ
      */
     protected function canAccessWarehouse(Warehouse $warehouse)
     {
+        if (!Yii::$app->user->isGuest && Yii::$app->user->can('inventory')) {
+            return true;
+        }
         $accessible = Warehouse::findAllAccessibleWarehouses();
         foreach ($accessible as $w) {
             if ((int) $w->id === (int) $warehouse->id) {

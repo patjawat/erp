@@ -43,14 +43,14 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
     /**
      * รายการขออนุมัติเบิกวัสดุ (inventoryV2) — แสดงทั้งรออนุมัติและย้อนหลัง (filter ตาม status ได้)
      * query: status = all | pending | APPROVED | CONFIRMED | CANCELLED
-     * ค้นหา: order_no, main_warehouse_id, sub_warehouse_id, date_start, date_end
+     * ค้นหา: order_no, main_warehouse_id, date_start, date_end
      */
     public function actionRequisitionV2()
     {
         $filterStatus = $this->request->get('status', 'all');
 
-        $searchModel = new DynamicModel(['order_no', 'main_warehouse_id', 'sub_warehouse_id', 'date_start', 'date_end']);
-        $searchModel->addRule(['order_no', 'main_warehouse_id', 'sub_warehouse_id', 'date_start', 'date_end'], 'safe');
+        $searchModel = new DynamicModel(['order_no', 'main_warehouse_id', 'date_start', 'date_end']);
+        $searchModel->addRule(['order_no', 'main_warehouse_id', 'date_start', 'date_end'], 'safe');
         $searchModel->load($this->request->get(), '');
 
         $query = StockOrder::find()
@@ -82,9 +82,6 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
         if (isset($searchModel->main_warehouse_id) && $searchModel->main_warehouse_id !== '' && $searchModel->main_warehouse_id !== null) {
             $query->andWhere(['stock_order.main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
         }
-        if (isset($searchModel->sub_warehouse_id) && $searchModel->sub_warehouse_id !== '' && $searchModel->sub_warehouse_id !== null) {
-            $query->andWhere(['stock_order.sub_warehouse_id' => (int) $searchModel->sub_warehouse_id]);
-        }
         if (trim($searchModel->date_start ?? '') !== '') {
             try {
                 $from = AppHelper::convertToGregorian($searchModel->date_start);
@@ -113,14 +110,12 @@ $dataProvider->query->andFilterWhere(['<=', 'stock_events.created_at', $endDate]
         ]);
 
         $mainWarehouses = ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'MAIN'])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
-        $subWarehouses = ArrayHelper::map(Warehouse::find()->where(['warehouse_type' => 'SUB'])->orderBy(['warehouse_name' => SORT_ASC])->all(), 'id', 'warehouse_name');
 
         return $this->render('requisition-v2', [
             'dataProvider' => $dataProvider,
             'filterStatus' => $filterStatus,
             'searchModel' => $searchModel,
             'mainWarehouses' => $mainWarehouses,
-            'subWarehouses' => $subWarehouses,
         ]);
     }
 

@@ -93,7 +93,7 @@ $kpiEndpoints = [
     ],
     'critical' => [
         'endpoint' => Url::to(['/inventory-v2/main-stock/critical-items-offcanvas']),
-        'full' => Url::to(['/inventory-v2/report/balance-by-warehouse', 'warehouse_id' => $currentWarehouseId]),
+        'full' => Url::to(['/inventory-v2/main-stock/balance', 'warehouse_id' => $currentWarehouseId]),
         'title' => 'ต่ำกว่าจุดสั่งซื้อ',
         'count' => $criticalCount,
     ],

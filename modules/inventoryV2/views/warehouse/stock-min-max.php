@@ -19,7 +19,6 @@ use yii\bootstrap5\LinkPager;
 $totals = $totals ?: ['total' => 0, 'configured' => 0, 'below_min' => 0, 'above_max' => 0];
 $totalItems = (int) ($totals['total'] ?? 0);
 $configuredItems = (int) ($totals['configured'] ?? 0);
-$unconfiguredItems = max(0, $totalItems - $configuredItems);
 $belowMinItems = (int) ($totals['below_min'] ?? 0);
 $aboveMaxItems = (int) ($totals['above_max'] ?? 0);
 $coveragePct = $totalItems > 0 ? round(($configuredItems / $totalItems) * 100) : 0;
@@ -36,6 +35,9 @@ $saveBatchUrl = Url::to(['/inventory-v2/warehouse/save-setting-batch']);
 $copyPreviewUrl = Url::to(['/inventory-v2/warehouse/copy-from-preview']);
 $copyUrl = Url::to(['/inventory-v2/warehouse/copy-from']);
 $importPreviewUrl = Url::to(['/inventory-v2/warehouse/import-preview', 'id' => $warehouse->id]);
+$candidateItemsUrl = Url::to(['/inventory-v2/warehouse/candidate-items', 'id' => $warehouse->id]);
+$addItemsUrl = Url::to(['/inventory-v2/warehouse/add-items']);
+$deleteBatchUrl = Url::to(['/inventory-v2/warehouse/delete-settings-batch']);
 $csrf = Yii::$app->request->csrfToken;
 ?>
 
@@ -103,10 +105,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
     <div class="row g-2 g-md-3 mb-3 stock-min-max-summary">
         <?php
         $tiles = [
-            ['key' => 'all', 'label' => 'วัสดุทั้งหมด', 'value' => $totalItems, 'tone' => 'body', 'icon' => 'bi-box-seam'],
             ['key' => 'configured', 'label' => 'ตั้งค่าแล้ว', 'value' => $configuredItems, 'tone' => 'success', 'icon' => 'bi-check2-circle'],
-            ['key' => 'unconfigured', 'label' => 'ยังไม่ตั้ง', 'value' => $unconfiguredItems, 'tone' => 'secondary', 'icon' => 'bi-circle'],
             ['key' => 'below_min', 'label' => 'ต่ำกว่า Min ตอนนี้', 'value' => $belowMinItems, 'tone' => 'danger', 'icon' => 'bi-exclamation-triangle'],
+            ['key' => 'above_max', 'label' => 'เกิน Max ตอนนี้', 'value' => $aboveMaxItems, 'tone' => 'warning', 'icon' => 'bi-arrow-up-circle'],
             ['key' => 'coverage', 'label' => 'ความครอบคลุม', 'value' => $coveragePct . '%', 'tone' => 'primary', 'icon' => 'bi-graph-up', 'static' => true],
         ];
         foreach ($tiles as $t):
@@ -144,9 +145,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
         <div class="col-6 col-md-3 col-lg-3">
             <label class="form-label small mb-1 text-muted">สถานะ</label>
             <select class="form-select form-select-sm" name="status">
-                <option value="all"          <?= $status === 'all' ? 'selected' : '' ?>>ทั้งหมด</option>
-                <option value="configured"   <?= $status === 'configured' ? 'selected' : '' ?>>ตั้งค่าแล้ว</option>
-                <option value="unconfigured" <?= $status === 'unconfigured' ? 'selected' : '' ?>>ยังไม่ตั้ง</option>
+                <option value="configured"   <?= $status === 'configured' ? 'selected' : '' ?>>ตั้งค่าแล้วทั้งหมด</option>
                 <option value="below_min"    <?= $status === 'below_min' ? 'selected' : '' ?>>ต่ำกว่า Min</option>
                 <option value="above_max"    <?= $status === 'above_max' ? 'selected' : '' ?>>เกิน Max</option>
             </select>
@@ -168,7 +167,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
             <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                 <i class="bi bi-funnel me-1"></i>กรอง
             </button>
-            <?php if ($q !== '' || $status !== 'all' || $categoryId !== ''): ?>
+            <?php if ($q !== '' || $status !== 'configured' || $categoryId !== ''): ?>
                 <a href="<?= Url::to($baseUrl) ?>" class="btn btn-outline-secondary btn-sm" title="ล้างตัวกรอง" aria-label="ล้างตัวกรอง">
                     <i class="bi bi-x-lg"></i>
                 </a>
@@ -180,11 +179,16 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="smm-table-header d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-2 border-bottom">
-                    <h6 class="mb-0 text-body fw-semibold d-flex align-items-center gap-2">
-                        <i class="bi bi-list-ul text-primary"></i>
-                        รายการวัสดุ
-                        <span class="badge rounded-pill text-bg-secondary fw-normal"><?= number_format($pagination->totalCount) ?></span>
-                    </h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h6 class="mb-0 text-body fw-semibold d-flex align-items-center gap-2">
+                            <i class="bi bi-list-ul text-primary"></i>
+                            รายการวัสดุ
+                            <span class="badge rounded-pill text-bg-secondary fw-normal"><?= number_format($pagination->totalCount) ?></span>
+                        </h6>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-none" id="smm-header-delete" title="ลบการตั้งค่า Min/Max ของรายการที่เลือก">
+                            <i class="bi bi-trash me-1"></i>ลบที่เลือก (<span class="js-sel-count">0</span>)
+                        </button>
+                    </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <!-- Mode toggle: ทีละช่อง autosave vs เลือกหลายรายการ manual -->
                         <div class="btn-group btn-group-sm smm-mode-toggle" role="group" aria-label="โหมดบันทึก">
@@ -197,6 +201,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                 <i class="bi bi-check2-square me-1"></i>เลือกหลายรายการ
                             </label>
                         </div>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-add-items-modal" title="เลือกหมวด → ติ๊กรายการที่ต้องการ → เพิ่มเข้าตาราง (Min/Max เริ่มต้น 0 — ค่อยกรอกในตาราง)">
+                            <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุเข้าตาราง
+                        </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-copy-from-modal" title="คัดลอกค่า Min/Max จากคลังอื่น">
                             <i class="bi bi-clipboard-plus me-1"></i>คัดลอกจากคลัง
                         </button>
@@ -231,7 +238,14 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                     <?php if (empty($rows)): ?>
                         <div class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            ไม่พบรายการวัสดุที่ตรงกับเงื่อนไข
+                            <?php if ($q === '' && $status === 'configured' && $categoryId === ''): ?>
+                                <div class="mb-3">ยังไม่มีวัสดุที่ตั้งค่า Min/Max ในคลังนี้</div>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-add-items-modal">
+                                    <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุเข้าตาราง
+                                </button>
+                            <?php else: ?>
+                                ไม่พบรายการวัสดุที่ตรงกับเงื่อนไข
+                            <?php endif; ?>
                         </div>
                     <?php else: ?>
                         <?php
@@ -262,7 +276,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                             <table class="table table-hover align-middle mb-0 stock-min-max-table">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="smm-batch-only text-center" style="width: 40px;">
+                                        <th class="text-center" style="width: 40px;">
                                             <input type="checkbox" class="form-check-input js-select-all" aria-label="เลือกทั้งหน้า">
                                         </th>
                                         <th style="width: 50px;">#</th>
@@ -290,7 +304,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                         $rowNumber = $pagination->offset + $i + 1;
                                     ?>
                                         <tr data-item-code="<?= Html::encode($r['item_code']) ?>" data-balance="<?= htmlspecialchars((string) (float) ($r['balance_qty'] ?? 0)) ?>" class="<?= $isConfigured ? 'is-configured' : 'is-unconfigured' ?> smm-row-<?= $st['key'] ?>">
-                                            <td class="smm-batch-only text-center">
+                                            <td class="text-center">
                                                 <input type="checkbox" class="form-check-input js-row-select" aria-label="เลือกรายการ">
                                             </td>
                                             <td class="text-muted small"><?= $rowNumber ?></td>
@@ -357,7 +371,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                     $st = $resolveStatus($isConfigured, $balance, $isConfigured ? (float) $minQty : 0, $isConfigured ? (float) $maxQty : 0);
                                 ?>
                                     <div class="list-group-item py-3 smm-row-<?= $st['key'] ?>" data-item-code="<?= Html::encode($r['item_code']) ?>" data-balance="<?= htmlspecialchars((string) (float) ($r['balance_qty'] ?? 0)) ?>">
-                                        <div class="smm-batch-only mb-2">
+                                        <div class="mb-2">
                                             <label class="d-flex align-items-center gap-2 small text-muted">
                                                 <input type="checkbox" class="form-check-input js-row-select">
                                                 เลือกรายการนี้
@@ -433,8 +447,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
     </div>
 </div>
 
-<!-- Sticky bulk toolbar (โผล่เฉพาะ batch mode + มี row เลือก) -->
-<div id="smm-bulk-toolbar" class="smm-bulk-toolbar d-none" role="region" aria-label="ตั้งค่าหลายรายการพร้อมกัน">
+<!-- Sticky bulk toolbar — โผล่เมื่อมี row ที่เลือก หรือ row dirty (batch mode) -->
+<div id="smm-bulk-toolbar" class="smm-bulk-toolbar d-none" role="region" aria-label="จัดการหลายรายการพร้อมกัน">
     <div class="container-fluid">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-2 px-md-3">
             <div class="d-flex align-items-center gap-2">
@@ -445,7 +459,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                 </button>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="d-flex align-items-center gap-1">
+                <div class="d-flex align-items-center gap-1 smm-batch-only">
                     <label class="small text-muted mb-0" for="smm-bulk-min">Min</label>
                     <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-min"
                         class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
@@ -456,7 +470,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         <i class="bi bi-arrow-down-square"></i> ใส่
                     </button>
                 </div>
-                <button type="button" class="btn btn-primary btn-sm fw-semibold" id="smm-bulk-save">
+                <button type="button" class="btn btn-primary btn-sm fw-semibold smm-batch-only" id="smm-bulk-save">
                     <i class="bi bi-check2-circle me-1"></i>บันทึก (<span class="js-count">0</span>)
                 </button>
             </div>
@@ -530,6 +544,81 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
                 <button type="button" class="btn btn-primary" id="smm-copy-confirm" disabled>
                     <i class="bi bi-clipboard-check me-1"></i>คัดลอก
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add items modal — เลือกหมวด → ติ๊กรายการ → เพิ่มเข้าตาราง (default 0/0) -->
+<div class="modal fade" id="smm-add-items-modal" tabindex="-1" aria-labelledby="smm-add-items-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="smm-add-items-title">
+                    <i class="bi bi-plus-lg text-primary me-1"></i>
+                    เพิ่มวัสดุเข้าตาราง Min/Max
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-5">
+                        <label for="smm-add-category" class="form-label small mb-1 text-muted">หมวดวัสดุ</label>
+                        <select id="smm-add-category" class="form-select form-select-sm">
+                            <option value="">ทุกหมวดที่คลังนี้รับเข้า</option>
+                            <?php foreach ($categoryOptions as $c): ?>
+                                <option value="<?= Html::encode($c['code']) ?>"><?= Html::encode($c['title']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-7">
+                        <label for="smm-add-q" class="form-label small mb-1 text-muted">ค้นหารหัส / ชื่อวัสดุ (เสริม)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="smm-add-q" class="form-control" placeholder="พิมพ์เพื่อค้นเฉพาะรายการที่ต้องการ">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div class="small text-muted">
+                        <span id="smm-add-status">เลือกหมวดเพื่อโหลดรายการ</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge text-bg-primary rounded-pill" id="smm-add-selected-count">0</span>
+                        <span class="small text-muted">เลือกแล้ว</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive border rounded-3" style="max-height: 420px;">
+                    <table class="table table-sm table-hover align-middle mb-0 smm-add-table">
+                        <thead class="table-light position-sticky top-0">
+                            <tr>
+                                <th class="text-center" style="width:40px;">
+                                    <input type="checkbox" class="form-check-input" id="smm-add-select-all" aria-label="เลือกทั้งหมด">
+                                </th>
+                                <th style="width:140px;">รหัส</th>
+                                <th>ชื่อวัสดุ</th>
+                                <th style="width:80px;">หน่วย</th>
+                                <th style="width:160px;">หมวด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smm-add-tbody">
+                            <tr><td colspan="5" class="text-center text-muted py-4">ยังไม่มีข้อมูล</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Min/Max เริ่มต้นจะถูกตั้งเป็น 0 — กรอกค่าจริงในตารางหน้าหลักหลังเพิ่มแล้ว
+                </small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="smm-add-confirm" disabled>
+                    <i class="bi bi-plus-lg me-1"></i>
+                    เพิ่ม <span class="js-add-count">0</span> รายการ
                 </button>
             </div>
         </div>
@@ -694,17 +783,17 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
     0%   { background-position: 0% 50%; }
     100% { background-position: -200% 50%; }
 }
-.stock-min-max-table input:focus,
-.stock-min-max-mobile input:focus {
+.stock-min-max-table input[type="number"]:focus,
+.stock-min-max-mobile input[type="number"]:focus {
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.18);
     border-color: rgba(13, 110, 253, 0.6);
 }
-.stock-min-max-table input,
-.stock-min-max-mobile input {
+.stock-min-max-table input[type="number"],
+.stock-min-max-mobile input[type="number"] {
     transition: border-color 0.15s, box-shadow 0.15s, background-color 0.2s;
     min-height: 38px;
 }
-.stock-min-max-mobile input { min-height: 44px; font-size: 1rem; }
+.stock-min-max-mobile input[type="number"] { min-height: 44px; font-size: 1rem; }
 .status-badge { font-weight: 500; padding: 0.35em 0.6em; }
 .stock-min-max-table .form-control-sm {
     padding: 0.3rem 0.5rem;
@@ -733,8 +822,8 @@ body:not(.smm-mode-batch) .smm-batch-only { display: none !important; }
     background-color: rgba(13, 110, 253, 0.04);
 }
 /* Dirty (มีการเปลี่ยน ยังไม่ save) — เห็นทั้งสอง mode */
-.stock-min-max-table tr.is-dirty input,
-.stock-min-max-mobile .list-group-item.is-dirty input {
+.stock-min-max-table tr.is-dirty input[type="number"],
+.stock-min-max-mobile .list-group-item.is-dirty input[type="number"] {
     background-color: rgba(255, 193, 7, 0.06);
     border-color: rgba(255, 193, 7, 0.5);
 }
@@ -783,6 +872,9 @@ $js = <<<JS
     const COPY_PREVIEW_URL = '{$copyPreviewUrl}';
     const COPY_URL         = '{$copyUrl}';
     const IMPORT_PREVIEW_URL = '{$importPreviewUrl}';
+    const CANDIDATE_ITEMS_URL = '{$candidateItemsUrl}';
+    const ADD_ITEMS_URL    = '{$addItemsUrl}';
+    const DELETE_BATCH_URL = '{$deleteBatchUrl}';
     const CSRF             = '{$csrf}';
     const WAREHOUSE_ID     = {$warehouse->id};
     const MODE_PREF_KEY    = 'inv2:smm:mode';
@@ -1043,6 +1135,39 @@ $js = <<<JS
             return cb && cb.checked;
         });
     }
+    // หน้านี้ render row ซ้ำ 2 view (table md+ / mobile <md) → unique โดย item_code
+    function selectedCodes() {
+        const set = new Set();
+        selectedRows().forEach(function (r) {
+            const c = r.getAttribute('data-item-code');
+            if (c) set.add(c);
+        });
+        return Array.from(set);
+    }
+    function allCodes() {
+        const set = new Set();
+        allRows().forEach(function (r) {
+            const c = r.getAttribute('data-item-code');
+            if (c) set.add(c);
+        });
+        return Array.from(set);
+    }
+    function setCodeSelected(code, checked) {
+        allRows().forEach(function (r) {
+            if (r.getAttribute('data-item-code') !== code) return;
+            const cb = r.querySelector('.js-row-select');
+            if (cb) cb.checked = checked;
+            r.classList.toggle('is-selected', checked);
+        });
+    }
+    function updateSelectAllState() {
+        const total = allCodes().length;
+        const selected = selectedCodes().length;
+        document.querySelectorAll('.js-select-all').forEach(function (cb) {
+            cb.checked = total > 0 && selected === total;
+            cb.indeterminate = selected > 0 && selected < total;
+        });
+    }
     function dirtyRows() {
         return allRows().filter(function (r) { return r.classList.contains('is-dirty'); });
     }
@@ -1056,24 +1181,31 @@ $js = <<<JS
         updateBulkUI();
     }
     function updateBulkUI() {
-        const sel = selectedRows().length;
+        const sel = selectedCodes().length;
         const dirty = dirtyRows().length;
+        // sticky toolbar โผล่เฉพาะ batch mode (bulk apply Min/Max + บันทึก)
         const showToolbar = currentMode() === 'batch' && (sel > 0 || dirty > 0);
         const toolbar = document.getElementById('smm-bulk-toolbar');
         if (toolbar) toolbar.classList.toggle('d-none', !showToolbar);
         document.body.classList.toggle('smm-bulk-visible', showToolbar);
         const countEl = document.getElementById('smm-selected-count');
         if (countEl) countEl.textContent = sel;
+        // ปุ่ม "ลบที่เลือก" ใน table header — โผล่ทุก mode เมื่อมี selected
+        const headerDel = document.getElementById('smm-header-delete');
+        if (headerDel) {
+            headerDel.classList.toggle('d-none', sel === 0);
+            headerDel.querySelectorAll('.js-sel-count').forEach(function (el) { el.textContent = sel; });
+        }
+        updateSelectAllState();
         updateBulkSaveCount();
     }
     function updateBulkSaveCount() {
-        // กำหนดให้ "บันทึก (N)" นับเฉพาะ row ที่ dirty (มีการเปลี่ยน) — ตรงเจตนาผู้ใช้
+        // "บันทึก (N)" นับเฉพาะ row ที่ dirty (มีการเปลี่ยน) — ตรงเจตนาผู้ใช้
         const n = dirtyRows().length;
         document.querySelectorAll('#smm-bulk-save .js-count').forEach(function (el) { el.textContent = n; });
         const btn = document.getElementById('smm-bulk-save');
         if (btn) btn.disabled = (n === 0);
-        // toggle toolbar by combined state
-        const sel = selectedRows().length;
+        const sel = selectedCodes().length;
         const showToolbar = currentMode() === 'batch' && (sel > 0 || n > 0);
         const toolbar = document.getElementById('smm-bulk-toolbar');
         if (toolbar) toolbar.classList.toggle('d-none', !showToolbar);
@@ -1084,7 +1216,14 @@ $js = <<<JS
         const t = e.target;
         if (t.classList && t.classList.contains('js-row-select')) {
             const row = getRow(t);
-            if (row) row.classList.toggle('is-selected', t.checked);
+            if (row) {
+                const code = row.getAttribute('data-item-code');
+                if (code) {
+                    setCodeSelected(code, t.checked);
+                } else {
+                    row.classList.toggle('is-selected', t.checked);
+                }
+            }
             updateBulkUI();
         } else if (t.classList && t.classList.contains('js-select-all')) {
             const checked = t.checked;
@@ -1119,6 +1258,41 @@ $js = <<<JS
                 row.classList.add('is-dirty');
             });
             updateBulkSaveCount();
+        });
+    }
+
+    // ===== Bulk delete (ลบ settings หลายรายการ) — ปุ่มอยู่ใน table header =====
+    const bulkDeleteBtn = document.getElementById('smm-header-delete');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function () {
+            const codes = selectedCodes();
+            if (codes.length === 0) return;
+            if (!confirm('ยืนยันลบการตั้งค่า Min/Max ของ ' + codes.length + ' รายการที่เลือก?')) return;
+
+            bulkDeleteBtn.disabled = true;
+            const form = new FormData();
+            form.append('warehouse_id', String(WAREHOUSE_ID));
+            form.append('_csrf', CSRF);
+            codes.forEach(function (c) { form.append('item_codes[]', c); });
+
+            fetch(DELETE_BATCH_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    bulkDeleteBtn.disabled = false;
+                    if (data.status === 'success') {
+                        showToast('ลบแล้ว ' + (data.deleted || codes.length) + ' รายการ', 'success');
+                        setTimeout(function () { window.location.reload(); }, 500);
+                    } else {
+                        showToast(data.message || 'ลบไม่สำเร็จ', 'error');
+                    }
+                })
+                .catch(() => {
+                    bulkDeleteBtn.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
         });
     }
 
@@ -1379,6 +1553,158 @@ $js = <<<JS
                 })
                 .catch(() => {
                     importApply.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
+        });
+    }
+
+    // ===== Add items modal =====
+    const addModalEl = document.getElementById('smm-add-items-modal');
+    const addCategorySel = document.getElementById('smm-add-category');
+    const addQInput = document.getElementById('smm-add-q');
+    const addTbody = document.getElementById('smm-add-tbody');
+    const addStatusEl = document.getElementById('smm-add-status');
+    const addSelectAll = document.getElementById('smm-add-select-all');
+    const addCountEl = document.getElementById('smm-add-selected-count');
+    const addConfirmBtn = document.getElementById('smm-add-confirm');
+
+    let addLoadSeq = 0;     // ป้องกัน race ระหว่าง fetch ซ้อน
+    let addQTimer = null;
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    function renderAddRows(rows, total, limited) {
+        if (!rows || rows.length === 0) {
+            addTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">ไม่มีรายการที่ยังไม่ตั้งค่าในเงื่อนไขนี้</td></tr>';
+            addStatusEl.textContent = 'ไม่พบรายการ';
+        } else {
+            addTbody.innerHTML = rows.map(function (r) {
+                return '<tr>' +
+                    '<td class="text-center"><input type="checkbox" class="form-check-input js-add-row" value="' + escapeHtml(r.item_code) + '"></td>' +
+                    '<td><code class="text-muted small">' + escapeHtml(r.item_code) + '</code></td>' +
+                    '<td>' + escapeHtml(r.item_name) + '</td>' +
+                    '<td class="text-muted small">' + escapeHtml(r.unit_name || '-') + '</td>' +
+                    '<td class="text-muted small">' + escapeHtml(r.category_title || '-') + '</td>' +
+                '</tr>';
+            }).join('');
+            addStatusEl.textContent = 'พบ ' + total + ' รายการ' + (limited ? ' (แสดง 500 รายการแรก — ค้นหาเพื่อแคบลง)' : '');
+        }
+        addSelectAll.checked = false;
+        updateAddCount();
+    }
+
+    function loadAddCandidates() {
+        const seq = ++addLoadSeq;
+        const cat = addCategorySel.value;
+        const q = addQInput.value.trim();
+        addTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-1"></span>กำลังโหลด...</td></tr>';
+        addStatusEl.textContent = 'กำลังโหลด...';
+        const sep = CANDIDATE_ITEMS_URL.indexOf('?') >= 0 ? '&' : '?';
+        const u = CANDIDATE_ITEMS_URL + sep + 'category_id=' + encodeURIComponent(cat) + '&q=' + encodeURIComponent(q);
+        fetch(u, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (seq !== addLoadSeq) return; // มี request ใหม่กว่าแล้ว
+                if (data.status !== 'success') {
+                    addTbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">' + escapeHtml(data.message || 'โหลดไม่สำเร็จ') + '</td></tr>';
+                    addStatusEl.textContent = '';
+                    return;
+                }
+                renderAddRows(data.rows || [], data.total || 0, !!data.limited);
+            })
+            .catch(() => {
+                if (seq !== addLoadSeq) return;
+                addTbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">เชื่อมต่อไม่ได้</td></tr>';
+                addStatusEl.textContent = '';
+            });
+    }
+
+    function updateAddCount() {
+        const n = addTbody.querySelectorAll('.js-add-row:checked').length;
+        addCountEl.textContent = n;
+        addConfirmBtn.querySelector('.js-add-count').textContent = n;
+        addConfirmBtn.disabled = (n === 0);
+    }
+
+    function resetAddModal() {
+        addCategorySel.value = '';
+        addQInput.value = '';
+        addTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">เลือกหมวดเพื่อโหลดรายการ</td></tr>';
+        addStatusEl.textContent = 'เลือกหมวดเพื่อโหลดรายการ';
+        addSelectAll.checked = false;
+        addLoadSeq++; // cancel any pending fetch
+        updateAddCount();
+    }
+
+    if (addModalEl) {
+        // เปิด modal → load รายการรอบแรก (default = ทุกหมวด)
+        addModalEl.addEventListener('shown.bs.modal', function () {
+            if (addTbody.children.length <= 1) {
+                loadAddCandidates();
+            }
+        });
+        addModalEl.addEventListener('hidden.bs.modal', resetAddModal);
+    }
+
+    if (addCategorySel) {
+        addCategorySel.addEventListener('change', loadAddCandidates);
+    }
+    if (addQInput) {
+        addQInput.addEventListener('input', function () {
+            clearTimeout(addQTimer);
+            addQTimer = setTimeout(loadAddCandidates, 350);
+        });
+    }
+    if (addSelectAll) {
+        addSelectAll.addEventListener('change', function () {
+            const on = this.checked;
+            addTbody.querySelectorAll('.js-add-row').forEach(function (cb) { cb.checked = on; });
+            updateAddCount();
+        });
+    }
+    if (addTbody) {
+        addTbody.addEventListener('change', function (e) {
+            if (e.target && e.target.classList && e.target.classList.contains('js-add-row')) {
+                updateAddCount();
+            }
+        });
+    }
+
+    if (addConfirmBtn) {
+        addConfirmBtn.addEventListener('click', function () {
+            const codes = Array.from(addTbody.querySelectorAll('.js-add-row:checked')).map(function (cb) { return cb.value; });
+            if (codes.length === 0) return;
+
+            addConfirmBtn.disabled = true;
+            const form = new FormData();
+            form.append('warehouse_id', String(WAREHOUSE_ID));
+            form.append('_csrf', CSRF);
+            codes.forEach(function (c) { form.append('item_codes[]', c); });
+
+            fetch(ADD_ITEMS_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    addConfirmBtn.disabled = false;
+                    if (data.status === 'success') {
+                        const msg = 'เพิ่มแล้ว ' + (data.added || 0) + ' รายการ'
+                            + ((data.skipped || 0) > 0 ? ' (ข้าม ' + data.skipped + ' ที่ตั้งไว้แล้ว)' : '');
+                        showToast(msg, 'success');
+                        const modal = bootstrap.Modal.getInstance(addModalEl);
+                        if (modal) modal.hide();
+                        setTimeout(function () { window.location.reload(); }, 600);
+                    } else {
+                        showToast(data.message || 'เพิ่มไม่สำเร็จ', 'error');
+                    }
+                })
+                .catch(() => {
+                    addConfirmBtn.disabled = false;
                     showToast('เชื่อมต่อไม่ได้', 'error');
                 });
         });

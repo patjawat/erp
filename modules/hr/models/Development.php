@@ -11,6 +11,7 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\ThaiDateHelper;
+use app\modules\development\components\DevelopmentTelegramService;
 use app\modules\hr\models\Employees;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
@@ -447,13 +448,25 @@ class Development extends \yii\db\ActiveRecord
                 $developmentStep1->save(false);
                 // try {
                 // ส่ง msg ให้ Approve
-                $toUserId = $developmentStep1->employee->user->line_id;
+                $toUserId = trim((string) ($developmentStep1->employee?->user?->line_id ?? ''));
                 $msg = 'ขออนุมัติ';
                 $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
                 $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
                 $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
-                $msg .= "\n" . 'ผู้ขอ : ' . $this->createdByEmp->fullname;
-                LineMsg::sendMsg($toUserId, $msg);
+                $msg .= "\n" . 'ผู้ขอ : ' . ($this->createdByEmp?->fullname ?? '-');
+                if ($toUserId !== '') {
+                    try {
+                        LineMsg::sendMsg($toUserId, $msg);
+                    } catch (\Throwable $th) {
+                        Yii::error('development approve line notify fail: ' . $th->getMessage(), __METHOD__);
+                    }
+                }
+
+                try {
+                    (new DevelopmentTelegramService())->notifyPendingApprove($this, $developmentStep1);
+                } catch (\Throwable $th) {
+                    Yii::error('development approve telegram notify fail: ' . $th->getMessage(), __METHOD__);
+                }
                 // } catch (\Throwable $th) {
 
                 // }

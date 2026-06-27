@@ -188,10 +188,32 @@ public function behaviors()
         $searchModel = new \app\modules\inventoryV2\models\RequisitionSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        // จำกัดเฉพาะคลังย่อยที่ user เป็นผู้รับผิดชอบ (data_json.officer) — ยกเว้น admin
+        if (!Yii::$app->user->can('admin')) {
+            $allowedSubIds = array_map(
+                fn($w) => (int) $w->id,
+                Warehouse::findSubWarehousesForUser()
+            );
+            $dataProvider->query->andWhere(['sub_warehouse_id' => $allowedSubIds]);
+        }
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'canCreateRequisition' => $this->canCreateRequisition(),
         ]);
+    }
+
+    /**
+     * สิทธิ์สร้างใบขอเบิก — เฉพาะ user ที่ถูกกำหนดเป็นผู้รับผิดชอบ
+     * (data_json.officer) ของคลังย่อยอย่างน้อย 1 คลัง หรือเป็น admin
+     */
+    protected function canCreateRequisition(): bool
+    {
+        if (Yii::$app->user->can('admin')) {
+            return true;
+        }
+        return !empty(Warehouse::findSubWarehousesForUser());
     }
 
     /**
@@ -234,6 +256,17 @@ public function behaviors()
                             'emp_id' => $approverEmpId ? (int) $approverEmpId : null,
                         ],
                     ]);
+
+                    $missing = [];
+                    if (empty($model->sub_warehouse_id))  { $missing[] = 'คลังที่รับของ'; }
+                    if (empty($model->main_warehouse_id)) { $missing[] = 'คลังที่จ่ายของ'; }
+                    if (trim((string) $this->request->post('issue_reason', '')) === '') {
+                        $missing[] = 'เหตุผล/วัตถุประสงค์การเบิก';
+                    }
+                    if (empty($approverEmpId)) { $missing[] = 'ผู้เห็นชอบ (หัวหน้า)'; }
+                    if (!empty($missing)) {
+                        throw new \Exception('กรุณากรอกข้อมูลให้ครบ: ' . implode(', ', $missing));
+                    }
 
                     // ผู้เบิก = พนักงานจาก user ที่ล็อกอิน (ดึงตำแหน่งจากระบบพนักงาน)
                     $userId = Yii::$app->user->id;
@@ -906,9 +939,17 @@ public function behaviors()
     public function actionApprove($id)
     {
         $model = $this->findModel($id);
+        $returnUrl = Yii::$app->request->get('returnUrl');
+        if (!is_string($returnUrl) || $returnUrl === '' || !\yii\helpers\Url::isRelative($returnUrl)) {
+            $returnUrl = null;
+        }
+        $redirectAfterApprove = function (array $fallback) use ($returnUrl) {
+            return $returnUrl ? $this->redirect($returnUrl) : $this->redirect($fallback);
+        };
+
         if ($model->status !== StockOrder::STATUS_DRAFT && $model->status !== StockOrder::STATUS_PENDING) {
             Yii::$app->session->setFlash('warning', 'เอกสารนี้ไม่อยู่ในสถานะที่อนุมัติได้');
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $redirectAfterApprove(['view', 'id' => $model->id]);
         }
         $approverEmpId = $model->getIssueSignatureEmpId('approver');
         $isCurrentUserApprover = false;
@@ -919,7 +960,7 @@ public function behaviors()
         $hasInventoryPermission = Yii::$app->user->can('inventory');
         if (!$isCurrentUserApprover && !$hasInventoryPermission) {
             Yii::$app->session->setFlash('warning', 'เฉพาะผู้เห็นชอบ (หัวหน้า) หรือผู้มีสิทธิคลังสินค้าเท่านั้นที่อนุมัติได้');
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $redirectAfterApprove(['view', 'id' => $model->id]);
         }
         $transaction = Yii::$app->db->beginTransaction();
         try {
@@ -945,7 +986,7 @@ public function behaviors()
             $transaction->rollBack();
             Yii::$app->session->setFlash('error', $e->getMessage());
         }
-        return $this->redirect(['view', 'id' => $model->id]);
+        return $redirectAfterApprove(['view', 'id' => $model->id]);
     }
 
 

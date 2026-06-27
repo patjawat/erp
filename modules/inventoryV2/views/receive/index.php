@@ -49,7 +49,7 @@ $currentStatus = $searchModel->status ?? '';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับ', ['/inventory-v2/main-stock/dashboard'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'receive']) ?>
 <?php $this->endBlock(); ?>
 
 
@@ -103,6 +103,12 @@ $currentStatus = $searchModel->status ?? '';
                 ]) ?>
             </div>
             <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                <label class="form-label small text-muted mb-1">ประเภทวัสดุ</label>
+                <?= Html::activeDropDownList($searchModel, 'category_id', $listItemType ?? ['' => 'ทุกประเภท'], [
+                    'class' => 'form-select w-100',
+                ]) ?>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
                 <label class="form-label small text-muted mb-1">สถานะ</label>
                 <?= Html::activeDropDownList($searchModel, 'status', $statusLabels, [
                     'class' => 'form-select w-100',
@@ -129,6 +135,7 @@ $currentStatus = $searchModel->status ?? '';
                         <th class="text-nowrap bg-light bg-opacity-50">เลขที่เอกสาร</th>
                         <th class="text-nowrap bg-light bg-opacity-50">วันที่</th>
                         <th class="text-nowrap bg-light bg-opacity-50">คลัง</th>
+                        <th class="text-nowrap bg-light bg-opacity-50">ประเภทวัสดุ</th>
                         <th class="text-end text-nowrap bg-light bg-opacity-50">รายการ</th>
                         <th class="text-end text-nowrap bg-light bg-opacity-50">มูลค่าที่รับเข้า</th>
                         <th class="text-center text-nowrap bg-light bg-opacity-50">สถานะ</th>
@@ -142,7 +149,7 @@ $currentStatus = $searchModel->status ?? '';
                 ?>
                 <?php if (empty($models)): ?>
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="8" class="text-center">
                             <div class="text-muted py-5"><i class="bi bi-inbox display-6 d-block mb-2"></i>ยังไม่มีใบรับเข้า</div>
                             <div class="pb-3"><?= Html::a('สร้างใบรับเข้า', ['create'], ['class' => 'btn btn-success btn-sm', 'data' => ['pjax' => 0]]) ?></div>
                         </td>
@@ -154,8 +161,12 @@ $currentStatus = $searchModel->status ?? '';
                     $warehouseName = $wh ? Html::encode($wh->warehouse_name) : '-';
                     $detailCount = number_format(count($item->stockDetails));
                     $rowTotal = 0;
+                    $typeNames = [];
                     foreach ($item->stockDetails as $d) {
                         $rowTotal += (float) $d->qty * (float) ($d->unit_price ?? 0);
+                        if ($d->item && $d->item->categoryType) {
+                            $typeNames[$d->item->categoryType->code] = $d->item->categoryType->title;
+                        }
                     }
                     $pageTotalValue += $rowTotal;
                     ?>
@@ -169,6 +180,7 @@ $currentStatus = $searchModel->status ?? '';
                         </td>
                         <td class="text-secondary"><?= $item->order_date ? \app\components\ThaiDateHelper::formatThaiDate($item->order_date) : '-' ?></td>
                         <td><?= $item->main_warehouse_id ? $warehouseName : '<span class="text-muted">-</span>' ?></td>
+                        <td class="text-secondary small"><?= !empty($typeNames) ? Html::encode(implode(', ', $typeNames)) : '<span class="text-muted">-</span>' ?></td>
                         <td class="text-end text-muted"><?= $detailCount ?></td>
                         <td class="text-end"><span class="fw-semibold"><?= number_format($rowTotal, 2) ?></span> <span class="text-muted small">บาท</span></td>
                         <td class="text-center"><?= StatusBadgeHelper::renderStatusBadge($item->status, ['tooltip' => StatusBadgeHelper::getLabel($item->status)]) ?></td>

@@ -57,7 +57,7 @@ class ReceiveController extends Controller
         $searchModel = new StockOrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['order_type' => 'IN']);
-        $dataProvider->query->with(['mainWarehouse', 'stockDetails']);
+        $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -104,6 +104,17 @@ class ReceiveController extends Controller
         if ($searchModel->status !== null && $searchModel->status !== '') {
             $totalAmountQuery->andWhere(['status' => $searchModel->status]);
         }
+        if ($searchModel->category_id !== null && $searchModel->category_id !== '') {
+            $categorySub = (new \yii\db\Query())
+                ->select('sd.stock_order_id')
+                ->from(['sd' => 'stock_detail'])
+                ->innerJoin(
+                    ['c' => 'categorise'],
+                    "c.code = sd.item_code AND c.name = 'asset_item' AND c.group_id = 'MATER'"
+                )
+                ->where(['c.category_id' => (string) $searchModel->category_id]);
+            $totalAmountQuery->andWhere(['id' => $categorySub]);
+        }
         $totalFromSet = $searchModel->total_from !== null && $searchModel->total_from !== '';
         $totalToSet = $searchModel->total_to !== null && $searchModel->total_to !== '';
         if ($totalFromSet || $totalToSet) {
@@ -127,12 +138,15 @@ class ReceiveController extends Controller
             ->where(['stock_order_id' => $totalAmountQuery])
             ->sum(new Expression('qty * COALESCE(unit_price, 0)'));
 
+        $listItemType = ['' => 'ทุกประเภท'] + StockItem::ListStockItemType();
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'statusSummary' => $statusSummaryMap,
             'warehouses' => $warehouses,
             'totalAmount' => $totalAmount,
+            'listItemType' => $listItemType,
         ]);
     }
 

@@ -93,6 +93,15 @@ class DefaultController extends Controller
         $reqCounts = [];
         $imgUrls = [];
         $employees = [];
+        $departmentOptions = [];
+
+        $organizations = Organization::find()
+            ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+            ->all();
+        foreach ($organizations as $org) {
+            $level = max(0, (int)($org->lvl ?? 0) - 1);
+            $departmentOptions[$org->id] = str_repeat(' - ', $level) . ($org->name ?? 'ไม่ระบุ');
+        }
 
         if (!empty($models)) {
             $warehouseIds = array_map(function ($m) { return $m->id; }, $models);
@@ -153,6 +162,7 @@ class DefaultController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'departmentNames' => $departmentNames,
+            'departmentOptions' => $departmentOptions,
             'reqCounts' => $reqCounts,
             'imgUrls' => $imgUrls,
             'employees' => $employees,

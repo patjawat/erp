@@ -8,6 +8,9 @@ use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
+use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
@@ -17,7 +20,46 @@ class SubStockController extends \yii\web\Controller
 {
     public function actionIndex()
     {
+        if (empty($this->getSubWarehouseIdsForIssue())) {
+            return $this->redirectToSubStockDashboard();
+        }
+
         return $this->render('index');
+    }
+
+    /**
+     * รายงานสรุปยอดคงเหลือ — มุมเจ้าหน้าที่คลังย่อย/แผนก
+     * Scope: เฉพาะคลังย่อย (SUB) ที่ user เป็น officer ใน data_json.officer
+     */
+    public function actionBalance()
+    {
+        $accessible = Warehouse::findSubWarehousesForUser();
+        $context = ReportController::buildBalanceContext(
+            $accessible,
+            $this->request->getQueryParams(),
+            '-- ทุกคลังย่อย --'
+        );
+
+        return $this->render('balance', array_merge($context, [
+            'accessibleWarehouseCount' => count($accessible),
+        ]));
+    }
+
+    /**
+     * Export Excel ของยอดคงเหลือ — มุมเจ้าหน้าที่คลังย่อย
+     */
+    public function actionExportBalance()
+    {
+        $accessible = Warehouse::findSubWarehousesForUser();
+        $context = ReportController::buildBalanceContext(
+            $accessible,
+            $this->request->getQueryParams(),
+            '-- ทุกคลังย่อย --'
+        );
+        ReportController::streamBalanceXlsx(
+            $context['rows'],
+            'balance-sub-warehouse'
+        );
     }
 
     /**
@@ -25,11 +67,12 @@ class SubStockController extends \yii\web\Controller
      */
     public function actionDashboard()
     {
-        $allowedSubIds = $this->getSubWarehouseIds();
-        $allSubIds = $allowedSubIds;
-        if (empty($allSubIds)) {
-            $allSubIds = [-1];
+        $allowedSubIds = $this->getSubWarehouseIdsForIssue();
+        if (empty($allowedSubIds)) {
+            return $this->renderPermissionBlockedDashboard();
         }
+
+        $allSubIds = $allowedSubIds;
 
         $warehouseId = $this->getFilterWarehouseId($allowedSubIds);
         if ($warehouseId !== null && !in_array($warehouseId, $allSubIds, true)) {
@@ -114,20 +157,87 @@ class SubStockController extends \yii\web\Controller
             'warehouses' => $warehouses,
             'currentWarehouseId' => $warehouseId,
             'usageHistory' => $usageHistory,
+            'canCreateRequisition' => $this->canCreateRequisition(),
         ]);
     }
 
-    /** รหัสคลังย่อยที่ผู้ใช้มีสิทธิ (ตามกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก ของคลังย่อย + แผนกของ user ที่ล็อกอิน) */
+    protected function renderPermissionBlockedDashboard()
+    {
+        return $this->render('dashboard', [
+            'pendingDisbursementCount' => 0,
+            'criticalCount' => 0,
+            'monthlyValue' => 0,
+            'expiringSoonCount' => 0,
+            'pendingIssueList' => [],
+            'chartData' => ['categories' => [], 'series' => []],
+            'subWarehouseIds' => [],
+            'warehouses' => [],
+            'currentWarehouseId' => null,
+            'usageHistory' => [],
+            'permissionBlocked' => true,
+            'permissionMessage' => $this->getSubStockPermissionMessage(),
+            'canCreateRequisition' => $this->canCreateRequisition(),
+        ]);
+    }
+
+    /**
+     * สิทธิ์สร้างใบขอเบิกจากคลังหลัก — เฉพาะ user ที่ถูกกำหนดเป็นผู้รับผิดชอบ
+     * (data_json.officer) ของคลังย่อยอย่างน้อย 1 คลัง หรือเป็น admin
+     */
+    protected function canCreateRequisition(): bool
+    {
+        if (Yii::$app->user->can('admin')) {
+            return true;
+        }
+        return !empty(Warehouse::findSubWarehousesForUser());
+    }
+
+    protected function redirectToSubStockDashboard()
+    {
+        return $this->redirect(['/inventory-v2/sub-stock/dashboard']);
+    }
+
+    protected function getSubStockPermissionMessage()
+    {
+        $departmentName = $this->getCurrentUserDepartmentName();
+        $subject = $departmentName !== '' ? $departmentName : 'หน่วยงานของคุณ';
+
+        return $subject . 'ยังไม่ได้กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก ในคลังย่อย';
+    }
+
+    protected function getCurrentUserDepartmentName()
+    {
+        if (Yii::$app->user->isGuest || !class_exists(Employees::class)) {
+            return '';
+        }
+
+        $employee = Employees::findOne(['user_id' => Yii::$app->user->id]);
+        if (!$employee || empty($employee->department) || !class_exists(Organization::class)) {
+            return '';
+        }
+
+        $department = Organization::findOne(['id' => (int) $employee->department]);
+        return $department ? trim((string) $department->name) : '';
+    }
+
+    /** รหัสคลังย่อยที่ user เป็นเจ้าหน้าที่คลัง (data_json.officer) */
     protected function getSubWarehouseIds()
     {
         $list = Warehouse::findSubWarehousesForUser();
         return array_values(array_map('intval', array_column($list, 'id')));
     }
 
-    /** รายการคลังย่อยสำหรับ dropdown (ตาม user ที่ล็อกอินและกำหนดแผนก/ฝ่ายที่มีสิทธิเบิก) */
+    /** รายการคลังย่อยสำหรับ dropdown ของ dashboard ตามแผนก/ฝ่ายที่มีสิทธิเบิก */
     protected function getSubWarehousesList()
     {
-        return Warehouse::findSubWarehousesForUser();
+        return Warehouse::findSubWarehousesForDepartment();
+    }
+
+    /** รหัสคลังย่อยที่ user มีสิทธิ "บันทึกจ่ายพัสดุ" (employee.department อยู่ใน warehouses.department) */
+    protected function getSubWarehouseIdsForIssue()
+    {
+        $list = Warehouse::findSubWarehousesForDepartment();
+        return array_values(array_map('intval', array_column($list, 'id')));
     }
 
     /** warehouse_id จาก query หรือ session (all = null) */
@@ -274,7 +384,11 @@ class SubStockController extends \yii\web\Controller
      */
     public function actionIssue()
     {
-        $subIds = $this->getSubWarehouseIds();
+        $subIds = $this->getSubWarehouseIdsForIssue();
+        if (empty($subIds)) {
+            return $this->redirectToSubStockDashboard();
+        }
+
         $subWarehouses = Warehouse::find()
             ->where(['id' => $subIds])
             ->orderBy(['warehouse_name' => SORT_ASC])
@@ -351,7 +465,40 @@ class SubStockController extends \yii\web\Controller
             'subWarehouses' => $subWarehouses,
             'currentWarehouseId' => $currentWarehouseId,
             'usageHistory' => $usageHistory,
+            'canCreateRequisition' => $this->canCreateRequisition(),
         ]);
+    }
+
+    public function actionRepairPicker($q = '')
+    {
+        $q = trim((string) $q);
+
+        $query = Helpdesk::find()
+            ->where(['name' => 'repair'])
+            ->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC])
+            ->limit(80);
+
+        if ($q !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'repair_number', $q],
+                ['like', 'title', $q],
+                ['like', 'asset_number', $q],
+                ['like', 'status', $q],
+                ['like', 'repair_group', $q],
+            ]);
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'title' => '<i class="bi bi-tools me-1"></i> เลือกใบแจ้งซ่อม',
+            'content' => $this->renderAjax('_repair_picker', [
+                'models' => $query->all(),
+                'q' => $q,
+            ]),
+            'footer' => '',
+        ];
     }
 
     /**
@@ -360,7 +507,7 @@ class SubStockController extends \yii\web\Controller
     public function actionGetAvailableLots($warehouse_id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $subIds = $this->getSubWarehouseIds();
+        $subIds = $this->getSubWarehouseIdsForIssue();
         $wid = (int) $warehouse_id;
         if ($wid <= 0 || !in_array($wid, $subIds, true)) {
             return [];
@@ -411,9 +558,14 @@ class SubStockController extends \yii\web\Controller
         $warehouse_id = (int) $this->request->post('warehouse_id');
         $job_type = trim((string) $this->request->post('job_type', ''));
         $reference = trim((string) $this->request->post('reference', ''));
+        $helpdesk_id = (int) $this->request->post('helpdesk_id', 0);
         $items = (array) $this->request->post('items', []);
 
-        $subIds = $this->getSubWarehouseIds();
+        $subIds = $this->getSubWarehouseIdsForIssue();
+        if (empty($subIds)) {
+            return ['success' => false, 'message' => $this->getSubStockPermissionMessage()];
+        }
+
         if ($warehouse_id <= 0 || !in_array($warehouse_id, $subIds, true)) {
             return ['success' => false, 'message' => 'กรุณาเลือกคลังย่อยที่ถูกต้อง'];
         }
@@ -426,6 +578,22 @@ class SubStockController extends \yii\web\Controller
 
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            if ($job_type === 'maintenance' && $helpdesk_id > 0) {
+                $repairTicket = Helpdesk::find()
+                    ->where(['id' => $helpdesk_id, 'name' => 'repair'])
+                    ->one();
+
+                if (!$repairTicket) {
+                    $transaction->rollBack();
+                    return ['success' => false, 'message' => 'ไม่พบใบแจ้งซ่อมที่เลือก'];
+                }
+
+                $repairNumber = trim((string) ($repairTicket->repair_number ?? ''));
+                if ($repairNumber !== '') {
+                    $reference = $repairNumber;
+                }
+            }
+
             $orderNo = $this->generateSubIssueOrderNo();
             $order = new StockOrder();
             $order->order_no = $orderNo;
@@ -434,7 +602,16 @@ class SubStockController extends \yii\web\Controller
             $order->order_date = date('Y-m-d H:i:s');
             $order->main_warehouse_id = $warehouse_id;
             $order->status = StockOrder::STATUS_CONFIRMED;
-            $order->data_json = ['job_type' => $job_type, 'reference' => $reference];
+            $orderData = ['job_type' => $job_type, 'reference' => $reference];
+            if ($job_type === 'maintenance') {
+                if ($helpdesk_id > 0) {
+                    $orderData['helpdesk_id'] = $helpdesk_id;
+                }
+                if ($reference !== '') {
+                    $orderData['repair_number'] = $reference;
+                }
+            }
+            $order->data_json = $orderData;
             if (!$order->save(false)) {
                 throw new \Exception('บันทึกหัวเอกสารไม่สำเร็จ');
             }
@@ -483,6 +660,10 @@ class SubStockController extends \yii\web\Controller
 
     public function actionRequisition()
     {
+        if (empty($this->getSubWarehouseIdsForIssue())) {
+            return $this->redirectToSubStockDashboard();
+        }
+
             $model = new StockOrder();
 
         if ($this->request->isPost) {

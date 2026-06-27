@@ -61,18 +61,20 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                     <?= $form->field($model, 'order_no', ['labelOptions' => ['label' => 'เลขที่ใบขอเบิก']])->textInput(['readonly' => true, 'class' => 'form-control', 'placeholder' => 'REQ-AUTO']) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'คลังที่รับของ']])->dropDownList($subWarehouses, [
+                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'คลังที่รับของ <span class="text-danger">*</span>']])->dropDownList($subWarehouses, [
                         'id' => 'sub-warehouse-id',
                         'prompt' => '-- เลือกคลังที่รับของ --',
                         'class' => 'form-select',
+                        'required' => true,
                         'options' => $autoSubId ? [$autoSubId => ['selected' => true]] : [],
                     ]) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'main_warehouse_id', ['labelOptions' => ['label' => 'คลังที่จ่ายของ']])->dropDownList($mainWarehouses ?: $warehouseList, [
+                    <?= $form->field($model, 'main_warehouse_id', ['labelOptions' => ['label' => 'คลังที่จ่ายของ <span class="text-danger">*</span>']])->dropDownList($mainWarehouses ?: $warehouseList, [
                         'id' => 'main-warehouse-id',
                         'prompt' => '-- เลือกคลังที่จ่ายของ --',
                         'class' => 'form-select',
+                        'required' => true,
                     ]) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
@@ -87,7 +89,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 <div class="col-12">
                     <div class="form-group">
                         <label class="form-label d-flex align-items-center gap-2 flex-wrap">
-                            เหตุผล/วัตถุประสงค์การเบิก
+                            เหตุผล/วัตถุประสงค์การเบิก <span class="text-danger">*</span>
                             <div class="dropdown">
                                 <button class="btn btn-light border rounded-3 dropdown-toggle btn-sm" type="button" id="dropdownIssueReason" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-list-ul me-1"></i> ตัวเลือก
@@ -109,13 +111,13 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                                 </ul>
                             </div>
                         </label>
-                        <textarea name="issue_reason" id="issue_reason" class="form-control" rows="2" placeholder="ระบุเหตุผลหรือวัตถุประสงค์ในการเบิกวัสดุ"><?= Html::encode($model->getIssueReason()) ?></textarea>
+                        <textarea name="issue_reason" id="issue_reason" class="form-control" rows="2" placeholder="ระบุเหตุผลหรือวัตถุประสงค์ในการเบิกวัสดุ" required><?= Html::encode($model->getIssueReason()) ?></textarea>
                         <div class="form-text">เช่น เบิกเพื่อใช้ในหน่วยงาน, เติมสต็อกคลังย่อย หรือกดตัวเลือกเพื่อเลือกเหตุผลที่ใช้บ่อย</div>
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="form-group">
-                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร </label>
+                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร) <span class="text-danger">*</span></label>
                         <input type="hidden" name="approver_name" id="approver_name" value="<?= Html::encode($approverSig['name']) ?>">
                         <input type="hidden" name="approver_position" id="approver_position" value="<?= Html::encode($approverSig['position']) ?>">
                         <?= Select2::widget([
@@ -198,7 +200,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                         echo '<div class="small text-muted font-monospace">' . Html::encode($detail->item_code) . '</div>';
                         echo '</div></div></td>';
                         echo '<td class="text-center unit-cell text-muted small align-middle">' . Html::encode($unitText) . '</td>';
-                        echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
+                        echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
                         echo '<td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>';
                         echo '</tr>';
                     }
@@ -224,7 +226,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
             </td>
             <td class="text-center unit-cell text-muted small align-middle"></td>
             <td>
-                <input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" required placeholder="0.00">
+                <input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" required placeholder="0.00">
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button>
@@ -244,7 +246,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 </div>
             </td>
             <td class="text-center unit-cell text-muted small align-middle">{unit_name}</td>
-            <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="0.01" value="{qty}" required placeholder="0.00"></td>
+            <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" value="{qty}" required placeholder="0.00"></td>
             <td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>
         </tr>
     </tbody>
@@ -628,6 +630,29 @@ function submitRequisitionForm(form) {
 // Submit Form ด้วย AJAX — preflight ตรวจยอดคลังก่อน เพื่อกัน user ส่งใบเบิกที่จ่ายไม่ได้
 $('#requisition-form').on('beforeSubmit', function(e) {
     var form = $(this);
+
+    // ตรวจช่องบังคับ 4 ช่อง: คลังที่รับของ, คลังที่จ่ายของ, เหตุผล, ผู้เห็นชอบ
+    var requiredFields = [
+        { sel: '#sub-warehouse-id',       label: 'คลังที่รับของ' },
+        { sel: '#main-warehouse-id',      label: 'คลังที่จ่ายของ' },
+        { sel: '#issue_reason',           label: 'เหตุผล/วัตถุประสงค์การเบิก' },
+        { sel: '#approver_emp_id_select', label: 'ผู้เห็นชอบ (หัวหน้า)' }
+    ];
+    $('.is-invalid').removeClass('is-invalid');
+    var missing = [];
+    requiredFields.forEach(function(f) {
+        var el = $(f.sel);
+        var v = (el.val() || '').toString().trim();
+        if (!v) {
+            missing.push(f.label);
+            el.addClass('is-invalid');
+        }
+    });
+    if (missing.length) {
+        Swal.fire('กรุณากรอกข้อมูลให้ครบ', 'ยังไม่ได้กรอก: ' + missing.join(', '), 'warning');
+        return false;
+    }
+
     if ($('#item-table tbody tr').length === 0) {
         Swal.fire('คำเตือน', 'กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ', 'warning');
         return false;
