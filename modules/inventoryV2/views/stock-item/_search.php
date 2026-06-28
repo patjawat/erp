@@ -40,11 +40,6 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
                 ['index'],
                 ['class' => 'btn btn-outline-secondary']
             ) ?>
-            <?= Html::a(
-                '<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่',
-                ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'],
-                ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg']]
-            ) ?>
             <div class="dropdown">
                 <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-file-excel me-1"></i> Excel

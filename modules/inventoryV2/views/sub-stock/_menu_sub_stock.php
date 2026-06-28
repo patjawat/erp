@@ -46,20 +46,17 @@ try {
         <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/dashboard'], $wParam)) ?>" class="btn btn-sm <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
             <i class="bi bi-grid-1x2 me-1"></i>ภาพรวม
         </a>
-        <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/issue'], $wParam)) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3">
-            <i class="bi bi-box-arrow-up-right me-1"></i>ตัดจ่ายคลังย่อย
-        </a>
-        <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/use-history'], $wParam)) ?>" class="btn btn-sm <?= $active === 'use-history' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
-            <i class="bi bi-clock-history me-1"></i>ประวัติตัดจ่าย
-        </a>
-        <?php if ($canCreateRequisition): ?>
+         <?php if ($canCreateRequisition): ?>
         <a href="<?= Url::to(['/inventory-v2/requisition']) ?>" class="btn btn-sm <?= $active === 'requisition' ? 'btn-success' : 'btn-outline-success' ?> rounded-pill px-3">
-            <i class="bi bi-file-earmark-plus me-1"></i>เบิกของคลังหลัก
+            <i class="bi bi-file-earmark-plus me-1"></i> บันทึกเบิก
             <?php if ($requisitionPendingCount > 0): ?>
                 <span class="badge text-bg-danger ms-1" title="รออนุมัติ"><?= $requisitionPendingCount ?></span>
             <?php endif; ?>
         </a>
         <?php endif; ?>
+        <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/issue'], $wParam)) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3">
+            <i class="bi bi-box-arrow-up-right me-1"></i>บันทึกจ่าย
+        </a>       
         <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/balance'], $wParam)) ?>" class="btn btn-sm <?= $active === 'balance' ? 'btn-info' : 'btn-outline-info' ?> rounded-pill px-3">
             <i class="bi bi-boxes me-1"></i>สถานะคงคลัง
         </a>

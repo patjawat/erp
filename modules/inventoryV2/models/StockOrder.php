@@ -301,6 +301,29 @@ public function getToWarehouse()
     }
 
     /**
+     * ข้อมูล marker ที่ระบุว่าเอกสารนี้ย้ายมาจาก Inventory V1
+     * คืน array ที่มี source_id / source_code / source_status / migrated_at / migrated_by / v1_movement_date
+     * คืน null ถ้าเอกสารสร้างใน V2 ตรง ๆ
+     * @return array|null
+     */
+    public function getMigratedFromV1()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        if (!is_array($json) || empty($json['migrated_from_v1']) || !is_array($json['migrated_from_v1'])) {
+            return null;
+        }
+        return $json['migrated_from_v1'];
+    }
+
+    public function isMigratedFromV1()
+    {
+        return $this->getMigratedFromV1() !== null;
+    }
+
+    /**
      * รายการค่าใช้จ่ายและใบเสร็จแนบ (เก็บใน data_json['expenses'])
      * แต่ละรายการ: ['description' => string, 'amount' => number, 'receipt_path' => string|null]
      * @return array

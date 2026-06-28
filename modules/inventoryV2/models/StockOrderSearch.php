@@ -24,6 +24,8 @@ class StockOrderSearch extends StockOrder
     public $total_to;
     /** ตัวกรองประเภทวัสดุ (categorise.code ของ asset_type) */
     public $category_id;
+    /** แหล่งที่มาของเอกสาร: 'v1' = ย้ายจาก V1, 'v2' = สร้างใน V2, '' = ทั้งหมด */
+    public $source_v1;
 
     /**
      * {@inheritdoc}
@@ -32,7 +34,7 @@ class StockOrderSearch extends StockOrder
     {
         return [
             [['id', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json', 'date_start', 'date_end', 'confirmed_date_start', 'confirmed_date_end', 'total_from', 'total_to', 'category_id'], 'safe'],
+            [['order_no', 'order_type', 'order_date', 'status', 'ref', 'data_json', 'date_start', 'date_end', 'confirmed_date_start', 'confirmed_date_end', 'total_from', 'total_to', 'category_id', 'source_v1'], 'safe'],
         ];
     }
 
@@ -129,6 +131,17 @@ class StockOrderSearch extends StockOrder
                 )
                 ->where(['c.category_id' => (string) $this->category_id]);
             $query->andWhere(['id' => $categorySub]);
+        }
+
+        // แหล่งที่มาของเอกสาร: V1 ย้ายเข้ามา vs สร้างใน V2
+        if ($this->source_v1 === 'v1') {
+            $query->andWhere(new Expression(
+                'JSON_EXTRACT(data_json, \'$.migrated_from_v1.source_id\') IS NOT NULL'
+            ));
+        } elseif ($this->source_v1 === 'v2') {
+            $query->andWhere(new Expression(
+                'JSON_EXTRACT(data_json, \'$.migrated_from_v1.source_id\') IS NULL'
+            ));
         }
 
         return $dataProvider;

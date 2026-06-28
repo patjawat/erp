@@ -6,8 +6,18 @@ use yii\helpers\Url;
 /** @var array $rows */
 /** @var array $warehouseMap */
 /** @var int $alreadyMigrated */
+/** @var string $statusFilter */
 
-$this->title = 'ย้ายใบเบิกค้างจ่าย ไป Inventory V2';
+$statusFilter = $statusFilter ?? 'pending';
+$isSuccessMode = ($statusFilter === 'success');
+$isAllMode = ($statusFilter === 'all');
+
+$titles = [
+    'pending' => 'ย้ายใบเบิก (PENDING) ไป Inventory V2',
+    'success' => 'ย้ายใบจ่ายที่เสร็จแล้ว (SUCCESS) ไป Inventory V2',
+    'all' => 'ย้ายใบเบิก-จ่าย V1 ไป Inventory V2',
+];
+$this->title = $titles[$statusFilter] ?? $titles['pending'];
 $this->params['breadcrumbs'][] = ['label' => 'ระบบคลัง', 'url' => ['/inventory/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -20,6 +30,25 @@ $warehouseName = function ($id) use ($warehouseMap) {
 $transferableCount = 0;
 foreach ($rows as $r) {
     if (!empty($r['transferable'])) $transferableCount++;
+}
+
+$tabs = [
+    'pending' => ['label' => 'ใบเบิก (รอจ่าย)', 'icon' => 'clock'],
+    'success' => ['label' => 'ใบจ่ายที่เสร็จแล้ว', 'icon' => 'check-double'],
+    'all' => ['label' => 'ทั้งหมด', 'icon' => 'list'],
+];
+
+if ($isAllMode) {
+    $formAction = null; // โหมด all ใช้แยกย้ายไม่ได้ ต้องเลือก tab ก่อน
+    $submitLabel = '';
+} elseif ($isSuccessMode) {
+    $formAction = ['/inventory/transfer-to-v2/create-issued'];
+    $submitLabel = '<i class="fa-solid fa-file-import me-1"></i> ย้ายใบที่เลือก ไป V2 (สถานะ CONFIRMED + ตัดยอด)';
+    $confirmMsg = 'ยืนยันย้ายใบจ่ายที่เลือก ไป V2 — ระบบจะตัด stock_balance ใน V2 ทันที (ยอดอาจติดลบ ให้ไปเคลียร์ที่เมนู "ปรับยอดคลัง > ยอดติดลบ")';
+} else {
+    $formAction = ['/inventory/transfer-to-v2/create-requisitions'];
+    $submitLabel = '<i class="fa-solid fa-file-import me-1"></i> ย้ายใบที่เลือก ไป V2 (สถานะ PENDING)';
+    $confirmMsg = 'ยืนยันย้ายใบเบิกที่เลือกไป Inventory V2 (สถานะรอหัวหน้าอนุมัติ)?';
 }
 ?>
 
@@ -49,13 +78,24 @@ foreach ($rows as $r) {
     </div>
 <?php endif; ?>
 
+<ul class="nav nav-tabs mb-3">
+    <?php foreach ($tabs as $key => $tab): ?>
+        <li class="nav-item">
+            <a class="nav-link <?= $statusFilter === $key ? 'active' : '' ?>"
+               href="<?= Url::to(['requisition-index', 'status_filter' => $key]) ?>">
+                <i class="fa-solid fa-<?= $tab['icon'] ?> me-1"></i> <?= $tab['label'] ?>
+            </a>
+        </li>
+    <?php endforeach; ?>
+</ul>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2 mb-0">
             <i class="fa-solid fa-clipboard-list me-1"></i>
-            ใบเบิก V1 ที่ยังไม่ได้จ่ายของ
+            <?= Html::encode($this->title) ?>
             <span class="badge text-white bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1 ms-2">
-                คงเหลือใน list <?= count($rows) ?> ใบ
+                ใน list <?= count($rows) ?> ใบ
             </span>
             <span class="badge text-white bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">
                 ย้ายได้ <?= $transferableCount ?> ใบ
@@ -68,19 +108,30 @@ foreach ($rows as $r) {
         </h6>
     </div>
     <div class="card-body">
-        <p class="text-muted small mb-0">
-            ใบเบิกที่ <code>order_status='pending'</code> ใน <code>stock_events</code> ของระบบเก่า เลือกใบที่ต้องการย้ายเข้า V2 — สถานะปลายทาง <strong>PENDING (รอหัวหน้าอนุมัติ)</strong>, <code>source_type=REQUEST</code>
-            <br>ระบบจะ <strong>ไม่แก้ไข</strong> ข้อมูลใน V1 — ใบที่ย้ายแล้วถ้าต้องการลบใน V1 ให้ทำแยกในระบบเก่า
-        </p>
+        <?php if ($isSuccessMode): ?>
+            <p class="text-muted small mb-0">
+                ใบจ่ายที่ <code>order_status='success'</code> ใน V1 — เมื่อย้ายเข้า V2 จะเป็น <strong>CONFIRMED</strong> และ <strong>ตัด stock_balance ทันที</strong> (ผ่าน <code>InventoryService::adjustBalance(allowNegative=true)</code>)
+                <br>ถ้ายอดติดลบ → ไปเคลียร์ที่ <code>ปรับยอดคลัง > ยอดติดลบ</code>
+            </p>
+        <?php elseif ($isAllMode): ?>
+            <p class="text-muted small mb-0">
+                แสดงทั้งใบเบิกค้างจ่ายและใบจ่ายที่เสร็จแล้ว — เพื่อย้ายข้อมูล กรุณาเลือก tab เฉพาะ (PENDING หรือ SUCCESS) เพราะวิธีการย้ายต่างกัน
+            </p>
+        <?php else: ?>
+            <p class="text-muted small mb-0">
+                ใบเบิกที่ <code>order_status='pending'</code> ใน V1 — ย้ายเข้า V2 เป็น <strong>PENDING (รอหัวหน้าอนุมัติ)</strong>, <code>source_type=REQUEST</code>
+                <br>ระบบจะ <strong>ไม่แก้ไข</strong> ข้อมูลใน V1 — ใบที่ย้ายแล้วถ้าต้องการลบใน V1 ให้ทำแยกในระบบเก่า
+            </p>
+        <?php endif; ?>
     </div>
 
     <?php if (empty($rows)): ?>
         <div class="alert alert-info m-3">
-            <i class="fa-solid fa-info-circle me-1"></i> ไม่พบใบเบิกค้างจ่ายใน Inventory V1
+            <i class="fa-solid fa-info-circle me-1"></i> ไม่พบใบ V1 ที่ตรงเงื่อนไข
         </div>
     <?php else: ?>
         <?php $form = \yii\widgets\ActiveForm::begin([
-            'action' => ['/inventory/transfer-to-v2/create-requisitions'],
+            'action' => $formAction ?: ['requisition-index'],
             'method' => 'post',
             'options' => ['id' => 'transfer-requisition-form'],
         ]); ?>
@@ -89,10 +140,13 @@ foreach ($rows as $r) {
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 48px;">
-                            <input type="checkbox" id="check-all" class="form-check-input">
+                            <?php if (!$isAllMode): ?>
+                                <input type="checkbox" id="check-all" class="form-check-input">
+                            <?php endif; ?>
                         </th>
                         <th style="width: 56px;">#</th>
-                        <th>เลขใบเบิก</th>
+                        <th>เลขใบ</th>
+                        <th>สถานะ V1</th>
                         <th>วันที่</th>
                         <th>คลังหลัก (Main)</th>
                         <th>คลังย่อย (Sub)</th>
@@ -114,10 +168,12 @@ foreach ($rows as $r) {
                             $note = '<span class="text-warning small"><i class="fa-solid fa-triangle-exclamation"></i> จะข้าม item: '
                                 . Html::encode(implode(', ', $r['skipped_codes'])) . '</span>';
                         }
+                        $v1Status = (string) ($r['v1_status'] ?? '');
+                        $statusClass = $v1Status === 'success' ? 'bg-success' : ($v1Status === 'pending' ? 'bg-warning text-dark' : 'bg-secondary');
                     ?>
                     <tr class="<?= $rowClass ?>">
                         <td class="text-center">
-                            <?php if ($r['transferable']): ?>
+                            <?php if (!$isAllMode && $r['transferable']): ?>
                                 <input type="checkbox" name="order_ids[]" value="<?= $r['id'] ?>" class="form-check-input row-check">
                             <?php else: ?>
                                 <input type="checkbox" disabled class="form-check-input">
@@ -125,6 +181,7 @@ foreach ($rows as $r) {
                         </td>
                         <td><?= $n++ ?></td>
                         <td><code><?= Html::encode($r['code']) ?></code></td>
+                        <td><span class="badge <?= $statusClass ?>"><?= Html::encode($v1Status ?: '-') ?></span></td>
                         <td><?= Html::encode($r['movement_date'] ?: '-') ?></td>
                         <td><?= $warehouseName($r['main_warehouse_id']) ?></td>
                         <td><?= $warehouseName($r['sub_warehouse_id']) ?></td>
@@ -140,15 +197,15 @@ foreach ($rows as $r) {
             </table>
         </div>
 
-        <?php if ($transferableCount > 0): ?>
+        <?php if (!$isAllMode && $transferableCount > 0): ?>
         <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="text-muted small">
                 <i class="fa-solid fa-info-circle me-1"></i>
-                เลขใบเบิก (order_no) คงค่าเดิมจาก V1 — ระบบจะตรวจซ้ำก่อนสร้าง
+                เลข order_no คงค่าเดิมจาก V1 — ระบบจะตรวจซ้ำก่อนสร้าง
             </span>
-            <?= Html::submitButton('<i class="fa-solid fa-file-import me-1"></i> ย้ายใบที่เลือก ไป V2 (สถานะ PENDING)', [
-                'class' => 'btn btn-primary btn-sm',
-                'data' => ['confirm' => 'ยืนยันย้ายใบเบิกที่เลือกไป Inventory V2 (สถานะรอหัวหน้าอนุมัติ)?'],
+            <?= Html::submitButton($submitLabel, [
+                'class' => $isSuccessMode ? 'btn btn-danger btn-sm' : 'btn btn-primary btn-sm',
+                'data' => ['confirm' => $confirmMsg],
             ]) ?>
         </div>
         <?php endif; ?>

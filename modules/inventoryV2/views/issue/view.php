@@ -27,10 +27,17 @@ $grandTotal = 0;
 ?>
 
 <div class="issue-detail-view">
+    <?= $this->render('@app/modules/inventoryV2/views/_partials/_migrated_v1_panel', ['model' => $model]) ?>
+
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
         <div>
             <div class="text-muted small mb-1">เลขที่เอกสาร</div>
-            <h6 class="mb-0 fw-bold font-monospace"><?= Html::encode($model->order_no) ?></h6>
+            <h6 class="mb-0 fw-bold font-monospace">
+                <?= Html::encode($model->order_no) ?>
+                <?php if ($model->isMigratedFromV1()): ?>
+                    <span class="badge bg-secondary fw-normal ms-1">V1</span>
+                <?php endif; ?>
+            </h6>
         </div>
         <span class="badge rounded-pill bg-<?= Html::encode($status['class']) ?> px-3 py-2">
             <?= Html::encode($status['label']) ?>

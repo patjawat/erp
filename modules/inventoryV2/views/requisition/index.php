@@ -207,6 +207,9 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                             'class' => 'req-doc-link open-modal',
                                             'data' => ['size' => 'modal-xl'],
                                         ]) ?>
+                                        <?php if ($model->isMigratedFromV1()): ?>
+                                            <span class="badge bg-secondary ms-1" title="ย้ายมาจาก Inventory V1">V1</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?= $renderPerson($requesterEmp, $requesterSig['name'] ?? '', $requesterSig['position'] ?? '') ?>
@@ -260,7 +263,12 @@ foreach (['action', 'page-action'] as $actionBlock) {
                         <li class="req-card">
                             <a href="<?= Url::to(['view', 'id' => $model->id]) ?>" class="req-card__main open-modal" data-size="modal-xl">
                                 <div class="req-card__head">
-                                    <span class="req-card__doc"><?= Html::encode($model->order_no) ?></span>
+                                    <span class="req-card__doc">
+                                        <?= Html::encode($model->order_no) ?>
+                                        <?php if ($model->isMigratedFromV1()): ?>
+                                            <span class="badge bg-secondary ms-1" title="ย้ายมาจาก Inventory V1">V1</span>
+                                        <?php endif; ?>
+                                    </span>
                                     <?= $renderStatus($model->status) ?>
                                 </div>
                                 <div class="req-card__meta">

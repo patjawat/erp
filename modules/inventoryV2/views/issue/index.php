@@ -75,6 +75,14 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                 <label class="form-label small text-muted mb-1">สถานะ</label>
                 <?= Html::activeDropDownList($searchModel, 'status', $statusLabels, ['class' => 'form-select form-select-sm']) ?>
             </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                <label class="form-label small text-muted mb-1">แหล่งที่มา</label>
+                <?= Html::activeDropDownList($searchModel, 'source_v1', [
+                    '' => 'ทั้งหมด',
+                    'v2' => 'สร้างใน V2',
+                    'v1' => 'ย้ายจาก V1',
+                ], ['class' => 'form-select form-select-sm']) ?>
+            </div>
             <div class="col-12 col-sm-auto d-flex gap-1 flex-wrap">
                 <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary btn-sm']) ?>
                 <?= Html::a('ล้าง', Url::to(['index']), ['class' => 'btn btn-outline-secondary btn-sm']) ?>
@@ -106,7 +114,15 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                         [
                             'attribute' => 'order_no',
                             'label' => 'เลขที่ใบเบิก',
+                            'format' => 'raw',
                             'contentOptions' => ['class' => 'fw-bold'],
+                            'value' => function ($model) {
+                                $html = Html::encode($model->order_no);
+                                if ($model->isMigratedFromV1()) {
+                                    $html .= ' <span class="badge bg-secondary fw-normal" title="ย้ายมาจาก Inventory V1">V1</span>';
+                                }
+                                return $html;
+                            },
                         ],
                         [
                             'label' => 'เหตุผลในการเบิก',

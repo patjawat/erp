@@ -53,6 +53,10 @@ $balanceQty = 0;   // สำหรับคำนวณจำนวนคงเ�
             <div class="col-md-4 text-md-end">
                 <small class="text-muted">ยอดคงเหลือรวม</small>
                 <h3 class="fw-bold text-primary"><?= number_format($model->SumQty()) ?> <small class="fs-6 text-muted"><?= $model->product->data_json['unit'] ?? '-' ?></small></h3>
+                <?= Html::a('<i class="fa-solid fa-clone me-1"></i> ย้ายประวัติ → V2',
+                    ['/inventory/transfer-to-v2/item-history', 'stock_id' => $model->id],
+                    ['class' => 'btn btn-sm btn-outline-warning mt-2',
+                     'title' => 'ย้ายใบรับ-จ่ายจริงของวัสดุนี้ไป V2 (history-only)']) ?>
             </div>
         </div>
 

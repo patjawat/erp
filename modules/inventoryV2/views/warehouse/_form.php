@@ -33,7 +33,12 @@ JS;
 ?>
 <style>.col-form-label { text-align: end; }</style>
 <div class="warehouse-form">
-    <?php $form = ActiveForm::begin(['id' => 'form']); ?>
+    <?php
+    $formAction = $model->isNewRecord
+        ? Url::to(['/inventory-v2/warehouse/create'])
+        : Url::to(['/inventory-v2/warehouse/update', 'id' => $model->id]);
+    $form = ActiveForm::begin(['id' => 'warehouse-form', 'action' => $formAction]);
+    ?>
     <div class="row">
         <div class="col-xl-7 col-lg-7 col-md-12 col-sm-12">
             <div class="d-flex justify-content-between gap-1">
@@ -44,48 +49,48 @@ JS;
                 <div class="col-5"><?= $form->field($model, 'warehouse_code')->textInput(['maxlength' => true]) ?></div>
             </div>
             <?php
-            $initEmployee = '';
-            try {
-                if (!empty($model->data_json['checker'])) {
-                    $emp = Employees::find()->where(['user_id' => $model->data_json['checker']])->one();
-                    if ($emp && method_exists($emp, 'getAvatar')) {
-                        $initEmployee = $emp->getAvatar(false);
-                    }
-                }
-            } catch (\Throwable $e) {}
-            echo $form->field($model, 'data_json[checker]')->widget(Select2::classname(), [
-                'initValueText' => $initEmployee,
-                'options' => ['placeholder' => 'เลือก ...'],
-                'size' => Select2::LARGE,
-                'pluginEvents' => [
-                    'select2:unselect' => 'function() { $("#warehouse-data_json-checker_name").val(""); }',
-                    'select2:select' => 'function() {
-                        var d = $(this).select2("data")[0];
-                        if (d) {
-                            $("#warehouse-data_json-checker_name").val(d.fullname || "");
-                            if ($("#order-data_json-position_name").length) $("#order-data_json-position_name").val(d.position_name || "");
-                        }
-                    }',
-                ],
-                'pluginOptions' => [
-                    'dropdownParent' => '#main-modal',
-                    'allowClear' => true,
-                    'minimumInputLength' => 1,
-                    'ajax' => [
-                        'url' => Url::to(['/depdrop/employee-by-id']),
-                        'dataType' => 'json',
-                        'delay' => 250,
-                        'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
-                        'processResults' => new JsExpression($resultsJs),
-                        'cache' => true,
-                    ],
-                    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-                    'templateSelection' => new JsExpression('function (item) { return item.text; }'),
-                    'templateResult' => new JsExpression('formatRepo'),
-                ],
-            ])->label('หัวหน้าตรวจสอบ');
+            // $initEmployee = '';
+            // try {
+            //     if (!empty($model->data_json['checker'])) {
+            //         $emp = Employees::find()->where(['user_id' => $model->data_json['checker']])->one();
+            //         if ($emp && method_exists($emp, 'getAvatar')) {
+            //             $initEmployee = $emp->getAvatar(false);
+            //         }
+            //     }
+            // } catch (\Throwable $e) {}
+            // echo $form->field($model, 'data_json[checker]')->widget(Select2::classname(), [
+            //     'initValueText' => $initEmployee,
+            //     'options' => ['placeholder' => 'เลือก ...'],
+            //     'size' => Select2::LARGE,
+            //     'pluginEvents' => [
+            //         'select2:unselect' => 'function() { $("#warehouse-data_json-checker_name").val(""); }',
+            //         'select2:select' => 'function() {
+            //             var d = $(this).select2("data")[0];
+            //             if (d) {
+            //                 $("#warehouse-data_json-checker_name").val(d.fullname || d.text || "");
+            //                 if ($("#order-data_json-position_name").length) $("#order-data_json-position_name").val(d.position_name || "");
+            //             }
+            //         }',
+            //     ],
+            //     'pluginOptions' => [
+            //         'dropdownParent' => '#main-modal',
+            //         'allowClear' => true,
+            //         'minimumInputLength' => 1,
+            //         'ajax' => [
+            //             'url' => Url::to(['/depdrop/employee-by-id']),
+            //             'dataType' => 'json',
+            //             'delay' => 250,
+            //             'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+            //             'processResults' => new JsExpression($resultsJs),
+            //             'cache' => true,
+            //         ],
+            //         'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+            //         'templateSelection' => new JsExpression('function (item) { return item.text; }'),
+            //         'templateResult' => new JsExpression('formatRepo'),
+            //     ],
+            // ])->label('หัวหน้าตรวจสอบ');
             ?>
-            <?= $form->field($model, 'data_json[checker_name]')->textInput()->label(false) ?>
+            <?php //  $form->field($model, 'data_json[checker_name]')->textInput()->label(false) ?>
         </div>
         <div class="col-xl-5 col-lg-5 col-md-12 col-sm-12">
             <input type="file" id="my_file" style="display: none;" />
@@ -168,7 +173,7 @@ JS;
 $ref = $model->ref ?? '';
 $urlUpload = Url::to('/filemanager/uploads/single');
 $js = <<< JS
-$('#form').on('beforeSubmit', function (e) {
+$('#warehouse-form').off('beforeSubmit.warehouse').on('beforeSubmit.warehouse', function (e) {
     var form = $(this);
     $.ajax({
         url: form.attr('action'),
@@ -176,12 +181,28 @@ $('#form').on('beforeSubmit', function (e) {
         data: form.serialize(),
         dataType: 'json',
         success: async function (response) {
-            form.yiiActiveForm('updateMessages', response, true);
             if (response.status == 'success') {
                 if (typeof closeModal === 'function') closeModal();
                 if (typeof success === 'function') success();
                 var container = response.container || '#pjax-warehouse';
-                if ($(container).length && $.fn.pjax) await $.pjax.reload({ container: container, timeout: false });
+                if ($(container).length && $.fn.pjax) {
+                    await $.pjax.reload({ container: container, timeout: false });
+                } else {
+                    window.location.reload();
+                }
+                return;
+            }
+            if (response.errors) {
+                form.yiiActiveForm('updateMessages', response.errors, true);
+            } else {
+                form.yiiActiveForm('updateMessages', response, true);
+            }
+            if (response.message) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: response.message });
+                } else {
+                    alert(response.message);
+                }
             }
         }
     });

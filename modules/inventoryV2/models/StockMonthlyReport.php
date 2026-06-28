@@ -16,6 +16,10 @@ use Yii;
  * @property float $opening_value
  * @property float $in_qty
  * @property float $in_value
+ * @property float $adjust_in_qty ปรับยอดเพิ่ม (qty บวก)
+ * @property float $adjust_in_value มูลค่าปรับยอดเพิ่ม
+ * @property float $adjust_out_qty ปรับยอดลด (qty ลบ — เก็บเป็นค่าบวก)
+ * @property float $adjust_out_value มูลค่าปรับยอดลด
  * @property float $out_sub_qty จ่ายส่วนของ รพ.aq
  * @property float $out_sub_value มูลค่าจ่ายส่วนของ รพ.aq
  * @property float $out_hosp_qty จ่ายส่วนของโรงพยาบาล
@@ -37,7 +41,7 @@ class StockMonthlyReport extends \yii\db\ActiveRecord
         return [
             [['report_year', 'report_month', 'warehouse_id', 'item_code'], 'required'],
             [['report_year', 'report_month', 'warehouse_id', 'created_at', 'created_by'], 'integer'],
-            [['opening_qty', 'opening_value', 'in_qty', 'in_value', 'out_sub_qty', 'out_sub_value', 'out_hosp_qty', 'out_hosp_value', 'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value'], 'number'],
+            [['opening_qty', 'opening_value', 'in_qty', 'in_value', 'adjust_in_qty', 'adjust_in_value', 'adjust_out_qty', 'adjust_out_value', 'out_sub_qty', 'out_sub_value', 'out_hosp_qty', 'out_hosp_value', 'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value'], 'number'],
             [['item_code'], 'string', 'max' => 50],
             [['unit_name'], 'string', 'max' => 100],
         ];
@@ -52,6 +56,8 @@ class StockMonthlyReport extends \yii\db\ActiveRecord
             'item_code' => 'รหัสพัสดุ',
             'opening_qty' => 'สินค้าคงเหลือ',
             'in_qty' => 'ซื้อระหว่างเดือน',
+            'adjust_in_qty' => 'ปรับยอดเพิ่ม',
+            'adjust_out_qty' => 'ปรับยอดลด',
             'out_sub_qty' => 'จ่ายส่วนของ รพ.aq',
             'out_hosp_qty' => 'จ่ายส่วนของโรงพยาบาล',
             'total_out_qty' => 'รวมจ่าย',

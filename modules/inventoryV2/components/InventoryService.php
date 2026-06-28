@@ -157,13 +157,14 @@ class InventoryService
     }
 
     /**
-     * ปรับยอดคงเหลือโดยตรง (ใช้กับเอกสารประเภท ADJUST)
+     * ปรับยอดคงเหลือโดยตรง (ใช้กับเอกสารประเภท ADJUST หรือ migration จาก V1)
      * @param string $itemCode รหัสพัสดุ
      * @param int $warehouseId คลัง
      * @param string $lotNumber เลข Lot (เช่น 'ADJUST')
      * @param float $delta จำนวนที่เพิ่ม (+) หรือลด (-)
+     * @param bool $allowNegative อนุญาตให้ยอดติดลบได้ (ใช้กับการย้ายข้อมูลจาก V1 ที่อาจมี snapshot ไม่ครบ)
      */
-    public static function adjustBalance($itemCode, $warehouseId, $lotNumber, $delta)
+    public static function adjustBalance($itemCode, $warehouseId, $lotNumber, $delta, $allowNegative = false)
     {
         $lot = !empty($lotNumber) ? $lotNumber : '-';
 
@@ -183,8 +184,8 @@ class InventoryService
         }
 
         $balance->balance_qty += (float) $delta;
-        // Lot ADJUST อนุญาตให้ยอดติดลบได้ (กรณีตรวจนับแล้วยอดจริงน้อยกว่าระบบ)
-        if ($balance->balance_qty < 0 && $lot !== 'ADJUST') {
+        // Lot ADJUST และโหมด migration (allowNegative) อนุญาตให้ยอดติดลบได้
+        if ($balance->balance_qty < 0 && $lot !== 'ADJUST' && !$allowNegative) {
             throw new \Exception("ยอดคงเหลือหลังปรับจะติดลบ (พัสดุ {$itemCode} Lot {$lot})");
         }
 

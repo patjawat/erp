@@ -8,6 +8,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $monthLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 $monthFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+$monthOrder = $monthOrder ?? [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 $hasRows = !empty($rows);
 $queryParams = [
     'year' => $year,
@@ -136,16 +137,16 @@ $queryParams = [
                         <tr>
                             <th rowspan="2" class="pivot-th--sticky" style="width: 3rem;">#</th>
                             <th rowspan="2" class="pivot-th--sticky pivot-th--name">รายการวัสดุ</th>
-                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                            <?php foreach ($monthOrder as $m): ?>
                                 <th colspan="2" class="pivot-th--month" data-month="<?= $m ?>"><?= $monthLabels[$m - 1] ?></th>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                             <th colspan="2" class="pivot-th--total">รวม</th>
                         </tr>
                         <tr>
-                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                            <?php foreach ($monthOrder as $m): ?>
                                 <th class="pivot-th--sub">จำนวน</th>
                                 <th class="pivot-th--sub pivot-th--sub-val">บาท</th>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                             <th class="pivot-th--sub">จำนวน</th>
                             <th class="pivot-th--sub pivot-th--sub-val">บาท</th>
                         </tr>
@@ -166,7 +167,7 @@ $queryParams = [
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <?php for ($m = 1; $m <= 12; $m++):
+                                <?php foreach ($monthOrder as $m):
                                     $cell = $r['monthly'][$m];
                                     $hasData = $cell['qty'] > 0 || $cell['value'] > 0;
                                 ?>
@@ -178,7 +179,7 @@ $queryParams = [
                                         <?= $hasData ? 'data-drill="1" data-item="' . Html::encode($r['item_code']) . '" data-month="' . $m . '" tabindex="0" role="button"' : '' ?>>
                                         <?= $hasData ? number_format($cell['value'], 2) : '' ?>
                                     </td>
-                                <?php endfor; ?>
+                                <?php endforeach; ?>
                                 <td class="pivot-td--qty pivot-td--total"><?= number_format($r['total_qty'], 2) ?></td>
                                 <td class="pivot-td--val pivot-td--total"><?= number_format($r['total_value'], 2) ?></td>
                             </tr>
@@ -188,10 +189,10 @@ $queryParams = [
                         <tr class="pivot-tfoot">
                             <td class="pivot-td--sticky text-center"></td>
                             <td class="pivot-td--sticky pivot-td--name">รวมทั้งหมด</td>
-                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                            <?php foreach ($monthOrder as $m): ?>
                                 <td class="pivot-td--qty"><?= $monthTotals[$m]['qty'] > 0 ? number_format($monthTotals[$m]['qty'], 2) : '—' ?></td>
                                 <td class="pivot-td--val"><?= $monthTotals[$m]['value'] > 0 ? number_format($monthTotals[$m]['value'], 2) : '' ?></td>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                             <td class="pivot-td--qty pivot-td--total"><?= number_format($grandQty, 2) ?></td>
                             <td class="pivot-td--val pivot-td--total"><?= number_format($grandValue, 2) ?></td>
                         </tr>

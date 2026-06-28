@@ -213,12 +213,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                         </div>
                         <div class="empty-block__title">ไม่มีใบที่รอคลังหลักจ่าย</div>
                         <div class="empty-block__caption">เมื่อหัวหน้าอนุมัติใบขอเบิก รายการจะแสดงที่นี่จนกว่าคลังหลักจะจ่ายของ</div>
-                        <?php if ($canCreateRequisition): ?>
-                        <a href="<?= Url::to(['/inventory-v2/requisition/create']) ?>" class="empty-block__action">
-                            <i class="bi bi-file-earmark-plus" aria-hidden="true"></i>
-                            <span>สร้างใบขอเบิกใหม่</span>
-                        </a>
-                        <?php endif; ?>
+                        
                     </div>
                 <?php endif; ?>
             </div>

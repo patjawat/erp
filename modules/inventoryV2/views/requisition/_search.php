@@ -88,6 +88,14 @@ $statusOpts = StockOrder::optsStatusLabels();
                 ])->label(false) ?>
             </div>
 
+            <div class="col-6 col-md-4 col-lg-2">
+                <?= $form->field($searchModel, 'source_v1')->widget(Select2::classname(), [
+                    'data' => ['v2' => 'สร้างใน V2', 'v1' => 'ย้ายจาก V1'],
+                    'options' => ['placeholder' => 'แหล่งที่มา (ทั้งหมด)'],
+                    'pluginOptions' => ['allowClear' => true, 'width' => '100%'],
+                ])->label(false) ?>
+            </div>
+
             <div class="col-6 col-md-auto col-lg-auto ms-lg-auto d-flex gap-2">
                 <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary flex-grow-1']) ?>
                 <?= Html::a('<i class="bi bi-eraser me-1"></i> ล้าง', ['index'], ['class' => 'btn btn-outline-secondary flex-grow-1']) ?>

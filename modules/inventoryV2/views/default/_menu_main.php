@@ -9,6 +9,9 @@ $active = $active ?? '';
 ?>
 <nav class="inventory-nav inventory-nav-main" aria-label="เมนูคลังหลัก">
     <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
+        <a href="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" class="btn btn-sm <?= $active === 'dashboard' ? 'btn-secondary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+            <i class="bi bi-speedometer2 me-1"></i>ภาพรวม
+        </a>
         <a href="<?= Url::to(['/inventory-v2/receive/index']) ?>" class="btn btn-sm <?= $active === 'receive' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
             <i class="bi bi-box-arrow-in-down me-1"></i>รับเข้าคลัง
         </a>

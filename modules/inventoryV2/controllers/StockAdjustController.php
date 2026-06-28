@@ -145,6 +145,52 @@ class StockAdjustController extends Controller
     }
 
     /**
+     * Dashboard ยอดคงเหลือติดลบ — รวบรวมรายการที่ balance_qty < 0
+     * (ส่วนใหญ่เกิดจากการย้ายข้อมูลใบจ่ายจาก V1 ผ่าน TransferToV2 เมื่อ snapshot ไม่ครบ)
+     * แสดงพร้อมปุ่มลัดไปสร้างใบ ADJUST เพื่อเคลียร์ยอด
+     */
+    public function actionNegativeBalance()
+    {
+        $rows = (new Query())
+            ->select([
+                'sb.id',
+                'sb.item_code',
+                'sb.warehouse_id',
+                'sb.lot_number',
+                'sb.balance_qty',
+                'sb.updated_at',
+                'item_name' => 'si.title',
+                'warehouse_name' => 'w.warehouse_name',
+            ])
+            ->from(['sb' => StockBalance::tableName()])
+            ->leftJoin(
+                ['si' => StockItem::tableName()],
+                'si.code = sb.item_code AND si.name = :asset_item',
+                [':asset_item' => 'asset_item']
+            )
+            ->leftJoin(['w' => Warehouse::tableName()], 'w.id = sb.warehouse_id')
+            ->where(['<', 'sb.balance_qty', 0])
+            ->orderBy(['sb.warehouse_id' => SORT_ASC, 'sb.item_code' => SORT_ASC])
+            ->all();
+
+        // จัดกลุ่มตามคลังเพื่อให้อ่านง่าย
+        $grouped = [];
+        $totalNegative = 0.0;
+        foreach ($rows as $r) {
+            $wid = (int) $r['warehouse_id'];
+            $grouped[$wid]['warehouse_name'] = $r['warehouse_name'] ?: ('#' . $wid);
+            $grouped[$wid]['rows'][] = $r;
+            $totalNegative += (float) $r['balance_qty'];
+        }
+
+        return $this->render('negative-balance', [
+            'grouped' => $grouped,
+            'totalCount' => count($rows),
+            'totalNegative' => $totalNegative,
+        ]);
+    }
+
+    /**
      * ล้างยอดคงเหลือในคลังเป็น 0 ทั้งหมด (สำหรับทดสอบระบบเท่านั้น)
      * ไม่ลบเอกสารรับ/จ่าย — แค่ set stock_balance.balance_qty = 0 ในคลังที่เลือก
      */

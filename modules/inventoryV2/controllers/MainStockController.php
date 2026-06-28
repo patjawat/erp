@@ -8,6 +8,7 @@ use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockMonthlyReport;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\components\InventoryService;
 use Yii;
@@ -161,7 +162,6 @@ class MainStockController extends \yii\web\Controller
             }
 
             $thaiYear = (int) ($this->request->get('year') ?: AppHelper::YearBudget());
-            $yearAD = $thaiYear - 543;
             $month = max(1, min(12, (int) $this->request->get('month', 0)));
             if ($month < 1) {
                 return ['status' => 'error', 'message' => 'ต้องระบุเดือน'];
@@ -175,9 +175,7 @@ class MainStockController extends \yii\web\Controller
                 return ['status' => 'error', 'message' => 'ต้องระบุประเภทพัสดุ'];
             }
 
-            $fromDate = sprintf('%04d-%02d-01 00:00:00', $yearAD, $month);
-            $daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $yearAD));
-            $toDate = sprintf('%04d-%02d-%02d 23:59:59', $yearAD, $month, $daysInMonth);
+            [$fromDate, $toDate] = $this->getFiscalMonthDateRange($thaiYear, $month);
 
             $categoryFilterSql = "COALESCE(cat.code, i.category_id, 'OTHER') = :category_code";
             $categoryFilterParams = [':category_code' => $categoryCode];
@@ -1322,17 +1320,45 @@ class MainStockController extends \yii\web\Controller
      * @param int|null $month 1-12 หรือ null = ทั้งปี
      * @param string $direction IN | OUT | NET
      */
+    protected function getFiscalMonthOrder()
+    {
+        return [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    }
+
+    protected function getFiscalYearDateRange($thaiYear)
+    {
+        $yearAD = (int) $thaiYear - 543;
+        return [
+            sprintf('%04d-10-01 00:00:00', $yearAD - 1),
+            sprintf('%04d-09-30 23:59:59', $yearAD),
+        ];
+    }
+
+    protected function getFiscalMonthDateRange($thaiYear, $month)
+    {
+        $yearAD = (int) $thaiYear - 543;
+        $month = max(1, min(12, (int) $month));
+        $monthYearAD = $month >= 10 ? $yearAD - 1 : $yearAD;
+        $fromDate = sprintf('%04d-%02d-01 00:00:00', $monthYearAD, $month);
+        $lastDay = (int) date('t', strtotime($fromDate));
+        return [
+            $fromDate,
+            sprintf('%04d-%02d-%02d 23:59:59', $monthYearAD, $month, $lastDay),
+        ];
+    }
+
     protected function getMovementChartData($warehouseId, array $mainWarehouseIds, $thaiYear, $month = null, $direction = 'IN')
     {
-        $yearAD = $thaiYear - 543;
         $monthLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        $monthOrder = $this->getFiscalMonthOrder();
+        $fiscalMonthLabels = array_map(fn($m) => $monthLabels[$m - 1], $monthOrder);
         $warehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
         if (empty($warehouseIds)) {
             $warehouseIds = [-1];
         }
 
-        $fromDate = sprintf('%04d-01-01 00:00:00', $yearAD);
-        $toDate = sprintf('%04d-12-31 23:59:59', $yearAD);
+        [$fromDate, $toDate] = $this->getFiscalYearDateRange($thaiYear);
+        $yearAD = (int) $thaiYear - 543;
 
         $needIn = ($direction === 'IN' || $direction === 'NET');
         $needOut = ($direction === 'OUT' || $direction === 'NET');
@@ -1360,86 +1386,51 @@ class MainStockController extends \yii\web\Controller
             }
         };
 
-        // IN: qty * sd.unit_price
-        if ($needIn) {
-            $inQuery = (new Query())
-                ->select([
-                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
-                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
-                    'm' => new Expression('MONTH(so.order_date)'),
-                    'value' => new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'),
-                ])
-                ->from(['sd' => StockDetail::tableName()])
-                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
-                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
-                ->where(['so.order_type' => 'IN'])
-                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
-                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
-                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
-                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+        // กำหนดว่าเดือนใดบ้างที่ "ปิดแล้ว" (มี snapshot ใน stock_monthly_report สำหรับ warehouse + fiscal year)
+        // closed[month_1-12] = true ถ้าทุก warehouse ที่เลือกถูกปิดเดือนนี้แล้ว
+        $closedMonths = $this->getClosedMonthsInFiscalYear($warehouseIds, $thaiYear);
 
-            foreach ($inQuery->all() as $r) {
-                $code = (string) $r['category_code'];
-                $m = (int) $r['m'];
-                if ($m < 1 || $m > 12) continue;
-                $ensureBucket($code);
-                if (!isset($catIndex[$code])) {
-                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
-                }
-                $v = (float) $r['value'];
-                $bucket[$code][$m] += ($direction === 'NET') ? $v : $v;
+        // อ่านข้อมูลจาก snapshot สำหรับเดือนที่ปิดแล้ว (รวม ADJUST แล้ว)
+        $this->fillBucketFromSnapshot(
+            $bucket,
+            $catIndex,
+            $ensureBucket,
+            $otherColor,
+            $warehouseIds,
+            $thaiYear,
+            $closedMonths,
+            $direction,
+            $needIn,
+            $needOut
+        );
+
+        // เดือนที่ยังไม่ปิด — ใช้ real-time จาก stock_order/stock_detail
+        // สร้าง list ของเดือนเปิด (calendar month_1-12) เพื่อ filter NOT IN ในระดับ SQL
+        $openCalendarMonths = [];
+        foreach ($monthOrder as $cm) {
+            if (empty($closedMonths[$cm])) {
+                $openCalendarMonths[] = $cm;
             }
         }
 
-        // OUT: qty * IN lot unit_price (ตาม lot_number) — ตรรกะเดียวกับ close-month
-        if ($needOut) {
-            $latestInPrice = (new Query())
-                ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
-                ->from(['sd_in' => StockDetail::tableName()])
-                ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
-                ->innerJoin(
-                    ['latest' => (new Query())
-                        ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
-                        ->from(['sd_l' => StockDetail::tableName()])
-                        ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
-                        ->where(['so_l.order_type' => 'IN'])
-                        ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
-                        ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
-                    'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
-                );
-
-            $outQuery = (new Query())
-                ->select([
-                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
-                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
-                    'm' => new Expression('MONTH(so.order_date)'),
-                    'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
-                ])
-                ->from(['sd' => StockDetail::tableName()])
-                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
-                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
-                ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
-                ->where(['so.order_type' => 'OUT'])
-                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
-                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
-                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
-                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
-
-            foreach ($outQuery->all() as $r) {
-                $code = (string) $r['category_code'];
-                $m = (int) $r['m'];
-                if ($m < 1 || $m > 12) continue;
-                $ensureBucket($code);
-                if (!isset($catIndex[$code])) {
-                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
-                }
-                $v = (float) $r['value'];
-                // NET = IN - OUT; subtract here (IN was added positive above)
-                $bucket[$code][$m] += ($direction === 'NET') ? -$v : $v;
-            }
+        if (!empty($openCalendarMonths)) {
+            $this->fillBucketRealtime(
+                $bucket,
+                $catIndex,
+                $ensureBucket,
+                $otherColor,
+                $warehouseIds,
+                $fromDate,
+                $toDate,
+                $openCalendarMonths,
+                $direction,
+                $needIn,
+                $needOut
+            );
         }
+
+        // is_closed flag ต่อเดือนตามลำดับ fiscal (12 ค่า)
+        $closedFlags = array_map(fn($m) => !empty($closedMonths[$m]), $monthOrder);
 
         // ถ้าโหมดรายเดือน — กรองเหลือเฉพาะเดือนนั้น (สำหรับ totals)
         $series = [];
@@ -1448,7 +1439,7 @@ class MainStockController extends \yii\web\Controller
 
         foreach ($bucket as $code => $monthlyData) {
             $info = $catIndex[$code] ?? ['title' => $code, 'color' => $otherColor];
-            $data12 = array_values($monthlyData);  // index 0..11 = ม.ค...ธ.ค.
+            $data12 = array_map(fn($m) => $monthlyData[$m] ?? 0.0, $monthOrder);
             $totalForPeriod = ($month === null)
                 ? array_sum($data12)
                 : ($monthlyData[$month] ?? 0);
@@ -1491,12 +1482,295 @@ class MainStockController extends \yii\web\Controller
             'year' => (int) $thaiYear,
             'month' => $month,
             'direction' => $direction,
-            'months' => $monthLabels,
+            'monthOrder' => $monthOrder,
+            'months' => $fiscalMonthLabels,
+            'closed_flags' => $closedFlags,
             'series' => $series,
             'totals' => $totalsByCategory,
             'total' => round($grandTotal, 2),
             'is_empty' => empty($series),
         ];
+    }
+
+    /**
+     * คืน map [calendar_month_1-12 => true] ของเดือนที่ "ปิดแล้ว"
+     * เดือนจะถูกนับว่าปิดเมื่อมีแถวใน stock_monthly_report สำหรับ ทุก warehouse ที่เลือก (ครบทุกคลัง)
+     */
+    protected function getClosedMonthsInFiscalYear(array $warehouseIds, $thaiYear)
+    {
+        $yearAD = (int) $thaiYear - 543;
+        // fiscal year: Oct (yearAD-1) → Sep yearAD
+        $rows = (new Query())
+            ->select([
+                'report_year' => 'smr.report_year',
+                'report_month' => 'smr.report_month',
+                'warehouses' => new Expression('COUNT(DISTINCT smr.warehouse_id)'),
+            ])
+            ->from(['smr' => StockMonthlyReport::tableName()])
+            ->where(['smr.warehouse_id' => $warehouseIds])
+            ->andWhere(['or',
+                ['and', ['smr.report_year' => $yearAD - 1], ['>=', 'smr.report_month', 10]],
+                ['and', ['smr.report_year' => $yearAD], ['<=', 'smr.report_month', 9]],
+            ])
+            ->groupBy(['smr.report_year', 'smr.report_month'])
+            ->all();
+
+        $expectedWarehouseCount = count(array_unique($warehouseIds));
+        $closed = [];
+        foreach ($rows as $r) {
+            if ((int) $r['warehouses'] >= $expectedWarehouseCount) {
+                $closed[(int) $r['report_month']] = true;
+            }
+        }
+        return $closed;
+    }
+
+    protected function fillBucketFromSnapshot(
+        array &$bucket,
+        array &$catIndex,
+        callable $ensureBucket,
+        string $otherColor,
+        array $warehouseIds,
+        $thaiYear,
+        array $closedMonths,
+        string $direction,
+        bool $needIn,
+        bool $needOut
+    ) {
+        if (empty($closedMonths)) {
+            return;
+        }
+        $yearAD = (int) $thaiYear - 543;
+
+        // ค่าแสดงต่อเดือนจาก snapshot:
+        //   IN  = in_value + adjust_in_value
+        //   OUT = total_out_value + adjust_out_value
+        //   NET = IN - OUT
+        $select = [
+            'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+            'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+            'm' => 'smr.report_month',
+            'in_val' => new Expression('SUM(COALESCE(smr.in_value, 0) + COALESCE(smr.adjust_in_value, 0))'),
+            'out_val' => new Expression('SUM(COALESCE(smr.total_out_value, 0) + COALESCE(smr.adjust_out_value, 0))'),
+        ];
+
+        $rows = (new Query())
+            ->select($select)
+            ->from(['smr' => StockMonthlyReport::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = smr.item_code')
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->where(['smr.warehouse_id' => $warehouseIds])
+            ->andWhere(['smr.report_month' => array_keys($closedMonths)])
+            ->andWhere(['or',
+                ['and', ['smr.report_year' => $yearAD - 1], ['>=', 'smr.report_month', 10]],
+                ['and', ['smr.report_year' => $yearAD], ['<=', 'smr.report_month', 9]],
+            ])
+            ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), 'smr.report_month'])
+            ->all();
+
+        foreach ($rows as $r) {
+            $code = (string) $r['category_code'];
+            $m = (int) $r['m'];
+            if ($m < 1 || $m > 12) continue;
+            $ensureBucket($code);
+            if (!isset($catIndex[$code])) {
+                $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+            }
+            $inVal = (float) ($r['in_val'] ?? 0);
+            $outVal = (float) ($r['out_val'] ?? 0);
+            if ($direction === 'IN') {
+                $bucket[$code][$m] += $inVal;
+            } elseif ($direction === 'OUT') {
+                $bucket[$code][$m] += $outVal;
+            } else { // NET
+                $bucket[$code][$m] += ($inVal - $outVal);
+            }
+        }
+    }
+
+    protected function fillBucketRealtime(
+        array &$bucket,
+        array &$catIndex,
+        callable $ensureBucket,
+        string $otherColor,
+        array $warehouseIds,
+        string $fromDate,
+        string $toDate,
+        array $openCalendarMonths,
+        string $direction,
+        bool $needIn,
+        bool $needOut
+    ) {
+        // IN: qty * sd.unit_price
+        if ($needIn) {
+            $inQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(sd.qty * COALESCE(sd.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->where(['so.order_type' => StockOrder::ORDER_TYPE_IN])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->andWhere(['in', new Expression('MONTH(so.order_date)'), $openCalendarMonths])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($inQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                $bucket[$code][$m] += $v;
+            }
+        }
+
+        // OUT: qty * IN lot unit_price (ตาม lot_number) — ตรรกะเดียวกับ close-month
+        if ($needOut) {
+            $latestInPrice = (new Query())
+                ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
+                ->from(['sd_in' => StockDetail::tableName()])
+                ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+                ->innerJoin(
+                    ['latest' => (new Query())
+                        ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
+                        ->from(['sd_l' => StockDetail::tableName()])
+                        ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                        ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
+                        ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
+                        ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
+                    'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
+                );
+
+            $outQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
+                ->where(['so.order_type' => StockOrder::ORDER_TYPE_OUT])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->andWhere(['in', new Expression('MONTH(so.order_date)'), $openCalendarMonths])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($outQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                $bucket[$code][$m] += ($direction === 'NET') ? -$v : $v;
+            }
+        }
+
+        // ADJUST: fold เข้า IN/OUT ตามเครื่องหมาย qty
+        //   qty > 0 → เพิ่มยอด (รวมเข้าฝั่ง IN)
+        //   qty < 0 → ลดยอด (รวมเข้าฝั่ง OUT ในรูปบวก, หรือลบใน NET)
+        // ใช้ราคา IN ล่าสุดของ item (cross-lot) เพราะ ADJUST lot_number = 'ADJUST' ไม่ตรงกับ lot จริง
+        $latestInPriceByItem = (new Query())
+            ->select(['sd_in.item_code', 'sd_in.unit_price'])
+            ->from(['sd_in' => StockDetail::tableName()])
+            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+            ->innerJoin(
+                ['latest_item' => (new Query())
+                    ->select(['sd_l.item_code', new Expression('MAX(sd_l.id) AS mid')])
+                    ->from(['sd_l' => StockDetail::tableName()])
+                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                    ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
+                    ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
+                    ->groupBy(['sd_l.item_code'])],
+                'latest_item.item_code = sd_in.item_code AND latest_item.mid = sd_in.id'
+            );
+
+        // ฝั่ง IN (qty บวก): ใช้ตอน direction = IN หรือ NET
+        if ($needIn) {
+            $adjInQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(sd.qty * COALESCE(in_item.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->leftJoin(['in_item' => $latestInPriceByItem], 'in_item.item_code = sd.item_code')
+                ->where(['so.order_type' => StockOrder::ORDER_TYPE_ADJUST])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->andWhere(['in', new Expression('MONTH(so.order_date)'), $openCalendarMonths])
+                ->andWhere(['>', 'sd.qty', 0])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($adjInQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                $bucket[$code][$m] += $v;
+            }
+        }
+
+        // ฝั่ง OUT (qty ลบ): เก็บมาเป็นค่าบวก
+        if ($needOut) {
+            $adjOutQuery = (new Query())
+                ->select([
+                    'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                    'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+                    'm' => new Expression('MONTH(so.order_date)'),
+                    'value' => new Expression('SUM(-sd.qty * COALESCE(in_item.unit_price, 0))'),
+                ])
+                ->from(['sd' => StockDetail::tableName()])
+                ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+                ->innerJoin(['i' => StockItem::tableName()], 'i.code = sd.item_code')
+                ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+                ->leftJoin(['in_item' => $latestInPriceByItem], 'in_item.item_code = sd.item_code')
+                ->where(['so.order_type' => StockOrder::ORDER_TYPE_ADJUST])
+                ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['so.main_warehouse_id' => $warehouseIds])
+                ->andWhere(['between', 'so.order_date', $fromDate, $toDate])
+                ->andWhere(['in', new Expression('MONTH(so.order_date)'), $openCalendarMonths])
+                ->andWhere(['<', 'sd.qty', 0])
+                ->groupBy([new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"), new Expression('MONTH(so.order_date)')]);
+
+            foreach ($adjOutQuery->all() as $r) {
+                $code = (string) $r['category_code'];
+                $m = (int) $r['m'];
+                if ($m < 1 || $m > 12) continue;
+                $ensureBucket($code);
+                if (!isset($catIndex[$code])) {
+                    $catIndex[$code] = ['title' => (string) $r['category_title'], 'color' => $otherColor];
+                }
+                $v = (float) $r['value'];
+                $bucket[$code][$m] += ($direction === 'NET') ? -$v : $v;
+            }
+        }
     }
     //     public function actionReceive()
     // {

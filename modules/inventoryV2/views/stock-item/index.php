@@ -208,11 +208,6 @@ AND group_id = 'MATER';
                                                 <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
                                                 <h5 class="text-muted mb-2">ไม่พบข้อมูลพัสดุ</h5>
                                                 <p class="text-muted mb-4">ไม่พบรายการที่ตรงกับการค้นหาของคุณ</p>
-                                                <?= Html::a(
-                                                    '<i class="fa-solid fa-circle-plus me-2"></i> สร้างพัสดุใหม่',
-                                                    ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'],
-                                                    ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]
-                                                ) ?>
                                             </div>
                                         </td>
                                     </tr>

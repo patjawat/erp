@@ -45,6 +45,24 @@ class StockOutController extends Controller
     }
 
     /**
+     * @inheritDoc
+     * Big-bang freeze: ห้ามทำงานที่เปลี่ยน state ในระบบ V1
+     */
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+        $writeActions = ['create', 'update', 'delete', 'checkout', 'confirm-order', 'cancel-order', 'save', 'submit'];
+        if (\app\modules\inventory\Module::isFrozen() && in_array($action->id, $writeActions, true)) {
+            Yii::$app->session->setFlash('error', 'ระบบ Inventory V1 ปิดการสร้าง/แก้ไขเอกสารแล้ว — กรุณาใช้ Inventory V2');
+            Yii::$app->response->redirect(['/inventory-v2'])->send();
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Lists all StockOut models.
      *
      * @return string

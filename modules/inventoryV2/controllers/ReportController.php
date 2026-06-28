@@ -393,13 +393,24 @@ class ReportController extends Controller
             'sd.lot_number',
         ];
 
+        // ADJUST: qty เก็บแบบ signed (StockAdjustController รับ "บวก=เพิ่ม, ลบ=ลด")
+        // TRANSFER: main = ต้นทาง (out), sub = ปลายทาง (in)
         $perspective = function ($row) use ($warehouseId) {
+            $type   = $row['order_type'];
             $isMain = (int) $row['main_warehouse_id'] === $warehouseId;
-            $isSub = (int) ($row['sub_warehouse_id'] ?? 0) === $warehouseId;
-            if ($row['order_type'] === 'IN' && $isMain) return 'in';
-            if ($row['order_type'] === 'OUT' && $isSub && !$isMain) return 'in';
-            if ($row['order_type'] === 'OUT' && $isMain) return 'out';
-            if ($row['order_type'] === 'IN' && $isSub && !$isMain) return 'out';
+            $isSub  = (int) ($row['sub_warehouse_id'] ?? 0) === $warehouseId;
+
+            if ($type === 'ADJUST') {
+                return ((float) $row['qty']) >= 0 ? 'in' : 'out';
+            }
+            if ($type === 'TRANSFER') {
+                if ($isMain && !$isSub) return 'out';
+                if ($isSub && !$isMain) return 'in';
+            }
+            if ($type === 'IN' && $isMain) return 'in';
+            if ($type === 'OUT' && $isMain) return 'out';
+            if ($type === 'OUT' && $isSub && !$isMain) return 'in';
+            if ($type === 'IN' && $isSub && !$isMain) return 'out';
             return 'out';
         };
 
@@ -420,7 +431,7 @@ class ReportController extends Controller
         $qtyBF = 0.0;
         $valueBF = 0.0;
         foreach ($bfRows as $r) {
-            $q = (float) $r['qty'];
+            $q = abs((float) $r['qty']);   // ADJUST อาจมี qty < 0 — ใช้ค่าสัมบูรณ์
             $p = (float) $r['unit_price'];
             if ($perspective($r) === 'in') {
                 $qtyBF += $q;
@@ -465,7 +476,7 @@ class ReportController extends Controller
         $transactions = [];
 
         foreach ($txRows as $r) {
-            $q = (float) $r['qty'];
+            $q = abs((float) $r['qty']);   // ADJUST อาจมี qty < 0 — ใช้ค่าสัมบูรณ์
             $p = (float) $r['unit_price'];
             $direction = $perspective($r);
             $delta = $q * $p;
@@ -947,6 +958,10 @@ class ReportController extends Controller
                 'SUM(r.opening_value) AS opening_value',
                 'SUM(r.in_qty) AS in_qty',
                 'SUM(r.in_value) AS in_value',
+                'SUM(r.adjust_in_qty) AS adjust_in_qty',
+                'SUM(r.adjust_in_value) AS adjust_in_value',
+                'SUM(r.adjust_out_qty) AS adjust_out_qty',
+                'SUM(r.adjust_out_value) AS adjust_out_value',
                 'SUM(r.out_sub_qty) AS out_sub_qty',
                 'SUM(r.out_sub_value) AS out_sub_value',
                 'SUM(r.out_hosp_qty) AS out_hosp_qty',
@@ -989,6 +1004,10 @@ class ReportController extends Controller
                 'opening_value' => (float) $r['opening_value'],
                 'in_qty' => (float) $r['in_qty'],
                 'in_value' => (float) $r['in_value'],
+                'adjust_in_qty' => (float) ($r['adjust_in_qty'] ?? 0),
+                'adjust_in_value' => (float) ($r['adjust_in_value'] ?? 0),
+                'adjust_out_qty' => (float) ($r['adjust_out_qty'] ?? 0),
+                'adjust_out_value' => (float) ($r['adjust_out_value'] ?? 0),
                 'out_sub_qty' => (float) $r['out_sub_qty'],
                 'out_sub_value' => (float) $r['out_sub_value'],
                 'out_hosp_qty' => (float) $r['out_hosp_qty'],
@@ -1036,7 +1055,7 @@ class ReportController extends Controller
 
         $totalCount = 0;
         foreach ($warehouseIds as $warehouseId) {
-            $result = $this->closeMonthForWarehouse((int) $warehouseId, $year, $month);
+            $result = self::closeMonthForWarehouse((int) $warehouseId, $year, $month);
             $totalCount += $result['count'];
         }
 
@@ -1045,8 +1064,9 @@ class ReportController extends Controller
 
     /**
      * ปิดเดือนสำหรับคลังเดียว
+     * เปิดเป็น public static เพื่อให้ console command (backfill) เรียกใช้ได้นอก request context
      */
-    protected function closeMonthForWarehouse($warehouseId, $year, $month)
+    public static function closeMonthForWarehouse($warehouseId, $year, $month)
     {
         $subIds = self::getDisburseSubWarehouseIds();
         $dateStart = sprintf('%04d-%02d-01 00:00:00', $year, $month);
@@ -1150,6 +1170,61 @@ class ReportController extends Controller
         }
         $itemCodes = array_unique($itemCodes);
 
+        // ADJUST: ราคาทุนใช้ IN ล่าสุดของ item (cross-lot) เพราะ lot_number ของ ADJUST = 'ADJUST'
+        // ไม่ตรงกับ lot จริง — fallback ระดับ item เพื่อให้ได้ราคาประมาณการที่สมเหตุสมผล
+        $latestInPriceByItem = (new Query())
+            ->select(['sd_in.item_code', 'sd_in.unit_price'])
+            ->from(['sd_in' => StockDetail::tableName()])
+            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
+            ->innerJoin(
+                ['latest_item' => (new Query())
+                    ->select(['sd_l.item_code', new Expression('MAX(sd_l.id) AS mid')])
+                    ->from(['sd_l' => StockDetail::tableName()])
+                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
+                    ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
+                    ->andWhere(['so_l.main_warehouse_id' => $warehouseId])
+                    ->groupBy(['sd_l.item_code'])],
+                'latest_item.item_code = sd_in.item_code AND latest_item.mid = sd_in.id'
+            );
+
+        $adjustRows = (new Query())
+            ->select([
+                'item_code' => 'sd.item_code',
+                'qty' => 'sd.qty',
+                'unit_price' => new Expression('COALESCE(in_item.unit_price, 0)'),
+            ])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->leftJoin(['in_item' => $latestInPriceByItem], 'in_item.item_code = sd.item_code')
+            ->where(['so.order_type' => StockOrder::ORDER_TYPE_ADJUST])
+            ->andWhere(['so.main_warehouse_id' => $warehouseId])
+            ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->all();
+
+        $adjustIn = [];
+        $adjustOut = [];
+        foreach ($adjustRows as $row) {
+            $code = $row['item_code'];
+            $q = (float) $row['qty'];
+            $price = (float) $row['unit_price'];
+            if (!isset($adjustIn[$code])) {
+                $adjustIn[$code] = ['qty' => 0, 'value' => 0];
+            }
+            if (!isset($adjustOut[$code])) {
+                $adjustOut[$code] = ['qty' => 0, 'value' => 0];
+            }
+            if ($q >= 0) {
+                $adjustIn[$code]['qty'] += $q;
+                $adjustIn[$code]['value'] += $q * $price;
+            } else {
+                $adjustOut[$code]['qty'] += -$q;
+                $adjustOut[$code]['value'] += -$q * $price;
+            }
+            $itemCodes[] = $code;
+        }
+        $itemCodes = array_unique($itemCodes);
+
         $inMap = [];
         foreach ($inRows as $row) {
             $inMap[$row['item_code']] = [
@@ -1166,7 +1241,7 @@ class ReportController extends Controller
 
         $items = StockItem::find()->where(['item_code' => $itemCodes])->indexBy('item_code')->all();
         $createdAt = time();
-        $createdBy = Yii::$app->user->id;
+        $createdBy = Yii::$app->has('user', true) ? (Yii::$app->user->id ?? null) : null;
 
         foreach ($itemCodes as $itemCode) {
             $prev = $prevClosing[$itemCode] ?? null;
@@ -1186,8 +1261,15 @@ class ReportController extends Controller
             $totalOutQty = $outSubQty + $outHospQty;
             $totalOutValue = $outSubValue + $outHospValue;
 
-            $closingQty = $openingQty + $inQty - $totalOutQty;
-            $closingValue = $openingValue + $inValue - $totalOutValue;
+            $adjIn = $adjustIn[$itemCode] ?? ['qty' => 0, 'value' => 0];
+            $adjOut = $adjustOut[$itemCode] ?? ['qty' => 0, 'value' => 0];
+            $adjustInQty = $adjIn['qty'];
+            $adjustInValue = $adjIn['value'];
+            $adjustOutQty = $adjOut['qty'];
+            $adjustOutValue = $adjOut['value'];
+
+            $closingQty = $openingQty + $inQty + $adjustInQty - $totalOutQty - $adjustOutQty;
+            $closingValue = $openingValue + $inValue + $adjustInValue - $totalOutValue - $adjustOutValue;
 
             $item = $items[$itemCode] ?? null;
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
@@ -1202,6 +1284,10 @@ class ReportController extends Controller
             $r->opening_value = $openingValue;
             $r->in_qty = $inQty;
             $r->in_value = $inValue;
+            $r->adjust_in_qty = $adjustInQty;
+            $r->adjust_in_value = $adjustInValue;
+            $r->adjust_out_qty = $adjustOutQty;
+            $r->adjust_out_value = $adjustOutValue;
             $r->out_sub_qty = $outSubQty;
             $r->out_sub_value = $outSubValue;
             $r->out_hosp_qty = $outHospQty;
@@ -1235,32 +1321,38 @@ class ReportController extends Controller
 
         $title = 'สรุปรายงานวัสดุคงคลัง  เดือน ' . $month . '/' . ($year + 543);
         $sheet->setCellValue('A1', $title);
-        $sheet->mergeCells('A1:I1');
+        $sheet->mergeCells('A1:K1');
         $sheet->getStyle('A1')->getFont()->setBold(true);
 
-        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.aq (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
+        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'ปรับเพิ่ม (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.aq (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'ปรับลด (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
         $col = 'A';
         foreach ($headers as $h) {
             $sheet->setCellValue($col . '3', $h);
             $col++;
         }
-        $sheet->getStyle('A3:I3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:I3')->getFill()
+        $sheet->getStyle('A3:K3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:K3')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('E0E0E0');
 
         $rowNum = 4;
         foreach ($rows as $i => $r) {
+            $adjustIn = (float) ($r['adjust_in_value'] ?? 0);
+            $adjustOut = (float) ($r['adjust_out_value'] ?? 0);
+            $totalAvail = $r['opening_value'] + $r['in_value'] + $adjustIn;
+            $totalOutWithAdjust = $r['total_out_value'] + $adjustOut;
+
             $sheet->setCellValue('A' . $rowNum, $i + 1);
             $sheet->setCellValue('B' . $rowNum, $r['category_label']);
-            $totalAvail = $r['opening_value'] + $r['in_value'];
             $sheet->setCellValue('C' . $rowNum, $r['opening_value']);
             $sheet->setCellValue('D' . $rowNum, $r['in_value']);
-            $sheet->setCellValue('E' . $rowNum, $totalAvail);
-            $sheet->setCellValue('F' . $rowNum, $r['out_sub_value']);
-            $sheet->setCellValue('G' . $rowNum, $r['out_hosp_value']);
-            $sheet->setCellValue('H' . $rowNum, $r['total_out_value']);
-            $sheet->setCellValue('I' . $rowNum, $r['closing_value']);
+            $sheet->setCellValue('E' . $rowNum, $adjustIn);
+            $sheet->setCellValue('F' . $rowNum, $totalAvail);
+            $sheet->setCellValue('G' . $rowNum, $r['out_sub_value']);
+            $sheet->setCellValue('H' . $rowNum, $r['out_hosp_value']);
+            $sheet->setCellValue('I' . $rowNum, $adjustOut);
+            $sheet->setCellValue('J' . $rowNum, $totalOutWithAdjust);
+            $sheet->setCellValue('K' . $rowNum, $r['closing_value']);
             $rowNum++;
         }
 
@@ -1268,8 +1360,10 @@ class ReportController extends Controller
             $tot = [
                 'opening' => array_sum(array_column($rows, 'opening_value')),
                 'in' => array_sum(array_column($rows, 'in_value')),
+                'adjust_in' => array_sum(array_column($rows, 'adjust_in_value')),
                 'out_sub' => array_sum(array_column($rows, 'out_sub_value')),
                 'out_hosp' => array_sum(array_column($rows, 'out_hosp_value')),
+                'adjust_out' => array_sum(array_column($rows, 'adjust_out_value')),
                 'total_out' => array_sum(array_column($rows, 'total_out_value')),
                 'closing' => array_sum(array_column($rows, 'closing_value')),
             ];
@@ -1277,18 +1371,20 @@ class ReportController extends Controller
             $sheet->setCellValue('B' . $rowNum, 'รวม');
             $sheet->setCellValue('C' . $rowNum, $tot['opening']);
             $sheet->setCellValue('D' . $rowNum, $tot['in']);
-            $sheet->setCellValue('E' . $rowNum, $tot['opening'] + $tot['in']);
-            $sheet->setCellValue('F' . $rowNum, $tot['out_sub']);
-            $sheet->setCellValue('G' . $rowNum, $tot['out_hosp']);
-            $sheet->setCellValue('H' . $rowNum, $tot['total_out']);
-            $sheet->setCellValue('I' . $rowNum, $tot['closing']);
-            $sheet->getStyle('A' . $rowNum . ':I' . $rowNum)->getFont()->setBold(true);
-            $sheet->getStyle('B' . $rowNum . ':I' . $rowNum)->getFill()
+            $sheet->setCellValue('E' . $rowNum, $tot['adjust_in']);
+            $sheet->setCellValue('F' . $rowNum, $tot['opening'] + $tot['in'] + $tot['adjust_in']);
+            $sheet->setCellValue('G' . $rowNum, $tot['out_sub']);
+            $sheet->setCellValue('H' . $rowNum, $tot['out_hosp']);
+            $sheet->setCellValue('I' . $rowNum, $tot['adjust_out']);
+            $sheet->setCellValue('J' . $rowNum, $tot['total_out'] + $tot['adjust_out']);
+            $sheet->setCellValue('K' . $rowNum, $tot['closing']);
+            $sheet->getStyle('A' . $rowNum . ':K' . $rowNum)->getFont()->setBold(true);
+            $sheet->getStyle('B' . $rowNum . ':K' . $rowNum)->getFill()
                 ->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setRGB('FFF59D');
         }
 
-        foreach (range('C', 'I') as $c) {
+        foreach (range('C', 'K') as $c) {
             $sheet->getStyle($c . '4:' . $c . ($rowNum))->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
@@ -1509,6 +1605,7 @@ class ReportController extends Controller
             'categories' => $categories,
             'yearOptions' => $yearOptions,
             'rows' => $data['rows'],
+            'monthOrder' => $data['monthOrder'],
             'monthTotals' => $data['monthTotals'],
             'grandQty' => $data['grandQty'],
             'grandValue' => $data['grandValue'],
@@ -1519,11 +1616,37 @@ class ReportController extends Controller
      * Pivot data รายเดือน — qty + value ต่อ item × เดือน
      * @return array{rows: array, monthTotals: array, grandQty: float, grandValue: float}
      */
+    protected function getFiscalMonthOrder()
+    {
+        return [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    }
+
+    protected function getFiscalYearDateRange($thaiYear)
+    {
+        $yearAD = (int) $thaiYear - 543;
+        return [
+            sprintf('%04d-10-01 00:00:00', $yearAD - 1),
+            sprintf('%04d-09-30 23:59:59', $yearAD),
+        ];
+    }
+
+    protected function getFiscalMonthDateRange($thaiYear, $month)
+    {
+        $yearAD = (int) $thaiYear - 543;
+        $month = max(1, min(12, (int) $month));
+        $monthYearAD = $month >= 10 ? $yearAD - 1 : $yearAD;
+        $fromDate = sprintf('%04d-%02d-01 00:00:00', $monthYearAD, $month);
+        $lastDay = (int) date('t', strtotime($fromDate));
+        return [
+            $fromDate,
+            sprintf('%04d-%02d-%02d 23:59:59', $monthYearAD, $month, $lastDay),
+        ];
+    }
+
     protected function getDisbursementByMonthData($thaiYear, $mainWarehouseId, $subWarehouseId, $categoryId, $search)
     {
-        $yearAD = $thaiYear - 543;
-        $fromDate = sprintf('%04d-01-01 00:00:00', $yearAD);
-        $toDate = sprintf('%04d-12-31 23:59:59', $yearAD);
+        [$fromDate, $toDate] = $this->getFiscalYearDateRange($thaiYear);
+        $monthOrder = $this->getFiscalMonthOrder();
 
         $mainIds = $mainWarehouseId
             ? [$mainWarehouseId]
@@ -1556,6 +1679,7 @@ class ReportController extends Controller
                 'category_code' => new Expression("MAX(COALESCE(cat.code, i.category_id, 'OTHER'))"),
                 'category_title' => new Expression("MAX(COALESCE(cat.title, i.category_id, 'อื่นๆ'))"),
                 'm' => new Expression('MONTH(so.order_date)'),
+                'fiscal_month' => new Expression('CASE WHEN MONTH(so.order_date) >= 10 THEN MONTH(so.order_date) - 9 ELSE MONTH(so.order_date) + 3 END'),
                 'qty' => new Expression('SUM(sd.qty)'),
                 'value' => new Expression('SUM(sd.qty * COALESCE(in_lot.unit_price, sd.unit_price, 0))'),
             ])
@@ -1584,7 +1708,8 @@ class ReportController extends Controller
             ]);
         }
 
-        $query->groupBy(['sd.item_code', new Expression('MONTH(so.order_date)')]);
+        $query->groupBy(['sd.item_code', new Expression('MONTH(so.order_date)')])
+            ->orderBy(new Expression('CASE WHEN MONTH(so.order_date) >= 10 THEN MONTH(so.order_date) - 9 ELSE MONTH(so.order_date) + 3 END ASC, sd.item_code ASC'));
 
         $rawRows = $query->all();
 
@@ -1646,6 +1771,7 @@ class ReportController extends Controller
 
         return [
             'rows' => array_values($items),
+            'monthOrder' => $monthOrder,
             'monthTotals' => $monthTotals,
             'grandQty' => $grandQty,
             'grandValue' => $grandValue,
@@ -1661,10 +1787,7 @@ class ReportController extends Controller
 
         $thaiYear = (int) $year;
         $month = max(1, min(12, (int) $month));
-        $yearAD = $thaiYear - 543;
-        $fromDate = sprintf('%04d-%02d-01 00:00:00', $yearAD, $month);
-        $lastDay = (int) date('t', strtotime($fromDate));
-        $toDate = sprintf('%04d-%02d-%02d 23:59:59', $yearAD, $month, $lastDay);
+        [$fromDate, $toDate] = $this->getFiscalMonthDateRange($thaiYear, $month);
 
         $mainIds = ($main_warehouse_id !== null && $main_warehouse_id !== '')
             ? [(int) $main_warehouse_id]
@@ -1770,6 +1893,7 @@ class ReportController extends Controller
         $data = $this->getDisbursementByMonthData($thaiYear, $mainWarehouseId, $subWarehouseId, $categoryId, $search);
         $rows = $data['rows'];
         $monthTotals = $data['monthTotals'];
+        $monthOrder = $data['monthOrder'];
         $monthLabels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
         $spreadsheet = new Spreadsheet();
@@ -1788,9 +1912,9 @@ class ReportController extends Controller
         $sheet->setCellValue('E3', 'หน่วย'); $sheet->mergeCells('E3:E4');
 
         $startCol = 6; // F
-        for ($m = 1; $m <= 12; $m++) {
-            $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
-            $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+        foreach ($monthOrder as $idx => $m) {
+            $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2);
+            $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2 + 1);
             $sheet->setCellValue($c1 . '3', $monthLabels[$m - 1]);
             $sheet->mergeCells($c1 . '3:' . $c2 . '3');
             $sheet->setCellValue($c1 . '4', 'จำนวน');
@@ -1814,9 +1938,9 @@ class ReportController extends Controller
             $sheet->setCellValue('C' . $rowNum, $r['item_name']);
             $sheet->setCellValue('D' . $rowNum, $r['category_title']);
             $sheet->setCellValue('E' . $rowNum, $r['unit_name']);
-            for ($m = 1; $m <= 12; $m++) {
-                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
-                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+            foreach ($monthOrder as $idx => $m) {
+                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2);
+                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2 + 1);
                 $sheet->setCellValue($c1 . $rowNum, $r['monthly'][$m]['qty']);
                 $sheet->setCellValue($c2 . $rowNum, $r['monthly'][$m]['value']);
             }
@@ -1829,9 +1953,9 @@ class ReportController extends Controller
         if (!empty($rows)) {
             $sheet->setCellValue('A' . $rowNum, '');
             $sheet->setCellValue('B' . $rowNum, 'รวมทั้งหมด');
-            for ($m = 1; $m <= 12; $m++) {
-                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2);
-                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + ($m - 1) * 2 + 1);
+            foreach ($monthOrder as $idx => $m) {
+                $c1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2);
+                $c2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol + $idx * 2 + 1);
                 $sheet->setCellValue($c1 . $rowNum, $monthTotals[$m]['qty']);
                 $sheet->setCellValue($c2 . $rowNum, $monthTotals[$m]['value']);
             }

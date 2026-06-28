@@ -30,6 +30,8 @@ $revisions = $model->getApproverRevisions();
         </div>
     </div>
 
+    <?= $this->render('@app/modules/inventoryV2/views/_partials/_migrated_v1_panel', ['model' => $model]) ?>
+
     <div class="alert <?= $model->status === 'CANCELLED' ? 'alert-danger' : 'alert-info' ?>">
         <div class="row">
             <div class="col-md-4">

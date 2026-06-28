@@ -162,16 +162,6 @@ $mainWarehouses = $mainWarehouses ?? [];
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center flex-wrap">
                                     <?= Html::a('<i class="bi bi-search"></i> ดู', ['/inventory-v2/requisition/view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl'], 'title' => 'ดูรายละเอียด']) ?>
-                                    <?php if (in_array($model->status, ['DRAFT', 'PENDING'])): ?>
-                                        <?= Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['/inventory-v2/requisition/approve', 'id' => $model->id], [
-                                            'class' => 'btn btn-sm btn-success',
-                                            'title' => 'อนุมัติใบขอเบิก',
-                                            'data' => [
-                                                'confirm' => 'ยืนยันอนุมัติใบขอเบิกเลขที่ ' . $model->order_no . '? (ยังไม่ตัดสต็อก — คลังจะจ่ายที่เมนู "รายการจ่ายพัสดุ")',
-                                                'method' => 'post',
-                                            ],
-                                        ]) ?>
-                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

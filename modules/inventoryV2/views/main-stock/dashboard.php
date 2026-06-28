@@ -19,7 +19,7 @@ $stats = $stats ?? [
 ];
 $warehouses = $warehouses ?? [];
 $pendingRequisitions = $pendingRequisitions ?? [];
-$chartData = $chartData ?? ['mode' => 'year', 'year' => (int) date('Y') + 543, 'month' => null, 'direction' => 'IN', 'months' => [], 'series' => [], 'totals' => [], 'total' => 0, 'is_empty' => true];
+$chartData = $chartData ?? ['mode' => 'year', 'year' => (int) date('Y') + 543, 'month' => null, 'direction' => 'IN', 'monthOrder' => [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9], 'months' => [], 'series' => [], 'totals' => [], 'total' => 0, 'is_empty' => true];
 $defaultYear = $defaultYear ?? ((int) date('Y') + 543);
 $yearOptions = $yearOptions ?? [$defaultYear];
 $currentWarehouseId = $currentWarehouseId ?? null;
@@ -165,7 +165,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
 
                 <div class="movement-toolbar" role="toolbar" aria-label="ตัวกรองข้อมูลกราฟ">
                     <div class="movement-toolbar__field">
-                        <label class="movement-label" for="movementYear">ปี (พ.ศ.)</label>
+                        <label class="movement-label" for="movementYear">ปีงบประมาณ (พ.ศ.)</label>
                         <select id="movementYear" class="movement-select">
                             <?php foreach ($yearOptions as $y): ?>
                                 <option value="<?= (int)$y ?>" <?= (int)$y === (int)$defaultYear ? 'selected' : '' ?>><?= (int)$y ?></option>
@@ -199,11 +199,12 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                                 <?php
                                 $monthNamesTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
                                 $monthFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                                $monthOrder = $chartData['monthOrder'] ?? [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
                                 $currentMonth = (int) date('n');
-                                for ($m = 1; $m <= 12; $m++):
+                                foreach ($monthOrder as $m):
                                 ?>
                                     <option value="<?= $m ?>" <?= $m === $currentMonth ? 'selected' : '' ?>><?= $monthFull[$m - 1] ?></option>
-                                <?php endfor; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -237,6 +238,11 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                 <p class="movement-hint" id="movementHint">
                     <i class="bi bi-hand-index-thumb"></i>
                     <span>คลิกแท่งกราฟเพื่อดูรายการพัสดุของประเภทนั้น</span>
+                </p>
+
+                <p class="movement-source-note" id="movementSourceNote" hidden>
+                    <i class="bi bi-lock-fill"></i>
+                    <span id="movementSourceText"></span>
                 </p>
             </section>
         </div>
@@ -641,6 +647,17 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     line-height: 1.25;
 }
 .main-stock-dashboard .movement-hint i { color: var(--primary); font-size: 0.85rem; }
+
+/* ─── Source-of-truth note (snapshot vs realtime) ─── */
+.main-stock-dashboard .movement-source-note {
+    margin: 0;
+    padding: 0 1rem 0.7rem;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.72rem; color: var(--ink-3);
+    line-height: 1.25;
+}
+.main-stock-dashboard .movement-source-note i { color: var(--ink-3); font-size: 0.8rem; }
+.main-stock-dashboard .movement-source-note strong { color: var(--ink-1); font-weight: 600; }
 
 /* Chart bars feel clickable */
 .main-stock-dashboard #mainWarehouseChart .apexcharts-bar-series .apexcharts-bar-area { cursor: pointer; }
@@ -1301,12 +1318,24 @@ $(document).ready(function() {
             background: 'transparent',
             events: chartEvents
         };
+        var closedFlags = data.closed_flags || [];
         var commonTheme = {
             grid: { borderColor: 'rgba(15,23,42,0.06)', strokeDashArray: 4, padding: { left: 8, right: 8, top: 0, bottom: 0 } },
             dataLabels: { enabled: false },
             legend: { show: false },
             tooltip: {
                 theme: 'light',
+                x: {
+                    formatter: function(val, opts) {
+                        if (data.mode !== 'year') return val;
+                        var idx = (opts && typeof opts.dataPointIndex === 'number') ? opts.dataPointIndex : -1;
+                        var suffix = '';
+                        if (idx >= 0 && idx < closedFlags.length) {
+                            suffix = closedFlags[idx] ? ' · ปิดเดือนแล้ว' : ' · ยังไม่ปิด';
+                        }
+                        return val + suffix;
+                    }
+                },
                 y: { formatter: function(v) { return fmt(v) + ' บาท'; } },
                 style: { fontSize: '12px', fontFamily: 'inherit' }
             }
@@ -1337,7 +1366,9 @@ $(document).ready(function() {
         }
 
         // month mode → horizontal bar (single bucket per category)
-        var monthIdx = (data.month || 1) - 1;
+        var monthOrder = data.monthOrder || [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        var monthIdx = monthOrder.indexOf(data.month || 1);
+        if (monthIdx < 0) monthIdx = 0;
         var rows = (data.series || []).map(function(s) { return { name: s.name, value: (s.data || [])[monthIdx] || 0, color: s.color }; });
         rows.sort(function(a, b) { return Math.abs(b.value) - Math.abs(a.value); });
         return Object.assign({
@@ -1378,6 +1409,7 @@ $(document).ready(function() {
     function render(data) {
         lastChartData = data || lastChartData;
         updateHint();
+        updateSourceNote(data);
         if (!data || data.is_empty) {
             \$empty.prop('hidden', false);
             \$chart.attr('aria-busy', 'false');
@@ -1397,6 +1429,27 @@ $(document).ready(function() {
         }
         renderChips(data);
         \$grandTotal.text(fmt(data.total));
+    }
+
+    // ─── Source-of-truth note (snapshot vs realtime) ───
+    var \$sourceNote = $('#movementSourceNote');
+    var \$sourceText = $('#movementSourceText');
+    function updateSourceNote(data) {
+        if (!\$sourceNote.length) return;
+        var flags = (data && data.closed_flags) || [];
+        if (!flags.length) { \$sourceNote.prop('hidden', true); return; }
+        var closed = 0, open = 0;
+        flags.forEach(function(f) { f ? closed++ : open++; });
+        var msg = '';
+        if (closed > 0 && open === 0) {
+            msg = 'ทุกเดือนปิดงวดแล้ว — ยอดตรงกับรายงานที่ส่งบัญชี';
+        } else if (closed === 0 && open > 0) {
+            msg = 'ยังไม่ได้ปิดเดือน — แสดงเป็น real-time ที่ยังเปลี่ยนได้';
+        } else {
+            msg = closed + ' เดือนปิดงวดแล้ว (ตรงกับบัญชี) · ' + open + ' เดือนยังไม่ปิด (real-time)';
+        }
+        \$sourceText.text(msg);
+        \$sourceNote.prop('hidden', false);
     }
 
     // ─── Hint about click-to-drill ───
@@ -1549,10 +1602,11 @@ $(document).ready(function() {
         if (Math.abs(clickedVal) < 0.005) return;
 
         var monthLabels = data.months || [];
+        var monthOrder = data.monthOrder || [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         lastTriggerEl = (evt && evt.target) ? evt.target : null;
         openItemsModal({
             year: data.year,
-            month: monthIdx + 1,
+            month: monthOrder[monthIdx] || (monthIdx + 1),
             direction: state.direction,
             categoryCode: seriesEntry.code,
             categoryName: seriesEntry.name,

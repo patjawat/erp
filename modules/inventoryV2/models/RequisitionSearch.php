@@ -27,12 +27,14 @@ class RequisitionSearch extends StockOrder
     public $date_end;
     public $q_requester_emp_id;
     public $q_approver_emp_id;
+    /** @var string 'v1' = เฉพาะย้ายมาจาก V1, 'v2' = สร้างใน V2, '' = ทั้งหมด */
+    public $source_v1;
 
     public function rules()
     {
         return [
             [['main_warehouse_id', 'sub_warehouse_id', 'q_requester_emp_id', 'q_approver_emp_id'], 'integer'],
-            [['order_no', 'status', 'date_filter', 'date_start', 'date_end'], 'safe'],
+            [['order_no', 'status', 'date_filter', 'date_start', 'date_end', 'source_v1'], 'safe'],
         ];
     }
 
@@ -101,6 +103,17 @@ class RequisitionSearch extends StockOrder
             $query->andWhere(new Expression(
                 'JSON_EXTRACT(data_json, \'$.issue_approver.emp_id\') = :aid',
                 [':aid' => (int) $this->q_approver_emp_id]
+            ));
+        }
+
+        // แหล่งที่มาของเอกสาร: V1 ย้ายเข้ามา vs สร้างใน V2
+        if ($this->source_v1 === 'v1') {
+            $query->andWhere(new Expression(
+                'JSON_EXTRACT(data_json, \'$.migrated_from_v1.source_id\') IS NOT NULL'
+            ));
+        } elseif ($this->source_v1 === 'v2') {
+            $query->andWhere(new Expression(
+                'JSON_EXTRACT(data_json, \'$.migrated_from_v1.source_id\') IS NULL'
             ));
         }
 

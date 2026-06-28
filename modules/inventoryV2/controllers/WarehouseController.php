@@ -131,8 +131,12 @@ class WarehouseController extends Controller
             if ($model->load($this->request->post()) && $model->save(false)) {
                 return ['status' => 'success', 'container' => '#pjax-warehouse'];
             }
-        } else {
-            $model->loadDefaultValues();
+
+            return [
+                'status' => 'error',
+                'message' => 'ไม่สามารถบันทึกข้อมูลคลังได้',
+                'errors' => \yii\widgets\ActiveForm::validate($model),
+            ];
         }
 
         if ($this->request->isAjax) {

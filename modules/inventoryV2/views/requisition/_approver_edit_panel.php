@@ -5,8 +5,8 @@ use yii\helpers\Url;
 /** @var \app\modules\inventoryV2\models\StockOrder $model */
 /** @var bool $isCurrentUserApprover */
 
-$saveDraftUrl = Url::to(['save-draft', 'id' => $model->id]);
 $approveUrl = Url::to(['approve-with-edits', 'id' => $model->id]);
+$rejectUrl = Url::to(['cancel', 'id' => $model->id]);
 $getItemInWhUrl = Url::to(['/inventory-v2/stock-item/get-items-by-warehouse']);
 $mainWhId = (int) $model->main_warehouse_id;
 
@@ -77,8 +77,8 @@ $rowsJson = Html::encode(json_encode($rows, JSON_UNESCAPED_UNICODE));
         </div>
     </div>
     <div class="ae-actions">
-        <button type="button" class="btn btn-light btn-block" id="ae-save-draft">
-            <i class="bi bi-bookmark me-1"></i> บันทึก (ยังไม่อนุมัติ)
+        <button type="button" class="btn btn-outline-danger btn-block" id="ae-reject">
+            <i class="bi bi-x-circle me-1"></i> ไม่อนุมัติ
         </button>
         <button type="button" class="btn btn-primary btn-block btn-save" id="ae-save-approve">
             <span class="btn-save__label">
@@ -467,7 +467,7 @@ $script = <<<JS
     if (!panel) return;
     var tbody = document.getElementById('ae-tbody');
     var emptyEl = panel.querySelector('.ae-empty');
-    var saveDraftBtn = document.getElementById('ae-save-draft');
+    var rejectBtn = document.getElementById('ae-reject');
     var saveApproveBtn = document.getElementById('ae-save-approve');
     var addConfirmBtn = document.getElementById('ae-add-confirm');
     var addQtyInput = document.getElementById('ae-item-qty');
@@ -572,7 +572,6 @@ $script = <<<JS
     function updateSubmitState() {
         var anyInvalid = rowsState.some(function (r) { return !(r.qty > 0); });
         var hasAny = rowsState.length > 0;
-        saveDraftBtn.disabled = !hasAny || anyInvalid;
         saveApproveBtn.disabled = !hasAny || anyInvalid;
     }
 
@@ -798,8 +797,34 @@ $script = <<<JS
             });
     }
 
-    saveDraftBtn.addEventListener('click', function () {
-        submit('{$saveDraftUrl}', saveDraftBtn, false);
+    rejectBtn.addEventListener('click', function () {
+        Swal.fire({
+            title: 'ยืนยันไม่อนุมัติ?',
+            text: 'ใบขอเบิกนี้จะถูกยกเลิก ผู้ขอเบิกต้องสร้างใบใหม่หากต้องการเบิกอีกครั้ง',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ไม่อนุมัติ',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#dc3545',
+            reverseButtons: true,
+            customClass: { actions: 'ae-swal-actions' }
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{$rejectUrl}';
+            var csrfParam = document.querySelector('meta[name=csrf-param]');
+            var csrfToken = document.querySelector('meta[name=csrf-token]');
+            if (csrfParam && csrfToken) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = csrfParam.getAttribute('content');
+                input.value = csrfToken.getAttribute('content');
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+        });
     });
     saveApproveBtn.addEventListener('click', function () {
         Swal.fire({

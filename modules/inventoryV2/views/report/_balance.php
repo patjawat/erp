@@ -317,14 +317,35 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
             </div>
 
             <div class="modal-body">
+                <?php
+                // default: ย้อนหลัง 1 ปี → วันนี้ (รูปแบบไทย d/m/Y พ.ศ.)
+                $defaultStart = date('d/m/', strtotime('-1 year')) . (date('Y', strtotime('-1 year')) + 543);
+                $defaultEnd   = date('d/m/') . (date('Y') + 543);
+                ?>
                 <form id="historyFilterForm" class="bal-history-filter">
                     <label class="bal-history-filter__field">
                         <span class="bal-history-filter__label">เริ่ม</span>
-                        <input type="date" id="hist-start-date" name="start_date" class="form-control form-control-sm" value="<?= date('Y-m-01') ?>">
+                        <?= \app\widgets\datepicker\DatepickerThai::widget([
+                            'name' => 'start_date',
+                            'value' => $defaultStart,
+                            'options' => [
+                                'id' => 'hist-start-date',
+                                'class' => 'form-control form-control-sm',
+                                'placeholder' => 'เริ่มจากวันที่',
+                            ],
+                        ]) ?>
                     </label>
                     <label class="bal-history-filter__field">
                         <span class="bal-history-filter__label">ถึง</span>
-                        <input type="date" id="hist-end-date" name="end_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
+                        <?= \app\widgets\datepicker\DatepickerThai::widget([
+                            'name' => 'end_date',
+                            'value' => $defaultEnd,
+                            'options' => [
+                                'id' => 'hist-end-date',
+                                'class' => 'form-control form-control-sm',
+                                'placeholder' => 'ถึงวันที่',
+                            ],
+                        ]) ?>
                     </label>
                     <button type="submit" class="bal-history-filter__btn">
                         <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>โหลดประวัติ
@@ -1051,10 +1072,22 @@ $js = <<<JS
         });
     }
 
+    // 'dd/mm/yyyy' (พ.ศ.) → 'yyyy-mm-dd' (ค.ศ.) สำหรับส่ง backend
+    function toGregorianISO(thaiDate) {
+        if (!thaiDate) return '';
+        var parts = String(thaiDate).split('/');
+        if (parts.length !== 3) return thaiDate; // เผื่อ user paste ISO ตรงๆ
+        var day = parts[0].padStart(2, '0');
+        var month = parts[1].padStart(2, '0');
+        var year = parseInt(parts[2], 10);
+        if (year > 2500) year -= 543; // พ.ศ. → ค.ศ.
+        return year + '-' + month + '-' + day;
+    }
+
     function loadHistory() {
         if (!ctx.item_code || !ctx.warehouse_id) return;
-        var sd = document.getElementById('hist-start-date').value;
-        var ed = document.getElementById('hist-end-date').value;
+        var sd = toGregorianISO(document.getElementById('hist-start-date').value);
+        var ed = toGregorianISO(document.getElementById('hist-end-date').value);
         skeletonRows();
         if (exportBtn) exportBtn.disabled = true;
 
@@ -1083,8 +1116,8 @@ $js = <<<JS
 
     function exportExcel() {
         if (!ctx.item_code || !ctx.warehouse_id) return;
-        var sd = document.getElementById('hist-start-date').value;
-        var ed = document.getElementById('hist-end-date').value;
+        var sd = toGregorianISO(document.getElementById('hist-start-date').value);
+        var ed = toGregorianISO(document.getElementById('hist-end-date').value);
         var params = new URLSearchParams({
             item_code: ctx.item_code,
             warehouse_id: ctx.warehouse_id,

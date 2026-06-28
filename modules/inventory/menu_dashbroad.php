@@ -7,6 +7,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
 
 ?>
 
+
 <div class="d-flex gap-2">
     <a href="<?= Url::to(['/inventory/default/dashboard']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
 <i data-lucide="layout-grid"></i>  
@@ -43,7 +44,22 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <li>
                 <?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออกรายงานวัสดุคงคลังรายตัว ', ['/inventory/export-stock'], ['class' => 'dropdown-item']) ?>
             </li>
-
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <h6 class="dropdown-header text-warning">เครื่องมือย้ายข้อมูล → V2</h6>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-file-csv me-2 text-success"></i> นำเข้ายอดยกมา (CSV จากการนับจริง)', ['/inventory/transfer-to-v2/import-count'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-share-from-square me-2 text-warning"></i> ย้ายคงเหลือสิ้นเดือนจาก V1', ['/inventory/transfer-to-v2/index'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-share-from-square me-2 text-warning"></i> ย้ายใบเบิก-จ่ายจาก V1', ['/inventory/transfer-to-v2/requisition-index'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a('<i class="fa-solid fa-clone me-2 text-warning"></i> ย้ายประวัติทั้งคลัง (bulk)', ['/inventory/transfer-to-v2/bulk-item-history'], ['class' => 'dropdown-item']) ?>
+            </li>
         </ul>
     </div>
 
