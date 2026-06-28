@@ -3,7 +3,7 @@
  * Sub-stock action buttons for page header.
  * UI pattern ตรงกับ _menu_main.php เพื่อความสอดคล้องของระบบ
  *
- * @var string $active 'dashboard' | 'issue' | 'requisition' | 'balance'
+ * @var string $active 'dashboard' | 'issue' | 'use-history' | 'requisition' | 'balance'
  * @var int|null $currentWarehouseId
  */
 use yii\helpers\Url;
@@ -48,6 +48,9 @@ try {
         </a>
         <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/issue'], $wParam)) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3">
             <i class="bi bi-box-arrow-up-right me-1"></i>ตัดจ่ายคลังย่อย
+        </a>
+        <a href="<?= Url::to(array_merge(['/inventory-v2/sub-stock/use-history'], $wParam)) ?>" class="btn btn-sm <?= $active === 'use-history' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
+            <i class="bi bi-clock-history me-1"></i>ประวัติตัดจ่าย
         </a>
         <?php if ($canCreateRequisition): ?>
         <a href="<?= Url::to(['/inventory-v2/requisition']) ?>" class="btn btn-sm <?= $active === 'requisition' ? 'btn-success' : 'btn-outline-success' ?> rounded-pill px-3">

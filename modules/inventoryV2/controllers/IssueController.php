@@ -540,6 +540,19 @@ CSS;
             ->all();
     }
 
+    public function actionViewModal($id)
+    {
+        $model = $this->findModel($id);
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        return [
+            'title' => '<i class="bi bi-eye me-1"></i>รายละเอียดใบตัดจ่าย',
+            'content' => $this->renderAjax('view', [
+                'model' => $model,
+            ]),
+        ];
+    }
+
     protected function findModel($id)
     {
         if (($model = StockOrder::findOne($id)) !== null) {

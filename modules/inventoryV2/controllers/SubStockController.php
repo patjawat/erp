@@ -12,6 +12,7 @@ use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use Yii;
+use yii\data\ActiveDataProvider;
 use yii\db\Expression;
 use yii\db\Query;
 use yii\web\Response;
@@ -100,6 +101,12 @@ class SubStockController extends \yii\web\Controller
                 ])
                 ->andWhere([
                     'or',
+                    ['<>', 'source_type', 'REQUEST'],
+                    ['source_type' => null],
+                    ['source_type' => ''],
+                ])
+                ->andWhere([
+                    'or',
                     ['like', 'ref', $needle],
                     ['like', 'data_json', $needle],
                 ])
@@ -139,6 +146,12 @@ class SubStockController extends \yii\web\Controller
                     ['like', 'ref', 'HELPDESK_ID:%'],
                     ['like', 'data_json', '"helpdesk_id"'],
                     ['like', 'data_json', 'helpdesk_id'],
+                ])
+                ->andWhere([
+                    'or',
+                    ['<>', 'source_type', 'REQUEST'],
+                    ['source_type' => null],
+                    ['source_type' => ''],
                 ])
                 ->orderBy(['id' => SORT_DESC])
                 ->limit(20)
@@ -379,7 +392,156 @@ class SubStockController extends \yii\web\Controller
     }
 
     /**
-     * ระบบตัดจ่ายพัสดุที่คลังย่อย (บันทึกการจ่าย/การใช้งาน)
+     * ประวัติการตัดจ่ายทั้งหมดของคลังย่อย พร้อมตัวกรองและสรุปมูลค่า
+     */
+    public function actionUseHistory()
+    {
+        $subWarehouseIds = array_map('intval', $this->getSubWarehouseIdsForIssue());
+        if (empty($subWarehouseIds)) {
+            return $this->renderPermissionBlockedDashboard();
+        }
+
+        $request = Yii::$app->request;
+        $filters = [
+            'q' => trim((string) $request->get('q', '')),
+            'date_from' => trim((string) $request->get('date_from', '')),
+            'date_to' => trim((string) $request->get('date_to', '')),
+            'warehouse_id' => (int) $request->get('warehouse_id', 0),
+            'source_type' => trim((string) $request->get('source_type', '')),
+        ];
+
+        if ($filters['warehouse_id'] > 0 && !in_array($filters['warehouse_id'], $subWarehouseIds, true)) {
+            $filters['warehouse_id'] = 0;
+        }
+
+        $baseQuery = (new Query())
+            ->select(['so.id'])
+            ->from(['so' => StockOrder::tableName()])
+            ->leftJoin(['sd' => StockDetail::tableName()], 'sd.stock_order_id = so.id')
+            ->leftJoin(['si' => StockItem::tableName()], 'si.code = sd.item_code')
+            ->where([
+                'so.order_type' => StockOrder::ORDER_TYPE_OUT,
+                'so.main_warehouse_id' => $subWarehouseIds,
+            ])
+            ->andWhere(['<>', 'so.status', StockOrder::STATUS_CANCELLED])
+            ->andWhere([
+                'or',
+                ['<>', 'so.source_type', 'REQUEST'],
+                ['so.source_type' => null],
+                ['so.source_type' => ''],
+            ])
+            ->groupBy(['so.id']);
+
+        if ($filters['warehouse_id'] > 0) {
+            $baseQuery->andWhere(['so.main_warehouse_id' => $filters['warehouse_id']]);
+        }
+
+        if ($filters['source_type'] !== '') {
+            $baseQuery->andWhere(['so.source_type' => $filters['source_type']]);
+        }
+
+        if ($filters['date_from'] !== '') {
+            $fromTs = strtotime($filters['date_from'] . ' 00:00:00');
+            if ($fromTs !== false) {
+                $filters['date_from'] = date('Y-m-d', $fromTs);
+                $baseQuery->andWhere(['>=', 'so.order_date', date('Y-m-d 00:00:00', $fromTs)]);
+            } else {
+                $filters['date_from'] = '';
+            }
+        }
+
+        if ($filters['date_to'] !== '') {
+            $toTs = strtotime($filters['date_to'] . ' 23:59:59');
+            if ($toTs !== false) {
+                $filters['date_to'] = date('Y-m-d', $toTs);
+                $baseQuery->andWhere(['<=', 'so.order_date', date('Y-m-d 23:59:59', $toTs)]);
+            } else {
+                $filters['date_to'] = '';
+            }
+        }
+
+        if ($filters['q'] !== '') {
+            $baseQuery->andWhere([
+                'or',
+                ['like', 'so.order_no', $filters['q']],
+                ['like', 'so.ref', $filters['q']],
+                ['like', 'so.source_type', $filters['q']],
+                ['like', 'so.data_json', $filters['q']],
+                ['like', 'sd.item_code', $filters['q']],
+                ['like', 'si.title', $filters['q']],
+            ]);
+        }
+
+        $countIdsQuery = clone $baseQuery;
+        $summaryIdsQuery = clone $baseQuery;
+        $ordersIdsQuery = clone $baseQuery;
+
+        $totalCount = (int) (new Query())
+            ->from(['ids' => $countIdsQuery])
+            ->count('*');
+
+        $summary = (new Query())
+            ->select([
+                'line_count' => new Expression('COUNT(sd.id)'),
+                'total_qty' => new Expression('COALESCE(SUM(sd.qty), 0)'),
+                'total_value' => new Expression('COALESCE(SUM(sd.qty * COALESCE(sd.unit_price, 0)), 0)'),
+            ])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['ids' => $summaryIdsQuery], 'ids.id = sd.stock_order_id')
+            ->one();
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => StockOrder::find()
+                ->alias('so')
+                ->where(['so.id' => $ordersIdsQuery])
+                ->with(['stockDetails.item', 'mainWarehouse'])
+                ->orderBy(['so.order_date' => SORT_DESC, 'so.id' => SORT_DESC]),
+            'pagination' => [
+                'pageSize' => 50,
+            ],
+            'sort' => false,
+        ]);
+
+        $warehouseOptions = [];
+        foreach ($this->getSubWarehousesList() as $warehouse) {
+            $warehouseOptions[(int) $warehouse->id] = (string) $warehouse->warehouse_name;
+        }
+
+        $sourceTypeOptions = StockOrder::find()
+            ->select('source_type')
+            ->distinct()
+            ->where([
+                'order_type' => StockOrder::ORDER_TYPE_OUT,
+                'main_warehouse_id' => $subWarehouseIds,
+            ])
+            ->andWhere(['<>', 'status', StockOrder::STATUS_CANCELLED])
+            ->andWhere([
+                'or',
+                ['<>', 'source_type', 'REQUEST'],
+                ['source_type' => null],
+                ['source_type' => ''],
+            ])
+            ->andWhere(['not', ['source_type' => null]])
+            ->andWhere(['<>', 'source_type', ''])
+            ->orderBy(['source_type' => SORT_ASC])
+            ->column();
+
+        return $this->render('use-history', [
+            'dataProvider' => $dataProvider,
+            'filters' => $filters,
+            'summary' => [
+                'order_count' => $totalCount,
+                'line_count' => (int) ($summary['line_count'] ?? 0),
+                'total_qty' => (float) ($summary['total_qty'] ?? 0),
+                'total_value' => (float) ($summary['total_value'] ?? 0),
+            ],
+            'warehouseOptions' => $warehouseOptions,
+            'sourceTypeOptions' => $sourceTypeOptions,
+        ]);
+    }
+
+    /**
+     * ตัดจ่ายพัสดุจากคลังย่อย
      * คลังย่อยต้องมีสต็อกก่อน (รับจากคลังหลักเมื่อคลังหลักจ่ายของแล้ว)
      */
     public function actionIssue()
@@ -455,6 +617,12 @@ class SubStockController extends \yii\web\Controller
                     ['like', 'ref', 'HELPDESK_ID:%'],
                     ['like', 'data_json', '"helpdesk_id"'],
                     ['like', 'data_json', 'helpdesk_id'],
+                ])
+                ->andWhere([
+                    'or',
+                    ['<>', 'source_type', 'REQUEST'],
+                    ['source_type' => null],
+                    ['source_type' => ''],
                 ])
                 ->orderBy(['id' => SORT_DESC])
                 ->limit(20)
