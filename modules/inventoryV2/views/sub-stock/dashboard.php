@@ -252,12 +252,6 @@ foreach (['action', 'page-action'] as $actionBlock) {
     <?php endif; ?>
 </div>
 
-<?php if (!$permissionBlocked): ?>
-    <a href="<?= Url::to($issueUrl) ?>" class="sub-stock-fab" aria-label="ตัดจ่ายคลังย่อย">
-        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-        <span>ตัดจ่ายครั้งย่อย</span>
-    </a>
-<?php endif; ?>
 
 <style>
 .sub-stock-dashboard {
