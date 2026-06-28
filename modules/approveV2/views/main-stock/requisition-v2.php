@@ -118,7 +118,7 @@ $mainWarehouses = $mainWarehouses ?? [];
                         <th class="text-center" style="width: 40px;">ลำดับ</th>
                         <th class="text-start" style="min-width: 120px;">เลขที่เอกสาร</th>
                         <th class="text-start">คลังที่จ่ายของ</th>
-                        <th class="text-start">หน่วยงานที่รับของ</th>
+                        <th class="text-start">คลังที่ที่รับของ</th>
                         <th class="text-center" style="width: 100px;">วันที่ขอเบิก</th>
                         <th class="text-center" style="width: 110px;">วันที่อนุมัติ</th>
                         <th class="text-center" style="width: 140px;">สถานะ</th>
