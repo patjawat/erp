@@ -36,6 +36,48 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 <?php endif; ?>
 
+<div class="card mb-3 border-info">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">
+            <i class="fa-solid fa-circle-info me-1"></i>
+            วิธีใช้งานเมื่อย้ายข้อมูลจริง
+        </h6>
+
+        <ol class="mb-3 ps-3">
+            <li class="mb-2">
+                สำรองข้อมูลก่อนรันจริง โดยเฉพาะตาราง <code>stock_order</code>,
+                <code>stock_detail</code> และ <code>stock_balance</code>
+            </li>
+            <li class="mb-2">
+                รันคำสั่งย้ายประวัติจาก Inventory เดิมมายัง Inventory V2
+            </li>
+            <li class="mb-2">
+                รันคำสั่งคำนวณยอดคงเหลือแบบตรวจสอบผลก่อน โดยยังไม่เขียนฐานข้อมูล
+            </li>
+            <li>
+                เมื่อผลตรวจสอบถูกต้องแล้ว จึงรันคำสั่งเขียนยอดคงเหลือจริง
+            </li>
+        </ol>
+
+        <div class="mb-3">
+            <div class="fw-bold mb-1">คำสั่งที่ใช้ใน Docker</div>
+            <pre class="bg-light border rounded p-3 mb-0 small"><code>docker exec -w /app dansai php -d error_reporting=22527 yii transfer-history-all-v2/run
+docker exec -w /app dansai php -d error_reporting=22527 yii sync-stock-balance/recalc
+docker exec -w /app dansai php -d error_reporting=22527 yii sync-stock-balance/recalc --apply</code></pre>
+        </div>
+
+        <div class="alert alert-warning mb-0">
+            <div class="fw-bold mb-1">ข้อควรทราบ</div>
+            <div>
+                คำสั่ง <code>transfer-history-all-v2/run</code> ย้ายเฉพาะประวัติไปที่
+                <code>stock_order</code> และ <code>stock_detail</code> เท่านั้น
+                ยังไม่อัปเดต <code>stock_balance</code> จึงต้องรัน
+                <code>sync-stock-balance/recalc --apply</code> ต่อเพื่อให้หน้า Balance แสดงยอดคงเหลือ
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card mb-3">
     <div class="card-header bg-info-subtle">
         <h6 class="mt-2 mb-0">
