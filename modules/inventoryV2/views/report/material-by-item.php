@@ -12,12 +12,12 @@ $monthNames = [
     5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
     9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
 ];
-$periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year + 543) : '';
+$periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year + 543) . ' (พ.ศ.)' : '';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
+    <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
         <i class="bi bi-list-ul fs-4 text-primary"></i>
         <?= Html::encode($this->title) ?>
     </h4>
@@ -48,9 +48,9 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
                 </div>
                 <div class="col-auto">
                     <label class="form-label mb-0">ปี (พ.ศ.)</label>
-                    <select name="year" class="form-select" style="min-width: 100px;">
+                    <select name="year" class="form-select" aria-label="ปี พ.ศ." style="min-width: 110px;">
                         <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
-                            <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?></option>
+                            <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?> (พ.ศ.)</option>
                         <?php endfor; ?>
                     </select>
                 </div>
@@ -79,7 +79,7 @@ $periodLabel = isset($monthNames[$month]) ? $monthNames[$month] . ' ' . ($year +
     <?php if (!$hasData): ?>
         <div class="alert alert-info border-0 shadow-sm">
             <i class="bi bi-info-circle me-2"></i>
-            ยังไม่มีข้อมูลปิดเดือนสำหรับเดือน<?= isset($monthNames[$month]) ? ' ' . $monthNames[$month] . ' ' . ($year + 543) : '' ?> — ไปที่ <a href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>">สรุปรายงานวัสดุคงคลัง</a> เพื่อปิดเดือนก่อน
+            ยังไม่มีข้อมูลปิดเดือนสำหรับเดือน<?= isset($monthNames[$month]) ? ' ' . $monthNames[$month] . ' ' . ($year + 543) . ' (พ.ศ.)' : '' ?> ไปที่ <a href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>">สรุปรายงานวัสดุคงคลัง</a> เพื่อปิดเดือนก่อน
         </div>
     <?php else: ?>
         <div class="card border-0 shadow-sm">

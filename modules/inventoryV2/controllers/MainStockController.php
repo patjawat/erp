@@ -1493,8 +1493,17 @@ class MainStockController extends \yii\web\Controller
     }
 
     /**
-     * คืน map [calendar_month_1-12 => true] ของเดือนที่ "ปิดแล้ว"
-     * เดือนจะถูกนับว่าปิดเมื่อมีแถวใน stock_monthly_report สำหรับ ทุก warehouse ที่เลือก (ครบทุกคลัง)
+     * คืน map [calendar_month_1-12 => true] ของเดือนที่ "ปิดแล้ว" ใน fiscal year ที่ระบุ
+     *
+     * นิยาม "ปิดแล้ว": มี snapshot row อย่างน้อย 1 row ใน stock_monthly_report
+     * สำหรับ (year, month) ของ fiscal year นั้น ภายใน scope warehouseIds
+     *
+     * เดิมใช้นิยามเข้ม "ทุก warehouse ต้องมี snapshot" — แต่ถ้าคลังใดไม่มี item เคลื่อนไหว
+     * เลย closeMonth จะไม่ save row ของคลังนั้น (count = 0) ทำให้ flag stays false
+     * แม้ user ปิดเดือนสำเร็จแล้ว → false negative
+     *
+     * Key เป็น month 1-12 ตาม fiscal calendar (Oct-Sep) ภายใน fiscal year เดียว
+     * — SQL where clause กรอง fiscal range เรียบร้อยแล้ว ไม่มี collision ระหว่างปี
      */
     protected function getClosedMonthsInFiscalYear(array $warehouseIds, $thaiYear)
     {
@@ -1504,7 +1513,6 @@ class MainStockController extends \yii\web\Controller
             ->select([
                 'report_year' => 'smr.report_year',
                 'report_month' => 'smr.report_month',
-                'warehouses' => new Expression('COUNT(DISTINCT smr.warehouse_id)'),
             ])
             ->from(['smr' => StockMonthlyReport::tableName()])
             ->where(['smr.warehouse_id' => $warehouseIds])
@@ -1515,12 +1523,9 @@ class MainStockController extends \yii\web\Controller
             ->groupBy(['smr.report_year', 'smr.report_month'])
             ->all();
 
-        $expectedWarehouseCount = count(array_unique($warehouseIds));
         $closed = [];
         foreach ($rows as $r) {
-            if ((int) $r['warehouses'] >= $expectedWarehouseCount) {
-                $closed[(int) $r['report_month']] = true;
-            }
+            $closed[(int) $r['report_month']] = true;
         }
         return $closed;
     }

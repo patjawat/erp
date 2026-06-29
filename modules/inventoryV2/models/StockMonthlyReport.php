@@ -20,8 +20,8 @@ use Yii;
  * @property float $adjust_in_value มูลค่าปรับยอดเพิ่ม
  * @property float $adjust_out_qty ปรับยอดลด (qty ลบ — เก็บเป็นค่าบวก)
  * @property float $adjust_out_value มูลค่าปรับยอดลด
- * @property float $out_sub_qty จ่ายส่วนของ รพ.aq
- * @property float $out_sub_value มูลค่าจ่ายส่วนของ รพ.aq
+ * @property float $out_sub_qty จ่ายส่วนของ รพ.สต.
+ * @property float $out_sub_value มูลค่าจ่ายส่วนของ รพ.สต.
  * @property float $out_hosp_qty จ่ายส่วนของโรงพยาบาล
  * @property float $out_hosp_value มูลค่าจ่ายส่วนของโรงพยาบาล
  * @property float $total_out_qty
@@ -58,7 +58,7 @@ class StockMonthlyReport extends \yii\db\ActiveRecord
             'in_qty' => 'ซื้อระหว่างเดือน',
             'adjust_in_qty' => 'ปรับยอดเพิ่ม',
             'adjust_out_qty' => 'ปรับยอดลด',
-            'out_sub_qty' => 'จ่ายส่วนของ รพ.aq',
+            'out_sub_qty' => 'จ่ายส่วนของ รพ.สต.',
             'out_hosp_qty' => 'จ่ายส่วนของโรงพยาบาล',
             'total_out_qty' => 'รวมจ่าย',
             'closing_qty' => 'ยอดยกไป',

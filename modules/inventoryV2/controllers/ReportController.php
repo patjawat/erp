@@ -27,7 +27,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
  */
 class ReportController extends Controller
 {
-    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.aq" (ที่เหลือนับเป็นโรงพยาบาล) */
+    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล) */
     public static function getDisburseSubWarehouseIds()
     {
         return (array) (Yii::$app->params['inventoryV2.disburseSubWarehouseIds'] ?? []);
@@ -50,6 +50,7 @@ class ReportController extends Controller
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
         $hasData = !empty($rows);
+        $closeMeta = $hasData ? $this->getCloseMetadata($year, $month, $warehouseId) : null;
 
         return $this->render('material-summary', [
             'year' => $year,
@@ -58,7 +59,195 @@ class ReportController extends Controller
             'warehouses' => $warehouses,
             'rows' => $rows,
             'hasData' => $hasData,
+            'closeMeta' => $closeMeta,
         ]);
+    }
+
+    /**
+     * ดึงเวลา/ผู้ปิดเดือน ของ snapshot ปัจจุบัน
+     * — closed_at = MAX(created_at) ของ rows ที่ตรงกับ year/month/warehouse
+     * — closed_by_name = ชื่อพนักงานจาก Employees ที่ match user_id
+     * @return array{closed_at: int|null, closed_by_name: string|null}
+     */
+    protected function getCloseMetadata($year, $month, $warehouseId = null): array
+    {
+        $q = (new Query())
+            ->select(['created_at' => new Expression('MAX(created_at)'), 'created_by'])
+            ->from(StockMonthlyReport::tableName())
+            ->where(['report_year' => $year, 'report_month' => $month])
+            ->groupBy('created_by')
+            ->orderBy(['created_at' => SORT_DESC]);
+        if ($warehouseId !== null && $warehouseId !== '') {
+            $q->andWhere(['warehouse_id' => $warehouseId]);
+        }
+        $row = $q->limit(1)->one();
+        if (!$row) {
+            return ['closed_at' => null, 'closed_by_name' => null];
+        }
+        $name = null;
+        if (!empty($row['created_by'])) {
+            $emp = \app\modules\hr\models\Employees::find()
+                ->where(['user_id' => (int) $row['created_by']])
+                ->one();
+            if ($emp) {
+                $name = trim(($emp->fname ?? '') . ' ' . ($emp->lname ?? ''));
+            }
+        }
+        return [
+            'closed_at' => (int) $row['created_at'],
+            'closed_by_name' => $name ?: null,
+        ];
+    }
+
+    /**
+     * Drill-down: รายการ item ที่ประกอบเป็นยอด cell ของ summary (category × kind × month × warehouse)
+     *
+     * เปิดจาก material-summary view เมื่อ accountant คลิกตัวเลขใน table cell
+     * Return JSON เพื่อ render ลง modal ฝั่ง client ทันที (ไม่ใช้ partial HTML)
+     */
+    public function actionCategoryDrilldown()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+
+        $year = (int) ($this->request->get('year') ?: date('Y'));
+        $month = (int) ($this->request->get('month') ?: (int) date('n'));
+        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
+            ? (int) $this->request->get('warehouse_id') : null;
+        $category = (string) $this->request->get('category', '');
+        $kind = (string) $this->request->get('kind', '');
+
+        $allowedKinds = ['opening', 'in', 'out_sub', 'out_hosp', 'total_out', 'closing'];
+        if (!in_array($kind, $allowedKinds, true)) {
+            return ['success' => false, 'message' => 'kind ไม่ถูกต้อง'];
+        }
+        if ($category === '') {
+            return ['success' => false, 'message' => 'ไม่ระบุ category'];
+        }
+
+        $kindLabels = [
+            'opening' => 'สินค้าคงเหลือยกมา',
+            'in' => 'ซื้อระหว่างเดือน',
+            'out_sub' => 'จ่ายส่วนของ รพ.สต.',
+            'out_hosp' => 'จ่ายส่วนของโรงพยาบาล',
+            'total_out' => 'รวมจ่ายออก',
+            'closing' => 'ยอดยกไป',
+        ];
+        $qtyCol = "r.{$kind}_qty";
+        $valueCol = "r.{$kind}_value";
+
+        $query = (new Query())
+            ->select([
+                'item_code' => 'r.item_code',
+                'item_name' => new Expression('COALESCE(i.title, r.item_code)'),
+                'unit_name' => 'r.unit_name',
+                'qty' => new Expression("SUM($qtyCol)"),
+                'value' => new Expression("SUM($valueCol)"),
+                'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+            ])
+            ->from(['r' => StockMonthlyReport::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.code = r.item_code')
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->where(['r.report_year' => $year, 'r.report_month' => $month])
+            ->andWhere("COALESCE(cat.code, i.category_id, 'OTHER') = :cat", [':cat' => $category])
+            ->groupBy(['r.item_code', 'i.title', 'r.unit_name', 'cat.code', 'cat.title', 'i.category_id'])
+            ->orderBy([new Expression("SUM($valueCol) DESC")]);
+
+        if ($warehouseId !== null) {
+            $query->andWhere(['r.warehouse_id' => $warehouseId]);
+        }
+
+        $raw = $query->all();
+
+        // Batch resolve image URLs (avoid N+1) — pattern เดียวกับ loadBalanceData
+        $itemCodes = array_values(array_unique(array_map(fn($r) => (string) $r['item_code'], $raw)));
+        $stockItems = empty($itemCodes)
+            ? []
+            : StockItem::find()->where(['code' => $itemCodes])->indexBy('code')->all();
+        $refs = array_values(array_filter(array_map(fn($i) => $i->ref ?? null, $stockItems)));
+        $uploadsByRef = empty($refs)
+            ? []
+            : \app\modules\filemanager\models\Uploads::find()->where(['ref' => $refs])->indexBy('ref')->all();
+        $placeholderUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+        $resolveImage = function ($itemCode) use ($stockItems, $uploadsByRef, $placeholderUrl) {
+            $it = $stockItems[$itemCode] ?? null;
+            if (!$it || empty($it->ref) || !isset($uploadsByRef[$it->ref])) {
+                return $placeholderUrl;
+            }
+            return FileManagerHelper::getImg($uploadsByRef[$it->ref]->id);
+        };
+
+        $items = [];
+        $totalQty = 0.0;
+        $totalValue = 0.0;
+        $categoryTitle = '';
+        foreach ($raw as $r) {
+            $q = (float) $r['qty'];
+            $v = (float) $r['value'];
+            if (abs($v) < 0.005) {
+                continue;
+            }
+            $totalQty += $q;
+            $totalValue += $v;
+            if ($categoryTitle === '') {
+                $categoryTitle = (string) $r['category_title'];
+            }
+            $items[] = [
+                'item_code' => (string) $r['item_code'],
+                'item_name' => (string) $r['item_name'],
+                'unit_name' => (string) ($r['unit_name'] ?? '-'),
+                'qty' => $q,
+                'value' => $v,
+                'image_url' => $resolveImage((string) $r['item_code']),
+            ];
+        }
+
+        // คิดสัดส่วนเทียบ total (ใช้ absolute เพื่อให้ติดลบยัง render bar ได้)
+        $absTotal = 0.0;
+        foreach ($items as $it) {
+            $absTotal += abs($it['value']);
+        }
+        if ($absTotal > 0) {
+            foreach ($items as &$it) {
+                $it['percent_of_total'] = round((abs($it['value']) / $absTotal) * 100, 2);
+            }
+            unset($it);
+        } else {
+            foreach ($items as &$it) {
+                $it['percent_of_total'] = 0.0;
+            }
+            unset($it);
+        }
+
+        $monthNames = [
+            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+        ];
+        $periodLabel = ($monthNames[$month] ?? '') . ' ' . ($year + 543);
+        $warehouseLabel = '— ทุกคลังหลัก —';
+        if ($warehouseId !== null) {
+            $w = Warehouse::findOne($warehouseId);
+            $warehouseLabel = $w ? $w->warehouse_name : (string) $warehouseId;
+        }
+
+        return [
+            'success' => true,
+            'items' => $items,
+            'summary' => [
+                'count' => count($items),
+                'total_qty' => $totalQty,
+                'total_value' => $totalValue,
+            ],
+            'meta' => [
+                'category_code' => $category,
+                'category_label' => $categoryTitle ?: $category,
+                'period_label' => $periodLabel,
+                'warehouse_label' => $warehouseLabel,
+                'kind' => $kind,
+                'kind_label' => $kindLabels[$kind],
+            ],
+        ];
     }
 
     /**
@@ -1324,7 +1513,7 @@ class ReportController extends Controller
         $sheet->mergeCells('A1:K1');
         $sheet->getStyle('A1')->getFont()->setBold(true);
 
-        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'ปรับเพิ่ม (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.aq (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'ปรับลด (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
+        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'ปรับเพิ่ม (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.สต. (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'ปรับลด (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
         $col = 'A';
         foreach ($headers as $h) {
             $sheet->setCellValue($col . '3', $h);
