@@ -48,17 +48,17 @@ class IssueController extends Controller
             $dataProvider->query->andWhere(['<=', 'order_date', $end . ' 23:59:59']);
         }
 
-        // วันที่จ่าย (updated_at เป็น timestamp)
+        // วันที่จ่าย (updated_at)
         $confStart = AppHelper::convertToGregorian($searchModel->confirmed_date_start);
         $confEnd = AppHelper::convertToGregorian($searchModel->confirmed_date_end);
         if ($confStart !== null && $confStart !== '') {
-            $dataProvider->query->andWhere(['>=', 'updated_at', strtotime($confStart . ' 00:00:00')]);
+            $dataProvider->query->andWhere(['>=', 'updated_at', $confStart . ' 00:00:00']);
         }
         if ($confEnd !== null && $confEnd !== '') {
-            $dataProvider->query->andWhere(['<=', 'updated_at', strtotime($confEnd . ' 23:59:59')]);
+            $dataProvider->query->andWhere(['<=', 'updated_at', $confEnd . ' 23:59:59']);
         }
 
-        $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
+        $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC, 'id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
         $mainWarehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
@@ -123,36 +123,45 @@ class IssueController extends Controller
             $transaction = Yii::$app->db->beginTransaction();
 
             try {
+                $processedCount = 0;
                 foreach ($data as $item) {
+                    if (!is_array($item)) {
+                        continue;
+                    }
+
                     // 1. ตรวจสอบเบื้องต้น: ถ้าจำนวนเป็น 0 หรือไม่มีข้อมูลให้ข้าม
-                    if (empty($item['qty_issued']) || $item['qty_issued'] <= 0) continue;
+                    $qtyToProcess = (float)($item['qty_issued'] ?? 0);
+                    if ($qtyToProcess <= 0) continue;
 
                     $detailId = $item['detail_id'] ?? null;
                     $isNewRow = ($detailId === 'new' || $detailId === '' || $detailId === null);
+                    $selectedLot = trim((string)($item['lot_number'] ?? ''));
+
+                    if ($selectedLot === '') {
+                        throw new \Exception('กรุณาเลือก Lot สำหรับรายการที่ต้องการจ่ายให้ครบ');
+                    }
 
                     if ($isNewRow) {
                         // รายการเพิ่มเติม (กดปุ่ม "เพิ่มวัสดุ" ในหน้า process) — สร้าง StockDetail ใหม่ผูกกับใบเบิกนี้
                         $itemCode = trim((string) ($item['item_code'] ?? ''));
-                        $lotNumber = trim((string) ($item['lot_number'] ?? ''));
-                        if ($itemCode === '' || $lotNumber === '') {
+                        if ($itemCode === '' || $selectedLot === '') {
                             throw new \Exception('รายการเพิ่มเติม: กรุณาเลือกวัสดุและ Lot ให้ครบ');
                         }
                         $detail = new StockDetail();
                         $detail->stock_order_id = $model->id;
                         $detail->item_code = $itemCode;
-                        $detail->lot_number = $lotNumber;
-                        $detail->qty = (float) $item['qty_issued']; // จะถูกเขียนทับด้วย qtyActuallyIssued ในขั้น 4
+                        $detail->lot_number = $selectedLot;
+                        $detail->qty = $qtyToProcess; // จะถูกเขียนทับด้วย qtyActuallyIssued ในขั้น 4
                         if (!$detail->save(false)) {
                             $errors = implode(', ', $detail->getFirstErrors());
                             throw new \Exception("ไม่สามารถสร้างรายการเพิ่มเติม: {$errors}");
                         }
                     } else {
-                        $detail = StockDetail::findOne($detailId);
-                        if (!$detail) continue;
+                        $detail = StockDetail::findOne(['id' => $detailId, 'stock_order_id' => $model->id]);
+                        if (!$detail) {
+                            throw new \Exception('ไม่พบรายการวัสดุในใบเบิกนี้');
+                        }
                     }
-
-                    $qtyToProcess = (float)$item['qty_issued'];
-                    $selectedLot = $item['lot_number'];
 
                     // 2. หักลบ remain_qty จาก "รายการรับเข้า (IN)" ต้นทาง 
                     // เพื่อให้ยอดเหลือรายแถวในหน้า process.php อัปเดตถูกต้อง
@@ -176,7 +185,9 @@ class IssueController extends Controller
 
                         $take = min($tempQty, (float)$sourceIn->remain_qty);
                         $sourceIn->remain_qty -= $take;
-                        $sourceIn->save(false);
+                        if (!$sourceIn->save(false)) {
+                            throw new \Exception("ไม่สามารถปรับปรุงยอดคงเหลือของ Lot {$selectedLot}");
+                        }
 
                         $lastUnitPrice = $sourceIn->unit_price; // เก็บราคาทุนไว้บันทึกกลับ
                         $tempQty -= $take;
@@ -216,6 +227,11 @@ class IssueController extends Controller
                     if (!$detail->save(false)) {
                         throw new \Exception("ไม่สามารถบันทึกรายละเอียดพัสดุรหัส: " . $detail->item_code);
                     }
+                    $processedCount++;
+                }
+
+                if ($processedCount === 0) {
+                    throw new \Exception('กรุณาระบุรายการที่ต้องการจ่ายอย่างน้อย 1 รายการ');
                 }
 
                 // 4.5 ถ้ายังไม่มี "ผู้จ่ายพัสดุ" ให้เซ็ตจาก user ปัจจุบัน (ดึงตำแหน่งจากระบบพนักงาน)
@@ -249,16 +265,27 @@ class IssueController extends Controller
                     $ts = time();
                 }
                 $model->setDisbursementDate($ts);
-                $model->updated_at = $ts; // ใช้ filter วันที่จ่ายใน index ได้
+                $model->updated_at = date('Y-m-d H:i:s', $ts); // ใช้ filter วันที่จ่ายใน index ได้
                 if (!$model->save(false)) {
                     throw new \Exception("ไม่สามารถบันทึกสถานะใบเบิกได้");
                 }
 
                 $transaction->commit();
-                InventoryTelegramNotify::notifyRequisitionDisbursed($model);
-                return ['success' => true];
-            } catch (\Exception $e) {
-                $transaction->rollBack();
+
+                try {
+                    InventoryTelegramNotify::notifyRequisitionDisbursed($model);
+                } catch (\Throwable $notifyError) {
+                    Yii::warning(
+                        'Issue notification failed for stock_order_id=' . $model->id . ': ' . $notifyError->getMessage(),
+                        __METHOD__
+                    );
+                }
+
+                return ['success' => true, 'message' => 'บันทึกการจ่ายเรียบร้อยแล้ว'];
+            } catch (\Throwable $e) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
                 return [
                     'success' => false,
                     'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()

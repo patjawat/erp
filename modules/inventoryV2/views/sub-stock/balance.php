@@ -37,8 +37,9 @@ if ($warehouseId && isset($warehouses[$warehouseId])) {
 <?= $this->render('_page_head', [
     'icon'    => 'bi-boxes',
     'title'   => $this->title,
+    'currentWarehouseName' => $currentWarehouseName,
     'caption' => 'เห็นเฉพาะคลังย่อยที่คุณได้รับสิทธิ์ คลิก <span class="inline-badge">ดูประวัติ</span> เพื่อเปิดบัตรเคลื่อนไหวของรายการ',
-    'metas'   => $currentWarehouseName ? ['กำลังดู: ' . $currentWarehouseName] : ['ทุกคลังย่อยที่เข้าถึงได้'],
+    'metas'   => $currentWarehouseName ? [] : ['ทุกคลังย่อยที่เข้าถึงได้'],
 ]) ?>
 <?php $this->endBlock(); ?>
 

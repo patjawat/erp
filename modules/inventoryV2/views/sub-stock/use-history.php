@@ -20,6 +20,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $orders = $dataProvider->getModels();
 $pagination = $dataProvider->getPagination();
+$currentWarehouseId = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
+$currentWarehouseName = $currentWarehouseId !== null && isset($warehouseOptions[$currentWarehouseId])
+    ? (string) $warehouseOptions[$currentWarehouseId]
+    : null;
 
 $sourceLabels = [
     'USAGE' => 'ตัดจ่ายใช้งาน',
@@ -74,6 +78,15 @@ $formatMoney = static function ($value): string {
 };
 ?>
 
+<?php $this->beginBlock('page-title'); ?>
+<?= $this->render('_page_head', [
+    'icon'  => 'bi-clock-history',
+    'title' => $this->title,
+    'currentWarehouseName' => $currentWarehouseName,
+]) ?>
+<?php $this->endBlock(); ?>
+
+
 <div class="use-history-page">
     <div class="history-head">
         <div>
@@ -83,7 +96,7 @@ $formatMoney = static function ($value): string {
         <div class="history-head__nav">
             <?= $this->render('_menu_sub_stock', [
                 'active' => 'use-history',
-                'currentWarehouseId' => !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null,
+                'currentWarehouseId' => $currentWarehouseId,
             ]) ?>
         </div>
     </div>

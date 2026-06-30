@@ -29,8 +29,23 @@ class StockAdjustController extends Controller
             ->all();
         $warehouses = ['' => '-- เลือกคลัง --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
 
+        // prefill จาก variance banner ในหน้า main-stock/balance
+        $request = Yii::$app->request;
+        $prefill = [
+            'warehouse_id' => (int) $request->get('prefill_warehouse_id', 0) ?: null,
+            'item_code' => trim((string) $request->get('prefill_item_code', '')) ?: null,
+            'qty' => $request->get('prefill_qty'),
+        ];
+        // qty อาจเป็น float ติดลบ — sanitize เก็บเป็น string ตามเดิม (input type=number step=any)
+        if ($prefill['qty'] !== null && $prefill['qty'] !== '') {
+            $prefill['qty'] = is_numeric($prefill['qty']) ? (string) (float) $prefill['qty'] : null;
+        } else {
+            $prefill['qty'] = null;
+        }
+
         return $this->render('index', [
             'warehouses' => $warehouses,
+            'prefill' => $prefill,
         ]);
     }
 

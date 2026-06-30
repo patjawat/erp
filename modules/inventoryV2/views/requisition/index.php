@@ -2,7 +2,6 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\LinkPager;
-use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\Warehouse;
@@ -59,6 +58,55 @@ $renderStatus = function ($status) {
         : '';
     return '<span class="' . $s['class'] . '">' . $icon . Html::encode($s['label']) . '</span>';
 };
+$toListTimestamp = function ($value) {
+    if (empty($value)) {
+        return null;
+    }
+    if (is_numeric($value)) {
+        return (int) $value;
+    }
+    $timestamp = strtotime((string) $value);
+    return $timestamp === false ? null : $timestamp;
+};
+$formatListDate = function ($value, $timeValue = null, $withTime = true) use ($toListTimestamp) {
+    $timestamp = $toListTimestamp($value);
+    if ($timestamp === null) {
+        return null;
+    }
+
+    $timeTimestamp = $toListTimestamp($timeValue);
+    if ($withTime && $timeTimestamp !== null && date('H:i', $timeTimestamp) !== '00:00') {
+        $timestamp = strtotime(date('Y-m-d', $timestamp) . ' ' . date('H:i:s', $timeTimestamp));
+    }
+
+    $thaiMonths = [
+        1 => 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+    ];
+    $day = (int) date('j', $timestamp);
+    $month = $thaiMonths[(int) date('n', $timestamp)] ?? '';
+    $year = (int) date('Y', $timestamp) + 543;
+    if (!$withTime) {
+        return "{$day} {$month} {$year}";
+    }
+
+    $time = date('H:i', $timestamp);
+
+    return "{$day} {$month} {$year} {$time} น.";
+};
+$renderDocumentDates = function (StockOrder $model) use ($formatListDate) {
+    $requestDate = $formatListDate($model->order_date ?: $model->created_at, $model->created_at);
+
+    return '<div class="req-doc-dates">'
+        . '<span title="วันที่ขอเบิก">' . Html::encode($requestDate ?: '—') . '</span>'
+        . '</div>';
+};
+$resolvePaidDate = function (StockOrder $model) use ($formatListDate) {
+    if ($model->status !== StockOrder::STATUS_CONFIRMED) {
+        return null;
+    }
+    return $formatListDate($model->disbursementDate, null, false);
+};
 
 /* ---------- person block (ชื่อ + ตำแหน่ง + avatar) ---------- */
 $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
@@ -91,6 +139,70 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
     return $out . '</div></div>';
 };
 
+/* ---------- item summary ---------- */
+$itemSummaryCache = [];
+$resolveItemSummary = function (StockOrder $model) use (&$itemSummaryCache) {
+    $cacheKey = $model->id ?: spl_object_hash($model);
+    if (isset($itemSummaryCache[$cacheKey])) {
+        return $itemSummaryCache[$cacheKey];
+    }
+
+    $details = $model->stockDetails ?: [];
+    $amount = 0.0;
+    $types = [];
+    foreach ($details as $detail) {
+        $amount += (float) ($detail->qty ?? 0) * (float) ($detail->unit_price ?? 0);
+
+        $item = $detail->item;
+        $category = $item ? $item->categoryType : null;
+        $typeName = $category && trim((string) ($category->title ?? '')) !== ''
+            ? trim((string) $category->title)
+            : ($item && trim((string) ($item->category_id ?? '')) !== '' ? trim((string) $item->category_id) : '');
+
+        if ($typeName !== '') {
+            $types[$typeName] = $typeName;
+        }
+    }
+
+    return $itemSummaryCache[$cacheKey] = [
+        'lineCount' => count($details),
+        'amount' => $amount,
+        'types' => array_values($types),
+    ];
+};
+$renderItemSummary = function (array $summary) {
+    $out = '<div class="req-item-summary">';
+    $out .= '<div class="req-item-summary__metrics">';
+    $out .= '<span class="req-item-summary__metric"><span class="req-item-summary__label">จำนวน</span><strong>' . number_format((int) $summary['lineCount']) . '</strong><span>รายการ</span></span>';
+    $out .= '</div>';
+    $out .= '<div class="req-item-summary__badges">';
+    if (!empty($summary['types'])) {
+        foreach ($summary['types'] as $typeName) {
+            $out .= '<span class="req-item-summary__badge">' . Html::encode($typeName) . '</span>';
+        }
+    } elseif ((int) $summary['lineCount'] > 0) {
+        $out .= '<span class="req-item-summary__badge req-item-summary__badge--muted">ไม่ระบุประเภท</span>';
+    } else {
+        $out .= '<span class="req-empty">—</span>';
+    }
+    return $out . '</div></div>';
+};
+$renderAmountValue = function (array $summary) {
+    return '<span class="req-amount-value">' . Html::encode(number_format((float) $summary['amount'], 4, '.', '')) . '</span>';
+};
+$renderPaidDateValue = function (StockOrder $model) use ($resolvePaidDate) {
+    $paidDate = $resolvePaidDate($model);
+    return $paidDate !== null
+        ? '<span class="req-paid-date">' . Html::encode($paidDate) . '</span>'
+        : '<span class="req-empty">—</span>';
+};
+$renderMobileSettlement = function (array $summary, StockOrder $model) use ($renderAmountValue, $renderPaidDateValue) {
+    return '<div class="req-card-settlement">'
+        . '<span class="req-card-settlement__item"><span class="req-card-settlement__label">มูลค่า</span>' . $renderAmountValue($summary) . '</span>'
+        . '<span class="req-card-settlement__item"><span class="req-card-settlement__label">วันที่จ่าย</span>' . $renderPaidDateValue($model) . '</span>'
+        . '</div>';
+};
+
 /* ---------- resolvers ---------- */
 $resolveRequester = function (StockOrder $model) use ($empsById, $empsByUserId) {
     $eid = $model->getIssueSignatureEmpId('requester');
@@ -109,12 +221,15 @@ $warehouseName = function ($id) use ($warehousesById) {
 };
 $mainWarehouseLabel = $searchModel->getAttributeLabel('main_warehouse_id');
 $recipientUnitLabel = $searchModel->getAttributeLabel('sub_warehouse_id');
+$currentWarehouseName = $warehouseName($currentWarehouseId);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
 <?= $this->render('@app/modules/inventoryV2/views/sub-stock/_page_head', [
     'icon'  => 'bi-file-earmark-text',
     'title' => $this->title,
+    'currentWarehouseId' => $currentWarehouseId,
+    'currentWarehouseName' => $currentWarehouseName ?? null,
 ]) ?>
 <?php $this->endBlock(); ?>
 
@@ -183,8 +298,10 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                 <th scope="col">ผู้ขอเบิก</th>
                                 <th scope="col"><?= Html::encode($mainWarehouseLabel) ?></th>
                                 <th scope="col"><?= Html::encode($recipientUnitLabel) ?></th>
-                                <th class="req-table__date" scope="col">วันที่ขอเบิก</th>
-                                <th scope="col">ผู้อนุมัติใบเบิก</th>
+                                <th class="req-table__items" scope="col">รายการเบิก</th>
+                                <th class="req-table__amount" scope="col">มูลค่า</th>
+                                <th class="req-table__paid-date" scope="col">วันที่จ่าย</th>
+                                <th scope="col">หัวหน้าตรวจสอบ</th>
                                 <th class="req-table__status" scope="col">สถานะ</th>
                                 <th class="req-table__action" scope="col"></th>
                             </tr>
@@ -199,6 +316,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                 $approverSig = $model->getIssueSignature('approver');
                                 $mainWarehouseName = $warehouseName($model->main_warehouse_id) ?? '—';
                                 $recipientUnitName = $warehouseName($model->sub_warehouse_id) ?? '—';
+                                $itemSummary = $resolveItemSummary($model);
                                 ?>
                                 <tr>
                                     <td class="req-table__no"><?= $offset + $idx + 1 ?></td>
@@ -207,9 +325,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                             'class' => 'req-doc-link open-modal',
                                             'data' => ['size' => 'modal-xl'],
                                         ]) ?>
-                                        <?php if ($model->isMigratedFromV1()): ?>
-                                            <span class="badge bg-secondary ms-1" title="ย้ายมาจาก Inventory V1">V1</span>
-                                        <?php endif; ?>
+                                        <?= $renderDocumentDates($model) ?>
                                     </td>
                                     <td>
                                         <?= $renderPerson($requesterEmp, $requesterSig['name'] ?? '', $requesterSig['position'] ?? '') ?>
@@ -220,8 +336,14 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                     <td class="req-table__warehouse" title="<?= Html::encode($recipientUnitName) ?>">
                                         <?= Html::encode($recipientUnitName) ?>
                                     </td>
-                                    <td class="req-table__date">
-                                        <?= $model->order_date ? Html::encode(ThaiDateHelper::formatThaiDate($model->order_date)) : '<span class="req-empty">—</span>' ?>
+                                    <td class="req-table__items">
+                                        <?= $renderItemSummary($itemSummary) ?>
+                                    </td>
+                                    <td class="req-table__amount">
+                                        <?= $renderAmountValue($itemSummary) ?>
+                                    </td>
+                                    <td class="req-table__paid-date">
+                                        <?= $renderPaidDateValue($model) ?>
                                     </td>
                                     <td>
                                         <?= $renderPerson($approverEmp, $approverSig['name'] ?? '', $approverSig['position'] ?? '') ?>
@@ -259,6 +381,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                         $approverSig = $model->getIssueSignature('approver');
                         $mainWarehouseName = $warehouseName($model->main_warehouse_id) ?? '—';
                         $recipientUnitName = $warehouseName($model->sub_warehouse_id) ?? '—';
+                        $itemSummary = $resolveItemSummary($model);
                         ?>
                         <li class="req-card">
                             <a href="<?= Url::to(['view', 'id' => $model->id]) ?>" class="req-card__main open-modal" data-size="modal-xl">
@@ -271,9 +394,10 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                     </span>
                                     <?= $renderStatus($model->status) ?>
                                 </div>
+                                <?= $renderDocumentDates($model) ?>
+                                <?= $renderItemSummary($itemSummary) ?>
+                                <?= $renderMobileSettlement($itemSummary, $model) ?>
                                 <div class="req-card__meta">
-                                    <span><?= $model->order_date ? Html::encode(ThaiDateHelper::formatThaiDate($model->order_date)) : '—' ?></span>
-                                    <span class="req-card__sep">·</span>
                                     <span class="req-card__route">
                                         <span class="req-card__route-item">
                                             <span class="req-card__route-label"><?= Html::encode($mainWarehouseLabel) ?></span>
@@ -292,7 +416,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                         <?= $renderPerson($requesterEmp, $requesterSig['name'] ?? '', $requesterSig['position'] ?? '') ?>
                                     </div>
                                     <div class="req-card__person">
-                                        <span class="req-card__person-label">ผู้อนุมัติ</span>
+                                        <span class="req-card__person-label">หัวหน้าตรวจสอบ</span>
                                         <?= $renderPerson($approverEmp, $approverSig['name'] ?? '', $approverSig['position'] ?? '') ?>
                                     </div>
                                 </div>
@@ -407,13 +531,24 @@ foreach (['action', 'page-action'] as $actionBlock) {
     font-size: 0.82rem;
 }
 .req-table__doc { width: 1%; white-space: nowrap; }
-.req-table__date {
+.req-table__warehouse { color: var(--ink-2); max-width: 14rem; }
+.req-table__items {
+    min-width: 15rem;
+    max-width: 20rem;
+}
+.req-table__amount {
     width: 1%;
-    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+.req-table th.req-table__amount {
+    text-align: right;
+}
+.req-table__paid-date {
+    width: 1%;
     color: var(--ink-2);
     white-space: nowrap;
 }
-.req-table__warehouse { color: var(--ink-2); max-width: 14rem; }
 .req-table__status { width: 1%; white-space: nowrap; }
 .req-table__action { width: 1%; white-space: nowrap; text-align: right; }
 .req-table__action .btn + .btn { margin-left: 0.25rem; }
@@ -425,6 +560,32 @@ foreach (['action', 'page-action'] as $actionBlock) {
     font-variant-numeric: tabular-nums;
 }
 .req-doc-link:hover { text-decoration: underline; }
+.req-doc-dates {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.4rem;
+    margin-top: 0.18rem;
+    color: var(--ink-3);
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.35;
+    white-space: normal;
+}
+.req-amount-value {
+    display: inline-block;
+    min-width: 5.8rem;
+    color: var(--ink-1);
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    text-align: right;
+}
+.req-paid-date {
+    color: var(--ink-2);
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
 
 /* person */
 .req-person {
@@ -465,6 +626,59 @@ foreach (['action', 'page-action'] as $actionBlock) {
     margin-top: 1px;
 }
 .req-empty { color: var(--ink-4); }
+.req-item-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+}
+.req-item-summary__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.7rem;
+}
+.req-item-summary__metric {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    color: var(--ink-2);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+.req-item-summary__metric strong {
+    color: var(--ink-1);
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+.req-item-summary__label {
+    color: var(--ink-3);
+    font-weight: 700;
+}
+.req-item-summary__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.req-item-summary__badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.req-item-summary__badge--muted {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: var(--ink-3);
+}
 
 /* mobile cards */
 .req-cards {
@@ -490,6 +704,32 @@ foreach (['action', 'page-action'] as $actionBlock) {
     display: flex; align-items: center; justify-content: space-between;
     gap: 0.5rem;
     margin-bottom: 0.4rem;
+}
+.req-card .req-item-summary {
+    margin: 0.65rem 0 0.55rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #e2e8f0;
+}
+.req-card-settlement {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 1rem;
+    margin: 0.2rem 0 0.55rem;
+}
+.req-card-settlement__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 7rem;
+}
+.req-card-settlement__label {
+    color: var(--ink-3);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.req-card-settlement .req-amount-value {
+    min-width: 0;
+    text-align: left;
 }
 .req-card__doc {
     color: var(--primary-ink);

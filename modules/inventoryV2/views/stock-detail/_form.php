@@ -14,7 +14,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'stock_order_id')->textInput() ?>
 
-    <?= $form->field($model, 'item_id')->textInput() ?>
+    <?= $form->field($model, 'item_code')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'qty')->textInput(['maxlength' => true]) ?>
 
@@ -26,7 +26,17 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'ref')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'data_json')->textInput() ?>
+    <?php
+    $dataJsonValue = $model->data_json;
+    if (is_array($dataJsonValue) || is_object($dataJsonValue)) {
+        $dataJsonValue = json_encode($dataJsonValue, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+    ?>
+    <?= $form->field($model, 'data_json')->textarea([
+        'rows' => 4,
+        'value' => $dataJsonValue,
+        'placeholder' => 'JSON string (ปล่อยว่างได้)',
+    ]) ?>
 
     <?= $form->field($model, 'created_at')->textInput() ?>
 

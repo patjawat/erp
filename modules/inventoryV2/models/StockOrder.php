@@ -20,9 +20,9 @@ use Yii;
  * @property string|null $ref อ้างอิงเลขที่ใบ PO หรือ PR
  * @property string|null $data_json
  * @property int|null $disbursement_date วันที่จ่าย (Unix timestamp)
- * @property int|null $created_at
+ * @property string|null $created_at
  * @property int|null $created_by
- * @property int|null $updated_at
+ * @property string|null $updated_at
  * @property int|null $updated_by
  *
  * @property StockDetail[] $stockDetails
@@ -64,14 +64,14 @@ class StockOrder extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['source_type', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'ref', 'data_json', 'disbursement_date', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
+            [['source_type', 'main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'ref', 'data_json', 'disbursement_date', 'emp_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['status'], 'default', 'value' => 'DRAFT'],
             [['order_type', 'order_date'], 'required'],
             [['order_no'], 'string', 'max' => 100],
             [['order_no'], 'unique'],
             [['order_type', 'status'], 'string'],
-            [['order_date', 'data_json'], 'safe'],
-            [['main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'disbursement_date', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['order_date', 'data_json', 'created_at', 'updated_at'], 'safe'],
+            [['main_warehouse_id', 'sub_warehouse_id', 'contact_id', 'disbursement_date', 'emp_id', 'created_by', 'updated_by'], 'integer'],
             [['source_type'], 'string', 'max' => 50],
             [['ref'], 'string', 'max' => 255],
             ['order_type', 'in', 'range' => array_keys(self::optsOrderType())],

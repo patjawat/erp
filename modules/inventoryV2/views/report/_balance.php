@@ -307,9 +307,11 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                             ประวัติการเคลื่อนไหววัสดุ
                         </h5>
                         <div class="bal-history-modal__meta">
-                            <span><i class="bi bi-upc-scan" aria-hidden="true"></i><strong id="hist-item-code">-</strong></span>
-                            <span><i class="bi bi-box" aria-hidden="true"></i><strong id="hist-item-name">-</strong></span>
-                            <span><i class="bi bi-building" aria-hidden="true"></i><strong id="hist-warehouse">-</strong></span>
+                            <span><strong id="hist-item-code">-</strong></span>
+                            <span class="sep" aria-hidden="true">·</span>
+                            <span><strong id="hist-item-name">-</strong></span>
+                            <span class="sep" aria-hidden="true">·</span>
+                            <span><strong id="hist-warehouse">-</strong></span>
                         </div>
                     </div>
                 </div>
@@ -352,7 +354,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     </button>
                 </form>
 
-                <ul class="bal-history-stats" aria-label="สรุปยอดเคลื่อนไหว">
+                <ul class="bal-history-stats" aria-label="สรุปยอดเคลื่อนไหว" aria-live="polite">
                     <li class="bal-history-stat">
                         <span class="bal-history-stat__label">ยอดยกมา</span>
                         <span class="bal-history-stat__value" id="hist-bf-qty">0</span>
@@ -361,18 +363,63 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     <li class="bal-history-stat">
                         <span class="bal-history-stat__label">เคลื่อนไหวในช่วงเวลา</span>
                         <span class="bal-history-stat__value bal-history-stat__value--inout">
-                            <span class="in" id="hist-total-in">+0</span>
-                            <span class="sep">/</span>
-                            <span class="out" id="hist-total-out">-0</span>
+                            <span class="dir-mark dir-mark--in" aria-hidden="true"><i class="bi bi-arrow-down-left"></i></span>
+                            <span id="hist-total-in">0</span>
+                            <span class="sep" aria-hidden="true">/</span>
+                            <span class="dir-mark dir-mark--out" aria-hidden="true"><i class="bi bi-arrow-up-right"></i></span>
+                            <span id="hist-total-out">0</span>
                         </span>
                         <span class="bal-history-stat__sub"><span id="hist-tx-count">0</span> รายการ</span>
                     </li>
-                    <li class="bal-history-stat bal-history-stat--primary">
-                        <span class="bal-history-stat__label">ยอดคงเหลือปัจจุบัน</span>
+                    <li class="bal-history-stat bal-history-stat--hero">
+                        <span class="bal-history-stat__label">
+                            ยอดคงเหลือปัจจุบัน
+                            <span class="bal-history-stat__sticker" title="ค่าตรงจากตาราง stock_balance ของระบบ">ยอดจริงในระบบ</span>
+                        </span>
                         <span class="bal-history-stat__value" id="hist-current-qty">0</span>
                         <span class="bal-history-stat__sub"><span id="hist-unit-name">หน่วย</span></span>
                     </li>
                 </ul>
+
+                <!-- variance / match strip (toggled by JS) -->
+                <div id="hist-variance" class="bal-history-variance" role="alert" aria-live="assertive" hidden>
+                    <div class="bal-history-variance__head">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                        <span class="bal-history-variance__title">ยอดสะสมไม่ตรงกับยอดคงเหลือในระบบ</span>
+                    </div>
+                    <div class="bal-history-variance__numbers">
+                        <span class="bal-history-variance__delta">
+                            ผลต่าง <strong id="hist-variance-delta">0</strong>
+                        </span>
+                        <span class="bal-history-variance__breakdown">
+                            (สะสม <strong id="hist-variance-running">0</strong>
+                            <span class="sep">·</span>
+                            ระบบ <strong id="hist-variance-truth">0</strong>)
+                        </span>
+                    </div>
+                    <ul class="bal-history-variance__causes">
+                        <li>มีการย้ายข้อมูลจาก V1 ที่ snapshot ไม่ครบ → <a href="#" id="hist-link-negative" target="_blank" rel="noopener">ดูยอดติดลบทั้งระบบ</a></li>
+                        <li>ยังไม่ตั้งยอดยกมาตั้งต้น (INITIAL) ก่อนช่วงนี้ → <a href="#" id="hist-link-initial" target="_blank" rel="noopener">ไปหน้ารับเข้า</a></li>
+                        <li>ข้อมูลใน stock_detail กับ stock_balance ไม่ sync → <a href="#" id="hist-link-detail" target="_blank" rel="noopener">ตรวจรายละเอียดล็อต</a></li>
+                    </ul>
+                    <div class="bal-history-variance__actions">
+                        <a href="#" id="hist-link-adjust" class="bal-history-variance__primary" target="_blank" rel="noopener">
+                            <i class="bi bi-sliders" aria-hidden="true"></i>ไปหน้าปรับยอด stock
+                        </a>
+                        <div class="bal-history-variance__copyhint">
+                            <span>ใช้เลขนี้ในช่อง "จำนวนที่ปรับ":</span>
+                            <button type="button" class="bal-history-variance__copybtn" id="hist-copy-qty" title="คัดลอกตัวเลข">
+                                <code id="hist-copy-val">0</code>
+                                <i class="bi bi-clipboard" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="hist-match" class="bal-history-match" hidden>
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                    ยอดสะสมตรงกับยอดคงเหลือในระบบ
+                </div>
 
                 <div class="table-responsive bal-history-table-wrap">
                     <table class="table align-middle mb-0 bal-history-table">
@@ -401,7 +448,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     <i class="bi bi-info-circle" aria-hidden="true"></i>
                     นับเฉพาะเอกสารที่ยืนยันแล้ว (CONFIRMED)
                 </span>
-                <button type="button" class="btn btn-success btn-sm" id="hist-export-btn" disabled>
+                <button type="button" class="btn btn-sm bal-history-modal__export" id="hist-export-btn" disabled>
                     <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
                 </button>
                 <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">ปิด</button>
@@ -838,28 +885,48 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     flex-shrink: 0;
 }
 .bal-history-modal__title {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3rem;
     color: var(--ink-1) !important;
     font-size: 1.05rem;
-    font-weight: 700;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
 }
-.bal-history-modal__title i { color: var(--primary); font-size: 1rem; }
+.bal-history-modal__title i { color: var(--ink-3); font-size: 0.9rem; }
 .bal-history-modal__meta {
     display: flex;
     flex-wrap: wrap;
-    column-gap: 1.25rem;
+    align-items: center;
+    column-gap: 0.5rem;
     row-gap: 0.15rem;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--ink-2);
 }
-.bal-history-modal__meta i {
-    color: var(--primary);
-    margin-right: 0.3rem;
-}
+.bal-history-modal__meta .sep { color: var(--ink-4); }
 .bal-history-modal__meta strong { color: var(--ink-1); font-weight: 600; }
+.bal-history-modal__export {
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    color: #fff;
+    font-weight: 600;
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.bal-history-modal__export:hover:not(:disabled) {
+    background: var(--primary-ink);
+    border-color: var(--primary-ink);
+    color: #fff;
+}
+.bal-history-modal__export:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.bal-history-modal__export:disabled {
+    background: var(--surface-3);
+    border-color: var(--line-strong);
+    color: var(--ink-3);
+    cursor: not-allowed;
+}
 .bal-history-modal__hint {
     font-size: 0.78rem;
     color: var(--ink-3);
@@ -894,21 +961,22 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     align-items: center;
     gap: 0.3rem;
     padding: 0.45rem 0.95rem;
-    background: var(--primary);
-    border: 1px solid var(--primary);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
-    color: #fff;
+    color: var(--ink-1);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 .bal-history-filter__btn:hover {
-    background: var(--primary-ink);
-    border-color: var(--primary-ink);
+    background: var(--surface-hover);
+    border-color: var(--ink-3);
 }
 .bal-history-filter__btn:focus-visible {
     outline: none;
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
@@ -916,79 +984,315 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 .bal-history-stats {
     list-style: none;
     padding: 0;
-    margin: 0 0 1rem;
+    margin: 0 0 0.85rem;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 2fr 2.2fr 2.6fr;
     gap: 0.5rem;
 }
 .bal-history-stat {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    padding: 0.7rem 0.95rem;
+    gap: 0.2rem;
+    padding: 0.75rem 0.95rem;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
 }
-.bal-history-stat--primary {
-    background: var(--primary-soft);
-    border-color: var(--primary-line);
-}
+.bal-history-stat--hero { padding: 0.8rem 1rem; }
 .bal-history-stat__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--ink-2);
+}
+.bal-history-stat__sticker {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--ink-3);
+    background: var(--surface-3);
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    cursor: help;
 }
 .bal-history-stat__value {
     font-size: 1.45rem;
     font-weight: 700;
     color: var(--ink-1);
-    line-height: 1.1;
+    line-height: 1.05;
     font-variant-numeric: tabular-nums;
 }
-.bal-history-stat--primary .bal-history-stat__value { color: var(--primary-ink); }
+.bal-history-stat--hero .bal-history-stat__value { font-size: 1.6rem; }
 .bal-history-stat__value--inout {
-    display: flex;
-    gap: 0.35rem;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
     align-items: baseline;
+    font-size: 1.25rem;
+    color: var(--ink-1);
 }
-.bal-history-stat__value--inout .in { color: var(--success); }
-.bal-history-stat__value--inout .out { color: var(--danger); }
-.bal-history-stat__value--inout .sep { color: var(--ink-4); font-weight: 400; font-size: 1rem; }
+.bal-history-stat__value--inout .sep {
+    color: var(--ink-4);
+    font-weight: 400;
+    font-size: 0.95rem;
+    align-self: center;
+}
 .bal-history-stat__sub {
     font-size: 0.78rem;
     color: var(--ink-3);
     font-variant-numeric: tabular-nums;
 }
 
+/* Direction marks (neutral — color reserved for negative balance + variance) */
+.dir-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-3);
+    color: var(--ink-2);
+}
+.dir-mark i { font-size: 0.78rem; line-height: 1; }
+.dir-mark--in i { transform: translate(0, 0); }
+.dir-mark--out i { transform: translate(0, 0); }
+
+/* === Variance banner === */
+.bal-history-variance {
+    margin: 0 0 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--danger-soft);
+    border: 1px solid var(--danger-line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    transition: opacity var(--t-mid) var(--ease), transform var(--t-mid) var(--ease);
+}
+.bal-history-variance[hidden] { display: none !important; }
+.bal-history-variance.is-entering {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+.bal-history-variance__head {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--danger);
+}
+.bal-history-variance__head i { font-size: 1rem; }
+.bal-history-variance__numbers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--ink-2);
+}
+.bal-history-variance__delta strong {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    margin-left: 0.3rem;
+}
+.bal-history-variance__breakdown {
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+}
+.bal-history-variance__breakdown strong { color: var(--ink-1); font-weight: 600; }
+.bal-history-variance__breakdown .sep { color: var(--ink-4); margin: 0 0.2rem; }
+.bal-history-variance__causes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+}
+.bal-history-variance__causes li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+.bal-history-variance__causes li::before {
+    content: '•';
+    color: var(--ink-4);
+}
+.bal-history-variance__causes a {
+    color: var(--primary-ink);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px dashed var(--primary-line);
+    padding-bottom: 1px;
+}
+.bal-history-variance__causes a:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.bal-history-variance__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.15rem;
+}
+.bal-history-variance__primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.bal-history-variance__primary:hover {
+    background: #991616;
+    border-color: #991616;
+    color: #fff;
+}
+.bal-history-variance__primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.bal-history-variance__hint {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+}
+.bal-history-variance__copyhint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--ink-2);
+}
+.bal-history-variance__copybtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font: inherit;
+    color: var(--ink-1);
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.bal-history-variance__copybtn code {
+    font-family: ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--danger);
+    font-variant-numeric: tabular-nums;
+    background: transparent;
+    padding: 0;
+}
+.bal-history-variance__copybtn i { color: var(--ink-3); font-size: 0.8rem; }
+.bal-history-variance__copybtn:hover { background: var(--surface-hover); border-color: var(--ink-3); }
+.bal-history-variance__copybtn:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.bal-history-variance__copybtn.is-copied {
+    background: var(--success-soft);
+    border-color: var(--success);
+}
+.bal-history-variance__copybtn.is-copied i::before {
+    content: "\f26b"; /* bi-clipboard-check */
+}
+.bal-history-variance__copybtn.is-copied i { color: var(--success); }
+
+/* Match strip */
+.bal-history-match {
+    margin: 0 0 0.85rem;
+    padding: 0.45rem 0.85rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--success);
+    font-weight: 600;
+}
+.bal-history-match[hidden] { display: none !important; }
+.bal-history-match i { font-size: 0.9rem; }
+
 /* === History table === */
 .bal-history-table-wrap { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.bal-history-table { font-size: 0.86rem; }
+.bal-history-table { font-size: 0.875rem; line-height: 1.45; margin-bottom: 0; }
 .bal-history-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     font-weight: 600;
-    font-size: 0.76rem;
-    color: var(--ink-2);
+    font-size: 0.78rem;
+    color: var(--ink-3);
     background: var(--surface-2);
     border-bottom: 1px solid var(--line);
-    padding: 0.5rem 0.75rem;
+    padding: 0.55rem 0.75rem;
+    letter-spacing: 0;
+    text-transform: none;
 }
 .bal-history-table tbody td {
     font-variant-numeric: tabular-nums;
     padding: 0.5rem 0.75rem;
     border-color: var(--line);
+    color: var(--ink-1);
+    vertical-align: middle;
 }
+.bal-history-table tbody tr {
+    transition: background-color var(--t-fast) var(--ease);
+}
+.bal-history-table tbody tr:hover { background: var(--surface-hover); }
+.bal-history-table .muted { color: var(--ink-4); }
+.bal-history-table .text-meta { color: var(--ink-3); }
 .bal-history-table .direction-pill {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
-    padding: 0.15rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 600;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-3);
+    color: var(--ink-2);
+    font-size: 0.78rem;
 }
-.bal-history-table .direction-pill.in { background: var(--success-soft); color: var(--success); }
-.bal-history-table .direction-pill.out { background: var(--danger-soft); color: var(--danger); }
-.bal-history-table tr.bf-row { background: var(--surface-2); font-weight: 600; color: var(--ink-1); }
+.bal-history-table .direction-pill i { line-height: 1; }
+.bal-history-table .doc-chip {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    background: var(--surface-3);
+    color: var(--ink-2);
+    border-radius: var(--radius-xs);
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.bal-history-table td.is-negative {
+    color: var(--danger);
+    font-weight: 700;
+}
+.bal-history-table tr.bf-row {
+    background: var(--surface-2);
+    font-weight: 600;
+    color: var(--ink-1);
+}
+.bal-history-table tr.bf-row:hover { background: var(--surface-2); }
+.bal-history-table tr.bf-row td { border-top: 0; }
 .bal-history-empty { color: var(--ink-3); padding: 1.25rem 0; }
 
 @keyframes bal-skel {
@@ -1006,12 +1310,16 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 /* === Responsive === */
 @media (max-width: 991.98px) {
     .bal-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bal-history-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bal-history-stat--hero { grid-column: 1 / -1; }
 }
 @media (max-width: 767.98px) {
     .bal-toolbar__field { flex: 1 1 auto; min-width: 130px; }
     .bal-toolbar__actions { flex: 1 1 100%; justify-content: flex-end; }
     .bal-history-stats { grid-template-columns: 1fr; }
+    .bal-history-stat--hero { grid-column: auto; }
     .bal-cell-warehouse { max-width: 9rem; }
+    .bal-history-variance__numbers { gap: 0.4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1023,7 +1331,12 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     .bal-item__thumb,
     .bal-history-btn,
     #itemHistoryModal .modal-dialog,
-    .bal-history-filter__btn { transition: none !important; }
+    .bal-history-filter__btn,
+    .bal-history-modal__export,
+    .bal-history-variance,
+    .bal-history-variance__primary,
+    .bal-history-table tbody tr { transition: none !important; }
+    .bal-history-variance.is-entering { opacity: 1; transform: none; }
     .bal-skeleton { animation: none; background: rgba(15,23,42,0.08); }
 }
 </style>
@@ -1041,9 +1354,55 @@ $js = <<<JS
     var fmt = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     var fmtInt = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 0 });
 
+    // หน่วยที่นับเป็นจำนวนเต็มเสมอ → 0 ทศนิยม; อื่น ๆ → 2 ทศนิยม
+    var integerUnits = ['ชิ้น','แผ่น','ม้วน','ขวด','กล่อง','ชุด','ใบ','อัน','คู่','ซอง','ห่อ','ตัว','เครื่อง','ถัง','ลัง','แท่ง','แท็บเล็ต','ฉบับ','เล่ม'];
+    function isIntegerUnit(unit) {
+        if (!unit) return false;
+        var u = String(unit).trim();
+        for (var i = 0; i < integerUnits.length; i++) {
+            if (u === integerUnits[i] || u.indexOf(integerUnits[i]) !== -1) return true;
+        }
+        return false;
+    }
+    function fmtUnit(qty, unit) {
+        return isIntegerUnit(unit) ? fmtInt.format(qty) : fmt.format(qty);
+    }
+    function todayISO() {
+        var d = new Date();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + m + '-' + day;
+    }
+
     function setText(id, val) {
         var el = document.getElementById(id);
         if (el) el.textContent = val;
+    }
+
+    // Stat tick: ค่อย ๆ นับเลขจากเดิม → ใหม่ ภายใน 240ms; ผลต่างน้อย < 0.5 → set ทันที
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function tickValue(id, target, unit) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var raw = parseFloat(String(el.dataset.raw || '0').replace(/[^0-9.\-]/g, ''));
+        if (isNaN(raw)) raw = 0;
+        var delta = target - raw;
+        el.dataset.raw = String(target);
+        if (prefersReducedMotion || Math.abs(delta) < 0.5) {
+            el.textContent = fmtUnit(target, unit);
+            return;
+        }
+        var start = performance.now();
+        var dur = 240;
+        function step(now) {
+            var t = Math.min(1, (now - start) / dur);
+            // ease-out-expo
+            var eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            var v = raw + delta * eased;
+            el.textContent = fmtUnit(v, unit);
+            if (t < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
     }
 
     function skeletonRows() {
@@ -1127,15 +1486,85 @@ $js = <<<JS
         window.location.href = $jsExportHistoryUrl + '?' + params.toString();
     }
 
+    function buildQuickLinks(itemCode, warehouseId, variance) {
+        var ic = encodeURIComponent(itemCode);
+        var wh = encodeURIComponent(warehouseId);
+        return {
+            // หน้าฟอร์มปรับยอด (user ต้องเลือกคลัง+พัสดุเอง — ดูเหตุผลที่เปิดในแท็บใหม่)
+            adjust: '/inventory-v2/stock-adjust/index?prefill_warehouse_id=' + wh + '&prefill_item_code=' + ic + '&prefill_qty=' + encodeURIComponent(variance),
+            // Dashboard รวมยอดติดลบทั้งระบบ
+            negative: '/inventory-v2/stock-adjust/negative-balance',
+            // หน้า receive (สำหรับ INITIAL ยอดตั้งต้น)
+            initial: '/inventory-v2/receive/create',
+            // ตรวจ stock-detail ของพัสดุนี้ (Yii SearchModel filter)
+            detail: '/inventory-v2/stock-detail/index?StockDetailSearch%5Bitem_code%5D=' + ic
+        };
+    }
+
+    function renderVariance(res, unit) {
+        var variancePanel = document.getElementById('hist-variance');
+        var matchPanel = document.getElementById('hist-match');
+        if (!variancePanel || !matchPanel) return;
+
+        var lastRunning = res.transactions.length
+            ? Number(res.transactions[res.transactions.length - 1].balance_qty)
+            : Number(res.summary.qty_bf);
+        var truth = Number(res.summary.current_qty);
+        var variance = truth - lastRunning;
+        var isOutOfSync = Math.abs(variance) > 0.001;
+        var endIsToday = res.meta.end_date === todayISO();
+
+        // ถ้าผู้ใช้เลือก end_date ก่อนวันนี้ → variance ไม่มีความหมาย (truth = ปัจจุบัน)
+        if (!endIsToday) {
+            variancePanel.hidden = true;
+            matchPanel.hidden = true;
+            return;
+        }
+
+        if (isOutOfSync) {
+            matchPanel.hidden = true;
+            // populate ตัวเลข
+            setText('hist-variance-delta', (variance > 0 ? '+' : '') + fmtUnit(variance, unit));
+            setText('hist-variance-running', fmtUnit(lastRunning, unit));
+            setText('hist-variance-truth', fmtUnit(truth, unit));
+            // populate link
+            var links = buildQuickLinks(ctx.item_code, ctx.warehouse_id, variance);
+            var lAdjust = document.getElementById('hist-link-adjust');
+            var lNegative = document.getElementById('hist-link-negative');
+            var lInitial = document.getElementById('hist-link-initial');
+            var lDetail = document.getElementById('hist-link-detail');
+            if (lAdjust) lAdjust.href = links.adjust;
+            if (lNegative) lNegative.href = links.negative;
+            if (lInitial) lInitial.href = links.initial;
+            if (lDetail) lDetail.href = links.detail;
+            // copy-to-clipboard hint: ตัวเลขที่ user ต้องกรอกใน "จำนวนที่ปรับ" คือ variance
+            var copyVal = document.getElementById('hist-copy-val');
+            if (copyVal) copyVal.textContent = (variance > 0 ? '+' : '') + fmtUnit(variance, unit);
+            // reveal กับ subtle enter
+            variancePanel.hidden = false;
+            variancePanel.classList.add('is-entering');
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    variancePanel.classList.remove('is-entering');
+                });
+            });
+        } else {
+            variancePanel.hidden = true;
+            matchPanel.hidden = false;
+        }
+    }
+
     function render(res) {
-        setText('hist-bf-qty', fmt.format(res.summary.qty_bf));
+        var unit = res.meta.unit_name || ctx.unit_name || '-';
+
+        // Stat values พร้อม tick animation
+        tickValue('hist-bf-qty', Number(res.summary.qty_bf), unit);
         setText('hist-bf-value', fmt.format(res.summary.value_bf));
-        setText('hist-total-in', '+' + fmt.format(res.summary.total_in));
-        setText('hist-total-out', '-' + fmt.format(res.summary.total_out));
-        setText('hist-current-qty', fmt.format(res.summary.current_qty));
+        tickValue('hist-total-in', Number(res.summary.total_in), unit);
+        tickValue('hist-total-out', Number(res.summary.total_out), unit);
+        tickValue('hist-current-qty', Number(res.summary.current_qty), unit);
         setText('hist-tx-count', fmtInt.format(res.summary.tx_count));
 
-        var unit = res.meta.unit_name || ctx.unit_name || '-';
         setText('hist-unit-name', 'หน่วย: ' + unit);
 
         if (res.meta.image_url) {
@@ -1148,16 +1577,20 @@ $js = <<<JS
         var tbody = document.getElementById('hist-tbody');
         var html = '';
 
+        // ยอดยกมา (bf-row) — ถ้าติดลบ → แดง
+        var bfNegCls = res.summary.qty_bf < 0 ? ' is-negative' : '';
+        var bfValNegCls = res.summary.value_bf < 0 ? ' is-negative' : '';
+        var bfSrText = res.summary.qty_bf < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
         html += '<tr class="bf-row">' +
             '<td colspan="3" class="text-end">' +
                 '<i class="bi bi-arrow-bar-right me-1"></i>ยอดยกมา ณ ' + escHtml(res.meta.start_date) +
             '</td>' +
-            '<td class="text-center">—</td>' +
-            '<td class="text-end">—</td>' +
-            '<td class="text-end">—</td>' +
-            '<td class="text-end">' + fmt.format(res.summary.qty_bf) + '</td>' +
-            '<td class="text-end d-none d-md-table-cell">' + fmt.format(res.summary.value_bf) + '</td>' +
-            '<td class="d-none d-md-table-cell">—</td>' +
+            '<td class="text-center"><span class="muted">—</span></td>' +
+            '<td class="text-end"><span class="muted">—</span></td>' +
+            '<td class="text-end"><span class="muted">—</span></td>' +
+            '<td class="text-end' + bfNegCls + '">' + bfSrText + fmtUnit(res.summary.qty_bf, unit) + '</td>' +
+            '<td class="text-end d-none d-md-table-cell' + bfValNegCls + '">' + fmt.format(res.summary.value_bf) + '</td>' +
+            '<td class="d-none d-md-table-cell"><span class="muted">—</span></td>' +
         '</tr>';
 
         if (!res.transactions.length) {
@@ -1168,23 +1601,32 @@ $js = <<<JS
                 var pillCls = t.direction === 'in' ? 'in' : 'out';
                 var pillLabel = t.direction === 'in' ? 'รับเข้า' : 'จ่ายออก';
                 var pillIcon = t.direction === 'in' ? 'arrow-down-left' : 'arrow-up-right';
+                var sign = t.direction === 'in' ? '+' : '-';
+                var balCls = t.balance_qty < 0 ? ' is-negative' : '';
+                var balValCls = t.balance_value < 0 ? ' is-negative' : '';
+                var balSr = t.balance_qty < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
+                var balValSr = t.balance_value < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
+
                 html += '<tr>' +
-                    '<td class="text-nowrap">' + escHtml(t.date) + ' <span class="text-muted">' + escHtml(t.time) + '</span></td>' +
-                    '<td class="text-nowrap"><span class="bal-badge" style="background:var(--surface-3);color:var(--ink-2)">' + escHtml(t.order_no) + '</span></td>' +
+                    '<td class="text-nowrap">' + escHtml(t.date) + ' <span class="text-meta">' + escHtml(t.time) + '</span></td>' +
+                    '<td class="text-nowrap"><span class="doc-chip">' + escHtml(t.order_no) + '</span></td>' +
                     '<td>' + escHtml(t.source_label) + '</td>' +
-                    '<td class="text-center"><span class="direction-pill ' + pillCls + '">' +
-                        '<i class="bi bi-' + pillIcon + '"></i>' + pillLabel + '</span></td>' +
-                    '<td class="text-end fw-semibold" style="color:' + (t.direction === 'in' ? 'var(--success)' : 'var(--danger)') + '">' +
-                        (t.direction === 'in' ? '+' : '-') + fmt.format(t.qty) + '</td>' +
-                    '<td class="text-end" style="color:var(--ink-3)">' + fmt.format(t.unit_price) + '</td>' +
-                    '<td class="text-end fw-semibold">' + fmt.format(t.balance_qty) + '</td>' +
-                    '<td class="text-end d-none d-md-table-cell" style="color:var(--primary-ink)">' + fmt.format(t.balance_value) + '</td>' +
-                    '<td class="d-none d-md-table-cell" style="color:var(--ink-3)">' + escHtml(t.lot) + '</td>' +
+                    '<td class="text-center">' +
+                        '<span class="direction-pill" title="' + pillLabel + '" aria-label="' + pillLabel + '">' +
+                            '<i class="bi bi-' + pillIcon + '" aria-hidden="true"></i>' +
+                        '</span>' +
+                    '</td>' +
+                    '<td class="text-end fw-semibold">' + sign + fmtUnit(t.qty, unit) + '</td>' +
+                    '<td class="text-end text-meta">' + fmt.format(t.unit_price) + '</td>' +
+                    '<td class="text-end fw-semibold' + balCls + '">' + balSr + fmtUnit(t.balance_qty, unit) + '</td>' +
+                    '<td class="text-end d-none d-md-table-cell' + balValCls + '">' + balValSr + fmt.format(t.balance_value) + '</td>' +
+                    '<td class="d-none d-md-table-cell text-meta">' + escHtml(t.lot) + '</td>' +
                 '</tr>';
             });
         }
 
         tbody.innerHTML = html;
+        renderVariance(res, unit);
     }
 
     modalEl.addEventListener('show.bs.modal', function (e) {
@@ -1206,10 +1648,24 @@ $js = <<<JS
             thumb.alt = btn.getAttribute('data-item-name') || '';
         }
 
-        ['hist-bf-qty','hist-bf-value','hist-current-qty'].forEach(function (id) { setText(id, '0.00'); });
-        setText('hist-total-in', '+0.00');
-        setText('hist-total-out', '-0.00');
+        ['hist-bf-qty','hist-bf-value','hist-current-qty'].forEach(function (id) {
+            setText(id, '0.00');
+            var el = document.getElementById(id);
+            if (el) el.dataset.raw = '0';
+        });
+        setText('hist-total-in', '0');
+        setText('hist-total-out', '0');
+        ['hist-total-in','hist-total-out'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.dataset.raw = '0';
+        });
         setText('hist-tx-count', '0');
+
+        // ซ่อน variance/match จาก modal เปิดครั้งก่อน
+        var vp = document.getElementById('hist-variance');
+        var mp = document.getElementById('hist-match');
+        if (vp) vp.hidden = true;
+        if (mp) mp.hidden = true;
     });
 
     modalEl.addEventListener('shown.bs.modal', function () {
@@ -1223,6 +1679,36 @@ $js = <<<JS
 
     if (exportBtn) {
         exportBtn.addEventListener('click', exportExcel);
+    }
+
+    // Copy ตัวเลข variance ไปวางในฟอร์มปรับยอด
+    var copyBtn = document.getElementById('hist-copy-qty');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var val = document.getElementById('hist-copy-val');
+            if (!val) return;
+            var text = val.textContent.trim();
+            // strip leading + (input รับเลขปกติ ไม่ต้องมี +)
+            if (text.charAt(0) === '+') text = text.substring(1);
+            // strip thousand separator + เครื่องหมายภาษาไทย → จำนวนเต็ม/ทศนิยม
+            text = text.replace(/[^0-9.\-]/g, '');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    copyBtn.classList.add('is-copied');
+                    setTimeout(function () { copyBtn.classList.remove('is-copied'); }, 1400);
+                });
+            } else {
+                // fallback
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(ta);
+                copyBtn.classList.add('is-copied');
+                setTimeout(function () { copyBtn.classList.remove('is-copied'); }, 1400);
+            }
+        });
     }
 })();
 JS;

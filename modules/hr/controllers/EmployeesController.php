@@ -93,15 +93,15 @@ class EmployeesController extends Controller
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-            WHERE t2.name = :name;';
+            WHERE t2.id = :id;';
             $querys = Yii::$app
                 ->db
                 ->createCommand($sql)
-                ->bindValue(':name', $org1->name)
+                ->bindValue(':id', $org1->id)
                 ->queryAll();
-            $arrDepartment = [];
+            $arrDepartment = [(int) $org1->id];
             foreach ($querys as $tree) {
-                $arrDepartment[] = $tree['id'];
+                $arrDepartment[] = (int) $tree['id'];
             }
 
             if (count($arrDepartment) > 0) {
@@ -186,15 +186,15 @@ class EmployeesController extends Controller
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-            WHERE t2.name = :name;';
+            WHERE t2.id = :id;';
             $querys = Yii::$app
                 ->db
                 ->createCommand($sql)
-                ->bindValue(':name', $org1->name)
+                ->bindValue(':id', $org1->id)
                 ->queryAll();
-            $arrDepartment = [];
+            $arrDepartment = [(int) $org1->id];
             foreach ($querys as $tree) {
-                $arrDepartment[] = $tree['id'];
+                $arrDepartment[] = (int) $tree['id'];
             }
             // Yii::$app->response->format = Response::FORMAT_JSON;
             // $dataDepartment =  ArrayHelper::merge($arrDepartment,$org1->lft);
@@ -922,15 +922,15 @@ class EmployeesController extends Controller
             $sql = 'SELECT t1.id, t1.root, t1.lft, t1.rgt, t1.lvl, t1.name, t1.icon
             FROM tree t1
             JOIN tree t2 ON t1.lft BETWEEN t2.lft AND t2.rgt AND t1.lvl = t2.lvl + 1
-            WHERE t2.name = :name;';
+            WHERE t2.id = :id;';
             $querys = Yii::$app
                 ->db
                 ->createCommand($sql)
-                ->bindValue(':name', $org1->name)
+                ->bindValue(':id', $org1->id)
                 ->queryAll();
-            $arrDepartment = [];
+            $arrDepartment = [(int) $org1->id];
             foreach ($querys as $tree) {
-                $arrDepartment[] = $tree['id'];
+                $arrDepartment[] = (int) $tree['id'];
             }
             // Yii::$app->response->format = Response::FORMAT_JSON;
             // $dataDepartment =  ArrayHelper::merge($arrDepartment,$org1->lft);

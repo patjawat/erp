@@ -186,7 +186,7 @@ class SyncStockBalanceController extends Controller
             $db->createCommand("DELETE FROM " . $db->quoteTableName($table))->execute();
 
             $rows = [];
-            $now = time();
+            $now = date('Y-m-d H:i:s');
             $userId = 1; // console ไม่มี user; ใช้ 1 หรือ 0
 
             foreach ($balance as $key => $qty) {

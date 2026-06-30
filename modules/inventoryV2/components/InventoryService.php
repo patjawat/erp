@@ -189,7 +189,7 @@ class InventoryService
             throw new \Exception("ยอดคงเหลือหลังปรับจะติดลบ (พัสดุ {$itemCode} Lot {$lot})");
         }
 
-        $balance->updated_at = time();
+        $balance->updated_at = date('Y-m-d H:i:s');
         $balance->updated_by = Yii::$app->user->id;
         if (!$balance->save()) {
             throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));

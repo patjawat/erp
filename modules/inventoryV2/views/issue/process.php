@@ -343,6 +343,7 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
 <?php
 // URL สำหรับดึง Lot เมื่อเลือกสินค้าใหม่
 $getLotUrl = Url::to(['get-available-lots', 'warehouse_id' => $model->main_warehouse_id]);
+$indexUrlJson = json_encode(Url::to(['index']));
 // เตรียมข้อมูลสินค้าสำหรับ Tom-select (categorise table ใช้ code/title — alias ให้ JS ใช้ value/text)
 $items = \app\modules\inventoryV2\models\StockItem::find()
     ->select(['code as value', 'title as text'])
@@ -353,6 +354,7 @@ $itemsJson = json_encode($items);
 $js = <<< JS
 $(document).ready(function() {
     let itemIndex = $('.item-row').length;
+    const issueIndexUrl = $indexUrlJson;
     const itemList = $itemsJson;
 
     // บันทึกข้อมูลผู้ลงนามแบบ AJAX + SweetAlert ปิด 2 วินาที
@@ -531,6 +533,30 @@ $(document).ready(function() {
     });
 
     $('#btnSubmitIssue').click(function() {
+        const activeRows = $('#issueTable .item-row').filter(function() {
+            const qtyInput = $(this).find('.qty-issued');
+            return !qtyInput.prop('disabled') && ((parseFloat(qtyInput.val()) || 0) > 0);
+        });
+
+        if (!activeRows.length) {
+            Swal.fire('แจ้งเตือน', 'กรุณาระบุรายการที่ต้องการจ่ายอย่างน้อย 1 รายการ', 'warning');
+            return;
+        }
+
+        let missingLot = false;
+        activeRows.each(function() {
+            const lotSelect = $(this).find('.lot-selector');
+            if (!lotSelect.val()) {
+                missingLot = true;
+                return false;
+            }
+        });
+
+        if (missingLot) {
+            Swal.fire('แจ้งเตือน', 'กรุณาเลือก Lot สำหรับรายการที่ต้องการจ่ายให้ครบ', 'warning');
+            return;
+        }
+
         Swal.fire({
             title: 'ยืนยันการบันทึกการจ่าย?',
             text: "ระบบจะตัดสต็อกและบันทึกรายการพัสดุตามหน้าจอนี้",
@@ -540,12 +566,30 @@ $(document).ready(function() {
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post(window.location.href, $('#issue-process-form').serialize(), function(res) {
-                    if (res.success) {
-                        Swal.fire('สำเร็จ', 'บันทึกการจ่ายเรียบร้อยแล้ว', 'success').then(() => { window.location.href = 'index'; });
+                const submitBtn = $('#btnSubmitIssue').prop('disabled', true);
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: $('#issue-process-form').serialize(),
+                    dataType: 'json'
+                }).done(function(res) {
+                    if (res && res.success) {
+                        Swal.fire('สำเร็จ', res.message || 'บันทึกการจ่ายเรียบร้อยแล้ว', 'success').then(() => {
+                            window.location.href = issueIndexUrl;
+                        });
                     } else {
-                        Swal.fire('ผิดพลาด', res.message, 'error');
+                        Swal.fire('ผิดพลาด', (res && res.message) || 'บันทึกไม่สำเร็จ', 'error');
                     }
+                }).fail(function(xhr) {
+                    let message = (xhr.responseJSON && xhr.responseJSON.message)
+                        || xhr.responseText
+                        || 'เกิดข้อผิดพลาดในการบันทึก';
+                    if (message.length > 400) {
+                        message = 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่อีกครั้งหรือติดต่อผู้ดูแลระบบ';
+                    }
+                    Swal.fire('ผิดพลาด', message, 'error');
+                }).always(function() {
+                    submitBtn.prop('disabled', false);
                 });
             }
         });

@@ -189,6 +189,14 @@ class Warehouse extends \yii\db\ActiveRecord
             return [];
         }
 
+        if (Yii::$app->user->can('admin')) {
+            return self::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                ->orderBy('warehouse_name')
+                ->all();
+        }
+
         $userId = (string) Yii::$app->user->id;
         return self::find()
             ->where(['warehouse_type' => 'MAIN'])

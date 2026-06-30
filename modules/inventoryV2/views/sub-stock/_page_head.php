@@ -6,9 +6,12 @@
  * @var string       $icon     bi-* icon class (default: bi-grid-1x2-fill)
  * @var string       $title    หัวเรื่อง (default: $this->title)
  * @var string[]     $metas    meta chips คั่นด้วย · (เช่น ชื่อคลัง, วันที่)
+ * @var int|null     $currentWarehouseId
+ * @var string|null  $currentWarehouseName
  * @var string|null  $caption  ข้อความบรรยายใต้หัวเรื่อง (รองรับ raw HTML)
  * @var string|null  $extra    HTML เพิ่ม (เช่น health badge)
  */
+use app\modules\inventoryV2\models\Warehouse;
 use yii\helpers\Html;
 
 $icon    = $icon    ?? 'bi-grid-1x2-fill';
@@ -16,12 +19,24 @@ $title   = $title   ?? (string) $this->title;
 $metas   = $metas   ?? [];
 $caption = $caption ?? null;
 $extra   = $extra   ?? null;
+$currentWarehouseId = $currentWarehouseId ?? null;
+$currentWarehouseName = isset($currentWarehouseName) ? trim((string) $currentWarehouseName) : '';
+
+if ($currentWarehouseName === '' && $currentWarehouseId !== null) {
+    $currentWarehouse = Warehouse::findOne((int) $currentWarehouseId);
+    $currentWarehouseName = $currentWarehouse ? trim((string) $currentWarehouse->warehouse_name) : '';
+}
+
 ?>
 <div class="sub-stock-page-head">
     <div class="sub-stock-page-head__title">
         <i class="bi <?= Html::encode($icon) ?>" aria-hidden="true"></i>
         <h4 class="mb-0"><?= Html::encode($title) ?></h4>
     </div>
+    <?php if ($currentWarehouseName !== ''): ?>
+        <span class="sub-stock-page-head__sep" aria-hidden="true">·</span>
+        <span class="sub-stock-page-head__warehouse"><?= Html::encode($currentWarehouseName) ?></span>
+    <?php endif; ?>
     <?php foreach ($metas as $meta): if ($meta === '' || $meta === null) continue; ?>
         <span class="sub-stock-page-head__sep" aria-hidden="true">·</span>
         <span class="sub-stock-page-head__meta"><?= Html::encode($meta) ?></span>
@@ -52,6 +67,12 @@ $extra   = $extra   ?? null;
     font-size: 1.15rem;
 }
 .sub-stock-page-head__title h4 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a202c;
+    line-height: 1.2;
+}
+.sub-stock-page-head__warehouse {
     font-size: 1.15rem;
     font-weight: 600;
     color: #1a202c;

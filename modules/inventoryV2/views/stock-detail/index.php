@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'id',
             'stock_order_id',
-            'item_id',
+            'item_code',
             'qty',
             'unit_price',
             //'lot_number',

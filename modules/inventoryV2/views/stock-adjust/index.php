@@ -2,6 +2,9 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
+/** @var array{warehouse_id:?int, item_code:?string, qty:?string} $prefill */
+$prefill = $prefill ?? ['warehouse_id' => null, 'item_code' => null, 'qty' => null];
+
 $this->title = 'ปรับยอด stock สินค้า';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -39,7 +42,8 @@ use app\widgets\TomSelectWidget;
                         <label class="form-label fw-semibold">คลัง <span class="text-danger">*</span></label>
                         <select name="warehouse_id" id="warehouse_id" class="form-select" required>
                             <?php foreach ($warehouses as $wid => $wname): ?>
-                                <option value="<?= $wid === '' ? '' : (int)$wid ?>"><?= Html::encode($wname) ?></option>
+                                <?php $selected = ($prefill['warehouse_id'] !== null && (int)$wid === (int)$prefill['warehouse_id']) ? ' selected' : ''; ?>
+                                <option value="<?= $wid === '' ? '' : (int)$wid ?>"<?= $selected ?>><?= Html::encode($wname) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -76,7 +80,7 @@ use app\widgets\TomSelectWidget;
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label fw-semibold">จำนวนที่ปรับ <span class="text-danger">*</span></label>
-                        <input type="number" name="adjustment_qty" id="adjustment_qty" class="form-control" step="any" placeholder="บวก = เพิ่ม, ลบ = ลด" required>
+                        <input type="number" name="adjustment_qty" id="adjustment_qty" class="form-control" step="any" placeholder="บวก = เพิ่ม, ลบ = ลด" value="<?= $prefill['qty'] !== null ? Html::encode($prefill['qty']) : '' ?>" required>
                         <small class="text-muted">เช่น 10 = เพิ่ม 10 หน่วย, -5 = ลด 5 หน่วย</small>
                     </div>
                     <div class="col-12 col-md-4">
@@ -101,10 +105,14 @@ use app\widgets\TomSelectWidget;
 $getBalanceUrl = json_encode(Url::to(['/inventory-v2/stock-adjust/get-balance']));
 $saveUrl = json_encode(Url::to(['/inventory-v2/stock-adjust/save']));
 $itemListUrl = json_encode(Url::to(['/inventory-v2/stock-item/item-list']));
+$prefillItemCode = json_encode($prefill['item_code']);
+$prefillWarehouseId = json_encode($prefill['warehouse_id']);
 $this->registerJs(<<<JS
 (function(){
     var getBalanceUrl = $getBalanceUrl;
     var saveUrl = $saveUrl;
+    var prefillItemCode = $prefillItemCode;
+    var prefillWarehouseId = $prefillWarehouseId;
     var itemSelect = window.itemSelect;
 
     if (itemSelect) {
@@ -140,6 +148,31 @@ $this->registerJs(<<<JS
     }
 
     $('#btn-load-balance').on('click', loadBalance);
+
+    // Prefill จาก URL query (มาจาก variance banner ในหน้า main-stock/balance)
+    if (prefillItemCode && prefillWarehouseId && itemSelect) {
+        // TomSelect AJAX โหลด options ตาม warehouse_id — ต้องรอ load เสร็จถึงจะ setValue ได้
+        var attempts = 0;
+        var tryPreselect = function () {
+            attempts++;
+            // ลองเรียก loadUrl + ?warehouse_id=X เพื่อให้ TomSelect มี option ของ item_code
+            if (typeof itemSelect.load === 'function') {
+                itemSelect.load('');  // trigger load with current warehouse_id param
+            }
+            setTimeout(function () {
+                try {
+                    itemSelect.addOption({ item_code: prefillItemCode, item_name: prefillItemCode });
+                    itemSelect.setValue(prefillItemCode, true);  // silent = true ไม่ trigger change
+                    loadBalance();
+                } catch (e) {
+                    if (attempts < 3) setTimeout(tryPreselect, 200);
+                }
+            }, 250);
+        };
+        setTimeout(tryPreselect, 100);
+        // focus ที่ adjustment_qty (มี value แล้ว — ให้ user พร้อมแก้/ยืนยัน)
+        setTimeout(function () { $('#adjustment_qty').focus().select(); }, 600);
+    }
 
     $('#form-stock-adjust').on('submit', function(e) {
         e.preventDefault();

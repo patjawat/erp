@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\grid\GridView;
 use app\components\ThaiDateHelper;
+use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\models\StockOrder;
 
 $this->title = 'รายการจ่ายพัสดุ (Stock Issue)';
@@ -14,6 +15,65 @@ $searchModel = $searchModel ?? null;
 $mainWarehouses = $mainWarehouses ?? ['' => 'ทุกคลัง'];
 $subWarehouses = $subWarehouses ?? ['' => 'ทุกแผนก/ฝ่าย'];
 $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
+
+/* prefetch ผู้ขอเบิก — ตัด N+1 query */
+$models = $dataProvider->getModels();
+$empIds = [];
+$userIds = [];
+foreach ($models as $m) {
+    $eid = $m->getIssueSignatureEmpId('requester');
+    if ($eid) {
+        $empIds[] = (int) $eid;
+    } elseif (!empty($m->created_by)) {
+        $userIds[] = (int) $m->created_by;
+    }
+}
+$empsById = $empIds
+    ? Employees::find()->where(['id' => array_values(array_unique($empIds))])->indexBy('id')->all()
+    : [];
+$empsByUserId = $userIds
+    ? Employees::find()->where(['user_id' => array_values(array_unique($userIds))])->indexBy('user_id')->all()
+    : [];
+
+$resolveRequester = function (StockOrder $model) use ($empsById, $empsByUserId) {
+    $eid = $model->getIssueSignatureEmpId('requester');
+    if ($eid && isset($empsById[$eid])) {
+        return $empsById[$eid];
+    }
+    if (!empty($model->created_by) && isset($empsByUserId[$model->created_by])) {
+        return $empsByUserId[$model->created_by];
+    }
+    return null;
+};
+
+$renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
+    $name = $fallbackName ?: ($emp ? trim($emp->fname . ' ' . $emp->lname) : '');
+    $position = $fallbackPosition;
+    if (!$position && $emp && method_exists($emp, 'positionName')) {
+        $position = (string) $emp->positionName();
+    }
+    if ($name === '' && $position === '') {
+        return '<span class="issue-empty">—</span>';
+    }
+    if ($emp && method_exists($emp, 'showAvatar')) {
+        $img = Html::img('@web/img/loading.gif', [
+            'class' => 'issue-person__avatar lazyload',
+            'data' => ['src' => $emp->showAvatar(), 'expand' => '-20', 'sizes' => 'auto'],
+            'alt' => '',
+        ]);
+    } else {
+        $initial = $name !== '' ? mb_substr($name, 0, 1, 'UTF-8') : '?';
+        $img = '<span class="issue-person__avatar issue-person__avatar--placeholder" aria-hidden="true">' . Html::encode($initial) . '</span>';
+    }
+    $out = '<div class="issue-person">' . $img . '<div class="issue-person__meta">';
+    if ($name !== '') {
+        $out .= '<div class="issue-person__name" title="' . Html::encode($name) . '">' . Html::encode($name) . '</div>';
+    }
+    if ($position !== '') {
+        $out .= '<div class="issue-person__position" title="' . Html::encode($position) . '">' . Html::encode($position) . '</div>';
+    }
+    return $out . '</div></div>';
+};
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -104,24 +164,29 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
                     'summary' => false,
                     'columns' => [
                         [
-                            'attribute' => 'order_date',
-                            'label' => 'วันที่เบิก',
+                            'attribute' => 'order_no',
+                            'label' => 'เลขที่ใบเบิก / วันที่ขอ',
                             'format' => 'raw',
+                            'contentOptions' => ['class' => 'text-nowrap'],
                             'value' => function ($model) {
-                                return $model->order_date ? Html::encode(ThaiDateHelper::formatThaiDate($model->order_date)) : '-';
-                            }
+                                $no = Html::encode($model->order_no);
+                                if ($model->isMigratedFromV1()) {
+                                    $no .= ' <span class="badge bg-secondary fw-normal" title="ย้ายมาจาก Inventory V1">V1</span>';
+                                }
+                                $date = $model->order_date
+                                    ? Html::encode(ThaiDateHelper::formatThaiDate($model->order_date))
+                                    : '<span class="text-muted">—</span>';
+                                return '<div class="fw-bold">' . $no . '</div>'
+                                    . '<div class="small text-muted">' . $date . '</div>';
+                            },
                         ],
                         [
-                            'attribute' => 'order_no',
-                            'label' => 'เลขที่ใบเบิก',
+                            'label' => 'ผู้ขอเบิก',
                             'format' => 'raw',
-                            'contentOptions' => ['class' => 'fw-bold'],
-                            'value' => function ($model) {
-                                $html = Html::encode($model->order_no);
-                                if ($model->isMigratedFromV1()) {
-                                    $html .= ' <span class="badge bg-secondary fw-normal" title="ย้ายมาจาก Inventory V1">V1</span>';
-                                }
-                                return $html;
+                            'value' => function ($model) use ($resolveRequester, $renderPerson) {
+                                $emp = $resolveRequester($model);
+                                $sig = $model->getIssueSignature('requester');
+                                return $renderPerson($emp, $sig['name'] ?? '', $sig['position'] ?? '');
                             },
                         ],
                         [
@@ -232,3 +297,54 @@ $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
         </div>
     </div>
 </div>
+
+<style>
+.issue-person {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+.issue-person__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #eef2f7;
+    flex-shrink: 0;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+.issue-person__avatar--placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+.issue-person__meta {
+    min-width: 0;
+    line-height: 1.25;
+}
+.issue-person__name {
+    color: #1a202c;
+    font-weight: 600;
+    font-size: 0.88rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 14rem;
+}
+.issue-person__position {
+    color: #718096;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 14rem;
+    margin-top: 1px;
+}
+.issue-empty {
+    color: #a0aec0;
+}
+</style>

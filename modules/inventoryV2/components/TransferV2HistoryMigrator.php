@@ -57,7 +57,10 @@ class TransferV2HistoryMigrator
     public function fetchHistoryDataByWarehouse($warehouseId)
     {
         $parents = (new Query())
-            ->select(['id', 'code', 'transaction_type', 'movement_date', 'warehouse_id', 'from_warehouse_id', 'order_status', 'created_at'])
+            ->select([
+                'id', 'code', 'transaction_type', 'movement_date', 'warehouse_id', 'from_warehouse_id',
+                'order_status', 'emp_id', 'created_at', 'updated_at', 'created_by', 'updated_by',
+            ])
             ->from(StockEvent::tableName())
             ->where([
                 'name' => 'order',
@@ -72,7 +75,10 @@ class TransferV2HistoryMigrator
         $allParentIds = array_column($parents, 'id');
         if (!empty($allParentIds)) {
             $children = (new Query())
-                ->select(['t.id', 't.category_id AS parent_id', 't.asset_item', 't.qty', 't.unit_price', 't.lot_number'])
+                ->select([
+                    't.id', 't.category_id AS parent_id', 't.asset_item', 't.qty', 't.unit_price', 't.lot_number',
+                    't.created_at', 't.updated_at', 't.created_by', 't.updated_by',
+                ])
                 ->from(['t' => StockEvent::tableName()])
                 ->where([
                     't.name' => 'order_item',
@@ -222,11 +228,16 @@ class TransferV2HistoryMigrator
             $stockOrder->order_date = $orderDate;
             $stockOrder->main_warehouse_id = $mainWarehouseId;
             $stockOrder->sub_warehouse_id = (int) ($p['from_warehouse_id'] ?? 0) ?: null;
+            $stockOrder->emp_id = !empty($p['emp_id']) ? (int) $p['emp_id'] : null;
             if ($isOut) {
                 $stockOrder->disbursement_date = strtotime($orderDate) ?: time();
             }
             $stockOrder->ref = 'V1';
             $stockOrder->data_json = ['migrated_from_v1' => $this->buildV1Marker($p)];
+            $stockOrder->created_by = !empty($p['created_by']) ? (int) $p['created_by'] : null;
+            $stockOrder->updated_by = !empty($p['updated_by']) ? (int) $p['updated_by'] : ($stockOrder->created_by ?: null);
+            $stockOrder->created_at = $this->toDateTime($p['created_at'] ?? null);
+            $stockOrder->updated_at = $this->toDateTime($p['updated_at'] ?? null) ?: $stockOrder->created_at;
 
             if (!$stockOrder->save(false)) {
                 throw new \RuntimeException('บันทึก stock_order ไม่สำเร็จ: ' . $code);
@@ -258,6 +269,10 @@ class TransferV2HistoryMigrator
                         'migrated_by' => $this->userId,
                     ],
                 ];
+                $detail->created_by = !empty($l['created_by']) ? (int) $l['created_by'] : $stockOrder->created_by;
+                $detail->updated_by = !empty($l['updated_by']) ? (int) $l['updated_by'] : ($detail->created_by ?: $stockOrder->updated_by);
+                $detail->created_at = $this->toDateTime($l['created_at'] ?? null) ?: $stockOrder->created_at;
+                $detail->updated_at = $this->toDateTime($l['updated_at'] ?? null) ?: $detail->created_at;
                 if (!$detail->save(false)) {
                     throw new \RuntimeException('บันทึก stock_detail ไม่สำเร็จ: ' . $code . ' / ' . $l['asset_item']);
                 }
@@ -297,6 +312,20 @@ class TransferV2HistoryMigrator
                 'partial_report' => null,
             ];
         }
+    }
+
+    private function toDateTime($value)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return date('Y-m-d H:i:s', (int) $value);
+        }
+
+        $timestamp = strtotime((string) $value);
+        return $timestamp !== false ? date('Y-m-d H:i:s', $timestamp) : null;
     }
 
     private function buildV1Marker(array $p)

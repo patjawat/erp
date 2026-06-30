@@ -57,6 +57,7 @@ class ReceiveController extends Controller
         $searchModel = new StockOrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andWhere(['order_type' => 'IN']);
+        $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
         $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
@@ -73,6 +74,7 @@ class ReceiveController extends Controller
 
         $statusSummary = StockOrder::find()
             ->where(['order_type' => 'IN'])
+            ->andWhere(['sub_warehouse_id' => null])
             ->select(['status', 'COUNT(*) as cnt'])
             ->groupBy('status')
             ->asArray()
@@ -90,7 +92,7 @@ class ReceiveController extends Controller
         );
 
         // รวมยอดเงินทั้งหมด (ตามตัวกรองปัจจุบัน)
-        $totalAmountQuery = StockOrder::find()->select('id')->where(['order_type' => 'IN']);
+        $totalAmountQuery = StockOrder::find()->select('id')->where(['order_type' => 'IN'])->andWhere(['sub_warehouse_id' => null]);
         if ($start !== null && $start !== '') {
             $totalAmountQuery->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
         }

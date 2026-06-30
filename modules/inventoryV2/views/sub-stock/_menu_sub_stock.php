@@ -47,7 +47,7 @@ try {
             <i class="bi bi-grid-1x2 me-1"></i>ภาพรวม
         </a>
          <?php if ($canCreateRequisition): ?>
-        <a href="<?= Url::to(['/inventory-v2/requisition']) ?>" class="btn btn-sm <?= $active === 'requisition' ? 'btn-success' : 'btn-outline-success' ?> rounded-pill px-3">
+        <a href="<?= Url::to(array_merge(['/inventory-v2/requisition'], $wParam)) ?>" class="btn btn-sm <?= $active === 'requisition' ? 'btn-success' : 'btn-outline-success' ?> rounded-pill px-3">
             <i class="bi bi-file-earmark-plus me-1"></i> บันทึกเบิก
             <?php if ($requisitionPendingCount > 0): ?>
                 <span class="badge text-bg-danger ms-1" title="รออนุมัติ"><?= $requisitionPendingCount ?></span>

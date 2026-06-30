@@ -17,9 +17,9 @@ use Yii;
  * @property string|null $expiry_date วันหมดอายุ
  * @property string|null $ref อ้างอิงอื่นๆ รายบรรทัด
  * @property string|null $data_json
- * @property int|null $created_at
+ * @property string|null $created_at
  * @property int|null $created_by
- * @property int|null $updated_at
+ * @property string|null $updated_at
  * @property int|null $updated_by
  *
  * @property StockOrder $stockOrder
@@ -46,14 +46,14 @@ public function rules()
             [['remain_qty'], 'default', 'value' => 0.00],
             [['stock_order_id', 'item_code', 'qty', 'lot_number'], 'required'],
             
-            // 1. ❌ เอา 'item_code' ออกจากกลุ่ม 'integer' เพราะมันเป็น string(50) 
-            [['stock_order_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            
+            // 1. ❌ เอา 'item_code' ออกจากกลุ่ม 'integer' เพราะมันเป็น string(50)
+            [['stock_order_id', 'created_by', 'updated_by'], 'integer'],
+
             // 2. ✅ เพิ่มกฎสำหรับ item_code ให้เป็น string ตาม Migration
             [['item_code'], 'string', 'max' => 50],
-            
+
             [['qty', 'unit_price', 'remain_qty'], 'number'],
-            [['expiry_date', 'data_json'], 'safe'],
+            [['expiry_date', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['lot_number'], 'string', 'max' => 100],
             [['ref'], 'string', 'max' => 255],
             [['stock_order_id'], 'exist', 'skipOnError' => true, 'targetClass' => StockOrder::class, 'targetAttribute' => ['stock_order_id' => 'id']],

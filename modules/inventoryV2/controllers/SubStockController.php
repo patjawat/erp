@@ -16,6 +16,7 @@ use yii\data\ActiveDataProvider;
 use yii\db\Expression;
 use yii\db\Query;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 class SubStockController extends \yii\web\Controller
 {
@@ -680,6 +681,209 @@ class SubStockController extends \yii\web\Controller
         if ($wid <= 0 || !in_array($wid, $subIds, true)) {
             return [];
         }
+        return $this->getAvailableLotRows($wid);
+    }
+
+    public function actionBulkAvailable($warehouse_id)
+    {
+        return $this->actionGetAvailableLots($warehouse_id);
+    }
+
+    public function actionExportIssueTemplate($warehouse_id)
+    {
+        $subIds = $this->getSubWarehouseIdsForIssue();
+        $wid = (int) $warehouse_id;
+        if ($wid <= 0 || !in_array($wid, $subIds, true)) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกคลังย่อยที่ถูกต้อง');
+            return $this->redirect(['issue']);
+        }
+
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, "\xEF\xBB\xBF");
+        fputcsv($stream, [
+            'item_code',
+            'item_name',
+            'lot_number',
+            'unit',
+            'balance_qty',
+            'issue_qty',
+            'actual_qty',
+            'note',
+        ]);
+
+        foreach ($this->getAvailableLotRows($wid) as $row) {
+            fputcsv($stream, [
+                $row['item_code'],
+                $row['item_name'],
+                $row['lot_number'],
+                $row['unit'],
+                $row['balance_qty'],
+                '',
+                '',
+                '',
+            ]);
+        }
+
+        rewind($stream);
+        $content = stream_get_contents($stream);
+        fclose($stream);
+
+        $filename = 'sub-stock-issue-template-' . $wid . '-' . date('Ymd-His') . '.csv';
+        return Yii::$app->response->sendContentAsFile($content, $filename, [
+            'mimeType' => 'text/csv; charset=UTF-8',
+            'inline' => false,
+        ]);
+    }
+
+    public function actionImportIssueTemplate()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (!$this->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid request'];
+        }
+
+        $warehouseId = (int) $this->request->post('warehouse_id');
+        $subIds = $this->getSubWarehouseIdsForIssue();
+        if ($warehouseId <= 0 || !in_array($warehouseId, $subIds, true)) {
+            return ['success' => false, 'message' => 'กรุณาเลือกคลังย่อยที่ถูกต้อง'];
+        }
+
+        $file = UploadedFile::getInstanceByName('csv_file');
+        if (!$file) {
+            return ['success' => false, 'message' => 'กรุณาเลือกไฟล์ CSV'];
+        }
+        if (strtolower($file->extension) !== 'csv') {
+            return ['success' => false, 'message' => 'รองรับเฉพาะไฟล์ CSV'];
+        }
+
+        $handle = fopen($file->tempName, 'r');
+        if (!$handle) {
+            return ['success' => false, 'message' => 'ไม่สามารถอ่านไฟล์ CSV ได้'];
+        }
+
+        $header = fgetcsv($handle);
+        if (!$header) {
+            fclose($handle);
+            return ['success' => false, 'message' => 'ไฟล์ CSV ไม่มีหัวตาราง'];
+        }
+
+        $columns = [];
+        foreach ($header as $index => $name) {
+            $name = preg_replace('/^\xEF\xBB\xBF/', '', (string) $name);
+            $columns[strtolower(trim($name))] = $index;
+        }
+
+        foreach (['item_code', 'lot_number'] as $required) {
+            if (!array_key_exists($required, $columns)) {
+                fclose($handle);
+                return ['success' => false, 'message' => 'ไฟล์ CSV ต้องมีคอลัมน์ item_code และ lot_number'];
+            }
+        }
+        if (!array_key_exists('issue_qty', $columns) && !array_key_exists('actual_qty', $columns)) {
+            fclose($handle);
+            return ['success' => false, 'message' => 'ไฟล์ CSV ต้องมีคอลัมน์ issue_qty หรือ actual_qty'];
+        }
+
+        $available = [];
+        foreach ($this->getAvailableLotRows($warehouseId) as $row) {
+            $available[$this->makeLotKey($row['item_code'], $row['lot_number'])] = $row;
+        }
+
+        $items = [];
+        $errors = [];
+        $skipped = 0;
+        $line = 1;
+        while (($csvRow = fgetcsv($handle)) !== false) {
+            $line++;
+            $itemCode = $this->csvValue($csvRow, $columns, 'item_code');
+            $lotNumber = $this->csvValue($csvRow, $columns, 'lot_number');
+            if ($itemCode === '' && $lotNumber === '') {
+                $skipped++;
+                continue;
+            }
+
+            $key = $this->makeLotKey($itemCode, $lotNumber);
+            if (!isset($available[$key])) {
+                $errors[] = "แถว {$line}: ไม่พบพัสดุ {$itemCode} Lot {$lotNumber} ในคลังนี้";
+                continue;
+            }
+
+            $stockRow = $available[$key];
+            $balanceQty = (float) $stockRow['balance_qty'];
+            $issueRaw = $this->csvValue($csvRow, $columns, 'issue_qty');
+            $actualRaw = $this->csvValue($csvRow, $columns, 'actual_qty');
+            $issueQty = null;
+
+            if ($issueRaw !== '') {
+                $issueQty = $this->parseCsvNumber($issueRaw);
+                if ($issueQty === null) {
+                    $errors[] = "แถว {$line}: issue_qty ไม่ใช่ตัวเลข";
+                    continue;
+                }
+            } elseif ($actualRaw !== '') {
+                $actualQty = $this->parseCsvNumber($actualRaw);
+                if ($actualQty === null) {
+                    $errors[] = "แถว {$line}: actual_qty ไม่ใช่ตัวเลข";
+                    continue;
+                }
+                if ($actualQty > $balanceQty) {
+                    $errors[] = "แถว {$line}: actual_qty มากกว่ายอดคงเหลือ";
+                    continue;
+                }
+                $issueQty = $balanceQty - $actualQty;
+            }
+
+            if ($issueQty === null) {
+                $skipped++;
+                continue;
+            }
+            if ($issueQty <= 0) {
+                $skipped++;
+                continue;
+            }
+            if ($issueQty > $balanceQty) {
+                $errors[] = "แถว {$line}: จำนวนจ่ายเกินยอดคงเหลือ";
+                continue;
+            }
+
+            if (isset($items[$key])) {
+                $items[$key]['qty'] = round($items[$key]['qty'] + $issueQty, 2);
+            } else {
+                $items[$key] = [
+                    'item_code' => $stockRow['item_code'],
+                    'item_name' => $stockRow['item_name'],
+                    'lot_number' => $stockRow['lot_number'],
+                    'unit' => $stockRow['unit'],
+                    'balance_qty' => $balanceQty,
+                    'qty' => round($issueQty, 2),
+                ];
+            }
+
+            if ($items[$key]['qty'] > $balanceQty) {
+                $errors[] = "แถว {$line}: จำนวนรวมของ {$itemCode} Lot {$lotNumber} เกินยอดคงเหลือ";
+                unset($items[$key]);
+            }
+        }
+        fclose($handle);
+
+        if (!empty($errors)) {
+            return [
+                'success' => false,
+                'message' => 'พบข้อมูลไม่ถูกต้องในไฟล์ CSV',
+                'errors' => array_slice($errors, 0, 20),
+                'summary' => ['ready' => count($items), 'skipped' => $skipped, 'errors' => count($errors)],
+            ];
+        }
+
+        return [
+            'success' => true,
+            'items' => array_values($items),
+            'summary' => ['ready' => count($items), 'skipped' => $skipped, 'errors' => 0],
+        ];
+    }
+
+    protected function getAvailableLotRows($warehouseId)
+    {
         $rows = (new Query())
             ->select([
                 'sb.item_code',
@@ -689,7 +893,7 @@ class SubStockController extends \yii\web\Controller
             ])
             ->from(['sb' => StockBalance::tableName()])
             ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
-            ->where(['sb.warehouse_id' => $wid])
+            ->where(['sb.warehouse_id' => (int) $warehouseId])
             ->andWhere(['>', 'sb.balance_qty', 0])
             ->orderBy(['i.title' => SORT_ASC, 'sb.lot_number' => SORT_ASC])
             ->all();
@@ -712,6 +916,29 @@ class SubStockController extends \yii\web\Controller
             ];
         }
         return $out;
+    }
+
+    protected function makeLotKey($itemCode, $lotNumber)
+    {
+        return (string) $itemCode . "\x1F" . (string) $lotNumber;
+    }
+
+    protected function csvValue(array $row, array $columns, $name)
+    {
+        if (!array_key_exists($name, $columns)) {
+            return '';
+        }
+        $index = $columns[$name];
+        return isset($row[$index]) ? trim((string) $row[$index]) : '';
+    }
+
+    protected function parseCsvNumber($value)
+    {
+        $value = str_replace([',', ' '], '', trim((string) $value));
+        if ($value === '' || !is_numeric($value)) {
+            return null;
+        }
+        return round((float) $value, 2);
     }
 
     /**

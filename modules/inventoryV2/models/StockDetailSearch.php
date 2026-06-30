@@ -17,9 +17,9 @@ class StockDetailSearch extends StockDetail
     public function rules()
     {
         return [
-            [['id', 'stock_order_id', 'item_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['id', 'stock_order_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['qty', 'unit_price'], 'number'],
-            [['lot_number', 'expiry_date', 'ref', 'data_json'], 'safe'],
+            [['item_code', 'lot_number', 'expiry_date', 'ref', 'data_json'], 'safe'],
         ];
     }
 
@@ -62,7 +62,6 @@ class StockDetailSearch extends StockDetail
         $query->andFilterWhere([
             'id' => $this->id,
             'stock_order_id' => $this->stock_order_id,
-            'item_id' => $this->item_id,
             'qty' => $this->qty,
             'unit_price' => $this->unit_price,
             'expiry_date' => $this->expiry_date,
@@ -72,7 +71,8 @@ class StockDetailSearch extends StockDetail
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'lot_number', $this->lot_number])
+        $query->andFilterWhere(['like', 'item_code', $this->item_code])
+            ->andFilterWhere(['like', 'lot_number', $this->lot_number])
             ->andFilterWhere(['like', 'ref', $this->ref])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
 

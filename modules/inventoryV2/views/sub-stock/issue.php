@@ -15,6 +15,8 @@ $currentWarehouseId = $currentWarehouseId ?? null;
 $canCreateRequisition = (bool) ($canCreateRequisition ?? false);
 $getLotsUrl = Url::to(['/inventory-v2/sub-stock/get-available-lots']);
 $saveUrl = Url::to(['/inventory-v2/sub-stock/save-usage']);
+$exportTemplateUrl = Url::to(['/inventory-v2/sub-stock/export-issue-template']);
+$importTemplateUrl = Url::to(['/inventory-v2/sub-stock/import-issue-template']);
 $repairPickerUrl = Url::to(['/inventory-v2/sub-stock/repair-picker', 'title' => '<i class="bi bi-tools me-1"></i> เลือกใบแจ้งซ่อม']);
 $requisitionUrl = Url::to(['/inventory-v2/requisition']);
 $dashboardUrl = Url::to(['/inventory-v2/sub-stock/dashboard']);
@@ -44,6 +46,7 @@ $jobOptions = [
 <?= $this->render('_page_head', [
     'icon'  => 'bi-box-arrow-up-right',
     'title' => $this->title,
+    'currentWarehouseId' => $currentWarehouseId,
 ]) ?>
 <?php $this->endBlock(); ?>
 
@@ -133,7 +136,35 @@ foreach (['action', 'page-action'] as $actionBlock) {
 
 <div class="pos-shell">
 
-    <main class="pos-items" aria-labelledby="hdrItems">
+    <div class="pos-actionbar" aria-label="เครื่องมือเลือกพัสดุ">
+        <button type="button"
+                class="btn btn-primary pos-actionbar__items-btn"
+                id="btnOpenStockItems"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#stockItemsOffcanvas"
+                aria-controls="stockItemsOffcanvas">
+            <i class="bi bi-boxes" aria-hidden="true"></i>
+            แสดงรายการวัสดุในคลัง
+            <span class="count-pill pos-actionbar__count" id="itemsCountAction" hidden>0</span>
+        </button>
+        <div class="pos-actionbar__hint">
+            เลือกวัสดุจากคลังเข้ารายการจ่าย แล้วปรับจำนวนจากตารางกลางหน้า
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-start stock-items-offcanvas"
+         tabindex="-1"
+         id="stockItemsOffcanvas"
+         aria-labelledby="stockItemsOffcanvasLabel">
+        <div class="offcanvas-header stock-items-offcanvas__head">
+            <h2 class="offcanvas-title stock-items-offcanvas__title" id="stockItemsOffcanvasLabel">
+                <i class="bi bi-boxes" aria-hidden="true"></i>
+                รายการวัสดุในคลัง
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+        </div>
+        <div class="offcanvas-body stock-items-offcanvas__body">
+    <main class="pos-items pos-items--offcanvas" aria-labelledby="hdrItems">
         <div class="pos-items__head">
             <h2 id="hdrItems" class="pos-items__title">
                 <i class="bi bi-boxes"></i>
@@ -192,6 +223,8 @@ foreach (['action', 'page-action'] as $actionBlock) {
 
         <ul class="pos-grid d-none" id="itemGrid" role="list" aria-label="รายการพัสดุที่เบิกได้"></ul>
     </main>
+        </div>
+    </div>
 
     <aside class="pos-cart" aria-labelledby="hdrCart" id="cartPanel">
         <header class="pos-cart__head">
@@ -205,11 +238,27 @@ foreach (['action', 'page-action'] as $actionBlock) {
             </button>
         </header>
 
+        <div class="bulk-tools" aria-label="เครื่องมือเพิ่มรายการจ่ายจำนวนมาก">
+            <button type="button" class="btn btn-light bulk-tools__btn" id="btnLoadAllStock">
+                <i class="bi bi-list-check" aria-hidden="true"></i>
+                โหลดทั้งหมด
+            </button>
+            <button type="button" class="btn btn-light bulk-tools__btn" id="btnDownloadTemplate">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                Template CSV
+            </button>
+            <button type="button" class="btn btn-light bulk-tools__btn" id="btnUploadTemplate">
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                อัปโหลด CSV
+            </button>
+            <input type="file" id="bulkCsvFile" accept=".csv,text/csv" hidden>
+        </div>
+
         <div class="pos-cart__body">
             <div id="cartEmpty" class="cart-empty">
                 <i class="bi bi-cart3 cart-empty__icon" aria-hidden="true"></i>
                 <div class="cart-empty__title">ยังไม่มีรายการ</div>
-                <div class="cart-empty__caption">คลิกพัสดุด้านซ้ายเพื่อเพิ่มเข้ารายการจ่าย</div>
+                <div class="cart-empty__caption">กดปุ่มแสดงรายการวัสดุในคลังเพื่อเพิ่มเข้ารายการจ่าย</div>
             </div>
 
             <ul class="cart-list d-none" id="cartList" role="list"></ul>
@@ -789,6 +838,26 @@ foreach (['action', 'page-action'] as $actionBlock) {
     min-width: 0;
 }
 .sub-stock-issue .pos-cart__title i { color: var(--primary); font-size: 1.05rem; }
+.sub-stock-issue .bulk-tools {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--line);
+}
+.sub-stock-issue .bulk-tools__btn {
+    min-height: 38px;
+    padding: 0.45rem 0.35rem;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+}
+.sub-stock-issue .bulk-tools__btn i { font-size: 0.95rem; }
 .sub-stock-issue .pos-cart__body {
     flex-grow: 1;
     overflow-y: auto;
@@ -1187,18 +1256,145 @@ foreach (['action', 'page-action'] as $actionBlock) {
     .undo-toast { transform: translateX(-50%) translateY(0); }
     .sub-stock-issue .pos-cart { transition: none; }
 }
+/* ─── Cart-focused issue layout ─── */
+.sub-stock-issue .pos-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    gap: 0.85rem;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+}
+.sub-stock-issue .pos-actionbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+}
+.sub-stock-issue .pos-actionbar__items-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 42px;
+    white-space: nowrap;
+}
+.sub-stock-issue .pos-actionbar__count {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.28);
+}
+.sub-stock-issue .pos-actionbar__hint {
+    min-width: 0;
+    color: var(--ink-3);
+    font-size: 0.86rem;
+    text-align: right;
+}
+.sub-stock-issue .pos-cart {
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+    min-height: min(68vh, 760px);
+    max-height: none;
+    position: relative;
+    inset: auto;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+}
+.sub-stock-issue .pos-cart__body {
+    min-height: 340px;
+}
+.sub-stock-issue .pos-cart__close,
+.sub-stock-issue .pos-cart__backdrop,
+.sub-stock-issue .pos-cart-fab {
+    display: none !important;
+}
+.sub-stock-issue .stock-items-offcanvas {
+    width: min(560px, 94vw);
+}
+.sub-stock-issue .stock-items-offcanvas__head {
+    border-bottom: 1px solid var(--line);
+    padding: 0.9rem 1rem;
+}
+.sub-stock-issue .stock-items-offcanvas__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.sub-stock-issue .stock-items-offcanvas__body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: var(--surface-2);
+}
+.sub-stock-issue .pos-items--offcanvas {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+.sub-stock-issue .pos-items--offcanvas .pos-items__head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.sub-stock-issue .pos-items--offcanvas .pos-grid {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+}
+.sub-stock-issue .pos-items--offcanvas .pos-state {
+    margin: 0.75rem;
+}
+
+@media (max-width: 767.98px) {
+    .sub-stock-issue .pos-actionbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .sub-stock-issue .pos-actionbar__items-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .sub-stock-issue .pos-actionbar__hint {
+        text-align: center;
+    }
+    .sub-stock-issue .pos-cart {
+        min-height: 64vh;
+    }
+    .sub-stock-issue .pos-cart__body {
+        min-height: 300px;
+    }
+}
 </style>
 
 <?php if (!empty($subWarehouses)): ?>
     <?php
     $getLotsUrlJson = json_encode($getLotsUrl);
     $saveUrlJson = json_encode($saveUrl);
+    $exportTemplateUrlJson = json_encode($exportTemplateUrl);
+    $importTemplateUrlJson = json_encode($importTemplateUrl);
     $recentJson = json_encode(array_values($recentItemCodes));
     $this->registerJs(
         <<<JS
 (function(){
     var getLotsUrl = {$getLotsUrlJson};
     var saveUrl = {$saveUrlJson};
+    var exportTemplateUrl = {$exportTemplateUrlJson};
+    var importTemplateUrl = {$importTemplateUrlJson};
     var recentItemCodes = {$recentJson};
     var lotsData = [];
     var rows = [];
@@ -1250,6 +1446,82 @@ foreach (['action', 'page-action'] as $actionBlock) {
         }
         return null;
     }
+    function getIssueRows() {
+        return rows.filter(function(r) { return (parseFloat(r.qty) || 0) > 0; });
+    }
+    function normalizeQty(qty, fallback) {
+        qty = parseFloat(qty);
+        if (isNaN(qty)) qty = fallback || 0;
+        if (qty < 0) qty = 0;
+        return +qty.toFixed(2);
+    }
+    function makeCartRow(item, qty, keepWhenZero) {
+        return {
+            item_code: item.item_code,
+            item_name: item.item_name,
+            lot_number: item.lot_number,
+            unit: item.unit || '',
+            qty: normalizeQty(qty, 0),
+            is_bulk: !!keepWhenZero
+        };
+    }
+    function mergeRows(items, opts) {
+        opts = opts || {};
+        if (opts.replace) rows = [];
+        items.forEach(function(item) {
+            var lot = lookupLot(item.item_code, item.lot_number) || item;
+            var balance = parseFloat(lot.balance_qty || item.balance_qty || 0);
+            var qty = normalizeQty(item.qty, 0);
+            if (balance > 0 && qty > balance) qty = balance;
+            var incoming = makeCartRow(lot, qty, !!opts.keepZero);
+            var idx = findCartIndex(incoming);
+            if (idx >= 0) {
+                var nextQty = opts.keepZero ? qty : normalizeQty((parseFloat(rows[idx].qty) || 0) + qty, 0);
+                rows[idx].qty = balance > 0 ? Math.min(nextQty, balance) : nextQty;
+                rows[idx].is_bulk = !!opts.keepZero;
+            } else if (incoming.qty > 0 || opts.keepZero) {
+                rows.push(incoming);
+            }
+        });
+        renderCart();
+        renderItemGrid();
+        if (!isDesktop && rows.length > 0) openCart();
+    }
+    function selectedWarehouse() {
+        return $('#warehouseSelect').val();
+    }
+    function requireWarehouse() {
+        var wh = selectedWarehouse();
+        if (!wh) {
+            notify('warning', 'เลือกคลังย่อยก่อน');
+            return '';
+        }
+        return wh;
+    }
+    function withReplaceChoice(title, text, onReplace, onAppend) {
+        if (rows.length === 0) {
+            onReplace();
+            return;
+        }
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'question',
+                title: title,
+                text: text,
+                showCancelButton: true,
+                showDenyButton: !!onAppend,
+                confirmButtonText: 'แทนที่รายการเดิม',
+                denyButtonText: 'รวมกับรายการเดิม',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#0d6efd'
+            }).then(function(result) {
+                if (result.isConfirmed) onReplace();
+                else if (result.isDenied && onAppend) onAppend();
+            });
+        } else if (confirm(text + ' ต้องการแทนที่รายการเดิมหรือไม่?')) {
+            onReplace();
+        }
+    }
     function initial(s) {
         var t = String(s || '').trim();
         return t ? t.charAt(0) : '?';
@@ -1290,6 +1562,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
             var cartIdx = findCartIndex(o);
             var balance = parseFloat(o.balance_qty || 0);
             var inCart = cartIdx >= 0 ? parseFloat(rows[cartIdx].qty) || 0 : 0;
+            var hasCartQty = inCart > 0;
             var remaining = balance - inCart;
             var isOut = remaining <= 0;
             var isLow = !isOut && remaining > 0 && remaining < Math.max(5, balance * 0.1);
@@ -1298,10 +1571,10 @@ foreach (['action', 'page-action'] as $actionBlock) {
                 '<button type="button" class="pos-tile' +
                     (isOut ? ' is-out' : '') +
                     (isLow ? ' is-low' : '') +
-                    (cartIdx >= 0 ? ' is-in-cart' : '') +
+                    (hasCartQty ? ' is-in-cart' : '') +
                 '" data-code="' + esc(o.item_code) + '" data-lot="' + esc(o.lot_number || '') +
                 '" aria-label="' + esc(o.item_name || o.item_code) + ' คงเหลือ ' + esc(remaining) + (o.unit ? ' ' + esc(o.unit) : '') + '">' +
-                  (cartIdx >= 0 ? '<span class="pos-tile__qty-badge" aria-label="ในรายการจ่าย ' + esc(inCart) + '">' + esc(inCart) + '</span>' : '') +
+                  (hasCartQty ? '<span class="pos-tile__qty-badge" aria-label="ในรายการจ่าย ' + esc(inCart) + '">' + esc(inCart) + '</span>' : '') +
                   '<div class="pos-tile__top">' +
                     '<div class="pos-tile__avatar" aria-hidden="true">' + esc(initial(o.item_name)) + '</div>' +
                     '<div class="pos-tile__body">' +
@@ -1416,7 +1689,16 @@ foreach (['action', 'page-action'] as $actionBlock) {
             notify('warning', 'เกินยอดคงเหลือ (มี ' + balance + (row.unit ? ' ' + row.unit : '') + ')');
             qty = balance;
         }
-        if (qty === 0) { removeRow(idx); return; }
+        if (qty === 0) {
+            if (row.is_bulk) {
+                row.qty = 0;
+                renderCart();
+                renderItemGrid();
+                return;
+            }
+            removeRow(idx);
+            return;
+        }
         row.qty = +qty.toFixed(2);
         renderCart();
         renderItemGrid();
@@ -1503,14 +1785,16 @@ foreach (['action', 'page-action'] as $actionBlock) {
         opts = opts || {};
         var list = $('#cartList').empty();
         var count = rows.length;
-        var totalQty = rows.reduce(function(s, r) { return s + (parseFloat(r.qty) || 0); }, 0);
+        var issueRows = getIssueRows();
+        var issueCount = issueRows.length;
+        var totalQty = issueRows.reduce(function(s, r) { return s + (parseFloat(r.qty) || 0); }, 0);
         var roundedQty = Math.round(totalQty * 100) / 100;
 
         $('#cartCount').text(count + ' รายการ').toggleClass('is-active', count > 0);
-        $('#totalCount').text(count);
+        $('#totalCount').text(issueCount);
         $('#totalQty').text(roundedQty);
         $('#summaryTotals').prop('hidden', count === 0);
-        $('#btnSaveFinal').prop('disabled', count === 0);
+        $('#btnSaveFinal').prop('disabled', issueCount === 0);
 
         $('#fabCount').text(count + ' รายการ');
         $('#fabQty').text('รวม ' + roundedQty);
@@ -1619,6 +1903,97 @@ foreach (['action', 'page-action'] as $actionBlock) {
     $('#btnOpenCart').on('click', openCart);
     $('#btnCloseCart').on('click', closeCart);
     $('#cartBackdrop').on('click', closeCart);
+
+    /* =========================
+       Bulk issue tools
+       ========================= */
+    function loadAllStockToCart() {
+        var wh = requireWarehouse();
+        if (!wh) return;
+        if (lotsData.length === 0) {
+            notify('warning', 'ไม่มีพัสดุคงเหลือให้โหลด');
+            return;
+        }
+        withReplaceChoice(
+            'โหลดรายการทั้งหมดจากคลัง',
+            'ระบบจะนำพัสดุที่ยังมีคงเหลือเข้ารายการจ่าย โดยตั้งจำนวนจ่ายเริ่มต้นเป็น 0',
+            function() {
+                mergeRows(lotsData.map(function(item) {
+                    return $.extend({}, item, { qty: 0 });
+                }), { replace: true, keepZero: true });
+                notify('success', 'โหลดรายการคงเหลือแล้ว ปรับจำนวนที่ต้องการจ่ายได้ทันที');
+            }
+        );
+    }
+    function downloadIssueTemplate() {
+        var wh = requireWarehouse();
+        if (!wh) return;
+        var sep = exportTemplateUrl.indexOf('?') >= 0 ? '&' : '?';
+        window.location.href = exportTemplateUrl + sep + 'warehouse_id=' + encodeURIComponent(wh);
+    }
+    function showImportErrors(res) {
+        var errors = (res && res.errors) ? res.errors : [];
+        if (typeof Swal !== 'undefined' && errors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: res.message || 'นำเข้า CSV ไม่สำเร็จ',
+                html: '<div class="text-start small">' + errors.map(function(e) { return '<div>' + esc(e) + '</div>'; }).join('') + '</div>',
+                confirmButtonColor: '#0d6efd',
+                confirmButtonText: 'ตกลง'
+            });
+        } else {
+            notify('error', (res && res.message) || 'นำเข้า CSV ไม่สำเร็จ');
+        }
+    }
+    function applyImportedRows(items, replace) {
+        mergeRows(items, { replace: replace, keepZero: false });
+        notify('success', 'นำเข้ารายการจ่าย ' + items.length + ' รายการ');
+    }
+    function importIssueTemplate(file) {
+        var wh = requireWarehouse();
+        if (!wh || !file) return;
+        var formData = new FormData();
+        formData.append('warehouse_id', wh);
+        formData.append('csv_file', file);
+        if (window.yii && yii.getCsrfParam && yii.getCsrfToken) {
+            formData.append(yii.getCsrfParam(), yii.getCsrfToken());
+        }
+
+        \$.ajax({
+            url: importTemplateUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false
+        }).done(function(res) {
+            if (!res || !res.success) {
+                showImportErrors(res || {});
+                return;
+            }
+            var items = res.items || [];
+            if (items.length === 0) {
+                notify('warning', 'ไม่พบรายการที่ต้องตัดจ่ายในไฟล์ CSV');
+                return;
+            }
+            withReplaceChoice(
+                'นำเข้ารายการจาก CSV',
+                'พบรายการพร้อมจ่าย ' + items.length + ' รายการ',
+                function() { applyImportedRows(items, true); },
+                function() { applyImportedRows(items, false); }
+            );
+        }).fail(function() {
+            notify('error', 'อัปโหลด CSV ไม่สำเร็จ');
+        });
+    }
+    $('#btnLoadAllStock').on('click', loadAllStockToCart);
+    $('#btnDownloadTemplate').on('click', downloadIssueTemplate);
+    $('#btnUploadTemplate').on('click', function() {
+        if (!requireWarehouse()) return;
+        $('#bulkCsvFile').val('').trigger('click');
+    });
+    $('#bulkCsvFile').on('change', function() {
+        importIssueTemplate(this.files && this.files[0]);
+    });
 
     /* =========================
        Warehouse change
@@ -1779,12 +2154,13 @@ foreach (['action', 'page-action'] as $actionBlock) {
        Save
        ========================= */
     function doSave() {
-        if (rows.length === 0) { notify('warning', 'เพิ่มรายการพัสดุก่อน'); return; }
+        var issueRows = getIssueRows();
+        if (issueRows.length === 0) { notify('warning', 'ระบุจำนวนจ่ายอย่างน้อย 1 รายการ'); return; }
         var wh = $('#warehouseSelect').val();
         if (!wh) { notify('warning', 'เลือกคลังย่อยก่อน'); return; }
         var jobType = $('#jobType').val();
         var reference = ($('#referenceInput').val() || '').trim() || 'ไม่ได้ระบุ';
-        var items = rows.map(function(r) { return { item_code: r.item_code, lot_number: r.lot_number, qty: r.qty }; });
+        var items = issueRows.map(function(r) { return { item_code: r.item_code, lot_number: r.lot_number, qty: r.qty }; });
 
         var btn = $('#btnSaveFinal').prop('disabled', true).addClass('is-saving');
         btn.find('.btn-save__label i').removeClass('bi-check2').addClass('bi-arrow-clockwise spin');
@@ -1841,6 +2217,53 @@ foreach (['action', 'page-action'] as $actionBlock) {
     } else {
         showState('stateNoWarehouse');
     }
+})();
+JS,
+        View::POS_READY
+    );
+    $this->registerJs(<<<JS
+(function() {
+    function syncStockItemsActionCount() {
+        var source = document.getElementById('itemsCount');
+        var target = document.getElementById('itemsCountAction');
+        if (!source || !target) return;
+
+        var text = (source.textContent || '').trim();
+        var isHidden = source.hidden || !text || text === '0';
+        target.textContent = text || '0';
+        target.hidden = isHidden;
+    }
+
+    syncStockItemsActionCount();
+
+    var countSource = document.getElementById('itemsCount');
+    var gridSource = document.getElementById('itemGrid');
+    if (window.MutationObserver) {
+        if (countSource) {
+            new MutationObserver(syncStockItemsActionCount).observe(countSource, {
+                childList: true,
+                characterData: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['hidden']
+            });
+        }
+        if (gridSource) {
+            new MutationObserver(syncStockItemsActionCount).observe(gridSource, {
+                childList: true,
+                subtree: false
+            });
+        }
+    }
+
+    $(document).on('click', '#itemGrid .pos-tile', function() {
+        setTimeout(function() {
+            var canvas = document.getElementById('stockItemsOffcanvas');
+            if (!canvas || !window.bootstrap || !bootstrap.Offcanvas) return;
+            var instance = bootstrap.Offcanvas.getInstance(canvas);
+            if (instance) instance.hide();
+        }, 140);
+    });
 })();
 JS,
         View::POS_READY

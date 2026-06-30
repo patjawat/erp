@@ -186,7 +186,19 @@ public function behaviors()
     public function actionIndex()
     {
         $searchModel = new \app\modules\inventoryV2\models\RequisitionSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $queryParams = Yii::$app->request->queryParams;
+        $warehouseId = $queryParams['warehouse_id'] ?? null;
+        if (is_numeric($warehouseId)) {
+            $searchFormName = $searchModel->formName();
+            if (!isset($queryParams[$searchFormName]) || !is_array($queryParams[$searchFormName])) {
+                $queryParams[$searchFormName] = [];
+            }
+            if (empty($queryParams[$searchFormName]['sub_warehouse_id'])) {
+                $queryParams[$searchFormName]['sub_warehouse_id'] = (int) $warehouseId;
+            }
+        }
+        $dataProvider = $searchModel->search($queryParams);
+        $dataProvider->query->with(['stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
 
         // จำกัดเฉพาะคลังย่อยที่ user เป็นผู้รับผิดชอบ (data_json.officer) — ยกเว้น admin
         if (!Yii::$app->user->can('admin')) {

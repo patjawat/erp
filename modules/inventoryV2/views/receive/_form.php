@@ -235,8 +235,8 @@ foreach ($items as $it) {
                                     }
                                     ?>
                                     <td><input type="text" id="expiry-date-<?= $index ?>" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control expiry-date-thai" value="<?= Html::encode($expiryDisplay) ?>" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="0.01" step="0.01"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" step="0.01"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="1" step="1"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" step="1"></td>
                                     <td class="text-end fw-bold row-total"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>
                                 </tr>
@@ -1131,8 +1131,8 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '<td class="text-muted small">' + typeLabel + '</td>' +
         '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
         '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="0.01"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" step="0.01"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="1"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" step="1"></td>' +
         '<td class="text-end fw-bold row-total">0.00</td>' +
         '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
         '</tr>';
@@ -1785,8 +1785,8 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     '<td class="text-muted small">' + (item.category_title || '-') + '</td>' +
                     '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
                     '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" value="' + (expiryDisplay || '') + '" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="0.01" step="0.01"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" step="0.01"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="1" step="1"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" step="1"></td>' +
                     '<td class="text-end fw-bold row-total">' + ((item.qty || 0) * (item.unit_price || 0)).toFixed(2) + '</td>' +
                     '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
                     '</tr>';
@@ -1805,31 +1805,36 @@ JS;
 $this->registerJs($js, \yii\web\View::POS_END);
 
 $this->registerCss(<<<CSS
-.receive-create .item-cell {
+.receive-form .item-cell {
     display: flex; align-items: center; gap: 0.6rem;
     min-width: 0;
 }
-.receive-create .item-cell__img {
-    width: 40px; height: 40px;
+.receive-form .item-cell__img {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    max-height: 40px;
     border-radius: 8px;
     object-fit: cover;
+    display: block;
     background: #f1f5f9;
     border: 1px solid rgba(15, 23, 42, 0.08);
-    flex-shrink: 0;
+    flex: 0 0 40px;
 }
-.receive-create .item-cell__img--placeholder {
+.receive-form .item-cell__img--placeholder {
     display: inline-flex; align-items: center; justify-content: center;
     color: #94a3b8;
     background: #f1f5f9;
     font-size: 1.1rem;
 }
-.receive-create .item-cell__body { min-width: 0; flex: 1; }
-.receive-create .item-cell__name {
+.receive-form .item-cell__body { min-width: 0; flex: 1; }
+.receive-form .item-cell__name {
     font-weight: 600; color: #1a202c;
     line-height: 1.25;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.receive-create .item-cell__code {
+.receive-form .item-cell__code {
     font-size: 0.72rem; color: #718096;
     font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
     line-height: 1.2; margin-top: 0.1rem;
