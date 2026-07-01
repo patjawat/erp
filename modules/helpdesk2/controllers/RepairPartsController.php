@@ -604,16 +604,30 @@ class RepairPartsController extends \yii\web\Controller
     }
 
     /**
-     * นับจำนวน IN-lots ที่เหลือสำหรับ FIFO (remain_qty > 0)
+     * นับจำนวน source lots ที่เหลือสำหรับ FIFO (remain_qty > 0)
      */
     private function countFifoUsableInLots(string $itemCode, int $warehouseId): int
     {
         return (int) StockDetail::find()
             ->joinWith('stockOrder')
-            ->where([
-                'stock_detail.item_code' => $itemCode,
-                'stock_order.order_type' => 'IN',
-                'stock_order.main_warehouse_id' => $warehouseId,
+            ->where(['stock_detail.item_code' => $itemCode])
+            ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and',
+                    ['stock_order.main_warehouse_id' => $warehouseId],
+                    ['or',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                        ['and',
+                            ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                            ['>', 'stock_detail.qty', 0],
+                        ],
+                    ],
+                ],
+                ['and',
+                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                    ['stock_order.sub_warehouse_id' => $warehouseId],
+                    ['>', 'stock_detail.qty', 0],
+                ],
             ])
             ->andWhere(['>', 'stock_detail.remain_qty', 0])
             ->count();

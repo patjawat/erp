@@ -400,11 +400,11 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                             ระบบ <strong id="hist-variance-truth">0</strong>)
                         </span>
                     </div>
-                    <ul class="bal-history-variance__causes">
+                    <!-- <ul class="bal-history-variance__causes">
                         <li>มีการย้ายข้อมูลจาก V1 ที่ snapshot ไม่ครบ → <a href="#" id="hist-link-negative" target="_blank" rel="noopener">ดูยอดติดลบทั้งระบบ</a></li>
                         <li>ยังไม่ตั้งยอดยกมาตั้งต้น (INITIAL) ก่อนช่วงนี้ → <a href="#" id="hist-link-initial" target="_blank" rel="noopener">ไปหน้ารับเข้า</a></li>
                         <li>ข้อมูลใน stock_detail กับ stock_balance ไม่ sync → <a href="#" id="hist-link-detail" target="_blank" rel="noopener">ตรวจรายละเอียดล็อต</a></li>
-                    </ul>
+                    </ul> -->
                     <div class="bal-history-variance__actions">
                         <a href="#" id="hist-link-adjust" class="bal-history-variance__primary">
                             <i class="bi bi-sliders" aria-hidden="true"></i>ปรับยอดในหน้านี้

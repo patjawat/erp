@@ -575,7 +575,7 @@ public function behaviors()
      *
      * เปรียบเทียบ 2 แหล่ง:
      * - stock_balance รวมทุก Lot ในคลังนั้น (ที่ผู้ใช้เห็นในหน้ายอดคงเหลือ)
-     * - Σ stock_detail.remain_qty ของ order_type=IN ในคลังนั้น (ที่ FIFO ใช้จ่ายได้จริง)
+     * - Σ stock_detail.remain_qty ของ source lot ในคลังนั้น (ที่ FIFO ใช้จ่ายได้จริง)
      * ถ้าไม่ตรงกัน = มีใบรับเข้าฉบับร่างที่ยังไม่ confirm หรือมี data drift
      */
     public function actionCheckStockAvailability()
@@ -610,15 +610,22 @@ public function behaviors()
             $fifoRemain = (float) (new Query())
                 ->from(['d' => StockDetail::tableName()])
                 ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
-                ->where([
-                    'd.item_code' => $code,
-                    'o.main_warehouse_id' => $warehouseId,
-                ])
+                ->where(['d.item_code' => $code])
                 ->andWhere(['o.status' => StockOrder::STATUS_CONFIRMED])
                 ->andWhere(['or',
-                    ['o.order_type' => StockOrder::ORDER_TYPE_IN],
                     ['and',
-                        ['o.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                        ['o.main_warehouse_id' => $warehouseId],
+                        ['or',
+                            ['o.order_type' => StockOrder::ORDER_TYPE_IN],
+                            ['and',
+                                ['o.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                                ['>', 'd.qty', 0],
+                            ],
+                        ],
+                    ],
+                    ['and',
+                        ['o.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                        ['o.sub_warehouse_id' => $warehouseId],
                         ['>', 'd.qty', 0],
                     ],
                 ])

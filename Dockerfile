@@ -52,7 +52,12 @@ RUN mkdir -p /app/web/assets /app/web/downloads /app/web/msword/results/leave /a
     chown -R www-data:www-data /app/modules/filemanager && \
     chown -R www-data:www-data /app/web/msword
 
-
+RUN mkdir -p \
+    /app/runtime/cache \
+    /app/runtime/backup \
+    /app/vendor/mpdf/mpdf/tmp/mpdf && \
+    chmod -R 775 /app/vendor/mpdf/mpdf/tmp && \
+    chown -R www-data:www-data /app/vendor/mpdf/mpdf/tmp
 
 # Set YII_ENV to 'pro'
 RUN sed -i "s/defined('YII_ENV') or define('YII_ENV', 'dev');/defined('YII_ENV') or define('YII_ENV', 'pro');/" /app/web/index.php

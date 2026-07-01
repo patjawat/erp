@@ -77,6 +77,42 @@ foreach (['action', 'page-action'] as $actionBlock) {
     </div>
 <?php else: ?>
 
+<section class="issue-hero" aria-label="ภาพรวมการตัดจ่ายคลังย่อย">
+    <div class="issue-hero__main">
+        <span class="issue-hero__badge">
+            <i class="bi bi-diagram-3" aria-hidden="true"></i>
+            งานคลังย่อย
+        </span>
+        <h2 class="issue-hero__title">ตัดจ่ายคลังย่อย</h2>
+        <p class="issue-hero__caption">เลือกคลัง งานอ้างอิง และรายการวัสดุในหน้าจอเดียว ตรวจจำนวนก่อนบันทึกเพื่อให้ยอดคงเหลือตรงกับงานจริง</p>
+    </div>
+    <div class="issue-hero__flow" aria-label="ลำดับการทำงาน">
+        <div class="issue-step issue-step--active">
+            <span class="issue-step__num">1</span>
+            <span class="issue-step__text">กำหนดคลัง</span>
+        </div>
+        <div class="issue-step">
+            <span class="issue-step__num">2</span>
+            <span class="issue-step__text">เลือกงานอ้างอิง</span>
+        </div>
+        <div class="issue-step">
+            <span class="issue-step__num">3</span>
+            <span class="issue-step__text">ตรวจรายการจ่าย</span>
+        </div>
+    </div>
+</section>
+
+<section class="issue-context-panel" aria-labelledby="issueContextTitle">
+    <div class="issue-context-panel__head">
+        <div>
+            <div class="issue-context-panel__label">ข้อมูลตั้งต้น</div>
+            <h2 class="issue-context-panel__title" id="issueContextTitle">กำหนดคลังและงานอ้างอิง</h2>
+        </div>
+        <div class="issue-context-panel__hint">
+            <i class="bi bi-shield-check" aria-hidden="true"></i>
+            ข้อมูลส่วนนี้ใช้กำกับทุกรายการจ่ายในรอบบันทึกนี้
+        </div>
+    </div>
 <header class="ctx-bar" aria-label="บริบทการเบิก">
     <div class="ctx-bar__field ctx-bar__field--wh">
         <label for="warehouseSelect" class="ctx-bar__label">คลังย่อย</label>
@@ -133,6 +169,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
         </div>
     </div>
 </header>
+</section>
 
 <div class="pos-shell">
 
@@ -171,6 +208,14 @@ foreach (['action', 'page-action'] as $actionBlock) {
                 รายการพัสดุ
                 <span class="count-pill pos-items__pill" id="itemsCount" hidden>0</span>
             </h2>
+            <div class="item-view-toggle" role="group" aria-label="รูปแบบการแสดงรายการพัสดุ">
+                <button type="button" class="item-view-toggle__btn is-active" data-view="card" aria-pressed="true" title="แสดงแบบการ์ด">
+                    <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="item-view-toggle__btn" data-view="list" aria-pressed="false" title="แสดงแบบรายการ">
+                    <i class="bi bi-list-ul" aria-hidden="true"></i>
+                </button>
+            </div>
             <div class="search-input-wrap pos-items__search">
                 <i class="bi bi-search search-input__icon" aria-hidden="true"></i>
                 <input type="search"
@@ -337,6 +382,13 @@ foreach (['action', 'page-action'] as $actionBlock) {
     --warning-soft: rgba(180, 83, 9, 0.10);
     --danger: #b91c1c;
     --danger-soft: rgba(185, 28, 28, 0.10);
+    --teal: #0f766e;
+    --teal-soft: rgba(15, 118, 110, 0.10);
+    --violet: #6d28d9;
+    --violet-soft: rgba(109, 40, 217, 0.10);
+    --amber: #c2410c;
+    --amber-soft: rgba(194, 65, 12, 0.10);
+    --canvas: #f4f7fb;
 
     --radius: 12px;
     --radius-sm: 8px;
@@ -352,6 +404,147 @@ foreach (['action', 'page-action'] as $actionBlock) {
     --t-slow: 240ms var(--ease);
 
     color: var(--ink-1);
+}
+
+.sub-stock-issue {
+    background:
+        linear-gradient(135deg, rgba(13, 110, 253, 0.055), rgba(15, 118, 110, 0.045) 42%, rgba(109, 40, 217, 0.04)),
+        var(--canvas);
+    border-radius: 0;
+}
+
+.sub-stock-issue .issue-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.62fr);
+    gap: 1rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+    padding: 1.15rem;
+    border: 1px solid rgba(13, 110, 253, 0.16);
+    border-radius: var(--radius);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+        linear-gradient(135deg, rgba(13, 110, 253, 0.14), rgba(15, 118, 110, 0.11) 54%, rgba(109, 40, 217, 0.11));
+    box-shadow: var(--shadow-2);
+}
+.sub-stock-issue .issue-hero__main {
+    min-width: 0;
+}
+.sub-stock-issue .issue-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 30px;
+    padding: 0.28rem 0.62rem;
+    border: 1px solid var(--primary-line);
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary-ink);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.sub-stock-issue .issue-hero__title {
+    margin: 0.65rem 0 0.35rem;
+    color: var(--ink-1);
+    font-size: clamp(1.35rem, 1.4vw + 1rem, 2.25rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-wrap: balance;
+}
+.sub-stock-issue .issue-hero__caption {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 0.94rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+}
+.sub-stock-issue .issue-hero__flow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+    align-content: center;
+}
+.sub-stock-issue .issue-step {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: center;
+    min-height: 68px;
+    padding: 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.78);
+}
+.sub-stock-issue .issue-step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--ink-2);
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+.sub-stock-issue .issue-step__text {
+    color: var(--ink-2);
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.sub-stock-issue .issue-step--active {
+    border-color: var(--primary-line);
+    background: var(--primary-soft);
+}
+.sub-stock-issue .issue-step--active .issue-step__num {
+    background: var(--primary);
+    color: #fff;
+}
+
+.sub-stock-issue .issue-context-panel {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-1);
+}
+.sub-stock-issue .issue-context-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+.sub-stock-issue .issue-context-panel__label {
+    margin-bottom: 0.18rem;
+    color: var(--teal);
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+.sub-stock-issue .issue-context-panel__title {
+    margin: 0;
+    color: var(--ink-1);
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+.sub-stock-issue .issue-context-panel__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: 360px;
+    padding: 0.45rem 0.62rem;
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    border-radius: var(--radius-sm);
+    background: var(--teal-soft);
+    color: #115e59;
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1.45;
 }
 
 /* ─── Empty (no warehouses permission) ─── */
@@ -565,6 +758,43 @@ foreach (['action', 'page-action'] as $actionBlock) {
 .sub-stock-issue .pos-items__title i { color: var(--primary); font-size: 1.1rem; }
 .sub-stock-issue .pos-items__search { flex: 1 1 280px; min-width: 0; }
 .sub-stock-issue .pos-items__recent { margin-bottom: 0.85rem; }
+.sub-stock-issue .item-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+.sub-stock-issue .item-view-toggle__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--ink-2);
+    line-height: 1;
+    transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+.sub-stock-issue .item-view-toggle__btn:hover {
+    background: var(--surface);
+    color: var(--ink-1);
+}
+.sub-stock-issue .item-view-toggle__btn.is-active {
+    background: var(--surface);
+    border-color: var(--primary-line);
+    color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+.sub-stock-issue .item-view-toggle__btn:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
 
 /* ─── Form control ─── */
 .sub-stock-issue .form-control-input {
@@ -646,6 +876,10 @@ foreach (['action', 'page-action'] as $actionBlock) {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 0.7rem;
 }
+.sub-stock-issue .pos-grid--list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+}
 .sub-stock-issue .pos-tile {
     position: relative;
     display: flex; flex-direction: column;
@@ -660,6 +894,51 @@ foreach (['action', 'page-action'] as $actionBlock) {
     overflow: hidden;
     font: inherit;
     color: inherit;
+}
+.sub-stock-issue .pos-tile__image {
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(13, 110, 253, 0.14);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--teal-soft));
+    color: var(--primary-ink);
+    font-size: 1rem;
+    font-weight: 800;
+}
+.sub-stock-issue .pos-tile__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.sub-stock-issue .pos-tile__image.is-fallback {
+    background: linear-gradient(135deg, var(--surface-3), var(--primary-soft));
+}
+.sub-stock-issue .pos-grid--list .pos-tile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+    gap: 0.75rem;
+    align-items: center;
+    min-height: 76px;
+    padding: 0.65rem 0.75rem;
+}
+.sub-stock-issue .pos-grid--list .pos-tile__top {
+    min-width: 0;
+}
+.sub-stock-issue .pos-grid--list .pos-tile__foot {
+    justify-content: flex-end;
+    margin-top: 0;
+    min-width: 0;
+}
+.sub-stock-issue .pos-grid--list .pos-tile__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .sub-stock-issue .pos-tile:hover {
     border-color: var(--primary);
@@ -1379,6 +1658,184 @@ foreach (['action', 'page-action'] as $actionBlock) {
         min-height: 300px;
     }
 }
+/* Enterprise desktop workbench override */
+.sub-stock-issue .issue-context-panel .ctx-bar {
+    margin-bottom: 0;
+    background: var(--surface-2);
+    box-shadow: none;
+}
+.sub-stock-issue .issue-context-panel .ctx-bar__field--wh {
+    flex-basis: 260px;
+}
+.sub-stock-issue .issue-context-panel .ctx-bar__field--job {
+    flex-basis: 430px;
+}
+.sub-stock-issue .issue-context-panel .ctx-bar__field--ref {
+    flex-basis: 280px;
+}
+.sub-stock-issue .ctx-bar__field--wh .ctx-bar__control {
+    color: var(--primary-ink);
+}
+.sub-stock-issue .ctx-bar__field--ref .ctx-bar__control.has-addon .ctx-bar__addon {
+    background: var(--teal-soft);
+    border-color: rgba(15, 118, 110, 0.24);
+    color: #115e59;
+}
+.sub-stock-issue #btnLoadAllStock {
+    background: var(--primary-soft);
+    border-color: var(--primary-line);
+    color: var(--primary-ink);
+}
+.sub-stock-issue #btnDownloadTemplate {
+    background: var(--violet-soft);
+    border-color: rgba(109, 40, 217, 0.22);
+    color: #5b21b6;
+}
+.sub-stock-issue #btnUploadTemplate {
+    background: var(--teal-soft);
+    border-color: rgba(15, 118, 110, 0.22);
+    color: #115e59;
+}
+.sub-stock-issue .pos-cart__save {
+    box-shadow: 0 10px 22px rgba(13, 110, 253, 0.18);
+}
+
+@media (min-width: 992px) {
+    .sub-stock-issue {
+        padding-bottom: 2rem;
+    }
+    .sub-stock-issue .pos-shell {
+        grid-template-columns: minmax(560px, 1fr) minmax(360px, 420px);
+        grid-template-areas:
+            "tools tools"
+            "items cart";
+        gap: 1rem;
+        align-items: start;
+    }
+    .sub-stock-issue .pos-actionbar {
+        grid-area: tools;
+        min-height: 58px;
+        padding: 0.85rem 1rem;
+        border-color: rgba(13, 110, 253, 0.16);
+        background:
+            linear-gradient(90deg, rgba(13, 110, 253, 0.08), rgba(15, 118, 110, 0.06)),
+            var(--surface);
+    }
+    .sub-stock-issue .pos-actionbar__items-btn {
+        display: none;
+    }
+    .sub-stock-issue .pos-actionbar__hint {
+        max-width: none;
+        color: var(--ink-2);
+        font-weight: 650;
+    }
+    .sub-stock-issue .stock-items-offcanvas {
+        grid-area: items;
+        position: static;
+        visibility: visible !important;
+        transform: none !important;
+        width: auto;
+        height: auto;
+        max-width: none;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow-1);
+        transition: none;
+    }
+    .sub-stock-issue .stock-items-offcanvas__head {
+        display: none;
+    }
+    .sub-stock-issue .stock-items-offcanvas__body {
+        min-height: min(64vh, 720px);
+        max-height: calc(100vh - 320px);
+        overflow: hidden;
+        border-radius: inherit;
+    }
+    .sub-stock-issue .pos-items--offcanvas {
+        min-height: 100%;
+        max-height: inherit;
+        border-radius: inherit;
+    }
+    .sub-stock-issue .pos-items--offcanvas .pos-items__head {
+        background: linear-gradient(180deg, var(--surface), rgba(255, 255, 255, 0.94));
+    }
+    .sub-stock-issue .pos-items--offcanvas .pos-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        align-content: start;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        overflow: auto;
+        padding: 0.85rem 0.95rem 1rem;
+    }
+    .sub-stock-issue .pos-items--offcanvas .pos-grid.pos-grid--list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .sub-stock-issue .pos-cart {
+        grid-area: cart;
+        position: sticky;
+        top: 1rem;
+        max-height: calc(100vh - 180px);
+        border-color: rgba(13, 110, 253, 0.18);
+        box-shadow: var(--shadow-2);
+    }
+    .sub-stock-issue .pos-cart__head {
+        background:
+            linear-gradient(90deg, var(--primary-soft), rgba(255, 255, 255, 0)),
+            var(--surface);
+    }
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+    .sub-stock-issue .pos-shell {
+        grid-template-columns: minmax(0, 1fr) 340px;
+    }
+    .sub-stock-issue .issue-hero {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sub-stock-issue .issue-hero {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .sub-stock-issue .issue-context-panel__head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sub-stock-issue .issue-context-panel__hint {
+        max-width: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sub-stock-issue .issue-hero {
+        padding: 0.9rem;
+    }
+    .sub-stock-issue .issue-hero__flow {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .sub-stock-issue .issue-step {
+        min-height: 54px;
+    }
+    .sub-stock-issue .pos-grid--list .pos-tile {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .sub-stock-issue .pos-grid--list .pos-tile__foot {
+        justify-content: space-between;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sub-stock-issue *,
+    .sub-stock-issue *::before,
+    .sub-stock-issue *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+    }
+}
 </style>
 
 <?php if (!empty($subWarehouses)): ?>
@@ -1401,6 +1858,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
     var lastWarehouseValue = $('#warehouseSelect').val() || '';
     var isInitialWarehouseChange = true;
     var currentQuery = '';
+    var itemViewMode = getStoredItemViewMode();
     var lastRemoved = null;
     var undoTimer = null;
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1526,6 +1984,39 @@ foreach (['action', 'page-action'] as $actionBlock) {
         var t = String(s || '').trim();
         return t ? t.charAt(0) : '?';
     }
+    function getStoredItemViewMode() {
+        try {
+            return window.localStorage && window.localStorage.getItem('subStockIssueItemView') === 'list'
+                ? 'list'
+                : 'card';
+        } catch (e) {
+            return 'card';
+        }
+    }
+    function storeItemViewMode(mode) {
+        try {
+            if (window.localStorage) window.localStorage.setItem('subStockIssueItemView', mode);
+        } catch (e) {}
+    }
+    function syncItemViewToggle() {
+        $('.item-view-toggle__btn').each(function() {
+            var isActive = $(this).data('view') === itemViewMode;
+            $(this).toggleClass('is-active', isActive).attr('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+    function itemImageUrl(item) {
+        return String(item.image_url || item.imageUrl || item.photo_url || item.avatar || '').trim();
+    }
+    function itemVisualHtml(item) {
+        var init = esc(initial(item.item_name || item.item_code));
+        var url = itemImageUrl(item);
+        if (!url) {
+            return '<span class="pos-tile__image is-fallback" aria-hidden="true">' + init + '</span>';
+        }
+        return '<span class="pos-tile__image" data-initial="' + init + '">' +
+            '<img src="' + esc(url) + '" alt="" loading="lazy" decoding="async">' +
+        '</span>';
+    }
 
     /* =========================
        View state toggle
@@ -1544,7 +2035,9 @@ foreach (['action', 'page-action'] as $actionBlock) {
        ========================= */
     function renderItemGrid() {
         var q = (currentQuery || '').trim().toLowerCase();
-        var grid = $('#itemGrid').empty();
+        var grid = $('#itemGrid').empty()
+            .toggleClass('pos-grid--list', itemViewMode === 'list')
+            .toggleClass('pos-grid--card', itemViewMode !== 'list');
         var filtered = lotsData.filter(function(o) {
             if (!q) return true;
             return (String(o.item_name || '').toLowerCase().indexOf(q) >= 0
@@ -1576,7 +2069,7 @@ foreach (['action', 'page-action'] as $actionBlock) {
                 '" aria-label="' + esc(o.item_name || o.item_code) + ' คงเหลือ ' + esc(remaining) + (o.unit ? ' ' + esc(o.unit) : '') + '">' +
                   (hasCartQty ? '<span class="pos-tile__qty-badge" aria-label="ในรายการจ่าย ' + esc(inCart) + '">' + esc(inCart) + '</span>' : '') +
                   '<div class="pos-tile__top">' +
-                    '<div class="pos-tile__avatar" aria-hidden="true">' + esc(initial(o.item_name)) + '</div>' +
+                    itemVisualHtml(o) +
                     '<div class="pos-tile__body">' +
                       '<div class="pos-tile__name">' + highlight(o.item_name || o.item_code, q) + '</div>' +
                       (o.item_code ? '<div class="pos-tile__code">' + esc(o.item_code) + '</div>' : '') +
@@ -1592,10 +2085,25 @@ foreach (['action', 'page-action'] as $actionBlock) {
                 '</button>' +
               '</li>';
             var tile = $(html);
+            tile.find('.pos-tile__image img').on('error', function() {
+                var wrap = $(this).closest('.pos-tile__image');
+                wrap.addClass('is-fallback').text(wrap.data('initial') || initial(o.item_name || o.item_code));
+                $(this).remove();
+            });
             tile.find('.pos-tile').on('click', function() { addToCart(o, this); });
             grid.append(tile);
         });
     }
+
+    syncItemViewToggle();
+    $('.item-view-toggle__btn').on('click', function() {
+        var nextMode = $(this).data('view') === 'list' ? 'list' : 'card';
+        if (nextMode === itemViewMode) return;
+        itemViewMode = nextMode;
+        storeItemViewMode(itemViewMode);
+        syncItemViewToggle();
+        if ($('#warehouseSelect').val() || lotsData.length > 0) renderItemGrid();
+    });
 
     /* =========================
        Search input → filter grid in place

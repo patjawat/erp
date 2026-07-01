@@ -163,17 +163,33 @@ class IssueController extends Controller
                         }
                     }
 
-                    // 2. หักลบ remain_qty จาก "รายการรับเข้า (IN)" ต้นทาง 
+                    // 2. หักลบ remain_qty จาก source lot ต้นทาง
                     // เพื่อให้ยอดเหลือรายแถวในหน้า process.php อัปเดตถูกต้อง
                     $sourceLots = StockDetail::find()
                         ->joinWith('stockOrder')
                         ->where([
                             'stock_detail.item_code' => $detail->item_code,
                             'stock_detail.lot_number' => $selectedLot,
-                            'stock_order.order_type' => 'IN',
-                            'stock_order.main_warehouse_id' => $model->main_warehouse_id
                         ])
-                        ->andWhere(['>', 'remain_qty', 0])
+                        ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+                        ->andWhere(['or',
+                            ['and',
+                                ['stock_order.main_warehouse_id' => $model->main_warehouse_id],
+                                ['or',
+                                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                                    ['and',
+                                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                                        ['>', 'stock_detail.qty', 0],
+                                    ],
+                                ],
+                            ],
+                            ['and',
+                                ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                                ['stock_order.sub_warehouse_id' => $model->main_warehouse_id],
+                                ['>', 'stock_detail.qty', 0],
+                            ],
+                        ])
+                        ->andWhere(['>', 'stock_detail.remain_qty', 0])
                         ->orderBy(['stock_detail.id' => SORT_ASC]) // ตัดตัวที่เข้าก่อน (FIFO ภายใน Lot)
                         ->all();
 
@@ -557,12 +573,26 @@ CSS;
         return \app\modules\inventoryV2\models\StockDetail::find()
             ->joinWith('stockOrder')
             ->select(['stock_detail.lot_number', 'stock_detail.remain_qty', 'stock_detail.unit_price'])
-            ->where([
-                'stock_detail.item_code' => $item_code,
-                'stock_order.main_warehouse_id' => $warehouse_id,
-                'stock_order.order_type' => 'IN'
+            ->where(['stock_detail.item_code' => $item_code])
+            ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and',
+                    ['stock_order.main_warehouse_id' => $warehouse_id],
+                    ['or',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                        ['and',
+                            ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                            ['>', 'stock_detail.qty', 0],
+                        ],
+                    ],
+                ],
+                ['and',
+                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                    ['stock_order.sub_warehouse_id' => $warehouse_id],
+                    ['>', 'stock_detail.qty', 0],
+                ],
             ])
-            ->andWhere(['>', 'remain_qty', 0])
+            ->andWhere(['>', 'stock_detail.remain_qty', 0])
             ->asArray()
             ->all();
     }

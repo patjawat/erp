@@ -59,23 +59,30 @@ class InventoryService
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
-            // 1. ค้นหารายการที่เคยรับเข้า (IN) และยังมีของเหลือ (remain_qty > 0)
+            // 1. ค้นหารายการ source lot ที่ยังมีของเหลือ (remain_qty > 0)
             // เรียงตามวันที่รับเข้าจากเก่าไปใหม่ (FIFO)
             $availableLots = StockDetail::find()
                 ->joinWith('stockOrder')
-                ->where([
-                    'stock_detail.item_code' => $itemId,
-                    'stock_order.main_warehouse_id' => $warehouseId,
-                ])
+                ->where(['stock_detail.item_code' => $itemId])
                 ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
                 ->andWhere(['or',
-                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
                     ['and',
-                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                        ['stock_order.main_warehouse_id' => $warehouseId],
+                        ['or',
+                            ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                            ['and',
+                                ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                                ['>', 'stock_detail.qty', 0],
+                            ],
+                        ],
+                    ],
+                    ['and',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                        ['stock_order.sub_warehouse_id' => $warehouseId],
                         ['>', 'stock_detail.qty', 0],
                     ],
                 ])
-                ->andWhere(['>', 'remain_qty', 0])
+                ->andWhere(['>', 'stock_detail.remain_qty', 0])
                 ->orderBy([
                     'stock_order.order_date' => SORT_ASC, 
                     'stock_detail.id' => SORT_ASC

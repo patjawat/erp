@@ -899,12 +899,16 @@ class SubStockController extends \yii\web\Controller
             ->all();
         $out = [];
         $unitCache = [];
+        $imageCache = [];
         foreach ($rows as $r) {
             $code = $r['item_code'];
             if (!array_key_exists($code, $unitCache)) {
                 $item = StockItem::findOne($code);
                 $unitCache[$code] = ($item && method_exists($item, 'getUnitName'))
                     ? ((string) ($item->getUnitName() ?: ''))
+                    : '';
+                $imageCache[$code] = ($item && method_exists($item, 'ShowImg'))
+                    ? ((string) ($item->ShowImg() ?: ''))
                     : '';
             }
             $out[] = [
@@ -913,6 +917,7 @@ class SubStockController extends \yii\web\Controller
                 'lot_number' => $r['lot_number'],
                 'balance_qty' => (float) $r['balance_qty'],
                 'unit' => $unitCache[$code],
+                'image_url' => $imageCache[$code] ?? '',
             ];
         }
         return $out;

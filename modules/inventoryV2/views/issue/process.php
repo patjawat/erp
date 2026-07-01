@@ -195,12 +195,26 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                 foreach ($model->stockDetails as $index => $detail) {
                     $availableLots = \app\modules\inventoryV2\models\StockDetail::find()
                         ->joinWith('stockOrder')
-                        ->where([
-                            'stock_detail.item_code' => $detail->item_code,
-                            'stock_order.main_warehouse_id' => $model->main_warehouse_id,
-                            'stock_order.order_type' => 'IN'
+                        ->where(['stock_detail.item_code' => $detail->item_code])
+                        ->andWhere(['stock_order.status' => \app\modules\inventoryV2\models\StockOrder::STATUS_CONFIRMED])
+                        ->andWhere(['or',
+                            ['and',
+                                ['stock_order.main_warehouse_id' => $model->main_warehouse_id],
+                                ['or',
+                                    ['stock_order.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_IN],
+                                    ['and',
+                                        ['stock_order.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_ADJUST],
+                                        ['>', 'stock_detail.qty', 0],
+                                    ],
+                                ],
+                            ],
+                            ['and',
+                                ['stock_order.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_TRANSFER],
+                                ['stock_order.sub_warehouse_id' => $model->main_warehouse_id],
+                                ['>', 'stock_detail.qty', 0],
+                            ],
                         ])
-                        ->andWhere(['>', 'remain_qty', 0])
+                        ->andWhere(['>', 'stock_detail.remain_qty', 0])
                         ->all();
                     $totalAvailable = 0;
                     foreach ($availableLots as $lotIn) {
