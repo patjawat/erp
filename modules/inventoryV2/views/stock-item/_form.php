@@ -28,7 +28,7 @@ $ref = isset($ref) ? Html::encode($ref) : '';
     </div>
     <div class="col-6">
         <?php
-        echo $form->field($model, 'data_json[unit_name]')->widget(Select2::classname(), [
+        echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
             'data' => $model->listUnit(),
             'options' => ['placeholder' => 'เช่น ชิ้น, กล่อง, แพ็ค'],
             'pluginOptions' => [

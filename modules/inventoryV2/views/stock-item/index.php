@@ -132,7 +132,7 @@ AND group_id = 'MATER';
                                                 <small class="text-muted">หมวดหมู่: <?= $item->categoryType->title ?? '-' ?></small>
                                             </td>
                                             <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
-                                            <td><?= $item->data_json['unit'] ?? $item->getUnitName() ?: '-' ?></td>
+                                            <td><?= $item->data_json['unit_name'] ?? $item->getUnitName() ?: '-' ?></td>
                                             <td class="text-center">
                                                 <?php if ($warehouseId): ?>
                                                     <?php

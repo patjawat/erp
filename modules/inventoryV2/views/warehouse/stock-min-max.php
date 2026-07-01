@@ -300,7 +300,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                         if (is_string($itemDataJson)) {
                                             $itemDataJson = json_decode($itemDataJson, true);
                                         }
-                                        $unitName = $itemDataJson['unit_name'] ?? '-';
+                                        $unitName = $itemDataJson['unit'] ?? '-';
                                         $isConfigured = !empty($r['setting_id']);
                                         $minQty = $isConfigured ? (float) $r['setting_min_qty'] : '';
                                         $maxQty = $isConfigured ? (float) $r['setting_max_qty'] : '';
