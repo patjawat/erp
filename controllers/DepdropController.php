@@ -178,7 +178,7 @@ class DepdropController extends \yii\web\Controller
     }
 
     // บุคลากร (รองรับ exclude_emp_id สำหรับฟอร์มที่ไม่ให้เลือกตัวเอง เช่น คำขอบคุณ)
-    public function actionEmployeeById($q = null, $id = null, $exclude_emp_id = null)
+    public function actionEmployeeById($q = null, $id = null, $exclude_emp_id = null, $page = 1)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
@@ -196,10 +196,16 @@ class DepdropController extends \yii\web\Controller
         if ($exclude_emp_id !== null && $exclude_emp_id !== '') {
             $query->andWhere(['!=', 'id', (int) $exclude_emp_id]);
         }
-        $query->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->limit(30);
+        $pageSize = 30;
+        $page = max(1, (int) $page);
+        $totalCount = (int) (clone $query)->count();
+
+        $query->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])
+            ->limit($pageSize)
+            ->offset(($page - 1) * $pageSize);
         $querys = $query->all();
 
-        $data = [['id' => '', 'text' => '']];
+        $data = $page === 1 ? [['id' => '', 'text' => '']] : [];
         foreach ($querys as $model) {
             $data[] = [
                 'id' => $model->id,
@@ -216,6 +222,7 @@ class DepdropController extends \yii\web\Controller
         }
         return [
             'results' => $data,
+            'total_count' => $totalCount,
             'items' => $model ?? []
         ];
     }

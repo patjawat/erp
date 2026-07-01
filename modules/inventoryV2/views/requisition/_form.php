@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
 
 $formatRepoJs = "var formatRepo=function(repo){if(repo.loading)return repo.avatar;return '<div>'+repo.avatar+'</div>';};";
 $this->registerJs($formatRepoJs, View::POS_HEAD);
-$resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagination:{more:(p.page*30)<(data.total_count||999)}};}";
+$resultsJs = "function(data,p){p.page=p.page||1;var total=parseInt(data.total_count||0,10);return{results:data.results||[],pagination:{more:total>0&&(p.page*30)<total}};}";
 
 /** @var \app\modules\inventoryV2\models\StockOrder $model */
 /** @var array|null $ctx */
@@ -344,12 +344,14 @@ function initItemSelect(elementId) {
         },
         load: function(query, callback) {
             var currentWhId = $('#main-warehouse-id').val();
+            var currentSubWhId = $('#sub-warehouse-id').val();
             if (!currentWhId) return callback();
+            if (!currentSubWhId) return callback();
             var excludeRow = $(this.input).closest('tr');
             var selectedCodes = getSelectedItemCodes(excludeRow);
             var q = (typeof query === 'string') ? query : '';
             q = q.replace(/^["'\s]+|["'\s]+$/g, '');
-            var url = '$getItemInWhUrl' + '?warehouse_id=' + currentWhId + '&q=' + encodeURIComponent(q);
+            var url = '$getItemInWhUrl' + '?warehouse_id=' + currentWhId + '&sub_warehouse_id=' + currentSubWhId + '&q=' + encodeURIComponent(q);
             fetch(url)
                 .then(function(response) {
                     if (!response.ok) return [];
@@ -402,11 +404,19 @@ function initItemSelect(elementId) {
 // 2. ฟังก์ชันเพิ่มแถว (คืนค่า TomSelect ของแถวใหม่)
 function addItem() {
     var whId = $('#main-warehouse-id').val();
+    var subWhId = $('#sub-warehouse-id').val();
     if (!whId) {
         if (typeof Swal !== 'undefined') {
             Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่จ่ายของก่อนเพิ่มรายการ', 'warning');
         }
         $('#main-warehouse-id').addClass('is-invalid').focus();
+        return null;
+    }
+    if (!subWhId) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('คำเตือน', 'กรุณาเลือกคลังที่รับของก่อนเพิ่มรายการ', 'warning');
+        }
+        $('#sub-warehouse-id').addClass('is-invalid').focus();
         return null;
     }
 

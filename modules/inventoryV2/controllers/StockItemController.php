@@ -8,6 +8,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockItemWarehouseSetting;
 use app\modules\inventoryV2\models\StockItemSearch;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\Warehouse;
@@ -512,12 +513,13 @@ class StockItemController extends Controller
      * รายการวัสดุสำหรับเลือกในใบขอเบิก
      * แสดงเฉพาะวัสดุที่มียอดคงเหลือ > 0 ในคลังที่เลือก (คลังที่จ่ายของ)
      * กรองตามประเภทวัสดุที่คลังนั้นรับไว้ (ถ้ามีการตั้งค่า)
-     * GET warehouse_id, q (optional ค้นหาชื่อ/รหัส)
+     * GET warehouse_id, sub_warehouse_id (optional กรอง min/max ของคลังรับ), q (optional ค้นหาชื่อ/รหัส)
      */
-    public function actionGetItemsByWarehouse($warehouse_id, $q = '')
+    public function actionGetItemsByWarehouse($warehouse_id, $q = '', $sub_warehouse_id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $warehouse_id = (int) $warehouse_id;
+        $sub_warehouse_id = $sub_warehouse_id !== null && $sub_warehouse_id !== '' ? (int) $sub_warehouse_id : null;
         $q = trim((string) $q, " \t\n\r\0\x0B\"'");
 
         if ($warehouse_id <= 0) {
@@ -541,6 +543,14 @@ class StockItemController extends Controller
             ->innerJoin(['b' => $balanceSubQuery], 'b.item_code = categorise.code')
             ->andWhere(['categorise.active' => 1])
             ->orderBy(['categorise.code' => SORT_ASC]);
+
+        if ($sub_warehouse_id && $sub_warehouse_id > 0) {
+            $query->innerJoin(
+                ['s' => StockItemWarehouseSetting::tableName()],
+                's.item_code = categorise.code AND s.warehouse_id = :setting_wh AND s.is_active = 1',
+                [':setting_wh' => $sub_warehouse_id]
+            )->andWhere(['>', 's.max_qty', 0]);
+        }
 
         // กรองตามประเภทที่คลังกำหนดไว้ (ถ้ามี)
         $warehouse = Warehouse::findOne($warehouse_id);

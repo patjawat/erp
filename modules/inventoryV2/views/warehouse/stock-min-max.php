@@ -35,6 +35,8 @@ $saveBatchUrl = Url::to(['/inventory-v2/warehouse/save-setting-batch']);
 $copyPreviewUrl = Url::to(['/inventory-v2/warehouse/copy-from-preview']);
 $copyUrl = Url::to(['/inventory-v2/warehouse/copy-from']);
 $importPreviewUrl = Url::to(['/inventory-v2/warehouse/import-preview', 'id' => $warehouse->id]);
+$historyPreviewUrl = Url::to(['/inventory-v2/warehouse/history-min-max-preview', 'id' => $warehouse->id]);
+$historyApplyUrl = Url::to(['/inventory-v2/warehouse/history-min-max-apply', 'id' => $warehouse->id]);
 $candidateItemsUrl = Url::to(['/inventory-v2/warehouse/candidate-items', 'id' => $warehouse->id]);
 $addItemsUrl = Url::to(['/inventory-v2/warehouse/add-items']);
 $deleteBatchUrl = Url::to(['/inventory-v2/warehouse/delete-settings-batch']);
@@ -203,6 +205,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         </div>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-add-items-modal" title="เลือกหมวด → ติ๊กรายการที่ต้องการ → เพิ่มเข้าตาราง (Min/Max เริ่มต้น 0 — ค่อยกรอกในตาราง)">
                             <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุเข้าตาราง
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-history-modal" title="โหลดวัสดุจากประวัติการเบิกและคำนวณ Min/Max ตั้งต้น">
+                            <i class="bi bi-magic me-1"></i>คำนวณจากประวัติเบิก
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-copy-from-modal" title="คัดลอกค่า Min/Max จากคลังอื่น">
                             <i class="bi bi-clipboard-plus me-1"></i>คัดลอกจากคลัง
@@ -625,6 +630,75 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
     </div>
 </div>
 
+<!-- History auto setup modal -->
+<div class="modal fade" id="smm-history-modal" tabindex="-1" aria-labelledby="smm-history-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="smm-history-title">
+                    <i class="bi bi-magic text-primary me-1"></i>
+                    คำนวณ Min/Max จากประวัติเบิก
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-6 col-md-3">
+                        <label for="smm-history-months" class="form-label small fw-semibold">ย้อนหลัง</label>
+                        <select id="smm-history-months" class="form-select form-select-sm">
+                            <option value="3">3 เดือน</option>
+                            <option value="6" selected>6 เดือน</option>
+                            <option value="12">12 เดือน</option>
+                            <option value="24">24 เดือน</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="smm-history-min-factor" class="form-label small fw-semibold">Min = เฉลี่ย x</label>
+                        <input type="number" id="smm-history-min-factor" class="form-control form-control-sm" min="0.1" max="12" step="0.1" value="1">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="smm-history-max-factor" class="form-label small fw-semibold">Max = เฉลี่ย x</label>
+                        <input type="number" id="smm-history-max-factor" class="form-control form-control-sm" min="0.1" max="24" step="0.1" value="2">
+                    </div>
+                    <div class="col-6 col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="smm-history-preview">
+                            <i class="bi bi-search me-1"></i>ดูตัวอย่าง
+                        </button>
+                    </div>
+                </div>
+
+                <div id="smm-history-summary" class="alert alert-light border d-none mb-3"></div>
+                <div id="smm-history-empty" class="text-center text-muted py-4">
+                    <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
+                    กดดูตัวอย่างเพื่อโหลดวัสดุจากประวัติเบิก
+                </div>
+                <div class="table-responsive d-none" id="smm-history-table-wrap">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>รหัส</th>
+                                <th>รายการวัสดุ</th>
+                                <th class="text-end">รวมเบิก</th>
+                                <th class="text-end">เฉลี่ย/เดือน</th>
+                                <th class="text-end">Min</th>
+                                <th class="text-end">Max</th>
+                                <th class="text-end">เอกสาร</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smm-history-preview-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="smm-history-apply" disabled>
+                    <i class="bi bi-check2-circle me-1"></i>บันทึกเข้าตาราง
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Excel Import modal -->
 <div class="modal fade" id="smm-import-modal" tabindex="-1" aria-labelledby="smm-import-title" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -872,6 +946,8 @@ $js = <<<JS
     const COPY_PREVIEW_URL = '{$copyPreviewUrl}';
     const COPY_URL         = '{$copyUrl}';
     const IMPORT_PREVIEW_URL = '{$importPreviewUrl}';
+    const HISTORY_PREVIEW_URL = '{$historyPreviewUrl}';
+    const HISTORY_APPLY_URL = '{$historyApplyUrl}';
     const CANDIDATE_ITEMS_URL = '{$candidateItemsUrl}';
     const ADD_ITEMS_URL    = '{$addItemsUrl}';
     const DELETE_BATCH_URL = '{$deleteBatchUrl}';
@@ -1739,6 +1815,121 @@ $js = <<<JS
                 })
                 .catch(() => {
                     copyConfirmBtn.disabled = false;
+                    showToast('เชื่อมต่อไม่ได้', 'error');
+                });
+        });
+    }
+    const historyPreviewBtn = document.getElementById('smm-history-preview');
+    const historyApplyBtn = document.getElementById('smm-history-apply');
+    const historyBody = document.getElementById('smm-history-preview-body');
+    const historyEmpty = document.getElementById('smm-history-empty');
+    const historyTableWrap = document.getElementById('smm-history-table-wrap');
+    const historySummary = document.getElementById('smm-history-summary');
+
+    function historyParams() {
+        const fd = new FormData();
+        fd.append('_csrf', CSRF);
+        fd.append('months', document.getElementById('smm-history-months')?.value || '6');
+        fd.append('min_factor', document.getElementById('smm-history-min-factor')?.value || '1');
+        fd.append('max_factor', document.getElementById('smm-history-max-factor')?.value || '2');
+        return fd;
+    }
+
+    function textCell(value, className) {
+        const td = document.createElement('td');
+        if (className) td.className = className;
+        td.textContent = value === null || value === undefined || value === '' ? '-' : String(value);
+        return td;
+    }
+
+    function numberText(value) {
+        const n = Number(value || 0);
+        return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
+    function renderHistoryPreview(data) {
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        historyBody.innerHTML = '';
+        historyApplyBtn.disabled = rows.length === 0;
+        historyTableWrap.classList.toggle('d-none', rows.length === 0);
+        historyEmpty.classList.toggle('d-none', rows.length > 0);
+        historySummary.classList.toggle('d-none', false);
+        historySummary.textContent = rows.length > 0
+            ? 'พบ ' + rows.length + ' รายการที่ยังไม่มี min/max จากประวัติย้อนหลัง ' + (data.options?.months || '-') + ' เดือน'
+            : 'ไม่พบวัสดุจากประวัติเบิกที่ยังไม่มีการตั้งค่า';
+
+        rows.forEach(function(row) {
+            const tr = document.createElement('tr');
+            tr.appendChild(textCell(row.item_code, 'font-monospace'));
+            tr.appendChild(textCell(row.item_name));
+            tr.appendChild(textCell(numberText(row.total_qty), 'text-end'));
+            tr.appendChild(textCell(numberText(row.avg_monthly), 'text-end'));
+            tr.appendChild(textCell(numberText(row.min_qty), 'text-end fw-semibold'));
+            tr.appendChild(textCell(numberText(row.max_qty), 'text-end fw-semibold'));
+            tr.appendChild(textCell(numberText(row.issue_count), 'text-end'));
+            historyBody.appendChild(tr);
+        });
+    }
+
+    ['smm-history-months', 'smm-history-min-factor', 'smm-history-max-factor'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function() {
+            historyApplyBtn.disabled = true;
+        });
+        el.addEventListener('change', function() {
+            historyApplyBtn.disabled = true;
+        });
+    });
+
+    if (historyPreviewBtn) {
+        historyPreviewBtn.addEventListener('click', function() {
+            historyPreviewBtn.disabled = true;
+            historyPreviewBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>กำลังคำนวณ';
+            fetch(HISTORY_PREVIEW_URL, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: historyParams()
+            })
+                .then(r => r.json())
+                .then(function(data) {
+                    if (!data || data.status !== 'success') {
+                        showToast((data && data.message) || 'คำนวณไม่สำเร็จ', 'error');
+                        return;
+                    }
+                    renderHistoryPreview(data);
+                })
+                .catch(() => showToast('เชื่อมต่อไม่ได้', 'error'))
+                .finally(function() {
+                    historyPreviewBtn.disabled = false;
+                    historyPreviewBtn.innerHTML = '<i class="bi bi-search me-1"></i>ดูตัวอย่าง';
+                });
+        });
+    }
+
+    if (historyApplyBtn) {
+        historyApplyBtn.addEventListener('click', function() {
+            historyApplyBtn.disabled = true;
+            historyApplyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>กำลังบันทึก';
+            fetch(HISTORY_APPLY_URL, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: historyParams()
+            })
+                .then(r => r.json())
+                .then(function(data) {
+                    if (!data || data.status !== 'success') {
+                        showToast((data && data.message) || 'บันทึกไม่สำเร็จ', 'error');
+                        historyApplyBtn.disabled = false;
+                        historyApplyBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>บันทึกเข้าตาราง';
+                        return;
+                    }
+                    showToast('เพิ่มจากประวัติเบิก ' + (data.added || 0) + ' รายการ');
+                    setTimeout(function() { window.location.reload(); }, 700);
+                })
+                .catch(function() {
+                    historyApplyBtn.disabled = false;
+                    historyApplyBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>บันทึกเข้าตาราง';
                     showToast('เชื่อมต่อไม่ได้', 'error');
                 });
         });

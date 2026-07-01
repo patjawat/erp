@@ -13,7 +13,9 @@ use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\models\WarehouseSearch;
+use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockItemWarehouseSetting;
 use app\modules\inventoryV2\services\StockMinMaxImportService;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
@@ -37,6 +39,8 @@ class WarehouseController extends Controller
                     'save-setting-batch' => ['POST'],
                     'copy-from' => ['POST'],
                     'import-preview' => ['POST'],
+                    'history-min-max-preview' => ['POST'],
+                    'history-min-max-apply' => ['POST'],
                     'add-items' => ['POST'],
                     'delete-settings-batch' => ['POST'],
                 ],
@@ -828,6 +832,176 @@ class WarehouseController extends Controller
             'added' => count($toInsert),
             'skipped' => count($validCodes) - count($toInsert),
         ];
+    }
+
+    public function actionHistoryMinMaxPreview($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse = $this->findModel($id);
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $options = $this->resolveHistoryMinMaxOptions();
+        $rows = $this->buildHistoryMinMaxRows($warehouse, $options);
+
+        return [
+            'status' => 'success',
+            'rows' => $rows,
+            'total' => count($rows),
+            'limited' => count($rows) >= $options['limit'],
+            'options' => $options,
+        ];
+    }
+
+    public function actionHistoryMinMaxApply($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $warehouse = $this->findModel($id);
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $options = $this->resolveHistoryMinMaxOptions();
+        $rows = $this->buildHistoryMinMaxRows($warehouse, $options);
+        if (empty($rows)) {
+            return ['status' => 'error', 'message' => 'ไม่พบวัสดุจากประวัติเบิกที่ยังไม่มีการตั้งค่า'];
+        }
+
+        $userId = Yii::$app->user->id;
+        $now = time();
+        $batch = [];
+        foreach ($rows as $row) {
+            $batch[] = [
+                $row['item_code'],
+                $warehouse->id,
+                $row['min_qty'],
+                $row['max_qty'],
+                1,
+                $now,
+                $now,
+                $userId,
+                $userId,
+            ];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            Yii::$app->db->createCommand()->batchInsert(
+                'stock_item_warehouse_setting',
+                ['item_code', 'warehouse_id', 'min_qty', 'max_qty', 'is_active',
+                 'created_at', 'updated_at', 'created_by', 'updated_by'],
+                $batch
+            )->execute();
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'ตั้งค่าอัตโนมัติไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        return [
+            'status' => 'success',
+            'added' => count($batch),
+        ];
+    }
+
+    private function resolveHistoryMinMaxOptions(): array
+    {
+        $months = (int) $this->request->post('months', 6);
+        $months = max(1, min(24, $months));
+        $minFactor = (float) $this->request->post('min_factor', 1);
+        $maxFactor = (float) $this->request->post('max_factor', 2);
+        $minFactor = max(0.1, min(12, $minFactor));
+        $maxFactor = max($minFactor, min(24, $maxFactor));
+        $limit = (int) $this->request->post('limit', 500);
+        $limit = max(1, min(500, $limit));
+        $startDate = (new \DateTimeImmutable('today'))
+            ->modify('-' . $months . ' months')
+            ->format('Y-m-d');
+
+        return [
+            'months' => $months,
+            'min_factor' => $minFactor,
+            'max_factor' => $maxFactor,
+            'limit' => $limit,
+            'start_date' => $startDate,
+        ];
+    }
+
+    private function buildHistoryMinMaxRows(Warehouse $warehouse, array $options): array
+    {
+        $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+        $query = (new Query())
+            ->select([
+                'item_code' => 'd.item_code',
+                'item_name' => 'i.title',
+                'i.category_id',
+                'i.data_json AS item_data_json',
+                'category_title' => 'cat.title',
+                'total_qty' => new Expression('SUM(d.qty)'),
+                'issue_count' => new Expression('COUNT(DISTINCT o.id)'),
+                'last_issue_date' => new Expression('MAX(o.order_date)'),
+            ])
+            ->from(['d' => StockDetail::tableName()])
+            ->innerJoin(['o' => StockOrder::tableName()], 'o.id = d.stock_order_id')
+            ->innerJoin(
+                ['i' => '{{%categorise}}'],
+                'i.code = d.item_code AND i.name = :item_name AND i.group_id = :item_group AND i.active = 1',
+                [':item_name' => 'asset_item', ':item_group' => 'MATER']
+            )
+            ->leftJoin(['cat' => '{{%categorise}}'], 'cat.code = i.category_id AND cat.name = :cat_name', [':cat_name' => 'asset_type'])
+            ->leftJoin(
+                ['s' => StockItemWarehouseSetting::tableName()],
+                's.item_code = d.item_code AND s.warehouse_id = :setting_wh',
+                [':setting_wh' => $warehouse->id]
+            )
+            ->where(['o.order_type' => StockOrder::ORDER_TYPE_OUT])
+            ->andWhere(['o.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or', ['o.main_warehouse_id' => $warehouse->id], ['o.sub_warehouse_id' => $warehouse->id]])
+            ->andWhere(['>=', 'o.order_date', $options['start_date']])
+            ->andWhere(['>', 'd.qty', 0])
+            ->andWhere(['s.id' => null])
+            ->groupBy(['d.item_code', 'i.title', 'i.category_id', 'i.data_json', 'cat.title'])
+            ->orderBy(['total_qty' => SORT_DESC, 'd.item_code' => SORT_ASC])
+            ->limit($options['limit']);
+
+        if (!empty($allowedTypes)) {
+            $query->andWhere(['i.category_id' => $allowedTypes]);
+        }
+
+        $rows = [];
+        foreach ($query->all() as $row) {
+            $totalQty = (float) $row['total_qty'];
+            if ($totalQty <= 0) {
+                continue;
+            }
+            $avgMonthly = $totalQty / max(1, (int) $options['months']);
+            $minQty = (float) ceil($avgMonthly * (float) $options['min_factor']);
+            $maxQty = (float) ceil($avgMonthly * (float) $options['max_factor']);
+            if ($maxQty < $minQty) {
+                $maxQty = $minQty;
+            }
+
+            $itemJson = $row['item_data_json'];
+            if (is_string($itemJson)) {
+                $itemJson = json_decode($itemJson, true);
+            }
+
+            $rows[] = [
+                'item_code' => (string) $row['item_code'],
+                'item_name' => (string) $row['item_name'],
+                'category_title' => (string) ($row['category_title'] ?: '-'),
+                'unit_name' => is_array($itemJson) ? (string) ($itemJson['unit_name'] ?? '') : '',
+                'total_qty' => round($totalQty, 2),
+                'avg_monthly' => round($avgMonthly, 2),
+                'issue_count' => (int) $row['issue_count'],
+                'last_issue_date' => (string) $row['last_issue_date'],
+                'min_qty' => $minQty,
+                'max_qty' => $maxQty,
+            ];
+        }
+
+        return $rows;
     }
 
     /**

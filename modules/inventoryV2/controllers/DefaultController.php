@@ -81,7 +81,7 @@ class DefaultController extends Controller
             $dataProvider->sort->defaultOrder = ['warehouse_name' => SORT_ASC];
         }
 
-        if (!\Yii::$app->user->can('admin')) {
+        if (!\Yii::$app->user->can('admin') && !\Yii::$app->user->can('warehouse')) {
             $userId = (string) \Yii::$app->user->id;
             $dataProvider->query->andWhere(
                 new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")

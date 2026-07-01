@@ -247,7 +247,7 @@ class SubStockController extends \yii\web\Controller
         return Warehouse::findSubWarehousesForDepartment();
     }
 
-    /** รหัสคลังย่อยที่ user มีสิทธิ "บันทึกจ่ายพัสดุ" (employee.department อยู่ใน warehouses.department) */
+    /** รหัสคลังย่อยที่ user มีสิทธิ "บันทึกจ่ายวัสดุ" (employee.department อยู่ใน warehouses.department) */
     protected function getSubWarehouseIdsForIssue()
     {
         $list = Warehouse::findSubWarehousesForDepartment();
@@ -928,6 +928,90 @@ class SubStockController extends \yii\web\Controller
         return (string) $itemCode . "\x1F" . (string) $lotNumber;
     }
 
+    protected function getSourceLotQuery($itemCode, $warehouseId, $lotNumber, $requireRemain = true, $requireUnitPrice = false)
+    {
+        $query = StockDetail::find()
+            ->joinWith('stockOrder')
+            ->where([
+                'stock_detail.item_code' => $itemCode,
+                'stock_detail.lot_number' => $lotNumber,
+            ])
+            ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and',
+                    ['stock_order.main_warehouse_id' => (int) $warehouseId],
+                    ['or',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                        ['and',
+                            ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                            ['>', 'stock_detail.qty', 0],
+                        ],
+                    ],
+                ],
+                ['and',
+                    ['stock_order.order_type' => [
+                        StockOrder::ORDER_TYPE_TRANSFER,
+                        StockOrder::ORDER_TYPE_OUT,
+                    ]],
+                    ['stock_order.sub_warehouse_id' => (int) $warehouseId],
+                    ['>', 'stock_detail.qty', 0],
+                ],
+            ]);
+
+        if ($requireRemain) {
+            $query->andWhere(['>', 'stock_detail.remain_qty', 0]);
+        }
+        if ($requireUnitPrice) {
+            $query->andWhere(['>', 'stock_detail.unit_price', 0]);
+        }
+
+        return $query;
+    }
+
+    protected function consumeSourceLotForUsage($itemCode, $warehouseId, $lotNumber, $qty)
+    {
+        $remaining = (float) $qty;
+        $unitPrice = null;
+
+        $sourceLots = $this->getSourceLotQuery($itemCode, $warehouseId, $lotNumber)
+            ->orderBy(['stock_detail.id' => SORT_ASC])
+            ->all();
+
+        foreach ($sourceLots as $sourceLot) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $available = (float) $sourceLot->remain_qty;
+            if ($available <= 0) {
+                continue;
+            }
+
+            $take = min($remaining, $available);
+            $sourceLot->remain_qty = $available - $take;
+            if (!$sourceLot->save(false)) {
+                throw new \Exception("ไม่สามารถปรับปรุงยอดคงเหลือของ Lot {$lotNumber}");
+            }
+
+            $sourcePrice = (float) ($sourceLot->unit_price ?? 0);
+            if ($sourcePrice > 0 || $unitPrice === null) {
+                $unitPrice = $sourcePrice;
+            }
+            $remaining -= $take;
+        }
+
+        if ((float) $unitPrice <= 0) {
+            $latestPricedLot = $this->getSourceLotQuery($itemCode, $warehouseId, $lotNumber, false, true)
+                ->orderBy(['stock_detail.id' => SORT_DESC])
+                ->one();
+            if ($latestPricedLot) {
+                $unitPrice = (float) $latestPricedLot->unit_price;
+            }
+        }
+
+        return (float) ($unitPrice ?? 0);
+    }
+
     protected function csvValue(array $row, array $columns, $name)
     {
         if (!array_key_exists($name, $columns)) {
@@ -1028,6 +1112,7 @@ class SubStockController extends \yii\web\Controller
                 if (!$balance || (float)$balance->balance_qty < $qty) {
                     throw new \Exception("พัสดุ {$itemCode} Lot {$lotNumber} มีไม่พอจ่าย (ยอดคงเหลือไม่เพียงพอ)");
                 }
+                $unitPrice = $this->consumeSourceLotForUsage($itemCode, $warehouse_id, $lotNumber, $qty);
                 InventoryService::updateBalance($itemCode, $warehouse_id, $qty, 'OUT', $lotNumber);
                 $detail = new StockDetail();
                 $detail->stock_order_id = $order->id;
@@ -1035,8 +1120,10 @@ class SubStockController extends \yii\web\Controller
                 $detail->qty = $qty;
                 $detail->remain_qty = 0;
                 $detail->lot_number = $lotNumber;
-                $detail->unit_price = 0;
-                $detail->save(false);
+                $detail->unit_price = $unitPrice;
+                if (!$detail->save(false)) {
+                    throw new \Exception("ไม่สามารถบันทึกรายการใช้พัสดุ {$itemCode} Lot {$lotNumber}");
+                }
             }
 
             $transaction->commit();

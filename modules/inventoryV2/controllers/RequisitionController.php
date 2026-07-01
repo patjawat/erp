@@ -303,6 +303,24 @@ public function behaviors()
                         throw new \Exception('กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ');
                     }
 
+                    $subWarehouseId = (int) $model->sub_warehouse_id;
+                    $itemCodes = array_values(array_unique(array_filter(array_map(function ($d) {
+                        return trim((string) ($d['item_code'] ?? ''));
+                    }, $details))));
+                    $configuredCodes = StockItemWarehouseSetting::find()
+                        ->select('item_code')
+                        ->where([
+                            'warehouse_id' => $subWarehouseId,
+                            'is_active' => 1,
+                            'item_code' => $itemCodes,
+                        ])
+                        ->andWhere(['>', 'max_qty', 0])
+                        ->column();
+                    $missingCodes = array_values(array_diff($itemCodes, array_map('strval', $configuredCodes)));
+                    if (!empty($missingCodes)) {
+                        throw new \Exception('รายการวัสดุบางรายการยังไม่ได้ตั้งค่า min/max สำหรับคลังที่รับของ: ' . implode(', ', $missingCodes));
+                    }
+
                     if (!$model->save()) {
                         throw new \Exception(implode('<br>', $model->getFirstErrors()));
                     }

@@ -184,7 +184,10 @@ class IssueController extends Controller
                                 ],
                             ],
                             ['and',
-                                ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                                ['stock_order.order_type' => [
+                                    StockOrder::ORDER_TYPE_TRANSFER,
+                                    StockOrder::ORDER_TYPE_OUT,
+                                ]],
                                 ['stock_order.sub_warehouse_id' => $model->main_warehouse_id],
                                 ['>', 'stock_detail.qty', 0],
                             ],
@@ -239,6 +242,7 @@ class IssueController extends Controller
                     $detail->qty = $qtyActuallyIssued;   // จำนวนที่จ่ายจริง
                     $detail->lot_number = $selectedLot;    // ล็อตที่เลือกจ่าย
                     $detail->unit_price = $lastUnitPrice;   // ราคาทุนที่ดึงมาจากต้นทาง
+                    $detail->remain_qty = $model->sub_warehouse_id ? $qtyActuallyIssued : 0;
 
                     if (!$detail->save(false)) {
                         throw new \Exception("ไม่สามารถบันทึกรายละเอียดพัสดุรหัส: " . $detail->item_code);
@@ -587,7 +591,10 @@ CSS;
                     ],
                 ],
                 ['and',
-                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER],
+                    ['stock_order.order_type' => [
+                        StockOrder::ORDER_TYPE_TRANSFER,
+                        StockOrder::ORDER_TYPE_OUT,
+                    ]],
                     ['stock_order.sub_warehouse_id' => $warehouse_id],
                     ['>', 'stock_detail.qty', 0],
                 ],
