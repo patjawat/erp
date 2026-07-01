@@ -2,8 +2,17 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var array{warehouse_id:?int, item_code:?string, qty:?string} $prefill */
-$prefill = $prefill ?? ['warehouse_id' => null, 'item_code' => null, 'qty' => null];
+/** @var array{warehouse_id:?int, item_code:?string, qty:?string, current_qty:?string, target_qty:?string, lot_number:string, note:string, source:string} $prefill */
+$prefill = $prefill ?? [
+    'warehouse_id' => null,
+    'item_code' => null,
+    'qty' => null,
+    'current_qty' => null,
+    'target_qty' => null,
+    'lot_number' => '',
+    'note' => '',
+    'source' => '',
+];
 
 $this->title = 'ปรับยอด stock สินค้า';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
@@ -37,6 +46,18 @@ use app\widgets\TomSelectWidget;
     <div class="card border shadow-sm rounded-3">
         <div class="card-body p-4">
             <form id="form-stock-adjust" class="needs-validation" novalidate>
+                <input type="hidden" name="current_qty" id="current_qty" value="<?= $prefill['current_qty'] !== null ? Html::encode($prefill['current_qty']) : '' ?>">
+                <input type="hidden" name="lot_number" id="lot_number" value="<?= Html::encode($prefill['lot_number'] ?: 'ADJUST') ?>">
+                <input type="hidden" name="source" id="source" value="<?= Html::encode($prefill['source']) ?>">
+                <?php if ($prefill['source']): ?>
+                    <div class="alert alert-info d-flex align-items-start gap-2 py-2 mb-3" role="status">
+                        <i class="bi bi-info-circle mt-1"></i>
+                        <div>
+                            <div class="fw-semibold">สร้างรายการปรับยอดจากประวัติการเคลื่อนไหววัสดุ</div>
+                            <div class="small text-muted">ตรวจสอบยอดนับจริงและเหตุผลก่อนบันทึก ระบบจะสร้างเอกสาร ADJUST ใหม่ ไม่แก้ประวัติเดิม</div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="row g-3">
                     <div class="col-12 col-md-4">
                         <label class="form-label fw-semibold">คลัง <span class="text-danger">*</span></label>
@@ -74,18 +95,23 @@ use app\widgets\TomSelectWidget;
                     </div>
                 </div>
                 <div class="row g-3 mt-1">
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">ยอดคงเหลือปัจจุบัน</label>
                         <div class="form-control-plaintext fw-bold text-primary" id="current_balance">—</div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">ยอดตรวจนับจริง</label>
+                        <input type="number" name="target_qty" id="target_qty" class="form-control" step="any" placeholder="ยอดที่ต้องการให้คงเหลือ" value="<?= $prefill['target_qty'] !== null ? Html::encode($prefill['target_qty']) : '' ?>">
+                        <small class="text-muted">กรอกยอดจริง ระบบจะคำนวณจำนวนที่ปรับให้</small>
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">จำนวนที่ปรับ <span class="text-danger">*</span></label>
                         <input type="number" name="adjustment_qty" id="adjustment_qty" class="form-control" step="any" placeholder="บวก = เพิ่ม, ลบ = ลด" value="<?= $prefill['qty'] !== null ? Html::encode($prefill['qty']) : '' ?>" required>
                         <small class="text-muted">เช่น 10 = เพิ่ม 10 หน่วย, -5 = ลด 5 หน่วย</small>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">หมายเหตุ</label>
-                        <input type="text" name="note" id="note" class="form-control" placeholder="เหตุผลการปรับ (ถ้ามี)">
+                        <input type="text" name="note" id="note" class="form-control" placeholder="เหตุผลการปรับ (ถ้ามี)" value="<?= Html::encode($prefill['note']) ?>">
                     </div>
                 </div>
                 <div class="row mt-4">
@@ -107,25 +133,57 @@ $saveUrl = json_encode(Url::to(['/inventory-v2/stock-adjust/save']));
 $itemListUrl = json_encode(Url::to(['/inventory-v2/stock-item/item-list']));
 $prefillItemCode = json_encode($prefill['item_code']);
 $prefillWarehouseId = json_encode($prefill['warehouse_id']);
+$prefillCurrentQty = json_encode($prefill['current_qty']);
+$prefillTargetQty = json_encode($prefill['target_qty']);
 $this->registerJs(<<<JS
 (function(){
     var getBalanceUrl = $getBalanceUrl;
     var saveUrl = $saveUrl;
     var prefillItemCode = $prefillItemCode;
     var prefillWarehouseId = $prefillWarehouseId;
+    var prefillCurrentQty = $prefillCurrentQty;
+    var prefillTargetQty = $prefillTargetQty;
     var itemSelect = window.itemSelect;
+
+    function formatQty(value) {
+        var num = parseFloat(value);
+        if (isNaN(num)) return '\\u2014';
+        return num.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function setCurrentQty(value, isError) {
+        if (isError) {
+            $('#current_balance').text(value || 'โหลดไม่สำเร็จ').addClass('text-danger');
+            $('#current_qty').val('');
+            return;
+        }
+        $('#current_qty').val(value);
+        $('#current_balance').text(formatQty(value)).toggleClass('text-danger', parseFloat(value) < 0);
+    }
+
+    function recalculateAdjustment() {
+        var target = parseFloat($('#target_qty').val());
+        var current = parseFloat($('#current_qty').val());
+        if (isNaN(target) || isNaN(current)) return;
+        var qty = target - current;
+        $('#adjustment_qty').val(parseFloat(qty.toFixed(6)));
+    }
 
     if (itemSelect) {
         itemSelect.on('change', function(value) {
             $('#current_balance').text('\u2014').removeClass('text-danger');
+            $('#current_qty').val('');
             if (value && $('#warehouse_id').val()) loadBalance();
         });
     }
 
     $('#warehouse_id').on('change', function() {
         if (itemSelect) itemSelect.clear();
+        $('#current_qty').val('');
         $('#current_balance').text('\u2014').removeClass('text-danger');
     });
+
+    $('#target_qty').on('input', recalculateAdjustment);
 
     function loadBalance() {
         var wh = $('#warehouse_id').val();
@@ -137,17 +195,26 @@ $this->registerJs(<<<JS
         $.get(getBalanceUrl, { warehouse_id: wh, item_code: code })
             .done(function(res) {
                 if (res.error) {
-                    $('#current_balance').text(res.error).addClass('text-danger');
+                    setCurrentQty(res.error, true);
                 } else {
-                    $('#current_balance').text(parseFloat(res.balance).toLocaleString('th-TH', { minimumFractionDigits: 2 })).removeClass('text-danger');
+                    setCurrentQty(res.balance, false);
+                    recalculateAdjustment();
                 }
             })
             .fail(function() {
-                $('#current_balance').text('โหลดไม่สำเร็จ').addClass('text-danger');
+                setCurrentQty('โหลดไม่สำเร็จ', true);
             });
     }
 
     $('#btn-load-balance').on('click', loadBalance);
+
+    if (prefillCurrentQty !== null && prefillCurrentQty !== '') {
+        setCurrentQty(prefillCurrentQty, false);
+    }
+    if (prefillTargetQty !== null && prefillTargetQty !== '') {
+        $('#target_qty').val(prefillTargetQty);
+        recalculateAdjustment();
+    }
 
     // Prefill จาก URL query (มาจาก variance banner ในหน้า main-stock/balance)
     if (prefillItemCode && prefillWarehouseId && itemSelect) {
@@ -189,7 +256,12 @@ $this->registerJs(<<<JS
         }
         var itemLabel = itemSelect ? itemSelect.getItem(code) : null;
         var name = itemLabel && itemLabel.item_name ? itemLabel.item_name : code;
+        var current = $('#current_qty').val();
+        var target = $('#target_qty').val();
         var msg = 'ยืนยันการปรับยอด?' + String.fromCharCode(10) + 'พัสดุ: ' + name + String.fromCharCode(10) + 'จำนวน: ' + qty + String.fromCharCode(10) + '(บวก=เพิ่ม, ลบ=ลด)';
+        if (current !== '' || target !== '') {
+            msg += String.fromCharCode(10) + 'ยอดระบบ: ' + (current || '-') + String.fromCharCode(10) + 'ยอดตรวจนับจริง: ' + (target || '-');
+        }
         if (!confirm(msg)) return;
 
         $.ajax({
@@ -199,6 +271,10 @@ $this->registerJs(<<<JS
                 warehouse_id: wh,
                 item_code: code,
                 adjustment_qty: qty,
+                current_qty: $('#current_qty').val(),
+                target_qty: $('#target_qty').val(),
+                lot_number: $('#lot_number').val(),
+                source: $('#source').val(),
                 note: $('#note').val()
             },
             dataType: 'json'

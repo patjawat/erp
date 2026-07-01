@@ -570,13 +570,15 @@ class ReportController extends Controller
         }
 
         $baseSelect = [
-            'so.id',
+            'order_id' => 'so.id',
+            'detail_id' => 'sd.id',
             'so.order_no',
             'so.order_type',
             'so.source_type',
             'so.order_date',
             'so.main_warehouse_id',
             'so.sub_warehouse_id',
+            'order_data_json' => 'so.data_json',
             'sd.qty',
             'sd.unit_price',
             'sd.lot_number',
@@ -603,16 +605,29 @@ class ReportController extends Controller
             return 'out';
         };
 
+        $v1MigratedHistorySql = "(COALESCE(sd.ref, '') = 'V1' OR COALESCE(sd.data_json, '') LIKE '%\"migrated_from_v1\"%')";
+        $warehouseHistoryCondition = [
+            'or',
+            ['and',
+                new Expression($v1MigratedHistorySql),
+                ['so.main_warehouse_id' => $warehouseId],
+            ],
+            ['and',
+                new Expression('NOT ' . $v1MigratedHistorySql),
+                ['or',
+                    ['so.main_warehouse_id' => $warehouseId],
+                    ['so.sub_warehouse_id' => $warehouseId],
+                ],
+            ],
+        ];
+
         // 1) ยอดยกมาก่อนวันที่เริ่มต้น
         $bfRows = (new Query())
             ->select($baseSelect)
             ->from(['sd' => StockDetail::tableName()])
             ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
             ->where(['sd.item_code' => $item_code])
-            ->andWhere(['or',
-                ['so.main_warehouse_id' => $warehouseId],
-                ['so.sub_warehouse_id' => $warehouseId],
-            ])
+            ->andWhere($warehouseHistoryCondition)
             ->andWhere(['<', 'so.order_date', $startDate . ' 00:00:00'])
             ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
             ->all();
@@ -637,10 +652,7 @@ class ReportController extends Controller
             ->from(['sd' => StockDetail::tableName()])
             ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
             ->where(['sd.item_code' => $item_code])
-            ->andWhere(['or',
-                ['so.main_warehouse_id' => $warehouseId],
-                ['so.sub_warehouse_id' => $warehouseId],
-            ])
+            ->andWhere($warehouseHistoryCondition)
             ->andWhere(['between', 'so.order_date', $startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
             ->orderBy(['so.order_date' => SORT_ASC, 'so.id' => SORT_ASC])
@@ -662,7 +674,39 @@ class ReportController extends Controller
         $runningValue = $valueBF;
         $totalIn = 0.0;
         $totalOut = 0.0;
+        $totalInValue = 0.0;
+        $totalOutValue = 0.0;
         $transactions = [];
+        $reversedDetailIds = [];
+
+        $reverseRows = (new Query())
+            ->select(['so.data_json'])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'sd.item_code' => $item_code,
+                'so.main_warehouse_id' => $warehouseId,
+                'so.order_type' => StockOrder::ORDER_TYPE_ADJUST,
+                'so.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['like', 'so.data_json', '"reverse_detail_id"'])
+            ->all();
+        foreach ($reverseRows as $reverseRow) {
+            $orderData = is_string($reverseRow['data_json']) ? json_decode($reverseRow['data_json'], true) : [];
+            if (is_array($orderData) && !empty($orderData['reverse_detail_id'])) {
+                $reversedDetailIds[(int) $orderData['reverse_detail_id']] = true;
+            }
+        }
+
+        foreach ($txRows as $r) {
+            if ((string) $r['order_type'] !== StockOrder::ORDER_TYPE_ADJUST || empty($r['order_data_json'])) {
+                continue;
+            }
+            $orderData = is_string($r['order_data_json']) ? json_decode($r['order_data_json'], true) : [];
+            if (is_array($orderData) && !empty($orderData['reverse_detail_id'])) {
+                $reversedDetailIds[(int) $orderData['reverse_detail_id']] = true;
+            }
+        }
 
         foreach ($txRows as $r) {
             $q = abs((float) $r['qty']);   // ADJUST อาจมี qty < 0 — ใช้ค่าสัมบูรณ์
@@ -674,24 +718,33 @@ class ReportController extends Controller
                 $runningQty += $q;
                 $runningValue += $delta;
                 $totalIn += $q;
+                $totalInValue += $delta;
             } else {
                 $runningQty -= $q;
                 $runningValue -= $delta;
                 $totalOut += $q;
+                $totalOutValue += $delta;
             }
 
+            $sourceKey = (string) ($r['source_type'] ?: $r['order_type']);
             $transactions[] = [
+                'order_id' => (int) $r['order_id'],
+                'detail_id' => (int) $r['detail_id'],
                 'date' => date('d/m/Y', strtotime($r['order_date'])),
                 'time' => date('H:i', strtotime($r['order_date'])),
                 'order_no' => (string) $r['order_no'],
                 'order_type' => (string) $r['order_type'],
-                'source_label' => $sourceLabel[$r['source_type']] ?? ($r['source_type'] ?? '-'),
+                'source_label' => $sourceLabel[$sourceKey] ?? ($sourceKey ?: '-'),
                 'direction' => $direction,
                 'qty' => $q,
                 'unit_price' => $p,
+                'amount' => $delta,
                 'balance_qty' => $runningQty,
                 'balance_value' => $runningValue,
                 'lot' => (string) ($r['lot_number'] ?? '-'),
+                'can_reverse' => (string) $r['order_type'] !== StockOrder::ORDER_TYPE_ADJUST && empty($reversedDetailIds[(int) $r['detail_id']]),
+                'reverse_status' => !empty($reversedDetailIds[(int) $r['detail_id']]) ? 'reversed' : null,
+                'can_edit_qty' => (string) $r['order_type'] === StockOrder::ORDER_TYPE_OUT,
             ];
         }
 
@@ -707,6 +760,7 @@ class ReportController extends Controller
                 'item_name' => $itemName,
                 'unit_name' => $unitName,
                 'image_url' => $imageUrl,
+                'warehouse_id' => $warehouseId,
                 'warehouse_label' => $warehouseLabel,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -716,6 +770,10 @@ class ReportController extends Controller
                 'value_bf' => $valueBF,
                 'total_in' => $totalIn,
                 'total_out' => $totalOut,
+                'total_in_value' => $totalInValue,
+                'total_out_value' => $totalOutValue,
+                'net_qty' => $totalIn - $totalOut,
+                'net_value' => $totalInValue - $totalOutValue,
                 'current_qty' => $currentBalance,
                 'current_value' => $runningValue,
                 'tx_count' => count($transactions),

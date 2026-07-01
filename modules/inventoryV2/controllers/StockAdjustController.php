@@ -35,12 +35,21 @@ class StockAdjustController extends Controller
             'warehouse_id' => (int) $request->get('prefill_warehouse_id', 0) ?: null,
             'item_code' => trim((string) $request->get('prefill_item_code', '')) ?: null,
             'qty' => $request->get('prefill_qty'),
+            'current_qty' => $request->get('prefill_current_qty'),
+            'target_qty' => $request->get('prefill_target_qty'),
+            'lot_number' => trim((string) $request->get('prefill_lot_number', '')),
+            'note' => trim((string) $request->get('prefill_note', '')),
+            'source' => trim((string) $request->get('prefill_source', '')),
         ];
-        // qty อาจเป็น float ติดลบ — sanitize เก็บเป็น string ตามเดิม (input type=number step=any)
-        if ($prefill['qty'] !== null && $prefill['qty'] !== '') {
-            $prefill['qty'] = is_numeric($prefill['qty']) ? (string) (float) $prefill['qty'] : null;
-        } else {
-            $prefill['qty'] = null;
+        foreach (['qty', 'current_qty', 'target_qty'] as $key) {
+            if ($prefill[$key] !== null && $prefill[$key] !== '') {
+                $prefill[$key] = is_numeric($prefill[$key]) ? (string) (float) $prefill[$key] : null;
+            } else {
+                $prefill[$key] = null;
+            }
+        }
+        if ($prefill['qty'] === null && $prefill['current_qty'] !== null && $prefill['target_qty'] !== null) {
+            $prefill['qty'] = (string) ((float) $prefill['target_qty'] - (float) $prefill['current_qty']);
         }
 
         return $this->render('index', [
@@ -84,6 +93,18 @@ class StockAdjustController extends Controller
         $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
         $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
         $adjustmentQty = (float) Yii::$app->request->post('adjustment_qty', 0);
+        $currentQtyRaw = Yii::$app->request->post('current_qty');
+        $targetQtyRaw = Yii::$app->request->post('target_qty');
+        $currentQty = is_numeric($currentQtyRaw) ? (float) $currentQtyRaw : null;
+        $targetQty = is_numeric($targetQtyRaw) ? (float) $targetQtyRaw : null;
+        if ($adjustmentQty == 0 && $currentQty !== null && $targetQty !== null) {
+            $adjustmentQty = $targetQty - $currentQty;
+        }
+        $lotNumber = trim((string) Yii::$app->request->post('lot_number', ''));
+        $lotNumber = $lotNumber !== '' ? $lotNumber : 'ADJUST';
+        $source = trim((string) Yii::$app->request->post('source', ''));
+        $reverseDetailId = (int) Yii::$app->request->post('reverse_detail_id', 0);
+        $reverseOrderNo = trim((string) Yii::$app->request->post('reverse_order_no', ''));
         $note = trim((string) Yii::$app->request->post('note', ''));
 
         if ($warehouseId <= 0) {
@@ -110,16 +131,31 @@ class StockAdjustController extends Controller
         $transaction = $db->beginTransaction();
         try {
             $orderNo = $this->generateAdjustOrderNo();
+            $now = date('Y-m-d H:i:s');
 
             $order = new StockOrder();
             $order->order_no = $orderNo;
             $order->order_type = StockOrder::ORDER_TYPE_ADJUST;
-            $order->order_date = date('Y-m-d H:i:s');
+            $order->source_type = StockOrder::ORDER_TYPE_ADJUST;
+            $order->order_date = $now;
             $order->main_warehouse_id = $warehouseId;
             $order->status = StockOrder::STATUS_CONFIRMED;
             $order->ref = $note ?: 'ปรับยอด';
-            $order->created_at = time();
+            $order->data_json = json_encode([
+                'adjust_source' => $source ?: 'stock-adjust',
+                'current_qty_before' => $currentQty,
+                'target_qty' => $targetQty,
+                'adjustment_qty' => $adjustmentQty,
+                'lot_number' => $lotNumber,
+                'note' => $note,
+                'reverse_detail_id' => $reverseDetailId ?: null,
+                'reverse_order_no' => $reverseOrderNo ?: null,
+                'created_from' => Yii::$app->request->referrer,
+            ], JSON_UNESCAPED_UNICODE);
+            $order->created_at = $now;
+            $order->updated_at = $now;
             $order->created_by = Yii::$app->user->id;
+            $order->updated_by = Yii::$app->user->id;
             if (!$order->save(false)) {
                 throw new \Exception('บันทึกหัวเอกสารไม่สำเร็จ');
             }
@@ -128,21 +164,192 @@ class StockAdjustController extends Controller
             $detail->stock_order_id = $order->id;
             $detail->item_code = $itemCode;
             $detail->qty = $adjustmentQty;
-            $detail->lot_number = 'ADJUST';
-            $detail->remain_qty = 0;
-            $detail->created_at = time();
+            $detail->lot_number = $lotNumber;
+            $detail->remain_qty = $adjustmentQty > 0 ? $adjustmentQty : 0;
+            $detail->created_at = $now;
+            $detail->updated_at = $now;
             $detail->created_by = Yii::$app->user->id;
+            $detail->updated_by = Yii::$app->user->id;
             if (!$detail->save(false)) {
                 throw new \Exception('บันทึกรายละเอียดไม่สำเร็จ');
             }
 
-            InventoryService::adjustBalance($itemCode, $warehouseId, 'ADJUST', $adjustmentQty);
+            if ($adjustmentQty > 0) {
+                InventoryService::adjustBalance($itemCode, $warehouseId, $lotNumber, $adjustmentQty);
+            } else {
+                InventoryService::processFIFO($itemCode, $warehouseId, abs($adjustmentQty), $order->id, $detail->id);
+            }
 
             $transaction->commit();
             return [
                 'success' => true,
                 'message' => 'ปรับยอดสำเร็จ',
                 'order_no' => $orderNo,
+            ];
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * แก้จำนวนรายการในใบเบิกที่ยืนยันแล้วจาก modal ประวัติการเคลื่อนไหววัสดุ
+     * ระบบแก้ stock_detail.qty ของใบเบิก และปรับผลต่างเข้า/ออก stock_balance + FIFO
+     */
+    public function actionUpdateRequisitionDetailQty()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid method'];
+        }
+
+        $detailId = (int) Yii::$app->request->post('detail_id', 0);
+        $newQty = (float) Yii::$app->request->post('qty', 0);
+        $newUnitPriceRaw = Yii::$app->request->post('unit_price');
+        $newUnitPrice = is_numeric($newUnitPriceRaw) ? (float) $newUnitPriceRaw : null;
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
+        $note = trim((string) Yii::$app->request->post('note', ''));
+
+        if ($detailId <= 0) {
+            return ['success' => false, 'message' => 'ไม่พบรายการใบเบิกที่ต้องการแก้ไข'];
+        }
+        if ($newQty <= 0) {
+            return ['success' => false, 'message' => 'จำนวนใหม่ต้องมากกว่า 0'];
+        }
+        if ($newUnitPrice !== null && $newUnitPrice < 0) {
+            return ['success' => false, 'message' => 'ราคา/หน่วยต้องไม่น้อยกว่า 0'];
+        }
+
+        $detail = StockDetail::findOne($detailId);
+        if (!$detail) {
+            return ['success' => false, 'message' => 'ไม่พบรายการใบเบิกในระบบ'];
+        }
+
+        $order = $detail->stockOrder;
+        if (!$order || $order->order_type !== StockOrder::ORDER_TYPE_OUT) {
+            return ['success' => false, 'message' => 'แก้จำนวนได้เฉพาะรายการในใบเบิก'];
+        }
+        if ($order->status !== StockOrder::STATUS_CONFIRMED) {
+            return ['success' => false, 'message' => 'แก้ได้เฉพาะใบเบิกที่ยืนยันแล้ว'];
+        }
+
+        $warehouseId = $warehouseId > 0 ? $warehouseId : (int) $order->main_warehouse_id;
+        $itemCode = $itemCode !== '' ? $itemCode : (string) $detail->item_code;
+        if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
+            return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
+        }
+
+        $oldRawQty = (float) $detail->qty;
+        $oldQty = abs($oldRawQty);
+        $oldUnitPrice = (float) $detail->unit_price;
+        if ($newUnitPrice === null) {
+            $newUnitPrice = $oldUnitPrice;
+        }
+        $delta = $newQty - $oldQty;
+        $priceDelta = $newUnitPrice - $oldUnitPrice;
+        if (abs($delta) < 0.000001 && abs($priceDelta) < 0.000001) {
+            return [
+                'success' => true,
+                'message' => 'จำนวนเดิมตรงกับจำนวนใหม่แล้ว',
+                'order_no' => $order->order_no,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldUnitPrice,
+                'new_unit_price' => $newUnitPrice,
+                'delta' => 0,
+            ];
+        }
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            if ($delta > 0) {
+                InventoryService::processFIFO($itemCode, $warehouseId, $delta, $order->id, $detail->id);
+                $detail = StockDetail::findOne($detailId);
+            } else {
+                InventoryService::returnFifoAllocation($detail, $warehouseId, abs($delta));
+            }
+
+            $now = date('Y-m-d H:i:s');
+            $detailData = is_array($detail->data_json)
+                ? $detail->data_json
+                : (is_string($detail->data_json) ? (json_decode($detail->data_json, true) ?: []) : []);
+            if (!is_array($detailData)) {
+                $detailData = [];
+            }
+            if (!isset($detailData['history_inline_qty_edits']) || !is_array($detailData['history_inline_qty_edits'])) {
+                $detailData['history_inline_qty_edits'] = [];
+            }
+            $detailData['history_inline_qty_edits'][] = [
+                'at' => $now,
+                'by_user_id' => Yii::$app->user->id,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldUnitPrice,
+                'new_unit_price' => $newUnitPrice,
+                'stock_delta' => -$delta,
+                'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'note' => $note,
+                'source' => 'item-history-inline-edit',
+            ];
+
+            $detail->qty = $oldRawQty < 0 ? -$newQty : $newQty;
+            $detail->unit_price = $newUnitPrice;
+            $detail->data_json = json_encode($detailData, JSON_UNESCAPED_UNICODE);
+            $detail->updated_at = $now;
+            $detail->updated_by = Yii::$app->user->id;
+            if (!$detail->save(false)) {
+                throw new \Exception('บันทึกรายการใบเบิกไม่สำเร็จ');
+            }
+
+            $orderData = is_array($order->data_json)
+                ? $order->data_json
+                : (is_string($order->data_json) ? (json_decode($order->data_json, true) ?: []) : []);
+            if (!is_array($orderData)) {
+                $orderData = [];
+            }
+            if (!isset($orderData['history_inline_qty_edits']) || !is_array($orderData['history_inline_qty_edits'])) {
+                $orderData['history_inline_qty_edits'] = [];
+            }
+            $orderData['history_inline_qty_edits'][] = [
+                'at' => $now,
+                'by_user_id' => Yii::$app->user->id,
+                'detail_id' => (int) $detail->id,
+                'item_code' => (string) $detail->item_code,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldUnitPrice,
+                'new_unit_price' => $newUnitPrice,
+                'stock_delta' => -$delta,
+                'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'note' => $note,
+                'source' => 'item-history-inline-edit',
+            ];
+            $order->data_json = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+            $order->updated_at = $now;
+            $order->updated_by = Yii::$app->user->id;
+            $order->save(false);
+
+            $currentBalance = (float) (new Query())
+                ->from(StockBalance::tableName())
+                ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+                ->sum('balance_qty');
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'แก้จำนวนใบเบิกสำเร็จ',
+                'order_no' => $order->order_no,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldUnitPrice,
+                'new_unit_price' => $newUnitPrice,
+                'delta' => $delta,
+                'stock_delta' => -$delta,
+                'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'current_qty' => $currentBalance,
             ];
         } catch (\Exception $e) {
             $transaction->rollBack();

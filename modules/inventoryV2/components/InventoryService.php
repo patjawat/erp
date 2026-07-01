@@ -5,6 +5,7 @@ namespace app\modules\inventoryV2\components;
 use Yii;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
+use app\modules\inventoryV2\models\StockOrder;
 
 class InventoryService
 {
@@ -65,7 +66,14 @@ class InventoryService
                 ->where([
                     'stock_detail.item_code' => $itemId,
                     'stock_order.main_warehouse_id' => $warehouseId,
-                    'stock_order.order_type' => 'IN',
+                ])
+                ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['or',
+                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                        ['>', 'stock_detail.qty', 0],
+                    ],
                 ])
                 ->andWhere(['>', 'remain_qty', 0])
                 ->orderBy([
@@ -75,6 +83,7 @@ class InventoryService
                 ->all();
 
             $remainingToProcess = (float)$totalQtyToOut;
+            $allocations = [];
 
             foreach ($availableLots as $lot) {
                 if ($remainingToProcess <= 0) break;
@@ -88,6 +97,12 @@ class InventoryService
 
                 // ตัดยอดออกจาก StockBalance (แยกตาม Lot ที่หยิบจริง)
                 self::updateBalance($itemId, $warehouseId, $take, 'OUT', $lot->lot_number);
+                $allocations[] = [
+                    'source_detail_id' => (int) $lot->id,
+                    'source_order_id' => (int) $lot->stock_order_id,
+                    'lot_number' => (string) $lot->lot_number,
+                    'qty' => (float) $take,
+                ];
 
                 $remainingToProcess -= $take;
             }
@@ -103,7 +118,19 @@ class InventoryService
                 $outDetail = StockDetail::findOne($orderDetailId);
                 if ($outDetail) {
                     // บันทึกจำนวนที่จ่ายจริง (อาจจะน้อยกว่าที่ขอเบิก)
-                    $outDetail->remain_qty = $totalQtyToOut - $remainingToProcess;
+                    $processedQty = $totalQtyToOut - $remainingToProcess;
+                    $outDetail->remain_qty = (float) $outDetail->remain_qty + $processedQty;
+                    $data = is_array($outDetail->data_json)
+                        ? $outDetail->data_json
+                        : (is_string($outDetail->data_json) ? (json_decode($outDetail->data_json, true) ?: []) : []);
+                    if (!is_array($data)) {
+                        $data = [];
+                    }
+                    $existingAllocations = isset($data['fifo_allocations']) && is_array($data['fifo_allocations'])
+                        ? $data['fifo_allocations']
+                        : [];
+                    $data['fifo_allocations'] = array_values(array_merge($existingAllocations, $allocations));
+                    $outDetail->data_json = json_encode($data, JSON_UNESCAPED_UNICODE);
                     $outDetail->save(false);
                 }
             }
@@ -153,6 +180,94 @@ class InventoryService
 
         if (!$balance->save()) {
             throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));
+        }
+    }
+
+    /**
+     * คืนยอดจากรายการจ่ายกลับเข้า FIFO/stock_balance เมื่อแก้จำนวนใบเบิกให้ลดลง
+     */
+    public static function returnFifoAllocation(StockDetail $outDetail, $warehouseId, $qtyToReturn)
+    {
+        $remaining = (float) $qtyToReturn;
+        if ($remaining <= 0) {
+            return true;
+        }
+
+        $data = is_array($outDetail->data_json)
+            ? $outDetail->data_json
+            : (is_string($outDetail->data_json) ? (json_decode($outDetail->data_json, true) ?: []) : []);
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $allocations = isset($data['fifo_allocations']) && is_array($data['fifo_allocations'])
+            ? $data['fifo_allocations']
+            : [];
+
+        for ($i = count($allocations) - 1; $i >= 0 && $remaining > 0; $i--) {
+            $allocatedQty = (float) ($allocations[$i]['qty'] ?? 0);
+            if ($allocatedQty <= 0) {
+                continue;
+            }
+
+            $take = min($remaining, $allocatedQty);
+            $lotNumber = (string) ($allocations[$i]['lot_number'] ?? $outDetail->lot_number ?? 'ADJUST');
+            $sourceDetailId = (int) ($allocations[$i]['source_detail_id'] ?? 0);
+            $sourceDetail = $sourceDetailId > 0 ? StockDetail::findOne($sourceDetailId) : null;
+            if ($sourceDetail) {
+                $sourceDetail->remain_qty = (float) $sourceDetail->remain_qty + $take;
+                $sourceDetail->save(false);
+            } else {
+                self::returnToLotSource($outDetail->item_code, $warehouseId, $lotNumber, $take);
+            }
+
+            self::updateBalance($outDetail->item_code, $warehouseId, $take, 'IN', $lotNumber);
+            $allocations[$i]['qty'] = $allocatedQty - $take;
+            $remaining -= $take;
+        }
+
+        if ($remaining > 0) {
+            $lotNumber = !empty($outDetail->lot_number) ? $outDetail->lot_number : 'ADJUST';
+            self::returnToLotSource($outDetail->item_code, $warehouseId, $lotNumber, $remaining);
+            self::updateBalance($outDetail->item_code, $warehouseId, $remaining, 'IN', $lotNumber);
+            $remaining = 0;
+        }
+
+        $data['fifo_allocations'] = array_values(array_filter($allocations, function ($allocation) {
+            return (float) ($allocation['qty'] ?? 0) > 0.000001;
+        }));
+        $outDetail->remain_qty = max(0, (float) $outDetail->remain_qty - (float) $qtyToReturn);
+        $outDetail->data_json = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+        return true;
+    }
+
+    private static function returnToLotSource($itemCode, $warehouseId, $lotNumber, $qty)
+    {
+        $sourceDetail = StockDetail::find()
+            ->joinWith('stockOrder')
+            ->where([
+                'stock_detail.item_code' => $itemCode,
+                'stock_detail.lot_number' => $lotNumber,
+                'stock_order.main_warehouse_id' => $warehouseId,
+                'stock_order.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['or',
+                ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                ['and',
+                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                    ['>', 'stock_detail.qty', 0],
+                ],
+            ])
+            ->orderBy([
+                'stock_order.order_date' => SORT_DESC,
+                'stock_detail.id' => SORT_DESC,
+            ])
+            ->one();
+
+        if ($sourceDetail) {
+            $sourceDetail->remain_qty = (float) $sourceDetail->remain_qty + (float) $qty;
+            $sourceDetail->save(false);
         }
     }
 

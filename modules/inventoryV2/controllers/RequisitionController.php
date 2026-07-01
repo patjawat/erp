@@ -613,7 +613,14 @@ public function behaviors()
                 ->where([
                     'd.item_code' => $code,
                     'o.main_warehouse_id' => $warehouseId,
-                    'o.order_type' => 'IN',
+                ])
+                ->andWhere(['o.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['or',
+                    ['o.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and',
+                        ['o.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                        ['>', 'd.qty', 0],
+                    ],
                 ])
                 ->andWhere(['>', 'd.remain_qty', 0])
                 ->sum('d.remain_qty');
