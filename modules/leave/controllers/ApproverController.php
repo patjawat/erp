@@ -16,6 +16,7 @@ use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\leave\models\LeaveType;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\Organization;
 use app\modules\leave\components\LeaveApprovalService;
 use app\modules\leave\components\LeaveTelegramService;
@@ -52,7 +53,7 @@ class ApproverController extends Controller
         $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
         $query->joinWith([
-            'employee',
+            'employee.employeeType',
             'leaveType',
             'leaveStatus',
         ]);
@@ -73,7 +74,7 @@ class ApproverController extends Controller
 
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
-            $query->andFilterWhere(['employees.position_type' => $position_type_id]);
+            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
         }
 
         if ($searchModel->q_department) {
@@ -105,12 +106,14 @@ class ApproverController extends Controller
             ->all();
         $listLeaveType = ArrayHelper::map($leaveTypes, 'code', 'title');
         $listLeaveStatus = (new Leave())->listStatus();
+        $listEmployeeType = EmployeeType::listItems();
 
         return $this->render('index', [
             'searchModel'        => $searchModel,
             'dataProvider'       => $dataProvider,
             'listLeaveType'      => $listLeaveType,
             'listLeaveStatus'    => $listLeaveStatus,
+            'listEmployeeType'   => $listEmployeeType,
         ]);
     }
 
@@ -676,20 +679,14 @@ class ApproverController extends Controller
             return [];
         }
 
-        $departmentIds = [$org->id];
-        if ((int) $org->lvl === 1) {
-            $query = Organization::find()
-                ->select('id')
-                ->where(['root' => $org->root])
-                ->andWhere(['>', 'lft', $org->lft])
-                ->andWhere(['<', 'rgt', $org->rgt])
-                ->andWhere(['lvl' => $org->lvl + 1]);
+        $descendantIds = Organization::find()
+            ->select('id')
+            ->where(['root' => $org->root])
+            ->andWhere(['>', 'lft', $org->lft])
+            ->andWhere(['<', 'rgt', $org->rgt])
+            ->column();
 
-            $childDepartmentIds = $query->column();
-            if (!empty($childDepartmentIds)) {
-                $departmentIds = $childDepartmentIds;
-            }
-        }
+        $departmentIds = array_merge([$org->id], $descendantIds);
 
         return Employees::find()
             ->select('id')
@@ -732,7 +729,7 @@ class ApproverController extends Controller
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
-            $query->andFilterWhere(['employees.position_type' => $position_type_id]);
+            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
         }
         if ($searchModel->q_department) {
             $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
@@ -787,7 +784,7 @@ class ApproverController extends Controller
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
-            $query->andFilterWhere(['employees.position_type' => $position_type_id]);
+            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
         }
         if ($searchModel->q_department) {
             $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);

@@ -51,6 +51,7 @@ $totalCount = (int) $dataProvider->getTotalCount();
                 'model' => $searchModel,
                 'listLeaveType' => $listLeaveType,
                 'listLeaveStatus' => $listLeaveStatus,
+                'listEmployeeType' => $listEmployeeType,
             ]) ?>
         </div>
     </div>
