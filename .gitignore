@@ -44,5 +44,6 @@ db-backup
 doc_receive/*
 modules/filemanager/fileupload/*
 .cursor
+.serena
 ngrok.exe
 composer.lock
