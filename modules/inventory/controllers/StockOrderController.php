@@ -51,14 +51,20 @@ class StockOrderController extends Controller
             return false;
         }
         $writeActions = [
-            'create', 'update', 'delete',
+            'create', 'update',
             'confirm-order', 'cancel-order',
             'approve-form-store', 'update-qty', 'update-lot',
             'save', 'submit',
         ];
         if (\app\modules\inventory\Module::isFrozen() && in_array($action->id, $writeActions, true)) {
-            Yii::$app->session->setFlash('error', 'ระบบ Inventory V1 ปิดการสร้าง/แก้ไขเอกสารแล้ว — กรุณาใช้ Inventory V2');
-            Yii::$app->response->redirect(['/inventory-v2'])->send();
+            $message = 'ระบบ Inventory V1 ปิดการสร้าง/แก้ไขเอกสารแล้ว — กรุณาใช้ Inventory V2';
+            Yii::$app->session->setFlash('error', $message);
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                Yii::$app->response->data = ['status' => 'error', 'message' => $message];
+            } else {
+                Yii::$app->response->redirect(['/inventory-v2'])->send();
+            }
             return false;
         }
         return true;
@@ -1098,13 +1104,11 @@ class StockOrderController extends Controller
      */
     public function actionDelete($id)
     {
-        $container = $this->request->get('container');
         $url = $this->request->get('url');
         $model = $this->findModel($id);
         \Yii::$app->response->format = Response::FORMAT_JSON;
         $model->delete();
 
-        return $this->redirect(['/inventory/stock-order/view', 'id' => $model->category_id]);
         return [
             'status' => 'success',
             'container' => '#inventory-container',

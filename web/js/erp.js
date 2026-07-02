@@ -903,6 +903,10 @@ $("body").off("click", ".delete-item").on("click", ".delete-item", async functio
             erpHideModal("#main-modal");
           } else if (response.status == "success" && response.url) {
             window.location.href = response.url;
+          } else if (response.status == "error" && response.message) {
+            Swal.fire({ icon: "error", title: "ไม่สำเร็จ", text: response.message }).then(() => {
+              location.reload();
+            });
           } else {
             location.reload();
           }
