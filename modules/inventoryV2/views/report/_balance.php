@@ -252,11 +252,28 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                                         <td class="text-end bal-cell-qty"><?= number_format($r['balance_qty'], 2) ?></td>
                                         <td class="text-end bal-cell-val"><?= number_format($r['value'], 2) ?></td>
                                         <td class="text-center bal-cell-mm">
-                                            <?= $r['min_qty'] !== null ? number_format($r['min_qty'], 0) : '<span class="bal-empty">—</span>' ?>
-                                            <span class="bal-sep">/</span>
-                                            <?= $r['max_qty'] !== null ? number_format($r['max_qty'], 0) : '<span class="bal-empty">—</span>' ?>
+                                            <button type="button"
+                                                    class="bal-mm-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#minMaxModal"
+                                                    data-item-code="<?= Html::encode($r['item_code']) ?>"
+                                                    data-item-name="<?= Html::encode($r['item_name']) ?>"
+                                                    data-warehouse-id="<?= (int) $r['warehouse_id'] ?>"
+                                                    data-warehouse-name="<?= Html::encode($r['warehouse_name']) ?>"
+                                                    data-unit-name="<?= Html::encode($r['unit_name']) ?>"
+                                                    data-item-image="<?= Html::encode($r['image_url']) ?>"
+                                                    data-balance-qty="<?= htmlspecialchars((string) (float) $r['balance_qty']) ?>"
+                                                    data-min-qty="<?= $r['min_qty'] !== null ? htmlspecialchars((string) (float) $r['min_qty']) : '' ?>"
+                                                    data-max-qty="<?= $r['max_qty'] !== null ? htmlspecialchars((string) (float) $r['max_qty']) : '' ?>"
+                                                    title="คลิกเพื่อตั้งค่า Min/Max"
+                                                    aria-label="ตั้งค่า Min/Max ของ <?= Html::encode($r['item_name']) ?> ที่ <?= Html::encode($r['warehouse_name']) ?>">
+                                                <span class="bal-mm-val"><?= $r['min_qty'] !== null ? number_format($r['min_qty'], 0) : '<span class="bal-empty">—</span>' ?></span>
+                                                <span class="bal-sep">/</span>
+                                                <span class="bal-mm-val"><?= $r['max_qty'] !== null ? number_format($r['max_qty'], 0) : '<span class="bal-empty">—</span>' ?></span>
+                                                <i class="bi bi-pencil-fill bal-mm-btn__icon" aria-hidden="true"></i>
+                                            </button>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center bal-cell-status">
                                             <?php if ($r['below_min']): ?>
                                                 <span class="bal-badge bal-badge--danger">ต่ำกว่า Min</span>
                                             <?php elseif ($r['below_max']): ?>
@@ -590,6 +607,58 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     </div>
 </div>
 
+<!-- Modal: ตั้งค่า Min/Max วัสดุประจำคลัง -->
+<div class="modal fade" id="minMaxModal" tabindex="-1" aria-labelledby="minMaxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow bal-mm-modal">
+            <div class="modal-header">
+                <h5 class="modal-title bal-mm-modal__title" id="minMaxModalLabel">
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
+                    ตั้งค่า Min / Max
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="bal-mm-modal__meta">
+                    <img id="mm-thumb" src="<?= $placeholderImg ?>"
+                         alt="" class="bal-mm-modal__thumb"
+                         onerror="this.onerror=null;this.src='<?= $placeholderImg ?>';">
+                    <div class="bal-mm-modal__meta-text">
+                        <strong id="mm-item-name">-</strong>
+                        <span class="bal-mm-modal__code" id="mm-item-code"></span>
+                        <div class="bal-mm-modal__warehouse" id="mm-warehouse-name">-</div>
+                    </div>
+                </div>
+                <div id="mm-alert" class="bal-mm-modal__alert" role="status" aria-live="polite" hidden></div>
+                <div class="row g-3 mt-1">
+                    <div class="col-6">
+                        <label for="mm-min-qty" class="form-label">Min</label>
+                        <input type="number" id="mm-min-qty" class="form-control" step="any" min="0" inputmode="decimal">
+                    </div>
+                    <div class="col-6">
+                        <label for="mm-max-qty" class="form-label">Max</label>
+                        <input type="number" id="mm-max-qty" class="form-control" step="any" min="0" inputmode="decimal">
+                    </div>
+                    <div class="col-12">
+                        <label for="mm-note" class="form-label">หมายเหตุ (ถ้ามี)</label>
+                        <input type="text" id="mm-note" class="form-control" placeholder="เช่น อ้างอิงจากการใช้เฉลี่ยรายเดือน">
+                    </div>
+                </div>
+                <div class="bal-mm-modal__hint">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                    ยอดคงเหลือปัจจุบัน: <strong id="mm-balance-qty">-</strong> <span id="mm-unit-name"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm" id="mm-save-btn">
+                    <i class="bi bi-check-lg" aria-hidden="true"></i> บันทึก
+                </button>
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal" id="mm-cancel-btn">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .bal-page {
     --ink-1: #1a202c;
@@ -857,9 +926,71 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 .bal-cell-num { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .bal-cell-cat, .bal-cell-unit { color: var(--ink-3); font-size: 0.82rem; }
 .bal-cell-qty, .bal-cell-val { font-weight: 600; font-variant-numeric: tabular-nums; }
-.bal-cell-mm { color: var(--ink-3); font-size: 0.82rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.bal-cell-mm { font-size: 0.82rem; }
 .bal-sep { color: var(--ink-4); padding: 0 0.25rem; }
 .bal-empty { color: var(--ink-4); }
+
+/* === Min/Max edit button === */
+.bal-mm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    color: var(--ink-3);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.bal-mm-btn:hover,
+.bal-mm-btn:focus-visible {
+    background: var(--primary-soft);
+    border-color: var(--primary-line);
+    color: var(--primary-ink);
+    outline: none;
+}
+.bal-mm-btn__icon { font-size: 0.68rem; opacity: 0; transition: opacity var(--t-fast) var(--ease); }
+.bal-mm-btn:hover .bal-mm-btn__icon,
+.bal-mm-btn:focus-visible .bal-mm-btn__icon { opacity: 0.7; }
+
+/* === Min/Max modal === */
+.bal-mm-modal__title { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 1.05rem; font-weight: 600; color: var(--ink-1); }
+.bal-mm-modal__title i { color: var(--ink-3); font-size: 0.9rem; }
+.bal-mm-modal__meta { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.bal-mm-modal__thumb {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--surface-3);
+    border: 1px solid var(--line);
+}
+.bal-mm-modal__meta-text { min-width: 0; }
+.bal-mm-modal__meta strong { color: var(--ink-1); font-size: 0.95rem; }
+.bal-mm-modal__code { color: var(--ink-3); font-size: 0.8rem; margin-left: 0.4rem; }
+.bal-mm-modal__warehouse { color: var(--ink-2); font-size: 0.8rem; margin-top: 0.1rem; }
+.bal-mm-modal__hint {
+    margin-top: 0.85rem;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+}
+.bal-mm-modal__hint strong { color: var(--ink-1); }
+.bal-mm-modal__alert {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+}
+.bal-mm-modal__alert[hidden] { display: none !important; }
+.bal-mm-modal__alert.is-success { color: var(--success); background: var(--success-soft); border-color: rgba(21,128,61,0.22); }
+.bal-mm-modal__alert.is-error { color: var(--danger); background: var(--danger-soft); border-color: var(--danger-line); }
 
 .bal-cell-warehouse {
     max-width: 12rem;
@@ -1655,6 +1786,7 @@ $jsHistoryUrl = Json::encode($historyUrl);
 $jsExportHistoryUrl = Json::encode($exportHistoryUrl);
 $jsAdjustSaveUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/save']));
 $jsReqDetailUpdateUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/update-requisition-detail-qty']));
+$jsSaveSettingUrl = Json::encode(Url::to(['/inventory-v2/warehouse/save-setting']));
 $js = <<<JS
 (function () {
     var modalEl = document.getElementById('itemHistoryModal');
@@ -2633,6 +2765,198 @@ $js = <<<JS
 })();
 JS;
 $this->registerJs($js, View::POS_END);
+
+$this->registerJs(<<<JS
+(function () {
+    var modalEl = document.getElementById('minMaxModal');
+    if (!modalEl) return;
+    var itemNameEl = document.getElementById('mm-item-name');
+    var itemCodeEl = document.getElementById('mm-item-code');
+    var warehouseNameEl = document.getElementById('mm-warehouse-name');
+    var thumbEl = document.getElementById('mm-thumb');
+    var minInput = document.getElementById('mm-min-qty');
+    var maxInput = document.getElementById('mm-max-qty');
+    var noteInput = document.getElementById('mm-note');
+    var balanceEl = document.getElementById('mm-balance-qty');
+    var unitEl = document.getElementById('mm-unit-name');
+    var alertEl = document.getElementById('mm-alert');
+    var saveBtn = document.getElementById('mm-save-btn');
+    var cancelBtn = document.getElementById('mm-cancel-btn');
+
+    var ctx = { itemCode: null, warehouseId: null, row: null, balanceQty: 0 };
+
+    function fmtInt(n) {
+        return Number(n).toLocaleString('th-TH', { maximumFractionDigits: 0 });
+    }
+
+    function showAlert(type, message) {
+        if (!alertEl) return;
+        alertEl.textContent = message;
+        alertEl.className = 'bal-mm-modal__alert is-' + type;
+        alertEl.hidden = false;
+    }
+    function hideAlert() {
+        if (alertEl) alertEl.hidden = true;
+    }
+
+    modalEl.addEventListener('show.bs.modal', function (e) {
+        var btn = e.relatedTarget;
+        if (!btn) return;
+        hideAlert();
+        ctx.itemCode = btn.getAttribute('data-item-code');
+        ctx.warehouseId = btn.getAttribute('data-warehouse-id');
+        ctx.row = btn.closest('tr');
+        ctx.balanceQty = parseFloat(btn.getAttribute('data-balance-qty')) || 0;
+
+        ctx.itemName = btn.getAttribute('data-item-name') || '-';
+        ctx.warehouseName = btn.getAttribute('data-warehouse-name') || '-';
+
+        if (itemNameEl) itemNameEl.textContent = ctx.itemName;
+        if (itemCodeEl) itemCodeEl.textContent = ctx.itemCode || '';
+        if (warehouseNameEl) warehouseNameEl.textContent = ctx.warehouseName;
+        if (minInput) minInput.value = btn.getAttribute('data-min-qty') || '';
+        if (maxInput) maxInput.value = btn.getAttribute('data-max-qty') || '';
+        if (noteInput) noteInput.value = '';
+        if (balanceEl) balanceEl.textContent = fmtInt(ctx.balanceQty);
+        if (unitEl) unitEl.textContent = btn.getAttribute('data-unit-name') || '';
+        if (thumbEl) {
+            var img = btn.getAttribute('data-item-image');
+            thumbEl.src = img || thumbEl.src;
+            thumbEl.alt = ctx.itemName;
+        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.classList.remove('disabled'); }
+    });
+
+    function setSaving(isSaving) {
+        if (saveBtn) { saveBtn.disabled = isSaving; saveBtn.classList.toggle('disabled', isSaving); }
+        if (cancelBtn) cancelBtn.disabled = isSaving;
+    }
+
+    function updateRowAfterSave(minVal, maxVal) {
+        if (!ctx.row) return;
+        var btn = ctx.row.querySelector('.bal-mm-btn');
+        if (btn) {
+            var vals = btn.querySelectorAll('.bal-mm-val');
+            if (vals[0]) vals[0].textContent = fmtInt(minVal);
+            if (vals[1]) vals[1].textContent = fmtInt(maxVal);
+            btn.setAttribute('data-min-qty', minVal);
+            btn.setAttribute('data-max-qty', maxVal);
+        }
+        var belowMin = minVal > 0 && ctx.balanceQty < minVal;
+        var belowMax = maxVal > 0 && ctx.balanceQty < maxVal;
+        ctx.row.classList.remove('is-danger', 'is-warning');
+        var badge = ctx.row.querySelector('.bal-cell-status .bal-badge');
+        if (belowMin) {
+            ctx.row.classList.add('is-danger');
+            if (badge) { badge.className = 'bal-badge bal-badge--danger'; badge.textContent = 'ต่ำกว่า Min'; }
+        } else if (belowMax) {
+            ctx.row.classList.add('is-warning');
+            if (badge) { badge.className = 'bal-badge bal-badge--warning'; badge.textContent = 'ต่ำกว่า Max'; }
+        } else if (badge) {
+            badge.className = 'bal-badge bal-badge--ok';
+            badge.textContent = 'พอดี';
+        }
+    }
+
+    function performSave(minVal, maxVal) {
+        var body = new URLSearchParams({
+            warehouse_id: ctx.warehouseId,
+            item_code: ctx.itemCode,
+            min_qty: minVal,
+            max_qty: maxVal,
+            note: noteInput ? noteInput.value : ''
+        });
+        var csrfParam = document.querySelector('meta[name="csrf-param"]');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfParam && csrfToken) {
+            body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+        }
+
+        hideAlert();
+        setSaving(true);
+        fetch($jsSaveSettingUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            credentials: 'same-origin',
+            body: body.toString()
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.status !== 'success') {
+                    throw new Error((res && res.message) ? res.message : 'บันทึกไม่สำเร็จ');
+                }
+                updateRowAfterSave(minVal, maxVal);
+                setSaving(false);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'บันทึกสำเร็จ',
+                        text: 'อัปเดต Min/Max ของ "' + (ctx.itemName || ctx.itemCode) + '" เรียบร้อยแล้ว',
+                        icon: 'success',
+                        timer: 1400,
+                        showConfirmButton: false
+                    });
+                } else {
+                    showAlert('success', 'บันทึกสำเร็จ');
+                }
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            })
+            .catch(function (err) {
+                setSaving(false);
+                var message = err && err.message ? err.message : 'บันทึกไม่สำเร็จ';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('ผิดพลาด', message, 'error');
+                } else {
+                    showAlert('error', message);
+                }
+            });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+            var minVal = parseFloat(minInput ? minInput.value : '');
+            var maxVal = parseFloat(maxInput ? maxInput.value : '');
+            if (!ctx.itemCode || !ctx.warehouseId) {
+                showAlert('error', 'ไม่พบข้อมูลวัสดุ/คลัง');
+                return;
+            }
+            if (isNaN(minVal) || isNaN(maxVal)) {
+                showAlert('error', 'กรอก Min และ Max ให้ครบ');
+                return;
+            }
+            if (minVal > maxVal) {
+                showAlert('error', 'Min ต้องไม่มากกว่า Max');
+                return;
+            }
+
+            var confirmText = 'Min: ' + fmtInt(minVal) + '  /  Max: ' + fmtInt(maxVal) + '\\n'
+                + (ctx.warehouseName || '');
+            if (typeof Swal === 'undefined') {
+                if (confirm('ยืนยันบันทึก Min/Max ของ "' + (ctx.itemName || ctx.itemCode) + '"?\\n' + confirmText)) {
+                    performSave(minVal, maxVal);
+                }
+                return;
+            }
+            Swal.fire({
+                title: 'ยืนยันบันทึก Min/Max?',
+                html: '<strong>' + (ctx.itemName || ctx.itemCode) + '</strong><br>' + confirmText.replace(/\\n/g, '<br>'),
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                cancelButtonText: 'ยกเลิก'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    performSave(minVal, maxVal);
+                }
+            });
+        });
+    }
+})();
+JS, View::POS_END);
 
 $this->registerJs(<<<JS
 (function () {

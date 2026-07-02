@@ -226,16 +226,15 @@ class StockInController extends Controller
                 $model->warehouse_id = $warehouse->id;
 
                 if ($model->save(false)) {
+                    $result = [
+                        'status' => 'success',
+                        'container' => '#inventory-container',
+                    ];
                     if ($model->name == 'order') {
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    } else {
-                        \Yii::$app->response->format = Response::FORMAT_JSON;
-
-                        return [
-                            'status' => 'success',
-                            'container' => '#inventory-container',
-                        ];
+                        $result['url'] = \yii\helpers\Url::to(['view', 'id' => $model->id]);
                     }
+
+                    return $result;
                 } else {
                     $model->loadDefaultValues();
                 }

@@ -10,6 +10,7 @@ use app\modules\inventoryV2\models\StockMonthlyReport;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockItemWarehouseSetting;
 use app\modules\inventoryV2\models\Warehouse;
 use Yii;
 use yii\db\Expression;
@@ -434,8 +435,8 @@ class ReportController extends Controller
                 'sb.item_code',
                 new Expression('i.title AS item_name'),
                 new Expression('i.category_id AS category_id'),
-                new Expression('i.qty_min AS min_qty'),
-                new Expression('i.qty_max AS max_qty'),
+                new Expression('s.min_qty AS min_qty'),
+                new Expression('s.max_qty AS max_qty'),
                 new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
                 new Expression('SUM(sb.balance_qty) AS balance_qty'),
                 new Expression('SUM(sb.balance_qty * COALESCE(lp.unit_price, 0)) AS value'),
@@ -444,9 +445,13 @@ class ReportController extends Controller
             ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
             ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
+            ->leftJoin(
+                ['s' => StockItemWarehouseSetting::tableName()],
+                's.item_code = sb.item_code AND s.warehouse_id = sb.warehouse_id AND s.is_active = 1'
+            )
             ->where(['sb.warehouse_id' => $warehouseIds])
             // ->andWhere(['>', 'sb.balance_qty', 0]) // แสดงรายการที่มียอดคงเหลือ 0 ด้วย (เพื่อให้เห็นว่ามีรายการอะไรบ้างที่เคยมีการรับเข้ามาในคลัง แต่ตอนนี้หมดแล้ว)
-            ->groupBy('sb.item_code', 'i.title', 'i.qty_min', 'i.qty_max', 'cat.title', 'i.category_id');
+            ->groupBy(['sb.warehouse_id', 'sb.item_code', 'i.title', 's.min_qty', 's.max_qty', 'cat.title', 'i.category_id']);
 
         $raw = $query->all();
         $warehouseNames = [];
