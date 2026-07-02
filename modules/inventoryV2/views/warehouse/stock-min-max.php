@@ -324,8 +324,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                             <td class="text-end">
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control form-control-sm text-end js-min-input"
                                                     value="<?= $minQty === '' ? '' : htmlspecialchars((string) $minQty) ?>"
@@ -336,8 +336,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                             <td class="text-end">
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control form-control-sm text-end js-max-input"
                                                     value="<?= $maxQty === '' ? '' : htmlspecialchars((string) $maxQty) ?>"
@@ -404,8 +404,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <label class="form-label small mb-1 text-muted">Min</label>
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control js-min-input text-end"
                                                     value="<?= $minQty === '' ? '' : htmlspecialchars((string) $minQty) ?>"
@@ -417,8 +417,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <label class="form-label small mb-1 text-muted">Max</label>
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control js-max-input text-end"
                                                     value="<?= $maxQty === '' ? '' : htmlspecialchars((string) $maxQty) ?>"
@@ -466,10 +466,10 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <div class="d-flex align-items-center gap-1 smm-batch-only">
                     <label class="small text-muted mb-0" for="smm-bulk-min">Min</label>
-                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-min"
+                    <input type="number" inputmode="numeric" step="1" min="0" id="smm-bulk-min"
                         class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
                     <label class="small text-muted mb-0 ms-2" for="smm-bulk-max">Max</label>
-                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-max"
+                    <input type="number" inputmode="numeric" step="1" min="0" id="smm-bulk-max"
                         class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
                     <button type="button" class="btn btn-outline-secondary btn-sm ms-1" id="smm-bulk-apply" title="ใส่ค่า Min/Max ที่กรอกให้ทุกรายการที่เลือก">
                         <i class="bi bi-arrow-down-square"></i> ใส่
