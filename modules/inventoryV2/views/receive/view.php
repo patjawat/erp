@@ -85,23 +85,25 @@ $canDelete = $undeletableReason === null;
                     ],
                 ]) ?>
             <?php endif; ?>
-            <?php if ($canDelete): ?>
-                <?= Html::a('<i class="bi bi-trash me-1"></i> ลบใบรับเข้า', ['delete', 'id' => $model->id], [
-                    'class' => 'btn btn-danger',
-                    'title' => $deleteTooltip,
-                    'data' => [
-                        'confirm' => 'ยืนยันลบใบรับเข้านี้หรือไม่? ระบบจะลบรายการและยอดคงเหลือที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนได้',
-                        'method' => 'post',
-                        'bs-toggle' => 'tooltip',
-                        'bs-placement' => 'top',
-                        'bs-html' => 'true',
-                        'bs-custom-class' => 'rv-tip-pop',
-                    ],
-                ]) ?>
-            <?php else: ?>
-                <button type="button" class="btn btn-danger" disabled title="<?= Html::encode($undeletableReason) ?>">
-                    <i class="bi bi-trash me-1"></i> ลบใบรับเข้า
-                </button>
+            <?php if (\Yii::$app->user->can('admin')): ?>
+                <?php if ($canDelete): ?>
+                    <?= Html::a('<i class="bi bi-trash me-1"></i> ลบใบรับเข้า', ['delete', 'id' => $model->id], [
+                        'class' => 'btn btn-danger',
+                        'title' => $deleteTooltip,
+                        'data' => [
+                            'confirm' => 'ยืนยันลบใบรับเข้านี้หรือไม่? ระบบจะลบรายการและยอดคงเหลือที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนได้',
+                            'method' => 'post',
+                            'bs-toggle' => 'tooltip',
+                            'bs-placement' => 'top',
+                            'bs-html' => 'true',
+                            'bs-custom-class' => 'rv-tip-pop',
+                        ],
+                    ]) ?>
+                <?php else: ?>
+                    <button type="button" class="btn btn-danger" disabled title="<?= Html::encode($undeletableReason) ?>">
+                        <i class="bi bi-trash me-1"></i> ลบใบรับเข้า
+                    </button>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

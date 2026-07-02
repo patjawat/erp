@@ -61,6 +61,14 @@ class ReceiveController extends Controller
         $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
         $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
 
+        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ (warehouse/update > ผู้รับผิดชอบคลัง)
+        $isAdmin = \Yii::$app->user->can('admin');
+        $accessibleWarehouses = Warehouse::findMainWarehousesForReceive();
+        $accessibleWarehouseIds = ArrayHelper::getColumn($accessibleWarehouses, 'id');
+        if (!$isAdmin) {
+            $dataProvider->query->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
+
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
         if ($start !== null && $start !== '') {
@@ -73,27 +81,36 @@ class ReceiveController extends Controller
         $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
-        $statusSummary = StockOrder::find()
+        $statusSummaryQuery = StockOrder::find()
             ->where(['order_type' => 'IN'])
-            ->andWhere(['sub_warehouse_id' => null])
+            ->andWhere(['sub_warehouse_id' => null]);
+        if (!$isAdmin) {
+            $statusSummaryQuery->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
+        $statusSummary = $statusSummaryQuery
             ->select(['status', 'COUNT(*) as cnt'])
             ->groupBy('status')
             ->asArray()
             ->all();
         $statusSummaryMap = array_column($statusSummary, 'cnt', 'status');
 
-        $warehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
-            Warehouse::find()
-                ->where(['warehouse_type' => 'MAIN'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->orderBy('warehouse_name')
-                ->all(),
-            'id',
-            'warehouse_name'
-        );
+        $warehouses = $isAdmin
+            ? ['' => 'ทุกคลัง'] + ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            )
+            : ['' => 'ทุกคลัง'] + ArrayHelper::map($accessibleWarehouses, 'id', 'warehouse_name');
 
         // รวมยอดเงินทั้งหมด (ตามตัวกรองปัจจุบัน)
         $totalAmountQuery = StockOrder::find()->select('id')->where(['order_type' => 'IN'])->andWhere(['sub_warehouse_id' => null]);
+        if (!$isAdmin) {
+            $totalAmountQuery->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
         if ($start !== null && $start !== '') {
             $totalAmountQuery->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
         }
@@ -141,7 +158,24 @@ class ReceiveController extends Controller
             ->where(['stock_order_id' => $totalAmountQuery])
             ->sum(new Expression('qty * COALESCE(unit_price, 0)'));
 
-        $listItemType = ['' => 'ทุกประเภท'] + StockItem::ListStockItemType();
+        $fullItemTypeList = StockItem::ListStockItemType();
+        if ($isAdmin) {
+            $listItemType = ['' => 'ทุกประเภท'] + $fullItemTypeList;
+        } else {
+            $allowedCodes = [];
+            $unrestricted = false;
+            foreach ($accessibleWarehouses as $w) {
+                $codes = $w->getAllowedItemTypeCodes();
+                if (empty($codes)) {
+                    $unrestricted = true;
+                    break;
+                }
+                $allowedCodes = array_merge($allowedCodes, $codes);
+            }
+            $listItemType = $unrestricted
+                ? ['' => 'ทุกประเภท'] + $fullItemTypeList
+                : ['' => 'ทุกประเภท'] + array_intersect_key($fullItemTypeList, array_flip(array_unique($allowedCodes)));
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -272,6 +306,12 @@ class ReceiveController extends Controller
         $dataProvider->query->andWhere(['order_type' => 'IN']);
         $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
         $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
+
+        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ เหมือนหน้ารายการ
+        if (!\Yii::$app->user->can('admin')) {
+            $accessibleWarehouseIds = ArrayHelper::getColumn(Warehouse::findMainWarehousesForReceive(), 'id');
+            $dataProvider->query->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
 
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -807,6 +847,11 @@ class ReceiveController extends Controller
      */
     public function actionDelete($id)
     {
+        if (!\Yii::$app->user->can('admin')) {
+            \Yii::$app->session->setFlash('error', 'ไม่มีสิทธิ์ลบใบรับเข้า (เฉพาะผู้ดูแลระบบเท่านั้น)');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
         $model = $this->findModel($id);
 
         if (!$model->canDelete()) {

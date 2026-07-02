@@ -239,24 +239,26 @@ $deleteTooltip = '<div class="rv-tip rv-tip--danger">'
                                     ],
                                 ]) ?>
                             <?php endif; ?>
-                            <?php if ($itemCanDelete): ?>
-                                <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-danger',
-                                    'title' => $deleteTooltip,
-                                    'data' => [
-                                        'method' => 'post',
-                                        'confirm' => 'ยืนยันลบใบรับเข้านี้? ระบบจะลบรายการและยอดคงเหลือที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนได้',
-                                        'pjax' => 0,
-                                        'bs-toggle' => 'tooltip',
-                                        'bs-placement' => 'top',
-                                        'bs-html' => 'true',
-                                        'bs-custom-class' => 'rv-tip-pop',
-                                    ],
-                                ]) ?>
-                            <?php else: ?>
-                                <button type="button" class="btn btn-sm btn-danger" disabled title="<?= Html::encode($itemUndeletableReason) ?>">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                            <?php if (\Yii::$app->user->can('admin')): ?>
+                                <?php if ($itemCanDelete): ?>
+                                    <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], [
+                                        'class' => 'btn btn-sm btn-danger',
+                                        'title' => $deleteTooltip,
+                                        'data' => [
+                                            'method' => 'post',
+                                            'confirm' => 'ยืนยันลบใบรับเข้านี้? ระบบจะลบรายการและยอดคงเหลือที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนได้',
+                                            'pjax' => 0,
+                                            'bs-toggle' => 'tooltip',
+                                            'bs-placement' => 'top',
+                                            'bs-html' => 'true',
+                                            'bs-custom-class' => 'rv-tip-pop',
+                                        ],
+                                    ]) ?>
+                                <?php else: ?>
+                                    <button type="button" class="btn btn-sm btn-danger" disabled title="<?= Html::encode($itemUndeletableReason) ?>">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>
