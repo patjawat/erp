@@ -2,8 +2,10 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
 use yii\grid\GridView;
 use app\components\ThaiDateHelper;
+use app\components\widgets\DataSummaryWidget;
 use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\models\StockOrder;
 
@@ -91,6 +93,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid">
+    <?php Pjax::begin(['id' => 'issue-pjax', 'timeout' => 5000, 'enablePushState' => true]); ?>
     <?php if ($searchModel): ?>
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-header py-2 px-3">
@@ -100,7 +103,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
             <?php $form = ActiveForm::begin([
                 'method' => 'get',
                 'action' => Url::to(['index']),
-                'options' => ['class' => 'row g-3 align-items-end'],
+                'options' => ['class' => 'row g-3 align-items-end', 'id' => 'issue-search-form', 'data-pjax' => 1],
                 'enableClientValidation' => false,
             ]); ?>
             <div class="col-12 col-sm-6 col-md-4 col-lg-2">
@@ -145,7 +148,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
             </div>
             <div class="col-12 col-sm-auto d-flex gap-1 flex-wrap">
                 <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary btn-sm']) ?>
-                <?= Html::a('ล้าง', Url::to(['index']), ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                <?= Html::a('ล้าง', Url::to(['index']), ['class' => 'btn btn-outline-secondary btn-sm', 'data' => ['pjax' => 0]]) ?>
             </div>
             <?php ActiveForm::end(); ?>
         </div>
@@ -163,6 +166,12 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                     'tableOptions' => ['class' => 'table table-hover align-middle'],
                     'summary' => false,
                     'columns' => [
+                        [
+                            'class' => 'yii\grid\SerialColumn',
+                            'header' => 'ลำดับ',
+                            'headerOptions' => ['class' => 'text-center', 'style' => 'width: 3rem;'],
+                            'contentOptions' => ['class' => 'text-center text-muted'],
+                        ],
                         [
                             'attribute' => 'order_no',
                             'label' => 'เลขที่ใบเบิก / วันที่ขอ',
@@ -257,22 +266,26 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                                         'data' => [
                                             'confirm' => 'ยืนยันอนุมัติใบเบิกนี้แทนหัวหน้า?',
                                             'method' => 'post',
+                                            'pjax' => 0,
                                         ],
                                     ]);
                                 },
                                 'process' => function($url, $model) {
                                     if ($model->status === StockOrder::STATUS_APPROVED) {
                                         return Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['process', 'id' => $model->id], [
-                                            'class' => 'btn btn-primary btn-sm'
+                                            'class' => 'btn btn-primary btn-sm',
+                                            'data' => ['pjax' => 0],
                                         ]);
                                     }
                                     if ($model->status === StockOrder::STATUS_PENDING) {
                                         return Html::a('<i class="bi bi-file-earmark-text"></i> ดูใบเบิก', ['/inventory-v2/requisition/view', 'id' => $model->id], [
-                                            'class' => 'btn btn-outline-secondary btn-sm'
+                                            'class' => 'btn btn-outline-secondary btn-sm',
+                                            'data' => ['pjax' => 0],
                                         ]);
                                     }
                                     return Html::a('<i class="bi bi-file-earmark-text"></i> ดูรายละเอียด', ['process', 'id' => $model->id], [
-                                        'class' => 'btn btn-outline-secondary btn-sm'
+                                        'class' => 'btn btn-outline-secondary btn-sm',
+                                        'data' => ['pjax' => 0],
                                     ]);
                                 },
                                 'print' => function($url, $model) {
@@ -280,6 +293,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                                         'class' => 'btn btn-outline-secondary btn-sm border-0',
                                         'title' => 'พิมพ์ใบเบิกวัสดุ',
                                         'target' => '_blank',
+                                        'data' => ['pjax' => 0],
                                     ]);
                                 },
                                 // 'printdoc' => function($url, $model) {
@@ -295,7 +309,13 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                 ]); ?>
             </div>
         </div>
+        <div class="card-footer bg-white py-2 px-3">
+            <?= DataSummaryWidget::widget([
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        </div>
     </div>
+    <?php Pjax::end(); ?>
 </div>
 
 <style>

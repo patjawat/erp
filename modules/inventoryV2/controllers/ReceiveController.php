@@ -6,6 +6,7 @@ use app\components\AppHelper;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
 use app\modules\sm\models\Vendor;
+use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
@@ -254,6 +255,111 @@ class ReceiveController extends Controller
 
         $filenameUtf8 = 'ใบรับเข้า-' . $model->order_no . '-' . date('Ymd-His') . '.xlsx';
         $filenameAscii = 'receive-' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $model->order_no) . '-' . date('Ymd-His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8));
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * ส่งออกรายการใบรับเข้าทั้งหมดตามตัวกรองปัจจุบัน (ไม่แบ่งหน้า) เป็น Excel แบบสรุป 1 แถวต่อ 1 ใบ
+     */
+    public function actionExportExcelList()
+    {
+        $searchModel = new StockOrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['order_type' => 'IN']);
+        $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
+        $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
+
+        $start = AppHelper::convertToGregorian($searchModel->date_start);
+        $end = AppHelper::convertToGregorian($searchModel->date_end);
+        if ($start !== null && $start !== '') {
+            $dataProvider->query->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
+        }
+        if ($end !== null && $end !== '') {
+            $dataProvider->query->andWhere(['<=', 'order_date', $end . ' 23:59:59']);
+        }
+
+        $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC];
+        $dataProvider->pagination = false;
+
+        $models = $dataProvider->getModels();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('รายการใบรับเข้า');
+
+        $sheet->setCellValue('A1', 'รายการใบรับเข้าวัสดุ');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->setCellValue('A2', 'ส่งออกเมื่อ: ' . \app\components\ThaiDateHelper::formatThaiDate(date('Y-m-d')) . ' ' . date('H:i'));
+        $sheet->mergeCells('A2:H2');
+
+        $headerRow = 4;
+        $headers = ['ลำดับ', 'เลขที่เอกสาร', 'วันที่', 'คลัง', 'ประเภทวัสดุ', 'จำนวนรายการ', 'มูลค่ารับเข้า (บาท)', 'สถานะ'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . $headerRow, $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $statusLabels = [
+            'DRAFT' => 'ร่าง',
+            'CONFIRMED' => 'บันทึกแล้ว',
+            'CANCELLED' => 'ยกเลิก',
+        ];
+
+        $rowNum = $headerRow + 1;
+        $grandTotal = 0;
+        foreach ($models as $index => $item) {
+            $rowTotal = 0;
+            $typeNames = [];
+            foreach ($item->stockDetails as $d) {
+                $rowTotal += (float) $d->qty * (float) ($d->unit_price ?? 0);
+                if ($d->item && $d->item->categoryType) {
+                    $typeNames[$d->item->categoryType->code] = $d->item->categoryType->title;
+                }
+            }
+            $grandTotal += $rowTotal;
+
+            $sheet->setCellValue('A' . $rowNum, $index + 1);
+            $sheet->setCellValue('B' . $rowNum, $item->order_no);
+            $sheet->setCellValue('C' . $rowNum, $item->order_date ? \app\components\ThaiDateHelper::formatThaiDate($item->order_date) : '-');
+            $sheet->setCellValue('D' . $rowNum, $item->mainWarehouse ? $item->mainWarehouse->warehouse_name : '-');
+            $sheet->setCellValue('E' . $rowNum, !empty($typeNames) ? implode(', ', $typeNames) : '-');
+            $sheet->setCellValue('F' . $rowNum, count($item->stockDetails));
+            $sheet->setCellValue('G' . $rowNum, $rowTotal);
+            $sheet->setCellValue('H' . $rowNum, $statusLabels[$item->status] ?? $item->status);
+            $rowNum++;
+        }
+
+        $sheet->setCellValue('A' . $rowNum, 'รวมยอดเงินทั้งหมด');
+        $sheet->mergeCells('A' . $rowNum . ':F' . $rowNum);
+        $sheet->setCellValue('G' . $rowNum, $grandTotal);
+        $sheet->getStyle('A' . $rowNum . ':H' . $rowNum)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        $dataLastRow = $rowNum;
+        $sheet->getStyle('G' . ($headerRow + 1) . ':G' . $dataLastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $dataLastRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $filenameUtf8 = 'รายการใบรับเข้า-' . date('Ymd-His') . '.xlsx';
+        $filenameAscii = 'receive-list-' . date('Ymd-His') . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8));
         $writer = new Xlsx($spreadsheet);
@@ -701,7 +807,52 @@ class ReceiveController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        if (!$model->canDelete()) {
+            \Yii::$app->session->setFlash('error', $model->getUndeletableReason());
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // ถ้าตัดสต็อกไปแล้ว (CONFIRMED) ต้องหักยอดคงเหลือคืนก่อนลบ
+            // stock_detail จะถูกลบอัตโนมัติผ่าน FK ON DELETE CASCADE
+            if ($model->status === StockOrder::STATUS_CONFIRMED) {
+                foreach ($model->stockDetails as $detail) {
+                    InventoryService::updateBalance(
+                        $detail->item_code,
+                        $model->main_warehouse_id,
+                        $detail->qty,
+                        'OUT',
+                        $detail->lot_number
+                    );
+
+                    // ลบแถว stock_balance ทิ้งถ้ายอดเหลือ 0 หลังหักคืน
+                    // (เงื่อนไข canDelete() การันตีว่ายังไม่มีการเบิก/โอนออกจากลอตนี้ จึงต้องกลับไป 0 เสมอ)
+                    $lot = !empty($detail->lot_number) ? $detail->lot_number : '-';
+                    $balance = StockBalance::findOne([
+                        'item_code' => $detail->item_code,
+                        'warehouse_id' => $model->main_warehouse_id,
+                        'lot_number' => $lot,
+                    ]);
+                    if ($balance && abs((float) $balance->balance_qty) < 0.000001) {
+                        $balance->delete();
+                    }
+                }
+            }
+
+            if (!$model->delete()) {
+                throw new \Exception('ไม่สามารถลบใบรับเข้าได้');
+            }
+
+            $transaction->commit();
+            \Yii::$app->session->setFlash('success', 'ลบใบรับเข้าเรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::$app->session->setFlash('error', 'Error: ' . $e->getMessage());
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
 
         return $this->redirect(['index']);
     }

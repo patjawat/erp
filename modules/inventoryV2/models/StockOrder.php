@@ -731,4 +731,80 @@ public function getToWarehouse()
     {
         return $this->status === self::STATUS_CONFIRMED;
     }
+
+    /**
+     * ตรวจสอบว่าเอกสารนี้ลบได้หรือไม่
+     * @return bool
+     */
+    public function canDelete()
+    {
+        return $this->getUndeletableReason() === null;
+    }
+
+    /**
+     * เหตุผลที่ลบไม่ได้ (คืนค่า null หากลบได้)
+     * ลบไม่ได้เมื่อยกเลิกไปแล้ว หรือ (กรณีตัดสต็อกแล้ว) มีการจ่ายวัสดุออกจาก "Lot เดียวกัน" ของคลังเดียวกันไปแล้ว
+     *
+     * หมายเหตุ: เช็คระดับ pool (item_code + lot_number + main_warehouse_id) ไม่ใช่แค่แถวของใบนี้เอง
+     * เพราะหลายรายการ (โดยเฉพาะที่ไม่มีการควบคุม lot จริง ใช้ lot_number = '-') ใช้ lot ร่วมกันหลายใบรับเข้า
+     * ระบบตัดสต็อกแบบ FIFO ตาม stock_detail.id (ดู IssueController::actionProcess) จึงอาจตัดจากใบรับเข้าใบอื่นที่อยู่ใน
+     * lot เดียวกันก่อน ทำให้ remain_qty ของใบนี้ยังเท่าเดิมทั้งที่ lot ถูกจ่ายออกไปแล้วจริง
+     * @return string|null
+     */
+    public function getUndeletableReason()
+    {
+        if ($this->status === self::STATUS_CANCELLED) {
+            return 'ไม่สามารถลบใบที่ยกเลิกแล้วได้';
+        }
+        if ($this->status === self::STATUS_CONFIRMED) {
+            $lots = [];
+            foreach ($this->stockDetails as $detail) {
+                $lotKey = $detail->item_code . '|' . ($detail->lot_number ?? '-');
+                $lots[$lotKey] = ['item_code' => $detail->item_code, 'lot_number' => $detail->lot_number];
+            }
+            if (empty($lots)) {
+                return null;
+            }
+
+            // Query แบบ batch เดียวสำหรับทุก (item_code, lot_number) ของใบนี้ แทนการยิงทีละแถว
+            // (ใบที่มีหลายร้อยรายการ เช่น lot_number = '-' ที่ใช้ร่วมกันหลายรายการ จะทำให้ยิง query ซ้ำจำนวนมากถ้า loop ทีละแถว)
+            $lotConditions = ['or'];
+            foreach ($lots as $lot) {
+                $lotConditions[] = ['and',
+                    ['stock_detail.item_code' => $lot['item_code']],
+                    ['stock_detail.lot_number' => $lot['lot_number']],
+                ];
+            }
+
+            $rows = StockDetail::find()
+                ->joinWith('stockOrder')
+                ->where([
+                    'stock_order.main_warehouse_id' => $this->main_warehouse_id,
+                    'stock_order.status' => self::STATUS_CONFIRMED,
+                ])
+                ->andWhere(['or',
+                    ['stock_order.order_type' => self::ORDER_TYPE_IN],
+                    ['and', ['stock_order.order_type' => self::ORDER_TYPE_ADJUST], ['>', 'stock_detail.qty', 0]],
+                ])
+                ->andWhere($lotConditions)
+                ->select([
+                    'item_code' => 'stock_detail.item_code',
+                    'lot_number' => 'stock_detail.lot_number',
+                    'total_qty' => 'SUM(stock_detail.qty)',
+                    'total_remain' => 'SUM(stock_detail.remain_qty)',
+                ])
+                ->groupBy(['stock_detail.item_code', 'stock_detail.lot_number'])
+                ->asArray()
+                ->all();
+
+            foreach ($rows as $row) {
+                $totalQty = (float) ($row['total_qty'] ?? 0);
+                $totalRemain = (float) ($row['total_remain'] ?? 0);
+                if ($totalQty - $totalRemain > 0.000001) {
+                    return 'ไม่สามารถลบได้ เนื่องจากมีการจ่ายวัสดุ Lot เดียวกันนี้ออกไปแล้ว (รหัสพัสดุ: ' . $row['item_code'] . ', Lot: ' . $row['lot_number'] . ')';
+                }
+            }
+        }
+        return null;
+    }
 }
