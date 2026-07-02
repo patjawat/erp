@@ -1,5 +1,7 @@
 <?php
 
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 use kartik\widgets\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Json;
@@ -29,16 +31,30 @@ $miniAppBaseUrlValue = trim((string) ($data['mini_app_base_url'] ?? $data['mini_
 $miniAppEnabled = (string) ($data['enable_mini_app'] ?? '0') === '1';
 $notificationEnabled = (string) ($data['enable_notification'] ?? '1') === '1';
 $linkedPercent = $activeUserCount > 0 ? round(($linkedUserCount / $activeUserCount) * 100) : 0;
-$botQrImagePath = trim((string) ($data['bot_qr_image'] ?? ''));
-$botQrImageName = trim((string) ($data['bot_qr_image_name'] ?? ''));
-$botQrImageUploadedAt = trim((string) ($data['bot_qr_image_uploaded_at'] ?? ''));
-$botQrImageVersion = $botQrImageUploadedAt !== '' ? (string) strtotime($botQrImageUploadedAt) : substr(md5($botQrImagePath), 0, 8);
-$botQrImageUrl = $botQrImagePath !== ''
-    ? Url::to(['/telegrambot/settings/bot-qr', 'v' => $botQrImageVersion])
-    : '';
-$botQrDownloadUrl = $botQrImagePath !== ''
-    ? Url::to(['/telegrambot/settings/bot-qr', 'download' => 1])
-    : '';
+
+$botDeepLink = $botUsernameValue !== '' ? 'https://t.me/' . $botUsernameValue : '';
+$botQrDataUri = '';
+if ($botDeepLink !== '') {
+    $botQrResult = Builder::create()
+        ->writer(new PngWriter())
+        ->data($botDeepLink)
+        ->size(280)
+        ->margin(10)
+        ->build();
+    $botQrDataUri = 'data:image/png;base64,' . base64_encode($botQrResult->getString());
+}
+
+$bindingRows = [];
+foreach ($bindings as $binding) {
+    $employee = $binding->employee ?? null;
+    $bindingRows[] = [
+        'name' => trim((string) ($binding->fullname ?: ($employee ? ($employee->fullname ?? '') : $binding->username))),
+        'username' => (string) ($binding->username ?? ''),
+        'department' => $employee ? trim((string) ($employee->departmentName() ?: '-')) : '-',
+        'position' => $employee ? trim((string) ($employee->positionName() ?: '-')) : '-',
+        'telegramId' => trim((string) ($binding->telegram_id ?? '')),
+    ];
+}
 
 $testUserOptions = [];
 foreach ($bindings as $binding) {
@@ -68,61 +84,119 @@ if (empty($testScenarioOptions)) {
 
 $this->registerCss(<<<CSS
 .telegram-personal-shell {
-    --tg-primary: #2155d6;
-    --tg-primary-soft: #edf4ff;
-    --tg-ink: #0f172a;
-    --tg-muted: #64748b;
-    --tg-border: #dbe5f1;
-    --tg-surface: #ffffff;
-    --tg-page: #f6f8fc;
-    color: var(--tg-ink);
+    --ink-1: #1a202c;
+    --ink-2: #4a5568;
+    --ink-3: #718096;
+    --ink-4: #a0aec0;
+
+    --surface: #ffffff;
+    --surface-2: #f7f9fc;
+    --surface-3: #eef2f7;
+    --surface-hover: #f1f5f9;
+
+    --line: rgba(15, 23, 42, 0.08);
+    --line-strong: rgba(15, 23, 42, 0.14);
+
+    --primary: #0d6efd;
+    --primary-ink: #0a58ca;
+    --primary-soft: rgba(13, 110, 253, 0.08);
+    --primary-line: rgba(13, 110, 253, 0.22);
+
+    --teal: #0f766e;
+    --teal-soft: rgba(15, 118, 110, 0.10);
+    --violet: #6d28d9;
+    --violet-soft: rgba(109, 40, 217, 0.10);
+
+    --success: #15803d;
+    --success-soft: rgba(21, 128, 61, 0.10);
+    --warning: #b45309;
+    --warning-soft: rgba(180, 83, 9, 0.10);
+    --danger: #b91c1c;
+    --danger-soft: rgba(185, 28, 28, 0.10);
+
+    --radius: 10px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+
+    --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --t-fast: 120ms;
+    --t-mid: 180ms;
+
+    color: var(--ink-1);
 }
 
 .telegram-personal-shell .setting-panel,
 .telegram-personal-shell .summary-tile {
-    background: var(--tg-surface);
-    border: 1px solid var(--tg-border);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, .05);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
 }
 
 .telegram-personal-shell .telegram-hero {
-    border-radius: 1.4rem;
-    background: linear-gradient(180deg, #f9fbff 0%, #f6f8fc 100%);
-}
-
-.telegram-personal-shell .setting-panel,
-.telegram-personal-shell .summary-tile {
-    border-radius: 1.1rem;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-1);
 }
 
 .telegram-personal-shell .bot-mark {
     width: 3.25rem;
     height: 3.25rem;
-    border-radius: 1rem;
+    border-radius: var(--radius-sm);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--tg-primary);
-    background: var(--tg-primary-soft);
+    color: var(--primary);
+    background: var(--primary-soft);
     flex: 0 0 auto;
+}
+
+.telegram-personal-shell .bot-mark.is-teal { color: var(--teal); background: var(--teal-soft); }
+.telegram-personal-shell .bot-mark.is-violet { color: var(--violet); background: var(--violet-soft); }
+.telegram-personal-shell .bot-mark.is-success { color: var(--success); background: var(--success-soft); }
+
+.telegram-personal-shell .panel-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: var(--radius-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    font-size: .85rem;
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.telegram-personal-shell .panel-icon.is-teal { color: var(--teal); background: var(--teal-soft); }
+.telegram-personal-shell .panel-icon.is-violet { color: var(--violet); background: var(--violet-soft); }
+.telegram-personal-shell .panel-icon.is-success { color: var(--success); background: var(--success-soft); }
+
+.telegram-personal-shell .panel-head-text {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
 }
 
 .telegram-personal-shell .page-title {
     font-size: 1.45rem;
     line-height: 1.25;
-    font-weight: 800;
+    font-weight: 700;
     text-wrap: balance;
 }
 
 .telegram-personal-shell .panel-title {
     font-size: 1.05rem;
-    font-weight: 800;
+    font-weight: 600;
     margin: 0;
 }
 
 .telegram-personal-shell .panel-desc,
 .telegram-personal-shell .muted-note {
-    color: var(--tg-muted);
+    color: var(--ink-2);
     font-size: .92rem;
     line-height: 1.55;
 }
@@ -135,144 +209,83 @@ $this->registerCss(<<<CSS
     border-radius: 999px;
     padding: .38rem .72rem;
     font-size: .8rem;
-    font-weight: 800;
-    border: 1px solid transparent;
+    font-weight: 600;
     white-space: nowrap;
-    transition: background-color 180ms cubic-bezier(0.25, 1, 0.5, 1), border-color 180ms cubic-bezier(0.25, 1, 0.5, 1), color 180ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition: background-color var(--t-mid) var(--ease), color var(--t-mid) var(--ease);
 }
 
-.telegram-personal-shell .is-success {
-    background: #e7f8ef;
-    color: #0f7a42;
-    border-color: #bbeacb;
-}
-
-.telegram-personal-shell .is-warning {
-    background: #fff7df;
-    color: #9a6700;
-    border-color: #f1d79e;
-}
-
-.telegram-personal-shell .is-danger {
-    background: #feecee;
-    color: #b42318;
-    border-color: #f7c4c9;
-}
-
-.telegram-personal-shell .is-neutral {
-    background: #eef3f8;
-    color: #526177;
-    border-color: #dae2ea;
-}
+.telegram-personal-shell .is-success { background: var(--success-soft); color: var(--success); }
+.telegram-personal-shell .is-warning { background: var(--warning-soft); color: var(--warning); }
+.telegram-personal-shell .is-danger { background: var(--danger-soft); color: var(--danger); }
+.telegram-personal-shell .is-neutral { background: var(--surface-3); color: var(--ink-2); }
 
 .telegram-personal-shell .summary-value {
     font-size: 1.32rem;
-    font-weight: 850;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
 
+.telegram-personal-shell .flow-list {
+    position: relative;
+}
+
+.telegram-personal-shell .flow-list::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    bottom: 1rem;
+    width: 2px;
+    background: var(--line);
+}
+
 .telegram-personal-shell .flow-step {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: .75rem;
 }
 
 .telegram-personal-shell .step-dot {
+    position: relative;
+    z-index: 1;
     width: 2rem;
     height: 2rem;
-    border-radius: .75rem;
+    border-radius: var(--radius-xs);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--tg-primary-soft);
-    color: var(--tg-primary);
+    background: var(--primary-soft);
+    color: var(--primary);
     flex: 0 0 auto;
 }
+
+.telegram-personal-shell .step-dot.is-teal { color: var(--teal); background: var(--teal-soft); }
+.telegram-personal-shell .step-dot.is-violet { color: var(--violet); background: var(--violet-soft); }
+.telegram-personal-shell .step-dot.is-success { color: var(--success); background: var(--success-soft); }
 
 .telegram-personal-shell .form-control,
 .telegram-personal-shell .form-select,
 .telegram-personal-shell .btn {
     min-height: 44px;
-    transition: border-color 180ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 180ms cubic-bezier(0.25, 1, 0.5, 1), background-color 180ms cubic-bezier(0.25, 1, 0.5, 1), transform 120ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition: border-color var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease), background-color var(--t-mid) var(--ease), transform var(--t-fast) var(--ease);
 }
 
 .telegram-personal-shell .btn:active {
     transform: translateY(1px);
 }
 
-.telegram-personal-shell .bot-share-card {
-    background: #ffffff;
-    border: 1px solid var(--tg-border);
-    border-radius: 1rem;
-    padding: .9rem;
-}
-
-.telegram-personal-shell .bot-qr-frame {
-    width: 8.5rem;
-    aspect-ratio: 1;
-    border: 1px solid #d9e4f2;
-    border-radius: .85rem;
-    background: #ffffff;
-    display: grid;
-    place-items: center;
+.telegram-personal-shell .binding-table-wrap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    flex: 0 0 auto;
-}
-
-.telegram-personal-shell .bot-qr-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.telegram-personal-shell .bot-qr-frame.is-empty {
-    background: #f8fbff;
-    color: #8090a6;
-}
-
-.telegram-personal-shell .bot-qr-placeholder {
-    display: grid;
-    place-items: center;
-    gap: .35rem;
-    text-align: center;
-    font-size: .8rem;
-    color: var(--tg-muted);
-}
-
-.telegram-personal-shell .bot-qr-actions .btn {
-    min-height: 38px;
-}
-
-.telegram-personal-shell .bot-upload-control {
-    border: 1px dashed #b9c9df;
-    border-radius: .85rem;
-    background: #f8fbff;
-    padding: .65rem;
-}
-
-.telegram-personal-shell .bot-upload-control .form-control {
-    min-height: 38px;
-    font-size: .86rem;
-}
-
-.telegram-personal-shell .bot-qr-meta {
-    color: #526177;
-    font-size: .82rem;
-    line-height: 1.45;
-    overflow-wrap: anywhere;
-}
-
-.telegram-personal-shell .bot-qr-save-hint {
-    color: #9a6700;
-    font-size: .82rem;
-    line-height: 1.45;
 }
 
 .telegram-personal-shell .binding-table thead th {
-    background: #f8fafc;
-    color: #475569;
+    background: var(--surface-2);
+    color: var(--ink-2);
     font-size: .82rem;
-    font-weight: 800;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -280,14 +293,138 @@ $this->registerCss(<<<CSS
     vertical-align: middle;
 }
 
+.telegram-personal-shell .binding-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.telegram-personal-shell .binding-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: .75rem;
+    background: var(--surface);
+}
+
+.telegram-personal-shell .binding-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .5rem;
+    margin-bottom: .45rem;
+}
+
+.telegram-personal-shell .binding-card__name {
+    font-weight: 600;
+    color: var(--ink-1);
+    font-size: .92rem;
+}
+
+.telegram-personal-shell .binding-card__username {
+    color: var(--ink-3);
+    font-size: .78rem;
+}
+
+.telegram-personal-shell .binding-card__meta {
+    color: var(--ink-2);
+    font-size: .84rem;
+    margin-bottom: .5rem;
+}
+
+.telegram-personal-shell .binding-card__chat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed var(--line);
+    padding-top: .5rem;
+}
+
+.telegram-personal-shell .binding-card__chat code {
+    font-size: .8rem;
+    color: var(--ink-2);
+}
+
 .telegram-personal-shell .empty-state {
-    border: 1px dashed #c9d6e6;
-    border-radius: 1rem;
-    background: #f8fbff;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+}
+
+.telegram-personal-shell .bot-qr-card {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: .65rem;
+}
+
+.telegram-personal-shell .bot-qr-card__image {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xs);
+    flex: 0 0 auto;
+    display: block;
+}
+
+.telegram-personal-shell .bot-qr-card__trigger {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 0;
+    flex: 0 0 auto;
+    cursor: zoom-in;
+    border-radius: var(--radius-xs);
+    transition: opacity var(--t-fast) var(--ease);
+}
+
+.telegram-personal-shell .bot-qr-card__trigger:hover {
+    opacity: .85;
+}
+
+.telegram-personal-shell .bot-qr-card__trigger:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.telegram-personal-shell .bot-qr-card__body {
+    min-width: 0;
+}
+
+.telegram-personal-shell .bot-qr-card__label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--ink-1);
+}
+
+.telegram-personal-shell .bot-qr-card__link {
+    font-size: .74rem;
+    color: var(--ink-2);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.telegram-personal-shell .bot-qr-card__empty {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    color: var(--ink-2);
+    font-size: .82rem;
+    padding: .3rem;
+}
+
+.telegram-personal-shell .bot-qr-card__empty i {
+    font-size: 1.4rem;
+    color: var(--ink-3);
+    flex: 0 0 auto;
 }
 
 .telegram-personal-shell .test-suite {
-    border-top: 1px solid var(--tg-border);
+    border-top: 1px solid var(--line);
     margin-top: 1.25rem;
     padding-top: 1.25rem;
 }
@@ -300,15 +437,15 @@ $this->registerCss(<<<CSS
 
 .telegram-personal-shell .scenario-preview {
     min-height: 100%;
-    border: 1px solid #cdd9ea;
-    border-radius: 1rem;
-    background: #f8fbff;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
     padding: 1rem;
-    transition: border-color 180ms cubic-bezier(0.25, 1, 0.5, 1), background-color 180ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 180ms cubic-bezier(0.25, 1, 0.5, 1);
+    transition: border-color var(--t-mid) var(--ease), background-color var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease);
 }
 
 .telegram-personal-shell .scenario-preview.is-updated {
-    animation: scenario-preview-pulse 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    animation: scenario-preview-pulse 320ms var(--ease);
 }
 
 .telegram-personal-shell .scenario-chip {
@@ -316,34 +453,34 @@ $this->registerCss(<<<CSS
     align-items: center;
     min-height: 1.75rem;
     border-radius: 999px;
-    background: var(--tg-primary-soft);
-    color: var(--tg-primary);
+    background: var(--primary-soft);
+    color: var(--primary-ink);
     padding: .25rem .6rem;
     font-size: .78rem;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .telegram-personal-shell .scenario-message {
-    color: var(--tg-ink);
+    color: var(--ink-1);
     font-size: .9rem;
     line-height: 1.55;
     white-space: pre-line;
 }
 
 .telegram-personal-shell .scenario-route {
-    color: #526177;
+    color: var(--ink-2);
     font-size: .82rem;
     overflow-wrap: anywhere;
 }
 
 @keyframes scenario-preview-pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(33, 85, 214, .18);
-        border-color: #9bb7ea;
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, .18);
+        border-color: var(--primary-line);
     }
     100% {
-        box-shadow: 0 0 0 .65rem rgba(33, 85, 214, 0);
-        border-color: #cdd9ea;
+        box-shadow: 0 0 0 .65rem rgba(13, 110, 253, 0);
+        border-color: var(--line-strong);
     }
 }
 
@@ -354,14 +491,6 @@ $this->registerCss(<<<CSS
 
     .telegram-personal-shell .page-title {
         font-size: 1.2rem;
-    }
-
-    .telegram-personal-shell .bot-share-card .d-flex {
-        align-items: center;
-    }
-
-    .telegram-personal-shell .bot-qr-frame {
-        width: 7.75rem;
     }
 }
 
@@ -377,6 +506,10 @@ $this->registerCss(<<<CSS
     .telegram-personal-shell .scenario-preview.is-updated {
         animation: none;
     }
+
+    .telegram-personal-shell .flow-list::before {
+        display: none;
+    }
 }
 CSS);
 
@@ -388,9 +521,7 @@ $config = Json::encode([
     'testMiniAppUrl' => Url::to(['/telegrambot/settings/test-mini-app']),
     'testNotificationScenarioUrl' => Url::to(['/telegrambot/settings/test-notification-scenario']),
     'notificationScenarios' => $notificationTestScenarios,
-    'botQrImageUrl' => $botQrImageUrl,
-    'botQrDownloadUrl' => $botQrDownloadUrl,
-    'botQrImageName' => $botQrImageName,
+    'botDeepLink' => $botDeepLink,
 ]);
 
 $this->registerJs(<<<JS
@@ -410,28 +541,13 @@ window.telegramPersonalConfig = {$config};
     const testMiniAppButton = document.getElementById('btn-test-mini-app');
     const testScenarioField = document.getElementById('telegram-test-scenario');
     const testScenarioButton = document.getElementById('btn-test-notification-scenario');
+    const copyBotLinkButton = document.getElementById('btn-copy-bot-link');
     const scenarioPreview = document.getElementById('telegram-scenario-preview');
     const scenarioPreviewLabel = document.getElementById('telegram-scenario-preview-label');
     const scenarioPreviewTitle = document.getElementById('telegram-scenario-preview-title');
     const scenarioPreviewDescription = document.getElementById('telegram-scenario-preview-description');
     const scenarioPreviewMessage = document.getElementById('telegram-scenario-preview-message');
     const scenarioPreviewRoute = document.getElementById('telegram-scenario-preview-route');
-    const botQrFrame = document.getElementById('telegram-bot-qr-frame');
-    const botQrImage = document.getElementById('telegram-bot-qr-image');
-    const botQrPlaceholder = document.getElementById('telegram-bot-qr-placeholder');
-    const openBotQrLink = document.getElementById('btn-open-bot-qr');
-    const downloadBotQrLink = document.getElementById('btn-download-bot-qr');
-    const shareBotQrButton = document.getElementById('btn-share-bot-qr');
-    const botQrUploadField = document.getElementById('telegram-bot-qr-upload');
-    const removeBotQrInput = document.getElementById('telegram-remove-bot-qr-image');
-    const removeBotQrButton = document.getElementById('btn-remove-bot-qr');
-    const botQrMetaNode = document.getElementById('telegram-bot-qr-meta');
-    const botQrSaveHint = document.getElementById('telegram-bot-qr-save-hint');
-    let selectedQrFile = null;
-    let selectedQrPreviewUrl = '';
-    let savedQrImageUrl = safeText(config.botQrImageUrl);
-    let savedQrDownloadUrl = safeText(config.botQrDownloadUrl);
-    let savedQrImageName = safeText(config.botQrImageName);
     const notificationScenarios = config.notificationScenarios || {};
 
     function safeText(value) {
@@ -552,65 +668,6 @@ window.telegramPersonalConfig = {$config};
         }
     }
 
-    function setQrLinkState(element, href, disabled) {
-        if (!element) {
-            return;
-        }
-        element.href = disabled ? '#' : href;
-        element.classList.toggle('disabled', disabled);
-        element.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-        if (disabled) {
-            element.setAttribute('tabindex', '-1');
-        } else {
-            element.removeAttribute('tabindex');
-        }
-    }
-
-    function setQrUi(imageUrl, downloadUrl, fileName, isPendingSave) {
-        const hasImage = !!imageUrl;
-        if (botQrFrame) {
-            botQrFrame.classList.toggle('is-empty', !hasImage);
-        }
-        if (botQrImage) {
-            if (hasImage) {
-                botQrImage.src = imageUrl;
-                botQrImage.alt = fileName ? 'QR Code: ' + fileName : 'QR Code ของ Telegram Bot';
-                botQrImage.classList.remove('d-none');
-            } else {
-                botQrImage.removeAttribute('src');
-                botQrImage.alt = '';
-                botQrImage.classList.add('d-none');
-            }
-        }
-        if (botQrPlaceholder) {
-            botQrPlaceholder.classList.toggle('d-none', hasImage);
-        }
-
-        setQrLinkState(openBotQrLink, imageUrl, !hasImage);
-        setQrLinkState(downloadBotQrLink, downloadUrl || imageUrl, !hasImage);
-        if (downloadBotQrLink) {
-            if (fileName) {
-                downloadBotQrLink.setAttribute('download', fileName);
-            } else {
-                downloadBotQrLink.removeAttribute('download');
-            }
-        }
-        if (shareBotQrButton) {
-            shareBotQrButton.disabled = !hasImage;
-        }
-        if (removeBotQrButton) {
-            removeBotQrButton.disabled = !hasImage;
-        }
-        if (botQrMetaNode) {
-            botQrMetaNode.textContent = hasImage
-                ? (fileName || 'รูป QR Code พร้อมใช้งาน')
-                : 'ยังไม่มีรูป QR Code ที่อัปโหลด';
-        }
-        if (botQrSaveHint) {
-            botQrSaveHint.classList.toggle('d-none', !isPendingSave);
-        }
-    }
-
     function normalizeBotUsernameInput() {
         const username = safeText(botUsernameField ? botUsernameField.value : '').trim().replace(/^@/, '');
         const normalizedUsername = getBotUsername();
@@ -656,6 +713,7 @@ window.telegramPersonalConfig = {$config};
         tokenToggleButton.addEventListener('click', function () {
             const nextType = botTokenField.type === 'password' ? 'text' : 'password';
             botTokenField.type = nextType;
+            tokenToggleButton.setAttribute('aria-pressed', nextType === 'text' ? 'true' : 'false');
             tokenToggleButton.innerHTML = nextType === 'password'
                 ? '<i class="fa-regular fa-eye me-1"></i> แสดง Token'
                 : '<i class="fa-regular fa-eye-slash me-1"></i> ซ่อน Token';
@@ -821,98 +879,28 @@ window.telegramPersonalConfig = {$config};
         });
     }
 
-    if (botQrUploadField) {
-        botQrUploadField.addEventListener('change', function () {
-            if (selectedQrPreviewUrl) {
-                URL.revokeObjectURL(selectedQrPreviewUrl);
-                selectedQrPreviewUrl = '';
-            }
-            selectedQrFile = botQrUploadField.files && botQrUploadField.files[0] ? botQrUploadField.files[0] : null;
-            if (!selectedQrFile) {
-                setQrUi(savedQrImageUrl, savedQrDownloadUrl, savedQrImageName, false);
+    if (copyBotLinkButton) {
+        copyBotLinkButton.addEventListener('click', async function () {
+            const link = safeText(config.botDeepLink);
+            if (!link) {
                 return;
             }
-            selectedQrPreviewUrl = URL.createObjectURL(selectedQrFile);
-            if (removeBotQrInput) {
-                removeBotQrInput.value = '0';
-            }
-            setQrUi(selectedQrPreviewUrl, selectedQrPreviewUrl, selectedQrFile.name, true);
-        });
-    }
-
-    if (removeBotQrButton) {
-        removeBotQrButton.addEventListener('click', function () {
-            if (selectedQrPreviewUrl) {
-                URL.revokeObjectURL(selectedQrPreviewUrl);
-                selectedQrPreviewUrl = '';
-            }
-            selectedQrFile = null;
-            if (botQrUploadField) {
-                botQrUploadField.value = '';
-            }
-            if (removeBotQrInput) {
-                removeBotQrInput.value = '1';
-            }
-            savedQrImageUrl = '';
-            savedQrDownloadUrl = '';
-            savedQrImageName = '';
-            setQrUi('', '', '', true);
-        });
-    }
-
-    if (shareBotQrButton) {
-        shareBotQrButton.addEventListener('click', async function () {
-            const username = getBotUsername();
-            const qrImageUrl = selectedQrPreviewUrl || savedQrImageUrl;
-            const qrFileName = selectedQrFile ? selectedQrFile.name : (savedQrImageName || 'telegram_bot_qr.png');
-            if (!qrImageUrl) {
-                flash('warning', 'ยังไม่มี QR Code', 'กรุณาอัปโหลดรูป QR Code ก่อน');
-                return;
-            }
-
             try {
-                if (navigator.share) {
-                    if (navigator.canShare && window.File && window.File.prototype) {
-                        let file = selectedQrFile;
-                        if (!file) {
-                            const response = await fetch(qrImageUrl, {
-                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                            });
-                            const blob = await response.blob();
-                            file = new File([blob], qrFileName, { type: blob.type || 'image/png' });
-                        }
-                        if (navigator.canShare({ files: [file] })) {
-                            await navigator.share({
-                                files: [file],
-                                title: 'Telegram Bot QR Code',
-                                text: username
-                                    ? 'สแกน QR เพื่อเพิ่ม @' + username
-                                    : 'สแกน QR เพื่อเพิ่ม Telegram Bot',
-                            });
-                            return;
-                        }
-                    }
-
-                    await navigator.share({
-                        title: 'Telegram Bot',
-                        text: username ? 'เพิ่ม @' + username + ' เพื่อรับแจ้งเตือน ERP' : 'เพิ่ม Telegram Bot เพื่อรับแจ้งเตือน ERP',
-                        url: qrImageUrl,
-                    });
-                    return;
-                }
-
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(qrImageUrl);
-                    flash('success', 'คัดลอกลิงก์รูป QR แล้ว', qrImageUrl);
-                    return;
+                    await navigator.clipboard.writeText(link);
+                } else {
+                    const helper = document.createElement('textarea');
+                    helper.value = link;
+                    helper.style.position = 'fixed';
+                    helper.style.opacity = '0';
+                    document.body.appendChild(helper);
+                    helper.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(helper);
                 }
-
-                window.open(qrImageUrl, '_blank', 'noopener');
+                flash('success', 'คัดลอกลิงก์แล้ว', link);
             } catch (error) {
-                if (error && error.name === 'AbortError') {
-                    return;
-                }
-                flash('error', 'แชร์ QR Code ไม่สำเร็จ', error.message || 'เปิดรูป QR แล้วส่งต่อด้วยตนเองได้');
+                flash('error', 'คัดลอกลิงก์ไม่สำเร็จ', link);
             }
         });
     }
@@ -921,7 +909,6 @@ window.telegramPersonalConfig = {$config};
         botUsernameField.addEventListener('input', normalizeBotUsernameInput);
         normalizeBotUsernameInput();
     }
-    setQrUi(savedQrImageUrl, savedQrDownloadUrl, savedQrImageName, false);
 })();
 JS, View::POS_END);
 ?>
@@ -938,93 +925,48 @@ JS, View::POS_END);
                     <p class="panel-desc mb-3">
                         ใช้ Telegram Bot เป็นช่องทางแจ้งเตือนรายบุคคล และเป็นประตูเข้า ERP Mobile ผ่าน Telegram Mini App โดยไม่ต้องสร้างกลุ่ม Telegram
                     </p>
-                    <div class="d-flex flex-wrap gap-2">
+                    <nav class="d-flex flex-wrap gap-2" aria-label="ลัดไปยังหัวข้อการตั้งค่า">
                         <a href="#settings-general" class="btn btn-light border rounded-3">ตั้งค่า Bot</a>
                         <a href="#settings-mini-app" class="btn btn-light border rounded-3">Mini App</a>
                         <a href="#settings-testing" class="btn btn-light border rounded-3">ทดสอบ</a>
                         <a href="#settings-bindings" class="btn btn-light border rounded-3">ผู้ใช้ที่ผูกแล้ว</a>
-                    </div>
+                    </nav>
                 </div>
             </div>
             <div class="d-grid gap-2" style="min-width:min(100%, 280px);">
                 <button type="submit" form="telegram-settings-form" class="btn btn-primary rounded-3 shadow-sm">
                     <i class="fa-solid fa-floppy-disk me-1"></i> บันทึกการตั้งค่า
                 </button>
-                <div class="bot-share-card">
-                    <div class="d-flex flex-column flex-sm-row gap-3">
-                        <div class="bot-qr-frame<?= $botQrImageUrl === '' ? ' is-empty' : '' ?>" id="telegram-bot-qr-frame">
+                <div class="bot-qr-card">
+                    <?php if ($botQrDataUri !== ''): ?>
+                        <button
+                            type="button"
+                            class="bot-qr-card__trigger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#botQrModal"
+                            aria-label="ขยาย QR Code สำหรับเปิดแชทกับ @<?= Html::encode($botUsernameValue) ?> ใน Telegram"
+                        >
                             <img
-                                id="telegram-bot-qr-image"
-                                <?= $botQrImageUrl !== '' ? 'src="' . Html::encode($botQrImageUrl) . '"' : '' ?>
-                                alt="<?= Html::encode($botQrImageName !== '' ? 'QR Code: ' . $botQrImageName : 'QR Code ของ Telegram Bot') ?>"
-                                class="<?= $botQrImageUrl === '' ? 'd-none' : '' ?>"
+                                src="<?= $botQrDataUri ?>"
+                                width="72"
+                                height="72"
+                                class="bot-qr-card__image"
+                                alt=""
                             >
-                            <div class="bot-qr-placeholder<?= $botQrImageUrl === '' ? '' : ' d-none' ?>" id="telegram-bot-qr-placeholder">
-                                <i class="fa-solid fa-qrcode fs-2"></i>
-                                <span>อัปโหลด QR Code</span>
-                            </div>
+                        </button>
+                        <div class="bot-qr-card__body">
+                            <div class="bot-qr-card__label">สแกนเพื่อเปิดแชทกับ Bot</div>
+                            <div class="bot-qr-card__link"><?= Html::encode($botDeepLink) ?></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 mt-2" id="btn-copy-bot-link">
+                                <i class="fa-regular fa-copy me-1"></i> คัดลอกลิงก์
+                            </button>
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold mb-1">QR Code ที่อัปโหลด</div>
-                            <div class="muted-note">ใช้รูป QR Code ที่ผู้ดูแลเตรียมไว้เอง สำหรับเปิดรูป ดาวน์โหลด หรือแชร์ให้ผู้ใช้เพิ่ม bot</div>
-                            <div class="bot-upload-control mt-3">
-                                <?= Html::hiddenInput('remove_bot_qr_image', '0', [
-                                    'id' => 'telegram-remove-bot-qr-image',
-                                    'form' => 'telegram-settings-form',
-                                ]) ?>
-                                <?= Html::fileInput('bot_qr_image', null, [
-                                    'id' => 'telegram-bot-qr-upload',
-                                    'class' => 'form-control',
-                                    'accept' => 'image/png,image/jpeg,image/webp,image/gif',
-                                    'form' => 'telegram-settings-form',
-                                ]) ?>
-                                <div class="bot-qr-meta mt-2" id="telegram-bot-qr-meta">
-                                    <?= Html::encode($botQrImageName !== '' ? $botQrImageName : 'ยังไม่มีรูป QR Code ที่อัปโหลด') ?>
-                                </div>
-                                <div class="bot-qr-save-hint mt-2 d-none" id="telegram-bot-qr-save-hint">
-                                    กดบันทึกการตั้งค่าเพื่อใช้รูป QR Code นี้
-                                </div>
-                            </div>
-                            <div class="bot-qr-actions d-flex flex-wrap gap-2 mt-3">
-                                <a
-                                    href="<?= Html::encode($botQrImageUrl !== '' ? $botQrImageUrl : '#') ?>"
-                                    target="_blank"
-                                    rel="noopener"
-                                    class="btn btn-sm btn-outline-primary rounded-3<?= $botQrImageUrl === '' ? ' disabled' : '' ?>"
-                                    id="btn-open-bot-qr"
-                                    aria-disabled="<?= $botQrImageUrl === '' ? 'true' : 'false' ?>"
-                                    <?= $botQrImageUrl === '' ? 'tabindex="-1"' : '' ?>
-                                >
-                                    <i class="fa-regular fa-image me-1"></i> เปิดรูป QR
-                                </a>
-                                <a
-                                    href="<?= Html::encode($botQrDownloadUrl !== '' ? $botQrDownloadUrl : '#') ?>"
-                                    class="btn btn-sm btn-outline-secondary rounded-3<?= $botQrDownloadUrl === '' ? ' disabled' : '' ?>"
-                                    id="btn-download-bot-qr"
-                                    aria-disabled="<?= $botQrDownloadUrl === '' ? 'true' : 'false' ?>"
-                                    <?= $botQrDownloadUrl === '' ? 'tabindex="-1"' : '' ?>
-                                >
-                                    <i class="fa-solid fa-download me-1"></i> ดาวน์โหลด QR
-                                </a>
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-primary rounded-3"
-                                    id="btn-share-bot-qr"
-                                    <?= $botQrImageUrl === '' ? 'disabled' : '' ?>
-                                >
-                                    <i class="fa-solid fa-share-nodes me-1"></i> แชร์ QR
-                                </button>
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-danger rounded-3"
-                                    id="btn-remove-bot-qr"
-                                    <?= $botQrImageUrl === '' ? 'disabled' : '' ?>
-                                >
-                                    <i class="fa-regular fa-trash-can me-1"></i> ลบรูป QR
-                                </button>
-                            </div>
+                    <?php else: ?>
+                        <div class="bot-qr-card__empty">
+                            <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                            <span>ตั้งค่า Bot Username แล้วบันทึก เพื่อสร้าง QR Code เปิดแชทกับ Bot</span>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1033,10 +975,10 @@ JS, View::POS_END);
             <div class="col">
                 <div class="summary-tile p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div class="bot-mark" style="width:2.5rem;height:2.5rem;border-radius:.85rem;">
+                        <div class="bot-mark" style="width:2.5rem;height:2.5rem;border-radius:var(--radius-xs);">
                             <i class="fa-solid fa-plug-circle-check"></i>
                         </div>
-                        <span class="status-pill <?= $botTokenValue !== '' ? 'is-neutral' : 'is-warning' ?>" data-status-kind="bot">
+                        <span class="status-pill <?= $botTokenValue !== '' ? 'is-neutral' : 'is-warning' ?>" data-status-kind="bot" aria-live="polite">
                             <?= $botTokenValue !== '' ? 'รอทดสอบ' : 'ยังไม่มี Token' ?>
                         </span>
                     </div>
@@ -1047,7 +989,7 @@ JS, View::POS_END);
             <div class="col">
                 <div class="summary-tile p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div class="bot-mark" style="width:2.5rem;height:2.5rem;border-radius:.85rem;">
+                        <div class="bot-mark is-teal" style="width:2.5rem;height:2.5rem;border-radius:var(--radius-xs);">
                             <i class="fa-solid fa-mobile-screen-button"></i>
                         </div>
                         <span class="status-pill <?= $miniAppEnabled ? 'is-success' : 'is-neutral' ?>">
@@ -1061,7 +1003,7 @@ JS, View::POS_END);
             <div class="col">
                 <div class="summary-tile p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div class="bot-mark" style="width:2.5rem;height:2.5rem;border-radius:.85rem;">
+                        <div class="bot-mark is-success" style="width:2.5rem;height:2.5rem;border-radius:var(--radius-xs);">
                             <i class="fa-regular fa-bell"></i>
                         </div>
                         <span class="status-pill <?= $notificationEnabled ? 'is-success' : 'is-warning' ?>">
@@ -1075,7 +1017,7 @@ JS, View::POS_END);
             <div class="col">
                 <div class="summary-tile p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div class="bot-mark" style="width:2.5rem;height:2.5rem;border-radius:.85rem;">
+                        <div class="bot-mark is-violet" style="width:2.5rem;height:2.5rem;border-radius:var(--radius-xs);">
                             <i class="fa-solid fa-user-check"></i>
                         </div>
                         <span class="status-pill is-neutral"><?= (int) $linkedPercent ?>%</span>
@@ -1091,7 +1033,6 @@ JS, View::POS_END);
         'id' => 'telegram-settings-form',
         'options' => [
             'autocomplete' => 'off',
-            'enctype' => 'multipart/form-data',
         ],
     ]); ?>
 
@@ -1103,13 +1044,16 @@ JS, View::POS_END);
 
     <div class="row g-4 align-items-start">
         <div class="col-12 col-xl-8">
-            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-general">
+            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-general" role="region" aria-labelledby="settings-general-title">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-                    <div>
-                        <h2 class="panel-title">General</h2>
-                        <p class="panel-desc mb-0">ตั้งค่า token, username และ webhook ที่รับ event จาก Telegram Bot</p>
+                    <div class="panel-head-text">
+                        <span class="panel-icon" aria-hidden="true"><i class="fa-solid fa-plug-circle-check"></i></span>
+                        <div>
+                            <h2 class="panel-title" id="settings-general-title">General</h2>
+                            <p class="panel-desc mb-0">ตั้งค่า token, username และ webhook ที่รับ event จาก Telegram Bot</p>
+                        </div>
                     </div>
-                    <span class="status-pill <?= $botTokenValue !== '' ? 'is-neutral' : 'is-warning' ?>" data-status-kind="bot">
+                    <span class="status-pill <?= $botTokenValue !== '' ? 'is-neutral' : 'is-warning' ?>" data-status-kind="bot" aria-live="polite">
                         <?= $botTokenValue !== '' ? 'รอทดสอบ' : 'ยังไม่มี Token' ?>
                     </span>
                 </div>
@@ -1160,11 +1104,14 @@ JS, View::POS_END);
                 </div>
             </div>
 
-            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-mini-app">
+            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-mini-app" role="region" aria-labelledby="settings-mini-app-title">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-                    <div>
-                        <h2 class="panel-title">Telegram Mini App</h2>
-                        <p class="panel-desc mb-0">ทุกปุ่มเปิด ERP Mobile จะอ่าน URL จาก Mini App Base URL นี้ เปลี่ยน domain ได้โดยไม่แก้โค้ด</p>
+                    <div class="panel-head-text">
+                        <span class="panel-icon is-teal" aria-hidden="true"><i class="fa-solid fa-mobile-screen-button"></i></span>
+                        <div>
+                            <h2 class="panel-title" id="settings-mini-app-title">Telegram Mini App</h2>
+                            <p class="panel-desc mb-0">ทุกปุ่มเปิด ERP Mobile จะอ่าน URL จาก Mini App Base URL นี้ เปลี่ยน domain ได้โดยไม่แก้โค้ด</p>
+                        </div>
                     </div>
                     <span class="status-pill <?= $miniAppEnabled ? 'is-success' : 'is-neutral' ?>">
                         <?= $miniAppEnabled ? 'เปิดใช้งาน' : 'ปิดอยู่' ?>
@@ -1209,7 +1156,7 @@ JS, View::POS_END);
 
                 <div class="empty-state p-3 mt-3">
                     <div class="flow-step">
-                        <span class="step-dot"><i class="fa-solid fa-route"></i></span>
+                        <span class="step-dot is-teal"><i class="fa-solid fa-route"></i></span>
                         <div class="muted-note">
                             Flow ใหม่: ระบบเชื่อม Telegram กับผู้ใช้รายบุคคล แล้วเปิด ERP Mobile ผ่าน Mini App โดยใช้ URL ที่ตั้งค่าไว้
                         </div>
@@ -1217,11 +1164,14 @@ JS, View::POS_END);
                 </div>
             </div>
 
-            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-testing">
+            <div class="setting-panel p-4 p-xl-5 mb-4" id="settings-testing" role="region" aria-labelledby="settings-testing-title">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-                    <div>
-                        <h2 class="panel-title">ทดสอบการแจ้งเตือน</h2>
-                        <p class="panel-desc mb-0">ส่งข้อความ ปุ่ม Mini App และตัวอย่าง notification ตามระบบงานให้ผู้ใช้ที่ผูก Telegram แล้ว</p>
+                    <div class="panel-head-text">
+                        <span class="panel-icon is-violet" aria-hidden="true"><i class="fa-solid fa-vial"></i></span>
+                        <div>
+                            <h2 class="panel-title" id="settings-testing-title">ทดสอบการแจ้งเตือน</h2>
+                            <p class="panel-desc mb-0">ส่งข้อความ ปุ่ม Mini App และตัวอย่าง notification ตามระบบงานให้ผู้ใช้ที่ผูก Telegram แล้ว</p>
+                        </div>
                     </div>
                     <span class="status-pill <?= $linkedUserCount > 0 ? 'is-success' : 'is-warning' ?>">
                         <?= $linkedUserCount > 0 ? number_format($linkedUserCount) . ' users' : 'ยังไม่มีผู้รับ' ?>
@@ -1287,68 +1237,79 @@ JS, View::POS_END);
                 </div>
             </div>
 
-            <div class="setting-panel p-4 p-xl-5" id="settings-bindings">
+            <div class="setting-panel p-4 p-xl-5" id="settings-bindings" role="region" aria-labelledby="settings-bindings-title">
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-                    <div>
-                        <h2 class="panel-title">บัญชีที่ผูก Telegram แล้ว</h2>
-                        <p class="panel-desc mb-0">รายชื่อผู้ใช้ที่ระบบสามารถส่งแจ้งเตือนรายบุคคลได้ทันที</p>
+                    <div class="panel-head-text">
+                        <span class="panel-icon is-success" aria-hidden="true"><i class="fa-solid fa-users"></i></span>
+                        <div>
+                            <h2 class="panel-title" id="settings-bindings-title">บัญชีที่ผูก Telegram แล้ว</h2>
+                            <p class="panel-desc mb-0">รายชื่อผู้ใช้ที่ระบบสามารถส่งแจ้งเตือนรายบุคคลได้ทันที</p>
+                        </div>
                     </div>
                     <span class="status-pill is-neutral"><?= number_format($linkedUserCount) ?> users</span>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 binding-table">
-                        <thead>
-                            <tr>
-                                <th>ผู้ใช้งาน</th>
-                                <th>แผนก / ตำแหน่ง</th>
-                                <th>Telegram Chat ID</th>
-                                <th class="text-center">สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($bindings)): ?>
+                <?php if (empty($bindingRows)): ?>
+                    <div class="empty-state p-4 text-center">
+                        <div class="fw-bold mb-1">ยังไม่มีผู้ใช้ที่ผูก Telegram</div>
+                        <div class="muted-note">ให้ผู้ใช้เชื่อมต่อ Telegram กับบัญชี ERP ตาม flow ที่ระบบกำหนดไว้</div>
+                    </div>
+                <?php else: ?>
+                    <div class="binding-table-wrap d-none d-lg-block">
+                        <table class="table table-hover align-middle mb-0 binding-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="text-center py-5">
-                                        <div class="empty-state p-4">
-                                            <div class="fw-bold mb-1">ยังไม่มีผู้ใช้ที่ผูก Telegram</div>
-                                            <div class="muted-note">ให้ผู้ใช้เชื่อมต่อ Telegram กับบัญชี ERP ตาม flow ที่ระบบกำหนดไว้</div>
-                                        </div>
-                                    </td>
+                                    <th>ผู้ใช้งาน</th>
+                                    <th>แผนก / ตำแหน่ง</th>
+                                    <th>Telegram Chat ID</th>
+                                    <th class="text-center">สถานะ</th>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($bindings as $binding): ?>
-                                    <?php
-                                    $employee = $binding->employee ?? null;
-                                    $employeeName = trim((string) ($binding->fullname ?: ($employee ? ($employee->fullname ?? '') : $binding->username)));
-                                    $departmentName = $employee ? trim((string) ($employee->departmentName() ?: '-')) : '-';
-                                    $positionName = $employee ? trim((string) ($employee->positionName() ?: '-')) : '-';
-                                    $telegramId = trim((string) ($binding->telegram_id ?? ''));
-                                    ?>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($bindingRows as $row): ?>
                                     <tr>
                                         <td>
-                                            <div class="fw-semibold"><?= Html::encode($employeeName !== '' ? $employeeName : '-') ?></div>
-                                            <div class="muted-note"><?= Html::encode($binding->username ?? '') ?></div>
+                                            <div class="fw-semibold"><?= Html::encode($row['name'] !== '' ? $row['name'] : '-') ?></div>
+                                            <div class="muted-note"><?= Html::encode($row['username']) ?></div>
                                         </td>
                                         <td>
-                                            <div><?= Html::encode($departmentName !== '' ? $departmentName : '-') ?></div>
-                                            <div class="muted-note"><?= Html::encode($positionName !== '' ? $positionName : '-') ?></div>
+                                            <div><?= Html::encode($row['department']) ?></div>
+                                            <div class="muted-note"><?= Html::encode($row['position']) ?></div>
                                         </td>
-                                        <td><code><?= Html::encode($telegramId) ?></code></td>
+                                        <td><code><?= Html::encode($row['telegramId']) ?></code></td>
                                         <td class="text-center"><span class="status-pill is-success">พร้อมรับแจ้งเตือน</span></td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <ul class="binding-cards d-lg-none" role="list">
+                        <?php foreach ($bindingRows as $row): ?>
+                            <li class="binding-card">
+                                <div class="binding-card__head">
+                                    <div>
+                                        <div class="binding-card__name"><?= Html::encode($row['name'] !== '' ? $row['name'] : '-') ?></div>
+                                        <div class="binding-card__username"><?= Html::encode($row['username']) ?></div>
+                                    </div>
+                                    <span class="status-pill is-success">พร้อมรับแจ้งเตือน</span>
+                                </div>
+                                <div class="binding-card__meta"><?= Html::encode($row['department']) ?> · <?= Html::encode($row['position']) ?></div>
+                                <div class="binding-card__chat">
+                                    <span class="muted-note">Chat ID</span>
+                                    <code><?= Html::encode($row['telegramId']) ?></code>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
         </div>
 
         <div class="col-12 col-xl-4">
             <div class="setting-panel p-4 mb-4">
                 <h2 class="panel-title mb-3">แนวคิดใหม่</h2>
-                <div class="d-grid gap-3">
+                <div class="d-grid gap-3 flow-list">
                     <div class="flow-step">
                         <span class="step-dot"><i class="fa-solid fa-user-plus"></i></span>
                         <div>
@@ -1357,21 +1318,21 @@ JS, View::POS_END);
                         </div>
                     </div>
                     <div class="flow-step">
-                        <span class="step-dot"><i class="fa-solid fa-right-to-bracket"></i></span>
+                        <span class="step-dot is-teal"><i class="fa-solid fa-right-to-bracket"></i></span>
                         <div>
                             <div class="fw-semibold">เปิด ERP Mobile</div>
                             <div class="muted-note">Mini App ส่ง Telegram user id ไปที่หน้า login</div>
                         </div>
                     </div>
                     <div class="flow-step">
-                        <span class="step-dot"><i class="fa-solid fa-link"></i></span>
+                        <span class="step-dot is-violet"><i class="fa-solid fa-link"></i></span>
                         <div>
                             <div class="fw-semibold">ผูกบัญชี</div>
                             <div class="muted-note">เมื่อ login สำเร็จ ระบบบันทึก Telegram Chat ID ให้ผู้ใช้คนนั้น</div>
                         </div>
                     </div>
                     <div class="flow-step">
-                        <span class="step-dot"><i class="fa-regular fa-bell"></i></span>
+                        <span class="step-dot is-success"><i class="fa-regular fa-bell"></i></span>
                         <div>
                             <div class="fw-semibold">แจ้งเตือนรายบุคคล</div>
                             <div class="muted-note">ERP ส่งข้อความตรงถึงผู้รับงานหรือผู้อนุมัติ ไม่ต้องใช้กลุ่ม</div>
@@ -1394,4 +1355,27 @@ JS, View::POS_END);
     </div>
 
     <?php ActiveForm::end(); ?>
+
+    <?php if ($botQrDataUri !== ''): ?>
+        <div class="modal fade" id="botQrModal" tabindex="-1" aria-labelledby="botQrModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content rounded-3">
+                    <div class="modal-header border-0 pb-0">
+                        <h2 class="modal-title fs-6 fw-semibold" id="botQrModalLabel">QR Code สำหรับเปิดแชทกับ Bot</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+                    </div>
+                    <div class="modal-body text-center pt-2">
+                        <img
+                            src="<?= $botQrDataUri ?>"
+                            width="260"
+                            height="260"
+                            class="img-fluid rounded-3 border"
+                            alt="QR Code สำหรับเปิดแชทกับ @<?= Html::encode($botUsernameValue) ?> ใน Telegram"
+                        >
+                        <div class="muted-note mt-3" style="overflow-wrap:anywhere;"><?= Html::encode($botDeepLink) ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
