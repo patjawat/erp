@@ -284,10 +284,10 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](modules/inventoryV2/views/requisition/index.php) — ทุกหน้าแสดง list (ใบขอเบิก, ใบลา, ใบจอง, ใบแจ้งซ่อม, รายการพัสดุ, ฯลฯ) ต้อง reuse pattern นี้ก่อนสร้างใหม่
 
 **Structural rules**
-1. **ไม่ใช้ GridView** — เขียน markup เองด้วย `<table>` (desktop) + `<ul>` (mobile) เพื่อ control density และ semantic ครบ; LinkPager ใช้แบบ widget ปกติ ห่อใน `.req-pager`
+1. **ไม่ใช้ GridView** — เขียน markup เองด้วย `<table>` (desktop) + `<ul>` (mobile) เพื่อ control density และ semantic ครบ; ถ้ามี legacy page ที่ยังใช้ GridView อยู่ ต้องปิด pager/summary ของ GridView เอง (`'layout' => '{items}'`) แล้วใช้ `DataSummaryWidget` แทนตามข้อ 4
 2. **Container** — `card shadow-sm` (Bootstrap) + `card-body p-0` รอบ table — ไม่ใช้ `.surface-card` ที่มีหัวการ์ดสำหรับ list (overkill); หัวเรื่องอยู่ที่ page-head ของหน้าแล้ว
 3. **Layout** — desktop table `.d-none .d-lg-block` + mobile cards `.d-lg-none` แสดงคู่กัน ไม่ใช้ table responsive scroll
-4. **Pager** — custom `.req-pager` 2 ส่วน: `หน้า X จาก Y` ซ้าย + Bootstrap `pagination pagination-sm` ขวา; bg `--surface-2`, border-top
+4. **Pager (mandatory)** — ทุกหน้า list ที่แบ่งหน้า ต้องใช้ `DataSummaryWidget` (`app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider])`) วางใน `card-footer` ใต้ table เป็น single source ของทั้ง summary text (`แสดง X ถึง Y จาก Z รายการ`) และ pager — ใช้เหมือนกันทั้ง GridView-based และ custom foreach `<table>`; ห้ามเขียน `LinkPager` + `.req-pager` เอง และห้ามปล่อยให้ GridView render pager ซ้ำ
 
 **Content rules (anti-redundancy)**
 1. **Status ใช้ของ model เท่านั้น** — เรียก `Model::getStatusBadgeConfigFor($status)` ตรง ๆ ห้ามสร้าง custom palette ในหน้า list
@@ -331,6 +331,7 @@ Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](mo
 - ❌ custom `req-icon-btn` / `req-page-btn` → ใช้ Bootstrap `btn` ที่มี
 - ❌ ไอคอน calendar/warehouse/arrow ใน cell → ลบ; text + `·` + `→` พอ
 - ❌ N+1 ใน loop (`Model::findOne()` ใน foreach) → batch prefetch
+- ❌ custom pager (`LinkPager` ตรงๆ, `.req-pager` มือเขียน) หรือ GridView pager ที่ไม่ปิด → ใช้ `DataSummaryWidget` แทนเสมอ
 
 ## The enterprise slop test
 

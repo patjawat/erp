@@ -16,9 +16,17 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\components\FrozenWriteGuard;
 
 class MainStockController extends Controller
 {
+    use FrozenWriteGuard;
+
+    protected function frozenWriteActions(): array
+    {
+        return ['create'];
+    }
+
     public function actionIndex()
     {
         $warehouse = \Yii::$app->session->get('warehouse');
@@ -137,7 +145,7 @@ class MainStockController extends Controller
                       // }
                     
                       
-                    return $this->redirect(['/inventory/main-stock']);
+                    return ['status' => 'success'];
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
                     return ['status' => 'error', 'message' => $e->getMessage()];

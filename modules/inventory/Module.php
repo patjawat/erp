@@ -3,6 +3,7 @@
 namespace app\modules\inventory;
 
 use Yii;
+use app\modules\inventory\models\Warehouse;
 
 /**
  * warehouse module definition class
@@ -29,6 +30,24 @@ class Module extends \yii\base\Module
     public function init()
     {
         parent::init();
+    }
+
+    /**
+     * {@inheritdoc}
+     * ซ่อม session('warehouse') ที่ยังค้างเป็น array (จาก StockOrder/StockOutController::setWarehouse รุ่นเก่า)
+     * ให้เป็น object เหมือนที่โค้ดส่วนใหญ่ในโมดูลนี้คาดหวัง (ป้องกัน "Attempt to read property on array")
+     */
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+        $warehouse = Yii::$app->session->get('warehouse');
+        if (is_array($warehouse)) {
+            $id = $warehouse['id'] ?? ($warehouse['warehouse_id'] ?? null);
+            Yii::$app->session->set('warehouse', $id ? Warehouse::findOne($id) : null);
+        }
+        return true;
     }
 
     /**

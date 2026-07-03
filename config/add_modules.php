@@ -63,7 +63,7 @@ $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานแ
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
 $modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การสำรวจครุภัณฑ์ประจำปี
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
-$modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คลัง
+$modules['inventory'] = ['class' => 'app\modules\inventory\Module', 'frozen' => false];  // คลัง (freeze ปิดชั่วคราว — ยังใช้งาน V1 คู่ขนานกับ V2 อยู่)
 $modules['inventory-v2'] = ['class' => 'app\modules\inventoryV2\Module'];  // คลัง
 $modules['sub-warehouse'] = ['class' => 'app\modules\SubWarehouse\Module'];  // คลังหน่วยงาน (คลังย่อย)
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋

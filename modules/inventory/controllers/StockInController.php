@@ -18,12 +18,20 @@ use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\components\FrozenWriteGuard;
 
 /**
  * StockEventController implements the CRUD actions for StockEvent model.
  */
 class StockInController extends Controller
 {
+    use FrozenWriteGuard;
+
+    protected function frozenWriteActions(): array
+    {
+        return ['create', 'create-by-po', 'update', 'delete', 'confirm-order', 'undo-status', 'delete-all-item'];
+    }
+
     public function behaviors()
     {
         return array_merge(
@@ -324,7 +332,11 @@ class StockInController extends Controller
                 }
 
 
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'container' => '#inventory-container',
+                    'url' => \yii\helpers\Url::to(['view', 'id' => $model->id]),
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -496,7 +508,9 @@ class StockInController extends Controller
         } else {
             StockEvent::updateAll(['order_status' => 'success'], ['category_id' => $id]);
             $this->updateStock($id);
-            return $this->redirect(['/inventory/stock-in']);
+            return [
+                'status' => 'success',
+            ];
         }
     }
 

@@ -784,6 +784,10 @@ $("body").on("click", ".open-modal", function (e) {
     url: url,
     dataType: "json",
     success: async function (response) {
+      if (response.status === "error") {
+        if (typeof warning === "function") warning(response.message);
+        return;
+      }
       var modal = $("#main-modal");
       modal.find("#main-modal-label").html(response.title);
       await erpInjectModalContent(modal.find(".modal-body"), response.content);

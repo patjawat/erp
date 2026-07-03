@@ -20,12 +20,26 @@ use app\modules\inventory\models\StockOut;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\components\FrozenWriteGuard;
 
 /**
  * StockOutController implements the CRUD actions for StockOut model.
  */
 class StockOrderController extends Controller
 {
+    use FrozenWriteGuard;
+
+    protected function frozenWriteActions(): array
+    {
+        // approve-form-store (อนุมัติแทนหัวหน้า) ไม่ frozen ตามคำขอ — ให้ทำงานได้ปกติเหมือนเดิม
+        return [
+            'create', 'update',
+            'confirm-order', 'cancel-order',
+            'update-qty', 'update-lot',
+            'save', 'submit',
+        ];
+    }
+
     public function behaviors()
     {
         return array_merge(
@@ -39,35 +53,6 @@ class StockOrderController extends Controller
                 ],
             ]
         );
-    }
-
-    /**
-     * @inheritDoc
-     * Big-bang freeze: ห้ามทำงานที่เปลี่ยน state ในระบบ V1 (ดู modules/inventory/Module::isFrozen)
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-        $writeActions = [
-            'create', 'update',
-            'confirm-order', 'cancel-order',
-            'approve-form-store', 'update-qty', 'update-lot',
-            'save', 'submit',
-        ];
-        if (\app\modules\inventory\Module::isFrozen() && in_array($action->id, $writeActions, true)) {
-            $message = 'ระบบ Inventory V1 ปิดการสร้าง/แก้ไขเอกสารแล้ว — กรุณาใช้ Inventory V2';
-            Yii::$app->session->setFlash('error', $message);
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                Yii::$app->response->data = ['status' => 'error', 'message' => $message];
-            } else {
-                Yii::$app->response->redirect(['/inventory-v2'])->send();
-            }
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -112,16 +97,8 @@ class StockOrderController extends Controller
     protected function setWarehouse($id)
     {
         $model = Warehouse::find()->where(['id' => $id])->One();
-        \Yii::$app->session->set('warehouse', [
-            'id' => $model->id,
-            'warehouse_id' => $model->id,
-            'warehouse_code' => $model->warehouse_code,
-            'warehouse_name' => $model->warehouse_name,
-            'warehouse_type' => $model->warehouse_type,
-            'category_id' => $model->category_id,
-            'checker' => isset($model->data_json['checker']) ? $model->data_json['checker'] : '',
-            'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
-        ]);
+        // เก็บเป็น object (เหมือน DefaultController/WarehouseController) เพราะโค้ดส่วนใหญ่ในโมดูลอ่าน $warehouse->property
+        \Yii::$app->session->set('warehouse', $model);
         // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
     }
 
@@ -265,7 +242,10 @@ class StockOrderController extends Controller
                         $this->saveCartItem($model);
                         \Yii::$app->cart->checkOut(false);
 
-                        return $this->redirect(['/inventory/stock-order/request']);
+                        return [
+                            'status' => 'success',
+                            'redirect_url' => \yii\helpers\Url::to(['/inventory/stock-order/request']),
+                        ];
                     } else {
                         \Yii::$app->response->format = Response::FORMAT_JSON;
 

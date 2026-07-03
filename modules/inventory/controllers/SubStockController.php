@@ -7,8 +7,16 @@ use app\components\AppHelper;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\Warehouse;
 use app\modules\inventory\models\StockEvent;
+use app\modules\inventory\components\FrozenWriteGuard;
 class SubStockController extends \yii\web\Controller
 {
+    use FrozenWriteGuard;
+
+    protected function frozenWriteActions(): array
+    {
+        return ['check-out'];
+    }
+
     public function actionIndex()
     {
         return $this->render('index');

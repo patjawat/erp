@@ -165,6 +165,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                     'dataProvider' => $dataProvider,
                     'tableOptions' => ['class' => 'table table-hover align-middle'],
                     'summary' => false,
+                    'layout' => '{items}',
                     'columns' => [
                         [
                             'class' => 'yii\grid\SerialColumn',
