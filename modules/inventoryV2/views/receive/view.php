@@ -145,6 +145,27 @@ $canDelete = $undeletableReason === null;
                                 'format' => 'raw',
                                 'value' => StatusBadgeHelper::renderStatusBadge($model->status, ['tooltip' => $statusLabel]),
                             ],
+                            [
+                                'label' => 'เลขที่สั่งซื้อ (PO)',
+                                'format' => 'raw',
+                                'visible' => trim((string) $model->ref) !== '',
+                                'value' => function ($model) {
+                                    $poOrderId = $model->getPoOrderId();
+                                    $ref = Html::encode($model->ref);
+                                    if (!$poOrderId) {
+                                        return $ref;
+                                    }
+                                    return Html::a($ref . ' <i class="bi bi-box-arrow-up-right small"></i>', ['/purchase/order/view', 'id' => $poOrderId], [
+                                        'target' => '_blank',
+                                        'title' => 'ดูใบสั่งซื้อต้นทาง',
+                                    ]);
+                                },
+                            ],
+                            [
+                                'label' => 'เลขที่ส่งสินค้า',
+                                'value' => $model->getDeliveryNoteNo(),
+                                'visible' => $model->getDeliveryNoteNo() !== '',
+                            ],
                         ],
                     ]) ?>
                 </div>

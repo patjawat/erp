@@ -324,6 +324,32 @@ public function getToWarehouse()
     }
 
     /**
+     * เลขที่ส่งสินค้าจากผู้ขาย (delivery note) — เก็บใน data_json['delivery_note_no']
+     * @return string
+     */
+    public function getDeliveryNoteNo()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        return isset($json['delivery_note_no']) ? (string) $json['delivery_note_no'] : '';
+    }
+
+    /**
+     * ใบสั่งซื้อ (orders.id) ต้นทางที่ใบรับเข้านี้อ้างอิง (กรณีรับเข้าจากการจัดซื้อผ่าน picker) — เก็บใน data_json['po_order_id']
+     * @return int|null
+     */
+    public function getPoOrderId()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        return (!empty($json['po_order_id'])) ? (int) $json['po_order_id'] : null;
+    }
+
+    /**
      * รายการค่าใช้จ่ายและใบเสร็จแนบ (เก็บใน data_json['expenses'])
      * แต่ละรายการ: ['description' => string, 'amount' => number, 'receipt_path' => string|null]
      * @return array
