@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'store']); ?>
+<?php Pjax::begin(['id' => 'inventory-container']); ?>
 <?php
 
 $cart = Yii::$app->cartMain;
