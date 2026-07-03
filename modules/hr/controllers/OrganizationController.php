@@ -10,6 +10,7 @@ use yii\filters\VerbFilter;
 use app\models\CategoriseSearch;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 
 /**
  * WorkgroupController implements the CRUD actions for Categorise model.
@@ -28,6 +29,7 @@ class OrganizationController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'purge-inactive' => ['POST'],
                     ],
                 ],
             ]
@@ -100,6 +102,37 @@ class OrganizationController extends Controller
         return $this->render('diagram/index', [
             'levelNamesModel' => $levelNamesModel,
         ]);
+    }
+
+    /**
+     * ล้าง node ที่ถูกลบแบบ soft-delete (active = 0) ออกจากผังถาวร
+     * เฉพาะ node ที่เป็นใบ (ไม่มีลูก) เท่านั้น เพื่อไม่ให้กระทบ node ที่ยัง active อยู่ข้างใต้
+     * ทำวนซ้ำเพราะเมื่อลบใบทิ้งแล้ว node แม่ที่ inactive อาจกลายเป็นใบต่อในรอบถัดไป
+     */
+    public function actionPurgeInactive()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $tbName = $this->request->post('tb_name', 'diagram');
+        $purged = [];
+
+        while (true) {
+            $node = Organization::find()
+                ->where(['tb_name' => $tbName, 'active' => false])
+                ->andWhere('rgt = lft + 1')
+                ->orderBy(['lft' => SORT_ASC])
+                ->one();
+            if ($node === null) {
+                break;
+            }
+            $purged[] = $node->name . ' (#' . $node->id . ')';
+            $node->delete();
+        }
+
+        return [
+            'status' => 'success',
+            'count' => count($purged),
+            'items' => $purged,
+        ];
     }
 
     /**

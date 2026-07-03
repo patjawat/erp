@@ -95,6 +95,14 @@ $defaultLabels = [
     </div>
 </div>
 
+<div class="mb-3 text-end">
+    <?= Html::button('<i class="bi bi-trash3 me-1"></i> ล้างรายการที่ถูกลบแล้วถาวร', [
+        'id' => 'btn-purge-inactive',
+        'class' => 'btn btn-outline-danger btn-sm rounded-3',
+        'title' => 'ลบถาวรเฉพาะ node ที่ถูกปิดใช้งาน (active = 0) และไม่มีลูกอยู่ข้างใต้ ออกจากผัง',
+    ]) ?>
+</div>
+
 <?php
 
 echo TreeView::widget([
@@ -104,6 +112,7 @@ echo TreeView::widget([
     'topRootAsHeading' => true, // this will override the headingOptions
     'fontAwesome' => true,
     'isAdmin' => false,
+    'showInactive' => true,
     'showIDAttribute' => false,
     'showNameAttribute' => false,
     'softDelete' => true,  
@@ -135,8 +144,43 @@ echo TreeView::widget([
 
 
 ]);
+$purgeUrl = \yii\helpers\Url::to(['/hr/organization/purge-inactive']);
 $js = <<< JS
 
+$('#btn-purge-inactive').on('click', function () {
+    Swal.fire({
+        title: 'ยืนยันการล้างข้อมูล?',
+        text: 'จะลบถาวรเฉพาะ node ที่ถูกปิดใช้งานแล้วและไม่มีลูกอยู่ข้างใต้ ไม่สามารถกู้คืนได้',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ล้างข้อมูล',
+        cancelButtonText: 'ยกเลิก'
+    }).then(function (result) {
+        if (!result.isConfirmed) {
+            return;
+        }
+        \$.ajax({
+            type: 'POST',
+            url: '$purgeUrl',
+            data: { tb_name: 'diagram', _csrf: yii.getCsrfToken() },
+            dataType: 'json',
+            success: function (res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ล้างข้อมูลสำเร็จ',
+                    text: 'ลบไปทั้งหมด ' + res.count + ' รายการ',
+                    timer: 2500,
+                    showConfirmButton: false
+                }).then(function () {
+                    \$.pjax.reload({container: '#hr-container'});
+                });
+            },
+            error: function () {
+                Swal.fire({icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถล้างข้อมูลได้ กรุณาลองใหม่'});
+            }
+        });
+    });
+});
 
 JS;
 $this->registerJS($js);
