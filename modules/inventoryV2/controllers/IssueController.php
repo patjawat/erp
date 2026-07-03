@@ -532,10 +532,23 @@ class IssueController extends Controller
 }
 
 .issue-signature-footer .signature-dots {
-    display: inline-block;
-    min-width: 135px;
-    color: #444;
     letter-spacing: 1px;
+    color: #444;
+}
+
+.issue-signature-footer .signature-stamp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.issue-signature-footer .signature-stamp-cell {
+    text-align: center;
+    padding: 0;
+    border: none !important;
+}
+
+.issue-signature-footer .signature-stamp {
+    display: inline-block;
 }
 
 .issue-signature-footer .signature-name {

@@ -1,11 +1,24 @@
 <?php
 use yii\helpers\Url;
+use app\modules\inventoryV2\models\StockOrder;
 
 /**
  * เมนูสำหรับผู้ดูแลคลังหลัก (ลดรายการ)
  * @var string $active 'dashboard' | 'receive' | 'issue' | 'report' | 'setting'
  */
 $active = $active ?? '';
+
+try {
+    $issuePendingCount = (int) StockOrder::find()
+        ->where([
+            'order_type'  => 'OUT',
+            'source_type' => 'REQUEST',
+            'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+        ])
+        ->count();
+} catch (\Throwable $e) {
+    $issuePendingCount = 0;
+}
 ?>
 <nav class="inventory-nav inventory-nav-main" aria-label="เมนูคลังหลัก">
     <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
@@ -17,6 +30,9 @@ $active = $active ?? '';
         </a>
         <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3">
             <i class="bi bi-box-arrow-right me-1"></i>จ่ายพัสดุ
+            <?php if ($issuePendingCount > 0): ?>
+                <span class="badge text-bg-danger ms-1" title="รออนุมัติ/รอจ่าย"><?= $issuePendingCount ?></span>
+            <?php endif; ?>
         </a>
         <div class="dropdown">
             <button type="button" class="btn btn-sm <?= ($active === 'report' || strpos((string)$active, 'report') === 0) ? 'btn-info' : 'btn-outline-info' ?> rounded-pill px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
