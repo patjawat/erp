@@ -202,6 +202,7 @@ class WarehouseController extends Controller
                 'item_code' => 'i.code',
                 'item_name' => 'i.title',
                 'i.category_id',
+                'category_title' => 'cat.title',
                 'i.data_json AS item_data_json',
                 's.id AS setting_id',
                 's.min_qty AS setting_min_qty',
@@ -217,6 +218,11 @@ class WarehouseController extends Controller
                 [':wid' => $warehouse->id]
             )
             ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
+            ->leftJoin(
+                ['cat' => '{{%categorise}}'],
+                'cat.code = i.category_id AND cat.name = :assetType',
+                [':assetType' => 'asset_type']
+            )
             ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
             ->andWhere(['i.active' => 1]);
 

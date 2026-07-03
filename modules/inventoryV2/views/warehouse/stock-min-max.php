@@ -286,6 +286,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                         </th>
                                         <th style="width: 50px;">#</th>
                                         <th>รหัส / ชื่อวัสดุ</th>
+                                        <th style="width: 150px;">หมวดหมู่</th>
                                         <th style="width: 80px;">หน่วย</th>
                                         <th class="text-end" style="width: 110px;">คงเหลือ</th>
                                         <th class="text-end" style="width: 130px;">Min</th>
@@ -317,6 +318,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
                                                 <code class="text-muted small"><?= Html::encode($r['item_code']) ?></code>
                                             </td>
+                                            <td class="text-muted small"><?= Html::encode($r['category_title'] ?? '-') ?></td>
                                             <td class="text-muted small"><?= Html::encode($unitName) ?></td>
                                             <td class="text-end font-monospace">
                                                 <?= $renderBalance($balance, $isConfigured, $isConfigured ? (float) $minQty : 0, $isConfigured ? (float) $maxQty : 0) ?>
@@ -387,6 +389,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
                                                 <code class="text-muted small"><?= Html::encode($r['item_code']) ?></code>
                                                 <span class="text-muted small ms-2"><?= Html::encode($unitName) ?></span>
+                                                <?php if (!empty($r['category_title'])): ?>
+                                                    <div class="text-muted small"><?= Html::encode($r['category_title']) ?></div>
+                                                <?php endif; ?>
                                             </div>
                                             <span class="badge status-badge <?= $st['badge'] ?>">
                                                 <?= $st['label'] ?>
