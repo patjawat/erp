@@ -1,0 +1,100 @@
+<?php
+use yii\helpers\Html;
+use app\models\Categorise;
+use app\components\CategoriseHelper;
+use app\modules\am\models\AssetItem;
+$layout = app\components\SiteHelper::getInfo()['layout'];
+$listAssetGroups = Categorise::find()
+->where(['name' => 'asset_group'])
+// ->andWhere(['NOT',['code'=>[1]]])
+->all();
+$layout = app\components\SiteHelper::getInfo()['layout'];
+
+?>
+
+<?php if($layout == 'horizontal'):?>
+<li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-gauge-high text-primary me-1"></i> Dashboard',['/am'],['class' => 'nav-link ' . (isset($active) && $active == 'index' ? 'active' : '')])?>
+</li>
+
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'asset' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        <i class="bi bi-ui-checks text-primary me-1"></i> ทะเบียนทรัพย์สิน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
+        <?= Html::a('<i class="fa-solid fa-map me-2"></i> ที่ดิน', ['/am/land'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-house me-2"></i> อาคาร', ['/am/building'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> สิ่งปลูกสร้าง', ['/am/construction'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> ครุภัณฑ์', ['/am/asset'], ['class' => 'dropdown-item']) ?>
+        <div class="dropdown-divider"></div>
+        <?= Html::a('<i class="fa-solid fa-boxes-stacked me-2"></i> รับครุภัณฑ์หลายเครื่อง', ['/am/asset-bulk/bulk-create'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-cart-shopping me-2"></i> นำเข้าครุภัณฑ์จากการสั่งซื้อ', ['/am/asset-bulk/bulk-create'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-arrow-right-arrow-left me-2"></i> โอนย้าย', ['/am/asset/transfer'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-wrench me-2"></i> ส่งซ่อม', ['/am/asset/repair'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-trash me-2"></i> จำหน่าย', ['/am/asset/dispose'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-qrcode me-2"></i> พิมพ์ QR', ['/am/asset/print-qr'], ['class' => 'dropdown-item']) ?>
+        <div class="dropdown-divider"></div>
+        <?= Html::a('<i class="fa-solid fa-calendar-day me-2"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-file-lines me-2"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?>
+    </div>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'report' ? 'active' : '')?>" href="#" id="topnav-report" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa-solid fa-chart-pie me-1"></i> รายงาน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="topnav-report">
+        <?= Html::a('<i class="fa-solid fa-list me-2"></i> รายงานค่าเสื่อม (ทะเบียน)', ['/am/report'], ['class' => 'dropdown-item']) ?>
+    </div>
+</li>
+<li class="nav-item">
+    </li>
+    
+    
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle <?=(isset($active) && $active == 'asset' ? 'active' : '')?>" href="#" id="topnav-dashboard" role="button" data-bs-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+       <i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน
+        <i class="bx bx-chevron-down"></i>
+    </a>
+    <div class="dropdown-menu " aria-labelledby="topnav-dashboard">
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม',['/am/asset-group'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท',['/am/asset-type'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่',['/am/asset-category'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN',['/am/fsn'],['class' => 'dropdown-item'])?>
+        <?=Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กำหนดชื่อครุภัณฑ์',['/am/asset-item'],['class' => 'dropdown-item'])?>
+        <?= Html::a('<i class="fa-solid fa-hashtag me-1"></i> รูปแบบ FSN ครุภัณฑ์', ['/am/setting/fsn-format'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่าทรัพย์สิน (ทั้งหมด)', ['/am/setting'], ['class' => 'dropdown-item']) ?>
+
+    </div>
+</li>
+
+
+<?php else:?>
+<div class="d-flex gap-2">
+    <?=Html::a('<i class="fa-solid fa-chart-simple"></i> Dashbroad',['/am'],['class' => 'btn btn-light'])?>
+    <div class="btn-group">
+        <?=Html::a('<i class="bi bi-ui-checks"></i> ทะเบียนทรัพย์สิน',['/am/asset'],['class' => 'btn btn-light'])?>
+    </div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">งานครุภัณฑ์</button>
+        <ul class="dropdown-menu">
+            <li><?= Html::a('รับครุภัณฑ์หลายเครื่อง', ['/am/asset/bulk-create'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('นำเข้าครุภัณฑ์จากการสั่งซื้อ', ['/am/asset/bulk-create'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('โอนย้าย', ['/am/asset/transfer'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('ส่งซ่อม', ['/am/asset/repair'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('จำหน่าย', ['/am/asset/dispose'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('พิมพ์ QR', ['/am/asset/print-qr'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><?= Html::a('ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
+        </ul>
+    </div>
+    <?=Html::a('<i class="fa-solid fa-chart-simple"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'btn btn-light'])?>
+    <?=Yii::$app->user->can('admin') ? Html::a('<i class="fa-solid fa-gear me-2"></i> ตั้งค่าทรัพย์สิน',['/am/setting'],['class' => 'btn btn-light']) : ''?>
+</div>
+<?php endif;?>
