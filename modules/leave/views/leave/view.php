@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $js = <<<JS
-    $("body").on("click", ".req-cancel-btn", function (e) {
+    $("body").off("click", ".req-cancel-btn").on("click", ".req-cancel-btn", function (e) {
         e.preventDefault();
         var title = $(this).data('title');
         var btn = $(this);
@@ -86,7 +86,7 @@ $js = <<<JS
         });
     });
 
-    $("body").on("click", ".download-leave", function (e) {
+    $("body").off("click", ".download-leave").on("click", ".download-leave", function (e) {
         e.preventDefault();
         var filename = $(this).data('filename');
         $.ajax({
