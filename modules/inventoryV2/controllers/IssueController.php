@@ -38,6 +38,16 @@ class IssueController extends Controller
         ]]);
         $dataProvider->query->with(['mainWarehouse', 'subWarehouse']);
 
+        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ (warehouse/update > ผู้รับผิดชอบคลัง)
+        // และแผนก/ฝ่ายที่ถูกกำหนดสิทธิเบิก (warehouse/update > กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก) — ต้องเข้าเงื่อนไขทั้งสองข้อ (AND)
+        $isAdmin = Yii::$app->user->can('admin');
+        $accessibleWarehouses = Warehouse::findMainWarehousesForReceive();
+        $accessibleDeptSubWarehouses = Warehouse::findSubWarehousesForDepartment();
+        if (!$isAdmin) {
+            $dataProvider->query->andWhere(['main_warehouse_id' => ArrayHelper::getColumn($accessibleWarehouses, 'id')]);
+            $dataProvider->query->andWhere(['sub_warehouse_id' => ArrayHelper::getColumn($accessibleDeptSubWarehouses, 'id')]);
+        }
+
         // วันที่เบิก (order_date)
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -61,24 +71,28 @@ class IssueController extends Controller
         $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC, 'id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
-        $mainWarehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
-            Warehouse::find()
-                ->where(['warehouse_type' => 'MAIN'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->orderBy('warehouse_name')
-                ->all(),
-            'id',
-            'warehouse_name'
-        );
-        $subWarehouses = ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map(
-            Warehouse::find()
-                ->where(['warehouse_type' => 'SUB'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->orderBy('warehouse_name')
-                ->all(),
-            'id',
-            'warehouse_name'
-        );
+        $mainWarehouses = $isAdmin
+            ? ['' => 'ทุกคลัง'] + ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            )
+            : ['' => 'ทุกคลัง'] + ArrayHelper::map($accessibleWarehouses, 'id', 'warehouse_name');
+        $subWarehouses = $isAdmin
+            ? ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'SUB'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            )
+            : ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map($accessibleDeptSubWarehouses, 'id', 'warehouse_name');
 
         $statusLabels = array_merge(
             ['' => 'ทุกสถานะ'],
