@@ -60,7 +60,7 @@ $products = $cart->getItems();
                 <h6>
                     <i class="bi bi-ui-checks"></i>ทะเบียนเบิกวัสดุคลังหลัก <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?></span> รายการ
                 </h6>
-                <a href="<?= Url::to(['/me/main-stock/store']) ?>" class="btn btn-light">
+                <a href="<?= Url::to(['/me/main-stock/store']) ?>" class="btn btn-light" data-pjax="0">
                     <i data-lucide="circle-plus"></i>
                     เลือกเบิกวัสดุ
                 </a>
