@@ -10,14 +10,22 @@ use yii\helpers\BaseConsole;
 use yii\helpers\Console;
 
 /**
- * Convert utf8mb3 tables to utf8mb4, one tenant DB at a time.
+ * Normalize every string column in a tenant DB to one target charset+collation
+ * (utf8mb4/utf8mb4_unicode_ci by default), one tenant DB at a time.
+ *
+ * Covers two distinct problems that both surface as SQL errors at query time:
+ *  - utf8mb3 columns (error 1253/3780: invalid or incompatible collation)
+ *  - utf8mb4 columns whose collation disagrees with another utf8mb4 column
+ *    they're compared/joined against (error 1267: illegal mix of collations)
+ *    — common when tables were created/migrated at different times with
+ *    different MySQL defaults (utf8mb4_general_ci vs utf8mb4_unicode_ci).
  *
  * Tables linked by a string-typed foreign key (e.g. asset <-> asset_condition,
  * auth_item <-> auth_rule) are converted together as a group: FKs in the group
  * are dropped, every table in the group is converted, then the FKs are
  * recreated. Converting a single table in a group in isolation fails with
- * MySQL error 3780 (incompatible FK charset) because the two sides of the FK
- * end up on different charsets mid-migration.
+ * MySQL error 3780 (incompatible FK charset/collation) because the two sides
+ * of the FK end up mismatched mid-migration.
  *
  * Usage:
  *   docker exec dansai php yii charset/status                  # inspect current .env DB
@@ -49,10 +57,10 @@ class CharsetController extends Controller
     {
         $conn = $this->resolveConnection();
         $dbName = $conn->createCommand('SELECT DATABASE()')->queryScalar();
-        $tables = $this->getUtf8mb3Tables($conn);
+        $tables = $this->getTablesNeedingConversion($conn);
 
         if (!$tables) {
-            $this->stdout("{$dbName}: already fully utf8mb4.\n", Console::FG_GREEN);
+            $this->stdout("{$dbName}: already fully utf8mb4/{$this->collation}, no mismatches.\n", Console::FG_GREEN);
             return ExitCode::OK;
         }
 
@@ -65,10 +73,10 @@ class CharsetController extends Controller
     {
         $conn = $this->resolveConnection();
         $dbName = $conn->createCommand('SELECT DATABASE()')->queryScalar();
-        $tables = $this->getUtf8mb3Tables($conn);
+        $tables = $this->getTablesNeedingConversion($conn);
 
         if (!$tables) {
-            $this->stdout("{$dbName}: nothing to do, already fully utf8mb4.\n", Console::FG_GREEN);
+            $this->stdout("{$dbName}: nothing to do, already fully utf8mb4/{$this->collation}.\n", Console::FG_GREEN);
             return ExitCode::OK;
         }
 
@@ -128,12 +136,23 @@ class CharsetController extends Controller
         $conn->createCommand($sql)->execute();
     }
 
-    private function getUtf8mb3Tables(Connection $conn): array
+    /**
+     * Tables with at least one string column that isn't already on the
+     * target charset+collation — either still utf8mb3, or utf8mb4 with a
+     * different collation than the target (e.g. utf8mb4_general_ci when the
+     * target is utf8mb4_unicode_ci).
+     */
+    private function getTablesNeedingConversion(Connection $conn): array
     {
         return $conn->createCommand(
-            "SELECT DISTINCT TABLE_NAME FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE() AND CHARACTER_SET_NAME = 'utf8mb3'
-             ORDER BY TABLE_NAME"
+            "SELECT DISTINCT c.TABLE_NAME FROM information_schema.COLUMNS c
+             JOIN information_schema.TABLES t
+                  ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+             WHERE c.TABLE_SCHEMA = DATABASE() AND c.CHARACTER_SET_NAME IS NOT NULL
+               AND t.TABLE_TYPE = 'BASE TABLE'
+               AND (c.CHARACTER_SET_NAME <> 'utf8mb4' OR c.COLLATION_NAME <> :collation)
+             ORDER BY c.TABLE_NAME",
+            [':collation' => $this->collation]
         )->queryColumn();
     }
 
