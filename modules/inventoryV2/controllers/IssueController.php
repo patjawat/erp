@@ -38,14 +38,13 @@ class IssueController extends Controller
         ]]);
         $dataProvider->query->with(['mainWarehouse', 'subWarehouse']);
 
-        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ (warehouse/update > ผู้รับผิดชอบคลัง)
-        // และแผนก/ฝ่ายที่ถูกกำหนดสิทธิเบิก (warehouse/update > กำหนดแผนก/ฝ่ายที่มีสิทธิเบิก) — ต้องเข้าเงื่อนไขทั้งสองข้อ (AND)
+        // เห็นหมดทุกคลัง = admin หรือผู้มีสิทธิ์ warehouse; นอกนั้นจำกัดเฉพาะคลังที่ user ถูกกำหนดเป็นผู้รับผิดชอบคลัง (officer)
+        // ให้ตรงกับ badge เมนู: ผู้รับผิดชอบคลังเห็นทุกใบที่เข้าคลังของตน โดยไม่ผูกกับแผนก/ฝ่ายที่มีสิทธิเบิก
         $isAdmin = Yii::$app->user->can('admin');
+        $canSeeAllWarehouses = $isAdmin || Yii::$app->user->can('warehouse');
         $accessibleWarehouses = Warehouse::findMainWarehousesForReceive();
-        $accessibleDeptSubWarehouses = Warehouse::findSubWarehousesForDepartment();
-        if (!$isAdmin) {
+        if (!$canSeeAllWarehouses) {
             $dataProvider->query->andWhere(['main_warehouse_id' => ArrayHelper::getColumn($accessibleWarehouses, 'id')]);
-            $dataProvider->query->andWhere(['sub_warehouse_id' => ArrayHelper::getColumn($accessibleDeptSubWarehouses, 'id')]);
         }
 
         // วันที่เบิก (order_date)
@@ -71,7 +70,7 @@ class IssueController extends Controller
         $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC, 'id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
-        $mainWarehouses = $isAdmin
+        $mainWarehouses = $canSeeAllWarehouses
             ? ['' => 'ทุกคลัง'] + ArrayHelper::map(
                 Warehouse::find()
                     ->where(['warehouse_type' => 'MAIN'])
@@ -82,22 +81,36 @@ class IssueController extends Controller
                 'warehouse_name'
             )
             : ['' => 'ทุกคลัง'] + ArrayHelper::map($accessibleWarehouses, 'id', 'warehouse_name');
-        $subWarehouses = $isAdmin
-            ? ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map(
-                Warehouse::find()
-                    ->where(['warehouse_type' => 'SUB'])
-                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                    ->orderBy('warehouse_name')
-                    ->all(),
-                'id',
-                'warehouse_name'
-            )
-            : ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map($accessibleDeptSubWarehouses, 'id', 'warehouse_name');
+        $subWarehouses = ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map(
+            Warehouse::find()
+                ->where(['warehouse_type' => 'SUB'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                ->orderBy('warehouse_name')
+                ->all(),
+            'id',
+            'warehouse_name'
+        );
 
         $statusLabels = array_merge(
             ['' => 'ทุกสถานะ'],
             StockOrder::optsStatusLabels()
         );
+
+        // ยอดใบเบิกที่ยังรอ (รออนุมัติ/รอจ่าย) สำหรับ badge เมนู — ใช้ scope สิทธิ์เดียวกับตาราง เคารพคลังที่จ่ายที่เลือกด้วย
+        $pendingCountQuery = StockOrder::find()
+            ->where([
+                'order_type'  => 'OUT',
+                'source_type' => 'REQUEST',
+                'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+            ]);
+        if (!$canSeeAllWarehouses) {
+            $pendingCountQuery
+                ->andWhere(['main_warehouse_id' => ArrayHelper::getColumn($accessibleWarehouses, 'id')]);
+        }
+        if (!empty($searchModel->main_warehouse_id)) {
+            $pendingCountQuery->andWhere(['main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
+        }
+        $issuePendingCount = (int) $pendingCountQuery->count();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -105,6 +118,7 @@ class IssueController extends Controller
             'mainWarehouses' => $mainWarehouses,
             'subWarehouses' => $subWarehouses,
             'statusLabels' => $statusLabels,
+            'issuePendingCount' => $issuePendingCount,
         ]);
     }
 

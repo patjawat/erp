@@ -288,13 +288,21 @@ class StockItemController extends Controller
                     }
                 }
                 
-                // จัดการ auto code
+                // ตรวจสอบข้อมูลที่จำเป็น (backstop ฝั่ง server กันกรณี JS ถูกข้าม)
+                if (empty($model->category_id)) {
+                    return ['status' => 'error', 'message' => 'กรุณาเลือกหมวดหมู่วัสดุ'];
+                }
+                if (trim((string) ($postData['data_json']['unit'] ?? '')) === '') {
+                    return ['status' => 'error', 'message' => 'กรุณาระบุหน่วยนับ'];
+                }
+
+                // จัดการ auto code (ต้องมี category_id ก่อน จึงจะออกรหัสได้)
                 if (isset($postData['auto']) && $postData['auto']) {
                     if (!$model->item_code || empty($model->item_code) || $model->item_code === 'อัตโนมัติ') {
                         $model->item_code = StockItem::nextCode($model->category_id);
                     }
                 }
-                
+
                 // ตรวจสอบว่ามีรหัสพัสดุหรือไม่
                 if (empty($model->item_code)) {
                     return [
@@ -304,15 +312,15 @@ class StockItemController extends Controller
                 }
                 
                 $model->is_active = 1;
-                $model->created_at = time();
-                $model->created_by = Yii::$app->user->id ?? null;
-                
+                // หมายเหตุ: ตาราง categorise ไม่มีคอลัมน์ created_at/created_by จึงไม่เซ็ตที่นี่
+
                 if ($model->save()) {
                     // Reload model เพื่อดึง relation
                     $model->refresh();
                     return [
                         'status' => 'success',
                         'message' => 'สร้างพัสดุใหม่สำเร็จ',
+                        'container' => '#sm-container', // ให้ _form สั่ง pjax reload รายการได้ถูก container
                         'item_code' => $model->item_code,
                         'item_name' => $model->item_name,
                         'category_title' => $model->categoryType ? $model->categoryType->title : '-',
@@ -340,8 +348,8 @@ class StockItemController extends Controller
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
-                'footer' => \yii\helpers\Html::button('บันทึก', ['class' => 'btn btn-primary form-submit', 'type' => 'submit', 'data' => ['id' => 'form-stock-item']]) .
-                    \yii\helpers\Html::button('ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal'])
+                // ปุ่มบันทึก/ปิด อยู่ใน _form.php แล้ว (ผูกกับ beforeSubmit AJAX + อัปโหลดรูป) — ไม่ต้องมี footer ซ้ำ
+                'footer' => '',
             ];
         } else {
             return $this->render('create', [
@@ -361,11 +369,40 @@ class StockItemController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return [
-                'status' => 'success'
-            ];
+        if ($this->request->isPost) {
+            // เก็บ data_json เดิมไว้ก่อน load() เพราะฟอร์มแก้ไขส่งมาแค่บาง key
+            // (unit, metter_type, purchase_type) การ load() ตรงๆ จะเขียนทับทั้งก้อน
+            // ทำให้ key อื่นที่เคยมี เช่น is_asset, unit_name หายไป
+            $oldDataJson = is_array($model->data_json)
+                ? $model->data_json
+                : (json_decode((string) $model->data_json, true) ?: []);
+
+            if ($model->load($this->request->post())) {
+                $newDataJson = is_array($model->data_json)
+                    ? $model->data_json
+                    : (json_decode((string) $model->data_json, true) ?: []);
+                $model->data_json = array_merge($oldDataJson, $newDataJson);
+
+                // ตรวจสอบข้อมูลที่จำเป็น (backstop ฝั่ง server กันกรณี JS ถูกข้าม)
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                if (empty($model->category_id)) {
+                    return ['status' => 'error', 'message' => 'กรุณาเลือกหมวดหมู่วัสดุ'];
+                }
+                if (trim((string) ($newDataJson['unit'] ?? '')) === '') {
+                    return ['status' => 'error', 'message' => 'กรุณาระบุหน่วยนับ'];
+                }
+
+                if ($model->save()) {
+                    return [
+                        'status' => 'success',
+                        'container' => '#sm-container', // ให้ _form สั่ง pjax reload รายการได้ถูก container
+                    ];
+                }
+                return [
+                    'status' => 'error',
+                    'message' => 'ไม่สามารถบันทึกได้: ' . implode(', ', $model->getFirstErrors()),
+                ];
+            }
         }
 
         if ($this->request->isAjax) {
@@ -376,6 +413,7 @@ class StockItemController extends Controller
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
                 ]),
+                'footer' => '', // ปุ่มบันทึก/ปิด อยู่ใน _form.php แล้ว — กัน footer ค้างจาก modal ก่อนหน้า
                 'status' => 'success',
                 'container' => '#sm-container',
             ];

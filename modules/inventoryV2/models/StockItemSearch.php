@@ -84,11 +84,9 @@ class StockItemSearch extends StockItem
             'qty_max' => $this->max_qty,
         ]);
 
-        // is_asset / is_innovation — เก็บใน data_json (ใช้ JSON_EXTRACT)
-        if ($this->is_asset !== null && $this->is_asset !== '') {
-            $query->andWhere("JSON_EXTRACT(categorise.data_json, '$.is_asset') = :is_asset",
-                [':is_asset' => (int) $this->is_asset]);
-        }
+        // is_innovation — เก็บใน data_json (ใช้ JSON_EXTRACT)
+        // หมายเหตุ: ยกเลิกตัวกรอง is_asset — วัสดุที่สร้างใหม่ไม่มี key is_asset ใน data_json
+        // ทำให้ JSON_EXTRACT(...) = 0 เป็น NULL แล้วถูกตัดออกจากรายการโดยไม่ตั้งใจ
         if ($this->is_innovation !== null && $this->is_innovation !== '') {
             $query->andWhere("JSON_EXTRACT(categorise.data_json, '$.is_innovation') = :is_inno",
                 [':is_inno' => (int) $this->is_innovation]);

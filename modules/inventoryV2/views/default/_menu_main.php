@@ -1,23 +1,39 @@
 <?php
 use yii\helpers\Url;
+use yii\helpers\ArrayHelper;
 use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\Warehouse;
 
 /**
  * เมนูสำหรับผู้ดูแลคลังหลัก (ลดรายการ)
  * @var string $active 'dashboard' | 'receive' | 'issue' | 'report' | 'setting'
+ * @var int|null $mainWarehouseId คลังหลักที่กำลังกรองอยู่ในหน้าปัจจุบัน (null = ทุกคลัง)
  */
 $active = $active ?? '';
+$mainWarehouseId = $mainWarehouseId ?? null;
+// ผู้เรียกส่งยอดมาแทนได้ (เช่นหน้า issue ที่ต้อง sync badge ผ่าน pjax); ถ้าไม่ส่งมาให้คำนวณเอง
+$issuePendingCount = $issuePendingCount ?? null;
 
-try {
-    $issuePendingCount = (int) StockOrder::find()
-        ->where([
-            'order_type'  => 'OUT',
-            'source_type' => 'REQUEST',
-            'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
-        ])
-        ->count();
-} catch (\Throwable $e) {
-    $issuePendingCount = 0;
+if ($issuePendingCount === null) {
+    try {
+        $issuePendingQuery = StockOrder::find()
+            ->where([
+                'order_type'  => 'OUT',
+                'source_type' => 'REQUEST',
+                'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+            ]);
+        // เห็นหมดทุกคลัง = admin หรือผู้มีสิทธิ์ warehouse; นอกนั้นนับเฉพาะคลังที่ user ถูกกำหนดเป็นผู้รับผิดชอบคลัง (officer)
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('warehouse')) {
+            $issuePendingQuery
+                ->andWhere(['main_warehouse_id' => ArrayHelper::getColumn(Warehouse::findMainWarehousesForReceive(), 'id')]);
+        }
+        if ($mainWarehouseId) {
+            $issuePendingQuery->andWhere(['main_warehouse_id' => $mainWarehouseId]);
+        }
+        $issuePendingCount = (int) $issuePendingQuery->count();
+    } catch (\Throwable $e) {
+        $issuePendingCount = 0;
+    }
 }
 ?>
 <nav class="inventory-nav inventory-nav-main" aria-label="เมนูคลังหลัก">
@@ -28,10 +44,10 @@ try {
         <a href="<?= Url::to(['/inventory-v2/receive/index']) ?>" class="btn btn-sm <?= $active === 'receive' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
             <i class="bi bi-box-arrow-in-down me-1"></i>รับเข้าคลัง
         </a>
-        <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3">
-            <i class="bi bi-box-arrow-right me-1"></i>จ่ายพัสดุ
+        <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3" data-issue-nav-link>
+            <i class="bi bi-box-arrow-right me-1"></i>จ่ายวัสดุ
             <?php if ($issuePendingCount > 0): ?>
-                <span class="badge text-bg-danger ms-1" title="รออนุมัติ/รอจ่าย"><?= $issuePendingCount ?></span>
+                <span class="badge text-bg-danger ms-1" data-issue-pending-badge title="รออนุมัติ/รอจ่าย"><?= $issuePendingCount ?></span>
             <?php endif; ?>
         </a>
         <div class="dropdown">
