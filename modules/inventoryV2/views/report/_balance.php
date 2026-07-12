@@ -29,6 +29,7 @@ $variant = $variant ?? 'sub';
 $isMainVariant = $variant === 'main';
 $hasActiveFilter = !empty($warehouseId) || !empty($categoryId) || !empty($status) || !empty($search);
 $placeholderImg = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
+$loadingImg = Yii::getAlias('@web') . '/img/loading.gif'; // placeholder เบา ระหว่าง lazysizes โหลดรูปจริง
 
 // quick filter links — เก็บ filter อื่นไว้ + toggle filter ที่ส่งมา
 $buildFilterUrl = function (array $override) use ($balanceUrl) {
@@ -236,11 +237,11 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                                         </td>
                                         <td>
                                             <div class="bal-item">
-                                                <img src="<?= Html::encode($r['image_url']) ?>"
+                                                <img src="<?= $loadingImg ?>"
+                                                     data-src="<?= Html::encode($r['image_url']) ?>"
                                                      alt=""
-                                                     class="bal-item__thumb"
-                                                     loading="lazy"
-                                                     onerror="this.onerror=null;this.src='<?= $placeholderImg ?>';">
+                                                     class="bal-item__thumb lazyload"
+                                                     onerror="this.onerror=null;this.src='<?= $placeholderImg ?>';this.classList.add('lazyloaded');">
                                                 <div class="bal-item__text">
                                                     <span class="bal-item__name"><?= Html::encode($r['item_name']) ?></span>
                                                     <span class="bal-item__code"><?= Html::encode($r['item_code']) ?></span>
@@ -660,7 +661,12 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 </div>
 
 <style>
-.bal-page {
+/* Design tokens — shared by the page และทั้งสอง modal
+   (Bootstrap 5 ไม่ย้าย modal ไป body → modal เป็น sibling นอก .bal-page
+    จึงต้องประกาศ token ให้ modal ตรงๆ ไม่งั้น var() undefined = สีตกทั้งหมด) */
+.bal-page,
+#itemHistoryModal,
+#minMaxModal {
     --ink-1: #1a202c;
     --ink-2: #4a5568;
     --ink-3: #718096;
@@ -690,6 +696,8 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     --t-fast: 120ms;
     --t-mid: 180ms;
+}
+.bal-page {
     padding-top: 0.75rem;
     padding-bottom: 2rem;
 }
@@ -1320,8 +1328,9 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     color: var(--ink-2);
 }
 .dir-mark i { font-size: 0.78rem; line-height: 1; }
-.dir-mark--in i { transform: translate(0, 0); }
-.dir-mark--out i { transform: translate(0, 0); }
+/* ทิศทางสื่อด้วยสี semantic: รับเข้า=เขียว, จ่ายออก=ส้ม */
+.dir-mark--in { background: var(--success-soft); color: var(--success); }
+.dir-mark--out { background: var(--warning-soft); color: var(--warning); }
 
 /* === Variance banner === */
 .bal-history-variance {
@@ -1683,6 +1692,8 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     font-size: 0.78rem;
 }
 .bal-history-table .direction-pill i { line-height: 1; }
+.bal-history-table .direction-pill--in { background: var(--success-soft); color: var(--success); }
+.bal-history-table .direction-pill--out { background: var(--warning-soft); color: var(--warning); }
 .bal-history-table .doc-chip {
     display: inline-block;
     padding: 0.1rem 0.5rem;
@@ -1693,8 +1704,9 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
-.bal-history-table .hist-reverse-btn,
-.bal-history-table .hist-edit-btn {
+/* ปุ่ม "จัดการ" (แก้จำนวนใบเบิก) ใช้ Bootstrap มาตรฐาน .btn .btn-sm .btn-warning
+   — hist-edit-btn เหลือไว้เป็น JS hook เท่านั้น ไม่มี custom style */
+.bal-history-table .hist-reverse-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1706,19 +1718,12 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     color: var(--ink-2);
     background: var(--surface);
 }
-.bal-history-table .hist-reverse-btn:hover,
-.bal-history-table .hist-edit-btn:hover {
+.bal-history-table .hist-reverse-btn:hover {
     color: var(--danger);
     border-color: rgba(220,53,69,0.35);
     background: var(--danger-soft);
 }
-.bal-history-table .hist-edit-btn:hover {
-    color: var(--primary);
-    border-color: var(--primary-line);
-    background: var(--primary-soft);
-}
-.bal-history-table .hist-reverse-btn:disabled,
-.bal-history-table .hist-edit-btn:disabled {
+.bal-history-table .hist-reverse-btn:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
@@ -2645,11 +2650,11 @@ $js = <<<JS
                 var balSr = t.balance_qty < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
                 var balValSr = t.balance_value < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
                 var actionHtml = t.can_edit_qty
-                    ? '<button type="button" class="hist-edit-btn" title="แก้จำนวนในใบเบิก" aria-label="แก้จำนวนในใบเบิก" ' +
+                    ? '<button type="button" class="btn btn-sm btn-warning hist-edit-btn" title="แก้จำนวนในใบเบิก" aria-label="แก้จำนวนในใบเบิก" ' +
                         'data-detail-id="' + escHtml(t.detail_id) + '" ' +
                         'data-order-no="' + escHtml(t.order_no) + '" ' +
                         'data-label="' + escHtml(t.source_label) + '">' +
-                        '<i class="bi bi-pencil-square" aria-hidden="true"></i>' +
+                        '<i class="bi bi-pencil" aria-hidden="true"></i>' +
                     '</button>'
                     : '<span class="muted" title="แก้จำนวนได้เฉพาะรายการใบเบิก">—</span>';
 
@@ -2658,7 +2663,7 @@ $js = <<<JS
                     '<td class="text-nowrap"><span class="doc-chip">' + escHtml(t.order_no) + '</span></td>' +
                     '<td>' + escHtml(t.source_label) + '</td>' +
                     '<td class="text-center">' +
-                        '<span class="direction-pill" title="' + pillLabel + '" aria-label="' + pillLabel + '">' +
+                        '<span class="direction-pill direction-pill--' + pillCls + '" title="' + pillLabel + '" aria-label="' + pillLabel + '">' +
                             '<i class="bi bi-' + pillIcon + '" aria-hidden="true"></i>' +
                         '</span>' +
                     '</td>' +

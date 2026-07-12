@@ -425,7 +425,7 @@ class ReportController extends Controller
                     ->select(['sd3.item_code', 'sd3.lot_number', 'MAX(sd3.id) AS mid'])
                     ->from(['sd3' => StockDetail::tableName()])
                     ->innerJoin(['so3' => StockOrder::tableName()], 'so3.id = sd3.stock_order_id AND so3.order_type = \'IN\'')
-                    ->groupBy('sd3.item_code', 'sd3.lot_number')],
+                    ->groupBy(['sd3.item_code', 'sd3.lot_number'])],
                 'latest.item_code = sd2.item_code AND latest.lot_number = sd2.lot_number AND latest.mid = sd2.id'
             );
 
@@ -478,7 +478,9 @@ class ReportController extends Controller
             if (!$item || empty($item->ref) || !isset($uploadsByRef[$item->ref])) {
                 return $placeholderUrl;
             }
-            return FileManagerHelper::getImg($uploadsByRef[$item->ref]->id);
+            // สร้าง URL ตรง ๆ — เลี่ยง getImg() ที่ยิง Uploads::findOne() + file_exists ซ้ำต่อแถว (N+1 ตอน render)
+            // ถ้าไฟล์หาย show จะคืน placeholder เอง และ onerror ฝั่ง client ก็รองรับอยู่แล้ว
+            return \yii\helpers\Url::to(['/filemanager/uploads/show', 'id' => $uploadsByRef[$item->ref]->id], true);
         };
 
         $rows = [];
@@ -1123,7 +1125,7 @@ class ReportController extends Controller
             $reqSub->andWhere(['so.sub_warehouse_id' => $subWarehouseId]);
         }
         if ($mainWarehouseId) {
-            $reqSub->select(['so.main_warehouse_id', 'sd.item_code', 'SUM(sd.qty) AS requested_qty'])->groupBy('so.main_warehouse_id', 'sd.item_code');
+            $reqSub->select(['so.main_warehouse_id', 'sd.item_code', 'SUM(sd.qty) AS requested_qty'])->groupBy(['so.main_warehouse_id', 'sd.item_code']);
         } else {
             $reqSub->select(['sd.item_code', 'SUM(sd.qty) AS requested_qty'])->groupBy('sd.item_code');
         }
@@ -1132,7 +1134,7 @@ class ReportController extends Controller
             ->from(StockBalance::tableName())
             ->where(['warehouse_id' => $warehouseIds]);
         if ($mainWarehouseId) {
-            $balSub->select(['warehouse_id AS main_warehouse_id', 'item_code', 'SUM(balance_qty) AS balance_qty'])->groupBy('warehouse_id', 'item_code');
+            $balSub->select(['warehouse_id AS main_warehouse_id', 'item_code', 'SUM(balance_qty) AS balance_qty'])->groupBy(['warehouse_id', 'item_code']);
         } else {
             $balSub->select(['item_code', 'SUM(balance_qty) AS balance_qty'])->groupBy('item_code');
         }

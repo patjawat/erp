@@ -1218,7 +1218,7 @@ class MainStockController extends \yii\web\Controller
                     ->select(['sd2.item_code', 'sd2.lot_number', 'MAX(sd2.id) as mid'])
                     ->from(['sd2' => StockDetail::tableName()])
                     ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
-                    ->groupBy('sd2.item_code', 'sd2.lot_number')],
+                    ->groupBy(['sd2.item_code', 'sd2.lot_number'])],
                 'latest.item_code = sd.item_code AND latest.lot_number = sd.lot_number AND latest.mid = sd.id'
             )
             ->where($warehouseId ? ['sb.warehouse_id' => $warehouseId] : ['sb.warehouse_id' => $mainWarehouseIds]);
