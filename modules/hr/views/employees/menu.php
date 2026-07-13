@@ -22,6 +22,12 @@ $menus = [
     'url' => ['/hr/team-group'],
     'icon' => '<i class="fa-solid fa-user-group text-primary me-1"></i>'
     ],
+    [
+    'title' => 'E-learning',
+    'active' => 'elearning',
+    'url' => ['/hr/elearning'],
+    'icon' => '<i class="fa-solid fa-graduation-cap text-primary me-1"></i>'
+    ],
 ];
 ?>
 <?php if($layout == 'horizontal'):?>

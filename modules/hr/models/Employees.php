@@ -889,7 +889,26 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ลายเซ็น',
                 'count' => 0,
             ],
+            [
+                'title' => 'ประวัติเรียน E-learning',
+                'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
+                'name' => 'elearning',
+                'subtitle' => 'ประวัติเรียนรู้ และผลการสอบหลังเรียน',
+                'count' => $this->getElearningCount(),
+            ],
         ];
+    }
+
+    /** จำนวนหลักสูตร E-learning ที่เรียนสำเร็จของพนักงาน */
+    public function getElearningCount()
+    {
+        try {
+            return \app\modules\hr\models\ElearningProgress::find()
+                ->where(['emp_id' => $this->id, 'status' => 'completed'])
+                ->count();
+        } catch (\Throwable $th) {
+            return 0;
+        }
     }
 
     /** จำนวนหัวข้อในคำอธิบายงาน (JD) ของพนักงาน */

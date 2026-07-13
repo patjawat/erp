@@ -22,6 +22,12 @@ use yii\helpers\Url;
         <span class="d-none d-sm-inline">ผังโครงสร้างองค์กร</span>
     </a>
 
+    <a href="<?= Url::to(['/hr/elearning']) ?>"
+       class="btn <?= $active === 'elearning' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
+        <i data-lucide="graduation-cap" width="16" height="16"></i>
+        <span class="d-none d-sm-inline">E-learning</span>
+    </a>
+
     <div class="dropdown">
         <button class="btn <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle d-inline-flex align-items-center gap-2"
                 type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -30,6 +36,16 @@ use yii\helpers\Url;
         </button>
 
         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="dropdownMenuButton1">
+            <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
+            <li>
+                <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="monitor-play" style="width:15px;height:15px" class="text-muted"></i> จัดการระบบ E-learning</span>',
+                    ['/hr/elearning-admin/index'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <?php endif; ?>
             <li>
                 <a href="#" id="download-button" class="dropdown-item d-flex align-items-center gap-2">
                     <i data-lucide="download" width="15" height="15" class="text-muted"></i>

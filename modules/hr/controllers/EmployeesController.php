@@ -280,13 +280,25 @@ class EmployeesController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
-        $searchModel = new EmployeeDetailSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['emp_id' => $model->id, 'name' => $name]);
-        $dataProvider->query->orderBy(
-            new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc")
-        );
-        $dataProvider->pagination->pageSize = 8;
+        if ($name === 'elearning') {
+            $searchModel = null;
+            $dataProvider = new \yii\data\ActiveDataProvider([
+                'query' => \app\modules\hr\models\ElearningProgress::find()
+                    ->where(['emp_id' => $model->id])
+                    ->with('course'),
+                'pagination' => [
+                    'pageSize' => 10,
+                ],
+            ]);
+        } else {
+            $searchModel = new EmployeeDetailSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->where(['emp_id' => $model->id, 'name' => $name]);
+            $dataProvider->query->orderBy(
+                new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc")
+            );
+            $dataProvider->pagination->pageSize = 8;
+        }
 
         return $this->render('view', [
             'searchModel' => $searchModel,
