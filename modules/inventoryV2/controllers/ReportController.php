@@ -2086,79 +2086,222 @@ class ReportController extends Controller
         $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
+        $itemRows = $this->getRowsByItem($year, $month, $warehouseId);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('สรุปรายงานวัสดุคงคลัง');
+        $sheet->setTitle('สรุปวัสดุคงคลัง');
 
-        $title = 'สรุปรายงานวัสดุคงคลัง  เดือน ' . $month . '/' . ($year + 543);
-        $sheet->setCellValue('A1', $title);
-        $sheet->mergeCells('A1:K1');
-        $sheet->getStyle('A1')->getFont()->setBold(true);
-
-        $headers = ['#', 'รายการ', 'สินค้าคงเหลือ (บาท)', 'ซื้อระหว่างเดือน (บาท)', 'ปรับเพิ่ม (บาท)', 'รวม (บาท)', 'จ่ายส่วนของ รพ.สต. (บาท)', 'จ่ายส่วนของโรงพยาบาล (บาท)', 'ปรับลด (บาท)', 'รวมจ่าย (บาท)', 'ยอดยกไป (บาท)'];
-        $col = 'A';
-        foreach ($headers as $h) {
-            $sheet->setCellValue($col . '3', $h);
-            $col++;
+        $summaryWidths = [
+            'A' => 8,
+            'B' => 30,
+            'C' => 27,
+            'D' => 32.29,
+            'E' => 23.71,
+            'F' => 35.57,
+            'G' => 39.14,
+            'H' => 23.71,
+            'I' => 27,
+        ];
+        foreach ($summaryWidths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
         }
-        $sheet->getStyle('A3:K3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:K3')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('E0E0E0');
 
-        $rowNum = 4;
+        $sheet->mergeCells('F1:H1');
+        $sheet->setCellValue('F1', 'สรุปงานวัสดุคงคลัง');
+        $sheet->setCellValue('F2', 'เดือน ');
+        $sheet->setCellValue('F3', 'รายงาน ณ วันที่');
+        $sheet->setCellValue('G3', $this->formatThaiMonthDateRange($year, $month));
+
+        $sheet->setCellValue('A4', 'ที่');
+        $sheet->setCellValue('B4', 'รายการ');
+        $sheet->setCellValue('C4', 'สินค้าคงเหลือ');
+        $sheet->setCellValue('D4', 'ซื้อระหว่างเดือน');
+        $sheet->setCellValue('E4', 'รวม');
+        $sheet->setCellValue('F4', 'สินค้าที่ใช้ไป');
+        $sheet->setCellValue('F5', 'จ่ายส่วนของ รพ.สต.');
+        $sheet->setCellValue('G5', 'จ่ายส่วนของโรงพยาบาล');
+        $sheet->setCellValue('H5', 'รวม');
+        $sheet->setCellValue('I4', 'สินค้าคงเหลือ');
+        foreach (['A', 'B', 'C', 'D', 'E', 'I'] as $column) {
+            $sheet->mergeCells($column . '4:' . $column . '5');
+        }
+        $sheet->mergeCells('F4:H4');
+
+        $rowNum = 6;
+        $tot = [
+            'opening' => 0,
+            'in' => 0,
+            'out_sub' => 0,
+            'out_hosp' => 0,
+            'total_out' => 0,
+            'closing' => 0,
+        ];
         foreach ($rows as $i => $r) {
-            $adjustIn = (float) ($r['adjust_in_value'] ?? 0);
-            $adjustOut = (float) ($r['adjust_out_value'] ?? 0);
-            $totalAvail = $r['opening_value'] + $r['in_value'] + $adjustIn;
-            $totalOutWithAdjust = $r['total_out_value'] + $adjustOut;
+            $openingValue = (float) $r['opening_value'];
+            $inValue = (float) $r['in_value'];
+            $outSubValue = (float) $r['out_sub_value'];
+            $outHospValue = (float) $r['out_hosp_value'];
+            $totalOutValue = (float) $r['total_out_value'];
+            $closingValue = (float) $r['closing_value'];
 
             $sheet->setCellValue('A' . $rowNum, $i + 1);
-            $sheet->setCellValue('B' . $rowNum, $r['category_label']);
-            $sheet->setCellValue('C' . $rowNum, $r['opening_value']);
-            $sheet->setCellValue('D' . $rowNum, $r['in_value']);
-            $sheet->setCellValue('E' . $rowNum, $adjustIn);
-            $sheet->setCellValue('F' . $rowNum, $totalAvail);
-            $sheet->setCellValue('G' . $rowNum, $r['out_sub_value']);
-            $sheet->setCellValue('H' . $rowNum, $r['out_hosp_value']);
-            $sheet->setCellValue('I' . $rowNum, $adjustOut);
-            $sheet->setCellValue('J' . $rowNum, $totalOutWithAdjust);
-            $sheet->setCellValue('K' . $rowNum, $r['closing_value']);
+            $sheet->setCellValue('B' . $rowNum, $this->formatMaterialSummaryCategoryLabel($r['category_label']));
+            $sheet->setCellValue('C' . $rowNum, $openingValue);
+            $sheet->setCellValue('D' . $rowNum, $inValue);
+            $sheet->setCellValue('E' . $rowNum, $openingValue + $inValue);
+            $sheet->setCellValue('F' . $rowNum, $outSubValue);
+            $sheet->setCellValue('G' . $rowNum, $outHospValue);
+            $sheet->setCellValue('H' . $rowNum, $totalOutValue);
+            $sheet->setCellValue('I' . $rowNum, $closingValue);
+
+            $tot['opening'] += $openingValue;
+            $tot['in'] += $inValue;
+            $tot['out_sub'] += $outSubValue;
+            $tot['out_hosp'] += $outHospValue;
+            $tot['total_out'] += $totalOutValue;
+            $tot['closing'] += $closingValue;
             $rowNum++;
         }
 
-        if (!empty($rows)) {
-            $tot = [
-                'opening' => array_sum(array_column($rows, 'opening_value')),
-                'in' => array_sum(array_column($rows, 'in_value')),
-                'adjust_in' => array_sum(array_column($rows, 'adjust_in_value')),
-                'out_sub' => array_sum(array_column($rows, 'out_sub_value')),
-                'out_hosp' => array_sum(array_column($rows, 'out_hosp_value')),
-                'adjust_out' => array_sum(array_column($rows, 'adjust_out_value')),
-                'total_out' => array_sum(array_column($rows, 'total_out_value')),
-                'closing' => array_sum(array_column($rows, 'closing_value')),
-            ];
-            $sheet->setCellValue('A' . $rowNum, '');
-            $sheet->setCellValue('B' . $rowNum, 'รวม');
-            $sheet->setCellValue('C' . $rowNum, $tot['opening']);
-            $sheet->setCellValue('D' . $rowNum, $tot['in']);
-            $sheet->setCellValue('E' . $rowNum, $tot['adjust_in']);
-            $sheet->setCellValue('F' . $rowNum, $tot['opening'] + $tot['in'] + $tot['adjust_in']);
-            $sheet->setCellValue('G' . $rowNum, $tot['out_sub']);
-            $sheet->setCellValue('H' . $rowNum, $tot['out_hosp']);
-            $sheet->setCellValue('I' . $rowNum, $tot['adjust_out']);
-            $sheet->setCellValue('J' . $rowNum, $tot['total_out'] + $tot['adjust_out']);
-            $sheet->setCellValue('K' . $rowNum, $tot['closing']);
-            $sheet->getStyle('A' . $rowNum . ':K' . $rowNum)->getFont()->setBold(true);
-            $sheet->getStyle('B' . $rowNum . ':K' . $rowNum)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('FFF59D');
+        $summaryTotalRow = $rowNum;
+        $sheet->setCellValue('A' . $summaryTotalRow, '');
+        $sheet->setCellValue('B' . $summaryTotalRow, 'รวม');
+        $sheet->setCellValue('C' . $summaryTotalRow, $tot['opening']);
+        $sheet->setCellValue('D' . $summaryTotalRow, $tot['in']);
+        $sheet->setCellValue('E' . $summaryTotalRow, $tot['opening'] + $tot['in']);
+        $sheet->setCellValue('F' . $summaryTotalRow, $tot['out_sub']);
+        $sheet->setCellValue('G' . $summaryTotalRow, $tot['out_hosp']);
+        $sheet->setCellValue('H' . $summaryTotalRow, $tot['total_out']);
+        $sheet->setCellValue('I' . $summaryTotalRow, $tot['closing']);
+
+        for ($i = 1; $i <= $summaryTotalRow; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(14.25);
+        }
+        $sheet->getStyle('A1:I' . $summaryTotalRow)->getFont()
+            ->setName('Sarabun')
+            ->setSize(16)
+            ->setBold(true);
+        $sheet->getStyle('A1:I5')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A6:A' . $summaryTotalRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('B6:B' . max(6, $summaryTotalRow - 1))->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('B' . $summaryTotalRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('C6:I' . $summaryTotalRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('C6:I' . $summaryTotalRow)->getNumberFormat()->setFormatCode('0.00000');
+        $sheet->getStyle('A4:I' . $summaryTotalRow)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000'],
+                ],
+            ],
+        ]);
+
+        $itemSheet = $spreadsheet->createSheet();
+        $itemSheet->setTitle('สรุปรายการ');
+
+        $itemWidths = [
+            'A' => 12,
+            'B' => 10,
+            'C' => 40,
+            'D' => 25,
+            'E' => 9,
+            'F' => 13,
+            'G' => 13,
+            'H' => 13,
+            'I' => 13,
+            'J' => 13,
+            'K' => 13,
+            'L' => 13,
+            'M' => 13,
+        ];
+        foreach ($itemWidths as $column => $width) {
+            $itemSheet->getColumnDimension($column)->setWidth($width);
         }
 
-        foreach (range('C', 'K') as $c) {
-            $sheet->getStyle($c . '4:' . $c . ($rowNum))->getNumberFormat()->setFormatCode('#,##0.00');
+        $itemSheet->setCellValue('A1', 'วดป.ที่รายงาน');
+        $itemSheet->setCellValue('B1', $this->formatThaiCurrentDate());
+        $itemFormulaEndRow = max(3, count($itemRows) + 2);
+        foreach (range('G', 'M') as $column) {
+            $itemSheet->setCellValue($column . '1', '=SUBTOTAL(9,' . $column . '3:' . $column . $itemFormulaEndRow . ')');
         }
+
+        $itemHeaders = [
+            'ที่',
+            'รหัส',
+            'รายการสินค้า',
+            'ประเภท',
+            'หน่วย',
+            'จำนวนคงเหลือ',
+            'มูลค่าคงเหลือ',
+            'จำนวนรับใหม่',
+            'มูลค่ารับใหม่',
+            'จำนวนจ่ายใหม่',
+            'มูลค่าจ่ายใหม่',
+            'จำนวนคงเหลือ',
+            'มูลค่าคงเหลือ',
+        ];
+        $itemColumn = 'A';
+        foreach ($itemHeaders as $header) {
+            $itemSheet->setCellValue($itemColumn . '2', $header);
+            $itemColumn++;
+        }
+
+        $itemRowNum = 3;
+        foreach ($itemRows as $i => $r) {
+            $itemSheet->setCellValue('A' . $itemRowNum, $i + 1);
+            $itemSheet->setCellValue('B' . $itemRowNum, $r['item_code']);
+            $itemSheet->setCellValue('C' . $itemRowNum, $r['item_name']);
+            $itemSheet->setCellValue('D' . $itemRowNum, $r['category_title']);
+            $itemSheet->setCellValue('E' . $itemRowNum, $r['unit_name'] ?? '');
+            $itemSheet->setCellValue('F' . $itemRowNum, (float) $r['opening_qty']);
+            $itemSheet->setCellValue('G' . $itemRowNum, (float) $r['opening_value']);
+            $itemSheet->setCellValue('H' . $itemRowNum, (float) $r['in_qty']);
+            $itemSheet->setCellValue('I' . $itemRowNum, (float) $r['in_value']);
+            $itemSheet->setCellValue('J' . $itemRowNum, (float) $r['total_out_qty']);
+            $itemSheet->setCellValue('K' . $itemRowNum, (float) $r['total_out_value']);
+            $itemSheet->setCellValue('L' . $itemRowNum, (float) $r['closing_qty']);
+            $itemSheet->setCellValue('M' . $itemRowNum, (float) $r['closing_value']);
+            $itemRowNum++;
+        }
+        $lastItemRow = max(2, $itemRowNum - 1);
+        for ($i = 1; $i <= $lastItemRow; $i++) {
+            $itemSheet->getRowDimension($i)->setRowHeight(14.25);
+        }
+        $itemSheet->getStyle('A1:M' . $lastItemRow)->getFont()
+            ->setName('Sarabun')
+            ->setSize(16);
+        $itemSheet->getStyle('A1:M2')->getFont()->setBold(true);
+        $itemSheet->getStyle('A1:M2')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+        if ($lastItemRow >= 3) {
+            $itemSheet->getStyle('A3:A' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $itemSheet->getStyle('B3:E' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $itemSheet->getStyle('F3:M' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $itemSheet->getStyle('F3:M' . $lastItemRow)->getNumberFormat()->setFormatCode('0.00000');
+        }
+        $itemSheet->getStyle('A1:M' . $lastItemRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $itemSheet->getStyle('A1:M' . $lastItemRow)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000'],
+                ],
+            ],
+        ]);
+
+        $spreadsheet->setActiveSheetIndex(0);
 
         $filename = 'material-summary-' . $year . '-' . $month . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -2205,6 +2348,7 @@ class ReportController extends Controller
             ->select([
                 'r.item_code',
                 'item_name' => 'i.title',
+                'item_data_json' => 'i.data_json',
                 new Expression("COALESCE(cat.title, i.category_id, '') AS category_title"),
                 'r.opening_qty',
                 'r.opening_value',
@@ -2228,7 +2372,65 @@ class ReportController extends Controller
             $query->andWhere(['r.warehouse_id' => $warehouseId]);
         }
 
-        return $query->all();
+        $rows = $query->all();
+        foreach ($rows as &$row) {
+            $row['unit_name'] = $this->extractStockItemUnitName($row['item_data_json'] ?? null);
+            unset($row['item_data_json']);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    protected function extractStockItemUnitName($dataJson)
+    {
+        $data = json_decode((string) $dataJson, true);
+        if (!is_array($data)) {
+            return '';
+        }
+
+        foreach (['unit_name', 'unit'] as $key) {
+            $value = trim((string) ($data[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    protected function formatMaterialSummaryCategoryLabel($label)
+    {
+        $label = trim((string) $label);
+        $withoutCode = trim((string) preg_replace('/^\([^)]+\)\s*/u', '', $label));
+
+        return $withoutCode !== '' ? $withoutCode : $label;
+    }
+
+    protected function formatThaiMonthDateRange($year, $month)
+    {
+        $monthNames = [
+            1 => 'ม.ค.',
+            2 => 'ก.พ.',
+            3 => 'มี.ค.',
+            4 => 'เม.ย.',
+            5 => 'พ.ค.',
+            6 => 'มิ.ย.',
+            7 => 'ก.ค.',
+            8 => 'ส.ค.',
+            9 => 'ก.ย.',
+            10 => 'ต.ค.',
+            11 => 'พ.ย.',
+            12 => 'ธ.ค.',
+        ];
+        $lastDay = (int) date('t', mktime(0, 0, 0, (int) $month, 1, (int) $year));
+
+        return '1 - ' . $lastDay . ' ' . ($monthNames[(int) $month] ?? '') . ' ' . ((int) $year + 543);
+    }
+
+    protected function formatThaiCurrentDate()
+    {
+        return date('d/m/') . (date('Y') + 543);
     }
 
     /**
