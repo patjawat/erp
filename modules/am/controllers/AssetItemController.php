@@ -202,8 +202,14 @@ class AssetItemController extends Controller
 
             if ($parents != null) {
                 $type_id = $parents[0];
+                // เฉพาะหมวดที่ "พร้อมใช้งาน" = มีรหัส FSN (code ไม่ว่าง) และเปิดใช้งาน (active <> 0)
+                // หมวดร่าง/ตัวอย่าง (ยังไม่กำหนดรหัส หรือปิดใช้งาน) จะไม่โผล่ใน picker — จัดการได้ที่แผง ⚙️
                 $categories = Categorise::find()
                     ->where(['category_id' => $type_id, 'name' => 'asset_category'])
+                    ->andWhere(['not', ['code' => null]])
+                    ->andWhere(['<>', 'code', ''])
+                    // NULL = ถือว่าเปิดใช้งาน · เฉพาะ active=0 เท่านั้นที่เป็น "ร่าง" แล้วซ่อนจาก picker
+                    ->andWhere('(active IS NULL OR active <> 0)')
                     ->select(['code', 'title'])
                     ->asArray()
                     ->all();
@@ -212,7 +218,7 @@ class AssetItemController extends Controller
                 $out = array_map(function ($category) {
                     return [
                         'id' => $category['code'],
-                        'name' => $category['code'] !== '' ? $category['title'] . ' : ' . $category['code'] : $category['title'],
+                        'name' => $category['title'] . ' : ' . $category['code'],
                     ];
                 }, $categories);
 

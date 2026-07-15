@@ -86,9 +86,20 @@ $this->params['breadcrumbs'][] = 'หมวดทรัพย์สิน';
             </thead>
             <tbody class="table-group-divider align-middle">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <?php
+                        // พร้อมใช้งาน = มีรหัส FSN + เปิดใช้งาน · ไม่งั้นถือเป็น "ร่าง" (ยังผูกกับครุภัณฑ์ไม่ได้)
+                        // NULL = ถือว่าเปิดใช้งาน · เฉพาะ active=0 ที่เป็นร่าง
+                        $isReady = trim((string) $item->code) !== ''
+                            && !($item->active !== null && (int) $item->active === 0);
+                    ?>
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td class="fw-semibold text-primary"><?= $item->code ?></td>
+                        <td class="fw-semibold text-primary">
+                            <?= trim((string) $item->code) !== '' ? Html::encode($item->code) : '<span class="text-muted">—</span>' ?>
+                            <?php if (!$isReady): ?>
+                                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1">ร่าง</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="fw-semibold"><?= $item->title ?></td>
                         <td><?= $item->assetType?->title ?? '-' ?></td>
                         <td class="text-center">

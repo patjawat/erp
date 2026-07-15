@@ -28,6 +28,7 @@ class AssetCategoryController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'toggle-active' => ['POST'],
                     ],
                 ],
             ]
@@ -44,7 +45,7 @@ class AssetCategoryController extends Controller
 
         // กัน browser/proxy cache ผลลัพธ์ของ endpoint ที่ offcanvas จัดการหมวดหมู่ใช้แบบ real-time
         // ไม่งั้นข้อมูลที่เพิ่งแก้ไขอาจไม่อัพเดตทันทีถ้ามี caching layer อยู่ระหว่างทาง (browser หรือ proxy)
-        if (in_array($action->id, ['quick-list', 'quick-list-items', 'setting-panel', 'setting-panel-items', 'update', 'create', 'delete'], true)) {
+        if (in_array($action->id, ['quick-list', 'quick-list-items', 'setting-panel', 'setting-panel-items', 'update', 'create', 'delete', 'toggle-active'], true)) {
             Yii::$app->response->getHeaders()
                 ->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 ->set('Pragma', 'no-cache');
@@ -63,8 +64,9 @@ class AssetCategoryController extends Controller
         $requiredName = 'ต้องระบุ';
         if ($this->request->isPost && $model->load($this->request->post())) {
 
+            // code ไม่บังคับ — หมวดสร้างเป็น "ร่าง/ตัวอย่าง" ได้ก่อน แล้วค่อยกำหนดรหัส FSN + เปิดใช้งานทีหลัง
+            // (หมวดที่ยังไม่มีรหัส/ยังไม่เปิดใช้งาน จะผูกกับครุภัณฑ์ไม่ได้ — กันไว้ที่ Asset::validateCategoryReady)
             $model->title == '' ? $model->addError('title', $requiredName) : null;
-            $model->code == '' ? $model->addError('code', $requiredName) : null;
             $model->category_id == '' ? $model->addError('category_id', $requiredName) : null;
             foreach ($model->getErrors() as $attribute => $errors) {
                 $result[\yii\helpers\Html::getInputId($model, $attribute)] = $errors;
@@ -218,6 +220,7 @@ class AssetCategoryController extends Controller
             'createUrl' => ['/am/asset-category/create', 'group' => 'EQUIP'],
             'updateUrl' => ['/am/asset-category/update'],
             'deleteUrl' => ['/am/asset-category/delete'],
+            'toggleUrl' => ['/am/asset-category/toggle-active'],
             'indexUrl' => ['/am/asset-category/index'],
         ];
     }
@@ -361,6 +364,29 @@ class AssetCategoryController extends Controller
                 'group' => $group,
             ]),
         ];
+    }
+
+    /**
+     * สลับสถานะเปิด/ปิดใช้งานหมวด (active) แบบ inline จาก offcanvas จัดการหมวดหมู่
+     * ใช้ updateAttributes เพื่อข้าม validation/beforeSave (แก้เฉพาะ flag ไม่กระทบฟิลด์อื่น)
+     * @param int $id ID
+     * @return array
+     */
+    public function actionToggleActive($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+
+        // รับสถานะที่ต้องการจาก UI (checkbox) ถ้าไม่ส่งมาให้สลับจากค่าเดิม (NULL/1 → 0, 0 → 1)
+        $posted = $this->request->post('active', null);
+        $active = $posted !== null
+            ? ((int) $posted === 1 ? 1 : 0)
+            : ((int) $model->active === 0 ? 1 : 0);
+
+        $model->active = $active;
+        $model->updateAttributes(['active']);
+
+        return ['status' => 'success', 'active' => $active];
     }
 
     /**

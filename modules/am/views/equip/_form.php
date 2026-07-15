@@ -897,6 +897,36 @@ $js = <<< JS
         loadCategoryQuickListItems();
     });
 
+<<<<<<< Updated upstream
+=======
+ // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline บน offcanvas) → POST แล้วรีเฟรชรายการ + dropdown หมวดหลัก
+ $(document).off('change.categoryQuickToggle', '.category-quick-list__toggle')
+    .on('change.categoryQuickToggle', '.category-quick-list__toggle', function () {
+        var \$sw = \$(this);
+        var url = \$sw.data('url');
+        var active = \$sw.is(':checked') ? 1 : 0;
+        \$sw.prop('disabled', true);
+        \$.post(url, { active: active }, function (res) {
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: active ? 'เปิดใช้งานแล้ว' : 'ปิดใช้งาน (ร่าง)', showConfirmButton: false, timer: 1400 });
+                }
+                loadCategoryQuickListItems();
+                // หมวดหลักของฟอร์มอาจเปลี่ยนสถานะพร้อมใช้งาน → โหลด dropdown ใหม่
+                var typeSelect = \$('#asset_type_id');
+                if (typeSelect.val()) { typeSelect.trigger('change'); }
+            } else {
+                \$sw.prop('checked', !active).prop('disabled', false);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'อัพเดตไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }
+        }, 'json').fail(function () {
+            \$sw.prop('checked', !active).prop('disabled', false);
+        });
+    });
+
+>>>>>>> Stashed changes
  $(document).off('click.categoryQuickDelete', '.category-quick-list__delete')
     .on('click.categoryQuickDelete', '.category-quick-list__delete', function (e) {
         e.preventDefault();

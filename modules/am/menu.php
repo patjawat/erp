@@ -43,11 +43,34 @@ use yii\helpers\Url;
             <!-- <li>
                 <hr class="dropdown-divider">
             </li> -->
-            <li><?= Html::a('<i data-lucide="calendar" class="me-2" style="width:1rem;height:1rem;"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="file-text" class="me-2" style="width:1rem;height:1rem;"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-check" class="me-2" style="width:1rem;height:1rem;"></i> ตรวจนับพัสดุประจำปี', ['/am/audit'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-search" class="me-2" style="width:1rem;height:1rem;"></i> รายงานครุภัณฑ์คงเหลือ', ['/am/report/register'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="trash-2" class="me-2" style="width:1rem;height:1rem;"></i> จำหน่ายพัสดุ', ['/am/disposal'], ['class' => 'dropdown-item']) ?></li>
+        </ul>
+    </div>
+
+    <div class="dropdown d-inline-block">
+        <button class="btn <?= $active !== 'depreciation' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i data-lucide="trending-down" style="width:1rem;height:1rem;"></i>
+            <span class="d-none d-sm-inline">ค่าเสื่อมราคา(!อยู่ระหว่างพัฒนา)</span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><?= Html::a('<i data-lucide="layout-list" class="me-2" style="width:1rem;height:1rem;"></i> ภาพรวม / เริ่มที่นี่', ['/am/asset-depreciation/overview'], ['class' => 'dropdown-item fw-semibold']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">1 · ตั้งค่าเกณฑ์</li>
+            <li><?= Html::a('<i data-lucide="percent" class="me-2" style="width:1rem;height:1rem;"></i> เกณฑ์ค่าเสื่อม', ['/am/depreciation-profile/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="link" class="me-2" style="width:1rem;height:1rem;"></i> ผูกเกณฑ์เข้าลำดับชั้น', ['/am/depreciation-binding/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">2 · เปิดงวดบัญชี</li>
+            <li><?= Html::a('<i data-lucide="calendar-range" class="me-2" style="width:1rem;height:1rem;"></i> สร้าง / เปิดงวดบัญชี', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">3 · ประมวลผลรายเดือน</li>
+            <li><?= Html::a('<i data-lucide="calculator" class="me-2" style="width:1rem;height:1rem;"></i> คำนวณค่าเสื่อมงวด', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="flask-conical" class="me-2" style="width:1rem;height:1rem;"></i> ทดลองคำนวณรายชิ้น', ['/am/asset-depreciation/preview-asset'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="replace" class="me-2" style="width:1rem;height:1rem;"></i> เปลี่ยนเกณฑ์ทรัพย์สิน', ['/am/asset-depreciation-change/form'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="history" class="me-2" style="width:1rem;height:1rem;"></i> ประวัติการเปลี่ยนเกณฑ์', ['/am/asset-depreciation-change/history'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><?= Html::a('<i data-lucide="file-bar-chart" class="me-2" style="width:1rem;height:1rem;"></i> รายงาน (เดือน/ไตรมาส/ปีงบ)', ['/am/depreciation-report/index'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 
@@ -248,6 +271,32 @@ $js = <<<'JS'
         });
     });
 
+<<<<<<< Updated upstream
+=======
+    // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline) → POST สถานะที่เลือก แล้วรีเฟรชรายการให้ badge อัพเดต
+    $oc.on('change', '.js-setting-quick__toggle', function () {
+        var $sw = $(this);
+        var url = $sw.data('url');
+        var active = $sw.is(':checked') ? 1 : 0;
+        $sw.prop('disabled', true);
+        $.post(url, { active: active }, function (res) {
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: active ? 'เปิดใช้งานแล้ว' : 'ปิดใช้งาน (ร่าง)', showConfirmButton: false, timer: 1400 });
+                }
+                loadItems();
+            } else {
+                $sw.prop('checked', !active).prop('disabled', false);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'อัพเดตไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }
+        }, 'json').fail(function () {
+            $sw.prop('checked', !active).prop('disabled', false);
+        });
+    });
+
+>>>>>>> Stashed changes
     // บันทึกใน modal เพิ่ม/แก้ไข (.open-modal) แล้วปิด ขณะ offcanvas เปิด → รีเฟรชรายการเห็นผลทันที
     $(document).off('hidden.bs.modal.amSetting', '#main-modal')
         .on('hidden.bs.modal.amSetting', '#main-modal', function () {
