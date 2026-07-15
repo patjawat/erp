@@ -313,8 +313,8 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                                 <option value="">— ไม่มีในคลังหลัก / ไม่มี Lot ให้จ่าย —</option>
                                             <?php else: ?>
                                                 <?php foreach ($availableLots as $lotIn): ?>
-                                                    <option value="<?= $lotIn->lot_number ?>" data-stock="<?= $lotIn->remain_qty ?>" data-price="<?= $lotIn->unit_price ?>">
-                                                        LOT: <?= $lotIn->lot_number ?> (เหลือ <?= number_format($lotIn->remain_qty, 2) ?>) [@<?= number_format($lotIn->unit_price, 2) ?>]
+                                                    <option value="<?= $lotIn->lot_number ?>" data-stock="<?= (float) $lotIn->remain_qty ?>" data-price="<?= (float) $lotIn->unit_price ?>">
+                                                        LOT: <?= $lotIn->lot_number ?> (เหลือ <?= number_format((float) $lotIn->remain_qty, 2) ?>) [@<?= number_format((float) $lotIn->unit_price, 2) ?>]
                                                     </option>
                                                 <?php endforeach; ?>
                                             <?php endif; ?>

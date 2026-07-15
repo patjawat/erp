@@ -617,7 +617,12 @@ CSS;
 
         return \app\modules\inventoryV2\models\StockDetail::find()
             ->joinWith('stockOrder')
-            ->select(['stock_detail.lot_number', 'stock_detail.remain_qty', 'stock_detail.unit_price'])
+            // COALESCE unit_price: lot ADJUST อาจมี unit_price = NULL → กัน NaN ในการคิดยอดฝั่ง JS
+            ->select([
+                'stock_detail.lot_number',
+                'stock_detail.remain_qty',
+                'unit_price' => new \yii\db\Expression('COALESCE(stock_detail.unit_price, 0)'),
+            ])
             ->where(['stock_detail.item_code' => $item_code])
             ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
             ->andWhere(['or',

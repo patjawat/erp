@@ -284,20 +284,29 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <button type="button"
-                                                    class="bal-history-btn"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#itemHistoryModal"
-                                                    data-item-code="<?= Html::encode($r['item_code']) ?>"
-                                                    data-item-name="<?= Html::encode($r['item_name']) ?>"
-                                                    data-unit-name="<?= Html::encode($r['unit_name']) ?>"
-                                                    data-item-image="<?= Html::encode($r['image_url']) ?>"
-                                                    data-warehouse-id="<?= (int) $r['warehouse_id'] ?>"
-                                                    data-warehouse-name="<?= Html::encode($r['warehouse_name']) ?>"
-                                                    aria-label="ดูประวัติเคลื่อนไหวของ <?= Html::encode($r['item_name']) ?> ที่ <?= Html::encode($r['warehouse_name']) ?>">
-                                                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                                                <span>ดูประวัติ</span>
-                                            </button>
+                                            <div class="d-inline-flex flex-column flex-sm-row gap-1 justify-content-center">
+                                                <button type="button"
+                                                        class="bal-history-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#itemHistoryModal"
+                                                        data-item-code="<?= Html::encode($r['item_code']) ?>"
+                                                        data-item-name="<?= Html::encode($r['item_name']) ?>"
+                                                        data-unit-name="<?= Html::encode($r['unit_name']) ?>"
+                                                        data-item-image="<?= Html::encode($r['image_url']) ?>"
+                                                        data-warehouse-id="<?= (int) $r['warehouse_id'] ?>"
+                                                        data-warehouse-name="<?= Html::encode($r['warehouse_name']) ?>"
+                                                        aria-label="ดูประวัติเคลื่อนไหวของ <?= Html::encode($r['item_name']) ?> ที่ <?= Html::encode($r['warehouse_name']) ?>">
+                                                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                                                    <span>ดูประวัติ</span>
+                                                </button>
+                                                <a href="<?= Url::to(['/inventory-v2/stock-adjust/modal', 'warehouse_id' => (int) $r['warehouse_id'], 'item_code' => $r['item_code']]) ?>"
+                                                   class="bal-history-btn open-modal"
+                                                   data-size="modal-lg"
+                                                   aria-label="ปรับยอดของ <?= Html::encode($r['item_name']) ?> ที่ <?= Html::encode($r['warehouse_name']) ?>">
+                                                    <i class="bi bi-wrench-adjustable" aria-hidden="true"></i>
+                                                    <span>ปรับยอด</span>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -425,7 +434,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     </ul> -->
                     <div class="bal-history-variance__actions">
                         <a href="#" id="hist-link-adjust" class="bal-history-variance__primary">
-                            <i class="bi bi-sliders" aria-hidden="true"></i>ปรับยอดในหน้านี้
+                            <i class="bi bi-wrench-adjustable" aria-hidden="true"></i>ปรับยอด stock
                         </a>
                         <div class="bal-history-variance__copyhint">
                             <span>ใช้เลขนี้ในช่อง "จำนวนที่ปรับ":</span>
@@ -597,7 +606,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     นับเฉพาะเอกสารที่ยืนยันแล้ว (CONFIRMED)
                 </span>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="hist-adjust-btn" disabled>
-                    <i class="bi bi-wrench-adjustable me-1"></i>ปรับยอดในหน้านี้
+                    <i class="bi bi-wrench-adjustable me-1"></i>ปรับยอด stock
                 </button>
                 <button type="button" class="btn btn-sm bal-history-modal__export" id="hist-export-btn" disabled>
                     <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
@@ -1790,6 +1799,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 $jsHistoryUrl = Json::encode($historyUrl);
 $jsExportHistoryUrl = Json::encode($exportHistoryUrl);
 $jsAdjustSaveUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/save']));
+$jsStockAdjustModalUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/modal']));
 $jsReqDetailUpdateUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/update-requisition-detail-qty']));
 $jsSaveSettingUrl = Json::encode(Url::to(['/inventory-v2/warehouse/save-setting']));
 $js = <<<JS
@@ -2497,7 +2507,32 @@ $js = <<<JS
         window.location.href = $jsExportHistoryUrl + '?' + params.toString();
     }
 
-    if (adjustBtn) adjustBtn.onclick = openAdjustPanel;
+    // เปิดโมดัลปรับยอด stock ตัวใหม่ (unified) แทน inline panel เดิม — ปิดโมดัลประวัติก่อนเพื่อไม่ให้ modal ซ้อน
+    function openStockAdjustModal() {
+        if (!ctx.item_code || !ctx.warehouse_id) return;
+        var url = $jsStockAdjustModalUrl + '?warehouse_id=' + encodeURIComponent(ctx.warehouse_id) + '&item_code=' + encodeURIComponent(ctx.item_code);
+        var launch = function () {
+            var a = document.createElement('a');
+            a.className = 'open-modal';
+            a.href = url;
+            a.setAttribute('data-size', 'modal-lg');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        var inst = (window.bootstrap && bootstrap.Modal) ? bootstrap.Modal.getInstance(modalEl) : null;
+        if (inst) {
+            modalEl.addEventListener('hidden.bs.modal', function handler() {
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+                launch();
+            });
+            inst.hide();
+        } else {
+            launch();
+        }
+    }
+
+    if (adjustBtn) adjustBtn.onclick = openStockAdjustModal;
     if (adjustTarget) adjustTarget.addEventListener('input', updateAdjustDelta);
     if (adjustSaveBtn) adjustSaveBtn.onclick = saveAdjustInline;
     if (adjustCancelBtn) adjustCancelBtn.onclick = closeAdjustPanel;
@@ -2523,7 +2558,7 @@ $js = <<<JS
         var trigger = event.target.closest ? event.target.closest('#hist-link-adjust') : null;
         if (!trigger) return;
         event.preventDefault();
-        openAdjustPanel();
+        openStockAdjustModal();
     });
 
     function buildQuickLinks(itemCode, warehouseId, variance) {
@@ -2723,9 +2758,8 @@ $js = <<<JS
         var mp = document.getElementById('hist-match');
         if (vp) vp.hidden = true;
         if (mp) mp.hidden = true;
-    });
 
-    modalEl.addEventListener('shown.bs.modal', function () {
+        // โหลดที่ show (ยิงแน่นอนทุกครั้ง) แทน shown ที่บางครั้งไม่ยิงหลังปิด modal อื่น → spinner ค้าง
         loadHistory();
     });
 

@@ -95,7 +95,7 @@ class ReportController extends Controller
             }
         }
         return [
-            'closed_at' => (int) $row['created_at'],
+            'closed_at' => !empty($row['created_at']) ? strtotime($row['created_at']) : null,
             'closed_by_name' => $name ?: null,
         ];
     }
@@ -416,18 +416,10 @@ class ReportController extends Controller
                 'summary' => ['total_value' => 0, 'below_min_count' => 0, 'below_max_count' => 0, 'items_count' => 0],
             ];
         }
-        $latestPriceSub = (new Query())
-            ->select(['sd2.item_code', 'sd2.lot_number', 'sd2.unit_price'])
-            ->from(['sd2' => StockDetail::tableName()])
-            ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
-            ->innerJoin(
-                ['latest' => (new Query())
-                    ->select(['sd3.item_code', 'sd3.lot_number', 'MAX(sd3.id) AS mid'])
-                    ->from(['sd3' => StockDetail::tableName()])
-                    ->innerJoin(['so3' => StockOrder::tableName()], 'so3.id = sd3.stock_order_id AND so3.order_type = \'IN\'')
-                    ->groupBy(['sd3.item_code', 'sd3.lot_number'])],
-                'latest.item_code = sd2.item_code AND latest.lot_number = sd2.lot_number AND latest.mid = sd2.id'
-            );
+        // มูลค่าคงเหลือคิดแบบ ledger (เงินเข้า−ออกจริงทุก transaction) ให้ตรงกับหน้าประวัติการเคลื่อนไหว
+        // เดิมใช้ balance_qty × ราคา IN ล่าสุดต่อ lot ซึ่งคลาดจาก ledger (เศษปัด + ของหลายราคาปนกัน)
+        // ใช้ perspective เดียวกับ getItemHistoryData: main = มุมต้นทาง, sub(ไม่ใช่ migrated) = มุมปลายทาง
+        $ledgerMap = self::loadLedgerValues($warehouseIds);
 
         $query = (new Query())
             ->select([
@@ -439,12 +431,10 @@ class ReportController extends Controller
                 new Expression('s.max_qty AS max_qty'),
                 new Expression('COALESCE(cat.title, i.category_id, \'อื่นๆ\') AS category_title'),
                 new Expression('SUM(sb.balance_qty) AS balance_qty'),
-                new Expression('SUM(sb.balance_qty * COALESCE(lp.unit_price, 0)) AS value'),
             ])
             ->from(['sb' => StockBalance::tableName()])
             ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
             ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
-            ->leftJoin(['lp' => $latestPriceSub], 'lp.item_code = sb.item_code AND lp.lot_number = sb.lot_number')
             ->leftJoin(
                 ['s' => StockItemWarehouseSetting::tableName()],
                 's.item_code = sb.item_code AND s.warehouse_id = sb.warehouse_id AND s.is_active = 1'
@@ -490,7 +480,7 @@ class ReportController extends Controller
 
         foreach ($raw as $r) {
             $balance = (float) $r['balance_qty'];
-            $value = (float) $r['value'];
+            $value = $ledgerMap[(int) $r['warehouse_id'] . ':' . (string) $r['item_code']] ?? 0.0;
             $minQty = $r['min_qty'] !== null ? (float) $r['min_qty'] : null;
             $maxQty = $r['max_qty'] !== null ? (float) $r['max_qty'] : null;
             $belowMin = $minQty !== null && $minQty > 0 && $balance < $minQty;
@@ -537,6 +527,63 @@ class ReportController extends Controller
                 'items_count' => $itemsCount,
             ],
         ];
+    }
+
+    /**
+     * มูลค่าคงเหลือแบบ ledger ต่อ (warehouse_id, item_code) — เงินเข้า−ออกจริงจากทุก transaction
+     * ยึด perspective เดียวกับ getItemHistoryData:
+     *   - มุมคลังหลัก (main_warehouse_id): IN=+, OUT/TRANSFER=−, ADJUST=+qty*price (qty signed)
+     *   - มุมคลังย่อย (sub_warehouse_id, เฉพาะที่ไม่ใช่ V1-migrated และ main<>sub): OUT/TRANSFER=+, IN=−
+     * คืน map คีย์ "warehouseId:itemCode" => value
+     * @param int[] $warehouseIds
+     * @return array<string,float>
+     */
+    public static function loadLedgerValues(array $warehouseIds): array
+    {
+        if (empty($warehouseIds)) {
+            return [];
+        }
+        $whList = implode(',', array_map('intval', $warehouseIds));
+        $sd = StockDetail::tableName();
+        $so = StockOrder::tableName();
+        // เงื่อนไข V1-migrated เหมือนใน getItemHistoryData (migrated นับเฉพาะมุมคลังหลัก)
+        $migrated = "(COALESCE(sd.ref,'')='V1' OR COALESCE(sd.data_json,'') LIKE '%\"migrated_from_v1\"%')";
+
+        $sql = "
+            SELECT wh, item_code, SUM(sv) AS value FROM (
+                SELECT so.main_warehouse_id AS wh, sd.item_code,
+                    CASE so.order_type
+                        WHEN 'IN' THEN sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'OUT' THEN -sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'TRANSFER' THEN -sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'ADJUST' THEN sd.qty * COALESCE(sd.unit_price, 0)
+                        ELSE -sd.qty * COALESCE(sd.unit_price, 0)
+                    END AS sv
+                FROM {$sd} sd
+                INNER JOIN {$so} so ON so.id = sd.stock_order_id
+                WHERE so.status = 'CONFIRMED' AND so.main_warehouse_id IN ({$whList})
+                UNION ALL
+                SELECT so.sub_warehouse_id AS wh, sd.item_code,
+                    CASE so.order_type
+                        WHEN 'OUT' THEN sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'IN' THEN -sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'TRANSFER' THEN sd.qty * COALESCE(sd.unit_price, 0)
+                        ELSE -sd.qty * COALESCE(sd.unit_price, 0)
+                    END AS sv
+                FROM {$sd} sd
+                INNER JOIN {$so} so ON so.id = sd.stock_order_id
+                WHERE so.status = 'CONFIRMED' AND so.sub_warehouse_id IN ({$whList})
+                    AND so.sub_warehouse_id <> COALESCE(so.main_warehouse_id, -1)
+                    AND NOT {$migrated}
+            ) u
+            GROUP BY wh, item_code
+        ";
+
+        $map = [];
+        foreach (Yii::$app->db->createCommand($sql)->queryAll() as $row) {
+            $map[(int) $row['wh'] . ':' . (string) $row['item_code']] = (float) $row['value'];
+        }
+        return $map;
     }
 
     /**
@@ -1309,41 +1356,384 @@ class ReportController extends Controller
 
         $totalCount = 0;
         foreach ($warehouseIds as $warehouseId) {
-            $result = self::closeMonthForWarehouse((int) $warehouseId, $year, $month);
+            // ถ้ายังไม่เคยปิดงวดก่อนหน้า → ยอดยกมาคำนวณสะสมจากต้น, บันทึกเฉพาะงวดนี้
+            $result = self::closeMonthFromStart((int) $warehouseId, $year, $month);
             $totalCount += $result['count'];
         }
 
-        return ['success' => true, 'message' => 'ปิดเดือนเรียบร้อย', 'count' => $totalCount, 'warehouses_count' => count($warehouseIds)];
+        return [
+            'success' => true,
+            'message' => 'ปิดเดือนเรียบร้อย',
+            'count' => $totalCount,
+            'warehouses_count' => count($warehouseIds),
+        ];
     }
 
     /**
-     * ปิดเดือนสำหรับคลังเดียว
-     * เปิดเป็น public static เพื่อให้ console command (backfill) เรียกใช้ได้นอก request context
+     * แปลง warehouse_id param → รายการ id คลังหลักที่จะประมวลผล (ใช้ร่วม close / preview)
+     * @return array{ids: int[], error: ?string}
      */
-    public static function closeMonthForWarehouse($warehouseId, $year, $month)
+    protected function resolveCloseWarehouseIds($warehouseIdParam): array
+    {
+        if ($warehouseIdParam === 'all' || $warehouseIdParam === '' || $warehouseIdParam === null) {
+            $ids = Warehouse::find()
+                ->where(['warehouse_type' => 'MAIN'])
+                ->select('id')
+                ->column();
+            if (empty($ids)) {
+                return ['ids' => [], 'error' => 'ไม่พบคลังหลักในระบบ'];
+            }
+            return ['ids' => array_map('intval', $ids), 'error' => null];
+        }
+        $wid = (int) $warehouseIdParam;
+        if ($wid <= 0) {
+            return ['ids' => [], 'error' => 'กรุณาเลือกคลังหรือเลือกปิดรวมทุกคลัง'];
+        }
+        return ['ids' => [$wid], 'error' => null];
+    }
+
+    /**
+     * ตัวอย่างก่อนปิดเดือน: คำนวณยอด (ไม่บันทึก) แล้วคืน summary + ตารางตามประเภท + รายการที่ต้องตรวจสอบ
+     * ให้เจ้าหน้าที่บัญชียืนยันความถูกต้องก่อนกดปิดเดือนจริง
+     */
+    public function actionCloseMonthPreview()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        $year = (int) $this->request->post('year', date('Y'));
+        $month = (int) $this->request->post('month', (int) date('n'));
+        $warehouseIdParam = $this->request->post('warehouse_id');
+
+        $resolved = $this->resolveCloseWarehouseIds($warehouseIdParam);
+        if ($resolved['error'] !== null) {
+            return ['success' => false, 'message' => $resolved['error']];
+        }
+        $warehouseIds = $resolved['ids'];
+
+        // คำนวณ row ต่อ item ต่อคลัง (แหล่งเดียวกับที่ปิดเดือนจริงจะบันทึก)
+        // opening มาจาก chain (buildOpeningForMonth) เพื่อให้ preview = ผลของ auto-chain ตอนกดปิดจริง
+        // — ถ้ามีงวดก่อนยังไม่ปิด จะคำนวณยอดยกมาต่อเนื่องมาให้ ไม่ใช่ 0
+        $allRows = [];
+        $chainedMonths = 0;
+        foreach ($warehouseIds as $wid) {
+            // นับงวดก่อนหน้าที่ยังไม่ปิด (จะถูก auto-chain ตอนกดปิดจริง) เพื่อเตือนผู้ใช้
+            [$py, $pm] = [$year, $month - 1];
+            if ($pm < 1) { $pm += 12; $py--; }
+            [$sy, $sm] = self::firstStockOrderMonth($wid);
+            if ($sy !== null) {
+                $curOrd = $py * 12 + $pm;
+                $ty = $sy; $tm = $sm;
+                while (($ty * 12 + $tm) <= $curOrd) {
+                    if (empty(self::snapshotClosingMap($wid, $ty, $tm))) {
+                        $chainedMonths++;
+                    }
+                    $tm++;
+                    if ($tm > 12) { $tm = 1; $ty++; }
+                }
+            }
+            $opening = self::buildOpeningForMonth($wid, $year, $month);
+            foreach (self::computeMonthlyRows($wid, $year, $month, $opening) as $row) {
+                $allRows[] = $row;
+            }
+        }
+
+        $catRows = $this->aggregateRowsByCategory($allRows);
+
+        // ── สรุปยอดรวม ──
+        $sumOpening = $sumIn = $sumOutSub = $sumOutHosp = $sumOut = $sumClosing = 0.0;
+        foreach ($catRows as $c) {
+            $sumOpening += $c['opening_value'];
+            $sumIn += $c['in_value'];
+            $sumOutSub += $c['out_sub_value'];
+            $sumOutHosp += $c['out_hosp_value'];
+            $sumOut += $c['total_out_value'];
+            $sumClosing += $c['closing_value'];
+        }
+
+        // ── รายการที่ต้องตรวจสอบ ──
+        // (1) ยอดยกไปติดลบ — เก็บราย (item, คลัง) เพื่อคลิกดูประวัติได้ตรงคลัง
+        // (2) จ่ายออกแต่ราคาทุน = 0 (มูลค่าอาจต่ำกว่าจริง) — รวมราย item
+        $whNameMap = [];
+        foreach (Warehouse::find()->select(['id', 'warehouse_name'])->where(['id' => $warehouseIds])->asArray()->all() as $w) {
+            $whNameMap[(int) $w['id']] = (string) $w['warehouse_name'];
+        }
+
+        $negativeRows = [];
+        $zeroCostCodes = [];
+        $outQtyByItem = [];
+        foreach ($allRows as $r) {
+            $code = (string) $r['item_code'];
+            if ((float) $r['closing_value'] < -0.005) {
+                $negativeRows[] = [
+                    'item_code' => $code,
+                    'warehouse_id' => (int) $r['warehouse_id'],
+                    'value' => round((float) $r['closing_value'], 2),
+                ];
+            }
+            if ((float) $r['total_out_qty'] > 0.005 && abs((float) $r['total_out_value']) < 0.005) {
+                $zeroCostCodes[$code] = true;
+            }
+            $outQtyByItem[$code] = ($outQtyByItem[$code] ?? 0) + (float) $r['total_out_qty'];
+        }
+
+        $warnCodes = array_values(array_unique(array_merge(
+            array_map(fn($n) => $n['item_code'], $negativeRows),
+            array_keys($zeroCostCodes)
+        )));
+        $itemTitles = [];
+        if (!empty($warnCodes)) {
+            foreach (StockItem::find()->select(['code', 'title'])->where(['code' => $warnCodes])->asArray()->all() as $it) {
+                $itemTitles[(string) $it['code']] = (string) ($it['title'] ?? '');
+            }
+        }
+
+        $multiWarehouse = count($warehouseIds) > 1;
+        $negatives = array_map(function ($n) use ($itemTitles, $whNameMap, $multiWarehouse) {
+            return [
+                'item_code' => $n['item_code'],
+                'item_name' => $itemTitles[$n['item_code']] ?? $n['item_code'],
+                'warehouse_id' => $n['warehouse_id'],
+                'warehouse_name' => $multiWarehouse ? ($whNameMap[$n['warehouse_id']] ?? '') : '',
+                'value' => $n['value'],
+            ];
+        }, $negativeRows);
+        $zeroCost = [];
+        foreach (array_keys($zeroCostCodes) as $code) {
+            $zeroCost[] = [
+                'item_code' => $code,
+                'item_name' => $itemTitles[$code] ?? $code,
+                'qty' => round($outQtyByItem[$code] ?? 0, 2),
+            ];
+        }
+        usort($negatives, fn($a, $b) => $a['value'] <=> $b['value']); // ติดลบมากสุดก่อน
+        usort($zeroCost, fn($a, $b) => strcmp($a['item_code'], $b['item_code']));
+
+        // ── งวดนี้เคยปิดไปแล้วหรือยัง (กดยืนยันจะเขียนทับ) ──
+        $existing = (new Query())
+            ->from(StockMonthlyReport::tableName())
+            ->where(['report_year' => $year, 'report_month' => $month]);
+        if (count($warehouseIds) === 1) {
+            $existing->andWhere(['warehouse_id' => $warehouseIds[0]]);
+        }
+        $alreadyClosed = $existing->exists();
+
+        $monthNames = [
+            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+        ];
+        $periodLabel = ($monthNames[$month] ?? '') . ' ' . ($year + 543);
+        if (count($warehouseIds) === 1) {
+            $w = Warehouse::findOne($warehouseIds[0]);
+            $warehouseLabel = $w ? $w->warehouse_name : (string) $warehouseIds[0];
+        } else {
+            $warehouseLabel = 'ทุกคลังหลัก (' . count($warehouseIds) . ' คลัง)';
+        }
+
+        return [
+            'success' => true,
+            'meta' => [
+                'period_label' => $periodLabel,
+                'warehouse_label' => $warehouseLabel,
+                'warehouses_count' => count($warehouseIds),
+                'already_closed' => $alreadyClosed,
+                'chained_months' => $chainedMonths,
+            ],
+            'summary' => [
+                'row_count' => count($allRows),
+                'item_count' => count(array_unique(array_map(fn($r) => (string) $r['item_code'], $allRows))),
+                'opening_value' => round($sumOpening, 2),
+                'in_value' => round($sumIn, 2),
+                'out_sub_value' => round($sumOutSub, 2),
+                'out_hosp_value' => round($sumOutHosp, 2),
+                'total_out_value' => round($sumOut, 2),
+                'closing_value' => round($sumClosing, 2),
+            ],
+            'rows' => $catRows,
+            'warnings' => [
+                'negatives' => $negatives,
+                'zero_cost' => $zeroCost,
+            ],
+        ];
+    }
+
+    /**
+     * ยกเลิกการปิดเดือน: ลบ row ใน stock_monthly_report ของงวด+คลังที่เลือก
+     * ทำเป็น 2 เฟส — เรียกครั้งแรก (ไม่มี confirmed) คืนจำนวนแถวที่จะลบ + งวดถัดไปที่ปิดแล้ว (ยอดยกมาผูกกัน)
+     * ให้ยืนยันก่อน แล้วเรียกซ้ำพร้อม confirmed=1 จึงลบจริง (destructive irreversible)
+     */
+    public function actionCancelClose()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        $year = (int) $this->request->post('year', date('Y'));
+        $month = (int) $this->request->post('month', (int) date('n'));
+        $warehouseIdParam = $this->request->post('warehouse_id');
+        $confirmed = (string) $this->request->post('confirmed', '') === '1';
+
+        $resolved = $this->resolveCloseWarehouseIds($warehouseIdParam);
+        if ($resolved['error'] !== null) {
+            return ['success' => false, 'message' => $resolved['error']];
+        }
+        $warehouseIds = $resolved['ids'];
+
+        $filter = ['report_year' => $year, 'report_month' => $month, 'warehouse_id' => $warehouseIds];
+        $rowCount = (int) (new Query())->from(StockMonthlyReport::tableName())->where($filter)->count();
+
+        if ($rowCount === 0) {
+            return ['success' => false, 'message' => 'งวดนี้ยังไม่มีข้อมูลปิดเดือน ไม่มีอะไรให้ยกเลิก'];
+        }
+
+        $monthNames = [
+            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+        ];
+
+        // งวดถัดไปที่ปิดแล้ว (report_year*12+report_month > งวดนี้) — ยอดยกมาผูกกับยอดยกไปของงวดนี้
+        $thisOrd = $year * 12 + $month;
+        $laterRows = (new Query())
+            ->select(['report_year', 'report_month'])
+            ->distinct()
+            ->from(StockMonthlyReport::tableName())
+            ->where(['warehouse_id' => $warehouseIds])
+            ->andWhere(new Expression('report_year * 12 + report_month > :ord', [':ord' => $thisOrd]))
+            ->orderBy(['report_year' => SORT_ASC, 'report_month' => SORT_ASC])
+            ->all();
+        $laterClosed = array_map(function ($r) use ($monthNames) {
+            $y = (int) $r['report_year'];
+            $mo = (int) $r['report_month'];
+            return ['year' => $y, 'month' => $mo, 'label' => ($monthNames[$mo] ?? '') . ' ' . ($y + 543)];
+        }, $laterRows);
+
+        $periodLabel = ($monthNames[$month] ?? '') . ' ' . ($year + 543);
+        if (count($warehouseIds) === 1) {
+            $w = Warehouse::findOne($warehouseIds[0]);
+            $warehouseLabel = $w ? $w->warehouse_name : (string) $warehouseIds[0];
+        } else {
+            $warehouseLabel = 'ทุกคลังหลัก (' . count($warehouseIds) . ' คลัง)';
+        }
+
+        // เฟส 1 — คืนข้อมูลให้ยืนยัน ยังไม่ลบ
+        if (!$confirmed) {
+            return [
+                'success' => true,
+                'confirmed' => false,
+                'row_count' => $rowCount,
+                'period_label' => $periodLabel,
+                'warehouse_label' => $warehouseLabel,
+                'warehouses_count' => count($warehouseIds),
+                'later_closed' => $laterClosed,
+            ];
+        }
+
+        // เฟส 2 — ลบจริง
+        $deleted = (int) StockMonthlyReport::deleteAll($filter);
+        return [
+            'success' => true,
+            'confirmed' => true,
+            'deleted' => $deleted,
+            'later_closed' => $laterClosed,
+        ];
+    }
+
+    /**
+     * รวมยอด row ต่อ item (in-memory จาก computeMonthlyRows) ตามประเภทวัสดุ
+     * ใช้ label/order รูปแบบเดียวกับ aggregateByCategory เพื่อให้ preview = รายงานจริง
+     * @param array<int, array<string, mixed>> $rows
+     */
+    protected function aggregateRowsByCategory(array $rows): array
+    {
+        if (empty($rows)) {
+            return [];
+        }
+        $itemCodes = array_values(array_unique(array_map(fn($r) => (string) $r['item_code'], $rows)));
+
+        $catMap = (new Query())
+            ->select([
+                'code' => 'i.code',
+                'category_code' => new Expression("COALESCE(cat.code, i.category_id, 'OTHER')"),
+                'category_title' => new Expression("COALESCE(cat.title, i.category_id, 'อื่นๆ')"),
+            ])
+            ->from(['i' => StockItem::tableName()])
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->where(['i.code' => $itemCodes])
+            ->indexBy('code')
+            ->all();
+
+        $categories = Categorise::find()
+            ->where(['name' => 'asset_type', 'category_id' => 4])
+            ->orderBy(['code' => SORT_ASC])
+            ->indexBy('code')
+            ->all();
+
+        $fields = [
+            'opening_qty', 'opening_value', 'in_qty', 'in_value',
+            'adjust_in_qty', 'adjust_in_value', 'adjust_out_qty', 'adjust_out_value',
+            'out_sub_qty', 'out_sub_value', 'out_hosp_qty', 'out_hosp_value',
+            'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value',
+        ];
+
+        $agg = [];
+        foreach ($rows as $r) {
+            $code = (string) $r['item_code'];
+            $catCode = $catMap[$code]['category_code'] ?? 'OTHER';
+            $catTitle = $catMap[$code]['category_title'] ?? 'อื่นๆ';
+            if (!isset($agg[$catCode])) {
+                $label = isset($categories[$catCode])
+                    ? '(' . $categories[$catCode]->code . ')' . $categories[$catCode]->title
+                    : '(' . $catCode . ') ' . $catTitle;
+                $agg[$catCode] = ['category_code' => $catCode, 'category_label' => $label];
+                foreach ($fields as $f) {
+                    $agg[$catCode][$f] = 0.0;
+                }
+            }
+            foreach ($fields as $f) {
+                $agg[$catCode][$f] += (float) ($r[$f] ?? 0);
+            }
+        }
+
+        $out = array_values($agg);
+        usort($out, fn($a, $b) => strcmp($a['category_code'], $b['category_code']));
+        return $out;
+    }
+
+    /**
+     * คำนวณยอดรายเดือนต่อ item สำหรับคลังเดียว โดย "ไม่บันทึก" ลง DB
+     * ใช้ร่วมกันระหว่าง preview (actionCloseMonthPreview) และการปิดเดือนจริง (closeMonthForWarehouse)
+     * เพื่อรับประกันว่า "ตัวอย่างที่เห็น = ข้อมูลที่จะบันทึก" (WYSIWYG)
+     *
+     * @return array<int, array<string, mixed>> แต่ละ element = 1 row ของ stock_monthly_report (ยังไม่มี created_at/by)
+     */
+    public static function computeMonthlyRows($warehouseId, $year, $month, ?array $openingOverride = null)
     {
         $subIds = self::getDisburseSubWarehouseIds();
         $dateStart = sprintf('%04d-%02d-01 00:00:00', $year, $month);
         $lastDay = (int) date('t', strtotime($dateStart));
         $dateEnd = sprintf('%04d-%02d-%02d 23:59:59', $year, $month, $lastDay);
 
-        $prevMonth = $month - 1;
-        $prevYear = $year;
-        if ($prevMonth < 1) {
-            $prevMonth += 12;
-            $prevYear--;
+        // ยอดยกมา = ยอดยกไปของงวดก่อน
+        // - $openingOverride != null → ใช้ opening ที่ chain คำนวณมาให้ (in-memory) — ใช้ตอน preview / auto-chain
+        //   รูปแบบ: [item_code => ['closing_qty' => float, 'closing_value' => float]]
+        // - null → อ่านจาก snapshot งวดก่อนใน stock_monthly_report (พฤติกรรมเดิม, ใช้โดย backfill ที่ปิดเรียงอยู่แล้ว)
+        if ($openingOverride !== null) {
+            $prevClosing = $openingOverride;
+        } else {
+            $prevMonth = $month - 1;
+            $prevYear = $year;
+            if ($prevMonth < 1) {
+                $prevMonth += 12;
+                $prevYear--;
+            }
+            $prevClosing = (new Query())
+                ->select(['item_code', 'closing_qty', 'closing_value'])
+                ->from(StockMonthlyReport::tableName())
+                ->where([
+                    'report_year' => $prevYear,
+                    'report_month' => $prevMonth,
+                    'warehouse_id' => $warehouseId,
+                ])
+                ->indexBy('item_code')
+                ->all();
         }
-
-        $prevClosing = (new Query())
-            ->select(['item_code', 'closing_qty', 'closing_value'])
-            ->from(StockMonthlyReport::tableName())
-            ->where([
-                'report_year' => $prevYear,
-                'report_month' => $prevMonth,
-                'warehouse_id' => $warehouseId,
-            ])
-            ->indexBy('item_code')
-            ->all();
 
         $itemCodes = array_keys($prevClosing);
 
@@ -1487,16 +1877,9 @@ class ReportController extends Controller
             ];
         }
 
-        StockMonthlyReport::deleteAll([
-            'report_year' => $year,
-            'report_month' => $month,
-            'warehouse_id' => $warehouseId,
-        ]);
-
         $items = StockItem::find()->where(['item_code' => $itemCodes])->indexBy('item_code')->all();
-        $createdAt = time();
-        $createdBy = Yii::$app->has('user', true) ? (Yii::$app->user->id ?? null) : null;
 
+        $rows = [];
         foreach ($itemCodes as $itemCode) {
             $prev = $prevClosing[$itemCode] ?? null;
             $openingQty = $prev ? (float) $prev['closing_qty'] : 0;
@@ -1528,34 +1911,154 @@ class ReportController extends Controller
             $item = $items[$itemCode] ?? null;
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
 
+            $rows[] = [
+                'report_year' => $year,
+                'report_month' => $month,
+                'warehouse_id' => $warehouseId,
+                'item_code' => $itemCode,
+                'unit_name' => $unitName,
+                'opening_qty' => $openingQty,
+                'opening_value' => $openingValue,
+                'in_qty' => $inQty,
+                'in_value' => $inValue,
+                'adjust_in_qty' => $adjustInQty,
+                'adjust_in_value' => $adjustInValue,
+                'adjust_out_qty' => $adjustOutQty,
+                'adjust_out_value' => $adjustOutValue,
+                'out_sub_qty' => $outSubQty,
+                'out_sub_value' => $outSubValue,
+                'out_hosp_qty' => $outHospQty,
+                'out_hosp_value' => $outHospValue,
+                'total_out_qty' => $totalOutQty,
+                'total_out_value' => $totalOutValue,
+                'closing_qty' => $closingQty,
+                'closing_value' => $closingValue,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * ปิดเดือนสำหรับคลังเดียว (งวดเดียว): คำนวณ (opening จาก snapshot งวดก่อนใน DB) แล้วเขียนทับ
+     * เปิดเป็น public static เพื่อให้ console command (backfill) เรียกใช้ได้นอก request context
+     * NOTE: backfill ปิดเรียงลำดับอยู่แล้ว จึงใช้ตัวนี้ได้; ฝั่งเว็บใช้ closeMonthFromStart (opening สะสมจากต้น)
+     */
+    public static function closeMonthForWarehouse($warehouseId, $year, $month)
+    {
+        $rows = self::computeMonthlyRows($warehouseId, $year, $month);
+        self::persistMonthlyRows($warehouseId, $year, $month, $rows);
+        return ['count' => count($rows)];
+    }
+
+    /**
+     * เขียนทับ snapshot ของงวด+คลังด้วย rows ที่คำนวณมา
+     * @param array<int, array<string, mixed>> $rows ผลจาก computeMonthlyRows
+     */
+    protected static function persistMonthlyRows($warehouseId, $year, $month, array $rows): void
+    {
+        StockMonthlyReport::deleteAll([
+            'report_year' => $year,
+            'report_month' => $month,
+            'warehouse_id' => $warehouseId,
+        ]);
+
+        $createdAt = date('Y-m-d H:i:s');
+        $createdBy = Yii::$app->has('user', true) ? (Yii::$app->user->id ?? null) : null;
+
+        foreach ($rows as $row) {
             $r = new StockMonthlyReport();
-            $r->report_year = $year;
-            $r->report_month = $month;
-            $r->warehouse_id = $warehouseId;
-            $r->item_code = $itemCode;
-            $r->unit_name = $unitName;
-            $r->opening_qty = $openingQty;
-            $r->opening_value = $openingValue;
-            $r->in_qty = $inQty;
-            $r->in_value = $inValue;
-            $r->adjust_in_qty = $adjustInQty;
-            $r->adjust_in_value = $adjustInValue;
-            $r->adjust_out_qty = $adjustOutQty;
-            $r->adjust_out_value = $adjustOutValue;
-            $r->out_sub_qty = $outSubQty;
-            $r->out_sub_value = $outSubValue;
-            $r->out_hosp_qty = $outHospQty;
-            $r->out_hosp_value = $outHospValue;
-            $r->total_out_qty = $totalOutQty;
-            $r->total_out_value = $totalOutValue;
-            $r->closing_qty = $closingQty;
-            $r->closing_value = $closingValue;
+            $r->setAttributes($row, false);
             $r->created_at = $createdAt;
             $r->created_by = $createdBy;
             $r->save(false);
         }
+    }
 
-        return ['count' => count($itemCodes)];
+    /** ปี/เดือนแรกที่มี stock_order ในคลังนี้ (จุดเริ่มของ chain) — @return array{0:?int,1:?int} */
+    protected static function firstStockOrderMonth($warehouseId): array
+    {
+        $firstDate = (new Query())
+            ->select('MIN(order_date)')
+            ->from(StockOrder::tableName())
+            ->where(['main_warehouse_id' => $warehouseId])
+            ->scalar();
+        if (!$firstDate) {
+            return [null, null];
+        }
+        $ts = strtotime($firstDate);
+        return [(int) date('Y', $ts), (int) date('n', $ts)];
+    }
+
+    /** map [item_code => ['closing_qty'=>, 'closing_value'=>]] จาก snapshot งวดใน DB */
+    protected static function snapshotClosingMap($warehouseId, $year, $month): array
+    {
+        return (new Query())
+            ->select(['item_code', 'closing_qty', 'closing_value'])
+            ->from(StockMonthlyReport::tableName())
+            ->where(['report_year' => $year, 'report_month' => $month, 'warehouse_id' => $warehouseId])
+            ->indexBy('item_code')
+            ->all();
+    }
+
+    /** map [item_code => ['closing_qty'=>, 'closing_value'=>]] จาก rows ที่คำนวณ (in-memory) */
+    protected static function closingMapFromRows(array $rows): array
+    {
+        $map = [];
+        foreach ($rows as $r) {
+            $map[(string) $r['item_code']] = [
+                'closing_qty' => (float) $r['closing_qty'],
+                'closing_value' => (float) $r['closing_value'],
+            ];
+        }
+        return $map;
+    }
+
+    /**
+     * ยอดยกมาของงวด (year, month) = ยอดยกไปของงวดก่อน — คำนวณแบบ chain โดยไม่เขียน DB
+     * - ถ้างวดก่อนมี snapshot ใน DB → เชื่อค่านั้น (หยุด chain)
+     * - ถ้าไม่มี → คำนวณงวดก่อนใน memory (recursive) ย้อนไปจนถึงงวดแรกที่มี stock_order
+     * ใช้ตอน preview เพื่อให้ opening ตรงกับที่ auto-chain จะบันทึกจริง
+     * @return array<string, array{closing_qty: float, closing_value: float}>
+     */
+    public static function buildOpeningForMonth($warehouseId, $year, $month): array
+    {
+        $prevMonth = $month - 1;
+        $prevYear = $year;
+        if ($prevMonth < 1) {
+            $prevMonth += 12;
+            $prevYear--;
+        }
+
+        [$startYear, $startMonth] = self::firstStockOrderMonth($warehouseId);
+        // ไม่มี order เลย หรือ งวดก่อนอยู่ก่อนงวดแรกสุด → ยอดยกมา = 0
+        if ($startYear === null || ($prevYear * 12 + $prevMonth) < ($startYear * 12 + $startMonth)) {
+            return [];
+        }
+
+        $snapshot = self::snapshotClosingMap($warehouseId, $prevYear, $prevMonth);
+        if (!empty($snapshot)) {
+            return $snapshot;
+        }
+
+        // งวดก่อนยังไม่ปิด → คำนวณ chain ต่อ
+        $prevOpening = self::buildOpeningForMonth($warehouseId, $prevYear, $prevMonth);
+        $prevRows = self::computeMonthlyRows($warehouseId, $prevYear, $prevMonth, $prevOpening);
+        return self::closingMapFromRows($prevRows);
+    }
+
+    /**
+     * ปิดเดือน (ฝั่งเว็บ): บันทึกเฉพาะงวดเป้าหมายงวดเดียว
+     * - ถ้างวดก่อนหน้ายังไม่ปิด → ยอดยกมาคำนวณสะสมจากต้นถึงงวดนี้ (buildOpeningForMonth, in-memory ไม่เขียน snapshot งวดกลาง)
+     * - ถ้างวดก่อนหน้าปิดไว้แล้ว → ยอดยกมาดึงจาก snapshot งวดที่ปิด (ปกติ)
+     * @return array{count: int}
+     */
+    public static function closeMonthFromStart($warehouseId, $targetYear, $targetMonth): array
+    {
+        $opening = self::buildOpeningForMonth($warehouseId, $targetYear, $targetMonth);
+        $rows = self::computeMonthlyRows($warehouseId, $targetYear, $targetMonth, $opening);
+        self::persistMonthlyRows($warehouseId, $targetYear, $targetMonth, $rows);
+        return ['count' => count($rows)];
     }
 
     /**
@@ -1686,7 +2189,7 @@ class ReportController extends Controller
         $query = (new Query())
             ->select([
                 'r.item_code',
-                'i.title',
+                'item_name' => 'i.title',
                 new Expression("COALESCE(cat.title, i.category_id, '') AS category_title"),
                 'r.opening_qty',
                 'r.opening_value',

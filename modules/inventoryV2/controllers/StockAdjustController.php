@@ -71,12 +71,61 @@ class StockAdjustController extends Controller
             return ['balance' => 0, 'error' => 'กรุณาเลือกคลังและรหัสพัสดุ'];
         }
 
-        $sum = (new Query())
+        $sum = (float) (new Query())
             ->from(StockBalance::tableName())
             ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
             ->sum('balance_qty');
 
-        return ['balance' => (float) $sum];
+        // มูลค่าคงเหลือแบบ ledger (ตรงกับหน้าสรุปยอดคงเหลือ + ประวัติ) และต้นทุนเฉลี่ยต่อหน่วย
+        $ledgerMap = \app\modules\inventoryV2\controllers\ReportController::loadLedgerValues([$warehouseId]);
+        $value = (float) ($ledgerMap[$warehouseId . ':' . $itemCode] ?? 0.0);
+        $avgCost = $sum > 0 ? $value / $sum : 0.0;
+
+        return [
+            'balance' => $sum,
+            'value' => round($value, 2),
+            'avg_cost' => round($avgCost, 6),
+        ];
+    }
+
+    /**
+     * ฟอร์มปรับยอดแบบ modal (เปิดจากหน้า balance ผ่าน .open-modal) — ผูกกับพัสดุ+คลังที่เลือกไว้แล้ว
+     * คืน JSON {status, title, content, footer} ตาม convention ของ .open-modal (web/js/erp.js)
+     */
+    public function actionModal($warehouse_id, $item_code)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouseId = (int) $warehouse_id;
+        $itemCode = trim((string) $item_code);
+
+        $item = StockItem::findOne(['item_code' => $itemCode]);
+        $warehouse = Warehouse::findOne($warehouseId);
+        if (!$item || !$warehouse) {
+            return ['status' => 'error', 'message' => 'ไม่พบพัสดุหรือคลังในระบบ'];
+        }
+
+        $balance = (float) (new Query())
+            ->from(StockBalance::tableName())
+            ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+            ->sum('balance_qty');
+        $ledgerMap = \app\modules\inventoryV2\controllers\ReportController::loadLedgerValues([$warehouseId]);
+        $value = (float) ($ledgerMap[$warehouseId . ':' . $itemCode] ?? 0.0);
+        $avgCost = $balance > 0 ? $value / $balance : 0.0;
+
+        return [
+            'status' => 'success',
+            'title' => '<i class="bi bi-wrench-adjustable me-1"></i> ปรับยอด stock สินค้า',
+            'content' => $this->renderPartial('_adjust_modal', [
+                'item' => $item,
+                'warehouse' => $warehouse,
+                'balance' => $balance,
+                'value' => $value,
+                'avgCost' => $avgCost,
+                'saveUrl' => \yii\helpers\Url::to(['/inventory-v2/stock-adjust/save']),
+            ]),
+            'footer' => '<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>',
+        ];
     }
 
     /**
@@ -100,12 +149,16 @@ class StockAdjustController extends Controller
         if ($adjustmentQty == 0 && $currentQty !== null && $targetQty !== null) {
             $adjustmentQty = $targetQty - $currentQty;
         }
-        $lotNumber = trim((string) Yii::$app->request->post('lot_number', ''));
-        $lotNumber = $lotNumber !== '' ? $lotNumber : 'ADJUST';
         $source = trim((string) Yii::$app->request->post('source', ''));
         $reverseDetailId = (int) Yii::$app->request->post('reverse_detail_id', 0);
         $reverseOrderNo = trim((string) Yii::$app->request->post('reverse_order_no', ''));
         $note = trim((string) Yii::$app->request->post('note', ''));
+        // โหมด: 'qty_only' = ปรับจำนวนอย่างเดียว ไม่กระทบมูลค่า (unit_price=null)
+        //        อื่นๆ (recount) = คิดมูลค่า: เพิ่มใช้ต้นทุนที่ระบุ/เฉลี่ย, ลดคิดตามต้นทุนเฉลี่ย
+        $mode = trim((string) Yii::$app->request->post('mode', 'recount'));
+        $isValueMode = ($mode !== 'qty_only');
+        $unitPriceRaw = Yii::$app->request->post('unit_price');
+        $unitPriceInput = is_numeric($unitPriceRaw) ? (float) $unitPriceRaw : null;
 
         if ($warehouseId <= 0) {
             return ['success' => false, 'message' => 'กรุณาเลือกคลัง'];
@@ -127,11 +180,35 @@ class StockAdjustController extends Controller
             return ['success' => false, 'message' => 'ไม่พบคลังในระบบ'];
         }
 
+        // ต้นทุนเฉลี่ยปัจจุบัน (moving-average) = มูลค่า ledger ÷ จำนวนคงเหลือ
+        $ledgerMap = \app\modules\inventoryV2\controllers\ReportController::loadLedgerValues([$warehouseId]);
+        $currentValue = (float) ($ledgerMap[$warehouseId . ':' . $itemCode] ?? 0.0);
+        $currentQtyBalance = (float) StockBalance::find()
+            ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+            ->sum('balance_qty');
+        $avgCost = $currentQtyBalance > 0 ? $currentValue / $currentQtyBalance : 0.0;
+
+        // ราคาต่อหน่วยของเอกสาร ADJUST ตามโหมด/ทิศทาง
+        if (!$isValueMode) {
+            $detailUnitPrice = null;                       // qty_only = ไม่กระทบมูลค่า
+        } elseif ($adjustmentQty > 0) {
+            // เพิ่ม (เจอของ) — ใช้ราคาที่กรอก มิฉะนั้นใช้ต้นทุนเฉลี่ย
+            $detailUnitPrice = ($unitPriceInput !== null && $unitPriceInput >= 0) ? $unitPriceInput : $avgCost;
+        } else {
+            // ลด (ของหาย/เสีย) — คิดต้นทุนตามราคาเฉลี่ยปัจจุบัน
+            $detailUnitPrice = $avgCost;
+        }
+        $valueDelta = $isValueMode ? ($adjustmentQty * (float) $detailUnitPrice) : 0.0;
+
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
             $orderNo = $this->generateAdjustOrderNo();
             $now = date('Y-m-d H:i:s');
+
+            // เพิ่มแบบคิดมูลค่า → lot เฉพาะผูกกับเอกสาร (ต้นทุน lot นี้ = detailUnitPrice) เพื่อ FIFO อนาคต
+            // นอกนั้นใช้ lot 'ADJUST'
+            $lotNumber = ($isValueMode && $adjustmentQty > 0) ? $orderNo : 'ADJUST';
 
             $order = new StockOrder();
             $order->order_no = $orderNo;
@@ -143,10 +220,14 @@ class StockAdjustController extends Controller
             $order->ref = $note ?: 'ปรับยอด';
             $order->data_json = json_encode([
                 'adjust_source' => $source ?: 'stock-adjust',
+                'adjust_mode' => $isValueMode ? 'recount' : 'qty_only',
                 'current_qty_before' => $currentQty,
                 'target_qty' => $targetQty,
                 'adjustment_qty' => $adjustmentQty,
                 'lot_number' => $lotNumber,
+                'unit_price' => $detailUnitPrice,
+                'avg_cost_before' => round($avgCost, 6),
+                'value_delta' => round($valueDelta, 2),
                 'note' => $note,
                 'reverse_detail_id' => $reverseDetailId ?: null,
                 'reverse_order_no' => $reverseOrderNo ?: null,
@@ -164,6 +245,7 @@ class StockAdjustController extends Controller
             $detail->stock_order_id = $order->id;
             $detail->item_code = $itemCode;
             $detail->qty = $adjustmentQty;
+            $detail->unit_price = $detailUnitPrice; // ledger คิดมูลค่าจากราคานี้ (null = ไม่กระทบมูลค่า)
             $detail->lot_number = $lotNumber;
             $detail->remain_qty = $adjustmentQty > 0 ? $adjustmentQty : 0;
             $detail->created_at = $now;
@@ -185,6 +267,8 @@ class StockAdjustController extends Controller
                 'success' => true,
                 'message' => 'ปรับยอดสำเร็จ',
                 'order_no' => $orderNo,
+                'value_delta' => round($valueDelta, 2),
+                'mode' => $isValueMode ? 'recount' : 'qty_only',
             ];
         } catch (\Exception $e) {
             $transaction->rollBack();
