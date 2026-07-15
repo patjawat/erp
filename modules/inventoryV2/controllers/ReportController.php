@@ -571,7 +571,12 @@ class ReportController extends Controller
                         WHEN 'IN' THEN sd.qty * COALESCE(sd.unit_price, 0)
                         WHEN 'OUT' THEN -sd.qty * COALESCE(sd.unit_price, 0)
                         WHEN 'TRANSFER' THEN -sd.qty * COALESCE(sd.unit_price, 0)
-                        WHEN 'ADJUST' THEN sd.qty * COALESCE(sd.unit_price, 0)
+                        WHEN 'ADJUST' THEN
+                            CASE
+                                WHEN CAST(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(sd.data_json, '$.adjust_value_only')), '0') AS UNSIGNED) = 1
+                                    THEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(sd.data_json, '$.value_delta')) AS DECIMAL(15,6)), 0)
+                                ELSE sd.qty * COALESCE(sd.unit_price, 0)
+                            END
                         ELSE -sd.qty * COALESCE(sd.unit_price, 0)
                     END AS sv
                 FROM {$sd} sd
@@ -814,6 +819,7 @@ class ReportController extends Controller
                 'can_reverse' => (string) $r['order_type'] !== StockOrder::ORDER_TYPE_ADJUST && empty($reversedDetailIds[(int) $r['detail_id']]),
                 'reverse_status' => !empty($reversedDetailIds[(int) $r['detail_id']]) ? 'reversed' : null,
                 'can_edit_qty' => (string) $r['order_type'] === StockOrder::ORDER_TYPE_OUT,
+                'can_delete_issue' => (string) $r['order_type'] === StockOrder::ORDER_TYPE_OUT,
             ];
         }
 
@@ -2176,12 +2182,17 @@ class ReportController extends Controller
         $sheet->setCellValue('I' . $summaryTotalRow, $tot['closing']);
 
         for ($i = 1; $i <= $summaryTotalRow; $i++) {
-            $sheet->getRowDimension($i)->setRowHeight(14.25);
+            $sheet->getRowDimension($i)->setRowHeight($i <= 5 ? 18 : 16.5);
         }
         $sheet->getStyle('A1:I' . $summaryTotalRow)->getFont()
-            ->setName('Sarabun')
-            ->setSize(16)
-            ->setBold(true);
+            ->setName('TH Sarabun New')
+            ->setSize(10);
+        $sheet->getStyle('A1:I' . $summaryTotalRow)->getAlignment()
+            ->setShrinkToFit(true);
+        $sheet->getStyle('F1:H1')->getFont()->setSize(13)->setBold(true);
+        $sheet->getStyle('F2:H3')->getFont()->setSize(11)->setBold(true);
+        $sheet->getStyle('A4:I5')->getFont()->setSize(11)->setBold(true);
+        $sheet->getStyle('A' . $summaryTotalRow . ':I' . $summaryTotalRow)->getFont()->setBold(true);
         $sheet->getStyle('A1:I5')->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)
             ->setVertical(Alignment::VERTICAL_CENTER);
@@ -2197,7 +2208,7 @@ class ReportController extends Controller
         $sheet->getStyle('C6:I' . $summaryTotalRow)->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
             ->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('C6:I' . $summaryTotalRow)->getNumberFormat()->setFormatCode('0.00000');
+        $sheet->getStyle('C6:I' . $summaryTotalRow)->getNumberFormat()->setFormatCode('#,##0.00');
         $sheet->getStyle('A4:I' . $summaryTotalRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
@@ -2276,12 +2287,14 @@ class ReportController extends Controller
         }
         $lastItemRow = max(2, $itemRowNum - 1);
         for ($i = 1; $i <= $lastItemRow; $i++) {
-            $itemSheet->getRowDimension($i)->setRowHeight(14.25);
+            $itemSheet->getRowDimension($i)->setRowHeight($i <= 2 ? 18 : 16.5);
         }
         $itemSheet->getStyle('A1:M' . $lastItemRow)->getFont()
-            ->setName('Sarabun')
-            ->setSize(16);
-        $itemSheet->getStyle('A1:M2')->getFont()->setBold(true);
+            ->setName('TH Sarabun New')
+            ->setSize(9);
+        $itemSheet->getStyle('A1:M' . $lastItemRow)->getAlignment()
+            ->setShrinkToFit(true);
+        $itemSheet->getStyle('A1:M2')->getFont()->setSize(10)->setBold(true);
         $itemSheet->getStyle('A1:M2')->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)
             ->setVertical(Alignment::VERTICAL_CENTER);
@@ -2289,8 +2302,9 @@ class ReportController extends Controller
             $itemSheet->getStyle('A3:A' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $itemSheet->getStyle('B3:E' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $itemSheet->getStyle('F3:M' . $lastItemRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-            $itemSheet->getStyle('F3:M' . $lastItemRow)->getNumberFormat()->setFormatCode('0.00000');
+            $itemSheet->getStyle('F3:M' . $lastItemRow)->getNumberFormat()->setFormatCode('#,##0.00');
         }
+        $itemSheet->getStyle('G1:M1')->getNumberFormat()->setFormatCode('#,##0.00');
         $itemSheet->getStyle('A1:M' . $lastItemRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $itemSheet->getStyle('A1:M' . $lastItemRow)->applyFromArray([
             'borders' => [
@@ -2303,9 +2317,10 @@ class ReportController extends Controller
 
         $spreadsheet->setActiveSheetIndex(0);
 
-        $filename = 'material-summary-' . $year . '-' . $month . '.xlsx';
+        $filename = $this->formatMaterialSummaryExportFilename($year, $month);
+        $fallbackFilename = 'material-summary-' . $year . '-' . $month . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Disposition: attachment; filename="' . $fallbackFilename . '"; filename*=UTF-8\'\'' . rawurlencode($filename));
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
@@ -2407,9 +2422,43 @@ class ReportController extends Controller
         return $withoutCode !== '' ? $withoutCode : $label;
     }
 
+    protected function formatMaterialSummaryExportFilename($year, $month)
+    {
+        $monthName = $this->getThaiMonthName($month, false);
+        $budgetYear = (int) $year + 543;
+
+        return 'สรุปรายงานวัสดุคงคลัง_' . $monthName . '_' . $budgetYear . '.xlsx';
+    }
+
     protected function formatThaiMonthDateRange($year, $month)
     {
-        $monthNames = [
+        $lastDay = (int) date('t', mktime(0, 0, 0, (int) $month, 1, (int) $year));
+
+        return '1 - ' . $lastDay . ' ' . $this->getThaiMonthName($month, true) . ' ' . ((int) $year + 543);
+    }
+
+    protected function formatThaiCurrentDate()
+    {
+        return date('d/m/') . (date('Y') + 543);
+    }
+
+    protected function getThaiMonthName($month, $short = false)
+    {
+        $fullMonthNames = [
+            1 => 'มกราคม',
+            2 => 'กุมภาพันธ์',
+            3 => 'มีนาคม',
+            4 => 'เมษายน',
+            5 => 'พฤษภาคม',
+            6 => 'มิถุนายน',
+            7 => 'กรกฎาคม',
+            8 => 'สิงหาคม',
+            9 => 'กันยายน',
+            10 => 'ตุลาคม',
+            11 => 'พฤศจิกายน',
+            12 => 'ธันวาคม',
+        ];
+        $shortMonthNames = [
             1 => 'ม.ค.',
             2 => 'ก.พ.',
             3 => 'มี.ค.',
@@ -2423,14 +2472,12 @@ class ReportController extends Controller
             11 => 'พ.ย.',
             12 => 'ธ.ค.',
         ];
-        $lastDay = (int) date('t', mktime(0, 0, 0, (int) $month, 1, (int) $year));
 
-        return '1 - ' . $lastDay . ' ' . ($monthNames[(int) $month] ?? '') . ' ' . ((int) $year + 543);
-    }
+        $month = (int) $month;
 
-    protected function formatThaiCurrentDate()
-    {
-        return date('d/m/') . (date('Y') + 543);
+        return $short
+            ? ($shortMonthNames[$month] ?? (string) $month)
+            : ($fullMonthNames[$month] ?? (string) $month);
     }
 
     /**

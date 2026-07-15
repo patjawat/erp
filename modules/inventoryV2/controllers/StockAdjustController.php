@@ -159,6 +159,16 @@ class StockAdjustController extends Controller
         $isValueMode = ($mode !== 'qty_only');
         $unitPriceRaw = Yii::$app->request->post('unit_price');
         $unitPriceInput = is_numeric($unitPriceRaw) ? (float) $unitPriceRaw : null;
+        $targetValueRaw = Yii::$app->request->post('target_value');
+        $targetValue = is_numeric($targetValueRaw) ? (float) $targetValueRaw : null;
+        $historyOnlyReverse = (int) Yii::$app->request->post('history_only_reverse', 0) === 1;
+
+        if ($historyOnlyReverse) {
+            return [
+                'success' => false,
+                'message' => 'ปุ่มยกเลิกผลรายการซ้ำถูกปิดแล้ว กรุณาใช้ปุ่มลบรายการใบเบิกซ้ำในประวัติ',
+            ];
+        }
 
         if ($warehouseId <= 0) {
             return ['success' => false, 'message' => 'กรุณาเลือกคลัง'];
@@ -166,8 +176,14 @@ class StockAdjustController extends Controller
         if ($itemCode === '') {
             return ['success' => false, 'message' => 'กรุณาเลือกรหัสพัสดุ'];
         }
-        if ($adjustmentQty == 0) {
-            return ['success' => false, 'message' => 'กรุณาระบุจำนวนที่ปรับ (บวก = เพิ่ม, ลบ = ลด)'];
+        if ($adjustmentQty == 0 && (!$isValueMode || $targetValue === null)) {
+            return ['success' => false, 'message' => 'กรุณาระบุจำนวนที่ปรับ หรือมูลค่าเป้าหมายที่ต้องการแก้ไข'];
+        }
+        if ($targetValue !== null && $targetValue < 0) {
+            return ['success' => false, 'message' => 'มูลค่าเป้าหมายต้องไม่ติดลบ'];
+        }
+        if ($historyOnlyReverse && $reverseDetailId <= 0) {
+            return ['success' => false, 'message' => 'ไม่พบรายการต้นทางสำหรับยกเลิกผลซ้ำ'];
         }
 
         $item = StockItem::findOne(['item_code' => $itemCode]);
@@ -187,9 +203,22 @@ class StockAdjustController extends Controller
             ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
             ->sum('balance_qty');
         $avgCost = $currentQtyBalance > 0 ? $currentValue / $currentQtyBalance : 0.0;
+        $valueOnly = false;
+        $valueDelta = 0.0;
+        if ($adjustmentQty == 0) {
+            $valueDelta = (float) $targetValue - $currentValue;
+            if (abs($valueDelta) < 0.000001) {
+                return ['success' => false, 'message' => 'จำนวนและมูลค่าไม่เปลี่ยนแปลง'];
+            }
+            $valueOnly = true;
+        }
 
         // ราคาต่อหน่วยของเอกสาร ADJUST ตามโหมด/ทิศทาง
-        if (!$isValueMode) {
+        if ($valueOnly) {
+            $detailUnitPrice = null;
+        } elseif ($historyOnlyReverse && $unitPriceInput !== null && $unitPriceInput >= 0) {
+            $detailUnitPrice = $unitPriceInput;
+        } elseif (!$isValueMode) {
             $detailUnitPrice = null;                       // qty_only = ไม่กระทบมูลค่า
         } elseif ($adjustmentQty > 0) {
             // เพิ่ม (เจอของ) — ใช้ราคาที่กรอก มิฉะนั้นใช้ต้นทุนเฉลี่ย
@@ -198,7 +227,9 @@ class StockAdjustController extends Controller
             // ลด (ของหาย/เสีย) — คิดต้นทุนตามราคาเฉลี่ยปัจจุบัน
             $detailUnitPrice = $avgCost;
         }
-        $valueDelta = $isValueMode ? ($adjustmentQty * (float) $detailUnitPrice) : 0.0;
+        if (!$valueOnly) {
+            $valueDelta = $isValueMode ? ($adjustmentQty * (float) $detailUnitPrice) : 0.0;
+        }
 
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
@@ -208,7 +239,7 @@ class StockAdjustController extends Controller
 
             // เพิ่มแบบคิดมูลค่า → lot เฉพาะผูกกับเอกสาร (ต้นทุน lot นี้ = detailUnitPrice) เพื่อ FIFO อนาคต
             // นอกนั้นใช้ lot 'ADJUST'
-            $lotNumber = ($isValueMode && $adjustmentQty > 0) ? $orderNo : 'ADJUST';
+            $lotNumber = ($isValueMode && !$valueOnly && !$historyOnlyReverse && $adjustmentQty > 0) ? $orderNo : 'ADJUST';
 
             $order = new StockOrder();
             $order->order_no = $orderNo;
@@ -220,10 +251,13 @@ class StockAdjustController extends Controller
             $order->ref = $note ?: 'ปรับยอด';
             $order->data_json = json_encode([
                 'adjust_source' => $source ?: 'stock-adjust',
-                'adjust_mode' => $isValueMode ? 'recount' : 'qty_only',
+                'adjust_mode' => $historyOnlyReverse ? 'history_reverse' : ($valueOnly ? 'value_only' : ($isValueMode ? 'recount' : 'qty_only')),
+                'history_only_reverse' => $historyOnlyReverse ? 1 : 0,
                 'current_qty_before' => $currentQty,
                 'target_qty' => $targetQty,
                 'adjustment_qty' => $adjustmentQty,
+                'current_value_before' => round($currentValue, 6),
+                'target_value' => $targetValue,
                 'lot_number' => $lotNumber,
                 'unit_price' => $detailUnitPrice,
                 'avg_cost_before' => round($avgCost, 6),
@@ -244,10 +278,25 @@ class StockAdjustController extends Controller
             $detail = new StockDetail();
             $detail->stock_order_id = $order->id;
             $detail->item_code = $itemCode;
-            $detail->qty = $adjustmentQty;
+            $detail->qty = $valueOnly ? 0 : $adjustmentQty;
             $detail->unit_price = $detailUnitPrice; // ledger คิดมูลค่าจากราคานี้ (null = ไม่กระทบมูลค่า)
             $detail->lot_number = $lotNumber;
-            $detail->remain_qty = $adjustmentQty > 0 ? $adjustmentQty : 0;
+            $detail->remain_qty = (!$valueOnly && !$historyOnlyReverse && $adjustmentQty > 0) ? $adjustmentQty : 0;
+            if ($valueOnly) {
+                $detail->data_json = json_encode([
+                    'adjust_value_only' => 1,
+                    'value_delta' => round($valueDelta, 6),
+                    'current_value_before' => round($currentValue, 6),
+                    'target_value' => round((float) $targetValue, 6),
+                ], JSON_UNESCAPED_UNICODE);
+            } elseif ($historyOnlyReverse) {
+                $detail->data_json = json_encode([
+                    'history_only_reverse' => 1,
+                    'reverse_detail_id' => $reverseDetailId ?: null,
+                    'reverse_order_no' => $reverseOrderNo ?: null,
+                    'value_delta' => round($valueDelta, 6),
+                ], JSON_UNESCAPED_UNICODE);
+            }
             $detail->created_at = $now;
             $detail->updated_at = $now;
             $detail->created_by = Yii::$app->user->id;
@@ -256,10 +305,12 @@ class StockAdjustController extends Controller
                 throw new \Exception('บันทึกรายละเอียดไม่สำเร็จ');
             }
 
-            if ($adjustmentQty > 0) {
-                InventoryService::adjustBalance($itemCode, $warehouseId, $lotNumber, $adjustmentQty);
-            } else {
-                InventoryService::processFIFO($itemCode, $warehouseId, abs($adjustmentQty), $order->id, $detail->id);
+            if (!$valueOnly && !$historyOnlyReverse) {
+                if ($adjustmentQty > 0) {
+                    InventoryService::adjustBalance($itemCode, $warehouseId, $lotNumber, $adjustmentQty);
+                } else {
+                    InventoryService::processFIFO($itemCode, $warehouseId, abs($adjustmentQty), $order->id, $detail->id);
+                }
             }
 
             $transaction->commit();
@@ -268,7 +319,7 @@ class StockAdjustController extends Controller
                 'message' => 'ปรับยอดสำเร็จ',
                 'order_no' => $orderNo,
                 'value_delta' => round($valueDelta, 2),
-                'mode' => $isValueMode ? 'recount' : 'qty_only',
+                'mode' => $historyOnlyReverse ? 'history_reverse' : ($valueOnly ? 'value_only' : ($isValueMode ? 'recount' : 'qty_only')),
             ];
         } catch (\Exception $e) {
             $transaction->rollBack();
@@ -436,6 +487,100 @@ class StockAdjustController extends Controller
                 'current_qty' => $currentBalance,
             ];
         } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * ลบแถวจ่ายซ้ำออกจากประวัติ เฉพาะรายการใบเบิก (OUT) เท่านั้น
+     * ไม่ปรับ stock_balance/FIFO ใช้สำหรับเคสประวัติซ้ำที่ยอดจริงในระบบถูกต้องอยู่แล้ว
+     */
+    public function actionDeleteRequisitionDetail()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid method'];
+        }
+
+        $detailId = (int) Yii::$app->request->post('detail_id', 0);
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
+        $note = trim((string) Yii::$app->request->post('note', 'ลบรายการใบเบิกซ้ำจากประวัติการเคลื่อนไหววัสดุ'));
+
+        if ($detailId <= 0 || $warehouseId <= 0 || $itemCode === '') {
+            return ['success' => false, 'message' => 'ข้อมูลรายการที่ต้องการลบไม่ครบถ้วน'];
+        }
+
+        $detail = StockDetail::findOne($detailId);
+        if (!$detail) {
+            return ['success' => false, 'message' => 'ไม่พบรายการใบเบิกที่ต้องการลบ'];
+        }
+
+        $order = StockOrder::findOne($detail->stock_order_id);
+        if (!$order || $order->order_type !== StockOrder::ORDER_TYPE_OUT) {
+            return ['success' => false, 'message' => 'ลบได้เฉพาะรายการใบเบิกเท่านั้น'];
+        }
+        if ((string) $order->status !== StockOrder::STATUS_CONFIRMED) {
+            return ['success' => false, 'message' => 'ลบได้เฉพาะเอกสารที่ยืนยันแล้วเท่านั้น'];
+        }
+        if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
+            return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
+        }
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $oldQty = (float) $detail->qty;
+            $oldUnitPrice = (float) $detail->unit_price;
+            $oldLotNumber = (string) $detail->lot_number;
+            $oldRemainQty = (float) $detail->remain_qty;
+
+            $orderData = is_string($order->data_json) && $order->data_json !== ''
+                ? json_decode($order->data_json, true)
+                : (is_array($order->data_json) ? $order->data_json : []);
+            if (!is_array($orderData)) {
+                $orderData = [];
+            }
+            if (!isset($orderData['history_deleted_details']) || !is_array($orderData['history_deleted_details'])) {
+                $orderData['history_deleted_details'] = [];
+            }
+            $orderData['history_deleted_details'][] = [
+                'detail_id' => $detailId,
+                'item_code' => $itemCode,
+                'old_qty' => $oldQty,
+                'old_unit_price' => $oldUnitPrice,
+                'old_lot_number' => $oldLotNumber,
+                'old_remain_qty' => $oldRemainQty,
+                'note' => $note,
+                'by_user_id' => Yii::$app->user->id,
+                'at' => date('Y-m-d H:i:s'),
+            ];
+            $order->data_json = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+            $order->updated_at = date('Y-m-d H:i:s');
+            $order->updated_by = Yii::$app->user->id;
+            $order->save(false);
+
+            if ($detail->delete() === false) {
+                throw new \Exception('ลบรายการใบเบิกซ้ำไม่สำเร็จ');
+            }
+
+            $currentQty = (float) StockBalance::find()
+                ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+                ->sum('balance_qty');
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'ลบรายการใบเบิกซ้ำสำเร็จ',
+                'order_no' => $order->order_no,
+                'deleted_detail_id' => $detailId,
+                'old_qty' => $oldQty,
+                'old_unit_price' => $oldUnitPrice,
+                'current_qty' => $currentQty,
+            ];
+        } catch (\Throwable $e) {
             $transaction->rollBack();
             return ['success' => false, 'message' => $e->getMessage()];
         }

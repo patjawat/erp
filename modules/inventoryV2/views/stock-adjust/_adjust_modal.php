@@ -367,20 +367,37 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
         $id('sam-price').value = price.toFixed(6);
     }
 
+    function readTargetValue() {
+        var tv = parseFloat($id('sam-target-value').value);
+        return isNaN(tv) ? null : tv;
+    }
+
+    function isValueOnly(qty) {
+        var tv = readTargetValue();
+        return getMode() !== 'qty_only' && qty === 0 && tv !== null && Math.abs(tv - curVal) > 0.000001;
+    }
+
+    function valueDeltaFor(qty) {
+        var tv = readTargetValue();
+        if (getMode() !== 'qty_only' && tv !== null) return tv - curVal;
+        return (getMode() === 'qty_only') ? 0 : qty * effPrice(qty);
+    }
+
     function updatePreview() {
-        var qty = parseFloat($id('sam-adjust').value);
-        var valid = !isNaN(qty) && qty !== 0;
+        var qtyRaw = parseFloat($id('sam-adjust').value);
+        var qty = isNaN(qtyRaw) ? 0 : qtyRaw;
+        var valueOnly = isValueOnly(qty);
+        var valid = qty !== 0 || valueOnly;
         $id('sam-preview').hidden = !valid;
         $id('sam-preview-empty').style.display = valid ? 'none' : '';
         if (!valid) { updateSteps(); $id('sam-save').disabled = true; return; }
 
-        var price = effPrice(qty);
-        var vDelta = (getMode() === 'qty_only') ? 0 : qty * price;
+        var vDelta = valueDeltaFor(qty);
         $id('sam-pv-before-qty').textContent = fmtQty(curQty);
         $id('sam-pv-before-val').textContent = fmtMoney(curVal);
         var dq = $id('sam-pv-delta-qty'), dv = $id('sam-pv-delta-val');
-        dq.textContent = (qty > 0 ? '+' : '') + fmtQty(qty);
-        dq.className = 'sam-preview__qty ' + (qty > 0 ? 'is-up' : 'is-down');
+        dq.textContent = valueOnly ? 'คงเดิม' : ((qty > 0 ? '+' : '') + fmtQty(qty));
+        dq.className = 'sam-preview__qty ' + (valueOnly ? '' : (qty > 0 ? 'is-up' : 'is-down'));
         dv.textContent = vDelta === 0 ? 'มูลค่าคงเดิม' : ((vDelta > 0 ? '+' : '') + fmtMoney(vDelta));
         dv.className = 'sam-preview__val ' + (vDelta > 0 ? 'is-up' : (vDelta < 0 ? 'is-down' : ''));
         $id('sam-pv-after-qty').textContent = fmtQty(curQty + qty);
@@ -392,10 +409,12 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
 
     // ไล่สถานะ done/active ของ stepper ตามความคืบหน้าจริง
     function updateSteps() {
-        var qty = parseFloat($id('sam-adjust').value);
+        var qtyRaw = parseFloat($id('sam-adjust').value);
+        var qty = isNaN(qtyRaw) ? 0 : qtyRaw;
+        var valueOnly = isValueOnly(qty);
         var done1 = true;
-        var done2 = !isNaN(qty) && qty !== 0;
-        var done3 = done2 && (getMode() === 'qty_only' || effPrice(qty) > 0);
+        var done2 = qty !== 0 || valueOnly;
+        var done3 = done2 && (getMode() === 'qty_only' || valueOnly || effPrice(qty) > 0);
         var doneMap = { 1: done1, 2: done2, 3: done3 };
         var active = !done2 ? 2 : (!done3 ? 3 : 4);
         Array.prototype.forEach.call(root.querySelectorAll('.sam-step'), function (el) {
@@ -410,7 +429,7 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
         root.classList.toggle('is-qty-only', mode === 'qty_only');
         var qty = parseFloat($id('sam-adjust').value);
         var isDecrease = !isNaN(qty) && qty < 0;
-        var showPrice = (mode !== 'qty_only') && (isNaN(qty) || qty > 0);
+        var showPrice = (mode !== 'qty_only') && (isNaN(qty) || qty >= 0);
         $id('sam-price-wrap').style.display = showPrice ? '' : 'none';
 
         var hint = $id('sam-price-hint');
@@ -448,8 +467,9 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
     });
 
     $id('sam-save').addEventListener('click', function () {
-        var qty = parseFloat($id('sam-adjust').value);
-        if (isNaN(qty) || qty === 0) { alert('กรุณาระบุจำนวนที่ปรับ (บวก/ลบ ไม่ใช่ศูนย์)'); return; }
+        var qtyRaw = parseFloat($id('sam-adjust').value);
+        var qty = isNaN(qtyRaw) ? 0 : qtyRaw;
+        if (qty === 0 && !isValueOnly(qty)) { alert('กรุณาระบุจำนวนที่ปรับ หรือมูลค่าเป้าหมายที่ต่างจากเดิม'); return; }
         var btn = this;
         btn.disabled = true; btn.classList.add('is-saving');
         btn.querySelector('.btn-save__label').textContent = 'กำลังบันทึก...';
@@ -463,6 +483,8 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
                 target_qty: $id('sam-target').value,
                 mode: getMode(),
                 unit_price: $id('sam-price').value,
+                current_value: curVal,
+                target_value: $id('sam-target-value').value,
                 source: 'balance-modal',
                 note: $id('sam-note').value
             }
