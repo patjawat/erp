@@ -220,7 +220,8 @@ class StockItemController extends Controller
         $filenameUtf8 = 'รายการพัสดุ-' . date('Ymd-His') . '.xlsx';
         $filenameAscii = 'stock-items-' . date('Ymd-His') . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8) . '"');
+        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8));
+        header('Cache-Control: max-age=0');
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;

@@ -82,8 +82,9 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
-     * Cascade endpoint: คืน leaf ภายใต้หมวด + ค่า default ค่าเสื่อมของหมวด
-     * รับ POST/GET group_code, ตอบ JSON { items:[{id,text}], defaults:{useful_life,depreciation_rate} }
+     * Cascade endpoint: คืนลูกภายใต้ node (หมวด/หมวดย่อย) + ค่า default ค่าเสื่อมของ node นั้น
+     * รับ POST/GET group_code, ตอบ JSON { items:[{id,text,has_children}], defaults:{useful_life,depreciation_rate} }
+     * has_children=true หมายถึง item นั้นยังมีลูกต่อ (ต้อง cascade อีกชั้น) ไม่ใช่ leaf จริง
      */
     public function actionStructureDepdrop()
     {
@@ -93,10 +94,11 @@ class StructureController extends \yii\web\Controller
 
         $model = new Asset();
         $leaves = $model->ListStructureTypeByGroup($groupCode);
+        $childCodes = $model->getStructureChildCodes();
 
         $items = [];
         foreach ($leaves as $code => $title) {
-            $items[] = ['id' => $code, 'text' => $title];
+            $items[] = ['id' => $code, 'text' => $title, 'has_children' => in_array($code, $childCodes, true)];
         }
 
         $defaults = ['useful_life' => null, 'depreciation_rate' => null];

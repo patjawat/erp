@@ -105,7 +105,8 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price', 'asset_status','useful_life','asset_condition'], 'required'],
+            // useful_life ไม่ required แล้ว — ถูกล็อกจากหมวดทรัพย์สินใน beforeSave (หลัง validation)
+            [['price', 'asset_status','asset_condition'], 'required'],
             [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'gfmis', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind','risk_level'], 'safe'],
             [['risk_level'], 'in', 'range' => ['H', 'M', 'L', null], 'strict' => false],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
@@ -172,9 +173,13 @@ class Asset extends \yii\db\ActiveRecord
             ->orderBy(['created_at' => SORT_DESC]);
     }
 
-    public function listAssetType()
+    /**
+     * รายการ "ประเภท" ตามกลุ่มทรัพย์สิน — EQUIP=ครุภัณฑ์, STRUCT=สิ่งปลูกสร้าง ฯลฯ
+     * (ใช้ร่วมกันระหว่างฟอร์มครุภัณฑ์และสิ่งปลูกสร้าง ต่างกันแค่ group_id)
+     */
+    public function listAssetType($group = 'EQUIP')
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => $group])->all(), 'code', 'title');
     }
 
     public function listAssetCategory()
@@ -345,6 +350,9 @@ class Asset extends \yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
+        // flow ทะเบียนครุภัณฑ์: ล็อกค่าเสื่อมจากหมวด + fsn_number เป็นหมายเลขเต็ม (code = mirror)
+        $this->applyEquipCategoryRules();
+
         try {
             if ($this->asset_group_id == 2) {
                 // try {
@@ -431,6 +439,57 @@ class Asset extends \yii\db\ActiveRecord
         $this->depreciation_rate = $v;
         $dj['depreciation'] = $v;
         $this->data_json = $dj;
+    }
+
+    /**
+     * กติกาของ flow ทะเบียนครุภัณฑ์ที่ผูกกับ "หมวดทรัพย์สิน" (asset_category_id = categorise.code = FSN prefix):
+     *
+     * 1) ค่าเสื่อม (useful_life / depreciation_rate) — หมวดเป็นแหล่งเดียว "ล็อก" override ค่าที่ผู้ใช้ส่งมาเสมอ
+     * 2) หมายเลขครุภัณฑ์ — `fsn_number` เก็บหมายเลขเต็ม, `code` เป็น mirror ของ `fsn_number`
+     *    (QR / asset_detail.code / isCar / sequence generator ยังอ้าง code ได้เหมือนเดิม)
+     *
+     * รองรับช่วงเปลี่ยนผ่านฟอร์มเก่า: ฟอร์มเดิมส่งหมายเลขเต็มมาที่ code และส่ง prefix มาที่ fsn_number
+     * ถ้ายังไม่มีหมายเลขเต็มเลย จะ generate จาก prefix + ปีงบประมาณ (ทำเฉพาะตอน save จริง ไม่กิน sequence ตอน ajax validate)
+     */
+    protected function applyEquipCategoryRules(): void
+    {
+        $prefix = trim((string) $this->asset_category_id);
+        if ($prefix === '') {
+            return; // ไม่ใช่ flow ที่ผูกกับหมวดทรัพย์สิน (เช่น group 2/3 legacy) — ไม่ยุ่ง
+        }
+
+        // 1) ค่าเสื่อมจากหมวด (หมวดเป็นแหล่งเดียว) — override เฉพาะเมื่อหมวดกำหนดค่าไว้
+        //    ถ้าหมวดยังไม่กำหนด (NULL) คงค่าเดิมของ asset ไว้ ไม่ลบทิ้ง (กันข้อมูลค่าเสื่อมเดิมหาย)
+        $category = AssetCategory::find()
+            ->where(['name' => 'asset_category', 'code' => $prefix])
+            ->one();
+        if ($category !== null) {
+            if ($category->useful_life !== null && $category->useful_life !== '') {
+                $this->useful_life = $category->useful_life;
+            }
+            if ($category->depreciation_rate !== null && $category->depreciation_rate !== '') {
+                $this->depreciation_rate = $category->depreciation_rate;
+            }
+        }
+
+        // 2) หมายเลขครุภัณฑ์เต็ม + mirror
+        $looksFull = static function ($s): bool {
+            $s = trim((string) $s);
+            return $s !== '' && strpos($s, '/') !== false;
+        };
+
+        if ($looksFull($this->fsn_number)) {
+            $number = trim((string) $this->fsn_number);      // ฟอร์มใหม่: เลขเต็มอยู่ที่ fsn_number แล้ว
+        } elseif ($looksFull($this->code)) {
+            $number = trim((string) $this->code);            // ฟอร์มเก่า: เลขเต็มอยู่ที่ code
+        } else {
+            $number = AssetNumberGenerator::generate($prefix, $this->on_year); // ยังไม่มี → สร้างใหม่
+        }
+
+        if ($number !== '') {
+            $this->fsn_number = $number;
+            $this->code = $number;
+        }
     }
 
     public function afterSave($insert, $changedAttributes)
@@ -872,6 +931,44 @@ class Asset extends \yii\db\ActiveRecord
             'group_title'       => $parent->title ?? null,
             'allow_other_note'  => !empty($leafJson['allow_other_note']),
         ];
+    }
+
+    /**
+     * ชุด code ของ node ที่ "มีลูก" (ถูกใช้เป็น category_id ของ node อื่น) — ใช้เช็คว่า
+     * node หนึ่งเป็นหมวด/หมวดย่อย (ต้อง cascade ต่อ) หรือเป็น leaf จริง โดยไม่ยิง query ต่อ node
+     * @return string[]
+     */
+    public function getStructureChildCodes()
+    {
+        return Categorise::find()
+            ->where(['name' => 'structure_type'])
+            ->andWhere(['not', ['category_id' => null]])
+            ->select('category_id')
+            ->distinct()
+            ->column();
+    }
+
+    /**
+     * เดินขึ้นจาก code ที่ให้มาไปตาม category_id จนถึงราก คืน path เรียงจากบนลงล่าง
+     * ใช้ resolve หมวด/หมวดย่อย/leaf ที่ถูกต้องปัจจุบันจาก leaf code เสมอ (leaf ไม่เคยย้ายที่
+     * แม้หมวดของมันจะถูกจัดกลุ่มใหม่ในภายหลัง)
+     * @return array<int,array{code:string,title:string}>
+     */
+    public function getStructureAncestryFor($code)
+    {
+        $path = [];
+        $current = $code;
+        $guard = 0;
+        while (!empty($current) && $guard < 5) {
+            $row = Categorise::find()->where(['name' => 'structure_type', 'code' => $current])->one();
+            if (!$row) {
+                break;
+            }
+            array_unshift($path, ['code' => $row->code, 'title' => $row->title]);
+            $current = $row->category_id;
+            $guard++;
+        }
+        return $path;
     }
 
     public function ListAssetstatus()

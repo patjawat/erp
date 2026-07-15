@@ -28,6 +28,7 @@ class AssetCategory extends \yii\db\ActiveRecord
 
 
     public $q;
+
     /**
      * {@inheritdoc}
      */
@@ -46,6 +47,8 @@ class AssetCategory extends \yii\db\ActiveRecord
             [['active'], 'default', 'value' => 1],
             [['name'], 'required'],
             [['qty', 'active'], 'integer'],
+            [['useful_life'], 'integer', 'min' => 1],
+            [['depreciation_rate'], 'number', 'min' => 0],
             [['data_json', 'ma_items','q'], 'safe'],
             [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
         ];
@@ -70,6 +73,8 @@ class AssetCategory extends \yii\db\ActiveRecord
             'data_json' => 'Data Json',
             'ma_items' => 'รายการบำรุงรักษา',
             'active' => 'Active',
+            'useful_life' => 'อายุการใช้งาน (ปี)',
+            'depreciation_rate' => 'อัตราค่าเสื่อม (%)',
         ];
     }
 
@@ -79,8 +84,8 @@ class AssetCategory extends \yii\db\ActiveRecord
             return $this->hasOne(Categorise::class, ['code' => 'category_id'])->andOnCondition(['name' => 'asset_type']);
         }
 
-            public function listAssetType(){
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => 'EQUIP'])->all(),'code','title');
+            public function listAssetType($group = 'EQUIP'){
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type','group_id' => $group])->all(),'code','title');
     }
     
 

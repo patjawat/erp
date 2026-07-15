@@ -34,6 +34,69 @@ class AssetTypeController extends Controller
         );
     }
 
+    public function beforeAction($action)
+    {
+        // กัน browser/proxy cache ผลลัพธ์ของ offcanvas ตั้งค่า (ต้องเห็นข้อมูลล่าสุดทันทีหลังแก้ไข)
+        if (in_array($action->id, ['setting-panel', 'setting-panel-items', 'update', 'create', 'delete'], true)) {
+            Yii::$app->response->getHeaders()
+                ->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->set('Pragma', 'no-cache');
+        }
+
+        return parent::beforeAction($action);
+    }
+
+    /**
+     * Offcanvas ตั้งค่า "ประเภท" จากเมนู — โหลด panel เต็ม (ตัวกรองกลุ่ม + ค้นหา + รายการ)
+     */
+    public function actionSettingPanel()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $cfg = $this->settingConfig((string) $this->request->get('q', ''), (string) $this->request->get('filter', ''));
+
+        return ['content' => $this->renderAjax('@app/modules/am/views/setting-quick/_panel', ['cfg' => $cfg])];
+    }
+
+    /**
+     * Offcanvas ตั้งค่า "ประเภท" — เฉพาะแถวรายการ (ใช้รีเฟรชหลังค้นหา/กรอง/ลบ/บันทึก)
+     */
+    public function actionSettingPanelItems()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $cfg = $this->settingConfig((string) $this->request->get('q', ''), (string) $this->request->get('filter', ''));
+
+        return ['content' => $this->renderAjax('@app/modules/am/views/setting-quick/_items', ['cfg' => $cfg])];
+    }
+
+    /**
+     * config ร่วมของ setting-quick panel/items (กรอง name=asset_type ตามกลุ่ม + ค้นหาชื่อ/รหัส)
+     */
+    private function settingConfig($q, $filter)
+    {
+        $query = AssetType::find()->where(['name' => 'asset_type']);
+        if ($filter !== '') {
+            $query->andWhere(['group_id' => $filter]);
+        }
+        if ($q !== '') {
+            $query->andWhere(['or', ['like', 'title', $q], ['like', 'code', $q]]);
+        }
+        $items = $query->orderBy(['id' => SORT_DESC])->all();
+
+        return [
+            'entity' => 'type',
+            'label' => 'ประเภททรัพย์สิน',
+            'items' => $items,
+            'q' => $q,
+            'filterOptions' => \app\modules\am\components\AssetHelper::assetGroupOptions(),
+            'filterLabel' => 'ทุกกลุ่มทรัพย์สิน',
+            'selectedFilter' => $filter,
+            'createUrl' => ['/am/asset-type/create', 'group' => $filter !== '' ? $filter : 'EQUIP'],
+            'updateUrl' => ['/am/asset-type/update'],
+            'deleteUrl' => ['/am/asset-type/delete'],
+            'indexUrl' => ['/am/asset-type/index'],
+        ];
+    }
+
         public function actionValidator()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -88,10 +151,16 @@ class AssetTypeController extends Controller
      */
     public function actionIndex()
     {
+        // กลุ่มที่เลือกจาก dropdown (ครุภัณฑ์/สิ่งปลูกสร้าง/อาคาร) — default = ครุภัณฑ์
+        $group = (string) $this->request->get('group', 'EQUIP');
+        if (!\app\modules\am\components\AssetHelper::isEnabledAssetGroup($group)) {
+            $group = 'EQUIP';
+        }
+
         $searchModel = new AssetTypeSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->sort = ['defaultOrder' => ['id' => SORT_DESC]];
-        $dataProvider->query->where(['name' => 'asset_type','group_id' =>'EQUIP']);
+        $dataProvider->query->where(['name' => 'asset_type', 'group_id' => $group]);
         $dataProviderGroup = $searchModel->search($this->request->queryParams);
         $dataProviderGroup->sort = ['defaultOrder' => ['id' => SORT_DESC]];
         $dataProviderGroup->query->andFilterWhere(['name' => 'asset_type', 'active' => true]);
@@ -100,6 +169,7 @@ class AssetTypeController extends Controller
             'searchModel' => $searchModel,
             'dataProviderGroup' => $dataProviderGroup,
             'dataProvider' => $dataProvider,
+            'group' => $group,
         ]);
     }
 
@@ -146,9 +216,16 @@ class AssetTypeController extends Controller
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+
+        // สร้างประเภทให้กับกลุ่มที่กำลังดูอยู่ (default = ครุภัณฑ์) กัน param ปลอมด้วย whitelist
+        $group = (string) $this->request->get('group', 'EQUIP');
+        if (!\app\modules\am\components\AssetHelper::isEnabledAssetGroup($group)) {
+            $group = 'EQUIP';
+        }
+
         $model = new AssetType([
             'name' => 'asset_type',
-            'group_id' => 'EQUIP'
+            'group_id' => $group,
         ]);
 
         if ($this->request->isPost) {
@@ -210,6 +287,12 @@ class AssetTypeController extends Controller
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
+
+        // ลบผ่าน offcanvas ตั้งค่า (AJAX) — ตอบ JSON ให้ JS รีเฟรชรายการได้ ไม่ต้องโหลดหน้า index
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['status' => 'success'];
+        }
 
         return $this->redirect(['index']);
     }

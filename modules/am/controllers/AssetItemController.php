@@ -202,17 +202,81 @@ class AssetItemController extends Controller
 
             if ($parents != null) {
                 $type_id = $parents[0];
-                $out = Categorise::find()
+                $categories = Categorise::find()
                     ->where(['category_id' => $type_id, 'name' => 'asset_category'])
-                    ->select(['code as id', 'title as name'])
+                    ->select(['code', 'title'])
                     ->asArray()
                     ->all();
+
+                // ต่อท้ายรหัสหมวดหมู่ (categorise.code) ในชื่อรายการตัวเลือก เช่น "คอมพิวเตอร์และอุปกรณ์ : COM"
+                $out = array_map(function ($category) {
+                    return [
+                        'id' => $category['code'],
+                        'name' => $category['code'] !== '' ? $category['title'] . ' : ' . $category['code'] : $category['title'],
+                    ];
+                }, $categories);
 
                 return ['output' => $out, 'selected' => ''];
             }
         }
 
         return ['output' => '', 'selected' => ''];
+    }
+
+    /**
+     * ดึงรหัสหมวดหมู่ครุภัณฑ์ (categorise.code, name=asset_category)
+     * ใช้เติมช่อง FSN อัตโนมัติในฟอร์มเพิ่มทะเบียนทรัพย์สินใหม่ เมื่อเลือกหมวดหมู่
+     */
+    public function actionGetCategoryFsn()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $code = Yii::$app->request->get('code');
+        if (!$code) {
+            return ['fsn' => ''];
+        }
+
+        $category = Categorise::find()->where(['name' => 'asset_category', 'code' => $code])->one();
+        if (!$category) {
+            return ['fsn' => ''];
+        }
+
+        return ['fsn' => $category->code];
+    }
+
+    /**
+     * ดึงค่า default ของหมวด (categorise.data_json, name=asset_category) — useful_life,
+     * depreciation_rate, allow_other_note — ใช้ auto-fill ค่าเสื่อมในฟอร์มสิ่งปลูกสร้าง
+     * เมื่อผู้ใช้เลือก "หมวด" (โครงสร้างเดียวกับครุภัณฑ์ ต่างแค่กลุ่ม)
+     */
+    public function actionCategoryDefaults()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $code = trim((string) Yii::$app->request->get('code', ''));
+        $empty = ['useful_life' => null, 'depreciation_rate' => null, 'allow_other_note' => false];
+        if ($code === '') {
+            return ['status' => 'success', 'defaults' => $empty];
+        }
+
+        $category = Categorise::find()->where(['name' => 'asset_category', 'code' => $code])->one();
+        if (!$category) {
+            return ['status' => 'success', 'defaults' => $empty];
+        }
+
+        // ค่าเสื่อมย้ายมาเป็นคอลัมน์จริงบน categorise แล้ว (ไม่เก็บใน data_json)
+        $json = is_array($category->data_json)
+            ? $category->data_json
+            : (is_string($category->data_json) ? (json_decode($category->data_json, true) ?: []) : []);
+
+        return [
+            'status' => 'success',
+            'defaults' => [
+                'useful_life'       => $category->useful_life,
+                'depreciation_rate' => $category->depreciation_rate,
+                'allow_other_note'  => !empty($json['allow_other_note']),
+            ],
+        ];
     }
 
     /**

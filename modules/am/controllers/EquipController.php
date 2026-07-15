@@ -43,6 +43,7 @@ class EquipController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'quick-update' => ['POST'],
                     ],
                 ],
             ]
@@ -375,7 +376,10 @@ class EquipController extends Controller
             $model->ref = substr(Yii::$app->security->generateRandomString(), 10);
             $model->created_at = date('Y-m-d H:i:s');
             $model->updated_at = null;
-            $model->code = AssetHelper::nextAssetCode($model->fsn_number); // สร้างรหัสใหม่
+            // clone: เคลียร์หมายเลขเดิม ให้ beforeSave สร้างหมายเลขใหม่จากหมวด (asset_category_id) ตอนบันทึก
+            $clonedNumber = $cloneAsset->fsn_number ?: $cloneAsset->code;
+            $model->code = null;
+            $model->fsn_number = null;
             // แปลง receive_date ถ้ามีค่า
             if (!empty($model->receive_date)) {
                 $model->receive_date = AppHelper::convertToThai($model->receive_date);
@@ -394,9 +398,8 @@ class EquipController extends Controller
                 ? AppHelper::convertToThai($dataJson['inspection_date'])
                 : null;
 
-            $dataJson['fsn_old'] = !empty($dataJson['fsn_old'])
-                ? $dataJson['fsn_old'] = $model->code
-                : null;
+            // เก็บหมายเลขเดิมของตัวที่ clone มาไว้อ้างอิง (ถ้ายังไม่มี fsn_old เดิม)
+            $dataJson['fsn_old'] = !empty($dataJson['fsn_old']) ? $dataJson['fsn_old'] : $clonedNumber;
 
 
 
@@ -515,6 +518,344 @@ class EquipController extends Controller
             'title' => $title,
             'content' => $this->renderAjax('is_computer/_form_computer', ['model' => $model]),
         ];
+    }
+
+    /**
+     * แก้ไขค่าเดียวแบบ inline จากหน้า list (popover) — สภาพ/สถานะ/ความเสี่ยง/ราคา/วันที่รับ
+     * รับ POST { field, value } เฉพาะฟิลด์ใน whitelist แล้วคืน HTML ของเซลล์ที่ render จาก model
+     * เพื่อให้ badge เป็น single source of truth ตาม design system
+     */
+    public function actionQuickUpdate($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->user->can('asset')) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิแก้ไขข้อมูล'];
+        }
+
+        $model = $this->findModel($id);
+        $field = (string) $this->request->post('field', '');
+        $value = $this->request->post('value');
+
+        $allowed = ['asset_condition', 'asset_status', 'risk_level', 'price', 'receive_date'];
+        if (!in_array($field, $allowed, true)) {
+            return ['status' => 'error', 'message' => 'ไม่รองรับการแก้ไขฟิลด์นี้'];
+        }
+
+        // ตรวจ + normalize ตามชนิดฟิลด์ ก่อนบันทึก
+        switch ($field) {
+            case 'asset_condition':
+                $valid = ArrayHelper::map(\app\modules\am\models\AssetCondition::find()->all(), 'id', 'id');
+                if (!isset($valid[$value])) {
+                    return ['status' => 'error', 'message' => 'สภาพครุภัณฑ์ไม่ถูกต้อง'];
+                }
+                $model->asset_condition = $value;
+                break;
+
+            case 'asset_status':
+                $valid = ArrayHelper::map(\app\modules\am\models\AssetStatus::find()->all(), 'id', 'id');
+                if (!isset($valid[$value])) {
+                    return ['status' => 'error', 'message' => 'สถานะไม่ถูกต้อง'];
+                }
+                $model->asset_status = $value;
+                break;
+
+            case 'risk_level':
+                $value = $value === '' ? null : (string) $value;
+                if ($value !== null && !in_array($value, ['H', 'M', 'L'], true)) {
+                    return ['status' => 'error', 'message' => 'ระดับความเสี่ยงไม่ถูกต้อง'];
+                }
+                $model->risk_level = $value;
+                break;
+
+            case 'price':
+                if (!is_numeric($value) || (float) $value < 0) {
+                    return ['status' => 'error', 'message' => 'ราคาต้องเป็นตัวเลขไม่ติดลบ'];
+                }
+                $model->price = (float) $value;
+                break;
+
+            case 'receive_date':
+                // popover ส่งค่ารูปแบบไทย d/m/พ.ศ. จาก DatepickerThai — แปลงเป็นรูปแบบ DB
+                $value = trim((string) $value);
+                $model->receive_date = $value === '' ? null : AppHelper::DateToDb($value);
+                break;
+        }
+
+        if (!$model->save(false)) {
+            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
+        }
+
+        // คืนค่า canonical จาก model เพื่อให้ data-qedit-value ตรงกับที่บันทึกจริง
+        $returnValue = (string) ($value ?? '');
+        if ($field === 'receive_date') {
+            $returnValue = $model->receive_date ? AppHelper::DateFormDb(substr((string) $model->receive_date, 0, 10)) : '';
+        } elseif ($field === 'price') {
+            $returnValue = (string) (float) $model->price;
+        }
+
+        return [
+            'status' => 'success',
+            'field' => $field,
+            'value' => $returnValue,
+            'html' => $this->quickCellHtml($model, $field),
+        ];
+    }
+
+    /**
+     * สร้าง HTML ภายในเซลล์สำหรับฟิลด์ quick-edit — ใช้ model method เป็นแหล่งความจริงเดียวของ badge
+     */
+    private function quickCellHtml($model, $field)
+    {
+        switch ($field) {
+            case 'asset_condition':
+                return $model->getConditionBadge();
+            case 'asset_status':
+                return $model->getStatusBadge();
+            case 'risk_level':
+                return $model->getRiskLevelBadge();
+            case 'price':
+                return number_format((float) ($model->price ?? 0), 2);
+            case 'receive_date':
+                if (empty($model->receive_date)) {
+                    return '<span class="text-body-tertiary">—</span>';
+                }
+                $date = \yii\helpers\Html::encode(Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium'));
+                $age = \yii\helpers\Html::encode(AssetHelper::receiveAgeText($model->receive_date));
+                return '<div>' . $date . '</div>'
+                    . ($age !== '' ? '<div class="small text-primary mt-1">' . $age . '</div>' : '');
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * Modal quick-edit สำหรับฟิลด์ที่พึ่งพากัน — section = category (ประเภท+หมวดหมู่) หรือ assignment (สถานที่+หน่วยงาน+ผู้รับผิดชอบ)
+     * GET: render ฟอร์มในโมดัล (reuse Select2/DepDrop) — POST: บันทึกแล้วให้หน้า list reload
+     */
+    public function actionQuickEdit($id, $section = 'category')
+    {
+        $model = $this->findModel($id);
+        $sections = ['category', 'assignment'];
+        if (!in_array($section, $sections, true)) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        // เก็บ data_json เดิมไว้ก่อน load — เพราะ load() จะเขียนทับทั้งก้อนด้วยแค่ค่าที่ฟอร์มส่งมา
+        $oldDataJson = is_array($model->data_json) ? $model->data_json : [];
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if (!Yii::$app->user->can('asset')) {
+                return ['status' => 'error', 'message' => 'ไม่มีสิทธิแก้ไขข้อมูล'];
+            }
+
+            // location เก็บใน data_json — merge กับของเดิมเสมอไม่ให้ค่าอื่น (brand/cpu/serial ฯลฯ) หาย
+            if ($section === 'assignment') {
+                $model->data_json = ArrayHelper::merge($oldDataJson, is_array($model->data_json) ? $model->data_json : []);
+            }
+
+            if ($model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'container' => '#am-container',
+                    'close' => true,
+                ];
+            }
+            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $titles = [
+                'category' => '<i class="fa-solid fa-tags me-2"></i> เปลี่ยนประเภท / หมวดหมู่',
+                'assignment' => '<i class="fa-solid fa-location-dot me-2"></i> เปลี่ยนสถานที่ / ผู้รับผิดชอบ',
+            ];
+            return [
+                'title' => $titles[$section],
+                'content' => $this->renderAjax('_quick_edit_form', [
+                    'model' => $model,
+                    'section' => $section,
+                ]),
+            ];
+        }
+
+        return $this->render('_quick_edit_form', [
+            'model' => $model,
+            'section' => $section,
+        ]);
+    }
+
+    /**
+     * แก้ไขหลายรายการพร้อมกัน (bulk edit) จากหน้า list — เลือกด้วย checkbox แล้วกำหนดค่าเดียวให้ทุกตัว
+     * GET: render ฟอร์มในโมดัลตาม section — POST: รับ ids[] + ค่าจากฟอร์ม แล้ว apply ให้ทุกรายการที่เลือก
+     *
+     * section: category (ประเภท+หมวดหมู่) | assignment (สถานที่+หน่วยงาน+ผู้รับผิดชอบ)
+     *          | receive_date | price | asset_condition | risk_level | asset_status
+     */
+    public function actionBulkEdit($section = 'category')
+    {
+        $sections = ['category', 'assignment', 'receive_date', 'price', 'asset_condition', 'risk_level', 'asset_status'];
+        if (!in_array($section, $sections, true)) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            if (!Yii::$app->user->can('asset')) {
+                return ['status' => 'error', 'message' => 'ไม่มีสิทธิแก้ไขข้อมูล'];
+            }
+
+            $ids = (array) $this->request->post('ids', []);
+            $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+            if (empty($ids)) {
+                return ['status' => 'error', 'message' => 'กรุณาเลือกรายการอย่างน้อย 1 รายการ'];
+            }
+
+            $post = (array) $this->request->post('Asset', []);
+
+            // ตรวจสอบ + เตรียมค่าที่จะ apply เพียงครั้งเดียวก่อนวนบันทึก
+            $apply = null; // function (Asset $m): void
+            switch ($section) {
+                case 'category':
+                    $typeId = trim((string) ($post['asset_type_id'] ?? ''));
+                    $categoryId = trim((string) ($post['asset_category_id'] ?? ''));
+                    if ($categoryId === '') {
+                        return ['status' => 'error', 'message' => 'กรุณาเลือกหมวดหมู่'];
+                    }
+                    $apply = function ($m) use ($typeId, $categoryId) {
+                        if ($typeId !== '') {
+                            $m->asset_type_id = $typeId;
+                        }
+                        $m->asset_category_id = $categoryId;
+                    };
+                    break;
+
+                case 'assignment':
+                    // ช่องที่เว้นว่าง = ไม่แก้ไข (กันข้อมูลเดิมถูกล้างโดยไม่ตั้งใจ)
+                    $location = array_key_exists('data_json', $post) && is_array($post['data_json'])
+                        ? trim((string) ($post['data_json']['location'] ?? '')) : '';
+                    $department = trim((string) ($post['department'] ?? ''));
+                    $owner = trim((string) ($post['owner'] ?? ''));
+                    if ($location === '' && $department === '' && $owner === '') {
+                        return ['status' => 'error', 'message' => 'กรุณาระบุอย่างน้อย 1 ช่อง (สถานที่ / หน่วยงาน / ผู้รับผิดชอบ)'];
+                    }
+                    $apply = function ($m) use ($location, $department, $owner) {
+                        if ($department !== '') {
+                            $m->department = $department;
+                        }
+                        if ($owner !== '') {
+                            $m->owner = $owner;
+                        }
+                        if ($location !== '') {
+                            $dj = is_array($m->data_json) ? $m->data_json : [];
+                            $dj['location'] = $location;
+                            $m->data_json = $dj;
+                        }
+                    };
+                    break;
+
+                case 'receive_date':
+                    $value = trim((string) ($post['receive_date'] ?? ''));
+                    if ($value === '') {
+                        return ['status' => 'error', 'message' => 'กรุณาระบุวันที่รับ'];
+                    }
+                    $dbDate = AppHelper::DateToDb($value);
+                    $apply = function ($m) use ($dbDate) {
+                        $m->receive_date = $dbDate;
+                    };
+                    break;
+
+                case 'price':
+                    $value = $post['price'] ?? '';
+                    if (!is_numeric($value) || (float) $value < 0) {
+                        return ['status' => 'error', 'message' => 'ราคาต้องเป็นตัวเลขไม่ติดลบ'];
+                    }
+                    $price = (float) $value;
+                    $apply = function ($m) use ($price) {
+                        $m->price = $price;
+                    };
+                    break;
+
+                case 'asset_condition':
+                    $value = (string) ($post['asset_condition'] ?? '');
+                    $valid = ArrayHelper::map(\app\modules\am\models\AssetCondition::find()->all(), 'id', 'id');
+                    if (!isset($valid[$value])) {
+                        return ['status' => 'error', 'message' => 'สภาพครุภัณฑ์ไม่ถูกต้อง'];
+                    }
+                    $apply = function ($m) use ($value) {
+                        $m->asset_condition = $value;
+                    };
+                    break;
+
+                case 'asset_status':
+                    $value = (string) ($post['asset_status'] ?? '');
+                    $valid = ArrayHelper::map(\app\modules\am\models\AssetStatus::find()->all(), 'id', 'id');
+                    if (!isset($valid[$value])) {
+                        return ['status' => 'error', 'message' => 'สถานะไม่ถูกต้อง'];
+                    }
+                    $apply = function ($m) use ($value) {
+                        $m->asset_status = $value;
+                    };
+                    break;
+
+                case 'risk_level':
+                    $value = trim((string) ($post['risk_level'] ?? ''));
+                    $value = $value === '' ? null : $value;
+                    if ($value !== null && !in_array($value, ['H', 'M', 'L'], true)) {
+                        return ['status' => 'error', 'message' => 'ระดับความเสี่ยงไม่ถูกต้อง'];
+                    }
+                    $apply = function ($m) use ($value) {
+                        $m->risk_level = $value;
+                    };
+                    break;
+            }
+
+            $models = Asset::find()->where(['in', 'id', $ids])->andWhere('deleted_at IS NULL')->all();
+            $ok = 0;
+            foreach ($models as $m) {
+                $apply($m);
+                if ($m->save(false)) {
+                    $ok++;
+                }
+            }
+
+            return [
+                'status' => 'success',
+                'container' => '#am-container',
+                'close' => true,
+                'message' => 'อัปเดต ' . $ok . ' รายการแล้ว',
+            ];
+        }
+
+        $model = new Asset(['asset_group_id' => 4]);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $titles = [
+                'category' => '<i class="fa-solid fa-tags me-2"></i> เปลี่ยนหมวดหมู่ (หลายรายการ)',
+                'assignment' => '<i class="fa-solid fa-location-dot me-2"></i> เปลี่ยนสถานที่ / ผู้รับผิดชอบ (หลายรายการ)',
+                'receive_date' => '<i class="fa-regular fa-calendar me-2"></i> เปลี่ยนวันที่รับ (หลายรายการ)',
+                'price' => '<i class="fa-solid fa-tag me-2"></i> เปลี่ยนราคาแรกรับ (หลายรายการ)',
+                'asset_condition' => '<i class="fa-solid fa-heart-pulse me-2"></i> เปลี่ยนสภาพ (หลายรายการ)',
+                'risk_level' => '<i class="fa-solid fa-triangle-exclamation me-2"></i> เปลี่ยนความเสี่ยง (หลายรายการ)',
+                'asset_status' => '<i class="fa-solid fa-circle-info me-2"></i> เปลี่ยนสถานะ (หลายรายการ)',
+            ];
+            return [
+                'title' => $titles[$section],
+                'content' => $this->renderAjax('_bulk_edit_form', [
+                    'model' => $model,
+                    'section' => $section,
+                ]),
+            ];
+        }
+
+        return $this->render('_bulk_edit_form', [
+            'model' => $model,
+            'section' => $section,
+        ]);
     }
 
     private static function CheckUpdateData($model)

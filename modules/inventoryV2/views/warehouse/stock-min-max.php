@@ -25,6 +25,14 @@ $coveragePct = $totalItems > 0 ? round(($configuredItems / $totalItems) * 100) :
 $categoryOptions = $categoryOptions ?? [];
 $baseUrl = ['/inventory-v2/warehouse/stock-min-max', 'id' => $warehouse->id];
 
+// ตัวกรองที่ active — แนบไปกับลิงก์ export เพื่อให้ Excel ส่งออกตรงกับที่เห็นบนหน้าจอ
+$exportFilterParams = array_filter([
+    'q' => $q,
+    'status' => $status,
+    'category_id' => $categoryId,
+], static fn($v) => $v !== '' && $v !== null);
+$hasExportFilter = !empty($exportFilterParams);
+
 $this->title = 'ตั้ง min/max วัสดุ: ' . $warehouse->warehouse_name;
 $this->params['breadcrumbs'][] = ['label' => 'ตั้งค่าคลัง', 'url' => ['/inventory-v2/default/setting']];
 $this->params['breadcrumbs'][] = $warehouse->warehouse_name;
@@ -218,13 +226,20 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <?php if ($hasExportFilter): ?>
+                                    <li>
+                                        <h6 class="dropdown-header d-flex align-items-center gap-1">
+                                            <i class="bi bi-funnel-fill text-primary"></i>ส่งออกเฉพาะรายการที่กรองอยู่
+                                        </h6>
+                                    </li>
+                                <?php endif; ?>
                                 <li>
-                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'template']) ?>">
+                                    <a class="dropdown-item" href="<?= Url::to(array_merge(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'template'], $exportFilterParams)) ?>">
                                         <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Template (ว่าง)
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'snapshot']) ?>">
+                                    <a class="dropdown-item" href="<?= Url::to(array_merge(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'snapshot'], $exportFilterParams)) ?>">
                                         <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Snapshot (ค่าปัจจุบัน)
                                     </a>
                                 </li>
@@ -370,7 +385,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                     if (is_string($itemDataJson)) {
                                         $itemDataJson = json_decode($itemDataJson, true);
                                     }
-                                    $unitName = $itemDataJson['unit_name'] ?? '-';
+                                    $unitName = $itemDataJson['unit'] ?? $itemDataJson['unit_name'] ?? '-';
                                     $isConfigured = !empty($r['setting_id']);
                                     $minQty = $isConfigured ? (float) $r['setting_min_qty'] : '';
                                     $maxQty = $isConfigured ? (float) $r['setting_max_qty'] : '';

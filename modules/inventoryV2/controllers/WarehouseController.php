@@ -609,8 +609,19 @@ class WarehouseController extends Controller
             ? StockMinMaxImportService::MODE_SNAPSHOT
             : StockMinMaxImportService::MODE_TEMPLATE;
 
+        // ส่งออกตามตัวกรองของหน้า list (q / status / category_id)
+        $status = (string) $this->request->get('status', '');
+        if (!in_array($status, ['configured', 'below_min', 'above_max'], true)) {
+            $status = '';
+        }
+        $filters = [
+            'q' => trim((string) $this->request->get('q', '')),
+            'category_id' => trim((string) $this->request->get('category_id', '')),
+            'status' => $status,
+        ];
+
         $svc = new StockMinMaxImportService();
-        $spread = $svc->generateTemplate((int) $warehouse->id, $mode);
+        $spread = $svc->generateTemplate((int) $warehouse->id, $mode, $filters);
 
         $modeLabel = $mode === StockMinMaxImportService::MODE_SNAPSHOT ? 'snapshot' : 'template';
         $filename = 'min-max-' . $warehouse->warehouse_name . '-' . $modeLabel . '-' . date('Y-m-d') . '.xlsx';

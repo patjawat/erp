@@ -74,13 +74,28 @@ use yii\helpers\Url;
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม', ['/am/asset-group'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="group" data-title="กลุ่มทรัพย์สิน" data-icon="bi bi-diagram-3"
+                    data-panel-url="<?= Url::to(['/am/asset-group/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-group/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม
+                </a>
             </li>
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท', ['/am/asset-type'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="type" data-title="ประเภททรัพย์สิน" data-icon="bi bi-collection"
+                    data-panel-url="<?= Url::to(['/am/asset-type/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-type/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท
+                </a>
             </li>
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่', ['/am/asset-category'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="category" data-title="หมวดหมู่ครุภัณฑ์" data-icon="bi bi-tags"
+                    data-panel-url="<?= Url::to(['/am/asset-category/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-category/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่
+                </a>
             </li>
             <li>
                 <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN', ['/am/fsn'], ['class' => 'dropdown-item']) ?>
@@ -118,3 +133,127 @@ use yii\helpers\Url;
 
 
 </div>
+
+<?php
+// ===== Offcanvas ตั้งค่า กลุ่ม/ประเภท/หมวดหมู่ (ใช้ร่วมจากเมนู) =====
+// เมนูถูก render ทุกหน้า am → offcanvas + JS พร้อมใช้ทุกที่ ไม่ต้องแยกหน้า index เต็ม (ยังคงลิงก์ไว้ในปุ่ม "เปิดหน้าเต็ม")
+?>
+<style>
+    /* เว้นด้านบนให้พ้น header สูง (.header-fixed ของธีม) ไม่ให้ทับหัว offcanvas */
+    #am-setting-offcanvas {
+        top: 72px;
+        height: calc(100% - 72px);
+    }
+</style>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="am-setting-offcanvas" aria-labelledby="am-setting-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title js-setting-quick__title" id="am-setting-offcanvas-label">
+            <i class="bi bi-gear me-2"></i> ตั้งค่า
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <div class="small mt-2">กำลังโหลดรายการ...</div>
+        </div>
+    </div>
+</div>
+
+<?php
+$js = <<<'JS'
+(function () {
+    var $oc = $('#am-setting-offcanvas');
+    if (!$oc.length) { return; }
+
+    function ctx() { return $oc.data('amCtx') || {}; }
+
+    var loadingHtml = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div><div class="small mt-2">กำลังโหลดรายการ...</div></div>';
+
+    // เก็บ context (urls) จากปุ่มเมนูที่กด — ทำก่อน offcanvas show เพื่อไม่พึ่ง relatedTarget (รองรับทุกเวอร์ชัน Bootstrap)
+    $(document).off('click.amSetting', '.js-am-setting-trigger')
+        .on('click.amSetting', '.js-am-setting-trigger', function () {
+            var t = this;
+            $oc.data('amCtx', {
+                panelUrl: t.getAttribute('data-panel-url'),
+                itemsUrl: t.getAttribute('data-items-url'),
+                entity: t.getAttribute('data-entity')
+            });
+            var icon = t.getAttribute('data-icon') || 'bi bi-gear';
+            var title = t.getAttribute('data-title') || 'ตั้งค่า';
+            $oc.find('.js-setting-quick__title').html('<i class="' + icon + ' me-2"></i> ' + title);
+        });
+
+    function loadPanel() {
+        var c = ctx();
+        if (!c.panelUrl) { return; }
+        var $body = $oc.find('.offcanvas-body');
+        $body.html(loadingHtml);
+        $.ajax({ url: c.panelUrl, type: 'GET', dataType: 'json', cache: false }).done(function (res) {
+            if (res && res.content) {
+                $body.html(res.content);
+                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+            }
+        });
+    }
+
+    function loadItems() {
+        var c = ctx();
+        if (!c.itemsUrl) { return; }
+        $.ajax({
+            url: c.itemsUrl, type: 'GET', dataType: 'json', cache: false,
+            data: {
+                q: $oc.find('.js-setting-quick__search').val() || '',
+                filter: $oc.find('.js-setting-quick__filter').val() || ''
+            }
+        }).done(function (res) {
+            if (res && res.content) {
+                $oc.find('.js-setting-quick__items').html(res.content);
+                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+            }
+        });
+    }
+
+    $oc.on('show.bs.offcanvas', function () { loadPanel(); });
+
+    var searchTimer = null;
+    $oc.on('input', '.js-setting-quick__search', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(loadItems, 300);
+    });
+    $oc.on('change', '.js-setting-quick__filter', loadItems);
+    $oc.on('click', '.js-setting-quick__refresh', loadItems);
+
+    $oc.on('click', '.js-setting-quick__delete', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (typeof Swal === 'undefined') { return; }
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: 'ลบรายการนี้ ไม่สามารถย้อนกลับได้',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ใช่, ลบเลย',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (result) {
+            if (!result.isConfirmed) { return; }
+            $.post(url, function (res) {
+                if (res && res.status === 'success') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1600 });
+                    loadItems();
+                } else {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'ลบไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }, 'json');
+        });
+    });
+
+    // บันทึกใน modal เพิ่ม/แก้ไข (.open-modal) แล้วปิด ขณะ offcanvas เปิด → รีเฟรชรายการเห็นผลทันที
+    $(document).off('hidden.bs.modal.amSetting', '#main-modal')
+        .on('hidden.bs.modal.amSetting', '#main-modal', function () {
+            if ($oc.hasClass('show')) { loadItems(); }
+        });
+})();
+JS;
+$this->registerJs($js, \yii\web\View::POS_READY, 'am-setting-offcanvas');
+?>

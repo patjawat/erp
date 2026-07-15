@@ -9,6 +9,8 @@ use yii\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItemSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+/** @var string $group */
+$group = $group ?? 'EQUIP';
 ?>
 <style>
 .field-assetitemsearch-asset_category_id {
@@ -23,6 +25,7 @@ use yii\widgets\ActiveForm;
         ],
     ]); ?>
 
+<?= Html::hiddenInput('group', $group) ?>
 <div class="row">
     <div class="col-lg-7 col-md-7 col-sm-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหาชื่อ,ชื่อทรัพย์สิน...'])->label(false) ?>
@@ -30,7 +33,7 @@ use yii\widgets\ActiveForm;
     <div class="col-lg-4 col-md-4 col-sm-12">
         <?php
                 echo $form->field($model, 'category_id')->widget(Select2::classname(), [
-                    'data' => $model->listAssetType(),
+                    'data' => $model->listAssetType($group),
                     'options' => ['placeholder' => 'ระบุประเภท...'],
                     'pluginOptions' => [
                         'allowClear' => true,

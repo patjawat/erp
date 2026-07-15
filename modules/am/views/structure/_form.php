@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use kartik\depdrop\DepDrop;
 use yii\widgets\MaskedInput;
 use app\modules\hr\models\Employees;
 use kartik\editors\Summernote;
@@ -13,13 +14,19 @@ use kartik\editors\Summernote;
 $title = Yii::$app->request->get('title');
 $group = Yii::$app->request->get('group');
 
-$structureGroups = $model->ListStructureGroup();
-$selectedGroup   = $model->data_json['structure_group'] ?? '';
-$selectedLeaf    = $model->data_json['structure_type'] ?? '';
-$selectedLeafTitle = $model->data_json['structure_type_name'] ?? '';
-$selectedOtherNote = $model->data_json['structure_type_other'] ?? '';
-$leafOptions       = $selectedGroup ? $model->ListStructureTypeByGroup($selectedGroup) : [];
-$structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf) : null;
+// ── ค่า "ระบุประเภทเพิ่มเติม" (คงไว้สำหรับหมวดที่ allow_other_note เช่น "อื่น ๆ รื้อถอนได้")
+$selectedOtherNote = is_array($model->data_json) ? ($model->data_json['structure_type_other'] ?? '') : '';
+
+// ตอนแก้ไข: ดูว่าหมวดที่เลือกอยู่อนุญาตให้ระบุเพิ่มเติมหรือไม่ (เพื่อ reveal ช่องตั้งแต่โหลดหน้า)
+$catAllowsOther = false;
+if (!empty($model->asset_category_id)) {
+    $catRow = \app\models\Categorise::find()
+        ->where(['name' => 'asset_category', 'code' => $model->asset_category_id])
+        ->one();
+    $catJson = $catRow && is_array($catRow->data_json) ? $catRow->data_json
+        : ($catRow && is_string($catRow->data_json) ? (json_decode($catRow->data_json, true) ?: []) : []);
+    $catAllowsOther = !empty($catJson['allow_other_note']);
+}
 ?>
 
 <style>
@@ -27,138 +34,7 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
         display: none !important;
     }
 
-    /* ── ประเภทสิ่งปลูกสร้าง · card ───────────────────────────── */
-    .struct-card .card-header {
-        background: #fff;
-    }
-
-    .struct-card__label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #4a5568;
-        margin-bottom: 0.4rem;
-        display: block;
-    }
-
-    /* seg-control: 3 chips สำหรับเลือกหมวด */
-    .struct-seg {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.5rem;
-        padding: 0.3rem;
-        background: #f7f9fc;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 8px;
-    }
-
-    @media (max-width: 575.98px) {
-        .struct-seg {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .struct-seg__item {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        min-height: 56px;
-        padding: 0.55rem 0.7rem;
-        text-align: center;
-        line-height: 1.25;
-        color: #1a202c;
-        font-size: 0.875rem;
-        font-weight: 500;
-        background: #fff;
-        border: 1px solid rgba(15, 23, 42, 0.14);
-        border-radius: 6px;
-        cursor: pointer;
-        user-select: none;
-        transition: border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-                    background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-                    box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .struct-seg__item:hover {
-        background: #f1f5f9;
-    }
-
-    .struct-seg__radio {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .struct-seg__radio:focus-visible + .struct-seg__item,
-    .struct-seg__item:focus-visible {
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.18);
-        border-color: #0d6efd;
-        outline: none;
-    }
-
-    .struct-seg__radio:checked + .struct-seg__item {
-        border-color: #0d6efd;
-        color: #0a58ca;
-        background: rgba(13, 110, 253, 0.08);
-        font-weight: 600;
-    }
-
-    .struct-seg__item:active {
-        transform: translateY(1px);
-    }
-
-    .struct-seg__radio:disabled + .struct-seg__item,
-    .struct-seg__item.is-disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-    }
-
-    /* ส่วน reveal ตอนเลือกหมวด */
-    .struct-reveal {
-        opacity: 0;
-        transform: translateY(4px);
-        max-height: 0;
-        overflow: hidden;
-        transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-                    max-height 180ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .struct-reveal.is-open {
-        opacity: 1;
-        transform: translateY(0);
-        max-height: 220px;
-    }
-
-    /* hint แสดงค่า default ที่จะ auto-fill */
-    .struct-hint {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.78rem;
-        color: #15803d;
-        background: rgba(21, 128, 61, 0.08);
-        border: 1px solid rgba(21, 128, 61, 0.2);
-        border-radius: 6px;
-        padding: 0.55rem 0.75rem;
-        line-height: 1.4;
-    }
-
-    .struct-hint--muted {
-        color: #4a5568;
-        background: #f7f9fc;
-        border-color: rgba(15, 23, 42, 0.08);
-    }
-
-    .struct-hint__caption {
-        color: #718096;
-        font-size: 0.72rem;
-        margin-top: 0.15rem;
-    }
-
-    /* flash ตอน auto-fill ที่ input ค่าเสื่อม */
+    /* flash ตอน auto-fill ค่าเสื่อมเมื่อเลือกหมวด */
     .struct-flash {
         animation: structFlash 240ms cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -168,63 +44,8 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
         100% { background-color: transparent; }
     }
 
-    /* override badge ที่ field ค่าเสื่อม */
-    .struct-override-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.7rem;
-        color: #718096;
-        margin-left: 0.4rem;
-    }
-
-    /* undo toast */
-    .struct-undo {
-        position: fixed;
-        bottom: 1.25rem;
-        left: 50%;
-        transform: translateX(-50%) translateY(8px);
-        z-index: 1080;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.55rem 1rem;
-        background: #1a202c;
-        color: #fff;
-        font-size: 0.85rem;
-        border-radius: 999px;
-        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .struct-undo.is-visible {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-        pointer-events: auto;
-    }
-
-    .struct-undo__btn {
-        background: transparent;
-        border: 0;
-        color: #93c5fd;
-        font-weight: 600;
-        padding: 0.15rem 0.4rem;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
-    .struct-undo__btn:hover { color: #fff; }
-    .struct-undo__btn:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
-
     @media (prefers-reduced-motion: reduce) {
-        .struct-seg__item,
-        .struct-reveal,
-        .struct-undo { transition: opacity 80ms linear !important; }
         .struct-flash { animation: none; }
-        .struct-reveal { transform: none; }
     }
 </style>
 <?php $form = ActiveForm::begin([
@@ -433,78 +254,6 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
     </div>
     <div class="col-8">
 
-        <!-- ─── ประเภทสิ่งปลูกสร้าง (cascade) ─────────────────────────── -->
-        <div class="card struct-card mb-3">
-            <div class="card-header border-bottom d-flex align-items-center gap-2">
-                <div class="erp-icon-box bg-primary bg-opacity-10">
-                    <i data-lucide="layers"></i>
-                </div>
-                <h6 class="text-uppercase text-secondary m-0">ประเภทสิ่งปลูกสร้าง</h6>
-            </div>
-            <div class="card-body">
-                <!-- ค่าที่ส่งจริงตอน submit (เก็บลง data_json) -->
-                <input type="hidden" name="Asset[data_json][structure_group]"      id="structure-group-input"       value="<?= Html::encode($selectedGroup) ?>">
-                <input type="hidden" name="Asset[data_json][structure_group_name]" id="structure-group-name-input"  value="<?= Html::encode($structureGroups[$selectedGroup] ?? '') ?>">
-                <input type="hidden" name="Asset[data_json][structure_type]"       id="structure-type-input"        value="<?= Html::encode($selectedLeaf) ?>">
-                <input type="hidden" name="Asset[data_json][structure_type_name]"  id="structure-type-name-input"   value="<?= Html::encode($selectedLeafTitle) ?>">
-
-                <!-- ── ขั้น 1: หมวด ────────────────────────────────── -->
-                <label class="struct-card__label">หมวด</label>
-                <div class="struct-seg" role="radiogroup" aria-label="หมวดสิ่งปลูกสร้าง" id="structure-seg">
-                    <?php foreach ($structureGroups as $code => $title): ?>
-                        <?php $rid = 'structure-grp-' . Html::encode($code); ?>
-                        <input class="struct-seg__radio" type="radio" name="structure_group_radio" id="<?= $rid ?>"
-                               value="<?= Html::encode($code) ?>"
-                               data-title="<?= Html::encode($title) ?>"
-                               <?= $selectedGroup === $code ? 'checked' : '' ?>>
-                        <label class="struct-seg__item" for="<?= $rid ?>" tabindex="0" role="radio"
-                               aria-checked="<?= $selectedGroup === $code ? 'true' : 'false' ?>">
-                            <?= Html::encode($title) ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- ── ขั้น 2: leaf (เผยเมื่อเลือกหมวด) ─────────────── -->
-                <div class="struct-reveal mt-3 <?= $selectedGroup ? 'is-open' : '' ?>" id="structure-leaf-wrap">
-                    <label class="struct-card__label" for="structure-leaf-select">รายการ</label>
-                    <select class="form-select" id="structure-leaf-select" data-placeholder="เลือกรายการ">
-                        <option value=""></option>
-                        <?php foreach ($leafOptions as $code => $title): ?>
-                            <option value="<?= Html::encode($code) ?>" <?= $selectedLeaf === $code ? 'selected' : '' ?>>
-                                <?= Html::encode($title) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- ── ขั้น 2b: ระบุเพิ่มเติม (เผยเมื่อ leaf มี allow_other_note) -->
-                <div class="struct-reveal mt-3 <?= !empty($structureDefaults['allow_other_note']) ? 'is-open' : '' ?>" id="structure-other-wrap">
-                    <label class="struct-card__label" for="structure-other-input">ระบุประเภทเพิ่มเติม</label>
-                    <input type="text" class="form-control" name="Asset[data_json][structure_type_other]" id="structure-other-input"
-                           value="<?= Html::encode($selectedOtherNote) ?>"
-                           placeholder="เช่น ป้อมยาม, ห้องเก็บของชั่วคราว" maxlength="255">
-                </div>
-
-                <!-- ── hint ค่าเสื่อม ──────────────────────────────── -->
-                <div class="struct-hint <?= $structureDefaults ? '' : 'struct-hint--muted' ?> mt-3" id="structure-hint">
-                    <i class="bi bi-info-circle"></i>
-                    <div>
-                        <div id="structure-hint-text">
-                            <?php if ($structureDefaults && ($structureDefaults['useful_life'] !== null || $structureDefaults['depreciation_rate'] !== null)): ?>
-                                อายุการใช้งาน <strong><?= (int) $structureDefaults['useful_life'] ?></strong> ปี ·
-                                อัตราค่าเสื่อม <strong><?= number_format((float) $structureDefaults['depreciation_rate'], 2) ?></strong>%
-                            <?php else: ?>
-                                เลือกหมวดและรายการ เพื่อเติมค่าเสื่อมอัตโนมัติ
-                            <?php endif; ?>
-                        </div>
-                        <div class="struct-hint__caption">
-                            ค่าจะถูกเติมที่การ์ด "เตรียมข้อมูลค่าเสื่อม" และผู้ใช้แก้ไขเองได้ตลอด
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header border-bottom d-flex align-items-center gap-2">
                 <div class="erp-icon-box bg-primary bg-opacity-10">
@@ -513,24 +262,60 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
                 <h6 class="text-uppercase text-secondary m-0">ข้อมูลพื้นฐาน</h6>
             </div>
             <div class="card-body">
-                <!-- ข้อมูลทั่วไป -->
+                <!-- ข้อมูลทั่วไป — จัดวางชื่อ/ประเภท/หมวด แบบเดียวกับครุภัณฑ์ (equip) -->
                 <div class="form-section">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <?php
-                            echo $form->field($model, 'asset_name', [
-                                'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/asset-item/list-item', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 'asButton' => true]
-                                ]
-                            ])->textInput([
+                            echo $form->field($model, 'asset_name')->textInput([
                                 'maxlength' => true,
                                 'placeholder' => 'ระบุชื่อสิ่งปลูกสร้าง',
-                                'readonly' => false,  // Make field readonly
-                                'class' => 'form-control'  // Add background color
+                                'class' => 'form-control',
                             ])->label('ชื่อสิ่งปลูกสร้าง');
                             ?>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
+                            <?php
+                            // Select2 - ประเภทสิ่งปลูกสร้าง (asset_type_id, group_id=STRUCT)
+                            echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                                'data' => $model->listAssetType('STRUCT'),
+                                'options' => [
+                                    'placeholder' => 'เลือกประเภท...',
+                                    'id' => 'asset_type_id',
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                            ])->label('ประเภทสิ่งปลูกสร้าง');
+                            ?>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <?php
+                            // DepDrop - หมวด (ขึ้นกับประเภท) ใช้ endpoint เดียวกับครุภัณฑ์
+                            echo $form->field($model, 'asset_category_id')->widget(DepDrop::class, [
+                                'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวด ...'],
+                                'type' => DepDrop::TYPE_SELECT2,
+                                'select2Options' => [
+                                    'pluginOptions' => ['allowClear' => true],
+                                ],
+                                'pluginOptions' => [
+                                    'depends' => ['asset_type_id'],
+                                    'url' => Url::to(['/am/asset-item/get-asset-category']),
+                                    'loadingText' => 'กำลังโหลด ...',
+                                    'initialize' => true, // โหลดค่าปัจจุบันตอนแก้ไข
+                                ],
+                            ])->label('หมวด'); ?>
+                        </div>
+                        <!-- ระบุประเภทเพิ่มเติม — เผยเฉพาะหมวดที่อนุญาต (เช่น "อื่น ๆ รื้อถอนได้") -->
+                        <div class="col-12" id="structure-other-wrap" style="<?= $catAllowsOther ? '' : 'display:none;' ?>">
+                            <?= $form->field($model, 'data_json[structure_type_other]')->textInput([
+                                'id' => 'structure-other-input',
+                                'value' => $selectedOtherNote,
+                                'maxlength' => 255,
+                                'placeholder' => 'เช่น ป้อมยาม, ห้องเก็บของชั่วคราว',
+                            ])->label('ระบุประเภทเพิ่มเติม'); ?>
+                        </div>
+                        <div class="col-12 col-md-6">
                             <?php
                             echo $form->field($model, 'code', [
                                 'addon' => [
@@ -539,9 +324,7 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
                             ])->textInput([
                                 'maxlength' => true,
                                 'placeholder' => 'ค้นหาเลข FSN',
-                                'readonly' => false,  // Make field readonly
-                                // 'class' => 'form-control bg-primary text-white'  // Add background color
-                                'class' => 'form-control'  // Add background color
+                                'class' => 'form-control',
                             ])->label('หมายเลขครุภัณฑ์'); ?>
                         </div>
                         <div class="col-md-6">
@@ -666,12 +449,6 @@ $structureDefaults = $selectedLeaf ? $model->getStructureDefaults($selectedLeaf)
 
 <?php ActiveForm::end(); ?>
 
-<!-- Undo toast (เผยเมื่อเปลี่ยนหมวดทับของเดิม) -->
-<div class="struct-undo" id="structure-undo" role="status" aria-live="polite">
-    <span id="structure-undo-text">ยกเลิกการเปลี่ยนหมวด</span>
-    <button type="button" class="struct-undo__btn" id="structure-undo-btn">ย้อนกลับ</button>
-</div>
-
 
 </div>
 </div>
@@ -688,229 +465,52 @@ $js = <<< JS
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
 
 
- isFile()
+ try { isFile(); } catch (e) { console.error('isFile() error:', e); }
 
 /* ───────────────────────────────────────────────────────────
- *  Structure type cascade — หมวด → leaf → auto-fill ค่าเสื่อม
+ *  ประเภท → หมวด (DepDrop เหมือน equip) + auto-fill ค่าเสื่อมตอนเลือกหมวด
  * ─────────────────────────────────────────────────────────── */
 (function () {
-    const \$seg            = \$('#structure-seg');
-    const \$leafWrap       = \$('#structure-leaf-wrap');
-    const \$leafSelect     = \$('#structure-leaf-select');
-    const \$otherWrap      = \$('#structure-other-wrap');
-    const \$otherInput     = \$('#structure-other-input');
-    const \$hintText       = \$('#structure-hint-text');
-    const \$hint           = \$('#structure-hint');
-
-    const \$groupCodeIn    = \$('#structure-group-input');
-    const \$groupNameIn    = \$('#structure-group-name-input');
-    const \$typeCodeIn     = \$('#structure-type-input');
-    const \$typeNameIn     = \$('#structure-type-name-input');
-
-    const \$life           = \$('#asset-useful_life');
-    const \$rate           = \$('#asset-depreciation_rate');
-
-    const \$undo           = \$('#structure-undo');
-    const \$undoBtn        = \$('#structure-undo-btn');
-
-    // จำสภาพก่อนถูกเปลี่ยน (สำหรับ undo)
-    let lastSnapshot = null;
-    let undoTimer = null;
-
-    // Init Select2 บน leaf
-    if (\$leafSelect.length && typeof \$leafSelect.select2 === 'function') {
-        \$leafSelect.select2({
-            placeholder: 'เลือกรายการ',
-            allowClear: true,
-            width: '100%',
-        });
-    }
-
-    // ── helper: snapshot ปัจจุบัน
-    function snapshot() {
-        return {
-            groupCode: \$groupCodeIn.val(),
-            groupName: \$groupNameIn.val(),
-            typeCode:  \$typeCodeIn.val(),
-            typeName:  \$typeNameIn.val(),
-            life:      \$life.val(),
-            rate:      \$rate.val(),
-            other:     \$otherInput.val(),
-            checked:   \$seg.find('.struct-seg__radio:checked').val() || null,
-            leafHtml:  \$leafSelect.html(),
-        };
-    }
-
-    function restore(snap) {
-        if (!snap) return;
-        \$groupCodeIn.val(snap.groupCode);
-        \$groupNameIn.val(snap.groupName);
-        \$typeCodeIn.val(snap.typeCode);
-        \$typeNameIn.val(snap.typeName);
-        \$life.val(snap.life);
-        \$rate.val(snap.rate);
-        \$otherInput.val(snap.other);
-        // restore radio
-        \$seg.find('.struct-seg__radio').prop('checked', false);
-        \$seg.find('.struct-seg__item').attr('aria-checked', 'false');
-        if (snap.checked) {
-            const \$r = \$seg.find('.struct-seg__radio[value="' + snap.checked + '"]');
-            \$r.prop('checked', true);
-            \$r.next('.struct-seg__item').attr('aria-checked', 'true');
-            \$leafWrap.addClass('is-open');
-        } else {
-            \$leafWrap.removeClass('is-open');
-        }
-        // restore leaf options
-        \$leafSelect.html(snap.leafHtml).trigger('change.select2');
-        // refresh hint
-        refreshHint();
-    }
-
-    function refreshHint(life, rate) {
-        const L = life !== undefined ? life : \$life.val();
-        const R = rate !== undefined ? rate : \$rate.val();
-        if (L || R) {
-            \$hint.removeClass('struct-hint--muted');
-            \$hintText.html(
-                'อายุการใช้งาน <strong>' + (L || '-') + '</strong> ปี · ' +
-                'อัตราค่าเสื่อม <strong>' + (R ? parseFloat(R).toFixed(2) : '-') + '</strong>%'
-            );
-        } else {
-            \$hint.addClass('struct-hint--muted');
-            \$hintText.text('เลือกหมวดและรายการ เพื่อเติมค่าเสื่อมอัตโนมัติ');
-        }
-    }
+    const \$category   = \$('#asset_category_id');
+    const \$otherWrap  = \$('#structure-other-wrap');
+    const \$otherInput = \$('#structure-other-input');
+    const \$life       = \$('#asset-useful_life');
+    const \$rate       = \$('#asset-depreciation_rate');
 
     function flash(\$el) {
         if (!\$el.length) return;
         \$el.removeClass('struct-flash');
-        // reflow
-        void \$el[0].offsetWidth;
+        void \$el[0].offsetWidth; // reflow
         \$el.addClass('struct-flash');
     }
 
-    function showUndo() {
-        \$undo.addClass('is-visible');
-        if (undoTimer) clearTimeout(undoTimer);
-        undoTimer = setTimeout(hideUndo, 5000);
-    }
-    function hideUndo() {
-        \$undo.removeClass('is-visible');
-        if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
-    }
-
-    \$undoBtn.on('click', function () {
-        restore(lastSnapshot);
-        lastSnapshot = null;
-        hideUndo();
-    });
-
-    // ── ขั้น 1: เลือกหมวด
-    \$seg.on('change', '.struct-seg__radio', function () {
-        const \$radio = \$(this);
-        const code   = \$radio.val();
-        const title  = \$radio.data('title') || '';
-
-        // ถ้ามีของเดิม → snapshot สำหรับ undo
-        const hadSelection = !!\$typeCodeIn.val() || !!\$groupCodeIn.val();
-        if (hadSelection) {
-            lastSnapshot = snapshot();
-        }
-
-        // อัปเดต aria-checked
-        \$seg.find('.struct-seg__item').attr('aria-checked', 'false');
-        \$radio.next('.struct-seg__item').attr('aria-checked', 'true');
-
-        // เซ็ตค่ากลุ่ม
-        \$groupCodeIn.val(code);
-        \$groupNameIn.val(title);
-
-        // clear leaf เดิม
-        \$typeCodeIn.val('');
-        \$typeNameIn.val('');
-        \$otherWrap.removeClass('is-open');
-        \$otherInput.val('');
-
-        // โหลด leaf list
-        \$.ajax({
-            url: '/am/structure/structure-depdrop',
-            type: 'POST',
-            data: { group_code: code, _csrf: yii.getCsrfToken() },
-            dataType: 'json',
-        }).done(function (res) {
-            if (res.status !== 'success') return;
-
-            let html = '<option value=""></option>';
-            (res.items || []).forEach(function (it) {
-                html += '<option value="' + it.id + '">' + it.text + '</option>';
-            });
-            \$leafSelect.html(html).val('').trigger('change.select2');
-
-            \$leafWrap.addClass('is-open');
-
-            // auto-fill ค่าเสื่อมจาก group default (ถ้า user ยังไม่แก้)
-            const d = res.defaults || {};
-            if (d.useful_life != null && d.depreciation_rate != null) {
-                \$life.val(d.useful_life);
-                \$rate.val(parseFloat(d.depreciation_rate).toFixed(2));
-                flash(\$life); flash(\$rate);
-                refreshHint(d.useful_life, d.depreciation_rate);
-            }
-
-            if (hadSelection) showUndo();
-        });
-    });
-
-    // ── ขั้น 2: เลือก leaf
-    \$leafSelect.on('change', function () {
-        const code = \$(this).val();
-        const title = \$(this).find('option:selected').text().trim();
-
-        \$typeCodeIn.val(code || '');
-        \$typeNameIn.val(title || '');
-
+    // เมื่อเลือกหมวด → ดึง default ค่าเสื่อม + flag ระบุเพิ่มเติมจาก data_json ของหมวด
+    \$category.on('change', function () {
+        const code = (\$(this).val() || '').toString().trim();
         if (!code) {
-            \$otherWrap.removeClass('is-open');
+            \$otherWrap.hide();
             \$otherInput.val('');
             return;
         }
-
-        \$.ajax({
-            url: '/am/structure/structure-leaf-defaults',
-            type: 'POST',
-            data: { leaf_code: code, _csrf: yii.getCsrfToken() },
-            dataType: 'json',
-        }).done(function (res) {
-            if (res.status !== 'success') return;
+        \$.get('/am/asset-item/category-defaults', { code: code }, function (res) {
+            if (!res || res.status !== 'success') return;
             const d = res.defaults || {};
 
-            // เปิด/ปิด "ระบุเพิ่มเติม" ตาม flag
+            // ระบุเพิ่มเติม: เผย/ซ่อนตาม flag
             if (d.allow_other_note) {
-                \$otherWrap.addClass('is-open');
+                \$otherWrap.show();
             } else {
-                \$otherWrap.removeClass('is-open');
+                \$otherWrap.hide();
                 \$otherInput.val('');
             }
 
-            // auto-fill ค่าเสื่อม (override ค่าจากกลุ่มเมื่อ leaf มีค่าเฉพาะ)
-            if (d.useful_life != null) {
-                \$life.val(d.useful_life);
-                flash(\$life);
-            }
-            if (d.depreciation_rate != null) {
-                \$rate.val(parseFloat(d.depreciation_rate).toFixed(2));
-                flash(\$rate);
-            }
-            refreshHint(\$life.val(), \$rate.val());
-        });
-    });
-
-    // ── update hint เมื่อ user override ด้วยมือ
-    \$life.add(\$rate).on('input', function () {
-        refreshHint(\$life.val(), \$rate.val());
+            // auto-fill ค่าเสื่อม (ผู้ใช้แก้ไขเองได้ตลอด)
+            if (d.useful_life != null) { \$life.val(d.useful_life); flash(\$life); }
+            if (d.depreciation_rate != null) { \$rate.val(parseFloat(d.depreciation_rate).toFixed(2)); flash(\$rate); }
+        }, 'json');
     });
 })();
+
 
 
  $('.next-code').on('click', function (e) { 

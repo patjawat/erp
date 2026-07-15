@@ -45,10 +45,13 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
                     <i class="fa-solid fa-file-excel me-1"></i> Excel
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                    <li><?= Html::a(
+                    <li><?= Html::button(
                         '<i class="fa-solid fa-file-export me-2"></i> ส่งออก Excel',
-                        array_merge(['/inventory-v2/stock-item/export-excel'], Yii::$app->request->queryParams),
-                        ['class' => 'dropdown-item', 'target' => '_blank']
+                        [
+                            'type' => 'button',
+                            'class' => 'dropdown-item export-excel-btn',
+                            'data' => ['href' => \yii\helpers\Url::to(array_merge(['/inventory-v2/stock-item/export-excel'], Yii::$app->request->queryParams))],
+                        ]
                     ) ?></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><?= Html::a(

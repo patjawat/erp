@@ -36,24 +36,26 @@ $group = Yii::$app->request->get('group');
 <?= $this->render('@app/modules/am/views/asset/_title', ['model' => $model]) ?>
 
 <?php
-$structureGroupName = is_array($model->data_json) ? ($model->data_json['structure_group_name'] ?? '') : '';
-$structureTypeName  = is_array($model->data_json) ? ($model->data_json['structure_type_name']  ?? '') : '';
-$structureOther     = is_array($model->data_json) ? ($model->data_json['structure_type_other'] ?? '') : '';
+// ประเภท/หมวด: อ่านจาก asset_type/asset_category (โครงสร้างใหม่เหมือนครุภัณฑ์)
+// fallback ค่าเดิมใน data_json สำหรับ record เก่าที่ยังใช้ structure_type cascade
+$typeName = $model->assetType->title ?? (is_array($model->data_json) ? ($model->data_json['structure_group_name'] ?? '') : '');
+$catName  = $model->assetCategory->title ?? (is_array($model->data_json) ? ($model->data_json['structure_type_name'] ?? '') : '');
+$structureOther = is_array($model->data_json) ? ($model->data_json['structure_type_other'] ?? '') : '';
 ?>
-<?php if ($structureGroupName !== '' || $structureTypeName !== ''): ?>
+<?php if ($typeName !== '' || $catName !== ''): ?>
 <div class="card mt-4 border-0 shadow-sm rounded-2">
     <div class="card-body py-3 px-4 d-flex flex-wrap align-items-center gap-3" style="font-size: 0.9rem;">
         <div class="d-flex align-items-center gap-2">
             <i data-lucide="layers" class="text-secondary"></i>
             <span class="text-secondary">ประเภทสิ่งปลูกสร้าง</span>
         </div>
-        <?php if ($structureGroupName !== ''): ?>
+        <?php if ($typeName !== ''): ?>
             <span class="badge rounded-2 fw-medium border" style="background-color: rgba(13,110,253,0.08); color: #0a58ca; border-color: rgba(13,110,253,0.22); padding: 4px 10px;">
-                <?= \yii\helpers\Html::encode($structureGroupName) ?>
+                <?= \yii\helpers\Html::encode($typeName) ?>
             </span>
         <?php endif; ?>
-        <?php if ($structureTypeName !== ''): ?>
-            <span class="text-dark fw-semibold"><?= \yii\helpers\Html::encode($structureTypeName) ?></span>
+        <?php if ($catName !== ''): ?>
+            <span class="text-dark fw-semibold"><?= \yii\helpers\Html::encode($catName) ?></span>
         <?php endif; ?>
         <?php if ($structureOther !== ''): ?>
             <span class="text-muted">· <?= \yii\helpers\Html::encode($structureOther) ?></span>

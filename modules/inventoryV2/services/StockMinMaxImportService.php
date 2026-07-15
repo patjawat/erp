@@ -84,16 +84,17 @@ class StockMinMaxImportService
      * สร้าง Spreadsheet สำหรับ download
      * @param int $warehouseId
      * @param string $mode template (ว่าง) | snapshot (เติมค่าเดิม)
+     * @param array $filters ตัวกรองจากหน้า list: q, status (configured|below_min|above_max), category_id
      * @return Spreadsheet
      */
-    public function generateTemplate(int $warehouseId, string $mode = self::MODE_TEMPLATE): Spreadsheet
+    public function generateTemplate(int $warehouseId, string $mode = self::MODE_TEMPLATE, array $filters = []): Spreadsheet
     {
         $warehouse = Warehouse::findOne(['id' => $warehouseId]);
         if (!$warehouse) {
             throw new \RuntimeException('ไม่พบคลัง id=' . $warehouseId);
         }
 
-        $rows = $this->loadItemsWithSettings($warehouse);
+        $rows = $this->loadItemsWithSettings($warehouse, $filters);
 
         $spread = new Spreadsheet();
         $sheet = $spread->getActiveSheet();
@@ -294,7 +295,7 @@ class StockMinMaxImportService
     /**
      * โหลด items + setting + balance สำหรับ export (ใช้ logic เดียวกับ controller actionStockMinMax)
      */
-    protected function loadItemsWithSettings(Warehouse $warehouse): array
+    protected function loadItemsWithSettings(Warehouse $warehouse, array $filters = []): array
     {
         $allowedTypes = $warehouse->getAllowedItemTypeCodes();
 
@@ -331,11 +332,32 @@ class StockMinMaxImportService
             $q->andWhere(['i.category_id' => $allowedTypes]);
         }
 
+        // ตัวกรองจากหน้า list — ให้ไฟล์ที่ส่งออกตรงกับที่เห็นบนหน้าจอ
+        $search = trim((string) ($filters['q'] ?? ''));
+        $categoryId = trim((string) ($filters['category_id'] ?? ''));
+        $status = (string) ($filters['status'] ?? '');
+        if ($search !== '') {
+            $q->andWhere(['or', ['like', 'i.code', $search], ['like', 'i.title', $search]]);
+        }
+        if ($categoryId !== '') {
+            $q->andWhere(['i.category_id' => $categoryId]);
+        }
+        if ($status === 'configured') {
+            $q->andWhere(['IS NOT', 's.id', null]);
+        } elseif ($status === 'below_min') {
+            $q->andWhere(['IS NOT', 's.id', null])
+                ->andWhere(new Expression('COALESCE(b.balance_total, 0) < s.min_qty'));
+        } elseif ($status === 'above_max') {
+            $q->andWhere(['IS NOT', 's.id', null])
+                ->andWhere(new Expression('COALESCE(b.balance_total, 0) > s.max_qty'));
+        }
+
         $rows = $q->orderBy(['i.code' => SORT_ASC])->all();
         foreach ($rows as &$r) {
             $j = $r['item_data_json'];
             if (is_string($j)) $j = json_decode($j, true);
-            $r['unit_name'] = $j['unit_name'] ?? '';
+            // data_json ใช้ key 'unit' (unit_name เป็น fallback เผื่อข้อมูลเก่า)
+            $r['unit_name'] = is_array($j) ? ($j['unit'] ?? $j['unit_name'] ?? '') : '';
             $r['category_title'] = $r['category_title'] ?? '';
         }
         return $rows;

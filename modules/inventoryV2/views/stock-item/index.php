@@ -3,7 +3,7 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
-use yii\bootstrap5\LinkPager;
+use app\components\widgets\DataSummaryWidget;
 
 /** @var yii\web\View $this */
 /** @var app\modules\inventoryV2\models\StockItemSearch $searchModel */
@@ -104,14 +104,11 @@ AND group_id = 'MATER';
                                     <th style="min-width: 350px;">รายการวัสดุ</th>
                                     <th class="text-center" style="min-width: 150px;">ประเภทวัสดุ</th>
                                     <th style="min-width: 100px;">หน่วยนับ</th>
-                                    <th class="text-center" style="min-width: 172px;">จำนวนคงเหลือ<?= $warehouseId ? ' (คลังที่เลือก)' : '' ?></th>
                                     <th style="min-width: 120px;">บัญชีนวัตกรรม</th>
-                                    <th class="text-center" style="min-width: 100px;">จำนวนสูงสุด</th>
-                                    <th class="text-center" style="min-width: 100px;">จำนวนต่ำสุด</th>
                                     <th class="text-center" style="min-width: 100px;">สถานะ</th>
 
                                     <!--ใช้ min-width ป้องกันการบีบ -->
-                                    <th class="text-center" style="min-width: 130px;">จัดการ</th>
+                                    <th class="text-center" style="min-width: 145px;">จัดการ</th>
                                 </tr>
                             </thead>
 
@@ -134,49 +131,11 @@ AND group_id = 'MATER';
                                             <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
                                             <td><?= $item->data_json['unit_name'] ?? $item->getUnitName() ?: '-' ?></td>
                                             <td class="text-center">
-                                                <?php if ($warehouseId): ?>
-                                                    <?php
-                                                    $bal = (float)($balanceMap[$item->item_code] ?? 0);
-                                                    $minQ = $item->min_qty !== null && $item->min_qty !== '' ? (float)$item->min_qty : null;
-                                                    $maxQ = $item->max_qty !== null && $item->max_qty !== '' ? (float)$item->max_qty : null;
-                                                    $hasMin = $minQ !== null && $minQ > 0;
-                                                    $hasMax = $maxQ !== null && $maxQ > 0;
-                                                    if ($hasMin && $bal < $minQ) {
-                                                        $statusClass = 'text-danger';
-                                                        $statusIcon = 'bi-arrow-down-circle-fill';
-                                                        $statusTitle = 'ต่ำกว่ากำหนด (ยอด < Min)';
-                                                    } elseif ($hasMax && $bal > $maxQ) {
-                                                        $statusClass = 'text-warning';
-                                                        $statusIcon = 'bi-arrow-up-circle-fill';
-                                                        $statusTitle = 'มากกว่ากำหนด (ยอด > Max)';
-                                                    } elseif ($hasMin || $hasMax) {
-                                                        $statusClass = 'text-success';
-                                                        $statusIcon = 'bi-check-circle-fill';
-                                                        $statusTitle = 'พอดี';
-                                                    } else {
-                                                        $statusClass = 'text-muted';
-                                                        $statusIcon = 'bi-dash-circle';
-                                                        $statusTitle = 'ยังไม่ได้กำหนด Min/Max';
-                                                    }
-                                                    $numberClass = $bal > 0 ? 'text-dark' : $statusClass;
-                                                    ?>
-                                                    <span title="<?= htmlspecialchars($statusTitle) ?>">
-                                                        <i class="bi <?= $statusIcon ?> me-1 <?= $statusClass ?>"></i>
-                                                        <span class="fw-bold <?= $numberClass ?>"><?= number_format($bal, 2) ?></span>
-                                                    </span>
-                                                <?php else: ?>
-                                                    <span class="text-muted">—</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-center">
                                                 <div class="form-check form-switch d-flex justify-content-center">
                                                     <input class="form-check-input set-active" type="checkbox" data-id="<?= $item->id ?>"
                                                         <?= $item->is_innovation == 1 ? 'checked' : '' ?>>
                                                 </div>
                                             </td>
-
-                                            <td class="text-center"><?= $item->max_qty ?></td>
-                                            <td class="text-center"><?= $item->min_qty ?></td>
 
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex justify-content-center">
@@ -185,25 +144,27 @@ AND group_id = 'MATER';
                                                 </div>
                                             </td>
 
-                                            <td class="text-center">
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                        type="button" data-bs-toggle="dropdown">
-                                                        จัดการ
-                                                    </button>
-
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['//inventory-v2/stock-item/view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['//inventory-v2/stock-item/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                                        <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['//inventory-v2/stock-item/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']) ?></li>
-                                                    </ul>
-                                                </div>
+                                            <td class="text-center text-nowrap">
+                                                <?= Html::a('<i class="fa-solid fa-eye"></i>', ['//inventory-v2/stock-item/view', 'id' => $item->id], [
+                                                    'class' => 'btn btn-sm btn-info open-modal',
+                                                    'title' => 'แสดง',
+                                                    'data' => ['size' => 'modal-lg'],
+                                                ]) ?>
+                                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['//inventory-v2/stock-item/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], [
+                                                    'class' => 'btn btn-sm btn-warning open-modal',
+                                                    'title' => 'แก้ไข',
+                                                    'data' => ['size' => 'modal-lg'],
+                                                ]) ?>
+                                                <?= Html::a('<i class="fa-solid fa-trash"></i>', ['//inventory-v2/stock-item/delete', 'id' => $item->id], [
+                                                    'class' => 'btn btn-sm btn-danger delete-item',
+                                                    'title' => 'ลบทิ้ง',
+                                                ]) ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="12" class="text-center py-5">
+                                        <td colspan="9" class="text-center py-5">
                                             <div class="d-flex flex-column align-items-center justify-content-center">
                                                 <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
                                                 <h5 class="text-muted mb-2">ไม่พบข้อมูลพัสดุ</h5>
@@ -216,16 +177,17 @@ AND group_id = 'MATER';
                         </table>
                     </div>
 
-                    <?php if ($dataProvider->getTotalCount() > 0 && $dataProvider->pagination->pageCount > 1): ?>
-                        <div class="d-flex justify-content-center mt-3">
-                            <?= LinkPager::widget([
-                                'pagination' => $dataProvider->pagination,
-                                'firstPageLabel' => 'หน้าแรก',
-                                'lastPageLabel' => 'หน้าสุดท้าย',
-                                'options' => ['class' => 'pagination pagination-sm'],
-                            ]) ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="mt-3 pt-3 border-top">
+                        <?= DataSummaryWidget::widget([
+                            'dataProvider' => $dataProvider,
+                            'pagerOptions' => [
+                                'options' => ['class' => 'pagination pagination-sm mb-0 justify-content-end'],
+                                'prevPageLabel' => '<i class="bi bi-chevron-left"></i>',
+                                'nextPageLabel' => '<i class="bi bi-chevron-right"></i>',
+                                'maxButtonCount' => 3,
+                            ],
+                        ]) ?>
+                    </div>
 
                 </div>
             </div>
@@ -238,6 +200,12 @@ AND group_id = 'MATER';
 <?php
 $chageActiveUrl = Url::to(['/inventory-v2/stock-item/set-active']);
 $js = <<< JS
+        // ส่งออก Excel เปิดแท็บใหม่ (ใช้ window.open เพื่อเลี่ยง pjax ดัก click ในคอนเทนเนอร์)
+        $("body").on("click", ".export-excel-btn", function (e) {
+          e.preventDefault();
+          window.open($(this).data('href'), '_blank');
+        });
+
         $("body").on("change", ".set-active", function (e) {
 
           var id = $(this).data('id');

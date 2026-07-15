@@ -18,6 +18,60 @@ class AssetHelper extends Component
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_group'])->all(), 'code', 'title');
     }
 
+    /**
+     * แผนที่กลุ่มทรัพย์สินกลาง (single source of truth) เชื่อม group_id (ป้ายข้อความบน asset_type)
+     * เข้ากับ asset_group_id เชิงเลขของทะเบียน + route ของหน้าทะเบียนแต่ละกลุ่ม
+     *
+     * ใช้ในหน้าตั้งค่า ประเภท/หมวด เพื่อ filter ตามกลุ่ม และรู้ว่ากลุ่มไหนผูกกับทะเบียนใด
+     * ตั้ง 'enabled' = true เฉพาะกลุ่มที่เปิดให้จัดการผ่าน UI ตอนนี้ (ครุภัณฑ์/สิ่งปลูกสร้าง/อาคาร)
+     *
+     * @return array<string,array{label:string,asset_group_id:int,route:string,enabled:bool}>
+     */
+    public static function assetGroupMap()
+    {
+        return [
+            'EQUIP'  => ['label' => 'ครุภัณฑ์',              'asset_group_id' => 4, 'route' => '/am/equip',     'enabled' => true],
+            'STRUCT' => ['label' => 'สิ่งปลูกสร้าง',          'asset_group_id' => 3, 'route' => '/am/structure', 'enabled' => true],
+            'BLDG'   => ['label' => 'อาคาร',                'asset_group_id' => 2, 'route' => '/am/building',  'enabled' => true],
+            'LAND'   => ['label' => 'ที่ดิน',                'asset_group_id' => 1, 'route' => '/am/land',      'enabled' => false],
+            'MINOR'  => ['label' => 'ครุภัณฑ์ต่ำกว่าเกณฑ์',   'asset_group_id' => 5, 'route' => '/am/equip',     'enabled' => false],
+            'INTAN'  => ['label' => 'สินทรัพย์ไม่มีตัวตน',    'asset_group_id' => 6, 'route' => '/am/equip',     'enabled' => false],
+            'MATER'  => ['label' => 'วัสดุ',                'asset_group_id' => 7, 'route' => '/am/equip',     'enabled' => false],
+        ];
+    }
+
+    /**
+     * ตัวเลือกกลุ่มสำหรับ dropdown filter (เฉพาะกลุ่มที่เปิดใช้งาน) — code => label
+     */
+    public static function assetGroupOptions()
+    {
+        $out = [];
+        foreach (self::assetGroupMap() as $code => $g) {
+            if (!empty($g['enabled'])) {
+                $out[$code] = $g['label'];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * ชื่อไทยของกลุ่มจาก group_id (คืน tag เดิมถ้าไม่พบในแผนที่)
+     */
+    public static function assetGroupLabel($groupId)
+    {
+        $map = self::assetGroupMap();
+        return $map[$groupId]['label'] ?? (string) $groupId;
+    }
+
+    /**
+     * ตรวจว่า group_id ที่รับมาเป็นกลุ่มที่เปิดให้จัดการผ่าน UI หรือไม่ (กัน param ปลอม)
+     */
+    public static function isEnabledAssetGroup($groupId)
+    {
+        $map = self::assetGroupMap();
+        return isset($map[$groupId]) && !empty($map[$groupId]['enabled']);
+    }
+
     public static function listAssetType()
     {
         return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
