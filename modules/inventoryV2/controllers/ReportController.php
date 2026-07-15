@@ -1043,12 +1043,18 @@ class ReportController extends Controller
         }
 
         $filename = $filenamePrefix . '-' . date('Ymd-His') . '.xlsx';
-        Yii::$app->response->format = Response::FORMAT_RAW;
-        Yii::$app->response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        Yii::$app->response->headers->set('Content-Disposition', 'attachment; filename="' . addslashes($filename) . '"');
+        $tempPath = Yii::getAlias('@runtime') . '/balance_' . uniqid('', true) . '.xlsx';
         $writer = new Xlsx($spreadsheet);
-        $writer->save('php://output');
-        Yii::$app->end();
+        $writer->save($tempPath);
+
+        Yii::$app->response->sendFile($tempPath, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ])->on(Response::EVENT_AFTER_SEND, function () use ($tempPath) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        });
     }
 
     /**

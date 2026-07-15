@@ -115,6 +115,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     'class' => 'bal-toolbar__btn bal-toolbar__btn--accent',
                     'title' => 'ดาวน์โหลด Excel',
                     'aria-label' => 'ดาวน์โหลด Excel',
+                    'data-pjax' => '0',
                 ]
             ) ?>
             <noscript>
