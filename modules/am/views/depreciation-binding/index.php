@@ -72,9 +72,60 @@ $this->beginBlock('action'); ?>
 
     <div class="card"><div class="card-body">
         <?php $showParentType = ($level === 'asset_category'); ?>
-        <table class="table table-sm table-hover align-middle">
+
+        <?php if (empty($rows)): ?>
+            <div class="text-center text-muted py-3">ไม่พบข้อมูล</div>
+        <?php else: ?>
+            <ul class="list-group list-group-flush d-lg-none mb-3" role="list" aria-label="รายการผูกเกณฑ์ค่าเสื่อม">
+                <?php foreach ($rows as $r): ?>
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between gap-2">
+                            <div class="min-w-0">
+                                <div class="fw-semibold text-dark"><?= Html::encode($r['title']) ?></div>
+                                <div class="small text-muted"><?= Html::encode($r['code']) ?></div>
+                                <?php if (!empty($r['parent_type_name'])): ?>
+                                    <div class="small text-muted mt-1">ประเภทหลัก: <?= Html::encode($r['parent_type_name']) ?></div>
+                                <?php elseif (!empty($r['parent_type_code'])): ?>
+                                    <div class="small text-muted mt-1">ประเภทหลัก: <?= Html::encode($r['parent_type_code']) ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <span class="badge <?= $r['bound_profile_name'] ? 'bg-success' : 'bg-light text-dark border' ?> align-self-start">
+                                <?= $r['bound_profile_name'] ? Html::encode($r['bound_profile_name']) : 'ยังไม่ผูก' ?>
+                            </span>
+                        </div>
+                        <?= Html::beginForm(['set'], 'post', ['class' => 'd-flex gap-2 mt-2']) ?>
+                            <?= Html::hiddenInput('id', $r['id']) ?>
+                            <?= Html::hiddenInput('level', $level) ?>
+                            <?= Html::hiddenInput('q', $q) ?>
+                            <?= Html::hiddenInput('type', $type) ?>
+                            <select name="profile_id" class="form-select form-select-sm" aria-label="เลือกเกณฑ์ค่าเสื่อมสำหรับ <?= Html::encode($r['title']) ?>">
+                                <option value="">ไม่ผูกเกณฑ์</option>
+                                <?php foreach ($profiles as $p): ?>
+                                    <option value="<?= $p->id ?>" <?= $r['bound_profile_id'] == $p->id ? 'selected' : '' ?>>
+                                        <?= Html::encode($p->code . ' — ' . $p->name) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?= Html::submitButton('<i data-lucide="save"></i><span class="visually-hidden">บันทึกเกณฑ์</span>', ['class' => 'btn btn-sm btn-primary']) ?>
+                        <?= Html::endForm() ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+
+        <div class="table-responsive d-none d-lg-block">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <caption class="visually-hidden">รายการผูกเกณฑ์ค่าเสื่อมตามลำดับชั้นทรัพย์สิน</caption>
             <thead class="table-light">
-                <tr><th>รหัส</th><th>ชื่อ</th><?php if ($showParentType): ?><th>ประเภทหลัก</th><?php endif; ?><th>เกณฑ์ที่ผูก</th><th style="width:360px">กำหนดเกณฑ์</th></tr>
+        <tr>
+          <th scope="col">รหัส</th>
+          <th scope="col">ชื่อ</th>
+          <?php if ($showParentType): ?>
+            <th scope="col">ประเภทหลัก</th>
+          <?php endif; ?>
+          <th scope="col">เกณฑ์ที่ผูก</th>
+          <th scope="col">กำหนดเกณฑ์</th>
+        </tr>
             </thead>
             <tbody>
                 <?php if (empty($rows)): ?>
@@ -115,13 +166,14 @@ $this->beginBlock('action'); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <?= Html::submitButton('<i data-lucide="save"></i>', ['class' => 'btn btn-sm btn-primary']) ?>
+                                <?= Html::submitButton('<i data-lucide="save"></i><span class="visually-hidden">บันทึกเกณฑ์</span>', ['class' => 'btn btn-sm btn-primary']) ?>
                             <?= Html::endForm() ?>
                         </td>
                     </tr>
                 <?php endforeach; endif; ?>
             </tbody>
         </table>
+</div>
         <?= LinkPager::widget(['pagination' => $pages]) ?>
     </div></div>
 </div>

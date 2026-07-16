@@ -6,10 +6,12 @@ use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\db\Query;
+use app\components\AppHelper;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\StockMonthlyReport;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
 
@@ -153,6 +155,7 @@ class StockAdjustController extends Controller
         $reverseDetailId = (int) Yii::$app->request->post('reverse_detail_id', 0);
         $reverseOrderNo = trim((string) Yii::$app->request->post('reverse_order_no', ''));
         $note = trim((string) Yii::$app->request->post('note', ''));
+        $orderDateInput = trim((string) Yii::$app->request->post('order_date', ''));
         // โหมด: 'qty_only' = ปรับจำนวนอย่างเดียว ไม่กระทบมูลค่า (unit_price=null)
         //        อื่นๆ (recount) = คิดมูลค่า: เพิ่มใช้ต้นทุนที่ระบุ/เฉลี่ย, ลดคิดตามต้นทุนเฉลี่ย
         $mode = trim((string) Yii::$app->request->post('mode', 'recount'));
@@ -237,6 +240,20 @@ class StockAdjustController extends Controller
             $orderNo = $this->generateAdjustOrderNo();
             $now = date('Y-m-d H:i:s');
 
+            // วันที่เอกสาร (order_date) = วันที่ผู้ใช้ระบุ (ถ้ามี) มิฉะนั้นใช้วันนี้
+            // order_date กำหนดว่ารายการนี้ถูกนับในงวด/เดือนไหน (computeMonthlyRows กรองด้วย order_date)
+            // created_at ยังคงเป็นเวลาบันทึกจริงเสมอ
+            $orderDate = $now;
+            if ($orderDateInput !== '') {
+                // ช่องวันที่เป็น Thai datepicker (วว/ดด/พ.ศ.) — แปลงเป็น ค.ศ. ก่อน; รองรับ ISO ด้วย
+                $greg = strpos($orderDateInput, '/') !== false
+                    ? AppHelper::convertToGregorian($orderDateInput)
+                    : (preg_match('/^\d{4}-\d{2}-\d{2}$/', $orderDateInput) ? $orderDateInput : null);
+                if ($greg !== null && strtotime($greg) !== false) {
+                    $orderDate = $greg . ' ' . date('H:i:s');
+                }
+            }
+
             // เพิ่มแบบคิดมูลค่า → lot เฉพาะผูกกับเอกสาร (ต้นทุน lot นี้ = detailUnitPrice) เพื่อ FIFO อนาคต
             // นอกนั้นใช้ lot 'ADJUST'
             $lotNumber = ($isValueMode && !$valueOnly && !$historyOnlyReverse && $adjustmentQty > 0) ? $orderNo : 'ADJUST';
@@ -245,7 +262,7 @@ class StockAdjustController extends Controller
             $order->order_no = $orderNo;
             $order->order_type = StockOrder::ORDER_TYPE_ADJUST;
             $order->source_type = StockOrder::ORDER_TYPE_ADJUST;
-            $order->order_date = $now;
+            $order->order_date = $orderDate;
             $order->main_warehouse_id = $warehouseId;
             $order->status = StockOrder::STATUS_CONFIRMED;
             $order->ref = $note ?: 'ปรับยอด';
@@ -318,8 +335,10 @@ class StockAdjustController extends Controller
                 'success' => true,
                 'message' => 'ปรับยอดสำเร็จ',
                 'order_no' => $orderNo,
+                'order_date' => date('Y-m-d', strtotime($orderDate)),
                 'value_delta' => round($valueDelta, 2),
                 'mode' => $historyOnlyReverse ? 'history_reverse' : ($valueOnly ? 'value_only' : ($isValueMode ? 'recount' : 'qty_only')),
+                'closed_month_warning' => $this->closedMonthWarning($warehouseId, $orderDate),
             ];
         } catch (\Exception $e) {
             $transaction->rollBack();
@@ -584,6 +603,445 @@ class StockAdjustController extends Controller
             $transaction->rollBack();
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * ถอนผลของเอกสาร ADJUST ออกจาก stock/FIFO — ใช้ร่วมกันทั้งลบและแก้ไข
+     * - qty > 0 (เพิ่มเข้า lot): ต้องยังไม่ถูกจ่ายออก (remain_qty ยังครบ) แล้วหักคืนจาก lot
+     * - qty < 0 (ตัด FIFO): คืน allocation กลับเข้าต้นทาง + stock_balance
+     * - value_only / history_reverse: ไม่มีผลต่อ stock — ไม่ต้องถอน
+     * @throws \Exception เมื่อรายการเพิ่มถูกจ่ายออกไปบางส่วนแล้ว (ถอนไม่ได้แบบปลอดภัย)
+     */
+    protected function reverseAdjustEffect(StockOrder $order, StockDetail $detail, int $warehouseId): void
+    {
+        $qty = (float) $detail->qty;
+        $lot = (string) ($detail->lot_number ?: 'ADJUST');
+
+        $orderData = is_string($order->data_json) && $order->data_json !== ''
+            ? (json_decode($order->data_json, true) ?: [])
+            : (is_array($order->data_json) ? $order->data_json : []);
+        $detailData = is_string($detail->data_json) && $detail->data_json !== ''
+            ? (json_decode($detail->data_json, true) ?: [])
+            : (is_array($detail->data_json) ? $detail->data_json : []);
+        $mode = (string) ($orderData['adjust_mode'] ?? '');
+
+        $noStockEffect = $mode === 'value_only' || $mode === 'history_reverse'
+            || !empty($detailData['adjust_value_only']) || !empty($detailData['history_only_reverse']);
+
+        if ($noStockEffect || abs($qty) < 0.000001) {
+            return;
+        }
+
+        if ($qty > 0) {
+            $remain = (float) $detail->remain_qty;
+            if ($remain + 0.000001 < $qty) {
+                throw new \Exception('รายการปรับยอดนี้ถูกจ่ายออกไปบางส่วนแล้ว จึงแก้ไข/ลบไม่ได้ กรุณาสร้างรายการปรับยอดใหม่เพื่อแก้ไขแทน');
+            }
+            // หักจำนวนที่เคยเพิ่มออกจาก lot (allowNegative กัน float ปัดเศษ)
+            InventoryService::adjustBalance((string) $detail->item_code, $warehouseId, $lot, -$qty, true);
+            $detail->remain_qty = 0;
+        } else {
+            // เคยตัด FIFO — คืน allocation กลับ (คืน remain_qty ต้นทาง + stock_balance)
+            InventoryService::returnFifoAllocation($detail, $warehouseId, abs($qty));
+        }
+    }
+
+    /**
+     * ลบรายการปรับยอด (ADJUST) ออกจากประวัติ พร้อมถอนผลต่อ stock จริง
+     */
+    public function actionDeleteAdjustDetail()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid method'];
+        }
+
+        $detailId = (int) Yii::$app->request->post('detail_id', 0);
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
+
+        if ($detailId <= 0 || $warehouseId <= 0 || $itemCode === '') {
+            return ['success' => false, 'message' => 'ข้อมูลรายการที่ต้องการลบไม่ครบถ้วน'];
+        }
+
+        $detail = StockDetail::findOne($detailId);
+        if (!$detail) {
+            return ['success' => false, 'message' => 'ไม่พบรายการปรับยอดที่ต้องการลบ'];
+        }
+
+        $order = StockOrder::findOne($detail->stock_order_id);
+        if (!$order || $order->order_type !== StockOrder::ORDER_TYPE_ADJUST) {
+            return ['success' => false, 'message' => 'ลบได้เฉพาะรายการปรับยอด (ADJUST) เท่านั้น'];
+        }
+        if ((string) $order->status !== StockOrder::STATUS_CONFIRMED) {
+            return ['success' => false, 'message' => 'ลบได้เฉพาะเอกสารที่ยืนยันแล้วเท่านั้น'];
+        }
+        if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
+            return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
+        }
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $orderNo = (string) $order->order_no;
+            $closedWarning = $this->closedMonthWarning($warehouseId, (string) $order->order_date);
+            $this->reverseAdjustEffect($order, $detail, $warehouseId);
+
+            $otherDetails = (int) StockDetail::find()
+                ->where(['stock_order_id' => $order->id])
+                ->andWhere(['<>', 'id', $detailId])
+                ->count();
+
+            if ($detail->delete() === false) {
+                throw new \Exception('ลบรายการปรับยอดไม่สำเร็จ');
+            }
+            // ADJUST มี 1 detail ต่อ 1 order — ลบหัวเอกสารทิ้งด้วยถ้าไม่เหลือรายการ
+            if ($otherDetails === 0) {
+                $order->delete();
+            }
+
+            $currentQty = (float) StockBalance::find()
+                ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+                ->sum('balance_qty');
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'ลบรายการปรับยอดและถอนผลต่อยอดคงเหลือเรียบร้อย',
+                'order_no' => $orderNo,
+                'deleted_detail_id' => $detailId,
+                'current_qty' => $currentQty,
+                'closed_month_warning' => $closedWarning,
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * แก้ไขรายการปรับยอด (ADJUST) — แก้ได้ทั้งจำนวน (+/-) และราคา/หน่วย
+     * วิธีทำ: ถอนผลเดิมออก แล้ว apply ผลใหม่ในเอกสารเดิม
+     */
+    public function actionUpdateAdjustDetail()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid method'];
+        }
+
+        $detailId = (int) Yii::$app->request->post('detail_id', 0);
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
+        $newQty = (float) Yii::$app->request->post('adjustment_qty', 0); // signed
+        $priceRaw = Yii::$app->request->post('unit_price');
+        $newPrice = is_numeric($priceRaw) ? (float) $priceRaw : null;
+        $note = trim((string) Yii::$app->request->post('note', ''));
+
+        if ($detailId <= 0 || $warehouseId <= 0 || $itemCode === '') {
+            return ['success' => false, 'message' => 'ข้อมูลรายการที่ต้องการแก้ไขไม่ครบถ้วน'];
+        }
+        if (abs($newQty) < 0.000001) {
+            return ['success' => false, 'message' => 'จำนวนที่ปรับต้องไม่เป็น 0 (หากต้องการยกเลิกรายการให้ใช้ปุ่มลบ)'];
+        }
+        if ($newPrice !== null && $newPrice < 0) {
+            return ['success' => false, 'message' => 'ราคา/หน่วยต้องไม่น้อยกว่า 0'];
+        }
+
+        $detail = StockDetail::findOne($detailId);
+        if (!$detail) {
+            return ['success' => false, 'message' => 'ไม่พบรายการปรับยอดที่ต้องการแก้ไข'];
+        }
+
+        $order = StockOrder::findOne($detail->stock_order_id);
+        if (!$order || $order->order_type !== StockOrder::ORDER_TYPE_ADJUST) {
+            return ['success' => false, 'message' => 'แก้ไขได้เฉพาะรายการปรับยอด (ADJUST) เท่านั้น'];
+        }
+        if ((string) $order->status !== StockOrder::STATUS_CONFIRMED) {
+            return ['success' => false, 'message' => 'แก้ได้เฉพาะเอกสารที่ยืนยันแล้วเท่านั้น'];
+        }
+        if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
+            return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
+        }
+
+        $oldQty = (float) $detail->qty;
+        $oldPrice = $detail->unit_price === null ? null : (float) $detail->unit_price;
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            // 1) ถอนผลเดิม (กัน edit รายการที่เพิ่มแล้วถูกจ่ายไปบางส่วน)
+            $this->reverseAdjustEffect($order, $detail, $warehouseId);
+
+            // 2) คำนวณราคา/โหมดใหม่ — กรอกราคา = คิดมูลค่า (recount), ไม่กรอก/0 = value-neutral (qty_only)
+            $isValueMode = ($newPrice !== null && $newPrice > 0);
+            $detailUnitPrice = $isValueMode ? $newPrice : null;
+            // เพิ่มแบบคิดมูลค่า → lot ผูกกับเอกสาร (ต้นทุน lot สำหรับ FIFO อนาคต); นอกนั้น 'ADJUST'
+            $lotNumber = ($isValueMode && $newQty > 0) ? (string) $order->order_no : 'ADJUST';
+
+            $now = date('Y-m-d H:i:s');
+            $editLog = [
+                'at' => $now,
+                'by_user_id' => Yii::$app->user->id,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldPrice,
+                'new_unit_price' => $detailUnitPrice,
+                'note' => $note,
+                'source' => 'item-history-adjust-edit',
+            ];
+
+            // 3) เขียน detail ด้วยค่าใหม่ก่อน (ลำดับเดียวกับ actionSave) เพื่อให้ processFIFO
+            //    เก็บ fifo_allocations ลง detail นี้ได้ถูกต้อง; ล้างร่องรอยโหมด/allocation เดิม
+            $detailData = is_string($detail->data_json) && $detail->data_json !== ''
+                ? (json_decode($detail->data_json, true) ?: [])
+                : (is_array($detail->data_json) ? $detail->data_json : []);
+            if (!is_array($detailData)) {
+                $detailData = [];
+            }
+            unset($detailData['adjust_value_only'], $detailData['history_only_reverse'], $detailData['fifo_allocations']);
+            $detailData['history_adjust_edits'][] = $editLog;
+
+            $detail->qty = $newQty;
+            $detail->unit_price = $detailUnitPrice;
+            $detail->lot_number = $lotNumber;
+            $detail->remain_qty = $newQty > 0 ? $newQty : 0;
+            $detail->data_json = json_encode($detailData, JSON_UNESCAPED_UNICODE);
+            $detail->updated_at = $now;
+            $detail->updated_by = Yii::$app->user->id;
+            if (!$detail->save(false)) {
+                throw new \Exception('บันทึกรายการปรับยอดไม่สำเร็จ');
+            }
+
+            // 4) apply ผลใหม่ต่อ stock/FIFO (processFIFO จะเติม remain_qty + fifo_allocations ให้ detail นี้)
+            if ($newQty > 0) {
+                InventoryService::adjustBalance($itemCode, $warehouseId, $lotNumber, $newQty);
+            } else {
+                InventoryService::processFIFO($itemCode, $warehouseId, abs($newQty), $order->id, $detail->id);
+            }
+
+            // 5) อัปเดตหัวเอกสาร
+            $orderData = is_string($order->data_json) && $order->data_json !== ''
+                ? (json_decode($order->data_json, true) ?: [])
+                : (is_array($order->data_json) ? $order->data_json : []);
+            if (!is_array($orderData)) {
+                $orderData = [];
+            }
+            $orderData['adjust_mode'] = $isValueMode ? 'recount' : 'qty_only';
+            $orderData['unit_price'] = $detailUnitPrice;
+            $orderData['lot_number'] = $lotNumber;
+            $orderData['adjustment_qty'] = $newQty;
+            $orderData['history_adjust_edits'][] = $editLog;
+            if ($note !== '') {
+                $order->ref = $note;
+            }
+            $order->data_json = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+            $order->updated_at = $now;
+            $order->updated_by = Yii::$app->user->id;
+            $order->save(false);
+
+            $currentQty = (float) StockBalance::find()
+                ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+                ->sum('balance_qty');
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'แก้ไขรายการปรับยอดสำเร็จ',
+                'order_no' => $order->order_no,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'old_unit_price' => $oldPrice,
+                'new_unit_price' => $detailUnitPrice,
+                'current_qty' => $currentQty,
+                'closed_month_warning' => $this->closedMonthWarning($warehouseId, (string) $order->order_date),
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * แก้ยอดคงเหลือของ lot โดยตรง (stock_balance.balance_qty) พร้อม sync FIFO (stock_detail.remain_qty)
+     * ใช้เป็นเครื่องมือ reconcile ข้อมูลจากประวัติการเคลื่อนไหววัสดุ (ไม่ผ่านเอกสาร ADJUST)
+     */
+    public function actionUpdateLotBalance()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['success' => false, 'message' => 'Invalid method'];
+        }
+
+        $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
+        $lot = trim((string) Yii::$app->request->post('lot_number', ''));
+        $newQtyRaw = Yii::$app->request->post('new_qty');
+        $note = trim((string) Yii::$app->request->post('note', ''));
+
+        if ($warehouseId <= 0 || $itemCode === '' || $lot === '') {
+            return ['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน (คลัง/รหัสพัสดุ/lot)'];
+        }
+        if (!is_numeric($newQtyRaw)) {
+            return ['success' => false, 'message' => 'จำนวนคงเหลือใหม่ไม่ถูกต้อง'];
+        }
+        $newQty = (float) $newQtyRaw;
+        if ($newQty < 0) {
+            return ['success' => false, 'message' => 'จำนวนคงเหลือต้องไม่ติดลบ'];
+        }
+        if (!StockItem::findOne(['item_code' => $itemCode])) {
+            return ['success' => false, 'message' => 'ไม่พบรหัสพัสดุในระบบ'];
+        }
+        if (!Warehouse::findOne($warehouseId)) {
+            return ['success' => false, 'message' => 'ไม่พบคลังในระบบ'];
+        }
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $now = date('Y-m-d H:i:s');
+            $userId = Yii::$app->user->id;
+
+            // source details ของ lot นี้ในคลังนี้ (ใช้ทั้งเช็คเพดาน + sync remain)
+            $sources = StockDetail::find()
+                ->joinWith('stockOrder')
+                ->where(['stock_detail.item_code' => $itemCode, 'stock_detail.lot_number' => $lot])
+                ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
+                ->andWhere(['or',
+                    ['and', ['stock_order.main_warehouse_id' => $warehouseId], ['or',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                        ['and', ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'stock_detail.qty', 0]],
+                    ]],
+                    ['and', ['stock_order.order_type' => StockOrder::ORDER_TYPE_TRANSFER], ['stock_order.sub_warehouse_id' => $warehouseId], ['>', 'stock_detail.qty', 0]],
+                ])
+                ->orderBy(['stock_order.order_date' => SORT_ASC, 'stock_detail.id' => SORT_ASC])
+                ->all();
+
+            // guard: ยอดคงเหลือใหม่ต้องไม่เกินจำนวนที่เคยรับเข้า lot นี้ (กัน typo)
+            // เว้น lot ที่ไม่มี source detail (หาเพดานไม่ได้ — orphan)
+            $totalReceived = 0.0;
+            foreach ($sources as $s) {
+                $totalReceived += (float) $s->qty;
+            }
+            if (!empty($sources) && $newQty > $totalReceived + 0.000001) {
+                $fmt = function ($n) { return rtrim(rtrim(number_format($n, 4, '.', ''), '0'), '.'); };
+                throw new \Exception('ยอดคงเหลือใหม่ (' . $fmt($newQty) . ') มากกว่าจำนวนที่เคยรับเข้า lot นี้ (' . $fmt($totalReceived) . ') กรุณาตรวจสอบ');
+            }
+
+            // 1) stock_balance: รวม row ซ้ำ (item,wh,lot) ให้เหลือแถวเดียว = newQty
+            $balances = StockBalance::find()
+                ->where(['item_code' => $itemCode, 'warehouse_id' => $warehouseId, 'lot_number' => $lot])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+            $oldBalance = 0.0;
+            foreach ($balances as $b) {
+                $oldBalance += (float) $b->balance_qty;
+            }
+            if (empty($balances)) {
+                if ($newQty > 0) {
+                    $b = new StockBalance([
+                        'item_code' => $itemCode,
+                        'warehouse_id' => $warehouseId,
+                        'lot_number' => $lot,
+                        'balance_qty' => $newQty,
+                    ]);
+                    $b->created_at = $now;
+                    $b->updated_at = $now;
+                    $b->created_by = $userId;
+                    $b->updated_by = $userId;
+                    $b->save(false);
+                }
+            } else {
+                $keep = array_shift($balances);
+                $bd = is_string($keep->data_json) && $keep->data_json !== ''
+                    ? (json_decode($keep->data_json, true) ?: [])
+                    : (is_array($keep->data_json) ? $keep->data_json : []);
+                if (!is_array($bd)) {
+                    $bd = [];
+                }
+                $bd['lot_balance_edits'][] = [
+                    'at' => $now, 'by_user_id' => $userId,
+                    'old' => $oldBalance, 'new' => $newQty, 'note' => $note,
+                    'merged_rows' => count($balances),
+                ];
+                $keep->balance_qty = $newQty;
+                $keep->data_json = json_encode($bd, JSON_UNESCAPED_UNICODE);
+                $keep->updated_at = $now;
+                $keep->updated_by = $userId;
+                $keep->save(false);
+                foreach ($balances as $dup) {
+                    $dup->delete(); // ลบ row ซ้ำที่เหลือ
+                }
+            }
+
+            // 2) sync stock_detail.remain_qty ของ source lot นี้ (reuse $sources ที่ fetch ไว้ด้านบน) ให้ผลรวม = newQty
+            $oldRemain = 0.0;
+            foreach ($sources as $s) {
+                $oldRemain += (float) $s->remain_qty;
+            }
+            $remainSynced = false;
+            if (!empty($sources)) {
+                $alloc = $newQty;
+                $last = count($sources) - 1;
+                foreach ($sources as $i => $s) {
+                    // เติมจากเก่า→ใหม่ (cap ที่ qty ที่รับเข้า) ตัวสุดท้ายรับส่วนที่เหลือทั้งหมดให้ผลรวมตรงพอดี
+                    $give = ($i === $last) ? max(0.0, $alloc) : max(0.0, min($alloc, (float) $s->qty));
+                    $s->remain_qty = $give;
+                    $s->updated_at = $now;
+                    $s->updated_by = $userId;
+                    $s->save(false);
+                    $alloc -= $give;
+                }
+                $remainSynced = true;
+            }
+
+            $currentQty = (float) StockBalance::find()
+                ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
+                ->sum('balance_qty');
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'แก้ยอดคงเหลือ lot สำเร็จ',
+                'lot_number' => $lot,
+                'old_balance' => round($oldBalance, 4),
+                'new_balance' => round($newQty, 4),
+                'old_remain' => round($oldRemain, 4),
+                'new_remain' => $remainSynced ? round($newQty, 4) : round($oldRemain, 4),
+                'remain_synced' => $remainSynced,
+                'current_qty' => $currentQty,
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * ถ้า order_date ตกในเดือนที่ปิดงวดไปแล้ว (มี snapshot ใน stock_monthly_report)
+     * คืนข้อความเตือนให้ผู้ใช้ปิดเดือนนั้นใหม่ — มิฉะนั้นคืน null
+     */
+    protected function closedMonthWarning(int $warehouseId, string $orderDate): ?string
+    {
+        $ts = strtotime($orderDate);
+        if ($ts === false) {
+            return null;
+        }
+        $y = (int) date('Y', $ts);
+        $m = (int) date('n', $ts);
+        $closed = StockMonthlyReport::find()
+            ->where(['report_year' => $y, 'report_month' => $m, 'warehouse_id' => $warehouseId])
+            ->exists();
+        if (!$closed) {
+            return null;
+        }
+        $monthNames = [1 => 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        $label = ($monthNames[$m] ?? '') . ' ' . ($y + 543);
+        return 'วันที่ที่เลือกอยู่ในเดือน ' . $label . ' ซึ่งปิดงวดไปแล้ว — กรุณาปิดเดือนนั้นใหม่เพื่อให้ยอดยกมา/ยกไปถูกต้อง';
     }
 
     protected function generateAdjustOrderNo()

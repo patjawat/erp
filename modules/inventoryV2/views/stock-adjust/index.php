@@ -140,6 +140,15 @@ use app\widgets\TomSelectWidget;
 
                 <div class="row g-3 mt-1">
                     <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold">วันที่ปรับยอด</label>
+                        <?= \app\widgets\datepicker\DatepickerThai::widget([
+                            'name' => 'order_date',
+                            'value' => \app\components\AppHelper::convertToThai(date('Y-m-d')),
+                            'options' => ['id' => 'order_date', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                        ]) ?>
+                        <div class="form-text">มีผลต่อการปิดเดือน — รายการจะถูกนับในงวดตามวันที่นี้ (ค่าเริ่มต้น = วันนี้)</div>
+                    </div>
+                    <div class="col-12 col-md-6">
                         <label class="form-label fw-semibold">หมายเหตุ</label>
                         <input type="text" name="note" id="note" class="form-control" placeholder="เหตุผลการปรับ (ถ้ามี)" value="<?= Html::encode($prefill['note']) ?>">
                     </div>
@@ -423,7 +432,8 @@ $this->registerJs(<<<JS
                 mode: getMode(),
                 unit_price: $('#unit_price').val(),
                 source: $('#source').val(),
-                note: $('#note').val()
+                note: $('#note').val(),
+                order_date: $('#order_date').val()
             },
             dataType: 'json'
         }).done(function(res) {
@@ -432,6 +442,7 @@ $this->registerJs(<<<JS
                     ? (' · มูลค่า ' + (parseFloat(res.value_delta) >= 0 ? '+' : '') + formatMoney(res.value_delta))
                     : '';
                 alert('ปรับยอดสำเร็จ — เลขที่เอกสาร: ' + (res.order_no || '') + extra);
+                if (res.closed_month_warning) { alert(res.closed_month_warning); }
                 $('#adjustment_qty').val('');
                 $('#target_qty').val('');
                 $('#note').val('');

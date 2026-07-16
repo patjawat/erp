@@ -246,10 +246,20 @@ class Warehouse extends \yii\db\ActiveRecord
      * ใช้สำหรับ "คลังที่รับของ" ในใบขอเบิก — เจ้าหน้าที่คลังย่อยเบิกของจากคลังหลักมาคลังตัวเอง
      * @return Warehouse[]
      */
-    public static function findSubWarehousesForUser()
+    public static function findSubWarehousesForUser($allowWarehouseScope = false)
     {
         if (Yii::$app->user->isGuest) {
             return [];
+        }
+
+        // opt-in เฉพาะบางจุด (เช่น หน้าเบิก): สิทธิ์ระดับ warehouse/admin เลือกได้ทุกคลังย่อย
+        // (idiom เดียวกับ can('warehouse') ที่ IssueController/เมนูใช้) — ค่า default ยังคงกรองเฉพาะ officer เดิม
+        if ($allowWarehouseScope && (Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse'))) {
+            return self::find()
+                ->where(['warehouse_type' => 'SUB'])
+                ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                ->orderBy('warehouse_name')
+                ->all();
         }
 
         $userId = (string) Yii::$app->user->id;

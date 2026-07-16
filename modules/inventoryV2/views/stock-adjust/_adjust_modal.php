@@ -145,6 +145,16 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
                 <div class="sam-preview-empty" id="sam-preview-empty">กรอกจำนวนที่ขั้นตอน 2 เพื่อดูผลลัพธ์ก่อนบันทึก</div>
 
                 <div class="sam-field mt-3">
+                    <label class="sam-label" for="sam-date">วันที่ปรับยอด</label>
+                    <?= \app\widgets\datepicker\DatepickerThai::widget([
+                        'name' => 'sam_order_date',
+                        'value' => \app\components\AppHelper::convertToThai(date('Y-m-d')),
+                        'options' => ['id' => 'sam-date', 'class' => 'form-control-input', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                    ]) ?>
+                    <div class="sam-date-hint" id="sam-date-hint">มีผลต่อการปิดเดือน — รายการจะถูกนับในงวดตามวันที่นี้ (ค่าเริ่มต้น = วันนี้)</div>
+                </div>
+
+                <div class="sam-field mt-3">
                     <label class="sam-label" for="sam-note">หมายเหตุ</label>
                     <div class="sam-note-group dropup">
                         <input type="text" id="sam-note" class="form-control-input" placeholder="เลือกเหตุผล หรือพิมพ์เอง">
@@ -271,6 +281,7 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
 }
 .stock-adjust-modal.is-qty-only .sam-neutral-note { display:block; }
 .stock-adjust-modal.is-qty-only #sam-price-wrap { display:none; }
+.stock-adjust-modal .sam-date-hint { margin-top:.35rem; font-size:.74rem; color:var(--ink-3); line-height:1.4; }
 
 .stock-adjust-modal .sam-note-group { position:relative; display:flex; flex-wrap:nowrap; }
 .stock-adjust-modal .sam-note-group > .form-control-input { flex:1 1 auto; width:1%; min-width:0; border-radius:var(--radius-sm) 0 0 var(--radius-sm); }
@@ -486,12 +497,14 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
                 current_value: curVal,
                 target_value: $id('sam-target-value').value,
                 source: 'balance-modal',
-                note: $id('sam-note').value
+                note: $id('sam-note').value,
+                order_date: $id('sam-date') ? $id('sam-date').value : ''
             }
         }).done(function (res) {
             if (res && res.success) {
                 btn.classList.remove('is-saving'); btn.classList.add('is-done');
                 btn.querySelector('.btn-save__label').textContent = 'สำเร็จ';
+                if (res.closed_month_warning) { alert(res.closed_month_warning); }
                 if (typeof success === 'function') { success('ปรับยอดสำเร็จ — ' + (res.order_no || '')); }
                 var modalEl = document.getElementById('main-modal');
                 if (modalEl && window.bootstrap && bootstrap.Modal) {
@@ -512,5 +525,10 @@ $pricePrefill = $avgCost > 0 ? number_format($avgCost, 4, '.', '') : '';
     });
 
     syncMode();
+
+    // widget DatepickerThai ใช้ registerJs ซึ่งไม่ทำงานตอน inject ผ่าน AJAX → init เองที่นี่
+    if (typeof thaiDatepicker === 'function') {
+        try { thaiDatepicker('#sam-date'); } catch (e) {}
+    }
 })();
 </script>

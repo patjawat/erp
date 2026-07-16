@@ -347,41 +347,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
             </div>
 
             <div class="modal-body">
-                <?php
-                // default: ย้อนหลัง 1 ปี → วันนี้ (รูปแบบไทย d/m/Y พ.ศ.)
-                $defaultStart = date('d/m/', strtotime('-1 year')) . (date('Y', strtotime('-1 year')) + 543);
-                $defaultEnd   = date('d/m/') . (date('Y') + 543);
-                ?>
-                <form id="historyFilterForm" class="bal-history-filter">
-                    <label class="bal-history-filter__field">
-                        <span class="bal-history-filter__label">เริ่ม</span>
-                        <?= \app\widgets\datepicker\DatepickerThai::widget([
-                            'name' => 'start_date',
-                            'value' => $defaultStart,
-                            'options' => [
-                                'id' => 'hist-start-date',
-                                'class' => 'form-control form-control-sm',
-                                'placeholder' => 'เริ่มจากวันที่',
-                            ],
-                        ]) ?>
-                    </label>
-                    <label class="bal-history-filter__field">
-                        <span class="bal-history-filter__label">ถึง</span>
-                        <?= \app\widgets\datepicker\DatepickerThai::widget([
-                            'name' => 'end_date',
-                            'value' => $defaultEnd,
-                            'options' => [
-                                'id' => 'hist-end-date',
-                                'class' => 'form-control form-control-sm',
-                                'placeholder' => 'ถึงวันที่',
-                            ],
-                        ]) ?>
-                    </label>
-                    <button type="submit" class="bal-history-filter__btn">
-                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>โหลดประวัติ
-                    </button>
-                </form>
-
+                <?php // เอา filter วันที่ออก — แสดงประวัติทั้งหมดเสมอ (start=1900-01-01, end=วันนี้ กำหนดใน JS) ?>
                 <ul class="bal-history-stats" aria-label="สรุปยอดเคลื่อนไหว" aria-live="polite">
                     <li class="bal-history-stat">
                         <span class="bal-history-stat__label">ยอดยกมา</span>
@@ -576,6 +542,38 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     </div>
                 </div>
 
+                <div id="hist-lotbal-panel" class="bal-history-adjust" hidden>
+                    <div class="bal-history-adjust__head">
+                        <div>
+                            <div class="bal-history-adjust__title">
+                                <i class="bi bi-sliders" aria-hidden="true"></i>
+                                แก้ยอดคงเหลือรายลอต (reconcile)
+                            </div>
+                            <div class="bal-history-adjust__caption">
+                                แก้ <code>balance_qty</code> ต่อ lot โดยตรง ระบบจะ sync <code>remain_qty</code> (FIFO) ให้เท่ากันและรวม row ซ้ำอัตโนมัติ · แถวส้ม = balance ≠ remain
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="hist-lotbal-close">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="hist-lotbal-alert" class="bal-history-adjust__alert" role="status" aria-live="polite" hidden></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0 hist-lotbal-table">
+                            <thead>
+                                <tr>
+                                    <th>Lot</th>
+                                    <th class="text-end">balance_qty</th>
+                                    <th class="text-end">remain_qty</th>
+                                    <th class="text-end" style="width:8rem;">คงเหลือใหม่</th>
+                                    <th class="text-end" style="width:5rem;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="hist-lotbal-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div id="hist-action-alert" class="bal-history-action-alert" role="status" aria-live="polite" hidden></div>
 
                 <div class="table-responsive bal-history-table-wrap">
@@ -595,7 +593,7 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                             </tr>
                         </thead>
                         <tbody id="hist-tbody">
-                            <tr><td colspan="10" class="text-center bal-history-empty">เลือกช่วงเวลาแล้วกด "โหลดประวัติ"</td></tr>
+                            <tr><td colspan="10" class="text-center bal-history-empty">กำลังโหลดประวัติ...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -606,10 +604,13 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
                     <i class="bi bi-info-circle" aria-hidden="true"></i>
                     นับเฉพาะเอกสารที่ยืนยันแล้ว (CONFIRMED)
                 </span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="hist-lotbal-btn" disabled>
+                    <i class="bi bi-sliders me-1"></i>แก้ยอดคงเหลือรายลอต
+                </button>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="hist-adjust-btn" disabled>
                     <i class="bi bi-wrench-adjustable me-1"></i>ปรับยอด stock
                 </button>
-                <button type="button" class="btn btn-sm bal-history-modal__export" id="hist-export-btn" disabled>
+                <button type="button" class="btn btn-sm btn-success" id="hist-export-btn" disabled>
                     <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
                 </button>
                 <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">ปิด</button>
@@ -1187,28 +1188,6 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
 }
 .bal-history-modal__meta .sep { color: var(--ink-4); }
 .bal-history-modal__meta strong { color: var(--ink-1); font-weight: 600; }
-.bal-history-modal__export {
-    background: var(--primary);
-    border: 1px solid var(--primary);
-    color: #fff;
-    font-weight: 600;
-    transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
-}
-.bal-history-modal__export:hover:not(:disabled) {
-    background: var(--primary-ink);
-    border-color: var(--primary-ink);
-    color: #fff;
-}
-.bal-history-modal__export:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--primary-soft);
-}
-.bal-history-modal__export:disabled {
-    background: var(--surface-3);
-    border-color: var(--line-strong);
-    color: var(--ink-3);
-    cursor: not-allowed;
-}
 .bal-history-modal__hint {
     font-size: 0.78rem;
     color: var(--ink-3);
@@ -1786,13 +1765,31 @@ $buildFilterUrl = function (array $override) use ($balanceUrl) {
     .bal-item__thumb,
     .bal-history-btn,
     #itemHistoryModal .modal-dialog,
-    .bal-history-filter__btn,
-    .bal-history-modal__export,
     .bal-history-variance,
     .bal-history-variance__primary,
     .bal-history-table tbody tr { transition: none !important; }
     .bal-history-variance.is-entering { opacity: 1; transform: none; }
     .bal-skeleton { animation: none; background: rgba(15,23,42,0.08); }
+}
+
+.hist-lotbal-table th { font-size: .78rem; color: #64748b; font-weight: 600; }
+.hist-lotbal-table td { font-size: .84rem; }
+.hist-lotbal-table .hist-lotbal-input { max-width: 7rem; margin-left: auto; }
+.hist-lotbal-mismatch { background: rgba(234,88,12,0.06); }
+
+/* Export flow (SweetAlert) — จูน radius/typography ให้เข้ากับ enterprise tokens (ไม่ใช้ radius 16px default) */
+.hist-swal { border-radius: 12px !important; }
+.hist-swal__confirm, .hist-swal__cancel { border-radius: 8px !important; font-weight: 600; }
+.hist-swal__body { line-height: 1.5; }
+.hist-swal__item { color: #1a202c; font-size: .95rem; font-weight: 600; }
+.hist-swal__meta { color: #718096; font-size: .84rem; }
+
+/* Export button — press feedback (มี reduced-motion guard) */
+#hist-export-btn { transition: transform 120ms cubic-bezier(0.16,1,0.3,1), box-shadow 120ms cubic-bezier(0.16,1,0.3,1); }
+#hist-export-btn:not(:disabled):active { transform: translateY(1px) scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+    #hist-export-btn { transition: none; }
+    #hist-export-btn:not(:disabled):active { transform: none; }
 }
 </style>
 
@@ -1803,12 +1800,20 @@ $jsAdjustSaveUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/save']));
 $jsStockAdjustModalUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/modal']));
 $jsReqDetailUpdateUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/update-requisition-detail-qty']));
 $jsReqDetailDeleteUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/delete-requisition-detail']));
+$jsAdjustUpdateUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/update-adjust-detail']));
+$jsAdjustDeleteUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/delete-adjust-detail']));
+$jsLotBalanceUrl = Json::encode(Url::to(['/inventory-v2/stock-adjust/update-lot-balance']));
 $jsSaveSettingUrl = Json::encode(Url::to(['/inventory-v2/warehouse/save-setting']));
 $js = <<<JS
 (function () {
     var modalEl = document.getElementById('itemHistoryModal');
     if (!modalEl) return;
     var adjustBtn = document.getElementById('hist-adjust-btn');
+    var lotbalBtn = document.getElementById('hist-lotbal-btn');
+    var lotbalPanel = document.getElementById('hist-lotbal-panel');
+    var lotbalTbody = document.getElementById('hist-lotbal-tbody');
+    var lotbalAlert = document.getElementById('hist-lotbal-alert');
+    var lotbalCloseBtn = document.getElementById('hist-lotbal-close');
     var lastHistoryPayload = null;
     var historyTooltips = [];
 
@@ -1864,6 +1869,7 @@ $js = <<<JS
     var editPreviewRowBalance = document.getElementById('hist-edit-preview-row-balance');
     var editPreviewValue = document.getElementById('hist-edit-preview-value');
     var activeEditRow = null;
+    var editMode = 'out'; // 'out' = แก้ใบเบิก, 'adjust' = แก้รายการปรับยอด
     var activeBalanceRow = null;
     var fmt = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     var fmtInt = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 0 });
@@ -2083,6 +2089,7 @@ $js = <<<JS
     }
 
     function updateEditImpact() {
+        if (editMode === 'adjust') return updateAdjustEditImpact();
         if (!editCurrent || !editNew || !editImpact) return 0;
         var currentQty = parseFloat(editCurrent.value || 0);
         var newQty = parseFloat(editNew.value);
@@ -2145,6 +2152,8 @@ $js = <<<JS
         hideEditMessage();
         if (activeEditRow) resetHistoryRowPreview();
         activeEditRow = null;
+        editMode = 'out';
+        if (editNew) editNew.min = '0.000001';
         clearEditPreview();
     }
 
@@ -2164,10 +2173,16 @@ $js = <<<JS
             resetHistoryRowPreview();
         }
         activeEditRow = row;
+        editMode = 'out';
         closeAdjustPanel();
         hideActionMessage();
         hideEditMessage();
         editPanel.hidden = false;
+        var lblCur = document.querySelector('label[for="hist-edit-current"]');
+        var lblNew = document.querySelector('label[for="hist-edit-new"]');
+        if (lblCur) lblCur.textContent = 'จำนวนเดิมในใบเบิก';
+        if (lblNew) lblNew.textContent = 'จำนวนที่ถูกต้อง';
+        if (editNew) editNew.min = '0.000001';
         if (editDoc) editDoc.textContent = (row.order_no || '-') + ' · ' + (row.source_label || 'ใบเบิก');
         if (editDetailId) editDetailId.value = row.detail_id || '';
         if (editCurrent) editCurrent.value = stripNumber(Number(row.qty || 0));
@@ -2198,6 +2213,7 @@ $js = <<<JS
     }
 
     function saveRequisitionDetailQty() {
+        if (editMode === 'adjust') return saveAdjustEdit();
         if (!lastHistoryPayload || !lastHistoryPayload.meta || !editDetailId || !editNew) return;
         var newQty = parseFloat(editNew.value);
         var newPrice = parseFloat(editNewPrice ? editNewPrice.value : 0);
@@ -2263,6 +2279,218 @@ $js = <<<JS
             })
             .finally(function () {
                 setEditSaving(false);
+            });
+    }
+
+    // ---- แก้ไข/ลบ รายการปรับยอด (ADJUST) — reuse edit panel เดิม ----
+    function openAdjustEditPanel(trigger) {
+        if (!editPanel || !trigger || !lastHistoryPayload || !lastHistoryPayload.transactions) return;
+        var detailId = trigger.getAttribute('data-detail-id');
+        var row = null;
+        for (var i = 0; i < lastHistoryPayload.transactions.length; i++) {
+            if (String(lastHistoryPayload.transactions[i].detail_id) === String(detailId)) {
+                row = lastHistoryPayload.transactions[i];
+                break;
+            }
+        }
+        if (!row) return;
+
+        if (activeEditRow && String(activeEditRow.detail_id) !== String(row.detail_id)) {
+            resetHistoryRowPreview();
+        }
+        activeEditRow = row;
+        editMode = 'adjust';
+        closeAdjustPanel();
+        hideActionMessage();
+        hideEditMessage();
+        editPanel.hidden = false;
+
+        var signedQty = Number(row.signed_qty != null ? row.signed_qty : (row.direction === 'in' ? row.qty : -row.qty));
+        var price = Number(row.unit_price || 0);
+
+        var lblCur = document.querySelector('label[for="hist-edit-current"]');
+        var lblNew = document.querySelector('label[for="hist-edit-new"]');
+        if (lblCur) lblCur.textContent = 'จำนวนปรับเดิม (+เพิ่ม/−ลด)';
+        if (lblNew) lblNew.textContent = 'จำนวนปรับใหม่ (+เพิ่ม/−ลด)';
+
+        if (editDoc) editDoc.textContent = (row.order_no || '-') + ' · ปรับยอด stock';
+        if (editDetailId) editDetailId.value = row.detail_id || '';
+        if (editCurrent) editCurrent.value = stripNumber(signedQty);
+        if (editNew) { editNew.min = ''; editNew.value = stripNumber(signedQty); }
+        if (editCurrentPrice) editCurrentPrice.value = stripNumber(price);
+        if (editNewPrice) editNewPrice.value = stripNumber(price);
+        if (editNote) editNote.value = 'แก้ไขรายการปรับยอดจากประวัติการเคลื่อนไหววัสดุ';
+        updateAdjustEditImpact();
+        setTimeout(function () {
+            if (editNew) { editNew.focus(); editNew.select(); }
+        }, 30);
+    }
+
+    function updateAdjustEditImpact() {
+        if (!editCurrent || !editNew || !editImpact) return 0;
+        var oldSigned = parseFloat(editCurrent.value || 0);
+        var newSigned = parseFloat(editNew.value);
+        var oldPrice = parseFloat(editCurrentPrice ? editCurrentPrice.value : 0);
+        var newPrice = parseFloat(editNewPrice ? editNewPrice.value : 0);
+        if (isNaN(oldSigned)) oldSigned = 0;
+        if (isNaN(oldPrice)) oldPrice = 0;
+        if (isNaN(newSigned) || Math.abs(newSigned) < 0.000001 || isNaN(newPrice) || newPrice < 0) {
+            editImpact.textContent = '—';
+            editImpact.classList.remove('is-in', 'is-out');
+            clearEditPreview();
+            resetHistoryRowPreview();
+            if (editSaveBtn) editSaveBtn.disabled = true;
+            return 0;
+        }
+        // ผลต่อยอดคงเหลือ = จำนวนปรับใหม่ − จำนวนปรับเดิม (signed)
+        var stockImpact = newSigned - oldSigned;
+        var currentBalance = lastHistoryPayload && lastHistoryPayload.summary ? Number(lastHistoryPayload.summary.current_qty || 0) : 0;
+        var projectedBalance = currentBalance + stockImpact;
+        var rowBalance = activeEditRow ? Number(activeEditRow.balance_qty || 0) : currentBalance;
+        var projectedRowBalance = rowBalance + stockImpact;
+
+        editImpact.textContent = (stockImpact > 0 ? '+' : '') + fmtUnit(stockImpact, ctx.unit_name);
+        editImpact.classList.toggle('is-in', stockImpact > 0);
+        editImpact.classList.toggle('is-out', stockImpact < 0);
+
+        setSignedPreview(editPreviewIssue,
+            (oldSigned > 0 ? '+' : '') + fmtUnit(oldSigned, ctx.unit_name) + ' → ' + (newSigned > 0 ? '+' : '') + fmtUnit(newSigned, ctx.unit_name),
+            stockImpact);
+        setSignedPreview(editPreviewStock, (stockImpact > 0 ? '+' : '') + fmtUnit(stockImpact, ctx.unit_name), stockImpact);
+        setSignedPreview(editPreviewPrice, fmt.format(oldPrice) + ' → ' + fmt.format(newPrice), newPrice - oldPrice);
+        setSignedPreview(editPreviewLineValue, fmt.format(Math.abs(newSigned) * newPrice) + ' ฿', 1);
+        setSignedPreview(editPreviewBalance, fmtUnit(projectedBalance, ctx.unit_name), projectedBalance);
+        setSignedPreview(editPreviewRowBalance, fmtUnit(projectedRowBalance, ctx.unit_name), projectedRowBalance);
+        if (editPreviewValue) { editPreviewValue.textContent = '—'; editPreviewValue.classList.remove('is-in', 'is-out'); }
+
+        // preview บนตาราง: ขยับยอดสะสมของแถวนี้เป็นต้นไป (มูลค่าไม่พรีวิว → 0)
+        updateHistoryRowPreview(Math.abs(newSigned), newPrice, stockImpact, 0);
+
+        var changed = Math.abs(newSigned - oldSigned) > 0.000001 || Math.abs(newPrice - oldPrice) > 0.000001;
+        if (editSaveBtn) editSaveBtn.disabled = !changed;
+        return changed ? Math.max(Math.abs(newSigned - oldSigned), Math.abs(newPrice - oldPrice)) : 0;
+    }
+
+    function saveAdjustEdit() {
+        if (!lastHistoryPayload || !lastHistoryPayload.meta || !editDetailId || !editNew) return;
+        var newSigned = parseFloat(editNew.value);
+        var newPrice = parseFloat(editNewPrice ? editNewPrice.value : 0);
+        if (isNaN(newSigned) || Math.abs(newSigned) < 0.000001) {
+            showEditMessage('error', 'จำนวนที่ปรับต้องไม่เป็น 0 (หากต้องการยกเลิกให้ใช้ปุ่มลบ)');
+            return;
+        }
+        if (isNaN(newPrice) || newPrice < 0) {
+            showEditMessage('error', 'กรุณาระบุราคา/หน่วยให้ถูกต้อง (0 = ไม่คิดมูลค่า)');
+            return;
+        }
+        var oldSigned = parseFloat(editCurrent ? editCurrent.value : 0);
+        var oldPrice = parseFloat(editCurrentPrice ? editCurrentPrice.value : 0);
+        if (Math.abs(newSigned - oldSigned) < 0.000001 && Math.abs(newPrice - oldPrice) < 0.000001) {
+            showEditMessage('error', 'จำนวนและราคาใหม่เท่ากับค่าเดิม ไม่ต้องบันทึก');
+            return;
+        }
+
+        var meta = lastHistoryPayload.meta;
+        var body = new URLSearchParams({
+            detail_id: editDetailId.value,
+            warehouse_id: meta.warehouse_id || ctx.warehouse_id,
+            item_code: meta.item_code || ctx.item_code,
+            adjustment_qty: stripNumber(newSigned),
+            unit_price: stripNumber(newPrice),
+            note: (editNote && editNote.value ? editNote.value : 'แก้ไขรายการปรับยอดจากประวัติการเคลื่อนไหววัสดุ')
+        });
+        var csrfParam = document.querySelector('meta[name="csrf-param"]');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfParam && csrfToken) {
+            body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+        }
+
+        setEditSaving(true);
+        showEditMessage('info', 'กำลังบันทึกและคำนวณผลต่อยอดคงเหลือใหม่...');
+        fetch($jsAdjustUpdateUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            credentials: 'same-origin',
+            body: body.toString()
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || !res.success) {
+                    throw new Error((res && res.message) ? res.message : 'บันทึกไม่สำเร็จ');
+                }
+                showEditMessage('success', 'แก้ไขรายการปรับยอดสำเร็จ: ' + (res.order_no || '-'));
+                if (res.closed_month_warning) { alert(res.closed_month_warning); }
+                var nq = res.new_qty != null ? Number(res.new_qty) : newSigned;
+                var np = res.new_unit_price != null ? Number(res.new_unit_price) : newPrice;
+                if (editCurrent) editCurrent.value = stripNumber(nq);
+                if (editNew) editNew.value = stripNumber(nq);
+                if (editCurrentPrice) editCurrentPrice.value = stripNumber(np);
+                if (editNewPrice) editNewPrice.value = stripNumber(np);
+                if (typeof res.current_qty !== 'undefined') {
+                    updateMainBalanceRow(Number(res.current_qty || 0));
+                }
+                loadHistory();
+            })
+            .catch(function (err) {
+                showEditMessage('error', err && err.message ? err.message : 'บันทึกไม่สำเร็จ');
+            })
+            .finally(function () {
+                setEditSaving(false);
+            });
+    }
+
+    function deleteAdjustMovement(trigger) {
+        if (!trigger || trigger.disabled || !lastHistoryPayload || !lastHistoryPayload.meta) return;
+        var detailId = trigger.getAttribute('data-detail-id') || '';
+        var orderNo = trigger.getAttribute('data-order-no') || '-';
+        var qtyText = trigger.getAttribute('data-qty-text') || '';
+        if (!detailId) return;
+
+        var confirmText = 'ยืนยันลบรายการปรับยอดนี้?' + String.fromCharCode(10) +
+            'เอกสาร: ' + orderNo + String.fromCharCode(10) +
+            'จำนวนที่ปรับ: ' + qtyText + String.fromCharCode(10) +
+            'ระบบจะถอนผลออกจากยอดคงเหลือจริง';
+        if (!confirm(confirmText)) return;
+
+        var body = new URLSearchParams({
+            detail_id: detailId,
+            warehouse_id: lastHistoryPayload.meta.warehouse_id || ctx.warehouse_id,
+            item_code: lastHistoryPayload.meta.item_code || ctx.item_code
+        });
+        var csrfParam = document.querySelector('meta[name="csrf-param"]');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfParam && csrfToken) {
+            body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+        }
+
+        trigger.disabled = true;
+        hideAdjustMessage();
+        showActionMessage('info', 'กำลังลบรายการปรับยอดและถอนผลต่อยอด...');
+        fetch($jsAdjustDeleteUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: body.toString()
+        })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, response: j }; }); })
+            .then(function (result) {
+                var res = result.response;
+                if (!result.ok || !res || res.success !== true) {
+                    throw new Error(res && res.message ? res.message : 'ลบรายการปรับยอดไม่สำเร็จ');
+                }
+                showActionMessage('success', 'ลบรายการปรับยอดสำเร็จ: ' + (res.order_no || '-'));
+                if (res.closed_month_warning) { alert(res.closed_month_warning); }
+                if (typeof res.current_qty !== 'undefined') updateMainBalanceRow(Number(res.current_qty || 0));
+                loadHistory();
+            })
+            .catch(function (err) {
+                showActionMessage('error', err && err.message ? err.message : 'ลบรายการปรับยอดไม่สำเร็จ');
+            })
+            .finally(function () {
+                trigger.disabled = false;
             });
     }
 
@@ -2493,11 +2721,14 @@ $js = <<<JS
 
     function loadHistory(keepActionMessage) {
         if (!ctx.item_code || !ctx.warehouse_id) return;
-        var sd = toGregorianISO(document.getElementById('hist-start-date').value);
-        var ed = toGregorianISO(document.getElementById('hist-end-date').value);
+        // ไม่มี filter วันที่แล้ว → แสดงทั้งหมด (start เก่าสุด) ถึงวันนี้ (end=วันนี้ ให้ variance panel ทำงาน)
+        var sd = '1900-01-01';
+        var ed = todayISO();
         skeletonRows();
         if (exportBtn) exportBtn.disabled = true;
         if (adjustBtn) adjustBtn.disabled = true;
+        if (lotbalBtn) lotbalBtn.disabled = true;
+        closeLotBalancePanel();
         if (!keepActionMessage) hideActionMessage();
         lastHistoryPayload = null;
 
@@ -2526,6 +2757,7 @@ $js = <<<JS
                 }
                 if (exportBtn) exportBtn.disabled = false;
                 if (adjustBtn) adjustBtn.disabled = false;
+                if (lotbalBtn) lotbalBtn.disabled = !(res.lots && res.lots.length);
             })
             .catch(function (err) {
                 console.error('Load item history failed', err);
@@ -2538,15 +2770,164 @@ $js = <<<JS
 
     function exportExcel() {
         if (!ctx.item_code || !ctx.warehouse_id) return;
-        var sd = toGregorianISO(document.getElementById('hist-start-date').value);
-        var ed = toGregorianISO(document.getElementById('hist-end-date').value);
-        var params = new URLSearchParams({
-            item_code: ctx.item_code,
-            warehouse_id: ctx.warehouse_id,
-            start_date: sd,
-            end_date: ed
+        if (!window.Swal) { // fallback: ไม่มี SweetAlert → ดาวน์โหลดตรง
+            window.location.href = $jsExportHistoryUrl + '?' + new URLSearchParams({ item_code: ctx.item_code, warehouse_id: ctx.warehouse_id, start_date: '1900-01-01', end_date: todayISO() }).toString();
+            return;
+        }
+        var meta = (lastHistoryPayload && lastHistoryPayload.meta) || {};
+        var itemName = meta.item_name || ctx.item_code || '';
+        var whLabel = meta.warehouse_label || '';
+        var url = $jsExportHistoryUrl + '?' + new URLSearchParams({
+            item_code: ctx.item_code, warehouse_id: ctx.warehouse_id, start_date: '1900-01-01', end_date: todayISO()
+        }).toString();
+
+        // reduced-motion: ปิด transition ของ SweetAlert
+        var noMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var swalBase = {
+            customClass: { popup: 'hist-swal', confirmButton: 'hist-swal__confirm', cancelButton: 'hist-swal__cancel' }
+        };
+        if (noMotion) { swalBase.showClass = { popup: '' }; swalBase.hideClass = { popup: '' }; }
+        var mk = function (o) { return Object.assign({}, swalBase, o); };
+
+        Swal.fire(mk({
+            title: 'Export ประวัติเป็น Excel?',
+            html: '<div class="hist-swal__body"><div class="hist-swal__item">' + escHtml(itemName) + '</div>' +
+                  (whLabel ? '<div class="hist-swal__meta">' + escHtml(whLabel) + '</div>' : '') + '</div>',
+            icon: 'question',
+            iconColor: '#0d6efd',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-file-earmark-excel me-1"></i>Export',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+            focusConfirm: true
+        })).then(function (r) {
+            if (!r.isConfirmed) return;
+
+            Swal.fire(mk({
+                title: 'กำลังสร้างไฟล์ Excel',
+                html: '<span class="hist-swal__meta">กรุณารอสักครู่...</span>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: function () { Swal.showLoading(); }
+            }));
+
+            fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('สร้างไฟล์ไม่สำเร็จ (สถานะ ' + resp.status + ')');
+                    var cd = resp.headers.get('Content-Disposition') || '';
+                    var m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+                    var fname = m ? decodeURIComponent(m[1]) : ('item-history-' + ctx.item_code + '.xlsx');
+                    return resp.blob().then(function (blob) { return { blob: blob, fname: fname }; });
+                })
+                .then(function (o) {
+                    var objUrl = URL.createObjectURL(o.blob);
+                    var a = document.createElement('a');
+                    a.href = objUrl; a.download = o.fname;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(objUrl); }, 2000);
+                    Swal.fire(mk({
+                        icon: 'success',
+                        iconColor: '#198754',
+                        title: 'ดาวน์โหลดเรียบร้อย',
+                        html: '<span class="hist-swal__meta">' + escHtml(o.fname) + '</span>',
+                        timer: 1800,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    }));
+                })
+                .catch(function (err) {
+                    Swal.fire(mk({
+                        icon: 'error',
+                        title: 'ผิดพลาด',
+                        text: (err && err.message) || 'ดาวน์โหลดไม่สำเร็จ ลองอีกครั้ง'
+                    }));
+                });
         });
-        window.location.href = $jsExportHistoryUrl + '?' + params.toString();
+    }
+
+    // ---- แก้ยอดคงเหลือรายลอต (reconcile balance_qty + remain_qty) ----
+    function showLotbalMessage(type, msg) {
+        if (!lotbalAlert) return;
+        lotbalAlert.hidden = false;
+        lotbalAlert.classList.toggle('is-success', type === 'success');
+        lotbalAlert.classList.toggle('is-error', type === 'error');
+        lotbalAlert.textContent = msg;
+    }
+    function hideLotbalMessage() {
+        if (!lotbalAlert) return;
+        lotbalAlert.hidden = true;
+        lotbalAlert.classList.remove('is-success', 'is-error');
+        lotbalAlert.textContent = '';
+    }
+    function closeLotBalancePanel() {
+        if (lotbalPanel) lotbalPanel.hidden = true;
+        hideLotbalMessage();
+    }
+    function renderLotBalances() {
+        if (!lotbalTbody || !lastHistoryPayload) return;
+        var lots = lastHistoryPayload.lots || [];
+        var unit = (lastHistoryPayload.meta && lastHistoryPayload.meta.unit_name) || ctx.unit_name || '-';
+        if (!lots.length) {
+            lotbalTbody.innerHTML = '<tr><td colspan="5" class="text-center text-meta">ไม่มี lot ที่มียอดคงเหลือ</td></tr>';
+            return;
+        }
+        var html = '';
+        lots.forEach(function (l) {
+            var mismatch = !l.consistent;
+            var recv = Number(l.received_qty || 0);
+            var maxAttr = recv > 0 ? ' max="' + stripNumber(recv) + '"' : '';
+            var recvTitle = recv > 0 ? ' title="สูงสุด (รับเข้าสะสม) = ' + escHtml(fmtUnit(recv, unit)) + '"' : '';
+            html += '<tr class="' + (mismatch ? 'hist-lotbal-mismatch' : '') + '">' +
+                '<td class="text-nowrap">' + escHtml(l.lot_number) + (mismatch ? ' <i class="bi bi-exclamation-triangle-fill text-warning" title="balance ≠ remain"></i>' : '') + '</td>' +
+                '<td class="text-end">' + fmtUnit(Number(l.balance_qty), unit) + '</td>' +
+                '<td class="text-end ' + (mismatch ? 'text-warning fw-semibold' : 'text-meta') + '">' + fmtUnit(Number(l.remain_qty), unit) + (recv > 0 ? ' <span class="text-meta">/ รับ ' + fmtUnit(recv, unit) + '</span>' : '') + '</td>' +
+                '<td class="text-end"><input type="number" step="any" min="0"' + maxAttr + recvTitle + ' class="form-control form-control-sm text-end hist-lotbal-input" value="' + stripNumber(Number(l.balance_qty)) + '" data-lot="' + escHtml(l.lot_number) + '" data-received="' + stripNumber(recv) + '"></td>' +
+                '<td class="text-end"><button type="button" class="btn btn-sm btn-primary hist-lotbal-save" data-lot="' + escHtml(l.lot_number) + '"><i class="bi bi-check-lg" aria-hidden="true"></i></button></td>' +
+            '</tr>';
+        });
+        lotbalTbody.innerHTML = html;
+    }
+    function openLotBalancePanel() {
+        if (!lotbalPanel || !lastHistoryPayload) return;
+        closeAdjustPanel();
+        closeEditPanel();
+        hideActionMessage();
+        hideLotbalMessage();
+        renderLotBalances();
+        lotbalPanel.hidden = false;
+    }
+    function saveLotBalance(lot, newQty, btn) {
+        if (!lastHistoryPayload || !lastHistoryPayload.meta) return;
+        if (isNaN(newQty) || newQty < 0) { showLotbalMessage('error', 'จำนวนคงเหลือใหม่ต้องไม่ติดลบ'); return; }
+        var meta = lastHistoryPayload.meta;
+        var body = new URLSearchParams({
+            warehouse_id: meta.warehouse_id || ctx.warehouse_id,
+            item_code: meta.item_code || ctx.item_code,
+            lot_number: lot,
+            new_qty: stripNumber(newQty),
+            note: 'แก้ยอดคงเหลือรายลอตจากประวัติการเคลื่อนไหววัสดุ'
+        });
+        var csrfParam = document.querySelector('meta[name="csrf-param"]');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfParam && csrfToken) body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+        if (btn) btn.disabled = true;
+        showLotbalMessage('info', 'กำลังบันทึกและ sync FIFO...');
+        fetch($jsLotBalanceUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            credentials: 'same-origin',
+            body: body.toString()
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || !res.success) throw new Error((res && res.message) ? res.message : 'บันทึกไม่สำเร็จ');
+                showActionMessage('success', 'lot ' + (res.lot_number || lot) + ': balance ' + fmt.format(Number(res.old_balance || 0)) + ' → ' + fmt.format(Number(res.new_balance || 0)) + (res.remain_synced ? ' · sync remain_qty แล้ว' : ' · ไม่พบ detail สำหรับ sync remain'));
+                if (typeof res.current_qty !== 'undefined') updateMainBalanceRow(Number(res.current_qty || 0));
+                loadHistory(true);
+            })
+            .catch(function (err) { showLotbalMessage('error', err && err.message ? err.message : 'บันทึกไม่สำเร็จ'); if (btn) btn.disabled = false; });
     }
 
     // เปิดโมดัลปรับยอด stock ตัวใหม่ (unified) แทน inline panel เดิม — ปิดโมดัลประวัติก่อนเพื่อไม่ให้ modal ซ้อน
@@ -2575,6 +2956,25 @@ $js = <<<JS
     }
 
     if (adjustBtn) adjustBtn.onclick = openStockAdjustModal;
+    if (lotbalBtn) lotbalBtn.onclick = openLotBalancePanel;
+    if (lotbalCloseBtn) lotbalCloseBtn.onclick = closeLotBalancePanel;
+    if (lotbalPanel) {
+        lotbalPanel.addEventListener('click', function (e) {
+            var btn = e.target.closest ? e.target.closest('.hist-lotbal-save') : null;
+            if (!btn) return;
+            e.preventDefault();
+            var lot = btn.getAttribute('data-lot');
+            var input = lotbalTbody.querySelector('.hist-lotbal-input[data-lot="' + (window.CSS && CSS.escape ? CSS.escape(lot) : lot) + '"]');
+            var newQty = input ? parseFloat(input.value) : NaN;
+            var recv = input ? parseFloat(input.getAttribute('data-received')) : NaN;
+            if (!isNaN(recv) && recv > 0 && newQty > recv + 0.000001) {
+                var unit = (lastHistoryPayload && lastHistoryPayload.meta && lastHistoryPayload.meta.unit_name) || ctx.unit_name || '-';
+                showLotbalMessage('error', 'ยอดคงเหลือใหม่ (' + fmtUnit(newQty, unit) + ') มากกว่าจำนวนที่เคยรับเข้า lot นี้ (' + fmtUnit(recv, unit) + ') กรุณาตรวจสอบ');
+                return;
+            }
+            saveLotBalance(lot, newQty, btn);
+        });
+    }
     if (adjustTarget) adjustTarget.addEventListener('input', updateAdjustDelta);
     if (adjustSaveBtn) adjustSaveBtn.onclick = saveAdjustInline;
     if (adjustCancelBtn) adjustCancelBtn.onclick = closeAdjustPanel;
@@ -2595,6 +2995,18 @@ $js = <<<JS
         if (deleteTrigger) {
             event.preventDefault();
             deleteDuplicateIssueMovement(deleteTrigger);
+            return;
+        }
+        var adjustEditTrigger = event.target.closest ? event.target.closest('.hist-adjust-edit-btn') : null;
+        if (adjustEditTrigger) {
+            event.preventDefault();
+            openAdjustEditPanel(adjustEditTrigger);
+            return;
+        }
+        var adjustDeleteTrigger = event.target.closest ? event.target.closest('.hist-adjust-delete-btn') : null;
+        if (adjustDeleteTrigger) {
+            event.preventDefault();
+            deleteAdjustMovement(adjustDeleteTrigger);
             return;
         }
         var trigger = event.target.closest ? event.target.closest('#hist-link-adjust') : null;
@@ -2696,10 +3108,11 @@ $js = <<<JS
         var tbody = document.getElementById('hist-tbody');
         var html = '';
 
-        // ยอดยกมา (bf-row) — ถ้าติดลบ → แดง
+        // ยอดยกมา (bf-row) — ถ้าติดลบ → แดง; ซ่อนเมื่อเป็น 0 (เช่น แสดงประวัติทั้งหมด ไม่มียอดยกมา)
         var bfNegCls = res.summary.qty_bf < 0 ? ' is-negative' : '';
         var bfValNegCls = res.summary.value_bf < 0 ? ' is-negative' : '';
         var bfSrText = res.summary.qty_bf < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
+        if (Math.abs(Number(res.summary.qty_bf) || 0) > 0.000001 || Math.abs(Number(res.summary.value_bf) || 0) > 0.000001)
         html += '<tr class="bf-row">' +
             '<td colspan="3" class="text-end">' +
                 '<i class="bi bi-arrow-bar-right me-1"></i>ยอดยกมา ณ ' + escHtml(res.meta.start_date) +
@@ -2744,6 +3157,21 @@ $js = <<<JS
                         '<i class="bi bi-trash" aria-hidden="true"></i>' +
                     '</button>');
                 }
+                if (t.can_edit_adjust) {
+                    actionParts.push('<button type="button" class="btn btn-sm btn-warning hist-adjust-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="แก้ไขจำนวน/ราคาของรายการปรับยอด แล้วให้ระบบคำนวณผลต่อ stock ใหม่" aria-label="แก้ไขจำนวนหรือราคาของรายการปรับยอด" ' +
+                        'data-detail-id="' + escHtml(t.detail_id) + '">' +
+                        '<i class="bi bi-pencil" aria-hidden="true"></i>' +
+                    '</button>');
+                }
+                if (t.can_delete_adjust) {
+                    actionParts.push('<button type="button" class="btn btn-sm btn-outline-danger hist-adjust-delete-btn ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="ลบรายการปรับยอดนี้ พร้อมถอนผลต่อยอดคงเหลือ" aria-label="ลบรายการปรับยอดนี้ พร้อมถอนผลต่อยอดคงเหลือ" ' +
+                        'data-detail-id="' + escHtml(t.detail_id) + '" ' +
+                        'data-order-no="' + escHtml(t.order_no) + '" ' +
+                        'data-label="' + escHtml(t.source_label) + '" ' +
+                        'data-qty-text="' + escHtml((t.direction === 'in' ? '+' : '-') + fmtUnit(t.qty, unit)) + '">' +
+                        '<i class="bi bi-trash" aria-hidden="true"></i>' +
+                    '</button>');
+                }
                 var actionHtml = actionParts.length
                     ? actionParts.join('')
                     : '<span class="muted" title="ไม่มีรายการที่แก้ไขได้">—</span>';
@@ -2761,7 +3189,10 @@ $js = <<<JS
                     '<td class="text-end text-meta hist-cell-price">' + fmt.format(t.unit_price) + '</td>' +
                     '<td class="text-end fw-semibold hist-cell-balance' + balCls + '">' + balSr + fmtUnit(t.balance_qty, unit) + '</td>' +
                     '<td class="text-end d-none d-md-table-cell hist-cell-value' + balValCls + '">' + balValSr + fmt.format(t.balance_value) + '</td>' +
-                    '<td class="d-none d-md-table-cell text-meta">' + escHtml(t.lot) + '</td>' +
+                    '<td class="d-none d-md-table-cell ' + (t.lot_has_balance ? 'text-success fw-semibold' : 'text-meta') + '"' +
+                        (t.lot_has_balance ? ' data-bs-toggle="tooltip" data-bs-placement="top" title="Lot นี้ยังคงเหลือ ' + escHtml(fmtUnit(t.lot_remain, unit)) + ' ในคลัง"' : '') + '>' +
+                        escHtml(t.lot) +
+                    '</td>' +
                     '<td class="text-end">' + actionHtml + '</td>' +
                 '</tr>';
             });
@@ -2833,11 +3264,6 @@ $js = <<<JS
 
     modalEl.addEventListener('hidden.bs.modal', function () {
         disposeHistoryTooltips();
-    });
-
-    document.getElementById('historyFilterForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        loadHistory();
     });
 
     if (exportBtn) {

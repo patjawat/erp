@@ -97,25 +97,26 @@ $this->beginBlock('action'); ?>
             <?php if (empty($grouped)): ?>
                 <div class="text-center text-muted py-3">ไม่มีข้อมูล (ยังไม่ได้คำนวณ/บันทึกงวดนี้)</div>
             <?php else: ?>
-            <table class="table table-sm table-bordered align-middle dep-rep-grouped">
-                <thead class="table-light">
+        <table class="table table-sm table-bordered align-middle dep-rep-grouped">
+          <caption class="visually-hidden">รายงานค่าเสื่อมราคาแบบจัดกลุ่มตามประเภทและหมวด</caption>
+                <th scope="col"ead class="table-light">
                     <tr>
-                        <th>#</th><th>รหัส</th><th>รายการ</th>
-                        <th>วันได้มา</th><th>เริ่มคิด</th><th class="text-end">อายุ(ด)</th><th class="text-end">อัตรา%</th>
-                        <th class="text-end">ราคาทุน</th><th class="text-end">ค่าเสื่อมงวด</th>
-                        <th class="text-end">ค่าเสื่อมสะสม</th><th class="text-end">มูลค่าสุทธิ</th>
+                        <th scope="col">#</th><th scope="col">รหัส</th><th scope="col">รายการ</th>
+                        <th scope="col">วันได้มา</th><th scope="col">เริ่มคิด</th><th scope="col" class="text-end">อายุ(ด)</th><th scope="col" class="text-end">อัตรา%</th>
+                        <th scope="col" class="text-end">ราคาทุน</th><th scope="col" class="text-end">ค่าเสื่อมงวด</th>
+                        <th scope="col" class="text-end">ค่าเสื่อมสะสม</th><th scope="col" class="text-end">มูลค่าสุทธิ</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php $n = 0; foreach ($grouped as $g): ?>
                         <tr class="dep-grp-type">
-                            <td colspan="11"><i data-lucide="folder" style="width:1rem;height:1rem;"></i>
+                            <th scope="rowgroup" colspan="11"><i data-lucide="folder" style="width:1rem;height:1rem;"></i>
                                 ประเภท: <?= Html::encode($g['type_name']) ?>
-                                <span class="fw-normal text-muted small">(<?= $g['totals']['count'] ?> รายการ)</span></td>
+                                <span class="fw-normal text-muted small">(<?= $g['totals']['count'] ?> รายการ)</span></th>
                         </tr>
                         <?php foreach ($g['categories'] as $cat): ?>
                             <tr class="dep-grp-cat">
-                                <td colspan="11" class="ps-4"><i data-lucide="corner-down-right" style="width:.85rem;height:.85rem;"></i> หมวด: <?= Html::encode($cat['category_name']) ?></td>
+                                <th scope="rowgroup" colspan="11" class="ps-4"><i data-lucide="corner-down-right" style="width:.85rem;height:.85rem;"></i> หมวด: <?= Html::encode($cat['category_name']) ?></th>
                             </tr>
                             <?php foreach ($cat['rows'] as $r): $n++; ?>
                                 <tr>
@@ -162,12 +163,13 @@ $this->beginBlock('action'); ?>
             <?php endif; ?>
         <?php else: ?>
             <table class="table table-sm table-bordered align-middle">
-                <thead class="table-light">
+          <caption class="visually-hidden">รายงานค่าเสื่อมราคารายการทรัพย์สิน</caption>
+                <th scope="col"ead class="table-light">
                     <tr>
-                        <th>#</th><th>รหัส</th><th>รายการ</th><th>ประเภท</th><th>หมวด</th>
-                        <th>วันได้มา</th><th>เริ่มคิด</th><th class="text-end">อายุ(ด)</th><th class="text-end">อัตรา%</th>
-                        <th class="text-end">ราคาทุน</th><th class="text-end">ค่าเสื่อมงวด</th>
-                        <th class="text-end">ค่าเสื่อมสะสม</th><th class="text-end">มูลค่าสุทธิ</th>
+                        <th scope="col">#</th><th scope="col">รหัส</th><th scope="col">รายการ</th><th scope="col">ประเภท</th><th scope="col">หมวด</th>
+                        <th scope="col">วันได้มา</th><th scope="col">เริ่มคิด</th><th scope="col" class="text-end">อายุ(ด)</th><th scope="col" class="text-end">อัตรา%</th>
+                        <th scope="col" class="text-end">ราคาทุน</th><th scope="col" class="text-end">ค่าเสื่อมงวด</th>
+                        <th scope="col" class="text-end">ค่าเสื่อมสะสม</th><th scope="col" class="text-end">มูลค่าสุทธิ</th>
                     </tr>
                 </thead>
                 <tbody>

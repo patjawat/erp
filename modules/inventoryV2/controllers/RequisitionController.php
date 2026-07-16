@@ -225,7 +225,8 @@ public function behaviors()
         if (Yii::$app->user->can('admin')) {
             return true;
         }
-        return !empty(Warehouse::findSubWarehousesForUser());
+        // สิทธิ์ระดับ warehouse เข้าหน้าเบิกได้แม้ไม่ได้เป็น officer ของคลังย่อยใด
+        return !empty(Warehouse::findSubWarehousesForUser(true));
     }
 
     /**
@@ -414,7 +415,8 @@ public function behaviors()
             }
         }
 
-        $subWarehouses = Warehouse::findSubWarehousesForUser();
+        // หน้าเบิก: สิทธิ์ระดับ warehouse เลือกคลังที่รับของได้ทุกคลัง
+        $subWarehouses = Warehouse::findSubWarehousesForUser(true);
 
         $approver = null;
         if ($requester['department_id']) {

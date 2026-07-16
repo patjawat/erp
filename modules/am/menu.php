@@ -50,9 +50,11 @@ use yii\helpers\Url;
     </div>
 
     <div class="dropdown d-inline-block">
-        <button class="btn <?= $active !== 'depreciation' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= $active !== 'depreciation' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูค่าเสื่อมราคา อยู่ระหว่างพัฒนา">
             <i data-lucide="trending-down" style="width:1rem;height:1rem;"></i>
-            <span class="d-none d-sm-inline">ค่าเสื่อมราคา(!อยู่ระหว่างพัฒนา)</span>
+            <span class="d-none d-sm-inline">ค่าเสื่อมราคา</span>
+            <span class="visually-hidden">อยู่ระหว่างพัฒนา</span>
+            <span class="badge text-bg-warning ms-1 d-none d-lg-inline">กำลังพัฒนา</span>
         </button>
         <ul class="dropdown-menu">
             <li><?= Html::a('<i data-lucide="layout-list" class="me-2" style="width:1rem;height:1rem;"></i> ภาพรวม / เริ่มที่นี่', ['/am/asset-depreciation/overview'], ['class' => 'dropdown-item fw-semibold']) ?></li>
@@ -271,8 +273,6 @@ $js = <<<'JS'
         });
     });
 
-<<<<<<< Updated upstream
-=======
     // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline) → POST สถานะที่เลือก แล้วรีเฟรชรายการให้ badge อัพเดต
     $oc.on('change', '.js-setting-quick__toggle', function () {
         var $sw = $(this);
@@ -296,7 +296,6 @@ $js = <<<'JS'
         });
     });
 
->>>>>>> Stashed changes
     // บันทึกใน modal เพิ่ม/แก้ไข (.open-modal) แล้วปิด ขณะ offcanvas เปิด → รีเฟรชรายการเห็นผลทันที
     $(document).off('hidden.bs.modal.amSetting', '#main-modal')
         .on('hidden.bs.modal.amSetting', '#main-modal', function () {

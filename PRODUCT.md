@@ -239,6 +239,18 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 - **Hint แสดง state เสมอ** — `.balance-hint` `.is-ok` (เขียว) / `.is-warn` (เหลือง-ส้ม) / default (เทา); ห้ามใช้สีแดงบน body text เล็ก
 - **Cumulative check** — สำหรับ cart/list ตรวจรวมกับสิ่งที่อยู่แล้ว ไม่ใช่แค่ input ปัจจุบัน (ดู `findCartIndex` ใน issue.php)
 
+### Date input
+- **ช่องกรอกวันที่ทุกช่องต้องใช้ widget `\app\widgets\datepicker\DatepickerThai` เสมอ** — ห้ามใช้ `<input type="date">` หรือ text input เปล่า (ผู้ใช้กรอก/อ่านเป็น พ.ศ. รูปแบบ วว/ดด/พ.ศ.)
+```php
+<?= \app\widgets\datepicker\DatepickerThai::widget([
+    'name' => 'order_date',                                  // หรือ 'model' => $model, 'attribute' => 'order_date'
+    'value' => \app\components\AppHelper::convertToThai(date('Y-m-d')),
+    'options' => ['id' => 'order_date', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+]) ?>
+```
+- **ค่า default / แสดงผล** = `AppHelper::convertToThai('Y-m-d')` (ค.ศ.→ไทย); **ตอนบันทึกฝั่ง server** แปลงกลับด้วย `AppHelper::convertToGregorian($input)` (ไทย→`Y-m-d`, คืน null ถ้า format ผิด) ก่อนเก็บลง DB เสมอ
+- **Modal/partial ที่ inject ผ่าน AJAX** — widget ใช้ `registerJs` ซึ่งไม่รันใน content ที่ inject ต้องเรียก `thaiDatepicker('#id')` เองใน inline `<script>` ของ partial (thai.datepicker.js โหลด global ผ่าน AppAsset อยู่แล้ว) — ดู `stock-adjust/_adjust_modal.php`
+
 ### Destructive action
 - **Reversible** (ลบ row จาก cart, ลบ draft) → undo toast 5 วินาที, ไม่ confirm
 - **Irreversible** (ส่ง approval, ลบ entity จริง) → SweetAlert modal, ปุ่ม confirm สีตามความรุนแรง
@@ -255,6 +267,27 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 - **Initial content load** → skeleton ที่ match รูปร่าง real (icon + lines + num)
 - **Submit/action** → spinner ใน button + disable, ห้ามเด้ง full-page overlay
 - **AJAX refresh ในส่วนที่ user เห็น** → opacity 0.6 + cursor wait, ไม่ replace ด้วย skeleton
+
+### Export / ดาวน์โหลดไฟล์ (Excel/PDF)
+มาตรฐานเดียวทุกปุ่ม export — flow **confirm → loading → success** ผ่าน SweetAlert2 (โหลด global แล้วผ่าน AppAsset)
+
+**ปุ่ม:** `class="btn btn-sm btn-success"` (เขียวทึบมาตรฐาน radius โค้งปกติ **ห้ามใส่ border/สีเอง หรือทำเป็นเหลี่ยม**) + icon `bi-file-earmark-excel` + label sentence-case ไทย เช่น "Export Excel". disable จนกว่าจะมีข้อมูลให้ export
+
+**Flow (3 สเต็ป):**
+1. **confirm** — `Swal.fire` icon `question` (`iconColor` primary `#0d6efd`), แสดง context (ชื่อ item/คลัง), `confirmButtonText` มี icon excel + `confirmButtonColor: '#198754'` (เขียวแมตช์ปุ่ม), `cancelButtonText: 'ยกเลิก'`, `reverseButtons: true`
+2. **loading** — หลังยืนยัน `Swal.fire({ didOpen: () => Swal.showLoading(), allowOutsideClick:false, allowEscapeKey:false })` "กำลังสร้างไฟล์..."
+3. **success** — icon `success` (เขียว), **auto-dismiss** `timer: 1800, timerProgressBar: true, showConfirmButton: false` แสดงชื่อไฟล์ · error → icon `error` + ข้อความ
+
+**Technical (บังคับ):**
+- ใช้ **`fetch()` + `response.blob()`** สร้าง object URL แล้ว `a.click()` ดาวน์โหลด — loading/success จึงผูกกับ **completion จริง** (ห้ามใช้ `window.location.href` + timer หลอก)
+- parse ชื่อไฟล์จาก header `Content-Disposition` (fallback เป็นชื่อ default)
+- **fallback**: ถ้า `!window.Swal` → ดาวน์โหลดตรงแบบเดิม (ไม่พัง)
+
+**Restraint (enterprise):** success ต้อง auto-dismiss ไม่ค้างให้กดปิด · ห้าม confetti/celebration · ภาษาไทยล้วน · SweetAlert popup radius **12px** ปุ่ม **8px** (`customClass` — ไม่ใช้ default 16px)
+
+**Reduced-motion:** ปิด `showClass`/`hideClass` ของ SweetAlert (ตั้งเป็น `{ popup: '' }`) + ปิด transition ปุ่ม เมื่อ `prefers-reduced-motion: reduce`
+
+**ข้อยกเว้นที่จงใจ:** export เป็น action ปลอดภัย (undo ได้) แต่ **ใช้ confirm modal ได้** เพราะเป็นการ "สร้างไฟล์" ที่มี cost + ต้องการ success feedback ชัด — ต่างจาก toggle/ลบ row ที่ใช้ undo toast (ดูหลัก "Undo > confirm" / Destructive action) · reference: `modules/inventoryV2/views/report/_balance.php` → `exportExcel()`
 
 ### Empty states
 - บอก **why** (ยังไม่มีข้อมูล / ยังไม่มีสิทธิ์ / คลังนี้ไม่มีพัสดุ) + **next action** (link หรือ button)

@@ -782,6 +782,17 @@ class ReportController extends Controller
             }
         }
 
+        // ยอดคงเหลือคงค้างต่อ lot ในคลังนี้ (ปัจจุบัน) — ใช้ไฮไลต์ lot ที่ยังมีของเหลือในประวัติ
+        $lotBalanceMap = [];
+        foreach ((new Query())
+            ->select(['lot_number', 'bal' => new Expression('SUM(balance_qty)')])
+            ->from(StockBalance::tableName())
+            ->where(['item_code' => $item_code, 'warehouse_id' => $warehouseId])
+            ->groupBy('lot_number')
+            ->all() as $lb) {
+            $lotBalanceMap[(string) $lb['lot_number']] = (float) $lb['bal'];
+        }
+
         foreach ($txRows as $r) {
             $q = abs((float) $r['qty']);   // ADJUST อาจมี qty < 0 — ใช้ค่าสัมบูรณ์
             $p = (float) $r['unit_price'];
@@ -801,6 +812,22 @@ class ReportController extends Controller
             }
 
             $sourceKey = (string) ($r['source_type'] ?: $r['order_type']);
+
+            // ADJUST: อนุญาตแก้ไข/ลบรายการปรับยอด (แก้เวลาปรับผิดพลาด)
+            // ยกเว้นรายการ reverse ที่ระบบสร้าง (history_only_reverse) และ value_only แก้จำนวนไม่ได้
+            $isAdjust = (string) $r['order_type'] === StockOrder::ORDER_TYPE_ADJUST;
+            $adjustMode = '';
+            $isSystemReverse = false;
+            if ($isAdjust && !empty($r['order_data_json'])) {
+                $od = json_decode($r['order_data_json'], true);
+                if (is_array($od)) {
+                    $adjustMode = (string) ($od['adjust_mode'] ?? '');
+                    $isSystemReverse = !empty($od['history_only_reverse']);
+                }
+            }
+            $canManageAdjust = $isAdjust && $adjustMode !== 'history_reverse' && !$isSystemReverse;
+            $canEditAdjust = $canManageAdjust && $q > 0.000001; // value_only (qty=0) แก้จำนวนไม่ได้
+
             $transactions[] = [
                 'order_id' => (int) $r['order_id'],
                 'detail_id' => (int) $r['detail_id'],
@@ -811,15 +838,20 @@ class ReportController extends Controller
                 'source_label' => $sourceLabel[$sourceKey] ?? ($sourceKey ?: '-'),
                 'direction' => $direction,
                 'qty' => $q,
+                'signed_qty' => (float) $r['qty'], // จำนวนจริงพร้อมเครื่องหมาย (ADJUST +/-) สำหรับ prefill ตอนแก้ไข
                 'unit_price' => $p,
                 'amount' => $delta,
                 'balance_qty' => $runningQty,
                 'balance_value' => $runningValue,
                 'lot' => (string) ($r['lot_number'] ?? '-'),
+                'lot_remain' => $lotBalanceMap[(string) ($r['lot_number'] ?? '')] ?? 0.0,
+                'lot_has_balance' => (($lotBalanceMap[(string) ($r['lot_number'] ?? '')] ?? 0.0) > 0.000001),
                 'can_reverse' => (string) $r['order_type'] !== StockOrder::ORDER_TYPE_ADJUST && empty($reversedDetailIds[(int) $r['detail_id']]),
                 'reverse_status' => !empty($reversedDetailIds[(int) $r['detail_id']]) ? 'reversed' : null,
                 'can_edit_qty' => (string) $r['order_type'] === StockOrder::ORDER_TYPE_OUT,
                 'can_delete_issue' => (string) $r['order_type'] === StockOrder::ORDER_TYPE_OUT,
+                'can_edit_adjust' => $canEditAdjust,
+                'can_delete_adjust' => $canManageAdjust,
             ];
         }
 
@@ -828,6 +860,46 @@ class ReportController extends Controller
             ->from(StockBalance::tableName())
             ->where(['item_code' => $item_code, 'warehouse_id' => $warehouseId])
             ->sum('balance_qty');
+
+        // รายลอตสำหรับเครื่องมือแก้ยอดคงเหลือ: balance_qty (stock_balance) เทียบ remain_qty (FIFO source details)
+        $lotRemainMap = [];
+        $lotReceivedMap = [];
+        foreach ((new Query())
+            ->select(['lot_number' => 'sd.lot_number', 'rem' => new Expression('SUM(sd.remain_qty)'), 'recv' => new Expression('SUM(sd.qty)')])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where(['sd.item_code' => $item_code])
+            ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and', ['so.main_warehouse_id' => $warehouseId], ['or',
+                    ['so.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and', ['so.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'sd.qty', 0]],
+                ]],
+                ['and', ['so.order_type' => StockOrder::ORDER_TYPE_TRANSFER], ['so.sub_warehouse_id' => $warehouseId], ['>', 'sd.qty', 0]],
+            ])
+            ->groupBy('sd.lot_number')
+            ->all() as $lr) {
+            $lotRemainMap[(string) $lr['lot_number']] = (float) $lr['rem'];
+            $lotReceivedMap[(string) $lr['lot_number']] = (float) $lr['recv'];
+        }
+        $lots = [];
+        foreach (array_values(array_unique(array_merge(array_keys($lotBalanceMap), array_keys($lotRemainMap)))) as $lotNo) {
+            $bal = (float) ($lotBalanceMap[$lotNo] ?? 0.0);
+            $rem = (float) ($lotRemainMap[$lotNo] ?? 0.0);
+            if (abs($bal) < 0.000001 && abs($rem) < 0.000001) {
+                continue;
+            }
+            $lots[] = [
+                'lot_number' => (string) $lotNo,
+                'balance_qty' => round($bal, 4),
+                'remain_qty' => round($rem, 4),
+                'received_qty' => round((float) ($lotReceivedMap[$lotNo] ?? 0.0), 4), // เพดานยอดคงเหลือ (รับเข้าสะสม)
+                'consistent' => abs($bal - $rem) < 0.000001,
+            ];
+        }
+        usort($lots, function ($a, $b) {
+            return ($a['consistent'] <=> $b['consistent']) ?: strcmp($a['lot_number'], $b['lot_number']);
+        });
 
         return [
             'meta' => [
@@ -854,6 +926,7 @@ class ReportController extends Controller
                 'tx_count' => count($transactions),
             ],
             'transactions' => $transactions,
+            'lots' => $lots,
         ];
     }
 
