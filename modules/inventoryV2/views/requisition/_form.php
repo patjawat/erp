@@ -30,7 +30,7 @@ $warehouseList = ArrayHelper::map(Warehouse::find()->andWhere(['or', ['delete' =
 // sub-warehouses: ถ้า controller ส่ง $ctx มา ใช้จาก ctx (auto), ไม่มีก็โหลดเอง (เช่นในหน้า update)
 $subWarehousesList = $ctx['sub_warehouses'] ?? null;
 if ($subWarehousesList === null) {
-    $subWarehousesList = Warehouse::findSubWarehousesForUser();
+    $subWarehousesList = Warehouse::findSubWarehousesForUser(true);
 }
 $subWarehouses = ArrayHelper::map($subWarehousesList, 'id', 'warehouse_name');
 
@@ -61,7 +61,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                     <?= $form->field($model, 'order_no', ['labelOptions' => ['label' => 'เลขที่ใบขอเบิก']])->textInput(['readonly' => true, 'class' => 'form-control', 'placeholder' => 'REQ-AUTO']) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'คลังที่รับของ <span class="text-danger">*</span>']])->dropDownList($subWarehouses, [
+                    <?= $form->field($model, 'sub_warehouse_id', ['labelOptions' => ['label' => 'คลังที่รับของ <span class="req-star">*</span>']])->dropDownList($subWarehouses, [
                         'id' => 'sub-warehouse-id',
                         'prompt' => '-- เลือกคลังที่รับของ --',
                         'class' => 'form-select',
@@ -70,7 +70,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                     ]) ?>
                 </div>
                 <div class="col-12 col-sm-6 col-md-3">
-                    <?= $form->field($model, 'main_warehouse_id', ['labelOptions' => ['label' => 'คลังที่จ่ายของ <span class="text-danger">*</span>']])->dropDownList($mainWarehouses ?: $warehouseList, [
+                    <?= $form->field($model, 'main_warehouse_id', ['labelOptions' => ['label' => 'คลังที่จ่ายของ <span class="req-star">*</span>']])->dropDownList($mainWarehouses ?: $warehouseList, [
                         'id' => 'main-warehouse-id',
                         'prompt' => '-- เลือกคลังที่จ่ายของ --',
                         'class' => 'form-select',
@@ -88,8 +88,8 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 </div>
                 <div class="col-12">
                     <div class="form-group">
-                        <label class="form-label d-flex align-items-center gap-2 flex-wrap">
-                            เหตุผล/วัตถุประสงค์การเบิก <span class="text-danger">*</span>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <label class="form-label mb-0" for="issue_reason">เหตุผล/วัตถุประสงค์การเบิก <span class="req-star">*</span></label>
                             <div class="dropdown">
                                 <button class="btn btn-light border rounded-3 dropdown-toggle btn-sm" type="button" id="dropdownIssueReason" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-list-ul me-1"></i> ตัวเลือก
@@ -110,14 +110,14 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
-                        </label>
+                        </div>
                         <textarea name="issue_reason" id="issue_reason" class="form-control" rows="2" placeholder="ระบุเหตุผลหรือวัตถุประสงค์ในการเบิกวัสดุ" required><?= Html::encode($model->getIssueReason()) ?></textarea>
                         <div class="form-text">เช่น เบิกเพื่อใช้ในหน่วยงาน, เติมสต็อกคลังย่อย หรือกดตัวเลือกเพื่อเลือกเหตุผลที่ใช้บ่อย</div>
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="form-group">
-                        <label class="form-label">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร) <span class="text-danger">*</span></label>
+                        <label class="form-label" for="approver_emp_id_select">ผู้เห็นชอบ (หัวหน้า) — เลือกพนักงาน (ดึงจากผังโครงสร้างองค์กร) <span class="req-star">*</span></label>
                         <input type="hidden" name="approver_name" id="approver_name" value="<?= Html::encode($approverSig['name']) ?>">
                         <input type="hidden" name="approver_position" id="approver_position" value="<?= Html::encode($approverSig['position']) ?>">
                         <?= Select2::widget([
@@ -161,18 +161,19 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="min-height: 400px;">
-        <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการวัสดุที่ต้องการเบิก</h6>
+    <div class="card border-0 shadow-sm req-items-card">
+        <div class="card-header req-items-head py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="req-items-title mb-0 small fw-semibold"><i class="bi bi-box-seam me-1"></i>รายการวัสดุที่ต้องการเบิก</h6>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <button type="button" id="load-below-max" class="btn btn-outline-light btn-sm" disabled title="เลือกคลังที่จ่ายและหน่วยงานที่รับให้ครบก่อน">
+                <button type="button" id="load-below-max" class="btn btn-outline-secondary btn-sm" disabled title="เลือกคลังที่จ่ายและหน่วยงานที่รับให้ครบก่อน">
                     <i class="bi bi-magic me-1"></i> เติมรายการตามเกณฑ์ Min/Max
                 </button>
-                <button type="button" id="add-item" class="btn btn-light btn-sm">
+                <button type="button" id="add-item" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i> เพิ่มวัสดุ
                 </button>
             </div>
         </div>
+            <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="item-table">
                 <thead class="table-light">
                     <tr>
@@ -193,14 +194,14 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                         echo '<td><input type="hidden" name="StockDetail[' . $i . '][item_code]" value="' . Html::encode($detail->item_code) . '">';
                         echo '<div class="d-flex align-items-center gap-2">';
                         if ($itemImg) {
-                            echo '<img src="' . Html::encode($itemImg) . '" alt="" class="rounded border item-thumb" onerror="this.style.display=\'none\'">';
+                            echo '<img src="' . Html::encode($itemImg) . '" alt="" loading="lazy" class="rounded border item-thumb" onerror="this.style.display=\'none\'">';
                         }
                         echo '<div class="min-w-0">';
                         echo '<div class="item-name-display fw-semibold">' . Html::encode($itemName) . '</div>';
                         echo '<div class="small text-muted font-monospace">' . Html::encode($detail->item_code) . '</div>';
                         echo '</div></div></td>';
                         echo '<td class="text-center unit-cell text-muted small align-middle">' . Html::encode($unitText) . '</td>';
-                        echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
+                        echo '<td><input type="number" name="StockDetail[' . $i . '][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="any" inputmode="decimal" value="' . (float)$detail->qty . '" required placeholder="0.00"></td>';
                         echo '<td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>';
                         echo '</tr>';
                     }
@@ -208,10 +209,16 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 ?>
                 </tbody>
             </table>
+            </div>
+            <div id="item-empty-state" class="item-empty d-none">
+                <div class="item-empty__icon"><i class="bi bi-inbox"></i></div>
+                <div class="item-empty__title">ยังไม่มีรายการวัสดุ</div>
+                <div class="item-empty__hint">กด «เพิ่มวัสดุ» เพื่อเริ่มเลือกของที่ต้องการเบิก</div>
+            </div>
     </div>
 
-    <div class="form-group mt-4 d-flex justify-content-end gap-2">
-        <?= Html::submitButton($model->isNewRecord ? '<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก' : '<i class="bi bi-check-lg me-1"></i> บันทึกการแก้ไข', ['class' => 'btn btn-primary me-2']) ?>
+    <div class="form-group mt-4 mb-5 d-flex justify-content-end gap-2">
+        <?= Html::submitButton($model->isNewRecord ? '<i class="bi bi-send-fill me-1"></i> ส่งคำขอเบิก' : '<i class="bi bi-check-lg me-1"></i> บันทึกการแก้ไข', ['class' => 'btn btn-primary']) ?>
         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
 
@@ -226,10 +233,10 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
             </td>
             <td class="text-center unit-cell text-muted small align-middle"></td>
             <td>
-                <input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" required placeholder="0.00">
+                <input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="any" inputmode="decimal" required placeholder="0.00">
             </td>
             <td class="text-center">
-                <button type="button" class="btn btn-outline-danger border-0 remove-item"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button>
             </td>
         </tr>
     </tbody>
@@ -246,7 +253,7 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
                 </div>
             </td>
             <td class="text-center unit-cell text-muted small align-middle">{unit_name}</td>
-            <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="1" step="1" value="{qty}" required placeholder="0.00"></td>
+            <td><input type="number" name="StockDetail[{idx}][qty]" class="form-control text-center qty-input fw-bold" min="0.01" step="any" inputmode="decimal" value="{qty}" required placeholder="0.00"></td>
             <td class="text-center"><button type="button" class="btn btn-outline-danger border-0 remove-item" aria-label="ลบรายการ"><i class="bi bi-trash"></i></button></td>
         </tr>
     </tbody>
@@ -255,14 +262,57 @@ if (!$approverEmpId && !empty($ctx['approver']['emp_id'])) {
 <?php
 \app\assets\TomSelectAsset::register($this);
 $this->registerCss(<<<CSS
+/* Design tokens — scope กับหน้านี้ (อ้างอิงมาตรฐานกลาง sub-stock/issue.php) */
+.requisition-form {
+    --ink-1: #1a202c;
+    --ink-2: #4a5568;
+    --ink-3: #718096;
+    --ink-4: #a0aec0;
+    --surface: #ffffff;
+    --surface-2: #f7f9fc;
+    --surface-3: #eef2f7;
+    --line: rgba(15, 23, 42, 0.08);
+    --line-strong: rgba(15, 23, 42, 0.14);
+    --primary: #0d6efd;
+    --danger: #b91c1c;
+    --radius-sm: 8px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* หัวการ์ดรายการวัสดุ — surface กลาง ไม่ใช้ primary เป็น decoration */
+.requisition-form .req-items-head {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+}
+.requisition-form .req-items-title { color: var(--ink-1); }
+.requisition-form .req-star { color: var(--danger); font-weight: 600; }
+
+/* Empty state ของตารางรายการ */
+.requisition-form .item-empty {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--ink-3);
+}
+.requisition-form .item-empty__icon {
+    width: 52px; height: 52px;
+    margin: 0 auto 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface-3);
+    border-radius: 14px;
+    font-size: 1.5rem;
+    color: var(--ink-4);
+}
+.requisition-form .item-empty__title { color: var(--ink-2); font-weight: 600; }
+.requisition-form .item-empty__hint { font-size: 0.85rem; color: var(--ink-3); margin-top: 0.15rem; }
+
 /* dropdown ถูก append ที่ body จึงใช้ class นี้ (ไม่มี parent .requisition-form) */
 .ts-dropdown.requisition-item-dropdown {
     z-index: 1060 !important;
     position: fixed !important;
-    border: 1px solid rgba(0,0,0,.15) !important;
+    border: 1px solid rgba(15, 23, 42, 0.14) !important;
     border-radius: 0.375rem !important;
-    background: #fff !important;
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important;
+    background: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.06) !important;
     max-height: 280px;
     overflow-y: auto;
 }
@@ -270,12 +320,30 @@ $this->registerCss(<<<CSS
 .requisition-form #item-table .ts-wrapper { position: relative; }
 .requisition-form #item-table .ts-control { min-height: 38px; }
 .requisition-form #item-table .item-thumb {
-    width: 42px; height: 42px; object-fit: cover; flex-shrink: 0; background: #f8f9fa;
+    width: 42px; height: 42px; object-fit: cover; flex-shrink: 0; background: var(--surface-2);
 }
 .requisition-form #item-table .item-name-display { line-height: 1.25; }
 .ts-dropdown.requisition-item-dropdown .ts-option-thumb {
     width: 32px; height: 32px; object-fit: cover; border-radius: 4px;
-    border: 1px solid rgba(0,0,0,.1); flex-shrink: 0; background: #f8f9fa;
+    border: 1px solid rgba(15, 23, 42, 0.10); flex-shrink: 0; background: #f7f9fc;
+}
+
+/* Motion — enter/exit ของแถวสื่อ state ไม่ใช่ decoration */
+.requisition-form .item-row--new {
+    animation: reqRowIn 180ms var(--ease);
+}
+.requisition-form .item-row--leaving {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+}
+@keyframes reqRowIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .requisition-form .item-row--new { animation: none; }
+    .requisition-form .item-row--leaving { transition: opacity 80ms linear; transform: none; }
 }
 CSS
 );
@@ -296,7 +364,7 @@ function escapeAttr(s) {
 // สร้าง HTML ของ td แรก (รูป + ชื่อ + รหัส) — ใช้ทั้ง prefilled และหลังเลือกจาก TomSelect
 function buildItemDisplayCellHtml(rowIdx, code, name, img) {
     var imgHtml = img
-        ? '<img src="' + escapeAttr(img) + '" alt="" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
+        ? '<img src="' + escapeAttr(img) + '" alt="" loading="lazy" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
         : '';
     return '<input type="hidden" name="StockDetail[' + rowIdx + '][item_code]" value="' + escapeAttr(code) + '">'
         + '<div class="d-flex align-items-center gap-2">'
@@ -372,7 +440,7 @@ function initItemSelect(elementId) {
             option: function(item, escape) {
                 var unit = (item.unit_name && item.unit_name !== '-') ? ' <span class="text-muted">(' + escape(item.unit_name) + ')</span>' : '';
                 var img = item.item_img
-                    ? '<img src="' + escape(item.item_img) + '" alt="" class="ts-option-thumb me-2" onerror="this.style.display=\\'none\\'">'
+                    ? '<img src="' + escape(item.item_img) + '" alt="" loading="lazy" class="ts-option-thumb me-2" onerror="this.style.display=\\'none\\'">'
                     : '';
                 return '<div class="d-flex align-items-center py-1">' + img
                     + '<div class="min-w-0"><div class="fw-bold">' + escape(item.item_name) + unit + '</div>'
@@ -401,6 +469,13 @@ function initItemSelect(elementId) {
     });
 }
 
+// สลับ empty state / thead ตามจำนวนแถวจริง (นับเฉพาะ .item-row)
+function refreshItemEmptyState() {
+    var hasRows = $('#item-table .item-row').length > 0;
+    $('#item-empty-state').toggleClass('d-none', hasRows);
+    $('#item-table thead').toggleClass('d-none', !hasRows);
+}
+
 // 2. ฟังก์ชันเพิ่มแถว (คืนค่า TomSelect ของแถวใหม่)
 function addItem() {
     var whId = $('#main-warehouse-id').val();
@@ -425,6 +500,8 @@ function addItem() {
     var newRow = $(rowHtml);
 
     $('#item-table tbody').append(newRow);
+    newRow.addClass('item-row--new');
+    refreshItemEmptyState();
 
     var selectId = 'select-item-' + idx;
     newRow.find('.item-select-ajax').attr('id', selectId);
@@ -496,7 +573,7 @@ function loadBelowMaxAndAddToTable() {
                     return;
                 }
                 var imgHtml = row.item_img
-                    ? '<img src="' + escapeAttr(row.item_img) + '" alt="" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
+                    ? '<img src="' + escapeAttr(row.item_img) + '" alt="" loading="lazy" class="rounded border item-thumb" onerror="this.style.display=\\'none\\'">'
                     : '';
                 var template = $('#row-template-prefilled').html();
                 var html = template
@@ -510,6 +587,7 @@ function loadBelowMaxAndAddToTable() {
                 idx++;
                 added++;
             });
+            refreshItemEmptyState();
             var parts = [];
             if (added) parts.push('เพิ่มใหม่ ' + added + ' รายการ');
             if (skipped) parts.push('ข้าม ' + skipped + ' รายการ (มีอยู่แล้ว — ไม่ทับจำนวนเดิม)');
@@ -576,6 +654,7 @@ $('#main-warehouse-id').on('change', function() {
             if (result.isConfirmed) {
                 $('#item-table tbody').empty();
                 idx = 0;
+                refreshItemEmptyState();
             }
         });
     }
@@ -599,9 +678,21 @@ $(document).on('click', '#load-below-max', function(e) {
 
 // init เมื่อโหลดหน้า
 updateLoadBelowMaxButtonState();
+refreshItemEmptyState();
 
 $(document).on('click', '.remove-item', function() {
-    $(this).closest('tr').remove();
+    var row = $(this).closest('tr');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+        row.remove();
+        refreshItemEmptyState();
+        return;
+    }
+    row.addClass('item-row--leaving');
+    setTimeout(function() {
+        row.remove();
+        refreshItemEmptyState();
+    }, 160);
 });
 
 // เลือกเหตุผลจาก dropdown แล้วใส่ในช่องเหตุผล/วัตถุประสงค์การเบิก
@@ -714,16 +805,16 @@ $('#requisition-form').on('beforeSubmit', function(e) {
 
             // มีรายการที่ติด — แสดงตารางสรุป
             var statusBadge = {
-                ok: '<span class="badge bg-success-subtle text-success">พอจ่าย</span>',
-                balance_only: '<span class="badge bg-warning-subtle text-warning-emphasis">ยอดคลังพอ Lot ไม่พร้อม</span>',
-                insufficient: '<span class="badge bg-danger-subtle text-danger">คงเหลือไม่พอ</span>',
-                not_in_warehouse: '<span class="badge bg-danger-subtle text-danger">ไม่มีในคลัง</span>'
+                ok: '<span class="badge" style="background:rgba(21,128,61,.10);color:#15803d">พอจ่าย</span>',
+                balance_only: '<span class="badge" style="background:rgba(180,83,9,.10);color:#b45309">ยอดคลังพอ Lot ไม่พร้อม</span>',
+                insufficient: '<span class="badge" style="background:rgba(185,28,28,.10);color:#b91c1c">คงเหลือไม่พอ</span>',
+                not_in_warehouse: '<span class="badge" style="background:rgba(185,28,28,.10);color:#b91c1c">ไม่มีในคลัง</span>'
             };
             var rows = checkRes.items.map(function(it) {
                 var badge = statusBadge[it.status] || '';
                 var rowClass = it.status === 'ok' ? '' : 'table-warning';
                 return '<tr class="' + rowClass + '">'
-                    + '<td class="text-start small">' + escapeHtmlPreflight(it.item_name) + '<div class="text-muted" style="font-size:11px">' + escapeHtmlPreflight(it.item_code) + '</div></td>'
+                    + '<td class="text-start small">' + escapeHtmlPreflight(it.item_name) + '<div style="font-size:12px;color:#718096">' + escapeHtmlPreflight(it.item_code) + '</div></td>'
                     + '<td class="text-end small">' + it.qty_requested + '</td>'
                     + '<td class="text-end small">' + it.balance + '</td>'
                     + '<td class="text-end small">' + it.fifo_remain + '</td>'
