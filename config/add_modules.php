@@ -82,8 +82,6 @@ $modules['approve-v2'] = ['class' => 'app\modules\approveV2\Module'];  // module
 $modules['approve-v3'] = ['class' => 'app\modules\approveV3\Module'];  // module อนุมัติ V3 (ตาราง approve เดิม)
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
-$modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
-$modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
 $modules['line2'] = ['class' => 'app\modules\line2\Module'];  // line officail 2 By PCH
 $modules['dev'] = ['class' => 'app\modules\dev\Module'];  // ปรับปรุงระบบ theme layout
