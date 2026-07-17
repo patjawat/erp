@@ -739,6 +739,7 @@ class StockAdjustController extends Controller
         $priceRaw = Yii::$app->request->post('unit_price');
         $newPrice = is_numeric($priceRaw) ? (float) $priceRaw : null;
         $note = trim((string) Yii::$app->request->post('note', ''));
+        $orderDateInput = trim((string) Yii::$app->request->post('order_date', '')); // 'วว/ดด/พ.ศ.' (ว่าง = ไม่แก้วันที่)
 
         if ($detailId <= 0 || $warehouseId <= 0 || $itemCode === '') {
             return ['success' => false, 'message' => 'ข้อมูลรายการที่ต้องการแก้ไขไม่ครบถ้วน'];
@@ -748,6 +749,15 @@ class StockAdjustController extends Controller
         }
         if ($newPrice !== null && $newPrice < 0) {
             return ['success' => false, 'message' => 'ราคา/หน่วยต้องไม่น้อยกว่า 0'];
+        }
+        // วันที่รับมาเป็น พ.ศ. (วว/ดด/พ.ศ.) → แปลงกลับเป็น ค.ศ. Y-m-d ตามมาตรฐาน PRODUCT.md
+        $newOrderDate = null; // 'Y-m-d H:i:s' หากผู้ใช้ระบุวันที่ใหม่
+        $orderDateGregorian = null; // 'Y-m-d'
+        if ($orderDateInput !== '') {
+            $orderDateGregorian = \app\components\AppHelper::convertToGregorian($orderDateInput);
+            if ($orderDateGregorian === null || strtotime($orderDateGregorian) === false) {
+                return ['success' => false, 'message' => 'รูปแบบวันที่ไม่ถูกต้อง'];
+            }
         }
 
         $detail = StockDetail::findOne($detailId);
@@ -764,6 +774,11 @@ class StockAdjustController extends Controller
         }
         if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
             return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
+        }
+        if ($orderDateGregorian !== null) {
+            // คงเวลาเดิมของเอกสารไว้ เปลี่ยนเฉพาะส่วนวันที่
+            $oldTime = date('H:i:s', strtotime((string) $order->order_date) ?: time());
+            $newOrderDate = $orderDateGregorian . ' ' . $oldTime;
         }
 
         $oldQty = (float) $detail->qty;
@@ -836,6 +851,16 @@ class StockAdjustController extends Controller
             $orderData['history_adjust_edits'][] = $editLog;
             if ($note !== '') {
                 $order->ref = $note;
+            }
+            // แก้วันที่เอกสาร (คงเวลาเดิมของ order ไว้ เปลี่ยนเฉพาะวันที่)
+            if ($newOrderDate !== null && $newOrderDate !== $order->order_date) {
+                $orderData['history_adjust_date_edits'][] = [
+                    'at' => $now,
+                    'by_user_id' => Yii::$app->user->id,
+                    'old_order_date' => $order->order_date,
+                    'new_order_date' => $newOrderDate,
+                ];
+                $order->order_date = $newOrderDate;
             }
             $order->data_json = json_encode($orderData, JSON_UNESCAPED_UNICODE);
             $order->updated_at = $now;

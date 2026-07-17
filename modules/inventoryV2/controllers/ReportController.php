@@ -833,6 +833,7 @@ class ReportController extends Controller
                 'detail_id' => (int) $r['detail_id'],
                 'date' => date('d/m/Y', strtotime($r['order_date'])),
                 'time' => date('H:i', strtotime($r['order_date'])),
+                'date_iso' => date('Y-m-d', strtotime($r['order_date'])), // สำหรับ prefill ช่องแก้วันที่ (ADJUST)
                 'order_no' => (string) $r['order_no'],
                 'order_type' => (string) $r['order_type'],
                 'source_label' => $sourceLabel[$sourceKey] ?? ($sourceKey ?: '-'),

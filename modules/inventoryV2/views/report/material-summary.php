@@ -376,41 +376,11 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
     </div>
 </div>
 
-<!-- Modal: ประวัติเคลื่อนไหวราย item (เปิดจากรายการติดลบใน preview) — reuse actionItemHistory -->
-<div class="modal fade" id="itemLedgerModal" tabindex="-1" aria-labelledby="itemLedgerModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
-        <div class="modal-content lg-modal">
-            <header class="lg-modal__head">
-                <div class="lg-modal__head-row">
-                    <span class="lg-modal__badge"><i class="bi bi-clock-history" aria-hidden="true"></i> ประวัติการเคลื่อนไหว</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
-                </div>
-                <h5 class="lg-modal__title" id="itemLedgerModalTitle">
-                    <span id="lg-item-name">—</span>
-                </h5>
-                <p class="lg-modal__caption">
-                    <span id="lg-item-code" class="lg-modal__code">—</span>
-                    <span class="lg-modal__sep" aria-hidden="true">·</span>
-                    <span id="lg-warehouse">—</span>
-                    <span class="lg-modal__sep" aria-hidden="true">·</span>
-                    <span id="lg-period">—</span>
-                </p>
-            </header>
-
-            <div class="lg-modal__body" id="lg-body" aria-live="polite" aria-busy="true">
-                <!-- injected by JS -->
-            </div>
-
-            <footer class="lg-modal__foot">
-                <span class="lg-modal__foot-hint">
-                    <i class="bi bi-info-circle" aria-hidden="true"></i>
-                    แถวสีแดง = ยอดคงเหลือสะสมติดลบ ณ รายการนั้น
-                </span>
-                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">ปิด</button>
-            </footer>
-        </div>
-    </div>
-</div>
+<?php // Modal: ประวัติการเคลื่อนไหววัสดุ — partial ร่วมกับหน้า balance (ดูประวัติ + ปรับยอด/แก้ไข) เปิดจากรายการติดลบใน preview ?>
+<?= $this->render('@app/modules/inventoryV2/views/report/_item_history_modal', [
+    'historyUrl' => Url::to(['/inventory-v2/report/item-history']),
+    'exportHistoryUrl' => Url::to(['/inventory-v2/report/export-item-history']),
+]) ?>
 
 <!-- Modal: ดูรายการ item ที่ประกอบเป็นยอดของ cell ที่คลิก -->
 <div class="modal fade" id="categoryDrillModal" tabindex="-1" aria-labelledby="categoryDrillModalTitle" aria-hidden="true">
@@ -484,8 +454,7 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 .ms-report-summary,
 #categoryDrillModal,
 #modal-close-month,
-#modal-cancel-close,
-#itemLedgerModal {
+#modal-cancel-close {
     --ms-ink-1: #1a202c;
     --ms-ink-2: #4a5568;
     --ms-ink-3: #718096;
@@ -1068,66 +1037,6 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 .cm-alert__item-ico { font-size: 0.72rem; opacity: 0.7; align-self: center; }
 @media (prefers-reduced-motion: reduce) { .cm-alert__item--btn { transition: none; } }
 
-/* ══════════════════════════════════════════════════════════
-   Item ledger modal (#itemLedgerModal) — reuse actionItemHistory
-   ══════════════════════════════════════════════════════════ */
-.lg-modal { border-radius: var(--ms-radius); overflow: hidden; display: flex; flex-direction: column; max-height: 100%; }
-.lg-modal__head { padding: 1rem 1.25rem 0.5rem; flex: 0 0 auto; }
-.lg-modal__head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.lg-modal__badge {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    background: var(--ms-danger-soft); color: var(--ms-danger);
-    padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
-}
-.lg-modal__title { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--ms-ink-1); }
-.lg-modal__caption { margin: 0.2rem 0 0; color: var(--ms-ink-3); font-size: 0.83rem; }
-.lg-modal__code { font-variant-numeric: tabular-nums; }
-.lg-modal__sep { margin: 0 0.4rem; color: var(--ms-ink-4); }
-.lg-modal__body { padding: 0.75rem 1.25rem 1rem; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
-
-.lg-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem; margin-bottom: 0.85rem; }
-.lg-summary__cell { background: var(--ms-surface-2); border: 1px solid var(--ms-line); border-radius: var(--ms-radius-sm); padding: 0.55rem 0.7rem; }
-.lg-summary__label { font-size: 0.73rem; color: var(--ms-ink-3); display: block; }
-.lg-summary__value { font-size: 1rem; font-weight: 700; color: var(--ms-ink-1); font-variant-numeric: tabular-nums; }
-.lg-summary__value.is-negative { color: var(--ms-danger); }
-.lg-summary__sub { font-size: 0.72rem; color: var(--ms-ink-3); }
-
-.lg-table-wrap { border: 1px solid var(--ms-line); border-radius: var(--ms-radius-sm); overflow: hidden; }
-.lg-table { width: 100%; border-collapse: collapse; margin: 0; }
-.lg-table thead th {
-    position: sticky; top: 0; z-index: 1; background: var(--ms-surface-2); color: var(--ms-ink-2);
-    font-size: 0.76rem; font-weight: 600; padding: 0.5rem 0.7rem; text-align: right; white-space: nowrap;
-    border-bottom: 1px solid var(--ms-line-strong);
-}
-.lg-table thead th:nth-child(1), .lg-table thead th:nth-child(2) { text-align: left; }
-.lg-table tbody td { font-size: 0.83rem; color: var(--ms-ink-1); padding: 0.45rem 0.7rem; text-align: right; border-bottom: 1px solid var(--ms-line); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.lg-table tbody td:nth-child(1), .lg-table tbody td:nth-child(2) { text-align: left; white-space: normal; }
-.lg-table tbody tr:last-child td { border-bottom: none; }
-.lg-table tbody tr.is-bf td { background: var(--ms-surface-2); color: var(--ms-ink-2); font-style: italic; }
-.lg-table tbody tr.is-neg td { background: var(--ms-danger-soft); }
-.lg-table tbody tr.is-neg td.lg-bal { color: var(--ms-danger); font-weight: 700; }
-.lg-dir { display: inline-flex; align-items: center; gap: 0.3rem; }
-.lg-dir__in { color: var(--ms-success); }
-.lg-dir__out { color: var(--ms-danger); }
-.lg-src { color: var(--ms-ink-2); }
-.lg-muted { color: var(--ms-ink-4); }
-
-.lg-skel { display: flex; flex-direction: column; gap: 0.5rem; }
-.lg-skel__strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
-.lg-skel__box, .lg-skel__line { background: linear-gradient(90deg, var(--ms-surface-2), var(--ms-surface-3), var(--ms-surface-2)); background-size: 200% 100%; animation: cd-shimmer 1.2s linear infinite; border-radius: var(--ms-radius-sm); }
-.lg-skel__box { height: 52px; }
-.lg-skel__line { height: 30px; border-radius: 6px; }
-.lg-skel__rows { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.4rem; }
-@media (prefers-reduced-motion: reduce) { .lg-skel__box, .lg-skel__line { animation: none; background: var(--ms-surface-3); } }
-
-.lg-state { text-align: center; padding: 2rem 1rem; color: var(--ms-ink-3); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
-.lg-state i { font-size: 1.6rem; color: var(--ms-ink-4); }
-.lg-state.is-error { color: var(--ms-danger); }
-.lg-state.is-error i { color: var(--ms-danger); }
-
-.lg-modal__foot { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.7rem 1.25rem; border-top: 1px solid var(--ms-line); background: var(--ms-surface-2); flex: 0 0 auto; }
-.lg-modal__foot-hint { color: var(--ms-ink-3); font-size: 0.76rem; }
-
 @media (max-width: 768px) {
     .ms-report-summary__head { flex-direction: column; align-items: flex-start; }
     .cd-modal__summary { margin: 0.5rem 0.75rem 0; }
@@ -1143,7 +1052,6 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 $closeUrl = Url::to(['/inventory-v2/report/close-month']);
 $previewUrl = Url::to(['/inventory-v2/report/close-month-preview']);
 $cancelUrl = Url::to(['/inventory-v2/report/cancel-close']);
-$historyUrl = Url::to(['/inventory-v2/report/item-history']);
 $reportUrl = Url::to(['/inventory-v2/report/material-summary']);
 $drillUrl = Url::to(['/inventory-v2/report/category-drilldown']);
 $placeholderUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
@@ -1226,6 +1134,7 @@ $this->registerJs(<<<JS
                     +   ' data-item-code="' + cmEsc(it.item_code) + '"'
                     +   ' data-item-name="' + cmEsc(it.item_name) + '"'
                     +   ' data-warehouse-id="' + cmEsc(it.warehouse_id) + '"'
+                    +   ' data-warehouse-name="' + cmEsc(it.warehouse_name || '') + '"'
                     +   ' title="ดูประวัติการเคลื่อนไหว">'
                     +   '<span class="cm-alert__item-code">' + cmEsc(it.item_code) + '</span>'
                     +   '<span>' + cmEsc(it.item_name) + '</span>' + wh
@@ -1510,88 +1419,26 @@ $this->registerJs(<<<JS
         \$btn.find('.cx-btn-danger__spinner').prop('hidden', true);
     }
 
-    // ══ Item ledger (ประวัติเคลื่อนไหว) — เปิดจากรายการติดลบใน preview, reuse actionItemHistory ══
-    var historyUrl = '{$historyUrl}';
-    var lgEl = document.getElementById('itemLedgerModal');
-    var lgModal = (lgEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(lgEl) : null;
-    var lgXhr = null;
-    function lgPad(n){ return (n < 10 ? '0' : '') + n; }
-    function lgSkeleton(){
-        var rows = '';
-        for (var i = 0; i < 6; i++){ rows += '<div class="lg-skel__line"></div>'; }
-        return '<div class="lg-skel" aria-hidden="true">'
-            + '<div class="lg-skel__strip"><div class="lg-skel__box"></div><div class="lg-skel__box"></div><div class="lg-skel__box"></div><div class="lg-skel__box"></div></div>'
-            + '<div class="lg-skel__rows">' + rows + '</div></div>';
-    }
-    function lgError(msg){
-        $('#lg-body').attr('aria-busy', 'false').html('<div class="lg-state is-error"><i class="bi bi-exclamation-triangle"></i><p>' + cmEsc(msg) + '</p></div>');
-    }
-    function lgRender(res){
-        var s = res.summary, m = res.meta;
-        var unit = m.unit_name || '';
-        var bfNeg = s.qty_bf < -0.0005;
-        var curNeg = s.current_qty < -0.0005;
-        var html = '<div class="lg-summary">'
-            + '<div class="lg-summary__cell"><span class="lg-summary__label">ยอดยกมา</span><span class="lg-summary__value' + (bfNeg ? ' is-negative' : '') + '">' + cmFmtQty(s.qty_bf) + '</span><span class="lg-summary__sub">' + cmEsc(unit) + '</span></div>'
-            + '<div class="lg-summary__cell"><span class="lg-summary__label">รับเข้า</span><span class="lg-summary__value">' + cmFmtQty(s.total_in) + '</span><span class="lg-summary__sub">ในงวด</span></div>'
-            + '<div class="lg-summary__cell"><span class="lg-summary__label">จ่ายออก</span><span class="lg-summary__value">' + cmFmtQty(s.total_out) + '</span><span class="lg-summary__sub">ในงวด</span></div>'
-            + '<div class="lg-summary__cell"><span class="lg-summary__label">คงเหลือปัจจุบัน (ระบบ)</span><span class="lg-summary__value' + (curNeg ? ' is-negative' : '') + '">' + cmFmtQty(s.current_qty) + '</span><span class="lg-summary__sub">' + cmEsc(unit) + '</span></div>'
-            + '</div>';
-        var txs = res.transactions || [];
-        var rows = '<tr class="is-bf' + (bfNeg ? ' is-neg' : '') + '"><td>—</td><td>ยอดยกมา (ก่อนงวด)</td><td></td><td></td><td class="lg-bal">' + cmFmtQty(s.qty_bf) + '</td></tr>';
-        if (!txs.length){
-            rows += '<tr><td colspan="5" class="lg-muted" style="text-align:center;padding:1rem;">ไม่มีการเคลื่อนไหวในงวดนี้</td></tr>';
-        } else {
-            rows += txs.map(function(t){
-                var neg = t.balance_qty < -0.0005;
-                var inCell = t.direction === 'in' ? '<span class="lg-dir lg-dir__in"><i class="bi bi-arrow-down-left" aria-hidden="true"></i>' + cmFmtQty(t.qty) + '</span>' : '<span class="lg-muted">—</span>';
-                var outCell = t.direction === 'out' ? '<span class="lg-dir lg-dir__out"><i class="bi bi-arrow-up-right" aria-hidden="true"></i>' + cmFmtQty(t.qty) + '</span>' : '<span class="lg-muted">—</span>';
-                return '<tr' + (neg ? ' class="is-neg"' : '') + '>'
-                    + '<td>' + cmEsc(t.date) + '</td>'
-                    + '<td><span class="lg-src">' + cmEsc(t.source_label) + '</span>' + (t.order_no ? ' <span class="lg-muted">' + cmEsc(t.order_no) + '</span>' : '') + '</td>'
-                    + '<td>' + inCell + '</td>'
-                    + '<td>' + outCell + '</td>'
-                    + '<td class="lg-bal">' + cmFmtQty(t.balance_qty) + '</td>'
-                    + '</tr>';
-            }).join('');
-        }
-        html += '<div class="lg-table-wrap"><table class="lg-table"><thead><tr>'
-            + '<th>วันที่</th><th>ประเภท</th><th>รับ</th><th>จ่าย</th><th>คงเหลือสะสม</th>'
-            + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
-        $('#lg-body').attr('aria-busy', 'false').html(html);
-    }
+    // ══ ประวัติการเคลื่อนไหววัสดุ — เปิดจากรายการติดลบใน preview ══
+    // reuse โมดัลเต็ม #itemHistoryModal (partial ร่วมกับหน้า balance) เพื่อดูประวัติ + ปรับยอด/แก้ไขได้
+    var histEl = document.getElementById('itemHistoryModal');
 
     $(document).on('click', '.js-neg-history', function(){
-        var code = this.getAttribute('data-item-code');
-        var name = this.getAttribute('data-item-name');
-        var whId = this.getAttribute('data-warehouse-id');
-        var year = parseInt($('#close-year').val(), 10);
-        var month = parseInt($('#close-month').val(), 10);
-        var lastDay = new Date(year, month, 0).getDate();
-        var start = year + '-' + lgPad(month) + '-01';
-        var end = year + '-' + lgPad(month) + '-' + lgPad(lastDay);
-
-        $('#lg-item-name').text(name || code);
-        $('#lg-item-code').text(code);
-        $('#lg-warehouse').text('—');
-        $('#lg-period').text((MONTH_NAMES[month] || '') + ' ' + (year + 543) + ' (พ.ศ.)');
-        $('#lg-body').attr('aria-busy', 'true').html(lgSkeleton());
-        if (lgModal) lgModal.show();
-
-        if (lgXhr && lgXhr.readyState !== 4){ lgXhr.abort(); }
-        lgXhr = $.ajax({ url: historyUrl, method: 'GET', dataType: 'json',
-            data: { item_code: code, warehouse_id: whId, start_date: start, end_date: end } })
-            .done(function(res){
-                if (!res || !res.meta){ lgError('โหลดประวัติไม่สำเร็จ'); return; }
-                $('#lg-warehouse').text(res.meta.warehouse_label || '—');
-                lgRender(res);
-            })
-            .fail(function(xhr, status){ if (status === 'abort') return; lgError('โหลดประวัติไม่สำเร็จ'); });
+        if (!histEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+        // สร้าง element trigger ชั่วคราวพร้อม data-* ให้ show.bs.modal ของโมดัลอ่านไปตั้งค่า
+        var trigger = document.createElement('span');
+        trigger.setAttribute('data-item-code', this.getAttribute('data-item-code') || '');
+        trigger.setAttribute('data-item-name', this.getAttribute('data-item-name') || '');
+        trigger.setAttribute('data-warehouse-id', this.getAttribute('data-warehouse-id') || '');
+        trigger.setAttribute('data-warehouse-name', this.getAttribute('data-warehouse-name') || '');
+        trigger.setAttribute('data-unit-name', this.getAttribute('data-unit-name') || '');
+        trigger.setAttribute('data-item-image', this.getAttribute('data-item-image') || '');
+        bootstrap.Modal.getOrCreateInstance(histEl).show(trigger);
     });
 
-    // ledger modal ซ้อนบน wizard modal — กัน scroll-lock หลุดตอนปิด ledger ขณะ wizard ยังเปิด
-    if (lgEl){
-        lgEl.addEventListener('hidden.bs.modal', function(){
+    // history modal ซ้อนบน wizard modal — กัน scroll-lock หลุดตอนปิด history ขณะ wizard ยังเปิด
+    if (histEl){
+        histEl.addEventListener('hidden.bs.modal', function(){
             var wiz = document.getElementById('modal-close-month');
             if (wiz && wiz.classList.contains('show')){ document.body.classList.add('modal-open'); }
         });
