@@ -50,13 +50,18 @@ use yii\bootstrap5\Breadcrumbs;
                
                <div class="title-text mt-2 mt-lg-0">
                   <?= isset($this->blocks['page-title']) ? $this->blocks['page-title'] : ''; ?>
+                  <?php if (isset($this->blocks['sub-title']) && trim($this->blocks['sub-title']) !== ''): ?>
+                     <div class="text-muted small mt-1"><?= $this->blocks['sub-title'] ?></div>
+                  <?php endif; ?>
                </div>
             </div>
          </div>
 
          <div class="action-box mt-3 mt-lg-0 w-100 w-lg-auto d-flex justify-content-center justify-content-lg-end">
             <div class="d-flex gap-2 flex-wrap justify-content-center justify-content-lg-end">
-               <?= isset($this->blocks['action']) ? $this->blocks['action'] : '' ?>
+               <?= isset($this->blocks['page-action'])
+                  ? $this->blocks['page-action']
+                  : (isset($this->blocks['action']) ? $this->blocks['action'] : '') ?>
             </div>
          </div>
 

@@ -22,6 +22,10 @@ product
 
 ความสำเร็จคือ: เจ้าหน้าที่กรอกใบลา/จองรถ/อนุมัติได้จบบนมือถือใน <30 วินาที โดยไม่ต้องสลับไปที่ desktop UI
 
+## Data Rules
+
+- **วัสดุ = `group_id = MATER`** — ทุก query/report/dropdown/import/export ที่ดึง "วัสดุ" ใน `inventoryV2` ต้องกรองเฉพาะรายการ `StockItem`/`categorise` ที่เป็น `group_id = MATER` เสมอ เพื่อไม่ให้ดึงพัสดุกลุ่มอื่นปนเข้ามา
+
 ## Brand Personality
 
 3 คำ: **เป็นทางการ · ใช้งานง่าย · เชื่อถือได้**
@@ -399,3 +403,23 @@ Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](mo
 - **Focus management**: focus ring ต้องเห็นชัดทุก interactive (`--primary` 3px ring), ไม่ลบ `outline` โดยไม่มี alternative
 - **Live region**: `aria-live="polite"` สำหรับ panel ที่ update แบบ async (selected item, balance hint, undo toast)
 - **ภาษาไทย**: font ต้องรองรับสระบน/ล่างไม่ตัด, รองรับชื่อยาว (ตำแหน่งทางการแพทย์) ไม่ overflow; ใช้ `text-overflow: ellipsis` + `max-width` ที่ context ยาวได้
+
+## Page Layout Blocks
+
+ทุกหน้า view ที่มีหัวข้อหน้าและ action ด้านบนต้องส่งข้อมูลให้ layout ผ่าน block กลางของระบบ ห้ามวาง header/action ซ้ำใน body ของหน้าเอง
+
+```php
+<?php $this->beginBlock('page-title'); ?>
+<?= Html::encode($this->title) ?>
+<?php $this->endBlock(); ?>
+
+<?php $this->beginBlock('page-action'); ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => '...']) ?>
+<?php $this->endBlock(); ?>
+```
+
+- ใช้ `beginBlock('page-title')` สำหรับชื่อหน้าหรือ heading หลักของ layout เท่านั้น
+- ใช้ `beginBlock('sub-title')` เมื่อต้องมีคำอธิบายสั้นใต้ชื่อหน้า
+- ใช้ `beginBlock('page-action')` สำหรับเมนูหลัก ปุ่ม action หรือ partial เช่น `_menu_main`
+- partial เมนู/action ไม่ควรครอบด้วย `.page-action` เอง ให้ layout เป็นผู้จัดตำแหน่ง
+- หลีกเลี่ยงการสร้าง `<h1>` หรือ action bar ซ้ำใน content body เมื่อ layout มี block เหล่านี้อยู่แล้ว

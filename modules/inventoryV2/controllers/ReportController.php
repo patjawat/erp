@@ -3085,4 +3085,557 @@ class ReportController extends Controller
             }
         });
     }
+
+    public function actionProcurementPlan()
+    {
+        $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
+        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        $categoryId = trim((string) $this->request->get('category_id', ''));
+        $q = trim((string) $this->request->get('q', ''));
+        $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));
+
+        $listWarehouse = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->orderBy(['warehouse_name' => SORT_ASC])
+            ->all();
+        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        $categories = $this->getProcurementMaterialCategories();
+
+        $rows = $this->buildProcurementPlanRows($fiscalYear, $warehouseId, $q, $dataSource, $categoryId);
+
+        return $this->render('procurement-plan', [
+            'fiscalYear' => $fiscalYear,
+            'warehouseId' => $warehouseId,
+            'warehouses' => $warehouses,
+            'categoryId' => $categoryId,
+            'categories' => $categories,
+            'q' => $q,
+            'dataSource' => $dataSource,
+            'dataSources' => $this->getProcurementDataSourceOptions(),
+            'rows' => $rows,
+            'headers' => $this->getProcurementPlanHeaders($fiscalYear),
+        ]);
+    }
+
+    public function actionExportProcurementPlan()
+    {
+        $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
+        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        $categoryId = trim((string) $this->request->get('category_id', ''));
+        $q = trim((string) $this->request->get('q', ''));
+        $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));
+        $rows = $this->buildProcurementPlanRows($fiscalYear, $warehouseId, $q, $dataSource, $categoryId);
+
+        return $this->streamProcurementPlanXlsx($rows, $fiscalYear, 'procurement-plan-' . $fiscalYear . '.xlsx');
+    }
+
+    protected function normalizeProcurementFiscalYear($value)
+    {
+        $year = (int) $value;
+        if ($year <= 0) {
+            return $this->currentThaiFiscalYear();
+        }
+
+        return $year < 2400 ? $year + 543 : $year;
+    }
+
+    protected function currentThaiFiscalYear()
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('Asia/Bangkok'));
+        $year = (int) $now->format('Y');
+        $month = (int) $now->format('n');
+
+        return $year + ($month >= 10 ? 544 : 543);
+    }
+
+    protected function normalizeProcurementDataSource($value)
+    {
+        $value = (string) $value;
+        $options = array_keys($this->getProcurementDataSourceOptions());
+
+        return in_array($value, $options, true) ? $value : 'closed';
+    }
+
+    protected function getProcurementDataSourceOptions()
+    {
+        return [
+            'closed' => 'ปิดเดือนแล้ว',
+            'with_unclosed' => 'รวมเดือนที่ยังไม่ปิด',
+        ];
+    }
+
+    protected function getProcurementMaterialCategories()
+    {
+        $rows = (new Query())
+            ->select([
+                'code' => 'cat.code',
+                'title' => 'cat.title',
+            ])
+            ->from(['cat' => Categorise::tableName()])
+            ->innerJoin(['i' => StockItem::tableName()], 'i.category_id = cat.code')
+            ->where([
+                'cat.name' => 'asset_type',
+                'i.name' => 'asset_item',
+                'i.group_id' => 'MATER',
+                'i.active' => 1,
+            ])
+            ->groupBy(['cat.code', 'cat.title'])
+            ->orderBy(['cat.title' => SORT_ASC])
+            ->all();
+
+        return ['' => '-- ทุกประเภทพัสดุ --'] + \yii\helpers\ArrayHelper::map($rows, 'code', 'title');
+    }
+
+    protected function buildProcurementPlanRows($fiscalYear, $warehouseId = null, $q = '', $dataSource = 'closed', $categoryId = '')
+    {
+        $previousYears = [$fiscalYear - 3, $fiscalYear - 2, $fiscalYear - 1];
+        $usageMaps = [];
+        foreach ($previousYears as $year) {
+            $usageMaps[$year] = $this->getFiscalUsageMap($year, $warehouseId, $dataSource);
+        }
+
+        $openingMap = $this->getOpeningInventoryMap($fiscalYear, $warehouseId, $dataSource);
+        $balanceMap = $this->getCurrentBalanceMap($warehouseId);
+
+        $itemQuery = (new Query())
+            ->select([
+                'item_code' => 'i.code',
+                'item_name' => 'i.title',
+                'item_data_json' => 'i.data_json',
+                'category_title' => new Expression("COALESCE(cat.title, i.category_id, '')"),
+                'unit_name' => new Expression('MAX(m.unit_name)'),
+            ])
+            ->from(['i' => StockItem::tableName()])
+            ->leftJoin(['cat' => Categorise::tableName()], "cat.code = i.category_id AND cat.name = 'asset_type'")
+            ->leftJoin(
+                ['m' => StockMonthlyReport::tableName()],
+                'm.item_code = i.code AND m.report_year = :unitYear AND m.report_month = 9',
+                [':unitYear' => $this->procurementFiscalYearEndYear($fiscalYear) - 1]
+            )
+            ->where([
+                'i.name' => 'asset_item',
+                'i.group_id' => 'MATER',
+                'i.active' => 1,
+            ])
+            ->groupBy(['i.code', 'i.title', 'i.data_json', 'cat.title', 'i.category_id'])
+            ->orderBy(['cat.title' => SORT_ASC, 'i.title' => SORT_ASC]);
+
+        if ($q !== '') {
+            $itemQuery->andWhere([
+                'or',
+                ['like', 'i.code', $q],
+                ['like', 'i.title', $q],
+                ['like', 'cat.title', $q],
+            ]);
+        }
+        if ($categoryId !== '') {
+            $itemQuery->andWhere(['i.category_id' => $categoryId]);
+        }
+
+        $items = $itemQuery->all();
+        $rows = [];
+        $seq = 1;
+
+        foreach ($items as $item) {
+            $code = (string) $item['item_code'];
+            $usageValues = [];
+            $priceQty = 0.0;
+            $priceValue = 0.0;
+            $outQty = 0.0;
+            $outValue = 0.0;
+
+            foreach ($previousYears as $year) {
+                $usage = $usageMaps[$year][$code] ?? null;
+                $qty = $usage ? (float) $usage['usage_qty'] : 0.0;
+                $usageValues[$year] = $qty;
+                if ($usage) {
+                    $priceQty += (float) $usage['in_qty'];
+                    $priceValue += (float) $usage['in_value'];
+                    $outQty += (float) $usage['usage_qty'];
+                    $outValue += (float) $usage['usage_value'];
+                }
+            }
+
+            $openingQty = array_key_exists($code, $openingMap)
+                ? (float) $openingMap[$code]
+                : (float) ($balanceMap[$code] ?? 0);
+            $estimatedUsed = round(array_sum($usageValues) / count($usageValues), 2);
+            $estimatedPurchaseQty = max($estimatedUsed - $openingQty, 0);
+            $unitPrice = $priceQty > 0 ? round($priceValue / $priceQty, 2) : ($outQty > 0 ? round($outValue / $outQty, 2) : 0);
+            $purchaseValue = round($estimatedPurchaseQty * $unitPrice, 2);
+            $dataJson = $this->decodeProcurementPlanJson($item['item_data_json'] ?? null);
+            $unitName = trim((string) ($item['unit_name'] ?? ''));
+            if ($unitName === '') {
+                $unitName = $this->extractProcurementJsonValue($dataJson, ['unit_name', 'unit']);
+            }
+
+            $rows[] = [
+                'fiscal_year' => $fiscalYear,
+                'plan_type' => 'เวชภัณฑ์มิใช่ยา',
+                'category_plan' => trim((string) $item['category_title']) !== '' ? (string) $item['category_title'] : 'วัสดุทั่วไป',
+                'seq' => $seq++,
+                'item_name' => (string) $item['item_name'],
+                'packaging_size' => $this->extractProcurementJsonValue($dataJson, ['packaging_size', 'packing_size', 'package_size', 'pack_size', 'size']),
+                'unit_name' => $unitName,
+                'usage_year_1' => $usageValues[$previousYears[0]],
+                'usage_year_2' => $usageValues[$previousYears[1]],
+                'usage_year_3' => $usageValues[$previousYears[2]],
+                'opening_inventory_qty' => $openingQty,
+                'estimated_amount_used' => $estimatedUsed,
+                'estimated_purchase_quantity' => $estimatedPurchaseQty,
+                'unit_price' => $unitPrice,
+                'purchase_vol_in_year' => $purchaseValue,
+            ];
+        }
+
+        return $rows;
+    }
+
+    protected function getFiscalUsageMap($fiscalYear, $warehouseId = null, $dataSource = 'closed')
+    {
+        if ($dataSource === 'with_unclosed') {
+            return $this->getFiscalUsageMapWithUnclosed($fiscalYear, $warehouseId);
+        }
+
+        $query = (new Query())
+            ->select([
+                'item_code' => 'r.item_code',
+                'usage_qty' => new Expression('SUM(COALESCE(r.total_out_qty, 0))'),
+                'usage_value' => new Expression('SUM(COALESCE(r.total_out_value, 0))'),
+                'in_qty' => new Expression('SUM(COALESCE(r.in_qty, 0) + COALESCE(r.adjust_in_qty, 0))'),
+                'in_value' => new Expression('SUM(COALESCE(r.in_value, 0) + COALESCE(r.adjust_in_value, 0))'),
+            ])
+            ->from(['r' => StockMonthlyReport::tableName()])
+            ->groupBy(['r.item_code']);
+
+        $this->applyProcurementFiscalRange($query, 'r', $fiscalYear);
+        if ($warehouseId) {
+            $query->andWhere(['r.warehouse_id' => $warehouseId]);
+        }
+
+        $map = [];
+        foreach ($query->all() as $row) {
+            $map[(string) $row['item_code']] = $row;
+        }
+
+        return $map;
+    }
+
+    protected function getFiscalUsageMapWithUnclosed($fiscalYear, $warehouseId = null)
+    {
+        $map = [];
+        $months = $this->getProcurementFiscalMonths($fiscalYear);
+
+        foreach ($this->getProcurementWarehouseIds($warehouseId) as $wid) {
+            $openingOverride = null;
+            foreach ($months as $period) {
+                $closedRows = $this->getClosedProcurementMonthRows((int) $period['year'], (int) $period['month'], $wid);
+                if ($closedRows !== null) {
+                    $this->addProcurementUsageRows($map, $closedRows);
+                    $openingOverride = null;
+                    continue;
+                }
+
+                $computedRows = self::computeMonthlyRows($wid, (int) $period['year'], (int) $period['month'], $openingOverride);
+                $this->addProcurementUsageRows($map, $computedRows);
+                $openingOverride = self::closingMapFromRows($computedRows);
+            }
+        }
+
+        return $map;
+    }
+
+    protected function getOpeningInventoryMap($fiscalYear, $warehouseId = null, $dataSource = 'closed')
+    {
+        if ($dataSource === 'with_unclosed') {
+            return $this->getOpeningInventoryMapWithUnclosed($fiscalYear, $warehouseId);
+        }
+
+        $query = (new Query())
+            ->select([
+                'item_code' => 'r.item_code',
+                'closing_qty' => new Expression('SUM(COALESCE(r.closing_qty, 0))'),
+            ])
+            ->from(['r' => StockMonthlyReport::tableName()])
+            ->where([
+                'r.report_year' => $this->procurementFiscalYearEndYear($fiscalYear) - 1,
+                'r.report_month' => 9,
+            ])
+            ->groupBy(['r.item_code']);
+
+        if ($warehouseId) {
+            $query->andWhere(['r.warehouse_id' => $warehouseId]);
+        }
+
+        $map = [];
+        foreach ($query->all() as $row) {
+            $map[(string) $row['item_code']] = (float) $row['closing_qty'];
+        }
+
+        return $map;
+    }
+
+    protected function getOpeningInventoryMapWithUnclosed($fiscalYear, $warehouseId = null)
+    {
+        $year = $this->procurementFiscalYearEndYear($fiscalYear) - 1;
+        $month = 9;
+        $map = [];
+
+        foreach ($this->getProcurementWarehouseIds($warehouseId) as $wid) {
+            $rows = $this->getClosedProcurementMonthRows($year, $month, $wid);
+            if ($rows === null) {
+                $rows = $this->computeProcurementRowsThroughMonth($wid, $year, $month);
+            }
+
+            foreach ($rows as $row) {
+                $code = (string) ($row['item_code'] ?? '');
+                if ($code === '') {
+                    continue;
+                }
+                if (!isset($map[$code])) {
+                    $map[$code] = 0.0;
+                }
+                $map[$code] += (float) ($row['closing_qty'] ?? 0);
+            }
+        }
+
+        return $map;
+    }
+
+    protected function addProcurementUsageRows(array &$map, array $rows): void
+    {
+        foreach ($rows as $row) {
+            $code = (string) ($row['item_code'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+
+            if (!isset($map[$code])) {
+                $map[$code] = [
+                    'usage_qty' => 0.0,
+                    'usage_value' => 0.0,
+                    'in_qty' => 0.0,
+                    'in_value' => 0.0,
+                ];
+            }
+
+            $map[$code]['usage_qty'] += (float) ($row['total_out_qty'] ?? 0);
+            $map[$code]['usage_value'] += (float) ($row['total_out_value'] ?? 0);
+            $map[$code]['in_qty'] += (float) ($row['in_qty'] ?? 0) + (float) ($row['adjust_in_qty'] ?? 0);
+            $map[$code]['in_value'] += (float) ($row['in_value'] ?? 0) + (float) ($row['adjust_in_value'] ?? 0);
+        }
+    }
+
+    protected function getClosedProcurementMonthRows($year, $month, $warehouseId)
+    {
+        $rows = (new Query())
+            ->from(StockMonthlyReport::tableName())
+            ->where([
+                'report_year' => $year,
+                'report_month' => $month,
+                'warehouse_id' => $warehouseId,
+            ])
+            ->all();
+
+        return empty($rows) ? null : $rows;
+    }
+
+    protected function computeProcurementRowsThroughMonth($warehouseId, $targetYear, $targetMonth)
+    {
+        $fiscalYear = ((int) $targetMonth >= 10 ? (int) $targetYear + 1 : (int) $targetYear) + 543;
+        $openingOverride = null;
+        $rows = [];
+
+        foreach ($this->getProcurementFiscalMonths($fiscalYear) as $period) {
+            $year = (int) $period['year'];
+            $month = (int) $period['month'];
+            $closedRows = $this->getClosedProcurementMonthRows($year, $month, $warehouseId);
+            if ($closedRows !== null) {
+                $rows = $closedRows;
+                $openingOverride = null;
+            } else {
+                $rows = self::computeMonthlyRows($warehouseId, $year, $month, $openingOverride);
+                $openingOverride = self::closingMapFromRows($rows);
+            }
+
+            if ($year === (int) $targetYear && $month === (int) $targetMonth) {
+                break;
+            }
+        }
+
+        return $rows;
+    }
+
+    protected function getProcurementFiscalMonths($fiscalYear)
+    {
+        $endYear = $this->procurementFiscalYearEndYear($fiscalYear);
+        $months = [];
+
+        for ($month = 10; $month <= 12; $month++) {
+            $months[] = ['year' => $endYear - 1, 'month' => $month];
+        }
+        for ($month = 1; $month <= 9; $month++) {
+            $months[] = ['year' => $endYear, 'month' => $month];
+        }
+
+        return $months;
+    }
+
+    protected function getProcurementWarehouseIds($warehouseId = null)
+    {
+        if ($warehouseId) {
+            return [(int) $warehouseId];
+        }
+
+        return array_map('intval', Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->select('id')
+            ->column());
+    }
+
+    protected function getCurrentBalanceMap($warehouseId = null)
+    {
+        $query = (new Query())
+            ->select([
+                'item_code' => 'b.item_code',
+                'balance_qty' => new Expression('SUM(COALESCE(b.balance_qty, 0))'),
+            ])
+            ->from(['b' => StockBalance::tableName()])
+            ->groupBy(['b.item_code']);
+
+        if ($warehouseId) {
+            $query->andWhere(['b.warehouse_id' => $warehouseId]);
+        }
+
+        $map = [];
+        foreach ($query->all() as $row) {
+            $map[(string) $row['item_code']] = (float) $row['balance_qty'];
+        }
+
+        return $map;
+    }
+
+    protected function applyProcurementFiscalRange(Query $query, $alias, $fiscalYear)
+    {
+        $endYear = $this->procurementFiscalYearEndYear($fiscalYear);
+
+        $query->andWhere([
+            'or',
+            ['and', ["{$alias}.report_year" => $endYear - 1], ['>=', "{$alias}.report_month", 10]],
+            ['and', ["{$alias}.report_year" => $endYear], ['<=', "{$alias}.report_month", 9]],
+        ]);
+    }
+
+    protected function procurementFiscalYearEndYear($fiscalYear)
+    {
+        return (int) $fiscalYear - 543;
+    }
+
+    protected function decodeProcurementPlanJson($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    protected function extractProcurementJsonValue(array $data, array $keys)
+    {
+        foreach ($keys as $key) {
+            if (isset($data[$key]) && trim((string) $data[$key]) !== '') {
+                return trim((string) $data[$key]);
+            }
+        }
+
+        return '';
+    }
+
+    protected function getProcurementPlanHeaders($fiscalYear)
+    {
+        return [
+            'seq' => 'ลำดับ',
+            'plan_type' => 'ประเภทแผนปฏิบัติการจัดซื้อ',
+            'category_plan' => 'ประเภทแผนปฏิบัติการจัดซื้อเวชภัณฑ์ที่มิใช่ยา',
+            'item_name' => 'รายการเวชภัณฑ์ที่มิใช่ยา',
+            'packaging_size' => 'ขนาดบรรจุ',
+            'unit_name' => 'หน่วยนับ',
+            'usage_year_1' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 3),
+            'usage_year_2' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 2),
+            'usage_year_3' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 1),
+            'opening_inventory_qty' => 'ปริมาณคงคลังยกมา',
+            'estimated_amount_used' => 'ประมาณการปริมาณใช้ในปี ' . $fiscalYear,
+            'estimated_purchase_quantity' => 'ประมาณการปริมาณซื้อในปี ' . $fiscalYear,
+            'unit_price' => 'ราคา/หน่วยนับ (บาท)',
+            'purchase_vol_in_year' => 'มูลค่าจัดซื้อปี ' . $fiscalYear . ' (บาท)',
+        ];
+    }
+
+    protected function streamProcurementPlanXlsx(array $rows, $fiscalYear, $filename)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('procurementPlan');
+
+        $headers = $this->getProcurementPlanHeaders($fiscalYear);
+        $colIndex = 1;
+        foreach ($headers as $header) {
+            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex++);
+            $sheet->setCellValue($column . '1', $header);
+        }
+
+        $rowIndex = 2;
+        foreach ($rows as $row) {
+            $colIndex = 1;
+            foreach (array_keys($headers) as $key) {
+                $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex++);
+                $sheet->setCellValue($column . $rowIndex, $row[$key] ?? '');
+            }
+            $rowIndex++;
+        }
+
+        $lastColumn = $sheet->getHighestColumn();
+        $lastRow = max($rowIndex - 1, 1);
+        $sheet->freezePane('A2');
+        $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
+            'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'EEF2F7'],
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'D9E2EC']],
+            ],
+        ]);
+        $sheet->getStyle("A1:{$lastColumn}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("H2:S{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle("A2:A{$lastRow}")->getNumberFormat()->setFormatCode('0');
+        $sheet->getStyle("D2:D{$lastRow}")->getNumberFormat()->setFormatCode('0');
+
+        $widths = [12, 24, 34, 10, 42, 16, 14, 18, 18, 18, 18, 22, 22, 18, 22, 22, 22, 22, 22];
+        foreach ($widths as $index => $width) {
+            $sheet->getColumnDimensionByColumn($index + 1)->setWidth($width);
+        }
+        $sheet->getDefaultRowDimension()->setRowHeight(22);
+        $sheet->getRowDimension(1)->setRowHeight(42);
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'procurement-plan-');
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        return Yii::$app->response->sendFile($tempPath, $filename)->on(\yii\web\Response::EVENT_AFTER_SEND, function () use ($tempPath) {
+            @unlink($tempPath);
+        });
+    }
 }
