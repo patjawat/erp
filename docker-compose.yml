@@ -12,6 +12,9 @@ services:
     volumes:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
+      # Keep dependencies on Docker's Linux filesystem. Extracting the large
+      # google/apiclient-services archive to a Windows bind mount is very slow.
+      - composer_vendor:/app/vendor
       - ./docker-php-memlimit.ini:/usr/local/etc/php/conf.d/docker-php-memlimit.ini
       # - /Volumes/Backup/erp/source/dansai/fileupload:/app/modules/filemanager/fileupload
     ports:
@@ -91,3 +94,6 @@ services:
 networks:
   web-network:
     driver: bridge
+
+volumes:
+  composer_vendor:

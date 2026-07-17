@@ -116,7 +116,7 @@
         "allow-plugins": {
             "yiisoft/yii2-composer": true
         },
-        "process-timeout": 1800,
+        "process-timeout": 0,
         "fxp-asset": {
             "enabled": false
         }
