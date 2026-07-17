@@ -94,5 +94,6 @@ $modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบา
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
 $modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริการออนไลน์ (แอปมือถือ)
 $modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PDF Template positioning (resolution-independent), URL: /pdf-template
+$modules['medsop'] = ['class' => 'app\modules\medsop\Module'];  // ระบบคลังเอกสาร SOP/WI
 $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 return $modules;
