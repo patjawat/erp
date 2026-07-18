@@ -13,6 +13,7 @@ use app\modules\medsop\models\DocumentAudience;
 use app\modules\medsop\models\DocumentAssignment;
 use app\modules\medsop\models\MedSopSetting;
 use app\modules\medsop\models\OrganizationSetting;
+use app\modules\medsop\models\TeamSetting;
 use app\modules\medsop\services\DocumentAccessService;
 use app\modules\medsop\services\AudienceConfigurationService;
 use app\modules\medsop\services\DocumentAssignmentService;
@@ -155,7 +156,17 @@ class DocumentController extends Controller
             throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบเท่านั้นที่ตั้งค่า MedSOP ได้');
         }
         $organizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
+        $organizationsById = [];
+        foreach ($organizations as $organization) {
+            $organizationsById[(int) $organization->id] = $organization;
+        }
         $organizationSettings = OrganizationSetting::find()->indexBy('organization_id')->all();
+        $teamGroups = TeamGroup::find()->where(['deleted_at' => null])->orderBy(['title' => SORT_ASC])->all();
+        $teamGroupsById = [];
+        foreach ($teamGroups as $teamGroup) {
+            $teamGroupsById[(int) $teamGroup->id] = $teamGroup;
+        }
+        $teamSettings = TeamSetting::find()->indexBy('team_group_id')->all();
 
         if (Yii::$app->request->isPost) {
             $transaction = Yii::$app->db->beginTransaction();
@@ -214,12 +225,8 @@ class DocumentController extends Controller
                     $model = $organizationSettings[$organizationId] ?? new OrganizationSetting(['organization_id' => $organizationId]);
                     $organizationCode = strtoupper(trim((string) ($row['code'] ?? '')));
                     $model->code = $organizationCode !== '' ? $organizationCode : null;
-                    $coordinatorTeam = trim((string) ($row['coordinator_team'] ?? ''));
-                    $model->coordinator_team = $coordinatorTeam !== '' ? $coordinatorTeam : null;
                     $organizationCategories = array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', (string) ($row['document_categories'] ?? ''))))));
                     $model->document_categories = $organizationCategories ? json_encode($organizationCategories, JSON_UNESCAPED_UNICODE) : null;
-                    $model->coordinator_team_group_id = !empty($row['coordinator_team_group_id']) ? (int) $row['coordinator_team_group_id'] : null;
-                    $model->coordinator_employee_id = !empty($row['coordinator_employee_id']) ? (int) $row['coordinator_employee_id'] : null;
                     $model->active = !empty($row['active']);
                     $model->updated_by = Yii::$app->user->id;
                     $model->updated_at = date('Y-m-d H:i:s');
@@ -228,7 +235,32 @@ class DocumentController extends Controller
                         $model->created_at = date('Y-m-d H:i:s');
                     }
                     if (!$model->save()) {
-                        throw new \RuntimeException(implode(' ', $model->getFirstErrors()));
+                        $organizationName = isset($organizationsById[$organizationId])
+                            ? $organizationsById[$organizationId]->name
+                            : 'รหัสหน่วยงาน ' . $organizationId;
+                        throw new \RuntimeException($organizationName . ': ' . implode(' ', $model->getFirstErrors()));
+                    }
+                }
+                foreach ((array) Yii::$app->request->post('teams', []) as $teamGroupId => $row) {
+                    $teamGroupId = (int) $teamGroupId;
+                    $model = $teamSettings[$teamGroupId] ?? new TeamSetting(['team_group_id' => $teamGroupId]);
+                    $teamCode = strtoupper(trim((string) ($row['code'] ?? '')));
+                    $model->code = $teamCode !== '' ? $teamCode : null;
+                    $teamCategories = array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', (string) ($row['document_categories'] ?? ''))))));
+                    $model->document_categories = $teamCategories ? json_encode($teamCategories, JSON_UNESCAPED_UNICODE) : null;
+                    $model->leader_employee_id = !empty($row['leader_employee_id']) ? (int) $row['leader_employee_id'] : null;
+                    $model->active = !empty($row['active']);
+                    $model->updated_by = Yii::$app->user->id;
+                    $model->updated_at = date('Y-m-d H:i:s');
+                    if ($model->isNewRecord) {
+                        $model->created_by = Yii::$app->user->id;
+                        $model->created_at = date('Y-m-d H:i:s');
+                    }
+                    if (!$model->save()) {
+                        $teamName = isset($teamGroupsById[$teamGroupId])
+                            ? $teamGroupsById[$teamGroupId]->title
+                            : 'รหัสทีม ' . $teamGroupId;
+                        throw new \RuntimeException($teamName . ': ' . implode(' ', $model->getFirstErrors()));
                     }
                 }
                 $transaction->commit();
@@ -246,9 +278,39 @@ class DocumentController extends Controller
             }
         }
 
-        $coordinatorEmployeeIds = array_values(array_unique(array_filter(array_map(static function ($setting) {
-            return (int) $setting->coordinator_employee_id;
-        }, $organizationSettings))));
+        $organizationLeaderIds = [];
+        foreach ($organizations as $organization) {
+            $data = is_array($organization->data_json)
+                ? $organization->data_json
+                : (json_decode((string) $organization->data_json, true) ?: []);
+            $leaderId = (int) ($data['leader_1'] ?? $data['leader1'] ?? 0);
+            if ($leaderId > 0) $organizationLeaderIds[(int) $organization->id] = $leaderId;
+        }
+        $teamChairIds = [];
+        foreach ($teamSettings as $teamGroupId => $teamSetting) {
+            if (!empty($teamSetting->leader_employee_id)) {
+                $teamChairIds[(int) $teamGroupId] = (int) $teamSetting->leader_employee_id;
+            }
+        }
+        $teamIds = array_keys($teamGroupsById);
+        if ($teamIds !== []) {
+            $committeeRows = TeamGroupDetail::find()
+                ->where(['name' => 'committee', 'category_id' => $teamIds, 'deleted_at' => null])
+                ->orderBy(['thai_year' => SORT_DESC, 'id' => SORT_DESC])
+                ->all();
+            foreach ($committeeRows as $committeeRow) {
+                $teamId = (int) $committeeRow->category_id;
+                if (isset($teamChairIds[$teamId])) continue;
+                $data = is_array($committeeRow->data_json) ? $committeeRow->data_json : (json_decode((string) $committeeRow->data_json, true) ?: []);
+                if ((string) ($data['committee_id'] ?? '') === '1' || mb_strpos((string) ($data['committee_name'] ?? ''), 'ประธาน') !== false) {
+                    $teamChairIds[$teamId] = (int) $committeeRow->emp_id;
+                }
+            }
+        }
+        $responsibleEmployeeIds = array_values(array_unique(array_filter(array_merge(array_values($organizationLeaderIds), array_values($teamChairIds)))));
+        $responsibleEmployees = $responsibleEmployeeIds
+            ? Employees::find()->where(['id' => $responsibleEmployeeIds])->indexBy('id')->all()
+            : [];
         return $this->render('setting', [
             'access' => $access,
             'organizations' => $organizations,
@@ -259,8 +321,11 @@ class DocumentController extends Controller
             'documentTypes' => MedSopSetting::documentTypes(),
             'categories' => MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI']),
             'announcementStatuses' => MedSopSetting::listValue(MedSopSetting::ANNOUNCEMENT_STATUSES, ['ACTIVE' => 'ประกาศใช้']),
-            'teamGroups' => TeamGroup::find()->where(['deleted_at' => null])->orderBy(['title' => SORT_ASC])->all(),
-            'coordinatorEmployees' => $coordinatorEmployeeIds ? Employees::find()->where(['id' => $coordinatorEmployeeIds])->indexBy('id')->all() : [],
+            'teamGroups' => $teamGroups,
+            'teamSettings' => $teamSettings,
+            'organizationLeaderIds' => $organizationLeaderIds,
+            'teamChairIds' => $teamChairIds,
+            'responsibleEmployees' => $responsibleEmployees,
             'saveError' => $saveError,
         ]);
     }
