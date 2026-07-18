@@ -110,6 +110,11 @@ class Employees extends Yii\db\ActiveRecord
         return 'employees';
     }
 
+    public static function primaryKey()
+    {
+        return ['id'];
+    }
+
     public function rules()
     {
         return [

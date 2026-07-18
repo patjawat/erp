@@ -1,6 +1,13 @@
 # MedSOP PRO Development Checklist
 
-อัปเดตล่าสุด: 17 กรกฎาคม 2569
+อัปเดตล่าสุด: 18 กรกฎาคม 2569
+
+## การส่งต่อให้ทีมทดสอบ
+
+- รัน migration ด้วย `php yii migrate/up --migrationPath=@app/modules/medsop/migrations --interactive=0`
+- Migration ของ MedSOP ทั้ง 6 รายการถูก apply ในฐานข้อมูล development แล้ว และตรวจซ้ำพบว่าไม่มี migration ค้าง
+- เอกสารทดสอบ ID 4 อยู่สถานะ `PUBLISHED` พร้อมผู้รับ 5 คน รวม employee ID 141 สำหรับทดสอบการเปิดอ่านและลงชื่อรับทราบ
+- ก่อนขึ้น production ให้ทีมทดสอบสิทธิ์ผู้ดูแล/ผู้รับเอกสาร, การเปิดอ่าน, การลงชื่อรับทราบ, Slide view และการส่งออก PDF อีกครั้งใน environment เป้าหมาย
 
 ## ขอบเขตที่อนุญาต
 
@@ -24,6 +31,7 @@
 
 - [x] สร้าง Module และลงทะเบียนใน config
 - [x] สร้าง Migration ตารางเอกสาร ขั้นตอน Revision และการตั้งค่า
+- [x] นำ Migration ของ MedSOP เข้า database `erp` หลังคืนข้อมูลวันที่ 14 กรกฎาคม 2569
 - [x] สร้าง ActiveRecord และ Search Model
 - [x] สร้าง Service สำหรับเอกสาร สิทธิ์ การอนุมัติ และไฟล์
 - [x] สร้าง Controller พร้อม server-side access control ระยะแรก
@@ -33,8 +41,10 @@
 - [x] คลังเอกสารและตัวกรอง
 - [x] Desktop table และ Mobile card list
 - [x] ฟอร์มสร้าง/แก้ไขพร้อม Dynamic Steps
+- [x] SweetAlert2 ยืนยันก่อนบันทึก แสดง loading ตามผลจริง และ redirect ไปหน้า View หลังสำเร็จ
 - [x] หน้ารายละเอียดและ Steps Timeline
 - [x] สถานะ Access Denied
+- [x] เพิ่มเมนู “คลัง SOP/WI” ใน navigation หลัก
 - [ ] Admin Console และ KPI
 - [ ] Empty, loading, validation และ error states
 

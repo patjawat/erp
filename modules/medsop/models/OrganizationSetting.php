@@ -23,6 +23,10 @@ class OrganizationSetting extends ActiveRecord
             [['organization_id'], 'required'],
             [['organization_id', 'created_by', 'updated_by'], 'integer'],
             [['active'], 'boolean'],
+            [['code'], 'string', 'max' => 20],
+            [['coordinator_team'], 'string', 'max' => 255],
+            [['code'], 'match', 'pattern' => '/^[A-Z0-9_-]+$/', 'message' => 'ใช้อักษรอังกฤษตัวพิมพ์ใหญ่ ตัวเลข ขีดกลาง หรือขีดล่างเท่านั้น'],
+            [['code'], 'unique'],
             [['created_at', 'updated_at'], 'safe'],
         ];
     }

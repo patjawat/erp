@@ -28,7 +28,7 @@ class DocumentSearch extends Model
 
         $provider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => ['pageSize' => 20],
+            'pagination' => ['pageSize' => 4],
             'sort' => ['defaultOrder' => ['updated_at' => SORT_DESC]],
         ]);
 
@@ -44,6 +44,8 @@ class DocumentSearch extends Model
                 ['like', 'd.title', $this->q],
                 ['like', 'd.document_no', $this->q],
                 ['like', 'd.objective', $this->q],
+                ['like', 'd.keywords', $this->q],
+                ['like', 'd.category', $this->q],
             ]);
         }
         return $provider;

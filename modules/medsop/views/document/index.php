@@ -5,65 +5,64 @@ use app\modules\medsop\models\Document;
 use yii\helpers\Html;
 
 MedSopAsset::register($this);
-$this->title = 'คลังเอกสาร SOP/WI';
+$this->title = 'คลังขั้นตอนปฏิบัติงานมาตรฐาน';
 $models = $dataProvider->getModels();
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>ค้นหาและเปิดอ่านเอกสารคุณภาพตามสิทธิ์ของคุณ<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?><?= $this->render('_nav') ?><?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>ค้นหา SOP และ WI ที่ใช้งานในโรงพยาบาลตามสิทธิ์ของคุณ<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?><?= $this->render('_nav', ['access' => $access, 'active' => 'index']) ?><?php $this->endBlock(); ?>
 
-<div class="medsop-index">
+<div>
     <?= $this->render('_search', ['searchModel' => $searchModel]) ?>
 
-    <section class="medsop-kpi" aria-label="สรุปข้อมูลเอกสาร">
-        <?php foreach ([['เอกสารทั้งหมด', $kpi['total']], ['รออนุมัติ', $kpi['pending']], ['เผยแพร่แล้ว', $kpi['published']], ['แผนกที่มีเอกสาร', $kpi['organizations']]] as $metric): ?>
-            <div class="medsop-kpi__item"><strong><?= number_format($metric[1]) ?></strong><span><?= Html::encode($metric[0]) ?></span></div>
-        <?php endforeach; ?>
-    </section>
-
-    <section class="card shadow-sm medsop-list" aria-labelledby="medsop-list-title">
-        <div class="medsop-list__head">
-            <h2 id="medsop-list-title">รายการเอกสาร</h2>
-            <span><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
+    <section aria-labelledby="medsop-list-title">
+        <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
+            <div>
+                <h2 id="medsop-list-title" class="h6 fw-semibold mb-1">รายการเอกสาร</h2>
+                <p class="small text-body-secondary mb-0">พบ <?= number_format($dataProvider->getTotalCount()) ?> เอกสารที่คุณเปิดอ่านได้</p>
+            </div>
+            <?php if ($access->canCreate()): ?>
+                <?= Html::a('<i class="bi bi-plus-circle me-sm-2" aria-hidden="true"></i><span class="d-none d-sm-inline">สร้างเอกสาร</span><span class="visually-hidden d-sm-none">สร้างเอกสาร</span>', ['/medsop/document/create'], [
+                    'class' => 'btn btn-primary flex-shrink-0 medsop-primary-action',
+                    'aria-label' => 'สร้างเอกสารใหม่',
+                ]) ?>
+            <?php endif; ?>
         </div>
         <?php if (!$models): ?>
-            <div class="medsop-empty">
-                <h3>ไม่พบเอกสารตามเงื่อนไข</h3>
-                <p>ลองเปลี่ยนคำค้นหา ประเภท หรือสถานะ แล้วค้นหาอีกครั้ง</p>
+            <div class="card-body text-center py-5" role="status">
+                <h3 class="h5 fw-semibold">ไม่พบเอกสารตามเงื่อนไข</h3>
+                <p class="text-body-secondary">ลองเปลี่ยนคำค้นหา ประเภท หรือสถานะ แล้วค้นหาอีกครั้ง</p>
                 <?= Html::a('ล้างตัวกรอง', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
             </div>
         <?php else: ?>
-            <div class="d-none d-lg-block">
-                <table class="medsop-table">
-                    <thead><tr><th>เลขที่เอกสาร</th><th>ชื่อเอกสาร</th><th>แผนก</th><th>ประเภท</th><th>แก้ไขล่าสุด</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead>
-                    <tbody>
-                    <?php foreach ($models as $model): $badge = Document::getStatusBadgeConfigFor($model->status); ?>
-                        <tr>
-                            <td class="medsop-table__number"><?= Html::encode($model->document_no) ?></td>
-                            <td><strong><?= Html::encode($model->title) ?></strong><small><?= Html::encode(mb_strimwidth($model->objective, 0, 100, '…', 'UTF-8')) ?></small></td>
-                            <td><?= Html::encode(isset($organizations[$model->organization_id]) ? $organizations[$model->organization_id]->name : 'ไม่ระบุ') ?></td>
-                            <td><?= Html::encode($model->document_type) ?></td>
-                            <td class="medsop-table__date"><?= Yii::$app->formatter->asDate($model->updated_at, 'medium') ?></td>
-                            <td><span class="<?= Html::encode($badge['class']) ?>"><i data-lucide="<?= Html::encode($badge['icon']) ?>"></i><?= Html::encode($badge['label']) ?></span></td>
-                            <td class="text-end"><?= Html::a('เปิดดู', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <ul class="medsop-mobile-list d-lg-none" role="list">
-                <?php foreach ($models as $model): $badge = Document::getStatusBadgeConfigFor($model->status); ?>
-                    <li>
-                        <div class="d-flex justify-content-between gap-2"><strong><?= Html::encode($model->document_no) ?></strong><span class="<?= Html::encode($badge['class']) ?>"><?= Html::encode($badge['label']) ?></span></div>
-                        <h3><?= Html::encode($model->title) ?></h3>
-                        <p><?= Html::encode(isset($organizations[$model->organization_id]) ? $organizations[$model->organization_id]->name : 'ไม่ระบุ') ?> · <?= Html::encode($model->document_type) ?></p>
-                        <?= Html::a('เปิดดูเอกสาร', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+            <ul class="medsop-catalog" role="list">
+                <?php foreach ($models as $model):
+                    $badge = Document::getStatusBadgeConfigFor($model->status);
+                    $cover = $model->cover_image;
+                    foreach ($model->steps as $documentStep) {
+                        foreach ($documentStep->media as $stepMedia) {
+                            if (!$cover && $stepMedia->media_type === 'image') { $cover = $stepMedia->file_path; break 2; }
+                        }
+                    }
+                ?>
+                    <li class="medsop-catalog-card position-relative">
+                        <div class="medsop-catalog-card__cover<?= $cover ? ' has-image' : '' ?>"<?php if ($cover): ?> style="background-image:url('<?= Html::encode($cover) ?>')"<?php endif; ?>>
+                            <div class="medsop-catalog-card__cover-overlay">
+                                <span class="medsop-catalog-card__department"><?= Html::encode(isset($organizations[$model->organization_id]) ? $organizations[$model->organization_id]->name : 'ไม่ระบุแผนก') ?></span>
+                                <h3 class="medsop-catalog-card__cover-title"><?= Html::encode($model->title) ?></h3>
+                            </div>
+                        </div>
+                        <div class="medsop-catalog-card__body">
+                            <div class="d-flex justify-content-between align-items-start gap-2"><div><span class="medsop-catalog-card__type me-2"><?= Html::encode($model->document_type) ?></span><strong class="medsop-code"><?= Html::encode($model->document_no) ?></strong></div><span class="<?= Html::encode($badge['class']) ?>"><?= Html::encode($badge['label']) ?></span></div>
+                            <p class="medsop-catalog-card__objective"><?= Html::encode(mb_strimwidth($model->objective, 0, 120, '…', 'UTF-8')) ?></p>
+                        </div>
+                        <div class="medsop-catalog-card__footer"><span>ปรับปรุง <?= Yii::$app->formatter->asDate($model->updated_at, 'medium') ?></span><?= Html::a('ศึกษาขั้นตอน <i class="bi bi-arrow-right" aria-hidden="true"></i>', ['view', 'id' => $model->id], ['class' => 'stretched-link medsop-card-link', 'aria-label' => 'ศึกษาขั้นตอน ' . $model->title]) ?></div>
                     </li>
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
         <?php if ($dataProvider->getTotalCount() > 0): ?>
-            <footer class="medsop-list__footer"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></footer>
+            <footer class="mt-3 py-3 border-top"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></footer>
         <?php endif; ?>
     </section>
 </div>

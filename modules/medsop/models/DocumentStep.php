@@ -16,7 +16,8 @@ class DocumentStep extends ActiveRecord
         return [
             [['document_id', 'step_order', 'title'], 'required'],
             [['document_id', 'step_order'], 'integer'],
-            [['description', 'caution'], 'string'],
+            [['description', 'caution', 'related_links'], 'string'],
+            [['related_links'], 'validateRelatedLinks'],
             [['title'], 'string', 'max' => 255],
             [['created_at', 'updated_at'], 'safe'],
         ];
@@ -25,6 +26,31 @@ class DocumentStep extends ActiveRecord
     public function getDocument()
     {
         return $this->hasOne(Document::class, ['id' => 'document_id']);
+    }
+
+    public function getMedia()
+    {
+        return $this->hasMany(DocumentStepMedia::class, ['step_id' => 'id'])->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC]);
+    }
+
+    public function getRelatedLinkItems(): array
+    {
+        $items = json_decode((string) $this->related_links, true);
+        return is_array($items) ? $items : [];
+    }
+
+    public function validateRelatedLinks($attribute): void
+    {
+        foreach ($this->getRelatedLinkItems() as $link) {
+            $url = trim((string) ($link['url'] ?? ''));
+            if ((int) ($link['document_id'] ?? 0) > 0) {
+                continue;
+            }
+            if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {
+                $this->addError($attribute, 'ลิงก์เอกสารที่เกี่ยวข้องไม่ถูกต้อง');
+                return;
+            }
+        }
     }
 
     public function beforeSave($insert)
