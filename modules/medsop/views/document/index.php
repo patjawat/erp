@@ -13,7 +13,7 @@ $models = $dataProvider->getModels();
 <?php $this->beginBlock('page-action'); ?><?= $this->render('_nav', ['access' => $access, 'active' => 'index']) ?><?php $this->endBlock(); ?>
 
 <div>
-    <?= $this->render('_search', ['searchModel' => $searchModel]) ?>
+    <?= $this->render('_search', ['searchModel' => $searchModel, 'filterOrganizations' => $filterOrganizations, 'filterCreators' => $filterCreators, 'categoryOptions' => $categoryOptions]) ?>
 
     <section aria-labelledby="medsop-list-title">
         <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
@@ -38,6 +38,8 @@ $models = $dataProvider->getModels();
             <ul class="medsop-catalog" role="list">
                 <?php foreach ($models as $model):
                     $badge = Document::getStatusBadgeConfigFor($model->status);
+                    $isReviewDue = $model->review_date && $model->review_date <= date('Y-m-d');
+                    $creator = $creators[$model->created_emp_id] ?? null;
                     $cover = $model->cover_image;
                     foreach ($model->steps as $documentStep) {
                         foreach ($documentStep->media as $stepMedia) {
@@ -54,9 +56,10 @@ $models = $dataProvider->getModels();
                         </div>
                         <div class="medsop-catalog-card__body">
                             <div class="d-flex justify-content-between align-items-start gap-2"><div><span class="medsop-catalog-card__type me-2"><?= Html::encode($model->document_type) ?></span><strong class="medsop-code"><?= Html::encode($model->document_no) ?></strong></div><span class="<?= Html::encode($badge['class']) ?>"><?= Html::encode($badge['label']) ?></span></div>
+                            <p class="medsop-catalog-card__meta mb-2"><?= Html::encode($model->category) ?><?php if ($creator): ?> · <?= Html::encode($creator->fullname()) ?><?php endif; ?></p>
                             <p class="medsop-catalog-card__objective"><?= Html::encode(mb_strimwidth($model->objective, 0, 120, '…', 'UTF-8')) ?></p>
                         </div>
-                        <div class="medsop-catalog-card__footer"><span>ปรับปรุง <?= Yii::$app->formatter->asDate($model->updated_at, 'medium') ?></span><?= Html::a('ศึกษาขั้นตอน <i class="bi bi-arrow-right" aria-hidden="true"></i>', ['view', 'id' => $model->id], ['class' => 'stretched-link medsop-card-link', 'aria-label' => 'ศึกษาขั้นตอน ' . $model->title]) ?></div>
+                        <div class="medsop-catalog-card__footer"><div><span class="d-block">ปรับปรุง <?= Yii::$app->formatter->asDate($model->updated_at, 'medium') ?></span><?php if ($model->review_date): ?><strong class="d-block<?= $isReviewDue ? ' medsop-review-due' : '' ?>"><?= $isReviewDue ? 'ถึงกำหนดทบทวน ' : 'ทบทวน ' ?><?= Yii::$app->formatter->asDate($model->review_date, 'medium') ?></strong><?php endif; ?></div><?= Html::a('ศึกษาขั้นตอน <i class="bi bi-arrow-right" aria-hidden="true"></i>', ['view', 'id' => $model->id], ['class' => 'stretched-link medsop-card-link', 'aria-label' => 'ศึกษาขั้นตอน ' . $model->title]) ?></div>
                     </li>
                 <?php endforeach; ?>
             </ul>

@@ -12,12 +12,15 @@ class DocumentSearch extends Model
     public $document_type;
     public $status;
     public $organization_id;
+    public $category;
+    public $created_emp_id;
+    public $review_state;
 
     public function rules()
     {
         return [
-            [['q', 'document_type', 'status'], 'string'],
-            [['organization_id'], 'integer'],
+            [['q', 'document_type', 'status', 'category', 'review_state'], 'string'],
+            [['organization_id', 'created_emp_id'], 'integer'],
         ];
     }
 
@@ -28,7 +31,7 @@ class DocumentSearch extends Model
 
         $provider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => ['pageSize' => 4],
+            'pagination' => ['pageSize' => 12],
             'sort' => ['defaultOrder' => ['updated_at' => SORT_DESC]],
         ]);
 
@@ -38,7 +41,16 @@ class DocumentSearch extends Model
 
         $query->andFilterWhere(['d.document_type' => $this->document_type])
             ->andFilterWhere(['d.status' => $this->status])
-            ->andFilterWhere(['d.organization_id' => $this->organization_id]);
+            ->andFilterWhere(['d.organization_id' => $this->organization_id])
+            ->andFilterWhere(['d.category' => $this->category])
+            ->andFilterWhere(['d.created_emp_id' => $this->created_emp_id]);
+        if ($this->review_state === 'DUE') {
+            $query->andWhere(['not', ['d.review_date' => null]])->andWhere(['<=', 'd.review_date', date('Y-m-d')]);
+        } elseif ($this->review_state === 'UPCOMING') {
+            $query->andWhere(['>', 'd.review_date', date('Y-m-d')])->andWhere(['<=', 'd.review_date', date('Y-m-d', strtotime('+90 days'))]);
+        } elseif ($this->review_state === 'NO_DATE') {
+            $query->andWhere(['d.review_date' => null]);
+        }
         if (trim((string) $this->q) !== '') {
             $query->andWhere(['or',
                 ['like', 'd.title', $this->q],

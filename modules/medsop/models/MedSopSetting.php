@@ -10,6 +10,7 @@ class MedSopSetting extends ActiveRecord
     public const WI_PREFIX = 'wi_prefix';
     public const CODE_PATTERN = 'code_pattern';
     public const DOCUMENT_CATEGORIES = 'document_categories';
+    public const DOCUMENT_TYPES = 'document_types';
     public const ANNOUNCEMENT_STATUSES = 'announcement_statuses';
 
     public static function tableName()
@@ -52,5 +53,10 @@ class MedSopSetting extends ActiveRecord
     {
         $decoded = json_decode(static::value($key, ''), true);
         return is_array($decoded) && $decoded !== [] ? $decoded : $default;
+    }
+
+    public static function documentTypes(): array
+    {
+        return static::listValue(self::DOCUMENT_TYPES, ['SOP' => 'SOP', 'WI' => 'WI']);
     }
 }

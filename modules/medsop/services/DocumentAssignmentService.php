@@ -59,7 +59,7 @@ class DocumentAssignmentService
                     'assigned_by' => $userId,
                 ]);
                 if (!$assignment->save()) {
-                    throw new \RuntimeException('ไม่สามารถสร้างรายการผู้รับเอกสารได้');
+                    throw new \RuntimeException('ไม่สามารถสร้างรายการผู้รับเอกสารได้: ' . implode(' ', $assignment->getFirstErrors()));
                 }
                 $this->writeLog($assignment, DocumentReadLog::EVENT_ASSIGNED, $userId, null, null);
                 $created++;
@@ -86,7 +86,7 @@ class DocumentAssignmentService
             'user_agent' => $userAgent,
         ]);
         if (!$log->save()) {
-            throw new \RuntimeException('ไม่สามารถบันทึกประวัติการมอบหมายเอกสารได้');
+            throw new \RuntimeException('ไม่สามารถบันทึกประวัติการมอบหมายเอกสารได้: ' . implode(' ', $log->getFirstErrors()));
         }
     }
 }

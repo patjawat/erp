@@ -27,7 +27,7 @@ class DocumentAssignment extends ActiveRecord
             [['status'], 'in', 'range' => self::statusOptions()],
             [['acknowledged_ip'], 'string', 'max' => 45],
             [['acknowledged_user_agent'], 'string', 'max' => 500],
-            [['document_id', 'revision_no', 'employee_id'], 'unique'],
+            [['document_id', 'revision_no', 'employee_id'], 'unique', 'targetAttribute' => ['document_id', 'revision_no', 'employee_id']],
         ];
     }
 

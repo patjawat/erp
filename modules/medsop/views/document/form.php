@@ -5,6 +5,7 @@ use app\components\AppHelper;
 use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\widgets\ActiveForm;
 
 MedSopAsset::register($this);
@@ -36,26 +37,27 @@ $stepRows = $stepRows ?: [['title' => '', 'description' => '', 'caution' => '', 
         <div class="medsop-document-order__icon" aria-hidden="true"><i class="bi bi-diagram-3"></i></div>
         <div><strong id="document-order-title" class="d-block mb-1">เริ่มจาก SOP แล้วจึงสร้าง WI</strong><p class="mb-0">SOP กำหนดภาพรวม จุดเริ่มต้น จุดสิ้นสุด ผู้รับผิดชอบ และเหตุผลของกระบวนการ ส่วน WI อธิบายวิธีปฏิบัติแบบทีละขั้นตอน ดังนั้น WI ทุกฉบับต้องอ้างอิง SOP หลักที่สร้างไว้แล้ว</p></div>
     </div><div class="row g-3">
-        <div class="col-12 col-md-4"><?= $form->field($model, 'document_no')->label(($model->document_type ?: Document::TYPE_SOP) . ' Code', ['data-document-code-label' => true])->textInput(['class' => 'form-control medsop-code-input', 'maxlength' => true, 'placeholder' => 'ระบบสร้างรหัสให้อัตโนมัติเมื่อบันทึก', 'readonly' => !$model->isNewRecord]) ?></div>
-        <div class="col-12 col-md-4"><?= $form->field($model, 'category')->label('หมวดหมู่เอกสาร (Category)')->dropDownList(array_combine($categories, $categories), ['prompt' => 'เลือกหมวดหมู่เอกสาร', 'class' => 'form-select']) ?></div>
-        <div class="col-12 col-md-4"><?= $form->field($model, 'announcement_status')->label('สถานะประกาศใช้เอกสาร')->dropDownList($announcementStatuses, ['prompt' => 'เลือกสถานะประกาศใช้', 'class' => 'form-select']) ?></div>
-        <div class="col-12 col-md-8"><?= $form->field($model, 'keywords')->label('คำสำคัญสำหรับการสืบค้น (Keywords)')->textInput(['class' => 'form-control', 'placeholder' => 'เช่น ความปลอดภัย, ผู้ป่วย, ห้องฉุกเฉิน'])->hint('คั่นคำสำคัญด้วยเครื่องหมายจุลภาค เพื่อช่วยให้ค้นหาเอกสารได้ง่ายขึ้น') ?></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="document-no-preview" data-document-code-label><?= Html::encode(($model->document_type ?: Document::TYPE_SOP) . ' Code') ?></label><?= Html::textInput(null, $model->document_no, ['id' => 'document-no-preview', 'class' => 'form-control medsop-code-input', 'placeholder' => 'ระบบสร้างรหัสให้อัตโนมัติเมื่อบันทึก', 'readonly' => true, 'aria-describedby' => 'document-code-help']) ?><div class="form-text" id="document-code-help">รหัสจะสร้างจากประเภทเอกสาร อักษรย่อหน่วยงาน ปี และเลขลำดับ</div></div>
+        <div class="col-12 col-md-4" data-flow-category><?= $form->field($model, 'category')->label('หมวดหมู่ของหน่วยงาน')->dropDownList(array_combine($categories, $categories), ['prompt' => 'เลือกหมวดหมู่ของหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?></div>
+        <div class="col-12 col-md-4"><?= $form->field($model, 'announcement_status')->label('สถานะประกาศใช้เอกสาร')->dropDownList($announcementStatuses, ['prompt' => 'เลือกสถานะประกาศใช้', 'class' => 'form-select', 'required' => true]) ?></div>
+        <div class="col-12 col-md-8"><?= $form->field($model, 'keywords')->label('คำสำคัญสำหรับการสืบค้น (Keywords)')->textInput(['class' => 'form-control', 'required' => true, 'placeholder' => 'เช่น ความปลอดภัย, ผู้ป่วย, ห้องฉุกเฉิน'])->hint('คั่นคำสำคัญด้วยเครื่องหมายจุลภาค เพื่อช่วยให้ค้นหาเอกสารได้ง่ายขึ้น') ?></div>
         <div class="col-12 col-md-4"><label class="form-label" for="document-review_date">วันที่ต้องทบทวนตรวจสอบ</label><?= DatepickerThai::widget(['name' => 'Document[review_date]', 'value' => $model->review_date ? AppHelper::convertToThai($model->review_date) : '', 'options' => ['id' => 'document-review_date', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.']]) ?></div>
         <div class="col-12 col-lg-6"><label class="form-label" for="cover-image">รูปปกเอกสาร</label><input id="cover-image" class="form-control" type="file" name="cover_image" accept="image/jpeg,image/png,image/webp"><div class="form-text">JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB ใช้แสดงในคลังเอกสาร</div><?php if ($model->cover_image): ?><img class="medsop-cover-preview mt-2" src="<?= Html::encode($model->cover_image) ?>" alt="รูปปกปัจจุบัน"><?php endif; ?></div>
         <div class="col-12 col-lg-6"><div class="d-flex justify-content-between align-items-center mb-2"><label class="form-label mb-0" data-related-document-label>SOP หรือ WI ที่เกี่ยวข้อง</label><button type="button" class="btn btn-sm btn-outline-secondary" data-add-related-link><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เลือกเอกสารเพิ่ม</button></div><div class="vstack gap-2" data-related-links><?php foreach ($relatedLinks as $linkIndex => $link): ?><div class="medsop-related-document" data-related-link><input type="search" class="form-control" data-document-search placeholder="ค้นหาจากรหัสหรือชื่อเอกสาร" aria-label="ค้นหา SOP หรือ WI"><?= Html::dropDownList("related_links[{$linkIndex}][document_id]", $relatedDocumentId($link), $relatedDocumentItems, ['prompt' => 'เลือก SOP หรือ WI ที่สร้างไว้', 'class' => 'form-select', 'data-document-select' => true]) ?><button class="btn btn-outline-danger" type="button" data-remove-related-link aria-label="นำเอกสารที่เกี่ยวข้องออก"><i class="bi bi-trash" aria-hidden="true"></i></button></div><?php endforeach; ?></div><div class="form-text" data-related-document-hint>ค้นหาและเลือกเอกสารที่สร้างไว้ สามารถเพิ่มได้หลายรายการ</div></div>
-        <div class="col-12 col-lg-6"><?= $form->field($model, 'title')->label('ชื่อเอกสาร ' . ($model->document_type ?: Document::TYPE_SOP), ['data-document-title-label' => true])->textInput(['class' => 'form-control', 'maxlength' => true]) ?></div>
-        <div class="col-12 col-sm-6 col-lg-3"><?= $form->field($model, 'document_type')->radioList(Document::typeOptions(), [
+        <div class="col-12 col-md-8" data-flow-title><?= $form->field($model, 'title')->label('ชื่อเอกสาร ' . ($model->document_type ?: Document::TYPE_SOP), ['data-document-title-label' => true])->textInput(['class' => 'form-control', 'maxlength' => true, 'required' => true]) ?></div>
+        <div class="col-12 col-md-4" data-flow-type><?= $form->field($model, 'document_type')->radioList(Document::typeOptions(), [
             'class' => 'btn-group w-100',
             'role' => 'group',
+            'unselect' => null,
             'item' => static function ($index, $label, $name, $checked, $value) use ($hasAvailableSop) {
                 $id = 'document-document_type-' . $index;
                 $disabled = $value === Document::TYPE_WI && !$hasAvailableSop && !$checked;
-                return Html::radio($name, $checked, ['id' => $id, 'value' => $value, 'class' => 'btn-check', 'autocomplete' => 'off', 'disabled' => $disabled])
+                return Html::radio($name, $checked, ['id' => $id, 'value' => $value, 'class' => 'btn-check', 'autocomplete' => 'off', 'disabled' => $disabled, 'required' => $index === 0])
                     . Html::label(Html::encode($label), $id, ['class' => 'btn btn-outline-primary flex-fill']);
             },
         ])->hint($hasAvailableSop ? 'เลือก SOP สำหรับภาพรวมกระบวนการ หรือ WI สำหรับวิธีปฏิบัติที่อ้างอิง SOP หลัก' : 'ต้องสร้าง SOP อย่างน้อย 1 ฉบับก่อน จึงจะสามารถเลือกสร้าง WI ได้') ?></div>
-        <div class="col-12 col-sm-6 col-lg-3"><?= $form->field($model, 'organization_id')->dropDownList($organizationItems, ['prompt' => 'เลือกแผนก/ฝ่าย', 'class' => 'form-select']) ?></div>
-        <div class="col-12 col-lg-6"><?= $form->field($model, 'objective')->textarea(['class' => 'form-control', 'rows' => 4]) ?></div>
+        <div class="col-12 col-md-4" data-flow-organization><?= $form->field($model, 'organization_id')->label('หน่วยงานเจ้าของเอกสาร')->dropDownList($organizationItems, ['prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?></div>
+        <div class="col-12 col-lg-6"><?= $form->field($model, 'objective')->textarea(['class' => 'form-control', 'rows' => 4, 'required' => true]) ?></div>
         <div class="col-12 col-lg-6"><?= $form->field($model, 'scope')->textarea(['class' => 'form-control', 'rows' => 4]) ?></div>
     </div></div>
 </section>
@@ -114,3 +116,38 @@ $stepRows = $stepRows ?: [['title' => '', 'description' => '', 'caution' => '', 
 <template data-step-related-document-row><div class="medsop-related-document" data-step-related-link><input type="search" class="form-control" data-document-search placeholder="ค้นหาจากรหัสหรือชื่อเอกสาร" aria-label="ค้นหา SOP หรือ WI"><?= Html::dropDownList('', null, $relatedDocumentItems, ['prompt' => 'เลือก SOP หรือ WI ที่สร้างไว้', 'class' => 'form-select', 'data-document-select' => true]) ?><button class="btn btn-outline-danger" type="button" data-remove-step-link aria-label="นำเอกสารที่เกี่ยวข้องออก"><i class="bi bi-trash" aria-hidden="true"></i></button></div></template>
 <div class="card shadow-sm position-sticky bottom-0 mt-3"><div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"><span class="text-body-secondary small">ระบบจะบันทึกเอกสารและทุกขั้นตอนพร้อมกัน</span><div class="d-flex gap-2"><?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary flex-fill']) ?><?= Html::submitButton('<span class="spinner-border spinner-border-sm me-2 d-none" data-save-spinner aria-hidden="true"></span><span data-save-label>บันทึกเอกสาร</span>', ['class' => 'btn btn-primary flex-fill', 'data-save-document' => true]) ?></div></div></div>
 <?php ActiveForm::end(); ?>
+<?php
+$categoryMapJson = Json::htmlEncode($organizationCategoryMap);
+$defaultCategoriesJson = Json::htmlEncode(array_values($defaultCategories));
+$this->registerJs(<<<JS
+(function () {
+  const organization = document.getElementById('document-organization_id');
+  const category = document.getElementById('document-category');
+  if (!organization || !category) return;
+  const categoryMap = {$categoryMapJson};
+  const defaultCategories = {$defaultCategoriesJson};
+  const flowType = document.querySelector('[data-flow-type]');
+  const flowOrganization = document.querySelector('[data-flow-organization]');
+  const flowCategory = document.querySelector('[data-flow-category]');
+  const flowTitle = document.querySelector('[data-flow-title]');
+  const row = flowType && flowType.parentElement;
+  if (row && flowOrganization && flowCategory && flowTitle) {
+    row.insertBefore(flowType, row.firstElementChild);
+    flowType.after(flowOrganization);
+    flowOrganization.after(flowCategory);
+    flowCategory.after(flowTitle);
+  }
+  function refreshCategories(preserveCurrent) {
+    const current = category.value;
+    const organizationId = organization.value;
+    const values = categoryMap[organizationId] || defaultCategories;
+    category.disabled = organizationId === '';
+    category.replaceChildren(new Option(organizationId === '' ? 'เลือกหน่วยงานก่อน' : 'เลือกหมวดหมู่ของหน่วยงาน', ''));
+    values.forEach(function (value) { category.add(new Option(value, value, false, value === current)); });
+    if (!preserveCurrent || !values.includes(current)) category.value = '';
+  }
+  organization.addEventListener('change', function () { refreshCategories(false); });
+  refreshCategories(true);
+})();
+JS);
+?>

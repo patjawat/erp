@@ -33,9 +33,9 @@ class Document extends ActiveRecord
             [['category'], 'string', 'max' => 100],
             [['announcement_status'], 'string', 'max' => 50],
             [['cover_image'], 'string', 'max' => 500],
-            [['document_type'], 'in', 'range' => [self::TYPE_SOP, self::TYPE_WI]],
+            [['document_type'], 'in', 'range' => array_keys(MedSopSetting::documentTypes())],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
-            [['category'], 'in', 'range' => MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI'])],
+            [['category'], 'validateCategory'],
             [['announcement_status'], 'in', 'range' => array_keys(MedSopSetting::listValue(MedSopSetting::ANNOUNCEMENT_STATUSES, ['ACTIVE' => 'ประกาศใช้']))],
             [['related_links'], 'validateRelatedLinks'],
             [['related_links'], 'validateWiHasParentSop'],
@@ -69,7 +69,22 @@ class Document extends ActiveRecord
 
     public static function typeOptions(): array
     {
-        return [self::TYPE_SOP => 'SOP', self::TYPE_WI => 'WI'];
+        return MedSopSetting::documentTypes();
+    }
+
+    public function validateCategory($attribute): void
+    {
+        $categories = MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI']);
+        $setting = $this->organization_id ? OrganizationSetting::findOne((int) $this->organization_id) : null;
+        if ($setting && $setting->document_categories) {
+            $organizationCategories = json_decode((string) $setting->document_categories, true);
+            if (is_array($organizationCategories) && $organizationCategories !== []) {
+                $categories = $organizationCategories;
+            }
+        }
+        if (!in_array((string) $this->$attribute, $categories, true)) {
+            $this->addError($attribute, 'หมวดหมู่เอกสารไม่ตรงกับหน่วยงานที่เลือก');
+        }
     }
 
     public static function getStatusBadgeConfigFor(string $status): array

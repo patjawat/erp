@@ -221,3 +221,11 @@
 .medsop-slide__step{width:100%;display:flex;flex-direction:column}.medsop-slide__step header span{color:#93c5fd;font-weight:700}.medsop-slide__step h2{font-size:clamp(1.8rem,4vw,3.25rem);margin:.35rem 0 1.5rem}.medsop-slide__body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:2rem;align-items:start}.medsop-slide__copy{font-size:1.15rem;line-height:1.75;color:#e2e8f0}.medsop-slide__copy aside{margin-top:1.5rem;padding:1rem;border:1px solid #d6a83f;border-radius:8px;background:#3b3424;color:#fff3c4}.medsop-slide figure{margin:0}.medsop-slide figure img{width:100%;max-height:55vh;object-fit:contain;border-radius:8px;background:#fff}.medsop-slide figcaption{margin-top:.5rem;color:#94a3b8}.medsop-slide-controls{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:1rem;background:#111827;border-top:1px solid #334155}.medsop-slide-controls>div{display:flex;gap:.35rem;min-width:4rem;justify-content:center;color:#cbd5e1}.medsop-slide-controls button{display:inline-flex;align-items:center;gap:.45rem;min-height:42px}
 @media(max-width:767.98px){.medsop-document-tools{justify-content:stretch}.medsop-document-tools .btn{flex:1}.medsop-slide-deck{min-height:calc(100vh - 160px)}.medsop-slide__body{grid-template-columns:1fr}.medsop-slide__copy{font-size:1rem}.medsop-slide-controls button span{display:none}}
 @media(prefers-reduced-motion:reduce){.medsop-slide{animation:none}}
+
+.medsop-form-section .form-group.required>.form-label::after,.medsop-form-section .form-group.required>.control-label::after{content:" *";color:#b91c1c}
+.medsop-form-section .form-control.is-invalid,.medsop-form-section .form-select.is-invalid{border-color:#b91c1c;background-color:#fff;box-shadow:0 0 0 3px rgba(185,28,28,.08)}
+.medsop-form-section .btn-check.is-invalid+.btn{border-color:#b91c1c;color:#b91c1c}
+[data-form-alert]{position:relative;border-radius:8px}
+@media(prefers-reduced-motion:reduce){.medsop-form-section .form-control,.medsop-form-section .form-select{transition:none}}
+.medsop-catalog-card__meta{font-size:.78rem;color:#4a5568;line-height:1.4}
+.medsop-review-due{margin-top:.2rem;color:#b91c1c;font-size:.78rem;font-weight:700}

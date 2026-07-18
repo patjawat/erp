@@ -66,7 +66,17 @@ class DocumentController extends Controller
             ? Organization::find()->where(['id' => $organizationIds])->indexBy('id')->all()
             : [];
 
-        return $this->render('index', compact('searchModel', 'dataProvider', 'organizations', 'access'));
+        $optionQuery = Document::find()->alias('d')->andWhere(['d.deleted_at' => null]);
+        $access->applyVisibleScope($optionQuery);
+        $filterOrganizationIds = (clone $optionQuery)->select('d.organization_id')->distinct()->column();
+        $filterCreatorIds = (clone $optionQuery)->select('d.created_emp_id')->andWhere(['not', ['d.created_emp_id' => null]])->distinct()->column();
+        $categoryOptions = (clone $optionQuery)->select('d.category')->andWhere(['not', ['d.category' => null]])->distinct()->orderBy(['d.category' => SORT_ASC])->column();
+        $filterOrganizations = $filterOrganizationIds ? Organization::find()->where(['id' => $filterOrganizationIds])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all() : [];
+        $filterCreators = $filterCreatorIds ? Employees::find()->where(['id' => $filterCreatorIds])->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all() : [];
+        $pageCreatorIds = array_values(array_unique(array_filter(array_map(static function (Document $document) { return (int) $document->created_emp_id; }, $models))));
+        $creators = $pageCreatorIds ? Employees::find()->where(['id' => $pageCreatorIds])->indexBy('id')->all() : [];
+
+        return $this->render('index', compact('searchModel', 'dataProvider', 'organizations', 'creators', 'filterOrganizations', 'filterCreators', 'categoryOptions', 'access'));
     }
 
     public function actionDashboard()
@@ -140,10 +150,11 @@ class DocumentController extends Controller
     public function actionSetting()
     {
         $access = $this->access();
+        $saveError = null;
         if (!$access->isAdmin()) {
             throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบเท่านั้นที่ตั้งค่า MedSOP ได้');
         }
-        $organizations = Organization::find()->where(['active' => 1])->orderBy(['lft' => SORT_ASC])->all();
+        $organizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
         $organizationSettings = OrganizationSetting::find()->indexBy('organization_id')->all();
 
         if (Yii::$app->request->isPost) {
@@ -156,9 +167,25 @@ class DocumentController extends Controller
                     MedSopSetting::CODE_PATTERN => trim((string) ($settings['code_pattern'] ?? '{type}-{org}-{year}-{sequence}')),
                 ];
                 $categories = array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', (string) ($settings['document_categories'] ?? ''))))));
+                $documentTypes = [];
+                foreach (preg_split('/\R/u', (string) ($settings['document_types'] ?? '')) as $line) {
+                    $parts = array_map('trim', explode('|', $line, 2));
+                    $code = strtoupper((string) ($parts[0] ?? ''));
+                    $label = (string) ($parts[1] ?? $code);
+                    if ($code === '') continue;
+                    if (!preg_match('/^[A-Z0-9_-]{1,10}$/', $code)) {
+                        throw new \RuntimeException('รหัสประเภทเอกสารต้องเป็น A-Z, 0-9, ขีดกลาง หรือขีดล่าง ไม่เกิน 10 ตัว');
+                    }
+                    $documentTypes[$code] = $label !== '' ? $label : $code;
+                }
                 $statusLabels = array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', (string) ($settings['announcement_statuses'] ?? ''))))));
-                if ($categories === [] || $statusLabels === []) {
-                    throw new \RuntimeException('กรุณากำหนดหมวดหมู่และสถานะประกาศใช้อย่างน้อย 1 รายการ');
+                if ($documentTypes === [] || $categories === [] || $statusLabels === []) {
+                    throw new \RuntimeException('กรุณากำหนดประเภท หมวดหมู่ และสถานะประกาศใช้อย่างน้อย 1 รายการ');
+                }
+                $usedTypes = Document::find()->select('document_type')->distinct()->column();
+                $removedUsedTypes = array_diff($usedTypes, array_keys($documentTypes));
+                if ($removedUsedTypes !== []) {
+                    throw new \RuntimeException('ลบประเภทที่มีเอกสารใช้งานอยู่ไม่ได้: ' . implode(', ', $removedUsedTypes));
                 }
                 $announcementStatuses = [];
                 $currentStatuses = MedSopSetting::listValue(MedSopSetting::ANNOUNCEMENT_STATUSES, []);
@@ -167,6 +194,7 @@ class DocumentController extends Controller
                     $announcementStatuses[$existingKey !== false ? $existingKey : 'STATUS_' . ($index + 1)] = $label;
                 }
                 $prefixes[MedSopSetting::DOCUMENT_CATEGORIES] = json_encode($categories, JSON_UNESCAPED_UNICODE);
+                $prefixes[MedSopSetting::DOCUMENT_TYPES] = json_encode($documentTypes, JSON_UNESCAPED_UNICODE);
                 $prefixes[MedSopSetting::ANNOUNCEMENT_STATUSES] = json_encode($announcementStatuses, JSON_UNESCAPED_UNICODE);
                 if (!preg_match('/^[A-Z0-9_-]{1,10}$/', $prefixes[MedSopSetting::SOP_PREFIX]) || !preg_match('/^[A-Z0-9_-]{1,10}$/', $prefixes[MedSopSetting::WI_PREFIX])) {
                     throw new \RuntimeException('อักษรย่อ SOP/WI ต้องเป็นอักษรอังกฤษตัวพิมพ์ใหญ่ ตัวเลข ขีดกลาง หรือขีดล่าง ไม่เกิน 10 ตัว');
@@ -184,8 +212,14 @@ class DocumentController extends Controller
                 foreach ((array) Yii::$app->request->post('organizations', []) as $organizationId => $row) {
                     $organizationId = (int) $organizationId;
                     $model = $organizationSettings[$organizationId] ?? new OrganizationSetting(['organization_id' => $organizationId]);
-                    $model->code = strtoupper(trim((string) ($row['code'] ?? '')));
-                    $model->coordinator_team = trim((string) ($row['coordinator_team'] ?? ''));
+                    $organizationCode = strtoupper(trim((string) ($row['code'] ?? '')));
+                    $model->code = $organizationCode !== '' ? $organizationCode : null;
+                    $coordinatorTeam = trim((string) ($row['coordinator_team'] ?? ''));
+                    $model->coordinator_team = $coordinatorTeam !== '' ? $coordinatorTeam : null;
+                    $organizationCategories = array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', (string) ($row['document_categories'] ?? ''))))));
+                    $model->document_categories = $organizationCategories ? json_encode($organizationCategories, JSON_UNESCAPED_UNICODE) : null;
+                    $model->coordinator_team_group_id = !empty($row['coordinator_team_group_id']) ? (int) $row['coordinator_team_group_id'] : null;
+                    $model->coordinator_employee_id = !empty($row['coordinator_employee_id']) ? (int) $row['coordinator_employee_id'] : null;
                     $model->active = !empty($row['active']);
                     $model->updated_by = Yii::$app->user->id;
                     $model->updated_at = date('Y-m-d H:i:s');
@@ -202,10 +236,19 @@ class DocumentController extends Controller
                 return $this->redirect(['setting']);
             } catch (\Throwable $e) {
                 if ($transaction->isActive) $transaction->rollBack();
+                $saveError = $e->getMessage();
+                Yii::error([
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
+                    'trace' => $e->getTraceAsString(),
+                ], 'medsop.setting.save');
                 Yii::$app->session->setFlash('error', $e->getMessage());
             }
         }
 
+        $coordinatorEmployeeIds = array_values(array_unique(array_filter(array_map(static function ($setting) {
+            return (int) $setting->coordinator_employee_id;
+        }, $organizationSettings))));
         return $this->render('setting', [
             'access' => $access,
             'organizations' => $organizations,
@@ -213,9 +256,34 @@ class DocumentController extends Controller
             'sopPrefix' => MedSopSetting::value(MedSopSetting::SOP_PREFIX, 'SP'),
             'wiPrefix' => MedSopSetting::value(MedSopSetting::WI_PREFIX, 'WI'),
             'codePattern' => MedSopSetting::value(MedSopSetting::CODE_PATTERN, '{type}-{org}-{year}-{sequence}'),
+            'documentTypes' => MedSopSetting::documentTypes(),
             'categories' => MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI']),
             'announcementStatuses' => MedSopSetting::listValue(MedSopSetting::ANNOUNCEMENT_STATUSES, ['ACTIVE' => 'ประกาศใช้']),
+            'teamGroups' => TeamGroup::find()->where(['deleted_at' => null])->orderBy(['title' => SORT_ASC])->all(),
+            'coordinatorEmployees' => $coordinatorEmployeeIds ? Employees::find()->where(['id' => $coordinatorEmployeeIds])->indexBy('id')->all() : [],
+            'saveError' => $saveError,
         ]);
+    }
+
+    public function actionCoordinatorEmployees($q = '')
+    {
+        if (!$this->access()->isAdmin()) {
+            throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบเท่านั้น');
+        }
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $query = Employees::find()->where(['status' => 1]);
+        $term = trim((string) $q);
+        if ($term !== '') {
+            $query->andWhere(['or', ['like', 'fname', $term], ['like', 'lname', $term]]);
+        }
+        $employees = $query->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->limit(30)->all();
+        return ['results' => array_map(static function (Employees $employee) {
+            return [
+                'id' => (int) $employee->id,
+                'fullname' => $employee->fullname(),
+                'position_name' => $employee->positionName(),
+            ];
+        }, $employees)];
     }
 
     public function actionView($id)
@@ -596,7 +664,7 @@ class DocumentController extends Controller
                 $model->addError('related_links', $e->getMessage());
             }
         }
-        if ($loaded && $model->isNewRecord && !$model->document_no) {
+        if ($loaded && $model->isNewRecord) {
             $model->document_no = $this->generateDocumentNo((string) $model->document_type, (int) $model->organization_id);
         }
         $coverFile = UploadedFile::getInstanceByName('cover_image');
@@ -632,11 +700,29 @@ class DocumentController extends Controller
                 return $row;
             }, $model->steps);
         }
+        $formOrganizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
+        $documentTypeCodes = array_keys(MedSopSetting::documentTypes());
+        $filterCategories = static function (array $values) use ($documentTypeCodes, $model): array {
+            $filtered = array_values(array_diff($values, $documentTypeCodes));
+            if ($model->category && in_array($model->category, $values, true) && !in_array($model->category, $filtered, true)) {
+                $filtered[] = $model->category;
+            }
+            return $filtered !== [] ? $filtered : array_values($values);
+        };
+        $defaultCategories = $filterCategories(MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI']));
+        $organizationCategoryMap = [];
+        foreach (OrganizationSetting::find()->select(['organization_id', 'document_categories'])->all() as $organizationSetting) {
+            $values = json_decode((string) $organizationSetting->document_categories, true);
+            if (is_array($values) && $values !== []) $organizationCategoryMap[(int) $organizationSetting->organization_id] = $filterCategories(array_values($values));
+        }
+        $categories = $organizationCategoryMap[(int) $model->organization_id] ?? $defaultCategories;
         return $this->render('form', [
             'model' => $model,
             'stepRows' => $stepRows,
-            'organizations' => Organization::find()->where(['active' => 1])->orderBy(['lft' => SORT_ASC])->all(),
-            'categories' => MedSopSetting::listValue(MedSopSetting::DOCUMENT_CATEGORIES, ['SOP', 'WI']),
+            'organizations' => $formOrganizations,
+            'categories' => $categories,
+            'defaultCategories' => $defaultCategories,
+            'organizationCategoryMap' => $organizationCategoryMap,
             'announcementStatuses' => MedSopSetting::listValue(MedSopSetting::ANNOUNCEMENT_STATUSES, ['ACTIVE' => 'ประกาศใช้']),
             'relatedLinks' => $model->getRelatedLinkItems() ?: [['label' => '', 'url' => '']],
             'relatedDocuments' => $this->relatedDocuments($model),
@@ -697,8 +783,13 @@ class DocumentController extends Controller
 
     private function generateDocumentNo(string $type, int $organizationId): string
     {
-        $prefixKey = $type === Document::TYPE_WI ? MedSopSetting::WI_PREFIX : MedSopSetting::SOP_PREFIX;
-        $prefix = MedSopSetting::value($prefixKey, $type === Document::TYPE_WI ? 'WI' : 'SP');
+        if ($type === Document::TYPE_WI) {
+            $prefix = MedSopSetting::value(MedSopSetting::WI_PREFIX, 'WI');
+        } elseif ($type === Document::TYPE_SOP) {
+            $prefix = MedSopSetting::value(MedSopSetting::SOP_PREFIX, 'SP');
+        } else {
+            $prefix = $type;
+        }
         $organizationSetting = OrganizationSetting::findOne($organizationId);
         $organizationCode = $organizationSetting && $organizationSetting->code ? $organizationSetting->code : 'ORG' . $organizationId;
         $year = (string) ((int) date('Y') + 543);

@@ -21,10 +21,11 @@ class OrganizationSetting extends ActiveRecord
     {
         return [
             [['organization_id'], 'required'],
-            [['organization_id', 'created_by', 'updated_by'], 'integer'],
+            [['organization_id', 'coordinator_employee_id', 'coordinator_team_group_id', 'created_by', 'updated_by'], 'integer'],
             [['active'], 'boolean'],
             [['code'], 'string', 'max' => 20],
             [['coordinator_team'], 'string', 'max' => 255],
+            [['document_categories'], 'string'],
             [['code'], 'match', 'pattern' => '/^[A-Z0-9_-]+$/', 'message' => 'ใช้อักษรอังกฤษตัวพิมพ์ใหญ่ ตัวเลข ขีดกลาง หรือขีดล่างเท่านั้น'],
             [['code'], 'unique'],
             [['created_at', 'updated_at'], 'safe'],

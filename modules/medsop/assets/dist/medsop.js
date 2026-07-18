@@ -155,12 +155,51 @@
   }
 
   function focusFirstInvalid() {
-    const invalid = form.querySelector('.is-invalid, :invalid');
+    const invalid = form.querySelector('.is-invalid, [aria-invalid="true"], :invalid');
     if (invalid) {
       invalid.focus();
-      invalid.scrollIntoView({ block: 'center' });
+      invalid.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     }
   }
+
+  function fieldLabel(field) {
+    if (!field) return '';
+    const container = field.closest('.form-group, [data-step]');
+    const label = (field.id && form.querySelector('label[for="' + CSS.escape(field.id) + '"]')) || (container && container.querySelector('.form-label, .control-label'));
+    let text = label ? label.textContent.trim() : '';
+    if (!text && field.name && field.name.indexOf('document_type') !== -1) text = 'ประเภทเอกสาร';
+    if (!text && field.name) text = field.name;
+    const step = field.closest('[data-step]');
+    if (step && field.name && /\[title\]$/.test(field.name)) {
+      const number = Array.from(list.querySelectorAll('[data-step]')).indexOf(step) + 1;
+      text = 'ชื่อขั้นตอนที่ ' + number;
+    }
+    return text.replace(/\s*\*\s*$/, '');
+  }
+
+  function invalidLabels(fields) {
+    return Array.from(new Set(fields.map(fieldLabel).filter(Boolean)));
+  }
+
+  form.addEventListener('invalid', function (event) {
+    event.preventDefault();
+    event.target.classList.add('is-invalid');
+    event.target.setAttribute('aria-invalid', 'true');
+  }, true);
+
+  form.addEventListener('input', function (event) {
+    if (event.target.matches('input, textarea, select') && event.target.checkValidity()) {
+      event.target.classList.remove('is-invalid');
+      event.target.removeAttribute('aria-invalid');
+    }
+  });
+
+  form.addEventListener('change', function (event) {
+    if (event.target.matches('input, textarea, select') && event.target.checkValidity()) {
+      event.target.classList.remove('is-invalid');
+      event.target.removeAttribute('aria-invalid');
+    }
+  });
 
   form.querySelector('[data-add-step]').addEventListener('click', function () {
     const source = list.querySelector('[data-step]');
@@ -372,7 +411,14 @@
       if (firstRelatedSelect) firstRelatedSelect.focus();
       return false;
     }
-    if (!form.reportValidity()) {
+    if (!form.checkValidity()) {
+      const invalidFields = Array.from(form.querySelectorAll(':invalid'));
+      invalidFields.forEach(function (field) {
+        field.classList.add('is-invalid');
+        field.setAttribute('aria-invalid', 'true');
+      });
+      const labels = invalidLabels(invalidFields);
+      showAlert('กรุณากรอกข้อมูลให้ครบ: ' + labels.join(', '), 'danger');
       focusFirstInvalid();
       return false;
     }
@@ -391,7 +437,14 @@
         if (window.jQuery && window.jQuery.fn.yiiActiveForm) {
           window.jQuery(form).yiiActiveForm('updateMessages', payload.validation || {}, true);
         }
-        throw new Error(payload.message || 'กรุณาตรวจสอบข้อมูลที่ระบุ');
+        const serverFields = Object.keys(payload.validation || {}).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        serverFields.forEach(function (field) {
+          field.classList.add('is-invalid');
+          field.setAttribute('aria-invalid', 'true');
+        });
+        const labels = invalidLabels(serverFields);
+        const message = labels.length ? 'กรุณาตรวจสอบ: ' + labels.join(', ') : (payload.message || 'กรุณาตรวจสอบข้อมูลที่ระบุ');
+        throw new Error(message);
       }
       window.location.assign(payload.redirect);
     }).catch(function (error) {
