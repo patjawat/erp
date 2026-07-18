@@ -3569,11 +3569,6 @@ class ReportController extends Controller
             'usage_year_1' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 3),
             'usage_year_2' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 2),
             'usage_year_3' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 1),
-            'opening_inventory_qty' => 'ปริมาณคงคลังยกมา',
-            'estimated_amount_used' => 'ประมาณการปริมาณใช้ในปี ' . $fiscalYear,
-            'estimated_purchase_quantity' => 'ประมาณการปริมาณซื้อในปี ' . $fiscalYear,
-            'unit_price' => 'ราคา/หน่วยนับ (บาท)',
-            'purchase_vol_in_year' => 'มูลค่าจัดซื้อปี ' . $fiscalYear . ' (บาท)',
         ];
     }
 
@@ -3619,11 +3614,10 @@ class ReportController extends Controller
             ],
         ]);
         $sheet->getStyle("A1:{$lastColumn}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle("H2:S{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle("G2:I{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
         $sheet->getStyle("A2:A{$lastRow}")->getNumberFormat()->setFormatCode('0');
-        $sheet->getStyle("D2:D{$lastRow}")->getNumberFormat()->setFormatCode('0');
 
-        $widths = [12, 24, 34, 10, 42, 16, 14, 18, 18, 18, 18, 22, 22, 18, 22, 22, 22, 22, 22];
+        $widths = [12, 24, 34, 42, 16, 14, 18, 18, 18];
         foreach ($widths as $index => $width) {
             $sheet->getColumnDimensionByColumn($index + 1)->setWidth($width);
         }

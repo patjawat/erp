@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'รายงานแผนจัดซื้อวัสดุ';
+$this->title = 'รายงานปริมาณการใช้งานวัสดุ';
 $this->params['breadcrumbs'][] = ['label' => 'คลังวัสดุ', 'url' => ['/inventory-v2/default/index']];
 $this->params['breadcrumbs'][] = ['label' => 'รายงาน', 'url' => ['/inventory-v2/report/material-summary']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -21,53 +21,6 @@ if ($q !== '') {
     $exportParams['q'] = $q;
 }
 
-$totalPurchaseQty = array_sum(array_column($rows, 'estimated_purchase_quantity'));
-$totalPurchaseValue = array_sum(array_column($rows, 'purchase_vol_in_year'));
-$totalEstimatedUse = array_sum(array_column($rows, 'estimated_amount_used'));
-$metricTooltips = [
-    'ประมาณการใช้รวม' => 'ผลรวมประมาณการใช้ของรายการที่แสดง โดยแต่ละรายการคำนวณจากค่าเฉลี่ยปริมาณการใช้ย้อนหลังใน StockMonthlyReport ตามปีงบประมาณและแหล่งข้อมูลที่เลือก',
-    'ประมาณการซื้อรวม' => 'ผลรวมจำนวนที่ควรจัดซื้อของรายการที่แสดง คำนวณจากประมาณการใช้หักด้วยยอดคงเหลือต้นงวดหรือยอดคงเหลือปัจจุบัน และไม่ให้ติดลบ',
-    'มูลค่าจัดซื้อรวม' => 'ผลรวมมูลค่าจัดซื้อโดยประมาณของรายการที่แสดง คำนวณจากประมาณการซื้อคูณราคาเฉลี่ยต่อหน่วย',
-];
-$metricTooltipPrefixes = [
-    'ประมาณการปริมาณใช้ในปี ' => 'ประมาณการใช้ของวัสดุแต่ละรายการ คำนวณจากค่าเฉลี่ยปริมาณการใช้ย้อนหลังใน StockMonthlyReport ตามปีงบประมาณและแหล่งข้อมูลที่เลือก',
-    'ประมาณการปริมาณซื้อในปี ' => 'จำนวนที่ควรจัดซื้อของวัสดุแต่ละรายการ คำนวณจากประมาณการใช้หักด้วยยอดคงเหลือต้นงวดหรือยอดคงเหลือปัจจุบัน และไม่ให้ติดลบ',
-    'มูลค่าจัดซื้อปี ' => 'มูลค่าจัดซื้อโดยประมาณของวัสดุแต่ละรายการ คำนวณจากประมาณการซื้อคูณราคาเฉลี่ยต่อหน่วย',
-];
-$tooltipLabel = static function (string $label) use ($metricTooltips, $metricTooltipPrefixes): string {
-    $tooltip = $metricTooltips[$label] ?? null;
-    if ($tooltip === null) {
-        foreach ($metricTooltipPrefixes as $prefix => $prefixTooltip) {
-            if (strpos($label, $prefix) === 0) {
-                $tooltip = $prefixTooltip;
-                break;
-            }
-        }
-    }
-
-    if ($tooltip === null) {
-        return Html::encode($label);
-    }
-
-    return Html::tag(
-        'span',
-        Html::encode($label) . ' ' . Html::tag('i', '', [
-            'class' => 'fa-solid fa-circle-info text-secondary',
-            'aria-hidden' => 'true',
-        ]),
-        [
-            'class' => 'd-inline-flex align-items-center gap-1',
-            'tabindex' => '0',
-            'role' => 'button',
-            'data-bs-toggle' => 'tooltip',
-            'data-bs-placement' => 'top',
-            'data-bs-title' => $tooltip,
-            'title' => $tooltip,
-            'aria-label' => $label . ': ' . $tooltip,
-        ]
-    );
-};
-
 $activeFilters = [
     ['label' => 'ปีงบประมาณ', 'value' => (string) $fiscalYear],
     ['label' => 'คลังหลัก', 'value' => $warehouseId ? ($warehouses[$warehouseId] ?? 'ไม่ระบุ') : 'ทุกคลังหลัก'],
@@ -83,7 +36,7 @@ echo Html::encode($this->title);
 $this->endBlock();
 
 $this->beginBlock('sub-title');
-echo 'คำนวณจากรายงานประจำเดือนและส่งออก Excel ตาม template ที่ตัดค่าคงที่แล้ว';
+echo 'ปริมาณการใช้งานวัสดุย้อนหลังตามปีงบประมาณและตัวกรองที่เลือก';
 $this->endBlock();
 
 $this->beginBlock('page-action');
@@ -99,13 +52,14 @@ $this->endBlock();
         <div class="card-body">
             <?= Html::beginForm(['/inventory-v2/report/procurement-plan'], 'get', ['class' => 'row g-3 align-items-end']) ?>
                 <label class="col-12 col-md-6 col-xl-2">
-                    <span class="form-label small fw-semibold text-secondary">ปีงบประมาณ</span>
+                    <span class="form-label small fw-semibold text-secondary">ปีงบประมาณที่จะจัดซื้อ</span>
                     <?= Html::input('number', 'fiscal_year', $fiscalYear, [
                         'class' => 'form-control',
                         'min' => 2400,
                         'max' => 2800,
                         'step' => 1,
                     ]) ?>
+                    <small class="text-secondary d-block mt-1">ประมาณการจากปริมาณใช้ 3 ปีก่อนหน้า</small>
                 </label>
 
                 <label class="col-12 col-md-6 col-xl-2">
@@ -159,8 +113,8 @@ $this->endBlock();
     <section class="card shadow-sm">
         <div class="card-header bg-light d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
             <div>
-                <h2 class="h6 fw-semibold mb-1">แผนจัดซื้อวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></h2>
-                <p class="small text-secondary mb-2">ค่าเฉลี่ยการใช้ย้อนหลัง 3 ปีงบประมาณ</p>
+                <h2 class="h6 fw-semibold mb-1">รายงานปริมาณการใช้งานวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></h2>
+                <p class="small text-secondary mb-2">ปริมาณการใช้ย้อนหลัง 3 ปีงบประมาณ</p>
                 <div class="d-flex flex-wrap gap-2" aria-label="ตัวกรองที่ใช้">
                     <?php foreach ($activeFilters as $filter): ?>
                         <span class="badge rounded-pill bg-white text-dark border fw-semibold">
@@ -179,23 +133,6 @@ $this->endBlock();
             </div>
         </div>
         <div class="card-body">
-            <div class="border rounded bg-light p-3 mb-3">
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-1"><?= $tooltipLabel('ประมาณการใช้รวม') ?></div>
-                        <div class="fw-semibold font-monospace"><?= $formatter->asDecimal($totalEstimatedUse, 2) ?></div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-1"><?= $tooltipLabel('ประมาณการซื้อรวม') ?></div>
-                        <div class="fw-semibold font-monospace"><?= $formatter->asDecimal($totalPurchaseQty, 2) ?></div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="small text-secondary mb-1"><?= $tooltipLabel('มูลค่าจัดซื้อรวม') ?></div>
-                        <div class="fw-semibold font-monospace"><?= $formatter->asDecimal($totalPurchaseValue, 2) ?> บาท</div>
-                    </div>
-                </div>
-            </div>
-
             <?php if (empty($rows)): ?>
                 <div class="d-flex align-items-center gap-3 border rounded bg-light p-4">
                     <i class="bi bi-inbox fs-3 text-secondary"></i>
@@ -207,11 +144,11 @@ $this->endBlock();
             <?php else: ?>
                 <div class="table-responsive border rounded">
                     <table class="table table-sm table-hover table-bordered align-middle mb-0 small">
-                        <caption class="visually-hidden">รายงานแผนจัดซื้อวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></caption>
+                        <caption class="visually-hidden">รายงานปริมาณการใช้งานวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></caption>
                         <thead class="table-light">
                             <tr>
                                 <?php foreach ($headers as $header): ?>
-                                    <th scope="col" class="text-nowrap"><?= $tooltipLabel($header) ?></th>
+                                    <th scope="col" class="text-nowrap"><?= Html::encode($header) ?></th>
                                 <?php endforeach; ?>
                             </tr>
                         </thead>
@@ -227,11 +164,6 @@ $this->endBlock();
                                     <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_1'], 2) ?></td>
                                     <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_2'], 2) ?></td>
                                     <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_3'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['opening_inventory_qty'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['estimated_amount_used'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['estimated_purchase_quantity'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['unit_price'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['purchase_vol_in_year'], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -282,7 +214,7 @@ $this->registerJs(<<<'JS'
         Swal.fire({
             icon: 'question',
             title: 'ส่งออก Excel',
-            text: 'ต้องการส่งออกรายงานแผนจัดซื้อวัสดุเป็นไฟล์ Excel หรือไม่',
+            text: 'ต้องการส่งออกรายงานปริมาณการใช้งานวัสดุเป็นไฟล์ Excel หรือไม่',
             showCancelButton: true,
             confirmButtonText: 'ส่งออก',
             cancelButtonText: 'ยกเลิก',
