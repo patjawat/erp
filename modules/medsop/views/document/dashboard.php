@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 MedSopAsset::register($this);
-$this->title = 'บริหารจัดการ SOP โรงพยาบาล';
+$this->title = 'บริหารจัดการ SOP /WI';
 $total = array_sum(array_map(static fn($row) => (int) $row['total'], $statusCounts));
 $published = (int) ($statusCounts[Document::STATUS_PUBLISHED]['total'] ?? 0);
 $pending = (int) ($statusCounts[Document::STATUS_PENDING]['total'] ?? 0);
@@ -13,7 +13,7 @@ $draft = (int) ($statusCounts[Document::STATUS_DRAFT]['total'] ?? 0);
 $maxOrganization = max(1, ...array_map(static fn($row) => (int) $row['total'], $organizationCounts ?: [['total' => 1]]));
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>สืบค้นขั้นตอนปฏิบัติงานมาตรฐาน (Standard Operating Procedure) รหัสเวชปฏิบัติการดูแลผู้ป่วย และรับทราบหลักเกณฑ์ความปลอดภัยล่าสุดได้ทันที เพื่อรักษาระดับการดูแลรักษาพยาบาลของโรงพยาบาล<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>สืบค้นขั้นตอนปฏิบัติงานมาตรฐาน (Standard Operating Procedure) และรับทราบหลักเกณฑ์ความปลอดภัยล่าสุดได้ทันที เพื่อรักษาระดับคุณภาพมาตรฐานขององค์กร<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?><?= $this->render('_nav', ['access' => $access, 'active' => 'dashboard']) ?><?php $this->endBlock(); ?>
 
 <div class="medsop-dashboard">

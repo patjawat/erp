@@ -97,21 +97,24 @@
         "mpdf/mpdf": "^8.2",
         "setasign/fpdi": "^2.6",
         "2amigos/yii2-qrcode-helper": "^3.1",
-        "guzzlehttp/guzzle": "7.10.x-dev",
+        "guzzlehttp/guzzle": "^7.12.1",
         "endroid/qr-code": "^4.6"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
         "yiisoft/yii2-gii": "~2.2.0",
         "yiisoft/yii2-faker": "~2.0.0",
-        "codeception/codeception": "^4.0",
-        "codeception/module-asserts": "^1.0",
-        "codeception/module-yii2": "^1.0",
-        "codeception/module-filesystem": "^1.0",
+        "codeception/codeception": "^5.0.8",
+        "codeception/module-asserts": "~3.1.0",
+        "codeception/module-yii2": "^1.1.12",
+        "codeception/module-filesystem": "^3.0",
         "codeception/verify": "^2.2",
-        "symfony/browser-kit": ">=2.7 <=4.2.4"
+        "symfony/browser-kit": "^6.4"
     },
     "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
         "platform-check": false,
         "allow-plugins": {
             "yiisoft/yii2-composer": true
@@ -121,6 +124,7 @@
             "enabled": false
         }
     },
+    "prefer-stable": true,
     "scripts": {
         "post-install-cmd": [
             "yii\\composer\\Installer::postInstall"
