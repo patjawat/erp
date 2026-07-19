@@ -60,18 +60,26 @@ class JdTemplate extends ActiveRecord
     {
         return [
             [['name', 'position_code'], 'required'],
-            [['is_active', 'created_by', 'updated_by', 'exp_years', 'salary_min', 'salary_max', 'headcount', 'has_subordinates'], 'integer'],
+            [['is_active', 'created_by', 'updated_by', 'exp_years', 'salary_min', 'salary_max', 'headcount', 'has_subordinates', 'parent_template_id', 'revision_no'], 'integer'],
             [['job_purpose', 'edu_requirement', 'exp_detail', 'hard_skills', 'soft_skills',
               'core_competency', 'functional_competency', 'leadership_competency',
               'kpis', 'benefits', 'variable_pay', 'work_conditions',
-              'career_vertical', 'career_lateral'], 'string'],
-            [['created_at', 'updated_at', 'jd_approved_at'], 'safe'],
+              'career_vertical', 'career_lateral', 'description'], 'string'],
+            [['created_at', 'updated_at', 'jd_approved_at', 'effective_date', 'ai_generated_at'], 'safe'],
             [['name', 'department', 'report_to', 'work_location', 'work_hours', 'jd_approved_by'], 'string', 'max' => 255],
             [['position_code', 'job_code'], 'string', 'max' => 64],
             [['job_level', 'employment_type'], 'string', 'max' => 100],
             [['work_type'], 'string', 'max' => 20],
+            [['template_code'], 'string', 'max' => 80],
+            [['document_no'], 'string', 'max' => 100],
+            [['template_type', 'lifecycle_status'], 'string', 'max' => 20],
+            [['template_type'], 'in', 'range' => ['base', 'variant']],
+            [['lifecycle_status'], 'in', 'range' => ['draft', 'review', 'active', 'retired']],
             [['is_active'], 'default', 'value' => 1],
             [['has_subordinates'], 'default', 'value' => 0],
+            [['template_type'], 'default', 'value' => 'base'],
+            [['revision_no'], 'default', 'value' => 1],
+            [['lifecycle_status'], 'default', 'value' => 'draft'],
         ];
     }
 
@@ -119,6 +127,18 @@ class JdTemplate extends ActiveRecord
     public function getSections()
     {
         return $this->hasMany(JdTemplateSection::class, ['template_id' => 'id'])->orderBy(['sort_order' => SORT_ASC]);
+    }
+
+    public function getBlocks()
+    {
+        return $this->hasMany(JdTemplateBlock::class, ['template_id' => 'id'])
+            ->andWhere(['is_enabled' => 1])
+            ->orderBy(['sort_order' => SORT_ASC]);
+    }
+
+    public function getParentTemplate()
+    {
+        return $this->hasOne(self::class, ['id' => 'parent_template_id']);
     }
 
     public function getPositionName()
