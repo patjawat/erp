@@ -1,90 +1,100 @@
 <?php
 
-use yii\helpers\Url;
 use yii\helpers\Html;
-use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use app\modules\appreciation\models\AppreciationChallenge;
 
-$me = UserHelper::GetEmployee();
-$this->title = 'Challenge รับรางวัล';
-$this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
+$this->title = 'กิจกรรมท้าทาย';
 $this->params['breadcrumbs'][] = ['label' => 'พลังแห่งคำขอบคุณ', 'url' => ['/appreciation/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
+$this->registerCssFile('@web/css/appreciation-media.css');
 ?>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-warning text-dark py-3">
-        <h5 class="mb-0 fw-bold">กิจกรรมเป้าหมาย แข่งกันทำครบรับของรางวัล</h5>
-        <p class="mb-0 small opacity-75">ส่งคำขอบคุณหรือรับคำขอบคุณให้ครบตามเป้า ภายในช่วงเวลาที่กำหนด เพื่อรับรางวัล</p>
+<?php $this->beginBlock('page-title'); ?>กิจกรรมท้าทาย<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>ทำเป้าหมายคำขอบคุณให้ครบและรับรางวัล<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับหน้าฟีด', ['/appreciation/default/index'], ['class' => 'btn btn-outline-secondary']) ?>
+<?php $this->endBlock(); ?>
+
+<div class="appreciation-home appreciation-challenges-page">
+    <div class="appreciation-layout appreciation-layout--catalog">
+        <aside class="appreciation-rail" aria-label="ข้อมูลกิจกรรมท้าทาย">
+            <div class="appreciation-rail__inner">
+                <section class="appreciation-profile appreciation-challenge-summary">
+                    <div class="appreciation-profile__person">
+                        <?= Html::img($me->showAvatar(), ['class' => 'appreciation-avatar appreciation-avatar--profile', 'width' => '64', 'height' => '64', 'alt' => '']) ?>
+                        <div class="min-w-0"><h2 class="appreciation-profile__name"><?= Html::encode($me->fullname()) ?></h2><p class="appreciation-profile__department">ภารกิจคำขอบคุณของคุณ</p></div>
+                    </div>
+                    <div class="appreciation-stats appreciation-stats--activity">
+                        <div><strong><?= count($active) ?></strong><span>กำลังดำเนินการ</span></div>
+                        <div><strong><?= count(array_filter($myProgress, static fn($progress) => !empty($progress->completed_at))) ?></strong><span>ทำสำเร็จแล้ว</span></div>
+                    </div>
+                </section>
+
+                <div class="appreciation-rail-note">
+                    <i class="bi bi-trophy" aria-hidden="true"></i>
+                    <p>ระบบจะนับความคืบหน้าอัตโนมัติเมื่อคุณส่งหรือได้รับคำขอบคุณตามเงื่อนไขของภารกิจ</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="appreciation-feed-column">
+            <?php if ($active): ?>
+                <section aria-labelledby="active-challenges-title">
+                    <div class="appreciation-feed-head"><div><h2 id="active-challenges-title">กำลังดำเนินการ</h2><p>ภารกิจที่นับความคืบหน้าอยู่ในขณะนี้</p></div></div>
+                    <div class="appreciation-challenge-list">
+                        <?php foreach ($active as $challenge): ?>
+                            <?php
+                            $progress = $myProgress[$challenge->id] ?? null;
+                            $current = $progress ? (int) $progress->current_value : 0;
+                            $goal = (int) $challenge->goal_value;
+                            $percent = $goal > 0 ? min(100, (int) round($current / $goal * 100)) : 0;
+                            $completed = $progress && $progress->completed_at;
+                            ?>
+                            <article class="appreciation-challenge-item">
+                                <header>
+                                    <span class="appreciation-challenge__icon"><i class="bi bi-trophy" aria-hidden="true"></i></span>
+                                    <div><h3><?= Html::encode($challenge->name) ?></h3><p><?= Html::encode(AppreciationChallenge::goalTypeLabels()[$challenge->goal_type] ?? $challenge->goal_type) ?> <?= number_format($goal) ?> ครั้ง</p></div>
+                                    <span class="appreciation-status<?= $completed ? ' is-complete' : '' ?>"><?= $completed ? 'สำเร็จแล้ว' : 'กำลังดำเนินการ' ?></span>
+                                </header>
+                                <?php if ($challenge->description): ?><p class="appreciation-challenge-item__description"><?= Html::encode($challenge->description) ?></p><?php endif; ?>
+                                <div class="appreciation-progress" role="progressbar" aria-label="ความคืบหน้าของ <?= Html::encode($challenge->name) ?>" aria-valuenow="<?= $current ?>" aria-valuemin="0" aria-valuemax="<?= $goal ?>"><span style="width: <?= $percent ?>%"></span></div>
+                                <div class="appreciation-challenge__meta"><strong><?= number_format($current) ?> จาก <?= number_format($goal) ?> ครั้ง</strong><span>ถึง <?= ThaiDateHelper::formatThaiDate($challenge->end_at) ?></span></div>
+                                <footer>
+                                    <?php if ($challenge->reward_name): ?><span class="appreciation-challenge-item__reward"><i class="bi bi-gift" aria-hidden="true"></i> <?= Html::encode($challenge->reward_name) ?></span><?php endif; ?>
+                                    <?= Html::a('ดูรายละเอียด', ['view', 'id' => $challenge->id], ['class' => 'btn btn-outline-primary']) ?>
+                                </footer>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
+
+            <?php if ($upcoming): ?>
+                <section class="appreciation-secondary-section" aria-labelledby="upcoming-title">
+                    <div class="appreciation-feed-head"><div><h2 id="upcoming-title">เร็ว ๆ นี้</h2><p>ภารกิจที่กำลังจะเปิด</p></div></div>
+                    <ul class="appreciation-compact-list" role="list">
+                        <?php foreach ($upcoming as $challenge): ?>
+                            <li><div><strong><?= Html::encode($challenge->name) ?></strong><span>เริ่ม <?= ThaiDateHelper::formatThaiDate($challenge->start_at) ?></span></div><?= Html::a('ดูรายละเอียด', ['view', 'id' => $challenge->id]) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+            <?php endif; ?>
+
+            <?php if ($ended): ?>
+                <section class="appreciation-secondary-section" aria-labelledby="ended-title">
+                    <div class="appreciation-feed-head"><div><h2 id="ended-title">สิ้นสุดแล้ว</h2><p>ภารกิจล่าสุดที่ผ่านมา</p></div></div>
+                    <ul class="appreciation-compact-list" role="list">
+                        <?php foreach ($ended as $challenge): ?>
+                            <li><div><strong><?= Html::encode($challenge->name) ?></strong><span>สิ้นสุด <?= ThaiDateHelper::formatThaiDate($challenge->end_at) ?></span></div><?= Html::a('ดูผล', ['view', 'id' => $challenge->id]) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+            <?php endif; ?>
+
+            <?php if (!$active && !$upcoming && !$ended): ?>
+                <div class="appreciation-empty"><h3>ยังไม่มีกิจกรรมท้าทาย</h3><p>ภารกิจใหม่จะแสดงเมื่อผู้ดูแลเปิดกิจกรรม</p></div>
+            <?php endif; ?>
+        </main>
     </div>
 </div>
-
-<?php if (!empty($active)): ?>
-    <h6 class="text-uppercase fw-bold text-muted mb-3">กำลังจัดกิจกรรม</h6>
-    <div class="row g-3 mb-4">
-        <?php foreach ($active as $ch): ?>
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <span class="badge bg-success rounded-pill mb-2">กำลังดำเนินการ</span>
-                        <h6 class="card-title fw-bold"><?= Html::encode($ch->name) ?></h6>
-                        <p class="card-text small text-muted"><?= nl2br(Html::encode(mb_substr($ch->description ?? '', 0, 120))) ?><?= mb_strlen($ch->description ?? '') > 120 ? '...' : '' ?></p>
-                        <p class="small mb-1">
-                            <span class="text-muted">เป้า:</span>
-                            <?= Html::encode(AppreciationChallenge::goalTypeLabels()[$ch->goal_type] ?? $ch->goal_type) ?>
-                            <strong><?= (int) $ch->goal_value ?> ครั้ง</strong>
-                        </p>
-                        <p class="small text-muted mb-2">
-                            <?= ThaiDateHelper::formatThaiDate($ch->start_at) ?> - <?= ThaiDateHelper::formatThaiDate($ch->end_at) ?>
-                        </p>
-                        <?php if ($ch->reward_name): ?>
-                            <p class="small mb-2"><span class="badge bg-warning text-dark">รางวัล: <?= Html::encode($ch->reward_name) ?></span></p>
-                        <?php endif; ?>
-                        <?= Html::a('ดูรายละเอียด', ['view', 'id' => $ch->id], ['class' => 'btn btn-primary btn-sm rounded-3']) ?>
-                    </div>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-<?php endif; ?>
-
-<?php if (!empty($upcoming)): ?>
-    <h6 class="text-uppercase fw-bold text-muted mb-3">เร็วๆ นี้</h6>
-    <div class="row g-3 mb-4">
-        <?php foreach ($upcoming as $ch): ?>
-            <div class="col-12 col-md-6">
-                <div class="card border border-light shadow-sm">
-                    <div class="card-body py-3">
-                        <span class="badge bg-secondary rounded-pill mb-2">เร็วๆ นี้</span>
-                        <h6 class="card-title fw-bold mb-1"><?= Html::encode($ch->name) ?></h6>
-                        <p class="small text-muted mb-0">เริ่ม <?= ThaiDateHelper::formatThaiDate($ch->start_at) ?></p>
-                    </div>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-<?php endif; ?>
-
-<?php if (!empty($ended)): ?>
-    <h6 class="text-uppercase fw-bold text-muted mb-3">กิจกรรมที่สิ้นสุดแล้ว</h6>
-    <ul class="list-group list-group-flush">
-        <?php foreach ($ended as $ch): ?>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><?= Html::encode($ch->name) ?></span>
-                <?= Html::a('ดูผล', ['view', 'id' => $ch->id], ['class' => 'btn btn-outline-secondary btn-sm rounded-3']) ?>
-            </li>
-        <?php endforeach; ?>
-    </ul>
-<?php endif; ?>
-
-<?php if (empty($active) && empty($upcoming) && empty($ended)): ?>
-    <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5 text-muted">
-            <p class="mb-2">ยังไม่มีกิจกรรม Challenge</p>
-            <p class="small">รอการเปิดกิจกรรมจากผู้ดูแลระบบ</p>
-        </div>
-    </div>
-<?php endif; ?>
-
-<?= Html::a('กลับฟีดคำขอบคุณ', ['/appreciation/default/index'], ['class' => 'btn btn-outline-secondary rounded-3 mt-3']) ?>

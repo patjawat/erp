@@ -40,8 +40,15 @@ class ChallengeController extends Controller
                 ->orderBy(['end_at' => SORT_DESC])
                 ->limit(5)
                 ->all();
+
+            $activeIds = array_map(static fn($item) => (int) $item->id, $active);
+            $myProgress = $activeIds ? AppreciationChallengeProgress::find()
+                ->andWhere(['challenge_id' => $activeIds, 'emp_id' => $me->id])
+                ->indexBy('challenge_id')
+                ->all() : [];
         } catch (\Throwable $e) {
             $active = $upcoming = $ended = [];
+            $myProgress = [];
             Yii::$app->session->setFlash('info', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน migration ก่อน');
         }
 
@@ -50,6 +57,7 @@ class ChallengeController extends Controller
             'active' => $active ?? [],
             'upcoming' => $upcoming ?? [],
             'ended' => $ended ?? [],
+            'myProgress' => $myProgress ?? [],
         ]);
     }
 
