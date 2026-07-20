@@ -14,6 +14,22 @@ $isModal = !empty($isModal);
 $this->registerCssFile('@web/css/appreciation-media.css');
 $this->registerCss(<<<'CSS'
 .appreciation-composer { color: #334155; }
+.appreciation-composer--form {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.appreciation-modal-body,
+.appreciation-modal-body > div,
+.appreciation-modal-body form,
+.appreciation-composer--form > * {
+    min-width: 0;
+    max-width: 100%;
+}
 .appreciation-composer__intro {
     padding: .25rem 0 1rem;
     border-bottom: 1px solid #eef2f6;
@@ -70,7 +86,19 @@ $this->registerCss(<<<'CSS'
     background: #dbeafe;
     font-size: 1.1rem;
 }
-.appreciation-badge-option { border-radius: 999px !important; }
+.appreciation-badge-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+}
+.appreciation-badge-option {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    border-radius: 8px !important;
+    white-space: normal;
+    text-align: left;
+}
 .appreciation-badge-option.btn-check:checked + label,
 .btn-check:checked + .appreciation-badge-option { box-shadow: 0 4px 12px rgba(37, 99, 235, .16); }
 .appreciation-composer__footer {
@@ -79,6 +107,19 @@ $this->registerCss(<<<'CSS'
     z-index: 2;
     padding: .85rem 0 .25rem;
     background: rgba(255,255,255,.96);
+}
+@media (max-width: 575.98px) {
+    .appreciation-modal-body { padding: 0 !important; }
+    .appreciation-composer__intro { align-items: flex-start !important; }
+    .appreciation-composer__message { min-height: 128px; }
+    .appreciation-badge-options { grid-template-columns: 1fr; }
+    .appreciation-composer__footer {
+        bottom: 0;
+        display: grid !important;
+        grid-template-columns: 1fr;
+        padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+    }
+    .appreciation-composer__footer .btn { width: 100%; }
 }
 .appreciation-success-pop {
     position: fixed;
@@ -163,7 +204,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
 ?>
 
 <?php if ($isModal): ?>
-<div class="p-2">
+<div class="p-2 appreciation-modal-body">
 <?php endif; ?>
 
 <div class="<?= $isModal ? '' : 'row justify-content-center py-3' ?>">
@@ -183,7 +224,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
                     'options' => ['data-modal-submit' => $isModal ? '1' : '0', 'enctype' => 'multipart/form-data'],
                 ]); ?>
 
-                <div class="appreciation-composer">
+                <div class="appreciation-composer appreciation-composer--form">
                 <div class="appreciation-composer__intro d-flex align-items-center gap-3 mb-3">
                     <span class="appreciation-composer__mark rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"><i class="bi bi-heart-fill"></i></span>
                     <div><div class="fw-bold">เล่าเรื่องดี ๆ ที่อยากขอบคุณ</div><div class="small text-muted">ข้อความนี้จะส่งถึงเพื่อนของคุณโดยตรง</div></div>
@@ -233,7 +274,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
                 <div class="mb-4 pt-1">
                     <label class="form-label fw-semibold d-block mb-1">เพื่อนคนนี้น่ารักตรงไหน?</label>
                     <p class="small text-muted mb-2">เลือกคำที่ตรงกับเรื่องราว เพื่อเชื่อมโยงกับค่านิยมองค์กร</p>
-                    <div class="d-flex flex-wrap gap-2" role="group" aria-label="เลือกประเภทคำขอบคุณ">
+                    <div class="appreciation-badge-options" role="group" aria-label="เลือกประเภทคำขอบคุณ">
                         <?php
                         $badges = Appreciation::badgeLabels();
                         $emojis = Appreciation::badgeEmojis();

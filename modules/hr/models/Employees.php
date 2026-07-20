@@ -804,11 +804,11 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => count($this->positions),
             ],
             [
-                'title' => 'คำอธิบายงาน (JD)',
+                'title' => 'ประวัติคำอธิบายงาน (JD)',
                 'icon' => '<i data-lucide="file-text" class="lucide-icon text-primary"></i>',
-                'name' => 'job_description',
-                'subtitle' => 'Job Description ตามตำแหน่ง แก้ไข/เพิ่มเติมได้',
-                'count' => $this->getJdSectionCount(),
+                'name' => 'job_description_history',
+                'subtitle' => 'ดู JD ทุก Revision และช่วงเวลาที่มีผล',
+                'count' => $this->getJdHistoryCount(),
             ],
             [
                 'title' => 'ข้อมูลการศึกษา',
@@ -903,11 +903,24 @@ class Employees extends Yii\db\ActiveRecord
         if (!class_exists(\app\modules\jd\models\JdEmployee::class)) {
             return 0;
         }
-        $jd = \app\modules\jd\models\JdEmployee::find()
-            ->where(['emp_id' => $this->id])
-            ->with('sections')
-            ->one();
+        $jd = \app\modules\jd\models\JdEmployee::findCurrent((int) $this->id);
         return $jd ? count($jd->sections) : 0;
+    }
+
+    public function getCurrentJd()
+    {
+        return \app\modules\jd\models\JdEmployee::findCurrent((int) $this->id);
+    }
+
+    public function getJdHistory()
+    {
+        return $this->hasMany(\app\modules\jd\models\JdEmployee::class, ['emp_id' => 'id'])
+            ->orderBy(['revision_no' => SORT_DESC, 'effective_from' => SORT_DESC, 'id' => SORT_DESC]);
+    }
+
+    public function getJdHistoryCount(): int
+    {
+        return (int) \app\modules\jd\models\JdEmployee::find()->where(['emp_id' => $this->id])->count();
     }
 
     // คำนำหน้า
