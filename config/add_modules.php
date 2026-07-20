@@ -63,7 +63,7 @@ $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานแ
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
 $modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การสำรวจครุภัณฑ์ประจำปี
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
-$modules['inventory'] = ['class' => 'app\modules\inventory\Module'];  // คลัง
+$modules['inventory'] = ['class' => 'app\modules\inventory\Module', 'frozen' => false];  // คลัง (freeze ปิดชั่วคราว — ยังใช้งาน V1 คู่ขนานกับ V2 อยู่)
 $modules['inventory-v2'] = ['class' => 'app\modules\inventoryV2\Module'];  // คลัง
 $modules['sub-warehouse'] = ['class' => 'app\modules\SubWarehouse\Module'];  // คลังหน่วยงาน (คลังย่อย)
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋
@@ -82,8 +82,6 @@ $modules['approve-v2'] = ['class' => 'app\modules\approveV2\Module'];  // module
 $modules['approve-v3'] = ['class' => 'app\modules\approveV3\Module'];  // module อนุมัติ V3 (ตาราง approve เดิม)
 $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // module Telegram
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
-$modules['backup'] = ['class' => 'app\modules\backup\Module'];  // module backup
-$modules['gdoc'] = ['class' => 'app\modules\gdoc\Module'];  // module gogole doc
 $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
 $modules['line2'] = ['class' => 'app\modules\line2\Module'];  // line officail 2 By PCH
 $modules['dev'] = ['class' => 'app\modules\dev\Module'];  // ปรับปรุงระบบ theme layout
@@ -96,5 +94,6 @@ $modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบา
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
 $modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริการออนไลน์ (แอปมือถือ)
 $modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PDF Template positioning (resolution-independent), URL: /pdf-template
+$modules['medsop'] = ['class' => 'app\modules\medsop\Module'];  // ระบบคลังเอกสาร SOP/WI
 $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 return $modules;

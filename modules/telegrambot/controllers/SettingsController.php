@@ -6,12 +6,10 @@ use app\models\Categorise;
 use app\modules\telegrambot\components\TelegramBot;
 use app\modules\usermanager\models\User;
 use Yii;
-use yii\helpers\FileHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\UploadedFile;
 use yii\web\Response;
 
 class SettingsController extends Controller
@@ -24,32 +22,19 @@ class SettingsController extends Controller
             $postedData = is_array($model->data_json ?? null) ? $model->data_json : [];
             $existingData = $this->normalizeDataJson($model->getOldAttribute('data_json'));
             $mergedData = $this->normalizeSettingsData(array_merge($existingData, $postedData));
-            $uploadResult = $this->applyBotQrImageUpload($mergedData, $existingData);
 
-            if (!$uploadResult['success']) {
-                Yii::$app->session->setFlash('error', $uploadResult['message']);
-                $model->data_json = $mergedData;
-            } else {
-                $mergedData = $uploadResult['data'];
+            $model->name = 'telegram_setting';
+            $model->code = $model->code ?: 'telegram_setting';
+            $model->title = $model->title ?: 'Telegram Personal Notification';
+            $model->data_json = json_encode($mergedData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-                $model->name = 'telegram_setting';
-                $model->code = $model->code ?: 'telegram_setting';
-                $model->title = $model->title ?: 'Telegram Personal Notification';
-                $model->data_json = json_encode($mergedData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-                if ($model->save(false)) {
-                    foreach ($uploadResult['delete_after_save'] as $path) {
-                        $this->deleteBotQrImageFile($path);
-                    }
-                    Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่า Telegram สำเร็จ');
-                    return $this->refresh();
-                }
-
-                foreach ($uploadResult['delete_on_failure'] as $path) {
-                    $this->deleteBotQrImageFile($path);
-                }
-                Yii::$app->session->setFlash('error', 'บันทึกการตั้งค่า Telegram ไม่สำเร็จ');
+            if ($model->save(false)) {
+                Yii::$app->session->setFlash('success', 'บันทึกการตั้งค่า Telegram สำเร็จ');
+                return $this->refresh();
             }
+
+            $model->data_json = $mergedData;
+            Yii::$app->session->setFlash('error', 'บันทึกการตั้งค่า Telegram ไม่สำเร็จ');
         }
 
         $data = $this->normalizeSettingsData($this->normalizeDataJson($model->data_json ?? null));
@@ -259,26 +244,6 @@ class SettingsController extends Controller
             'web_app_url' => $webAppUrl,
             'attach_web_app' => $attachWebApp,
         ];
-    }
-
-    public function actionBotQr(int $download = 0)
-    {
-        $settings = $this->normalizeSettingsData($this->normalizeDataJson($this->findSettingsModel()->data_json ?? null));
-        $imagePath = $this->normalizeBotQrImagePath($settings['bot_qr_image'] ?? '');
-        $fullPath = $this->resolveBotQrImageFullPath($imagePath);
-
-        if ($fullPath === null || !is_file($fullPath)) {
-            Yii::$app->response->format = Response::FORMAT_RAW;
-            Yii::$app->response->statusCode = 404;
-            Yii::$app->response->headers->set('Content-Type', 'text/plain; charset=UTF-8');
-            return 'ไม่พบรูป QR Code ของ Bot';
-        }
-
-        $mimeType = FileHelper::getMimeType($fullPath) ?: 'application/octet-stream';
-        return Yii::$app->response->sendFile($fullPath, basename($fullPath), [
-            'mimeType' => $mimeType,
-            'inline' => !$download,
-        ]);
     }
 
     protected function findSettingsModel(): Categorise
@@ -581,73 +546,7 @@ class SettingsController extends Controller
             'mini_app' => $baseUrl,
             'enable_mini_app' => (string) ($data['enable_mini_app'] ?? '0') === '1' ? '1' : '0',
             'enable_notification' => (string) ($data['enable_notification'] ?? '1') === '1' ? '1' : '0',
-            'bot_qr_image' => $this->normalizeBotQrImagePath($data['bot_qr_image'] ?? ''),
-            'bot_qr_image_name' => trim((string) ($data['bot_qr_image_name'] ?? '')),
-            'bot_qr_image_uploaded_at' => trim((string) ($data['bot_qr_image_uploaded_at'] ?? '')),
         ]);
-    }
-
-    protected function applyBotQrImageUpload(array $data, array $existingData): array
-    {
-        $removeCurrentImage = Yii::$app->request->post('remove_bot_qr_image') === '1';
-        $file = UploadedFile::getInstanceByName('bot_qr_image');
-        $deleteAfterSave = [];
-        $deleteOnFailure = [];
-
-        if ($removeCurrentImage) {
-            $deleteAfterSave[] = $existingData['bot_qr_image'] ?? '';
-            $data['bot_qr_image'] = '';
-            $data['bot_qr_image_name'] = '';
-            $data['bot_qr_image_uploaded_at'] = '';
-        }
-
-        if ($file === null) {
-            return [
-                'success' => true,
-                'data' => $data,
-                'delete_after_save' => $deleteAfterSave,
-                'delete_on_failure' => $deleteOnFailure,
-            ];
-        }
-
-        if ((int) $file->error !== UPLOAD_ERR_OK) {
-            return ['success' => false, 'message' => 'อัปโหลดรูป QR Code ไม่สำเร็จ'];
-        }
-
-        if ((int) $file->size > 5 * 1024 * 1024) {
-            return ['success' => false, 'message' => 'รูป QR Code ต้องมีขนาดไม่เกิน 5 MB'];
-        }
-
-        $extension = strtolower((string) $file->extension);
-        $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-        $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-        $mimeType = FileHelper::getMimeType($file->tempName) ?: $file->type;
-
-        if (!in_array($extension, $allowedExtensions, true) || !in_array($mimeType, $allowedMimeTypes, true)) {
-            return ['success' => false, 'message' => 'อนุญาตเฉพาะไฟล์รูปภาพ PNG, JPG, WEBP หรือ GIF'];
-        }
-
-        $uploadDir = Yii::getAlias('@webroot') . '/uploads/telegrambot/qr';
-        FileHelper::createDirectory($uploadDir, 0775, true);
-
-        $filename = 'bot-qr-' . date('YmdHis') . '-' . Yii::$app->security->generateRandomString(8) . '.' . $extension;
-        $savePath = $uploadDir . '/' . $filename;
-        if (!$file->saveAs($savePath)) {
-            return ['success' => false, 'message' => 'บันทึกรูป QR Code ไม่สำเร็จ'];
-        }
-
-        $data['bot_qr_image'] = '/uploads/telegrambot/qr/' . $filename;
-        $data['bot_qr_image_name'] = $file->name;
-        $data['bot_qr_image_uploaded_at'] = date('c');
-        $deleteAfterSave[] = $existingData['bot_qr_image'] ?? '';
-        $deleteOnFailure[] = $data['bot_qr_image'];
-
-        return [
-            'success' => true,
-            'data' => $data,
-            'delete_after_save' => $deleteAfterSave,
-            'delete_on_failure' => $deleteOnFailure,
-        ];
     }
 
     protected function isValidPublicHttpsUrl(?string $url): bool
@@ -680,34 +579,6 @@ class SettingsController extends Controller
         $username = preg_replace('/[^A-Za-z0-9_]/', '', $username) ?: '';
 
         return substr($username, 0, 64);
-    }
-
-    protected function normalizeBotQrImagePath($path): string
-    {
-        $path = trim((string) $path);
-        if ($path === '') {
-            return '';
-        }
-
-        return strpos($path, '/uploads/telegrambot/qr/') === 0 ? $path : '';
-    }
-
-    protected function resolveBotQrImageFullPath(string $path): ?string
-    {
-        $path = $this->normalizeBotQrImagePath($path);
-        if ($path === '') {
-            return null;
-        }
-
-        return Yii::getAlias('@webroot') . $path;
-    }
-
-    protected function deleteBotQrImageFile($path): void
-    {
-        $fullPath = $this->resolveBotQrImageFullPath((string) $path);
-        if ($fullPath !== null && is_file($fullPath)) {
-            @unlink($fullPath);
-        }
     }
 
     protected function normalizeDataJson($data): array

@@ -105,9 +105,12 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['price', 'asset_status','useful_life','asset_condition'], 'required'],
+            // useful_life ไม่ required แล้ว — ถูกล็อกจากหมวดทรัพย์สินใน beforeSave (หลัง validation)
+            [['price', 'asset_status','asset_condition'], 'required'],
             [['q_department', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'deleted_at', 'deleted_by', 'on_year', 'receive_date', 'data_json', 'device_items', 'updated_at', 'created_at', 'asset_name', 'asset_item_id', 'fsn_number', 'code', 'gfmis', 'qty', 'fsn_auto', 'type_name', 'show', 'asset_group_id', 'asset_type', 'q', 'budget_type', 'purchase', 'owner', 'price1', 'price2', 'q_date', 'q_receive_date', 'q_month', 'q_year', 'department_name', 'asset_option', 'method_get', 'po_number', 'q_lastDay', 'item_options', 'group_id', 'license_plate', 'car_type', 'depreciation_rate', 'depreciation_method', 'lifecycle_status', 'qr_code_path','asset_kind','risk_level'], 'safe'],
             [['risk_level'], 'in', 'range' => ['H', 'M', 'L', null], 'strict' => false],
+            // flow ครุภัณฑ์: หมวดทรัพย์สินที่เลือกต้อง "พร้อมใช้งาน" (มีรหัส + เปิดใช้งาน) จึงบันทึกได้
+            [['asset_category_id'], 'validateCategoryReady'],
             [['price', 'residual_value', 'depreciation_rate'], 'number'],
             [['code'], 'unique'],
             [['department', 'depre_type', 'created_by', 'updated_by', 'useful_life'], 'integer'],
@@ -172,9 +175,13 @@ class Asset extends \yii\db\ActiveRecord
             ->orderBy(['created_at' => SORT_DESC]);
     }
 
-    public function listAssetType()
+    /**
+     * รายการ "ประเภท" ตามกลุ่มทรัพย์สิน — EQUIP=ครุภัณฑ์, STRUCT=สิ่งปลูกสร้าง ฯลฯ
+     * (ใช้ร่วมกันระหว่างฟอร์มครุภัณฑ์และสิ่งปลูกสร้าง ต่างกันแค่ group_id)
+     */
+    public function listAssetType($group = 'EQUIP')
     {
-        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'EQUIP'])->all(), 'code', 'title');
+        return ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type', 'group_id' => $group])->all(), 'code', 'title');
     }
 
     public function listAssetCategory()
@@ -345,6 +352,9 @@ class Asset extends \yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
+        // flow ทะเบียนครุภัณฑ์: ล็อกค่าเสื่อมจากหมวด + fsn_number เป็นหมายเลขเต็ม (code = mirror)
+        $this->applyEquipCategoryRules();
+
         try {
             if ($this->asset_group_id == 2) {
                 // try {
@@ -872,6 +882,44 @@ class Asset extends \yii\db\ActiveRecord
             'group_title'       => $parent->title ?? null,
             'allow_other_note'  => !empty($leafJson['allow_other_note']),
         ];
+    }
+
+    /**
+     * ชุด code ของ node ที่ "มีลูก" (ถูกใช้เป็น category_id ของ node อื่น) — ใช้เช็คว่า
+     * node หนึ่งเป็นหมวด/หมวดย่อย (ต้อง cascade ต่อ) หรือเป็น leaf จริง โดยไม่ยิง query ต่อ node
+     * @return string[]
+     */
+    public function getStructureChildCodes()
+    {
+        return Categorise::find()
+            ->where(['name' => 'structure_type'])
+            ->andWhere(['not', ['category_id' => null]])
+            ->select('category_id')
+            ->distinct()
+            ->column();
+    }
+
+    /**
+     * เดินขึ้นจาก code ที่ให้มาไปตาม category_id จนถึงราก คืน path เรียงจากบนลงล่าง
+     * ใช้ resolve หมวด/หมวดย่อย/leaf ที่ถูกต้องปัจจุบันจาก leaf code เสมอ (leaf ไม่เคยย้ายที่
+     * แม้หมวดของมันจะถูกจัดกลุ่มใหม่ในภายหลัง)
+     * @return array<int,array{code:string,title:string}>
+     */
+    public function getStructureAncestryFor($code)
+    {
+        $path = [];
+        $current = $code;
+        $guard = 0;
+        while (!empty($current) && $guard < 5) {
+            $row = Categorise::find()->where(['name' => 'structure_type', 'code' => $current])->one();
+            if (!$row) {
+                break;
+            }
+            array_unshift($path, ['code' => $row->code, 'title' => $row->title]);
+            $current = $row->category_id;
+            $guard++;
+        }
+        return $path;
     }
 
     public function ListAssetstatus()

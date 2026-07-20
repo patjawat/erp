@@ -101,11 +101,13 @@ class WarehouseController extends Controller
     public function actionOrderRequest($all = null)
     {
         $warehouse = \Yii::$app->session->get('warehouse');
+        // เผื่อ session เก่าที่ยังเก็บเป็น array (ก่อนแก้ StockOrder/StockOutController::setWarehouse ให้เก็บเป็น object)
+        $warehouseId = is_array($warehouse) ? ($warehouse['id'] ?? null) : ($warehouse->id ?? null);
         // หากเลือกคลังแล้วให้แสดง ในคลัง
         // if ($warehouse) {
         $searchModel = new StockEventSearch([
             'order_status' =>   ['pending'],
-            'warehouse_id' => $warehouse->id,
+            'warehouse_id' => $warehouseId,
             'transaction_type' => 'OUT'
         ]);
 

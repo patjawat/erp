@@ -5,6 +5,9 @@ namespace app\modules\me\controllers;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\appreciation\models\Appreciation;
+use app\modules\appreciation\models\AppreciationProgramYear;
+use app\modules\appreciation\models\AppreciationRedemption;
+use app\modules\appreciation\services\AppreciationPointService;
 use app\modules\dms\models\Documents;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\helpdesk\models\HelpdeskSearch;
@@ -52,6 +55,7 @@ class DefaultController extends Controller
 
         $todayCheckinCount = 0;
         $appreciationReceivedCount = 0;
+        $appreciationStatus = ['year'=>null,'earned'=>0,'used'=>0,'balance'=>0,'levelName'=>'เริ่มต้น','levelColor'=>'#2563eb','nextLevelName'=>null,'pointsToNext'=>0,'progress'=>0,'rewardsCount'=>0];
         $unreadDocumentCount = 0;
         try {
             $empId = (int) $model->id;
@@ -99,7 +103,17 @@ class DefaultController extends Controller
                 $todayCheckinCount = 0;
             }
             try {
-                $appreciationReceivedCount = (int) Appreciation::find()->andWhere(['to_emp_id' => $model->id])->count();
+                $programYear=AppreciationProgramYear::active();
+                $summary=AppreciationPointService::summary($model->id,$programYear);
+                $appreciationReceivedQuery=Appreciation::find()->andWhere(['to_emp_id'=>$model->id]);
+                if($programYear)$appreciationReceivedQuery->andWhere(['between','created_at',$programYear->start_at.' 00:00:00',$programYear->end_at.' 23:59:59']);
+                $appreciationReceivedCount=(int)$appreciationReceivedQuery->count();
+                $currentMin=$summary['level']?(int)$summary['level']->min_points:0;
+                $nextMin=$summary['nextLevel']?(int)$summary['nextLevel']->min_points:null;
+                $progress=$nextMin!==null && $nextMin>$currentMin ? max(0,min(100,round((($summary['earned']-$currentMin)/($nextMin-$currentMin))*100))) : ($summary['earned']>0?100:0);
+                $rewardsCount=$programYear?(int)AppreciationRedemption::find()->where(['emp_id'=>$model->id,'program_year_id'=>$programYear->id,'status'=>[AppreciationRedemption::STATUS_APPROVED,AppreciationRedemption::STATUS_DELIVERED]])->count():0;
+                $levelColor=$summary['level'] && preg_match('/^#[0-9a-fA-F]{6}$/',(string)$summary['level']->color)?$summary['level']->color:'#2563eb';
+                $appreciationStatus=['year'=>$programYear,'earned'=>(int)$summary['earned'],'used'=>(int)$summary['used'],'balance'=>(int)$summary['balance'],'levelName'=>$summary['level']?$summary['level']->name:'เริ่มต้น','levelColor'=>$levelColor,'nextLevelName'=>$summary['nextLevel']?$summary['nextLevel']->name:null,'pointsToNext'=>$nextMin!==null?max(0,$nextMin-(int)$summary['earned']):0,'progress'=>$progress,'rewardsCount'=>$rewardsCount];
             } catch (\Throwable $e) {
                 $appreciationReceivedCount = 0;
             }
@@ -111,6 +125,7 @@ class DefaultController extends Controller
             'dataProvider' => $dataProvider,
             'todayCheckinCount' => $todayCheckinCount,
             'appreciationReceivedCount' => $appreciationReceivedCount,
+            'appreciationStatus' => $appreciationStatus,
             'unreadDocumentCount' => $unreadDocumentCount,
         ]);
     }

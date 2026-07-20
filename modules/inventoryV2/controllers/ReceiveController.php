@@ -6,10 +6,14 @@ use app\components\AppHelper;
 use app\modules\inventoryV2\models\Warehouse;
 use app\modules\inventoryV2\components\InventoryService;
 use app\modules\sm\models\Vendor;
+use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
+use app\modules\purchase\models\Order as PurchaseOrder;
+use app\modules\filemanager\models\Uploads;
+use app\modules\filemanager\components\FileManagerHelper;
 use yii\db\Expression;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
@@ -60,6 +64,14 @@ class ReceiveController extends Controller
         $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
         $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
 
+        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ (warehouse/update > ผู้รับผิดชอบคลัง)
+        $isAdmin = \Yii::$app->user->can('admin');
+        $accessibleWarehouses = Warehouse::findMainWarehousesForReceive();
+        $accessibleWarehouseIds = ArrayHelper::getColumn($accessibleWarehouses, 'id');
+        if (!$isAdmin) {
+            $dataProvider->query->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
+
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
         if ($start !== null && $start !== '') {
@@ -72,27 +84,36 @@ class ReceiveController extends Controller
         $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
-        $statusSummary = StockOrder::find()
+        $statusSummaryQuery = StockOrder::find()
             ->where(['order_type' => 'IN'])
-            ->andWhere(['sub_warehouse_id' => null])
+            ->andWhere(['sub_warehouse_id' => null]);
+        if (!$isAdmin) {
+            $statusSummaryQuery->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
+        $statusSummary = $statusSummaryQuery
             ->select(['status', 'COUNT(*) as cnt'])
             ->groupBy('status')
             ->asArray()
             ->all();
         $statusSummaryMap = array_column($statusSummary, 'cnt', 'status');
 
-        $warehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
-            Warehouse::find()
-                ->where(['warehouse_type' => 'MAIN'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->orderBy('warehouse_name')
-                ->all(),
-            'id',
-            'warehouse_name'
-        );
+        $warehouses = $isAdmin
+            ? ['' => 'ทุกคลัง'] + ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            )
+            : ['' => 'ทุกคลัง'] + ArrayHelper::map($accessibleWarehouses, 'id', 'warehouse_name');
 
         // รวมยอดเงินทั้งหมด (ตามตัวกรองปัจจุบัน)
         $totalAmountQuery = StockOrder::find()->select('id')->where(['order_type' => 'IN'])->andWhere(['sub_warehouse_id' => null]);
+        if (!$isAdmin) {
+            $totalAmountQuery->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
         if ($start !== null && $start !== '') {
             $totalAmountQuery->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
         }
@@ -140,7 +161,24 @@ class ReceiveController extends Controller
             ->where(['stock_order_id' => $totalAmountQuery])
             ->sum(new Expression('qty * COALESCE(unit_price, 0)'));
 
-        $listItemType = ['' => 'ทุกประเภท'] + StockItem::ListStockItemType();
+        $fullItemTypeList = StockItem::ListStockItemType();
+        if ($isAdmin) {
+            $listItemType = ['' => 'ทุกประเภท'] + $fullItemTypeList;
+        } else {
+            $allowedCodes = [];
+            $unrestricted = false;
+            foreach ($accessibleWarehouses as $w) {
+                $codes = $w->getAllowedItemTypeCodes();
+                if (empty($codes)) {
+                    $unrestricted = true;
+                    break;
+                }
+                $allowedCodes = array_merge($allowedCodes, $codes);
+            }
+            $listItemType = $unrestricted
+                ? ['' => 'ทุกประเภท'] + $fullItemTypeList
+                : ['' => 'ทุกประเภท'] + array_intersect_key($fullItemTypeList, array_flip(array_unique($allowedCodes)));
+        }
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -262,6 +300,254 @@ class ReceiveController extends Controller
     }
 
     /**
+     * ส่งออกรายการใบรับเข้าทั้งหมดตามตัวกรองปัจจุบัน (ไม่แบ่งหน้า) เป็น Excel แบบสรุป 1 แถวต่อ 1 ใบ
+     */
+    public function actionExportExcelList()
+    {
+        $searchModel = new StockOrderSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['order_type' => 'IN']);
+        $dataProvider->query->andWhere(['sub_warehouse_id' => null]);
+        $dataProvider->query->with(['mainWarehouse', 'stockDetails', 'stockDetails.item', 'stockDetails.item.categoryType']);
+
+        // ไม่ใช่ admin: จำกัดเฉพาะคลังที่ถูกกำหนดเป็นผู้รับผิดชอบ เหมือนหน้ารายการ
+        if (!\Yii::$app->user->can('admin')) {
+            $accessibleWarehouseIds = ArrayHelper::getColumn(Warehouse::findMainWarehousesForReceive(), 'id');
+            $dataProvider->query->andWhere(['main_warehouse_id' => $accessibleWarehouseIds]);
+        }
+
+        $start = AppHelper::convertToGregorian($searchModel->date_start);
+        $end = AppHelper::convertToGregorian($searchModel->date_end);
+        if ($start !== null && $start !== '') {
+            $dataProvider->query->andWhere(['>=', 'order_date', $start . ' 00:00:00']);
+        }
+        if ($end !== null && $end !== '') {
+            $dataProvider->query->andWhere(['<=', 'order_date', $end . ' 23:59:59']);
+        }
+
+        $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC];
+        $dataProvider->pagination = false;
+
+        $models = $dataProvider->getModels();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('รายการใบรับเข้า');
+
+        $sheet->setCellValue('A1', 'รายการใบรับเข้าวัสดุ');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->setCellValue('A2', 'ส่งออกเมื่อ: ' . \app\components\ThaiDateHelper::formatThaiDate(date('Y-m-d')) . ' ' . date('H:i'));
+        $sheet->mergeCells('A2:H2');
+
+        $headerRow = 4;
+        $headers = ['ลำดับ', 'เลขที่เอกสาร', 'วันที่', 'คลัง', 'ประเภทวัสดุ', 'จำนวนรายการ', 'มูลค่ารับเข้า (บาท)', 'สถานะ'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . $headerRow, $h);
+            $col++;
+        }
+        $lastCol = chr(ord('A') + count($headers) - 1);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E0E0E0');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        $statusLabels = [
+            'DRAFT' => 'ร่าง',
+            'CONFIRMED' => 'บันทึกแล้ว',
+            'CANCELLED' => 'ยกเลิก',
+        ];
+
+        $rowNum = $headerRow + 1;
+        $grandTotal = 0;
+        foreach ($models as $index => $item) {
+            $rowTotal = 0;
+            $typeNames = [];
+            foreach ($item->stockDetails as $d) {
+                $rowTotal += (float) $d->qty * (float) ($d->unit_price ?? 0);
+                if ($d->item && $d->item->categoryType) {
+                    $typeNames[$d->item->categoryType->code] = $d->item->categoryType->title;
+                }
+            }
+            $grandTotal += $rowTotal;
+
+            $sheet->setCellValue('A' . $rowNum, $index + 1);
+            $sheet->setCellValue('B' . $rowNum, $item->order_no);
+            $sheet->setCellValue('C' . $rowNum, $item->order_date ? \app\components\ThaiDateHelper::formatThaiDate($item->order_date) : '-');
+            $sheet->setCellValue('D' . $rowNum, $item->mainWarehouse ? $item->mainWarehouse->warehouse_name : '-');
+            $sheet->setCellValue('E' . $rowNum, !empty($typeNames) ? implode(', ', $typeNames) : '-');
+            $sheet->setCellValue('F' . $rowNum, count($item->stockDetails));
+            $sheet->setCellValue('G' . $rowNum, $rowTotal);
+            $sheet->setCellValue('H' . $rowNum, $statusLabels[$item->status] ?? $item->status);
+            $rowNum++;
+        }
+
+        $sheet->setCellValue('A' . $rowNum, 'รวมยอดเงินทั้งหมด');
+        $sheet->mergeCells('A' . $rowNum . ':F' . $rowNum);
+        $sheet->setCellValue('G' . $rowNum, $grandTotal);
+        $sheet->getStyle('A' . $rowNum . ':H' . $rowNum)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+        $dataLastRow = $rowNum;
+        $sheet->getStyle('G' . ($headerRow + 1) . ':G' . $dataLastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $dataLastRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+        foreach (range('A', $lastCol) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
+
+        $filenameUtf8 = 'รายการใบรับเข้า-' . date('Ymd-His') . '.xlsx';
+        $filenameAscii = 'receive-list-' . date('Ymd-His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filenameAscii . '"; filename*=UTF-8\'\'' . rawurlencode($filenameUtf8));
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * รายการใบสั่งซื้อที่รอรับเข้าคลัง (สำหรับ picker ในหน้าสร้างใบรับเข้า)
+     * กรองตามประเภทวัสดุที่คลังที่เลือกอนุญาตรับ + ค้นหาด้วยเลขที่ PO/PQ/PR/ผู้ขาย/ประเภท/จำนวนเงิน
+     *
+     * หมายเหตุ: ค้นหาด้วยการ match กับค่าที่แสดงจริงในรายการ (ผู้ขาย/ประเภท/จำนวนเงิน คำนวณจาก relation
+     * ไม่ใช่ data_json['vendor_name'] ที่หลายใบเป็นแค่ '-' เพราะไม่ได้บันทึกไว้) — ทำใน PHP หลัง query
+     * เนื่องจากปริมาณใบสั่งซื้อที่รอรับเข้าต่อคลังโดยทั่วไปมีไม่มาก จึงคัดกรองหลัง fetch ได้โดยไม่กระทบ performance
+     * @return array
+     */
+    public function actionPendingPo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $warehouseId = (int) $this->request->get('warehouse_id');
+        $q = trim((string) $this->request->get('q', ''));
+        if (!$warehouseId) {
+            return ['results' => []];
+        }
+        $warehouse = Warehouse::findOne($warehouseId);
+        if (!$warehouse) {
+            return ['results' => []];
+        }
+        $allowedCodes = $warehouse->getAllowedItemTypeCodes();
+
+        $query = PurchaseOrder::find()->where(['name' => 'order', 'status' => 5]);
+        if (!empty($allowedCodes)) {
+            $query->andWhere(['category_id' => $allowedCodes]);
+        }
+        $orders = $query->orderBy(['id' => SORT_DESC])->limit(500)->all();
+
+        $results = [];
+        foreach ($orders as $order) {
+            $vendorTitle = $order->vendor ? $order->vendor->title : ($order->vendor_name ?: '-');
+            $assetTypeTitle = $order->assetType ? $order->assetType->title : '-';
+            $totalAmount = (float) $order->calculateVAT()['priceAfterVAT'];
+
+            if ($q !== '') {
+                $haystack = implode(' ', [
+                    $order->po_number,
+                    $order->pq_number,
+                    $order->pr_number,
+                    $vendorTitle,
+                    $assetTypeTitle,
+                    number_format($totalAmount, 2),
+                ]);
+                if (mb_stripos($haystack, $q) === false) {
+                    continue;
+                }
+            }
+
+            $results[] = [
+                'id' => $order->id,
+                'po_number' => $order->po_number,
+                'pq_number' => $order->pq_number,
+                'vendor_title' => $vendorTitle,
+                'asset_type_title' => $assetTypeTitle,
+                'item_count' => count($order->ListOrderItems()),
+                'total_amount' => $totalAmount,
+            ];
+            if (count($results) >= 30) {
+                break;
+            }
+        }
+
+        return ['results' => $results];
+    }
+
+    /**
+     * รายละเอียดใบสั่งซื้อที่เลือก (สำหรับ auto-fill ในหน้าสร้างใบรับเข้า)
+     * แปลงรายการจาก orders(order_item, asset_item) ให้อยู่ในรูปแบบเดียวกับที่ตารางรายการฝั่ง _form.php ใช้ (เหมือน import CSV)
+     * @param int $id orders.id
+     * @return array
+     */
+    public function actionPendingPoItems($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $order = PurchaseOrder::findOne(['id' => $id, 'name' => 'order']);
+        if (!$order) {
+            return ['success' => false, 'message' => 'ไม่พบใบสั่งซื้อ'];
+        }
+        if ((int) $order->status !== 5) {
+            return ['success' => false, 'message' => 'ใบสั่งซื้อนี้ถูกรับเข้าคลังไปแล้ว หรือไม่อยู่ในสถานะรอรับเข้า'];
+        }
+
+        $warehouseId = (int) $this->request->get('warehouse_id');
+        $warehouse = $warehouseId ? Warehouse::findOne($warehouseId) : null;
+
+        $contactId = null;
+        if (!empty($order->vendor_id)) {
+            $vendor = Vendor::findOne(['code' => $order->vendor_id, 'name' => 'vendor']);
+            $contactId = $vendor ? $vendor->id : null;
+        }
+
+        $items = [];
+        $skipped = [];
+        foreach ($order->ListOrderItems() as $orderItem) {
+            $stockItem = StockItem::findOne(['item_code' => $orderItem->asset_item]);
+            if (!$stockItem) {
+                $skipped[] = ['name' => $orderItem->asset_item, 'reason' => 'ไม่พบพัสดุนี้ในระบบคลัง'];
+                continue;
+            }
+            if ($warehouse && !$warehouse->allowsItemType($stockItem->category_id)) {
+                $skipped[] = ['name' => $stockItem->item_name, 'reason' => 'คลังที่เลือกไม่รับพัสดุประเภทนี้'];
+                continue;
+            }
+            $imgUrl = '';
+            if (!empty($stockItem->ref)) {
+                $upload = Uploads::find()->where(['ref' => $stockItem->ref])->one();
+                if ($upload) {
+                    $imgUrl = FileManagerHelper::getImg($upload->id);
+                }
+            }
+            $items[] = [
+                'item_code' => $stockItem->item_code,
+                'item_name' => $stockItem->item_name,
+                'unit_name' => $stockItem->unitName ?: '-',
+                'category_title' => $stockItem->categoryType ? $stockItem->categoryType->title : '-',
+                'image_url' => $imgUrl,
+                'qty' => (float) $orderItem->qty,
+                'unit_price' => (float) $orderItem->price,
+                'lot_number' => '',
+                'expiry_date' => '',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'order_id' => $order->id,
+            'po_number' => $order->po_number,
+            'delivery_note_no' => isset($order->data_json['gr_number']) ? $order->data_json['gr_number'] : '',
+            'contact_id' => $contactId,
+            'items' => $items,
+            'skipped_items' => $skipped,
+        ];
+    }
+
+    /**
      * Creates a new StockOrder model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
@@ -298,6 +584,17 @@ class ReceiveController extends Controller
                         $model->order_date .= ' ' . date('H:i:s');
                     }
                 }
+
+                // เลขที่ส่งสินค้า + ลิงก์ใบสั่งซื้อต้นทาง (ถ้ารับเข้าจาก PO picker) — เก็บใน data_json
+                $poOrderIdRaw = $this->request->post('po_order_id');
+                $poOrderId = ($poOrderIdRaw !== null && $poOrderIdRaw !== '') ? (int) $poOrderIdRaw : null;
+                $json = is_array($model->data_json) ? $model->data_json : (is_string($model->data_json) ? (json_decode($model->data_json, true) ?: []) : []);
+                $json['delivery_note_no'] = trim((string) $this->request->post('delivery_note_no', ''));
+                if ($poOrderId) {
+                    $json['po_order_id'] = $poOrderId;
+                }
+                $model->data_json = $json;
+
                 $details = $this->request->post('StockDetail', []);
                 if (!empty($details) && $model->main_warehouse_id) {
                     $warehouse = Warehouse::findOne($model->main_warehouse_id);
@@ -399,6 +696,7 @@ class ReceiveController extends Controller
                         }
                     }
 
+                    $this->markPoOrderReceived($poOrderId);
                     $this->saveExpenseItemsAndReceipts($model);
                     $transaction->commit();
                     return [
@@ -436,6 +734,8 @@ class ReceiveController extends Controller
             'listItemType' => StockItem::ListStockItemType(),
             'items' => [], // สำหรับหน้า create จะไม่มีรายการเริ่มต้น
             'listVendors' => $listVendors,
+            'deliveryNoteNo' => '',
+            'poOrderId' => null,
         ]);
     }
 
@@ -505,6 +805,17 @@ class ReceiveController extends Controller
                     $model->order_date .= ' ' . date('H:i:s');
                 }
             }
+
+            // เลขที่ส่งสินค้า + ลิงก์ใบสั่งซื้อต้นทาง (ถ้ารับเข้าจาก PO picker) — เก็บใน data_json
+            $poOrderIdRaw = $this->request->post('po_order_id');
+            $poOrderId = ($poOrderIdRaw !== null && $poOrderIdRaw !== '') ? (int) $poOrderIdRaw : null;
+            $json = is_array($model->data_json) ? $model->data_json : (is_string($model->data_json) ? (json_decode($model->data_json, true) ?: []) : []);
+            $json['delivery_note_no'] = trim((string) $this->request->post('delivery_note_no', ''));
+            if ($poOrderId) {
+                $json['po_order_id'] = $poOrderId;
+            }
+            $model->data_json = $json;
+
             $detailsData = $this->request->post('StockDetail', []);
             if (!empty($detailsData) && $model->main_warehouse_id) {
                 $warehouse = Warehouse::findOne($model->main_warehouse_id);
@@ -605,6 +916,7 @@ class ReceiveController extends Controller
                     }
                 }
 
+                $this->markPoOrderReceived($poOrderId);
                 $this->saveExpenseItemsAndReceipts($model);
                 $transaction->commit();
                 return [
@@ -643,6 +955,8 @@ class ReceiveController extends Controller
             ),
         'listItemType' => StockItem::ListStockItemType(),
         'listVendors' => $listVendors,
+        'deliveryNoteNo' => $model->getDeliveryNoteNo(),
+        'poOrderId' => $model->getPoOrderId(),
     ]);
 }
 
@@ -678,6 +992,7 @@ class ReceiveController extends Controller
             // 2. เปลี่ยนสถานะเอกสาร
             $model->status = 'CANCELLED';
             if ($model->save(false)) { // ใช้ false เพื่อข้าม validation บางตัวถ้าจำเป็น
+                $this->revertPoOrderPending($model->getPoOrderId());
                 $transaction->commit();
                 \Yii::$app->session->setFlash('success', 'ยกเลิกเอกสารและคืนสต็อกเรียบร้อยแล้ว');
             } else {
@@ -701,9 +1016,94 @@ class ReceiveController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        if (!\Yii::$app->user->can('admin')) {
+            \Yii::$app->session->setFlash('error', 'ไม่มีสิทธิ์ลบใบรับเข้า (เฉพาะผู้ดูแลระบบเท่านั้น)');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        $model = $this->findModel($id);
+
+        if (!$model->canDelete()) {
+            \Yii::$app->session->setFlash('error', $model->getUndeletableReason());
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // ถ้าตัดสต็อกไปแล้ว (CONFIRMED) ต้องหักยอดคงเหลือคืนก่อนลบ
+            // stock_detail จะถูกลบอัตโนมัติผ่าน FK ON DELETE CASCADE
+            if ($model->status === StockOrder::STATUS_CONFIRMED) {
+                foreach ($model->stockDetails as $detail) {
+                    InventoryService::updateBalance(
+                        $detail->item_code,
+                        $model->main_warehouse_id,
+                        $detail->qty,
+                        'OUT',
+                        $detail->lot_number
+                    );
+
+                    // ลบแถว stock_balance ทิ้งถ้ายอดเหลือ 0 หลังหักคืน
+                    // (เงื่อนไข canDelete() การันตีว่ายังไม่มีการเบิก/โอนออกจากลอตนี้ จึงต้องกลับไป 0 เสมอ)
+                    $lot = !empty($detail->lot_number) ? $detail->lot_number : '-';
+                    $balance = StockBalance::findOne([
+                        'item_code' => $detail->item_code,
+                        'warehouse_id' => $model->main_warehouse_id,
+                        'lot_number' => $lot,
+                    ]);
+                    if ($balance && abs((float) $balance->balance_qty) < 0.000001) {
+                        $balance->delete();
+                    }
+                }
+            }
+
+            $poOrderId = $model->getPoOrderId();
+
+            if (!$model->delete()) {
+                throw new \Exception('ไม่สามารถลบใบรับเข้าได้');
+            }
+
+            $this->revertPoOrderPending($poOrderId);
+            $transaction->commit();
+            \Yii::$app->session->setFlash('success', 'ลบใบรับเข้าเรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::$app->session->setFlash('error', 'Error: ' . $e->getMessage());
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * เปลี่ยนสถานะใบสั่งซื้อต้นทางเป็น "ส่งเข้าคลังแล้ว" (status = 6) หลังบันทึกรับเข้าคลังสำเร็จ
+     * @param int|null $poOrderId orders.id
+     */
+    protected function markPoOrderReceived($poOrderId)
+    {
+        if (!$poOrderId) {
+            return;
+        }
+        $poOrder = PurchaseOrder::findOne(['id' => $poOrderId, 'name' => 'order']);
+        if ($poOrder) {
+            $poOrder->status = 6;
+            $poOrder->save(false);
+        }
+    }
+
+    /**
+     * ย้อนสถานะใบสั่งซื้อกลับเป็น "รอรับเข้าคลัง" (status = 5) เมื่อยกเลิก/ลบใบรับเข้าที่ผูกกับ PO นี้
+     * @param int|null $poOrderId orders.id
+     */
+    protected function revertPoOrderPending($poOrderId)
+    {
+        if (!$poOrderId) {
+            return;
+        }
+        $poOrder = PurchaseOrder::findOne(['id' => $poOrderId, 'name' => 'order']);
+        if ($poOrder && (int) $poOrder->status === 6) {
+            $poOrder->status = 5;
+            $poOrder->save(false);
+        }
     }
 
     /**

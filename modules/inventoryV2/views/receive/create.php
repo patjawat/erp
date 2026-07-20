@@ -35,5 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'listItemType' => $listItemType ?? [],
         'items' => $items ?? [],
         'listVendors' => $listVendors ?? [],
+        'deliveryNoteNo' => $deliveryNoteNo ?? '',
+        'poOrderId' => $poOrderId ?? null,
     ]) ?>
 </div>

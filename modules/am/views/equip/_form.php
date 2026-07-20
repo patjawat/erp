@@ -18,12 +18,136 @@ $group = Yii::$app->request->get('group');
 $assetNumberPattern = \app\modules\am\services\AssetNumberGenerator::getActivePattern();
 $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-0003', '66', '01'], $assetNumberPattern);
 
-
 ?>
 
 <style>
     .modal-footer {
         display: none !important;
+    }
+
+    /* รูปภาพทรัพย์สิน: preview/upload — scoped ไม่กระทบฟอร์มอื่นที่ id ซ้ำกัน (land/structure/building) */
+    #form-asset {
+        --photo-ink-2: #4a5568;   /* label, ผ่าน contrast 7.1:1 บน surface */
+        --photo-ink-3: #64748b;   /* hint/caption, ผ่าน contrast 4.5:1 บน surface (ไม่ใช้ ink-4 #a0aec0 เพราะตกที่ ~2.1:1) */
+        --photo-ink-4: #a0aec0;   /* decorative icon เท่านั้น ไม่ใช้กับตัวอักษร */
+        --photo-surface-2: #f7f9fc;
+        --photo-line: rgba(15, 23, 42, .08);
+        --photo-line-strong: rgba(15, 23, 42, .14);
+        --photo-primary: #0d6efd;
+        --photo-primary-soft: rgba(13, 110, 253, .35);
+        --photo-danger: #b91c1c;
+    }
+
+    #form-asset .asset-photo {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #form-asset .file-file-preview {
+        margin-top: 0;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        height: auto;
+        max-height: 280px;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: var(--photo-surface-2);
+        border: 1px solid var(--photo-line);
+    }
+
+    #form-asset .file-file-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        padding: .5rem;
+    }
+
+    #form-asset .file-remove {
+        position: absolute;
+        top: .5rem;
+        right: .5rem;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        color: var(--photo-ink-2);
+        border: 1px solid var(--photo-line);
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .12);
+        cursor: pointer;
+        transition: background-color 120ms cubic-bezier(.16, 1, .3, 1), color 120ms cubic-bezier(.16, 1, .3, 1), border-color 120ms cubic-bezier(.16, 1, .3, 1);
+    }
+
+    #form-asset .file-remove:hover {
+        background-color: var(--photo-danger);
+        border-color: var(--photo-danger);
+        color: #fff;
+    }
+
+    #form-asset .file-remove:focus-visible {
+        outline: 3px solid var(--photo-primary-soft);
+        outline-offset: 2px;
+    }
+
+    #form-asset .file-remove i {
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    #form-asset .file-upload-btn {
+        height: auto;
+        min-height: 160px;
+        aspect-ratio: 4 / 3;
+        max-height: 280px;
+        border-radius: 10px;
+        border-color: var(--photo-line-strong);
+        background-color: var(--photo-surface-2);
+        transition: border-color 180ms cubic-bezier(.16, 1, .3, 1), background-color 180ms cubic-bezier(.16, 1, .3, 1);
+    }
+
+    #form-asset .file-upload-btn:hover {
+        border-color: var(--photo-primary);
+        background-color: rgba(13, 110, 253, .04);
+    }
+
+    #form-asset .file-upload:focus-within .file-upload-btn {
+        border-color: var(--photo-primary);
+        outline: 3px solid var(--photo-primary-soft);
+        outline-offset: 2px;
+    }
+
+    #form-asset .file-upload-btn__icon {
+        font-size: 1.75rem;
+        color: var(--photo-ink-4);
+        margin-bottom: .5rem;
+        transition: color 180ms cubic-bezier(.16, 1, .3, 1);
+    }
+
+    #form-asset .file-upload-btn:hover .file-upload-btn__icon {
+        color: var(--photo-primary);
+    }
+
+    #form-asset .file-upload-btn__text {
+        font-size: .85rem;
+        font-weight: 600;
+        color: var(--photo-ink-2);
+    }
+
+    #form-asset .file-upload-btn__hint {
+        display: block;
+        margin-top: .35rem;
+        font-size: .72rem;
+        color: var(--photo-ink-3);
+    }
+
+    /* offcanvas จัดการหมวดหมู่: เว้นด้านบนให้พ้น header สูง 64px (.header-fixed ของธีม) ไม่ให้ทับหัว offcanvas เอง */
+    #category-manage-offcanvas {
+        top: 72px;
+        height: calc(100% - 72px);
     }
 </style>
 <?php $form = ActiveForm::begin([
@@ -44,20 +168,20 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                 <h6 class="text-uppercase text-secondary m-0">รูปภาพทรัพย์สิน</h6>
             </div>
             <div class="card-body">
-                <div class="mb-3">
+                <div class="asset-photo mb-0">
                     <div class="file-file-preview" id="editImagePreview" data-isfile="<?= $model->showImg()['isFile'] ?>" data-newfile="false">
-                        <?= Html::img($model->showImg()['image'], ['id' => 'editPreviewImg']) ?>
-                        <div class="file-remove" id="editRemoveImage">
+                        <?= Html::img($model->showImg()['image'], ['id' => 'editPreviewImg', 'alt' => 'รูปภาพทรัพย์สิน']) ?>
+                        <button type="button" class="file-remove" id="editRemoveImage" aria-label="ลบรูปภาพ" title="ลบรูปภาพ">
                             <i class="bi bi-x"></i>
-                        </div>
+                        </button>
                     </div>
                     <div class="file-upload">
                         <div class="file-upload-btn" id="editUploadBtn">
-                            <i class="bi bi-cloud-arrow-up fs-3 mb-2"></i>
-                            <span>คลิกหรือลากไฟล์มาวางที่นี่</span>
-                            <small class="d-block text-muted mt-2">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
+                            <i class="bi bi-cloud-arrow-up file-upload-btn__icon"></i>
+                            <span class="file-upload-btn__text">คลิกหรือลากไฟล์มาวางที่นี่</span>
+                            <small class="file-upload-btn__hint">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB</small>
                         </div>
-                        <input type="file" class="file-upload-input" id="my_file" accept="image/*">
+                        <input type="file" class="file-upload-input" id="my_file" accept="image/*" aria-label="อัปโหลดรูปภาพทรัพย์สิน">
                     </div>
                 </div>
             </div>
@@ -206,27 +330,20 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                 <div class="erp-icon-box bg-primary bg-opacity-10">
                     <i data-lucide="trending-down"></i>
                 </div>
-                <h6 class="text-uppercase text-secondary m-0">เตรียมข้อมูลค่าเสื่อม</h6>
+                <h6 class="text-uppercase text-secondary m-0">ค่าเสื่อมราคา (จากหมวดทรัพย์สิน)</h6>
             </div>
             <div class="card-body">
                 <div class="form-section mb-0">
-                    <p class="text-muted small mb-3">ใช้สำหรับคำนวณค่าเสื่อมราคาในอนาคต</p>
+                    <p class="text-muted small mb-3">กำหนดที่หมวดทรัพย์สิน — แก้ไขได้ที่หน้าจัดการหมวดหมู่</p>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small mb-1">อายุการใช้งาน (ปี)</label>
+                            <div class="fw-semibold fs-5" id="deprec-useful-life"><?= $model->useful_life !== null && $model->useful_life !== '' ? Html::encode($model->useful_life) : '—' ?></div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'depreciation_rate', [
-                                'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
-                            ])->textInput([
-                                'type' => 'number',
-                                'step' => '0.01',
-                                'min' => '0',
-                                'placeholder' => 'เช่น 20.00',
-                                'class' => 'form-control',
-                            ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small mb-1">อัตราค่าเสื่อม</label>
+                            <div class="fw-semibold fs-5"><span id="deprec-rate"><?= $model->depreciation_rate !== null && $model->depreciation_rate !== '' ? Html::encode($model->depreciation_rate) : '—' ?></span> %</div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -338,7 +455,21 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                         <div class="col-12 col-md-6">
                             <?php
                             // DepDrop - หมวดหมู่ครุภัณฑ์
-                            echo $form->field($model, 'asset_category_id')->widget(DepDrop::class, [
+                            echo $form->field($model, 'asset_category_id', [
+                                'addon' => [
+                                    'append' => [
+                                        'content' => Html::button('<i data-lucide="settings"></i>', [
+                                            'type' => 'button',
+                                            'class' => 'btn btn-sm btn-secondary',
+                                            'title' => 'จัดการหมวดหมู่ครุภัณฑ์',
+                                            'data-bs-toggle' => 'offcanvas',
+                                            'data-bs-target' => '#category-manage-offcanvas',
+                                            'aria-controls' => 'category-manage-offcanvas',
+                                        ]),
+                                        'asButton' => true,
+                                    ],
+                                ],
+                            ])->widget(DepDrop::class, [
                                 'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวดทรัพย์สิน ...'],
                                 'type' => DepDrop::TYPE_SELECT2,
                                 'select2Options' => [
@@ -353,32 +484,16 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                             ])->label('หมวดหมู่'); ?>
                         </div>
                         <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'fsn_number', [
-                                'addon' => [
-                                    'append' => [
-                                        'content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/fsn/list-fsn', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียน FSN'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]),
-                                        'asButton' => true
-                                    ]
-                                ]
-                            ])->textInput([
-                                'maxlength' => true,
-                                'placeholder' => 'ค้นหาเลข FSN',
-                                'readonly' => false,
-                                'class' => 'form-control'
-                            ])->label('FSN'); ?>
-                        </div>
-                        <div class="col-12 col-md-6">
                             <?php
-                            echo $form->field($model, 'code', [
+                            echo $form->field($model, 'fsn_number', [
                                 'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-wand-magic-sparkles me-1"></i> สร้างหมายเลข', '#', ['class' => 'btn btn-outline-primary next-code', 'title' => 'สร้างหมายเลขครุภัณฑ์อัตโนมัติจาก FSN ที่เลือก']), 'asButton' => true]
+                                    'append' => ['content' => Html::a('<i class="fa-solid fa-wand-magic-sparkles me-1"></i> สร้างหมายเลข', '#', ['class' => 'btn btn-outline-primary next-code', 'title' => 'สร้างหมายเลขครุภัณฑ์อัตโนมัติจากหมวดที่เลือก']), 'asButton' => true]
                                 ]
                             ])->textInput([
                                 'maxlength' => true,
-                                'placeholder' => 'กดปุ่มสร้างหมายเลข หรือกรอก FSN แล้วจะสร้างอัตโนมัติ',
-                                'readonly' => false,
+                                'placeholder' => 'เลือกหมวด + ปีงบ แล้วกดสร้างหมายเลข',
                                 'class' => 'form-control'
-                            ])->label('หมายเลขครุภัณฑ์')->hint('สามารถแก้ไขได้ตามต้องการ', ['class' => 'form-text text-muted small']); ?>
+                            ])->label('หมายเลขครุภัณฑ์')->hint('ระบบสร้างจากหมวดที่เลือก · แก้ไขได้', ['class' => 'form-text text-muted small']); ?>
                         </div>
                         <div class="col-12 col-md-6">
                             <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
@@ -600,25 +715,51 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
 
 <?php ActiveForm::end(); ?>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="category-manage-offcanvas" aria-labelledby="category-manage-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="category-manage-offcanvas-label">
+            <i class="bi bi-tags"></i> จัดการหมวดหมู่ครุภัณฑ์
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <div class="small mt-2">กำลังโหลดรายการ...</div>
+        </div>
+    </div>
+</div>
+
 <?php
 $ref = Json::encode($model->ref);
 $urlUpload = Url::to('/filemanager/uploads/single');
 $nextAssetNumberUrl = Url::to(['/am/equip/next-asset-number']);
 $vendorOptionsUrl = Url::to(['/am/vendor/options']);
+$categoryDefaultsUrl = Url::to(['/am/asset-item/category-defaults']);
+$categoryQuickListUrl = Url::to(['/am/asset-category/quick-list']);
+$categoryQuickListItemsUrl = Url::to(['/am/asset-category/quick-list-items']);
 
 $js = <<< JS
 
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
  isFile()
 
+ // prefix (FSN) มาจากหมวดทรัพย์สินที่เลือก — ค่า = categorise.code
+ function currentAssetPrefix() {
+    return ($('#asset_category_id').val() || '').toString().trim();
+ }
+ function currentAssetNumber() {
+    return ($('#asset-fsn_number').val() || '').toString().trim();
+ }
+
  function fetchNextAssetNumber(showConfirm) {
-    var categoryId = ($('#asset-fsn_number').val() || '').toString().trim();
+    var prefix = currentAssetPrefix();
     var onYear = ($('#asset-on_year').val() || '').toString().trim();
     $('#form-asset .is-invalid').removeClass('is-invalid');
-    if (!categoryId) {
-        $('#asset-fsn_number').addClass('is-invalid');
+    if (!prefix) {
+        $('#asset_category_id').addClass('is-invalid');
         if (typeof Swal !== 'undefined') {
-            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาระบุ FSN ก่อน', showConfirmButton: false, timer: 3000 });
+            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาเลือกหมวดทรัพย์สินก่อน', showConfirmButton: false, timer: 3000 });
         }
         return;
     }
@@ -629,7 +770,7 @@ $js = <<< JS
         }
         return;
     }
-    $.get('$nextAssetNumberUrl', { category_id: categoryId, on_year: onYear }, function (res) {
+    $.get('$nextAssetNumberUrl', { category_id: prefix, on_year: onYear }, function (res) {
         if (res.error) {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: res.error, showConfirmButton: false, timer: 3000 });
@@ -637,7 +778,6 @@ $js = <<< JS
             return;
         }
         if (res.asset_number) {
-            $('#asset-fsn_number').removeClass('is-invalid');
             if (showConfirm && typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'หมายเลขที่จะได้',
@@ -648,12 +788,12 @@ $js = <<< JS
                     cancelButtonText: 'ยกเลิก'
                 }).then(function (result) {
                     if (result.isConfirmed) {
-                        $('#asset-code').val(res.asset_number);
+                        $('#asset-fsn_number').val(res.asset_number).removeClass('is-invalid');
                         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'กำหนดหมายเลขแล้ว', showConfirmButton: false, timer: 2000 });
                     }
                 });
             } else {
-                $('#asset-code').val(res.asset_number);
+                $('#asset-fsn_number').val(res.asset_number).removeClass('is-invalid');
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'สร้างหมายเลขครุภัณฑ์แล้ว', showConfirmButton: false, timer: 2000 });
                 }
@@ -662,19 +802,170 @@ $js = <<< JS
     }, 'json');
  }
 
- $('#asset-fsn_number').on('blur', function () {
-    var hasFsn = ($(this).val() || '').toString().trim();
-    var hasYear = ($('#asset-on_year').val() || '').toString().trim();
-    if (hasFsn && hasYear && !$('#asset-code').val()) { fetchNextAssetNumber(false); }
- });
+ // แสดงค่าเสื่อม (read-only) จากหมวดทรัพย์สินที่เลือก
+ function loadCategoryDeprecation(prefix) {
+    if (!prefix) {
+        $('#deprec-useful-life').text('—');
+        $('#deprec-rate').text('—');
+        return;
+    }
+    $.get('$categoryDefaultsUrl', { code: prefix }, function (res) {
+        if (res && res.status === 'success') {
+            var d = res.defaults || {};
+            var ul = (d.useful_life !== null && d.useful_life !== undefined && d.useful_life !== '') ? d.useful_life : '—';
+            var dr = (d.depreciation_rate !== null && d.depreciation_rate !== undefined && d.depreciation_rate !== '') ? d.depreciation_rate : '—';
+            $('#deprec-useful-life').text(ul);
+            $('#deprec-rate').text(dr);
+        }
+    }, 'json');
+ }
+
  $('#asset-on_year').on('blur', function () {
-    var hasFsn = ($('#asset-fsn_number').val() || '').toString().trim();
     var hasYear = ($(this).val() || '').toString().trim();
-    if (hasFsn && hasYear && !$('#asset-code').val()) { fetchNextAssetNumber(false); }
+    if (currentAssetPrefix() && hasYear && !currentAssetNumber()) { fetchNextAssetNumber(false); }
  });
  $('.next-code').on('click', function (e) {
     e.preventDefault();
     fetchNextAssetNumber(true);
+ });
+
+ // เมื่อเลือกหมวดทรัพย์สิน: อัปเดตค่าเสื่อม (read-only) + สร้างหมายเลขให้ถ้ามีปีงบและยังไม่มีหมายเลข
+ $('#asset_category_id').on('change', function () {
+    var prefix = ($(this).val() || '').toString().trim();
+    loadCategoryDeprecation(prefix);
+    if (!prefix) { return; }
+    $(this).removeClass('is-invalid');
+    var hasYear = ($('#asset-on_year').val() || '').toString().trim();
+    if (hasYear && !currentAssetNumber()) { fetchNextAssetNumber(false); }
+ });
+
+ // -- จัดการหมวดหมู่ครุภัณฑ์ผ่าน offcanvas: โหลด shell (ตัวกรอง+รายการ), ค้นหา/กรองประเภทแบบ server-side, ลบ, รีเฟรชหลังเพิ่ม/แก้ไข --
+ // cache: false เสมอ เพราะ \$.get() ปกติ browser cache ผล GET ซ้ำ ทำให้เห็นข้อมูลเก่าหลังแก้ไขจนกว่าจะ reload หน้าเพจ
+ // โหลด shell ทั้งชุด (ตัวกรองประเภท + ช่องค้นหา + รายการ) ใช้ตอนเปิด offcanvas ครั้งแรกเท่านั้น
+ function loadCategoryQuickList() {
+    $.ajax({
+        url: '$categoryQuickListUrl',
+        type: 'GET',
+        dataType: 'json',
+        cache: false
+    }).done(function (res) {
+        if (res && res.content) {
+            $('#category-manage-offcanvas .offcanvas-body').html(res.content);
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+        }
+    });
+ }
+
+ // โหลดเฉพาะแถวรายการ (ไม่แตะช่องค้นหา/dropdown กรอง) ใช้รีเฟรชตอนพิมพ์ค้นหา/เปลี่ยนตัวกรอง/ลบ/บันทึก
+ function loadCategoryQuickListItems() {
+    $.ajax({
+        url: '$categoryQuickListItemsUrl',
+        type: 'GET',
+        dataType: 'json',
+        cache: false,
+        data: {
+            'AssetCategorySearch[q]': $('.category-quick-list__search').val() || '',
+            'AssetCategorySearch[category_id]': $('.category-quick-list__type-filter').val() || ''
+        }
+    }).done(function (res) {
+        if (res && res.content) {
+            $('.category-quick-list__items').html(res.content);
+        }
+    });
+ }
+
+ $('#category-manage-offcanvas').on('show.bs.offcanvas', function () {
+    loadCategoryQuickList();
+ });
+
+ var categoryQuickSearchTimer = null;
+ $(document).off('input.categoryQuickSearch', '.category-quick-list__search')
+    .on('input.categoryQuickSearch', '.category-quick-list__search', function () {
+        clearTimeout(categoryQuickSearchTimer);
+        categoryQuickSearchTimer = setTimeout(loadCategoryQuickListItems, 300);
+    });
+
+ $(document).off('change.categoryQuickFilter', '.category-quick-list__type-filter')
+    .on('change.categoryQuickFilter', '.category-quick-list__type-filter', function () {
+        loadCategoryQuickListItems();
+    });
+
+ // ปุ่มรีเฟรชแบบกดเอง — ใช้ path เดียวกับตอนเปลี่ยน filter ประเภท (ยืนยันแล้วว่าทำงานถูกต้อง)
+ // สำรองไว้เผื่อกรณีรีเฟรชอัตโนมัติหลังบันทึกไม่ทำงาน จะได้ยังมีทางดึงข้อมูลล่าสุดได้แน่นอน
+ $(document).off('click.categoryQuickRefresh', '.category-quick-list__refresh')
+    .on('click.categoryQuickRefresh', '.category-quick-list__refresh', function () {
+        loadCategoryQuickListItems();
+    });
+
+<<<<<<< Updated upstream
+=======
+ // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline บน offcanvas) → POST แล้วรีเฟรชรายการ + dropdown หมวดหลัก
+ $(document).off('change.categoryQuickToggle', '.category-quick-list__toggle')
+    .on('change.categoryQuickToggle', '.category-quick-list__toggle', function () {
+        var \$sw = \$(this);
+        var url = \$sw.data('url');
+        var active = \$sw.is(':checked') ? 1 : 0;
+        \$sw.prop('disabled', true);
+        \$.post(url, { active: active }, function (res) {
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: active ? 'เปิดใช้งานแล้ว' : 'ปิดใช้งาน (ร่าง)', showConfirmButton: false, timer: 1400 });
+                }
+                loadCategoryQuickListItems();
+                // หมวดหลักของฟอร์มอาจเปลี่ยนสถานะพร้อมใช้งาน → โหลด dropdown ใหม่
+                var typeSelect = \$('#asset_type_id');
+                if (typeSelect.val()) { typeSelect.trigger('change'); }
+            } else {
+                \$sw.prop('checked', !active).prop('disabled', false);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'อัพเดตไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }
+        }, 'json').fail(function () {
+            \$sw.prop('checked', !active).prop('disabled', false);
+        });
+    });
+
+>>>>>>> Stashed changes
+ $(document).off('click.categoryQuickDelete', '.category-quick-list__delete')
+    .on('click.categoryQuickDelete', '.category-quick-list__delete', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (typeof Swal === 'undefined') { return; }
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: 'ลบหมวดหมู่ครุภัณฑ์นี้ ไม่สามารถย้อนกลับได้',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ใช่, ลบเลย',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (result) {
+            if (!result.isConfirmed) { return; }
+            $.post(url, function (res) {
+                if (res && res.status === 'success') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1800 });
+                    loadCategoryQuickListItems();
+                } else {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'ลบไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }, 'json');
+        });
+    });
+
+ // รีเฟรช list ทุกครั้งที่ #main-modal ปิด ขณะ offcanvas เปิดอยู่ — ใช้ native Bootstrap event ('hidden.bs.modal')
+ // โดยตรง ไม่พึ่ง custom event ('assetCategory:saved') ที่ยิงข้ามจาก asset-category/_form.php (สคริปต์ที่โหลดผ่าน
+ // .open-modal แยกต่างหาก) เพื่อตัดจุดเสี่ยงที่ signal อาจไปไม่ถึง ครอบคลุมทั้งกรณีบันทึกสำเร็จและกดยกเลิก/ปิด
+ $('#main-modal').on('hidden.bs.modal', function () {
+    if ($('#category-manage-offcanvas').hasClass('show')) {
+        loadCategoryQuickListItems();
+    }
+ });
+
+ // เมื่อบันทึกหมวดหมู่ (เพิ่ม/แก้ไข) สำเร็จ — ใช้รีเฟรช dropdown "หมวดหมู่" หลักของฟอร์มครุภัณฑ์เพิ่มเติม
+ // (การรีเฟรช list ใน offcanvas เองใช้ hidden.bs.modal ด้านบนแล้ว ไม่ต้องพึ่ง event นี้อีก)
+ $(document).off('assetCategory:saved.assetForm').on('assetCategory:saved.assetForm', function () {
+    var typeSelect = $('#asset_type_id');
+    if (typeSelect.val()) { typeSelect.trigger('change'); }
  });
 
  // -- Vendor inline-add: refetch full list from server + rebuild Select2 + auto-select new --
@@ -863,3 +1154,6 @@ $js = <<< JS
 JS;
 $this->registerJs($js);
 ?>
+
+
+

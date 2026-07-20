@@ -70,7 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td scope="row">
                             <div class="d-flex gap-3">
-                            <?php echo Html::img($item->product->ShowImg(),['class' => 'img-fluid object-fit-cover rounded-1','style' => 'width:60px'])?>
+                            <?php echo Html::img($item->product?->ShowImg() ?? Yii::getAlias('@web') . '/img/placeholder-img.jpg',['class' => 'img-fluid object-fit-cover rounded-1','style' => 'width:60px'])?>
 
                                 <div class="avatar-detail">
                                 <h6 class="mb-1"><?php echo $item->product?->title?></h6>

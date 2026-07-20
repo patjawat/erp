@@ -75,7 +75,7 @@ class m260622_120000_migrate_stock_item_to_categorise extends Migration
 
         $missing = (new \yii\db\Query())
             ->from(['si' => 'stock_item'])
-            ->leftJoin(['c' => 'categorise'], 'c.code = si.item_code AND c.name = :n AND c.group_id = :g', [
+            ->leftJoin(['c' => 'categorise'], "c.code = CONVERT(si.item_code USING utf8mb4) COLLATE utf8mb4_general_ci AND c.name = :n AND c.group_id = :g", [
                 ':n' => self::NAME_ASSET_ITEM,
                 ':g' => self::GROUP_MATER,
             ])

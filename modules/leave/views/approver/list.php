@@ -59,6 +59,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                 <th class="text-center py-3 px-3 small">ประเภทการลา</th>
                 <th class="text-center">จำนวนวันลา</th>
                 <th class="py-3 px-3 small">ผู้ขออนุมัติการลา</th>
+                <th class="py-3 px-3 small">ประเภทบุคลากร</th>
                 <th class="py-3 px-3 small">ประเภทเวร</th>
                 <th class="py-3 px-3 small">เหตุผล</th>
                 <th class="py-3 px-3 small">ระหว่างวันที่</th>
@@ -111,6 +112,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
                             <?= $item->employee ? $item->employee->getAvatar(false) : '-' ?>
                         </a>
                     </td>
+                    <td class="py-3 px-3 small"><?= $item->employee && $item->employee->employeeType ? Html::encode($item->employee->employeeType->title) : '-' ?></td>
                     <td class="py-3 px-3 small"><?= Html::encode($item->work_shift_name ?? '-') ?></td>
                     <td class="py-3 px-3">
                         <div class="small"><?= Html::encode($item->data_json['reason'] ?? '') ?></div>
@@ -177,7 +179,7 @@ $csrfToken     = Yii::$app->request->csrfToken;
             <?php endforeach; ?>
             <?php if (count($models) === 0): ?>
                 <tr>
-                    <td colspan="13" class="text-center text-muted py-5 px-3">
+                    <td colspan="14" class="text-center text-muted py-5 px-3">
                         <i class="bi bi-inbox display-5 d-block mb-2 opacity-50"></i>
                         <span class="small">ไม่มีรายการวันลา</span>
                     </td>

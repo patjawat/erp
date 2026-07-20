@@ -1,0 +1,1905 @@
+:root {
+    --app-ink-1: #1a202c;
+    --app-ink-2: #4a5568;
+    --app-ink-3: #718096;
+    --app-surface: #fff;
+    --app-surface-2: #f7f9fc;
+    --app-surface-3: #eef2f7;
+    --app-line: rgba(15, 23, 42, .08);
+    --app-line-strong: rgba(15, 23, 42, .14);
+    --app-primary: #0d6efd;
+    --app-primary-ink: #0a58ca;
+    --app-primary-soft: rgba(13, 110, 253, .08);
+    --app-success: #15803d;
+    --app-success-soft: rgba(21, 128, 61, .10);
+    --app-warning: #b45309;
+    --app-warning-soft: rgba(180, 83, 9, .10);
+    --app-rose-soft: #fcecef;
+    --app-rose-ink: #a93650;
+    --app-mint-soft: #e7f6f3;
+    --app-mint-ink: #176b62;
+    --app-peach-soft: #fff3dc;
+    --app-peach-ink: #99600a;
+    --app-lavender-soft: #f1edff;
+    --app-lavender-ink: #6354a5;
+    --app-sky-soft: #eaf2ff;
+    --app-sky-ink: #315f9a;
+    --app-radius: 10px;
+    --app-radius-sm: 8px;
+    --app-radius-xs: 6px;
+    --app-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 1px 1px rgba(15, 23, 42, .03);
+    --app-ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+.appreciation-home {
+    max-width: 1180px;
+    margin: 0 auto;
+    color: var(--app-ink-1);
+}
+
+.appreciation-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 360px) minmax(0, 720px);
+    align-items: start;
+    justify-content: center;
+    gap: 28px;
+}
+
+.appreciation-rail__inner {
+    position: sticky;
+    top: 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.appreciation-profile,
+.appreciation-promo,
+.appreciation-composer,
+.appreciation-post,
+.appreciation-empty {
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow);
+}
+
+.appreciation-profile {
+    padding: 20px;
+}
+
+.appreciation-profile__person {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.appreciation-avatar {
+    flex: 0 0 auto;
+    display: block;
+    border: 1px solid var(--app-line);
+    border-radius: 50%;
+    background: var(--app-surface-3);
+    object-fit: cover;
+}
+
+.appreciation-avatar--profile {
+    width: 64px;
+    height: 64px;
+}
+
+.appreciation-avatar--post {
+    width: 48px;
+    height: 48px;
+}
+
+.appreciation-profile__name {
+    overflow: hidden;
+    margin: 0 0 3px;
+    font-size: .98rem;
+    font-weight: 650;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appreciation-profile__department,
+.appreciation-section-head p,
+.appreciation-feed-head p {
+    margin: 0;
+    color: var(--app-ink-3);
+    font-size: .78rem;
+    line-height: 1.45;
+}
+
+.appreciation-balance {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--app-line);
+}
+
+.appreciation-balance strong,
+.appreciation-balance span {
+    display: block;
+}
+
+.appreciation-meta {
+    margin-bottom: 3px;
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-balance__points {
+    color: var(--app-primary-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    overflow: hidden;
+    margin-top: 16px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius-sm);
+    background: var(--app-line);
+}
+
+.appreciation-stats > div {
+    padding: 12px 10px;
+    background: var(--app-surface-2);
+    text-align: center;
+}
+
+.appreciation-stats strong,
+.appreciation-stats span {
+    display: block;
+}
+
+.appreciation-stats strong {
+    margin-bottom: 2px;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-stats span {
+    color: var(--app-ink-2);
+    font-size: .72rem;
+}
+
+.appreciation-promo {
+    padding: 18px;
+}
+
+.appreciation-section-head,
+.appreciation-feed-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.appreciation-section-head h2,
+.appreciation-feed-head h2 {
+    margin: 0 0 3px;
+    font-size: .95rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.appreciation-text-link {
+    flex: 0 0 auto;
+    color: var(--app-primary-ink);
+    font-size: .76rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.appreciation-text-link:hover {
+    text-decoration: underline;
+}
+
+.appreciation-text-link:focus-visible,
+.appreciation-shortcuts a:focus-visible,
+.appreciation-reward:focus-visible,
+.appreciation-composer__button:focus-visible,
+.btn-appreciation-like:focus-visible {
+    outline: 3px solid var(--app-primary-soft);
+    outline-offset: 2px;
+}
+
+.appreciation-challenge__hero {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.appreciation-challenge__icon,
+.appreciation-reward__image--empty {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    color: var(--app-warning);
+    background: var(--app-warning-soft);
+}
+
+.appreciation-challenge__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--app-radius-sm);
+    font-size: 1rem;
+}
+
+.appreciation-challenge__hero > div {
+    min-width: 0;
+    flex: 1;
+}
+
+.appreciation-challenge__hero h3 {
+    overflow: hidden;
+    margin: 0 0 2px;
+    font-size: .86rem;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appreciation-challenge__hero p,
+.appreciation-challenge__more {
+    margin: 0;
+    color: var(--app-ink-3);
+    font-size: .74rem;
+}
+
+.appreciation-status {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 600;
+}
+
+.appreciation-status.is-complete {
+    color: var(--app-success);
+    background: var(--app-success-soft);
+}
+
+.appreciation-progress {
+    overflow: hidden;
+    height: 7px;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: var(--app-surface-3);
+}
+
+.appreciation-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--app-warning);
+}
+
+.appreciation-challenge__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 7px;
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-challenge__meta strong {
+    color: var(--app-ink-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-challenge__more {
+    margin-top: 12px;
+}
+
+.appreciation-quiet-state {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: var(--app-radius-sm);
+    color: var(--app-ink-2);
+    background: var(--app-surface-2);
+    font-size: .78rem;
+    line-height: 1.45;
+}
+
+.appreciation-quiet-state i {
+    color: var(--app-ink-3);
+    font-size: 1rem;
+}
+
+.appreciation-reward-list {
+    margin-top: 12px;
+}
+
+.appreciation-reward {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 66px;
+    padding: 9px 0;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 120ms var(--app-ease);
+}
+
+.appreciation-reward + .appreciation-reward {
+    border-top: 1px solid var(--app-line);
+}
+
+.appreciation-reward:hover {
+    color: inherit;
+}
+
+.appreciation-reward__image {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--app-radius-xs);
+    object-fit: cover;
+}
+
+.appreciation-reward__content {
+    display: block;
+    min-width: 0;
+    flex: 1;
+}
+
+.appreciation-reward__content strong,
+.appreciation-reward__content span,
+.appreciation-reward__content small {
+    display: block;
+}
+
+.appreciation-reward__content strong {
+    overflow: hidden;
+    font-size: .82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appreciation-reward__content span {
+    color: var(--app-warning);
+    font-size: .75rem;
+    font-weight: 650;
+}
+
+.appreciation-reward__content small {
+    color: var(--app-ink-3);
+    font-size: .68rem;
+}
+
+.appreciation-reward__content small.is-ready {
+    color: var(--app-success);
+}
+
+.appreciation-reward > .bi-chevron-right {
+    color: var(--app-ink-3);
+    font-size: .8rem;
+}
+
+.appreciation-shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.appreciation-shortcuts a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    border: 1px solid var(--app-line-strong);
+    border-radius: var(--app-radius-sm);
+    color: var(--app-ink-2);
+    background: var(--app-surface);
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 120ms var(--app-ease), color 120ms var(--app-ease);
+}
+
+.appreciation-shortcuts a:hover {
+    color: var(--app-ink-1);
+    background: var(--app-surface-2);
+}
+
+.appreciation-feed-column {
+    min-width: 0;
+}
+
+.appreciation-composer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    transition: box-shadow 180ms var(--app-ease);
+}
+
+.appreciation-composer.is-highlighted {
+    box-shadow: 0 0 0 3px var(--app-primary-soft), var(--app-shadow);
+}
+
+.appreciation-composer__button {
+    display: flex;
+    min-height: 44px;
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 15px;
+    border: 1px solid var(--app-line-strong);
+    border-radius: var(--app-radius-sm);
+    color: var(--app-ink-2);
+    background: var(--app-surface-2);
+    font-size: .9rem;
+    text-decoration: none;
+    transition: border-color 120ms var(--app-ease), background-color 120ms var(--app-ease);
+}
+
+.appreciation-composer__button:hover {
+    border-color: var(--app-primary);
+    color: var(--app-ink-1);
+    background: var(--app-surface);
+}
+
+.appreciation-composer__button i {
+    color: var(--app-primary);
+}
+
+.appreciation-feed-head {
+    align-items: end;
+    padding: 22px 3px 10px;
+}
+
+.appreciation-feed-head h2 {
+    font-size: 1rem;
+}
+
+.appreciation-post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.appreciation-post {
+    overflow: hidden;
+}
+
+.appreciation-post__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 0;
+}
+
+.appreciation-post__identity {
+    min-width: 0;
+}
+
+.appreciation-post__identity h3 {
+    overflow: hidden;
+    margin: 0 0 3px;
+    font-size: .92rem;
+    font-weight: 650;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appreciation-post__identity p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    color: var(--app-ink-3);
+    font-size: .76rem;
+    line-height: 1.4;
+}
+
+.appreciation-post__identity strong {
+    color: var(--app-primary-ink);
+    font-weight: 600;
+}
+
+.appreciation-post__body {
+    padding: 16px 20px 18px 80px;
+}
+
+.appreciation-post__message {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--app-ink-1);
+    font-size: 1rem;
+    line-height: 1.72;
+    overflow-wrap: anywhere;
+}
+
+.appreciation-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 13px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    color: var(--app-ink-2);
+    background: var(--app-surface-3);
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+.appreciation-frame {
+    overflow: hidden;
+    max-width: 42rem;
+    margin: 16px 0 0;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius-sm);
+    background: var(--app-surface);
+}
+
+.appreciation-frame img {
+    display: block;
+    width: 100%;
+    max-height: 32rem;
+    object-fit: cover;
+}
+
+.appreciation-frame--polaroid {
+    padding: 8px;
+}
+
+.appreciation-frame--soft {
+    padding: 6px;
+    background: var(--app-surface-2);
+}
+
+.appreciation-frame--moment {
+    padding: 6px;
+    background: #173b70;
+}
+
+.appreciation-frame--polaroid img,
+.appreciation-frame--soft img,
+.appreciation-frame--moment img {
+    border-radius: var(--app-radius-xs);
+}
+
+.appreciation-post__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    margin: 0 20px;
+    border-top: 1px solid var(--app-line);
+}
+
+.btn-appreciation-like {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--app-radius-xs);
+    color: var(--app-ink-2);
+    background: transparent;
+    font-size: .8rem;
+    font-weight: 600;
+    transition: color 120ms var(--app-ease), background-color 120ms var(--app-ease);
+}
+
+.btn-appreciation-like:hover {
+    color: var(--app-ink-1);
+    background: var(--app-surface-2);
+}
+
+.btn-appreciation-like.is-liked {
+    color: #b91c1c;
+}
+
+.btn-appreciation-like:disabled {
+    cursor: wait;
+    opacity: .55;
+}
+
+.like-count {
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-points {
+    color: var(--app-warning);
+    font-size: .76rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-empty {
+    padding: 52px 24px;
+    text-align: center;
+}
+
+.appreciation-empty h3 {
+    margin: 0 0 7px;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+.appreciation-empty p {
+    margin: 0 auto 18px;
+    color: var(--app-ink-3);
+    font-size: .84rem;
+    line-height: 1.55;
+}
+
+/* Pastel domain language: color supports meaning while content stays neutral. */
+.appreciation-home:not(.appreciation-catalog):not(.appreciation-activities-page):not(.appreciation-challenges-page) .appreciation-profile {
+    border-color: #dbe8fb;
+    background: var(--app-sky-soft);
+}
+
+.appreciation-home:not(.appreciation-catalog) .appreciation-promo:not(.appreciation-challenge) {
+    border-color: #f3dfb8;
+    background: #fffbf2;
+}
+
+.appreciation-home:not(.appreciation-catalog) .appreciation-challenge {
+    border-color: #ded7f8;
+    background: #fbfaff;
+}
+
+.appreciation-composer {
+    border-color: #f1d8df;
+    background: #fffafb;
+}
+
+.appreciation-composer__button i,
+.btn-appreciation-like.is-liked,
+.btn-appreciation-like:hover {
+    color: var(--app-rose-ink);
+}
+
+.btn-appreciation-like:hover {
+    background: var(--app-rose-soft);
+}
+
+.appreciation-value {
+    color: var(--app-rose-ink);
+    background: var(--app-rose-soft);
+}
+
+.appreciation-challenge__icon {
+    color: var(--app-lavender-ink);
+    background: var(--app-lavender-soft);
+}
+
+.appreciation-challenge .appreciation-progress span,
+.appreciation-challenges-page .appreciation-progress span {
+    background: var(--app-lavender-ink);
+}
+
+.appreciation-reward__image--empty,
+.appreciation-catalog-item__image--empty {
+    color: var(--app-peach-ink);
+    background: var(--app-peach-soft);
+}
+
+.appreciation-reward__content span,
+.appreciation-catalog .appreciation-cost,
+.appreciation-catalog .appreciation-points {
+    color: var(--app-peach-ink);
+}
+
+.appreciation-catalog .appreciation-profile {
+    border-color: #f3dfb8;
+    background: #fffbf2;
+}
+
+.appreciation-catalog .appreciation-wallet__balance strong {
+    color: var(--app-peach-ink);
+}
+
+.appreciation-activities-page .appreciation-profile {
+    border-color: #cfe9e4;
+    background: #f4fbf9;
+}
+
+.appreciation-activities-page .appreciation-balance__points,
+.appreciation-activities-page .appreciation-rail-note i {
+    color: var(--app-mint-ink);
+}
+
+.appreciation-activity-item__image--empty {
+    color: var(--app-mint-ink);
+    background: var(--app-mint-soft);
+}
+
+.appreciation-activity-item__type {
+    display: inline-flex;
+    width: fit-content;
+    margin-bottom: 5px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    color: var(--app-mint-ink);
+    background: var(--app-mint-soft);
+}
+
+.appreciation-challenges-page .appreciation-profile {
+    border-color: #ded7f8;
+    background: #faf8ff;
+}
+
+.appreciation-challenges-page .appreciation-rail-note i,
+.appreciation-challenges-page .appreciation-challenge-item__reward {
+    color: var(--app-lavender-ink);
+}
+
+/* Admin uses pastel grouping while forms and tables remain white. */
+.appreciation-admin {
+    --admin-ink: var(--app-lavender-ink);
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.appreciation-admin-metrics .card {
+    border: 1px solid var(--app-line) !important;
+    box-shadow: var(--app-shadow) !important;
+}
+
+.appreciation-admin-metrics .col-6:nth-child(1) .card { background: #f4fbf9; }
+.appreciation-admin-metrics .col-6:nth-child(2) .card { background: #f5f8ff; }
+.appreciation-admin-metrics .col-6:nth-child(3) .card { background: #faf8ff; }
+.appreciation-admin-metrics .col-6:nth-child(4) .card { background: #fffbf2; }
+
+.appreciation-admin-metrics .col-6:nth-child(1) i { color: var(--app-mint-ink) !important; }
+.appreciation-admin-metrics .col-6:nth-child(2) i { color: var(--app-sky-ink) !important; }
+.appreciation-admin-metrics .col-6:nth-child(3) i { color: var(--app-lavender-ink) !important; }
+.appreciation-admin-metrics .col-6:nth-child(4) i { color: var(--app-peach-ink) !important; }
+
+.appreciation-admin > .nav-tabs {
+    gap: 5px;
+    padding: 6px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-surface-2);
+}
+
+.appreciation-admin > .nav-tabs .nav-link {
+    min-height: 38px;
+    border: 1px solid transparent;
+    border-radius: var(--app-radius-xs);
+    color: var(--app-ink-2);
+    font-size: .78rem;
+}
+
+.appreciation-admin > .nav-tabs .nav-link:hover {
+    background: var(--app-surface);
+}
+
+.appreciation-admin > .nav-tabs .nav-link.active {
+    border-color: #d9d1f5;
+    color: var(--app-lavender-ink);
+    background: var(--app-lavender-soft);
+    font-weight: 650;
+}
+
+.appreciation-admin .tab-pane > .row > div:first-child .card-header {
+    color: var(--app-lavender-ink);
+    background: #faf8ff !important;
+}
+
+.appreciation-admin .card {
+    border: 1px solid var(--app-line) !important;
+    border-radius: var(--app-radius);
+    box-shadow: var(--app-shadow) !important;
+}
+
+.appreciation-admin .table thead th {
+    color: var(--app-ink-2);
+    background: var(--app-sky-soft);
+    font-size: .76rem;
+    font-weight: 650;
+}
+
+.appreciation-admin .form-control:focus,
+.appreciation-admin .form-select:focus {
+    border-color: var(--app-lavender-ink);
+    box-shadow: 0 0 0 3px var(--app-lavender-soft);
+}
+
+.appreciation-analytics__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 18px 20px;
+    border: 1px solid #d9d1f5;
+    border-radius: var(--app-radius);
+    background: #faf8ff;
+}
+
+.appreciation-analytics__head h2 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+    font-weight: 650;
+}
+
+.appreciation-analytics__head p {
+    margin: 0;
+    color: var(--app-ink-2);
+    font-size: .78rem;
+}
+
+.appreciation-privacy-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    color: var(--app-lavender-ink);
+    background: var(--app-lavender-soft);
+    font-size: .72rem;
+    font-weight: 650;
+}
+
+.appreciation-analytics-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-line);
+    gap: 1px;
+}
+
+.appreciation-analytics-summary > div {
+    padding: 16px;
+    background: var(--app-surface);
+}
+
+.appreciation-analytics-summary > div:nth-child(1) { background: #f5f8ff; }
+.appreciation-analytics-summary > div:nth-child(2) { background: #fffafb; }
+.appreciation-analytics-summary > div:nth-child(3) { background: #f4fbf9; }
+.appreciation-analytics-summary > div:nth-child(4) { background: #fffbf2; }
+
+.appreciation-analytics-summary span,
+.appreciation-analytics-summary small {
+    display: block;
+    color: var(--app-ink-2);
+    font-size: .72rem;
+}
+
+.appreciation-analytics-summary strong {
+    display: inline-block;
+    margin: 5px 4px 0 0;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-analytics-summary small {
+    display: inline;
+}
+
+.appreciation-analytics-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.appreciation-analysis-panel {
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow);
+}
+
+.appreciation-analysis-panel > header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.appreciation-analysis-panel > header h3 {
+    margin: 0 0 3px;
+    font-size: .9rem;
+    font-weight: 650;
+}
+
+.appreciation-analysis-panel > header p {
+    margin: 0;
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    padding: 16px 18px 18px;
+}
+
+.appreciation-breakdown > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: .75rem;
+}
+
+.appreciation-breakdown strong {
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-breakdown__track {
+    overflow: hidden;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--app-surface-3);
+}
+
+.appreciation-breakdown__track span {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    border-radius: inherit;
+}
+
+.appreciation-breakdown--1 .appreciation-breakdown__track span { background: var(--app-rose-ink); }
+.appreciation-breakdown--2 .appreciation-breakdown__track span { background: var(--app-mint-ink); }
+.appreciation-breakdown--3 .appreciation-breakdown__track span { background: var(--app-peach-ink); }
+.appreciation-breakdown--4 .appreciation-breakdown__track span { background: var(--app-lavender-ink); }
+
+.appreciation-analysis-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 22px;
+    padding: 16px 18px 18px;
+}
+
+.appreciation-analysis-columns h4 {
+    margin: 0 0 6px;
+    color: var(--app-ink-2);
+    font-size: .75rem;
+    font-weight: 650;
+}
+
+.appreciation-analysis-columns ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.appreciation-analysis-columns li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0;
+    color: var(--app-ink-2);
+    font-size: .72rem;
+}
+
+.appreciation-analysis-columns li strong {
+    color: var(--app-ink-1);
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-score-matrix {
+    overflow: hidden;
+}
+
+.appreciation-participant-detail {
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.appreciation-participant-table th,
+.appreciation-participant-table td {
+    padding: 10px 12px;
+    font-size: .76rem;
+    vertical-align: middle;
+}
+
+.appreciation-participant-table td > strong,
+.appreciation-participant-table td > span:not(.appreciation-status) {
+    display: block;
+}
+
+.appreciation-participant-table td > span:not(.appreciation-status) {
+    margin-top: 2px;
+    color: var(--app-ink-3);
+    font-size: .68rem;
+    font-weight: 400;
+}
+
+.appreciation-participant-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 0;
+    padding: 12px;
+    list-style: none;
+}
+
+.appreciation-participant-cards li {
+    padding: 13px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius-sm);
+}
+
+.appreciation-participant-cards header,
+.appreciation-participant-cards footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.appreciation-participant-cards p {
+    margin: 7px 0;
+    color: var(--app-ink-3);
+    font-size: .7rem;
+    line-height: 1.5;
+}
+
+.appreciation-participant-cards footer {
+    padding-top: 7px;
+    border-top: 1px solid var(--app-line);
+    font-size: .7rem;
+}
+
+.appreciation-participant-cards footer strong {
+    flex: 0 0 auto;
+    color: var(--app-mint-ink);
+}
+
+.appreciation-analysis-filters {
+    display: grid;
+    grid-template-columns: 1.25fr repeat(3, minmax(140px, 1fr));
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--app-line);
+    background: var(--app-surface-2);
+}
+
+.appreciation-analysis-filters label > span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--app-ink-2);
+    font-size: .7rem;
+    font-weight: 600;
+}
+
+.appreciation-analysis-filters .form-control,
+.appreciation-analysis-filters .form-select {
+    min-height: 40px;
+    border-radius: var(--app-radius-sm);
+    font-size: .78rem;
+}
+
+.appreciation-matrix-wrap {
+    overflow-x: auto;
+}
+
+.appreciation-matrix {
+    min-width: 760px;
+}
+
+.appreciation-matrix th,
+.appreciation-matrix td {
+    padding: 10px 12px;
+    font-size: .78rem;
+    vertical-align: middle;
+}
+
+.appreciation-matrix td:first-child {
+    min-width: 240px;
+}
+
+.appreciation-matrix td:first-child strong,
+.appreciation-matrix td:first-child span {
+    display: block;
+}
+
+.appreciation-matrix td:first-child span {
+    margin-top: 2px;
+    color: var(--app-ink-3);
+    font-size: .68rem;
+    font-weight: 400;
+}
+
+.appreciation-matrix td:not(:first-child) {
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-score-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+    list-style: none;
+}
+
+.appreciation-score-cards li {
+    padding: 14px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius-sm);
+}
+
+.appreciation-score-cards header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.appreciation-score-cards header strong,
+.appreciation-score-cards header span {
+    display: block;
+}
+
+.appreciation-score-cards header span {
+    margin-top: 2px;
+    color: var(--app-ink-3);
+    font-size: .68rem;
+}
+
+.appreciation-score-cards header b {
+    flex: 0 0 auto;
+    color: var(--app-lavender-ink);
+    font-size: .78rem;
+}
+
+.appreciation-score-cards dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 16px;
+    margin: 10px 0 0;
+}
+
+.appreciation-score-cards dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: .7rem;
+}
+
+.appreciation-score-cards dt { color: var(--app-ink-3); font-weight: 400; }
+.appreciation-score-cards dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.appreciation-no-results {
+    margin: 0;
+    padding: 34px 18px;
+    color: var(--app-ink-3);
+    text-align: center;
+    font-size: .8rem;
+}
+
+/* Shared catalog pages: rewards, activities, and challenges */
+.appreciation-layout--catalog {
+    grid-template-columns: minmax(280px, 330px) minmax(0, 720px);
+}
+
+.appreciation-wallet__balance {
+    margin-top: 18px;
+    padding: 18px 0;
+    border-top: 1px solid var(--app-line);
+    border-bottom: 1px solid var(--app-line);
+}
+
+.appreciation-wallet__balance span,
+.appreciation-wallet__balance small {
+    display: block;
+    color: var(--app-ink-3);
+    font-size: .74rem;
+}
+
+.appreciation-wallet__balance strong {
+    display: inline-block;
+    margin: 4px 5px 0 0;
+    color: var(--app-primary-ink);
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.appreciation-wallet__balance small {
+    display: inline;
+}
+
+.appreciation-detail-list {
+    margin: 14px 0 0;
+}
+
+.appreciation-detail-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.appreciation-detail-list dt,
+.appreciation-detail-list dd {
+    margin: 0;
+    font-size: .78rem;
+}
+
+.appreciation-detail-list dt {
+    color: var(--app-ink-3);
+    font-weight: 400;
+}
+
+.appreciation-detail-list dd {
+    color: var(--app-ink-1);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-rail-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 6px;
+    color: var(--app-ink-2);
+}
+
+.appreciation-rail-note i {
+    margin-top: 2px;
+    color: var(--app-primary-ink);
+}
+
+.appreciation-rail-note p {
+    margin: 0;
+    font-size: .76rem;
+    line-height: 1.6;
+}
+
+.appreciation-view-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius-sm);
+    background: var(--app-surface-2);
+}
+
+.appreciation-view-tabs button {
+    flex: 1;
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    border-radius: var(--app-radius-xs);
+    color: var(--app-ink-2);
+    background: transparent;
+    font-size: .82rem;
+    font-weight: 600;
+    transition: color 120ms var(--app-ease), border-color 120ms var(--app-ease), background-color 120ms var(--app-ease);
+}
+
+.appreciation-view-tabs button span {
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-view-tabs button.is-active {
+    border-color: var(--app-line-strong);
+    color: var(--app-ink-1);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow);
+}
+
+.appreciation-view-tabs button:focus-visible,
+.appreciation-filter-list button:focus-visible,
+[data-evidence-toggle]:focus-visible {
+    outline: 3px solid var(--app-primary-soft);
+    outline-offset: 1px;
+}
+
+.appreciation-tab-panel:not(.is-active) {
+    display: none;
+}
+
+.appreciation-catalog-list,
+.appreciation-activity-list,
+.appreciation-challenge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.appreciation-catalog-item,
+.appreciation-activity-item,
+.appreciation-challenge-item,
+.appreciation-history,
+.appreciation-compact-list {
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow);
+}
+
+.appreciation-catalog-item {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    overflow: hidden;
+    min-height: 160px;
+}
+
+.appreciation-catalog-item__image {
+    width: 150px;
+    height: 100%;
+    min-height: 160px;
+    object-fit: cover;
+}
+
+.appreciation-catalog-item__image--empty,
+.appreciation-activity-item__image--empty {
+    display: grid;
+    place-items: center;
+    color: var(--app-warning);
+    background: var(--app-warning-soft);
+    font-size: 1.5rem;
+}
+
+.appreciation-catalog-item__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 18px;
+}
+
+.appreciation-catalog-item__content header,
+.appreciation-activity-item__content header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.appreciation-catalog-item h3,
+.appreciation-activity-item h3,
+.appreciation-challenge-item h3 {
+    margin: 0 0 5px;
+    color: var(--app-ink-1);
+    font-size: .94rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.appreciation-catalog-item header p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    color: var(--app-ink-2);
+    font-size: .78rem;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.appreciation-cost {
+    flex: 0 0 auto;
+    color: var(--app-warning);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-catalog-item__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 12px;
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-catalog-item__meta .is-success {
+    color: var(--app-success);
+}
+
+.appreciation-catalog-item__meta .is-danger {
+    color: #b91c1c;
+}
+
+.appreciation-catalog-item__action {
+    margin-top: auto;
+    padding-top: 14px;
+}
+
+.appreciation-catalog-item__action .btn {
+    min-width: 116px;
+}
+
+.appreciation-catalog-item.is-unavailable .appreciation-catalog-item__image {
+    filter: grayscale(.7);
+    opacity: .72;
+}
+
+.appreciation-history,
+.appreciation-compact-list {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.appreciation-history li,
+.appreciation-compact-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 68px;
+    padding: 13px 16px;
+}
+
+.appreciation-history li + li,
+.appreciation-compact-list li + li {
+    border-top: 1px solid var(--app-line);
+}
+
+.appreciation-history strong,
+.appreciation-history span,
+.appreciation-compact-list strong,
+.appreciation-compact-list span {
+    display: block;
+}
+
+.appreciation-history strong,
+.appreciation-compact-list strong {
+    margin-bottom: 3px;
+    font-size: .83rem;
+}
+
+.appreciation-history div > span,
+.appreciation-compact-list div > span {
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-history > li > .appreciation-status {
+    flex: 0 0 auto;
+    color: var(--app-ink-2);
+    background: var(--app-surface-3);
+}
+
+.appreciation-compact-list a {
+    flex: 0 0 auto;
+    color: var(--app-primary-ink);
+    font-size: .76rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.appreciation-stats--activity {
+    margin-top: 18px;
+}
+
+.appreciation-balance--compact {
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 14px;
+}
+
+.appreciation-balance--compact .appreciation-meta {
+    margin: 0;
+}
+
+.appreciation-filter-panel {
+    padding: 16px;
+    border: 1px solid var(--app-line);
+    border-radius: var(--app-radius);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow);
+}
+
+.appreciation-filter-panel h2 {
+    margin: 0 0 10px;
+    font-size: .84rem;
+    font-weight: 650;
+}
+
+.appreciation-filter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.appreciation-filter-list button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--app-radius-xs);
+    color: var(--app-ink-2);
+    background: transparent;
+    font-size: .78rem;
+    text-align: left;
+}
+
+.appreciation-filter-list button:hover {
+    background: var(--app-surface-2);
+}
+
+.appreciation-filter-list button.is-active {
+    border-color: var(--app-primary);
+    color: var(--app-primary-ink);
+    background: var(--app-primary-soft);
+    font-weight: 650;
+}
+
+.appreciation-filter-list button span {
+    font-variant-numeric: tabular-nums;
+}
+
+.appreciation-activity-item {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    overflow: hidden;
+}
+
+.appreciation-activity-item__image {
+    width: 130px;
+    height: 100%;
+    min-height: 174px;
+    object-fit: cover;
+}
+
+.appreciation-activity-item__content {
+    min-width: 0;
+    padding: 17px 18px;
+}
+
+.appreciation-activity-item__type {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--app-ink-3);
+    font-size: .7rem;
+}
+
+.appreciation-activity-item__description {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 8px 0;
+    color: var(--app-ink-2);
+    font-size: .78rem;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.appreciation-activity-item__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 14px;
+    color: var(--app-ink-3);
+    font-size: .72rem;
+}
+
+.appreciation-activity-item__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.appreciation-activity-item__footer .appreciation-status {
+    color: var(--app-ink-2);
+    background: var(--app-surface-3);
+}
+
+.appreciation-status--completed {
+    color: var(--app-success) !important;
+    background: var(--app-success-soft) !important;
+}
+
+.appreciation-status--rejected {
+    color: #b91c1c !important;
+    background: rgba(185, 28, 28, .10) !important;
+}
+
+.appreciation-evidence-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--app-line);
+}
+
+.appreciation-evidence-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--app-ink-2);
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.appreciation-evidence-form > div {
+    display: flex;
+    gap: 8px;
+}
+
+.appreciation-evidence-form .form-control {
+    min-height: 42px;
+    border-radius: var(--app-radius-sm);
+}
+
+.appreciation-challenge-item {
+    padding: 18px;
+}
+
+.appreciation-challenge-item header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.appreciation-challenge-item header > div {
+    min-width: 0;
+    flex: 1;
+}
+
+.appreciation-challenge-item header h3 {
+    margin-bottom: 2px;
+}
+
+.appreciation-challenge-item header p,
+.appreciation-challenge-item__description {
+    margin: 0;
+    color: var(--app-ink-3);
+    font-size: .74rem;
+    line-height: 1.55;
+}
+
+.appreciation-challenge-item header .appreciation-status:not(.is-complete) {
+    color: var(--app-ink-2);
+    background: var(--app-surface-3);
+}
+
+.appreciation-challenge-item__description {
+    margin-top: 13px;
+    color: var(--app-ink-2);
+}
+
+.appreciation-challenge-item footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 15px;
+    padding-top: 13px;
+    border-top: 1px solid var(--app-line);
+}
+
+.appreciation-challenge-item__reward {
+    color: var(--app-warning);
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.appreciation-secondary-section {
+    margin-top: 8px;
+}
+
+/* Contextual color overrides stay after component definitions. */
+.appreciation-catalog .appreciation-catalog-item__image--empty {
+    color: var(--app-peach-ink);
+    background: var(--app-peach-soft);
+}
+
+.appreciation-catalog .appreciation-cost,
+.appreciation-catalog .appreciation-wallet__balance strong {
+    color: var(--app-peach-ink);
+}
+
+.appreciation-activities-page .appreciation-activity-item__image--empty {
+    color: var(--app-mint-ink);
+    background: var(--app-mint-soft);
+}
+
+.appreciation-activities-page .appreciation-activity-item__type {
+    color: var(--app-mint-ink);
+    background: var(--app-mint-soft);
+}
+
+.appreciation-challenges-page .appreciation-challenge__icon {
+    color: var(--app-lavender-ink);
+    background: var(--app-lavender-soft);
+}
+
+.appreciation-challenges-page .appreciation-progress span {
+    background: var(--app-lavender-ink);
+}
+
+.appreciation-challenges-page .appreciation-challenge-item__reward {
+    color: var(--app-lavender-ink);
+}
+
+@media (max-width: 991.98px) {
+    .appreciation-layout {
+        grid-template-columns: minmax(0, 720px);
+    }
+
+    .appreciation-rail__inner {
+        position: static;
+    }
+
+    .appreciation-profile {
+        order: 1;
+    }
+
+    .appreciation-challenge {
+        order: 2;
+    }
+
+    .appreciation-promo:not(.appreciation-challenge),
+    .appreciation-shortcuts {
+        order: 3;
+    }
+
+    .appreciation-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .appreciation-analysis-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .appreciation-layout {
+        gap: 16px;
+    }
+
+    .appreciation-profile,
+    .appreciation-promo {
+        padding: 16px;
+    }
+
+    .appreciation-profile__person {
+        align-items: flex-start;
+    }
+
+    .appreciation-balance {
+        align-items: flex-start;
+    }
+
+    .appreciation-composer {
+        padding: 12px;
+    }
+
+    .appreciation-feed-head {
+        padding: 18px 2px 9px;
+    }
+
+    .appreciation-post__header {
+        padding: 16px 16px 0;
+    }
+
+    .appreciation-post__body {
+        padding: 15px 16px 16px;
+    }
+
+    .appreciation-post__message {
+        font-size: .96rem;
+        line-height: 1.68;
+    }
+
+    .appreciation-post__footer {
+        margin: 0 16px;
+    }
+
+    .appreciation-frame img {
+        max-height: 24rem;
+    }
+
+    .appreciation-catalog-item,
+    .appreciation-activity-item {
+        grid-template-columns: 96px minmax(0, 1fr);
+    }
+
+    .appreciation-catalog-item__image,
+    .appreciation-activity-item__image {
+        width: 96px;
+        min-height: 150px;
+    }
+
+    .appreciation-catalog-item__content,
+    .appreciation-activity-item__content {
+        padding: 14px;
+    }
+
+    .appreciation-catalog-item__content header,
+    .appreciation-activity-item__content header {
+        display: block;
+    }
+
+    .appreciation-cost,
+    .appreciation-activity-item__content header > .appreciation-points {
+        display: block;
+        margin-top: 6px;
+    }
+
+    .appreciation-catalog-item__action .btn,
+    .appreciation-activity-item__footer .btn {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .appreciation-activity-item__footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .appreciation-evidence-form > div {
+        flex-direction: column;
+    }
+
+    .appreciation-challenge-item header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .appreciation-challenge-item header .appreciation-status {
+        margin-left: 53px;
+    }
+
+    .appreciation-challenge-item footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .appreciation-challenge-item footer .btn {
+        width: 100%;
+    }
+
+    .appreciation-history li,
+    .appreciation-compact-list li {
+        align-items: flex-start;
+    }
+
+    .appreciation-analytics__head {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .appreciation-analytics-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .appreciation-analysis-columns,
+    .appreciation-analysis-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .appreciation-composer,
+    .appreciation-composer__button,
+    .appreciation-reward,
+    .appreciation-shortcuts a,
+    .btn-appreciation-like {
+        transition-duration: 80ms;
+        transition-property: opacity, color, background-color, border-color;
+    }
+}

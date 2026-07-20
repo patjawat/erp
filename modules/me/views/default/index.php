@@ -10,6 +10,133 @@ use app\components\ThaiDateHelper;
 $me = UserHelper::GetEmployee();
 $notify = ApproveHelper::Info();
 
+$this->registerCss(<<<'CSS'
+.appreciation-action {
+    color: #475569;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 180ms ease, transform 180ms ease;
+}
+.appreciation-action:hover,
+.appreciation-action:focus-visible {
+    color: #1d4ed8;
+    transform: translateY(-2px);
+}
+.appreciation-action__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: .5rem;
+    border: 1px solid rgba(148, 163, 184, .12);
+    box-shadow: 0 8px 20px rgba(51, 65, 85, .16);
+    font-size: 1.25rem;
+}
+.appreciation-action--thanks .appreciation-action__icon {
+    color: #9b3f36;
+    background: linear-gradient(145deg, #ffe4dc, #f6b9a8);
+}
+.appreciation-action--reward .appreciation-action__icon {
+    color: #75500d;
+    background: linear-gradient(145deg, #fff1c9, #ebcb72);
+}
+.appreciation-action--activity .appreciation-action__icon {
+    color: #315d3b;
+    background: linear-gradient(145deg, #e0f1dc, #a9d1a9);
+}
+.appreciation-action .d-block.small {
+    font-size: .9rem;
+}
+.appreciation-status-card .small {
+    font-size: .86rem;
+}
+.appreciation-feed-link {
+    color: #64748b;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.appreciation-feed-link:hover { color: #2563eb; }
+.appreciation-metric {
+    text-align: center;
+}
+.appreciation-metric + .appreciation-metric {
+    border-left: 1px solid #e2e8f0;
+}
+.appreciation-heart {
+    width: 42px;
+    height: 42px;
+    color: #fff;
+    background: linear-gradient(145deg, #fb7185, #e83e5b);
+    box-shadow: 0 7px 16px rgba(232, 62, 91, .25);
+}
+.appreciation-growth {
+    position: relative;
+    text-align: center;
+    padding: .15rem 0 .2rem;
+}
+.appreciation-growth__plant {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: .25rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff9d9 0 18%, #f9d98c 55%, #efb85b 100%);
+    box-shadow: 0 8px 18px rgba(183, 126, 38, .2);
+    font-size: 1.55rem;
+}
+.appreciation-growth .progress {
+    background: #edf0e7;
+}
+.appreciation-growth .progress-bar {
+    background: linear-gradient(90deg, #ef9f62, #e4bd4f 52%, #79b879);
+}
+.erp-quick-services {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+.erp-quick-service {
+    min-width: 0;
+}
+.erp-quick-service > a > div {
+    justify-content: center !important;
+    align-items: center;
+    text-align: center;
+    gap: .65rem;
+}
+.erp-quick-service > a > div > .bg-primary-subtle {
+    width: 60px !important;
+    height: 60px !important;
+    margin-bottom: 0 !important;
+    border-radius: 16px !important;
+}
+.erp-quick-service > a > div > .bg-primary-subtle svg {
+    width: 29px;
+    height: 29px;
+}
+.erp-quick-service .text-xs {
+    width: 100%;
+    color: #475569 !important;
+    font-size: 1rem !important;
+    line-height: 1.35;
+    text-align: center;
+}
+@media (min-width: 1200px) {
+    .erp-dashboard-primary-row {
+        min-height: 470px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .appreciation-action { transition: none; }
+}
+CSS);
+
 $pendingApproveItems = [
     [
         'key' => 'leave',
@@ -118,7 +245,7 @@ if (!empty($upcomingHealth)): ?>
 </div>
 <?php endif; ?>
 
-<div class="row g-3">
+<div class="row g-3 erp-dashboard-primary-row">
     <div class="col-12 col-xl-6">
         <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-center rounded-4"
             style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
@@ -172,7 +299,7 @@ if (!empty($upcomingHealth)): ?>
                     <div class="d-flex flex-column flex-md-row align-items-center gap-3 mb-2">
                         <h2 class="fw-black m-0 tracking-tight text-white" style="font-size: 1.875rem;">
                             <?= $me->fullname ?></h2>
-                        <div class="d-flex align-items-center gap-1 px-3 py-1 rounded-pill shadow-sm"
+                        <div class="d-none"
                             style="background: linear-gradient(to right, #f59e0b, #fb923c);">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -183,7 +310,7 @@ if (!empty($upcomingHealth)): ?>
                         </div>
                     </div>
                     <p class="text-white text-opacity-75 text-sm fw-medium mb-4"><?= $me->positionName() ?> • <span
-                            class="text-white fw-bold text-uppercase" style="letter-spacing: 0.05em;">Rank: Gold</span>
+                            class="text-white fw-bold">ระดับ: <?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></span>
                     </p>
                     <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
                         <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
@@ -192,7 +319,7 @@ if (!empty($upcomingHealth)): ?>
                                 <circle cx="12" cy="10" r="3"></circle>
                             </svg><span><?= $me->departmentName() ?></span>
                         </div>
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
+                        <div class="d-none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="heart" style="color: #fca5a5; fill: #fca5a5;" class="lucide lucide-heart">
                                 <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>
                             </svg><span>ได้รับคำขอบคุณแล้ว: <span class="fw-black"><?= (int) ($appreciationReceivedCount ?? 0) ?> ครั้ง</span></span>
@@ -258,6 +385,45 @@ if (!empty($upcomingHealth)): ?>
     </div>
 
     <div class="col-12 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 appreciation-status-card">
+            <div class="card-body p-3 p-md-4 d-flex flex-column">
+                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div class="min-w-0 flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="appreciation-heart d-inline-flex align-items-center justify-content-center rounded-circle"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
+                            <div><h2 class="h6 fw-bold mb-0">สถานะคำขอบคุณ</h2><div class="small text-muted"><?= !empty($appreciationStatus['year']) ? Html::encode($appreciationStatus['year']->name) : 'ยังไม่เปิดรอบคะแนน' ?></div></div>
+                        </div>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                        <div class="small text-muted">ระดับ</div>
+                        <div class="fw-bold lh-sm" style="font-size:1.35rem;color:<?= Html::encode($appreciationStatus['levelColor'] ?? '#2563eb') ?>"><?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></div>
+                    </div>
+                </div>
+                <div class="appreciation-growth mb-2">
+                    <span class="appreciation-growth__plant" aria-hidden="true">🌱</span>
+                    <div class="small fw-semibold text-dark mb-1"><?= !empty($appreciationStatus['nextLevelName']) ? 'กำลังเติบโตสู่ '.Html::encode($appreciationStatus['nextLevelName']) : 'เติบโตถึงระดับปัจจุบันแล้ว' ?></div>
+                    <div class="d-flex justify-content-between gap-2 small mb-1"><span class="text-muted">เส้นทางของคุณ</span><span class="fw-bold text-success"><?= (int)($appreciationStatus['progress'] ?? 0) ?>%</span></div>
+                    <div class="progress rounded-pill" style="height:8px"><div class="progress-bar rounded-pill" role="progressbar" style="width:<?= (int)($appreciationStatus['progress'] ?? 0) ?>%" aria-valuenow="<?= (int)($appreciationStatus['progress'] ?? 0) ?>" aria-valuemin="0" aria-valuemax="100"></div></div>
+                    <?php if(!empty($appreciationStatus['nextLevelName'])): ?><div class="small text-muted mt-1">อีก <?= number_format($appreciationStatus['pointsToNext']) ?> คะแนน ต้นอ่อนจะเติบโตขึ้น</div><?php endif; ?>
+                </div>
+                <dl class="row g-0 mb-3 small py-2">
+                    <div class="col-4 appreciation-metric px-2"><dt class="text-muted fw-normal"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>สะสม</dt><dd class="fw-bold fs-6 mb-0 mt-1"><?= number_format($appreciationStatus['earned'] ?? 0) ?></dd></div>
+                    <div class="col-4 appreciation-metric px-3"><dt class="text-muted fw-normal"><i class="bi bi-wallet2 text-primary me-1" aria-hidden="true"></i>คงเหลือ</dt><dd class="fw-bold fs-6 text-primary mb-0 mt-1"><?= number_format($appreciationStatus['balance'] ?? 0) ?></dd></div>
+                    <div class="col-4 appreciation-metric px-3"><dt class="text-muted fw-normal"><i class="bi bi-gift-fill text-success me-1" aria-hidden="true"></i>รางวัล</dt><dd class="fw-bold fs-6 mb-0 mt-1"><?= number_format($appreciationStatus['rewardsCount'] ?? 0) ?></dd></div>
+                </dl>
+                <div class="row g-0 text-center border-top pt-3 pb-1">
+                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-heart-fill"></i></span><span class="d-block small">ส่งคำขอบคุณ</span>', ['/appreciation/default/create'], ['class'=>'appreciation-action appreciation-action--thanks d-inline-flex flex-column align-items-center open-modal','data'=>['size'=>'modal-lg']]) ?></div>
+                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-gift"></i></span><span class="d-block small">แลกของ</span>', ['/appreciation/reward/index'], ['class'=>'appreciation-action appreciation-action--reward d-inline-flex flex-column align-items-center']) ?></div>
+                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-calendar-check"></i></span><span class="d-block small">ร่วมกิจกรรม</span>', ['/appreciation/activity/index'], ['class'=>'appreciation-action appreciation-action--activity d-inline-flex flex-column align-items-center']) ?></div>
+                </div>
+                <div class="text-center mt-3">
+                    <?= Html::a('<i class="bi bi-heart-fill me-1 text-danger"></i> ดูฟีดคำขอบคุณทั้งหมด <i class="bi bi-arrow-right ms-1"></i>', ['/appreciation/default/index'], ['class'=>'appreciation-feed-link']) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none">
         <div class="card border-0 shadow-sm h-100 p-4 d-flex flex-column justify-content-between position-relative overflow-hidden"
             style="background-color: #fff;">
             <div class="position-absolute top-0 end-0 p-3 opacity-10" style="pointer-events: none;"><svg
@@ -335,64 +501,64 @@ if (!empty($upcomingHealth)): ?>
     </div>
 
     <div class="col-12 col-xl-3">
-        <div class="row g-3">
-            <div class="col-6">
+        <div class="erp-quick-services h-100">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(['/leave']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">การลางาน</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">การลางาน</span>
                     </div>
                 </a>
             </div>
-            <div class="col-6">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/repair-v2']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="wrench"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">แจ้งซ่อม</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">แจ้งซ่อม</span>
                     </div>
                 </a>
             </div>
-            <div class="col-6">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/booking-vehicle/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="car-front"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">จองรถ</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">จองรถ</span>
                     </div>
                 </a>
             </div>
-            <div class="col-6">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/booking-meeting/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-days"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">จองห้องประชุม</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">จองห้องประชุม</span>
                     </div>
                 </a>
             </div>
-            <div class="col-6">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(!empty(env('DEVELOPMENT_USER_URL')) ? env('DEVELOPMENT_USER_URL') : ['/me/development']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="graduation-cap"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">อบรม/ดูงาน</span>
                     </div>
                 </a>
             </div>
-            <div class="col-6">
+            <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/purchase']) ?>" class="text-decoration-none text-body d-block h-100">
                     <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="shopping-cart"></i>
                         </div>
-                        <div><span class="text-xs text-muted fw-bold d-block">ขอซื้อ/ขอจ้าง</span></div>
+                        <span class="text-xs text-muted fw-bold d-block">ขอซื้อ/ขอจ้าง</span>
                     </div>
                 </a>
             </div>
@@ -400,7 +566,7 @@ if (!empty($upcomingHealth)): ?>
     </div>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 d-none">
     <div class="col-12">
         <div class="row g-3">
             <div class="col-12">

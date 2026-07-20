@@ -698,12 +698,14 @@ function beforLoadModal() {
   erpShowModal("#main-modal");
   // $('#modal-dialog').modal('show');
   $("#main-modal-label").html("กำลังโหลด");
-  $(".modal-dialog").removeClass(
+  // scope เฉพาะ #main-modal — เดิมใช้ $(".modal-dialog")/$(".modal-body") แบบ global
+  // ทำให้ไปเขียนทับ body ของ modal อื่น (เช่น #itemHistoryModal) พังตอนเปิดทีหลัง
+  $("#main-modal .modal-dialog").removeClass(
     "modal-sm modal-md modal-lg modal-xl modal-xxl"
   );
-  $(".modal-dialog").addClass("modal-sm");
+  $("#main-modal .modal-dialog").addClass("modal-sm");
   $("#modal-dialog").removeClass("fade");
-  $(".modal-body").html(
+  $("#main-modal .modal-body").html(
     '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
   );
 }
@@ -784,6 +786,10 @@ $("body").on("click", ".open-modal", function (e) {
     url: url,
     dataType: "json",
     success: async function (response) {
+      if (response.status === "error") {
+        if (typeof warning === "function") warning(response.message);
+        return;
+      }
       var modal = $("#main-modal");
       modal.find("#main-modal-label").html(response.title);
       await erpInjectModalContent(modal.find(".modal-body"), response.content);
@@ -903,6 +909,10 @@ $("body").off("click", ".delete-item").on("click", ".delete-item", async functio
             erpHideModal("#main-modal");
           } else if (response.status == "success" && response.url) {
             window.location.href = response.url;
+          } else if (response.status == "error" && response.message) {
+            Swal.fire({ icon: "error", title: "ไม่สำเร็จ", text: response.message }).then(() => {
+              location.reload();
+            });
           } else {
             location.reload();
           }

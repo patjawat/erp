@@ -13,11 +13,18 @@ $warehouse = Yii::$app->session->get('warehouse');
 /* @var yii\web\View $this */
 /* @var app\modules\inventory\models\StockEvent $model */
 
-try {
-    $this->title = $warehouse->warehouse_name;
-} catch (Throwable $th) {
-    $this->title = 'ไม่ระบุคลังที่ร้องขอ';
-}
+// session 'warehouse' อาจถูกเก็บเป็น array (StockOrderController::setWarehouse) หรือ object (DefaultController/WarehouseController) แล้วแต่ flow ที่ผ่านมา
+$warehouseGet = function ($key, $default = null) use ($warehouse) {
+    if (is_array($warehouse)) {
+        return $warehouse[$key] ?? $default;
+    }
+    if (is_object($warehouse)) {
+        return $warehouse->$key ?? $default;
+    }
+    return $default;
+};
+
+$this->title = $warehouseGet('warehouse_name', 'ไม่ระบุคลังที่ร้องขอ');
 $this->params['breadcrumbs'][] = ['label' => 'คลัง', 'url' => ['/inventory']];
 $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'เบิกวัสดุ';
@@ -187,7 +194,7 @@ foreach ($model->getItems() as $item): ?>
 
 
 <div class="d-flex justify-content-center">
-    <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouse->id)): ?>
+    <?php if ($model->OrderApprove() && isset($office) && ($model->order_status != 'success') && ($model->warehouse_id == $warehouseGet('id'))): ?>
         <?php echo  Html::a('<i class="bi bi-check2-circle"></i> บันทึกจ่าย', ['/inventory/stock-order/check-out', 'id' => $model->id], ['class' => 'btn btn-primary rounded-pill shadow checkout-xxx open-modal', 'id' => 'btnSave', 'data' => ['size' => 'modal-md']]); ?>
     <?php endif; ?>
 

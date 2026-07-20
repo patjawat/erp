@@ -70,7 +70,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'label' => 'มูลค่า',
-                            'value' => $model->getTotalOrderPrice()
+                            'value' => is_numeric($model->getTotalOrderPrice()) ? number_format($model->getTotalOrderPrice(), 2) : '0.00'
                         ],
                         [
                             'label' => 'สถานะ',

@@ -14,6 +14,47 @@ use app\modules\hr\models\Organization;
 class AssetHelper extends Component
 {
 
+    /**
+     * ข้อความอายุการรับเข้า เช่น "ผ่านมา 2 ปี 3 เดือน" / "รับวันนี้" / "ยังไม่ถึงวันที่รับ"
+     * ใช้ร่วมกันระหว่างหน้า list และ quick-update เพื่อไม่ให้ logic ซ้ำ
+     */
+    public static function receiveAgeText($receiveDate): string
+    {
+        if (empty($receiveDate)) {
+            return '';
+        }
+
+        try {
+            $dateText = substr((string) $receiveDate, 0, 10);
+            $receivedAt = \DateTimeImmutable::createFromFormat('!Y-m-d', $dateText) ?: new \DateTimeImmutable((string) $receiveDate);
+            $today = new \DateTimeImmutable('today');
+        } catch (\Throwable $e) {
+            return '';
+        }
+
+        if ($receivedAt > $today) {
+            return 'ยังไม่ถึงวันที่รับ';
+        }
+
+        $diff = $receivedAt->diff($today);
+        if ($diff->y === 0 && $diff->m === 0 && $diff->d === 0) {
+            return 'รับวันนี้';
+        }
+
+        $parts = [];
+        if ($diff->y > 0) {
+            $parts[] = $diff->y . ' ปี';
+        }
+        if ($diff->m > 0) {
+            $parts[] = $diff->m . ' เดือน';
+        }
+        if ($diff->d > 0) {
+            $parts[] = $diff->d . ' วัน';
+        }
+
+        return 'ผ่านมา ' . implode(' ', $parts);
+    }
+
         //คำนวนรหัสครุภัณฑ์ใหม่
     public static function nextAssetCode($fsn_number)
     {

@@ -94,10 +94,32 @@ use app\widgets\TomSelectWidget;
                         </button>
                     </div>
                 </div>
+                <input type="hidden" name="mode" id="mode" value="recount">
+
+                <div class="row g-3 mt-1">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold d-block">รูปแบบการปรับ</label>
+                        <div class="btn-group w-100 w-md-auto" role="group" aria-label="โหมดการปรับยอด">
+                            <input type="radio" class="btn-check" name="mode_radio" id="mode_recount" value="recount" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="mode_recount">
+                                <i class="bi bi-calculator me-1"></i> ตรวจนับ — คิดมูลค่า
+                            </label>
+                            <input type="radio" class="btn-check" name="mode_radio" id="mode_qty_only" value="qty_only" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="mode_qty_only">
+                                <i class="bi bi-123 me-1"></i> ปรับจำนวนอย่างเดียว
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1" id="mode_hint">
+                            เพิ่ม = ตีมูลค่าตามต้นทุน (ค่าเริ่มต้น = ต้นทุนเฉลี่ย) · ลด = คิดต้นทุนตามค่าเฉลี่ย → มูลค่าขยับตามจริง
+                        </small>
+                    </div>
+                </div>
+
                 <div class="row g-3 mt-1">
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">ยอดคงเหลือปัจจุบัน</label>
                         <div class="form-control-plaintext fw-bold text-primary" id="current_balance">—</div>
+                        <small class="text-muted">มูลค่า: <span id="current_value">—</span> · เฉลี่ย/หน่วย: <span id="avg_cost">—</span></small>
                     </div>
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold">ยอดตรวจนับจริง</label>
@@ -109,11 +131,54 @@ use app\widgets\TomSelectWidget;
                         <input type="number" name="adjustment_qty" id="adjustment_qty" class="form-control" step="any" placeholder="บวก = เพิ่ม, ลบ = ลด" value="<?= $prefill['qty'] !== null ? Html::encode($prefill['qty']) : '' ?>" required>
                         <small class="text-muted">เช่น 10 = เพิ่ม 10 หน่วย, -5 = ลด 5 หน่วย</small>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-3" id="unit_price_wrap">
+                        <label class="form-label fw-semibold">ต้นทุน/หน่วย (ของที่เพิ่ม)</label>
+                        <input type="number" name="unit_price" id="unit_price" class="form-control" step="any" min="0" placeholder="ค่าเริ่มต้น = ต้นทุนเฉลี่ย">
+                        <small class="text-muted">ใช้ตอน<strong>เพิ่ม</strong>ยอด · เว้นว่าง = ใช้ต้นทุนเฉลี่ย</small>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold">วันที่ปรับยอด</label>
+                        <?= \app\widgets\datepicker\DatepickerThai::widget([
+                            'name' => 'order_date',
+                            'value' => \app\components\AppHelper::convertToThai(date('Y-m-d')),
+                            'options' => ['id' => 'order_date', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                        ]) ?>
+                        <div class="form-text">มีผลต่อการปิดเดือน — รายการจะถูกนับในงวดตามวันที่นี้ (ค่าเริ่มต้น = วันนี้)</div>
+                    </div>
+                    <div class="col-12 col-md-6">
                         <label class="form-label fw-semibold">หมายเหตุ</label>
                         <input type="text" name="note" id="note" class="form-control" placeholder="เหตุผลการปรับ (ถ้ามี)" value="<?= Html::encode($prefill['note']) ?>">
                     </div>
                 </div>
+
+                <div class="row mt-3" id="preview_wrap" style="display:none;">
+                    <div class="col-12">
+                        <div class="border rounded-3 p-3 bg-body-tertiary">
+                            <div class="fw-semibold mb-2"><i class="bi bi-eye me-1"></i> ตรวจสอบก่อนบันทึก</div>
+                            <div class="row g-3 text-center">
+                                <div class="col-4">
+                                    <div class="small text-muted">ก่อนปรับ</div>
+                                    <div class="fw-bold" id="pv_before_qty">—</div>
+                                    <div class="small text-muted" id="pv_before_val">—</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">ผลต่าง</div>
+                                    <div class="fw-bold" id="pv_delta_qty">—</div>
+                                    <div class="small" id="pv_delta_val">—</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted">หลังปรับ</div>
+                                    <div class="fw-bold text-primary" id="pv_after_qty">—</div>
+                                    <div class="small text-primary" id="pv_after_val">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row mt-4">
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary px-4">
@@ -145,34 +210,106 @@ $this->registerJs(<<<JS
     var prefillTargetQty = $prefillTargetQty;
     var itemSelect = window.itemSelect;
 
+    var currentValue = 0;   // มูลค่า ledger ปัจจุบัน
+    var avgCost = 0;        // ต้นทุนเฉลี่ยต่อหน่วย
+    var hasBalance = false;
+
     function formatQty(value) {
         var num = parseFloat(value);
         if (isNaN(num)) return '\\u2014';
         return num.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+    function formatMoney(value) {
+        var num = parseFloat(value);
+        if (isNaN(num)) return '\\u2014';
+        return num.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ฿';
+    }
+    function getMode() { return $('#mode').val(); }
 
     function setCurrentQty(value, isError) {
         if (isError) {
             $('#current_balance').text(value || 'โหลดไม่สำเร็จ').addClass('text-danger');
             $('#current_qty').val('');
+            hasBalance = false;
+            updatePreview();
             return;
         }
         $('#current_qty').val(value);
         $('#current_balance').text(formatQty(value)).toggleClass('text-danger', parseFloat(value) < 0);
+        hasBalance = true;
     }
 
     function recalculateAdjustment() {
         var target = parseFloat($('#target_qty').val());
         var current = parseFloat($('#current_qty').val());
-        if (isNaN(target) || isNaN(current)) return;
+        if (isNaN(target) || isNaN(current)) { updatePreview(); return; }
         var qty = target - current;
         $('#adjustment_qty').val(parseFloat(qty.toFixed(6)));
+        updatePreview();
     }
+
+    // ราคาที่ใช้คิดมูลค่าตามโหมด/ทิศทาง (ตรงกับ logic ฝั่ง server)
+    function effectiveUnitPrice(qty) {
+        if (getMode() === 'qty_only') return 0;
+        if (qty > 0) {
+            var input = parseFloat($('#unit_price').val());
+            return (!isNaN(input) && input >= 0) ? input : avgCost;
+        }
+        return avgCost; // ลด = ต้นทุนเฉลี่ย
+    }
+
+    function updatePreview() {
+        var qty = parseFloat($('#adjustment_qty').val());
+        var current = parseFloat($('#current_qty').val());
+        if (!hasBalance || isNaN(qty) || qty === 0 || isNaN(current)) {
+            $('#preview_wrap').hide();
+            return;
+        }
+        var price = effectiveUnitPrice(qty);
+        var valueDelta = (getMode() === 'qty_only') ? 0 : qty * price;
+        var afterQty = current + qty;
+        var afterVal = currentValue + valueDelta;
+
+        $('#pv_before_qty').text(formatQty(current));
+        $('#pv_before_val').text(formatMoney(currentValue));
+        var deltaSign = qty > 0 ? '+' : '';
+        $('#pv_delta_qty').text(deltaSign + formatQty(qty))
+            .toggleClass('text-success', qty > 0).toggleClass('text-danger', qty < 0);
+        var vSign = valueDelta > 0 ? '+' : '';
+        $('#pv_delta_val').text(valueDelta === 0 ? 'มูลค่าไม่เปลี่ยน' : (vSign + formatMoney(valueDelta)))
+            .toggleClass('text-success', valueDelta > 0).toggleClass('text-danger', valueDelta < 0)
+            .toggleClass('text-muted', valueDelta === 0);
+        $('#pv_after_qty').text(formatQty(afterQty));
+        $('#pv_after_val').text(formatMoney(afterVal));
+        $('#preview_wrap').show();
+    }
+
+    // แสดง/ซ่อนช่องต้นทุน + hint ตามโหมด/ทิศทาง
+    function syncModeUI() {
+        var mode = getMode();
+        var qty = parseFloat($('#adjustment_qty').val());
+        var showPrice = (mode !== 'qty_only') && (isNaN(qty) || qty > 0);
+        $('#unit_price_wrap').toggle(showPrice);
+        if (mode === 'qty_only') {
+            $('#mode_hint').text('ปรับเฉพาะจำนวน — มูลค่าคงเดิม (ใช้เมื่อแก้ตัวเลขล้วน ไม่ใช่เจอของเพิ่ม/หาย)');
+        } else {
+            $('#mode_hint').text('เพิ่ม = ตีมูลค่าตามต้นทุน (ค่าเริ่มต้น = ต้นทุนเฉลี่ย) · ลด = คิดต้นทุนตามค่าเฉลี่ย → มูลค่าขยับตามจริง');
+        }
+        updatePreview();
+    }
+
+    $('input[name=mode_radio]').on('change', function(){
+        $('#mode').val(this.value);
+        syncModeUI();
+    });
 
     if (itemSelect) {
         itemSelect.on('change', function(value) {
             $('#current_balance').text('\u2014').removeClass('text-danger');
             $('#current_qty').val('');
+            currentValue = 0; avgCost = 0; hasBalance = false;
+            $('#current_value').text('—'); $('#avg_cost').text('—');
+            $('#preview_wrap').hide();
             if (value && $('#warehouse_id').val()) loadBalance();
         });
     }
@@ -181,9 +318,14 @@ $this->registerJs(<<<JS
         if (itemSelect) itemSelect.clear();
         $('#current_qty').val('');
         $('#current_balance').text('\u2014').removeClass('text-danger');
+        currentValue = 0; avgCost = 0; hasBalance = false;
+        $('#current_value').text('\u2014'); $('#avg_cost').text('\u2014');
+        $('#preview_wrap').hide();
     });
 
     $('#target_qty').on('input', recalculateAdjustment);
+    $('#adjustment_qty').on('input', syncModeUI);
+    $('#unit_price').on('input', updatePreview);
 
     function loadBalance() {
         var wh = $('#warehouse_id').val();
@@ -198,7 +340,13 @@ $this->registerJs(<<<JS
                     setCurrentQty(res.error, true);
                 } else {
                     setCurrentQty(res.balance, false);
+                    currentValue = parseFloat(res.value) || 0;
+                    avgCost = parseFloat(res.avg_cost) || 0;
+                    $('#current_value').text(formatMoney(currentValue));
+                    $('#avg_cost').text(avgCost > 0 ? formatMoney(avgCost) : '—');
+                    if (!$('#unit_price').val() && avgCost > 0) $('#unit_price').val(avgCost.toFixed(4));
                     recalculateAdjustment();
+                    syncModeUI();
                 }
             })
             .fail(function() {
@@ -215,6 +363,7 @@ $this->registerJs(<<<JS
         $('#target_qty').val(prefillTargetQty);
         recalculateAdjustment();
     }
+    syncModeUI();
 
     // Prefill จาก URL query (มาจาก variance banner ในหน้า main-stock/balance)
     if (prefillItemCode && prefillWarehouseId && itemSelect) {
@@ -258,9 +407,16 @@ $this->registerJs(<<<JS
         var name = itemLabel && itemLabel.item_name ? itemLabel.item_name : code;
         var current = $('#current_qty').val();
         var target = $('#target_qty').val();
-        var msg = 'ยืนยันการปรับยอด?' + String.fromCharCode(10) + 'พัสดุ: ' + name + String.fromCharCode(10) + 'จำนวน: ' + qty + String.fromCharCode(10) + '(บวก=เพิ่ม, ลบ=ลด)';
+        var NL = String.fromCharCode(10);
+        var valueDelta = (getMode() === 'qty_only') ? 0 : qty * effectiveUnitPrice(qty);
+        var msg = 'ยืนยันการปรับยอด?' + NL + 'พัสดุ: ' + name + NL + 'จำนวน: ' + (qty > 0 ? '+' : '') + qty + ' (บวก=เพิ่ม, ลบ=ลด)';
+        if (getMode() === 'qty_only') {
+            msg += NL + 'โหมด: ปรับจำนวนอย่างเดียว (มูลค่าไม่เปลี่ยน)';
+        } else {
+            msg += NL + 'ผลต่อมูลค่า: ' + (valueDelta >= 0 ? '+' : '') + formatMoney(valueDelta);
+        }
         if (current !== '' || target !== '') {
-            msg += String.fromCharCode(10) + 'ยอดระบบ: ' + (current || '-') + String.fromCharCode(10) + 'ยอดตรวจนับจริง: ' + (target || '-');
+            msg += NL + 'ยอดระบบ: ' + (current || '-') + ' → ยอดจริง: ' + (target || '-');
         }
         if (!confirm(msg)) return;
 
@@ -273,16 +429,24 @@ $this->registerJs(<<<JS
                 adjustment_qty: qty,
                 current_qty: $('#current_qty').val(),
                 target_qty: $('#target_qty').val(),
-                lot_number: $('#lot_number').val(),
+                mode: getMode(),
+                unit_price: $('#unit_price').val(),
                 source: $('#source').val(),
-                note: $('#note').val()
+                note: $('#note').val(),
+                order_date: $('#order_date').val()
             },
             dataType: 'json'
         }).done(function(res) {
             if (res.success) {
-                alert('ปรับยอดสำเร็จ — เลขที่เอกสาร: ' + (res.order_no || ''));
+                var extra = (res.value_delta && parseFloat(res.value_delta) !== 0)
+                    ? (' · มูลค่า ' + (parseFloat(res.value_delta) >= 0 ? '+' : '') + formatMoney(res.value_delta))
+                    : '';
+                alert('ปรับยอดสำเร็จ — เลขที่เอกสาร: ' + (res.order_no || '') + extra);
+                if (res.closed_month_warning) { alert(res.closed_month_warning); }
                 $('#adjustment_qty').val('');
+                $('#target_qty').val('');
                 $('#note').val('');
+                $('#preview_wrap').hide();
                 loadBalance();
             } else {
                 alert(res.message || 'เกิดข้อผิดพลาด');

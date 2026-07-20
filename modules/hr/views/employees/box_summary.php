@@ -10,17 +10,19 @@ use app\components\AgeProcessHelper;
 
 <div class="row mb-3">
             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12">
-                <div class="card card-body">
+                <a class="card card-body text-decoration-none <?= ($name ?? '') === 'job_description_current' ? 'border-primary' : '' ?>"
+                   href="<?= Url::to(['/hr/employees/view', 'id' => $model->id, 'name' => 'job_description_current']) ?>"
+                   aria-label="ดูคำอธิบายงานฉบับปัจจุบัน">
                     <div class="d-flex">
                         <div class="avatar-md rounded-circle bg-light">
                             <i class="bi bi-calendar2-plus fs-md avatar-title text-primary"></i>
                         </div>
                         <div class="flex-grow-1 text-end">
                             <h5 class="text-dark"><span data-plugin="counterup">Job Description</span></h5>
-                            <p class="text-muted mb-0 text-truncate">0</p>
+                            <p class="text-muted mb-0 text-truncate"><?= (int) $model->getJdSectionCount() ?> หัวข้อ</p>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12">

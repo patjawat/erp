@@ -18,11 +18,11 @@ $this->params['breadcrumbs'][] = 'แก้ไขหัวข้อ';
     <div class="card-body">
         <?php $form = ActiveForm::begin(); ?>
         <?= $form->field($section, 'title')->textInput(['maxlength' => true, 'class' => 'form-control'])->label('หัวข้อ') ?>
-        <?= $form->field($section, 'content')->textarea(['rows' => 6, 'class' => 'form-control'])->label('เนื้อหา') ?>
+        <?= $form->field($section, 'content')->textarea(['rows' => 10, 'class' => 'form-control', 'placeholder' => 'กรอกรายละเอียดของหัวข้อนี้'])->label('รายละเอียด') ?>
         <?= $form->field($section, 'sort_order')->textInput(['type' => 'number', 'class' => 'form-control'])->label('ลำดับ') ?>
         <div class="mt-3">
             <?= Html::submitButton('<i class="bi bi-check-lg me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
-            <?= Html::a('ยกเลิก', ['view', 'emp_id' => $employee->id], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('ยกเลิก', ['view', 'emp_id' => $employee->id, 'id' => $jd->id], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
         <?php ActiveForm::end(); ?>
     </div>

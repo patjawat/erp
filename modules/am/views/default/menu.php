@@ -37,8 +37,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
         <?= Html::a('<i class="fa-solid fa-trash me-2"></i> จำหน่าย', ['/am/asset/dispose'], ['class' => 'dropdown-item']) ?>
         <?= Html::a('<i class="fa-solid fa-qrcode me-2"></i> พิมพ์ QR', ['/am/asset/print-qr'], ['class' => 'dropdown-item']) ?>
         <div class="dropdown-divider"></div>
-        <?= Html::a('<i class="fa-solid fa-calendar-day me-2"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?>
-        <?= Html::a('<i class="fa-solid fa-file-lines me-2"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?>
+        <?= Html::a('<i class="fa-solid fa-percent me-2"></i> ค่าเสื่อมราคา', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?>
     </div>
 </li>
 
@@ -90,8 +89,7 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
             <li><?= Html::a('จำหน่าย', ['/am/asset/dispose'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('พิมพ์ QR', ['/am/asset/print-qr'], ['class' => 'dropdown-item']) ?></li>
             <li><hr class="dropdown-divider"></li>
-            <li><?= Html::a('ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('ค่าเสื่อมราคา', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
     <?=Html::a('<i class="fa-solid fa-chart-simple"></i> รายงานค่าเสื่อม',['/am/report'],['class' => 'btn btn-light'])?>

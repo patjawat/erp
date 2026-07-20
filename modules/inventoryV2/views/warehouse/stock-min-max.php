@@ -25,6 +25,14 @@ $coveragePct = $totalItems > 0 ? round(($configuredItems / $totalItems) * 100) :
 $categoryOptions = $categoryOptions ?? [];
 $baseUrl = ['/inventory-v2/warehouse/stock-min-max', 'id' => $warehouse->id];
 
+// ตัวกรองที่ active — แนบไปกับลิงก์ export เพื่อให้ Excel ส่งออกตรงกับที่เห็นบนหน้าจอ
+$exportFilterParams = array_filter([
+    'q' => $q,
+    'status' => $status,
+    'category_id' => $categoryId,
+], static fn($v) => $v !== '' && $v !== null);
+$hasExportFilter = !empty($exportFilterParams);
+
 $this->title = 'ตั้ง min/max วัสดุ: ' . $warehouse->warehouse_name;
 $this->params['breadcrumbs'][] = ['label' => 'ตั้งค่าคลัง', 'url' => ['/inventory-v2/default/setting']];
 $this->params['breadcrumbs'][] = $warehouse->warehouse_name;
@@ -218,13 +226,20 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                 <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <?php if ($hasExportFilter): ?>
+                                    <li>
+                                        <h6 class="dropdown-header d-flex align-items-center gap-1">
+                                            <i class="bi bi-funnel-fill text-primary"></i>ส่งออกเฉพาะรายการที่กรองอยู่
+                                        </h6>
+                                    </li>
+                                <?php endif; ?>
                                 <li>
-                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'template']) ?>">
+                                    <a class="dropdown-item" href="<?= Url::to(array_merge(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'template'], $exportFilterParams)) ?>">
                                         <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Template (ว่าง)
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'snapshot']) ?>">
+                                    <a class="dropdown-item" href="<?= Url::to(array_merge(['/inventory-v2/warehouse/export-settings', 'id' => $warehouse->id, 'mode' => 'snapshot'], $exportFilterParams)) ?>">
                                         <i class="bi bi-download me-2 text-muted"></i>ดาวน์โหลด Snapshot (ค่าปัจจุบัน)
                                     </a>
                                 </li>
@@ -286,6 +301,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                         </th>
                                         <th style="width: 50px;">#</th>
                                         <th>รหัส / ชื่อวัสดุ</th>
+                                        <th style="width: 150px;">หมวดหมู่</th>
                                         <th style="width: 80px;">หน่วย</th>
                                         <th class="text-end" style="width: 110px;">คงเหลือ</th>
                                         <th class="text-end" style="width: 130px;">Min</th>
@@ -317,6 +333,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
                                                 <code class="text-muted small"><?= Html::encode($r['item_code']) ?></code>
                                             </td>
+                                            <td class="text-muted small"><?= Html::encode($r['category_title'] ?? '-') ?></td>
                                             <td class="text-muted small"><?= Html::encode($unitName) ?></td>
                                             <td class="text-end font-monospace">
                                                 <?= $renderBalance($balance, $isConfigured, $isConfigured ? (float) $minQty : 0, $isConfigured ? (float) $maxQty : 0) ?>
@@ -324,8 +341,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                             <td class="text-end">
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control form-control-sm text-end js-min-input"
                                                     value="<?= $minQty === '' ? '' : htmlspecialchars((string) $minQty) ?>"
@@ -336,8 +353,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                             <td class="text-end">
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control form-control-sm text-end js-max-input"
                                                     value="<?= $maxQty === '' ? '' : htmlspecialchars((string) $maxQty) ?>"
@@ -368,7 +385,7 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                     if (is_string($itemDataJson)) {
                                         $itemDataJson = json_decode($itemDataJson, true);
                                     }
-                                    $unitName = $itemDataJson['unit_name'] ?? '-';
+                                    $unitName = $itemDataJson['unit'] ?? $itemDataJson['unit_name'] ?? '-';
                                     $isConfigured = !empty($r['setting_id']);
                                     $minQty = $isConfigured ? (float) $r['setting_min_qty'] : '';
                                     $maxQty = $isConfigured ? (float) $r['setting_max_qty'] : '';
@@ -387,6 +404,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <div class="fw-semibold"><?= Html::encode($r['item_name']) ?></div>
                                                 <code class="text-muted small"><?= Html::encode($r['item_code']) ?></code>
                                                 <span class="text-muted small ms-2"><?= Html::encode($unitName) ?></span>
+                                                <?php if (!empty($r['category_title'])): ?>
+                                                    <div class="text-muted small"><?= Html::encode($r['category_title']) ?></div>
+                                                <?php endif; ?>
                                             </div>
                                             <span class="badge status-badge <?= $st['badge'] ?>">
                                                 <?= $st['label'] ?>
@@ -404,8 +424,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <label class="form-label small mb-1 text-muted">Min</label>
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control js-min-input text-end"
                                                     value="<?= $minQty === '' ? '' : htmlspecialchars((string) $minQty) ?>"
@@ -417,8 +437,8 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                                                 <label class="form-label small mb-1 text-muted">Max</label>
                                                 <input
                                                     type="number"
-                                                    inputmode="decimal"
-                                                    step="0.01"
+                                                    inputmode="numeric"
+                                                    step="1"
                                                     min="0"
                                                     class="form-control js-max-input text-end"
                                                     value="<?= $maxQty === '' ? '' : htmlspecialchars((string) $maxQty) ?>"
@@ -466,10 +486,10 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <div class="d-flex align-items-center gap-1 smm-batch-only">
                     <label class="small text-muted mb-0" for="smm-bulk-min">Min</label>
-                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-min"
+                    <input type="number" inputmode="numeric" step="1" min="0" id="smm-bulk-min"
                         class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
                     <label class="small text-muted mb-0 ms-2" for="smm-bulk-max">Max</label>
-                    <input type="number" inputmode="decimal" step="0.01" min="0" id="smm-bulk-max"
+                    <input type="number" inputmode="numeric" step="1" min="0" id="smm-bulk-max"
                         class="form-control form-control-sm text-end" style="width: 90px;" placeholder="—">
                     <button type="button" class="btn btn-outline-secondary btn-sm ms-1" id="smm-bulk-apply" title="ใส่ค่า Min/Max ที่กรอกให้ทุกรายการที่เลือก">
                         <i class="bi bi-arrow-down-square"></i> ใส่

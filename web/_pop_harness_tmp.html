@@ -1,0 +1,49 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+#itemHistoryModal{--ink-1:#1a202c;--ink-2:#4a5568;--ink-3:#718096;--surface:#fff;--surface-2:#f7f9fc;--line:rgba(15,23,42,.08);--line-strong:rgba(15,23,42,.14);--primary:#0d6efd;--primary-soft:rgba(13,110,253,.08);--success:#15803d;--warning:#b45309;--danger:#b91c1c;--danger-soft:rgba(185,28,28,.1);--radius:10px;--radius-sm:8px;--radius-xs:6px;}
+#itemHistoryModal.show .modal-dialog{transform:translateY(0) scale(1);}
+.doc-chip{padding:.1rem .5rem;background:#eef2f7;color:#4a5568;border-radius:6px;font-size:.78rem;font-weight:600;}
+tr.is-preview{background:rgba(13,110,253,.08);}
+.hist-pop{position:fixed;z-index:1085;width:320px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:0 12px 32px rgba(15,23,42,.16);padding:.85rem;}
+.hist-pop[hidden]{display:none!important;}
+.hist-pop__head{display:flex;justify-content:space-between;gap:.5rem;margin-bottom:.5rem;}
+.hist-pop__title{font-size:.9rem;font-weight:700;}
+.hist-pop__close{width:1.6rem;height:1.6rem;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--ink-3);cursor:pointer;}
+.hist-pop__actions{display:flex;justify-content:flex-end;gap:.45rem;margin-top:.6rem;}
+#log{position:fixed;left:8px;bottom:8px;background:#000;color:#0f0;font:12px monospace;padding:6px 10px;border-radius:6px;z-index:3000;}
+</style></head><body>
+<div class="modal fade" id="itemHistoryModal" tabindex="-1"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">ประวัติ</h5></div><div class="modal-body">
+<table class="table"><tbody id="tb"></tbody></table>
+<div id="hist-edit-popover" class="hist-pop" role="dialog" hidden>
+ <div class="hist-pop__head"><div class="hist-pop__title">แก้จำนวน / ราคา <span class="doc-chip" id="hist-pop-doc">-</span></div>
+ <button type="button" class="hist-pop__close" id="hist-pop-close" aria-label="ปิด"><i class="bi bi-x-lg"></i></button></div>
+ <input type="number" id="hist-pop-qty" class="form-control" value="18">
+ <div class="hist-pop__actions"><button class="btn btn-sm btn-light" id="hist-pop-cancel">ยกเลิก</button><button class="btn btn-sm btn-primary" id="hist-pop-save">บันทึก</button></div>
+</div>
+</div></div></div></div>
+<div id="log">log</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var LG=document.getElementById('log');function log(m){LG.textContent=m;}
+var payload={transactions:[{detail_id:1,order_no:'REQ-690749',qty:18,unit_price:660,balance_qty:5,balance_value:0,direction:'out'}]};
+var tb=document.getElementById('tb');
+function render(){tb.innerHTML=payload.transactions.map(function(t){return '<tr class="hist-tx-row" data-detail-id="'+t.detail_id+'"><td><span class="doc-chip">'+t.order_no+'</span></td><td class="text-end">-'+t.qty+'</td><td class="text-end"><button class="btn btn-sm btn-warning hist-edit-btn" data-detail-id="'+t.detail_id+'"><i class="bi bi-pencil"></i></button></td></tr>';}).join('');}
+render();
+var modalEl=document.getElementById('itemHistoryModal'),popEl=document.getElementById('hist-edit-popover');
+if(popEl.parentNode!==modalEl)modalEl.appendChild(popEl);
+var popCloseBtn=document.getElementById('hist-pop-close'),popCancelBtn=document.getElementById('hist-pop-cancel'),popSaveBtn=document.getElementById('hist-pop-save'),popQty=document.getElementById('hist-pop-qty'),popDoc=document.getElementById('hist-pop-doc');
+var popRow=null,popTriggerBtn=null,lastHistoryPayload=payload,activeEditRow=null;
+function resetHistoryRowPreview(){if(lastHistoryPayload)render();}
+function position(){if(popEl.hidden||!popTriggerBtn)return;var r=popTriggerBtn.getBoundingClientRect();popEl.style.left=Math.min(r.left,innerWidth-336)+'px';popEl.style.top=(r.bottom+8)+'px';}
+function openEditPopover(trigger){var id=trigger.getAttribute('data-detail-id');var row=null;payload.transactions.forEach(function(t){if(String(t.detail_id)===id)row=t;});if(!row)return;popRow=row;popTriggerBtn=trigger;activeEditRow=row;popDoc.textContent=row.order_no;popQty.value=row.qty;popEl.hidden=false;position();log('opened');}
+function closeEditPopover(){if(!popEl||popEl.hidden)return;popEl.hidden=true;if(popRow)resetHistoryRowPreview();popRow=null;popTriggerBtn=null;activeEditRow=null;log('CLOSED at '+Date.now());}
+popCloseBtn.onclick=closeEditPopover;popCancelBtn.onclick=closeEditPopover;
+popSaveBtn.onclick=function(){log('save');};
+// production-style modalEl click handler
+modalEl.addEventListener('click',function(event){var editTrigger=event.target.closest&&event.target.closest('.hist-edit-btn');if(editTrigger){event.preventDefault();closeEditPopover();openEditPopover(editTrigger);return;}var trigger=event.target.closest&&event.target.closest('#hist-link-adjust');if(!trigger)return;event.preventDefault();});
+// production-style outside mousedown
+document.addEventListener('mousedown',function(e){if(!popEl||popEl.hidden)return;if(popEl.contains(e.target)){log('mousedown INSIDE');return;}if(popTriggerBtn&&(e.target===popTriggerBtn||(popTriggerBtn.contains&&popTriggerBtn.contains(e.target))))return;if(e.target.closest&&e.target.closest('.hist-edit-btn'))return;log('mousedown OUTSIDE -> close');closeEditPopover();});
+new bootstrap.Modal(modalEl,{backdrop:false}).show();
+</script></body></html>

@@ -66,7 +66,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => 
             </form>
         </div>
         <div class="col-12 col-lg-auto">
-            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'dashboard']) ?>
+            <?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'dashboard', 'mainWarehouseId' => $currentWarehouseId]) ?>
         </div>
     </div>
 </div>

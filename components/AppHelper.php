@@ -392,7 +392,10 @@ class AppHelper extends Component
     {
         try {
             if ($date != '__/__/____') {
-                $dmy = explode('/', $date);  // แยก วัน/เดือน/ปี
+                $dmy = explode('/', (string) $date);  // แยก วัน/เดือน/ปี
+                if (count($dmy) !== 3 || !checkdate((int) $dmy[1], (int) $dmy[0], (int) $dmy[2] - 543)) {
+                    return null;
+                }
                 $year = (int) $dmy[2];  // กำหนดเป็น int เพื่อการคำนวณ
                 $year = $year - 543;  // ปี พ.ศ.-543
                 return $year . '-' . $dmy[1] . '-' . $dmy[0];  // ได้รูปแบบ 2016-05-20
@@ -408,7 +411,10 @@ class AppHelper extends Component
     public static function DateFormDb($date)
     {
         try {
-            $dmy = explode('-', $date);  // แยก วัน/เดือน/ปี
+            $dmy = explode('-', (string) $date);  // แยก วัน/เดือน/ปี
+            if (count($dmy) !== 3 || !checkdate((int) $dmy[1], (int) $dmy[2], (int) $dmy[0])) {
+                return null;
+            }
             $year = (int) $dmy[0];  // กำหนดเป็น int เพื่อการคำนวณ
             $year = $year + 543;  // ปี พ.ศ.-543
             return $dmy[2] . '/' . $dmy[1] . '/' . $year;  // ได้รูปแบบ 20/10/2566

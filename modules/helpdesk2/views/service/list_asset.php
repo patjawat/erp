@@ -158,8 +158,7 @@ $equipStats = $equipStats ?? [
             <i class="fa-solid fa-angle-down"></i>
         </button>
         <ul class="dropdown-menu">
-            <li><?= Html::a('<i data-lucide="calendar" class="me-2" style="width:1rem;height:1rem;"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="file-text" class="me-2" style="width:1rem;height:1rem;"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="trending-down" class="me-2" style="width:1rem;height:1rem;"></i> ค่าเสื่อมราคา', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-check" class="me-2" style="width:1rem;height:1rem;"></i> ตรวจนับพัสดุประจำปี', ['/am/audit'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="trash-2" class="me-2" style="width:1rem;height:1rem;"></i> จำหน่ายพัสดุ', ['/am/disposal'], ['class' => 'dropdown-item']) ?></li>
         </ul>

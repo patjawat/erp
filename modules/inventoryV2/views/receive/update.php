@@ -17,6 +17,8 @@ $this->params['breadcrumbs'][] = 'Update';
         'listWarehouse' => $listWarehouse,
         'listItemType' => $listItemType ?? [],
         'listVendors' => $listVendors ?? [],
+        'deliveryNoteNo' => $deliveryNoteNo ?? '',
+        'poOrderId' => $poOrderId ?? null,
     ]) ?>
 
 </div>

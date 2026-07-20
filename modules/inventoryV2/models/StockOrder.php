@@ -324,6 +324,32 @@ public function getToWarehouse()
     }
 
     /**
+     * เลขที่ส่งสินค้าจากผู้ขาย (delivery note) — เก็บใน data_json['delivery_note_no']
+     * @return string
+     */
+    public function getDeliveryNoteNo()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        return isset($json['delivery_note_no']) ? (string) $json['delivery_note_no'] : '';
+    }
+
+    /**
+     * ใบสั่งซื้อ (orders.id) ต้นทางที่ใบรับเข้านี้อ้างอิง (กรณีรับเข้าจากการจัดซื้อผ่าน picker) — เก็บใน data_json['po_order_id']
+     * @return int|null
+     */
+    public function getPoOrderId()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        return (!empty($json['po_order_id'])) ? (int) $json['po_order_id'] : null;
+    }
+
+    /**
      * รายการค่าใช้จ่ายและใบเสร็จแนบ (เก็บใน data_json['expenses'])
      * แต่ละรายการ: ['description' => string, 'amount' => number, 'receipt_path' => string|null]
      * @return array
@@ -730,5 +756,81 @@ public function getToWarehouse()
     public function isStockDeducted()
     {
         return $this->status === self::STATUS_CONFIRMED;
+    }
+
+    /**
+     * ตรวจสอบว่าเอกสารนี้ลบได้หรือไม่
+     * @return bool
+     */
+    public function canDelete()
+    {
+        return $this->getUndeletableReason() === null;
+    }
+
+    /**
+     * เหตุผลที่ลบไม่ได้ (คืนค่า null หากลบได้)
+     * ลบไม่ได้เมื่อยกเลิกไปแล้ว หรือ (กรณีตัดสต็อกแล้ว) มีการจ่ายวัสดุออกจาก "Lot เดียวกัน" ของคลังเดียวกันไปแล้ว
+     *
+     * หมายเหตุ: เช็คระดับ pool (item_code + lot_number + main_warehouse_id) ไม่ใช่แค่แถวของใบนี้เอง
+     * เพราะหลายรายการ (โดยเฉพาะที่ไม่มีการควบคุม lot จริง ใช้ lot_number = '-') ใช้ lot ร่วมกันหลายใบรับเข้า
+     * ระบบตัดสต็อกแบบ FIFO ตาม stock_detail.id (ดู IssueController::actionProcess) จึงอาจตัดจากใบรับเข้าใบอื่นที่อยู่ใน
+     * lot เดียวกันก่อน ทำให้ remain_qty ของใบนี้ยังเท่าเดิมทั้งที่ lot ถูกจ่ายออกไปแล้วจริง
+     * @return string|null
+     */
+    public function getUndeletableReason()
+    {
+        if ($this->status === self::STATUS_CANCELLED) {
+            return 'ไม่สามารถลบใบที่ยกเลิกแล้วได้';
+        }
+        if ($this->status === self::STATUS_CONFIRMED) {
+            $lots = [];
+            foreach ($this->stockDetails as $detail) {
+                $lotKey = $detail->item_code . '|' . ($detail->lot_number ?? '-');
+                $lots[$lotKey] = ['item_code' => $detail->item_code, 'lot_number' => $detail->lot_number];
+            }
+            if (empty($lots)) {
+                return null;
+            }
+
+            // Query แบบ batch เดียวสำหรับทุก (item_code, lot_number) ของใบนี้ แทนการยิงทีละแถว
+            // (ใบที่มีหลายร้อยรายการ เช่น lot_number = '-' ที่ใช้ร่วมกันหลายรายการ จะทำให้ยิง query ซ้ำจำนวนมากถ้า loop ทีละแถว)
+            $lotConditions = ['or'];
+            foreach ($lots as $lot) {
+                $lotConditions[] = ['and',
+                    ['stock_detail.item_code' => $lot['item_code']],
+                    ['stock_detail.lot_number' => $lot['lot_number']],
+                ];
+            }
+
+            $rows = StockDetail::find()
+                ->joinWith('stockOrder')
+                ->where([
+                    'stock_order.main_warehouse_id' => $this->main_warehouse_id,
+                    'stock_order.status' => self::STATUS_CONFIRMED,
+                ])
+                ->andWhere(['or',
+                    ['stock_order.order_type' => self::ORDER_TYPE_IN],
+                    ['and', ['stock_order.order_type' => self::ORDER_TYPE_ADJUST], ['>', 'stock_detail.qty', 0]],
+                ])
+                ->andWhere($lotConditions)
+                ->select([
+                    'item_code' => 'stock_detail.item_code',
+                    'lot_number' => 'stock_detail.lot_number',
+                    'total_qty' => 'SUM(stock_detail.qty)',
+                    'total_remain' => 'SUM(stock_detail.remain_qty)',
+                ])
+                ->groupBy(['stock_detail.item_code', 'stock_detail.lot_number'])
+                ->asArray()
+                ->all();
+
+            foreach ($rows as $row) {
+                $totalQty = (float) ($row['total_qty'] ?? 0);
+                $totalRemain = (float) ($row['total_remain'] ?? 0);
+                if ($totalQty - $totalRemain > 0.000001) {
+                    return 'ไม่สามารถลบได้ เนื่องจากมีการจ่ายวัสดุ Lot เดียวกันนี้ออกไปแล้ว (รหัสพัสดุ: ' . $row['item_code'] . ', Lot: ' . $row['lot_number'] . ')';
+                }
+            }
+        }
+        return null;
     }
 }

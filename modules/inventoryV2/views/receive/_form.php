@@ -15,6 +15,8 @@ use kartik\widgets\ActiveForm;
 // กำหนดค่าเริ่มต้นเพื่อป้องกัน undefined variable
 $items = $items ?? [];
 $listVendors = $listVendors ?? ['' => '-- เลือกผู้ขาย (ไม่บังคับ) --'];
+$deliveryNoteNo = $deliveryNoteNo ?? '';
+$poOrderId = $poOrderId ?? null;
 // หน้าแก้ไข: ถ้าไม่มี $items แต่โมเดลมี stockDetails ให้ใช้จาก relation (ป้องกันรายการไม่โหลด)
 if (!$model->isNewRecord && empty($items) && is_array($model->stockDetails)) {
     $items = $model->stockDetails;
@@ -85,6 +87,25 @@ foreach ($items as $it) {
                         'id' => 'stockorder-order_no',
                     ])->label('เลขที่ใบรับเข้า (เว้นว่างได้ — ระบบสร้างเลขที่อัตโนมัติ)') ?>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="stockorder-ref">เลขที่สั่งซื้อ (PO)</label>
+                    <div class="input-group">
+                        <?= Html::activeTextInput($model, 'ref', [
+                            'id' => 'stockorder-ref',
+                            'class' => 'form-control',
+                            'maxlength' => true,
+                            'placeholder' => 'เว้นว่างได้ถ้าไม่ใช่การรับจากจัดซื้อ',
+                        ]) ?>
+                        <button type="button" class="btn btn-outline-primary" id="btnPickPo" disabled title="กรุณาเลือกคลังสินค้าก่อน">
+                            <i class="bi bi-search"></i> เลือกจาก PO
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="deliveryNoteNoInput">เลขที่ส่งสินค้า</label>
+                    <input type="text" class="form-control" id="deliveryNoteNoInput" name="delivery_note_no" value="<?= Html::encode($deliveryNoteNo) ?>" placeholder="เลขที่เอกสารส่งของจากผู้ขาย (ถ้ามี)">
+                </div>
+                <?= Html::hiddenInput('po_order_id', $poOrderId, ['id' => 'poOrderIdInput']) ?>
                 <div class="col-md-12">
                     <?= $form->field($model, 'contact_id')->widget(TomSelectWidget::class, [
                         'items' => $listVendors,
@@ -95,7 +116,7 @@ foreach ($items as $it) {
                         ],
                     ])->label('ผู้ขาย') ?>
                 </div>
-                
+
             </div>
 
             <div class="row g-2 mb-1 align-items-end">
@@ -236,7 +257,7 @@ foreach ($items as $it) {
                                     ?>
                                     <td><input type="text" id="expiry-date-<?= $index ?>" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control expiry-date-thai" value="<?= Html::encode($expiryDisplay) ?>" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
                                     <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="1" step="1"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" step="1"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" min="0" step="any" inputmode="decimal"></td>
                                     <td class="text-end fw-bold row-total"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>
                                 </tr>
@@ -270,6 +291,21 @@ foreach ($items as $it) {
     </div>
 
     <?php ActiveForm::end(); ?>
+</div>
+
+<div class="modal fade" id="pendingPoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary-gradient text-white py-2">
+                <h6 class="modal-title text-white mb-0"><i class="bi bi-cart-check me-1"></i> เลือกใบสั่งซื้อที่รอรับเข้าคลัง</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="poSearchInput" placeholder="ค้นหาเลขที่ PO / เลขทะเบียนคุม / ผู้ขาย" autocomplete="off">
+                <div id="poListContainer"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="selectedItemsModal" tabindex="-1" aria-hidden="true">
@@ -323,6 +359,8 @@ $unitListUrl = Url::to(['stock-item/unit-list']);
 $createUnitUrl = Url::to(['stock-item/create-unit']);
 $createItemUrl = Url::to(['stock-item/create-item']);
 $createItemModalUrl = Url::to(['stock-item/create']);
+$pendingPoUrl = Url::to(['pending-po']);
+$pendingPoItemsUrl = Url::to(['pending-po-items']);
 $itemListUrlJson = json_encode($itemListUrl);
 $itemTypeListUrlJson = json_encode($itemTypeListUrl);
 $importCsvUrlJson = json_encode($importCsvUrl);
@@ -330,6 +368,8 @@ $unitListUrlJson = json_encode($unitListUrl);
 $createUnitUrlJson = json_encode($createUnitUrl);
 $createItemUrlJson = json_encode($createItemUrl);
 $createItemModalUrlJson = json_encode($createItemModalUrl);
+$pendingPoUrlJson = json_encode($pendingPoUrl);
+$pendingPoItemsUrlJson = json_encode($pendingPoItemsUrl);
 $initialWarehouseIdJson = json_encode($initialWarehouseId);
 $initialItemTypeJson = json_encode($initialItemType);
 $msgChangeWarehouse = json_encode('การเปลี่ยนคลังสินค้าจะล้างรายการที่เลือกไว้ทั้งหมด ต้องการดำเนินการหรือไม่?');
@@ -352,6 +392,11 @@ $msgConnectionError = json_encode('เกิดข้อผิดพลาดใ
 $msgAlert = json_encode('แจ้งเตือน');
 $msgCannotSave = json_encode('ไม่สามารถบันทึกได้');
 $msgAddItemRequired = json_encode('กรุณาเพิ่มรายการวัสดุอย่างน้อย 1 รายการ');
+$msgReplaceItemsTitle = json_encode('แทนที่รายการปัจจุบัน?');
+$msgReplaceItemsConfirm = json_encode('ใช่ แทนที่');
+$msgPendingPoEmpty = json_encode('ไม่พบใบสั่งซื้อที่รอรับเข้าคลังนี้');
+$msgPendingPoLoadError = json_encode('ไม่สามารถโหลดรายการใบสั่งซื้อได้');
+$msgPendingPoItemsError = json_encode('ไม่สามารถโหลดรายการพัสดุจากใบสั่งซื้อนี้ได้');
 $msgConfirmSave = json_encode('ยืนยันการบันทึกข้อมูล?');
 $msgCheckData = json_encode('ตรวจสอบความถูกต้องของจำนวนและราคาก่อนยืนยัน');
 $msgConfirmYes = json_encode('ใช่, บันทึกเลย!');
@@ -419,6 +464,19 @@ $js = <<< JS
         });
     }
 
+    // ปุ่ม "เลือกจาก PO" ใช้ได้เฉพาะเมื่อเลือกคลังแล้ว (การกรองรายการ PO ต้องอิงประเภทวัสดุที่คลังนั้นรับ)
+    function updatePoPickerGuard(warehouseId) {
+        var btn = document.getElementById('btnPickPo');
+        if (!btn) return;
+        if (warehouseId) {
+            btn.disabled = false;
+            btn.title = 'ค้นหาและเลือกใบสั่งซื้อที่รอรับเข้าคลัง';
+        } else {
+            btn.disabled = true;
+            btn.title = 'กรุณาเลือกคลังสินค้าก่อน';
+        }
+    }
+
     var warehouseTomSelect = null;
     if (warehouseSelectEl) {
         warehouseTomSelect = new TomSelect(warehouseSelectEl, {
@@ -435,6 +493,7 @@ $js = <<< JS
             },
             onChange: function(val) {
                 var newVal = val || '';
+                updatePoPickerGuard(newVal);
                 if (newVal !== prevWarehouse && $('.item-row').length > 0) {
                     confirmThenClearRows({$msgChangeWarehouse}, function() {
                         clearDetailRows();
@@ -450,6 +509,7 @@ $js = <<< JS
             }
         });
         if (initialWarehouseId) warehouseTomSelect.setValue(initialWarehouseId, true);
+        updatePoPickerGuard(initialWarehouseId || warehouseSelectEl.value);
     }
 
     var itemTypeListUrl = {$itemTypeListUrlJson};
@@ -1132,7 +1192,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
         '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
         '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="1"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" step="1"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" min="0" step="any" inputmode="decimal"></td>' +
         '<td class="text-end fw-bold row-total">0.00</td>' +
         '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
         '</tr>';
@@ -1786,7 +1846,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
                     '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" value="' + (expiryDisplay || '') + '" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
                     '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="1" step="1"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" step="1"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" min="0" step="any" inputmode="decimal"></td>' +
                     '<td class="text-end fw-bold row-total">' + ((item.qty || 0) * (item.unit_price || 0)).toFixed(2) + '</td>' +
                     '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
                     '</tr>';
@@ -1799,6 +1859,163 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
             calculateTotal();
             $('#csvFileInput').val('');
         }
+
+        // ─── PO picker: เลือกใบสั่งซื้อที่รอรับเข้าคลัง ───
+        var poSearchDebounce = null;
+        function currentWarehouseIdForPo() {
+            return (warehouseTomSelect && warehouseTomSelect.getValue()) ? warehouseTomSelect.getValue() : (warehouseSelectEl ? warehouseSelectEl.value : '');
+        }
+
+        function renderPoEmptyState(message) {
+            $('#poListContainer').html(
+                '<div class="po-pick-empty">' +
+                    '<i class="bi bi-inbox"></i>' +
+                    '<p class="po-pick-empty__title">' + escapeHtml(message) + '</p>' +
+                '</div>'
+            );
+        }
+
+        function renderPoLoading() {
+            $('#poListContainer').html(
+                '<div class="po-pick-empty">' +
+                    '<div class="spinner-border spinner-border-sm text-primary" role="status"></div>' +
+                    '<p class="po-pick-empty__title mt-2">กำลังค้นหา...</p>' +
+                '</div>'
+            );
+        }
+
+        function renderPoList(results) {
+            if (!results || results.length === 0) {
+                renderPoEmptyState({$msgPendingPoEmpty});
+                return;
+            }
+            var rows = results.map(function(po) {
+                return '<div class="po-pick-row" data-id="' + po.id + '">' +
+                    '<div class="po-pick-row__icon"><i class="bi bi-file-earmark-text"></i></div>' +
+                    '<div class="po-pick-row__main">' +
+                        '<div class="po-pick-row__title">' +
+                            '<span class="po-pick-row__code">' + escapeHtml(po.po_number || '-') + '</span>' +
+                            '<span class="po-pick-row__sep">·</span>' +
+                            '<span class="po-pick-row__name">' + escapeHtml(po.vendor_title || '-') + '</span>' +
+                        '</div>' +
+                        '<div class="po-pick-row__meta">' +
+                            escapeHtml(po.asset_type_title || '-') + ' · ' + (po.item_count || 0) + ' รายการ · ' +
+                            Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท' +
+                        '</div>' +
+                    '</div>' +
+                    '<span class="po-pick-row__cta">เลือก <i class="bi bi-chevron-right"></i></span>' +
+                '</div>';
+            }).join('');
+            $('#poListContainer').html(rows);
+        }
+
+        function loadPoList(q) {
+            var warehouseId = currentWarehouseIdForPo();
+            if (!warehouseId) return;
+            renderPoLoading();
+            var url = {$pendingPoUrlJson} + '?warehouse_id=' + encodeURIComponent(warehouseId) + '&q=' + encodeURIComponent(q || '');
+            fetch(url).then(function(r) { return r.json(); }).then(function(json) {
+                renderPoList(json.results || []);
+            }).catch(function() {
+                renderPoEmptyState({$msgPendingPoLoadError});
+            });
+        }
+
+        $('#btnPickPo').on('click', function() {
+            var warehouseId = currentWarehouseIdForPo();
+            if (!warehouseId) {
+                Swal.fire({$msgAlert}, {$msgSelectWarehouse}, 'warning');
+                return;
+            }
+            $('#poSearchInput').val('');
+            var modalEl = document.getElementById('pendingPoModal');
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            loadPoList('');
+        });
+
+        $('#poSearchInput').on('input', function() {
+            var q = $(this).val();
+            clearTimeout(poSearchDebounce);
+            poSearchDebounce = setTimeout(function() { loadPoList(q); }, 300);
+        });
+
+        $(document).on('click', '.po-pick-row', function() {
+            var poId = $(this).data('id');
+            var warehouseId = currentWarehouseIdForPo();
+
+            function applyPoDetail(detail) {
+                $('#stockorder-ref').val(detail.po_number || '');
+                $('#deliveryNoteNoInput').val(detail.delivery_note_no || '');
+                $('#poOrderIdInput').val(detail.order_id);
+
+                var sourceTypeEl = document.getElementById('stockorder-source_type');
+                if (sourceTypeEl) {
+                    sourceTypeEl.value = 'PO';
+                    $(sourceTypeEl).trigger('change');
+                }
+
+                if (detail.contact_id) {
+                    var contactEl = document.getElementById('stockorder-contact_id');
+                    var contactTs = contactEl ? contactEl.tomselect : null;
+                    if (contactTs) {
+                        contactTs.setValue(String(detail.contact_id), true);
+                    } else if (contactEl) {
+                        contactEl.value = detail.contact_id;
+                    }
+                }
+
+                $('#detail-body tr.item-row').remove();
+                $('#emptyRow').show();
+                addCSVItemsToTable(detail.items || []);
+
+                var modalEl = document.getElementById('pendingPoModal');
+                var m = bootstrap.Modal.getInstance(modalEl);
+                if (m) m.hide();
+
+                if (detail.skipped_items && detail.skipped_items.length) {
+                    var lines = detail.skipped_items.slice(0, 8).map(function(s) {
+                        return '- ' + (s.name || '-') + ': ' + s.reason;
+                    }).join('\\n');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'มีบางรายการไม่ถูกเพิ่มเข้าตาราง',
+                        text: lines,
+                    });
+                }
+            }
+
+            function fetchAndApply() {
+                Swal.fire({ title: 'กำลังโหลดรายการ...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                var url = {$pendingPoItemsUrlJson} + '?id=' + encodeURIComponent(poId) + '&warehouse_id=' + encodeURIComponent(warehouseId);
+                fetch(url).then(function(r) { return r.json(); }).then(function(detail) {
+                    Swal.close();
+                    if (!detail.success) {
+                        Swal.fire({$msgError}, detail.message || {$msgPendingPoItemsError}, 'error');
+                        return;
+                    }
+                    applyPoDetail(detail);
+                }).catch(function() {
+                    Swal.fire({$msgError}, {$msgPendingPoItemsError}, 'error');
+                });
+            }
+
+            if ($('.item-row').length > 0) {
+                Swal.fire({
+                    title: {$msgReplaceItemsTitle},
+                    text: 'การเลือกใบสั่งซื้อนี้จะลบรายการที่กรอกไว้ ' + $('.item-row').length + ' รายการ และแทนที่ด้วยรายการจากใบสั่งซื้อ',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: {$msgReplaceItemsConfirm},
+                    cancelButtonText: {$msgCancel}
+                }).then(function(res) {
+                    if (res.isConfirmed) fetchAndApply();
+                });
+            } else {
+                fetchAndApply();
+            }
+        });
 
     });
 JS;
@@ -1838,6 +2055,45 @@ $this->registerCss(<<<CSS
     font-size: 0.72rem; color: #718096;
     font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
     line-height: 1.2; margin-top: 0.1rem;
+}
+
+/* ─── PO picker (modal #pendingPoModal) ─── */
+.po-pick-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2.5rem 1rem; color: #718096;
+}
+.po-pick-empty i { font-size: 1.75rem; color: #a0aec0; margin-bottom: 0.5rem; }
+.po-pick-empty__title { margin: 0; font-size: 0.9rem; }
+.po-pick-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.po-pick-row + .po-pick-row { margin-top: 0.5rem; }
+.po-pick-row:hover { background: #f7f9fc; border-color: rgba(13, 110, 253, 0.25); }
+.po-pick-row__icon {
+    flex: 0 0 36px; width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px; background: #eef2f7; color: #475569; font-size: 1rem;
+}
+.po-pick-row__main { flex: 1; min-width: 0; }
+.po-pick-row__title {
+    font-weight: 600; color: #1a202c; font-size: 0.9rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.po-pick-row__sep { color: #a0aec0; margin: 0 0.35rem; }
+.po-pick-row__name { font-weight: 400; color: #4a5568; }
+.po-pick-row__meta { font-size: 0.78rem; color: #718096; margin-top: 0.15rem; }
+.po-pick-row__cta {
+    flex: 0 0 auto; font-size: 0.8rem; font-weight: 600; color: #0d6efd;
+    white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+    .po-pick-row { transition: none; }
 }
 
 /* ─── Category mismatch dialog ─── */

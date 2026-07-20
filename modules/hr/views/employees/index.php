@@ -39,11 +39,6 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/hr/menu', ['active' => 'employees'])
-?>
-<?php $this->endBlock(); ?>
-
 
 <?php $this->beginBlock('sub-title'); ?>
 จำนวนทั้งหมด <span id="showTotalCount"> <?= $dataProvider->getTotalCount() ?>
@@ -52,14 +47,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $notStatus > 0 ? Html::a('| ' . AppHelper::MsgWarning('ไม่ระบุตำแหน่ง') . ' ' . $notStatus . ' คน', ['/hr/employees/', 'not-status' => true]) : '' ?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'employees'])
+?>
 <?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/hr/views/employees/menu', ['active' => 'employees']) ?>
-<?php $this->endBlock(); ?>
-
 <!-- การค้นหา -->
 <div class="mb-3">
     <?php echo $this->render('_search', ['model' => $searchModel]); ?>

@@ -159,42 +159,6 @@ $renderSettingCard = static function (array $item): string {
         <div class="row g-3">
             <div class="col-12 col-md-6 col-xl-4">
                 <?= $renderSettingCard([
-                    'url' => Url::to(['/hr/categorise', 'title' => 'การตั้งค่าบุคลากร']),
-                    'title' => 'บุคลากร',
-                    'subtitle' => 'ประเภท ตำแหน่ง และยศ',
-                    'icon' => 'fa-solid fa-clipboard-user',
-                    'color' => 'info',
-                ]) ?>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4">
-                <?= $renderSettingCard([
-                    'url' => Url::to(['/am/setting']),
-                    'title' => 'ทรัพย์สิน',
-                    'subtitle' => 'ประเภทครุภัณฑ์ และรหัส FSN',
-                    'icon' => 'fa-solid fa-boxes-stacked',
-                    'color' => 'primary',
-                ]) ?>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4">
-                <?= $renderSettingCard([
-                    'url' => Url::to(['/am/setting/fsn-format']),
-                    'title' => 'รูปแบบ FSN ครุภัณฑ์',
-                    'subtitle' => 'กำหนดรูปแบบและลำดับหมายเลข',
-                    'icon' => 'fa-solid fa-hashtag',
-                    'color' => 'primary',
-                ]) ?>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4">
-                <?= $renderSettingCard([
-                    'url' => Url::to(['/gdoc/setting']),
-                    'title' => 'จัดการแบบฟอร์ม',
-                    'subtitle' => 'เทมเพลต Google / เอกสาร',
-                    'icon' => 'fa-brands fa-google-drive',
-                    'color' => 'info',
-                ]) ?>
-            </div>
-            <div class="col-12 col-md-6 col-xl-4">
-                <?= $renderSettingCard([
                     'url' => Url::to(['/pdf-template/template']),
                     'title' => 'เทมเพลต PDF',
                     'subtitle' => 'ใบลา ใบรายงาน และเอกสารอื่น',
@@ -206,17 +170,8 @@ $renderSettingCard = static function (array $item): string {
     </section>
 
     <section class="mb-4">
-        <?= $renderSectionTitle('fa-solid fa-server', 'ระบบและความปลอดภัย', 'งานดูแลระบบ สำรองข้อมูล และอัปเดต') ?>
+        <?= $renderSectionTitle('fa-solid fa-server', 'ระบบและความปลอดภัย', 'งานดูแลระบบและอัปเดต') ?>
         <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <?= $renderSettingCard([
-                    'url' => Url::to(['/backup']),
-                    'title' => 'สำรองข้อมูล',
-                    'subtitle' => 'Backup และกู้คืนข้อมูล',
-                    'icon' => 'fa-solid fa-database',
-                    'color' => 'info',
-                ]) ?>
-            </div>
             <div class="col-12 col-md-6">
                 <?= $renderSettingCard([
                     'url' => Url::to(['/settings/update']),

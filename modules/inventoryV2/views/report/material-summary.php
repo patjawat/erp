@@ -126,6 +126,12 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
                         <button type="button" class="btn btn-outline-secondary px-3" id="btn-close-month" data-bs-toggle="modal" data-bs-target="#modal-close-month">
                             <i class="bi bi-calendar-check me-1"></i> ปิดเดือน
                         </button>
+                        <?php if ($hasData): ?>
+                            <button type="button" class="btn btn-outline-danger px-3" id="btn-cancel-close"
+                                    data-year="<?= (int)$year ?>" data-month="<?= (int)$month ?>" data-warehouse="<?= $warehouseId ? (int)$warehouseId : '' ?>">
+                                <i class="bi bi-x-circle me-1"></i> ยกเลิกปิดเดือน
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </form>
@@ -222,54 +228,159 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
     <?php endif; ?>
 </div>
 
-<!-- Modal ปิดเดือน -->
+<!-- Modal ปิดเดือน — wizard 3 สเต็ป (เลือกงวด → ตรวจสอบ → ยืนยัน) -->
 <div class="modal fade" id="modal-close-month" tabindex="-1" aria-labelledby="modal-close-month-title" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal-close-month-title">ปิดเดือน</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted mb-3">ระบบจะคำนวณยอดจากธุรกรรมรับ-จ่ายในเดือนที่เลือก แล้วบันทึกลงรายงานประจำเดือน</p>
-                <div class="mb-3">
-                    <label class="form-label" for="close-warehouse-id">คลัง</label>
-                    <select id="close-warehouse-id" class="form-select">
-                        <option value="">เลือกคลัง</option>
-                        <option value="all">ปิดรวมทุกคลังหลัก</option>
-                        <?php foreach ($warehouses as $wid => $wname): ?>
-                            <?php if ($wid !== ''): ?>
-                                <option value="<?= (int)$wid ?>"><?= Html::encode($wname) ?></option>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </select>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content cm-modal" data-step="1">
+            <header class="cm-modal__head">
+                <div class="cm-modal__head-row">
+                    <h5 class="cm-modal__title" id="modal-close-month-title">
+                        <i class="bi bi-calendar-check" aria-hidden="true"></i> ปิดเดือน
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">เดือน / ปีงบประมาณ (พ.ศ.)</label>
-                    <div class="d-flex gap-2">
-                        <select id="close-month" class="form-select" aria-label="เดือน">
-                            <?php for ($m = 1; $m <= 12; $m++): ?>
-                                <option value="<?= $m ?>" <?= (int)$month === $m ? 'selected' : '' ?>><?= $monthNames[$m] ?></option>
-                            <?php endfor; ?>
-                        </select>
-                        <select id="close-year" class="form-select" aria-label="ปี พ.ศ.">
-                            <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
-                                <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?> (พ.ศ.)</option>
-                            <?php endfor; ?>
-                        </select>
+                <ol class="cm-stepper" aria-label="ขั้นตอนการปิดเดือน">
+                    <li class="cm-step is-active" data-step="1">
+                        <span class="cm-step__indicator"><span class="cm-step__num">1</span><i class="cm-step__check bi bi-check-lg" aria-hidden="true"></i></span>
+                        <span class="cm-step__label">เลือกงวด</span>
+                    </li>
+                    <li class="cm-step" data-step="2">
+                        <span class="cm-step__indicator"><span class="cm-step__num">2</span><i class="cm-step__check bi bi-check-lg" aria-hidden="true"></i></span>
+                        <span class="cm-step__label">ตรวจสอบข้อมูล</span>
+                    </li>
+                    <li class="cm-step" data-step="3">
+                        <span class="cm-step__indicator"><span class="cm-step__num">3</span><i class="cm-step__check bi bi-check-lg" aria-hidden="true"></i></span>
+                        <span class="cm-step__label">ยืนยัน</span>
+                    </li>
+                </ol>
+            </header>
+
+            <div class="modal-body cm-modal__body">
+                <!-- ── สเต็ป 1: เลือกงวด ── -->
+                <section class="cm-panel" data-step="1" aria-label="เลือกงวด">
+                    <p class="cm-panel__lead">เลือกคลังและเดือนที่ต้องการปิด ระบบจะคำนวณยอดจากธุรกรรมรับ-จ่ายในงวดนั้นให้ตรวจสอบก่อนบันทึก</p>
+                    <div class="cm-field-grid">
+                        <div class="cm-field">
+                            <label class="cm-field__label" for="close-warehouse-id">คลัง</label>
+                            <select id="close-warehouse-id" class="form-select cm-select">
+                                <option value="">เลือกคลัง</option>
+                                <option value="all">ปิดรวมทุกคลังหลัก</option>
+                                <?php foreach ($warehouses as $wid => $wname): ?>
+                                    <?php if ($wid !== ''): ?>
+                                        <option value="<?= (int)$wid ?>" <?= (string)$warehouseId === (string)$wid ? 'selected' : '' ?>><?= Html::encode($wname) ?></option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="cm-field__hint" id="cm-warehouse-hint" hidden>กรุณาเลือกคลังหรือเลือกปิดรวมทุกคลัง</span>
+                        </div>
+                        <div class="cm-field">
+                            <label class="cm-field__label" for="close-month">เดือน / ปีงบประมาณ (พ.ศ.)</label>
+                            <div class="cm-field__pair">
+                                <select id="close-month" class="form-select cm-select" aria-label="เดือน">
+                                    <?php for ($m = 1; $m <= 12; $m++): ?>
+                                        <option value="<?= $m ?>" <?= (int)$month === $m ? 'selected' : '' ?>><?= $monthNames[$m] ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <select id="close-year" class="form-select cm-select" aria-label="ปี พ.ศ.">
+                                    <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
+                                        <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?> (พ.ศ.)</option>
+                                    <?php endfor; ?>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+                </section>
+
+                <!-- ── สเต็ป 2: ตรวจสอบข้อมูล ── -->
+                <section class="cm-panel" data-step="2" aria-label="ตรวจสอบข้อมูล" hidden>
+                    <div class="cm-preview" id="cm-preview" aria-live="polite" aria-busy="true">
+                        <!-- injected by JS: skeleton → summary + warnings + table -->
+                    </div>
+                </section>
+
+                <!-- ── สเต็ป 3: ยืนยัน / ผลลัพธ์ ── -->
+                <section class="cm-panel cm-panel--result" data-step="3" aria-label="ผลลัพธ์" hidden>
+                    <div class="cm-result" id="cm-result" aria-live="polite">
+                        <!-- injected by JS -->
+                    </div>
+                </section>
+            </div>
+
+            <footer class="cm-modal__foot">
+                <!-- สเต็ป 1 -->
+                <div class="cm-foot-group" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary cm-btn-next" id="cm-to-preview">
+                        ถัดไป: ดูตัวอย่าง <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </button>
                 </div>
-                <div id="close-month-result" class="alert d-none"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary me-2" id="btn-do-close-month">
-                    <i class="bi bi-calendar-check"></i> ปิดเดือน
-                </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-            </div>
+                <!-- สเต็ป 2 -->
+                <div class="cm-foot-group" data-step="2" hidden>
+                    <button type="button" class="btn btn-outline-secondary" id="cm-back">
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i> ย้อนกลับ
+                    </button>
+                    <button type="button" class="btn btn-primary cm-btn-confirm" id="cm-confirm" disabled>
+                        <span class="cm-btn-confirm__label"><i class="bi bi-calendar-check" aria-hidden="true"></i> ยืนยันปิดเดือน</span>
+                        <span class="cm-btn-confirm__spinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                    </button>
+                </div>
+                <!-- สเต็ป 3 -->
+                <div class="cm-foot-group" data-step="3" hidden>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </footer>
         </div>
     </div>
 </div>
+
+<!-- Modal ยกเลิกปิดเดือน (destructive — ต้องยืนยัน) -->
+<div class="modal fade" id="modal-cancel-close" tabindex="-1" aria-labelledby="modal-cancel-close-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content cx-modal">
+            <header class="cx-modal__head">
+                <span class="cx-modal__icon"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i></span>
+                <div>
+                    <h5 class="cx-modal__title" id="modal-cancel-close-title">ยกเลิกการปิดเดือน</h5>
+                    <p class="cx-modal__caption" id="cx-context">—</p>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </header>
+            <div class="modal-body cx-modal__body">
+                <div class="cx-load" id="cx-load">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังตรวจสอบ…
+                </div>
+                <div id="cx-detail" hidden>
+                    <p class="cx-lead">
+                        การกระทำนี้จะ<strong>ลบข้อมูลรายงานที่ปิดไว้</strong> <span id="cx-rowcount" class="cx-strong">0</span> แถว
+                        แล้วงวดนี้จะกลับไปเป็น "ยังไม่ปิด" <span class="cx-irrev">กู้คืนไม่ได้ ต้องปิดเดือนใหม่</span>
+                    </p>
+                    <div class="cm-alert cm-alert--warning" id="cx-later-warn" role="alert" hidden>
+                        <i class="cm-alert__icon bi bi-diagram-3" aria-hidden="true"></i>
+                        <div class="cm-alert__body">
+                            <div class="cm-alert__title" id="cx-later-title">มีงวดถัดไปที่ปิดไปแล้ว</div>
+                            <div>ยอดยกมาของงวดเหล่านี้ผูกกับยอดยกไปของงวดที่กำลังยกเลิก หลังยกเลิกต้อง<strong>ปิดงวดเหล่านี้ใหม่</strong>ให้ยอดตรง</div>
+                            <ul class="cm-alert__list" id="cx-later-list"></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="cx-error" id="cx-error" hidden></div>
+            </div>
+            <footer class="cx-modal__foot">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ไม่ยกเลิก</button>
+                <button type="button" class="btn cx-btn-danger" id="cx-confirm" disabled>
+                    <span class="cx-btn-danger__label"><i class="bi bi-x-circle" aria-hidden="true"></i> ยืนยันยกเลิกการปิดเดือน</span>
+                    <span class="cx-btn-danger__spinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                </button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<?php // Modal: ประวัติการเคลื่อนไหววัสดุ — partial ร่วมกับหน้า balance (ดูประวัติ + ปรับยอด/แก้ไข) เปิดจากรายการติดลบใน preview ?>
+<?= $this->render('@app/modules/inventoryV2/views/report/_item_history_modal', [
+    'historyUrl' => Url::to(['/inventory-v2/report/item-history']),
+    'exportHistoryUrl' => Url::to(['/inventory-v2/report/export-item-history']),
+]) ?>
 
 <!-- Modal: ดูรายการ item ที่ประกอบเป็นยอดของ cell ที่คลิก -->
 <div class="modal fade" id="categoryDrillModal" tabindex="-1" aria-labelledby="categoryDrillModalTitle" aria-hidden="true">
@@ -342,7 +453,8 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 /* Tokens — ใช้ร่วมกับ modal ที่อยู่นอก .ms-report-summary scope (Bootstrap modal positioned fixed) */
 .ms-report-summary,
 #categoryDrillModal,
-#modal-close-month {
+#modal-close-month,
+#modal-cancel-close {
     --ms-ink-1: #1a202c;
     --ms-ink-2: #4a5568;
     --ms-ink-3: #718096;
@@ -357,6 +469,10 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
     --ms-primary-soft: rgba(13, 110, 253, 0.08);
     --ms-success: #15803d;
     --ms-success-soft: rgba(21, 128, 61, 0.10);
+    --ms-warning: #b45309;
+    --ms-warning-soft: rgba(180, 83, 9, 0.10);
+    --ms-danger: #b91c1c;
+    --ms-danger-soft: rgba(185, 28, 28, 0.10);
     --ms-radius: 10px;
     --ms-radius-sm: 8px;
     --ms-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -657,15 +773,285 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 }
 .cd-modal__foot-hint { color: var(--ms-ink-3); font-size: 0.78rem; }
 
+/* ══════════════════════════════════════════════════════════
+   Close-month wizard (#modal-close-month)
+   ══════════════════════════════════════════════════════════ */
+.cm-modal {
+    border-radius: var(--ms-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+.cm-modal__head { padding: 1rem 1.25rem 0; flex: 0 0 auto; }
+.cm-modal__head-row { display: flex; justify-content: space-between; align-items: center; }
+.cm-modal__title {
+    margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--ms-ink-1);
+    display: inline-flex; align-items: center; gap: 0.45rem;
+}
+.cm-modal__title i { color: var(--ms-primary); font-size: 1.05rem; }
+
+/* Stepper */
+.cm-stepper {
+    display: flex; align-items: center; gap: 0.5rem;
+    list-style: none; margin: 0.9rem 0 0; padding: 0 0 1rem;
+    counter-reset: none;
+}
+.cm-step {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    color: var(--ms-ink-3); font-size: 0.85rem; font-weight: 500;
+    flex: 0 0 auto;
+}
+.cm-step:not(:last-child)::after {
+    content: ""; width: 1.75rem; height: 2px; margin-left: 0.25rem;
+    background: var(--ms-line-strong); border-radius: 999px;
+    transition: background-color var(--ms-t-mid, 180ms) var(--ms-ease);
+}
+.cm-step__indicator {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--ms-surface-3); color: var(--ms-ink-3);
+    font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums;
+    border: 1.5px solid transparent;
+    transition: background-color 180ms var(--ms-ease), color 180ms var(--ms-ease), border-color 180ms var(--ms-ease);
+}
+.cm-step__check { display: none; font-size: 0.9rem; }
+.cm-step.is-active { color: var(--ms-ink-1); font-weight: 600; }
+.cm-step.is-active .cm-step__indicator {
+    background: var(--ms-primary); color: #fff;
+    border-color: var(--ms-primary);
+    box-shadow: 0 0 0 3px var(--ms-primary-soft);
+}
+.cm-step.is-done { color: var(--ms-ink-2); }
+.cm-step.is-done .cm-step__indicator { background: var(--ms-success); color: #fff; border-color: var(--ms-success); }
+.cm-step.is-done .cm-step__num { display: none; }
+.cm-step.is-done .cm-step__check { display: inline; }
+.cm-step.is-done:not(:last-child)::after { background: var(--ms-success); }
+
+#modal-close-month .is-negative { color: var(--ms-danger); }
+.cm-modal__body { padding: 1.1rem 1.25rem; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+.cm-panel__lead { color: var(--ms-ink-2); font-size: 0.9rem; margin: 0 0 1.1rem; line-height: 1.5; max-width: 60ch; }
+
+/* Step 1 fields */
+.cm-field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; max-width: 640px; }
+.cm-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.cm-field__label { font-size: 0.8rem; font-weight: 600; color: var(--ms-ink-2); }
+.cm-field__pair { display: flex; gap: 0.5rem; }
+.cm-select {
+    min-height: 42px; border-radius: var(--ms-radius-sm);
+    border: 1px solid var(--ms-line-strong); color: var(--ms-ink-1);
+    font-size: 0.92rem;
+    transition: border-color 120ms var(--ms-ease), box-shadow 120ms var(--ms-ease);
+}
+.cm-select:focus { border-color: var(--ms-primary); box-shadow: 0 0 0 3px var(--ms-primary-soft); }
+.cm-field.is-invalid .cm-select { border-color: var(--ms-danger); }
+.cm-field__hint { font-size: 0.78rem; color: var(--ms-danger); font-weight: 500; }
+
+/* Summary strip (step 2) */
+.cm-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.6rem; margin-bottom: 1rem;
+}
+.cm-summary__cell {
+    background: var(--ms-surface-2); border: 1px solid var(--ms-line);
+    border-radius: var(--ms-radius-sm); padding: 0.6rem 0.75rem;
+    display: flex; flex-direction: column; gap: 0.2rem;
+}
+.cm-summary__cell--emphasis { background: var(--ms-primary-soft); border-color: var(--ms-primary-line); }
+.cm-summary__label { font-size: 0.74rem; color: var(--ms-ink-3); }
+.cm-summary__value {
+    font-size: 1.05rem; font-weight: 700; color: var(--ms-ink-1);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1.2;
+}
+.cm-summary__value.is-negative { color: var(--ms-danger); }
+.cm-summary__unit { font-size: 0.7rem; color: var(--ms-ink-3); font-weight: 500; }
+
+/* Context line */
+.cm-ctx { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem; color: var(--ms-ink-2); font-size: 0.88rem; }
+.cm-ctx__chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--ms-surface-3); color: var(--ms-ink-2);
+    padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+}
+.cm-ctx__chip i { color: var(--ms-ink-3); font-size: 0.82rem; }
+
+/* Alert banners (already-closed / negatives / zero-cost / clean) */
+.cm-alert {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    padding: 0.7rem 0.85rem; border-radius: var(--ms-radius-sm);
+    margin-bottom: 0.75rem; font-size: 0.86rem; line-height: 1.45;
+}
+.cm-alert__icon { font-size: 1rem; flex: 0 0 auto; margin-top: 0.05rem; }
+.cm-alert__body { min-width: 0; }
+.cm-alert__title { font-weight: 600; }
+.cm-alert__list { margin: 0.4rem 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.cm-alert__item {
+    display: inline-flex; align-items: baseline; gap: 0.3rem;
+    background: rgba(255, 255, 255, 0.65); border: 1px solid currentColor;
+    border-radius: 999px; padding: 0.15rem 0.55rem; font-size: 0.78rem; font-weight: 500;
+}
+.cm-alert__item-code { font-variant-numeric: tabular-nums; opacity: 0.75; }
+.cm-alert__item-val { font-variant-numeric: tabular-nums; font-weight: 700; }
+.cm-alert__more { align-self: center; font-size: 0.78rem; font-weight: 600; opacity: 0.8; }
+.cm-alert--danger { background: var(--ms-danger-soft); color: var(--ms-danger); }
+.cm-alert--warning { background: var(--ms-warning-soft); color: var(--ms-warning); }
+.cm-alert--success { background: var(--ms-success-soft); color: var(--ms-success); }
+.cm-alert--info { background: var(--ms-primary-soft); color: var(--ms-primary-ink); }
+.cm-alert--danger .cm-alert__item,
+.cm-alert--warning .cm-alert__item { border-color: rgba(0, 0, 0, 0.12); }
+
+/* Legend */
+.cm-legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin: 0.6rem 0 0.85rem; font-size: 0.76rem; color: var(--ms-ink-3); }
+.cm-legend__item { display: inline-flex; align-items: center; gap: 0.35rem; }
+.cm-legend__swatch { width: 0.7rem; height: 0.7rem; border-radius: 3px; display: inline-block; }
+.cm-legend__swatch--neg { background: var(--ms-danger); }
+.cm-legend__swatch--zero { background: var(--ms-ink-4); }
+
+/* Preview table */
+.cm-table-wrap { border: 1px solid var(--ms-line); border-radius: var(--ms-radius-sm); overflow: hidden; }
+.cm-table { width: 100%; margin: 0; border-collapse: collapse; }
+.cm-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--ms-surface-2); color: var(--ms-ink-2);
+    font-size: 0.78rem; font-weight: 600; text-align: right;
+    padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--ms-line-strong);
+    white-space: nowrap;
+}
+.cm-table thead th:first-child, .cm-table tbody td:first-child { text-align: left; }
+.cm-table tbody td {
+    font-size: 0.85rem; color: var(--ms-ink-1); text-align: right;
+    padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--ms-line);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.cm-table tbody tr:last-child td { border-bottom: none; }
+.cm-table tbody tr:hover td { background: var(--ms-surface-hover); }
+.cm-table td.is-negative { color: var(--ms-danger); font-weight: 600; }
+.cm-table td .cm-zero { color: var(--ms-ink-4); }
+.cm-table tfoot td {
+    background: var(--ms-surface-2); color: var(--ms-ink-1);
+    font-weight: 700; font-size: 0.86rem; text-align: right;
+    padding: 0.55rem 0.7rem; border-top: 2px solid var(--ms-line-strong);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+    position: sticky; bottom: 0;
+}
+.cm-table tfoot td:first-child { text-align: left; }
+.cm-table tfoot td.is-negative { color: var(--ms-danger); }
+
+/* Preview skeleton */
+.cm-skeleton { display: flex; flex-direction: column; gap: 0.6rem; }
+.cm-skeleton__strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; }
+.cm-skeleton__box, .cm-skeleton__line {
+    background: linear-gradient(90deg, var(--ms-surface-2), var(--ms-surface-3), var(--ms-surface-2));
+    background-size: 200% 100%; animation: cd-shimmer 1.2s linear infinite; border-radius: var(--ms-radius-sm);
+}
+.cm-skeleton__box { height: 58px; }
+.cm-skeleton__line { height: 34px; border-radius: 6px; }
+.cm-skeleton__rows { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.4rem; }
+@media (prefers-reduced-motion: reduce) {
+    .cm-skeleton__box, .cm-skeleton__line { animation: none; background: var(--ms-surface-3); }
+}
+
+/* Preview error */
+.cm-error { text-align: center; padding: 2rem 1rem; color: var(--ms-danger); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.cm-error i { font-size: 1.75rem; }
+.cm-error p { margin: 0; }
+
+/* Step 3 result */
+.cm-panel--result { display: flex; align-items: center; justify-content: center; min-height: 240px; }
+.cm-result { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.cm-result__icon {
+    width: 64px; height: 64px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--ms-success-soft); color: var(--ms-success); font-size: 2rem;
+}
+.cm-result__icon.is-error { background: var(--ms-danger-soft); color: var(--ms-danger); }
+.cm-result__title { font-size: 1.1rem; font-weight: 700; color: var(--ms-ink-1); margin: 0; }
+.cm-result__caption { color: var(--ms-ink-3); font-size: 0.88rem; margin: 0; }
+@keyframes cm-pop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.cm-result__icon { animation: cm-pop 240ms var(--ms-ease); }
+@media (prefers-reduced-motion: reduce) { .cm-result__icon { animation: none; } }
+
+/* Footer */
+.cm-modal__foot {
+    display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+    padding: 0.85rem 1.25rem; border-top: 1px solid var(--ms-line);
+    background: var(--ms-surface-2); flex: 0 0 auto;
+}
+.cm-foot-group { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; width: 100%; }
+.cm-btn-confirm { position: relative; }
+.cm-btn-confirm.is-danger { background: var(--ms-danger); border-color: var(--ms-danger); }
+.cm-btn-confirm.is-danger:hover { background: #a01818; border-color: #a01818; }
+.cm-btn-confirm__spinner { margin-left: 0.15rem; }
+
+/* Panel enter transition */
+.cm-panel[hidden] { display: none; }
+.cm-panel:not([hidden]) { animation: cm-panel-in var(--ms-t-mid, 180ms) var(--ms-ease); }
+@keyframes cm-panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cm-panel:not([hidden]) { animation: none; } }
+
+/* ══════════════════════════════════════════════════════════
+   Cancel-close confirm modal (#modal-cancel-close)
+   ══════════════════════════════════════════════════════════ */
+.cx-modal { border-radius: var(--ms-radius); overflow: hidden; }
+.cx-modal__head { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1.1rem 1.25rem 0.75rem; }
+.cx-modal__icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 999px; flex: 0 0 auto;
+    background: var(--ms-danger-soft); color: var(--ms-danger); font-size: 1.15rem;
+}
+.cx-modal__title { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--ms-ink-1); }
+.cx-modal__caption { margin: 0.15rem 0 0; font-size: 0.82rem; color: var(--ms-ink-3); }
+.cx-modal__body { padding: 0.5rem 1.25rem 1rem; }
+.cx-load { display: flex; align-items: center; gap: 0.5rem; color: var(--ms-ink-3); font-size: 0.88rem; padding: 0.75rem 0; }
+.cx-lead { color: var(--ms-ink-2); font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.75rem; }
+.cx-strong { font-weight: 700; color: var(--ms-ink-1); font-variant-numeric: tabular-nums; }
+.cx-irrev { color: var(--ms-danger); font-weight: 600; }
+.cx-modal__foot {
+    display: flex; justify-content: flex-end; gap: 0.6rem;
+    padding: 0.85rem 1.25rem; border-top: 1px solid var(--ms-line); background: var(--ms-surface-2);
+}
+.cx-btn-danger {
+    background: var(--ms-danger); border: 1px solid var(--ms-danger); color: #fff;
+    font-weight: 600; border-radius: var(--ms-radius-sm); position: relative;
+    transition: background-color 120ms var(--ms-ease);
+}
+.cx-btn-danger:hover:not(:disabled) { background: #a01818; border-color: #a01818; color: #fff; }
+.cx-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ms-danger-soft); }
+.cx-btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
+.cx-btn-danger__spinner { margin-left: 0.15rem; }
+.cx-error { color: var(--ms-danger); font-size: 0.88rem; padding: 0.5rem 0; display: flex; align-items: center; gap: 0.4rem; }
+
+/* Clickable negative chip (in preview warning list) */
+.cm-alert__list li { list-style: none; }
+.cm-alert__item--btn {
+    appearance: none; cursor: pointer; font: inherit; text-align: left;
+    display: inline-flex; align-items: baseline; gap: 0.3rem;
+    background: rgba(255, 255, 255, 0.75); border: 1px solid var(--ms-danger);
+    color: var(--ms-danger); border-radius: 999px; padding: 0.15rem 0.55rem;
+    font-size: 0.78rem; font-weight: 500;
+    transition: background-color 120ms var(--ms-ease), box-shadow 120ms var(--ms-ease);
+}
+.cm-alert__item--btn:hover { background: #fff; box-shadow: 0 0 0 2px var(--ms-danger-soft); }
+.cm-alert__item--btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ms-danger-soft); }
+.cm-alert__item-wh { opacity: 0.7; font-weight: 400; }
+.cm-alert__item-ico { font-size: 0.72rem; opacity: 0.7; align-self: center; }
+@media (prefers-reduced-motion: reduce) { .cm-alert__item--btn { transition: none; } }
+
 @media (max-width: 768px) {
     .ms-report-summary__head { flex-direction: column; align-items: flex-start; }
     .cd-modal__summary { margin: 0.5rem 0.75rem 0; }
     .cd-modal__head, .cd-modal__body, .cd-modal__foot { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .cm-modal__head, .cm-modal__body, .cm-modal__foot { padding-left: 0.85rem; padding-right: 0.85rem; }
+    .cm-step__label { display: none; }
+    .cm-step:not(:last-child)::after { width: 1.25rem; }
+    .cm-skeleton__strip { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 
 <?php
 $closeUrl = Url::to(['/inventory-v2/report/close-month']);
+$previewUrl = Url::to(['/inventory-v2/report/close-month-preview']);
+$cancelUrl = Url::to(['/inventory-v2/report/cancel-close']);
 $reportUrl = Url::to(['/inventory-v2/report/material-summary']);
 $drillUrl = Url::to(['/inventory-v2/report/category-drilldown']);
 $placeholderUrl = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
@@ -674,37 +1060,389 @@ $ctxMonth = (int) $month;
 $ctxWarehouse = $warehouseId === null ? 'null' : (int) $warehouseId;
 $this->registerJs(<<<JS
 (function(){
-    // ── Close-month modal ──
-    \$('#btn-do-close-month').on('click', function(){
-        var \$btn = $(this).prop('disabled', true);
+    // ══ Close-month wizard (3 steps) ══
+    var closeUrl = '{$closeUrl}';
+    var previewUrl = '{$previewUrl}';
+    var reportUrl = '{$reportUrl}';
+    var MONTH_NAMES = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    var MAX_WARN_ITEMS = 12;
+
+    var cmEl = document.getElementById('modal-close-month');
+    var cmContent = cmEl ? cmEl.querySelector('.cm-modal') : null;
+    var cmPreviewXhr = null;
+    var cmPreviewLoaded = false;
+
+    function cmFmt(n){ return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function cmFmtQty(n){ return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function cmEsc(s){
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+        });
+    }
+    // number cell: 0 → em-dash, <0 → red
+    function cmCell(v){
+        v = Number(v || 0);
+        if (Math.abs(v) < 0.005) return '<span class="cm-zero" aria-label="ไม่มียอด">—</span>';
+        return v < 0 ? '<span class="is-negative">' + cmFmt(v) + '</span>' : cmFmt(v);
+    }
+
+    function cmGoStep(step){
+        if (!cmContent) return;
+        cmContent.setAttribute('data-step', String(step));
+        cmContent.querySelectorAll('.cm-panel').forEach(function(p){
+            p.hidden = (Number(p.getAttribute('data-step')) !== step);
+        });
+        cmContent.querySelectorAll('.cm-foot-group').forEach(function(g){
+            g.hidden = (Number(g.getAttribute('data-step')) !== step);
+        });
+        cmContent.querySelectorAll('.cm-step').forEach(function(s){
+            var sStep = Number(s.getAttribute('data-step'));
+            s.classList.toggle('is-active', sStep === step);
+            s.classList.toggle('is-done', sStep < step);
+            if (sStep === step) { s.setAttribute('aria-current', 'step'); }
+            else { s.removeAttribute('aria-current'); }
+        });
+    }
+
+    function cmReset(){
+        cmPreviewLoaded = false;
+        cmGoStep(1);
+        $('#cm-warehouse-hint').prop('hidden', true).closest('.cm-field').removeClass('is-invalid');
+        $('#cm-confirm').prop('disabled', true).removeClass('is-danger');
+        $('#cm-preview').empty().attr('aria-busy', 'true');
+    }
+
+    function cmPreviewSkeleton(){
+        var rows = '';
+        for (var i = 0; i < 6; i++){ rows += '<div class="cm-skeleton__line"></div>'; }
+        return '<div class="cm-skeleton" aria-hidden="true">'
+            + '<div class="cm-skeleton__strip">'
+            +   '<div class="cm-skeleton__box"></div><div class="cm-skeleton__box"></div><div class="cm-skeleton__box"></div><div class="cm-skeleton__box"></div><div class="cm-skeleton__box"></div>'
+            + '</div>'
+            + '<div class="cm-skeleton__rows">' + rows + '</div>'
+            + '</div>';
+    }
+
+    function cmWarnItems(items, kind){
+        var shown = items.slice(0, MAX_WARN_ITEMS);
+        var html = shown.map(function(it){
+            if (kind === 'neg'){
+                // คลิกได้ → เปิดประวัติเคลื่อนไหวของ item+คลังนั้น
+                var wh = it.warehouse_name ? '<span class="cm-alert__item-wh">· ' + cmEsc(it.warehouse_name) + '</span>' : '';
+                return '<li>'
+                    + '<button type="button" class="cm-alert__item cm-alert__item--btn js-neg-history"'
+                    +   ' data-item-code="' + cmEsc(it.item_code) + '"'
+                    +   ' data-item-name="' + cmEsc(it.item_name) + '"'
+                    +   ' data-warehouse-id="' + cmEsc(it.warehouse_id) + '"'
+                    +   ' data-warehouse-name="' + cmEsc(it.warehouse_name || '') + '"'
+                    +   ' title="ดูประวัติการเคลื่อนไหว">'
+                    +   '<span class="cm-alert__item-code">' + cmEsc(it.item_code) + '</span>'
+                    +   '<span>' + cmEsc(it.item_name) + '</span>' + wh
+                    +   '<span class="cm-alert__item-val">' + cmFmt(it.value) + '</span>'
+                    +   '<i class="bi bi-clock-history cm-alert__item-ico" aria-hidden="true"></i>'
+                    + '</button></li>';
+            }
+            return '<li class="cm-alert__item">'
+                + '<span class="cm-alert__item-code">' + cmEsc(it.item_code) + '</span>'
+                + '<span>' + cmEsc(it.item_name) + '</span>'
+                + '<span class="cm-alert__item-val">' + cmFmtQty(it.qty) + ' หน่วย</span>'
+                + '</li>';
+        }).join('');
+        if (items.length > MAX_WARN_ITEMS){
+            html += '<li class="cm-alert__more">และอีก ' + (items.length - MAX_WARN_ITEMS) + ' รายการ</li>';
+        }
+        return '<ul class="cm-alert__list">' + html + '</ul>';
+    }
+
+    function cmRenderPreview(res){
+        var m = res.meta, s = res.summary, w = res.warnings;
+        var negCls = s.closing_value < -0.005 ? ' is-negative' : '';
+        var html = '';
+
+        // context
+        html += '<div class="cm-ctx">'
+            + '<span class="cm-ctx__chip"><i class="bi bi-building" aria-hidden="true"></i>' + cmEsc(m.warehouse_label) + '</span>'
+            + '<span class="cm-ctx__chip"><i class="bi bi-calendar3" aria-hidden="true"></i>' + cmEsc(m.period_label) + ' (พ.ศ.)</span>'
+            + '</div>';
+
+        // summary strip
+        html += '<div class="cm-summary">'
+            + cmSumCell('รายการที่จะบันทึก', s.row_count.toLocaleString('en-US'), 'แถว', false)
+            + cmSumCell('ยอดยกมา', cmFmt(s.opening_value), 'บาท', false)
+            + cmSumCell('รับเข้า', cmFmt(s.in_value), 'บาท', false)
+            + cmSumCell('จ่ายออก', cmFmt(s.total_out_value), 'บาท', false)
+            + cmSumCell('ยอดยกไป', '<span class="' + (negCls ? 'is-negative' : '') + '">' + cmFmt(s.closing_value) + '</span>', 'บาท', true)
+            + '</div>';
+
+        // warnings
+        var hasWarn = false;
+        if (m.chained_months && m.chained_months > 0){
+            html += cmAlert('info', 'bi-calculator', 'ยังไม่เคยปิดงวดก่อนหน้า (' + m.chained_months + ' งวด)',
+                'ยอดยกมาในตัวอย่างนี้คำนวณสะสมจากต้นจนถึงงวดนี้ให้แล้ว เมื่อกดยืนยันจะบันทึกเฉพาะงวดนี้งวดเดียว (ไม่สร้างข้อมูลงวดกลาง) — งวดถัดไปจะยกยอดมาจากงวดนี้');
+        }
+        if (m.already_closed){
+            html += cmAlert('warning', 'bi-arrow-repeat', 'งวดนี้เคยปิดไปแล้ว', 'การกดยืนยันจะคำนวณใหม่และเขียนทับข้อมูลเดิมของงวดนี้');
+        }
+        if (w.negatives && w.negatives.length){
+            hasWarn = true;
+            html += cmAlert('danger', 'bi-exclamation-octagon-fill',
+                'ยอดยกไปติดลบ ' + w.negatives.length + ' รายการ',
+                'ตรวจสอบการรับ-จ่ายของรายการเหล่านี้ก่อนปิด (ยอดคงเหลือไม่ควรติดลบ) — คลิกที่รายการเพื่อดูประวัติการเคลื่อนไหว',
+                cmWarnItems(w.negatives, 'neg'));
+        }
+        if (w.zero_cost && w.zero_cost.length){
+            hasWarn = true;
+            html += cmAlert('warning', 'bi-cash-stack',
+                'จ่ายออกแต่ไม่มีราคาทุน ' + w.zero_cost.length + ' รายการ',
+                'รายการเหล่านี้มีการจ่ายออกแต่คิดมูลค่าเป็น 0 (ยังไม่เคยรับเข้าในคลังนี้) มูลค่าจ่ายจริงอาจสูงกว่าที่แสดง',
+                cmWarnItems(w.zero_cost, 'zero'));
+        }
+        if (!hasWarn && !m.already_closed){
+            html += cmAlert('success', 'bi-check-circle-fill', 'ตรวจแล้วไม่พบความผิดปกติ', 'ทุกรายการมียอดคงเหลือปกติ พร้อมปิดเดือน');
+        }
+
+        // legend + table
+        html += '<div class="cm-legend">'
+            + '<span class="cm-legend__item"><span class="cm-legend__swatch cm-legend__swatch--neg"></span> ตัวเลขสีแดง = ติดลบ ต้องตรวจสอบ</span>'
+            + '<span class="cm-legend__item"><span class="cm-legend__swatch cm-legend__swatch--zero"></span> — = ไม่มียอด</span>'
+            + '</div>';
+        html += cmRenderTable(res.rows);
+
+        $('#cm-preview').attr('aria-busy', 'false').html(html);
+
+        // confirm button state
+        var \$confirm = $('#cm-confirm').prop('disabled', false);
+        \$confirm.toggleClass('is-danger', !!m.already_closed);
+        \$confirm.find('.cm-btn-confirm__label').html(m.already_closed
+            ? '<i class="bi bi-arrow-repeat" aria-hidden="true"></i> ยืนยันเขียนทับ'
+            : '<i class="bi bi-calendar-check" aria-hidden="true"></i> ยืนยันปิดเดือน');
+        cmPreviewLoaded = true;
+    }
+
+    function cmSumCell(label, valueHtml, unit, emphasis){
+        return '<div class="cm-summary__cell' + (emphasis ? ' cm-summary__cell--emphasis' : '') + '">'
+            + '<span class="cm-summary__label">' + label + '</span>'
+            + '<span class="cm-summary__value">' + valueHtml + ' <span class="cm-summary__unit">' + unit + '</span></span>'
+            + '</div>';
+    }
+    function cmAlert(variant, icon, title, body, extra){
+        return '<div class="cm-alert cm-alert--' + variant + '" role="' + (variant === 'danger' ? 'alert' : 'status') + '">'
+            + '<i class="cm-alert__icon bi ' + icon + '" aria-hidden="true"></i>'
+            + '<div class="cm-alert__body">'
+            +   '<div class="cm-alert__title">' + cmEsc(title) + '</div>'
+            +   '<div>' + cmEsc(body) + '</div>'
+            +   (extra || '')
+            + '</div></div>';
+    }
+    function cmRenderTable(rows){
+        if (!rows || !rows.length){
+            return '<div class="cm-error" style="color:var(--ms-ink-3)"><i class="bi bi-inbox" style="color:var(--ms-ink-4)"></i><p>ไม่มีรายการเคลื่อนไหวในงวดนี้</p></div>';
+        }
+        var tOpen=0,tIn=0,tAvail=0,tSub=0,tHosp=0,tOut=0,tClose=0;
+        var body = rows.map(function(r){
+            var avail = Number(r.opening_value) + Number(r.in_value);
+            tOpen+=Number(r.opening_value); tIn+=Number(r.in_value); tAvail+=avail;
+            tSub+=Number(r.out_sub_value); tHosp+=Number(r.out_hosp_value);
+            tOut+=Number(r.total_out_value); tClose+=Number(r.closing_value);
+            function td(v){ var neg = Number(v) < -0.005; return '<td' + (neg ? ' class="is-negative"' : '') + '>' + cmCell(v) + '</td>'; }
+            return '<tr>'
+                + '<td>' + cmEsc(r.category_label) + '</td>'
+                + td(r.opening_value) + td(r.in_value) + td(avail)
+                + td(r.out_sub_value) + td(r.out_hosp_value) + td(r.total_out_value) + td(r.closing_value)
+                + '</tr>';
+        }).join('');
+        function ft(v){ var neg = Number(v) < -0.005; return '<td' + (neg ? ' class="is-negative"' : '') + '>' + cmCell(v) + '</td>'; }
+        return '<div class="cm-table-wrap"><table class="cm-table"><thead><tr>'
+            + '<th>ประเภทวัสดุ</th><th>ยกมา</th><th>ซื้อ</th><th>รวม</th>'
+            + '<th>จ่าย รพ.สต.</th><th>จ่าย รพ.</th><th>รวมจ่าย</th><th>ยกไป</th>'
+            + '</tr></thead><tbody>' + body + '</tbody>'
+            + '<tfoot><tr><td>รวมทั้งหมด</td>'
+            + ft(tOpen) + ft(tIn) + ft(tAvail) + ft(tSub) + ft(tHosp) + ft(tOut) + ft(tClose)
+            + '</tr></tfoot></table></div>';
+    }
+
+    function cmLoadPreview(){
         var wh = $('#close-warehouse-id').val();
         var month = $('#close-month').val();
         var year = $('#close-year').val();
-        var \$result = $('#close-month-result').addClass('d-none');
-        if (!wh) {
-            \$result.removeClass('d-none alert-success alert-danger').addClass('alert-warning').text('กรุณาเลือกคลังหรือปิดรวมทุกคลัง').show();
-            \$btn.prop('disabled', false);
+        $('#cm-preview').attr('aria-busy', 'true').html(cmPreviewSkeleton());
+        $('#cm-confirm').prop('disabled', true);
+        if (cmPreviewXhr && cmPreviewXhr.readyState !== 4){ cmPreviewXhr.abort(); }
+        cmPreviewXhr = $.ajax({ url: previewUrl, method: 'POST', dataType: 'json',
+            data: { warehouse_id: wh, month: month, year: year } })
+            .done(function(res){
+                if (!res || !res.success){
+                    cmPreviewError((res && res.message) || 'คำนวณข้อมูลไม่สำเร็จ');
+                    return;
+                }
+                cmRenderPreview(res);
+            })
+            .fail(function(xhr, status){
+                if (status === 'abort') return;
+                cmPreviewError('คำนวณข้อมูลไม่สำเร็จ');
+            });
+    }
+    function cmPreviewError(msg){
+        $('#cm-preview').attr('aria-busy', 'false').html(
+            '<div class="cm-error"><i class="bi bi-exclamation-triangle"></i><p>' + cmEsc(msg) + '</p>'
+            + '<button type="button" class="btn btn-outline-secondary btn-sm" id="cm-retry">ลองอีกครั้ง</button></div>');
+    }
+
+    // ── Events ──
+    // reset to step 1 each time modal opens
+    if (cmEl){
+        cmEl.addEventListener('show.bs.modal', cmReset);
+        cmEl.addEventListener('shown.bs.modal', function(){ $('#close-warehouse-id').trigger('focus'); });
+    }
+
+    // step 1 → 2
+    $(document).on('click', '#cm-to-preview', function(){
+        var wh = $('#close-warehouse-id').val();
+        if (!wh){
+            $('#cm-warehouse-hint').prop('hidden', false).closest('.cm-field').addClass('is-invalid');
+            $('#close-warehouse-id').trigger('focus');
             return;
         }
-        $.post('{$closeUrl}', { warehouse_id: wh, month: month, year: year })
+        $('#cm-warehouse-hint').prop('hidden', true).closest('.cm-field').removeClass('is-invalid');
+        cmGoStep(2);
+        cmLoadPreview();
+    });
+    $(document).on('change', '#close-warehouse-id', function(){
+        if (this.value){ $('#cm-warehouse-hint').prop('hidden', true).closest('.cm-field').removeClass('is-invalid'); }
+    });
+    // retry preview
+    $(document).on('click', '#cm-retry', cmLoadPreview);
+    // step 2 → 1
+    $(document).on('click', '#cm-back', function(){ cmGoStep(1); });
+
+    // step 2 → confirm (commit)
+    $(document).on('click', '#cm-confirm', function(){
+        var \$btn = $(this).prop('disabled', true);
+        \$btn.find('.cm-btn-confirm__label').css('opacity', 0.6);
+        \$btn.find('.cm-btn-confirm__spinner').prop('hidden', false);
+        var wh = $('#close-warehouse-id').val();
+        var month = $('#close-month').val();
+        var year = $('#close-year').val();
+        $.post(closeUrl, { warehouse_id: wh, month: month, year: year })
             .done(function(res){
-                if (res.success) {
-                    var msg = 'ปิดเดือนเรียบร้อย รายการ ' + (res.count || 0) + ' รายการ';
-                    if (res.warehouses_count > 1) msg += ' (' + res.warehouses_count + ' คลัง)';
-                    \$result.removeClass('alert-danger alert-warning').addClass('alert-success').html(msg).removeClass('d-none');
+                if (res && res.success){
+                    var caption = 'บันทึก ' + (res.count || 0) + ' รายการ';
+                    if (res.warehouses_count > 1) caption += ' · ' + res.warehouses_count + ' คลัง';
+                    $('#cm-result').html(
+                        '<span class="cm-result__icon"><i class="bi bi-check-lg"></i></span>'
+                        + '<p class="cm-result__title">ปิดเดือนเรียบร้อย</p>'
+                        + '<p class="cm-result__caption">' + caption + ' · กำลังพาไปยังรายงาน…</p>');
+                    cmGoStep(3);
                     var qs = 'year=' + year + '&month=' + month;
                     if (wh !== 'all') qs += '&warehouse_id=' + wh;
-                    setTimeout(function(){ window.location.href = '{$reportUrl}?' + qs; }, 1200);
+                    setTimeout(function(){ window.location.href = reportUrl + '?' + qs; }, 1100);
                 } else {
-                    \$result.removeClass('alert-success alert-warning').addClass('alert-danger').text(res.message || 'เกิดข้อผิดพลาด').removeClass('d-none');
-                    \$btn.prop('disabled', false);
+                    cmConfirmFail(\$btn, (res && res.message) || 'เกิดข้อผิดพลาด');
                 }
             })
+            .fail(function(){ cmConfirmFail(\$btn, 'เกิดข้อผิดพลาด'); });
+    });
+    // on commit failure: stay on step 2, show inline alert, re-enable confirm to retry
+    function cmConfirmFail(\$btn, msg){
+        $('#cm-preview .cm-commit-error').remove();
+        $('#cm-preview').prepend(cmAlert('danger', 'bi-exclamation-triangle-fill', 'ปิดเดือนไม่สำเร็จ', msg).replace('cm-alert cm-alert--danger', 'cm-alert cm-alert--danger cm-commit-error'));
+        \$btn.prop('disabled', false);
+        \$btn.find('.cm-btn-confirm__label').css('opacity', 1);
+        \$btn.find('.cm-btn-confirm__spinner').prop('hidden', true);
+    }
+
+    // ══ Cancel-close (ยกเลิกปิดเดือน) — 2 phase: check → confirm delete ══
+    var cancelUrl = '{$cancelUrl}';
+    var cxEl = document.getElementById('modal-cancel-close');
+    var cxModal = (cxEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) ? new bootstrap.Modal(cxEl) : null;
+    var cxCtx = null;
+
+    $(document).on('click', '#btn-cancel-close', function(){
+        cxCtx = {
+            year: this.getAttribute('data-year'),
+            month: this.getAttribute('data-month'),
+            warehouse: this.getAttribute('data-warehouse') || ''
+        };
+        $('#cx-load').show();
+        $('#cx-detail').prop('hidden', true);
+        $('#cx-error').prop('hidden', true).empty();
+        $('#cx-later-warn').prop('hidden', true);
+        $('#cx-later-list').empty();
+        $('#cx-confirm').prop('disabled', true);
+        if (cxModal) cxModal.show();
+        $.post(cancelUrl, { year: cxCtx.year, month: cxCtx.month, warehouse_id: cxCtx.warehouse })
+            .done(function(res){
+                $('#cx-load').hide();
+                if (!res || !res.success){
+                    $('#cx-error').prop('hidden', false).html('<i class="bi bi-exclamation-triangle"></i> ' + cmEsc((res && res.message) || 'ตรวจสอบไม่สำเร็จ'));
+                    return;
+                }
+                $('#cx-context').text(res.warehouse_label + ' · ' + res.period_label + ' (พ.ศ.)');
+                $('#cx-rowcount').text(Number(res.row_count || 0).toLocaleString('en-US'));
+                if (res.later_closed && res.later_closed.length){
+                    $('#cx-later-title').text('มีงวดถัดไปที่ปิดไปแล้ว ' + res.later_closed.length + ' งวด');
+                    $('#cx-later-list').html(res.later_closed.map(function(p){
+                        return '<li class="cm-alert__item">' + cmEsc(p.label) + '</li>';
+                    }).join(''));
+                    $('#cx-later-warn').prop('hidden', false);
+                }
+                $('#cx-detail').prop('hidden', false);
+                $('#cx-confirm').prop('disabled', false);
+            })
             .fail(function(){
-                \$result.removeClass('alert-success alert-warning').addClass('alert-danger').text('เกิดข้อผิดพลาด').removeClass('d-none');
-                \$btn.prop('disabled', false);
+                $('#cx-load').hide();
+                $('#cx-error').prop('hidden', false).html('<i class="bi bi-exclamation-triangle"></i> ตรวจสอบไม่สำเร็จ');
             });
     });
+
+    $(document).on('click', '#cx-confirm', function(){
+        if (!cxCtx) return;
+        var \$btn = $(this).prop('disabled', true);
+        \$btn.find('.cx-btn-danger__label').css('opacity', 0.6);
+        \$btn.find('.cx-btn-danger__spinner').prop('hidden', false);
+        $.post(cancelUrl, { year: cxCtx.year, month: cxCtx.month, warehouse_id: cxCtx.warehouse, confirmed: 1 })
+            .done(function(res){
+                if (res && res.success && res.confirmed){
+                    var qs = 'year=' + cxCtx.year + '&month=' + cxCtx.month;
+                    if (cxCtx.warehouse) qs += '&warehouse_id=' + cxCtx.warehouse;
+                    window.location.href = reportUrl + '?' + qs;
+                } else {
+                    cxFail(\$btn, (res && res.message) || 'ยกเลิกไม่สำเร็จ');
+                }
+            })
+            .fail(function(){ cxFail(\$btn, 'ยกเลิกไม่สำเร็จ'); });
+    });
+    function cxFail(\$btn, msg){
+        $('#cx-error').prop('hidden', false).html('<i class="bi bi-exclamation-triangle"></i> ' + cmEsc(msg));
+        \$btn.prop('disabled', false);
+        \$btn.find('.cx-btn-danger__label').css('opacity', 1);
+        \$btn.find('.cx-btn-danger__spinner').prop('hidden', true);
+    }
+
+    // ══ ประวัติการเคลื่อนไหววัสดุ — เปิดจากรายการติดลบใน preview ══
+    // reuse โมดัลเต็ม #itemHistoryModal (partial ร่วมกับหน้า balance) เพื่อดูประวัติ + ปรับยอด/แก้ไขได้
+    var histEl = document.getElementById('itemHistoryModal');
+
+    $(document).on('click', '.js-neg-history', function(){
+        if (!histEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+        // สร้าง element trigger ชั่วคราวพร้อม data-* ให้ show.bs.modal ของโมดัลอ่านไปตั้งค่า
+        var trigger = document.createElement('span');
+        trigger.setAttribute('data-item-code', this.getAttribute('data-item-code') || '');
+        trigger.setAttribute('data-item-name', this.getAttribute('data-item-name') || '');
+        trigger.setAttribute('data-warehouse-id', this.getAttribute('data-warehouse-id') || '');
+        trigger.setAttribute('data-warehouse-name', this.getAttribute('data-warehouse-name') || '');
+        trigger.setAttribute('data-unit-name', this.getAttribute('data-unit-name') || '');
+        trigger.setAttribute('data-item-image', this.getAttribute('data-item-image') || '');
+        bootstrap.Modal.getOrCreateInstance(histEl).show(trigger);
+    });
+
+    // history modal ซ้อนบน wizard modal — กัน scroll-lock หลุดตอนปิด history ขณะ wizard ยังเปิด
+    if (histEl){
+        histEl.addEventListener('hidden.bs.modal', function(){
+            var wiz = document.getElementById('modal-close-month');
+            if (wiz && wiz.classList.contains('show')){ document.body.classList.add('modal-open'); }
+        });
+    }
 
     // ── Bootstrap tooltip for tooltip-info icons ──
     if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {

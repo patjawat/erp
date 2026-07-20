@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = 'เบิกวัสดุคลังหล�
 <?php $this->endBlock(); ?>
 
 
-<?php Pjax::begin(['id' => 'store']); ?>
+<?php Pjax::begin(['id' => 'inventory-container']); ?>
 <?php
 
 $cart = Yii::$app->cartMain;
@@ -77,6 +77,7 @@ $products = $cart->getItems();
 
 <div class="d-flex flex-wrap">
     <?php foreach ($dataProvider->getModels() as $model) { ?>
+    <?php $sumQty = $model->SumQty(); ?>
     <div class="p-2 col-2">
         <div class="card position-relative">
             <p class="position-absolute top-0 end-0 p-2">
@@ -85,8 +86,8 @@ $products = $cart->getItems();
             <?php echo Html::img($model->product->ShowImg(), ['class' => 'card-top object-fit-cover rounded-top','style' => 'max-height: 155px;']); ?>
             <div class="card-body w-100">
                 <div class="d-flex justify-content-start align-items-center">
-                    <?php if($model->SumQty() >= 1):?>
-                    <span class="badge text-bg-primary  mt--45"><?php echo $model->SumQty(); ?>
+                    <?php if($sumQty >= 1):?>
+                    <span class="badge text-bg-primary  mt--45"><?php echo $sumQty; ?>
                         <?php echo $model->product->unit_name; ?></span>
                     <?php else:?>
                     <span class="btn btn-sm btn-secondary fs-13 mt--45 rounded-pill"> หมด</span>
@@ -98,7 +99,7 @@ $products = $cart->getItems();
                     <div class="fw-semibold text-danger">
                         <?php echo number_format($model->unit_price ?? 0,2); ?>
                     </div>
-                    <?php if($model->SumQty() >= 1):?>
+                    <?php if($sumQty >= 1):?>
                     <?php
                     
                                                 try {

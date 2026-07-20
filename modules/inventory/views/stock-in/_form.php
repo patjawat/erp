@@ -64,7 +64,9 @@ $js = <<< JS
                                         }).then((result) => {
                                         /* Read more about isConfirmed, isDenied below */
                                         if (result.isConfirmed) {
-                                            $("#main-modal").modal("hide");
+                                            if (typeof erpHideModal === "function") {
+                                                erpHideModal("#main-modal");
+                                            }
                                             $.ajax({
                                                     url: form.attr('action'),
                                                     type: 'post',
@@ -81,23 +83,34 @@ $js = <<< JS
                                                         if (response.status == "success") {
                                                             Swal.fire({
                                                                 title: 'สำเร็จ!',
-                                                                text: 'ดำเนินการลบสำเร็จ!',
+                                                                text: 'บันทึกข้อมูลสำเร็จ!',
                                                                 icon: 'success',
                                                                 showConfirmButton: false,
                                                                 timer: 1000 // ✅ ปิด Swal อัตโนมัติใน 1 วินาที
                                                             });
 
                                                             setTimeout(() => {
-                                                                location.reload(); // ✅ รีโหลดหน้าเว็บหลังจาก Swal ปิด
+                                                                if (response.url) {
+                                                                    window.location.href = response.url;
+                                                                } else {
+                                                                    location.reload(); // ✅ รีโหลดหน้าเว็บหลังจาก Swal ปิด
+                                                                }
                                                             }, 1000);
                                                             } else {
                                                             Swal.fire(
                                                                 'ผิดพลาด!',
-                                                                'ไม่สามารถลบรายการได้',
+                                                                'ไม่สามารถบันทึกข้อมูลได้',
                                                                 'error'
                                                             );
                                                             }
-                                                                                                    }
+                                                                                                    },
+                                                    error: function () {
+                                                        Swal.fire(
+                                                            'ผิดพลาด!',
+                                                            'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง',
+                                                            'error'
+                                                        );
+                                                    }
                                                 });
                                                 return false;
                                         } else if (result.isDenied) {

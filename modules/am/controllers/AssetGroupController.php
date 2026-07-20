@@ -7,6 +7,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\components\SiteHelper;
+use app\models\Categorise;
 use app\models\CategoriseSearch;
 use yii\web\NotFoundHttpException;
 use nickdenry\grid\toggle\actions\ToggleAction;
@@ -60,7 +61,61 @@ class AssetGroupController extends Controller
             SiteHelper::setDisplay($this->request->get('view'));
         }
 
+        // กัน browser/proxy cache ผลลัพธ์ของ offcanvas ตั้งค่า
+        if (in_array($action->id, ['setting-panel', 'setting-panel-items'], true)) {
+            Yii::$app->response->getHeaders()
+                ->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->set('Pragma', 'no-cache');
+        }
+
         return parent::beforeAction($action);
+    }
+
+    /**
+     * Offcanvas ตั้งค่า "กลุ่ม" จากเมนู — read-only (กลุ่มเป็น enum ระบบ ตรงกับหน้า index ที่ไม่มีปุ่มแก้ไข)
+     */
+    public function actionSettingPanel()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $cfg = $this->settingConfig((string) $this->request->get('q', ''));
+
+        return ['content' => $this->renderAjax('@app/modules/am/views/setting-quick/_panel', ['cfg' => $cfg])];
+    }
+
+    /**
+     * Offcanvas ตั้งค่า "กลุ่ม" — เฉพาะแถวรายการ (ใช้รีเฟรชหลังค้นหา)
+     */
+    public function actionSettingPanelItems()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $cfg = $this->settingConfig((string) $this->request->get('q', ''));
+
+        return ['content' => $this->renderAjax('@app/modules/am/views/setting-quick/_items', ['cfg' => $cfg])];
+    }
+
+    /**
+     * config ร่วมของ setting-quick panel/items — กลุ่มทรัพย์สิน (read-only, ค้นหาชื่อ/รหัส)
+     */
+    private function settingConfig($q)
+    {
+        $query = Categorise::find()->where(['name' => 'asset_group']);
+        if ($q !== '') {
+            $query->andWhere(['or', ['like', 'title', $q], ['like', 'code', $q]]);
+        }
+        $items = $query->orderBy(['id' => SORT_ASC])->all();
+
+        return [
+            'entity' => 'group',
+            'label' => 'กลุ่มทรัพย์สิน',
+            'items' => $items,
+            'q' => $q,
+            'filterOptions' => null,
+            'selectedFilter' => '',
+            'createUrl' => null,
+            'updateUrl' => null,
+            'deleteUrl' => null,
+            'indexUrl' => ['/am/asset-group/index'],
+        ];
     }
 
     /**

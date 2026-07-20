@@ -150,13 +150,13 @@ LEFT JOIN {$employeeDetailTable} p ON p.id = (
     FROM {$employeeDetailTable} p2
     WHERE p2.emp_id = e.id
       AND p2.name = 'position'
-    ORDER BY p2.data_json->>'$.date_start' DESC
+    ORDER BY JSON_UNQUOTE(JSON_EXTRACT(p2.data_json, '$.date_start')) DESC
     LIMIT 1
 )
 JOIN {$employeeTypeTable} new_t
     ON JSON_CONTAINS(
-        new_t.data_json->'$.legacy_codes',
-        JSON_QUOTE(p.data_json->>'$.position_type')
+        JSON_EXTRACT(new_t.data_json, '$.legacy_codes'),
+        JSON_QUOTE(JSON_UNQUOTE(JSON_EXTRACT(p.data_json, '$.position_type')))
     )
 SET e.employee_type_id = new_t.id
 WHERE e.employee_type_id <> new_t.id

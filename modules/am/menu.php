@@ -43,11 +43,36 @@ use yii\helpers\Url;
             <!-- <li>
                 <hr class="dropdown-divider">
             </li> -->
-            <li><?= Html::a('<i data-lucide="calendar" class="me-2" style="width:1rem;height:1rem;"></i> ประมวลผลรายเดือน', ['/am/depreciation/monthly-processing'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="file-text" class="me-2" style="width:1rem;height:1rem;"></i> รายงานค่าเสื่อมรายเดือน', ['/am/report/monthly-depreciation'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-check" class="me-2" style="width:1rem;height:1rem;"></i> ตรวจนับพัสดุประจำปี', ['/am/audit'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="file-search" class="me-2" style="width:1rem;height:1rem;"></i> รายงานครุภัณฑ์คงเหลือ', ['/am/report/register'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="trash-2" class="me-2" style="width:1rem;height:1rem;"></i> จำหน่ายพัสดุ', ['/am/disposal'], ['class' => 'dropdown-item']) ?></li>
+        </ul>
+    </div>
+
+    <div class="dropdown d-inline-block">
+        <button class="btn <?= $active !== 'depreciation' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูค่าเสื่อมราคา อยู่ระหว่างพัฒนา">
+            <i data-lucide="trending-down" style="width:1rem;height:1rem;"></i>
+            <span class="d-none d-sm-inline">ค่าเสื่อมราคา</span>
+            <span class="visually-hidden">อยู่ระหว่างพัฒนา</span>
+            <span class="badge text-bg-warning ms-1 d-none d-lg-inline">กำลังพัฒนา</span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><?= Html::a('<i data-lucide="layout-list" class="me-2" style="width:1rem;height:1rem;"></i> ภาพรวม / เริ่มที่นี่', ['/am/asset-depreciation/overview'], ['class' => 'dropdown-item fw-semibold']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">1 · ตั้งค่าเกณฑ์</li>
+            <li><?= Html::a('<i data-lucide="percent" class="me-2" style="width:1rem;height:1rem;"></i> เกณฑ์ค่าเสื่อม', ['/am/depreciation-profile/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="link" class="me-2" style="width:1rem;height:1rem;"></i> ผูกเกณฑ์เข้าลำดับชั้น', ['/am/depreciation-binding/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">2 · เปิดงวดบัญชี</li>
+            <li><?= Html::a('<i data-lucide="calendar-range" class="me-2" style="width:1rem;height:1rem;"></i> สร้าง / เปิดงวดบัญชี', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">3 · ประมวลผลรายเดือน</li>
+            <li><?= Html::a('<i data-lucide="calculator" class="me-2" style="width:1rem;height:1rem;"></i> คำนวณค่าเสื่อมงวด', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="flask-conical" class="me-2" style="width:1rem;height:1rem;"></i> ทดลองคำนวณรายชิ้น', ['/am/asset-depreciation/preview-asset'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="replace" class="me-2" style="width:1rem;height:1rem;"></i> เปลี่ยนเกณฑ์ทรัพย์สิน', ['/am/asset-depreciation-change/form'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="history" class="me-2" style="width:1rem;height:1rem;"></i> ประวัติการเปลี่ยนเกณฑ์', ['/am/asset-depreciation-change/history'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><?= Html::a('<i data-lucide="file-bar-chart" class="me-2" style="width:1rem;height:1rem;"></i> รายงาน (เดือน/ไตรมาส/ปีงบ)', ['/am/depreciation-report/index'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 
@@ -74,13 +99,28 @@ use yii\helpers\Url;
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม', ['/am/asset-group'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="group" data-title="กลุ่มทรัพย์สิน" data-icon="bi bi-diagram-3"
+                    data-panel-url="<?= Url::to(['/am/asset-group/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-group/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> กลุ่ม
+                </a>
             </li>
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท', ['/am/asset-type'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="type" data-title="ประเภททรัพย์สิน" data-icon="bi bi-collection"
+                    data-panel-url="<?= Url::to(['/am/asset-type/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-type/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> ประเภท
+                </a>
             </li>
             <li>
-                <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่', ['/am/asset-category'], ['class' => 'dropdown-item']) ?>
+                <a href="#" class="dropdown-item js-am-setting-trigger" data-bs-toggle="offcanvas" data-bs-target="#am-setting-offcanvas"
+                    data-entity="category" data-title="หมวดหมู่ครุภัณฑ์" data-icon="bi bi-tags"
+                    data-panel-url="<?= Url::to(['/am/asset-category/setting-panel']) ?>"
+                    data-items-url="<?= Url::to(['/am/asset-category/setting-panel-items']) ?>">
+                    <i class="bi bi-ui-checks text-primary me-1"></i> หมวดหมู่
+                </a>
             </li>
             <li>
                 <?= Html::a(' <i class="bi bi-ui-checks text-primary me-1"></i> FSN', ['/am/fsn'], ['class' => 'dropdown-item']) ?>
@@ -118,3 +158,150 @@ use yii\helpers\Url;
 
 
 </div>
+
+<?php
+// ===== Offcanvas ตั้งค่า กลุ่ม/ประเภท/หมวดหมู่ (ใช้ร่วมจากเมนู) =====
+// เมนูถูก render ทุกหน้า am → offcanvas + JS พร้อมใช้ทุกที่ ไม่ต้องแยกหน้า index เต็ม (ยังคงลิงก์ไว้ในปุ่ม "เปิดหน้าเต็ม")
+?>
+<style>
+    /* เว้นด้านบนให้พ้น header สูง (.header-fixed ของธีม) ไม่ให้ทับหัว offcanvas */
+    #am-setting-offcanvas {
+        top: 72px;
+        height: calc(100% - 72px);
+    }
+</style>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="am-setting-offcanvas" aria-labelledby="am-setting-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title js-setting-quick__title" id="am-setting-offcanvas-label">
+            <i class="bi bi-gear me-2"></i> ตั้งค่า
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <div class="small mt-2">กำลังโหลดรายการ...</div>
+        </div>
+    </div>
+</div>
+
+<?php
+$js = <<<'JS'
+(function () {
+    var $oc = $('#am-setting-offcanvas');
+    if (!$oc.length) { return; }
+
+    function ctx() { return $oc.data('amCtx') || {}; }
+
+    var loadingHtml = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm" role="status"></div><div class="small mt-2">กำลังโหลดรายการ...</div></div>';
+
+    // เก็บ context (urls) จากปุ่มเมนูที่กด — ทำก่อน offcanvas show เพื่อไม่พึ่ง relatedTarget (รองรับทุกเวอร์ชัน Bootstrap)
+    $(document).off('click.amSetting', '.js-am-setting-trigger')
+        .on('click.amSetting', '.js-am-setting-trigger', function () {
+            var t = this;
+            $oc.data('amCtx', {
+                panelUrl: t.getAttribute('data-panel-url'),
+                itemsUrl: t.getAttribute('data-items-url'),
+                entity: t.getAttribute('data-entity')
+            });
+            var icon = t.getAttribute('data-icon') || 'bi bi-gear';
+            var title = t.getAttribute('data-title') || 'ตั้งค่า';
+            $oc.find('.js-setting-quick__title').html('<i class="' + icon + ' me-2"></i> ' + title);
+        });
+
+    function loadPanel() {
+        var c = ctx();
+        if (!c.panelUrl) { return; }
+        var $body = $oc.find('.offcanvas-body');
+        $body.html(loadingHtml);
+        $.ajax({ url: c.panelUrl, type: 'GET', dataType: 'json', cache: false }).done(function (res) {
+            if (res && res.content) {
+                $body.html(res.content);
+                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+            }
+        });
+    }
+
+    function loadItems() {
+        var c = ctx();
+        if (!c.itemsUrl) { return; }
+        $.ajax({
+            url: c.itemsUrl, type: 'GET', dataType: 'json', cache: false,
+            data: {
+                q: $oc.find('.js-setting-quick__search').val() || '',
+                filter: $oc.find('.js-setting-quick__filter').val() || ''
+            }
+        }).done(function (res) {
+            if (res && res.content) {
+                $oc.find('.js-setting-quick__items').html(res.content);
+                if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+            }
+        });
+    }
+
+    $oc.on('show.bs.offcanvas', function () { loadPanel(); });
+
+    var searchTimer = null;
+    $oc.on('input', '.js-setting-quick__search', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(loadItems, 300);
+    });
+    $oc.on('change', '.js-setting-quick__filter', loadItems);
+    $oc.on('click', '.js-setting-quick__refresh', loadItems);
+
+    $oc.on('click', '.js-setting-quick__delete', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (typeof Swal === 'undefined') { return; }
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: 'ลบรายการนี้ ไม่สามารถย้อนกลับได้',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ใช่, ลบเลย',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (result) {
+            if (!result.isConfirmed) { return; }
+            $.post(url, function (res) {
+                if (res && res.status === 'success') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบสำเร็จ', showConfirmButton: false, timer: 1600 });
+                    loadItems();
+                } else {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'ลบไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }, 'json');
+        });
+    });
+
+    // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline) → POST สถานะที่เลือก แล้วรีเฟรชรายการให้ badge อัพเดต
+    $oc.on('change', '.js-setting-quick__toggle', function () {
+        var $sw = $(this);
+        var url = $sw.data('url');
+        var active = $sw.is(':checked') ? 1 : 0;
+        $sw.prop('disabled', true);
+        $.post(url, { active: active }, function (res) {
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: active ? 'เปิดใช้งานแล้ว' : 'ปิดใช้งาน (ร่าง)', showConfirmButton: false, timer: 1400 });
+                }
+                loadItems();
+            } else {
+                $sw.prop('checked', !active).prop('disabled', false);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'อัพเดตไม่สำเร็จ', showConfirmButton: false, timer: 2200 });
+                }
+            }
+        }, 'json').fail(function () {
+            $sw.prop('checked', !active).prop('disabled', false);
+        });
+    });
+
+    // บันทึกใน modal เพิ่ม/แก้ไข (.open-modal) แล้วปิด ขณะ offcanvas เปิด → รีเฟรชรายการเห็นผลทันที
+    $(document).off('hidden.bs.modal.amSetting', '#main-modal')
+        .on('hidden.bs.modal.amSetting', '#main-modal', function () {
+            if ($oc.hasClass('show')) { loadItems(); }
+        });
+})();
+JS;
+$this->registerJs($js, \yii\web\View::POS_READY, 'am-setting-offcanvas');
+?>

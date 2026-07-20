@@ -5,14 +5,18 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use app\modules\am\models\AssetItem;
+use app\modules\am\components\AssetHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\AssetItemSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var string $group */
 
+$group = $group ?? 'EQUIP';
+$groupOptions = AssetHelper::assetGroupOptions();
 
-$this->title = 'หมวดทรัพย์สิน';
-$this->params['breadcrumbs'][] = $this->title;
+$this->title = 'หมวดทรัพย์สิน · ' . AssetHelper::assetGroupLabel($group);
+$this->params['breadcrumbs'][] = 'หมวดทรัพย์สิน';
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2 mb-1">
@@ -34,12 +38,28 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/components/ui/btnReturn'); ?>
 <?php $this->endBlock() ?>
 
+<!-- ตัวกรองกลุ่มทรัพย์สิน — เปลี่ยนกลุ่มแล้วโหลดหน้าใหม่ตาม ?group= -->
+<div class="card">
+    <div class="card-body py-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <label for="asset-group-filter" class="fw-semibold text-secondary mb-0 me-1">
+                <i class="bi bi-funnel me-1"></i>กลุ่มทรัพย์สิน
+            </label>
+            <?= Html::dropDownList('group', $group, $groupOptions, [
+                'id' => 'asset-group-filter',
+                'class' => 'form-select w-auto',
+                'onchange' => "window.location='" . Url::to(['index']) . "?group='+encodeURIComponent(this.value);",
+            ]) ?>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
-        <?php echo $this->render('_search', ['model' => $searchModel]); ?>
+        <?php echo $this->render('_search', ['model' => $searchModel, 'group' => $group]); ?>
     </div>
 </div>
 
@@ -47,10 +67,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between align-item-center">
-            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i><?= $this->title; ?> <span
+            <h6 class="text-white"><i class="bi bi-ui-checks me-1"></i><?= Html::encode($this->title) ?> <span
                     class="badge bg-light"><?= number_format($dataProvider->getTotalCount(), 0) ?></span>
                 รายการ</h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างใหม่'], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create', 'group' => $group, 'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างหมวด' . AssetHelper::assetGroupLabel($group)], ['class' => 'btn btn-light shadow open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
     </div>
     <div class="card-body">
@@ -66,9 +86,20 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="table-group-divider align-middle">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <?php
+                        // พร้อมใช้งาน = มีรหัส FSN + เปิดใช้งาน · ไม่งั้นถือเป็น "ร่าง" (ยังผูกกับครุภัณฑ์ไม่ได้)
+                        // NULL = ถือว่าเปิดใช้งาน · เฉพาะ active=0 ที่เป็นร่าง
+                        $isReady = trim((string) $item->code) !== ''
+                            && !($item->active !== null && (int) $item->active === 0);
+                    ?>
                     <tr>
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td class="fw-semibold text-primary"><?= $item->code ?></td>
+                        <td class="fw-semibold text-primary">
+                            <?= trim((string) $item->code) !== '' ? Html::encode($item->code) : '<span class="text-muted">—</span>' ?>
+                            <?php if (!$isReady): ?>
+                                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1">ร่าง</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="fw-semibold"><?= $item->title ?></td>
                         <td><?= $item->assetType?->title ?? '-' ?></td>
                         <td class="text-center">
@@ -99,6 +130,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 </div>
+
+<?php
+$js = <<< JS
+    \$(document).off('assetCategory:saved.assetCategoryIndex').on('assetCategory:saved.assetCategoryIndex', function () {
+        location.reload();
+    });
+JS;
+$this->registerJs($js);
+?>
 
 <?php
 // $sql = "INSERT INTO categorise (name,title, code, data_json) VALUES

@@ -202,6 +202,7 @@ class WarehouseController extends Controller
                 'item_code' => 'i.code',
                 'item_name' => 'i.title',
                 'i.category_id',
+                'category_title' => 'cat.title',
                 'i.data_json AS item_data_json',
                 's.id AS setting_id',
                 's.min_qty AS setting_min_qty',
@@ -217,6 +218,11 @@ class WarehouseController extends Controller
                 [':wid' => $warehouse->id]
             )
             ->leftJoin(['b' => $balanceSub], 'b.item_code = i.code')
+            ->leftJoin(
+                ['cat' => '{{%categorise}}'],
+                'cat.code = i.category_id AND cat.name = :assetType',
+                [':assetType' => 'asset_type']
+            )
             ->andWhere(['i.name' => 'asset_item', 'i.group_id' => 'MATER'])
             ->andWhere(['i.active' => 1]);
 
@@ -603,8 +609,19 @@ class WarehouseController extends Controller
             ? StockMinMaxImportService::MODE_SNAPSHOT
             : StockMinMaxImportService::MODE_TEMPLATE;
 
+        // ส่งออกตามตัวกรองของหน้า list (q / status / category_id)
+        $status = (string) $this->request->get('status', '');
+        if (!in_array($status, ['configured', 'below_min', 'above_max'], true)) {
+            $status = '';
+        }
+        $filters = [
+            'q' => trim((string) $this->request->get('q', '')),
+            'category_id' => trim((string) $this->request->get('category_id', '')),
+            'status' => $status,
+        ];
+
         $svc = new StockMinMaxImportService();
-        $spread = $svc->generateTemplate((int) $warehouse->id, $mode);
+        $spread = $svc->generateTemplate((int) $warehouse->id, $mode, $filters);
 
         $modeLabel = $mode === StockMinMaxImportService::MODE_SNAPSHOT ? 'snapshot' : 'template';
         $filename = 'min-max-' . $warehouse->warehouse_name . '-' . $modeLabel . '-' . date('Y-m-d') . '.xlsx';

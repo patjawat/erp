@@ -31,10 +31,15 @@ try {
         ->where([
             'order_type'  => StockOrder::ORDER_TYPE_OUT,
             'source_type' => 'REQUEST',
-            'status'      => StockOrder::STATUS_PENDING,
+            'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
         ]);
+    // non-admin: กันไม่ให้เห็นเกินคลังย่อยที่ตัวเองเป็นเจ้าหน้าที่
     if (!$isAdmin) {
         $pendingQuery->andWhere(['sub_warehouse_id' => $allowedSubIds]);
+    }
+    // แสดงเฉพาะใบที่ "คลังของตัวเอง" (คลังย่อยที่กำลังดูอยู่) เบิกไป
+    if ($currentWarehouseId) {
+        $pendingQuery->andWhere(['sub_warehouse_id' => (int) $currentWarehouseId]);
     }
     $requisitionPendingCount = (int) $pendingQuery->count();
 } catch (\Throwable $e) {
@@ -50,7 +55,7 @@ try {
         <a href="<?= Url::to(array_merge(['/inventory-v2/requisition'], $wParam)) ?>" class="btn btn-sm <?= $active === 'requisition' ? 'btn-success' : 'btn-outline-success' ?> rounded-pill px-3">
             <i class="bi bi-file-earmark-plus me-1"></i> บันทึกเบิก
             <?php if ($requisitionPendingCount > 0): ?>
-                <span class="badge text-bg-danger ms-1" title="รออนุมัติ"><?= $requisitionPendingCount ?></span>
+                <span class="badge text-bg-danger ms-1" title="รอหัวหน้าอนุมัติ/รอคลังจ่าย"><?= $requisitionPendingCount ?></span>
             <?php endif; ?>
         </a>
         <?php endif; ?>

@@ -32,6 +32,15 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
     /**
+     * Alias ของ $id — โค้ดหลายจุดใน session('warehouse') อ่านผ่านชื่อ warehouse_id (ทั้ง ->warehouse_id และ ['warehouse_id'])
+     * ชื่อ method ต้องเป็น getWarehouse_id (มี underscore ตรงตัว) เพราะ Yii magic getter resolve จาก 'get' . $name แบบ string ตรงๆ ไม่ได้แปลง snake_case เป็น camelCase ให้
+     */
+    public function getWarehouse_id()
+    {
+        return $this->id;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function rules()

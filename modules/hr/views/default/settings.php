@@ -18,12 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('../employees/menu', ['active' => 'setting']) ?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/hr/views/employees/menu', ['active' => 'setting']) ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="row g-3">

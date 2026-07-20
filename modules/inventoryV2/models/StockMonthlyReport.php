@@ -40,7 +40,8 @@ class StockMonthlyReport extends \yii\db\ActiveRecord
     {
         return [
             [['report_year', 'report_month', 'warehouse_id', 'item_code'], 'required'],
-            [['report_year', 'report_month', 'warehouse_id', 'created_at', 'created_by'], 'integer'],
+            [['report_year', 'report_month', 'warehouse_id', 'created_by'], 'integer'],
+            [['created_at'], 'safe'],
             [['opening_qty', 'opening_value', 'in_qty', 'in_value', 'adjust_in_qty', 'adjust_in_value', 'adjust_out_qty', 'adjust_out_value', 'out_sub_qty', 'out_sub_value', 'out_hosp_qty', 'out_hosp_value', 'total_out_qty', 'total_out_value', 'closing_qty', 'closing_value'], 'number'],
             [['item_code'], 'string', 'max' => 50],
             [['unit_name'], 'string', 'max' => 100],

@@ -2,12 +2,14 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
 use yii\grid\GridView;
 use app\components\ThaiDateHelper;
+use app\components\widgets\DataSummaryWidget;
 use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\models\StockOrder;
 
-$this->title = 'รายการจ่ายพัสดุ (Stock Issue)';
+$this->title = 'รายการจ่ายวัสดุ (Stock Issue)';
 $this->params['breadcrumbs'][] = ['label' => 'คลังสินค้า', 'url' => ['/inventory-v2/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -15,6 +17,11 @@ $searchModel = $searchModel ?? null;
 $mainWarehouses = $mainWarehouses ?? ['' => 'ทุกคลัง'];
 $subWarehouses = $subWarehouses ?? ['' => 'ทุกแผนก/ฝ่าย'];
 $statusLabels = $statusLabels ?? ['' => 'ทุกสถานะ'];
+
+/* ยอดใบเบิกที่ยังรอ (รออนุมัติ/รอจ่าย) — controller คำนวณตาม scope สิทธิ์ + คลังที่จ่ายที่เลือกมาให้แล้ว
+   ใช้ทั้ง badge ในเมนู และ sync กลับหลัง pjax (เมนูอยู่นอก container #issue-pjax จึงไม่ refresh เอง) */
+$issuePendingCount = (int) ($issuePendingCount ?? 0);
+$issueFilterWarehouseId = ($searchModel && $searchModel->main_warehouse_id) ? (int) $searchModel->main_warehouse_id : null;
 
 /* prefetch ผู้ขอเบิก — ตัด N+1 query */
 $models = $dataProvider->getModels();
@@ -87,10 +94,16 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', ['active' => 'issue']) ?>
+<?= $this->render('@app/modules/inventoryV2/views/default/_menu_main', [
+    'active' => 'issue',
+    'mainWarehouseId' => $issueFilterWarehouseId,
+    'issuePendingCount' => $issuePendingCount,
+]) ?>
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid">
+    <?php Pjax::begin(['id' => 'issue-pjax', 'timeout' => 5000, 'enablePushState' => true]); ?>
+    <span id="issuePendingCountData" data-count="<?= $issuePendingCount ?>" hidden></span>
     <?php if ($searchModel): ?>
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-header py-2 px-3">
@@ -100,52 +113,52 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
             <?php $form = ActiveForm::begin([
                 'method' => 'get',
                 'action' => Url::to(['index']),
-                'options' => ['class' => 'row g-3 align-items-end'],
+                'options' => ['class' => 'row g-3 align-items-end', 'id' => 'issue-search-form', 'data-pjax' => 1],
                 'enableClientValidation' => false,
             ]); ?>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">เลขที่ใบเบิก</label>
-                <?= $form->field($searchModel, 'order_no')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'ค้นหา...'])->label(false) ?>
+                <?= $form->field($searchModel, 'order_no')->textInput(['class' => 'form-control form-control', 'placeholder' => 'ค้นหา...'])->label(false) ?>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">วันที่เบิก</label>
-                <div class="d-flex align-items-center gap-1 flex-wrap">
-                    <?= $this->render('@app/components/ui/_date_start', ['form' => $form, 'model' => $searchModel, 'label' => false]) ?>
-                    <span class="text-muted small">–</span>
-                    <?= $this->render('@app/components/ui/_date_end', ['form' => $form, 'model' => $searchModel, 'label' => false]) ?>
+                <div class="issue-daterange">
+                    <?= $form->field($searchModel, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['class' => 'form-control', 'id' => 'issueOrderDateStart', 'placeholder' => 'ตั้งแต่']])->label(false) ?>
+                    <span class="issue-daterange__sep" aria-hidden="true">–</span>
+                    <?= $form->field($searchModel, 'date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['class' => 'form-control', 'id' => 'issueOrderDateEnd', 'placeholder' => 'ถึง']])->label(false) ?>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">วันที่จ่าย</label>
-                <div class="d-flex align-items-center gap-1 flex-wrap">
-                    <?= $form->field($searchModel, 'confirmed_date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['id' => 'issueConfirmedDateStart', 'placeholder' => 'ตั้งแต่']])->label(false) ?>
-                    <span class="text-muted small">–</span>
-                    <?= $form->field($searchModel, 'confirmed_date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['id' => 'issueConfirmedDateEnd', 'placeholder' => 'ถึง']])->label(false) ?>
+                <div class="issue-daterange">
+                    <?= $form->field($searchModel, 'confirmed_date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['class' => 'form-control', 'id' => 'issueConfirmedDateStart', 'placeholder' => 'ตั้งแต่']])->label(false) ?>
+                    <span class="issue-daterange__sep" aria-hidden="true">–</span>
+                    <?= $form->field($searchModel, 'confirmed_date_end')->widget(\app\widgets\datepicker\DatepickerThai::class, ['options' => ['class' => 'form-control', 'id' => 'issueConfirmedDateEnd', 'placeholder' => 'ถึง']])->label(false) ?>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">แผนก/ฝ่ายที่เบิก</label>
-                <?= Html::activeDropDownList($searchModel, 'sub_warehouse_id', $subWarehouses, ['class' => 'form-select form-select-sm']) ?>
+                <?= Html::activeDropDownList($searchModel, 'sub_warehouse_id', $subWarehouses, ['class' => 'form-select form-select']) ?>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">คลังที่จ่าย</label>
-                <?= Html::activeDropDownList($searchModel, 'main_warehouse_id', $mainWarehouses, ['class' => 'form-select form-select-sm']) ?>
+                <?= Html::activeDropDownList($searchModel, 'main_warehouse_id', $mainWarehouses, ['class' => 'form-select form-select']) ?>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">สถานะ</label>
-                <?= Html::activeDropDownList($searchModel, 'status', $statusLabels, ['class' => 'form-select form-select-sm']) ?>
+                <?= Html::activeDropDownList($searchModel, 'status', $statusLabels, ['class' => 'form-select form-select']) ?>
             </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <div class="col-12 col-sm-6 col-lg-3">
                 <label class="form-label small text-muted mb-1">แหล่งที่มา</label>
                 <?= Html::activeDropDownList($searchModel, 'source_v1', [
                     '' => 'ทั้งหมด',
                     'v2' => 'สร้างใน V2',
                     'v1' => 'ย้ายจาก V1',
-                ], ['class' => 'form-select form-select-sm']) ?>
+                ], ['class' => 'form-select form-select']) ?>
             </div>
-            <div class="col-12 col-sm-auto d-flex gap-1 flex-wrap">
-                <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary btn-sm']) ?>
-                <?= Html::a('ล้าง', Url::to(['index']), ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+            <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-end gap-2">
+                <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary btn-sm flex-fill']) ?>
+                <?= Html::a('ล้าง', Url::to(['index']), ['class' => 'btn btn-outline-secondary btn-sm', 'data' => ['pjax' => 0]]) ?>
             </div>
             <?php ActiveForm::end(); ?>
         </div>
@@ -153,8 +166,8 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
     <?php endif; ?>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 text-primary fw-bold"><i class="bi bi-box-seam erp-icon-box"></i> รายการใบเบิกจากคลังย่อย (รอจ่าย)</h5>
+        <div class="card-header bg-white py-3 d-flex align-items-center">
+            <h5 class="mb-0 text-primary fw-bold d-flex align-items-center gap-2 text-nowrap"><i class="bi bi-box-seam erp-icon-box"></i> รายการใบเบิกจากคลังย่อย (รอจ่าย)</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -162,7 +175,14 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                     'dataProvider' => $dataProvider,
                     'tableOptions' => ['class' => 'table table-hover align-middle'],
                     'summary' => false,
+                    'layout' => '{items}',
                     'columns' => [
+                        [
+                            'class' => 'yii\grid\SerialColumn',
+                            'header' => 'ลำดับ',
+                            'headerOptions' => ['class' => 'text-center', 'style' => 'width: 3rem;'],
+                            'contentOptions' => ['class' => 'text-center text-muted'],
+                        ],
                         [
                             'attribute' => 'order_no',
                             'label' => 'เลขที่ใบเบิก / วันที่ขอ',
@@ -257,22 +277,26 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                                         'data' => [
                                             'confirm' => 'ยืนยันอนุมัติใบเบิกนี้แทนหัวหน้า?',
                                             'method' => 'post',
+                                            'pjax' => 0,
                                         ],
                                     ]);
                                 },
                                 'process' => function($url, $model) {
                                     if ($model->status === StockOrder::STATUS_APPROVED) {
                                         return Html::a('<i class="bi bi-box-seam"></i> ดำเนินการจ่าย', ['process', 'id' => $model->id], [
-                                            'class' => 'btn btn-primary btn-sm'
+                                            'class' => 'btn btn-primary btn-sm',
+                                            'data' => ['pjax' => 0],
                                         ]);
                                     }
                                     if ($model->status === StockOrder::STATUS_PENDING) {
                                         return Html::a('<i class="bi bi-file-earmark-text"></i> ดูใบเบิก', ['/inventory-v2/requisition/view', 'id' => $model->id], [
-                                            'class' => 'btn btn-outline-secondary btn-sm'
+                                            'class' => 'btn btn-outline-secondary btn-sm',
+                                            'data' => ['pjax' => 0],
                                         ]);
                                     }
                                     return Html::a('<i class="bi bi-file-earmark-text"></i> ดูรายละเอียด', ['process', 'id' => $model->id], [
-                                        'class' => 'btn btn-outline-secondary btn-sm'
+                                        'class' => 'btn btn-outline-secondary btn-sm',
+                                        'data' => ['pjax' => 0],
                                     ]);
                                 },
                                 'print' => function($url, $model) {
@@ -280,6 +304,7 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                                         'class' => 'btn btn-outline-secondary btn-sm border-0',
                                         'title' => 'พิมพ์ใบเบิกวัสดุ',
                                         'target' => '_blank',
+                                        'data' => ['pjax' => 0],
                                     ]);
                                 },
                                 // 'printdoc' => function($url, $model) {
@@ -295,10 +320,63 @@ $renderPerson = function ($emp, $fallbackName, $fallbackPosition) {
                 ]); ?>
             </div>
         </div>
+        <div class="card-footer bg-white py-2 px-3">
+            <?= DataSummaryWidget::widget([
+                'dataProvider' => $dataProvider,
+            ]) ?>
+        </div>
     </div>
+    <?php Pjax::end(); ?>
 </div>
 
+<?php
+/* sync badge "จ่ายวัสดุ" ในเมนู (อยู่นอก #issue-pjax) ให้ตรงกับคลังที่กรอง หลัง pjax reload */
+$this->registerJs(<<<'JS'
+$(document).off('pjax:end.issueBadge').on('pjax:end.issueBadge', '#issue-pjax', function () {
+    var data = document.getElementById('issuePendingCountData');
+    var link = document.querySelector('[data-issue-nav-link]');
+    if (!data || !link) return;
+    var count = parseInt(data.getAttribute('data-count'), 10) || 0;
+    var badge = link.querySelector('[data-issue-pending-badge]');
+    if (count > 0) {
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'badge text-bg-danger ms-1';
+            badge.setAttribute('data-issue-pending-badge', '');
+            badge.title = 'รออนุมัติ/รอจ่าย';
+            link.appendChild(badge);
+        }
+        badge.textContent = String(count);
+    } else if (badge) {
+        badge.remove();
+    }
+});
+JS);
+?>
+
 <style>
+/* ─── ช่วงวันที่ (date range) ในฟอร์มค้นหา — สอง input + คั่นกลาง ───
+   จัดให้ input เริ่ม/สิ้นสุด แบ่งความกว้างเท่ากันเสมอ และสูงเท่ากับ dropdown อื่น */
+.issue-daterange {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.issue-daterange > .mb-3 {           /* Yii ActiveField wrapper — ให้ยืดเท่ากัน ไม่มี margin ล่าง */
+    flex: 1 1 0;
+    min-width: 0;
+    margin-bottom: 0;
+}
+.issue-daterange .form-control {
+    width: 100%;
+}
+.issue-daterange__sep {
+    flex: 0 0 auto;
+    color: #a0aec0;
+    font-size: 0.85rem;
+    line-height: 1;
+    user-select: none;
+}
 .issue-person {
     display: flex;
     align-items: center;

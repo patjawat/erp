@@ -38,6 +38,15 @@ class IssueController extends Controller
         ]]);
         $dataProvider->query->with(['mainWarehouse', 'subWarehouse']);
 
+        // เห็นหมดทุกคลัง = admin หรือผู้มีสิทธิ์ warehouse; นอกนั้นจำกัดเฉพาะคลังที่ user ถูกกำหนดเป็นผู้รับผิดชอบคลัง (officer)
+        // ให้ตรงกับ badge เมนู: ผู้รับผิดชอบคลังเห็นทุกใบที่เข้าคลังของตน โดยไม่ผูกกับแผนก/ฝ่ายที่มีสิทธิเบิก
+        $isAdmin = Yii::$app->user->can('admin');
+        $canSeeAllWarehouses = $isAdmin || Yii::$app->user->can('warehouse');
+        $accessibleWarehouses = Warehouse::findMainWarehousesForReceive();
+        if (!$canSeeAllWarehouses) {
+            $dataProvider->query->andWhere(['main_warehouse_id' => ArrayHelper::getColumn($accessibleWarehouses, 'id')]);
+        }
+
         // วันที่เบิก (order_date)
         $start = AppHelper::convertToGregorian($searchModel->date_start);
         $end = AppHelper::convertToGregorian($searchModel->date_end);
@@ -61,15 +70,17 @@ class IssueController extends Controller
         $dataProvider->sort->defaultOrder = ['order_date' => SORT_DESC, 'id' => SORT_DESC];
         $dataProvider->pagination->pageSize = 15;
 
-        $mainWarehouses = ['' => 'ทุกคลัง'] + ArrayHelper::map(
-            Warehouse::find()
-                ->where(['warehouse_type' => 'MAIN'])
-                ->andWhere(['or', ['delete' => null], ['delete' => '']])
-                ->orderBy('warehouse_name')
-                ->all(),
-            'id',
-            'warehouse_name'
-        );
+        $mainWarehouses = $canSeeAllWarehouses
+            ? ['' => 'ทุกคลัง'] + ArrayHelper::map(
+                Warehouse::find()
+                    ->where(['warehouse_type' => 'MAIN'])
+                    ->andWhere(['or', ['delete' => null], ['delete' => '']])
+                    ->orderBy('warehouse_name')
+                    ->all(),
+                'id',
+                'warehouse_name'
+            )
+            : ['' => 'ทุกคลัง'] + ArrayHelper::map($accessibleWarehouses, 'id', 'warehouse_name');
         $subWarehouses = ['' => 'ทุกหน่วยงาน'] + ArrayHelper::map(
             Warehouse::find()
                 ->where(['warehouse_type' => 'SUB'])
@@ -85,12 +96,29 @@ class IssueController extends Controller
             StockOrder::optsStatusLabels()
         );
 
+        // ยอดใบเบิกที่ยังรอ (รออนุมัติ/รอจ่าย) สำหรับ badge เมนู — ใช้ scope สิทธิ์เดียวกับตาราง เคารพคลังที่จ่ายที่เลือกด้วย
+        $pendingCountQuery = StockOrder::find()
+            ->where([
+                'order_type'  => 'OUT',
+                'source_type' => 'REQUEST',
+                'status'      => [StockOrder::STATUS_PENDING, StockOrder::STATUS_APPROVED],
+            ]);
+        if (!$canSeeAllWarehouses) {
+            $pendingCountQuery
+                ->andWhere(['main_warehouse_id' => ArrayHelper::getColumn($accessibleWarehouses, 'id')]);
+        }
+        if (!empty($searchModel->main_warehouse_id)) {
+            $pendingCountQuery->andWhere(['main_warehouse_id' => (int) $searchModel->main_warehouse_id]);
+        }
+        $issuePendingCount = (int) $pendingCountQuery->count();
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'mainWarehouses' => $mainWarehouses,
             'subWarehouses' => $subWarehouses,
             'statusLabels' => $statusLabels,
+            'issuePendingCount' => $issuePendingCount,
         ]);
     }
 
@@ -532,10 +560,23 @@ class IssueController extends Controller
 }
 
 .issue-signature-footer .signature-dots {
-    display: inline-block;
-    min-width: 135px;
-    color: #444;
     letter-spacing: 1px;
+    color: #444;
+}
+
+.issue-signature-footer .signature-stamp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.issue-signature-footer .signature-stamp-cell {
+    text-align: center;
+    padding: 0;
+    border: none !important;
+}
+
+.issue-signature-footer .signature-stamp {
+    display: inline-block;
 }
 
 .issue-signature-footer .signature-name {
@@ -576,7 +617,12 @@ CSS;
 
         return \app\modules\inventoryV2\models\StockDetail::find()
             ->joinWith('stockOrder')
-            ->select(['stock_detail.lot_number', 'stock_detail.remain_qty', 'stock_detail.unit_price'])
+            // COALESCE unit_price: lot ADJUST อาจมี unit_price = NULL → กัน NaN ในการคิดยอดฝั่ง JS
+            ->select([
+                'stock_detail.lot_number',
+                'stock_detail.remain_qty',
+                'unit_price' => new \yii\db\Expression('COALESCE(stock_detail.unit_price, 0)'),
+            ])
             ->where(['stock_detail.item_code' => $item_code])
             ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
             ->andWhere(['or',

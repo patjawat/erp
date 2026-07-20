@@ -9,6 +9,7 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
 /** @var yii\web\View $this */
 /** @var app\modules\lm\models\LeaveSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+/** @var array $listEmployeeType */
 ?>
 <?php $form = ActiveForm::begin([
     'action' => ['index'],
@@ -69,7 +70,7 @@ $hasAdvancedFilters =  !empty($model->position_type_id) || !empty($model->leave_
         <div class="col-12 col-md-6 col-xl-2">
 
             <?= $form->field($model, 'position_type_id')->widget(Select2::classname(), [
-                'data' => $model->ListPositionType(),
+                'data' => $listEmployeeType,
                 'options' => ['placeholder' => 'ประเภทบุคลากรทั้งหมด ...'],
                 'pluginOptions' => [
                     'allowClear' => true

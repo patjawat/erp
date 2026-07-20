@@ -11,6 +11,10 @@ use kartik\widgets\ActiveForm;
 $id = isset($model->id) ? intval($model->id) : 0;
 $ref = isset($ref) ? Html::encode($ref) : '';
 ?>
+<style>
+/* กรอบแดงสำหรับ Select2 ที่ยังไม่ได้กรอก (validation) */
+#form-product .select2-selection.is-invalid { border-color: #dc3545 !important; }
+</style>
 
 
 
@@ -150,16 +154,30 @@ $ref = isset($ref) ? Html::encode($ref) : '';
     <?php
     $urlUpload = Url::to('/filemanager/uploads/single');
     $ref = $model->ref;
+    $isNew = $model->isNewRecord ? 'true' : 'false';
     $js = <<< JS
-    if (localStorage.getItem('auto') === '1') {
-        $('#product-auto').prop('checked', true);
-        $('#product-code').prop('disabled', true).val('อัตโนมัติ');
+    // ---- สวิตช์ "รหัสวัสดุอัตโนมัติ": ปิดช่องรหัสเมื่อเปิด (ระบบออกรหัสให้ตอนบันทึก) ----
+    var isNewRecord = $isNew;
+    var autoCb = $('#form-product [name="StockItem[auto]"]');
+    var codeInput = $('#form-product [name="StockItem[item_code]"]');
+    function applyAutoState() {
+        if (!isNewRecord) return; // หน้าแก้ไข: รหัสวัสดุถูกล็อกไว้ ไม่ยุ่งกับสวิตช์ auto
+        var isAuto = autoCb.is(':checked');
+        if (isAuto) {
+            codeInput.prop('disabled', true).val('').attr('placeholder', 'ระบบจะออกรหัสให้อัตโนมัติ').removeClass('is-invalid');
+        } else {
+            codeInput.prop('disabled', false).attr('placeholder', 'ระบุรหัสวัสดุ / Barcode');
+        }
     }
-    
-    $('#product-auto').change(function () {
-        let isChecked = this.checked;
-        localStorage.setItem('auto', isChecked ? '1' : '0');
-        $('#product-code').prop('disabled', isChecked).val(isChecked ? 'อัตโนมัติ' : '');
+    autoCb.on('change', applyAutoState);
+    applyAutoState();
+
+    // ล้างสถานะ error เมื่อผู้ใช้เริ่มแก้ไข
+    $('#form-product').on('input change', '[name="StockItem[item_name]"], [name="StockItem[item_code]"]', function () {
+        $(this).removeClass('is-invalid');
+    });
+    $('#form-product').on('change', '[name="StockItem[data_json][unit]"], [name="StockItem[category_id]"]', function () {
+        $(this).removeClass('is-invalid').next('.select2-container').find('.select2-selection').removeClass('is-invalid');
     });
 
     
@@ -195,6 +213,34 @@ $("#product_file").on("change", function() {
 $('#form-product').on('beforeSubmit', function (e) {
     e.preventDefault();
     let form = $(this);
+
+    // ---------- ตรวจสอบข้อมูลที่จำเป็นก่อนบันทึก ----------
+    var missing = [];
+    function checkField(sel, label) {
+        var el = form.find(sel);
+        var ok = $.trim((el.val() || '') + '') !== '';
+        el.toggleClass('is-invalid', !ok);
+        el.next('.select2-container').find('.select2-selection').toggleClass('is-invalid', !ok);
+        if (!ok) missing.push(label);
+        return ok;
+    }
+    checkField('[name="StockItem[item_name]"]', 'ชื่อวัสดุ');
+    checkField('[name="StockItem[data_json][unit]"]', 'หน่วย');
+    checkField('[name="StockItem[category_id]"]', 'หมวดหมู่');
+    // รหัสวัสดุ: บังคับเฉพาะกรณีไม่ได้เลือกรหัสอัตโนมัติ
+    var codeEl = form.find('[name="StockItem[item_code]"]');
+    if (codeEl.length && !codeEl.prop('disabled') && !autoCb.is(':checked')) {
+        checkField('[name="StockItem[item_code]"]', 'รหัสวัสดุ');
+    }
+    if (missing.length) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรอกข้อมูลไม่ครบ',
+            html: 'กรุณากรอก: <strong>' + missing.join(', ') + '</strong>',
+            confirmButtonText: 'ตกลง'
+        });
+        return false;
+    }
 
     Swal.fire({
         title: 'ยืนยันการบันทึก?',

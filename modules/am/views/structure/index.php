@@ -161,10 +161,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             if ($location === '') {
                                 $location = $item->departmentName();
                             }
-                            $structureGroupName = is_array($item->data_json) ? ($item->data_json['structure_group_name'] ?? '') : '';
+                            $structureGroupName    = is_array($item->data_json) ? ($item->data_json['structure_group_name']    ?? '') : '';
+                            $structureSubgroupName = is_array($item->data_json) ? ($item->data_json['structure_subgroup_name'] ?? '') : '';
                             $structureTypeName  = is_array($item->data_json) ? ($item->data_json['structure_type_name']  ?? '') : '';
                             $structureOtherNote = is_array($item->data_json) ? ($item->data_json['structure_type_other'] ?? '') : '';
-                            $catTitle           = $structureGroupName !== '' ? $structureGroupName : ($item->assetCategory?->title ?? $item->assetType?->title ?? '-');
+                            $catTitle           = $structureGroupName !== '' ? ($structureGroupName . ($structureSubgroupName !== '' ? ' › ' . $structureSubgroupName : '')) : ($item->assetCategory?->title ?? $item->assetType?->title ?? '-');
                             $titleName          = $item->asset_name ?: ($item->AssetitemName() ?: '-');
                             ?>
                             <tr style="border-bottom: 1px solid rgb(241, 245, 249);">

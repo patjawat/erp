@@ -623,31 +623,20 @@ class MainStockController extends \yii\web\Controller
 
             $cacheKey = 'top-value-offcanvas:' . md5(json_encode([$warehouseIds, $q, $limit]));
             $payload = Yii::$app->cache->getOrSet($cacheKey, function () use ($warehouseIds, $q, $limit) {
-                // sb.balance_qty × latest IN lot unit_price ต่อ item
-                $latestInPrice = (new Query())
-                    ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
-                    ->from(['sd_in' => StockDetail::tableName()])
-                    ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
-                    ->innerJoin(
-                        ['latest' => (new Query())
-                            ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
-                            ->from(['sd_l' => StockDetail::tableName()])
-                            ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
-                            ->where(['so_l.order_type' => 'IN'])
-                            ->andWhere(['so_l.main_warehouse_id' => $warehouseIds])
-                            ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
-                        'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
-                    );
+                // มูลค่าต่อ item คิดแบบ ledger (เงินเข้า−ออกจริง) ให้ตรงหน้าสรุปยอดคงเหลือ + ประวัติการเคลื่อนไหว
+                $ledgerByItem = [];
+                foreach (\app\modules\inventoryV2\controllers\ReportController::loadLedgerValues($warehouseIds) as $key => $val) {
+                    $itemCode = substr($key, strpos($key, ':') + 1);
+                    $ledgerByItem[$itemCode] = ($ledgerByItem[$itemCode] ?? 0.0) + (float) $val;
+                }
 
                 $base = (new Query())
                     ->from(['sb' => StockBalance::tableName()])
                     ->innerJoin(['i' => StockItem::tableName()], 'i.code = sb.item_code')
-                    ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sb.item_code AND in_lot.lot_number = sb.lot_number')
                     ->select([
                         'item_code' => 'sb.item_code',
                         'item_name' => 'i.title',
                         'total_qty' => new Expression('SUM(sb.balance_qty)'),
-                        'total_value' => new Expression('SUM(sb.balance_qty * COALESCE(in_lot.unit_price, 0))'),
                     ])
                     ->where(['sb.warehouse_id' => $warehouseIds])
                     ->andWhere(['>', 'sb.balance_qty', 0])
@@ -670,7 +659,14 @@ class MainStockController extends \yii\web\Controller
                     ->groupBy('sb2.item_code')
                     ->count();
 
-                $rows = $base->orderBy(['total_value' => SORT_DESC])->limit($limit)->all();
+                // แนบมูลค่า ledger, เรียงมาก→น้อย แล้วตัด top N (แทน ORDER BY/LIMIT ใน SQL)
+                $allRows = $base->all();
+                foreach ($allRows as &$row) {
+                    $row['total_value'] = $ledgerByItem[$row['item_code']] ?? 0.0;
+                }
+                unset($row);
+                usort($allRows, fn($a, $b) => $b['total_value'] <=> $a['total_value']);
+                $rows = array_slice($allRows, 0, $limit);
                 return ['rows' => $rows, 'total' => $totalCount];
             }, 300);
 
@@ -1203,27 +1199,11 @@ class MainStockController extends \yii\web\Controller
             ->andWhere('b.total_qty < i.qty_min');
         $criticalCount = (int) $criticalQuery->count();
 
-        $valueQuery = (new Query())
-            ->from(['sb' => StockBalance::tableName()])
-            ->leftJoin(
-                ['sd' => StockDetail::tableName()],
-                'sd.item_code = sb.item_code AND sd.lot_number = sb.lot_number'
-            )
-            ->innerJoin(
-                ['so' => StockOrder::tableName()],
-                'so.id = sd.stock_order_id AND so.order_type = \'IN\''
-            )
-            ->innerJoin(
-                ['latest' => (new Query())
-                    ->select(['sd2.item_code', 'sd2.lot_number', 'MAX(sd2.id) as mid'])
-                    ->from(['sd2' => StockDetail::tableName()])
-                    ->innerJoin(['so2' => StockOrder::tableName()], 'so2.id = sd2.stock_order_id AND so2.order_type = \'IN\'')
-                    ->groupBy('sd2.item_code', 'sd2.lot_number')],
-                'latest.item_code = sd.item_code AND latest.lot_number = sd.lot_number AND latest.mid = sd.id'
-            )
-            ->where($warehouseId ? ['sb.warehouse_id' => $warehouseId] : ['sb.warehouse_id' => $mainWarehouseIds]);
-        $valueQuery->select(['SUM(sb.balance_qty * COALESCE(sd.unit_price, 0)) as total']);
-        $totalValue = (float) $valueQuery->scalar();
+        // มูลค่ารวมคิดแบบ ledger (เงินเข้า−ออกจริง) ให้ตรงกับหน้าสรุปยอดคงเหลือ + ประวัติการเคลื่อนไหว
+        $valueWarehouseIds = $warehouseId ? [$warehouseId] : $mainWarehouseIds;
+        $totalValue = (float) array_sum(
+            \app\modules\inventoryV2\controllers\ReportController::loadLedgerValues($valueWarehouseIds)
+        );
 
         $usageQuery = (new Query())
             ->from(['sb' => StockBalance::tableName()])

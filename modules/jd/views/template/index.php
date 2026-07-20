@@ -1,184 +1,75 @@
 <?php
+
 use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\widgets\Pjax;
 use yii\bootstrap5\ActiveForm;
-use yii\bootstrap5\LinkPager;
+use app\components\CategoriseHelper;
+use app\components\widgets\DataSummaryWidget;
 
 /** @var yii\web\View $this */
 /** @var app\modules\jd\models\JdTemplateSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Template คำอธิบายงาน (JD)';
+$this->title = 'คลัง Template JD';
 $this->params['breadcrumbs'][] = $this->title;
+$models = $dataProvider->getModels();
+$pagination = $dataProvider->pagination;
+$statusLabels = ['draft' => 'ฉบับร่าง', 'review' => 'รอตรวจสอบ', 'active' => 'พร้อมใช้งาน', 'retired' => 'ยกเลิกใช้งาน'];
+$statusClasses = ['draft' => 'jd-status--draft', 'review' => 'jd-status--review', 'active' => 'jd-status--active', 'retired' => 'jd-status--retired'];
 ?>
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
-        <?= Html::encode($this->title) ?>
-    </h4>
-</div>
+<div><h4 class="fw-semibold mb-1">คลัง Template JD</h4><div class="text-muted small">จัดทำ Template มาตรฐานและ Template เฉพาะลักษณะงานของแต่ละตำแหน่ง</div></div>
 <?php $this->endBlock(); ?>
+<?php
+$pageAction = Html::a('<i class="bi bi-plus-lg me-1"></i>สร้าง Template', ['create'], ['class' => 'btn btn-primary']);
+foreach (['action', 'page-action'] as $actionBlock) {
+    $this->beginBlock($actionBlock);
+    echo $pageAction;
+    $this->endBlock();
+}
+?>
 
-<?php $this->beginBlock('action'); ?>
-<div class="d-flex gap-2">
-    <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้าง Template', ['create'], ['class' => 'btn btn-primary']) ?>
-    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalImportSeed">
-        <i class="bi bi-cloud-download me-1"></i> นำเข้า Template สาธารณสุข
-    </button>
-</div>
-<?php $this->endBlock(); ?>
+<style>
+.jd-page{--jd-ink:#1a202c;--jd-muted:#718096;--jd-surface:#fff;--jd-surface-2:#f7f9fc;--jd-line:rgba(15,23,42,.08);--jd-line-strong:rgba(15,23,42,.14);--jd-radius:10px;--jd-radius-sm:8px;padding:1rem 1rem 2rem}.jd-library{background:var(--jd-surface);border:1px solid var(--jd-line);border-radius:var(--jd-radius);box-shadow:0 1px 2px rgba(15,23,42,.04)}.jd-library__filter{padding:1rem 1.1rem;border-bottom:1px solid var(--jd-line);background:var(--jd-surface-2);border-radius:var(--jd-radius) var(--jd-radius) 0 0}.jd-library__filter .form-label{font-size:.8rem;font-weight:600;color:#4a5568}.jd-library__filter .form-control,.jd-library__filter .form-select{min-height:42px;border-color:var(--jd-line-strong);border-radius:var(--jd-radius-sm)}.jd-library table{margin:0}.jd-library th{background:var(--jd-surface-2);color:#4a5568;font-size:.78rem;font-weight:600;padding:.65rem .9rem;border-bottom-color:var(--jd-line-strong)}.jd-library td{padding:.72rem .9rem;font-size:.88rem;border-color:var(--jd-line)}.jd-template-name{font-weight:600;color:var(--jd-ink);text-decoration:none}.jd-template-name:hover{color:#0a58ca}.jd-template-meta{font-size:.74rem;color:var(--jd-muted);margin-top:.15rem}.jd-library__footer{padding:.75rem 1rem;border-top:1px solid var(--jd-line);background:var(--jd-surface-2);border-radius:0 0 var(--jd-radius) var(--jd-radius)}.jd-status--draft{color:#4a5568;background:#eef2f7}.jd-status--review{color:#92400e;background:rgba(180,83,9,.10)}.jd-status--active{color:#166534;background:rgba(21,128,61,.10)}.jd-status--retired{color:#64748b;background:#e2e8f0}@media(max-width:991.98px){.jd-page{padding:.75rem}.jd-library__desktop{display:none}.jd-mobile-item{display:block;padding:.8rem;border-bottom:1px solid var(--jd-line);text-decoration:none;color:inherit}.jd-mobile-item:last-child{border-bottom:0}}@media(min-width:992px){.jd-library__mobile{display:none}}
+</style>
 
-<!-- Modal ยืนยันการนำเข้า -->
-<div class="modal fade" id="modalImportSeed" tabindex="-1" aria-labelledby="modalImportSeedLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white py-2 px-3">
-                <h6 class="modal-title mb-0 small fw-normal" id="modalImportSeedLabel">
-                    <i class="bi bi-cloud-download me-1"></i> นำเข้า Template ตำแหน่งงานสาธารณสุข
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-2">ระบบจะนำเข้า <strong>15 ตำแหน่งงาน</strong> มาตรฐานกระทรวงสาธารณสุข ได้แก่:</p>
-                <div class="row g-1 small text-muted mb-3">
-                    <div class="col-6">
-                        <ul class="mb-0 ps-3">
-                            <li>นายแพทย์</li>
-                            <li>พยาบาลวิชาชีพ</li>
-                            <li>เภสัชกร</li>
-                            <li>ทันตแพทย์</li>
-                            <li>นักเทคนิคการแพทย์</li>
-                            <li>นักกายภาพบำบัด</li>
-                            <li>นักรังสีการแพทย์</li>
-                            <li>นักโภชนาการ</li>
-                        </ul>
-                    </div>
-                    <div class="col-6">
-                        <ul class="mb-0 ps-3">
-                            <li>นักสังคมสงเคราะห์</li>
-                            <li>นักวิชาการสาธารณสุข</li>
-                            <li>เจ้าพนักงานสาธารณสุข</li>
-                            <li>นักวิเคราะห์นโยบายและแผน</li>
-                            <li>นักทรัพยากรบุคคล</li>
-                            <li>นักจัดการงานทั่วไป</li>
-                            <li>นักวิชาการคอมพิวเตอร์</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="alert border-0 rounded-2 d-flex gap-2 align-items-start py-2 px-3 mb-0" style="background:#fff3cd">
-                    <i class="bi bi-exclamation-triangle text-warning mt-1 flex-shrink-0"></i>
-                    <div class="small">
-                        ตำแหน่งที่<strong>มีอยู่แล้ว</strong> (position_code ซ้ำ) จะถูกข้ามไป ข้อมูลเดิมจะไม่ถูกทับ<br>
-                        หลังนำเข้าแนะนำให้แก้ไข <strong>ตำแหน่งงาน</strong> ให้ตรงกับ Categorise ของระบบ
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer py-2">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <?= Html::beginForm(['import-seed'], 'post') ?>
-                    <?= Html::submitButton('<i class="bi bi-cloud-download me-1"></i> นำเข้าเลย', ['class' => 'btn btn-success']) ?>
-                <?= Html::endForm() ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<?php Pjax::begin(['id' => 'jd-template-index']); ?>
-<div class="card border-0 shadow-sm rounded-3">
-    <div class="card-body">
-        <?php $form = ActiveForm::begin([
-            'method' => 'get',
-            'action' => ['index'],
-            'options' => ['class' => 'mb-3', 'data-pjax' => 1],
-        ]); ?>
+<div class="jd-page">
+<div class="jd-library">
+    <div class="jd-library__filter">
+        <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['index']]); ?>
         <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <?= $form->field($searchModel, 'name')->textInput([
-                    'class' => 'form-control',
-                    'placeholder' => 'ค้นหา ชื่อ template',
-                    'autocomplete' => 'off',
-                ])->label('ค้นหา') ?>
-            </div>
-            <div class="col-md-3">
-                <?= $form->field($searchModel, 'position_code')->dropDownList(
-                    ['' => '-- ทุกตำแหน่ง --'] + \app\components\CategoriseHelper::PositionName(),
-                    ['class' => 'form-select']
-                )->label('ตำแหน่งงาน') ?>
-            </div>
-            <div class="col-md-2">
-                <?= $form->field($searchModel, 'is_active')->dropDownList(
-                    ['' => 'ทั้งหมด', 1 => 'ใช้งาน', 0 => 'ปิดใช้'],
-                    ['class' => 'form-select']
-                )->label('สถานะ') ?>
-            </div>
-            <div class="col-md-2">
-                <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
-                <?= Html::a('ล้าง', ['index'], ['class' => 'btn btn-outline-secondary', 'data-pjax' => '0']) ?>
-            </div>
+            <div class="col-md-5"><?= $form->field($searchModel, 'name')->textInput(['placeholder' => 'ค้นหาชื่อ Template'])->label('ค้นหา') ?></div>
+            <div class="col-md-4"><?= $form->field($searchModel, 'position_code')->dropDownList(['' => 'ทุกตำแหน่ง'] + CategoriseHelper::PositionName())->label('ตำแหน่ง') ?></div>
+            <div class="col-md-3 d-flex gap-2 pb-3"><?= Html::submitButton('<i class="bi bi-search me-1"></i>ค้นหา', ['class' => 'btn btn-primary']) ?><?= Html::a('ล้างตัวกรอง', ['index'], ['class' => 'btn btn-outline-secondary']) ?></div>
         </div>
         <?php ActiveForm::end(); ?>
-
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-nowrap">ลำดับ</th>
-                        <th>ชื่อ Template</th>
-                            <th>ตำแหน่งงาน</th>
-                            <th>ระดับ</th>
-                            <th>สถานะ</th>
-                            <th class="text-nowrap">หัวข้อ</th>
-                        <th class="text-end" style="width: 140px;">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="align-middle table-group-divider">
-                    <?php
-                    $models = $dataProvider->getModels();
-                    $pagination = $dataProvider->pagination;
-                    $offset = $pagination ? $pagination->offset : 0;
-                    foreach ($models as $key => $item):
-                        $num = $offset + $key + 1;
-                    ?>
-                        <tr>
-                            <td class="text-nowrap"><?= $num ?></td>
-                            <td><?= Html::encode($item->name) ?></td>
-                            <td><?= Html::encode($item->getPositionTitle()) ?></td>
-                            <td class="text-nowrap"><?= $item->job_level ? Html::encode($item->job_level) : '<span class="text-muted">—</span>' ?></td>
-                            <td>
-                                <?= $item->is_active
-                                    ? Html::tag('span', 'ใช้งาน', ['class' => 'badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1'])
-                                    : Html::tag('span', 'ปิดใช้', ['class' => 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill fw-medium px-2 py-1']) ?>
-                            </td>
-                            <td><?= count($item->sections) ?></td>
-                            <td class="text-end">
-                                <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'ดู', 'data-pjax' => '0']) ?>
-                                <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary', 'title' => 'แก้ไข', 'data-pjax' => '0']) ?>
-                                <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-outline-danger',
-                                    'title' => 'ลบ',
-                                    'data' => ['method' => 'post', 'confirm' => 'ยืนยันลบ template นี้?'],
-                                ]) ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <?php if ($pagination && $pagination->totalCount > $pagination->limit): ?>
-            <div class="d-flex justify-content-center mt-3">
-                <?= LinkPager::widget([
-                    'pagination' => $pagination,
-                    'options' => ['class' => 'pagination mb-0'],
-                ]) ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (empty($models)): ?>
-            <p class="text-muted text-center py-4 mb-0">ไม่พบรายการ</p>
-        <?php endif; ?>
     </div>
+
+    <div class="jd-library__desktop">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Template</th><th>ตำแหน่ง</th><th>ประเภท</th><th>Revision</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead>
+            <tbody>
+            <?php foreach ($models as $item): $status = $item->lifecycle_status ?: 'draft'; ?>
+                <tr>
+                    <td><a class="jd-template-name" href="<?= Html::encode(\yii\helpers\Url::to(['structure', 'id' => $item->id])) ?>"><?= Html::encode($item->name) ?></a><div class="jd-template-meta"><?= Html::encode($item->template_code ?: 'ยังไม่กำหนดรหัส') ?></div></td>
+                    <td><?= Html::encode($item->getPositionTitle()) ?></td>
+                    <td><?= $item->template_type === 'variant' ? 'เฉพาะลักษณะงาน' : 'มาตรฐาน' ?></td>
+                    <td><?= (int) ($item->revision_no ?: 1) ?></td>
+                    <td><span class="badge rounded-pill <?= $statusClasses[$status] ?? 'jd-status--draft' ?>"><?= Html::encode($statusLabels[$status] ?? $status) ?></span></td>
+                    <td class="text-end">
+                        <?= Html::a('จัดทำเนื้อหา', ['structure', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+                        <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไขข้อมูล Template']) ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <div class="jd-library__mobile">
+        <?php foreach ($models as $item): ?>
+            <a class="jd-mobile-item" href="<?= Html::encode(\yii\helpers\Url::to(['structure', 'id' => $item->id])) ?>"><div class="d-flex justify-content-between gap-2"><strong><?= Html::encode($item->name) ?></strong><span>Rev. <?= (int) ($item->revision_no ?: 1) ?></span></div><div class="jd-template-meta"><?= Html::encode($item->getPositionTitle()) ?> · <?= $item->template_type === 'variant' ? 'เฉพาะลักษณะงาน' : 'มาตรฐาน' ?></div></a>
+        <?php endforeach; ?>
+    </div>
+    <?php if (!$models): ?><div class="text-center p-5"><h5 class="fw-semibold">ยังไม่มี Template</h5><p class="text-muted">สร้าง Template แรกเพื่อเริ่มจัดทำข้อมูลตำแหน่ง</p><?= Html::a('สร้าง Template', ['create'], ['class' => 'btn btn-primary']) ?></div><?php endif; ?>
+    <?php if ($models): ?><div class="jd-library__footer"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></div><?php endif; ?>
 </div>
-<?php Pjax::end(); ?>
+</div>

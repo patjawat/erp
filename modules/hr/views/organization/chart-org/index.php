@@ -24,8 +24,8 @@ $this->registerCssFile('https://cdn.jsdelivr.net/npm/jstree/dist/themes/default/
 
 
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'organization']) ?>
 <?php $this->endBlock(); ?>
 
 <?php

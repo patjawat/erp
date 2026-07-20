@@ -129,7 +129,7 @@ $emp = UserHelper::GetEmployee();
                                 ?>
                                 <?php if (!in_array($model->order_status, ['success', 'cancel'])): ?>
                                     <li>
-                                        <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash me-1"></i> ลบรายการ', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item']); ?>
+                                        <?php echo $model->order_status == 'success' ? '' : Html::a('<i class="fa-solid fa-trash me-1"></i> ลบรายการ', ['/inventory/stock-order/delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item', 'data-pjax' => '0']); ?>
                                     </li>
                                 <?php endif ?>
                                 </ui>

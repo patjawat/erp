@@ -235,10 +235,10 @@ SQL;
             return [];
         }
         return Yii::$app->db->createCommand(
-            "SELECT c.title AS label, a.asset_group_id, COUNT(a.asset_group_id) AS value 
-             FROM {{%asset}} a 
-             LEFT JOIN {{%categorise}} c ON c.code = a.asset_group_id AND c.name = 'asset_group'
-             WHERE a.deleted_at IS NULL AND c.code IN(1,2,3,4,5,6)
+            "SELECT c.title AS label, a.asset_group_id, COUNT(a.asset_group_id) AS value
+             FROM {{%asset}} a
+             LEFT JOIN {{%categorise}} c ON c.code COLLATE utf8mb4_unicode_ci = a.asset_group_id COLLATE utf8mb4_unicode_ci AND c.name = 'asset_group'
+             WHERE a.deleted_at IS NULL AND c.code COLLATE utf8mb4_unicode_ci IN(1,2,3,4,5,6)
              GROUP BY a.asset_group_id
              ORDER BY a.asset_group_id DESC"
         )->queryAll();

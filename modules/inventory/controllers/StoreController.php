@@ -20,12 +20,23 @@ use app\modules\inventory\models\StockSearch;
 use app\components\UserHelper;
 use app\modules\inventory\models\StockEvent;
 use yii\db\Expression;
+use app\modules\inventory\components\FrozenWriteGuard;
 
 /**
  * StoreController implements the CRUD actions for Store model.
  */
-class StoreController extends Controller 
+class StoreController extends Controller
 {
+    use FrozenWriteGuard;
+
+    /**
+     * เฉพาะ action ที่เขียนเอกสาร Stock (order) — actionUpdate/actionDelete แก้ไข master data ของ Store (คลัง/สาขา) เท่านั้น ไม่ frozen
+     */
+    protected function frozenWriteActions(): array
+    {
+        return ['create', 'checkout'];
+    }
+
     /**
      * @inheritDoc
      */
@@ -157,11 +168,11 @@ class StoreController extends Controller
             'name' => 'order',
             'movement_type' => 'OUT',
             'order_status' => 'pending',
-            'from_warehouse_id' => $warehouse['warehouse_id'],
+            'from_warehouse_id' => $warehouse->id,
             'warehouse_id' => $warehouseSelect['warehouse_id'],
             'data_json' => [
                 'checker' => (int)$userCreate->leaderUser()['leader1'],
-                'checker_name' => $warehouse['checker_name'],
+                'checker_name' => isset($warehouse->data_json['checker_name']) ? $warehouse->data_json['checker_name'] : '',
             ]
         ]);
         $cart = \Yii::$app->cart;

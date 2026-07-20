@@ -7,6 +7,7 @@ use app\modules\hr\models\EmployeePosition;
 use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\TeamGroup;
 use app\models\Categorise;
 use Yii;
 use yii\helpers\Url;
@@ -575,11 +576,17 @@ class DefaultController extends Controller
             "SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, join_date, CURDATE())), 1) AS avg_years FROM employees WHERE {$avgWhere}"
         )->bindValues($avgParams)->queryScalar();
         $avgYearsService = $avgYearsService !== null ? round((float) $avgYearsService, 1) : null;
+        $organizationDiagramCount = (int) Organization::find()->where(['tb_name' => 'diagram'])->count('id');
+        $teamGroupCount = (int) TeamGroup::find()->count('id');
+        $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories);
 
         return $this->render('dashboard', [
             'totalCount' => $totalCount,
             'countMale' => $countMale,
             'countFemale' => $countFemale,
+            'organizationDiagramCount' => $organizationDiagramCount,
+            'teamGroupCount' => $teamGroupCount,
+            'dashboardTooltipPeople' => $dashboardTooltipPeople,
             'positionTypeLabels' => $positionTypeLabels,
             'positionTypeCounts' => $positionTypeCounts,
             'positionNameCategories' => $positionNameCategories,
@@ -707,6 +714,188 @@ class DefaultController extends Controller
      * เงื่อนไข SQL สำหรับ filter ช่วงอายุงาน (ใช้กับ raw SQL หรือ Query + Expression)
      * @param string $alias alias ตาราง employees เช่น 'e' หรือ '' สำหรับไม่มี alias
      */
+    private static function buildDashboardTooltipPeople($query, array $genYearRanges, array $serviceBandLabels, array $ageCategories): array
+    {
+        $maxPeoplePerBucket = 5;
+        $fallbackAvatar = Url::to('@web/img/profiles/avatar-01.jpg');
+        $result = [
+            'gender' => [],
+            'generation' => [],
+            'positionType' => [],
+            'workgroup' => [],
+            'workgroupPositionType' => [],
+            'age' => [],
+            'ageGender' => [],
+            'positionName' => [],
+            'serviceBand' => [],
+            'department' => [],
+        ];
+
+        $departmentToWorkgroups = [];
+        foreach (Categorise::find()->select(['category_id', 'code'])->where(['name' => 'department'])->asArray()->all() as $row) {
+            $departmentCode = (string)($row['code'] ?? '');
+            $workgroupCode = (string)($row['category_id'] ?? '');
+            if ($departmentCode !== '' && $workgroupCode !== '') {
+                $departmentToWorkgroups[$departmentCode][] = $workgroupCode;
+            }
+        }
+
+        $peopleRows = $query
+            ->select([
+                'id',
+                'prefix',
+                'fname',
+                'lname',
+                'avatar',
+                'gender',
+                'birthday',
+                'join_date',
+                'department',
+                'employee_type_id',
+                'employee_position_id',
+            ])
+            ->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])
+            ->asArray()
+            ->all();
+
+        $pushPerson = static function (string $group, $key, array $person) use (&$result, $maxPeoplePerBucket): void {
+            $key = (string)$key;
+            if ($key === '') {
+                return;
+            }
+            if (!isset($result[$group][$key])) {
+                $result[$group][$key] = [];
+            }
+            if (count($result[$group][$key]) < $maxPeoplePerBucket) {
+                $result[$group][$key][] = $person;
+            }
+        };
+
+        foreach ($peopleRows as $row) {
+            $name = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+                $row['prefix'] ?? '',
+                $row['fname'] ?? '',
+                $row['lname'] ?? '',
+            ], static function ($value) {
+                return trim((string)$value) !== '';
+            }))));
+            $avatar = trim((string)($row['avatar'] ?? ''));
+            $avatarUrl = $avatar !== '' ? Url::to('@web/avatar/' . rawurlencode($avatar)) : $fallbackAvatar;
+            $person = [
+                'id' => (int)($row['id'] ?? 0),
+                'name' => $name !== '' ? $name : 'ไม่ระบุชื่อ',
+                'avatar' => $avatarUrl,
+            ];
+
+            $gender = (string)($row['gender'] ?? '');
+            $department = (string)($row['department'] ?? '');
+            $employeeTypeId = (string)($row['employee_type_id'] ?? '');
+            $employeePositionId = (string)($row['employee_position_id'] ?? '');
+            $generation = self::dashboardGenerationBucket($row['birthday'] ?? null, $genYearRanges);
+            $age = self::dashboardAgeBucket($row['birthday'] ?? null, $ageCategories);
+            $serviceBand = self::dashboardServiceBandBucket($row['join_date'] ?? null, $serviceBandLabels);
+
+            $pushPerson('gender', $gender, $person);
+            $pushPerson('generation', $generation, $person);
+            $pushPerson('positionType', $employeeTypeId, $person);
+            $pushPerson('age', $age, $person);
+            $pushPerson('ageGender', $age !== null && $gender !== '' ? $age . '|' . $gender : '', $person);
+            $pushPerson('positionName', $employeePositionId, $person);
+            $pushPerson('serviceBand', $serviceBand, $person);
+            $pushPerson('department', $department, $person);
+
+            foreach (($departmentToWorkgroups[$department] ?? []) as $workgroupCode) {
+                $pushPerson('workgroup', $workgroupCode, $person);
+                $pushPerson('workgroupPositionType', $employeeTypeId !== '' ? $workgroupCode . '|' . $employeeTypeId : '', $person);
+            }
+        }
+
+        return $result;
+    }
+
+    private static function dashboardGenerationBucket($birthday, array $genYearRanges): ?string
+    {
+        $year = self::dashboardDateYear($birthday);
+        if ($year === null) {
+            return null;
+        }
+        foreach ($genYearRanges as $label => $range) {
+            if (isset($range[0], $range[1]) && $year >= (int)$range[0] && $year <= (int)$range[1]) {
+                return (string)$label;
+            }
+        }
+        return null;
+    }
+
+    private static function dashboardAgeBucket($birthday, array $ageCategories): ?string
+    {
+        $age = self::dashboardYearDiff($birthday);
+        if ($age === null) {
+            return null;
+        }
+        return self::dashboardNumericBucketLabel($age, $ageCategories, $age >= 60 ? '60+' : null);
+    }
+
+    private static function dashboardServiceBandBucket($joinDate, array $serviceBandLabels): ?string
+    {
+        $years = self::dashboardYearDiff($joinDate);
+        if ($years === null) {
+            return null;
+        }
+        return self::dashboardNumericBucketLabel($years, $serviceBandLabels, $years >= 20 ? '20+' : null, false);
+    }
+
+    private static function dashboardNumericBucketLabel(int $value, array $labels, ?string $fallback = null, bool $upperInclusive = true): ?string
+    {
+        foreach ($labels as $index => $label) {
+            $label = (string)$label;
+            if ($label === '') {
+                continue;
+            }
+            preg_match_all('/\d+/', $label, $matches);
+            $numbers = array_map('intval', $matches[0] ?? []);
+            if (strpos($label, '+') !== false && isset($numbers[0]) && $value >= $numbers[0]) {
+                return $label;
+            }
+            if (strpos($label, '<') !== false && isset($numbers[0]) && $value < $numbers[0]) {
+                return $label;
+            }
+            if (isset($numbers[0], $numbers[1]) && $value >= $numbers[0] && ($upperInclusive ? $value <= $numbers[1] : $value < $numbers[1])) {
+                return $label;
+            }
+            if (!$upperInclusive && $index === 0 && isset($numbers[1]) && $value < $numbers[1]) {
+                return $label;
+            }
+            if (count($numbers) === 1 && $value === $numbers[0]) {
+                return $label;
+            }
+        }
+
+        return $fallback;
+    }
+
+    private static function dashboardDateYear($date): ?int
+    {
+        $date = trim((string)$date);
+        if ($date === '' || $date === '0000-00-00') {
+            return null;
+        }
+        return (int)substr($date, 0, 4) ?: null;
+    }
+
+    private static function dashboardYearDiff($date): ?int
+    {
+        $date = trim((string)$date);
+        if ($date === '' || $date === '0000-00-00') {
+            return null;
+        }
+        try {
+            return (int)(new \DateTimeImmutable($date))->diff(new \DateTimeImmutable('today'))->y;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     private static function serviceBandWhereSql($alias, $label)
     {
         $p = $alias !== '' ? $alias . '.' : '';

@@ -20,12 +20,20 @@ use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockSearch;
 use app\modules\inventory\models\StockOutSearch;
 use app\modules\inventory\models\StockEventSearch;
+use app\modules\inventory\components\FrozenWriteGuard;
 
 /**
  * StockOutController implements the CRUD actions for StockOut model.
  */
 class StockOutController extends Controller
 {
+    use FrozenWriteGuard;
+
+    protected function frozenWriteActions(): array
+    {
+        return ['create', 'update', 'delete', 'checkout', 'confirm-order', 'cancel-order', 'save', 'submit'];
+    }
+
     /**
      * @inheritDoc
      */
@@ -42,24 +50,6 @@ class StockOutController extends Controller
                 ],
             ]
         );
-    }
-
-    /**
-     * @inheritDoc
-     * Big-bang freeze: ห้ามทำงานที่เปลี่ยน state ในระบบ V1
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-        $writeActions = ['create', 'update', 'delete', 'checkout', 'confirm-order', 'cancel-order', 'save', 'submit'];
-        if (\app\modules\inventory\Module::isFrozen() && in_array($action->id, $writeActions, true)) {
-            Yii::$app->session->setFlash('error', 'ระบบ Inventory V1 ปิดการสร้าง/แก้ไขเอกสารแล้ว — กรุณาใช้ Inventory V2');
-            Yii::$app->response->redirect(['/inventory-v2'])->send();
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -469,16 +459,8 @@ public function actionShowCart()
       protected function setWarehouse($id)
       {
           $model = Warehouse::find()->where(['id' => $id])->One();
-          Yii::$app->session->set('warehouse',[
-              'id' => $model->id,
-              'warehouse_id' => $model->id,
-              'warehouse_code' => $model->warehouse_code,
-              'warehouse_name' => $model->warehouse_name,
-              'warehouse_type' => $model->warehouse_type,
-              'category_id' => $model->category_id,
-              'checker' => isset($model->data_json['checker']) ?  $model->data_json['checker'] : '',
-              'checker_name' => isset($model->data_json['checker_name']) ? $model->data_json['checker_name'] : '',
-          ]);
+          // เก็บเป็น object (เหมือน DefaultController/WarehouseController) เพราะโค้ดส่วนใหญ่ในโมดูลอ่าน $warehouse->property
+          Yii::$app->session->set('warehouse', $model);
           return $this->redirect(['index']);
           // Yii::$app->session->set('warehouse_name', $model->warehouse_name);
       }

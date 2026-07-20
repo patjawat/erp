@@ -12,6 +12,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="asset-item-create">
     <?= $this->render('_form', [
         'model' => $model,
+        'group' => $group ?? 'EQUIP',
     ]) ?>
 
 </div>

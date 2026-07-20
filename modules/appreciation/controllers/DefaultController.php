@@ -6,6 +6,8 @@ use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\Response;
+use yii\web\UploadedFile;
+use yii\helpers\FileHelper;
 use yii\data\ArrayDataProvider;
 use yii\db\Query;
 use app\components\UserHelper;
@@ -14,6 +16,10 @@ use app\modules\appreciation\models\AppreciationChallenge;
 use app\modules\appreciation\models\AppreciationChallengeProgress;
 use app\modules\appreciation\models\AppreciationLike;
 use app\modules\appreciation\models\AppreciationSearch;
+use app\modules\appreciation\models\AppreciationProgramYear;
+use app\modules\appreciation\models\AppreciationReward;
+use app\modules\appreciation\models\AppreciationValue;
+use app\modules\appreciation\services\AppreciationPointService;
 use app\modules\hr\models\Employees;
 use app\modules\notify\models\Notify;
 
@@ -30,6 +36,9 @@ class DefaultController extends Controller
         $leaderboard = [];
         $activeChallenges = [];
         $myChallengeProgress = [];
+        $programYear = null;
+        $featuredRewards = [];
+        $pointSummary = ['earned' => 0, 'used' => 0, 'balance' => 0, 'level' => null, 'nextLevel' => null];
 
         try {
             $searchModel = new AppreciationSearch();
@@ -41,6 +50,19 @@ class DefaultController extends Controller
             ]);
             $receivedCount = (int) Appreciation::find()->andWhere(['to_emp_id' => $me->id])->count();
             $totalPoints = (int) Appreciation::find()->andWhere(['to_emp_id' => $me->id])->sum('points_given');
+            $programYear = AppreciationProgramYear::active();
+            $pointSummary = AppreciationPointService::summary($me->id, $programYear);
+            if ($programYear) {
+                $featuredRewards = AppreciationReward::find()
+                    ->andWhere([
+                        'program_year_id' => $programYear->id,
+                        'is_active' => 1,
+                    ])
+                    ->andWhere(['>', 'stock_qty', 0])
+                    ->orderBy(['points_cost' => SORT_ASC])
+                    ->limit(2)
+                    ->all();
+            }
 
             $leaderboardRows = (new Query())
                 ->select(['to_emp_id as emp_id', 'SUM(points_given) as total_points'])
@@ -76,7 +98,7 @@ class DefaultController extends Controller
             $dataProvider = new ArrayDataProvider(['allModels' => [], 'pagination' => ['pageSize' => 20]]);
             $receivedCount = 0;
             $totalPoints = 0;
-            Yii::$app->session->setFlash('info', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน: php yii migrate --migrationPath=@app/modules/appreciation/migrations');
+            Yii::$app->session->setFlash('info', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน: php yii migrate');
         }
 
         return $this->render('index', [
@@ -88,6 +110,9 @@ class DefaultController extends Controller
             'leaderboard' => $leaderboard,
             'activeChallenges' => $activeChallenges ?? [],
             'myChallengeProgress' => $myChallengeProgress ?? [],
+            'programYear' => $programYear,
+            'pointSummary' => $pointSummary,
+            'featuredRewards' => $featuredRewards,
         ]);
     }
 
@@ -105,24 +130,47 @@ class DefaultController extends Controller
 
         $model = new Appreciation();
         $model->from_emp_id = $me->id;
-        $model->points_given = Yii::$app->getModule('appreciation')->pointsPerThank;
+        $model->frame_style = Appreciation::FRAME_CLASSIC;
+        $programYear = AppreciationProgramYear::active();
+        $model->points_given = $programYear ? $programYear->points_per_thank : Yii::$app->getModule('appreciation')->pointsPerThank;
 
         if ($model->load(Yii::$app->request->post())) {
+            $savedImagePath = null;
             try {
-                if ($model->save()) {
+                if ($programYear && $model->badge_type) {
+                    $value = AppreciationValue::findOne(['code' => $model->badge_type, 'is_active' => 1]);
+                    $model->points_given = $value && $value->points !== null ? (int)$value->points : (int)$programYear->points_per_thank;
+                }
+                $model->imageFile = UploadedFile::getInstance($model, 'imageFile');
+                if ($model->validate() && $model->imageFile) {
+                    $uploadDir = Yii::getAlias('@webroot/uploads/appreciation');
+                    FileHelper::createDirectory($uploadDir, 0755, true);
+                    $fileName = Yii::$app->security->generateRandomString(24) . '.' . strtolower($model->imageFile->extension);
+                    $savedImagePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+                    if ($model->imageFile->saveAs($savedImagePath)) {
+                        $model->image_path = '/uploads/appreciation/' . $fileName;
+                    } else {
+                        $model->addError('imageFile', 'ไม่สามารถบันทึกภาพได้ กรุณาลองใหม่');
+                    }
+                }
+                if (!$model->hasErrors() && $model->save(false)) {
                     Notify::createForAppreciation($model);
                     $this->updateChallengeProgress($model, 'send');
-                    Yii::$app->session->setFlash('success', 'ส่งคำขอบคุณแล้ว ขอบคุณที่ส่งพลังบวกให้เพื่อนร่วมงานครับ');
+                    Yii::$app->session->setFlash('success', 'เพื่อนของคุณได้รับข้อความขอบคุณแล้ว');
                     if (Yii::$app->request->isAjax) {
                         Yii::$app->response->format = Response::FORMAT_JSON;
                         return [
                             'success' => true,
-                            'redirect_url' => Url::to(['index', 'celebrate' => 1]),
+                            'message' => 'เพื่อนของคุณได้รับข้อความขอบคุณแล้ว',
+                            'feed_url' => Url::to(['index']),
                         ];
                     }
-                    return $this->redirect(['index', 'celebrate' => 1]);
+                    return $this->redirect(['/me']);
                 }
             } catch (\Throwable $e) {
+                if ($savedImagePath && is_file($savedImagePath)) {
+                    @unlink($savedImagePath);
+                }
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return [
@@ -131,7 +179,7 @@ class DefaultController extends Controller
                         'redirect_url' => Url::to(['/me']),
                     ];
                 }
-                Yii::$app->session->setFlash('error', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน migration: php yii migrate --migrationPath=@app/modules/appreciation/migrations');
+                Yii::$app->session->setFlash('error', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน migration: php yii migrate');
                 return $this->redirect(['/me']);
             }
             if (Yii::$app->request->isAjax) {
@@ -172,6 +220,9 @@ class DefaultController extends Controller
             $appreciation = Appreciation::findOne($id);
             if (!$appreciation) {
                 return ['success' => false, 'message' => 'ไม่พบรายการ'];
+            }
+            if ((int)$appreciation->from_emp_id !== (int)$me->id && (int)$appreciation->to_emp_id !== (int)$me->id) {
+                return ['success' => false, 'message' => 'คุณไม่มีสิทธิ์เข้าถึงคำขอบคุณนี้'];
             }
 
             $like = AppreciationLike::findOne(['appreciation_id' => $id, 'emp_id' => $me->id]);

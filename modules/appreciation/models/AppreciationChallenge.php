@@ -85,6 +85,15 @@ class AppreciationChallenge extends \yii\db\ActiveRecord
         return $this->hasMany(AppreciationChallengeProgress::class, ['challenge_id' => 'id']);
     }
 
+    public function beforeSave($insert)
+    {
+        if ($insert && empty($this->created_at)) {
+            $this->created_at = date('Y-m-d H:i:s');
+        }
+        $this->updated_at = date('Y-m-d H:i:s');
+        return parent::beforeSave($insert);
+    }
+
     public function isActive()
     {
         return $this->status === self::STATUS_ACTIVE
