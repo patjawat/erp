@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'รายงานปริมาณการใช้งานวัสดุ';
+$this->title = 'รายงานการใช้งานวัสดุรายตัว';
 $this->params['breadcrumbs'][] = ['label' => 'คลังวัสดุ', 'url' => ['/inventory-v2/default/index']];
 $this->params['breadcrumbs'][] = ['label' => 'รายงาน', 'url' => ['/inventory-v2/report/material-summary']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -36,7 +36,7 @@ echo Html::encode($this->title);
 $this->endBlock();
 
 $this->beginBlock('sub-title');
-echo 'ปริมาณการใช้งานวัสดุย้อนหลังตามปีงบประมาณและตัวกรองที่เลือก';
+echo 'ปริมาณการใช้งานวัสดุรายตัวตามปีงบประมาณและตัวกรองที่เลือก';
 $this->endBlock();
 
 $this->beginBlock('page-action');
@@ -113,8 +113,8 @@ $this->endBlock();
     <section class="card shadow-sm">
         <div class="card-header bg-light d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
             <div>
-                <h2 class="h6 fw-semibold mb-1">รายงานปริมาณการใช้งานวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></h2>
-                <p class="small text-secondary mb-2">ปริมาณการใช้ย้อนหลัง 3 ปีงบประมาณ</p>
+                <h2 class="h6 fw-semibold mb-1">รายงานการใช้งานวัสดุรายตัว ปีงบประมาณ <?= Html::encode($fiscalYear) ?></h2>
+                <p class="small text-secondary mb-2">ปริมาณการใช้งานของวัสดุแต่ละรายการ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></p>
                 <div class="d-flex flex-wrap gap-2" aria-label="ตัวกรองที่ใช้">
                     <?php foreach ($activeFilters as $filter): ?>
                         <span class="badge rounded-pill bg-white text-dark border fw-semibold">
@@ -144,7 +144,7 @@ $this->endBlock();
             <?php else: ?>
                 <div class="table-responsive border rounded">
                     <table class="table table-sm table-hover table-bordered align-middle mb-0 small">
-                        <caption class="visually-hidden">รายงานปริมาณการใช้งานวัสดุ ปีงบประมาณ <?= Html::encode($fiscalYear) ?></caption>
+                        <caption class="visually-hidden">รายงานการใช้งานวัสดุรายตัว ปีงบประมาณ <?= Html::encode($fiscalYear) ?></caption>
                         <thead class="table-light">
                             <tr>
                                 <?php foreach ($headers as $header): ?>
@@ -158,12 +158,10 @@ $this->endBlock();
                                     <td class="text-center text-nowrap font-monospace"><?= $formatter->asInteger($row['seq']) ?></td>
                                     <td><?= Html::encode($row['plan_type']) ?></td>
                                     <td><?= Html::encode($row['category_plan']) ?></td>
+                                    <td class="text-nowrap font-monospace"><?= Html::encode($row['item_code']) ?></td>
                                     <td class="text-break fw-medium text-dark"><?= Html::encode($row['item_name']) ?></td>
-                                    <td><?= Html::encode($row['packaging_size']) ?></td>
-                                    <td><?= Html::encode($row['unit_name']) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_1'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_2'], 2) ?></td>
-                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_year_3'], 2) ?></td>
+                                    <td class="text-end text-nowrap font-monospace"><?= $formatter->asDecimal($row['usage_qty'], 2) ?></td>
+                                    <td class="text-center"><?= Html::encode($row['unit_name']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -214,7 +212,7 @@ $this->registerJs(<<<'JS'
         Swal.fire({
             icon: 'question',
             title: 'ส่งออก Excel',
-            text: 'ต้องการส่งออกรายงานปริมาณการใช้งานวัสดุเป็นไฟล์ Excel หรือไม่',
+            text: 'ต้องการส่งออกรายงานการใช้งานวัสดุรายตัวเป็นไฟล์ Excel หรือไม่',
             showCancelButton: true,
             confirmButtonText: 'ส่งออก',
             cancelButtonText: 'ยกเลิก',

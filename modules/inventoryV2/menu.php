@@ -55,7 +55,7 @@ use yii\helpers\Url;
     </a>
     <a href="<?= Url::to(['/inventory-v2/report/procurement-plan']) ?>" class="btn <?= ($active ?? '') !== 'report-procurement-plan' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-clipboard2-data"></i>
-        แผนจัดซื้อวัสดุ
+        การใช้งานวัสดุรายตัว
     </a>
     <a href="<?= Url::to(['/inventory-v2/report/balance-by-warehouse']) ?>" class="btn <?= ($active ?? '') !== 'report-balance' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-boxes"></i>

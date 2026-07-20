@@ -57,7 +57,7 @@ if ($issuePendingCount === null) {
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/main-stock/balance']) ?>"><i class="bi bi-boxes me-2"></i>สถานะคงคลัง</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>"><i class="bi bi-journal-check me-2"></i>สรุปรายงานวัสดุคงคลัง</a></li>
-                <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/procurement-plan']) ?>"><i class="bi bi-clipboard2-data me-2"></i>แผนจัดซื้อวัสดุ</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/procurement-plan']) ?>"><i class="bi bi-clipboard2-data me-2"></i>การใช้งานวัสดุรายตัว</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/disbursement-by-month']) ?>"><i class="bi bi-calendar3-week me-2"></i>ประวัติจ่ายวัสดุ × เดือน</a></li>
             </ul>
         </div>

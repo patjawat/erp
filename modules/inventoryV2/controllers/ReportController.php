@@ -3188,14 +3188,7 @@ class ReportController extends Controller
 
     protected function buildProcurementPlanRows($fiscalYear, $warehouseId = null, $q = '', $dataSource = 'closed', $categoryId = '')
     {
-        $previousYears = [$fiscalYear - 3, $fiscalYear - 2, $fiscalYear - 1];
-        $usageMaps = [];
-        foreach ($previousYears as $year) {
-            $usageMaps[$year] = $this->getFiscalUsageMap($year, $warehouseId, $dataSource);
-        }
-
-        $openingMap = $this->getOpeningInventoryMap($fiscalYear, $warehouseId, $dataSource);
-        $balanceMap = $this->getCurrentBalanceMap($warehouseId);
+        $usageMap = $this->getFiscalUsageMap($fiscalYear, $warehouseId, $dataSource);
 
         $itemQuery = (new Query())
             ->select([
@@ -3238,31 +3231,9 @@ class ReportController extends Controller
 
         foreach ($items as $item) {
             $code = (string) $item['item_code'];
-            $usageValues = [];
-            $priceQty = 0.0;
-            $priceValue = 0.0;
-            $outQty = 0.0;
-            $outValue = 0.0;
+            $usage = $usageMap[$code] ?? null;
+            $usageQty = $usage ? (float) $usage['usage_qty'] : 0.0;
 
-            foreach ($previousYears as $year) {
-                $usage = $usageMaps[$year][$code] ?? null;
-                $qty = $usage ? (float) $usage['usage_qty'] : 0.0;
-                $usageValues[$year] = $qty;
-                if ($usage) {
-                    $priceQty += (float) $usage['in_qty'];
-                    $priceValue += (float) $usage['in_value'];
-                    $outQty += (float) $usage['usage_qty'];
-                    $outValue += (float) $usage['usage_value'];
-                }
-            }
-
-            $openingQty = array_key_exists($code, $openingMap)
-                ? (float) $openingMap[$code]
-                : (float) ($balanceMap[$code] ?? 0);
-            $estimatedUsed = round(array_sum($usageValues) / count($usageValues), 2);
-            $estimatedPurchaseQty = max($estimatedUsed - $openingQty, 0);
-            $unitPrice = $priceQty > 0 ? round($priceValue / $priceQty, 2) : ($outQty > 0 ? round($outValue / $outQty, 2) : 0);
-            $purchaseValue = round($estimatedPurchaseQty * $unitPrice, 2);
             $dataJson = $this->decodeProcurementPlanJson($item['item_data_json'] ?? null);
             $unitName = trim((string) ($item['unit_name'] ?? ''));
             if ($unitName === '') {
@@ -3274,17 +3245,10 @@ class ReportController extends Controller
                 'plan_type' => 'เวชภัณฑ์มิใช่ยา',
                 'category_plan' => trim((string) $item['category_title']) !== '' ? (string) $item['category_title'] : 'วัสดุทั่วไป',
                 'seq' => $seq++,
+                'item_code' => $code,
                 'item_name' => (string) $item['item_name'],
-                'packaging_size' => $this->extractProcurementJsonValue($dataJson, ['packaging_size', 'packing_size', 'package_size', 'pack_size', 'size']),
+                'usage_qty' => $usageQty,
                 'unit_name' => $unitName,
-                'usage_year_1' => $usageValues[$previousYears[0]],
-                'usage_year_2' => $usageValues[$previousYears[1]],
-                'usage_year_3' => $usageValues[$previousYears[2]],
-                'opening_inventory_qty' => $openingQty,
-                'estimated_amount_used' => $estimatedUsed,
-                'estimated_purchase_quantity' => $estimatedPurchaseQty,
-                'unit_price' => $unitPrice,
-                'purchase_vol_in_year' => $purchaseValue,
             ];
         }
 
@@ -3561,14 +3525,12 @@ class ReportController extends Controller
     {
         return [
             'seq' => 'ลำดับ',
-            'plan_type' => 'ประเภทแผนปฏิบัติการจัดซื้อ',
-            'category_plan' => 'ประเภทแผนปฏิบัติการจัดซื้อเวชภัณฑ์ที่มิใช่ยา',
-            'item_name' => 'รายการเวชภัณฑ์ที่มิใช่ยา',
-            'packaging_size' => 'ขนาดบรรจุ',
+            'plan_type' => 'ประเภทเวชภัณฑ์',
+            'category_plan' => 'ประเภทวัสดุ',
+            'item_code' => 'รหัสวัสดุ',
+            'item_name' => 'ชื่อรายการวัสดุ',
+            'usage_qty' => 'ปริมาณการใช้',
             'unit_name' => 'หน่วยนับ',
-            'usage_year_1' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 3),
-            'usage_year_2' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 2),
-            'usage_year_3' => 'ปริมาณการใช้ปี ' . ($fiscalYear - 1),
         ];
     }
 
@@ -3579,13 +3541,20 @@ class ReportController extends Controller
         $sheet->setTitle('procurementPlan');
 
         $headers = $this->getProcurementPlanHeaders($fiscalYear);
+        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+
+        // แถวหัวข้อชื่อรายงาน (ให้ตรงกับหัวข้อที่แสดงในหน้าเว็บ)
+        $sheet->setCellValue('A1', 'รายงานการใช้งานวัสดุรายตัว ปีงบประมาณ ' . $fiscalYear);
+        $sheet->mergeCells("A1:{$lastColumn}1");
+
+        // แถวหัวตาราง (ชื่อคอลัมน์เหมือนในตารางที่แสดง)
         $colIndex = 1;
         foreach ($headers as $header) {
             $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex++);
-            $sheet->setCellValue($column . '1', $header);
+            $sheet->setCellValue($column . '2', $header);
         }
 
-        $rowIndex = 2;
+        $rowIndex = 3;
         foreach ($rows as $row) {
             $colIndex = 1;
             foreach (array_keys($headers) as $key) {
@@ -3595,10 +3564,16 @@ class ReportController extends Controller
             $rowIndex++;
         }
 
-        $lastColumn = $sheet->getHighestColumn();
-        $lastRow = max($rowIndex - 1, 1);
-        $sheet->freezePane('A2');
-        $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
+        $lastRow = max($rowIndex - 1, 2);
+        $sheet->freezePane('A3');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+        $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
             'font' => ['bold' => true],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -3613,16 +3588,19 @@ class ReportController extends Controller
                 'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'D9E2EC']],
             ],
         ]);
-        $sheet->getStyle("A1:{$lastColumn}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        $sheet->getStyle("G2:I{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("A2:A{$lastRow}")->getNumberFormat()->setFormatCode('0');
+        $sheet->getStyle("A2:{$lastColumn}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle("F3:F{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle("F3:F{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle("A3:A{$lastRow}")->getNumberFormat()->setFormatCode('0');
+        $sheet->getStyle("G3:G{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $widths = [12, 24, 34, 42, 16, 14, 18, 18, 18];
+        $widths = [12, 24, 34, 16, 42, 18, 14];
         foreach ($widths as $index => $width) {
             $sheet->getColumnDimensionByColumn($index + 1)->setWidth($width);
         }
         $sheet->getDefaultRowDimension()->setRowHeight(22);
-        $sheet->getRowDimension(1)->setRowHeight(42);
+        $sheet->getRowDimension(1)->setRowHeight(30);
+        $sheet->getRowDimension(2)->setRowHeight(42);
 
         $tempPath = tempnam(sys_get_temp_dir(), 'procurement-plan-');
         $writer = new Xlsx($spreadsheet);
