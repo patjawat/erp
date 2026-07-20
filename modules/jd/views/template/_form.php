@@ -63,6 +63,15 @@ $toLines = function ($text) {
     <!-- ─── Tab 1: ข้อมูลพื้นฐาน + วัตถุประสงค์ ─── -->
     <div class="tab-pane fade show active" id="ftab1" role="tabpanel">
         <div class="row g-3">
+            <div class="col-md-4">
+                <?= $form->field($model, 'template_type')->dropDownList(['base' => 'Template มาตรฐานของตำแหน่ง', 'variant' => 'Template เฉพาะลักษณะงาน'], ['class' => 'form-select'])->label('ประเภท Template') ?>
+            </div>
+            <div class="col-md-4">
+                <?= $form->field($model, 'template_code')->textInput(['maxlength' => true, 'class' => 'form-control', 'placeholder' => 'เช่น NUR-IPD'])->label('รหัส Template') ?>
+            </div>
+            <div class="col-md-4">
+                <?= $form->field($model, 'lifecycle_status')->dropDownList(['draft' => 'ฉบับร่าง', 'review' => 'รอตรวจสอบ', 'active' => 'พร้อมใช้งาน', 'retired' => 'ยกเลิกใช้งาน'], ['class' => 'form-select'])->label('สถานะเอกสาร') ?>
+            </div>
             <div class="col-md-8">
                 <?= $form->field($model, 'name')
                     ->textInput(['maxlength' => true, 'class' => 'form-control', 'placeholder' => 'เช่น JD นักพัฒนาซอฟต์แวร์ ระดับ Senior'])

@@ -1,5 +1,5 @@
 # Ignore vendor folder as it's installed during build
-# vendor/
+vendor/
 docker/
 bootstrap-sass/
 db-backup/

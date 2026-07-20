@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
-        <?php echo $this->render('box_summary',['model' => $model])?>
+        <?php echo $this->render('box_summary',['model' => $model, 'name' => $name])?>
         <?php if($name):?>
         <div>
             <?php echo $this->render('./lists/'.$name.'_list',['model' => $model,'name' => $name, 'dataProvider' => $dataProvider])?>

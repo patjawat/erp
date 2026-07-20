@@ -12,6 +12,8 @@ use app\components\AppHelper;
 use app\modules\jd\models\JdTemplate;
 use app\modules\jd\models\JdTemplateSearch;
 use app\modules\jd\models\JdTemplateSection;
+use app\modules\jd\models\JdTemplateBlock;
+use app\modules\jd\services\JdAiDraftService;
 use app\modules\jd\data\MophSeedData;
 
 class TemplateController extends Controller
@@ -25,6 +27,9 @@ class TemplateController extends Controller
                     'delete'        => ['POST'],
                     'delete-section' => ['POST'],
                     'import-seed'   => ['POST'],
+                    'copy'          => ['POST'],
+                    'new-revision'  => ['POST'],
+                    'ai-draft'      => ['POST'],
                 ],
             ],
         ]);
@@ -43,8 +48,7 @@ class TemplateController extends Controller
 
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        return $this->render('view', ['model' => $model]);
+        return $this->redirect(['structure', 'id' => $id]);
     }
 
     public function actionCreate()
@@ -55,6 +59,7 @@ class TemplateController extends Controller
             $model->load(Yii::$app->request->post());
             static::normalizeJdApprovedAt($model);
             if ($model->save()) {
+                JdTemplateBlock::ensureForTemplate((int) $model->id);
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return [
@@ -64,7 +69,7 @@ class TemplateController extends Controller
                     ];
                 }
                 Yii::$app->session->setFlash('success', 'สร้าง template สำเร็จ');
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['structure', 'id' => $model->id]);
             }
         }
         if (Yii::$app->request->isAjax) {
@@ -93,7 +98,7 @@ class TemplateController extends Controller
                     ];
                 }
                 Yii::$app->session->setFlash('success', 'บันทึกแก้ไขแล้ว');
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect(['structure', 'id' => $model->id]);
             }
         }
         if (Yii::$app->request->isAjax) {
@@ -104,6 +109,111 @@ class TemplateController extends Controller
             ];
         }
         return $this->render('update', ['model' => $model]);
+    }
+
+    public function actionStructure($id)
+    {
+        $model = $this->findModel($id);
+        JdTemplateBlock::ensureForTemplate((int) $model->id);
+
+        if (Yii::$app->request->isPost) {
+            $posted = Yii::$app->request->post('blocks', []);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                foreach ($model->blocks as $block) {
+                    if (!array_key_exists($block->section_code, $posted)) {
+                        continue;
+                    }
+                    $payload = json_decode((string) $posted[$block->section_code], true);
+                    if (!is_array($payload)) {
+                        throw new \RuntimeException('ข้อมูลหมวด ' . $block->title . ' มีรูปแบบไม่ถูกต้อง');
+                    }
+                    $block->setData($payload);
+                    $block->updated_at = date('Y-m-d H:i:s');
+                    if (!$block->save()) {
+                        throw new \RuntimeException(implode(', ', $block->getFirstErrors()));
+                    }
+                }
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', 'บันทึกโครงสร้าง Template แล้ว');
+                return $this->redirect(['structure', 'id' => $model->id]);
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('structure', ['model' => $model]);
+    }
+
+    public function actionCopy($id)
+    {
+        $source = $this->findModel($id);
+        $copy = new JdTemplate();
+        $copy->setAttributes($source->getAttributes(null, ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'jd_approved_at', 'ai_generated_at']));
+        $copy->name = $source->name . ' (สำเนา)';
+        $copy->template_code = null;
+        $copy->template_type = 'variant';
+        $copy->parent_template_id = $source->id;
+        $copy->revision_no = 1;
+        $copy->lifecycle_status = 'draft';
+        $copy->is_active = 0;
+        if (!$copy->save()) {
+            throw new \RuntimeException(implode(', ', $copy->getFirstErrors()));
+        }
+        foreach ($source->blocks as $sourceBlock) {
+            $block = new JdTemplateBlock();
+            $block->setAttributes($sourceBlock->getAttributes(null, ['id', 'template_id']));
+            $block->template_id = $copy->id;
+            $block->save(false);
+        }
+        Yii::$app->session->setFlash('success', 'คัดลอกเป็น Template ใหม่แล้ว กรุณาตรวจสอบชื่อและรายละเอียด');
+        return $this->redirect(['update', 'id' => $copy->id]);
+    }
+
+    public function actionNewRevision($id)
+    {
+        $source = $this->findModel($id);
+        $copy = new JdTemplate();
+        $copy->setAttributes($source->getAttributes(null, ['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'jd_approved_at', 'ai_generated_at']));
+        $copy->parent_template_id = $source->parent_template_id ?: $source->id;
+        $copy->revision_no = ((int) $source->revision_no) + 1;
+        $copy->lifecycle_status = 'draft';
+        $copy->is_active = 0;
+        if (!$copy->save()) {
+            throw new \RuntimeException(implode(', ', $copy->getFirstErrors()));
+        }
+        foreach ($source->blocks as $sourceBlock) {
+            $block = new JdTemplateBlock();
+            $block->setAttributes($sourceBlock->getAttributes(null, ['id', 'template_id']));
+            $block->template_id = $copy->id;
+            $block->save(false);
+        }
+        Yii::$app->session->setFlash('success', 'สร้าง Revision ' . $copy->revision_no . ' เป็นฉบับร่างแล้ว');
+        return $this->redirect(['structure', 'id' => $copy->id]);
+    }
+
+    public function actionAiDraft($id)
+    {
+        $model = $this->findModel($id);
+        JdTemplateBlock::ensureForTemplate((int) $model->id);
+        try {
+            $service = new JdAiDraftService();
+            $draft = $service->generate($model);
+            foreach ($model->blocks as $block) {
+                if (isset($draft[$block->section_code]) && is_array($draft[$block->section_code])) {
+                    $block->setData($draft[$block->section_code]);
+                    $block->updated_at = date('Y-m-d H:i:s');
+                    $block->save(false);
+                }
+            }
+            $model->ai_generated_at = date('Y-m-d H:i:s');
+            $model->save(false, ['ai_generated_at']);
+            Yii::$app->session->setFlash('success', 'AI สร้างข้อมูลฉบับร่างแล้ว กรุณาตรวจสอบทุกหมวดก่อนใช้งาน');
+        } catch (\Throwable $e) {
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        }
+        return $this->redirect(['structure', 'id' => $model->id]);
     }
 
     /**

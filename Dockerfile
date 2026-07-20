@@ -27,12 +27,16 @@ RUN docker-php-ext-install calendar
 WORKDIR /app
 RUN apt update && apt install -y nano default-mysql-client
 
+# Some packages (notably google/apiclient-services) contain many files and can
+# take longer than Composer's default process timeout to extract in Docker.
+ENV COMPOSER_PROCESS_TIMEOUT=0
+
 # Step 3: Copy ไฟล์ที่จำเป็นไปยัง image
 COPY ./ /app/
 
 # Step 4: ติดตั้ง dependencies ผ่าน composer
 
-RUN composer install --ignore-platform-reqs
+RUN composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
 

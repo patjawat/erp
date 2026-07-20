@@ -27,8 +27,10 @@ class JdEmployeeSection extends ActiveRecord
         return [
             [['jd_employee_id', 'title'], 'required'],
             [['jd_employee_id', 'sort_order'], 'integer'],
-            [['content'], 'string'],
+            [['content', 'data_json'], 'string'],
             [['title'], 'string', 'max' => 255],
+            [['section_code'], 'string', 'max' => 40],
+            [['block_type'], 'string', 'max' => 30],
             [['sort_order'], 'default', 'value' => 0],
             [['jd_employee_id'], 'exist', 'targetClass' => JdEmployee::class, 'targetAttribute' => ['jd_employee_id' => 'id']],
         ];
@@ -48,5 +50,11 @@ class JdEmployeeSection extends ActiveRecord
     public function getJdEmployee()
     {
         return $this->hasOne(JdEmployee::class, ['id' => 'jd_employee_id']);
+    }
+
+    public function getData(): array
+    {
+        $value = json_decode((string) $this->data_json, true);
+        return is_array($value) ? $value : [];
     }
 }

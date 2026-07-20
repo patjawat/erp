@@ -1,6 +1,6 @@
 <?php
 
-namespace app\widgets\orgchart;
+namespace app\widgets;
 
 use Yii;
 

@@ -34,11 +34,18 @@ $row = function (string $label, ?string $value, bool $nl2br = false) {
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<div class="d-flex gap-2">
+<div class="d-flex flex-wrap gap-2">
+    <?= Html::a('<i class="bi bi-ui-checks-grid me-1"></i>จัดทำเนื้อหา 10 หมวด', ['structure', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
     <?= Html::a('<i class="bi bi-pencil me-1"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
     <?= Html::a('<i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ',
         ['add-section', 'id' => $model->id, 'title' => 'เพิ่มหัวข้อ: ' . $model->name],
         ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    <?= Html::beginForm(['copy', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
+    <?= Html::submitButton('<i class="bi bi-copy me-1"></i>คัดลอก Template', ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::endForm() ?>
+    <?= Html::beginForm(['new-revision', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
+    <?= Html::submitButton('<i class="bi bi-clock-history me-1"></i>สร้าง Revision ใหม่', ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::endForm() ?>
 </div>
 <?php $this->endBlock(); ?>
 

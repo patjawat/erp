@@ -203,7 +203,7 @@ $valueWidth = 'col-12 col-md-8 col-lg-9';
             </div>
             <div class="card-body">
                 <p class="text-muted small mb-3">ดูหรือแก้ไขคำอธิบายงานตามตำแหน่ง (JD)</p>
-                <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id, 'name' => 'job_description']) ?>" class="btn btn-secondary btn-sm rounded-pill">
+                <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->id, 'name' => 'job_description_current']) ?>" class="btn btn-secondary btn-sm rounded-pill">
                     <i class="bi bi-journal-text me-1"></i> ดูคำอธิบายงาน (JD)
                 </a>
             </div>

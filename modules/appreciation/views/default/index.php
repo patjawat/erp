@@ -4,100 +4,138 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\ListView;
 use yii\widgets\Pjax;
-use app\components\UserHelper;
-use app\modules\appreciation\models\Appreciation;
 
-$me = UserHelper::GetEmployee();
 $this->title = 'พลังแห่งคำขอบคุณ';
 $this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
-
 $showCelebrate = (bool) (Yii::$app->request->get('celebrate') ?? false);
+$this->registerCssFile('@web/css/appreciation-media.css');
 ?>
 
-<div class="row g-4">
-    <!-- คอลัมน์ฟีด (Bento: กล่องหลัก) -->
-    <div class="col-12 col-lg-8">
-        <!-- Compose bar (Glass-style) -->
-        <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden bg-white bg-opacity-75">
-            <div class="card-body p-3 p-md-4">
-                <div class="d-flex align-items-center gap-3">
+<?php $this->beginBlock('page-title'); ?>พลังแห่งคำขอบคุณ<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>แบ่งปันเรื่องดี ๆ และส่งกำลังใจให้เพื่อนร่วมงาน<?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<div class="d-flex flex-wrap align-items-center gap-2">
+    <?= Html::a('<i class="bi bi-send-heart me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    <?php if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr')): ?>
+        <?= Html::a('<i class="bi bi-gear me-1"></i> จัดการระบบ', ['/appreciation/admin/index'], ['class' => 'btn btn-outline-secondary']) ?>
+    <?php endif; ?>
+</div>
+<?php $this->endBlock(); ?>
+
+<div class="appreciation-home">
+    <div class="appreciation-layout">
+        <aside class="appreciation-rail" aria-label="ข้อมูลและกิจกรรมของฉัน">
+            <div class="appreciation-rail__inner">
+                <section class="appreciation-profile" aria-labelledby="appreciation-profile-title">
                     <?php if ($me): ?>
-                        <?= Html::img($me->showAvatar(), [
-                            'class' => 'rounded-circle border border-2 border-white shadow-sm flex-shrink-0',
-                            'width' => '48',
-                            'height' => '48',
-                            'alt' => '',
-                        ]) ?>
-                        <?= Html::a(
-                            '<span class="text-muted">ส่งคำขอบคุณให้เพื่อน...</span>',
-                            ['create'],
-                            ['class' => 'flex-grow-1 text-start text-decoration-none rounded-3 border p-3 d-block bg-light bg-opacity-50 open-modal', 'data' => ['size' => 'modal-lg']]
-                        ) ?>
-                    <?php else: ?>
-                        <?= Html::a('ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary rounded-3 px-4']) ?>
+                        <div class="appreciation-profile__person">
+                            <?= Html::img($me->showAvatar(), [
+                                'class' => 'appreciation-avatar appreciation-avatar--profile',
+                                'width' => '64',
+                                'height' => '64',
+                                'alt' => '',
+                            ]) ?>
+                            <div class="min-w-0">
+                                <h2 id="appreciation-profile-title" class="appreciation-profile__name"><?= Html::encode($me->fullname()) ?></h2>
+                                <p class="appreciation-profile__department"><?= Html::encode($me->departmentName() ?: 'ไม่ระบุหน่วยงาน') ?></p>
+                            </div>
+                        </div>
                     <?php endif; ?>
-                </div>
-                <div class="mt-2 d-flex flex-wrap gap-2">
-                    <?= Html::a('<i class="bi bi-heart text-danger me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-outline-danger btn-sm rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?= Html::a('Challenge', ['challenge/index'], ['class' => 'btn btn-outline-secondary btn-sm rounded-pill']) ?>
-                </div>
+
+                    <div class="appreciation-balance">
+                        <div>
+                            <span class="appreciation-meta"><?= $programYear ? Html::encode($programYear->name) : 'รอบกิจกรรมปัจจุบัน' ?></span>
+                            <strong><?= !empty($pointSummary['level']) ? Html::encode($pointSummary['level']->name) : 'ระดับเริ่มต้น' ?></strong>
+                        </div>
+                        <div class="text-end">
+                            <span class="appreciation-meta">คะแนนที่ใช้ได้</span>
+                            <strong class="appreciation-balance__points"><?= number_format($pointSummary['balance']) ?> คะแนน</strong>
+                        </div>
+                    </div>
+
+                    <div class="appreciation-stats" aria-label="สถิติคำขอบคุณ">
+                        <div><strong><?= number_format($receivedCount) ?></strong><span>คำขอบคุณที่ได้รับ</span></div>
+                        <div><strong><?= number_format($totalPoints) ?></strong><span>คะแนนสะสมทั้งหมด</span></div>
+                    </div>
+                </section>
+
+                <?= $this->render('_challenge_widget', ['activeChallenges' => $activeChallenges, 'myChallengeProgress' => $myChallengeProgress]) ?>
+
+                <section class="appreciation-promo" aria-labelledby="featured-rewards-title">
+                    <div class="appreciation-section-head">
+                        <div>
+                            <h2 id="featured-rewards-title">ของรางวัลแนะนำ</h2>
+                            <p>ใช้คะแนนจากคำขอบคุณแลกรางวัล</p>
+                        </div>
+                        <?= Html::a('ดูทั้งหมด', ['/appreciation/reward/index'], ['class' => 'appreciation-text-link']) ?>
+                    </div>
+
+                    <?php if (empty($featuredRewards)): ?>
+                        <div class="appreciation-quiet-state">
+                            <i class="bi bi-gift" aria-hidden="true"></i>
+                            <span>ของรางวัลใหม่จะแสดงที่นี่เมื่อเปิดให้แลก</span>
+                        </div>
+                    <?php else: ?>
+                        <div class="appreciation-reward-list">
+                            <?php foreach ($featuredRewards as $reward): ?>
+                                <a class="appreciation-reward" href="<?= Html::encode(Url::to(['/appreciation/reward/index'])) ?>">
+                                    <?php if ($reward->image_url): ?>
+                                        <?= Html::img($reward->image_url, ['class' => 'appreciation-reward__image', 'alt' => '', 'loading' => 'lazy']) ?>
+                                    <?php else: ?>
+                                        <span class="appreciation-reward__image appreciation-reward__image--empty"><i class="bi bi-gift" aria-hidden="true"></i></span>
+                                    <?php endif; ?>
+                                    <span class="appreciation-reward__content">
+                                        <strong><?= Html::encode($reward->name) ?></strong>
+                                        <span><?= number_format($reward->points_cost) ?> คะแนน</span>
+                                        <?php if ($pointSummary['balance'] < $reward->points_cost): ?>
+                                            <small>ขาดอีก <?= number_format($reward->points_cost - $pointSummary['balance']) ?> คะแนน</small>
+                                        <?php else: ?>
+                                            <small class="is-ready">คะแนนเพียงพอสำหรับแลก</small>
+                                        <?php endif; ?>
+                                    </span>
+                                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </section>
+
+                <nav class="appreciation-shortcuts" aria-label="ทางลัด">
+                    <?= Html::a('<i class="bi bi-calendar-check"></i><span>กิจกรรมของฉัน</span>', ['/appreciation/activity/index']) ?>
+                    <?= Html::a('<i class="bi bi-gift"></i><span>แลกรางวัล</span>', ['/appreciation/reward/index']) ?>
+                </nav>
             </div>
-        </div>
+        </aside>
 
-        <h6 class="mb-3 fw-bold text-muted small text-uppercase">คำขอบคุณล่าสุด (ที่เกี่ยวข้องกับคุณ)</h6>
-
-        <?php Pjax::begin(['id' => 'appreciation-feed', 'timeout' => 5000]); ?>
-        <?= ListView::widget([
-            'dataProvider' => $dataProvider,
-            'itemView' => '_item',
-            'layout' => "{items}\n<div class='d-flex justify-content-center py-4'>{pager}</div>",
-            'emptyText' => '<div class="card border-0 shadow-sm rounded-3"><div class="card-body text-center py-5"><p class="text-muted mb-2 fs-5">ยังไม่มีคำขอบคุณที่เกี่ยวข้องกับคุณ</p><p class="small text-muted mb-4">ลองเริ่มส่งคำขอบคุณให้เพื่อนร่วมงาน แล้วรายการของคุณจะปรากฏที่นี่</p>' . Html::a('<i class="bi bi-heart me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary rounded-3 open-modal', 'data' => ['size' => 'modal-lg']]) . '</div></div>',
-            'viewParams' => ['me' => $me],
-        ]) ?>
-        <?php Pjax::end(); ?>
-    </div>
-
-    <!-- Sidebar Bento: โปรไฟล์ + อันดับ + Challenge -->
-    <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden bg-white bg-opacity-75">
-            <div class="card-body p-0">
+        <main class="appreciation-feed-column">
+            <section class="appreciation-composer" aria-label="ส่งคำขอบคุณ">
                 <?php if ($me): ?>
-                    <div class="p-4 bg-primary bg-opacity-10 text-center border-bottom">
-                        <?= Html::img($me->showAvatar(), [
-                            'class' => 'rounded-circle border border-3 border-white shadow-sm mb-2',
-                            'width' => '72',
-                            'height' => '72',
-                            'alt' => '',
-                        ]) ?>
-                        <h6 class="mb-0 fw-bold"><?= Html::encode($me->fullname()) ?></h6>
-                        <p class="mb-0 small text-muted"><?= Html::encode($me->departmentName() ?: '-') ?></p>
-                    </div>
+                    <?= Html::img($me->showAvatar(), ['class' => 'appreciation-avatar', 'width' => '44', 'height' => '44', 'alt' => '']) ?>
                 <?php endif; ?>
-                <div class="p-3">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="p-3 rounded-3 border text-center">
-                                <p class="text-muted small mb-0">ได้รับคำขอบคุณ</p>
-                                <p class="mb-0 fw-bold fs-4 text-primary"><?= (int) $receivedCount ?></p>
-                                <p class="mb-0 small">ครั้ง</p>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 rounded-3 border text-center">
-                                <p class="text-muted small mb-0">คะแนนสะสม</p>
-                                <p class="mb-0 fw-bold fs-4 text-warning"><?= number_format($totalPoints) ?></p>
-                            </div>
-                        </div>
-                    </div>
+                <?= Html::a('<span>อยากขอบคุณใครในวันนี้</span><i class="bi bi-send-heart" aria-hidden="true"></i>', ['create'], [
+                    'class' => 'appreciation-composer__button open-modal',
+                    'data' => ['size' => 'modal-lg'],
+                ]) ?>
+            </section>
+
+            <div class="appreciation-feed-head">
+                <div>
+                    <h2>คำขอบคุณของคุณ</h2>
+                    <p>เรื่องราวที่คุณส่งหรือได้รับ</p>
                 </div>
             </div>
-        </div>
 
-        <?= $this->render('_leaderboard', ['leaderboard' => $leaderboard, 'me' => $me]) ?>
-        <?= $this->render('_challenge_widget', ['activeChallenges' => $activeChallenges, 'myChallengeProgress' => $myChallengeProgress]) ?>
-
-        <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับหน้า Me', ['/me'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
+            <?php Pjax::begin(['id' => 'appreciation-feed', 'timeout' => 5000]); ?>
+            <?= ListView::widget([
+                'dataProvider' => $dataProvider,
+                'itemView' => '_item',
+                'layout' => "<div class='appreciation-post-list'>{items}</div><div class='d-flex justify-content-center py-4'>{pager}</div>",
+                'emptyText' => '<div class="appreciation-empty"><h3>ยังไม่มีคำขอบคุณที่เกี่ยวข้องกับคุณ</h3><p>เริ่มส่งข้อความดี ๆ ให้เพื่อนร่วมงาน แล้วเรื่องราวจะแสดงที่นี่</p>' . Html::a('<i class="bi bi-send-heart me-1"></i> ส่งคำขอบคุณ', ['create'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) . '</div>',
+                'viewParams' => ['me' => $me],
+            ]) ?>
+            <?php Pjax::end(); ?>
+        </main>
     </div>
 </div>
 
@@ -108,43 +146,21 @@ $(document).on('click', '.btn-appreciation-like', function(e) {
     e.preventDefault();
     var btn = $(this);
     var id = btn.data('id');
-    if (!id) return;
-    btn.prop('disabled', true);
-    var offset = btn.offset();
+    if (!id || btn.prop('disabled')) return;
+    btn.prop('disabled', true).attr('aria-busy', 'true');
     $.post('{$likeUrl}', { id: id }).then(function(res) {
         if (res.success) {
-            btn.toggleClass('active text-danger', res.liked);
+            btn.toggleClass('is-liked', res.liked).attr('aria-pressed', res.liked ? 'true' : 'false');
             btn.find('.like-count').text(res.count);
-            if (res.liked) {
-                for (var i = 0; i < 8; i++) {
-                    (function(j) {
-                        setTimeout(function() {
-                            var h = $('<span class="appreciation-heart-burst">❤</span>');
-                            h.css({
-                                position: 'fixed',
-                                left: (offset.left + 20) + 'px',
-                                top: (offset.top + 10) + 'px',
-                                zIndex: 9999,
-                                fontSize: '18px',
-                                pointerEvents: 'none',
-                                opacity: 1
-                            });
-                            $('body').append(h);
-                            h.animate({
-                                top: (offset.top - 40 - j * 8) + 'px',
-                                left: (offset.left + (j % 2 === 0 ? 1 : -1) * (20 + j * 6)) + 'px',
-                                opacity: 0
-                            }, 600, function() { h.remove(); });
-                        }, j * 40);
-                    })(i);
-                }
-            }
+            btn.find('svg').attr('fill', res.liked ? 'currentColor' : 'none');
         }
-    }).always(function() { btn.prop('disabled', false); });
+    }).always(function() {
+        btn.prop('disabled', false).removeAttr('aria-busy');
+    });
 });
 JS;
 if ($showCelebrate) {
-    $js .= "\n(function(){ var c=0; var t=setInterval(function(){ if(c++>=12) { clearInterval(t); return; } var h=$('<span class=\"appreciation-heart-burst\">❤</span>'); h.css({ position:'fixed', left:(Math.random()*60+20)+'%', top:(Math.random()*40+25)+'%', zIndex:9999, fontSize:'24px', opacity:1, pointerEvents:'none' }); $('body').append(h); h.animate({ top:'0%', opacity:0 }, 1200, function(){ h.remove(); }); }, 120); })();";
+    $js .= "\n$('.appreciation-composer').addClass('is-highlighted'); setTimeout(function(){ $('.appreciation-composer').removeClass('is-highlighted'); }, 900);";
 }
 $this->registerJs($js);
 ?>
