@@ -4,8 +4,8 @@
 
 ## การส่งต่อให้ทีมทดสอบ
 
-- รัน migration ด้วย `php yii migrate/up --migrationPath=@app/modules/medsop/migrations --interactive=0`
-- Migration ของ MedSOP ทั้ง 6 รายการถูก apply ในฐานข้อมูล development แล้ว และตรวจซ้ำพบว่าไม่มี migration ค้าง
+- รัน migration ด้วย `php yii migrate/up --migrationPath=@app/migrations --interactive=0`
+- Migration ของ MedSOP ถูก apply ในฐานข้อมูล development แล้ว และตรวจซ้ำพบว่าไม่มี migration ค้าง
 - เอกสารทดสอบ ID 4 อยู่สถานะ `PUBLISHED` พร้อมผู้รับ 5 คน รวม employee ID 141 สำหรับทดสอบการเปิดอ่านและลงชื่อรับทราบ
 - ก่อนขึ้น production ให้ทีมทดสอบสิทธิ์ผู้ดูแล/ผู้รับเอกสาร, การเปิดอ่าน, การลงชื่อรับทราบ, Slide view และการส่งออก PDF อีกครั้งใน environment เป้าหมาย
 

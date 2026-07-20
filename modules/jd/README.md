@@ -5,7 +5,7 @@
 - **Template ต่อตำแหน่งงาน**: สร้าง/แก้ไข template JD แยกตามตำแหน่ง (ผูกกับ `categorise` ชื่อ `position_name`)
 - **Employee JD**: ในโปรไฟล์พนักงาน (HR > ทะเบียนบุคลากร > ดูพนักงาน) มีเมนู "คำอธิบายงาน (JD)" — โหลด template ตามตำแหน่งปัจจุบันได้ แล้วแก้ไข/เพิ่ม/ลบหัวข้อได้
 
-## โครงสร้างตาราง (migrations อยู่ในโมดูล)
+## โครงสร้างตาราง (migrations อยู่ใน migrations หลัก)
 
 - `jd_template` — template ต่อตำแหน่ง (name, position_code, is_active)
 - `jd_template_section` — หัวข้อใน template (title, content, sort_order)
@@ -23,7 +23,7 @@
 ## การรัน Migration
 
 ```bash
-php yii migrate --migrationPath=@app/modules/jd/migrations
+php yii migrate --migrationPath=@app/migrations
 ```
 
 ## เมนู/จุดเข้าใช้
