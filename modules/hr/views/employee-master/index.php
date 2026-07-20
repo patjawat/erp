@@ -25,15 +25,7 @@ $activeTab = in_array($activeTab ?? 'type', ['type', 'group', 'position'], true)
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
- <div class="d-flex flex-column flex-sm-row flex-wrap gap-2">
-                <?= Html::a('<i class="fa-solid fa-arrow-left me-1"></i> กลับหน้าทะเบียนบุคลากร', ['/hr/employees'], [
-                    'class' => 'btn btn-outline-secondary rounded-3 fw-semibold',
-                ]) ?>
-            </div>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?= $this->render('@app/modules/hr/views/employees/menu', ['active' => 'setting']) ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'setting']) ?>
 <?php $this->endBlock(); ?>
 
 

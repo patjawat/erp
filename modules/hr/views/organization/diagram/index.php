@@ -20,12 +20,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <i class="bi bi-diagram-3"></i> <?=$this->title;?>  
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('page-action'); ?>
-<?= $this->render('@app/modules/hr/views/employees/menu') ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'organization']) ?>
 <?php $this->endBlock(); ?>
 <style>
     .kv-tree-root.kv-root-heading {

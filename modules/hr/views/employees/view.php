@@ -19,12 +19,8 @@ $this->params['breadcrumbs'][] = $this->title;
 ข้อมูลส่วนบุคคล | <?=$this->title;?>
 <?php $this->endBlock(); ?>
 
-<?php $this->beginBlock('page-action'); ?>
-<?=$this->render('menu')?>
-<?php $this->endBlock(); ?>
-
-<?php $this->beginBlock('navbar_menu'); ?>
-<?=$this->render('@app/modules/hr/views/employees/menu',['active' => 'employees'])?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/hr/menu', ['active' => 'employees']) ?>
 <?php $this->endBlock(); ?>
 
 
