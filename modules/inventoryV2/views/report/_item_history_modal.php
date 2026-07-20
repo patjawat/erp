@@ -247,6 +247,64 @@ $placeholderImg = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
                     </div>
                 </div>
 
+                <?php // Popover แก้จำนวน/ราคา เฉพาะแถวจ่ายออก — วาง fixed ตรงปุ่มดินสอ (append ใน modalEl) ?>
+                <div id="hist-edit-popover" class="hist-pop" role="dialog" aria-modal="false" aria-labelledby="hist-pop-title" hidden>
+                    <span class="hist-pop__caret" aria-hidden="true"></span>
+                    <div class="hist-pop__head">
+                        <div class="hist-pop__titlewrap">
+                            <div class="hist-pop__title" id="hist-pop-title">
+                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                แก้จำนวน / ราคา
+                            </div>
+                            <div class="hist-pop__doc"><span class="doc-chip" id="hist-pop-doc">-</span></div>
+                        </div>
+                        <button type="button" class="hist-pop__close" id="hist-pop-close" aria-label="ปิด">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="hist-pop-alert" class="hist-pop__alert" role="status" aria-live="polite" hidden></div>
+                    <div class="hist-pop__fields">
+                        <div class="hist-pop__field">
+                            <label for="hist-pop-qty">จำนวนที่จ่ายออก</label>
+                            <div class="hist-pop__inputwrap">
+                                <input type="number" id="hist-pop-qty" class="hist-pop__input hist-pop__input--unit" step="any" min="0" inputmode="decimal" autocomplete="off">
+                                <span class="hist-pop__suffix" id="hist-pop-unit">หน่วย</span>
+                            </div>
+                            <div class="hist-pop__was" id="hist-pop-qty-was">เดิม —</div>
+                        </div>
+                        <div class="hist-pop__field">
+                            <label for="hist-pop-price">ราคา / หน่วย</label>
+                            <div class="hist-pop__inputwrap">
+                                <input type="number" id="hist-pop-price" class="hist-pop__input" step="any" min="0" inputmode="decimal" autocomplete="off">
+                                <span class="hist-pop__suffix">฿</span>
+                            </div>
+                            <div class="hist-pop__was" id="hist-pop-price-was">เดิม —</div>
+                        </div>
+                    </div>
+                    <label class="hist-pop__check" for="hist-pop-return">
+                        <input type="checkbox" id="hist-pop-return" checked>
+                        <span class="hist-pop__check-label">คืนสต๊อกกลับเข้าคลัง</span>
+                    </label>
+                    <div class="hist-pop__check-hint" id="hist-pop-return-hint">ลดจำนวน → ระบบคืนของเข้าคลัง ยอดคงเหลือเพิ่มตามส่วนต่าง</div>
+                    <div class="hist-pop__preview" aria-live="polite">
+                        <div class="hist-pop__stat">
+                            <span class="hist-pop__stat-label">ยอดคงเหลือหลังแก้</span>
+                            <strong class="hist-pop__stat-value" id="hist-pop-balance">—</strong>
+                        </div>
+                        <div class="hist-pop__stat">
+                            <span class="hist-pop__stat-label">มูลค่าที่เปลี่ยน</span>
+                            <strong class="hist-pop__stat-value" id="hist-pop-value">—</strong>
+                        </div>
+                    </div>
+                    <div class="hist-pop__actions">
+                        <button type="button" class="btn btn-sm btn-light" id="hist-pop-cancel">ยกเลิก</button>
+                        <button type="button" class="btn btn-sm btn-primary" id="hist-pop-save">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            บันทึก
+                        </button>
+                    </div>
+                </div>
+
                 <div id="hist-lotbal-panel" class="bal-history-adjust" hidden>
                     <div class="bal-history-adjust__head">
                         <div>
@@ -994,6 +1052,256 @@ $placeholderImg = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
 .hist-lotbal-table .hist-lotbal-input { max-width: 7rem; margin-left: auto; }
 .hist-lotbal-mismatch { background: rgba(234,88,12,0.06); }
 
+/* === Inline edit popover (เฉพาะแถวจ่ายออก) === */
+/* ย้ายไปอยู่ใต้ document.body (นอก .modal-dialog ที่มี transform → containing block ของ fixed)
+   จึงต้องประกาศ token ตรงบน #hist-edit-popover เองเหมือนที่ modal ทำ */
+#hist-edit-popover {
+    --ink-1: #1a202c;
+    --ink-2: #4a5568;
+    --ink-3: #718096;
+    --ink-4: #a0aec0;
+    --surface: #ffffff;
+    --surface-2: #f7f9fc;
+    --surface-3: #eef2f7;
+    --surface-hover: #f1f5f9;
+    --line: rgba(15, 23, 42, 0.08);
+    --line-strong: rgba(15, 23, 42, 0.14);
+    --primary: #0d6efd;
+    --primary-ink: #0a58ca;
+    --primary-soft: rgba(13, 110, 253, 0.08);
+    --primary-line: rgba(13, 110, 253, 0.22);
+    --success: #15803d;
+    --success-soft: rgba(21, 128, 61, 0.10);
+    --warning: #b45309;
+    --warning-soft: rgba(180, 83, 9, 0.10);
+    --danger: #b91c1c;
+    --danger-soft: rgba(185, 28, 28, 0.10);
+    --danger-line: rgba(185, 28, 28, 0.22);
+    --radius: 10px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --t-fast: 120ms;
+    --t-mid: 180ms;
+}
+.hist-pop {
+    position: fixed;
+    z-index: 1085; /* เหนือ modal(1055)/backdrop; ใต้ tooltip */
+    width: 320px;
+    max-width: calc(100vw - 1.5rem);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 32px rgba(15,23,42,0.16), 0 3px 8px rgba(15,23,42,0.08);
+    padding: 0.85rem;
+    transform-origin: top center;
+    transition: opacity var(--t-fast) var(--ease), transform var(--t-mid) var(--ease);
+}
+.hist-pop[hidden] { display: none !important; }
+.hist-pop.is-entering { opacity: 0; transform: translateY(-6px) scale(0.98); }
+.hist-pop.is-above { transform-origin: bottom center; }
+.hist-pop.is-above.is-entering { transform: translateY(6px) scale(0.98); }
+.hist-pop__caret {
+    position: absolute;
+    left: var(--caret-x, 50%);
+    top: -6px;
+    width: 12px;
+    height: 12px;
+    background: var(--surface);
+    border-left: 1px solid var(--line-strong);
+    border-top: 1px solid var(--line-strong);
+    transform: translateX(-50%) rotate(45deg);
+    pointer-events: none; /* transform สร้าง stacking context วาดทับปุ่ม X — ห้ามให้ caret กินคลิก */
+}
+.hist-pop.is-above .hist-pop__caret {
+    top: auto;
+    bottom: -6px;
+    border-left: 0; border-top: 0;
+    border-right: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+}
+.hist-pop__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+}
+.hist-pop__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink-1);
+}
+.hist-pop__title i { color: var(--warning); font-size: 0.85rem; }
+.hist-pop__doc { margin-top: 0.3rem; }
+.hist-pop__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex-shrink: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.hist-pop__close:hover { background: var(--surface-hover); color: var(--ink-1); }
+.hist-pop__close:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.hist-pop__fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+.hist-pop__field label {
+    display: block;
+    margin-bottom: 0.28rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ink-2);
+}
+.hist-pop__inputwrap { position: relative; }
+.hist-pop__input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0.4rem 2.1rem 0.4rem 0.6rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink-1);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.hist-pop__input--unit { padding-right: 3.7rem; } /* เผื่อชื่อหน่วยไทย (กล่อง/ม้วน/แท็บเล็ต) ไม่ทับตัวเลข */
+.hist-pop__input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.hist-pop__input.is-invalid { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+/* ซ่อน spinner ของ number input (ใช้พื้นที่ให้ suffix) */
+.hist-pop__input::-webkit-outer-spin-button,
+.hist-pop__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.hist-pop__input[type=number] { -moz-appearance: textfield; }
+.hist-pop__suffix {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: 2.9rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: right;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--ink-3);
+    pointer-events: none;
+}
+.hist-pop__was {
+    margin-top: 0.28rem;
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+}
+.hist-pop__check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    user-select: none;
+}
+.hist-pop__check input {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+.hist-pop__check-hint {
+    margin-top: 0.28rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--ink-3);
+}
+.hist-pop__check-hint.is-warn { color: var(--warning); }
+.hist-pop__preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+    padding: 0.55rem 0.6rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+}
+.hist-pop__stat { min-width: 0; }
+.hist-pop__stat-label {
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ink-3);
+}
+.hist-pop__stat-value {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink-1);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hist-pop__stat-value.is-in { color: var(--success); }
+.hist-pop__stat-value.is-out { color: var(--danger); }
+.hist-pop__alert {
+    margin-bottom: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink-2);
+}
+.hist-pop__alert[hidden] { display: none !important; }
+.hist-pop__alert.is-error { color: var(--danger); background: var(--danger-soft); border-color: var(--danger-line); }
+.hist-pop__alert.is-success { color: var(--success); background: var(--success-soft); border-color: rgba(21,128,61,0.22); }
+.hist-pop__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+}
+.hist-pop__actions .btn-light {
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+    color: var(--ink-2);
+}
+.hist-pop__actions .btn-light:hover { background: var(--surface-hover); color: var(--ink-1); }
+@media (max-width: 420px) {
+    .hist-pop__fields, .hist-pop__preview { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hist-pop { transition: none; }
+    .hist-pop.is-entering { opacity: 1; transform: none; }
+    .hist-pop.is-above.is-entering { transform: none; }
+}
+
 /* Export flow (SweetAlert) — จูน radius/typography ให้เข้ากับ enterprise tokens (ไม่ใช้ radius 16px default) */
 .hist-swal { border-radius: 12px !important; }
 .hist-swal__confirm, .hist-swal__cancel { border-radius: 8px !important; font-weight: 600; }
@@ -1090,6 +1398,36 @@ $js = <<<JS
     var activeEditRow = null;
     var editMode = 'out'; // 'out' = แก้ใบเบิก, 'adjust' = แก้รายการปรับยอด
     var activeBalanceRow = null;
+
+    // ---- Popover แก้จำนวน/ราคา เฉพาะแถวจ่ายออก ----
+    var popEl = document.getElementById('hist-edit-popover');
+    var popCaret = popEl ? popEl.querySelector('.hist-pop__caret') : null;
+    var popDoc = document.getElementById('hist-pop-doc');
+    var popUnit = document.getElementById('hist-pop-unit');
+    var popQty = document.getElementById('hist-pop-qty');
+    var popPrice = document.getElementById('hist-pop-price');
+    var popQtyWas = document.getElementById('hist-pop-qty-was');
+    var popPriceWas = document.getElementById('hist-pop-price-was');
+    var popBalance = document.getElementById('hist-pop-balance');
+    var popValue = document.getElementById('hist-pop-value');
+    var popReturn = document.getElementById('hist-pop-return');
+    var popReturnHint = document.getElementById('hist-pop-return-hint');
+    var popAlert = document.getElementById('hist-pop-alert');
+    var popSaveBtn = document.getElementById('hist-pop-save');
+    var popCancelBtn = document.getElementById('hist-pop-cancel');
+    var popCloseBtn = document.getElementById('hist-pop-close');
+    var popRow = null;        // transaction object กำลังแก้
+    var popTriggerBtn = null; // ปุ่มดินสอที่เปิด popover (ใช้ reposition)
+    var popSaving = false;
+    // ย้าย popover ไปเป็นลูกของ .modal (#itemHistoryModal) ชั้นนอกสุด — ไม่ใช่ body และไม่ใช่ .modal-body
+    // เหตุผล 2 ข้อพร้อมกัน:
+    //  1) .modal-dialog มี transform → เป็น containing block ของ position:fixed ทำให้ clamp เพี้ยนหลุดจอ
+    //     แต่ .modal (ตัวนอก) ไม่มี transform → เป็นลูกตรงนี้ fixed อ้างอิง viewport ถูกต้อง
+    //  2) Bootstrap modal มี focus-trap ดึง focus กลับถ้า element อยู่นอก .modal → input พิมพ์ไม่ได้
+    //     การอยู่ใน #itemHistoryModal ทำให้ focus-trap ยอมให้โฟกัส/พิมพ์ได้ (และ inherit token เดิมด้วย)
+    if (popEl && popEl.parentNode !== modalEl) {
+        modalEl.appendChild(popEl);
+    }
     var fmt = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     var fmtInt = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 0 });
 
@@ -1969,6 +2307,7 @@ $js = <<<JS
         closeLotBalancePanel();
         if (!keepActionMessage) hideActionMessage();
         lastHistoryPayload = null;
+        closeEditPopover(); // ปิด popover ที่ค้าง (payload=null แล้ว → ไม่ไป re-render ทับ skeleton)
 
         var params = new URLSearchParams({
             item_code: ctx.item_code,
@@ -2193,6 +2532,304 @@ $js = <<<JS
         }
     }
 
+    // ============ Popover แก้จำนวน/ราคา เฉพาะแถวจ่ายออก ============
+    function showPopMessage(type, message) {
+        if (!popAlert) return;
+        popAlert.hidden = false;
+        popAlert.classList.toggle('is-error', type === 'error');
+        popAlert.classList.toggle('is-success', type === 'success');
+        popAlert.textContent = message;
+    }
+    function hidePopMessage() {
+        if (!popAlert) return;
+        popAlert.hidden = true;
+        popAlert.classList.remove('is-error', 'is-success');
+        popAlert.textContent = '';
+    }
+
+    function positionEditPopover() {
+        if (!popEl || popEl.hidden || !popTriggerBtn) return;
+        var margin = 8;                // เว้นขอบจอ
+        var gap = 8;                   // ระยะห่างปุ่ม↔popover
+        var r = popTriggerBtn.getBoundingClientRect();
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var pw = popEl.offsetWidth;
+        var ph = popEl.offsetHeight;
+        // กันเคส viewport ยังไม่พร้อม/แท็บซ่อน หรือปุ่มหลุด DOM แล้ว → อย่าดีดไปมุมจอ
+        if (vw <= 0 || vh <= 0 || pw <= 0) return;
+        if (r.width === 0 && r.height === 0) return;
+
+        // แนวนอน: จัดกึ่งกลางปุ่ม แล้ว clamp ในจอ
+        var left = r.left + r.width / 2 - pw / 2;
+        left = Math.max(margin, Math.min(left, vw - pw - margin));
+
+        // แนวตั้ง: ปกติอยู่ใต้ปุ่ม; ถ้าล่างไม่พอและบนมากกว่า → พลิกขึ้นบน
+        var below = r.bottom + gap;
+        var placeAbove = (below + ph > vh - margin) && (r.top - gap - ph > margin);
+        var top = placeAbove ? (r.top - gap - ph) : below;
+        top = Math.max(margin, Math.min(top, vh - ph - margin));
+
+        popEl.classList.toggle('is-above', placeAbove);
+        popEl.style.left = Math.round(left) + 'px';
+        popEl.style.top = Math.round(top) + 'px';
+
+        // caret ชี้กลางปุ่ม (clamp ไม่ให้เลยมุมโค้ง)
+        if (popCaret) {
+            var caretX = r.left + r.width / 2 - left;
+            caretX = Math.max(14, Math.min(caretX, pw - 14));
+            popEl.style.setProperty('--caret-x', Math.round(caretX) + 'px');
+        }
+    }
+
+    function computePopoverImpact() {
+        if (!popRow) return { changed: false };
+        var unit = ctx.unit_name;
+        var oldQty = Number(popRow.qty || 0);
+        var oldPrice = Number(popRow.unit_price || 0);
+        var newQty = parseFloat(popQty ? popQty.value : NaN);
+        var newPrice = parseFloat(popPrice ? popPrice.value : NaN);
+        var returnStock = !popReturn || popReturn.checked; // ติ๊ก = คืนสต๊อก (default)
+        var qtyValid = !isNaN(newQty) && newQty >= 0; // อนุญาต 0 (= ยกเลิกการจ่ายบรรทัดนี้)
+        var priceValid = !isNaN(newPrice) && newPrice >= 0;
+        if (popQty) popQty.classList.toggle('is-invalid', popQty.value !== '' && !qtyValid);
+        if (popPrice) popPrice.classList.toggle('is-invalid', popPrice.value !== '' && !priceValid);
+
+        if (!qtyValid || !priceValid) {
+            if (popBalance) { popBalance.textContent = '—'; popBalance.classList.remove('is-in', 'is-out'); }
+            if (popValue) { popValue.textContent = '—'; popValue.classList.remove('is-in', 'is-out'); }
+            resetHistoryRowPreview();
+            if (popSaveBtn) popSaveBtn.disabled = true;
+            return { changed: false };
+        }
+
+        // จ่ายออก: จ่ายมากขึ้น → ยอดสะสม(movements) ลดลง = -(newQty-oldQty) ใช้ preview คอลัมน์ยอดสะสม/มูลค่าเสมอ
+        var itemDelta = newQty - oldQty;
+        var movStockImpact = -itemDelta;
+        // ยอดคงเหลือจริงในระบบเปลี่ยนตามส่วนต่าง เฉพาะเมื่อ "คืนสต๊อก"; ไม่คืน = ระบบคงเดิม
+        var sysStockImpact = returnStock ? movStockImpact : 0;
+        var currentBalance = (lastHistoryPayload && lastHistoryPayload.summary) ? Number(lastHistoryPayload.summary.current_qty || 0) : 0;
+        var projectedBalance = currentBalance + sysStockImpact;
+        var oldLineValue = oldQty * oldPrice;
+        var newLineValue = newQty * newPrice;
+        var valueImpact = -(newLineValue - oldLineValue); // direction out → factor -1
+        if (Math.abs(valueImpact) < 0.005) valueImpact = 0; // กัน -0.00
+        var changed = Math.abs(itemDelta) > 0.000001 || Math.abs(newPrice - oldPrice) > 0.000001;
+
+        if (popBalance) {
+            popBalance.textContent = fmtUnit(projectedBalance, unit) + ' ' + unit;
+            popBalance.classList.toggle('is-out', projectedBalance < 0);
+            popBalance.classList.remove('is-in');
+        }
+        if (popValue) {
+            popValue.textContent = (valueImpact > 0 ? '+' : '') + fmt.format(valueImpact) + ' ฿';
+            popValue.classList.toggle('is-in', valueImpact > 0);
+            popValue.classList.toggle('is-out', valueImpact < 0);
+        }
+
+        // preview บนตาราง: คอลัมน์ยอดสะสม/มูลค่าอิง movements เสมอ (เปลี่ยนไม่ว่าคืนหรือไม่คืน)
+        if (changed) {
+            updateHistoryRowPreview(newQty, newPrice, movStockImpact, valueImpact);
+        } else {
+            resetHistoryRowPreview();
+        }
+
+        if (popSaveBtn) popSaveBtn.disabled = popSaving || !changed;
+        return { changed: changed, newQty: newQty, newPrice: newPrice, returnStock: returnStock };
+    }
+
+    function updateReturnHint() {
+        if (!popReturnHint) return;
+        var returnStock = !popReturn || popReturn.checked;
+        if (returnStock) {
+            popReturnHint.classList.remove('is-warn');
+            popReturnHint.textContent = 'ลดจำนวน → ระบบคืนของเข้าคลัง ยอดคงเหลือเพิ่มตามส่วนต่าง';
+        } else {
+            popReturnHint.classList.add('is-warn');
+            popReturnHint.textContent = 'แก้เฉพาะตัวเลข/มูลค่าที่บันทึก ยอดคงเหลือจริงไม่เปลี่ยน (ยอดสะสมในประวัติอาจไม่ตรงระบบ)';
+        }
+    }
+
+    function openEditPopover(trigger) {
+        if (!popEl || !trigger || !lastHistoryPayload || !lastHistoryPayload.transactions) return;
+        var detailId = trigger.getAttribute('data-detail-id');
+        var row = null;
+        for (var i = 0; i < lastHistoryPayload.transactions.length; i++) {
+            if (String(lastHistoryPayload.transactions[i].detail_id) === String(detailId)) {
+                row = lastHistoryPayload.transactions[i];
+                break;
+            }
+        }
+        if (!row) return;
+
+        // ปิด UI แก้อื่น ๆ ก่อน (panel ใหญ่/ปรับยอด/ลอต) แล้ว claim activeEditRow
+        closeEditPanel();
+        closeAdjustPanel();
+        closeLotBalancePanel();
+        hideActionMessage();
+        // ซ่อน tooltip ของปุ่มที่กด ไม่ให้ค้างทับ popover
+        if (window.bootstrap && bootstrap.Tooltip) {
+            var tt = bootstrap.Tooltip.getInstance(trigger);
+            if (tt) tt.hide();
+        }
+
+        popSaving = false;
+        popRow = row;
+        popTriggerBtn = trigger;
+        activeEditRow = row;
+        editMode = 'out';
+        if (popReturn) popReturn.checked = true; // ทุกครั้งที่เปิด default = คืนสต๊อก
+        updateReturnHint();
+
+        var unit = ctx.unit_name;
+        if (popDoc) popDoc.textContent = (row.order_no || '-');
+        if (popUnit) popUnit.textContent = unit;
+        if (popQty) popQty.value = stripNumber(Number(row.qty || 0));
+        if (popPrice) popPrice.value = stripNumber(Number(row.unit_price || 0));
+        if (popQtyWas) popQtyWas.textContent = 'เดิม ' + fmtUnit(Number(row.qty || 0), unit) + ' ' + unit;
+        if (popPriceWas) popPriceWas.textContent = 'เดิม ' + fmt.format(Number(row.unit_price || 0)) + ' ฿';
+        hidePopMessage();
+        if (popSaveBtn) { popSaveBtn.disabled = true; popSaveBtn.classList.remove('disabled'); }
+
+        popEl.hidden = false;
+        popEl.classList.add('is-entering');
+        // วางตำแหน่งหลัง layout พร้อม (ต้องมี offsetWidth/Height จริง)
+        positionEditPopover();
+        requestAnimationFrame(function () {
+            positionEditPopover();
+            requestAnimationFrame(function () { popEl.classList.remove('is-entering'); });
+        });
+        computePopoverImpact();
+        setTimeout(function () { if (popQty) { popQty.focus(); popQty.select(); } }, 30);
+    }
+
+    function closeEditPopover() {
+        if (!popEl || popEl.hidden) return;
+        popEl.hidden = true;
+        popEl.classList.remove('is-entering', 'is-above');
+        hidePopMessage();
+        if (popRow) resetHistoryRowPreview();
+        popRow = null;
+        popTriggerBtn = null;
+        activeEditRow = null;
+        popSaving = false;
+    }
+
+    function setPopoverSaving(isSaving) {
+        popSaving = isSaving;
+        if (popSaveBtn) {
+            popSaveBtn.disabled = isSaving || popSaveBtn.disabled;
+            popSaveBtn.classList.toggle('disabled', isSaving);
+        }
+        if (popCancelBtn) popCancelBtn.disabled = isSaving;
+        if (popCloseBtn) popCloseBtn.disabled = isSaving;
+        if (popQty) popQty.disabled = isSaving;
+        if (popPrice) popPrice.disabled = isSaving;
+    }
+
+    function savePopover() {
+        if (!popRow || !lastHistoryPayload || !lastHistoryPayload.meta) return;
+        var res = computePopoverImpact();
+        if (!res.changed) {
+            showPopMessage('error', 'จำนวนและราคาใหม่เท่ากับค่าเดิม ไม่ต้องบันทึก');
+            return;
+        }
+        var newQty = res.newQty;
+        var newPrice = res.newPrice;
+        var returnStock = res.returnStock !== false;
+
+        var meta = lastHistoryPayload.meta;
+        var body = new URLSearchParams({
+            detail_id: popRow.detail_id,
+            warehouse_id: meta.warehouse_id || ctx.warehouse_id,
+            item_code: meta.item_code || ctx.item_code,
+            qty: stripNumber(newQty),
+            unit_price: stripNumber(newPrice),
+            return_stock: returnStock ? '1' : '0',
+            note: (returnStock ? 'แก้จำนวน/ราคาใบเบิกจากประวัติการเคลื่อนไหววัสดุ' : 'แก้จำนวน/ราคาใบเบิก (ไม่คืนสต๊อก) จากประวัติการเคลื่อนไหววัสดุ')
+        });
+        var csrfParam = document.querySelector('meta[name="csrf-param"]');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfParam && csrfToken) {
+            body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+        }
+
+        setPopoverSaving(true);
+        showPopMessage('info', 'กำลังบันทึกและปรับยอดคงเหลือ...');
+        fetch($jsReqDetailUpdateUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            credentials: 'same-origin',
+            body: body.toString()
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res2) {
+                if (!res2 || !res2.success) {
+                    throw new Error((res2 && res2.message) ? res2.message : 'บันทึกไม่สำเร็จ');
+                }
+                var unit = ctx.unit_name;
+                if (typeof res2.current_qty !== 'undefined') {
+                    updateMainBalanceRow(Number(res2.current_qty || 0));
+                }
+                showActionMessage('success', 'แก้ ' + (res2.order_no || '-') + ': จำนวน ' +
+                    fmtUnit(Number(res2.old_qty || 0), unit) + ' → ' + fmtUnit(Number(res2.new_qty || newQty), unit) +
+                    ' · ราคา ' + fmt.format(Number(res2.old_unit_price || 0)) + ' → ' + fmt.format(Number(res2.new_unit_price || newPrice)));
+                closeEditPopover();
+                loadHistory(true); // keepActionMessage
+            })
+            .catch(function (err) {
+                showPopMessage('error', err && err.message ? err.message : 'บันทึกไม่สำเร็จ');
+                setPopoverSaving(false);
+                computePopoverImpact();
+            });
+    }
+
+    if (popQty) popQty.addEventListener('input', computePopoverImpact);
+    if (popPrice) popPrice.addEventListener('input', computePopoverImpact);
+    if (popReturn) popReturn.addEventListener('change', function () {
+        updateReturnHint();
+        computePopoverImpact();
+    });
+    if (popSaveBtn) popSaveBtn.onclick = savePopover;
+    if (popCancelBtn) popCancelBtn.onclick = closeEditPopover;
+    if (popCloseBtn) popCloseBtn.onclick = closeEditPopover;
+    // Enter = บันทึก (ถ้าแก้ได้), Esc = ปิด
+    if (popEl) {
+        popEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); if (popSaveBtn && !popSaveBtn.disabled) savePopover(); }
+            else if (e.key === 'Escape') { e.preventDefault(); closeEditPopover(); }
+        });
+    }
+    // คลิกนอก popover (และไม่ใช่ปุ่มดินสอ) → ปิด
+    document.addEventListener('mousedown', function (e) {
+        if (!popEl || popEl.hidden) return;
+        if (popEl.contains(e.target)) return;
+        if (popTriggerBtn && (e.target === popTriggerBtn || (popTriggerBtn.contains && popTriggerBtn.contains(e.target)))) return;
+        if (e.target.closest && e.target.closest('.hist-edit-btn')) return; // เปลี่ยนไปแถวอื่น handler จะเปิดใหม่เอง
+        closeEditPopover();
+    });
+    // scroll ในตาราง/modal หรือ resize → reposition (ปิดถ้าปุ่มหลุดจอ)
+    var repositionRaf = null;
+    function onReflow() {
+        if (!popEl || popEl.hidden || !popTriggerBtn) return;
+        if (repositionRaf) cancelAnimationFrame(repositionRaf);
+        repositionRaf = requestAnimationFrame(function () {
+            var r = popTriggerBtn.getBoundingClientRect();
+            var mb = modalEl.querySelector('.modal-body');
+            var bound = mb ? mb.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+            // ปุ่มเลื่อนพ้นพื้นที่ตารางที่มองเห็น → ปิด popover
+            if (r.bottom < bound.top || r.top > bound.bottom) { closeEditPopover(); return; }
+            positionEditPopover();
+        });
+    }
+    var modalBodyEl = modalEl.querySelector('.modal-body');
+    if (modalBodyEl) modalBodyEl.addEventListener('scroll', onReflow, true);
+    window.addEventListener('resize', onReflow);
+
     if (adjustBtn) adjustBtn.onclick = openStockAdjustModal;
     if (lotbalBtn) lotbalBtn.onclick = openLotBalancePanel;
     if (lotbalCloseBtn) lotbalCloseBtn.onclick = closeLotBalancePanel;
@@ -2233,7 +2870,7 @@ $js = <<<JS
         var editTrigger = event.target.closest ? event.target.closest('.hist-edit-btn') : null;
         if (editTrigger) {
             event.preventDefault();
-            openEditPanel(editTrigger);
+            openEditPopover(editTrigger); // แถวจ่ายออก → popover ในตำแหน่งปุ่ม (panel ใหญ่สงวนไว้ให้รายการปรับยอด)
             return;
         }
         var deleteTrigger = event.target.closest ? event.target.closest('.hist-delete-btn') : null;
@@ -2386,7 +3023,7 @@ $js = <<<JS
                 var balValSr = t.balance_value < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
                 var actionParts = [];
                 if (t.can_edit_qty) {
-                    actionParts.push('<button type="button" class="btn btn-sm btn-warning hist-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="แก้จำนวน/ราคาในใบเบิก และให้ระบบคำนวณผลกระทบ FIFO/stock ใหม่" aria-label="แก้จำนวนหรือราคาในใบเบิก และให้ระบบคำนวณผลกระทบ FIFO/stock ใหม่" ' +
+                    actionParts.push('<button type="button" class="btn btn-sm btn-warning hist-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="แก้จำนวน/ราคาที่จ่ายออก — ปรับได้ตรงนี้ ระบบคำนวณ FIFO/ยอดคงเหลือใหม่ให้" aria-label="แก้จำนวนหรือราคาที่จ่ายออกในใบเบิก ระบบคำนวณผลกระทบ FIFO และยอดคงเหลือใหม่" ' +
                         'data-detail-id="' + escHtml(t.detail_id) + '" ' +
                         'data-order-no="' + escHtml(t.order_no) + '" ' +
                         'data-label="' + escHtml(t.source_label) + '">' +
@@ -2470,6 +3107,7 @@ $js = <<<JS
         activeBalanceRow = btn.closest('tr');
         closeAdjustPanel();
         closeEditPanel();
+        closeEditPopover();
         hideActionMessage();
 
         setText('hist-item-code', ctx.item_code);
@@ -2508,6 +3146,7 @@ $js = <<<JS
     });
 
     modalEl.addEventListener('hidden.bs.modal', function () {
+        closeEditPopover();
         disposeHistoryTooltips();
     });
 

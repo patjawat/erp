@@ -365,12 +365,15 @@ class StockAdjustController extends Controller
         $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
         $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
         $note = trim((string) Yii::$app->request->post('note', ''));
+        // return_stock: 1 (default) = ปรับ FIFO/ยอดคงเหลือตามส่วนต่าง; 0 = แก้เฉพาะตัวเลข/มูลค่าบนบรรทัด ไม่แตะ stock
+        $returnStockRaw = (string) Yii::$app->request->post('return_stock', '1');
+        $returnStock = !in_array($returnStockRaw, ['0', 'false', 'no', ''], true);
 
         if ($detailId <= 0) {
             return ['success' => false, 'message' => 'ไม่พบรายการใบเบิกที่ต้องการแก้ไข'];
         }
-        if ($newQty <= 0) {
-            return ['success' => false, 'message' => 'จำนวนใหม่ต้องมากกว่า 0'];
+        if ($newQty < 0) {
+            return ['success' => false, 'message' => 'จำนวนใหม่ต้องไม่ติดลบ (0 = ยกเลิกการจ่ายบรรทัดนี้)'];
         }
         if ($newUnitPrice !== null && $newUnitPrice < 0) {
             return ['success' => false, 'message' => 'ราคา/หน่วยต้องไม่น้อยกว่า 0'];
@@ -419,12 +422,16 @@ class StockAdjustController extends Controller
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
-            if ($delta > 0) {
-                InventoryService::processFIFO($itemCode, $warehouseId, $delta, $order->id, $detail->id);
-                $detail = StockDetail::findOne($detailId);
-            } else {
-                InventoryService::returnFifoAllocation($detail, $warehouseId, abs($delta));
+            if ($returnStock) {
+                if ($delta > 0) {
+                    InventoryService::processFIFO($itemCode, $warehouseId, $delta, $order->id, $detail->id);
+                    $detail = StockDetail::findOne($detailId);
+                } else {
+                    InventoryService::returnFifoAllocation($detail, $warehouseId, abs($delta));
+                }
             }
+            // $returnStock === false → ไม่แตะ FIFO/stock_balance; อัปเดตเฉพาะจำนวน/ราคาบน detail ด้านล่าง
+            // (ยอดคงเหลือจริงคงเดิม แต่ยอดสะสมในประวัติ IN−OUT จะเปลี่ยน → variance ตามที่ผู้ใช้ยอมรับ)
 
             $now = date('Y-m-d H:i:s');
             $detailData = is_array($detail->data_json)
@@ -443,8 +450,9 @@ class StockAdjustController extends Controller
                 'new_qty' => $newQty,
                 'old_unit_price' => $oldUnitPrice,
                 'new_unit_price' => $newUnitPrice,
-                'stock_delta' => -$delta,
+                'stock_delta' => $returnStock ? -$delta : 0.0,
                 'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'return_stock' => $returnStock,
                 'note' => $note,
                 'source' => 'item-history-inline-edit',
             ];
@@ -476,8 +484,9 @@ class StockAdjustController extends Controller
                 'new_qty' => $newQty,
                 'old_unit_price' => $oldUnitPrice,
                 'new_unit_price' => $newUnitPrice,
-                'stock_delta' => -$delta,
+                'stock_delta' => $returnStock ? -$delta : 0.0,
                 'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'return_stock' => $returnStock,
                 'note' => $note,
                 'source' => 'item-history-inline-edit',
             ];
@@ -501,8 +510,9 @@ class StockAdjustController extends Controller
                 'old_unit_price' => $oldUnitPrice,
                 'new_unit_price' => $newUnitPrice,
                 'delta' => $delta,
-                'stock_delta' => -$delta,
+                'stock_delta' => $returnStock ? -$delta : 0.0,
                 'value_delta' => ($oldQty * $oldUnitPrice) - ($newQty * $newUnitPrice),
+                'return_stock' => $returnStock,
                 'current_qty' => $currentBalance,
             ];
         } catch (\Exception $e) {
