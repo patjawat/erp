@@ -98,7 +98,7 @@ class DefaultController extends Controller
             $dataProvider = new ArrayDataProvider(['allModels' => [], 'pagination' => ['pageSize' => 20]]);
             $receivedCount = 0;
             $totalPoints = 0;
-            Yii::$app->session->setFlash('info', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน: php yii migrate --migrationPath=@app/modules/appreciation/migrations');
+            Yii::$app->session->setFlash('info', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน: php yii migrate');
         }
 
         return $this->render('index', [
@@ -179,7 +179,7 @@ class DefaultController extends Controller
                         'redirect_url' => Url::to(['/me']),
                     ];
                 }
-                Yii::$app->session->setFlash('error', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน migration: php yii migrate --migrationPath=@app/modules/appreciation/migrations');
+                Yii::$app->session->setFlash('error', 'ยังไม่ได้ติดตั้งตารางโมดูลคำขอบคุณ กรุณารัน migration: php yii migrate');
                 return $this->redirect(['/me']);
             }
             if (Yii::$app->request->isAjax) {

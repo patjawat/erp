@@ -7,13 +7,13 @@
 รัน migration (จากโฟลเดอร์โปรเจกต์):
 
 ```bash
-php yii migrate --migrationPath=@app/modules/appreciation/migrations --interactive=0
+php yii migrate --interactive=0
 ```
 
 หรือถ้าใช้ Docker:
 
 ```bash
-docker-compose exec app php yii migrate --migrationPath=@app/modules/appreciation/migrations --interactive=0
+docker-compose exec app php yii migrate --interactive=0
 ```
 
 ## ฟีเจอร์
