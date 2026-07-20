@@ -12,7 +12,7 @@ INSERT INTO {{%medsop_team_setting}}
     (team_group_id, code, active, created_at, updated_at)
 SELECT
     t.id,
-    UPPER(SUBSTRING_INDEX(TRIM(t.title), ' ', 1)),
+    LEFT(UPPER(SUBSTRING_INDEX(TRIM(t.title), ' ', 1)), 20),
     1,
     '{$now}',
     '{$now}'

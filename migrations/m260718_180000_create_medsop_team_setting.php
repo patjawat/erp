@@ -27,7 +27,7 @@ INSERT INTO {{%medsop_team_setting}}
     (team_group_id, code, leader_employee_id, active, created_by, updated_by, created_at, updated_at)
 SELECT
     s.coordinator_team_group_id,
-    UPPER(SUBSTRING_INDEX(MAX(t.title), ' ', 1)),
+    LEFT(UPPER(SUBSTRING_INDEX(TRIM(MAX(t.title)), ' ', 1)), 20),
     MAX(s.coordinator_employee_id),
     1,
     MAX(s.created_by),
