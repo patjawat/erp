@@ -5,27 +5,30 @@ use yii\helpers\Url;
 ?>
 <div class="d-flex align-items-center gap-2">
     <a href="<?= Url::to(['/hr/default/dashboard']) ?>"
+       aria-label="ภาพรวม"
        class="btn <?= ($active === 'overview' || $active === 'dashboard') ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
-        <i data-lucide="layout-grid" width="16" height="16"></i>
+        <i data-lucide="layout-grid" width="16" height="16" aria-hidden="true"></i>
         <span class="d-none d-sm-inline">ภาพรวม</span>
     </a>
 
     <a href="<?= Url::to(['/hr/employees']) ?>"
+       aria-label="ทะเบียนบุคลากร"
        class="btn <?= $active === 'employees' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
-        <i data-lucide="users" width="16" height="16"></i>
+        <i data-lucide="users" width="16" height="16" aria-hidden="true"></i>
         <span class="d-none d-sm-inline">ทะเบียนบุคลากร</span>
     </a>
 
     <a href="<?= Url::to(['/hr/organization/diagram']) ?>"
+       aria-label="ผังโครงสร้างองค์กร"
        class="btn <?= $active === 'organization' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
-        <i data-lucide="network" width="16" height="16"></i>
+        <i data-lucide="network" width="16" height="16" aria-hidden="true"></i>
         <span class="d-none d-sm-inline">ผังโครงสร้างองค์กร</span>
     </a>
 
     <div class="dropdown">
         <button class="btn <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle d-inline-flex align-items-center gap-2"
-                type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-            <i data-lucide="settings" width="16" height="16"></i>
+                type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" aria-label="ตั้งค่า">
+            <i data-lucide="settings" width="16" height="16" aria-hidden="true"></i>
             <span class="d-none d-sm-inline">ตั้งค่า</span>
         </button>
 
