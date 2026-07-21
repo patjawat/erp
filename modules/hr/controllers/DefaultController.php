@@ -501,6 +501,7 @@ class DefaultController extends Controller
         $departmentRows = $departmentQuery->groupBy(['org.id', 'org.name'])->orderBy(['cnt' => SORT_DESC])->all();
         $departmentLabels = array_map(function ($t) { return $t !== null && $t !== '' ? $t : 'ไม่ระบุ'; }, array_column($departmentRows, 'title'));
         $departmentCodes = array_map(function ($v) { return $v === null ? '' : (string) $v; }, array_column($departmentRows, 'code'));
+        $departmentLabelMap = array_combine($departmentCodes, $departmentLabels) ?: [];
         $departmentValues = array_map('intval', array_column($departmentRows, 'cnt'));
 
         // อายุงาน (ปี) – ช่วงอายุงาน
@@ -578,7 +579,7 @@ class DefaultController extends Controller
         $avgYearsService = $avgYearsService !== null ? round((float) $avgYearsService, 1) : null;
         $organizationDiagramCount = (int) Organization::find()->where(['tb_name' => 'diagram'])->count('id');
         $teamGroupCount = (int) TeamGroup::find()->count('id');
-        $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories);
+        $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories, $departmentLabelMap);
 
         return $this->render('dashboard', [
             'totalCount' => $totalCount,
@@ -714,9 +715,9 @@ class DefaultController extends Controller
      * เงื่อนไข SQL สำหรับ filter ช่วงอายุงาน (ใช้กับ raw SQL หรือ Query + Expression)
      * @param string $alias alias ตาราง employees เช่น 'e' หรือ '' สำหรับไม่มี alias
      */
-    private static function buildDashboardTooltipPeople($query, array $genYearRanges, array $serviceBandLabels, array $ageCategories): array
+    private static function buildDashboardTooltipPeople($query, array $genYearRanges, array $serviceBandLabels, array $ageCategories, array $departmentLabelMap = []): array
     {
-        $maxPeoplePerBucket = 5;
+        $maxPeoplePerBucket = 300;
         $fallbackAvatar = Url::to('@web/img/profiles/avatar-01.jpg');
         $result = [
             'gender' => [],
@@ -747,8 +748,21 @@ class DefaultController extends Controller
                 'fname',
                 'lname',
                 'avatar',
+                'ref',
                 'gender',
                 'birthday',
+                'age_bucket' => new \yii\db\Expression("
+                    CASE
+                        WHEN birthday IS NULL THEN NULL
+                        WHEN YEAR(CURDATE()) - YEAR(birthday) < 20 THEN '20+'
+                        WHEN YEAR(CURDATE()) - YEAR(birthday) >= 60 THEN '60+'
+                        ELSE CONCAT(
+                            5 * FLOOR((YEAR(CURDATE()) - YEAR(birthday)) / 5),
+                            ' - ',
+                            5 * FLOOR((YEAR(CURDATE()) - YEAR(birthday)) / 5) + 4
+                        )
+                    END
+                "),
                 'join_date',
                 'department',
                 'employee_type_id',
@@ -771,6 +785,61 @@ class DefaultController extends Controller
             }
         };
 
+        $avatarRefs = array_values(array_unique(array_filter(array_map(static function ($row) {
+            return trim((string)($row['ref'] ?? ''));
+        }, $peopleRows), static function ($ref) {
+            return $ref !== '';
+        })));
+
+        $avatarUploads = [];
+        if (!empty($avatarRefs)) {
+            $avatarUploads = Uploads::find()
+                ->select(['id', 'ref'])
+                ->where(['ref' => $avatarRefs, 'name' => 'avatar'])
+                ->indexBy('ref')
+                ->asArray()
+                ->all();
+        }
+
+        $positionIds = array_values(array_unique(array_filter(array_map(static function ($row) {
+            return trim((string)($row['employee_position_id'] ?? ''));
+        }, $peopleRows), static function ($id) {
+            return $id !== '';
+        })));
+
+        $positionTitles = [];
+        if (!empty($positionIds)) {
+            $positionTitles = EmployeePosition::find()
+                ->select(['id', 'title'])
+                ->where(['id' => $positionIds])
+                ->indexBy('id')
+                ->asArray()
+                ->all();
+        }
+
+        $resolveAvatarUrl = static function (array $row) use ($fallbackAvatar, $avatarUploads) {
+            $ref = trim((string)($row['ref'] ?? ''));
+            $uploadId = $ref !== '' ? ($avatarUploads[$ref]['id'] ?? null) : null;
+            if ($uploadId) {
+                return Url::to(['/filemanager/uploads/get-image', 'id' => $uploadId]);
+            }
+
+            $avatar = trim((string)($row['avatar'] ?? ''));
+            if ($avatar === '') {
+                return $fallbackAvatar;
+            }
+
+            if (preg_match('/^(?:https?:)?\/\//i', $avatar) || strpos($avatar, '/') === 0 || strpos($avatar, '@') === 0) {
+                return Url::to($avatar);
+            }
+
+            if (strpos($avatar, '/') !== false) {
+                return Url::to('@web/' . ltrim($avatar, '/'));
+            }
+
+            return Url::to('@web/avatar/' . rawurlencode($avatar));
+        };
+
         foreach ($peopleRows as $row) {
             $name = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
                 $row['prefix'] ?? '',
@@ -779,20 +848,27 @@ class DefaultController extends Controller
             ], static function ($value) {
                 return trim((string)$value) !== '';
             }))));
-            $avatar = trim((string)($row['avatar'] ?? ''));
-            $avatarUrl = $avatar !== '' ? Url::to('@web/avatar/' . rawurlencode($avatar)) : $fallbackAvatar;
+            $avatarUrl = $resolveAvatarUrl($row);
+            $departmentCode = (string)($row['department'] ?? '');
+            $departmentLabel = $departmentLabelMap[$departmentCode] ?? null;
             $person = [
                 'id' => (int)($row['id'] ?? 0),
                 'name' => $name !== '' ? $name : 'ไม่ระบุชื่อ',
                 'avatar' => $avatarUrl,
+                'profileUrl' => Url::to(['/hr/employees/view', 'id' => (int)($row['id'] ?? 0)]),
+                'position' => $positionTitles[(string)($row['employee_position_id'] ?? '')]['title'] ?? 'ไม่ระบุตำแหน่ง',
+                'department' => $departmentLabel !== null && $departmentLabel !== '' ? $departmentLabel : ($departmentCode !== '' ? 'แผนก/ฝ่าย #' . $departmentCode : 'ไม่ระบุแผนก/ฝ่าย'),
             ];
 
-            $gender = (string)($row['gender'] ?? '');
+            $gender = preg_replace('/\s+/u', '', trim((string)($row['gender'] ?? '')));
             $department = (string)($row['department'] ?? '');
             $employeeTypeId = (string)($row['employee_type_id'] ?? '');
             $employeePositionId = (string)($row['employee_position_id'] ?? '');
             $generation = self::dashboardGenerationBucket($row['birthday'] ?? null, $genYearRanges);
-            $age = self::dashboardAgeBucket($row['birthday'] ?? null, $ageCategories);
+            $age = trim((string)($row['age_bucket'] ?? ''));
+            if ($age === '') {
+                $age = self::dashboardAgeBucket($row['birthday'] ?? null, $ageCategories);
+            }
             $serviceBand = self::dashboardServiceBandBucket($row['join_date'] ?? null, $serviceBandLabels);
 
             $pushPerson('gender', $gender, $person);
