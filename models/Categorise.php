@@ -4,6 +4,7 @@ namespace app\models;
 
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use app\components\CategoriseHelper;
 use app\modules\hr\models\Employees;
 use app\modules\filemanager\components\FileManagerHelper;
@@ -17,7 +18,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property string $name ชนิดข้อมูล
  * @property string|null $title ชื่อ
  * @property string|null $description รายละเอียดเพิ่มเติม
- * @property string|null $data_json
+ * @property array|string|null $data_json
  * @property int|null $active
  */
 class Categorise extends \yii\db\ActiveRecord
@@ -76,6 +77,70 @@ class Categorise extends \yii\db\ActiveRecord
         }
         // if(isset($this->code)){
         // }
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        $this->normalizeDataJson();
+    }
+
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
+    private function normalizeDataJson()
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if ($this->data_json === null || $this->data_json === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        if (is_string($this->data_json)) {
+            try {
+                $decoded = Json::decode($this->data_json, true);
+                $this->data_json = is_array($decoded) ? $decoded : [];
+            } catch (\InvalidArgumentException $e) {
+                $this->data_json = [];
+            }
+        }
+    }
+
+    private function isNativeJsonColumn()
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        if ($column === null) {
+            return false;
+        }
+
+        return $column->type === 'json' || stripos((string)$column->dbType, 'json') !== false;
     }
 
     public function Upload($name)
