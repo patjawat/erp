@@ -14,30 +14,6 @@ $countFemale = (int)($countFemale ?? 0);
 $organizationDiagramCount = (int)($organizationDiagramCount ?? 0);
 $teamGroupCount = (int)($teamGroupCount ?? 0);
 $genderRatio = $totalCount > 0 ? (round($countMale / $totalCount * 100) . ' : ' . round($countFemale / $totalCount * 100)) : '—';
-$dashboardFilters = [
-    'gender' => $filterGender ?? null,
-    'department' => $filterDepartment ?? null,
-    'employee_type_id' => $filterPositionType ?? null,
-    'workgroup' => $filterWorkgroup ?? null,
-    'gen' => $filterGen ?? null,
-    'employee_position_id' => $filterPositionName ?? null,
-    'service_band' => $filterServiceBand ?? null,
-];
-$buildDashboardFilterUrl = static function (string $key, $value) use ($dashboardFilters): string {
-    $params = ['/hr/default/dashboard'];
-    foreach ($dashboardFilters as $filterKey => $filterValue) {
-        if ($filterValue !== null && $filterValue !== '') {
-            $params[$filterKey] = $filterValue;
-        }
-    }
-    if ($value === null || $value === '') {
-        unset($params[$key]);
-    } else {
-        $params[$key] = $value;
-    }
-
-    return Url::to($params);
-};
 $renderDashboardFilterLinks = static function (
     string $id,
     array $labels,
@@ -45,35 +21,12 @@ $renderDashboardFilterLinks = static function (
     string $filterKey,
     array $codes,
     string $ariaLabel
-) use ($dashboardFilters, $buildDashboardFilterUrl): string {
-    $items = [];
-    foreach (array_values($labels) as $idx => $label) {
-        $count = (int)($values[$idx] ?? 0);
-        if ((string)$label === '' || $count <= 0) {
-            continue;
-        }
-        $code = $codes[$idx] ?? $label;
-        $isActive = (string)($dashboardFilters[$filterKey] ?? '') === (string)$code;
-        $classes = 'hr-chart-filter-link' . ($isActive ? ' is-active' : '');
-        $content = Html::tag('span', Html::encode((string)$label), ['class' => 'hr-chart-filter-link__label']) .
-            Html::tag('span', Html::encode(number_format($count)), ['class' => 'hr-chart-filter-link__count']);
-        $items[] = Html::tag(
-            'span',
-            Html::a($content, $buildDashboardFilterUrl($filterKey, $code), [
-                'class' => $classes,
-                'aria-current' => $isActive ? 'true' : null,
-                'title' => 'กรองตาม ' . (string)$label,
-            ]),
-            ['role' => 'listitem']
-        );
-    }
-
-    return Html::tag('div', implode('', $items), [
+): string {
+    return Html::tag('span', $ariaLabel, [
         'id' => $id,
-        'class' => 'hr-chart-filter-list',
-        'role' => 'list',
-        'aria-label' => $ariaLabel,
+        'style' => 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;',
     ]);
+
 };
 $genderLabels = ['ชาย', 'หญิง'];
 $genderValues = [$countMale, $countFemale];
@@ -343,61 +296,6 @@ $this->registerCss(<<<'CSS'
     padding-top: .8rem !important;
 }
 
-.hr-chart-filter-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
-    justify-content: center;
-    margin-top: .65rem;
-    padding-top: .65rem;
-    border-top: 1px solid var(--hr-line);
-}
-
-.hr-chart-filter-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    max-width: min(100%, 18rem);
-    gap: .4rem;
-    border: 1px solid var(--hr-line);
-    border-radius: 999px;
-    background: var(--hr-surface);
-    color: var(--hr-ink-2);
-    padding: .35rem .7rem;
-    text-decoration: none;
-    transition: background-color 160ms cubic-bezier(.16, 1, .3, 1), border-color 160ms cubic-bezier(.16, 1, .3, 1), color 160ms cubic-bezier(.16, 1, .3, 1), transform 120ms cubic-bezier(.16, 1, .3, 1);
-}
-
-.hr-chart-filter-link__label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.hr-chart-filter-link:hover {
-    background: var(--hr-surface-1);
-    border-color: rgba(15, 23, 42, .18);
-    color: var(--hr-primary);
-}
-
-.hr-chart-filter-link:active {
-    transform: translateY(1px);
-}
-
-.hr-chart-filter-link.is-active {
-    background: var(--hr-primary);
-    border-color: var(--hr-primary);
-    color: #fff;
-}
-
-.hr-chart-filter-link__count {
-    flex: 0 0 auto;
-    font-variant-numeric: tabular-nums;
-    color: currentColor;
-    opacity: .82;
-}
-
 .hr-chart-tooltip {
     min-width: 220px;
     max-width: 280px;
@@ -461,6 +359,241 @@ $this->registerCss(<<<'CSS'
     margin-top: .55rem;
     color: var(--hr-ink-3);
     font-size: .76rem;
+}
+
+.hr-person-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.hr-person-panel.is-open {
+    display: flex;
+}
+
+.hr-person-panel__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .36);
+}
+
+.hr-person-panel__sheet {
+    position: relative;
+    width: min(520px, calc(100vw - 2rem));
+    max-height: min(680px, calc(100vh - 2rem));
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
+}
+
+.hr-person-panel__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem .85rem;
+    border-bottom: 1px solid rgba(148, 163, 184, .18);
+}
+
+.hr-person-panel__eyebrow {
+    color: var(--hr-ink-3);
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.hr-person-panel__title {
+    color: var(--hr-ink-1);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.hr-person-panel__meta {
+    color: var(--hr-ink-3);
+    font-size: .78rem;
+    margin-top: .2rem;
+}
+
+.hr-person-panel__action-row {
+    display: none;
+    margin-top: .65rem;
+}
+
+.hr-person-panel__action-row.is-visible {
+    display: flex;
+}
+
+.hr-person-panel__filter-btn,
+.hr-filter-confirm__apply {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 7px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: .78rem;
+    font-weight: 800;
+    line-height: 1.1;
+    padding: .45rem .75rem;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
+}
+
+.hr-person-panel__filter-btn:hover,
+.hr-filter-confirm__apply:hover {
+    background: #1d4ed8;
+}
+
+.hr-person-panel__close {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    color: var(--hr-ink-2);
+    background: rgba(148, 163, 184, .12);
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.hr-person-panel__close:hover {
+    background: rgba(148, 163, 184, .2);
+}
+
+.hr-person-panel__list {
+    max-height: calc(min(680px, calc(100vh - 2rem)) - 92px);
+    overflow: auto;
+    padding: .55rem;
+}
+
+.hr-person-panel__row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: .75rem;
+    align-items: center;
+    padding: .65rem;
+    border-radius: 8px;
+}
+
+.hr-person-panel__content {
+    min-width: 0;
+}
+
+.hr-person-panel__row + .hr-person-panel__row {
+    border-top: 1px solid rgba(148, 163, 184, .14);
+}
+
+.hr-person-panel__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 2px #ffffff, 0 4px 12px rgba(15, 23, 42, .16);
+}
+
+.hr-person-panel__name {
+    color: var(--hr-ink-1);
+    font-size: .88rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.hr-person-panel__detail {
+    color: var(--hr-ink-3);
+    font-size: .78rem;
+    line-height: 1.35;
+    margin-top: .16rem;
+}
+
+.hr-person-panel__profile-link {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: .35rem .6rem;
+    border: 1px solid rgba(37, 99, 235, .22);
+    border-radius: 7px;
+    background: rgba(37, 99, 235, .08);
+    color: #1d4ed8;
+    font-size: .76rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.hr-person-panel__profile-link:hover {
+    background: rgba(37, 99, 235, .14);
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+#dashboardRoot .apexcharts-bar-area,
+#dashboardRoot .apexcharts-pie-area,
+#dashboardRoot .apexcharts-radialbar-area {
+    cursor: pointer;
+}
+
+.hr-filter-confirm {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1095;
+    display: none;
+    width: min(360px, calc(100vw - 2rem));
+    padding: .8rem;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 8px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
+}
+
+.hr-filter-confirm.is-open {
+    display: block;
+}
+
+.hr-filter-confirm__title {
+    color: var(--hr-ink-1);
+    font-size: .9rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.hr-filter-confirm__meta {
+    color: var(--hr-ink-3);
+    font-size: .76rem;
+    line-height: 1.35;
+    margin-top: .15rem;
+}
+
+.hr-filter-confirm__actions {
+    display: flex;
+    gap: .45rem;
+    justify-content: flex-end;
+    margin-top: .7rem;
+}
+
+.hr-filter-confirm__cancel {
+    min-height: 34px;
+    border: 1px solid rgba(148, 163, 184, .32);
+    border-radius: 7px;
+    background: #ffffff;
+    color: var(--hr-ink-2);
+    font-size: .78rem;
+    font-weight: 800;
+    padding: .45rem .7rem;
 }
 
 .hr-dashboard-empty {
@@ -1070,6 +1203,17 @@ $js = <<<'JS'
     if (!options.tooltip && inferredTooltipGroup) {
       options.tooltip = dashboardTooltip(inferredTooltipGroup);
     }
+    if (inferredTooltipGroup) {
+      var existingDataPointSelection = options.chart.events && options.chart.events.dataPointSelection;
+      options.chart.events = Object.assign({}, options.chart.events || {}, {
+        dataPointSelection: function(event, chartContext, opts) {
+          openPeoplePanel(inferredTooltipGroup, opts || {});
+          if (typeof existingDataPointSelection === 'function') {
+            return existingDataPointSelection(event, chartContext, opts);
+          }
+        }
+      });
+    }
     return options;
   }
   var tooltipPeople = d.tooltipPeople || {};
@@ -1097,23 +1241,35 @@ $js = <<<'JS'
     if (chart.type === 'bar' && xaxisCategories === d.positionTypeLabels && seriesNames.length) return 'workgroup';
     return null;
   }
+  var dashboardIndex = function(value) {
+    return typeof value === 'number' && isFinite(value) && value >= 0 ? value : -1;
+  };
   var getSeriesValue = function(opts) {
-    if (!opts || opts.dataPointIndex < 0) return 0;
-    if (Array.isArray(opts.series) && Array.isArray(opts.series[opts.seriesIndex])) {
-      return Number(opts.series[opts.seriesIndex][opts.dataPointIndex]) || 0;
+    if (!opts) return 0;
+    var dataIndex = dashboardIndex(opts.dataPointIndex);
+    var seriesIndex = dashboardIndex(opts.seriesIndex);
+    if (Array.isArray(opts.series) && Array.isArray(opts.series[seriesIndex]) && dataIndex >= 0) {
+      return Number(opts.series[seriesIndex][dataIndex]) || 0;
     }
-    if (Array.isArray(opts.series)) {
-      return Number(opts.series[opts.dataPointIndex]) || 0;
+    if (Array.isArray(opts.series) && dataIndex >= 0) {
+      return Number(opts.series[dataIndex]) || 0;
+    }
+    if (Array.isArray(opts.series) && seriesIndex >= 0) {
+      return Number(opts.series[seriesIndex]) || 0;
     }
     return 0;
   };
   var getTooltipContext = function(group, opts) {
-    var index = opts && opts.dataPointIndex >= 0 ? opts.dataPointIndex : -1;
-    var seriesIndex = opts && opts.seriesIndex >= 0 ? opts.seriesIndex : -1;
+    var index = opts ? dashboardIndex(opts.dataPointIndex) : -1;
+    var seriesIndex = opts ? dashboardIndex(opts.seriesIndex) : -1;
+    if (index < 0 && (group === 'gender' || group === 'generation' || group === 'positionType')) {
+      index = seriesIndex;
+    }
     var label = '';
     var seriesLabel = '';
     var bucketGroup = group;
     var key = '';
+    var bucketKey = '';
 
     if (group === 'gender') {
       label = fallbackGenderLabels[index] || '';
@@ -1139,7 +1295,7 @@ $js = <<<'JS'
       key = label;
       if (seriesLabel) {
         bucketGroup = 'ageGender';
-        key = String(label) + '|' + String(seriesLabel);
+        bucketKey = String(label) + '|' + String(seriesLabel).trim();
       }
     } else if (group === 'positionName') {
       label = d.positionNameCategories[index] || '';
@@ -1152,15 +1308,17 @@ $js = <<<'JS'
       key = label;
     }
 
-    var people = ((tooltipPeople[bucketGroup] || {})[String(key)] || (tooltipPeople[group] || {})[String(key)] || []);
+    bucketKey = bucketKey || key;
+    var people = ((tooltipPeople[bucketGroup] || {})[String(bucketKey)] || (tooltipPeople[group] || {})[String(key)] || []);
     return { label: label, seriesLabel: seriesLabel, people: Array.isArray(people) ? people : [] };
   };
   var renderAvatarTooltip = function(group, opts) {
     var context = getTooltipContext(group, opts || {});
     var value = getSeriesValue(opts || {});
-    var displayCount = value > 0 ? Math.min(5, value) : 0;
+    var absoluteValue = Math.abs(value);
+    var displayCount = absoluteValue > 0 ? Math.min(5, absoluteValue) : 0;
     var people = context.people.slice(0, displayCount);
-    var remaining = Math.max(0, value - people.length);
+    var remaining = Math.max(0, absoluteValue - people.length);
     var title = context.seriesLabel ? context.label + ' · ' + context.seriesLabel : context.label;
     var avatars = people.map(function(person) {
       var name = person && person.name ? person.name : 'ไม่ระบุชื่อ';
@@ -1173,10 +1331,182 @@ $js = <<<'JS'
     return '<div class="hr-chart-tooltip">' +
       '<div class="hr-chart-tooltip__eyebrow">ตัวอย่างบุคลากรในข้อมูลนี้</div>' +
       '<div class="hr-chart-tooltip__title">' + escapeHtml(title || 'ข้อมูล') + '</div>' +
-      '<div class="hr-chart-tooltip__meta">' + escapeHtml(value.toLocaleString('th-TH')) + ' คน</div>' +
+      '<div class="hr-chart-tooltip__meta">' + escapeHtml(absoluteValue.toLocaleString('th-TH')) + ' คน</div>' +
       (avatars ? '<div class="hr-avatar-stack">' + avatars + '</div>' : '<div class="hr-chart-tooltip__empty">ไม่มีรูปบุคลากรในกลุ่มนี้</div>') +
     '</div>';
   };
+  var peoplePanelEl = null;
+  var filterConfirmEl = null;
+  var pendingFilterAction = null;
+  var closePeoplePanel = function() {
+    if (peoplePanelEl) {
+      peoplePanelEl.classList.remove('is-open');
+    }
+  };
+
+  var ensurePeoplePanel = function() {
+    if (peoplePanelEl) {
+      return peoplePanelEl;
+    }
+
+    peoplePanelEl = document.createElement('div');
+    peoplePanelEl.className = 'hr-person-panel';
+    peoplePanelEl.setAttribute('role', 'dialog');
+    peoplePanelEl.setAttribute('aria-modal', 'true');
+    peoplePanelEl.innerHTML =
+      '<div class="hr-person-panel__backdrop" data-hr-person-close></div>' +
+      '<div class="hr-person-panel__sheet">' +
+        '<div class="hr-person-panel__header">' +
+          '<div>' +
+            '<div class="hr-person-panel__eyebrow">รายชื่อบุคลากรในข้อมูลนี้</div>' +
+            '<div class="hr-person-panel__title" data-hr-person-title></div>' +
+            '<div class="hr-person-panel__meta" data-hr-person-meta></div>' +
+            '<div class="hr-person-panel__action-row" data-hr-filter-action-row>' +
+              '<button type="button" class="hr-person-panel__filter-btn" data-hr-filter-apply>กรองข้อมูลนี้</button>' +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="hr-person-panel__close" data-hr-person-close aria-label="ปิด">&times;</button>' +
+        '</div>' +
+        '<div class="hr-person-panel__list" data-hr-person-list></div>' +
+      '</div>';
+
+    peoplePanelEl.addEventListener('click', function(event) {
+      if (event.target && event.target.hasAttribute('data-hr-filter-apply')) {
+        applyPendingFilter();
+        return;
+      }
+      if (event.target && event.target.hasAttribute('data-hr-person-close')) {
+        closePeoplePanel();
+      }
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closePeoplePanel();
+      }
+    });
+    document.body.appendChild(peoplePanelEl);
+    return peoplePanelEl;
+  };
+
+  var closeFilterConfirm = function() {
+    if (filterConfirmEl) {
+      filterConfirmEl.classList.remove('is-open');
+    }
+  };
+
+  var applyPendingFilter = function() {
+    if (!pendingFilterAction) {
+      return;
+    }
+    applyFilter(pendingFilterAction.key, pendingFilterAction.value);
+  };
+
+  var ensureFilterConfirm = function() {
+    if (filterConfirmEl) {
+      return filterConfirmEl;
+    }
+
+    filterConfirmEl = document.createElement('div');
+    filterConfirmEl.className = 'hr-filter-confirm';
+    filterConfirmEl.innerHTML =
+      '<div class="hr-filter-confirm__title" data-hr-filter-title></div>' +
+      '<div class="hr-filter-confirm__meta">เลือกข้อมูลจากกราฟแล้ว</div>' +
+      '<div class="hr-filter-confirm__actions">' +
+        '<button type="button" class="hr-filter-confirm__cancel" data-hr-filter-cancel>ยกเลิก</button>' +
+        '<button type="button" class="hr-filter-confirm__apply" data-hr-filter-apply>กรองข้อมูลนี้</button>' +
+      '</div>';
+
+    filterConfirmEl.addEventListener('click', function(event) {
+      if (event.target && event.target.hasAttribute('data-hr-filter-apply')) {
+        applyPendingFilter();
+        return;
+      }
+      if (event.target && event.target.hasAttribute('data-hr-filter-cancel')) {
+        closeFilterConfirm();
+      }
+    });
+    document.body.appendChild(filterConfirmEl);
+    return filterConfirmEl;
+  };
+
+  var setPeoplePanelFilterAction = function(action) {
+    if (!peoplePanelEl) {
+      return;
+    }
+
+    var actionRow = peoplePanelEl.querySelector('[data-hr-filter-action-row]');
+    if (!actionRow) {
+      return;
+    }
+
+    actionRow.classList.toggle('is-visible', !!action);
+  };
+
+  var requestFilter = function(key, value, label) {
+    if (!key || value === undefined || value === null || value === '') {
+      return;
+    }
+
+    pendingFilterAction = {
+      key: key,
+      value: value,
+      label: label || value
+    };
+
+    if (peoplePanelEl && peoplePanelEl.classList.contains('is-open')) {
+      setPeoplePanelFilterAction(pendingFilterAction);
+      closeFilterConfirm();
+      return;
+    }
+
+    var confirm = ensureFilterConfirm();
+    confirm.querySelector('[data-hr-filter-title]').textContent = pendingFilterAction.label;
+    confirm.classList.add('is-open');
+  };
+
+  var getSortedPeople = function(people) {
+    return people.slice().sort(function(a, b) {
+      var departmentCompare = String(a.department || '').localeCompare(String(b.department || ''), 'th');
+      if (departmentCompare !== 0) return departmentCompare;
+      var positionCompare = String(a.position || '').localeCompare(String(b.position || ''), 'th');
+      if (positionCompare !== 0) return positionCompare;
+      return String(a.name || '').localeCompare(String(b.name || ''), 'th');
+    });
+  };
+
+  var openPeoplePanel = function(group, opts) {
+    var context = getTooltipContext(group, opts || {});
+    var value = Math.abs(getSeriesValue(opts || {}));
+    var people = getSortedPeople(context.people || []);
+    var totalCount = Math.max(value, people.length);
+    var title = context.seriesLabel ? context.label + ' · ' + context.seriesLabel : context.label;
+    var panel = ensurePeoplePanel();
+    setPeoplePanelFilterAction(null);
+    var metaText = people.length < totalCount
+      ? 'แสดง ' + people.length.toLocaleString('th-TH') + ' จาก ' + totalCount.toLocaleString('th-TH') + ' คน'
+      : people.length.toLocaleString('th-TH') + ' คน';
+
+    panel.querySelector('[data-hr-person-title]').textContent = title || 'ข้อมูล';
+    panel.querySelector('[data-hr-person-meta]').textContent = metaText;
+    panel.querySelector('[data-hr-person-list]').innerHTML = people.length ? people.map(function(person) {
+      var name = person && person.name ? person.name : 'ไม่ระบุชื่อ';
+      var src = person && person.avatar ? person.avatar : '';
+      var position = person && person.position ? person.position : 'ไม่ระบุตำแหน่ง';
+      var department = person && person.department ? person.department : 'ไม่ระบุแผนก/ฝ่าย';
+      var profileUrl = person && person.profileUrl ? person.profileUrl : '';
+      return '<div class="hr-person-panel__row">' +
+        '<img class="hr-person-panel__avatar" src="' + escapeHtml(src) + '" alt="' + escapeHtml(name) + '" loading="lazy">' +
+        '<div class="hr-person-panel__content">' +
+          '<div class="hr-person-panel__name">' + escapeHtml(name) + '</div>' +
+          '<div class="hr-person-panel__detail">' + escapeHtml(position) + '</div>' +
+          '<div class="hr-person-panel__detail">' + escapeHtml(department) + '</div>' +
+        '</div>' +
+        (profileUrl ? '<a class="hr-person-panel__profile-link" href="' + escapeHtml(profileUrl) + '" target="_blank" rel="noopener noreferrer">แสดงโปรไฟล์</a>' : '') +
+      '</div>';
+    }).join('') : '<div class="hr-chart-tooltip__empty">ไม่มีข้อมูลบุคลากรในกลุ่มนี้</div>';
+    panel.classList.add('is-open');
+  };
+
   var dashboardTooltip = function(group) {
     return { custom: function(opts) { return renderAvatarTooltip(group, opts); } };
   };
@@ -1224,7 +1554,7 @@ $js = <<<'JS'
       series: wgSeries,
       chart: { type: 'bar', height: 320, events: { dataPointSelection: function(e, chart, opts) {
         var wcode = wgCodes[opts.seriesIndex];
-        if (wcode) applyFilter('workgroup', wcode);
+        if (wcode) requestFilter('workgroup', wcode, wgSeries[opts.seriesIndex] && wgSeries[opts.seriesIndex].name ? wgSeries[opts.seriesIndex].name : wcode);
       } } },
       colors: chartPalette,
       plotOptions: { bar: { horizontal: false, columnWidth: '54%', endingShape: 'rounded', borderRadius: 6 } },
@@ -1245,7 +1575,15 @@ $js = <<<'JS'
       series: [{ name: 'ชาย', data: d.ageMale }, { name: 'หญิง', data: d.ageFemale }],
       chart: { type: 'bar', height: 300, stacked: true },
       colors: genderPalette,
-      plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '70%' } },
+      plotOptions: {
+        bar: {
+          borderRadius: 6,
+          borderRadiusApplication: 'end',
+          borderRadiusWhenStacked: 'all',
+          horizontal: true,
+          barHeight: '70%'
+        }
+      },
       dataLabels: { enabled: true, formatter: function(v) { return (totalCount ? Math.abs(Math.round(v * 100 / totalCount)) : 0) + '%'; } },
       stroke: { width: 1, colors: [palette.surface] },
       xaxis: { categories: d.ageCategories },
@@ -1261,14 +1599,15 @@ $js = <<<'JS'
       series: [{ name: 'จำนวนคน', data: d.positionNameValues }],
       chart: { type: 'bar', height: pnHeight, events: { dataPointSelection: function(e, chart, opts) {
         var code = d.positionNameCodes[opts.dataPointIndex];
-        if (code != null && code !== '') applyFilter('employee_position_id', code);
+        if (code != null && code !== '') requestFilter('employee_position_id', code, d.positionNameCategories[opts.dataPointIndex] || code);
       } } },
       plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 6, barHeight: '68%', dataLabels: { position: 'top' } } },
       dataLabels: { enabled: true },
       xaxis: { categories: d.positionNameCategories, tickAmount: 6 },
       yaxis: { labels: { maxWidth: 200 } },
       grid: { padding: { left: 8, right: 8 } },
-      colors: chartPalette
+      colors: chartPalette,
+      legend: { show: false }
     })).render();
   }
 
@@ -1277,7 +1616,7 @@ $js = <<<'JS'
     new ApexCharts(el, withDashboardChartDefaults({
       chart: { type: 'donut', height: 260, events: { dataPointSelection: function(e, chart, opts) {
         var g = ['ชาย', 'หญิง'][opts.dataPointIndex];
-        if (g) applyFilter('gender', g);
+        if (g) requestFilter('gender', g, g);
       } } },
       labels: ['ชาย', 'หญิง'],
       series: [Number(d.countMale) || 0, Number(d.countFemale) || 0],
@@ -1293,7 +1632,7 @@ $js = <<<'JS'
     new ApexCharts(el, withDashboardChartDefaults({
       chart: { type: 'donut', height: 260, events: { dataPointSelection: function(e, chart, opts) {
         var gen = d.genLabels[opts.dataPointIndex];
-        if (gen) applyFilter('gen', gen);
+        if (gen) requestFilter('gen', gen, gen);
       } } },
       labels: d.genLabels,
       series: d.genSeries,
@@ -1309,7 +1648,7 @@ $js = <<<'JS'
     new ApexCharts(el, withDashboardChartDefaults({
       chart: { type: 'donut', height: 260, events: { dataPointSelection: function(e, chart, opts) {
         var code = d.positionTypeCodes[opts.dataPointIndex];
-        if (code) applyFilter('employee_type_id', code);
+        if (code) requestFilter('employee_type_id', code, d.positionTypeLabels[opts.dataPointIndex] || code);
       } } },
       labels: d.positionTypeLabels,
       series: d.positionTypeCounts,
@@ -1328,14 +1667,15 @@ $js = <<<'JS'
       series: [{ name: 'จำนวนคน', data: d.departmentValues }],
       chart: { type: 'bar', height: deptHeight, events: { dataPointSelection: function(e, chart, opts) {
         var code = d.departmentCodes[opts.dataPointIndex];
-        if (code != null && code !== '') applyFilter('department', code);
+        if (code != null && code !== '') requestFilter('department', code, d.departmentLabels[opts.dataPointIndex] || code);
       } } },
       plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 6, barHeight: '68%', dataLabels: { position: 'top' } } },
       dataLabels: { enabled: true },
       xaxis: { categories: d.departmentLabels, tickAmount: 6 },
       yaxis: { labels: { maxWidth: 200 } },
       grid: { padding: { left: 8, right: 8 } },
-      colors: chartPalette
+      colors: chartPalette,
+      legend: { show: false }
     })).render();
   }
 
@@ -1345,14 +1685,15 @@ $js = <<<'JS'
       series: [{ name: 'จำนวนคน', data: d.serviceBandValues }],
       chart: { type: 'bar', height: 300, events: { dataPointSelection: function(e, chart, opts) {
         var label = d.serviceBandLabels[opts.dataPointIndex];
-        if (label) applyFilter('service_band', label);
+        if (label) requestFilter('service_band', label, label);
       } } },
       plotOptions: { bar: { distributed: true, borderRadius: 6, columnWidth: '52%', dataLabels: { position: 'top' } } },
       dataLabels: { enabled: true },
       xaxis: { categories: d.serviceBandLabels, labels: { rotate: -25, maxWidth: 100 } },
       yaxis: { tickAmount: 6 },
       grid: { padding: { left: 8, right: 8 } },
-      colors: chartPalette
+      colors: chartPalette,
+      legend: { show: false }
     })).render();
   }
 })();
