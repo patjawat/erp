@@ -712,6 +712,30 @@ class Employees extends Yii\db\ActiveRecord
         }
     }
 
+    // ประวัติการดำรงตำแหน่งล่าสุด (date_start มากสุด) → ตั้งแต่วันที่ / รายการเคลื่อนไหว / เลขประจำตำแหน่ง
+    public function latestPositionData()
+    {
+        $model = EmployeeDetail::find()
+            ->where(['emp_id' => $this->id, 'name' => 'position'])
+            ->orderBy([
+                new Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"),
+                'id' => SORT_DESC,
+            ])
+            ->one();
+
+        if (!$model) {
+            return ['date_start' => '', 'movement' => '', 'position_number' => ''];
+        }
+
+        $json = is_array($model->data_json) ? $model->data_json : [];
+
+        return [
+            'date_start' => $json['date_start'] ?? '',
+            'movement' => $json['statuslist'] ?? '',
+            'position_number' => $json['position_number'] ?? '',
+        ];
+    }
+
     // count form position Show Dashbroad
     // แสดงหน้า dashboard
     public function WorkgroupSummary($dep_id)
@@ -1484,6 +1508,44 @@ class Employees extends Yii\db\ActiveRecord
         } catch (\Throwable $th) {
             return 'ไม่ระบุ';
         }
+    }
+
+    // แยกโครงสร้างสังกัดของบุคลากรเป็น กลุ่มงาน (lvl 1) และ หน่วยงาน (lvl 2)
+    // ถ้าบุคลากรสังกัด node ระดับ 2 -> unit = node, group = parent (lvl 1)
+    // ถ้าสังกัด node ระดับ 0-1 -> group = node, ไม่มี unit
+    public function orgUnits()
+    {
+        $group = null; // กลุ่มงาน
+        $unit = null;  // หน่วยงาน
+        try {
+            $node = $this->empDepartment;
+            if ($node) {
+                if ((int) $node->lvl >= 2) {
+                    $unit = $node;
+                    $group = $node->parents(1)->one();
+                } else {
+                    $group = $node;
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+
+        return ['group' => $group, 'unit' => $unit];
+    }
+
+    // เช็คว่าบุคลากรเป็นหัวหน้า (leader1) ของ organization node ที่ระบุหรือไม่
+    public function isOrgLeader($node)
+    {
+        if (!$node) {
+            return false;
+        }
+        $json = $node->data_json;
+        if (!is_array($json)) {
+            $json = json_decode((string) $json, true) ?: [];
+        }
+        $leader = isset($json['leader1']) && $json['leader1'] !== '' ? (int) $json['leader1'] : null;
+
+        return $leader !== null && $leader === (int) $this->id;
     }
 
     public function expertiseName()

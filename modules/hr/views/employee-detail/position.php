@@ -189,7 +189,7 @@ $initEmployeePosition = $employeePositionId ? [
                         'yearOffset' => 543,
                         'format' => 'd/m/Y', 
                     ],
-                    ])->label('ตั้งแต่วันที่') ?>
+                    ])->label('วันที่แต่งตั้ง') ?>
 
     </div>
     <div class="col-9">
