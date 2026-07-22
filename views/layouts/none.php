@@ -28,7 +28,7 @@ $style = 2;
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
 </head>
-<?= $this->render('@app/themes/v3/layouts/modal') ?>
+<?= $this->render('@app/themes/v4/layouts/modal') ?>
 <?= $content ?>
 </body>
 <?php
