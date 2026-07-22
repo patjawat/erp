@@ -2,6 +2,7 @@
 
 use yii\web\View;
 use app\assets\AppAsset;
+use app\modules\ai\widgets\AssistantWidget;
 use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\assets\BootstapIconAsset;
@@ -288,6 +289,8 @@ AppAsset::register($this);
 
     <!-- ปุ่มขึ้นบนสุด / ลงล่างสุด -->
     <?= $this->render('scroll_buttons') ?>
+
+    <?= AssistantWidget::widget() ?>
 
     <?php
     $js = <<<'JS'

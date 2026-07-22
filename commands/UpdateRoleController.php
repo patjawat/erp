@@ -22,7 +22,7 @@ use yii\helpers\BaseConsole;
  *
  * @since 2.0
  */
-class UpdateTableController extends Controller
+class UpdateRoleController extends Controller
 {
     /**
      * This command echoes what you have entered as the message.
@@ -72,6 +72,7 @@ class UpdateTableController extends Controller
             ['name' => 'technician', 'type' => 1, 'description' => 'งานซ่อมบำรุง'],
             ['name' => 'technician_ma', 'type' => 1, 'description' => 'หัวหน้างานซ่อมบำรุง'],
             ['name' => 'user', 'type' => 1, 'description' => 'ผู้ใช้งานทั่วไป'],
+            ['name' => 'ai', 'type' => 1, 'description' => 'ผู้ใช้งานผู้ช่วย AI'],
             ['name' => 'warehouse', 'type' => 1, 'description' => 'ผู้จัดการคลัง'],
             ['name' => 'branch', 'type' => 1, 'description' => 'สาขา'],
             ['name' => 'inventory', 'type' => 1, 'description' => 'ระบบคลัง'],
@@ -86,6 +87,23 @@ class UpdateTableController extends Controller
             ['name' => 'health', 'type' => 1, 'description' => 'ตรวจสุขภาพ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
+            // ผู้ช่วย AI
+            ['name' => '/ai/*', 'type' => 2, 'description' => 'เข้าใช้งานโมดูลผู้ช่วย AI'],
+            ['name' => 'ai.chat.use', 'type' => 2, 'description' => 'ใช้ AI Chat'],
+            ['name' => 'ai.hr.summary', 'type' => 2, 'description' => 'ดูข้อมูลสรุปบุคลากรผ่าน AI'],
+            ['name' => 'ai.leave.summary', 'type' => 2, 'description' => 'ดูข้อมูลสรุประบบลาผ่าน AI'],
+            ['name' => 'ai.vehicle.summary', 'type' => 2, 'description' => 'ดูข้อมูลจองรถผ่าน AI'],
+            ['name' => 'ai.meeting.summary', 'type' => 2, 'description' => 'ดูข้อมูลจองห้องประชุมผ่าน AI'],
+            ['name' => 'ai.stock.summary', 'type' => 2, 'description' => 'ดูข้อมูลคลังสินค้าผ่าน AI'],
+            ['name' => 'ai.training.summary', 'type' => 2, 'description' => 'ดูข้อมูลอบรมและดูงานผ่าน AI'],
+            ['name' => 'ai.document.summary', 'type' => 2, 'description' => 'ดูข้อมูลสารบรรณผ่าน AI'],
+            ['name' => 'ai.health.summary', 'type' => 2, 'description' => 'ดูข้อมูลสุขภาพผ่าน AI'],
+            ['name' => 'ai.export.excel', 'type' => 2, 'description' => 'Export Excel ผ่าน AI'],
+            ['name' => 'ai.scope.leave.all', 'type' => 2, 'description' => 'AI data scope: ดูข้อมูลลาทั้งหมด'],
+            ['name' => 'ai.scope.leave.department', 'type' => 2, 'description' => 'AI data scope: ดูข้อมูลลาตามหน่วยงาน'],
+            ['name' => 'ai.scope.stock.all', 'type' => 2, 'description' => 'AI data scope: ดูคลังทั้งหมด'],
+            ['name' => 'ai.scope.document.all', 'type' => 2, 'description' => 'AI data scope: ดูสารบรรณทั้งหมด'],
+            ['name' => 'ai.scope.health.all', 'type' => 2, 'description' => 'AI data scope: ดูข้อมูลสุขภาพทั้งหมด'],
 
             // การตรวจสุขภาพ
             ['name' => '/health/*', 'type' => 2, 'description' => ''],
@@ -265,6 +283,32 @@ class UpdateTableController extends Controller
             ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
             ['child' => 'plan', 'parent'  => 'admin'],
+
+            // ผู้ช่วย AI
+            ['child' => 'ai', 'parent' => 'admin'],
+            ['child' => 'ai', 'parent' => 'user'],
+            ['child' => '/ai/*', 'parent' => 'ai'],
+            ['child' => 'ai.chat.use', 'parent' => 'ai'],
+            ['child' => 'ai.export.excel', 'parent' => 'ai'],
+
+            // สิทธิ์ชุดข้อมูล AI ตามระบบงาน
+            ['child' => 'ai.hr.summary', 'parent' => 'hr'],
+            ['child' => 'ai.training.summary', 'parent' => 'hr'],
+            ['child' => 'ai.leave.summary', 'parent' => 'leave'],
+            ['child' => 'ai.scope.leave.all', 'parent' => 'leave'],
+            ['child' => 'ai.vehicle.summary', 'parent' => 'vehicle'],
+            ['child' => 'ai.meeting.summary', 'parent' => 'meeting'],
+            ['child' => 'ai.stock.summary', 'parent' => 'inventory'],
+            ['child' => 'ai.scope.stock.all', 'parent' => 'inventory'],
+            ['child' => 'ai.stock.summary', 'parent' => 'warehouse'],
+            ['child' => 'ai.scope.stock.all', 'parent' => 'warehouse'],
+            ['child' => 'ai.stock.summary', 'parent' => 'sm'],
+            ['child' => 'ai.scope.stock.all', 'parent' => 'sm'],
+            ['child' => 'ai.document.summary', 'parent' => 'document'],
+            ['child' => 'ai.scope.document.all', 'parent' => 'document'],
+            ['child' => 'ai.health.summary', 'parent' => 'health'],
+            ['child' => 'ai.scope.health.all', 'parent' => 'health'],
+
             //การอนุมัติ
             ['child' => '/approve-v2/*', 'parent' => 'user'],
             // ยานพาหนะ

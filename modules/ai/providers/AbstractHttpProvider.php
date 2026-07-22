@@ -46,6 +46,46 @@ abstract class AbstractHttpProvider
 
         if ($status >= 400) {
             $message = $data['error']['message'] ?? $data['error'] ?? 'AI provider request failed.';
+            $message = is_string($message) ? $message : json_encode($message);
+            throw new RuntimeException("AI provider request failed with HTTP status {$status}: {$message}");
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<int, string> $headers
+     * @return array<string, mixed>
+     */
+    protected function getJson(string $url, array $headers = []): array
+    {
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('PHP cURL extension is required for AI provider requests.');
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $this->timeout,
+        ]);
+
+        $body = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false) {
+            throw new RuntimeException('AI provider request failed: ' . $error);
+        }
+
+        $data = json_decode((string) $body, true);
+        if (!is_array($data)) {
+            throw new RuntimeException('AI provider returned invalid JSON.');
+        }
+
+        if ($status >= 400) {
+            $message = $data['error']['message'] ?? $data['error'] ?? 'AI provider request failed.';
             throw new RuntimeException(is_string($message) ? $message : json_encode($message));
         }
 

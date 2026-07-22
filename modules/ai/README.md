@@ -20,6 +20,13 @@
 php yii migrate --migrationPath=@app/modules/ai/migrations
 ```
 
+Migration ชุดนี้มี:
+
+- ตาราง AI core
+- seed dataset registry ตัวอย่าง
+- permission/RBAC
+- compatibility AI views สำหรับ dataset v1
+
 โมดูลถูก register แล้วใน `config/add_modules.php`:
 
 ```php
@@ -31,25 +38,16 @@ $modules['ai'] = ['class' => 'app\modules\ai\Module'];
 ```php
 $modules['ai'] = [
     'class' => 'app\modules\ai\Module',
-    'defaultProvider' => 'openai',
+    'defaultProvider' => 'openrouter',
     'readDb' => 'dbReadonly',
     'defaultMaxRows' => 100,
     'absoluteMaxRows' => 1000,
     'providers' => [
-        'openai' => [
-            'class' => app\modules\ai\providers\OpenAiProvider::class,
-            'apiKey' => env('OPENAI_API_KEY') ?: '',
-            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
-        ],
-        'claude' => [
-            'class' => app\modules\ai\providers\ClaudeProvider::class,
-            'apiKey' => env('ANTHROPIC_API_KEY') ?: '',
-            'model' => env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-latest'),
-        ],
-        'ollama' => [
-            'class' => app\modules\ai\providers\OllamaProvider::class,
-            'endpoint' => env('OLLAMA_ENDPOINT', 'http://127.0.0.1:11434'),
-            'model' => env('OLLAMA_MODEL', 'llama3.1'),
+        'openrouter' => [
+            'class' => app\modules\ai\providers\OpenRouterProvider::class,
+            'apiKey' => env('OPENROUTER_API_KEY') ?: '',
+            'model' => env('OPENROUTER_MODEL', 'openai/gpt-5.2'),
+            'endpoint' => env('OPENROUTER_CHAT_ENDPOINT', 'https://openrouter.ai/api/v1/chat/completions'),
         ],
     ],
 ];
@@ -114,6 +112,10 @@ AI query ได้เฉพาะ view ที่ขึ้นต้นด้ว�
 - `ai_health_overview`
 
 ทีม domain ต้องสร้าง view เหล่านี้ในฐานข้อมูลจริงเอง โดยเลือก field ให้ตรงกับ `datasets/default.php`
+
+มี migration `m260722_000004_create_ai_default_views` สร้าง compatibility view ให้ครบชุดแล้ว ถ้าพบตารางและคอลัมน์จริงจะ map field พื้นฐานให้อัตโนมัติ ถ้า schema ยังไม่ครบจะสร้าง empty view ที่มี column ตรง registry เพื่อไม่ให้ migration ล้ม
+
+ก่อน production ทีมเจ้าของ domain ควร review/แทน SQL ของ compatibility view ให้ตรง business rule จริง เช่น สถานะอนุมัติ, การนับบุคลากร active, mapping หน่วยงาน, และ field ที่ต้อง mask
 
 ## เพิ่ม Dataset ใหม่
 
@@ -180,6 +182,19 @@ AI query ได้เฉพาะ view ที่ขึ้นต้นด้ว�
 /ai/chat/index
 ```
 
+รายการโมเดลของ OpenRouter และบันทึกโมเดลที่เลือก:
+
+```http
+GET /ai/chat/openrouter-models
+
+POST /ai/chat/openrouter-models
+Content-Type: application/json
+
+{
+  "model": "openai/gpt-5.2"
+}
+```
+
 ส่ง chat:
 
 ```http
@@ -189,7 +204,7 @@ Content-Type: application/json
 {
   "message": "สรุปยอดคงเหลือคลัง",
   "conversation_id": null,
-  "provider": "openai"
+  "provider": "openrouter"
 }
 ```
 
@@ -226,25 +241,12 @@ Content-Type: application/json
 }
 ```
 
-## Provider ใหม่
+## AI Provider
 
-สร้าง class ที่ implement:
-
-```php
-app\modules\ai\contracts\AiProviderInterface
-```
-
-แล้วเพิ่มใน config:
-
-```php
-'providers' => [
-    'my-provider' => [
-        'class' => app\modules\ai\providers\MyProvider::class,
-    ],
-],
-```
-
-Core ของโมดูลไม่ต้องเปลี่ยน
+โมดูลรองรับ OpenRouter เพียง provider เดียว กำหนด API key ผ่าน `OPENROUTER_API_KEY`
+หรือวางคีย์ในส่วน "การเชื่อมต่อ OpenRouter" บนหน้าผู้ช่วย AI หลังเชื่อมต่อแล้ว
+ระบบจะโหลดรายการโมเดลที่ API key ใช้งานได้ รองรับการค้นหาจากชื่อ/รหัส กรองเฉพาะโมเดลฟรี
+และจดจำโมเดลที่เลือกไว้ใน session ของผู้ใช้
 
 ## Audit Log
 

@@ -7,6 +7,7 @@ namespace app\modules\ai\services;
 use app\modules\ai\contracts\AiProviderResponse;
 use app\modules\ai\models\AiConversation;
 use app\modules\ai\models\AiMessage;
+use app\modules\ai\providers\OpenRouterProvider;
 use app\modules\ai\security\PermissionChecker;
 use app\modules\ai\tools\ToolRegistry;
 use Yii;
@@ -42,11 +43,12 @@ class AiChatOrchestrator
         }
 
         $provider = $this->providerFactory->create($providerCode);
+        $model = $provider instanceof OpenRouterProvider ? $provider->model : null;
         $conversation = $this->conversationService->getOrCreate(
             $conversationId,
             (int) Yii::$app->user->id,
             $provider->getCode(),
-            null,
+            $model,
             $message
         );
 
@@ -123,13 +125,22 @@ class AiChatOrchestrator
             'conversation_id' => $conversation->id,
             'message_id' => $assistantMessage->id,
             'provider' => $provider->getCode(),
+            'model' => $finalResponse->getMetadata()['model'] ?? $model,
+            'fallback_from' => $finalResponse->getMetadata()['fallback_from'] ?? null,
             'content' => $finalResponse->getContent(),
             'tool_results' => $toolResults,
         ];
     }
 
-    public function streamMessage(string $message, callable $onDelta, ?string $conversationId = null, ?string $providerCode = null): array
+    public function streamMessage(
+        string $message,
+        callable $onDelta,
+        ?string $conversationId = null,
+        ?string $providerCode = null,
+        ?callable $onStatus = null
+    ): array
     {
+        $this->emitStatus($onStatus, 'connecting');
         $this->permissionChecker->requirePermission('ai.chat.use');
         $message = trim($message);
         if ($message === '') {
@@ -137,29 +148,81 @@ class AiChatOrchestrator
         }
 
         $provider = $this->providerFactory->create($providerCode);
+        $model = $provider instanceof OpenRouterProvider ? $provider->model : null;
         $conversation = $this->conversationService->getOrCreate(
             $conversationId,
             (int) Yii::$app->user->id,
             $provider->getCode(),
-            null,
+            $model,
             $message
         );
-        $this->conversationService->addMessage($conversation->id, AiMessage::ROLE_USER, $message, $provider->getCode());
+        $userMessage = $this->conversationService->addMessage(
+            $conversation->id,
+            AiMessage::ROLE_USER,
+            $message,
+            $provider->getCode()
+        );
 
-        if (!$provider->supportsStreaming()) {
-            $response = $provider->chat($this->buildProviderMessages($conversation->id), []);
+        $this->emitStatus($onStatus, 'thinking');
+        $response = $provider->chat(
+            $this->buildProviderMessages($conversation->id),
+            $this->toolRegistry->definitions()
+        );
+        $finalResponse = $response;
+        $toolResults = [];
+
+        if ($response->hasToolCalls()) {
+            $this->conversationService->addMessage(
+                $conversation->id,
+                AiMessage::ROLE_ASSISTANT,
+                $response->getContent() ?: 'เรียกใช้เครื่องมือของระบบ',
+                $provider->getCode(),
+                null,
+                null,
+                ['tool_calls' => $response->getToolCalls(), 'provider' => $response->getMetadata()]
+            );
+
+            $this->emitStatus($onStatus, 'searching');
+            foreach ($response->getToolCalls() as $toolCall) {
+                $result = $this->toolRegistry->execute(
+                    $toolCall['name'],
+                    (array) ($toolCall['arguments'] ?? []),
+                    $conversation->id,
+                    $provider->getCode()
+                );
+                $toolResults[] = $result;
+
+                $this->conversationService->addMessage(
+                    $conversation->id,
+                    AiMessage::ROLE_TOOL,
+                    json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    $provider->getCode(),
+                    $toolCall['name'],
+                    $toolCall['id'] ?? null
+                );
+            }
+
+            $this->emitStatus($onStatus, 'composing');
+            $toolMessages = $this->buildToolResultMessages($conversation->id, $toolResults);
+            if ($provider->supportsStreaming()) {
+                $finalResponse = $provider->stream($toolMessages, $onDelta, [], ['tool_choice' => 'none']);
+            } else {
+                $finalResponse = $provider->chat($toolMessages, [], ['tool_choice' => 'none']);
+                $this->emitProgressiveDeltas($finalResponse->getContent(), $onDelta);
+            }
         } else {
-            $response = $provider->stream($this->buildProviderMessages($conversation->id), $onDelta);
+            $this->emitStatus($onStatus, 'composing');
+            $this->emitProgressiveDeltas($response->getContent(), $onDelta);
         }
 
         $assistantMessage = $this->conversationService->addMessage(
             $conversation->id,
             AiMessage::ROLE_ASSISTANT,
-            $response->getContent(),
+            $finalResponse->getContent(),
             $provider->getCode(),
             null,
             null,
-            $this->responseMetadata($response)
+            $this->responseMetadata($finalResponse, $toolResults)
         );
 
         $this->auditLogger->log([
@@ -168,14 +231,18 @@ class AiChatOrchestrator
             'provider' => $provider->getCode(),
             'action' => 'chat_stream',
             'status' => 'success',
-            'response' => ['message_id' => $assistantMessage->id],
+            'request' => ['message_id' => $userMessage->id],
+            'response' => ['message_id' => $assistantMessage->id, 'tool_count' => count($toolResults)],
         ]);
 
         return [
             'conversation_id' => $conversation->id,
             'message_id' => $assistantMessage->id,
             'provider' => $provider->getCode(),
-            'content' => $response->getContent(),
+            'model' => $finalResponse->getMetadata()['model'] ?? $model,
+            'fallback_from' => $finalResponse->getMetadata()['fallback_from'] ?? null,
+            'content' => $finalResponse->getContent(),
+            'tool_results' => $toolResults,
         ];
     }
 
@@ -240,5 +307,54 @@ class AiChatOrchestrator
             'finish_reason' => $response->getFinishReason(),
             'tool_results' => $toolResults,
         ];
+    }
+
+    private function emitStatus(?callable $onStatus, string $status): void
+    {
+        if ($onStatus !== null) {
+            $onStatus($status);
+        }
+    }
+
+    private function emitProgressiveDeltas(string $content, callable $onDelta): void
+    {
+        if ($content === '') {
+            return;
+        }
+
+        preg_match_all('/\\X/u', $content, $matches);
+        $characters = $matches[0] ?? [];
+        if ($characters === []) {
+            $onDelta($content);
+            return;
+        }
+
+        $chunks = [];
+        $buffer = '';
+        $length = 0;
+        foreach ($characters as $character) {
+            $buffer .= $character;
+            $length++;
+
+            $hardBoundary = preg_match('/[\\n.!?。！？]\\s*$/u', $buffer) === 1;
+            $softBoundary = preg_match('/[\\s,;:ๆฯ…]$/u', $buffer) === 1;
+            if (($hardBoundary && $length >= 14) || ($softBoundary && $length >= 28) || $length >= 44) {
+                $chunks[] = $buffer;
+                $buffer = '';
+                $length = 0;
+            }
+        }
+
+        if ($buffer !== '') {
+            $chunks[] = $buffer;
+        }
+
+        $lastIndex = count($chunks) - 1;
+        foreach ($chunks as $index => $chunk) {
+            $onDelta($chunk);
+            if ($index !== $lastIndex) {
+                usleep(24000);
+            }
+        }
     }
 }

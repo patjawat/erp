@@ -28,7 +28,7 @@ class m260722_000002_seed_ai_default_datasets extends Migration
                 'max_rows' => $definition['max_rows'] ?? 100,
                 'is_exportable' => (int) ($definition['is_exportable'] ?? true),
                 'is_active' => 1,
-                'metadata_json' => $this->json($definition['metadata'] ?? []),
+                'metadata_json' => $this->encodeJsonValue($definition['metadata'] ?? []),
                 'updated_at' => $now,
             ];
 
@@ -54,7 +54,7 @@ class m260722_000002_seed_ai_default_datasets extends Migration
                     'is_filterable' => (int) ($field['is_filterable'] ?? false),
                     'is_sortable' => (int) ($field['is_sortable'] ?? false),
                     'is_selectable' => (int) ($field['is_selectable'] ?? true),
-                    'allowed_operators' => isset($field['allowed_operators']) ? $this->json($field['allowed_operators']) : null,
+                    'allowed_operators' => isset($field['allowed_operators']) ? $this->encodeJsonValue($field['allowed_operators']) : null,
                     'sort_order' => $sortOrder,
                     'created_at' => $now,
                 ]);
@@ -69,7 +69,7 @@ class m260722_000002_seed_ai_default_datasets extends Migration
         $this->delete('{{%ai_datasets}}', ['code' => array_keys($definitions)]);
     }
 
-    private function json(array $value): string
+    private function encodeJsonValue(array $value): string
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
     }

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace app\modules\ai;
 
-use app\modules\ai\providers\ClaudeProvider;
-use app\modules\ai\providers\OllamaProvider;
-use app\modules\ai\providers\OpenAiProvider;
+use app\modules\ai\providers\OpenRouterProvider;
 use Yii;
 use yii\base\BootstrapInterface;
 
@@ -22,7 +20,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
 
     public $defaultRoute = 'chat/index';
 
-    public string $defaultProvider = 'openai';
+    public string $defaultProvider = 'openrouter';
 
     /**
      * Yii DB component used for AI registry/audit tables.
@@ -79,20 +77,14 @@ class Module extends \yii\base\Module implements BootstrapInterface
     private function defaultProviders(): array
     {
         return [
-            'openai' => [
-                'class' => OpenAiProvider::class,
-                'apiKey' => $this->env('OPENAI_API_KEY', ''),
-                'model' => $this->env('OPENAI_MODEL', 'gpt-4o-mini'),
-            ],
-            'claude' => [
-                'class' => ClaudeProvider::class,
-                'apiKey' => $this->env('ANTHROPIC_API_KEY', ''),
-                'model' => $this->env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-latest'),
-            ],
-            'ollama' => [
-                'class' => OllamaProvider::class,
-                'endpoint' => $this->env('OLLAMA_ENDPOINT', 'http://127.0.0.1:11434'),
-                'model' => $this->env('OLLAMA_MODEL', 'llama3.1'),
+            'openrouter' => [
+                'class' => OpenRouterProvider::class,
+                'apiKey' => $this->env('OPENROUTER_API_KEY', ''),
+                'model' => $this->env('OPENROUTER_MODEL', 'openai/gpt-5.2'),
+                'endpoint' => $this->env('OPENROUTER_CHAT_ENDPOINT', 'https://openrouter.ai/api/v1/chat/completions'),
+                'modelsEndpoint' => $this->env('OPENROUTER_MODELS_ENDPOINT', 'https://openrouter.ai/api/v1/models'),
+                'siteUrl' => $this->env('OPENROUTER_SITE_URL'),
+                'siteName' => $this->env('OPENROUTER_SITE_NAME', 'ERP Platform AI'),
             ],
         ];
     }

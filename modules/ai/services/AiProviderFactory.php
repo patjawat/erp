@@ -6,6 +6,7 @@ namespace app\modules\ai\services;
 
 use app\modules\ai\contracts\AiProviderInterface;
 use app\modules\ai\Module;
+use app\modules\ai\providers\OpenRouterProvider;
 use InvalidArgumentException;
 use Yii;
 
@@ -28,6 +29,19 @@ class AiProviderFactory
         $provider = Yii::createObject($config);
         if (!$provider instanceof AiProviderInterface) {
             throw new InvalidArgumentException("AI provider '{$providerCode}' must implement AiProviderInterface.");
+        }
+
+        if ($provider instanceof OpenRouterProvider) {
+            $credentialStore = new OpenRouterCredentialStore($this->module);
+            $apiKey = $credentialStore->getApiKey();
+            if ($apiKey !== null) {
+                $provider->apiKey = $apiKey;
+            }
+
+            $selectedModel = $credentialStore->getSelectedModel();
+            if ($selectedModel !== null) {
+                $provider->model = $selectedModel;
+            }
         }
 
         return $provider;
