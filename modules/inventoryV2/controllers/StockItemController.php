@@ -1498,6 +1498,9 @@ class StockItemController extends Controller
                 }
                 $sourcePath = $uploadBasePath . $upload['ref'] . DIRECTORY_SEPARATOR . $realFilename;
                 if (!is_file($sourcePath)) {
+                    $sourcePath = $uploadBasePath . $upload['ref'] . DIRECTORY_SEPARATOR . 'thumbnail' . DIRECTORY_SEPARATOR . $realFilename;
+                }
+                if (!is_file($sourcePath)) {
                     continue;
                 }
                 $zipPath = 'uploads/' . $this->safeZipSegment($upload['ref']) . '/' . $realFilename;
@@ -1505,8 +1508,9 @@ class StockItemController extends Controller
                     'name' => $upload['name'] ?? null,
                     'file_name' => $upload['file_name'] ?? $realFilename,
                     'real_filename' => $realFilename,
-                    'type' => $upload['type'] ?? null,
+                    'type' => $this->normalizeImportedUploadType($upload['type'] ?? null, $realFilename),
                     'create_date' => $upload['create_date'] ?? null,
+                    'size' => filesize($sourcePath) ?: null,
                     'path' => $zipPath,
                     'source_path' => $sourcePath,
                 ];
@@ -1681,8 +1685,14 @@ class StockItemController extends Controller
                 $model->name = $upload['name'] ?? null;
             }
             $model->file_name = $upload['file_name'] ?? $realFilename;
+            if ($model->hasAttribute('filename')) {
+                $model->filename = $model->file_name;
+            }
             $model->real_filename = $realFilename;
-            $model->type = $upload['type'] ?? FileManagerHelper::checkFileType($extension);
+            $model->type = $this->normalizeImportedUploadType($upload['type'] ?? null, $realFilename);
+            if ($model->hasAttribute('size')) {
+                $model->size = filesize($targetPath) ?: null;
+            }
             if ($model->hasAttribute('create_date')) {
                 $model->create_date = $upload['create_date'] ?? date('Y-m-d H:i:s');
             }
@@ -1691,6 +1701,18 @@ class StockItemController extends Controller
         }
 
         return $count;
+    }
+
+    private function normalizeImportedUploadType($type, $filename)
+    {
+        $extension = strtolower(pathinfo((string)$filename, PATHINFO_EXTENSION));
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+        if (in_array($extension, $imageExtensions, true)) {
+            return $extension;
+        }
+
+        $type = trim((string)$type);
+        return $type !== '' ? $type : FileManagerHelper::checkFileType($extension);
     }
 
     private function deleteUploadsForRefs(array $refs)
