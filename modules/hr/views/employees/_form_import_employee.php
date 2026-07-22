@@ -44,13 +44,13 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                         </div>
                         <div class="col-md-6">
                             <?= Html::a(
-                                '<i class="bi bi-file-earmark-arrow-down me-1"></i> ดาวน์โหลด Template (พร้อม dropdown)',
+                                '<i class="bi bi-file-earmark-arrow-down me-1"></i> ดาวน์โหลด Template (.xlsx)',
                                 ['/hr/employees/import-template'],
                                 ['class' => 'btn btn-outline-success', 'target' => '_blank']
                             ) ?>
                             <div class="form-text">
                                 <i class="fas fa-lightbulb text-warning me-1"></i>
-                                โหลด template ที่มีตัวเลือก (dropdown) จากข้อมูลจริงในระบบ แล้วกรอกก่อนนำเข้า
+                                โหลด template ที่มี dropdown ตัวเลือกจากข้อมูลจริง + ตัวอย่าง 2 แถว แล้วกรอกก่อนอัปโหลด
                             </div>
                         </div>
                     </div>

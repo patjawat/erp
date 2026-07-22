@@ -86,26 +86,28 @@ $this->params['breadcrumbs'][] = $this->title;
                     <span class="d-none d-sm-inline">Excel</span>
                 </button>
 
-                <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2" style="min-width: 240px;" aria-labelledby="dropdownMenuButton1">
                     <li>
                         <a href="#" id="download-button"
-                            class="dropdown-item d-flex align-items-center gap-2<?= (int) $dataProvider->getTotalCount() === 0 ? ' disabled' : '' ?>"
+                            class="dropdown-item d-flex align-items-center gap-2 py-2 text-nowrap<?= (int) $dataProvider->getTotalCount() === 0 ? ' disabled' : '' ?>"
                             <?= (int) $dataProvider->getTotalCount() === 0 ? 'aria-disabled="true" tabindex="-1"' : '' ?>>
-                            <i class="bi bi-file-earmark-excel"></i>ส่งออก Excel</a>
+                            <i class="bi bi-file-earmark-excel text-success"></i>
+                            <span>ส่งออก Excel</span>
+                        </a>
                     </li>
+                    <li><hr class="dropdown-divider my-1"></li>
                     <li><?= Html::a(
-                            '<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',
+                            '<i class="fa-solid fa-file-csv text-muted"></i><span>นำเข้าด้วย CSV</span>',
                             ['/hr/employees/import-csv', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'],
-                            ['class' => 'dropdown-item open-modal']
+                            ['class' => 'dropdown-item open-modal d-flex align-items-center gap-2 py-2 text-nowrap']
                         ) ?>
                     </li>
                     <li><?= Html::a(
-                            '<i class="bi bi-file-earmark-arrow-down me-2"></i> ดาวน์โหลด Template นำเข้า',
+                            '<i class="bi bi-file-earmark-arrow-down text-muted"></i><span>ดาวน์โหลด Template นำเข้า</span>',
                             ['/hr/employees/import-template'],
-                            ['class' => 'dropdown-item', 'target' => '_blank']
+                            ['class' => 'dropdown-item d-flex align-items-center gap-2 py-2 text-nowrap', 'id' => 'download-template']
                         ) ?>
                     </li>
-                    </a>
                 </ul>
             </div>
         </div>
@@ -146,6 +148,7 @@ $this->registerCss(<<<CSS
 .emp-export-swal__meta { color: #718096; font-size: .84rem; }
 CSS);
 
+$templateUrl = Url::to(['/hr/employees/import-template']);
 $js = <<< JS
 
         $('#hr-container').on('pjax:success', function() {
@@ -162,21 +165,10 @@ $js = <<< JS
             return fallback;
         }
 
-        $("body").on("click", "#download-button", function (e) {
-            e.preventDefault();
-            if ($(this).hasClass('disabled')) { return; }
-
-            var form = $('#employees-filter');
-            var query = form.length ? form.serialize() : '';
-            var reqUrl = '$url' + (query ? ('?' + query) : '');
-            var fallbackName = 'ข้อมูลบุคลากร.xlsx';
-            var total = ($('#totalCount').text() || '').trim();
-
+        // flow ดาวน์โหลดไฟล์แบบมาตรฐาน: confirm → loading → success (ใช้ร่วมทั้ง export และ template)
+        function empFileDownload(opt) {
             // fallback: ไม่มี SweetAlert → ดาวน์โหลดตรงแบบเดิม (ไม่พัง)
-            if (!window.Swal) {
-                window.location.href = reqUrl;
-                return;
-            }
+            if (!window.Swal) { window.location.href = opt.url; return; }
 
             var noMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             var swalBase = {
@@ -189,11 +181,10 @@ $js = <<< JS
             Swal.fire(mk({
                 icon: 'question',
                 iconColor: '#0d6efd',
-                title: 'ส่งออกข้อมูลบุคลากรเป็น Excel?',
-                html: '<div class="emp-export-swal__item">ข้อมูลบุคลากร</div>'
-                    + (total ? '<div class="emp-export-swal__meta">จำนวน ' + total + ' รายการ</div>' : ''),
+                title: opt.confirmTitle,
+                html: opt.confirmHtml || '',
                 showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-file-earmark-excel me-1"></i>ส่งออก',
+                confirmButtonText: opt.confirmButton,
                 cancelButtonText: 'ยกเลิก',
                 confirmButtonColor: '#198754',
                 cancelButtonColor: '#6c757d',
@@ -211,10 +202,10 @@ $js = <<< JS
                     didOpen: function () { Swal.showLoading(); }
                 }));
 
-                fetch(reqUrl, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                fetch(opt.url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function (resp) {
                         if (!resp.ok) { throw new Error('สร้างไฟล์ไม่สำเร็จ (สถานะ ' + resp.status + ')'); }
-                        var fname = empExportFileName(resp, fallbackName);
+                        var fname = empExportFileName(resp, opt.fallbackName);
                         return resp.blob().then(function (blob) { return { blob: blob, fname: fname }; });
                     })
                     .then(function (o) {
@@ -238,10 +229,40 @@ $js = <<< JS
                     .catch(function (err) {
                         Swal.fire(mk({
                             icon: 'error',
-                            title: 'ส่งออกไม่สำเร็จ',
+                            title: 'ดาวน์โหลดไม่สำเร็จ',
                             text: (err && err.message) || 'ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่อีกครั้ง'
                         }));
                     });
+            });
+        }
+
+        // ส่งออกข้อมูลบุคลากร (Excel)
+        $("body").on("click", "#download-button", function (e) {
+            e.preventDefault();
+            if ($(this).hasClass('disabled')) { return; }
+            var form = $('#employees-filter');
+            var query = form.length ? form.serialize() : '';
+            var total = ($('#totalCount').text() || '').trim();
+            empFileDownload({
+                url: '$url' + (query ? ('?' + query) : ''),
+                fallbackName: 'ข้อมูลบุคลากร.xlsx',
+                confirmTitle: 'ส่งออกข้อมูลบุคลากรเป็น Excel?',
+                confirmHtml: '<div class="emp-export-swal__item">ข้อมูลบุคลากร</div>'
+                    + (total ? '<div class="emp-export-swal__meta">จำนวน ' + total + ' รายการ</div>' : ''),
+                confirmButton: '<i class="bi bi-file-earmark-excel me-1"></i>ส่งออก'
+            });
+        });
+
+        // ดาวน์โหลด Template นำเข้า (CSV)
+        $("body").on("click", "#download-template", function (e) {
+            e.preventDefault();
+            empFileDownload({
+                url: '$templateUrl',
+                fallbackName: 'template-นำเข้าบุคลากร.xlsx',
+                confirmTitle: 'ดาวน์โหลด Template นำเข้า?',
+                confirmHtml: '<div class="emp-export-swal__item">Template นำเข้าบุคลากร (.xlsx)</div>'
+                    + '<div class="emp-export-swal__meta">มี dropdown ตัวเลือกจากข้อมูลจริง + ตัวอย่าง 2 แถว</div>',
+                confirmButton: '<i class="bi bi-file-earmark-arrow-down me-1"></i>ดาวน์โหลด'
             });
         });
 JS;

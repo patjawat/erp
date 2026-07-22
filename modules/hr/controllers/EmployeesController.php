@@ -14,12 +14,16 @@ use app\modules\hr\models\EmployeesSearch;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\UploadCsv;
 use app\modules\hr\helpers\EmployeeImportHelper;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use ruskid\csvimporter\CSVImporter;
 use ruskid\csvimporter\CSVReader;
@@ -575,27 +579,98 @@ class EmployeesController extends Controller
     }
 
     /**
-     * สร้างไฟล์ CSV template นำเข้าบุคลากร (หัวตารางตาม schema)
-     * import จะ validate ทุกช่องกับข้อมูลจริงใน DB อยู่แล้ว จึงไม่ต้องมี dropdown ในไฟล์
+     * สร้างไฟล์ Excel (.xlsx) template นำเข้าบุคลากร พร้อม dropdown (data validation)
+     * ที่ดึงตัวเลือกจากข้อมูลจริงใน DB + แถวตัวอย่าง 2 รายการ
+     * (CSV ใส่ dropdown ไม่ได้ จึงต้องเป็น .xlsx)
      */
     public function actionImportTemplate()
     {
         $schema = EmployeeImportHelper::schema();
-        $headers = array_map(fn($col) => $col['header'], $schema);
+        $sets = EmployeeImportHelper::optionSets();
+        $examples = EmployeeImportHelper::exampleRows();
+        $maxRows = 1000; // จำนวนแถวที่ผูก dropdown ไว้ล่วงหน้า
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('นำเข้าบุคลากร');
+
+        // ชีตซ่อนเก็บตัวเลือก dropdown (Excel รองรับ list ยาวผ่าน range เท่านั้น)
+        $lists = new Worksheet($spreadsheet, 'lists');
+        $spreadsheet->addSheet($lists);
+        $lists->setSheetState(Worksheet::SHEETSTATE_HIDDEN);
+
+        // เขียนตัวเลือกลงชีต lists ทีละคอลัมน์ แล้วจำ range ของแต่ละชุด
+        $optionRange = [];
+        $listColIndex = 1;
+        foreach ($sets as $key => $set) {
+            if (empty($set['labels'])) {
+                continue;
+            }
+            $letter = Coordinate::stringFromColumnIndex($listColIndex);
+            $row = 1;
+            foreach ($set['labels'] as $label) {
+                $lists->setCellValueExplicit($letter . $row, $label, DataType::TYPE_STRING);
+                $row++;
+            }
+            $optionRange[$key] = sprintf('lists!$%s$1:$%s$%d', $letter, $letter, $row - 1);
+            $listColIndex++;
+        }
+
+        // หัวตาราง + dropdown
+        foreach ($schema as $i => $col) {
+            $letter = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue($letter . '1', $col['header']);
+            $sheet->getColumnDimension($letter)->setWidth(20);
+
+            $optKey = $col['option'] ?? null;
+            if (in_array($col['type'], ['dropdown', 'flag'], true) && $optKey !== null && isset($optionRange[$optKey])) {
+                $dv = new DataValidation();
+                $dv->setType(DataValidation::TYPE_LIST);
+                $dv->setErrorStyle(DataValidation::STYLE_STOP);
+                $dv->setAllowBlank(true);
+                $dv->setShowDropDown(true);
+                $dv->setShowErrorMessage(true);
+                $dv->setErrorTitle('ค่าไม่ถูกต้อง');
+                $dv->setError('กรุณาเลือกค่าจากรายการที่กำหนด');
+                $dv->setFormula1($optionRange[$optKey]);
+                // ผูก dropdown ให้แถวข้อมูล (รวมแถวตัวอย่าง)
+                $sheet->setDataValidation(sprintf('%s2:%s%d', $letter, $letter, $maxRows), $dv);
+            }
+        }
+
+        // แถวตัวอย่าง 2 รายการ (เริ่มแถวที่ 2) — ลบทิ้งก่อนนำเข้าจริง
+        $exRow = 2;
+        foreach ($examples as $example) {
+            foreach ($example as $i => $value) {
+                $letter = Coordinate::stringFromColumnIndex($i + 1);
+                $sheet->setCellValueExplicit($letter . $exRow, (string) $value, DataType::TYPE_STRING);
+            }
+            $exRow++;
+        }
+        // เน้นแถวตัวอย่างด้วยพื้นหลังอ่อน + ตัวเอียง ให้รู้ว่าเป็นตัวอย่าง
+        $lastCol = Coordinate::stringFromColumnIndex(count($schema));
+        if ($exRow > 2) {
+            $exRange = 'A2:' . $lastCol . ($exRow - 1);
+            $sheet->getStyle($exRange)->getFont()->setItalic(true);
+            $sheet->getStyle($exRange)->getFill()->getStartColor()->setRGB('FFF7E6');
+        }
+
+        // สไตล์หัวตาราง
+        $headerRange = 'A1:' . $lastCol . '1';
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->getStartColor()->setRGB('8DB4E2');
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->freezePane('A2');
 
         $dir = Yii::getAlias('@runtime/export');
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
-        $filePath = $dir . '/template-employee-import.csv';
+        $filePath = $dir . '/template-employee-import.xlsx';
+        (new Xlsx($spreadsheet))->save($filePath);
 
-        $handle = fopen($filePath, 'w');
-        // BOM ให้ Excel เปิดภาษาไทยไม่เพี้ยน
-        fwrite($handle, "\xEF\xBB\xBF");
-        fputcsv($handle, $headers);
-        fclose($handle);
-
-        return Yii::$app->response->sendFile($filePath, 'template-นำเข้าบุคลากร.csv');
+        return Yii::$app->response->sendFile($filePath, 'template-นำเข้าบุคลากร.xlsx');
     }
 
     public function actionImportCsv()

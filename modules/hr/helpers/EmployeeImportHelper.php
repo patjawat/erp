@@ -99,6 +99,59 @@ class EmployeeImportHelper
         return $sets[$optionKey] ?? ['labels' => [], 'map' => []];
     }
 
+    /**
+     * แถวตัวอย่างสำหรับ template (2 รายการ) — ใช้ค่าจริงจาก dropdown ในระบบ
+     * เพื่อให้ผู้ใช้เห็นรูปแบบค่าที่ถูกต้อง (ลบทิ้งก่อนนำเข้าจริง)
+     * คืน array เรียงตามลำดับคอลัมน์ของ schema()
+     */
+    public static function exampleRows()
+    {
+        $sets = self::optionSets();
+        // เลือก label ลำดับที่ idx (ถ้าไม่มีคืนค่าว่าง)
+        $pick = function ($key, $idx = 0) use ($sets) {
+            $labels = $sets[$key]['labels'] ?? [];
+            if (empty($labels)) {
+                return '';
+            }
+            return $labels[min($idx, count($labels) - 1)];
+        };
+
+        $samples = [
+            [
+                'cid' => '1100000000001', 'gender' => $pick('gender', 0), 'prefix' => $pick('prefix', 0),
+                'fname' => 'สมชาย', 'lname' => 'ใจดี', 'birthday' => '15/05/2530',
+                'email' => 'somchai@example.com', 'address' => '123 หมู่ 1 ต.ด่านซ้าย อ.ด่านซ้าย จ.เลย', 'zipcode' => '42120', 'phone' => '0812345678',
+                'status' => $pick('status', 0), 'position' => $pick('position', 0), 'position_level' => $pick('level', 0),
+                'position_type' => $pick('type', 0), 'expertise' => $pick('expertise', 0), 'position_group' => $pick('group', 0),
+                'salary' => '25000', 'org_group' => $pick('tree_group', 0), 'org_unit' => $pick('tree_unit', 0),
+                'is_group_leader' => '', 'is_unit_leader' => 'Y',
+                'appoint_date' => '01/10/2566', 'movement' => 'คำสั่งแต่งตั้ง ที่ 1/2566', 'position_number' => '12345', 'join_date' => '01/06/2558',
+            ],
+            [
+                'cid' => '1100000000002', 'gender' => $pick('gender', 1), 'prefix' => $pick('prefix', 1),
+                'fname' => 'สมหญิง', 'lname' => 'รักงาน', 'birthday' => '20/11/2535',
+                'email' => 'somying@example.com', 'address' => '456 หมู่ 2 ต.โคกงาม อ.ด่านซ้าย จ.เลย', 'zipcode' => '42120', 'phone' => '0898765432',
+                'status' => $pick('status', 1), 'position' => $pick('position', 1), 'position_level' => $pick('level', 1),
+                'position_type' => $pick('type', 1), 'expertise' => $pick('expertise', 1), 'position_group' => $pick('group', 1),
+                'salary' => '18000', 'org_group' => $pick('tree_group', 1), 'org_unit' => $pick('tree_unit', 1),
+                'is_group_leader' => '', 'is_unit_leader' => '',
+                'appoint_date' => '01/04/2567', 'movement' => 'คำสั่งบรรจุ ที่ 5/2567', 'position_number' => '67890', 'join_date' => '01/04/2567',
+            ],
+        ];
+
+        // แปลง assoc → เรียงตามลำดับคอลัมน์ของ schema()
+        $ordered = [];
+        foreach ($samples as $s) {
+            $line = [];
+            foreach (self::schema() as $col) {
+                $line[] = $s[$col['key']] ?? '';
+            }
+            $ordered[] = $line;
+        }
+
+        return $ordered;
+    }
+
     // ---- ตัวช่วยสร้างชุดตัวเลือก ----
 
     /** ค่า distinct จาก column ของตาราง employees (เช่น gender, prefix) */

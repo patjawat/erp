@@ -1,11 +1,19 @@
 
 
 // --- Global loading (ใช้ทั้ง pjax และ full page) ---
+var _erpLoadingSafetyTimer = null;
 function erpShowPageLoading() {
   var el = document.getElementById("erp-global-loading");
   if (el) el.classList.remove("erp-loading-hidden");
+  // safety: กันค้าง — ถ้าไม่มีอะไรซ่อนภายใน 15 วิ ให้ซ่อนเอง (กันบั๊ก loading ค้างทุกกรณี)
+  if (_erpLoadingSafetyTimer) clearTimeout(_erpLoadingSafetyTimer);
+  _erpLoadingSafetyTimer = setTimeout(erpHidePageLoading, 15000);
 }
 function erpHidePageLoading() {
+  if (_erpLoadingSafetyTimer) {
+    clearTimeout(_erpLoadingSafetyTimer);
+    _erpLoadingSafetyTimer = null;
+  }
   var el = document.getElementById("erp-global-loading");
   if (el) el.classList.add("erp-loading-hidden");
 }
@@ -288,19 +296,32 @@ jQuery(document).on("pjax:end", function () {
 jQuery(document).on("pjax:complete", function () {
   erpHidePageLoading();
 });
+// กันค้าง: pjax ล้มเหลว/timeout ต้องซ่อน loading ด้วย
+jQuery(document).on("pjax:error pjax:timeout", function () {
+  erpHidePageLoading();
+});
 
 // แสดง loading เมื่อคลิกลิงก์ที่นำไปหน้าใหม่ (full page)
-$(document).on("click", "a[href]", function () {
+$(document).on("click", "a[href]", function (e) {
   var $a = $(this);
   if ($a.attr("target") === "_blank") return;
   if ($a.hasClass("open-modal") || $a.hasClass("open-modal-fullscreen")) return;
   if ($a.data("pjax") === false || $a.data("pjax") === 0) return;
+  // ลิงก์ดาวน์โหลด (download attr) ไม่ได้เปลี่ยนหน้า → อย่าโชว์ loading
+  if ($a.is("[download]")) return;
   var href = ($a.attr("href") || "").trim();
   if (!href || href === "#" || href.indexOf("javascript:") === 0) return;
+  var sameOrigin;
   try {
-    var sameOrigin = new URL(href, location.origin).origin === location.origin;
-    if (sameOrigin) erpShowPageLoading();
-  } catch (e) { }
+    sameOrigin = new URL(href, location.origin).origin === location.origin;
+  } catch (err) { return; }
+  if (!sameOrigin) return;
+  // เลื่อนไปเช็คใน tick ถัดไป — ถ้ามี handler อื่น preventDefault (เช่นปุ่มดาวน์โหลด/JS ดัก)
+  // แปลว่าไม่ได้เปลี่ยนหน้าจริง จึงไม่ต้องโชว์ loading (กันค้าง)
+  setTimeout(function () {
+    if (e.isDefaultPrevented()) return;
+    erpShowPageLoading();
+  }, 0);
 });
 
 $(function () {
