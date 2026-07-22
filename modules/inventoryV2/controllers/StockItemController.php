@@ -20,9 +20,12 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Yii;
 use yii\filters\VerbFilter;
+use yii\helpers\FileHelper;
+use yii\helpers\Json;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 /**
  * StockItemController implements the CRUD actions for StockItem model.
@@ -225,6 +228,191 @@ class StockItemController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * ส่งออกข้อมูลวัสดุพร้อมไฟล์รูปภาพเป็น ZIP
+     */
+    public function actionExportZip()
+    {
+        if (!class_exists(\ZipArchive::class)) {
+            throw new \RuntimeException('เซิร์ฟเวอร์ยังไม่เปิดใช้งาน ZipArchive');
+        }
+
+        $searchModel = new StockItemSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        if ($searchModel->q !== null && $searchModel->q !== '') {
+            $dataProvider->query->andFilterWhere([
+                'or',
+                ['like', 'categorise.code', $searchModel->q],
+                ['like', 'categorise.title', $searchModel->q],
+            ]);
+        }
+        $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        $dataProvider->pagination = false;
+
+        $items = $dataProvider->getModels();
+        $manifest = $this->buildStockItemZipManifest($items);
+
+        $zipPath = Yii::getAlias('@runtime') . '/stock-items-' . date('Ymd-His') . '-' . Yii::$app->security->generateRandomString(8) . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('ไม่สามารถสร้างไฟล์ ZIP ได้');
+        }
+
+        $zip->addFromString('manifest.json', Json::encode($this->manifestWithoutSourcePaths($manifest), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        foreach ($manifest['items'] as $item) {
+            foreach ($item['uploads'] as $upload) {
+                if (empty($upload['source_path']) || empty($upload['path']) || !is_file($upload['source_path'])) {
+                    continue;
+                }
+                $zip->addFile($upload['source_path'], $upload['path']);
+            }
+        }
+        $zip->close();
+
+        $downloadName = 'stock-items-' . date('Ymd-His') . '.zip';
+        $response = Yii::$app->response->sendFile($zipPath, $downloadName, [
+            'mimeType' => 'application/zip',
+            'inline' => false,
+        ]);
+        $response->on(Response::EVENT_AFTER_SEND, function () use ($zipPath) {
+            @unlink($zipPath);
+        });
+        return $response;
+    }
+
+    /**
+     * นำเข้าข้อมูลวัสดุจาก ZIP ที่ export จากระบบนี้
+     */
+    public function actionImportZip()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if (!Yii::$app->request->isPost) {
+            return ['status' => 'error', 'message' => 'Invalid request method'];
+        }
+
+        if (!class_exists(\ZipArchive::class)) {
+            return ['status' => 'error', 'message' => 'เซิร์ฟเวอร์ยังไม่เปิดใช้งาน ZipArchive'];
+        }
+
+        $mode = Yii::$app->request->post('mode', 'merge');
+        if (!in_array($mode, ['merge', 'replace', 'disable'], true)) {
+            return ['status' => 'error', 'message' => 'รูปแบบการนำเข้าไม่ถูกต้อง'];
+        }
+
+        $file = UploadedFile::getInstanceByName('zip_file');
+        if (!$file) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกไฟล์ ZIP'];
+        }
+
+        if (strtolower($file->extension) !== 'zip') {
+            return ['status' => 'error', 'message' => 'รองรับเฉพาะไฟล์ .zip เท่านั้น'];
+        }
+
+        $tmpDir = Yii::getAlias('@runtime') . '/stock-item-import-' . Yii::$app->security->generateRandomString(12);
+        $transaction = null;
+
+        try {
+            FileHelper::createDirectory($tmpDir);
+            $this->extractZipSafely($file->tempName, $tmpDir);
+
+            $manifestPath = $tmpDir . DIRECTORY_SEPARATOR . 'manifest.json';
+            if (!is_file($manifestPath)) {
+                throw new \RuntimeException('ไม่พบ manifest.json ในไฟล์ ZIP');
+            }
+
+            $manifest = Json::decode(file_get_contents($manifestPath), true);
+            if (($manifest['format'] ?? null) !== 'inventory-v2-stock-items' || !isset($manifest['items']) || !is_array($manifest['items'])) {
+                throw new \RuntimeException('ไฟล์ ZIP นี้ไม่ใช่ไฟล์ส่งออกข้อมูลวัสดุที่รองรับ');
+            }
+
+            $stats = [
+                'created' => 0,
+                'updated' => 0,
+                'deleted' => 0,
+                'disabled' => 0,
+                'skipped' => 0,
+                'uploads' => 0,
+                'categories_created' => 0,
+                'units_created' => 0,
+            ];
+
+            $transaction = Yii::$app->db->beginTransaction();
+
+            if ($mode === 'replace') {
+                $refs = StockItem::find()->select('ref')->column();
+                $this->deleteUploadsForRefs($refs);
+                $stats['deleted'] = StockItem::deleteAll(['name' => 'asset_item', 'group_id' => 'MATER']);
+            } elseif ($mode === 'disable') {
+                $stats['disabled'] = StockItem::updateAll(['active' => 0], ['name' => 'asset_item', 'group_id' => 'MATER', 'active' => 1]);
+            }
+
+            $stats['categories_created'] = $this->ensureImportedCategories($manifest, $manifest['items']);
+            $stats['units_created'] = $this->ensureImportedUnits($manifest, $manifest['items']);
+
+            foreach ($manifest['items'] as $itemData) {
+                $code = trim((string)($itemData['code'] ?? ''));
+                $title = trim((string)($itemData['title'] ?? ''));
+                if ($code === '' || $title === '') {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                $model = StockItem::find()->andWhere(['code' => $code])->one();
+                $isNew = false;
+                if (!$model) {
+                    $model = new StockItem();
+                    $model->ref = $this->generateStockItemRef();
+                    $isNew = true;
+                } elseif (empty($model->ref)) {
+                    $model->ref = $this->generateStockItemRef();
+                }
+
+                $model->code = $code;
+                $model->title = $title;
+                $model->category_id = (string)($itemData['category_id'] ?? '');
+                $model->qty_min = $itemData['qty_min'] ?? null;
+                $model->qty_max = $itemData['qty_max'] ?? null;
+                $model->qty = $itemData['qty'] ?? null;
+                $model->active = (int)($itemData['active'] ?? 1);
+                $model->data_json = $this->normalizeManifestDataJson($itemData['data_json'] ?? []);
+
+                if (!$model->save(false)) {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                if (array_key_exists('uploads', $itemData)) {
+                    $stats['uploads'] += $this->syncImportedUploads($model->ref, (array)$itemData['uploads'], $tmpDir);
+                }
+
+                if ($isNew) {
+                    $stats['created']++;
+                } else {
+                    $stats['updated']++;
+                }
+            }
+
+            $transaction->commit();
+
+            return [
+                'status' => 'success',
+                'message' => 'นำเข้าข้อมูลวัสดุสำเร็จ',
+                'summary' => $stats,
+                'container' => '#sm-container',
+            ];
+        } catch (\Throwable $e) {
+            if ($transaction && $transaction->isActive) {
+                $transaction->rollBack();
+            }
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        } finally {
+            if (is_dir($tmpDir)) {
+                FileHelper::removeDirectory($tmpDir);
+            }
+        }
     }
 
     /**
@@ -1249,6 +1437,349 @@ class StockItemController extends Controller
                 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
             ];
         }
+    }
+
+    private function buildStockItemZipManifest($items)
+    {
+        $refs = [];
+        $categoryIds = [];
+        foreach ($items as $item) {
+            if (!empty($item->ref)) {
+                $refs[] = $item->ref;
+            }
+            if (!empty($item->category_id)) {
+                $categoryIds[] = (string)$item->category_id;
+            }
+        }
+
+        $uploadsByRef = [];
+        if (!empty($refs)) {
+            $uploads = Uploads::find()
+                ->where(['ref' => array_values(array_unique($refs))])
+                ->asArray()
+                ->all();
+            foreach ($uploads as $upload) {
+                $uploadsByRef[$upload['ref']][] = $upload;
+            }
+        }
+
+        $categories = [];
+        if (!empty($categoryIds)) {
+            $rows = Categorise::find()
+                ->where(['name' => 'asset_type', 'code' => array_values(array_unique($categoryIds))])
+                ->asArray()
+                ->all();
+            foreach ($rows as $row) {
+                $categories[] = [
+                    'code' => (string)($row['code'] ?? ''),
+                    'title' => (string)($row['title'] ?? ''),
+                    'category_id' => $row['category_id'] ?? 4,
+                    'active' => (int)($row['active'] ?? 1),
+                    'data_json' => $this->normalizeManifestDataJson($row['data_json'] ?? []),
+                ];
+            }
+        }
+
+        $manifestItems = [];
+        $unitMap = [];
+        $uploadBasePath = FileManagerHelper::getUploadPath();
+        foreach ($items as $item) {
+            $dataJson = $this->normalizeManifestDataJson($item->data_json);
+            $unitName = trim((string)($dataJson['unit_name'] ?? $dataJson['unit'] ?? ''));
+            if ($unitName !== '') {
+                $unitMap[$unitName] = ['title' => $unitName];
+            }
+
+            $uploads = [];
+            foreach ($uploadsByRef[$item->ref] ?? [] as $upload) {
+                $realFilename = basename((string)($upload['real_filename'] ?? ''));
+                if ($realFilename === '') {
+                    continue;
+                }
+                $sourcePath = $uploadBasePath . $upload['ref'] . DIRECTORY_SEPARATOR . $realFilename;
+                if (!is_file($sourcePath)) {
+                    continue;
+                }
+                $zipPath = 'uploads/' . $this->safeZipSegment($upload['ref']) . '/' . $realFilename;
+                $uploads[] = [
+                    'name' => $upload['name'] ?? null,
+                    'file_name' => $upload['file_name'] ?? $realFilename,
+                    'real_filename' => $realFilename,
+                    'type' => $upload['type'] ?? null,
+                    'create_date' => $upload['create_date'] ?? null,
+                    'path' => $zipPath,
+                    'source_path' => $sourcePath,
+                ];
+            }
+
+            $manifestItems[] = [
+                'code' => (string)$item->code,
+                'title' => (string)$item->title,
+                'category_id' => (string)$item->category_id,
+                'qty_min' => $item->qty_min,
+                'qty_max' => $item->qty_max,
+                'qty' => $item->qty,
+                'active' => (int)$item->active,
+                'ref' => (string)$item->ref,
+                'data_json' => $dataJson,
+                'uploads' => $uploads,
+            ];
+        }
+
+        return [
+            'format' => 'inventory-v2-stock-items',
+            'version' => 1,
+            'exported_at' => date(DATE_ATOM),
+            'categories' => $categories,
+            'units' => array_values($unitMap),
+            'items' => $manifestItems,
+        ];
+    }
+
+    private function manifestWithoutSourcePaths(array $manifest)
+    {
+        foreach ($manifest['items'] as $itemIndex => $item) {
+            foreach (($item['uploads'] ?? []) as $uploadIndex => $upload) {
+                unset($manifest['items'][$itemIndex]['uploads'][$uploadIndex]['source_path']);
+            }
+        }
+        return $manifest;
+    }
+
+    private function normalizeManifestDataJson($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if ($value === null || $value === '') {
+            return [];
+        }
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    }
+
+    private function ensureImportedCategories(array $manifest, array $items)
+    {
+        $categoryMap = [];
+        foreach (($manifest['categories'] ?? []) as $category) {
+            $code = trim((string)($category['code'] ?? ''));
+            if ($code === '') {
+                continue;
+            }
+            $categoryMap[$code] = $category;
+        }
+
+        foreach ($items as $item) {
+            $code = trim((string)($item['category_id'] ?? ''));
+            if ($code !== '' && !isset($categoryMap[$code])) {
+                $categoryMap[$code] = ['code' => $code, 'title' => $code, 'active' => 1, 'data_json' => []];
+            }
+        }
+
+        $created = 0;
+        foreach ($categoryMap as $code => $category) {
+            $exists = Categorise::find()->where(['name' => 'asset_type', 'code' => $code])->exists();
+            if ($exists) {
+                continue;
+            }
+
+            $model = new Categorise();
+            $model->name = 'asset_type';
+            $model->category_id = $category['category_id'] ?? 4;
+            $model->code = $code;
+            $model->title = trim((string)($category['title'] ?? '')) ?: $code;
+            $model->active = (int)($category['active'] ?? 1);
+            $model->data_json = $this->normalizeManifestDataJson($category['data_json'] ?? []);
+            $model->save(false);
+            $created++;
+        }
+        return $created;
+    }
+
+    private function ensureImportedUnits(array $manifest, array $items)
+    {
+        $unitMap = [];
+        foreach (($manifest['units'] ?? []) as $unit) {
+            $title = is_array($unit) ? ($unit['title'] ?? '') : $unit;
+            $title = trim((string)$title);
+            if ($title !== '') {
+                $unitMap[$title] = $title;
+            }
+        }
+
+        foreach ($items as $item) {
+            $dataJson = $this->normalizeManifestDataJson($item['data_json'] ?? []);
+            $title = trim((string)($dataJson['unit_name'] ?? $dataJson['unit'] ?? ''));
+            if ($title !== '') {
+                $unitMap[$title] = $title;
+            }
+        }
+
+        $created = 0;
+        foreach ($unitMap as $title) {
+            $exists = Categorise::find()->where(['name' => 'unit', 'title' => $title])->exists();
+            if ($exists) {
+                continue;
+            }
+
+            $model = new Categorise();
+            $model->name = 'unit';
+            $model->title = $title;
+            $model->active = 1;
+            $model->save(false);
+            $created++;
+        }
+        return $created;
+    }
+
+    private function syncImportedUploads($ref, array $uploads, $baseDir)
+    {
+        $this->deleteUploadsForRefs([$ref]);
+        FileManagerHelper::CreateDir($ref);
+
+        $count = 0;
+        foreach ($uploads as $upload) {
+            $relativePath = (string)($upload['path'] ?? '');
+            if (!$this->isSafeZipPath($relativePath)) {
+                continue;
+            }
+
+            $sourcePath = $this->extractedPath($baseDir, $relativePath);
+            if (!$sourcePath || !is_file($sourcePath)) {
+                continue;
+            }
+
+            $realFilename = basename((string)($upload['real_filename'] ?? basename($relativePath)));
+            if ($realFilename === '') {
+                continue;
+            }
+
+            $targetPath = FileManagerHelper::getUploadPath() . $ref . DIRECTORY_SEPARATOR . $realFilename;
+            if (!copy($sourcePath, $targetPath)) {
+                continue;
+            }
+
+            $extension = strtolower(pathinfo($realFilename, PATHINFO_EXTENSION));
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($extension, $imageExtensions, true) && FileManagerHelper::isImage($targetPath)) {
+                try {
+                    FileManagerHelper::createThumbnail($ref, $realFilename);
+                } catch (\Throwable $e) {
+                    Yii::warning($e->getMessage(), __METHOD__);
+                }
+            }
+
+            $model = new Uploads();
+            $model->ref = $ref;
+            if ($model->hasAttribute('name')) {
+                $model->name = $upload['name'] ?? null;
+            }
+            $model->file_name = $upload['file_name'] ?? $realFilename;
+            $model->real_filename = $realFilename;
+            $model->type = $upload['type'] ?? FileManagerHelper::checkFileType($extension);
+            if ($model->hasAttribute('create_date')) {
+                $model->create_date = $upload['create_date'] ?? date('Y-m-d H:i:s');
+            }
+            $model->save(false);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    private function deleteUploadsForRefs(array $refs)
+    {
+        $deleted = 0;
+        foreach (array_values(array_unique(array_filter($refs))) as $ref) {
+            $deleted += Uploads::deleteAll(['ref' => $ref]);
+            $dir = FileManagerHelper::getUploadPath() . $ref;
+            if (is_dir($dir)) {
+                FileHelper::removeDirectory($dir);
+            }
+        }
+        return $deleted;
+    }
+
+    private function extractZipSafely($zipPath, $destination)
+    {
+        $zip = new \ZipArchive();
+        $openResult = $zip->open($zipPath);
+        if ($openResult !== true) {
+            throw new \RuntimeException('ไม่สามารถเปิดไฟล์ ZIP ได้');
+        }
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (!$this->isSafeZipPath($name)) {
+                $zip->close();
+                throw new \RuntimeException('พบ path ที่ไม่ปลอดภัยในไฟล์ ZIP');
+            }
+
+            $targetPath = $this->extractedPath($destination, $name);
+            if (substr($name, -1) === '/') {
+                FileHelper::createDirectory($targetPath);
+                continue;
+            }
+
+            FileHelper::createDirectory(dirname($targetPath));
+            $source = $zip->getStream($name);
+            if (!$source) {
+                $zip->close();
+                throw new \RuntimeException('อ่านไฟล์ใน ZIP ไม่สำเร็จ: ' . $name);
+            }
+            $target = fopen($targetPath, 'wb');
+            stream_copy_to_stream($source, $target);
+            fclose($target);
+            fclose($source);
+        }
+
+        $zip->close();
+    }
+
+    private function isSafeZipPath($path)
+    {
+        $path = str_replace('\\', '/', (string)$path);
+        if ($path === '' || strpos($path, "\0") !== false || $path[0] === '/' || preg_match('/^[A-Za-z]:\//', $path)) {
+            return false;
+        }
+        foreach (explode('/', $path) as $part) {
+            if ($part === '..') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function extractedPath($baseDir, $relativePath)
+    {
+        if (!$this->isSafeZipPath($relativePath)) {
+            return null;
+        }
+        return rtrim($baseDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, str_replace('\\', '/', $relativePath));
+    }
+
+    private function safeZipSegment($value)
+    {
+        $segment = preg_replace('/[^A-Za-z0-9._-]/', '_', (string)$value);
+        return $segment !== '' ? $segment : 'ref';
+    }
+
+    private function generateStockItemRef()
+    {
+        do {
+            $ref = substr(Yii::$app->security->generateRandomString(32), 10);
+        } while (
+            StockItem::find()->andWhere(['ref' => $ref])->exists()
+            || Uploads::find()->where(['ref' => $ref])->exists()
+        );
+
+        return $ref;
     }
 
     /**

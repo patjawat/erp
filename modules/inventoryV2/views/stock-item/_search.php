@@ -42,7 +42,7 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
             ) ?>
             <div class="dropdown">
                 <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-file-excel me-1"></i> Excel
+                    <i class="fa-solid fa-file-export me-1"></i> นำเข้า/ส่งออก
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                     <li><?= Html::button(
@@ -53,7 +53,24 @@ $warehouses = $warehouses ?? ['' => '-- ทุกคลัง --'];
                             'data' => ['href' => \yii\helpers\Url::to(array_merge(['/inventory-v2/stock-item/export-excel'], Yii::$app->request->queryParams))],
                         ]
                     ) ?></li>
+                    <li><?= Html::button(
+                        '<i class="fa-solid fa-file-zipper me-2"></i> ส่งออก ZIP',
+                        [
+                            'type' => 'button',
+                            'class' => 'dropdown-item export-zip-btn',
+                            'data' => ['href' => \yii\helpers\Url::to(array_merge(['/inventory-v2/stock-item/export-zip'], Yii::$app->request->queryParams))],
+                        ]
+                    ) ?></li>
                     <li><hr class="dropdown-divider"></li>
+                    <li><?= Html::button(
+                        '<i class="fa-solid fa-file-zipper me-2"></i> นำเข้าจาก ZIP',
+                        [
+                            'type' => 'button',
+                            'class' => 'dropdown-item',
+                            'data-bs-toggle' => 'modal',
+                            'data-bs-target' => '#stock-item-import-zip-modal',
+                        ]
+                    ) ?></li>
                     <li><?= Html::a(
                         '<i class="fa-solid fa-file-csv me-2"></i> นำเข้าด้วย CSV',
                         ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'],
