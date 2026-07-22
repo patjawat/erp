@@ -14,7 +14,6 @@ $this->title = $model->topic;
 $this->params['breadcrumbs'][] = ['label' => 'Documents', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
-$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 <iframe id="myIframe" src="<?= Url::to(['/dms/documents/show','ref' => $model->ref]);?>&embedded=true"
 frameborder="0" style="width: 100%; height: 500px; border: none;"></iframe>
@@ -29,7 +28,6 @@ $liffProfileUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_profi
 $liffRegisterUrl = 'https://liff.line.me/'.SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<< JS
-    var vConsole = new window.VConsole();
       async function checkProfile(){
           const {userId} = await liff.getProfile()
           await $.ajax({

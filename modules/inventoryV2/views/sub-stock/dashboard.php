@@ -4,7 +4,7 @@ use yii\helpers\Url;
 use yii\web\View;
 use app\modules\inventoryV2\models\StockOrder;
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
+$this->registerJsFile('@web/apexcharts/apexcharts.min.js', ['position' => View::POS_HEAD]); // self-hosted (เดิม jsdelivr)
 
 $pendingDisbursementCount = (int) ($pendingDisbursementCount ?? ($pendingReceiveCount ?? 0));
 $criticalCount = (int) ($criticalCount ?? 0);

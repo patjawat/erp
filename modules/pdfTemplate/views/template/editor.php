@@ -51,7 +51,7 @@ $this->registerCss(<<<CSS
 #field-list { max-height: min(60vh, 480px); overflow-y: auto; overflow-x: hidden; }
 CSS
 );
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', ['position' => \yii\web\View::POS_HEAD]);
+$this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::POS_HEAD]); // self-hosted (เดิมดึงจาก cdnjs)
 ?>
 <div class="container-fluid pdf-editor-container py-3">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -300,7 +300,7 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pd
 
 <script>
 (function() {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '<?= Yii::getAlias('@web') ?>/libs/pdf/pdf.worker.js';
     var serveUrl = <?= json_encode($serveUrl) ?>;
     var dataSources = <?= json_encode($dataSources) ?>;
     var initialSelectedSourceId = <?= json_encode($selectedSourceId) ?>;

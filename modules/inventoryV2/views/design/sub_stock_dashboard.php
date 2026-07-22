@@ -5,7 +5,7 @@ use yii\helpers\Url;
 use yii\web\View;
 
 // ลงทะเบียน ApexCharts และ Bootstrap Icons
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
+$this->registerJsFile('@web/apexcharts/apexcharts.min.js', ['position' => View::POS_HEAD]); // self-hosted (เดิม jsdelivr)
 ?>
 
 <div class="card">

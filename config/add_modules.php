@@ -84,7 +84,6 @@ $modules['telegrambot'] = ['class' => 'app\modules\telegrambot\Module'];  // mod
 $modules['formlayout'] = ['class' => 'app\modules\formlayout\Module'];  // module ออกแบบ โนพท pdf
 $modules['plan'] = ['class' => 'app\modules\plan\Module'];  // แผนงานและโครงการ (Project management)
 $modules['line2'] = ['class' => 'app\modules\line2\Module'];  // line officail 2 By PCH
-$modules['dev'] = ['class' => 'app\modules\dev\Module'];  // ปรับปรุงระบบ theme layout
 $modules['health'] = ['class' => 'app\modules\health\Module'];  //ข้อมูลสุขภาพ
 $modules['attendance'] = ['class' => 'app\modules\attendance\Module'];  // บันทึกเวลาเข้างาน (Check-in)
 $modules['leave'] = ['class' => 'app\modules\leave\Module'];  // ระบบลา (ขอลา / อนุมัติ / ทางลัด)

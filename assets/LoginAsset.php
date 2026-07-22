@@ -21,12 +21,12 @@ class LoginAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         'login-design/style.css',
-        'https://unpkg.com/aos@next/dist/aos.css'
+        'aos/aos.css', // self-hosted (เดิมดึงจาก unpkg CDN)
     ];
     public $js = [
         'login-design/js.js',
-        'https://unpkg.com/aos@next/dist/aos.js',
-        'https://cdn.jsdelivr.net/npm/typed.js@2.0.12'
+        'aos/aos.js', // self-hosted (เดิมดึงจาก unpkg CDN)
+        'libs/typed/typed.min.js', // self-hosted (เดิมดึงจาก jsdelivr CDN)
     ];
     public $depends = [
         'yii\web\YiiAsset',

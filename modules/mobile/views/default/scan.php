@@ -133,7 +133,7 @@ $assetUrlByCode        = \yii\helpers\Url::to(['/mobile/default/asset', 'code' =
 $maintenanceUrlById    = \yii\helpers\Url::to(['/mobile/default/repair-request', 'asset_number' => '__CODE__', 'send_type' => 'asset']);
 $maintenanceUrlByCode  = \yii\helpers\Url::to(['/mobile/default/repair-request', 'asset_number' => '__CODE__', 'send_type' => 'asset']);
 ?>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="<?= \yii\helpers\Url::to('@web/libs/html5-qrcode/html5-qrcode.min.js') ?>"></script><?php // self-hosted (เดิม jsdelivr) ?>
 <script>
 (function() {
     var loadingEl = document.getElementById('scan-loading');

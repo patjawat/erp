@@ -8,7 +8,8 @@ use iamsaint\datetimepicker\Datetimepicker;
 use kartik\widgets\Select2;
 use yii\web\JsExpression;
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+// FullCalendar core โหลดจาก AppAsset (self-hosted) แล้ว — เพิ่ม locale ไทย
+$this->registerJsFile('@web/libs/fullcalendar/th.global.min.js', ['depends' => [\app\assets\AppAsset::class]]);
 ?>
 <style>
     #external-events {

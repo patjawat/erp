@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <button id="exportLayout">บันทึก Layout</button>
 <pre id="output"></pre>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<script src="<?= Yii::getAlias('@web') ?>/libs/fabric/fabric.min.js"></script><?php // self-hosted (เดิม cdnjs) ?>
 <script>
 const canvas = new fabric.Canvas('pdfCanvas');
 

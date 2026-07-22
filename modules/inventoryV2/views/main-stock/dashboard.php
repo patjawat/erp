@@ -35,7 +35,7 @@ if ($currentWarehouseId && $warehouses) {
     }
 }
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/apexcharts', ['position' => View::POS_HEAD]);
+$this->registerJsFile('@web/apexcharts/apexcharts.min.js', ['position' => View::POS_HEAD]); // self-hosted (เดิม jsdelivr)
 ?>
 
 <?php $this->beginBlock('page-title'); ?>

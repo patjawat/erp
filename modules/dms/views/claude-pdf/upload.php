@@ -12,8 +12,8 @@ $this->title = 'อัพโหลดเอกสารและเพิ่ม�
 $this->params['breadcrumbs'][] = ['label' => 'เอกสาร', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-// Register FontAwesome
-$this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+// FontAwesome โหลดจาก AppAsset (self-hosted FA7) แล้ว — ไม่ต้องเรียก CDN ซ้ำ
+$this->registerCssFile('@web/libs/font-awesome/fontawesome-free-7.1.0-web/css/all.min.css');
 ?>
 
 <div class="document-upload">

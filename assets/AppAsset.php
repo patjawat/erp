@@ -52,7 +52,7 @@ class AppAsset extends AssetBundle
         'libs/pdf/pdf.min.js',
         'libs/magnific-popup/jquery.magnific-popup.js',
         'libs/font-awesome/fontawesome-free-7.1.0-web/js/all.min.js',
-        'https://unpkg.com/lucide@latest/dist/umd/lucide.min.js'
+        'libs/lucide/lucide.min.js', // self-hosted (เดิมดึงจาก unpkg CDN)
     ];
 
     public $depends = [

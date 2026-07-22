@@ -5,8 +5,7 @@ use yii\helpers\Url;
 use app\models\Categorise;
 use app\modules\booking\models\Meeting;
 
-// $this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
-// $this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// FullCalendar โหลดจาก AppAsset (self-hosted) แล้ว
 
 $this->title = 'ปฏิทินการใช้ห้องประชุม';
 $this->params['breadcrumbs'][] = ['label' => 'จองห้องประชุม', 'url' => ['/booking/meeting/index']];

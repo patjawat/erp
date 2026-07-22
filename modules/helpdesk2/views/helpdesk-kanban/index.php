@@ -11,7 +11,7 @@ $this->title = 'Ticket Kanban Board';
 $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = $this->title;
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/libs/sortablejs/Sortable.min.js', ['depends' => [\yii\web\JqueryAsset::class]]); // self-hosted (เดิม jsdelivr)
 
 $updateUrl = Url::to(['/helpdesk/service/update-status']);
 
