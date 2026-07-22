@@ -9,9 +9,10 @@ $this->params['breadcrumbs'][] = $this->title;
 $dataUrl = Url::to(['/hr/org-chart/data']);
 $baseUrl = Yii::getAlias('@web');
 
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/treant-js@1.0.1/Treant.css', ['depends' => [\yii\bootstrap5\BootstrapAsset::class]]);
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/raphael@2.3.0/raphael.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/treant-js@1.0.1/Treant.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// self-hosted treant-js@1.0.1 + raphael@2.3.0 (เดิม jsdelivr)
+$this->registerCssFile('@web/libs/treant/Treant.css', ['depends' => [\yii\bootstrap5\BootstrapAsset::class]]);
+$this->registerJsFile('@web/libs/treant/raphael.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/libs/treant/Treant.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerJsFile($baseUrl . '/js/hr-org-chart.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $css = <<<CSS

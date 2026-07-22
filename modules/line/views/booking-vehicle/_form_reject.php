@@ -17,7 +17,6 @@ use app\components\SiteHelper;
 /** @var app\modules\sm\models\Inventory $model */
 $this->title = 'ขออนุญาตใช้รถยนต์';
 \yii\web\YiiAsset::register($this);
-$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-calendar-day fs-1"></i> ขอ<?php echo ($model->leave->leaveType->title ?? '-') ?>

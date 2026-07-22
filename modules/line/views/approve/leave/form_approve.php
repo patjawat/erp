@@ -16,7 +16,6 @@ use yii\helpers\ArrayHelper;
 /** @var app\modules\sm\models\Inventory $model */
 $this->title = 'ขออนุมัติวันลา';
 \yii\web\YiiAsset::register($this);
-$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 <?php $this->beginBlock('page-title'); ?>
 <i class="fa-solid fa-calendar-day fs-1"></i> ขอ<?php echo ($model->leave->leaveType->title ?? '-') ?>
@@ -75,9 +74,6 @@ $liffProfileUrl = 'https://liff.line.me/' . $liffProfile;
 $liffRegisterUrl = 'https://liff.line.me/' . SiteHelper::getInfo()['line_liff_register'];
 
 $js = <<<JS
-
-    var vConsole = new window.VConsole();
-       
     \$('#form').on('beforeSubmit', function (e) {
                 var form = \$('#form');
                 \$.ajax({

@@ -197,13 +197,125 @@ AND group_id = 'MATER';
 
 <?php Pjax::end(); ?>
 
+<div class="modal fade" id="stock-item-import-zip-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form id="stock-item-import-zip-form" enctype="multipart/form-data">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white mb-0">
+                        <i class="fa-solid fa-file-zipper me-2"></i>นำเข้าข้อมูลวัสดุจาก ZIP
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="stock-item-import-zip-file">ไฟล์ ZIP</label>
+                        <input type="file" class="form-control" id="stock-item-import-zip-file" name="zip_file" accept=".zip,application/zip" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-label fw-semibold">รูปแบบการนำเข้า</div>
+                        <div class="vstack gap-2">
+                            <label class="border rounded-2 p-3 mb-0">
+                                <span class="d-flex gap-2 align-items-start">
+                                    <input class="form-check-input mt-1" type="radio" name="mode" value="merge" checked>
+                                    <span>
+                                        <span class="d-block fw-semibold">นำเข้ารวมกับข้อมูลเดิม</span>
+                                        <span class="text-muted small">ถ้ารหัสวัสดุซ้ำ จะอัปเดตข้อมูลและรูปภาพตามไฟล์ ZIP</span>
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="border rounded-2 p-3 mb-0">
+                                <span class="d-flex gap-2 align-items-start">
+                                    <input class="form-check-input mt-1" type="radio" name="mode" value="replace">
+                                    <span>
+                                        <span class="d-block fw-semibold text-danger">ลบข้อมูลเดิมทั้งหมด แล้วนำเข้าจากไฟล์นี้</span>
+                                        <span class="text-muted small">ลบ master วัสดุเดิมในขอบเขต Inventory V2 ก่อนนำเข้า</span>
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="border rounded-2 p-3 mb-0">
+                                <span class="d-flex gap-2 align-items-start">
+                                    <input class="form-check-input mt-1" type="radio" name="mode" value="disable">
+                                    <span>
+                                        <span class="d-block fw-semibold">ปิดการใช้งานข้อมูลเดิม แล้วนำเข้าจากไฟล์นี้</span>
+                                        <span class="text-muted small">ข้อมูลเดิมจะถูกตั้งเป็นไม่ active ส่วนข้อมูลใน ZIP จะถูกเพิ่มหรืออัปเดต</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="stock-item-import-zip-result" class="alert d-none mb-0"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-file-import me-1"></i> นำเข้า
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?php
 $chageActiveUrl = Url::to(['/inventory-v2/stock-item/set-active']);
+$importZipUrl = Url::to(['/inventory-v2/stock-item/import-zip']);
 $js = <<< JS
         // ส่งออก Excel เปิดแท็บใหม่ (ใช้ window.open เพื่อเลี่ยง pjax ดัก click ในคอนเทนเนอร์)
         $("body").on("click", ".export-excel-btn", function (e) {
           e.preventDefault();
           window.open($(this).data('href'), '_blank');
+        });
+
+        $("body").on("click", ".export-zip-btn", function (e) {
+          e.preventDefault();
+          window.open($(this).data('href'), '_blank');
+        });
+
+        $("body").on("submit", "#stock-item-import-zip-form", function (e) {
+          e.preventDefault();
+
+          var form = this;
+          var formData = new FormData(form);
+          var submitBtn = $(form).find('button[type="submit"]');
+          var originalBtnHtml = submitBtn.html();
+          var resultBox = $("#stock-item-import-zip-result");
+
+          submitBtn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span> กำลังนำเข้า...');
+          resultBox.addClass("d-none").removeClass("alert-success alert-danger").empty();
+
+          $.ajax({
+            url: "$importZipUrl",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: "json",
+            success: function (res) {
+              if (res.status === "success") {
+                var s = res.summary || {};
+                var message = "นำเข้าสำเร็จ: สร้างใหม่ " + (s.created || 0)
+                  + " รายการ, อัปเดต " + (s.updated || 0)
+                  + " รายการ, รูปภาพ " + (s.uploads || 0)
+                  + " ไฟล์";
+                resultBox.removeClass("d-none alert-danger").addClass("alert-success").text(message);
+                if (typeof success === "function") {
+                  success();
+                }
+                $.pjax.reload({container: res.container || "#sm-container", history: false});
+              } else {
+                resultBox.removeClass("d-none alert-success").addClass("alert-danger").text(res.message || "นำเข้าไม่สำเร็จ");
+              }
+            },
+            error: function (xhr) {
+              var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "นำเข้าไม่สำเร็จ";
+              resultBox.removeClass("d-none alert-success").addClass("alert-danger").text(message);
+            },
+            complete: function () {
+              submitBtn.prop("disabled", false).html(originalBtnHtml);
+            }
+          });
         });
 
         $("body").on("change", ".set-active", function (e) {

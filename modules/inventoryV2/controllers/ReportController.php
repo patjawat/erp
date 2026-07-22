@@ -28,10 +28,20 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
  */
 class ReportController extends Controller
 {
-    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล) */
+    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล)
+     * ลำดับความสำคัญ: param inventoryV2.disburseSubWarehouseIds (ถ้ากำหนดไว้) →
+     * ถ้าว่าง fallback ไปดึงคลังประเภท BRANCH (=รพ.สต.) อัตโนมัติ
+     * เพื่อให้รวมคลัง รพ.สต. ที่เพิ่มใหม่ในอนาคตโดยไม่ต้องแก้ config */
     public static function getDisburseSubWarehouseIds()
     {
-        return (array) (Yii::$app->params['inventoryV2.disburseSubWarehouseIds'] ?? []);
+        $ids = (array) (Yii::$app->params['inventoryV2.disburseSubWarehouseIds'] ?? []);
+        if ($ids) {
+            return array_map('intval', $ids);
+        }
+        return array_map('intval', Warehouse::find()
+            ->select('id')
+            ->where(['warehouse_type' => 'BRANCH'])
+            ->column());
     }
 
     /**
@@ -1857,34 +1867,19 @@ class ReportController extends Controller
         }
         $itemCodes = array_unique($itemCodes);
 
-        // ราคาทุนต่อหน่วยต่อ lot — ใช้ unit_price จาก IN detail ล่าสุดของ (item_code, lot_number) ในคลังหลักนี้
-        // เพื่อให้ "มูลค่าจ่ายออก" คำนวณตาม lot ที่จ่ายจริง (ไม่ขึ้นกับ sd.unit_price ของ OUT row)
-        $latestInPrice = (new Query())
-            ->select(['sd_in.item_code', 'sd_in.lot_number', 'sd_in.unit_price'])
-            ->from(['sd_in' => StockDetail::tableName()])
-            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
-            ->innerJoin(
-                ['latest' => (new Query())
-                    ->select(['sd_l.item_code', 'sd_l.lot_number', new Expression('MAX(sd_l.id) AS mid')])
-                    ->from(['sd_l' => StockDetail::tableName()])
-                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
-                    ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
-                    ->andWhere(['so_l.main_warehouse_id' => $warehouseId])
-                    ->groupBy(['sd_l.item_code', 'sd_l.lot_number'])],
-                'latest.item_code = sd_in.item_code AND latest.lot_number = sd_in.lot_number AND latest.mid = sd_in.id'
-            );
-
+        // OUT: ตีมูลค่าจากราคาบนแถวจริง (sd.unit_price) ที่บันทึกไว้ตอนจ่ายออก
+        // ให้ตรงกับหน้า balance/ledger (loadLedgerValues) — เดิม reprice ด้วยราคา IN lot ล่าสุด
+        // ทำให้ยอดยกไปเพี้ยนจาก balance เมื่อราคาบนแถว OUT ไม่ตรงกับราคา lot ล่าสุด
         $outRows = (new Query())
             ->select([
                 'item_code' => 'sd.item_code',
                 'sub_warehouse_id' => 'so.sub_warehouse_id',
                 'qty' => 'sd.qty',
                 'lot_number' => 'sd.lot_number',
-                'in_unit_price' => new Expression('COALESCE(in_lot.unit_price, sd.unit_price, 0)'),
+                'in_unit_price' => new Expression('COALESCE(sd.unit_price, 0)'),
             ])
             ->from(['sd' => StockDetail::tableName()])
             ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-            ->leftJoin(['in_lot' => $latestInPrice], 'in_lot.item_code = sd.item_code AND in_lot.lot_number = sd.lot_number')
             ->where(['so.order_type' => StockOrder::ORDER_TYPE_OUT])
             ->andWhere(['so.main_warehouse_id' => $warehouseId])
             ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
@@ -1915,32 +1910,18 @@ class ReportController extends Controller
         }
         $itemCodes = array_unique($itemCodes);
 
-        // ADJUST: ราคาทุนใช้ IN ล่าสุดของ item (cross-lot) เพราะ lot_number ของ ADJUST = 'ADJUST'
-        // ไม่ตรงกับ lot จริง — fallback ระดับ item เพื่อให้ได้ราคาประมาณการที่สมเหตุสมผล
-        $latestInPriceByItem = (new Query())
-            ->select(['sd_in.item_code', 'sd_in.unit_price'])
-            ->from(['sd_in' => StockDetail::tableName()])
-            ->innerJoin(['so_in' => StockOrder::tableName()], 'so_in.id = sd_in.stock_order_id')
-            ->innerJoin(
-                ['latest_item' => (new Query())
-                    ->select(['sd_l.item_code', new Expression('MAX(sd_l.id) AS mid')])
-                    ->from(['sd_l' => StockDetail::tableName()])
-                    ->innerJoin(['so_l' => StockOrder::tableName()], 'so_l.id = sd_l.stock_order_id')
-                    ->where(['so_l.order_type' => StockOrder::ORDER_TYPE_IN])
-                    ->andWhere(['so_l.main_warehouse_id' => $warehouseId])
-                    ->groupBy(['sd_l.item_code'])],
-                'latest_item.item_code = sd_in.item_code AND latest_item.mid = sd_in.id'
-            );
-
+        // ADJUST: ตีมูลค่าจากราคาบนแถว (sd.unit_price) ที่บันทึกไว้ตอนทำรายการจริง
+        // ให้ตรงกับหน้า balance/ledger (loadLedgerValues) — เดิม reprice ด้วยราคา IN ล่าสุดของ item
+        // ซึ่งทำให้ยอดยกไปเพี้ยนจาก balance (เช่นปรับเพิ่มกรอกราคา A แต่ถูกตีทับด้วยราคาซื้อล่าสุด B)
         $adjustRows = (new Query())
             ->select([
                 'item_code' => 'sd.item_code',
                 'qty' => 'sd.qty',
-                'unit_price' => new Expression('COALESCE(in_item.unit_price, 0)'),
+                'unit_price' => new Expression('COALESCE(sd.unit_price, 0)'),
+                'data_json' => 'sd.data_json',
             ])
             ->from(['sd' => StockDetail::tableName()])
             ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
-            ->leftJoin(['in_item' => $latestInPriceByItem], 'in_item.item_code = sd.item_code')
             ->where(['so.order_type' => StockOrder::ORDER_TYPE_ADJUST])
             ->andWhere(['so.main_warehouse_id' => $warehouseId])
             ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
@@ -1953,11 +1934,22 @@ class ReportController extends Controller
             $code = $row['item_code'];
             $q = (float) $row['qty'];
             $price = (float) $row['unit_price'];
+            $dataJson = self::decodeStockDetailDataJson($row['data_json'] ?? null);
+            $valueDelta = self::extractNumericStockDetailJsonValue($dataJson, 'value_delta');
             if (!isset($adjustIn[$code])) {
                 $adjustIn[$code] = ['qty' => 0, 'value' => 0];
             }
             if (!isset($adjustOut[$code])) {
                 $adjustOut[$code] = ['qty' => 0, 'value' => 0];
+            }
+            if ($valueDelta !== null && (abs($q) < 0.0000001 || !empty($dataJson['adjust_value_only']))) {
+                if ($valueDelta >= 0) {
+                    $adjustIn[$code]['value'] += $valueDelta;
+                } else {
+                    $adjustOut[$code]['value'] += -$valueDelta;
+                }
+                $itemCodes[] = $code;
+                continue;
             }
             if ($q >= 0) {
                 $adjustIn[$code]['qty'] += $q;
@@ -2038,6 +2030,41 @@ class ReportController extends Controller
         }
 
         return $rows;
+    }
+
+    protected static function decodeStockDetailDataJson($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_object($value)) {
+            return (array) $value;
+        }
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return [];
+        }
+        if (is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return [];
+            }
+        }
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    protected static function extractNumericStockDetailJsonValue(array $data, string $key): ?float
+    {
+        if (!array_key_exists($key, $data) || $data[$key] === null || $data[$key] === '') {
+            return null;
+        }
+
+        return is_numeric($data[$key]) ? (float) $data[$key] : null;
     }
 
     /**

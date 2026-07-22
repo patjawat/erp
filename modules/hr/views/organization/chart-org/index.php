@@ -18,7 +18,7 @@ $this->title = "ผังโครงสร้างองค์กร";
 $this->params['breadcrumbs'][] = $this->title;
 
 \app\assets\JsTreeAsset::register($this);
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/jstree/dist/themes/default/style.min.css');
+$this->registerCssFile('@web/jstree/themes/default/style.min.css'); // self-hosted (เดิม jsdelivr)
 ?>
 
 
@@ -35,7 +35,7 @@ $createUrl = \yii\helpers\Url::to(['tree/create-node']);
 $renameUrl = \yii\helpers\Url::to(['tree/rename-node']);
 $deleteUrl = \yii\helpers\Url::to(['tree/delete-node']);
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/apextree', ['depends' => \yii\web\JqueryAsset::class]);
+$this->registerJsFile('@web/libs/apextree/apextree.min.js', ['depends' => \yii\web\JqueryAsset::class]); // self-hosted (เดิม jsdelivr)
 $orgUrl = \yii\helpers\Url::to(['tree/org-tree']);
 $formUrl = Url::to(['tree/form']);
 ?>

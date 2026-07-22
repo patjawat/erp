@@ -8,6 +8,13 @@ $moduleId = Yii::$app->controller->module->id;
 
 $menuItems = [
     [
+        'label' => 'AI Assistant',
+        'url' => ['/ai/chat/index'],
+        'active' => 'ai',
+        'icon' => '<i class="fa-solid fa-robot"></i>',
+        'show' => !Yii::$app->user->isGuest && Yii::$app->user->can('ai.chat.use'),
+    ],
+    [
         'show' => Yii::$app->user->can('dashboard-admin') ? true : false,
         'label' => 'Dashboard (Admin)', 
         'url' => ['/dashboard-admin/index'], 

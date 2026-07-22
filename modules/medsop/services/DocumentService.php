@@ -2,12 +2,14 @@
 
 namespace app\modules\medsop\services;
 
+use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\medsop\models\Document;
 use app\modules\medsop\models\DocumentRevision;
 use app\modules\medsop\models\DocumentStep;
 use app\modules\medsop\models\DocumentStepMedia;
 use Yii;
 use yii\helpers\FileHelper;
+use yii\helpers\Url;
 use yii\web\UploadedFile;
 
 class DocumentService
@@ -68,7 +70,7 @@ class DocumentService
                     throw new \RuntimeException('ไม่สามารถบันทึกขั้นตอนปฏิบัติงานได้');
                 }
                 $keptStepIds[] = (int) $step->id;
-                $this->syncMedia($step, $row, $mediaFiles[$row['source_index']] ?? []);
+                $this->syncMedia($step, $row, $mediaFiles[$row['source_index']] ?? [], (string) $document->ref);
             }
             if ($existingSteps) {
                 DocumentStep::deleteAll(['and', ['document_id' => $document->id], ['not in', 'id', $keptStepIds]]);
@@ -186,33 +188,24 @@ class DocumentService
 
     private function saveCover(Document $document, UploadedFile $file): void
     {
-        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
         $actualMime = FileHelper::getMimeType($file->tempName);
-        if (!isset($allowed[$actualMime]) || $file->size > 10 * 1024 * 1024) {
+        if (!in_array($actualMime, ['image/jpeg', 'image/png', 'image/webp'], true) || $file->size > 10 * 1024 * 1024) {
             throw new \RuntimeException('รูปปกต้องเป็นไฟล์ JPG, PNG หรือ WebP และมีขนาดไม่เกิน 10 MB');
         }
-        $directory = Yii::getAlias('@webroot/uploads/medsop/' . $document->id . '/cover');
-        FileHelper::createDirectory($directory);
-        $storedName = bin2hex(random_bytes(16)) . '.' . $allowed[$actualMime];
-        if (!$file->saveAs($directory . DIRECTORY_SEPARATOR . $storedName)) {
+        // เก็บผ่านระบบ filemanager: ref = ของเอกสารเอง (fileupload/<ref>/), slot 'cover' อัปใหม่ลบเก่าอัตโนมัติ
+        $upload = FileManagerHelper::saveUploadedFile($file, (string) $document->ref, 'cover', true);
+        if ($upload === null) {
             throw new \RuntimeException('ไม่สามารถจัดเก็บรูปปกเอกสารได้');
         }
-        $oldPath = $document->cover_image;
-        $document->cover_image = '/uploads/medsop/' . $document->id . '/cover/' . $storedName;
+        $document->cover_image = (string) $upload->id;
         if (!$document->save(false, ['cover_image', 'updated_at'])) {
-            @unlink($directory . DIRECTORY_SEPARATOR . $storedName);
+            FileManagerHelper::Deletefile($upload->id);
             throw new \RuntimeException('ไม่สามารถบันทึกรูปปกเอกสารได้');
-        }
-        if ($oldPath) {
-            $oldFile = Yii::getAlias('@webroot') . str_replace('/', DIRECTORY_SEPARATOR, $oldPath);
-            if (is_file($oldFile)) {
-                @unlink($oldFile);
-            }
         }
     }
 
     /** @param UploadedFile[] $files */
-    private function syncMedia(DocumentStep $step, array $row, array $files): void
+    private function syncMedia(DocumentStep $step, array $row, array $files, string $documentRef): void
     {
         $keepIds = $row['keep_media'];
         $removeQuery = DocumentStepMedia::find()->where(['step_id' => $step->id]);
@@ -256,17 +249,18 @@ class DocumentService
             if ($file->size > $maxSize) {
                 throw new \RuntimeException($mediaType === DocumentStepMedia::TYPE_IMAGE ? 'ภาพต้องมีขนาดไม่เกิน 10 MB' : 'วิดีโอต้องมีขนาดไม่เกิน 100 MB');
             }
-            $directory = Yii::getAlias('@webroot/uploads/medsop/' . $step->document_id . '/' . $step->id);
-            FileHelper::createDirectory($directory);
-            $storedName = bin2hex(random_bytes(16)) . '.' . $safeExtension;
-            if (!$file->saveAs($directory . DIRECTORY_SEPARATOR . $storedName)) {
+            // เก็บผ่านระบบ filemanager: ref = ของเอกสาร (fileupload/<ref>/), slot 'step_media'
+            // DocumentStepMedia คงไว้เพื่อ ordering/metadata และชี้ไฟล์ผ่าน upload_id
+            $upload = FileManagerHelper::saveUploadedFile($file, $documentRef, 'step_media', false);
+            if ($upload === null) {
                 throw new \RuntimeException('ไม่สามารถจัดเก็บไฟล์สื่อได้');
             }
             $media = new DocumentStepMedia([
                 'step_id' => $step->id,
+                'upload_id' => $upload->id,
                 'media_type' => $mediaType,
                 'file_name' => $file->baseName . '.' . $file->extension,
-                'file_path' => '/uploads/medsop/' . $step->document_id . '/' . $step->id . '/' . $storedName,
+                'file_path' => Url::to(['/filemanager/uploads/show', 'id' => $upload->id]),
                 'mime_type' => $actualMime,
                 'file_size' => $file->size,
                 'sort_order' => ++$sortOrder,
@@ -274,7 +268,7 @@ class DocumentService
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
             if (!$media->save()) {
-                @unlink($directory . DIRECTORY_SEPARATOR . $storedName);
+                FileManagerHelper::Deletefile($upload->id);
                 throw new \RuntimeException('ไม่สามารถบันทึกข้อมูลไฟล์สื่อได้');
             }
         }

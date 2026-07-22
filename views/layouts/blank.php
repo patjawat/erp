@@ -36,7 +36,7 @@ $style = 2;
     <?php $this->head() ?>
 </head>
 
-<?=$this->render('@app/themes/v3/layouts/modal')?>
+<?=$this->render('@app/themes/v4/layouts/modal')?>
     <body class="bg-primary">
         <?php $this->beginBody() ?>
         <section class="bg-primary py-3 py-md-5 py-xl-8 h-screen-100">

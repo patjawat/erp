@@ -83,8 +83,8 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <script>
+<?php // jQuery + SweetAlert2 โหลดจาก AppAsset/YiiAsset (self-hosted) แล้ว ?>
+<script>
 $(document).ready(function() {
     // ตั้งค่าวันที่ปัจจุบัน
     let today = new Date().toISOString().split('T')[0];

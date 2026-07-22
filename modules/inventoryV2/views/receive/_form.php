@@ -413,24 +413,14 @@ $js = <<< JS
         if (this.id && typeof thaiDatepicker === 'function') thaiDatepicker('#' + this.id);
     });
 
-    // เลขที่ใบรับเข้า: บังคับกรอกเฉพาะเมื่อประเภทการรับเข้า = จัดซื้อ (PO)
-    function toggleOrderNoRequired() {
-        var st = ($('#stockorder-source_type').val() || '').trim();
+    // เลขที่ใบรับเข้า: เว้นว่างได้เสมอ — ถ้าเว้นว่างระบบจะสร้างเลข RCV- ให้อัตโนมัติ (รวมถึงกรณีรับจาก PO)
+    (function initOrderNoOptional() {
         var input = $('#stockorder-order_no');
         if (input.length) {
             input.removeAttr('required');
-            if (st === 'PO') {
-                input.prop('required', true);
-                input.attr('placeholder', '');
-            } else {
-                input.attr('placeholder', 'เว้นว่างได้ — สร้างเลขที่อัตโนมัติ');
-            }
+            input.attr('placeholder', 'เว้นว่างได้ — สร้างเลขที่อัตโนมัติ');
         }
-    }
-    $(document).on('change', '#stockorder-source_type', toggleOrderNoRequired);
-    toggleOrderNoRequired();
-    setTimeout(toggleOrderNoRequired, 100);
-    setTimeout(toggleOrderNoRequired, 500);
+    })();
 
     var initialWarehouseId = {$initialWarehouseIdJson} || '';
     var initialItemType = {$initialItemTypeJson} || '';
@@ -1947,6 +1937,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 $('#stockorder-ref').val(detail.po_number || '');
                 $('#deliveryNoteNoInput').val(detail.delivery_note_no || '');
                 $('#poOrderIdInput').val(detail.order_id);
+                // เลขที่ใบรับเข้า: ไม่ auto-fill — เว้นว่างได้ ถ้าเว้นว่างระบบจะออกเลข RCV- ให้อัตโนมัติ
 
                 var sourceTypeEl = document.getElementById('stockorder-source_type');
                 if (sourceTypeEl) {
@@ -1966,6 +1957,15 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 
                 $('#detail-body tr.item-row').remove();
                 $('#emptyRow').show();
+
+                // ประเภทวัสดุ: auto-select ตามใบสั่งซื้อ (ตั้งค่าก่อนเพิ่มรายการ ขณะตารางยังว่าง จึงไม่ติด confirm ล้างรายการ)
+                if (detail.category_id) {
+                    var poCat = String(detail.category_id);
+                    itemTypeTomSelect.setValue(poCat, true);
+                    prevItemType = poCat;
+                    resetItemSelectForCategory(poCat);
+                }
+
                 addCSVItemsToTable(detail.items || []);
 
                 var modalEl = document.getElementById('pendingPoModal');

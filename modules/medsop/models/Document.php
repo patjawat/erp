@@ -2,8 +2,10 @@
 
 namespace app\modules\medsop\models;
 
+use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use Yii;
 use yii\db\ActiveRecord;
 
 class Document extends ActiveRecord
@@ -21,6 +23,18 @@ class Document extends ActiveRecord
         return '{{%medsop_document}}';
     }
 
+    /**
+     * URL รูปปกจากระบบ filemanager (cover_image เก็บ uploads.id)
+     * คืน null เมื่อไม่มีรูปปก เพื่อให้ผู้เรียก fallback ไปใช้รูปจากขั้นตอนได้
+     */
+    public function getCoverUrl(): ?string
+    {
+        if (!$this->cover_image) {
+            return null;
+        }
+        return FileManagerHelper::getImg((int) $this->cover_image);
+    }
+
     public function rules()
     {
         return [
@@ -33,6 +47,7 @@ class Document extends ActiveRecord
             [['category'], 'string', 'max' => 100],
             [['announcement_status'], 'string', 'max' => 50],
             [['cover_image'], 'string', 'max' => 500],
+            [['ref'], 'string', 'max' => 50],
             [['document_type'], 'in', 'range' => array_keys(MedSopSetting::documentTypes())],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['category'], 'validateCategory'],
@@ -177,6 +192,8 @@ class Document extends ActiveRecord
         $now = date('Y-m-d H:i:s');
         if ($insert) {
             $this->created_at = $this->created_at ?: $now;
+            // token ต่อ record สำหรับเก็บไฟล์ในระบบ filemanager (fileupload/<ref>/)
+            $this->ref = $this->ref ?: substr(Yii::$app->getSecurity()->generateRandomString(), 10);
         }
         $this->updated_at = $now;
         return parent::beforeSave($insert);

@@ -11,12 +11,16 @@ use yii\web\View;
  */
 class TomSelectAsset extends AssetBundle
 {
+    public $basePath = '@webroot';
+    public $baseUrl = '@web';
+
+    // self-hosted tom-select@2.2.2 (เดิมดึงจาก jsdelivr CDN)
     public $css = [
-        'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css',
+        'libs/tom-select/tom-select.bootstrap5.min.css',
     ];
 
     public $js = [
-        'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js',
+        'libs/tom-select/tom-select.complete.min.js',
     ];
 
     public $jsOptions = [

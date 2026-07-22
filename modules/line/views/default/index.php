@@ -10,7 +10,6 @@ use app\components\ApproveHelper;
 $totalNotification = ApproveHelper::Info()['total'];
 $site = SiteHelper::getInfo();
 $me = UserHelper::GetEmployee();
-$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
 

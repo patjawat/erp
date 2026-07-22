@@ -5,8 +5,8 @@ use yii\helpers\Url;
 use yii\helpers\Json;
 use app\models\Categorise;
 
-$this->registerCssFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css');
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// FullCalendar core โหลดจาก AppAsset (self-hosted) แล้ว — เพิ่มเฉพาะ locale ไทย
+$this->registerJsFile('@web/libs/fullcalendar/th.global.min.js', ['depends' => [\app\assets\AppAsset::class]]);
 
 ?>
 

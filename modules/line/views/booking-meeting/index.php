@@ -8,8 +8,9 @@ use app\components\UserHelper;
 $this->title = 'ระบบขอใช้ห้องประชุม';
 $this->params['breadcrumbs'][] = $this->title;
 
-$this->registerJsFile('https://unpkg.com/popper.js/dist/umd/popper.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
-$this->registerJsFile('https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+// self-hosted popper.js@1 + tooltip.js@1 (เดิม unpkg) — ใช้กับ new Tooltip() ด้านล่าง
+$this->registerJsFile('@web/libs/popper/popper.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile('@web/libs/tooltip/tooltip.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 $me = UserHelper::getEmployee();
 

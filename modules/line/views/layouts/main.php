@@ -48,7 +48,7 @@ $this->registerJsFile('https://static.line-scdn.net/liff/edge/2/sdk.js', ['depen
     }
     </style>
     <?php $this->beginBody() ?>
-    <?=$this->render('@app/themes/v3/layouts/modal')?>
+    <?=$this->render('@app/themes/v4/layouts/modal')?>
     <div class="container mt-3">
         <div class="d-flex justify-content-between">
             <div class="d-flex gap-1">

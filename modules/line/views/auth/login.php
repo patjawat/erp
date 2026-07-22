@@ -15,7 +15,6 @@ $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['the
 $this->title = 'กรุณายืนยันตัวตน';
 $this->params['breadcrumbs'][] = $this->title;
 $this->title = "ระบบยืนยันตัวตน";
-$this->registerJsFile('https://unpkg.com/vconsole@latest/dist/vconsole.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
 <style>
@@ -102,8 +101,6 @@ $urlCheckProfile = Url::to(['/line/auth/check-profile']);
 
 $js = <<<JS
 (function() {
-    var vConsole = new VConsole();
-
     $('#blank-form').on('beforeSubmit', function (e) {
         e.preventDefault();
 

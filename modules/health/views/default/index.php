@@ -152,8 +152,8 @@ $riskHigh = json_encode($riskTrend['high'] ?? []);
 $calendarEventsUrl = Url::to(['/health/default/calendar-events']);
 $calendarThaiYear = (int)($searchModel->thai_year ?? 0);
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/th.global.min.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+// FullCalendar core โหลดจาก AppAsset (self-hosted) แล้ว — เพิ่มเฉพาะ locale ไทย
+$this->registerJsFile('@web/libs/fullcalendar/th.global.min.js', ['depends' => [\app\assets\AppAsset::class]]);
 
 $js = <<< JS
     // --- ปฏิทินการนัดหมายตรวจสุขภาพ (FullCalendar) ---

@@ -64,7 +64,15 @@ BootstapIconAsset::register($this);
         'options' => ['class' => 'navbar-nav ms-auto mb-2 mb-md-0 navbar-right','id' =>'main_nav'],
         'items' => $menuItems,
     ]);
-    if (Yii::$app->user->isGuest) {
+if (!Yii::$app->user->isGuest && Yii::$app->user->can('ai.chat.use')) {
+    $menuItems[] = [
+        'label' => '<i class="fa-solid fa-robot me-1"></i> AI Assistant',
+        'url' => ['/ai/chat/index'],
+        'encode' => false,
+    ];
+}
+
+if (Yii::$app->user->isGuest) {
         echo Html::tag('div',Html::a('<i class="fa-solid fa-user-lock"></i> เข้าสู่ระบบ',['/site/login'],['class' => ['shadow  btn btn-kku-gradient rounded-pill login text-decoration-none']]),['class' => ['d-flex']]);
     } else {
         echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])

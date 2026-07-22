@@ -506,6 +506,7 @@ class ReceiveController extends Controller
 
         $items = [];
         $skipped = [];
+        $categoryId = null; // ประเภทวัสดุ (asset_type code) จากรายการแรกที่รับเข้าได้ — ใช้ auto-select dropdown ประเภทวัสดุ
         foreach ($order->ListOrderItems() as $orderItem) {
             $stockItem = StockItem::findOne(['item_code' => $orderItem->asset_item]);
             if (!$stockItem) {
@@ -515,6 +516,9 @@ class ReceiveController extends Controller
             if ($warehouse && !$warehouse->allowsItemType($stockItem->category_id)) {
                 $skipped[] = ['name' => $stockItem->item_name, 'reason' => 'คลังที่เลือกไม่รับพัสดุประเภทนี้'];
                 continue;
+            }
+            if ($categoryId === null && $stockItem->category_id !== null && $stockItem->category_id !== '') {
+                $categoryId = (string) $stockItem->category_id;
             }
             $imgUrl = '';
             if (!empty($stockItem->ref)) {
@@ -542,6 +546,7 @@ class ReceiveController extends Controller
             'po_number' => $order->po_number,
             'delivery_note_no' => isset($order->data_json['gr_number']) ? $order->data_json['gr_number'] : '',
             'contact_id' => $contactId,
+            'category_id' => $categoryId,
             'items' => $items,
             'skipped_items' => $skipped,
         ];
@@ -570,11 +575,8 @@ class ReceiveController extends Controller
                 }
 
                 $model->load($this->request->post());
-                $orderNoEmpty = trim((string) $model->order_no) === '';
-                if ($orderNoEmpty && $model->source_type === StockOrder::SOURCE_PO) {
-                    throw new \Exception('กรุณากรอกเลขที่ใบรับเข้า');
-                }
-                if ($orderNoEmpty && $model->source_type !== StockOrder::SOURCE_PO) {
+                // เลขที่ใบรับเข้าเว้นว่างได้เสมอ (รวมถึงรับจาก PO) — ถ้าว่างระบบออกเลข RCV- ให้อัตโนมัติ
+                if (trim((string) $model->order_no) === '') {
                     $model->order_no = $this->generateReceiveOrderNo();
                 }
                 // แปลงวันที่จาก พ.ศ. (ไทย) เป็น ค.ศ. ก่อนบันทึก
@@ -792,11 +794,8 @@ class ReceiveController extends Controller
             } else {
                 $model->status = 'CONFIRMED';
             }
-            $orderNoEmpty = trim((string) $model->order_no) === '';
-            if ($orderNoEmpty && $model->source_type === StockOrder::SOURCE_PO) {
-                throw new \Exception('กรุณากรอกเลขที่ใบรับเข้า');
-            }
-            if ($orderNoEmpty && $model->source_type !== StockOrder::SOURCE_PO) {
+            // เลขที่ใบรับเข้าเว้นว่างได้เสมอ (รวมถึงรับจาก PO) — ถ้าว่างระบบออกเลข RCV- ให้อัตโนมัติ
+            if (trim((string) $model->order_no) === '') {
                 $model->order_no = $this->generateReceiveOrderNo();
             }
             if (!empty($model->order_date)) {

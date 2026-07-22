@@ -194,9 +194,10 @@ $this->registerCss('
 </div>
 
 <?php
+// FullCalendar core โหลดจาก AppAsset (self-hosted) แล้ว — เพิ่มเฉพาะ locale ไทย
 $this->registerJsFile(
-    'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js',
-    ['position' => \yii\web\View::POS_END]
+    '@web/libs/fullcalendar/th.global.min.js',
+    ['depends' => [\app\assets\AppAsset::class], 'position' => \yii\web\View::POS_END]
 );
 
 $this->registerJs(<<<JS

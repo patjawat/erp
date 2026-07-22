@@ -2,7 +2,7 @@
 use yii\web\View;
 use yii\helpers\Url;
 
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile('@web/libs/mammoth/mammoth.browser.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]); // self-hosted (เดิม cdnjs)
 ?>
 
 <div class="docx-preview">

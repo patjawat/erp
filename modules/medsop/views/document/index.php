@@ -40,7 +40,7 @@ $models = $dataProvider->getModels();
                     $badge = Document::getStatusBadgeConfigFor($model->status);
                     $isReviewDue = $model->review_date && $model->review_date <= date('Y-m-d');
                     $creator = $creators[$model->created_emp_id] ?? null;
-                    $cover = $model->cover_image;
+                    $cover = $model->getCoverUrl();
                     foreach ($model->steps as $documentStep) {
                         foreach ($documentStep->media as $stepMedia) {
                             if (!$cover && $stepMedia->media_type === 'image') { $cover = $stepMedia->file_path; break 2; }

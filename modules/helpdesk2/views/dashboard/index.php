@@ -45,7 +45,7 @@ foreach ($statusSummary as $row) {
 $chartLabels = json_encode(['เปิดอยู่', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
 $chartData = json_encode(array_values($statusLabels));
 
-$this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/libs/chartjs/chart.umd.min.js', ['depends' => [\yii\web\JqueryAsset::class]]); // self-hosted chart.js@4 (เดิม jsdelivr)
 
 $js = <<<JS
 const ctx = document.getElementById('statusChart');

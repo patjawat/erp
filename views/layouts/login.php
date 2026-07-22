@@ -54,7 +54,7 @@ img {
 }
     </style>
     <?php $this->beginBody() ?>
-    <?=$this->render('@app/themes/v3/layouts/modal')?>
+    <?=$this->render('@app/themes/v4/layouts/modal')?>
 
     <!-- Login 9 - Bootstrap Brain Component -->
     <section class="py-3 py-md-5 py-xl-8 h-screen-100">

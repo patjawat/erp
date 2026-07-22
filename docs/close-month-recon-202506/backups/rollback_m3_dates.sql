@@ -1,0 +1,13 @@
+UPDATE stock_order SET order_date='2026-07-13 23:12:32' WHERE id=3374;
+UPDATE stock_order SET order_date='2026-07-16 09:58:53' WHERE id=3427;
+UPDATE stock_order SET order_date='2026-07-16 09:59:29' WHERE id=3428;
+UPDATE stock_order SET order_date='2026-07-16 10:00:22' WHERE id=3429;
+UPDATE stock_order SET order_date='2026-07-16 10:01:01' WHERE id=3430;
+UPDATE stock_order SET order_date='2026-07-16 10:01:42' WHERE id=3431;
+UPDATE stock_order SET order_date='2026-07-16 10:04:36' WHERE id=3434;
+UPDATE stock_order SET order_date='2026-07-16 10:05:11' WHERE id=3435;
+UPDATE stock_order SET order_date='2026-07-16 10:06:07' WHERE id=3436;
+UPDATE stock_order SET order_date='2026-07-16 10:06:58' WHERE id=3437;
+UPDATE stock_order SET order_date='2026-07-16 10:08:18' WHERE id=3439;
+UPDATE stock_order SET order_date='2026-07-16 10:08:38' WHERE id=3440;
+UPDATE stock_order SET order_date='2026-07-16 10:09:32' WHERE id=3441;
