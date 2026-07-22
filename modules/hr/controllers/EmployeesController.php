@@ -13,6 +13,8 @@ use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeesSearch;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\UploadCsv;
+use app\modules\hr\helpers\EmployeeImportHelper;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -572,6 +574,30 @@ class EmployeesController extends Controller
         }
     }
 
+    /**
+     * สร้างไฟล์ CSV template นำเข้าบุคลากร (หัวตารางตาม schema)
+     * import จะ validate ทุกช่องกับข้อมูลจริงใน DB อยู่แล้ว จึงไม่ต้องมี dropdown ในไฟล์
+     */
+    public function actionImportTemplate()
+    {
+        $schema = EmployeeImportHelper::schema();
+        $headers = array_map(fn($col) => $col['header'], $schema);
+
+        $dir = Yii::getAlias('@runtime/export');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        $filePath = $dir . '/template-employee-import.csv';
+
+        $handle = fopen($filePath, 'w');
+        // BOM ให้ Excel เปิดภาษาไทยไม่เพี้ยน
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, $headers);
+        fclose($handle);
+
+        return Yii::$app->response->sendFile($filePath, 'template-นำเข้าบุคลากร.csv');
+    }
+
     public function actionImportCsv()
     {
 
@@ -583,38 +609,44 @@ class EmployeesController extends Controller
                 return ['status' => 'error', 'message' => 'ไม่พบไฟล์'];
             }
 
-            $imported = 0;
-            $demo = [];
-            if (($handle = fopen($filePath, "r")) !== false) {
-                $row = 0;
-                $error = 0;
-
-                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $row++;
-                    if ($row == 1) continue; // ข้าม header
-                    $demo[] = $data[1];
-                    $result = $this->importEmployee($data);
-                    if ($result['status'] == 'success') {
-                        $imported++;
-                    } else {
-                        $error++;
-                        // คุณอาจเก็บ log ของ error แถวนี้ได้
-                    }
-                }
-                fclose($handle);
-                if ($error >= 1) {
-                    return [
-                        'status' => 'error',
-                        'message' => "xx",
-                        'demo' => $demo
-                    ];
-                }
-                return [
-                    'status' => 'success',
-                    'message' => "นำเข้าข้อมูลเรียบร้อย {$imported} แถว",
-                    'demo' => $demo
-                ];
+            $rows = $this->readRowsFromFile($filePath);
+            if ($rows === null) {
+                return ['status' => 'error', 'message' => 'อ่านไฟล์ไม่สำเร็จ (รองรับ .xlsx หรือ .csv)'];
             }
+
+            // เฟส 1: validate + parse ทั้งไฟล์
+            $parseResult = EmployeeImportHelper::parseRows($rows);
+            if ($parseResult['fatal'] !== null) {
+                return ['status' => 'error', 'message' => $parseResult['fatal']];
+            }
+
+            // เฟส 2: บันทึกเฉพาะแถวที่ผ่าน validate
+            $apply = EmployeeImportHelper::applyRows($parseResult['parsed']);
+
+            $rowErrors = $parseResult['errors'];
+            $failures = $apply['failures'];
+            $ok = empty($rowErrors) && empty($failures);
+
+            $message = "นำเข้าสำเร็จ — เพิ่มใหม่ {$apply['inserted']} คน, อัปเดต {$apply['updated']} คน";
+            if (!empty($rowErrors)) {
+                $message .= " · ข้าม " . count($rowErrors) . " แถวที่ข้อมูลไม่ถูกต้อง";
+            }
+            if (!empty($failures)) {
+                $message .= " · บันทึกไม่สำเร็จ " . count($failures) . " แถว";
+            }
+
+            return [
+                'status' => $ok ? 'success' : 'warning',
+                'message' => $message,
+                'summary' => [
+                    'inserted' => $apply['inserted'],
+                    'updated' => $apply['updated'],
+                    'skipped' => count($rowErrors),
+                    'failed' => count($failures),
+                ],
+                'rowErrors' => $rowErrors,
+                'failures' => $failures,
+            ];
         }
 
         $model = new Employees;
@@ -634,36 +666,34 @@ class EmployeesController extends Controller
         }
     }
 
-    protected function importEmployee($data)
+    /**
+     * อ่านไฟล์นำเข้า (.xlsx หรือ .csv) → array ของแถว (แถวแรก = หัวตาราง)
+     * คืน null ถ้าอ่านไม่ได้
+     */
+    protected function readRowsFromFile($filePath)
     {
-        $employee = Employees::find()->where(['cid' => $data[0]])->one();
-        if ($employee) {
-            return [
-                'status' => 'success',
-                'msg' => 'ตรวจพบที่มี' . $data[0] . 'อยู่แล้ว',
-                'data' => $employee
-            ];
-        } else {
-            // ถ้าไม่มีทำการสร้างใหม่
-            //ถ้าไม่ซ้ำให้สาร้างใหม่
-            $newEmployee = new Employees;
-            $newEmployee->user_id = 0;
-            $newEmployee->cid = $data[0];
-            $newEmployee->gender = $data[1];
-            $newEmployee->prefix = $data[2];
-            $newEmployee->fname = $data[3];
-            $newEmployee->lname = $data[4];
-            $newEmployee->birthday = $data[5];
-            $newEmployee->phone = $data[6];
-            $newEmployee->email = $data[7];
-            $newEmployee->address = $data[8];
-            $newEmployee->zipcode = $data[9];
-            $newEmployee->save(false);
-            return [
-                'status' => 'success',
-                'msg' => 'Yes',
-                'data' => $newEmployee
-            ];
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        if ($ext === 'csv' || $ext === 'txt') {
+            $rows = [];
+            if (($handle = fopen($filePath, 'r')) !== false) {
+                while (($data = fgetcsv($handle, 0, ',')) !== false) {
+                    $rows[] = $data;
+                }
+                fclose($handle);
+                return $rows;
+            }
+            return null;
+        }
+
+        // xlsx / xls
+        try {
+            $reader = IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($filePath);
+            return $spreadsheet->getActiveSheet()->toArray(null, true, false, false);
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 
@@ -679,16 +709,10 @@ class EmployeesController extends Controller
             $filePath = Yii::getAlias('@runtime') . '/import_' . time() . '.' . $model->csvFile->extension;
             $model->csvFile->saveAs($filePath);
 
-            // อ่าน CSV แถวแรก 10 แถว
-            $previewData = [];
-            if (($handle = fopen($filePath, "r")) !== false) {
-                $row = 0;
-                while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-                    $previewData[] = $data;
-                    $row++;
-                    // if ($row >= 10) break;
-                }
-                fclose($handle);
+            // อ่านทั้ง .xlsx และ .csv
+            $previewData = $this->readRowsFromFile($filePath);
+            if ($previewData === null) {
+                return ['status' => 'error', 'message' => 'อ่านไฟล์ไม่สำเร็จ (รองรับ .xlsx หรือ .csv)'];
             }
 
             return [
@@ -998,22 +1022,26 @@ class EmployeesController extends Controller
         $sheet->getColumnDimension('Q')->setWidth(13);
         $sheet->getColumnDimension('R')->setWidth(25);
         $sheet->getColumnDimension('S')->setWidth(13);
-        $sheet->getColumnDimension('T')->setWidth(13);
-        $sheet->getColumnDimension('U')->setWidth(25);
-        $sheet->getColumnDimension('V')->setWidth(18);
-        $sheet->getColumnDimension('W')->setWidth(17);
-        $sheet->getColumnDimension('X')->setWidth(18);
+        $sheet->getColumnDimension('T')->setWidth(20);
+        $sheet->getColumnDimension('U')->setWidth(15);
+        $sheet->getColumnDimension('V')->setWidth(25);
+        $sheet->getColumnDimension('W')->setWidth(18);
+        $sheet->getColumnDimension('X')->setWidth(17);
         $sheet->getColumnDimension('Y')->setWidth(18);
-        $sheet->getColumnDimension('Z')->setWidth(13);
-        $sheet->getColumnDimension('AA')->setWidth(10);
+        $sheet->getColumnDimension('Z')->setWidth(18);
+        $sheet->getColumnDimension('AA')->setWidth(30);
+        $sheet->getColumnDimension('AB')->setWidth(15);
+        $sheet->getColumnDimension('AC')->setWidth(30);
+        $sheet->getColumnDimension('AD')->setWidth(15);
+        $sheet->getColumnDimension('AE')->setWidth(10);
 
-        $setHeader = 'A1:AA1';
+        $setHeader = 'A1:AE1';
         $sheet->getStyle($setHeader)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle($setHeader)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle($setHeader)->getBorders()->getAllBorders()->setColor(new Color(Color::COLOR_BLACK));
         $sheet->getStyle($setHeader)->getFill()->getStartColor()->setRGB('8DB4E2');
-        $sheet->getStyle('A1:AA1')->getFont()->setBold(true)->setItalic(false);
+        $sheet->getStyle('A1:AE1')->getFont()->setBold(true)->setItalic(false);
         // ตั้งชื่อแผ่นงาน
         $sheet->setTitle('ข้อมูลบุคลากร');
         $sheet->setCellValue('A1', 'ลำดับ');
@@ -1035,14 +1063,18 @@ class EmployeesController extends Controller
         $sheet->setCellValue('Q1', 'สถานะ');
         $sheet->setCellValue('R1', 'ตำแหน่งปัจจุบัน');
         $sheet->setCellValue('S1', 'วันที่แต่งตั้ง');
-        $sheet->setCellValue('T1', 'เลขตำแหน่ง');
-        $sheet->setCellValue('U1', 'ประเภท');
-        $sheet->setCellValue('V1', 'ระดับตำแหน่ง');
-        $sheet->setCellValue('W1', 'ความเชี่ยวชาญ');
-        $sheet->setCellValue('X1', 'ประเภท/กลุ่มงาน');
-        $sheet->setCellValue('Y1', 'เงินเดือน');
-        $sheet->setCellValue('Z1', 'หน่วยงาน');
-        $sheet->setCellValue('AA1', 'ลายเซ็น');
+        $sheet->setCellValue('T1', 'รายการเคลื่อนไหว');
+        $sheet->setCellValue('U1', 'เลขประจำตำแหน่ง');
+        $sheet->setCellValue('V1', 'ประเภท');
+        $sheet->setCellValue('W1', 'ระดับตำแหน่ง');
+        $sheet->setCellValue('X1', 'ความเชี่ยวชาญ');
+        $sheet->setCellValue('Y1', 'ประเภท/กลุ่มงาน');
+        $sheet->setCellValue('Z1', 'เงินเดือน');
+        $sheet->setCellValue('AA1', 'กลุ่มงาน');
+        $sheet->setCellValue('AB1', 'หัวหน้ากลุ่มงาน');
+        $sheet->setCellValue('AC1', 'หน่วยงาน');
+        $sheet->setCellValue('AD1', 'หัวหน้าหน่วยงาน');
+        $sheet->setCellValue('AE1', 'ลายเซ็น');
         $StartRowSheet = 2;
         // $dataItems = $this->findModelItem($params);
         foreach ($dataProvider->getModels() as $key => $value) {
@@ -1080,15 +1112,41 @@ class EmployeesController extends Controller
             $sheet->setCellValue('P' . $numRow, $value->phone);
             $sheet->setCellValue('Q' . $numRow, $value->statusName());
             $sheet->setCellValue('R' . $numRow, $value->positionName(['icon' => false]));
-            // $sheet->setCellValue('S' . $numRow, Yii::$app->thaiFormatter->asDate($value->nowPosition()['date_start'], 'php:d/m/Y'));
-            $sheet->setCellValue('T' . $numRow, $value->nowPosition()['position_number']);
-            $sheet->setCellValue('U' . $numRow, $value->positionTypeName());
-            $sheet->setCellValue('V' . $numRow, $value->positionLevelName());
-            $sheet->setCellValue('W' . $numRow, $value->expertiseName());
-            $sheet->setCellValue('X' . $numRow, $value->positionGroupName());
-            $sheet->setCellValue('Y' . $numRow, $value->salary ? number_format($value->salary, 2) : '');
-            $sheet->setCellValue('Z' . $numRow, $value->departmentName());
-            $sheet->setCellValue('AA' . $numRow, $value->signature() ? 'มี' : 'ไม่มี');
+            // ประวัติการดำรงตำแหน่งล่าสุด: ตั้งแต่วันที่ / รายการเคลื่อนไหว / เลขประจำตำแหน่ง
+            $latestPosition = $value->latestPositionData();
+            try {
+                $sheet->setCellValue('S' . $numRow, $latestPosition['date_start'] ? Yii::$app->thaiFormatter->asDate($latestPosition['date_start'], 'php:d/m/Y') : '');
+            } catch (\Throwable $th) {
+                $sheet->setCellValue('S' . $numRow, $latestPosition['date_start']);
+            }
+            $sheet->setCellValue('T' . $numRow, $latestPosition['movement']);
+            $sheet->setCellValue('U' . $numRow, $latestPosition['position_number']);
+            $sheet->setCellValue('V' . $numRow, $value->positionTypeName());
+            $sheet->setCellValue('W' . $numRow, $value->positionLevelName());
+            $sheet->setCellValue('X' . $numRow, $value->expertiseName());
+            $sheet->setCellValue('Y' . $numRow, $value->positionGroupName());
+            $sheet->setCellValue('Z' . $numRow, $value->salary ? number_format($value->salary, 2) : '');
+            $orgUnits = $value->orgUnits();
+            $sheet->setCellValue('AA' . $numRow, $orgUnits['group'] ? $orgUnits['group']->name : '');
+            $sheet->setCellValue('AB' . $numRow, $value->isOrgLeader($orgUnits['group']) ? 'Y' : '');
+            $sheet->setCellValue('AC' . $numRow, $orgUnits['unit'] ? $orgUnits['unit']->name : '');
+            $sheet->setCellValue('AD' . $numRow, $value->isOrgLeader($orgUnits['unit']) ? 'Y' : '');
+            $sheet->setCellValue('AE' . $numRow, $value->signature() ? 'มี' : 'ไม่มี');
+        }
+
+        // จัดตำแหน่งข้อมูล (แถวข้อมูลเท่านั้น หัวตารางยังกึ่งกลางเหมือนเดิม)
+        $lastRow = $StartRowSheet - 1;
+        if ($lastRow >= 2) {
+            // กึ่งกลาง: ลำดับ, เลขบัตร ปชช., เพศ, คำนำหน้า, วันเกิด, อายุ, รหัสไปรษณีย์, วันที่เริ่มงาน,
+            //          คงเหลือ/ปี, หมายเลขโทรศัพท์, ตั้งแต่วันที่, เลขประจำตำแหน่ง, หัวหน้ากลุ่มงาน, หัวหน้าหน่วยงาน, ลายเซ็น
+            $centerCols = ['A', 'B', 'C', 'D', 'G', 'H', 'K', 'L', 'O', 'P', 'S', 'U', 'AB', 'AD', 'AE'];
+            foreach ($centerCols as $col) {
+                $sheet->getStyle($col . '2:' . $col . $lastRow)
+                    ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+            // ชิดขวา: เงินเดือน
+            $sheet->getStyle('Z2:Z' . $lastRow)
+                ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         }
 
         $writer = new Xlsx($spreadsheet);
@@ -1100,7 +1158,7 @@ class EmployeesController extends Controller
         // }
 
         if (file_exists($filePath)) {
-            return Yii::$app->response->sendFile($filePath);
+            return Yii::$app->response->sendFile($filePath, 'ข้อมูลบุคลากร.xlsx');
         } else {
             throw new \yii\web\NotFoundHttpException('The file does not exist.');
         }

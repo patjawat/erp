@@ -266,7 +266,7 @@ class StockAdjustController extends Controller
             $order->main_warehouse_id = $warehouseId;
             $order->status = StockOrder::STATUS_CONFIRMED;
             $order->ref = $note ?: 'ปรับยอด';
-            $order->data_json = json_encode([
+            $order->data_json = [
                 'adjust_source' => $source ?: 'stock-adjust',
                 'adjust_mode' => $historyOnlyReverse ? 'history_reverse' : ($valueOnly ? 'value_only' : ($isValueMode ? 'recount' : 'qty_only')),
                 'history_only_reverse' => $historyOnlyReverse ? 1 : 0,
@@ -283,7 +283,7 @@ class StockAdjustController extends Controller
                 'reverse_detail_id' => $reverseDetailId ?: null,
                 'reverse_order_no' => $reverseOrderNo ?: null,
                 'created_from' => Yii::$app->request->referrer,
-            ], JSON_UNESCAPED_UNICODE);
+            ];
             $order->created_at = $now;
             $order->updated_at = $now;
             $order->created_by = Yii::$app->user->id;
@@ -300,19 +300,19 @@ class StockAdjustController extends Controller
             $detail->lot_number = $lotNumber;
             $detail->remain_qty = (!$valueOnly && !$historyOnlyReverse && $adjustmentQty > 0) ? $adjustmentQty : 0;
             if ($valueOnly) {
-                $detail->data_json = json_encode([
+                $detail->data_json = [
                     'adjust_value_only' => 1,
                     'value_delta' => round($valueDelta, 6),
                     'current_value_before' => round($currentValue, 6),
                     'target_value' => round((float) $targetValue, 6),
-                ], JSON_UNESCAPED_UNICODE);
+                ];
             } elseif ($historyOnlyReverse) {
-                $detail->data_json = json_encode([
+                $detail->data_json = [
                     'history_only_reverse' => 1,
                     'reverse_detail_id' => $reverseDetailId ?: null,
                     'reverse_order_no' => $reverseOrderNo ?: null,
                     'value_delta' => round($valueDelta, 6),
-                ], JSON_UNESCAPED_UNICODE);
+                ];
             }
             $detail->created_at = $now;
             $detail->updated_at = $now;
@@ -459,7 +459,7 @@ class StockAdjustController extends Controller
 
             $detail->qty = $oldRawQty < 0 ? -$newQty : $newQty;
             $detail->unit_price = $newUnitPrice;
-            $detail->data_json = json_encode($detailData, JSON_UNESCAPED_UNICODE);
+            $detail->data_json = $detailData;
             $detail->updated_at = $now;
             $detail->updated_by = Yii::$app->user->id;
             if (!$detail->save(false)) {
@@ -490,7 +490,7 @@ class StockAdjustController extends Controller
                 'note' => $note,
                 'source' => 'item-history-inline-edit',
             ];
-            $order->data_json = json_encode($orderData, JSON_UNESCAPED_UNICODE);
+            $order->data_json = $orderData;
             $order->updated_at = $now;
             $order->updated_by = Yii::$app->user->id;
             $order->save(false);

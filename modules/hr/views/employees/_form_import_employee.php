@@ -22,27 +22,37 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                     ]) ?>
                     
                     <!-- File Upload Section -->
-                    <div class="row g-4">
+                    <div class="row g-4 align-items-end">
                         <div class="col-md-6">
                             <label for="csvFile" class="form-label">
-                                เลือกไฟล์ CSV
+                                เลือกไฟล์นำเข้า
                             </label>
                             <div class="position-relative">
                                 <?= Html::fileInput('csvFile', null, [
                                     'id' => 'csvFile',
                                     'class' => 'form-control',
-                                    'accept' => '.csv',
+                                    'accept' => '.xlsx,.csv',
                                 ]) ?>
                                 <div class="invalid-feedback">
-                                    กรุณาเลือกไฟล์ CSV
+                                    กรุณาเลือกไฟล์ .xlsx หรือ .csv
                                 </div>
                             </div>
                             <div class="form-text">
                                 <i class="fas fa-info-circle text-info me-1"></i>
-                                รองรับไฟล์ .csv เท่านั้น
+                                รองรับไฟล์ .xlsx (แนะนำ) หรือ .csv
                             </div>
                         </div>
-                        
+                        <div class="col-md-6">
+                            <?= Html::a(
+                                '<i class="bi bi-file-earmark-arrow-down me-1"></i> ดาวน์โหลด Template (พร้อม dropdown)',
+                                ['/hr/employees/import-template'],
+                                ['class' => 'btn btn-outline-success', 'target' => '_blank']
+                            ) ?>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb text-warning me-1"></i>
+                                โหลด template ที่มีตัวเลือก (dropdown) จากข้อมูลจริงในระบบ แล้วกรอกก่อนนำเข้า
+                            </div>
+                        </div>
                     </div>
                     
                     <?= Html::hiddenInput('order_id', $order_id ?? null, ['id' => 'order_id']) ?>
@@ -82,6 +92,13 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                     <?= Html::hiddenInput('filePath', null, ['id' => 'filePath']) ?>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Import Result Report -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="import-report"></div>
         </div>
     </div>
 
@@ -146,14 +163,48 @@ $(document).ready(function() {
         }
     }
 
+    // แสดงรายงานผลการนำเข้า (สรุป + แถวที่ข้าม/ผิดพลาด)
+    function renderImportReport(res) {
+        var s = res.summary || {};
+        var esc = function (t) { return $('<div>').text(t == null ? '' : t).html(); };
+        var alertClass = res.status === 'success' ? 'alert-success' : 'alert-warning';
+
+        var html = '<div class="alert ' + alertClass + ' border-0 shadow-sm">';
+        html += '<h6 class="fw-semibold mb-2"><i class="fas fa-clipboard-check me-1"></i> ' + esc(res.message) + '</h6>';
+        html += '<div class="d-flex flex-wrap gap-3 small">';
+        html += '<span><i class="fas fa-user-plus text-success me-1"></i>เพิ่มใหม่ <strong>' + (s.inserted || 0) + '</strong></span>';
+        html += '<span><i class="fas fa-user-edit text-primary me-1"></i>อัปเดต <strong>' + (s.updated || 0) + '</strong></span>';
+        html += '<span><i class="fas fa-forward text-warning me-1"></i>ข้าม <strong>' + (s.skipped || 0) + '</strong></span>';
+        html += '<span><i class="fas fa-triangle-exclamation text-danger me-1"></i>บันทึกไม่สำเร็จ <strong>' + (s.failed || 0) + '</strong></span>';
+        html += '</div></div>';
+
+        var rowErrors = res.rowErrors || [];
+        var failures = res.failures || [];
+        if (rowErrors.length || failures.length) {
+            html += '<div class="card border-0 shadow-sm"><div class="card-body p-0"><div class="table-responsive">';
+            html += '<table class="table table-sm table-bordered mb-0"><thead class="table-light"><tr>';
+            html += '<th class="text-center" style="width:90px">แถว</th><th class="text-center" style="width:150px">เลขบัตร</th><th>รายละเอียด</th></tr></thead><tbody>';
+            rowErrors.forEach(function (e) {
+                html += '<tr><td class="text-center">' + esc(e.row) + '</td><td class="text-center">' + esc(e.cid) + '</td><td class="text-danger small">' + esc((e.messages || []).join(' · ')) + '</td></tr>';
+            });
+            failures.forEach(function (f) {
+                html += '<tr><td class="text-center">-</td><td class="text-center">' + esc(f.cid) + '</td><td class="text-danger small">บันทึกไม่สำเร็จ: ' + esc(f.message) + '</td></tr>';
+            });
+            html += '</tbody></table></div></div></div>';
+        }
+
+        $('#import-report').html(html);
+    }
+
     // 1️⃣ AJAX preview with enhanced UI
     $('#csvFile').on('change', function() {
         var file = this.files[0];
         if(!file) return;
         
         // Validate file type
-        if (!file.name.toLowerCase().endsWith('.csv')) {
-            showErrorToast('กรุณาเลือกไฟล์ .csv เท่านั้น');
+        var fn = file.name.toLowerCase();
+        if (!fn.endsWith('.xlsx') && !fn.endsWith('.csv')) {
+            showErrorToast('กรุณาเลือกไฟล์ .xlsx หรือ .csv');
             $(this).val('');
             return;
         }
@@ -259,23 +310,17 @@ $(document).ready(function() {
                     $('#import-spinner').addClass('d-none');
                     $('#btn-import').prop('disabled', false);
                     
-                    if(res.status === 'success'){
-                        showSuccessToast(res.message || 'นำเข้าข้อมูลสำเร็จ');
-                        
-                        // Reset form
-                        setTimeout(() => {
-                            $('#preview-table').html('');
-                            $('#preview-section').slideUp();
-                            $('#import-btn').fadeOut();
-                            $('#csvFile').val('');
-                            $('#filePath').val('');
-                        }, 1500);
-                        
-                        // Reload page after success message
-                        // setTimeout(() => {
-                        //     window.location.reload(true);
-                        // }, 2500);
-                        
+                    if (res.status === 'success' || res.status === 'warning') {
+                        renderImportReport(res);
+                        if (res.status === 'success') {
+                            showSuccessToast(res.message || 'นำเข้าข้อมูลสำเร็จ');
+                        }
+                        // reset ส่วนอัปโหลด (คงรายงานผลไว้ให้ผู้ใช้อ่าน)
+                        $('#preview-table').html('');
+                        $('#preview-section').slideUp();
+                        $('#import-btn').fadeOut();
+                        $('#csvFile').val('');
+                        $('#filePath').val('');
                     } else {
                         showErrorToast(res.message || 'เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
                     }

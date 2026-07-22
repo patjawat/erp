@@ -163,6 +163,48 @@ class AppHelper extends Component
         return null;
     }
 
+    /**
+     * แปลงวันที่จาก input (นำเข้าข้อมูล) → ค.ศ. รูปแบบ Y-m-d สำหรับบันทึกลง DB
+     * รับได้ทั้ง พ.ศ./ค.ศ. และทั้งรูปแบบ d/m/Y และ Y-m-d (คั่นด้วย / หรือ -)
+     * เกณฑ์: ปี >= 2400 = พ.ศ. → ลบ 543 ; ปี 1900-2200 = ค.ศ. → คงไว้
+     * คืน null ถ้า input ว่าง/รูปแบบผิด/ไม่ผ่าน checkdate
+     */
+    public static function normalizeDateToDb($raw)
+    {
+        if ($raw === null) {
+            return null;
+        }
+        $raw = trim((string) $raw);
+        if ($raw === '' || $raw === '__/__/____') {
+            return null;
+        }
+
+        // แยกส่วนด้วย / หรือ -
+        $parts = preg_split('#[/\-]#', $raw);
+        if (count($parts) !== 3) {
+            return null;
+        }
+        $parts = array_map('intval', $parts);
+
+        // ตรวจว่าเป็น Y-m-d (ส่วนแรกเป็นปี 4 หลัก) หรือ d/m/Y
+        if ($parts[0] > 31) {
+            [$year, $month, $day] = $parts;
+        } else {
+            [$day, $month, $year] = $parts;
+        }
+
+        // พ.ศ. → ค.ศ.
+        if ($year >= 2400) {
+            $year -= 543;
+        }
+
+        if ($year < 1900 || $year > 2200 || !checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return sprintf('%04d-%02d-%02d', $year, $month, $day);
+    }
+
     // แปลงตัวเลขเป็นตัวหนังสือ
     public static function convertNumberToWords($number)
     {

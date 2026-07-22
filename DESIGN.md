@@ -254,7 +254,7 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 **ปุ่ม:** `class="btn btn-sm btn-success"` (เขียวทึบมาตรฐาน radius โค้งปกติ **ห้ามใส่ border/สีเอง หรือทำเป็นเหลี่ยม**) + icon `bi-file-earmark-excel` + label sentence-case ไทย เช่น "Export Excel". disable จนกว่าจะมีข้อมูลให้ export
 
 **Flow (3 สเต็ป):**
-1. **confirm** — `Swal.fire` icon `question` (`iconColor` primary `#0d6efd`), แสดง context (ชื่อ item/คลัง), `confirmButtonText` มี icon excel + `confirmButtonColor: '#198754'` (เขียวแมตช์ปุ่ม), `cancelButtonText: 'ยกเลิก'`, `reverseButtons: true`
+1. **confirm** — `Swal.fire` icon `question` (`iconColor` primary `#0d6efd`), แสดง context (ชื่อ item/คลัง), `confirmButtonText` มี icon excel + `confirmButtonColor: '#198754'` (เขียวแมตช์ปุ่ม), `cancelButtonText: 'ยกเลิก'`, `reverseButtons: false` (**ปุ่มยืนยันซ้าย · ปุ่มยกเลิกขวา** — เป็นมาตรฐานของทุกปุ่ม export)
 2. **loading** — หลังยืนยัน `Swal.fire({ didOpen: () => Swal.showLoading(), allowOutsideClick:false, allowEscapeKey:false })` "กำลังสร้างไฟล์..."
 3. **success** — icon `success` (เขียว), **auto-dismiss** `timer: 1800, timerProgressBar: true, showConfirmButton: false` แสดงชื่อไฟล์ · error → icon `error` + ข้อความ
 
