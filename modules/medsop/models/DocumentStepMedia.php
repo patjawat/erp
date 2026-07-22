@@ -2,6 +2,7 @@
 
 namespace app\modules\medsop\models;
 
+use app\modules\filemanager\components\FileManagerHelper;
 use yii\db\ActiveRecord;
 
 class DocumentStepMedia extends ActiveRecord
@@ -18,7 +19,7 @@ class DocumentStepMedia extends ActiveRecord
     {
         return [
             [['step_id', 'media_type', 'file_name', 'file_path', 'mime_type', 'file_size'], 'required'],
-            [['step_id', 'file_size', 'sort_order', 'created_by'], 'integer'],
+            [['step_id', 'upload_id', 'file_size', 'sort_order', 'created_by'], 'integer'],
             [['media_type'], 'in', 'range' => [self::TYPE_IMAGE, self::TYPE_VIDEO]],
             [['file_name'], 'string', 'max' => 255],
             [['file_path'], 'string', 'max' => 500],
@@ -30,5 +31,16 @@ class DocumentStepMedia extends ActiveRecord
     public function getStep()
     {
         return $this->hasOne(DocumentStep::class, ['id' => 'step_id']);
+    }
+
+    /**
+     * ลบไฟล์จริงในระบบ filemanager เมื่อลบ record (ครอบคลุมทั้งการลบราย media และ cascade)
+     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        if ($this->upload_id) {
+            FileManagerHelper::Deletefile($this->upload_id);
+        }
     }
 }

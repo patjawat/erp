@@ -236,6 +236,53 @@ class FileManagerHelper extends Component
         return $model;
     }
 
+    /**
+     * บันทึกไฟล์ที่อัปโหลด (UploadedFile) เข้าระบบ filemanager แบบ generic
+     * ใช้ได้ทั้งแบบ single-slot (replaceSlot=true พร้อม name จะลบไฟล์เดิม ref+name เดียวกันก่อน)
+     * และแบบหลายไฟล์ (replaceSlot=false). สร้าง thumbnail อัตโนมัติถ้าเป็นรูปภาพ.
+     *
+     * @param UploadedFile $file ไฟล์จาก getInstanceByName/getInstancesByName
+     * @param string $ref โฟลเดอร์ใน fileupload
+     * @param string|null $name ชื่อ slot (จำเป็นเมื่อ replaceSlot=true)
+     * @param bool $replaceSlot ถ้า true จะลบไฟล์เดิมที่ ref+name เดียวกันก่อนบันทึก
+     * @return Uploads|null โมเดล Uploads ที่สร้าง หรือ null ถ้าล้มเหลว
+     */
+    public static function saveUploadedFile(UploadedFile $file, string $ref, ?string $name = null, bool $replaceSlot = false): ?Uploads
+    {
+        self::CreateDir($ref);
+        $fileName = $file->baseName . '.' . $file->extension;
+        $realFileName = md5($file->baseName . microtime(true) . random_bytes(4)) . '.' . $file->extension;
+        $savePath = self::getUploadPath() . $ref . '/' . $realFileName;
+        if (!$file->saveAs($savePath)) {
+            return null;
+        }
+        if (self::isImage($savePath)) {
+            try {
+                self::createThumbnail($ref, $realFileName);
+            } catch (\Throwable $e) {
+                Yii::warning('สร้าง thumbnail ไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+            }
+        }
+        if ($replaceSlot && $name !== null) {
+            foreach (Uploads::find()->where(['ref' => $ref, 'name' => $name])->all() as $old) {
+                self::Deletefile($old->id);
+            }
+        }
+        $model = new Uploads();
+        $model->ref = $ref;
+        $model->name = $name;
+        $model->file_name = $fileName;
+        $model->real_filename = $realFileName;
+        $model->type = self::checkFileType(strtolower($file->extension));
+        $model->size = $file->size;
+        if (!$model->save(false)) {
+            @unlink($savePath);
+            @unlink(self::getUploadPath() . $ref . '/thumbnail/' . $realFileName);
+            return null;
+        }
+        return $model;
+    }
+
     public static function UploadPdf($isAjax = false)
     {
         if (Yii::$app->request->isPost) {
