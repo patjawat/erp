@@ -96,4 +96,5 @@ $modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริก�
 $modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PDF Template positioning (resolution-independent), URL: /pdf-template
 $modules['medsop'] = ['class' => 'app\modules\medsop\Module'];  // ระบบคลังเอกสาร SOP/WI
 $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
+$modules['ai'] = ['class' => 'app\modules\ai\Module'];
 return $modules;
