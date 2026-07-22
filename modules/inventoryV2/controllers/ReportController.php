@@ -28,10 +28,20 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
  */
 class ReportController extends Controller
 {
-    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล) */
+    /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล)
+     * ลำดับความสำคัญ: param inventoryV2.disburseSubWarehouseIds (ถ้ากำหนดไว้) →
+     * ถ้าว่าง fallback ไปดึงคลังประเภท BRANCH (=รพ.สต.) อัตโนมัติ
+     * เพื่อให้รวมคลัง รพ.สต. ที่เพิ่มใหม่ในอนาคตโดยไม่ต้องแก้ config */
     public static function getDisburseSubWarehouseIds()
     {
-        return (array) (Yii::$app->params['inventoryV2.disburseSubWarehouseIds'] ?? []);
+        $ids = (array) (Yii::$app->params['inventoryV2.disburseSubWarehouseIds'] ?? []);
+        if ($ids) {
+            return array_map('intval', $ids);
+        }
+        return array_map('intval', Warehouse::find()
+            ->select('id')
+            ->where(['warehouse_type' => 'BRANCH'])
+            ->column());
     }
 
     /**
