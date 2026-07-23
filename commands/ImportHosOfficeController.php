@@ -994,7 +994,7 @@ private function mapVehicleType($input) {
                     LEFT JOIN leave_status ON leave_register.LEAVE_STATUS_CODE = leave_status.STATUS_CODE
                     LEFT JOIN leave_location ON leave_register.LOCATION_ID = leave_location.LOCATION_ID
                     LEFT JOIN leave_day_type ON leave_day_type.DAY_TYPE_ID = leave_register.DAY_TYPE_ID
-                    WHERE LEAVE_STATUS_CODE = "Z" ORDER BY leave_register.ID DESC;')
+                    ORDER BY leave_register.ID DESC;')
             ->queryAll();
         $num = 1;
         $total = count($querys);
@@ -1184,32 +1184,26 @@ private function mapVehicleType($input) {
         $total = count($leaves);
         echo "สร้างข้อมูลการอนุมัติลา...\n";
         foreach ($leaves as $item) {
-            $obj1 = ['name' => 'leave', 'from_id' => $item->id, 'level' => 1, 'emp_id' => $item->data_json['approve_1'], 'status' => 'Pass'];
-            $approve1 = Approve::find()->where($obj1)->one();
-            if (!$approve1) {
-                $newApprove1 = new Approve($obj1);
-                $newApprove1->save(false);
+            // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
+            $data = $item->data_json;
+            if (is_string($data)) {
+                $data = json_decode($data, true);
+            }
+            if (!is_array($data)) {
+                $data = [];
             }
 
-            $obj2 = ['name' => 'leave', 'from_id' => $item->id, 'level' => 2, 'emp_id' => $item->data_json['approve_2'], 'status' => 'Pass'];
-            $approve2 = Approve::find()->where($obj2)->one();
-            if (!$approve2) {
-                $newApprove2 = new Approve($obj2);
-                $newApprove2->save(false);
-            }
-
-            $obj3 = ['name' => 'leave', 'from_id' => $item->id, 'level' => 3, 'emp_id' => $item->data_json['approve_3'], 'status' => 'Pass'];
-            $approve3 = Approve::find()->where($obj3)->one();
-            if (!$approve3) {
-                $newApprove3 = new Approve($obj3);
-                $newApprove3->save(false);
-            }
-
-            $obj4 = ['name' => 'leave', 'from_id' => $item->id, 'level' => 4, 'emp_id' => $item->data_json['approve_4'], 'status' => 'Pass'];
-            $approve4 = Approve::find()->where($obj4)->one();
-            if (!$approve4) {
-                $newApprove4 = new Approve($obj4);
-                $newApprove4->save(false);
+            foreach ([1, 2, 3, 4] as $level) {
+                $empId = $data['approve_' . $level] ?? null;
+                if (empty($empId)) {
+                    continue;
+                }
+                $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
+                $approve = Approve::find()->where($obj)->one();
+                if (!$approve) {
+                    $newApprove = new Approve($obj);
+                    $newApprove->save(false);
+                }
             }
             BaseConsole::updateProgress($num, $total);
             $num++;

@@ -19,18 +19,26 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class CheckinController extends Controller
 {
+    /**
+     * ประวัติการลงเวลาของฉัน — แสดงเฉพาะของผู้ใช้ที่ล็อกอินเสมอ
+     * (ผู้ดูแลระบบดูของทั้งหน่วยงานที่หน้า report)
+     */
     public function actionIndex()
     {
         $searchModel = new CheckinRecordSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $me = UserHelper::GetEmployee();
-        $isOwnOnly = !Yii::$app->user->can('admin') && !Yii::$app->user->can('hr');
-        if ($isOwnOnly && $me) {
+        if ($me) {
             $dataProvider->query->andWhere(['checkin_record.emp_id' => $me->id]);
+        } else {
+            $dataProvider->query->andWhere('1=0'); // ไม่พบพนักงาน → ไม่แสดงของใคร
         }
+        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr');
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'isAdminOrHr' => $isAdminOrHr,
+            'me' => $me,
         ]);
     }
 
@@ -189,13 +197,11 @@ class CheckinController extends Controller
      */
     public function actionReport()
     {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+            throw new \yii\web\ForbiddenHttpException('หน้านี้สำหรับผู้ดูแลระบบเท่านั้น ดูประวัติของคุณได้ที่หน้าประวัติการลงเวลา');
+        }
         $searchModel = new CheckinRecordSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $me = UserHelper::GetEmployee();
-        $isOwnOnly = !Yii::$app->user->can('admin') && !Yii::$app->user->can('hr');
-        if ($isOwnOnly && $me) {
-            $dataProvider->query->andWhere(['checkin_record.emp_id' => $me->id]);
-        }
         $dataProvider->pagination = ['pageSize' => 50];
         return $this->render('report', [
             'searchModel' => $searchModel,
@@ -208,13 +214,11 @@ class CheckinController extends Controller
      */
     public function actionExportExcel()
     {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+            throw new \yii\web\ForbiddenHttpException('การส่งออกรายงานสำหรับผู้ดูแลระบบเท่านั้น');
+        }
         $searchModel = new CheckinRecordSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $me = UserHelper::GetEmployee();
-        $isOwnOnly = !Yii::$app->user->can('admin') && !Yii::$app->user->can('hr');
-        if ($isOwnOnly && $me) {
-            $dataProvider->query->andWhere(['checkin_record.emp_id' => $me->id]);
-        }
         $dataProvider->pagination = false;
         $models = $dataProvider->getModels();
 

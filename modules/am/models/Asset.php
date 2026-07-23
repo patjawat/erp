@@ -122,6 +122,26 @@ class Asset extends \yii\db\ActiveRecord
     /**
      * {@inheritdoc}
      */
+    public function validateCategoryReady($attribute, $params)
+    {
+        $categoryCode = $this->$attribute;
+
+        if ($categoryCode === null || $categoryCode === '') {
+            return;
+        }
+
+        $category = AssetCategory::find()
+            ->where([
+                'name' => 'asset_category',
+                'code' => $categoryCode,
+            ])
+            ->one();
+
+        if ($category === null || empty($category->code) || (int) $category->active !== 1) {
+            $this->addError($attribute, 'หมวดทรัพย์สินที่เลือกยังไม่พร้อมใช้งาน');
+        }
+    }
+
     public function attributeLabels()
     {
         return [

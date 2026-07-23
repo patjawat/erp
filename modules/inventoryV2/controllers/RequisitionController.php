@@ -30,6 +30,7 @@ public function behaviors()
             'actions' => [
                 'delete' => ['POST'],
                 'cancel' => ['POST'],
+                'recall' => ['POST'],
                 'approve' => ['POST'],
                 'approve-with-edits' => ['POST'],
                 'save-draft' => ['POST'],
@@ -249,6 +250,9 @@ public function behaviors()
                     $model->order_type = StockOrder::ORDER_TYPE_OUT;
                     $model->status = StockOrder::STATUS_PENDING;
                     $model->source_type = 'REQUEST';
+                    if (empty($model->created_by) && !Yii::$app->user->isGuest) {
+                        $model->created_by = Yii::$app->user->id;
+                    }
                     if (!empty($model->order_date) && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', trim($model->order_date), $m)) {
                         $y = (int) $m[3];
                         $model->order_date = ($y > 2400 ? $y - 543 : $y) . '-' . sprintf('%02d', (int) $m[2]) . '-' . sprintf('%02d', (int) $m[1]);
@@ -1078,7 +1082,7 @@ public function behaviors()
             return $this->redirect(['view', 'id' => $model->id]);
         }
         $isInventoryStaff = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
-        $isCreator = !Yii::$app->user->isGuest && (int) $model->created_by === (int) Yii::$app->user->id;
+        $isCreator = !Yii::$app->user->isGuest && (int) $model->getCreatorUserId() === (int) Yii::$app->user->id;
         $isApprover = $this->isApproverOrInventoryStaff($model);
         $allowed = false;
         if ($model->status === StockOrder::STATUS_DRAFT) {
@@ -1092,6 +1096,7 @@ public function behaviors()
         }
         $isApproverEditing = $model->status === StockOrder::STATUS_PENDING && $isApprover;
         $beforeSnapshot = $isApproverEditing ? $this->snapshotDetails($model) : null;
+        $originalStatus = $model->status;
 
         if ($this->request->isPost) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -1100,7 +1105,12 @@ public function behaviors()
                 if ($model->load($this->request->post())) {
                     $model->order_type = StockOrder::ORDER_TYPE_OUT;
                     $model->source_type = 'REQUEST';
-                    // ไม่เปลี่ยน status จาก form
+                    // กำหนด status เอง ไม่รับจาก form:
+                    // - DRAFT (ใบที่ดึงกลับมาแก้) → ส่งอนุมัติใหม่เป็น PENDING อัตโนมัติ
+                    // - PENDING (ผู้อนุมัติแก้ก่อนอนุมัติ) → คงสถานะเดิม
+                    $model->status = ($originalStatus === StockOrder::STATUS_DRAFT)
+                        ? StockOrder::STATUS_PENDING
+                        : $originalStatus;
                     if (!empty($model->order_date) && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', trim($model->order_date), $m)) {
                         $y = (int) $m[3];
                         $model->order_date = ($y > 2400 ? $y - 543 : $y) . '-' . sprintf('%02d', (int) $m[2]) . '-' . sprintf('%02d', (int) $m[1]);
@@ -1392,6 +1402,53 @@ public function behaviors()
         ]);
     }
 
+
+    /**
+     * ดึงใบขอเบิกกลับเป็นฉบับร่าง (PENDING → DRAFT) เพื่อให้ผู้สร้างแก้ไขได้อีกครั้ง
+     * เฉพาะใบสถานะ PENDING และผู้ใช้คือผู้สร้าง หรือ จนท.คลัง
+     * เมื่อดึงกลับแล้วใบจะหลุดจากคิวอนุมัติของหัวหน้าอัตโนมัติ (syncApproveRow ลบ row)
+     * และต้องส่งอนุมัติใหม่หลังแก้ไขเสร็จ
+     */
+    public function actionRecall($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->status !== StockOrder::STATUS_PENDING) {
+            Yii::$app->session->setFlash('warning', 'ดึงกลับได้เฉพาะใบที่สถานะ "รอหัวหน้าอนุมัติ" เท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $canInventory = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+        if (!$model->canRecall(Yii::$app->user->id, $canInventory)) {
+            Yii::$app->session->setFlash('warning', 'ดึงกลับได้เฉพาะผู้สร้างใบ หรือเจ้าหน้าที่คลังเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model->status = StockOrder::STATUS_DRAFT;
+            // ซ่อมข้อมูลใบเก่าที่ created_by ว่าง — บันทึกเจ้าของที่ resolve จากผู้ขอเบิกลง DB ถาวร
+            // เพื่อให้ actionUpdate เช็คสิทธิ์ผ่านหลังดึงกลับ
+            if (empty($model->created_by)) {
+                $resolvedCreator = $model->getCreatorUserId();
+                if ($resolvedCreator) {
+                    $model->created_by = (int) $resolvedCreator;
+                }
+            }
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถดึงใบกลับเป็นฉบับร่างได้');
+            }
+            $this->syncApproveRow($model);
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'ดึงใบกลับเป็นฉบับร่างแล้ว แก้ไขเสร็จแล้วส่งอนุมัติใหม่อีกครั้ง');
+            return $this->redirect(['update', 'id' => $model->id]);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'ข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
 
     public function actionCancel($id)
     {
