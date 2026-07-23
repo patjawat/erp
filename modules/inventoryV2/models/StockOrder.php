@@ -674,6 +674,63 @@ public function getToWarehouse()
     }
 
     /**
+     * ตรวจสอบว่า user ปัจจุบันแก้ไขใบนี้ได้จริงหรือไม่ (รวม logic ที่ actionUpdate ใช้)
+     * DRAFT: ผู้สร้าง หรือ จนท.คลัง — PENDING: ผู้อนุมัติที่ระบุไว้ หรือ จนท.คลัง
+     * @param int|null $userId user.id ที่ล็อกอินอยู่
+     * @param bool $hasInventoryPermission ผลของ Yii::$app->user->can('inventory')
+     * @return bool
+     */
+    public function canEditByUser($userId, $hasInventoryPermission = false)
+    {
+        if ($this->status === self::STATUS_DRAFT) {
+            return $hasInventoryPermission || ($userId && (int) $this->getCreatorUserId() === (int) $userId);
+        }
+        if ($this->status === self::STATUS_PENDING) {
+            return $this->canEditByApprover($userId, $hasInventoryPermission);
+        }
+        return false;
+    }
+
+    /**
+     * ตรวจสอบว่า user ปัจจุบันดึงใบกลับเป็นฉบับร่างได้หรือไม่
+     * ดึงกลับได้เฉพาะใบสถานะ PENDING (รอหัวหน้าอนุมัติ) และผู้ใช้คือผู้สร้าง หรือ จนท.คลัง
+     * @param int|null $userId user.id ที่ล็อกอินอยู่
+     * @param bool $hasInventoryPermission ผลของ Yii::$app->user->can('inventory')
+     * @return bool
+     */
+    public function canRecall($userId, $hasInventoryPermission = false)
+    {
+        if ($this->status !== self::STATUS_PENDING) {
+            return false;
+        }
+        if ($hasInventoryPermission) {
+            return true;
+        }
+        return $userId && (int) $this->getCreatorUserId() === (int) $userId;
+    }
+
+    /**
+     * user.id ของ "ผู้สร้าง/ผู้ขอเบิก" ใบนี้
+     * ยึด created_by ก่อน — ถ้าว่าง (ใบเก่าที่ยังไม่มี) fallback ไปที่ผู้ขอเบิก
+     * (issue_requester.emp_id → Employees.user_id)
+     * @return int|null
+     */
+    public function getCreatorUserId()
+    {
+        if (!empty($this->created_by)) {
+            return (int) $this->created_by;
+        }
+        $requesterEmpId = $this->getIssueSignatureEmpId('requester');
+        if ($requesterEmpId) {
+            $emp = \app\modules\hr\models\Employees::findOne($requesterEmpId);
+            if ($emp && $emp->user_id) {
+                return (int) $emp->user_id;
+            }
+        }
+        return null;
+    }
+
+    /**
      * บันทึก snapshot การปรับรายการโดยผู้อนุมัติลงใน data_json
      * เก็บใน data_json['approver_revisions'][] — ไม่เพิ่มคอลัมน์
      *

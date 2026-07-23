@@ -15,6 +15,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $canCreateRequisition = (bool) ($canCreateRequisition ?? false);
 
+$currentUserId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+$canInventory = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+
 $currentWarehouseId = Yii::$app->request->get('warehouse_id');
 $currentWarehouseId = is_numeric($currentWarehouseId) ? (int) $currentWarehouseId : null;
 if ($currentWarehouseId === null && !empty($searchModel->sub_warehouse_id)) {
@@ -354,14 +357,40 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                     <td class="req-table__action">
                                         <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $model->id], [
                                             'class' => 'btn btn-sm btn-outline-primary open-modal',
-                                            'title' => 'ดูรายละเอียด',
                                             'aria-label' => 'ดูรายละเอียด',
-                                            'data' => ['size' => 'modal-xl'],
+                                            'data' => [
+                                                'size' => 'modal-xl',
+                                                'bs-toggle' => 'tooltip',
+                                                'bs-placement' => 'top',
+                                                'bs-trigger' => 'hover',
+                                                'bs-title' => 'ดูรายละเอียดใบขอเบิก — เปิดในหน้าต่างซ้อน (ไม่ออกจากหน้านี้)',
+                                            ],
                                         ]) ?>
-                                        <?php if ($model->canEdit()): ?>
+                                        <?php if ($model->canEditByUser($currentUserId, $canInventory)): ?>
                                             <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $model->id], [
                                                 'class' => 'btn btn-sm btn-outline-secondary',
-                                                'title' => 'แก้ไข',
+                                                'aria-label' => 'แก้ไข',
+                                                'data' => [
+                                                    'bs-toggle' => 'tooltip',
+                                                    'bs-placement' => 'top',
+                                                    'bs-trigger' => 'hover',
+                                                    'bs-title' => 'แก้ไขรายการในใบขอเบิกนี้',
+                                                ],
+                                            ]) ?>
+                                        <?php endif; ?>
+                                        <?php if ($model->canRecall($currentUserId, $canInventory)): ?>
+                                            <?= Html::button('<i class="bi bi-arrow-counterclockwise"></i>', [
+                                                'type' => 'button',
+                                                'class' => 'btn btn-sm btn-outline-warning js-recall',
+                                                'aria-label' => 'ดึงกลับเป็นฉบับร่าง',
+                                                'data' => [
+                                                    'url' => Url::to(['recall', 'id' => $model->id]),
+                                                    'order-no' => $model->order_no,
+                                                    'bs-toggle' => 'tooltip',
+                                                    'bs-placement' => 'top',
+                                                    'bs-trigger' => 'hover',
+                                                    'bs-title' => 'ดึงใบกลับเป็นฉบับร่างเพื่อแก้ไข — ใบจะออกจากคิวอนุมัติของหัวหน้า และต้องส่งอนุมัติใหม่',
+                                                ],
                                             ]) ?>
                                         <?php endif; ?>
                                     </td>
@@ -421,11 +450,23 @@ foreach (['action', 'page-action'] as $actionBlock) {
                                     </div>
                                 </div>
                             </a>
-                            <?php if ($model->canEdit()): ?>
+                            <?php if ($model->canEditByUser($currentUserId, $canInventory) || $model->canRecall($currentUserId, $canInventory)): ?>
                                 <div class="req-card__actions">
-                                    <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], [
-                                        'class' => 'btn btn-sm btn-outline-secondary',
-                                    ]) ?>
+                                    <?php if ($model->canEditByUser($currentUserId, $canInventory)): ?>
+                                        <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], [
+                                            'class' => 'btn btn-sm btn-outline-secondary',
+                                        ]) ?>
+                                    <?php endif; ?>
+                                    <?php if ($model->canRecall($currentUserId, $canInventory)): ?>
+                                        <?= Html::button('<i class="bi bi-arrow-counterclockwise me-1"></i>ดึงกลับ', [
+                                            'type' => 'button',
+                                            'class' => 'btn btn-sm btn-outline-warning js-recall',
+                                            'data' => [
+                                                'url' => Url::to(['recall', 'id' => $model->id]),
+                                                'order-no' => $model->order_no,
+                                            ],
+                                        ]) ?>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </li>
@@ -852,12 +893,74 @@ foreach (['action', 'page-action'] as $actionBlock) {
 </style>
 
 <?php
+$csrfParam = Yii::$app->request->csrfParam;
+$csrfToken = Yii::$app->request->csrfToken;
+
+$this->registerCss(<<<CSS
+/* SweetAlert action row — บังคับลำดับ [ยืนยัน ซ้าย] [ยกเลิก ขวา] (project SweetAlert ไม่เคารพ reverseButtons) */
+.swal2-actions.req-swal-actions { flex-direction: row-reverse !important; justify-content: center; }
+CSS
+);
+
 $this->registerJs(<<<JS
 (function () {
+    function submitRecall(url) {
+        var form = document.createElement('form');
+        form.method = 'post';
+        form.action = url;
+        var t = document.createElement('input');
+        t.type = 'hidden';
+        t.name = '{$csrfParam}';
+        t.value = '{$csrfToken}';
+        form.appendChild(t);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function initTooltips() {
+        if (!window.bootstrap || !bootstrap.Tooltip) return;
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            if (!bootstrap.Tooltip.getInstance(el)) new bootstrap.Tooltip(el);
+        });
+    }
+
+    function initRecall() {
+        document.querySelectorAll('.js-recall').forEach(function (btn) {
+            if (btn.dataset.recallBound) return;
+            btn.dataset.recallBound = '1';
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-url');
+                var orderNo = btn.getAttribute('data-order-no') || '';
+                var tip = bootstrap.Tooltip && bootstrap.Tooltip.getInstance(btn);
+                if (tip) tip.hide();
+                if (!window.Swal) {
+                    if (confirm('ดึงใบ ' + orderNo + ' กลับเป็นฉบับร่างเพื่อแก้ไข? หัวหน้าจะต้องอนุมัติใหม่อีกครั้ง')) submitRecall(url);
+                    return;
+                }
+                Swal.fire({
+                    title: 'ดึงกลับเป็นฉบับร่าง?',
+                    html: 'ใบ <strong>' + orderNo + '</strong> จะถูกดึงออกจากคิวอนุมัติของหัวหน้า กลับมาเป็นฉบับร่างให้แก้ไขได้<br>เมื่อแก้เสร็จต้อง<strong>ส่งอนุมัติใหม่</strong>อีกครั้ง',
+                    icon: 'question',
+                    iconColor: '#0d6efd',
+                    showCancelButton: true,
+                    confirmButtonText: 'ดึงกลับ',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#fd7e14',
+                    reverseButtons: true,
+                    customClass: { actions: 'req-swal-actions' }
+                }).then(function (r) {
+                    if (r.isConfirmed) submitRecall(url);
+                });
+            });
+        });
+    }
+
     function init() {
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
             window.lucide.createIcons();
         }
+        initTooltips();
+        initRecall();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init, { once: true });
