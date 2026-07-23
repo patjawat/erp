@@ -994,7 +994,7 @@ private function mapVehicleType($input) {
                     LEFT JOIN leave_status ON leave_register.LEAVE_STATUS_CODE = leave_status.STATUS_CODE
                     LEFT JOIN leave_location ON leave_register.LOCATION_ID = leave_location.LOCATION_ID
                     LEFT JOIN leave_day_type ON leave_day_type.DAY_TYPE_ID = leave_register.DAY_TYPE_ID
-                    WHERE LEAVE_STATUS_CODE = "Z" ORDER BY leave_register.ID DESC;')
+                    ORDER BY leave_register.ID DESC;')
             ->queryAll();
         $num = 1;
         $total = count($querys);
