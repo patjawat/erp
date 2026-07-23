@@ -171,8 +171,11 @@ $('#btn-purge-inactive').on('click', function () {
                     \$.pjax.reload({container: '#hr-container'});
                 });
             },
-            error: function () {
-                Swal.fire({icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถล้างข้อมูลได้ กรุณาลองใหม่'});
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message)
+                    ? xhr.responseJSON.message
+                    : 'ไม่สามารถล้างข้อมูลได้ กรุณาลองใหม่';
+                Swal.fire({icon: 'error', title: 'เกิดข้อผิดพลาด', text: msg});
             }
         });
     });

@@ -115,17 +115,36 @@ class OrganizationController extends Controller
         $tbName = $this->request->post('tb_name', 'diagram');
         $purged = [];
 
-        while (true) {
-            $node = Organization::find()
-                ->where(['tb_name' => $tbName, 'active' => false])
-                ->andWhere('rgt = lft + 1')
-                ->orderBy(['lft' => SORT_ASC])
-                ->one();
-            if ($node === null) {
-                break;
+        try {
+            while (true) {
+                $node = Organization::find()
+                    ->where(['tb_name' => $tbName, 'active' => false])
+                    ->andWhere('rgt = lft + 1')
+                    ->orderBy(['lft' => SORT_ASC])
+                    ->one();
+                if ($node === null) {
+                    break;
+                }
+
+                // NestedSetsBehavior::delete() โยน NotSupportedException สำหรับ root node
+                // node ที่ถูกเลือกเป็นใบเสมอ (rgt = lft + 1) จึงลบได้ปลอดภัยด้วย deleteWithChildren()
+                $deleted = $node->isRoot() ? $node->deleteWithChildren() : $node->delete();
+
+                // ถ้าลบไม่สำเร็จ (คืน false/0) ต้องหยุด ไม่งั้นลูปจะวนไม่รู้จบเพราะเจอ node เดิม
+                if (!$deleted) {
+                    throw new \RuntimeException('ไม่สามารถลบ node "' . $node->name . '" (#' . $node->id . ') ได้');
+                }
+                $purged[] = $node->name . ' (#' . $node->id . ')';
             }
-            $purged[] = $node->name . ' (#' . $node->id . ')';
-            $node->delete();
+        } catch (\Throwable $e) {
+            Yii::error('purge-inactive failed: ' . $e->getMessage(), __METHOD__);
+            Yii::$app->response->statusCode = 500;
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'count' => count($purged),
+                'items' => $purged,
+            ];
         }
 
         return [
