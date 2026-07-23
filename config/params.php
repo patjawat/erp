@@ -5,7 +5,7 @@ return [
     'senderEmail' => 'patjawat@gmail.com',
     'senderName' => 'Example.com mailer',
     'bsVersion' => '5.x',
-    'bsDependencyEnabled' => false,
+    'bsDependencyEnabled' => true,
 
     // Session / Cookie: idle + absolute + remember-me
     // ไม่เลือก remember → session อยู่ได้ประมาณ 1 ชม. (cookie + gc เท่ากัน)

@@ -425,9 +425,9 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                         <div class="col-12">
                             <?php
                             echo $form->field($model, 'asset_name', [
-                                'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/asset-item/list-item', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 'asButton' => true]
-                                ]
+                                // 'addon' => [
+                                //     'append' => ['content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/asset-item/list-item', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 'asButton' => true]
+                                // ]
                             ])->textInput([
                                 'maxlength' => true,
                                 'placeholder' => 'ค้นหาชื่อครุภัณฑ์',
@@ -470,7 +470,10 @@ $assetNumberExample = str_replace(['{category}', '{year}', '{seq}'], ['7910-003-
                                     ],
                                 ],
                             ])->widget(DepDrop::class, [
-                                'options' => ['id' => 'asset_category_id', 'placeholder' => 'เลือกหมวดทรัพย์สิน ...'],
+                                'options' => [
+                                    'id' => 'asset_category_id',
+                                    'placeholder' => 'เลือกหมวดทรัพย์สิน ...',
+                                ],
                                 'type' => DepDrop::TYPE_SELECT2,
                                 'select2Options' => [
                                     'pluginOptions' => ['allowClear' => true],
@@ -742,6 +745,7 @@ $categoryQuickListItemsUrl = Url::to(['/am/asset-category/quick-list-items']);
 $js = <<< JS
 
  thaiDatepicker('#asset-receive_date,#asset-data_json-expire_date,#asset-data_json-inspection_date')
+
  isFile()
 
  // prefix (FSN) มาจากหมวดทรัพย์สินที่เลือก — ค่า = categorise.code
@@ -897,8 +901,6 @@ $js = <<< JS
         loadCategoryQuickListItems();
     });
 
-<<<<<<< Updated upstream
-=======
  // สลับเปิด/ปิดใช้งานหมวด (สวิตช์ inline บน offcanvas) → POST แล้วรีเฟรชรายการ + dropdown หมวดหลัก
  $(document).off('change.categoryQuickToggle', '.category-quick-list__toggle')
     .on('change.categoryQuickToggle', '.category-quick-list__toggle', function () {
@@ -926,7 +928,6 @@ $js = <<< JS
         });
     });
 
->>>>>>> Stashed changes
  $(document).off('click.categoryQuickDelete', '.category-quick-list__delete')
     .on('click.categoryQuickDelete', '.category-quick-list__delete', function (e) {
         e.preventDefault();
@@ -1154,6 +1155,3 @@ $js = <<< JS
 JS;
 $this->registerJs($js);
 ?>
-
-
-

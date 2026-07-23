@@ -595,8 +595,6 @@ handleFormSubmit("#form-emp-detail", null, async function (response) {
 
 function isFile() {
   var isFile = $("#editImagePreview").data("isfile");
-  console.log(isFile);
-
   if (isFile == true) {
     $("#editImagePreview").show();
     $("#editUploadBtn").hide();

@@ -25,11 +25,7 @@ $group = $group ?? 'EQUIP';
 
 <div class="row">
 <div class="col-5">
-<<<<<<< Updated upstream
-          <?=$form->field($model, 'code')->textInput()->label("FSN")->hint('ใช้เป็นรหัส FSN ของหมวดหมู่นี้ในการเพิ่มทะเบียนทรัพย์สินใหม่ด้วย')?>
-=======
           <?=$form->field($model, 'code')->textInput(['placeholder'=>'เว้นว่างได้ (ร่าง)'])->label("FSN")->hint('รหัส FSN ของหมวดนี้ · เว้นว่างเพื่อบันทึกเป็นร่างก่อนได้ — แต่ต้องกำหนดรหัส + เปิดใช้งานจึงจะนำไปเพิ่มทะเบียนครุภัณฑ์ได้')?>
->>>>>>> Stashed changes
         </div>
         <div class="col-7">
     <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อของใหวดหมู่...'])->label("ชื่อหมวดหมู่") ?>
@@ -67,8 +63,6 @@ $group = $group ?? 'EQUIP';
         ])->label('อัตราค่าเสื่อม')->hint('ทศนิยม 2 ตำแหน่ง') ?>
     </div>
 </div>
-<<<<<<< Updated upstream
-=======
 
 <div class="row">
     <div class="col-12">
@@ -85,7 +79,6 @@ $group = $group ?? 'EQUIP';
         </div>
     </div>
 </div>
->>>>>>> Stashed changes
 
 <div class="form-group mt-3 d-flex justify-content-center gap-2">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary','id' => "summitxx"]) ?>
