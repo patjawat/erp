@@ -105,6 +105,10 @@ $statusBadge = function ($status, $label) {
                             <i class="bi bi-people" aria-hidden="true"></i>
                             <span>ทั้งหน่วยงาน</span>
                         </a>
+                        <a href="<?= Url::to(['/attendance/checkin/monthly']) ?>" class="att-tile">
+                            <i class="bi bi-calendar3" aria-hidden="true"></i>
+                            <span>สรุปรายเดือน</span>
+                        </a>
                         <a href="<?= Url::to(['/attendance/location/index']) ?>" class="att-tile">
                             <i class="bi bi-geo-alt" aria-hidden="true"></i>
                             <span>จุดลงเวลา</span>

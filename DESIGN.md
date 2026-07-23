@@ -273,6 +273,76 @@ Selected (เพิ่ม): สำหรับ list/seg-control → `.is-active`
 - บอก **why** (ยังไม่มีข้อมูล / ยังไม่มีสิทธิ์ / คลังนี้ไม่มีพัสดุ) + **next action** (link หรือ button)
 - ห้าม "No data" / "ไม่มีข้อมูล" loose
 
+### AJAX modal (`.open-modal`) — canonical CRUD in-page
+
+> **Trigger:** ผู้ใช้พูดว่า **"crud ajax"** / "ทำเป็น modal" → ใช้ pattern นี้เป็นค่าเริ่มต้นทันที (ดู PRODUCT.md → Table Conventions ข้อ 3)
+
+มาตรฐานของ **create / edit / view-partial ที่ไม่ต้องเปลี่ยนหน้า** — โหลดฟอร์มเข้า `#main-modal` (global ใน `themes/v4/layouts/main.php`) ผ่าน AJAX แล้ว submit + reload เฉพาะตารางด้วย Pjax โดยไม่ full reload เอนจินอยู่ใน `web/js/erp.js` (`.open-modal` handler + `handleFormSubmit` + `erpReloadPjax`) — **reuse pattern นี้ก่อนเขียน modal เอง** reference: `modules/am/views/depreciation-profile/` + `DepreciationProfileController`
+
+**1. ปุ่ม/ลิงก์ที่เปิด modal (view)**
+```php
+Html::a('<i data-lucide="plus"></i> เพิ่มเกณฑ์', ['create', 'title' => 'เพิ่มเกณฑ์ค่าเสื่อม'], [
+    'class' => 'btn btn-primary btn-sm open-modal',
+    'data'  => ['size' => 'modal-xl'],   // modal-sm|md|lg|xl|xxl
+])
+```
+- `href` = GET url ที่โหลดเข้า modal · query `title` = หัว modal · `data-size` = ขนาด dialog
+- ปุ่ม edit ในแถวตารางใช้ `open-modal` เหมือนกัน — ส่ง `id` + `title` ไปด้วย
+- action ที่เป็น **หน้าเต็ม** (เช่น view ที่มี sub-form ต่อ) อย่าใส่ `open-modal`; ถ้าลิงก์นั้นอยู่ใน Pjax container ให้ใส่ `data-pjax="0"` กัน pjax ดักลิงก์
+
+**2. ตารางต้องอยู่ใน Pjax container**
+```php
+<?php Pjax::begin(['id' => 'am-dp-container', 'enablePushState' => false]); ?>
+    <?= GridView::widget([...]) /* หรือ custom table ตาม List page pattern */ ?>
+<?php Pjax::end(); ?>
+```
+- id ของ container (`#am-dp-container`) คือ target ที่ controller ส่งกลับให้ reload หลัง save
+
+**3. Controller — ตอบ JSON 2 จังหวะ** (คง fallback หน้าเต็มไว้เสมอ)
+```php
+public function actionCreate()
+{
+    $model = new Foo();
+    if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        if (Yii::$app->request->isAjax) {                 // submit จาก modal
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['status' => 'success', 'message' => 'บันทึกเรียบร้อย', 'container' => '#am-dp-container'];
+        }
+        return $this->redirect(['view', 'id' => $model->id]);   // fallback หน้าเต็ม
+    }
+    if (Yii::$app->request->isAjax) {                     // GET / validation-fail → ส่งฟอร์มเข้า modal
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return ['title' => Yii::$app->request->get('title'), 'content' => $this->renderAjax('_form', ['model' => $model])];
+    }
+    return $this->render('create', ['model' => $model]);
+}
+```
+- GET → `{title, content}` (`content` มาจาก `renderAjax` ซึ่ง inline JS ที่ `registerJs` ไว้ให้รันใน modal) · optional `footer`, `initCallback` (ชื่อ global fn รันหลังเปิด modal)
+- POST สำเร็จ → `{status:'success', container:'#...'}` · ผิดพลาด → `{status:'error', message:'...'}`
+- validation ผ่าน ActiveForm ajax คืน error array ตามปกติ (erp.js เติมข้อความให้เอง)
+
+**4. `_form` — ผูก `handleFormSubmit` (ทำงานทั้ง modal + หน้าเต็ม)**
+```php
+<?php $form = ActiveForm::begin(['id' => 'dp-form', 'options' => ['data-list-url' => Url::to(['index'])]]); ?>
+    ... fields ...
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data' => ['bs-dismiss' => 'modal']]) ?>
+    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary']) ?>
+<?php ActiveForm::end();
+$this->registerJs(<<<JS
+handleFormSubmit('#dp-form', null, async function (r) {
+    var c = r && r.container;
+    if (c && document.querySelector(c) && typeof erpReloadPjax === 'function' && erpReloadPjax(c)) return; // โหมด modal → reload เฉพาะตาราง
+    var url = document.querySelector('#dp-form').getAttribute('data-list-url');
+    url ? window.location.href = url : location.reload();  // fallback หน้าเต็ม
+});
+JS); ?>
+```
+- `handleFormSubmit(sel, actionUrl, successCallback)` = confirm (SweetAlert) → loading → ajax POST → ปิด modal + success toast แล้วเรียก `successCallback(response)` · ห้าม return `redirect_url` จาก controller เมื่ออยากใช้ pjax (มันจะ override การ reload)
+- `_form` **ไม่ห่อ card เอง** (modal-body มี padding แล้ว) — หน้าเต็ม create/update เป็นฝั่งที่ห่อ `card > card-body`
+- form 1 อันใช้ id คงที่ได้ (`handleFormSubmit` ใช้ `.off().on` กัน bind ซ้ำ) · ปุ่มยกเลิกใช้ `data-bs-dismiss="modal"`
+
+**Restraint:** ใช้ `.open-modal` กับ CRUD form ที่ inline ในหน้า list เท่านั้น — destructive irreversible ยังใช้ SweetAlert (ดู Destructive action) · reversible ยังใช้ undo toast
+
 ## Data Display
 
 ### Desktop (≥992px)

@@ -10,6 +10,7 @@ use app\components\UserHelper;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\attendance\models\CheckinRecordSearch;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\approveV2\models\Approve;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -207,6 +208,297 @@ class CheckinController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    /**
+     * เวลาเข้างานมาตรฐานของคนเวรปกติ (normal) — ใช้เกณฑ์เดียวกับรายงาน export เดิม
+     */
+    const SHIFT_START_NORMAL = '08:30';
+
+    /**
+     * สรุปการลงเวลารายเดือน (matrix) — บุคลากรปฏิบัติราชการ × วันที่ 1..สิ้นเดือน
+     * เลือกเดือน/ปี (พ.ศ.) + กรองกลุ่มงาน/ฝ่ายงาน + สรุปรวมมาสาย + ส่งออก Excel
+     * admin/hr เท่านั้น
+     */
+    public function actionMonthly($month = null, $year = null, $group = null, $unit = null)
+    {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+            throw new \yii\web\ForbiddenHttpException('หน้านี้สำหรับผู้ดูแลระบบเท่านั้น');
+        }
+        $month = $this->clampMonth($month);
+        $yearCE = $this->clampYearCE($year);
+        $data = $this->buildMonthlyMatrix($month, $yearCE, $group, $unit);
+
+        return $this->render('monthly', array_merge($data, [
+            'groups' => $this->orgOptions(1),
+            'units' => $this->orgOptions(2),
+            'selGroup' => $group !== null && $group !== '' ? (int)$group : null,
+            'selUnit' => $unit !== null && $unit !== '' ? (int)$unit : null,
+        ]));
+    }
+
+    /**
+     * ส่งออกสรุปรายเดือน (matrix) เป็น Excel — ใช้ข้อมูลชุดเดียวกับ actionMonthly
+     */
+    public function actionMonthlyExcel($month = null, $year = null, $group = null, $unit = null)
+    {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+            throw new \yii\web\ForbiddenHttpException('การส่งออกรายงานสำหรับผู้ดูแลระบบเท่านั้น');
+        }
+        $month = $this->clampMonth($month);
+        $yearCE = $this->clampYearCE($year);
+        $data = $this->buildMonthlyMatrix($month, $yearCE, $group, $unit);
+        $rows = $data['rows'];
+        $days = $data['daysInMonth'];
+        $monthName = $data['monthName'];
+        $yearBE = $data['yearBE'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('สรุปลงเวลา');
+
+        $lastColIdx = 3 + $days + 1; // ลำดับ, ชื่อ, ตำแหน่ง, วัน 1..N, รวมสาย
+        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
+
+        $sheet->mergeCells('A1:' . $lastCol . '1');
+        $sheet->setCellValue('A1', 'สรุปการลงเวลาเข้างาน เดือน' . $monthName . ' พ.ศ. ' . $yearBE);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // header
+        $sheet->setCellValue('A2', 'ลำดับ');
+        $sheet->setCellValue('B2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('C2', 'ตำแหน่ง');
+        for ($d = 1; $d <= $days; $d++) {
+            $sheet->setCellValueByColumnAndRow(3 + $d, 2, $d);
+        }
+        $sheet->setCellValue($lastCol . '2', 'รวมสาย');
+        $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D9E1F2']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+
+        $r = 3;
+        foreach ($rows as $idx => $row) {
+            $sheet->setCellValue('A' . $r, $idx + 1);
+            $sheet->setCellValue('B' . $r, $row['name']);
+            $sheet->setCellValue('C' . $r, $row['position']);
+            for ($d = 1; $d <= $days; $d++) {
+                $cell = $row['cells'][$d];
+                $col = 3 + $d;
+                $val = '';
+                switch ($cell['state']) {
+                    case 'ontime': $val = $cell['time']; break;
+                    case 'late': $val = $cell['time']; break;
+                    case 'shift': $val = $cell['time']; break;
+                    case 'absent': $val = '-'; break;
+                    default: $val = ''; break; // weekend / future
+                }
+                $sheet->setCellValueByColumnAndRow($col, $r, $val);
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                if ($cell['state'] === 'late') {
+                    $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FDE7C7');
+                    $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('B45309');
+                } elseif ($cell['state'] === 'weekend') {
+                    $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
+                }
+            }
+            $sheet->setCellValue($lastCol . $r, $row['lateCount']);
+            if ($row['lateCount'] > 0) {
+                $sheet->getStyle($lastCol . $r)->getFont()->setBold(true)->getColor()->setRGB('B45309');
+            }
+            $r++;
+        }
+        if ($r > 3) {
+            $sheet->getStyle('A2:' . $lastCol . ($r - 1))->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $sheet->getStyle('D3:' . $lastCol . ($r - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+        $sheet->getColumnDimension('A')->setWidth(6);
+        $sheet->getColumnDimension('B')->setWidth(26);
+        $sheet->getColumnDimension('C')->setWidth(22);
+        for ($d = 1; $d <= $days; $d++) {
+            $sheet->getColumnDimensionByColumn(3 + $d)->setWidth(6);
+        }
+        $sheet->getColumnDimension($lastCol)->setWidth(9);
+        $sheet->freezePane('D3');
+
+        $dir = Yii::getAlias('@webroot/downloads');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $filename = 'attendance-monthly-' . $yearCE . sprintf('%02d', $month) . '-' . date('His') . '.xlsx';
+        $filePath = $dir . '/' . $filename;
+        (new Xlsx($spreadsheet))->save($filePath);
+        if (file_exists($filePath)) {
+            return Yii::$app->response->sendFile($filePath, $filename, ['inline' => false]);
+        }
+        throw new \yii\web\ServerErrorHttpException('สร้างไฟล์ไม่สำเร็จ');
+    }
+
+    /** เดือน 1-12 (default = เดือนปัจจุบัน) */
+    private function clampMonth($month): int
+    {
+        $m = (int)$month;
+        return ($m >= 1 && $m <= 12) ? $m : (int)date('n');
+    }
+
+    /** ปี ค.ศ. จาก input พ.ศ. (default = ปีปัจจุบัน); รับ พ.ศ. เท่านั้น */
+    private function clampYearCE($year): int
+    {
+        $y = (int)$year;
+        if ($y >= 2500 && $y <= 2600) {
+            return $y - 543;
+        }
+        return (int)date('Y');
+    }
+
+    /** รายการ organization node ตาม lvl (1 = กลุ่มงาน, 2 = ฝ่าย/หน่วยงาน) => [id => name] */
+    private function orgOptions(int $lvl): array
+    {
+        $out = [];
+        try {
+            $nodes = Organization::find()->where(['lvl' => $lvl])->orderBy(['lft' => SORT_ASC])->all();
+            foreach ($nodes as $n) {
+                $out[(int)$n->id] = $n->name;
+            }
+        } catch (\Throwable $e) {
+        }
+        return $out;
+    }
+
+    /** id ของ node ที่เลือก + ลูกหลานทั้งหมด (nested set) สำหรับกรอง department */
+    private function orgSubtreeIds($nodeId): ?array
+    {
+        $node = Organization::findOne((int)$nodeId);
+        if (!$node) {
+            return null;
+        }
+        return Organization::find()
+            ->select('id')
+            ->where(['root' => $node->root])
+            ->andWhere(['>=', 'lft', $node->lft])
+            ->andWhere(['<=', 'rgt', $node->rgt])
+            ->column();
+    }
+
+    /**
+     * สร้างข้อมูล matrix สรุปรายเดือน (ใช้ร่วมกันระหว่าง view และ Excel)
+     * @return array{rows:array,daysInMonth:int,month:int,monthName:string,yearCE:int,yearBE:int,weekends:array,totalLate:int}
+     */
+    private function buildMonthlyMatrix(int $month, int $yearCE, $groupId, $unitId): array
+    {
+        $monthStart = sprintf('%04d-%02d-01 00:00:00', $yearCE, $month);
+        $daysInMonth = (int)date('t', strtotime($monthStart));
+        $monthEnd = sprintf('%04d-%02d-%02d 23:59:59', $yearCE, $month, $daysInMonth);
+        $today = date('Y-m-d');
+
+        // วันหยุดเสาร์-อาทิตย์
+        $weekends = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $w = (int)date('w', strtotime(sprintf('%04d-%02d-%02d', $yearCE, $month, $d)));
+            $weekends[$d] = ($w === 0 || $w === 6);
+        }
+
+        // department ที่ต้องกรอง (ฝ่ายชนะกลุ่ม ถ้าเลือกทั้งคู่)
+        $deptIds = null;
+        if ($unitId !== null && $unitId !== '') {
+            $deptIds = $this->orgSubtreeIds($unitId);
+        } elseif ($groupId !== null && $groupId !== '') {
+            $deptIds = $this->orgSubtreeIds($groupId);
+        }
+
+        $empQuery = Employees::find()
+            ->andWhere(['branch' => 'MAIN', 'status' => '1'])
+            ->andWhere(['not', ['id' => 1]]);
+        if ($deptIds !== null) {
+            $empQuery->andWhere(['department' => $deptIds]);
+        }
+        $emps = $empQuery->orderBy(['department' => SORT_ASC, 'fname' => SORT_ASC, 'lname' => SORT_ASC])->all();
+        $empIds = array_map(static fn($e) => (int)$e->id, $emps);
+
+        // prefetch การลงเวลา (เข้า) ของทั้งเดือน — เก็บเวลาเข้าเร็วสุดต่อวัน
+        $map = [];
+        if (!empty($empIds)) {
+            $recs = CheckinRecord::find()
+                ->select(['emp_id', 'checkin_at'])
+                ->where(['check_type' => CheckinRecord::CHECK_TYPE_IN])
+                ->andWhere(['emp_id' => $empIds])
+                ->andWhere(['between', 'checkin_at', $monthStart, $monthEnd])
+                ->andWhere(['<>', 'status', CheckinRecord::STATUS_REJECTED])
+                ->orderBy(['checkin_at' => SORT_ASC])
+                ->asArray()->all();
+            foreach ($recs as $rec) {
+                $ts = strtotime($rec['checkin_at']);
+                $d = (int)date('j', $ts);
+                $eid = (int)$rec['emp_id'];
+                if (!isset($map[$eid][$d])) {
+                    $map[$eid][$d] = date('H:i', $ts); // เร็วสุดของวัน (ordered ASC)
+                }
+            }
+        }
+
+        $rows = [];
+        $totalLate = 0;
+        foreach ($emps as $emp) {
+            $shift = $emp->work_shift ?: 'normal';
+            $cells = [];
+            $lateCount = 0;
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $dateStr = sprintf('%04d-%02d-%02d', $yearCE, $month, $d);
+                $time = $map[(int)$emp->id][$d] ?? null;
+                if ($time !== null) {
+                    if ($shift === 'shift') {
+                        $state = 'shift'; // เวรหมุน — ไม่ประเมินสาย
+                    } else {
+                        $state = ($time > self::SHIFT_START_NORMAL) ? 'late' : 'ontime';
+                        if ($state === 'late') {
+                            $lateCount++;
+                        }
+                    }
+                } else {
+                    if ($weekends[$d]) {
+                        $state = 'weekend';
+                    } elseif ($dateStr > $today) {
+                        $state = 'future';
+                    } else {
+                        $state = 'absent';
+                    }
+                }
+                $cells[$d] = ['state' => $state, 'time' => $time];
+            }
+            $pos = '';
+            try {
+                $pos = $emp->positionName ? (string)$emp->positionName->title : '';
+            } catch (\Throwable $e) {
+            }
+            $totalLate += $lateCount;
+            $rows[] = [
+                'id' => (int)$emp->id,
+                'name' => trim($emp->fname . ' ' . $emp->lname),
+                'position' => $pos,
+                'dept' => $emp->departmentName(),
+                'shift' => $shift,
+                'cells' => $cells,
+                'lateCount' => $lateCount,
+            ];
+        }
+
+        $thaiMonths = [1 => 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+        return [
+            'rows' => $rows,
+            'daysInMonth' => $daysInMonth,
+            'month' => $month,
+            'monthName' => $thaiMonths[$month] ?? '',
+            'yearCE' => $yearCE,
+            'yearBE' => $yearCE + 543,
+            'weekends' => $weekends,
+            'totalLate' => $totalLate,
+        ];
     }
 
     /**

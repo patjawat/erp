@@ -13,6 +13,9 @@ use yii\helpers\Url;
     <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-people"></i> ทั้งหน่วยงาน
     </a>
+    <a href="<?= Url::to(['/attendance/checkin/monthly']) ?>" class="btn <?= ($active ?? '') !== 'monthly' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-calendar3"></i> สรุปรายเดือน
+    </a>
     <a href="<?= Url::to(['/attendance/location/index']) ?>" class="btn btn-outline-primary">
         <i class="bi bi-geo-alt"></i> จุดลงเวลา
     </a>

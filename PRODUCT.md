@@ -56,6 +56,15 @@ product
 - retrieval: `Uploads::find()->where(['ref' => $model->ref, 'name' => $slot])`; serve ผ่าน `/filemanager/uploads/show?id=` หรือ `get-image?id=`
 - ต้นแบบ: `modules/hr/models/Employees.php` (`ShowAvatar()`) + `modules/medsop` (cover/step media)
 
+### 3. CRUD ในหน้า list = เปิดฟอร์มด้วย AJAX modal (`.open-modal`) — ค่าเริ่มต้น
+
+> **คำสั่งลัด:** เมื่อผู้ใช้บอกว่า **"crud ajax"** (หรือ "ทำเป็น modal / เปิดในโมดัล") ให้ใช้ pattern นี้เป็นค่าเริ่มต้นทันที ไม่ต้องถามซ้ำ — เขียน view + controller + `_form` ตามโครงด้านล่าง
+
+create / edit ของ record ในหน้า list ให้เปิดฟอร์มเข้า `#main-modal` แล้ว reload เฉพาะตารางผ่าน Pjax แทนการเปลี่ยนหน้า — ใช้กลไก `.open-modal` + `handleFormSubmit` + `erpReloadPjax` ใน `web/js/erp.js` (view เรียก `open-modal`, controller ตอบ JSON, `_form` ผูก `handleFormSubmit`)
+
+- วิธีใช้เต็ม + โค้ดตัวอย่าง: [DESIGN.md](DESIGN.md) → **Interaction Patterns → AJAX modal (`.open-modal`)**
+- ต้นแบบ: `modules/am/views/depreciation-profile/` + `DepreciationProfileController`
+
 ## Design
 
 See [DESIGN.md](DESIGN.md).
