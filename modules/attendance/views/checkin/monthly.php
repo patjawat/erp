@@ -178,7 +178,7 @@ $glyph = function ($cell) {
 .att-mtx__filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:.6rem;align-items:end;padding:.9rem 1rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-1)}
 @media (max-width:820px){.att-mtx__filter-grid{grid-template-columns:1fr 1fr}.att-mtx__filter-actions{grid-column:1/-1}}
 .att-mtx .att-field{min-width:0;margin:0}
-.att-mtx .att-lbl{display:block;font-size:.78rem;font-weight:600;color:var(--ink-2);margin-bottom:.3rem}
+.att-mtx .att-lbl{display:block;font-size:.78rem;font-weight:500;color:var(--ink-2);margin-bottom:.3rem}
 .att-mtx .att-select{width:100%;min-height:40px;padding:.35rem .6rem;border:1px solid var(--line-strong);border-radius:var(--radius-sm);font-size:.88rem;color:var(--ink-1);background:var(--surface)}
 .att-mtx .att-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
 .att-mtx__filter-actions{display:flex;gap:.4rem;align-items:end;flex-wrap:wrap}
@@ -204,7 +204,7 @@ $glyph = function ($cell) {
 .att-mtx__scroll{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-1)}
 .att-mtx .mtx{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:.8rem}
 .att-mtx .mtx th,.att-mtx .mtx td{border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
-.att-mtx .mtx thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--ink-2);font-weight:600;text-align:center;padding:.35rem .2rem;vertical-align:middle}
+.att-mtx .mtx thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--ink-2);font-weight:500;text-align:center;padding:.35rem .2rem;vertical-align:middle}
 .att-mtx .mtx-day{width:32px;min-width:32px;text-align:center;padding:.4rem 0}
 .att-mtx .mtx thead .mtx-day{line-height:1.05}
 .att-mtx .mtx-day__num{display:block;font-weight:400;color:var(--ink-1);font-variant-numeric:tabular-nums}
@@ -215,15 +215,15 @@ $glyph = function ($cell) {
 /* sticky name column (left) */
 .att-mtx .mtx-name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:.45rem .7rem;min-width:210px;max-width:230px}
 .att-mtx .mtx thead .mtx-name{z-index:3;background:var(--surface-2)}
-.att-mtx .mtx-name__title{display:block;font-weight:600;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
+.att-mtx .mtx-name__title{display:block;font-weight:500;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
 .att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
-.att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:600}
+.att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:500}
 
 /* sticky summary columns (right) — รวมลา แล้ว รวมสาย (ขวาสุด) */
-.att-mtx .mtx-sum{position:sticky;z-index:1;background:var(--surface);text-align:center;min-width:60px;width:60px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-2)}
+.att-mtx .mtx-sum{position:sticky;z-index:1;background:var(--surface);text-align:center;min-width:60px;width:60px;font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink-2)}
 .att-mtx .mtx-sum--late{right:0;border-left:1px solid var(--line-strong)}
 .att-mtx .mtx-sum--leave{right:60px;border-left:1px solid var(--line)}
-.att-mtx .mtx thead .mtx-sum{z-index:3;background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.att-mtx .mtx thead .mtx-sum{z-index:3;background:var(--surface-2);color:var(--ink-2);font-weight:500}
 .att-mtx .mtx-sum--late.is-late{color:var(--warning);background:#fbe8cf}
 .att-mtx .mtx-sum--leave.is-leave{color:#6d28d9;background:#ede7f6}
 
@@ -234,7 +234,7 @@ $glyph = function ($cell) {
 .att-mtx .mtx tbody tr:hover .mtx-sum--leave.is-leave{background:#e3d9f5}
 
 /* buttons */
-.att-mtx .att-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:40px;padding:.45rem .9rem;border:1px solid transparent;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background 140ms var(--ease),border-color 140ms var(--ease)}
+.att-mtx .att-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:40px;padding:.45rem .9rem;border:1px solid transparent;border-radius:var(--radius-sm);font-size:.9rem;font-weight:500;text-decoration:none;cursor:pointer;transition:background 140ms var(--ease),border-color 140ms var(--ease)}
 .att-mtx .att-btn--sm{min-height:38px;padding:.4rem .8rem;font-size:.85rem}
 .att-mtx .att-btn--primary{background:var(--primary);color:#fff;border-color:var(--primary)}
 .att-mtx .att-btn--primary:hover{background:var(--primary-ink);border-color:var(--primary-ink)}
@@ -243,7 +243,7 @@ $glyph = function ($cell) {
 
 /* empty */
 .att-mtx__empty{padding:3rem 1.5rem;text-align:center;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-1)}
-.att-mtx__empty-title{margin:0;font-weight:600;color:var(--ink-2);font-size:1.05rem}
+.att-mtx__empty-title{margin:0;font-weight:500;color:var(--ink-2);font-size:1.05rem}
 .att-mtx__empty-sub{margin:.3rem 0 0;font-size:.88rem;color:var(--ink-3)}
 
 @media (prefers-reduced-motion:reduce){.att-mtx .att-btn{transition:none}}
