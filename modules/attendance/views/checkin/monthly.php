@@ -24,6 +24,7 @@ $glyph = function ($cell) {
         case 'ontime': return '<i class="bi bi-check2 g-ontime" title="เข้า ' . Html::encode($cell['time']) . '"></i>';
         case 'late':   return '<i class="bi bi-clock-fill g-late" title="สาย ' . Html::encode($cell['time']) . '"></i>';
         case 'shift':  return '<i class="bi bi-circle-fill g-shift" title="เวร ' . Html::encode($cell['time']) . '"></i>';
+        case 'leave':  $lv = $cell['lv'] ?? ['ab' => 'ล', 'title' => 'ลา']; return '<span class="g-leave" title="' . Html::encode($lv['title']) . '">' . Html::encode($lv['ab']) . '</span>';
         case 'absent': return '<span class="g-absent" title="ไม่มีการลงเวลา">—</span>';
         default:       return ''; // weekend / future
     }
@@ -98,11 +99,14 @@ $glyph = function ($cell) {
                 <span>บุคลากร <strong><?= $personCount ?></strong> คน</span>
                 <span class="att-mtx__dot">·</span>
                 <span>รวมมาสาย <strong class="<?= $totalLate > 0 ? 'text-late' : '' ?>"><?= $totalLate ?></strong> ครั้ง</span>
+                <span class="att-mtx__dot">·</span>
+                <span>รวมลา <strong class="<?= ($totalLeave ?? 0) > 0 ? 'text-leave' : '' ?>"><?= (int)($totalLeave ?? 0) ?></strong> วัน</span>
             </div>
             <div class="att-mtx__legend">
                 <span class="lg"><i class="bi bi-check2 g-ontime"></i> ตรงเวลา</span>
                 <span class="lg"><i class="bi bi-clock-fill g-late"></i> สาย</span>
                 <span class="lg"><i class="bi bi-circle-fill g-shift"></i> เวร</span>
+                <span class="lg"><span class="g-leave">ล</span> ลา <span class="lg-hint">(ป ป่วย · ก กิจ · พ พักผ่อน)</span></span>
                 <span class="lg"><span class="g-absent">—</span> ขาด</span>
                 <span class="lg"><span class="lg-weekend"></span> วันหยุด</span>
             </div>
@@ -127,7 +131,8 @@ $glyph = function ($cell) {
                             <span class="mtx-day__dow"><?= $dayNames[$w] ?></span>
                         </th>
                         <?php endfor; ?>
-                        <th class="mtx-sum">รวมสาย</th>
+                        <th class="mtx-sum mtx-sum--leave">รวมลา</th>
+                        <th class="mtx-sum mtx-sum--late">รวมสาย</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -143,7 +148,8 @@ $glyph = function ($cell) {
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
                         <td class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?>"><?= $glyph($row['cells'][$d]) ?></td>
                         <?php endfor; ?>
-                        <td class="mtx-sum <?= $row['lateCount'] > 0 ? 'is-late' : '' ?>"><?= $row['lateCount'] ?></td>
+                        <td class="mtx-sum mtx-sum--leave <?= $row['leaveCount'] > 0 ? 'is-leave' : '' ?>"><?= $row['leaveCount'] ?></td>
+                        <td class="mtx-sum mtx-sum--late <?= $row['lateCount'] > 0 ? 'is-late' : '' ?>"><?= $row['lateCount'] ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -165,6 +171,7 @@ $glyph = function ($cell) {
 }
 .att-mtx__shell{padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
 .att-mtx .text-late{color:var(--warning)}
+.att-mtx .text-leave{color:#6d28d9}
 
 /* filter */
 .att-mtx__filter{margin:0}
@@ -183,12 +190,14 @@ $glyph = function ($cell) {
 .att-mtx__dot{color:var(--ink-4)}
 .att-mtx__legend{display:flex;flex-wrap:wrap;gap:.75rem 1rem;font-size:.8rem;color:var(--ink-2)}
 .att-mtx__legend .lg{display:inline-flex;align-items:center;gap:.3rem}
+.att-mtx__legend .lg-hint{color:var(--ink-3);font-size:.72rem}
 .att-mtx__legend .lg-weekend{display:inline-block;width:14px;height:14px;border-radius:3px;background:var(--surface-3);border:1px solid var(--line)}
 
 /* glyphs */
 .att-mtx .g-ontime{color:var(--success)}
 .att-mtx .g-late{color:var(--warning)}
 .att-mtx .g-shift{color:var(--ink-4);font-size:.55rem;vertical-align:middle}
+.att-mtx .g-leave{color:#6d28d9;font-weight:400;font-size:.82rem}
 .att-mtx .g-absent{color:var(--ink-4)}
 
 /* matrix table */
@@ -210,15 +219,19 @@ $glyph = function ($cell) {
 .att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
 .att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:600}
 
-/* sticky summary column (right) */
-.att-mtx .mtx-sum{position:sticky;right:0;z-index:1;background:var(--surface);text-align:center;min-width:62px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-2);border-left:1px solid var(--line-strong)}
+/* sticky summary columns (right) — รวมลา แล้ว รวมสาย (ขวาสุด) */
+.att-mtx .mtx-sum{position:sticky;z-index:1;background:var(--surface);text-align:center;min-width:60px;width:60px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-2)}
+.att-mtx .mtx-sum--late{right:0;border-left:1px solid var(--line-strong)}
+.att-mtx .mtx-sum--leave{right:60px;border-left:1px solid var(--line)}
 .att-mtx .mtx thead .mtx-sum{z-index:3;background:var(--surface-2);color:var(--ink-2);font-weight:600}
-.att-mtx .mtx-sum.is-late{color:var(--warning);background:#fbe8cf}
+.att-mtx .mtx-sum--late.is-late{color:var(--warning);background:#fbe8cf}
+.att-mtx .mtx-sum--leave.is-leave{color:#6d28d9;background:#ede7f6}
 
 /* row hover keeps sticky cells in sync */
 .att-mtx .mtx tbody tr:hover td{background:var(--surface-hover)}
 .att-mtx .mtx tbody tr:hover .mtx-name,.att-mtx .mtx tbody tr:hover .mtx-sum{background:var(--surface-hover)}
-.att-mtx .mtx tbody tr:hover .mtx-sum.is-late{background:#f6ddb9}
+.att-mtx .mtx tbody tr:hover .mtx-sum--late.is-late{background:#f6ddb9}
+.att-mtx .mtx tbody tr:hover .mtx-sum--leave.is-leave{background:#e3d9f5}
 
 /* buttons */
 .att-mtx .att-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:40px;padding:.45rem .9rem;border:1px solid transparent;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background 140ms var(--ease),border-color 140ms var(--ease)}

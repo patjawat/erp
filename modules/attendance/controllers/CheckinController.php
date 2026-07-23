@@ -11,6 +11,7 @@ use app\modules\attendance\models\CheckinRecord;
 use app\modules\attendance\models\CheckinRecordSearch;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\leave\models\Leave;
 use app\modules\approveV2\models\Approve;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -257,7 +258,9 @@ class CheckinController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('สรุปลงเวลา');
 
-        $lastColIdx = 3 + $days + 1; // ลำดับ, ชื่อ, ตำแหน่ง, วัน 1..N, รวมสาย
+        $leaveColIdx = 3 + $days + 1;      // รวมลา
+        $lastColIdx = 3 + $days + 2;       // รวมสาย
+        $leaveCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($leaveColIdx);
         $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
 
         $sheet->mergeCells('A1:' . $lastCol . '1');
@@ -272,6 +275,7 @@ class CheckinController extends Controller
         for ($d = 1; $d <= $days; $d++) {
             $sheet->setCellValueByColumnAndRow(3 + $d, 2, $d);
         }
+        $sheet->setCellValue($leaveCol . '2', 'รวมลา');
         $sheet->setCellValue($lastCol . '2', 'รวมสาย');
         $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
             'font' => ['bold' => true],
@@ -293,6 +297,7 @@ class CheckinController extends Controller
                     case 'ontime': $val = $cell['time']; break;
                     case 'late': $val = $cell['time']; break;
                     case 'shift': $val = $cell['time']; break;
+                    case 'leave': $val = ($cell['lv']['ab'] ?? 'ล'); break;
                     case 'absent': $val = '-'; break;
                     default: $val = ''; break; // weekend / future
                 }
@@ -301,9 +306,16 @@ class CheckinController extends Controller
                 if ($cell['state'] === 'late') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FDE7C7');
                     $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('B45309');
+                } elseif ($cell['state'] === 'leave') {
+                    $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EDE7F6');
+                    $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('6D28D9');
                 } elseif ($cell['state'] === 'weekend') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
                 }
+            }
+            $sheet->setCellValue($leaveCol . $r, $row['leaveCount']);
+            if ($row['leaveCount'] > 0) {
+                $sheet->getStyle($leaveCol . $r)->getFont()->setBold(true)->getColor()->setRGB('6D28D9');
             }
             $sheet->setCellValue($lastCol . $r, $row['lateCount']);
             if ($row['lateCount'] > 0) {
@@ -323,6 +335,7 @@ class CheckinController extends Controller
         for ($d = 1; $d <= $days; $d++) {
             $sheet->getColumnDimensionByColumn(3 + $d)->setWidth(6);
         }
+        $sheet->getColumnDimension($leaveCol)->setWidth(9);
         $sheet->getColumnDimension($lastCol)->setWidth(9);
         $sheet->freezePane('D3');
 
@@ -394,6 +407,8 @@ class CheckinController extends Controller
         $monthStart = sprintf('%04d-%02d-01 00:00:00', $yearCE, $month);
         $daysInMonth = (int)date('t', strtotime($monthStart));
         $monthEnd = sprintf('%04d-%02d-%02d 23:59:59', $yearCE, $month, $daysInMonth);
+        $monthStartDate = sprintf('%04d-%02d-01', $yearCE, $month);
+        $monthEndDate = sprintf('%04d-%02d-%02d', $yearCE, $month, $daysInMonth);
         $today = date('Y-m-d');
 
         // วันหยุดเสาร์-อาทิตย์
@@ -441,15 +456,73 @@ class CheckinController extends Controller
             }
         }
 
+        // map ประเภทการลา code => [ตัวย่อ, ชื่อเต็ม] (ย่อจาก title ด้วย keyword)
+        $leaveTypeAbbr = [];
+        $leaveTypeTitle = [];
+        try {
+            $lts = (new \yii\db\Query())->select(['code', 'title'])->from('categorise')
+                ->where(['name' => 'leave_type'])->all();
+            foreach ($lts as $lt) {
+                $title = (string)$lt['title'];
+                $leaveTypeTitle[$lt['code']] = $title;
+                $ab = 'ล';
+                if (mb_strpos($title, 'ป่วย') !== false) {
+                    $ab = 'ป';
+                } elseif (mb_strpos($title, 'กิจ') !== false) {
+                    $ab = 'ก';
+                } elseif (mb_strpos($title, 'พักผ่อน') !== false) {
+                    $ab = 'พ';
+                } elseif (mb_strpos($title, 'คลอด') !== false) {
+                    $ab = 'ค';
+                }
+                $leaveTypeAbbr[$lt['code']] = $ab;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // prefetch ใบลาที่อนุมัติแล้ว (status = Approve, ยังไม่ถูกลบ) — map เป็นรายวัน + ประเภท
+        $leaveMap = [];
+        if (!empty($empIds)) {
+            try {
+                $leaves = Leave::find()
+                    ->select(['emp_id', 'date_start', 'date_end', 'leave_type_id'])
+                    ->where(['status' => 'Approve'])
+                    ->andWhere(['emp_id' => $empIds])
+                    ->andWhere(['deleted_at' => null])
+                    ->andWhere(['<=', 'date_start', $monthEndDate])
+                    ->andWhere(['>=', 'date_end', $monthStartDate])
+                    ->asArray()->all();
+                $mLo = strtotime($monthStartDate);
+                $mHi = strtotime($monthEndDate);
+                foreach ($leaves as $lv) {
+                    if (empty($lv['date_start'])) {
+                        continue;
+                    }
+                    $code = (string)($lv['leave_type_id'] ?? '');
+                    $info = ['ab' => $leaveTypeAbbr[$code] ?? 'ล', 'title' => $leaveTypeTitle[$code] ?? 'ลา'];
+                    $lo = max(strtotime($lv['date_start']), $mLo);
+                    $hi = min(strtotime($lv['date_end'] ?: $lv['date_start']), $mHi);
+                    for ($t = $lo; $t <= $hi; $t += 86400) {
+                        $leaveMap[(int)$lv['emp_id']][(int)date('j', $t)] = $info;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ตาราง leave ยังไม่มี / โครงสร้างต่าง — ข้ามการแสดงลา
+            }
+        }
+
         $rows = [];
         $totalLate = 0;
+        $totalLeave = 0;
         foreach ($emps as $emp) {
             $shift = $emp->work_shift ?: 'normal';
             $cells = [];
             $lateCount = 0;
+            $leaveCount = 0;
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf('%04d-%02d-%02d', $yearCE, $month, $d);
                 $time = $map[(int)$emp->id][$d] ?? null;
+                $lv = null;
                 if ($time !== null) {
                     if ($shift === 'shift') {
                         $state = 'shift'; // เวรหมุน — ไม่ประเมินสาย
@@ -462,13 +535,17 @@ class CheckinController extends Controller
                 } else {
                     if ($weekends[$d]) {
                         $state = 'weekend';
+                    } elseif (isset($leaveMap[(int)$emp->id][$d])) {
+                        $state = 'leave';
+                        $lv = $leaveMap[(int)$emp->id][$d];
+                        $leaveCount++;
                     } elseif ($dateStr > $today) {
                         $state = 'future';
                     } else {
                         $state = 'absent';
                     }
                 }
-                $cells[$d] = ['state' => $state, 'time' => $time];
+                $cells[$d] = ['state' => $state, 'time' => $time, 'lv' => $lv];
             }
             $pos = '';
             try {
@@ -476,6 +553,7 @@ class CheckinController extends Controller
             } catch (\Throwable $e) {
             }
             $totalLate += $lateCount;
+            $totalLeave += $leaveCount;
             $rows[] = [
                 'id' => (int)$emp->id,
                 'name' => trim($emp->fname . ' ' . $emp->lname),
@@ -484,6 +562,7 @@ class CheckinController extends Controller
                 'shift' => $shift,
                 'cells' => $cells,
                 'lateCount' => $lateCount,
+                'leaveCount' => $leaveCount,
             ];
         }
 
@@ -498,6 +577,7 @@ class CheckinController extends Controller
             'yearBE' => $yearCE + 543,
             'weekends' => $weekends,
             'totalLate' => $totalLate,
+            'totalLeave' => $totalLeave,
         ];
     }
 
