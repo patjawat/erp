@@ -12,6 +12,7 @@ use app\modules\attendance\models\CheckinRecordSearch;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\leave\models\Leave;
+use app\modules\filemanager\models\Uploads;
 use app\modules\approveV2\models\Approve;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -309,6 +310,8 @@ class CheckinController extends Controller
                 } elseif ($cell['state'] === 'leave') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EDE7F6');
                     $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('6D28D9');
+                } elseif ($cell['state'] === 'holiday') {
+                    $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FBE4EC');
                 } elseif ($cell['state'] === 'weekend') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
                 }
@@ -418,6 +421,30 @@ class CheckinController extends Controller
             $weekends[$d] = ($w === 0 || $w === 6);
         }
 
+        // วันหยุดนักขัตฤกษ์ (calendar name='holiday', date_start/date_end = Y-m-d) — day => ชื่อวันหยุด
+        $holidays = [];
+        try {
+            $hs = (new \yii\db\Query())->select(['title', 'date_start', 'date_end'])->from('calendar')
+                ->where(['name' => 'holiday'])
+                ->andWhere(['deleted_at' => null])
+                ->andWhere(['<=', 'date_start', $monthEndDate])
+                ->andWhere(['or', ['date_end' => null], ['>=', 'date_end', $monthStartDate]])
+                ->all();
+            $mLo = strtotime($monthStartDate);
+            $mHi = strtotime($monthEndDate);
+            foreach ($hs as $h) {
+                if (empty($h['date_start'])) {
+                    continue;
+                }
+                $lo = max(strtotime($h['date_start']), $mLo);
+                $hi = min(strtotime($h['date_end'] ?: $h['date_start']), $mHi);
+                for ($t = $lo; $t <= $hi; $t += 86400) {
+                    $holidays[(int)date('j', $t)] = (string)$h['title'];
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
         // department ที่ต้องกรอง (ฝ่ายชนะกลุ่ม ถ้าเลือกทั้งคู่)
         $deptIds = null;
         if ($unitId !== null && $unitId !== '') {
@@ -434,6 +461,22 @@ class CheckinController extends Controller
         }
         $emps = $empQuery->orderBy(['department' => SORT_ASC, 'fname' => SORT_ASC, 'lname' => SORT_ASC])->all();
         $empIds = array_map(static fn($e) => (int)$e->id, $emps);
+
+        // batch prefetch avatar (กัน N+1) — ref => upload id
+        $avatarByRef = [];
+        try {
+            $refs = array_values(array_filter(array_map(static fn($e) => $e->ref, $emps)));
+            if (!empty($refs)) {
+                $ups = Uploads::find()->select(['id', 'ref'])
+                    ->where(['name' => 'avatar'])->andWhere(['ref' => $refs])
+                    ->asArray()->all();
+                foreach ($ups as $u) {
+                    $avatarByRef[$u['ref']] = (int)$u['id'];
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+        $placeholderAvatar = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
 
         // prefetch การลงเวลา (เข้า) ของทั้งเดือน — เก็บเวลาเข้าเร็วสุดต่อวัน
         $map = [];
@@ -535,6 +578,8 @@ class CheckinController extends Controller
                 } else {
                     if ($weekends[$d]) {
                         $state = 'weekend';
+                    } elseif (isset($holidays[$d])) {
+                        $state = 'holiday'; // วันหยุดนักขัตฤกษ์ — ไม่นับขาด
                     } elseif (isset($leaveMap[(int)$emp->id][$d])) {
                         $state = 'leave';
                         $lv = $leaveMap[(int)$emp->id][$d];
@@ -552,12 +597,16 @@ class CheckinController extends Controller
                 $pos = $emp->positionName ? (string)$emp->positionName->title : '';
             } catch (\Throwable $e) {
             }
+            $avatar = (!empty($emp->ref) && isset($avatarByRef[$emp->ref]))
+                ? \yii\helpers\Url::to(['/filemanager/uploads/get-image', 'id' => $avatarByRef[$emp->ref]])
+                : $placeholderAvatar;
             $totalLate += $lateCount;
             $totalLeave += $leaveCount;
             $rows[] = [
                 'id' => (int)$emp->id,
                 'name' => trim($emp->fname . ' ' . $emp->lname),
                 'position' => $pos,
+                'avatar' => $avatar,
                 'dept' => $emp->departmentName(),
                 'shift' => $shift,
                 'cells' => $cells,
@@ -576,6 +625,7 @@ class CheckinController extends Controller
             'yearCE' => $yearCE,
             'yearBE' => $yearCE + 543,
             'weekends' => $weekends,
+            'holidays' => $holidays,
             'totalLate' => $totalLate,
             'totalLeave' => $totalLeave,
         ];

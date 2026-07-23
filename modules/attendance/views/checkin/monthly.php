@@ -108,7 +108,8 @@ $glyph = function ($cell) {
                 <span class="lg"><i class="bi bi-circle-fill g-shift"></i> เวร</span>
                 <span class="lg"><span class="g-leave">ล</span> ลา <span class="lg-hint">(ป ป่วย · ก กิจ · พ พักผ่อน)</span></span>
                 <span class="lg"><span class="g-absent">—</span> ขาด</span>
-                <span class="lg"><span class="lg-weekend"></span> วันหยุด</span>
+                <span class="lg"><span class="lg-weekend"></span> เสาร์-อาทิตย์</span>
+                <span class="lg"><span class="lg-holiday"></span> วันหยุดนักขัตฤกษ์</span>
             </div>
         </div>
 
@@ -125,10 +126,10 @@ $glyph = function ($cell) {
                     <tr>
                         <th class="mtx-name">รายชื่อ (<?= $personCount ?>)</th>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
-                        <?php $w = (int)date('w', strtotime(sprintf('%04d-%02d-%02d', $yearCE, $month, $d))); ?>
-                        <th class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?>">
+                        <?php $w = (int)date('w', strtotime(sprintf('%04d-%02d-%02d', $yearCE, $month, $d))); $isHol = isset($holidays[$d]); ?>
+                        <th class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?> <?= $isHol ? 'is-holiday' : '' ?>"<?= $isHol ? ' title="' . Html::encode($holidays[$d]) . '"' : '' ?>>
                             <span class="mtx-day__num"><?= $d ?></span>
-                            <span class="mtx-day__dow"><?= $dayNames[$w] ?></span>
+                            <span class="mtx-day__dow"><?= $isHol ? '<span class="mtx-day__hol" aria-hidden="true">●</span>' : $dayNames[$w] ?></span>
                         </th>
                         <?php endfor; ?>
                         <th class="mtx-sum mtx-sum--leave">รวมลา</th>
@@ -139,14 +140,19 @@ $glyph = function ($cell) {
                     <?php foreach ($rows as $row): ?>
                     <tr>
                         <td class="mtx-name">
-                            <span class="mtx-name__title"><?= Html::encode($row['name']) ?></span>
-                            <span class="mtx-name__sub">
-                                <?= $row['position'] !== '' ? Html::encode($row['position']) : '<span class="text-muted">—</span>' ?>
-                                <?php if ($row['shift'] === 'shift'): ?><span class="mtx-tag">เวร</span><?php endif; ?>
-                            </span>
+                            <div class="mtx-person">
+                                <img class="mtx-avatar" src="<?= Html::encode($row['avatar']) ?>" alt="" loading="lazy">
+                                <div class="mtx-person__body">
+                                    <span class="mtx-name__title"><?= Html::encode($row['name']) ?></span>
+                                    <span class="mtx-name__sub">
+                                        <?= $row['position'] !== '' ? Html::encode($row['position']) : '<span class="text-muted">—</span>' ?>
+                                        <?php if ($row['shift'] === 'shift'): ?><span class="mtx-tag">เวร</span><?php endif; ?>
+                                    </span>
+                                </div>
+                            </div>
                         </td>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
-                        <td class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?>"><?= $glyph($row['cells'][$d]) ?></td>
+                        <td class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?> <?= isset($holidays[$d]) ? 'is-holiday' : '' ?>"><?= $glyph($row['cells'][$d]) ?></td>
                         <?php endfor; ?>
                         <td class="mtx-sum mtx-sum--leave <?= $row['leaveCount'] > 0 ? 'is-leave' : '' ?>"><?= $row['leaveCount'] ?></td>
                         <td class="mtx-sum mtx-sum--late <?= $row['lateCount'] > 0 ? 'is-late' : '' ?>"><?= $row['lateCount'] ?></td>
@@ -192,6 +198,7 @@ $glyph = function ($cell) {
 .att-mtx__legend .lg{display:inline-flex;align-items:center;gap:.3rem}
 .att-mtx__legend .lg-hint{color:var(--ink-3);font-size:.72rem}
 .att-mtx__legend .lg-weekend{display:inline-block;width:14px;height:14px;border-radius:3px;background:var(--surface-3);border:1px solid var(--line)}
+.att-mtx__legend .lg-holiday{display:inline-block;width:14px;height:14px;border-radius:3px;background:#fbe1ea;border:1px solid #f4c9d8}
 
 /* glyphs */
 .att-mtx .g-ontime{color:var(--success)}
@@ -211,12 +218,19 @@ $glyph = function ($cell) {
 .att-mtx .mtx-day__dow{display:block;font-size:.62rem;color:var(--ink-3)}
 .att-mtx .mtx th.is-weekend{background:var(--surface-3)}
 .att-mtx .mtx td.is-weekend{background:var(--surface-2)}
+.att-mtx .mtx th.is-holiday{background:#fbe1ea}
+.att-mtx .mtx td.is-holiday{background:#fdeef3}
+.att-mtx .mtx th.is-holiday .mtx-day__num{color:#be123c}
+.att-mtx .mtx-day__hol{color:#be123c;font-size:.5rem;line-height:1;display:inline-block}
 
 /* sticky name column (left) */
-.att-mtx .mtx-name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:.45rem .7rem;min-width:210px;max-width:230px}
+.att-mtx .mtx-name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:.4rem .7rem;min-width:228px;max-width:248px}
 .att-mtx .mtx thead .mtx-name{z-index:3;background:var(--surface-2)}
-.att-mtx .mtx-name__title{display:block;font-weight:500;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
-.att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:214px}
+.att-mtx .mtx-person{display:flex;align-items:center;gap:.55rem;min-width:0}
+.att-mtx .mtx-avatar{width:32px;height:32px;flex:none;border-radius:50%;object-fit:cover;background:var(--surface-3);border:1px solid var(--line)}
+.att-mtx .mtx-person__body{min-width:0;display:flex;flex-direction:column}
+.att-mtx .mtx-name__title{display:block;font-weight:600;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
+.att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
 .att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:500}
 
 /* sticky summary columns (right) — รวมลา แล้ว รวมสาย (ขวาสุด) */
