@@ -25,9 +25,10 @@ class DepreciationBindingController extends Controller
 
     /**
      * ระดับ "ประเภทหลัก" (asset_type) แสดงเฉพาะกลุ่มที่คิดค่าเสื่อม:
-     * ครุภัณฑ์ (EQUIP) + สิ่งปลูกสร้าง (STRUCT) — ตัดวัสดุ (MATER)/อาคาร (BLDG)/ไม่มีตัวตน (INTAN)/ไม่ระบุ ออก
+     * อาคาร (BLDG) + ครุภัณฑ์ (EQUIP) + สิ่งก่อสร้าง (STRUCT) — ตัดวัสดุ (MATER)/ไม่มีตัวตน (INTAN)/ไม่ระบุ ออก
+     * (อาคารถาวรคิดค่าเสื่อม; ที่ดินไม่คิด — ไม่มีในกลุ่มนี้)
      */
-    private const DEPRECIABLE_TYPE_GROUPS = ['EQUIP', 'STRUCT'];
+    private const DEPRECIABLE_TYPE_GROUPS = ['BLDG', 'EQUIP', 'STRUCT'];
 
     public function behaviors()
     {
@@ -38,7 +39,7 @@ class DepreciationBindingController extends Controller
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['set' => ['POST']],
+                'actions' => ['set' => ['POST'], 'bulk-set' => ['POST']],
             ],
         ]);
     }
@@ -161,6 +162,83 @@ class DepreciationBindingController extends Controller
         Yii::$app->session->setFlash('success', $msg);
 
         return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
+    }
+
+    /**
+     * ผูก/ล้างเกณฑ์ให้หลายรายการพร้อมกัน (bulk)
+     * profile_id: id ของเกณฑ์ · '0' = ล้างการผูก · '' = ไม่ระบุ (ถือเป็น error)
+     * ตอบ JSON เมื่อเรียกผ่าน ajax (pjax reload) และ redirect เมื่อเป็น request ปกติ
+     */
+    public function actionBulkSet()
+    {
+        $req = Yii::$app->request;
+        $level = $req->post('level');
+        $ids = array_values(array_filter(
+            array_map('intval', (array) $req->post('ids', [])),
+            static fn($i) => $i > 0
+        ));
+        $ids = array_values(array_unique($ids));
+        $profileId = $req->post('profile_id');
+        $clear = ($profileId === '0' || $profileId === 0);
+        $wantId = (!$clear && $profileId !== '' && $profileId !== null) ? (int) $profileId : null;
+
+        $backUrl = ['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')];
+
+        // validate
+        $error = null;
+        if (empty($ids)) {
+            $error = 'ยังไม่ได้เลือกรายการ';
+        } elseif (!$clear && $wantId === null) {
+            $error = 'กรุณาเลือกเกณฑ์ที่จะกำหนด';
+        } elseif ($wantId !== null && !DepreciationProfile::find()->where(['id' => $wantId])->exists()) {
+            $error = 'ไม่พบเกณฑ์ที่เลือก';
+        }
+        if ($error !== null) {
+            if ($req->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['status' => 'error', 'message' => $error];
+            }
+            Yii::$app->session->setFlash('error', $error);
+            return $this->redirect($backUrl);
+        }
+
+        // อ่านค่าเดิมทีละแถว (data_json อาจ double-encoded — JSON_SET ใช้ไม่ได้) แล้วเขียนกลับ
+        $rows = (new Query())->select(['id', 'data_json'])->from('{{%categorise}}')
+            ->where(['id' => $ids])->all();
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($rows as $row) {
+                $dj = DepreciationProfileResolver::decodeDataJson($row['data_json']);
+                if ($clear) {
+                    unset($dj['depreciation_profile_id']);
+                } else {
+                    $dj['depreciation_profile_id'] = $wantId;
+                }
+                Yii::$app->db->createCommand()
+                    ->update('{{%categorise}}',
+                        ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
+                        ['id' => $row['id']])
+                    ->execute();
+            }
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            if ($req->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ: ' . $e->getMessage()];
+            }
+            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ');
+            return $this->redirect($backUrl);
+        }
+
+        $n = count($rows);
+        $msg = $clear ? "ล้างการผูกเกณฑ์ {$n} รายการเรียบร้อย" : "ผูกเกณฑ์ให้ {$n} รายการเรียบร้อย";
+        if ($req->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['status' => 'success', 'message' => $msg, 'container' => '#dp-binding-container'];
+        }
+        Yii::$app->session->setFlash('success', $msg);
+        return $this->redirect($backUrl);
     }
 
     private static function extractProfileId($dataJson): ?int

@@ -24,5 +24,7 @@ $this->beginBlock('action'); ?>
     <div class="alert alert-info small">
         <i data-lucide="info"></i> การแก้เกณฑ์นี้จะไม่เปลี่ยน snapshot ของทรัพย์สินที่ขึ้นทะเบียนไปแล้ว หากต้องการเกณฑ์ใหม่ที่ต่างจากเดิมอย่างมีนัยสำคัญ แนะนำให้สร้างเกณฑ์ใหม่แทน
     </div>
-    <?= $this->render('_form', ['model' => $model]) ?>
+    <div class="card"><div class="card-body">
+        <?= $this->render('_form', ['model' => $model]) ?>
+    </div></div>
 </div>

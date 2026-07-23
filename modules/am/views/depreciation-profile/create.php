@@ -21,5 +21,7 @@ $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/am/menu', ['active' => 'depreciation']) ?>
 <?php $this->endBlock(); ?>
 <div class="container-fluid py-3">
-    <?= $this->render('_form', ['model' => $model]) ?>
+    <div class="card"><div class="card-body">
+        <?= $this->render('_form', ['model' => $model]) ?>
+    </div></div>
 </div>
