@@ -7,12 +7,12 @@ use yii\helpers\Url;
         <i class="bi bi-clock-history"></i> ลงเวลา
     </a>
     <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="btn <?= ($active ?? '') !== 'history' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-list-ul"></i> ประวัติ
-    </a>
-    <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-graph-up"></i> รายงาน
+        <i class="bi bi-list-ul"></i> ประวัติของฉัน
     </a>
     <?php if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr')): ?>
+    <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-people"></i> ทั้งหน่วยงาน
+    </a>
     <a href="<?= Url::to(['/attendance/location/index']) ?>" class="btn btn-outline-primary">
         <i class="bi bi-geo-alt"></i> จุดลงเวลา
     </a>

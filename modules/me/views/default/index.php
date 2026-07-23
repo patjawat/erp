@@ -341,16 +341,16 @@ if (!empty($upcomingHealth)): ?>
                             <circle cx="12" cy="12" r="10"></circle>
                         </svg> ลงเวลาเข้า-ออก</p>
                     <span id="current-time" class="text-white fw-black mb-2 lh-1 d-block" style="font-size: 2.75rem; letter-spacing: 0.02em;">00:00:00</span>
-                    <p class="text-white text-opacity-90 small mb-2">ลงเวลาแล้ว <span id="today-checkin-count" class="fw-bold"><?= $todayCheckinCount ?></span> ครั้งวันนี้</p>
-                    <div class="d-flex gap-2 mb-3 w-100">
-                        <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1 active bg-white bg-opacity-25" data-check-type="in">เข้า</button>
-                        <button type="button" class="btn btn-sm flex-grow-1 rounded-pill me-check-type-btn border border-white border-opacity-50 text-white py-1" data-check-type="out">ออก</button>
-                    </div>
-                    <a id="btn-clock-in" href="<?= Url::to(['/attendance/default/checkin']) ?>" class="btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1 text-decoration-none" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;"><span id="me-btn-checkin-label">ลงเวลาเข้า</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
+                    <?php if ($todayCheckinCount > 0): ?>
+                    <p class="text-white text-opacity-90 small mb-3">ลงเวลาแล้ว <span id="today-checkin-count" class="fw-bold"><?= $todayCheckinCount ?></span> ครั้งวันนี้</p>
+                    <?php else: ?>
+                    <p class="text-white text-opacity-75 small mb-3"><span id="today-checkin-count" class="d-none">0</span>ยังไม่ได้ลงเวลาวันนี้</p>
+                    <?php endif; ?>
+                    <a id="btn-clock-in" href="<?= Url::to(['/attendance/default/checkin-modal']) ?>" data-size="modal-md" class="open-modal btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1 text-decoration-none" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">ลงเวลา <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
                             <path d="M7 7h10v10"></path>
                             <path d="M7 17 17 7"></path>
                         </svg></a>
-                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-2 d-block">ประวัติลงเวลา</a>
+                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-2 d-block">ประวัติ</a>
                 </div>
             </div>
         </div>
@@ -797,16 +797,7 @@ $js = <<< JS
     // ตั้งเวลาให้ทำงานทุกๆ 1 วินาที
     setInterval(updateClock, 1000);
 
-    // ปุ่มเข้า/ออก อัปเดตข้อความและลิงก์ไปหน้ารายการลงเวลา
-    var meCheckType = 'in';
-    var checkinPageUrl = $(document).find('#btn-clock-in').attr('href') || '/attendance/default/checkin';
-    $('.me-check-type-btn').on('click', function() {
-        meCheckType = $(this).data('check-type');
-        $('.me-check-type-btn').removeClass('active bg-white bg-opacity-25').addClass('text-white');
-        $(this).addClass('active bg-white bg-opacity-25').removeClass('text-white');
-        $('#me-btn-checkin-label').text(meCheckType === 'in' ? 'ลงเวลาเข้า' : 'ลงเวลาออก');
-        $('#btn-clock-in').attr('href', checkinPageUrl + (checkinPageUrl.indexOf('?') >= 0 ? '&' : '?') + 'check_type=' + meCheckType);
-    });
+    // เลือกเข้า/ออกไปทำใน modal ลงเวลา (.open-modal) แล้ว — การ์ดนี้เหลือปุ่มลงเวลาปุ่มเดียว
     });
     
 // --- ส่วนงานอัปโหลดรูปภาพ ---

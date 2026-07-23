@@ -122,6 +122,38 @@ class DefaultController extends Controller
     }
 
     /**
+     * เนื้อหาลงเวลาสำหรับเปิดใน modal (.open-modal จาก /me) — คืน JSON {status,title,content,footer}
+     * ตาม convention ของ web/js/erp.js
+     */
+    public function actionCheckinModal($check_type = 'in')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            return ['status' => 'error', 'message' => 'ไม่พบข้อมูลพนักงาน'];
+        }
+        $checkType = in_array($check_type, [CheckinRecord::CHECK_TYPE_IN, CheckinRecord::CHECK_TYPE_OUT], true)
+            ? $check_type : CheckinRecord::CHECK_TYPE_IN;
+        $geofences = [];
+        try {
+            $geofences = CheckinLocation::findActiveGeofenced();
+        } catch (\Throwable $e) {
+            // ตาราง checkin_location ยังไม่มี (ยังไม่รัน migration)
+        }
+        $content = $this->renderPartial('_checkin_modal', [
+            'geofences' => $geofences,
+            'checkType' => $checkType,
+            'saveUrl' => \yii\helpers\Url::to(['/attendance/default/save']),
+        ]);
+        return [
+            'status' => 'success',
+            'title' => '<i class="bi bi-clock-history me-1"></i> ลงเวลาเข้า-ออก',
+            'content' => $content,
+            'footer' => '',
+        ];
+    }
+
+    /**
      * API: บันทึกการลงเวลา (เรียกจากฟอร์มหรือ AJAX) — หัวหน้าอนุมัติภายหลัง
      * POST: method, check_type (in|out), qr_token?, lat?, lng?, photo_path?
      */
