@@ -23,6 +23,10 @@ class Processor extends TemplateProcessor
 
     public function __construct($documentTemplate)
     {
+        // เปิด output escaping เพื่อ escape อักขระพิเศษของ XML (& < >) ในค่าที่ setValue
+        // ป้องกัน document.xml พังเมื่อข้อมูล เช่น ชื่อสินค้า มี & (เช่น "Levels 1&2") ทำให้ Word เปิดไฟล์ไม่ได้
+        Settings::setOutputEscapingEnabled(true);
+
         $this->_countRels = 100; //start id for relationship between image and document.xml
 
         // Temporary document filename initialization

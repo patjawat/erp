@@ -560,15 +560,17 @@ class Order extends \yii\db\ActiveRecord
         try {
             $employee = Employees::find()->where(['user_id' => $this->created_by])->one();
 
-            $createDate = AppHelper::convertToThai($this->data_json['pr_create_date']);
+            $createDate = AppHelper::convertToThai($this->data_json['pr_create_date'] ?? null);
             $text = $msg ? $msg : ($this->pr_number);
             return [
                 'employee' => $employee,
                 'avatar' => $employee->getAvatar(false, $text),
                 'department' => $employee->departmentName(),
                 'fullname' => $employee->fullname,
-                'position_name' => $employee->data_json['position_name_text'] . $employee->data_json['position_level_text'],
-                'product_type_name' => $this->data_json['product_type_name']
+                // null-safe: employee บางคน data_json ไม่มี key เหล่านี้ ถ้าเข้าถึงตรงๆ จะเกิด ErrorException
+                // แล้ว catch ด้านล่างจะกลืนทั้ง method ทำให้ช่องผู้ขอ (avatar) ว่างทั้งช่อง
+                'position_name' => ($employee->data_json['position_name_text'] ?? '') . ($employee->data_json['position_level_text'] ?? ''),
+                'product_type_name' => $this->data_json['product_type_name'] ?? null
             ];
         } catch (\Throwable $th) {
             return [
