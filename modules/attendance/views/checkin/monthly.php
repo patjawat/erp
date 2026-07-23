@@ -229,7 +229,7 @@ $glyph = function ($cell) {
 .att-mtx .mtx-person{display:flex;align-items:center;gap:.55rem;min-width:0}
 .att-mtx .mtx-avatar{width:32px;height:32px;flex:none;border-radius:50%;object-fit:cover;background:var(--surface-3);border:1px solid var(--line)}
 .att-mtx .mtx-person__body{min-width:0;display:flex;flex-direction:column}
-.att-mtx .mtx-name__title{display:block;font-weight:600;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
+.att-mtx .mtx-name__title{display:block;font-weight:400;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
 .att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
 .att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:500}
 
