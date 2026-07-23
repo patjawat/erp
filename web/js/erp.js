@@ -568,7 +568,7 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
       text: confirmText,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#28a745",
+      confirmButtonColor: "#198754",
       cancelButtonColor: "#6c757d",
       confirmButtonText: confirmButtonText,
       cancelButtonText: "ยกเลิก",
