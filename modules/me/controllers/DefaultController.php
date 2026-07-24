@@ -50,7 +50,7 @@ class DefaultController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         //เช็คจากการตั้งค่าใน Employees ถ้าเป็น รพ.สต.
         if ($model->branch == 'BRANCH') {
-            return $this->redirect(['/me/store-v2/dashboard']);
+            return $this->redirect(['/inventory-v2/sub-stock/dashboard']);
         }
 
         $todayCheckinCount = 0;
