@@ -216,7 +216,20 @@ class DefaultController extends Controller
                 'checkin_at' => $record->checkin_at,
             ];
         } catch (\Throwable $e) {
-            return ['success' => false, 'message' => 'ระบบลงเวลายังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบ'];
+            // เดิม catch นี้กลืน exception ทิ้งทั้งหมด ทำให้ FK ที่ค้างชี้ตารางเก่าซ่อนอยู่นานโดยไม่มีใครเห็น
+            Yii::error(
+                'checkin save failed (emp_id=' . $me->id . '): ' . $e->getMessage()
+                . ' in ' . $e->getFile() . ':' . $e->getLine(),
+                __METHOD__
+            );
+            $notReady = $e instanceof \yii\db\Exception
+                && stripos($e->getMessage(), "doesn't exist") !== false;
+            return [
+                'success' => false,
+                'message' => $notReady
+                    ? 'ระบบลงเวลายังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบ'
+                    : 'บันทึกไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบพร้อมเวลาที่กด',
+            ];
         }
     }
 
