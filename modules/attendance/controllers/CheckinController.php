@@ -11,6 +11,7 @@ use app\modules\attendance\models\CheckinRecord;
 use app\modules\attendance\models\CheckinRecordSearch;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\EmployeePosition;
 use app\modules\leave\models\Leave;
 use app\modules\filemanager\models\Uploads;
 use app\modules\approveV2\models\Approve;
@@ -218,6 +219,12 @@ class CheckinController extends Controller
     const SHIFT_START_NORMAL = '08:30';
 
     /**
+     * สถานะใบไปราชการ (development) ที่ถือว่า "ได้ไปจริง" — ผ่านการตรวจสอบอย่างน้อยชั้นที่ 1
+     * ตัด Pending / Reject / Cancel / Checking (ยังไม่ผ่านชั้นใดเลย) ออก
+     */
+    const TRIP_STATUSES = ['Approve', 'Pass', 'Checkup_pass', 'Checking2_pass', 'Checking1_pass'];
+
+    /**
      * สรุปการลงเวลารายเดือน (matrix) — บุคลากรปฏิบัติราชการ × วันที่ 1..สิ้นเดือน
      * เลือกเดือน/ปี (พ.ศ.) + กรองกลุ่มงาน/ฝ่ายงาน + สรุปรวมมาสาย + ส่งออก Excel
      * admin/hr เท่านั้น
@@ -259,9 +266,13 @@ class CheckinController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('สรุปลงเวลา');
 
-        $leaveColIdx = 3 + $days + 1;      // รวมลา
-        $lastColIdx = 3 + $days + 2;       // รวมสาย
+        $tripColIdx = 3 + $days + 1;       // รวมไปราชการ
+        $leaveColIdx = 3 + $days + 2;      // รวมลา
+        $absentColIdx = 3 + $days + 3;     // รวมขาด
+        $lastColIdx = 3 + $days + 4;       // รวมสาย
+        $tripCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($tripColIdx);
         $leaveCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($leaveColIdx);
+        $absentCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($absentColIdx);
         $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
 
         $sheet->mergeCells('A1:' . $lastCol . '1');
@@ -274,9 +285,11 @@ class CheckinController extends Controller
         $sheet->setCellValue('B2', 'ชื่อ-นามสกุล');
         $sheet->setCellValue('C2', 'ตำแหน่ง');
         for ($d = 1; $d <= $days; $d++) {
-            $sheet->setCellValueByColumnAndRow(3 + $d, 2, $d);
+            $sheet->setCellValue([3 + $d, 2], $d);
         }
+        $sheet->setCellValue($tripCol . '2', 'รวมไปราชการ');
         $sheet->setCellValue($leaveCol . '2', 'รวมลา');
+        $sheet->setCellValue($absentCol . '2', 'รวมขาด');
         $sheet->setCellValue($lastCol . '2', 'รวมสาย');
         $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
             'font' => ['bold' => true],
@@ -299,10 +312,11 @@ class CheckinController extends Controller
                     case 'late': $val = $cell['time']; break;
                     case 'shift': $val = $cell['time']; break;
                     case 'leave': $val = ($cell['lv']['ab'] ?? 'ล'); break;
+                    case 'trip': $val = 'ร'; break;
                     case 'absent': $val = '-'; break;
-                    default: $val = ''; break; // weekend / future
+                    default: $val = ''; break; // weekend / holiday / future / nodata
                 }
-                $sheet->setCellValueByColumnAndRow($col, $r, $val);
+                $sheet->setCellValue([$col, $r], $val);
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
                 if ($cell['state'] === 'late') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FDE7C7');
@@ -310,15 +324,26 @@ class CheckinController extends Controller
                 } elseif ($cell['state'] === 'leave') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EDE7F6');
                     $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('6D28D9');
+                } elseif ($cell['state'] === 'trip') {
+                    $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D7F0EC');
+                    $sheet->getStyle($colLetter . $r)->getFont()->setBold(true)->getColor()->setRGB('0F766E');
                 } elseif ($cell['state'] === 'holiday') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FBE4EC');
                 } elseif ($cell['state'] === 'weekend') {
                     $sheet->getStyle($colLetter . $r)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
                 }
             }
+            $sheet->setCellValue($tripCol . $r, $row['tripCount']);
+            if ($row['tripCount'] > 0) {
+                $sheet->getStyle($tripCol . $r)->getFont()->setBold(true)->getColor()->setRGB('0F766E');
+            }
             $sheet->setCellValue($leaveCol . $r, $row['leaveCount']);
             if ($row['leaveCount'] > 0) {
                 $sheet->getStyle($leaveCol . $r)->getFont()->setBold(true)->getColor()->setRGB('6D28D9');
+            }
+            $sheet->setCellValue($absentCol . $r, $row['absentCount']);
+            if ($row['absentCount'] > 0) {
+                $sheet->getStyle($absentCol . $r)->getFont()->setBold(true)->getColor()->setRGB('B91C1C');
             }
             $sheet->setCellValue($lastCol . $r, $row['lateCount']);
             if ($row['lateCount'] > 0) {
@@ -338,7 +363,9 @@ class CheckinController extends Controller
         for ($d = 1; $d <= $days; $d++) {
             $sheet->getColumnDimensionByColumn(3 + $d)->setWidth(6);
         }
+        $sheet->getColumnDimension($tripCol)->setWidth(13);
         $sheet->getColumnDimension($leaveCol)->setWidth(9);
+        $sheet->getColumnDimension($absentCol)->setWidth(9);
         $sheet->getColumnDimension($lastCol)->setWidth(9);
         $sheet->freezePane('D3');
 
@@ -453,19 +480,45 @@ class CheckinController extends Controller
             $deptIds = $this->orgSubtreeIds($groupId);
         }
 
+        // ดึงเป็น array ไม่ใช่ ActiveRecord — Employees::afterFind() ทำงานหนักต่อ record
+        // (UpdateFormDetail/joinDate/Age ยิง query ต่อคน) รายงานนี้ใช้แค่ 8 คอลัมน์ จึงไม่ต้อง hydrate
         $empQuery = Employees::find()
+            ->select(['id', 'prefix', 'fname', 'lname', 'ref', 'work_shift', 'department', 'employee_position_id'])
             ->andWhere(['branch' => 'MAIN', 'status' => '1'])
             ->andWhere(['not', ['id' => 1]]);
         if ($deptIds !== null) {
             $empQuery->andWhere(['department' => $deptIds]);
         }
-        $emps = $empQuery->orderBy(['department' => SORT_ASC, 'fname' => SORT_ASC, 'lname' => SORT_ASC])->all();
-        $empIds = array_map(static fn($e) => (int)$e->id, $emps);
+        $emps = $empQuery->orderBy(['department' => SORT_ASC, 'fname' => SORT_ASC, 'lname' => SORT_ASC])
+            ->asArray()->all();
+        $empIds = array_map(static fn($e) => (int)$e['id'], $emps);
+
+        // batch lookup ชื่อตำแหน่ง / ชื่อหน่วยงาน (แทนการอ่านผ่าน relation ต่อแถว)
+        $posTitles = [];
+        try {
+            $posIds = array_values(array_unique(array_filter(array_map(static fn($e) => $e['employee_position_id'], $emps))));
+            if (!empty($posIds)) {
+                foreach (EmployeePosition::find()->select(['id', 'title'])->where(['id' => $posIds])->asArray()->all() as $p) {
+                    $posTitles[(int)$p['id']] = (string)$p['title'];
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+        $deptNames = [];
+        try {
+            $dIds = array_values(array_unique(array_filter(array_map(static fn($e) => $e['department'], $emps))));
+            if (!empty($dIds)) {
+                foreach (Organization::find()->select(['id', 'name'])->where(['id' => $dIds])->asArray()->all() as $o) {
+                    $deptNames[(int)$o['id']] = (string)$o['name'];
+                }
+            }
+        } catch (\Throwable $e) {
+        }
 
         // batch prefetch avatar (กัน N+1) — ref => upload id
         $avatarByRef = [];
         try {
-            $refs = array_values(array_filter(array_map(static fn($e) => $e->ref, $emps)));
+            $refs = array_values(array_filter(array_map(static fn($e) => $e['ref'], $emps)));
             if (!empty($refs)) {
                 $ups = Uploads::find()->select(['id', 'ref'])
                     ->where(['name' => 'avatar'])->andWhere(['ref' => $refs])
@@ -477,6 +530,26 @@ class CheckinController extends Controller
         } catch (\Throwable $e) {
         }
         $placeholderAvatar = \Yii::getAlias('@web') . '/img/placeholder_cid.png';
+
+        // วันที่แต่ละคน "เริ่มใช้ระบบลงเวลา" = วันลงเวลาครั้งแรกของคนนั้น (ทุกช่วงเวลา ไม่จำกัดเดือนนี้)
+        // ก่อนวันนั้น = ยังไม่มีข้อมูล (no-data) ไม่ใช่ขาดงาน — ตั้ง params['attendanceStartDate'] เพื่อกำหนดวันเริ่มใช้ระดับองค์กรทับได้
+        $orgStart = Yii::$app->params['attendanceStartDate'] ?? null;
+        $startByEmp = [];
+        if (!empty($empIds)) {
+            try {
+                $firsts = CheckinRecord::find()
+                    ->select(['emp_id', 'first_at' => 'MIN(checkin_at)'])
+                    ->where(['emp_id' => $empIds])
+                    ->andWhere(['<>', 'status', CheckinRecord::STATUS_REJECTED])
+                    ->groupBy(['emp_id'])
+                    ->asArray()->all();
+                foreach ($firsts as $f) {
+                    $d = substr((string)$f['first_at'], 0, 10);
+                    $startByEmp[(int)$f['emp_id']] = ($orgStart && $orgStart > $d) ? $orgStart : $d;
+                }
+            } catch (\Throwable $e) {
+            }
+        }
 
         // prefetch การลงเวลา (เข้า) ของทั้งเดือน — เก็บเวลาเข้าเร็วสุดต่อวัน
         $map = [];
@@ -528,7 +601,7 @@ class CheckinController extends Controller
         if (!empty($empIds)) {
             try {
                 $leaves = Leave::find()
-                    ->select(['emp_id', 'date_start', 'date_end', 'leave_type_id'])
+                    ->select(['emp_id', 'date_start', 'date_end', 'leave_type_id', 'total_days', 'data_json'])
                     ->where(['status' => 'Approve'])
                     ->andWhere(['emp_id' => $empIds])
                     ->andWhere(['deleted_at' => null])
@@ -542,7 +615,20 @@ class CheckinController extends Controller
                         continue;
                     }
                     $code = (string)($lv['leave_type_id'] ?? '');
-                    $info = ['ab' => $leaveTypeAbbr[$code] ?? 'ล', 'title' => $leaveTypeTitle[$code] ?? 'ลา'];
+                    $reason = '';
+                    $raw = $lv['data_json'] ?? null;
+                    $json = is_array($raw) ? $raw : (is_string($raw) && $raw !== '' ? json_decode($raw, true) : null);
+                    if (is_array($json) && !empty($json['reason'])) {
+                        $reason = (string)$json['reason'];
+                    }
+                    $info = [
+                        'ab' => $leaveTypeAbbr[$code] ?? 'ล',
+                        'title' => $leaveTypeTitle[$code] ?? 'ลา',
+                        'from' => (string)$lv['date_start'],
+                        'to' => (string)($lv['date_end'] ?: $lv['date_start']),
+                        'days' => $lv['total_days'] !== null ? (float)$lv['total_days'] : null,
+                        'reason' => $reason,
+                    ];
                     $lo = max(strtotime($lv['date_start']), $mLo);
                     $hi = min(strtotime($lv['date_end'] ?: $lv['date_start']), $mHi);
                     for ($t = $lo; $t <= $hi; $t += 86400) {
@@ -554,18 +640,77 @@ class CheckinController extends Controller
             }
         }
 
+        // prefetch การไปราชการ (development + development_detail name='member') — map เป็นรายวัน
+        // ช่วงวันที่ยึด vehicle_date_* (วันเดินทาง) และ fallback เป็น date_* ถ้าไม่ได้ระบุรถ
+        $tripMap = [];
+        if (!empty($empIds)) {
+            try {
+                $dsExpr = 'COALESCE(d.vehicle_date_start, d.date_start)';
+                $deExpr = 'COALESCE(d.vehicle_date_end, d.date_end, d.vehicle_date_start, d.date_start)';
+                $trips = (new \yii\db\Query())
+                    ->select(['emp_id' => 'dd.emp_id', 'topic' => 'd.topic', 'status' => 'd.status', 'ds' => $dsExpr, 'de' => $deExpr])
+                    ->from(['dd' => 'development_detail'])
+                    ->innerJoin(['d' => 'development'], 'd.id = dd.development_id')
+                    ->where(['dd.name' => 'member'])
+                    ->andWhere(['dd.deleted_at' => null])
+                    ->andWhere(['d.deleted_at' => null])
+                    ->andWhere(['d.status' => self::TRIP_STATUSES])
+                    ->andWhere(['dd.emp_id' => array_map('strval', $empIds)])
+                    ->andWhere(['<=', $dsExpr, $monthEndDate])
+                    ->andWhere(['>=', $deExpr, $monthStartDate])
+                    ->all();
+                $mLo = strtotime($monthStartDate);
+                $mHi = strtotime($monthEndDate);
+                foreach ($trips as $tp) {
+                    if (empty($tp['ds'])) {
+                        continue;
+                    }
+                    $info = [
+                        'topic' => (string)$tp['topic'],
+                        'from' => (string)$tp['ds'],
+                        'to' => (string)($tp['de'] ?: $tp['ds']),
+                        'status' => (string)$tp['status'],
+                    ];
+                    $eid = (int)$tp['emp_id'];
+                    $lo = max(strtotime($tp['ds']), $mLo);
+                    $hi = min(strtotime($tp['de'] ?: $tp['ds']), $mHi);
+                    for ($t = $lo; $t <= $hi; $t += 86400) {
+                        $tripMap[$eid][(int)date('j', $t)][] = $info;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ตาราง development ยังไม่มี / โครงสร้างต่าง — ข้ามการแสดงไปราชการ
+            }
+        }
+
         $rows = [];
         $totalLate = 0;
         $totalLeave = 0;
+        $totalTrip = 0;
+        $totalAbsent = 0;
+        $coveredCount = 0;                         // จำนวนคนที่เริ่มใช้ระบบแล้ว (มีวันเริ่มนับในหรือก่อนเดือนนี้)
+        $dayLate = array_fill(1, $daysInMonth, 0); // ยอดรวมต่อวัน (แถวท้ายตาราง)
+        $dayAbsent = array_fill(1, $daysInMonth, 0);
         foreach ($emps as $emp) {
-            $shift = $emp->work_shift ?: 'normal';
+            $empId = (int)$emp['id'];
+            $shift = $emp['work_shift'] ?: 'normal';
+            $empStart = $startByEmp[$empId] ?? null;   // null = ยังไม่เคยลงเวลาเลย
+            if ($empStart !== null && $empStart <= $monthEndDate) {
+                $coveredCount++;
+            }
             $cells = [];
             $lateCount = 0;
             $leaveCount = 0;
+            $tripCount = 0;
+            $absentCount = 0;
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dateStr = sprintf('%04d-%02d-%02d', $yearCE, $month, $d);
-                $time = $map[(int)$emp->id][$d] ?? null;
-                $lv = null;
+                $time = $map[$empId][$d] ?? null;
+                $lv = $leaveMap[$empId][$d] ?? null;
+                $tp = $tripMap[$empId][$d] ?? null;
+                if ($tp !== null && !$weekends[$d] && !isset($holidays[$d])) {
+                    $tripCount++;
+                }
                 if ($time !== null) {
                     if ($shift === 'shift') {
                         $state = 'shift'; // เวรหมุน — ไม่ประเมินสาย
@@ -573,6 +718,7 @@ class CheckinController extends Controller
                         $state = ($time > self::SHIFT_START_NORMAL) ? 'late' : 'ontime';
                         if ($state === 'late') {
                             $lateCount++;
+                            $dayLate[$d]++;
                         }
                     }
                 } else {
@@ -580,38 +726,44 @@ class CheckinController extends Controller
                         $state = 'weekend';
                     } elseif (isset($holidays[$d])) {
                         $state = 'holiday'; // วันหยุดนักขัตฤกษ์ — ไม่นับขาด
-                    } elseif (isset($leaveMap[(int)$emp->id][$d])) {
+                    } elseif ($lv !== null) {
                         $state = 'leave';
-                        $lv = $leaveMap[(int)$emp->id][$d];
                         $leaveCount++;
+                    } elseif ($tp !== null) {
+                        $state = 'trip'; // ไปราชการ — ไม่นับขาด
                     } elseif ($dateStr > $today) {
                         $state = 'future';
+                    } elseif ($empStart === null || $dateStr < $empStart) {
+                        $state = 'nodata'; // ยังไม่เริ่มใช้ระบบลงเวลา — ไม่ใช่ขาดงาน จึงไม่นับ
                     } else {
                         $state = 'absent';
+                        $absentCount++;
+                        $dayAbsent[$d]++;
                     }
                 }
-                $cells[$d] = ['state' => $state, 'time' => $time, 'lv' => $lv];
+                $cells[$d] = ['state' => $state, 'time' => $time, 'lv' => $lv, 'trip' => $tp];
             }
-            $pos = '';
-            try {
-                $pos = $emp->positionName ? (string)$emp->positionName->title : '';
-            } catch (\Throwable $e) {
-            }
-            $avatar = (!empty($emp->ref) && isset($avatarByRef[$emp->ref]))
-                ? \yii\helpers\Url::to(['/filemanager/uploads/get-image', 'id' => $avatarByRef[$emp->ref]])
+            $pos = $posTitles[(int)$emp['employee_position_id']] ?? '';
+            $avatar = (!empty($emp['ref']) && isset($avatarByRef[$emp['ref']]))
+                ? \yii\helpers\Url::to(['/filemanager/uploads/get-image', 'id' => $avatarByRef[$emp['ref']]])
                 : $placeholderAvatar;
             $totalLate += $lateCount;
             $totalLeave += $leaveCount;
+            $totalTrip += $tripCount;
+            $totalAbsent += $absentCount;
             $rows[] = [
-                'id' => (int)$emp->id,
-                'name' => trim($emp->fname . ' ' . $emp->lname),
+                'id' => $empId,
+                'name' => trim($emp['fname'] . ' ' . $emp['lname']),
                 'position' => $pos,
                 'avatar' => $avatar,
-                'dept' => $emp->departmentName(),
+                'dept' => $deptNames[(int)$emp['department']] ?? 'ไม่ระบุ',
                 'shift' => $shift,
                 'cells' => $cells,
                 'lateCount' => $lateCount,
                 'leaveCount' => $leaveCount,
+                'tripCount' => $tripCount,
+                'absentCount' => $absentCount,
+                'covered' => $empStart !== null && $empStart <= $monthEndDate,
             ];
         }
 
@@ -628,6 +780,12 @@ class CheckinController extends Controller
             'holidays' => $holidays,
             'totalLate' => $totalLate,
             'totalLeave' => $totalLeave,
+            'totalTrip' => $totalTrip,
+            'totalAbsent' => $totalAbsent,
+            'coveredCount' => $coveredCount,
+            'dayLate' => $dayLate,
+            'dayAbsent' => $dayAbsent,
+            'shiftStart' => self::SHIFT_START_NORMAL,
         ];
     }
 
