@@ -229,3 +229,25 @@
 @media(prefers-reduced-motion:reduce){.medsop-form-section .form-control,.medsop-form-section .form-select{transition:none}}
 .medsop-catalog-card__meta{font-size:.78rem;color:#4a5568;line-height:1.4}
 .medsop-review-due{margin-top:.2rem;color:#b91c1c;font-size:.78rem;font-weight:700}
+.medsop-rte{border:1px solid var(--medsop-line);border-radius:var(--medsop-radius-sm);background:#fff;overflow:hidden;transition:border-color .15s var(--medsop-ease),box-shadow .15s var(--medsop-ease)}
+.medsop-rte:focus-within{border-color:var(--medsop-primary);box-shadow:0 0 0 3px rgba(13,110,253,.16)}
+.medsop-rte.is-invalid{border-color:var(--medsop-danger)}
+.medsop-rte.is-invalid:focus-within{box-shadow:0 0 0 3px rgba(185,28,28,.16)}
+.medsop-rte__toolbar{display:flex;flex-wrap:wrap;gap:.15rem;padding:.3rem;background:var(--medsop-surface-2);border-bottom:1px solid var(--medsop-line)}
+.medsop-rte__btn{display:inline-grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--medsop-muted);font-size:1rem;line-height:1;cursor:pointer;transition:background-color .12s var(--medsop-ease),color .12s var(--medsop-ease)}
+.medsop-rte__btn:hover{background:rgba(13,110,253,.08);color:var(--medsop-ink)}
+.medsop-rte__btn.is-active{background:rgba(13,110,253,.14);color:var(--medsop-primary)}
+.medsop-rte__btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(13,110,253,.28)}
+.medsop-rte__area{min-height:7.5rem;padding:.6rem .75rem;color:var(--medsop-ink);font-size:.95rem;line-height:1.6;outline:none;overflow-wrap:break-word}
+.medsop-rte__area.is-empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none}
+.medsop-rte__area>:first-child{margin-top:0}
+.medsop-rte__area>:last-child{margin-bottom:0}
+.medsop-rte__area p{margin:0 0 .5rem}
+.medsop-rte__area ul,.medsop-rte__area ol{margin:0 0 .5rem;padding-left:1.4rem}
+@media(prefers-reduced-motion:reduce){.medsop-rte,.medsop-rte__btn{transition:none}}
+.medsop-richtext{overflow-wrap:break-word}
+.medsop-richtext>:first-child{margin-top:0}
+.medsop-richtext>:last-child{margin-bottom:0}
+.medsop-richtext p{margin:0 0 .5rem}
+.medsop-richtext ul,.medsop-richtext ol{margin:0 0 .5rem;padding-left:1.4rem}
+.medsop-richtext li{margin-bottom:.15rem}

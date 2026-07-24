@@ -61,6 +61,171 @@
     input.addEventListener('change', refreshDocumentTypeGuidance);
   });
 
+  // ---- Rich text editor (วัตถุประสงค์ / ขอบเขต / รายละเอียด / ข้อควรระวัง) ----
+  // ครอบ <textarea data-richtext> ด้วย toolbar + พื้นที่ contenteditable แล้ว sync
+  // เนื้อหากลับเข้า textarea เดิม (ชื่อฟิลด์ไม่เปลี่ยน) ฝั่ง server กรอง HTML ซ้ำอีกชั้น
+  const RTE_HTML_PROBE = /<(?:p|br|ul|ol|li|strong|em|b|i|u)\b[^>]*>/i;
+  const RTE_COMMANDS = [
+    { cmd: 'bold', icon: 'type-bold', label: 'ตัวหนา' },
+    { cmd: 'italic', icon: 'type-italic', label: 'ตัวเอียง' },
+    { cmd: 'underline', icon: 'type-underline', label: 'ขีดเส้นใต้' },
+    { cmd: 'insertUnorderedList', icon: 'list-ul', label: 'รายการสัญลักษณ์' },
+    { cmd: 'insertOrderedList', icon: 'list-ol', label: 'รายการลำดับเลข' },
+    { cmd: 'removeFormat', icon: 'eraser', label: 'ล้างรูปแบบ' }
+  ];
+
+  function rteEscape(text) {
+    return text.replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+
+  function rteSeedHtml(textarea) {
+    const raw = textarea.value;
+    if (raw.trim() === '') return '';
+    // record ใหม่มีแท็ก HTML อยู่แล้ว, record เก่าเป็นข้อความล้วน — คงบรรทัดด้วย <br>
+    return RTE_HTML_PROBE.test(raw) ? raw : rteEscape(raw).replace(/\r?\n/g, '<br>');
+  }
+
+  function rteHasContent(area) {
+    return !!area.querySelector('ul, ol, li') || area.textContent.trim() !== '';
+  }
+
+  function rteSync(area) {
+    const textarea = area._rteTextarea;
+    if (!textarea) return;
+    const filled = rteHasContent(area);
+    textarea.value = filled ? area.innerHTML : '';
+    area.classList.toggle('is-empty', !filled);
+  }
+
+  function rteSyncAll() {
+    form.querySelectorAll('.medsop-rte__area').forEach(rteSync);
+  }
+
+  function rteUpdateButtons(area) {
+    const toolbar = area.previousElementSibling;
+    if (!toolbar) return;
+    toolbar.querySelectorAll('.medsop-rte__btn').forEach(function (btn) {
+      let active = false;
+      try { active = document.queryCommandState(btn.dataset.command); } catch (e) { active = false; }
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function enhanceRichText(scope) {
+    (scope || form).querySelectorAll('[data-richtext]').forEach(function (textarea) {
+      if (textarea._rteReady) return;
+      textarea._rteReady = true;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'medsop-rte';
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'medsop-rte__toolbar';
+      toolbar.setAttribute('role', 'toolbar');
+      toolbar.setAttribute('aria-label', 'จัดรูปแบบข้อความ');
+      RTE_COMMANDS.forEach(function (item) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'medsop-rte__btn';
+        btn.dataset.command = item.cmd;
+        btn.title = item.label;
+        btn.setAttribute('aria-label', item.label);
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML = '<i class="bi bi-' + item.icon + '" aria-hidden="true"></i>';
+        toolbar.appendChild(btn);
+      });
+
+      const area = document.createElement('div');
+      area.className = 'medsop-rte__area';
+      area.contentEditable = 'true';
+      area.setAttribute('role', 'textbox');
+      area.setAttribute('aria-multiline', 'true');
+      if (textarea.dataset.rteLabel) area.setAttribute('aria-label', textarea.dataset.rteLabel);
+      if (textarea.dataset.rteRequired === 'true') area.setAttribute('aria-required', 'true');
+      if (textarea.getAttribute('placeholder')) area.setAttribute('data-placeholder', textarea.getAttribute('placeholder'));
+      area.innerHTML = rteSeedHtml(textarea);
+
+      area._rteTextarea = textarea;
+      textarea._rteArea = area;
+
+      wrap.append(toolbar, area);
+      textarea.classList.add('visually-hidden');
+      textarea.setAttribute('tabindex', '-1');
+      textarea.setAttribute('aria-hidden', 'true');
+      textarea.removeAttribute('required');
+      textarea.after(wrap);
+      rteSync(area);
+    });
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) {}
+  }
+
+  // เตรียม step ที่ clone ใหม่ให้เป็น editor เปล่า (ลบ editor เดิมที่ติดมากับ clone)
+  function resetRichText(scope) {
+    scope.querySelectorAll('.medsop-rte').forEach(function (node) { node.remove(); });
+    scope.querySelectorAll('[data-richtext]').forEach(function (textarea) {
+      textarea._rteReady = false;
+      textarea._rteArea = null;
+      textarea.value = '';
+      textarea.classList.remove('visually-hidden', 'is-invalid');
+      textarea.removeAttribute('aria-hidden');
+      textarea.removeAttribute('tabindex');
+    });
+  }
+
+  function validateRichText() {
+    let firstInvalid = null;
+    form.querySelectorAll('[data-richtext][data-rte-required="true"]').forEach(function (textarea) {
+      const area = textarea._rteArea;
+      if (!area) return;
+      rteSync(area);
+      const empty = textarea.value.trim() === '';
+      const wrap = area.closest('.medsop-rte');
+      if (wrap) wrap.classList.toggle('is-invalid', empty);
+      if (empty && !firstInvalid) firstInvalid = area;
+    });
+    return firstInvalid;
+  }
+
+  // เก็บ selection ไว้เมื่อกดปุ่ม toolbar (mousedown บนปุ่มไม่ให้ย้าย caret)
+  form.addEventListener('mousedown', function (event) {
+    if (event.target.closest('.medsop-rte__btn')) event.preventDefault();
+  });
+  form.addEventListener('click', function (event) {
+    const btn = event.target.closest('.medsop-rte__btn');
+    if (!btn) return;
+    const area = btn.closest('.medsop-rte').querySelector('.medsop-rte__area');
+    if (document.activeElement !== area) area.focus();
+    try { document.execCommand(btn.dataset.command, false, null); } catch (e) {}
+    rteSync(area);
+    rteUpdateButtons(area);
+  });
+  form.addEventListener('input', function (event) {
+    const area = event.target.closest('.medsop-rte__area');
+    if (!area) return;
+    rteSync(area);
+    const wrap = area.closest('.medsop-rte');
+    if (wrap) wrap.classList.remove('is-invalid');
+  });
+  form.addEventListener('paste', function (event) {
+    const area = event.target.closest('.medsop-rte__area');
+    if (!area) return;
+    event.preventDefault();
+    const text = ((event.clipboardData || window.clipboardData).getData('text/plain') || '');
+    try { document.execCommand('insertText', false, text); } catch (e) {}
+    rteSync(area);
+  });
+  form.addEventListener('keyup', function (event) {
+    const area = event.target.closest('.medsop-rte__area');
+    if (area) rteUpdateButtons(area);
+  });
+  form.addEventListener('mouseup', function (event) {
+    const area = event.target.closest('.medsop-rte__area');
+    if (area) rteUpdateButtons(area);
+  });
+
   function prepareDocumentPicker(row) {
     if (!row) return;
     const select = row.querySelector('[data-document-select]');
@@ -214,7 +379,9 @@
     step.querySelectorAll('[data-step-related-link]').forEach(function (item) { item.remove(); });
     const preview = step.querySelector('[data-media-preview]');
     if (preview) preview.classList.add('d-none');
+    resetRichText(step);
     list.appendChild(step);
+    enhanceRichText(step);
     refresh();
     step.querySelector('input').focus();
   });
@@ -404,6 +571,14 @@
 
   function submitForm() {
     if (saving) return false;
+    rteSyncAll();
+    const invalidRichText = validateRichText();
+    if (invalidRichText) {
+      const label = (invalidRichText._rteTextarea && invalidRichText._rteTextarea.dataset.rteLabel) || 'วัตถุประสงค์';
+      showAlert('กรุณากรอกข้อมูลให้ครบ: ' + label, 'danger');
+      invalidRichText.focus();
+      return false;
+    }
     if (selectedDocumentType() === 'WI' && !hasSelectedParentSop()) {
       refreshDocumentTypeGuidance();
       showAlert('เอกสาร WI ต้องเลือก SOP หลักที่สร้างไว้แล้วอย่างน้อย 1 ฉบับ', 'danger');
@@ -464,6 +639,7 @@
     });
   }
 
+  enhanceRichText();
   refresh();
   refreshDocumentTypeGuidance();
 })();

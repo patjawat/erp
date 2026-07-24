@@ -57,8 +57,8 @@ $stepRows = $stepRows ?: [['title' => '', 'description' => '', 'caution' => '', 
             },
         ])->hint($hasAvailableSop ? 'เลือก SOP สำหรับภาพรวมกระบวนการ หรือ WI สำหรับวิธีปฏิบัติที่อ้างอิง SOP หลัก' : 'ต้องสร้าง SOP อย่างน้อย 1 ฉบับก่อน จึงจะสามารถเลือกสร้าง WI ได้') ?></div>
         <div class="col-12 col-md-4" data-flow-organization><?= $form->field($model, 'organization_id')->label('หน่วยงานเจ้าของเอกสาร')->dropDownList($organizationItems, ['prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?></div>
-        <div class="col-12 col-lg-6"><?= $form->field($model, 'objective')->textarea(['class' => 'form-control', 'rows' => 4, 'required' => true]) ?></div>
-        <div class="col-12 col-lg-6"><?= $form->field($model, 'scope')->textarea(['class' => 'form-control', 'rows' => 4]) ?></div>
+        <div class="col-12 col-lg-6"><?= $form->field($model, 'objective')->textarea(['class' => 'form-control', 'rows' => 4, 'data-richtext' => 'objective', 'data-rte-required' => 'true', 'data-rte-label' => 'วัตถุประสงค์', 'placeholder' => 'อธิบายเหตุผลและเป้าหมายของเอกสารฉบับนี้']) ?></div>
+        <div class="col-12 col-lg-6"><?= $form->field($model, 'scope')->textarea(['class' => 'form-control', 'rows' => 4, 'data-richtext' => 'scope', 'data-rte-label' => 'ขอบเขตการใช้งาน', 'placeholder' => 'ระบุขอบเขตหน่วยงานหรือสถานการณ์ที่ใช้เอกสารนี้']) ?></div>
     </div></div>
 </section>
 
@@ -71,8 +71,8 @@ $stepRows = $stepRows ?: [['title' => '', 'description' => '', 'caution' => '', 
                 <div class="medsop-manual-editor__head"><span class="medsop-step-number" data-step-number><?= $index + 1 ?></span><strong>ขั้นตอนที่ <span data-step-label><?= $index + 1 ?></span></strong><span class="text-body-secondary small">เพิ่มภาพหรือคลิปเพื่อให้ทำตามได้ง่าย</span><button type="button" class="btn btn-sm btn-outline-danger ms-auto" data-remove-step aria-label="ลบขั้นตอนที่ <?= $index + 1 ?>"><i class="bi bi-trash" aria-hidden="true"></i><span class="visually-hidden">ลบขั้นตอน</span></button></div>
                 <div class="row g-3">
                     <div class="col-12"><label class="form-label" for="step-<?= $index ?>-title">ชื่อขั้นตอน</label><input id="step-<?= $index ?>-title" class="form-control" name="steps[<?= $index ?>][title]" value="<?= Html::encode($step['title'] ?? '') ?>" required><div class="invalid-feedback">กรุณาระบุชื่อขั้นตอน</div></div>
-                    <div class="col-12 col-lg-6"><label class="form-label" for="step-<?= $index ?>-description">รายละเอียด</label><textarea id="step-<?= $index ?>-description" class="form-control" rows="3" name="steps[<?= $index ?>][description]"><?= Html::encode($step['description'] ?? '') ?></textarea></div>
-                    <div class="col-12 col-lg-6"><label class="form-label" for="step-<?= $index ?>-caution">ข้อควรระวัง</label><textarea id="step-<?= $index ?>-caution" class="form-control" rows="3" name="steps[<?= $index ?>][caution]"><?= Html::encode($step['caution'] ?? '') ?></textarea></div>
+                    <div class="col-12 col-lg-6"><label class="form-label" for="step-<?= $index ?>-description">รายละเอียด</label><textarea id="step-<?= $index ?>-description" class="form-control" rows="3" name="steps[<?= $index ?>][description]" data-richtext="step-description" data-rte-label="รายละเอียด" placeholder="อธิบายวิธีปฏิบัติของขั้นตอนนี้"><?= Html::encode($step['description'] ?? '') ?></textarea></div>
+                    <div class="col-12 col-lg-6"><label class="form-label" for="step-<?= $index ?>-caution">ข้อควรระวัง</label><textarea id="step-<?= $index ?>-caution" class="form-control" rows="3" name="steps[<?= $index ?>][caution]" data-richtext="step-caution" data-rte-label="ข้อควรระวัง" placeholder="สิ่งที่ต้องระวังหรือข้อห้ามในขั้นตอนนี้"><?= Html::encode($step['caution'] ?? '') ?></textarea></div>
                     <div class="col-12">
                         <div class="medsop-media-picker" data-media-picker>
                             <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">

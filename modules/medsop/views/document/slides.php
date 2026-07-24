@@ -1,5 +1,6 @@
 <?php
 use app\modules\medsop\assets\MedSopAsset;
+use app\modules\medsop\components\RichText;
 use yii\helpers\Html;
 MedSopAsset::register($this);
 $this->title = 'สไลด์ ' . $model->title;
@@ -13,7 +14,7 @@ $this->title = 'สไลด์ ' . $model->title;
         <div class="medsop-slide__cover">
             <span class="medsop-slide__type"><?= Html::encode($model->document_type) ?></span>
             <h1><?= Html::encode($model->title) ?></h1>
-            <p><?= Html::encode($model->objective) ?></p>
+            <div class="medsop-slide__lead medsop-richtext"><?= RichText::render($model->objective) ?></div>
             <div><strong><?= Html::encode($model->document_no) ?></strong><span>ฉบับที่ <?= number_format($model->current_revision) ?></span></div>
         </div>
     </section>
@@ -22,7 +23,7 @@ $this->title = 'สไลด์ ' . $model->title;
         <div class="medsop-slide__step">
             <header><span>ขั้นตอน <?= $index + 1 ?></span><h2><?= Html::encode($step->title) ?></h2></header>
             <div class="medsop-slide__body">
-                <div class="medsop-slide__copy"><p><?= nl2br(Html::encode($step->description)) ?></p><?php if ($step->caution): ?><aside><strong><i class="bi bi-exclamation-triangle me-2"></i>ข้อควรระวัง</strong><p><?= nl2br(Html::encode($step->caution)) ?></p></aside><?php endif; ?></div>
+                <div class="medsop-slide__copy"><div class="medsop-richtext"><?= RichText::render($step->description) ?></div><?php if ($step->caution): ?><aside><strong><i class="bi bi-exclamation-triangle me-2"></i>ข้อควรระวัง</strong><div class="medsop-richtext"><?= RichText::render($step->caution) ?></div></aside><?php endif; ?></div>
                 <?php $image = null; foreach ($step->media as $media) { if ($media->media_type === 'image') { $image = $media; break; } } ?>
                 <?php if ($image): ?><figure><img src="<?= Html::encode($image->file_path) ?>" alt="ภาพประกอบ <?= Html::encode($step->title) ?>"><figcaption><?= Html::encode($image->file_name) ?></figcaption></figure><?php endif; ?>
             </div>
