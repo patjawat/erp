@@ -14,6 +14,8 @@ use yii\bootstrap5\ActiveForm;
 use app\modules\hr\models\Employees;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\EmployeeDetail;
+use app\modules\hr\models\EmployeeDetailSearch;
+use app\modules\hr\models\EmployeeTrainingPlan;
 
 class ProfileController extends \yii\web\Controller
 
@@ -56,10 +58,29 @@ class ProfileController extends \yii\web\Controller
     {
         $name = $this->request->get('name');
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        $trainingPlans = [];
+        $dataProvider = null;
+        if ($model && $name === 'training_roadmap') {
+            $trainingPlans = EmployeeTrainingPlan::find()
+                ->where(['emp_id' => $model->id])
+                ->with(['roadmap.phases.activities', 'results'])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+        } elseif ($model && $name) {
+            $searchModel = new EmployeeDetailSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query
+                ->where(['emp_id' => $model->id, 'name' => $name])
+                ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"))
+                ->addOrderBy(['id' => SORT_DESC]);
+            $dataProvider->pagination->pageSize = 8;
+        }
         // if($model){
         return $this->render('@app/modules/hr/views/employees/view', [
             'model' => $model ? $model : new Employees(),
             'name' => $name,
+            'trainingPlans' => $trainingPlans,
+            'dataProvider' => $dataProvider,
         ]);
         // }else{
         //     return $this->renderContent('<h1 class="text-center">ไม่พบข้อมูลพนักงาน</h1>');

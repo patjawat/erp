@@ -7,6 +7,7 @@ use app\modules\hr\models\Employees;
 use app\modules\jd\models\JdEmployee;
 use app\modules\jd\models\JdEmployeeSection;
 use app\modules\jd\models\JdEmployeeAcknowledgement;
+use app\modules\jd\components\RichText;
 use app\modules\jd\models\JdChangeRequest;
 use app\modules\jd\models\JdTemplate;
 use app\modules\jd\models\JdTemplateBlock;
@@ -370,7 +371,33 @@ class EmployeeJdController extends Controller
             'jd_employee_id' => $jd->id,
             'sort_order' => (int) JdEmployeeSection::find()->where(['jd_employee_id' => $jd->id])->max('sort_order') + 1,
         ]);
-        if ($section->load(Yii::$app->request->post()) && $section->save()) {
+        if ($section->load(Yii::$app->request->post())) {
+            $payloadJson = Yii::$app->request->post('section_payload');
+            if ($payloadJson !== null && $section->section_code) {
+                $payload = json_decode((string) $payloadJson, true);
+                if (!is_array($payload)) {
+                    $section->addError('data_json', 'รูปแบบข้อมูลหัวข้อไม่ถูกต้อง');
+                } else {
+                    $payload['intro'] = RichText::sanitize($payload['intro'] ?? '');
+                    foreach (($payload['items'] ?? []) as &$item) {
+                        if (!is_array($item)) {
+                            $item = [];
+                            continue;
+                        }
+                        foreach ($item as $key => $value) {
+                            if ($key !== 'employee_id') {
+                                $item[$key] = RichText::sanitize((string) $value);
+                            }
+                        }
+                    }
+                    unset($item);
+                    $section->setData($payload);
+                }
+            } else {
+                $section->content = RichText::sanitize($section->content);
+            }
+        }
+        if (!$section->hasErrors() && Yii::$app->request->isPost && $section->save()) {
             Yii::$app->session->setFlash('success', 'เพิ่มหัวข้อแล้ว');
             return $this->redirect(['view', 'emp_id' => $emp_id, 'id' => $jd->id]);
         }
@@ -386,7 +413,33 @@ class EmployeeJdController extends Controller
         }
         $jd = $section->jdEmployee;
         $employee = $jd->employee;
-        if ($section->load(Yii::$app->request->post()) && $section->save()) {
+        if ($section->load(Yii::$app->request->post())) {
+            $payloadJson = Yii::$app->request->post('section_payload');
+            if ($payloadJson !== null && $section->section_code) {
+                $payload = json_decode((string) $payloadJson, true);
+                if (!is_array($payload)) {
+                    $section->addError('data_json', 'รูปแบบข้อมูลหัวข้อไม่ถูกต้อง');
+                } else {
+                    $payload['intro'] = RichText::sanitize($payload['intro'] ?? '');
+                    foreach (($payload['items'] ?? []) as &$item) {
+                        if (!is_array($item)) {
+                            $item = [];
+                            continue;
+                        }
+                        foreach ($item as $key => $value) {
+                            if ($key !== 'employee_id') {
+                                $item[$key] = RichText::sanitize((string) $value);
+                            }
+                        }
+                    }
+                    unset($item);
+                    $section->setData($payload);
+                }
+            } else {
+                $section->content = RichText::sanitize($section->content);
+            }
+        }
+        if (!$section->hasErrors() && Yii::$app->request->isPost && $section->save()) {
             Yii::$app->session->setFlash('success', 'บันทึกหัวข้อแล้ว');
             return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
         }

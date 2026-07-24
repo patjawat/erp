@@ -13,6 +13,8 @@ use app\modules\purchase\models\Order;
 use app\modules\approveV2\models\Approve;
 use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
+use app\modules\jd\models\JdEmployee;
+use app\modules\jd\models\JdEmployeeAcknowledgement;
 
 // การแจ้งเตือนต่างๆ
 class ApproveHelper extends Component
@@ -20,9 +22,11 @@ class ApproveHelper extends Component
     // รวมค่าการแจ้งเตือนต่างๆ
     public static function Info()
     {
+        $jdAcknowledgement = self::JdAcknowledgement();
+
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -31,7 +35,42 @@ class ApproveHelper extends Component
             'checkin' => self::Checkin(),
             'assetMove' => self::AssetMove(),
             'requisitionV2' => self::RequisitionV2(),
+            'jd_acknowledgement' => $jdAcknowledgement,
         ];
+    }
+
+    /**
+     * JD ฉบับปัจจุบันของผู้ใช้ที่ยังไม่ได้ลงนามรับทราบ
+     */
+    public static function JdAcknowledgement(): array
+    {
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
+            }
+
+            $jd = JdEmployee::findCurrent((int) $me->id);
+            if (!$jd) {
+                return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
+            }
+
+            $acknowledged = JdEmployeeAcknowledgement::find()
+                ->where([
+                    'jd_employee_id' => (int) $jd->id,
+                    'emp_id' => (int) $me->id,
+                ])
+                ->exists();
+
+            return [
+                'title' => 'JD รอลงนามรับทราบ',
+                'total' => $acknowledged ? 0 : 1,
+                'datas' => $acknowledged ? [] : [$jd],
+            ];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load pending JD acknowledgement: ' . $th->getMessage(), __METHOD__);
+            return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
+        }
     }
 
 

@@ -26,7 +26,7 @@ use yii\helpers\Url;
     </a>
 
     <div class="dropdown">
-        <button class="btn <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle d-inline-flex align-items-center gap-2"
+        <button class="btn <?= in_array($active, ['setting', 'training-roadmap'], true) ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle d-inline-flex align-items-center gap-2"
                 type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" aria-label="ตั้งค่า">
             <i data-lucide="settings" width="16" height="16" aria-hidden="true"></i>
             <span class="d-none d-sm-inline">ตั้งค่า</span>
@@ -63,6 +63,13 @@ use yii\helpers\Url;
             </li>
             <li>
                 <?= Html::a('<i class="bi bi-file-earmark-text me-1"></i> Template คำอธิบายงาน (JD)', ['/jd/template/index'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li>
+                <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="signpost" style="width:15px;height:15px" class="text-muted"></i> Training Roadmap</span>',
+                    ['/hr/training-roadmap/index'],
+                    ['class' => 'dropdown-item', 'data-pjax' => '0']
+                ) ?>
             </li>
 
         </ul>

@@ -63,10 +63,10 @@ class JdTemplateBlock extends ActiveRecord
             'matrix' => ['area' => 'ด้าน', 'details' => 'ขอบเขตงาน'],
             'groups' => ['group' => 'หมวดย่อย', 'details' => 'รายละเอียด'],
             'authority' => ['subject' => 'เรื่อง', 'can_do' => 'ตัดสินใจ/ดำเนินการได้', 'approval' => 'ต้องประสานหรือขออนุมัติ'],
-            'kpi' => ['indicator' => 'ตัวชี้วัด', 'target' => 'เป้าหมาย', 'measurement' => 'วิธีวัด/ความถี่'],
+            'kpi' => ['indicator' => 'ชื่อตัวชี้วัด', 'target' => 'เป้าหมาย', 'expectation' => 'ความคาดหวัง'],
             'named_items' => ['name' => 'หัวข้อ', 'description' => 'คำอธิบาย'],
             'boundary' => ['responsibility' => 'ทำได้/รับผิดชอบ', 'coordinate' => 'ต้องไม่ทำ/ต้องประสาน'],
-            'approval' => ['role' => 'ขั้นตอน', 'approver' => 'ชื่อผู้รับผิดชอบ', 'position' => 'ตำแหน่ง'],
+            'approval' => ['role' => 'ขั้นตอนการลงนาม', 'employee_id' => 'ผู้ลงนาม'],
         ];
         return $map[$type] ?? $map['named_items'];
     }

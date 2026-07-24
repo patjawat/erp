@@ -884,6 +884,14 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
             [
+                'title' => 'Training Roadmap',
+                'icon' => '<i data-lucide="signpost" class="lucide-icon text-primary"></i>',
+                'name' => 'training_roadmap',
+                'url' => ['/hr/training-roadmap/employee', 'emp_id' => $this->id],
+                'subtitle' => 'แผนพัฒนา สมรรถนะ และจุดประเมิน',
+                'count' => $this->getTrainingPlans()->count(),
+            ],
+            [
                 'title' => 'การรับทุน',
                 'icon' => '<i data-lucide="hand-coins" class="lucide-icon text-primary"></i>',
                 'name' => 'scholarships',
@@ -919,6 +927,62 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
         ];
+    }
+
+    /**
+     * Groups the employee profile navigation without changing the legacy
+     * menu definitions or their routes.
+     */
+    public function generalMenuGroups()
+    {
+        $items = [];
+        foreach ($this->generalMenu() as $item) {
+            $items[$item['name']] = $item;
+        }
+
+        $definitions = [
+            [
+                'key' => 'general',
+                'title' => 'ข้อมูลทั่วไป',
+                'subtitle' => 'ประวัติส่วนบุคคลและการทำงาน',
+                'icon' => 'user-round',
+                'items' => [
+                    '', 'position', 'job_description_history', 'education',
+                    'family', 'rename', 'license', 'award', 'insignia',
+                    'scholarships', 'benefit', 'position_manage', 'blame', 'signature',
+                ],
+            ],
+            [
+                'key' => 'development',
+                'title' => 'การพัฒนาและประเมินผล',
+                'subtitle' => 'การอบรมและเส้นทางพัฒนา',
+                'icon' => 'chart-no-axes-combined',
+                'items' => ['develop', 'training_roadmap'],
+            ],
+            [
+                'key' => 'health',
+                'title' => 'สุขภาพและความปลอดภัย',
+                'subtitle' => 'ข้อมูลสุขภาพที่เกี่ยวข้องกับงาน',
+                'icon' => 'heart-pulse',
+                'items' => ['health'],
+            ],
+        ];
+
+        $groups = [];
+        foreach ($definitions as $definition) {
+            $groupItems = [];
+            foreach ($definition['items'] as $name) {
+                if (array_key_exists($name, $items)) {
+                    $groupItems[] = $items[$name];
+                }
+            }
+            if ($groupItems) {
+                $definition['items'] = $groupItems;
+                $groups[] = $definition;
+            }
+        }
+
+        return $groups;
     }
 
     /** จำนวนหัวข้อในคำอธิบายงาน (JD) ของพนักงาน */
@@ -1716,6 +1780,15 @@ class Employees extends Yii\db\ActiveRecord
     public function getDevelopmentMenber()
     {
         return $this->hasMany(DevelopmentDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'member']);
+    }
+
+    /**
+     * Training Roadmaps assigned to this employee.
+     */
+    public function getTrainingPlans()
+    {
+        return $this->hasMany(EmployeeTrainingPlan::class, ['emp_id' => 'id'])
+            ->orderBy(['id' => SORT_DESC]);
     }
 
 

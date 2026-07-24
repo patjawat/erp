@@ -270,7 +270,15 @@ $row = function (string $label, ?string $value, bool $nl2br = false) {
         <hr>
         <h6 class="fw-medium mb-3">ตัวชี้วัดผลงาน (KPIs)</h6>
         <?php if (!empty($model->kpis)): ?>
-            <div class="p-3 rounded-3 border"><?= nl2br(Html::encode($model->kpis)) ?></div>
+            <?php $kpiItems = json_decode((string) $model->kpis, true); ?>
+            <?php if (is_array($kpiItems)): ?>
+                <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th>#</th><th>ชื่อตัวชี้วัด</th><th>เป้าหมาย</th><th>ความคาดหวัง</th></tr></thead>
+                    <tbody><?php foreach ($kpiItems as $index => $item): ?><tr><td><?= $index + 1 ?></td><td><?= Html::encode($item['indicator'] ?? '—') ?></td><td><?= Html::encode($item['target'] ?? '—') ?></td><td><?= Html::encode($item['expectation'] ?? '—') ?></td></tr><?php endforeach; ?></tbody>
+                </table></div>
+            <?php else: ?>
+                <div class="p-3 rounded-3 border"><?= nl2br(Html::encode($model->kpis)) ?></div>
+            <?php endif; ?>
         <?php else: ?>
             <span class="text-muted">—</span>
         <?php endif; ?>

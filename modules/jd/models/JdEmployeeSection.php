@@ -57,4 +57,9 @@ class JdEmployeeSection extends ActiveRecord
         $value = json_decode((string) $this->data_json, true);
         return is_array($value) ? $value : [];
     }
+
+    public function setData(array $value): void
+    {
+        $this->data_json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
 }
