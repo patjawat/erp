@@ -324,12 +324,6 @@ if (!empty($upcomingHealth)): ?>
                                 <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>
                             </svg><span>ได้รับคำขอบคุณแล้ว: <span class="fw-black"><?= (int) ($appreciationReceivedCount ?? 0) ?> ครั้ง</span></span>
                         </div>
-                        <?php if($me->healthData()['result']):?>
-                        <a href="<?= Url::to(['/me/health/view','id' => $me->healthData()['id']])?>" class="open-modal d-flex align-items-center px-3 py-2 rounded-pill text-decoration-none shadow-sm" data-size="modal-xl" style="background: #ffffff; color: #2563eb;">
-                            <i class="fas fa-file-medical-alt me-2"></i>
-                            <span class="small fw-bold">ดูประวัติสุขภาพ</span>
-                        </a>
-                        <?php endif;?>
                     </div>
                 </div>
 

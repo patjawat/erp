@@ -814,13 +814,6 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
             [
-                'title' => 'ข้อมูลตรวจสุขภาพประจำปี',
-                'icon' => '<i data-lucide="heart-pulse" class="lucide-icon text-primary"></i>',
-                'name' => 'health',
-                'subtitle' => 'ข้อมูลตรวจสุขภาพประจำปี',
-                'count' => 0,
-            ],
-            [
                 'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
                 'icon' => '<i data-lucide="briefcase" class="lucide-icon text-primary"></i>',
                 'name' => 'position',
@@ -959,7 +952,6 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
             'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
-            'occupational_health' => $comingSoon('occupational_health', 'สุขภาพจากการทำงาน', 'การเจ็บป่วย อุบัติเหตุ และข้อจำกัด', 'briefcase-medical'),
             'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
             'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
             'housing' => $comingSoon('housing', 'บ้านพัก', 'คำขอเข้าพัก ค่าใช้จ่าย และแจ้งซ่อม', 'house'),
@@ -999,13 +991,6 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ตั้งแต่ทดลองงานถึงผลประจำปี',
                 'icon' => 'clipboard-list',
                 'items' => ['performance_appraisal'],
-            ],
-            [
-                'key' => 'health',
-                'title' => 'สุขภาพและความปลอดภัย',
-                'subtitle' => 'ข้อมูลสุขภาพที่เกี่ยวข้องกับงาน',
-                'icon' => 'heart-pulse',
-                'items' => ['health', 'occupational_health'],
             ],
             [
                 'key' => 'compensation',

@@ -76,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
 
                     <div class="d-flex gap-3 mt-5">
-                        <a href="<?= Url::to(['/hr/employees/view', 'id' => $model->emp_id, 'name' => 'health']) ?>" class="btn btn-light flex-grow-1 py-3 fw-bold rounded-4 border">
+                        <a href="<?= Url::to(['/health/health-screen/index', 'HealthScreenSearch[emp_id]' => $model->emp_id]) ?>" class="btn btn-light flex-grow-1 py-3 fw-bold rounded-4 border">
                             กลับหน้าโปรไฟล์
                         </a>
 

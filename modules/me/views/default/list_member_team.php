@@ -60,12 +60,6 @@ $listsMemberTeam = Employees::find()
                                             KPI Profile
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id, 'name' => 'health']) ?>">
-                                            <i class="bi bi-heart-pulse text-danger"></i>
-                                            ข้อมูลสุขภาพ
-                                        </a>
-                                    </li>
                                 </ul>
                             </div>
                         </div>

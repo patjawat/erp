@@ -60,6 +60,12 @@ class ProfileController extends \yii\web\Controller
     {
         $name = $this->request->get('name');
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        if ($model && in_array($name, ['health', 'occupational_health'], true)) {
+            return $this->redirect([
+                '/health/health-screen/index',
+                'HealthScreenSearch[emp_id]' => (int) $model->id,
+            ]);
+        }
         $trainingPlans = [];
         $idpCycle = null;
         $idpPlan = null;

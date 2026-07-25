@@ -9,7 +9,7 @@ $items = [
     'idp' => ['IDP', 'target', ['/hr/idp/index']],
     'trm' => ['TRM', 'signpost', ['/hr/training-roadmap/index']],
     'appraisal' => ['ประเมินผล', 'chart-no-axes-combined', ['/hr/workforce/index', 'section' => 'appraisal']],
-    'health' => ['Health', 'heart-pulse', ['/hr/workforce/index', 'section' => 'health']],
+    'health' => ['Health', 'heart-pulse', ['/health/default/index']],
     'exit' => ['Exit Int', 'log-out', ['/hr/workforce/index', 'section' => 'exit']],
 ];
 ?>
@@ -20,7 +20,7 @@ $items = [
             $url,
             [
                 'class' => 'workforce-nav__item workforce-nav__item--' . $key . ($active === $key ? ' is-active' : ''),
-                'title' => $key === 'trm' ? 'Training Roadmap' : ($key === 'health' ? 'สุขภาพจากการทำงาน' : ($key === 'exit' ? 'Exit Interview' : $label)),
+                'title' => $key === 'trm' ? 'Training Roadmap' : ($key === 'health' ? 'สุขภาพและการเจ็บป่วยจากการทำงาน' : ($key === 'exit' ? 'Exit Interview' : $label)),
                 'aria-current' => $active === $key ? 'page' : null,
                 'data-pjax' => '0',
             ]

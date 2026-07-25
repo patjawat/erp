@@ -6,7 +6,6 @@ $titles = [
     'overview' => ['ภาพรวมงาน HRD', 'ติดตามความพร้อมและรายการที่ HR ต้องดำเนินการจากจุดเดียว'],
     'jd' => ['JD', 'ภาพรวมคำบรรยายลักษณะงานและการลงนามรับทราบ'],
     'appraisal' => ['ประเมินผล', 'การประเมินช่วงทดลองงานและผลการปฏิบัติงานประจำปี'],
-    'health' => ['สุขภาพจากการทำงาน', 'ติดตามข้อมูลการเจ็บป่วยและเหตุการณ์ที่เกี่ยวข้องกับการทำงาน'],
     'exit' => ['Exit Interview', 'ติดตามการสัมภาษณ์ก่อนออกจากงานและประเด็นที่องค์กรควรนำไปปรับปรุง'],
 ];
 [$heading, $description] = $titles[$section];
@@ -64,13 +63,11 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
         </div>
     <?php else: ?>
         <section class="workforce-empty">
-            <span class="workforce-empty__icon"><i data-lucide="<?= $section === 'health' ? 'heart-pulse' : ($section === 'exit' ? 'log-out' : 'chart-no-axes-combined') ?>"></i></span>
+            <span class="workforce-empty__icon"><i data-lucide="<?= $section === 'exit' ? 'log-out' : 'chart-no-axes-combined' ?>"></i></span>
             <h2>วางตำแหน่งเมนูไว้แล้ว</h2>
-            <p><?= $section === 'health'
-                ? 'ขั้นถัดไปจะออกแบบทะเบียนสุขภาพจากการทำงาน การบันทึกเหตุการณ์ และสิทธิ์การเข้าถึงข้อมูลที่มีความอ่อนไหว'
-                : ($section === 'exit'
+            <p><?= $section === 'exit'
                     ? 'ขั้นถัดไปจะออกแบบแบบสัมภาษณ์ การส่งมอบงาน เหตุผลการลาออก และรายงานวิเคราะห์สำหรับ HR'
-                    : 'ขั้นถัดไปจะออกแบบรอบทดลองงานและรอบประเมินประจำปี โดยเชื่อมผลประเมินไปยัง IDP') ?></p>
+                    : 'ขั้นถัดไปจะออกแบบรอบทดลองงานและรอบประเมินประจำปี โดยเชื่อมผลประเมินไปยัง IDP' ?></p>
             <?= Html::a('กลับไปภาพรวม', ['/hr/workforce/index'], ['class' => 'btn btn-outline-primary']) ?>
         </section>
     <?php endif ?>

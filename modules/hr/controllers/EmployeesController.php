@@ -286,6 +286,13 @@ class EmployeesController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
+        if (in_array($name, ['health', 'occupational_health'], true)) {
+            return $this->redirect([
+                '/health/health-screen/index',
+                'HealthScreenSearch[emp_id]' => (int) $model->id,
+            ]);
+        }
+
         $searchModel = new EmployeeDetailSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->where(['emp_id' => $model->id, 'name' => $name]);

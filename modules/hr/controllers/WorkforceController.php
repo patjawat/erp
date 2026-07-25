@@ -37,7 +37,11 @@ class WorkforceController extends Controller
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูภาพรวมงานบุคลากร');
         }
 
-        $allowedSections = ['overview', 'jd', 'appraisal', 'health', 'exit'];
+        if ($section === 'health') {
+            return $this->redirect(['/health/default/index']);
+        }
+
+        $allowedSections = ['overview', 'jd', 'appraisal', 'exit'];
         if (!in_array($section, $allowedSections, true)) {
             $section = 'overview';
         }
