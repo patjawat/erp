@@ -76,8 +76,8 @@ use yii\helpers\Url;
             </li>
             <li>
                 <?= Html::a(
-                    '<span class="d-flex align-items-center gap-2"><i data-lucide="signpost" style="width:15px;height:15px" class="text-muted"></i> Training Roadmap</span>',
-                    ['/hr/training-roadmap/index'],
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="signpost" style="width:15px;height:15px" class="text-muted"></i> TRM Template</span>',
+                    ['/hr/training-roadmap/templates'],
                     ['class' => 'dropdown-item', 'data-pjax' => '0']
                 ) ?>
             </li>

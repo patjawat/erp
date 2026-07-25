@@ -4,7 +4,9 @@ namespace app\modules\hr\controllers;
 
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\db\Query;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -30,11 +32,79 @@ class TrainingRoadmapController extends Controller
                     ['allow' => true, 'roles' => ['@']],
                 ],
             ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => ['bulk-assign' => ['POST']],
+            ],
         ];
     }
 
     public function actionIndex()
     {
+        $this->assertCanManageRoadmaps();
+        $q = trim((string) Yii::$app->request->get('q'));
+        $planStatus = trim((string) Yii::$app->request->get('status'));
+        $newHireSince = date('Y-m-d', strtotime('-90 days'));
+
+        $newHireQuery = Employees::find()->alias('e')
+            ->where(['e.status' => 1])
+            ->andWhere(['not', ['e.id' => 1]])
+            ->andWhere(['>=', 'e.join_date', $newHireSince]);
+        $assignedEmployeeIds = (new Query())
+            ->select('emp_id')
+            ->from(EmployeeTrainingPlan::tableName())
+            ->where(['not in', 'status', ['cancelled']]);
+        $unassignedQuery = (clone $newHireQuery)
+            ->andWhere(['not in', 'e.id', $assignedEmployeeIds])
+            ->with(['empDepartment'])
+            ->orderBy(['e.join_date' => SORT_DESC, 'e.id' => SORT_DESC]);
+
+        $planQuery = EmployeeTrainingPlan::find()->alias('p')
+            ->with(['employee.empDepartment', 'roadmap', 'mentor', 'assessor']);
+        if ($q !== '') {
+            $planQuery->innerJoin(['e' => Employees::tableName()], 'e.id = p.emp_id')
+                ->andWhere(['or', ['like', 'e.fname', $q], ['like', 'e.lname', $q]]);
+        }
+        if ($planStatus !== '') {
+            $planQuery->andWhere(['p.status' => $planStatus]);
+        } else {
+            $planQuery->andWhere(['p.status' => ['assigned', 'in_progress', 'assessment', 'paused']]);
+        }
+
+        $metrics = [
+            'new_hires' => (int) (clone $newHireQuery)->count(),
+            'unassigned' => (int) (clone $unassignedQuery)->count(),
+            'in_progress' => (int) EmployeeTrainingPlan::find()->where(['status' => ['assigned', 'in_progress', 'assessment']])->count(),
+            'overdue' => (int) EmployeeTrainingPlan::find()
+                ->where(['status' => ['assigned', 'in_progress', 'assessment', 'paused']])
+                ->andWhere(['<', 'target_end_date', date('Y-m-d')])
+                ->count(),
+        ];
+
+        return $this->render('index', [
+            'metrics' => $metrics,
+            'newHireSince' => $newHireSince,
+            'unassignedProvider' => new ActiveDataProvider([
+                'query' => $unassignedQuery,
+                'pagination' => ['pageSize' => 10, 'pageParam' => 'new-page'],
+            ]),
+            'planProvider' => new ActiveDataProvider([
+                'query' => $planQuery->orderBy(['p.updated_at' => SORT_DESC, 'p.id' => SORT_DESC]),
+                'pagination' => ['pageSize' => 15, 'pageParam' => 'plan-page'],
+            ]),
+            'roadmapItems' => ArrayHelper::map(
+                TrainingRoadmap::find()->where(['not in', 'status', ['retired']])->orderBy(['title' => SORT_ASC])->all(),
+                'id',
+                static fn(TrainingRoadmap $model) => $model->code . ' · ' . $model->title
+            ),
+            'q' => $q,
+            'planStatus' => $planStatus,
+        ]);
+    }
+
+    public function actionTemplates()
+    {
+        $this->assertCanManageRoadmaps();
         $query = TrainingRoadmap::find()->with(['phases.activities']);
         $q = trim((string) Yii::$app->request->get('q'));
         $status = Yii::$app->request->get('status');
@@ -48,7 +118,7 @@ class TrainingRoadmapController extends Controller
             'query' => $query->orderBy(['updated_at' => SORT_DESC, 'id' => SORT_DESC]),
             'pagination' => ['pageSize' => 20],
         ]);
-        return $this->render('index', compact('dataProvider', 'q', 'status'));
+        return $this->render('templates', compact('dataProvider', 'q', 'status'));
     }
 
     public function actionView($id)
@@ -58,6 +128,7 @@ class TrainingRoadmapController extends Controller
 
     public function actionCreate()
     {
+        $this->assertCanManageRoadmaps();
         $model = new TrainingRoadmap([
             'roadmap_type' => 'professional', 'version_no' => 1, 'duration_value' => 90,
             'duration_unit' => 'day', 'status' => 'draft',
@@ -67,11 +138,13 @@ class TrainingRoadmapController extends Controller
 
     public function actionUpdate($id)
     {
+        $this->assertCanManageRoadmaps();
         return $this->saveRoadmap($this->findRoadmap($id));
     }
 
     public function actionPhase($roadmap_id, $id = null)
     {
+        $this->assertCanManageRoadmaps();
         $roadmap = $this->findRoadmap($roadmap_id);
         $model = $id ? $this->findPhase($id) : new TrainingRoadmapPhase([
             'roadmap_id' => $roadmap->id,
@@ -86,6 +159,7 @@ class TrainingRoadmapController extends Controller
 
     public function actionActivity($phase_id, $id = null)
     {
+        $this->assertCanManageRoadmaps();
         $phase = $this->findPhase($phase_id);
         $model = $id ? $this->findActivity($id) : new TrainingRoadmapActivity([
             'phase_id' => $phase->id,
@@ -101,6 +175,7 @@ class TrainingRoadmapController extends Controller
 
     public function actionMilestone($roadmap_id, $id = null)
     {
+        $this->assertCanManageRoadmaps();
         $roadmap = $this->findRoadmap($roadmap_id);
         $model = $id ? $this->findMilestone($id) : new TrainingRoadmapMilestone([
             'roadmap_id' => $roadmap->id,
@@ -113,39 +188,80 @@ class TrainingRoadmapController extends Controller
         return $this->saveModalModel($model, '_milestone_form', 'บันทึกจุดประเมินเรียบร้อย', '#roadmap-builder');
     }
 
-    public function actionAssign($roadmap_id, $emp_id = null)
+    public function actionAssign($roadmap_id = null, $emp_id = null)
     {
-        $roadmap = $this->findRoadmap($roadmap_id);
+        $roadmap = $roadmap_id ? $this->findRoadmap($roadmap_id) : null;
         $model = new EmployeeTrainingPlan([
-            'roadmap_id' => $roadmap->id, 'emp_id' => $emp_id, 'start_date' => date('Y-m-d'),
-            'status' => 'assigned', 'progress_percent' => 0,
+            'roadmap_id' => $roadmap?->id,
+            'emp_id' => $emp_id,
+            'start_date' => date('Y-m-d'),
+            'status' => 'assigned',
+            'progress_percent' => 0,
         ]);
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            $model->target_end_date = $this->calculateEndDate($model->start_date, $roadmap->duration_value, $roadmap->duration_unit);
-            $model->roadmap_snapshot_json = json_encode($this->snapshotRoadmap($roadmap), JSON_UNESCAPED_UNICODE);
-            $model->assigned_by = Yii::$app->user->id;
-            $model->assigned_at = date('Y-m-d H:i:s');
-            $transaction = Yii::$app->db->beginTransaction();
-            try {
-                $model->save(false);
-                foreach ($roadmap->phases as $phase) {
-                    foreach ($phase->activities as $activity) {
-                        (new EmployeeTrainingResult([
-                            'plan_id' => $model->id, 'activity_id' => $activity->id, 'status' => 'pending',
-                        ]))->save(false);
-                    }
-                }
-                $transaction->commit();
-            } catch (\Throwable $e) {
-                $transaction->rollBack();
-                throw $e;
+        if ($model->load(Yii::$app->request->post())) {
+            $roadmap = $this->findRoadmap($model->roadmap_id);
+            $employee = Employees::findOne($model->emp_id);
+            if (!$employee) throw new NotFoundHttpException('ไม่พบบุคลากร');
+            $this->assertCanAssignEmployee($employee);
+            if ($this->hasOpenPlan($model->emp_id)) {
+                $model->addError('emp_id', 'บุคลากรรายนี้มี Training Roadmap ที่กำลังดำเนินการอยู่แล้ว');
             }
-            return $this->jsonSuccess('มอบหมาย Training Roadmap เรียบร้อย', '#roadmap-assignments');
+        } elseif ($emp_id) {
+            $employee = Employees::findOne($emp_id);
+            if (!$employee) throw new NotFoundHttpException('ไม่พบบุคลากร');
+            $this->assertCanAssignEmployee($employee);
+        } else {
+            $this->assertCanManageRoadmaps();
+        }
+        if (!$model->hasErrors() && Yii::$app->request->isPost && $model->validate()) {
+            $this->createEmployeePlan($model, $roadmap);
+            if (Yii::$app->request->isAjax) {
+                return $this->jsonSuccess('มอบหมาย Training Roadmap เรียบร้อย', '#roadmap-assignments');
+            }
+            Yii::$app->session->setFlash('success', 'มอบหมาย Training Roadmap เรียบร้อย');
+            return $this->redirect(['index']);
         }
         return $this->modalOrPage('_assign_form', [
-            'model' => $model, 'roadmap' => $roadmap,
-            'employeeItems' => ArrayHelper::map(Employees::find()->orderBy(['fname' => SORT_ASC])->all(), 'id', 'fullname'),
+            'model' => $model,
+            'roadmap' => $roadmap,
+            'employeeItems' => ArrayHelper::map(Employees::find()->where(['status' => 1])->orderBy(['fname' => SORT_ASC])->all(), 'id', 'fullname'),
+            'roadmapItems' => ArrayHelper::map(
+                TrainingRoadmap::find()->where(['not in', 'status', ['retired']])->orderBy(['title' => SORT_ASC])->all(),
+                'id',
+                static fn(TrainingRoadmap $item) => $item->code . ' · ' . $item->title
+            ),
         ], 'มอบหมาย Training Roadmap');
+    }
+
+    public function actionBulkAssign()
+    {
+        $this->assertCanManageRoadmaps();
+        $employeeIds = array_values(array_unique(array_filter(array_map('intval', (array) Yii::$app->request->post('emp_ids')))));
+        $roadmapId = (int) Yii::$app->request->post('roadmap_id');
+        $startDate = (string) Yii::$app->request->post('start_date', date('Y-m-d'));
+        if (!$employeeIds || !$roadmapId) {
+            Yii::$app->session->setFlash('warning', 'กรุณาเลือกบุคลากรและ Training Roadmap');
+            return $this->redirect(['index']);
+        }
+        $roadmap = $this->findRoadmap($roadmapId);
+        $assigned = 0;
+        $skipped = 0;
+        foreach (Employees::find()->where(['id' => $employeeIds, 'status' => 1])->all() as $employee) {
+            if ($this->hasOpenPlan($employee->id)) {
+                $skipped++;
+                continue;
+            }
+            $this->createEmployeePlan(new EmployeeTrainingPlan([
+                'emp_id' => $employee->id,
+                'roadmap_id' => $roadmap->id,
+                'start_date' => $startDate,
+                'status' => 'assigned',
+                'progress_percent' => 0,
+            ]), $roadmap);
+            $assigned++;
+        }
+        Yii::$app->session->setFlash('success', "มอบหมาย TRM สำเร็จ {$assigned} คน" . ($skipped ? " ข้าม {$skipped} คนที่มีแผนอยู่แล้ว" : ''));
+        return $this->redirect(['index']);
     }
 
     public function actionEmployee($emp_id)
@@ -155,7 +271,8 @@ class TrainingRoadmapController extends Controller
             throw new NotFoundHttpException('ไม่พบข้อมูลบุคลากร');
         }
         $me = UserHelper::GetEmployee();
-        if (!$this->canManageRoadmaps() && (!$me || (int) $me->id !== (int) $employee->id)) {
+        $isLeader = $me && (int) ($employee->leader()?->id ?? 0) === (int) $me->id;
+        if (!$this->canManageRoadmaps() && (!$me || ((int) $me->id !== (int) $employee->id && !$isLeader))) {
             throw new NotFoundHttpException('ไม่พบข้อมูลบุคลากร');
         }
         $plans = EmployeeTrainingPlan::find()->where(['emp_id' => $emp_id])
@@ -181,7 +298,8 @@ class TrainingRoadmapController extends Controller
             throw new NotFoundHttpException('ไม่พบแผนพัฒนารายบุคคล');
         }
         $me = UserHelper::GetEmployee();
-        if (!$this->canManageRoadmaps() && (!$me || (int) $me->id !== (int) $model->emp_id)) {
+        $isLeader = $me && (int) ($model->employee?->leader()?->id ?? 0) === (int) $me->id;
+        if (!$this->canManageRoadmaps() && (!$me || ((int) $me->id !== (int) $model->emp_id && !$isLeader))) {
             throw new NotFoundHttpException('ไม่พบแผนพัฒนารายบุคคล');
         }
         return $this->render('plan', ['model' => $model]);
@@ -279,6 +397,42 @@ class TrainingRoadmapController extends Controller
         $plan->save(false);
     }
 
+    protected function createEmployeePlan(EmployeeTrainingPlan $model, TrainingRoadmap $roadmap)
+    {
+        $model->target_end_date = $this->calculateEndDate($model->start_date, $roadmap->duration_value, $roadmap->duration_unit);
+        $model->roadmap_snapshot_json = json_encode($this->snapshotRoadmap($roadmap), JSON_UNESCAPED_UNICODE);
+        $model->assigned_by = Yii::$app->user->id;
+        $model->assigned_at = date('Y-m-d H:i:s');
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if (!$model->save()) {
+                throw new \RuntimeException(implode(', ', $model->getFirstErrors()));
+            }
+            foreach ($roadmap->phases as $phase) {
+                foreach ($phase->activities as $activity) {
+                    (new EmployeeTrainingResult([
+                        'plan_id' => $model->id,
+                        'activity_id' => $activity->id,
+                        'status' => 'pending',
+                    ]))->save(false);
+                }
+            }
+            $transaction->commit();
+            return $model;
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    protected function hasOpenPlan($employeeId)
+    {
+        return EmployeeTrainingPlan::find()
+            ->where(['emp_id' => $employeeId])
+            ->andWhere(['not in', 'status', ['completed', 'cancelled']])
+            ->exists();
+    }
+
     protected function findRoadmap($id) {
         $model = TrainingRoadmap::find()->where(['id' => $id])->with(['phases.activities', 'milestones', 'assignments'])->one();
         if (!$model) throw new NotFoundHttpException('ไม่พบ Training Roadmap');
@@ -303,5 +457,21 @@ class TrainingRoadmapController extends Controller
     protected function canManageRoadmaps()
     {
         return Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
+    }
+
+    protected function assertCanManageRoadmaps()
+    {
+        if (!$this->canManageRoadmaps()) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์จัดการ Training Roadmap');
+        }
+    }
+
+    protected function assertCanAssignEmployee(Employees $employee)
+    {
+        if ($this->canManageRoadmaps()) return;
+        $me = UserHelper::GetEmployee();
+        if (!$me || (int) ($employee->leader()?->id ?? 0) !== (int) $me->id) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์มอบหมาย Training Roadmap ให้บุคลากรรายนี้');
+        }
     }
 }

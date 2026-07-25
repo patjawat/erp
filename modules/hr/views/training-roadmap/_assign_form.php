@@ -4,8 +4,11 @@ use yii\widgets\ActiveForm;
 use app\modules\hr\models\EmployeeTrainingPlan;
 $form = ActiveForm::begin(['id' => 'training-assign-form']);
 ?>
+<?php if ($roadmap): ?>
 <div class="alert alert-light border mb-3"><strong><?= Html::encode($roadmap->title) ?></strong><br><span class="text-muted">ระบบจะคำนวณวันสิ้นสุดและสร้างรายการติดตามจากแม่แบบเวอร์ชัน <?= (int) $roadmap->version_no ?></span></div>
+<?php endif ?>
 <div class="row g-3">
+    <div class="col-12"><?= $form->field($model, 'roadmap_id')->dropDownList($roadmapItems, ['prompt' => 'เลือก Training Roadmap', 'disabled' => $roadmap !== null])->label('Training Roadmap') ?><?php if ($roadmap): ?><?= Html::activeHiddenInput($model, 'roadmap_id') ?><?php endif ?></div>
     <div class="col-12"><?= $form->field($model, 'emp_id')->dropDownList($employeeItems, ['prompt' => 'เลือกบุคลากร'])->label('บุคลากร') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'start_date')->input('date')->label('วันที่เริ่มแผน') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'status')->dropDownList(EmployeeTrainingPlan::statusOptions())->label('สถานะเริ่มต้น') ?></div>

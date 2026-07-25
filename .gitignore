@@ -51,3 +51,4 @@ composer.lock
 # Claude Code / AI tooling (local, not part of the project)
 .claude
 .tokensave
+/tmp/

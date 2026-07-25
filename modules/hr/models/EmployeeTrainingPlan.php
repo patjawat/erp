@@ -22,5 +22,7 @@ class EmployeeTrainingPlan extends TrainingRoadmapRecord
     }
     public function getEmployee() { return $this->hasOne(Employees::class, ['id' => 'emp_id']); }
     public function getRoadmap() { return $this->hasOne(TrainingRoadmap::class, ['id' => 'roadmap_id']); }
+    public function getMentor() { return $this->hasOne(Employees::class, ['id' => 'mentor_emp_id']); }
+    public function getAssessor() { return $this->hasOne(Employees::class, ['id' => 'assessor_emp_id']); }
     public function getResults() { return $this->hasMany(EmployeeTrainingResult::class, ['plan_id' => 'id']); }
 }
