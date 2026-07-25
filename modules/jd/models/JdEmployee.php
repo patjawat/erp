@@ -21,6 +21,7 @@ use yii\db\ActiveRecord;
 class JdEmployee extends ActiveRecord
 {
     public const STATUS_DRAFT = 'draft';
+    public const STATUS_PENDING = 'pending';
     public const STATUS_ACTIVE = 'active';
     public const STATUS_RETIRED = 'retired';
     public static function tableName()
@@ -34,7 +35,7 @@ class JdEmployee extends ActiveRecord
             [['emp_id'], 'required'],
             [['emp_id', 'template_id', 'revision_no', 'supersedes_id', 'approved_by', 'created_by', 'updated_by'], 'integer'],
             [['created_at', 'updated_at', 'effective_from', 'effective_to', 'approved_at'], 'safe'],
-            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_ACTIVE, self::STATUS_RETIRED]],
+            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_ACTIVE, self::STATUS_RETIRED]],
             [['position_code', 'department_code'], 'string', 'max' => 64],
             [['position_title', 'department_title'], 'string', 'max' => 255],
             [['revision_no'], 'default', 'value' => 1],
@@ -93,6 +94,13 @@ class JdEmployee extends ActiveRecord
         return $this->hasOne(Employees::class, ['user_id' => 'approved_by']);
     }
 
+    public function getApprovalRows()
+    {
+        return $this->hasMany(\app\modules\approveV2\models\Approve::class, ['from_id' => 'id'])
+            ->andOnCondition(['name' => \app\modules\jd\services\JdApprovalService::APPROVE_NAME])
+            ->orderBy(['level' => SORT_ASC]);
+    }
+
     public static function findCurrent(int $employeeId): ?self
     {
         $today = date('Y-m-d');
@@ -109,6 +117,7 @@ class JdEmployee extends ActiveRecord
     {
         return [
             self::STATUS_DRAFT => 'ฉบับร่าง',
+            self::STATUS_PENDING => 'รอลงนาม',
             self::STATUS_ACTIVE => 'ฉบับปัจจุบัน',
             self::STATUS_RETIRED => 'สิ้นสุดแล้ว',
         ];

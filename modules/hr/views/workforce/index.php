@@ -56,12 +56,11 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
         <section class="workforce-metrics" aria-label="ตัวชี้วัด JD">
             <div class="workforce-metric"><span class="workforce-metric__label">บุคลากรทั้งหมด</span><strong class="workforce-metric__value"><?= number_format($metrics['employees']) ?></strong></div>
             <div class="workforce-metric"><span class="workforce-metric__label">มี JD ปัจจุบัน</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_active']) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">รอลงนามรับทราบ</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_pending']) ?></strong></div>
+            <div class="workforce-metric"><span class="workforce-metric__label">อยู่ระหว่างลงนาม</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_approval_pending']) ?></strong></div>
+            <div class="workforce-metric"><span class="workforce-metric__label">ยังไม่ได้กำหนด JD</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_missing']) ?></strong></div>
         </section>
-        <div class="workforce-panel mt-3">
-            <h2>จัดการ JD</h2>
-            <?= Html::a('<span><strong>เปิดทะเบียนบุคลากร</strong><small>เลือกบุคลากรเพื่อดู จัดทำ หรือปรับปรุง JD</small></span><i data-lucide="arrow-right"></i>', ['/hr/employees'], ['class' => 'workforce-link']) ?>
-            <?= Html::a('<span><strong>ตั้งค่า JD Template</strong><small>จัดการแม่แบบตามตำแหน่งและหน่วยงาน</small></span><i data-lucide="arrow-right"></i>', ['/jd/template/index'], ['class' => 'workforce-link']) ?>
+        <div class="mt-3">
+            <?= $this->render('_jd_registry', compact('jdDataProvider', 'jdByEmployee', 'approvalByJd', 'acknowledgedJdIds')) ?>
         </div>
     <?php else: ?>
         <section class="workforce-empty">
