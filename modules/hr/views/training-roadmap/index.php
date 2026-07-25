@@ -7,11 +7,13 @@ use app\components\widgets\DataSummaryWidget;
 
 $this->title = 'Training Roadmap';
 echo $this->render('_styles');
+echo $this->render('@app/modules/hr/views/workforce/_styles');
 $this->beginBlock('page-title'); echo Html::encode($this->title); $this->endBlock();
 $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['active' => 'training-roadmap']); $this->endBlock();
 $models = $dataProvider->getModels();
 ?>
 <div class="trm-shell">
+    <?= $this->render('@app/modules/hr/views/workforce/_menu', ['active' => 'trm']) ?>
     <div class="trm-page-head">
         <div><h1>แม่แบบ Training Roadmap</h1><p>กำหนดเส้นทางพัฒนาที่ใช้ร่วมกันได้ทุกวิชาชีพ พร้อมระยะฝึก กิจกรรม สมรรถนะ และจุดประเมิน</p></div>
         <?= Html::a('<i class="bi bi-plus-lg me-1"></i> สร้าง Roadmap', ['create', 'title' => 'สร้าง Training Roadmap'], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-xl']) ?>

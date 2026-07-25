@@ -16,6 +16,8 @@ use app\modules\usermanager\models\User;
 use app\modules\hr\models\EmployeeDetail;
 use app\modules\hr\models\EmployeeDetailSearch;
 use app\modules\hr\models\EmployeeTrainingPlan;
+use app\modules\hr\models\IdpCycle;
+use app\modules\hr\models\IdpPlan;
 
 class ProfileController extends \yii\web\Controller
 
@@ -59,6 +61,8 @@ class ProfileController extends \yii\web\Controller
         $name = $this->request->get('name');
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
         $trainingPlans = [];
+        $idpCycle = null;
+        $idpPlan = null;
         $dataProvider = null;
         if ($model && $name === 'training_roadmap') {
             $trainingPlans = EmployeeTrainingPlan::find()
@@ -66,6 +70,12 @@ class ProfileController extends \yii\web\Controller
                 ->with(['roadmap.phases.activities', 'results'])
                 ->orderBy(['id' => SORT_DESC])
                 ->all();
+        } elseif ($model && $name === 'idp') {
+            $idpCycle = IdpCycle::current();
+            $idpPlan = $idpCycle
+                ? IdpPlan::find()->where(['cycle_id' => $idpCycle->id, 'emp_id' => $model->id])
+                    ->with(['cycle', 'employee', 'supervisor', 'goals.activities'])->one()
+                : null;
         } elseif ($model && $name) {
             $searchModel = new EmployeeDetailSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
@@ -80,6 +90,8 @@ class ProfileController extends \yii\web\Controller
             'model' => $model ? $model : new Employees(),
             'name' => $name,
             'trainingPlans' => $trainingPlans,
+            'idpCycle' => $idpCycle,
+            'idpPlan' => $idpPlan,
             'dataProvider' => $dataProvider,
         ]);
         // }else{

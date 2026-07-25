@@ -940,31 +940,100 @@ class Employees extends Yii\db\ActiveRecord
             $items[$item['name']] = $item;
         }
 
+        $comingSoon = static function (string $name, string $title, string $subtitle, string $icon): array {
+            return [
+                'name' => $name,
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'icon' => '<i data-lucide="' . $icon . '" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+                'coming_soon' => true,
+            ];
+        };
+        $items += [
+            'idp' => [
+                'name' => 'idp',
+                'title' => 'IDP ของฉัน',
+                'subtitle' => 'เป้าหมาย กิจกรรม และความก้าวหน้า',
+                'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+            ],
+            'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
+            'occupational_health' => $comingSoon('occupational_health', 'สุขภาพจากการทำงาน', 'การเจ็บป่วย อุบัติเหตุ และข้อจำกัด', 'briefcase-medical'),
+            'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
+            'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
+            'housing' => $comingSoon('housing', 'บ้านพัก', 'คำขอเข้าพัก ค่าใช้จ่าย และแจ้งซ่อม', 'house'),
+            'handover' => $comingSoon('handover', 'การส่งมอบงาน', 'งาน ทรัพย์สิน สิทธิ์ระบบ และความรู้', 'list-checks'),
+            'exit_interview' => $comingSoon('exit_interview', 'Exit Interview', 'แบบสัมภาษณ์ก่อนสิ้นสุดการทำงาน', 'messages-square'),
+        ];
+
         $definitions = [
             [
                 'key' => 'general',
                 'title' => 'ข้อมูลทั่วไป',
-                'subtitle' => 'ประวัติส่วนบุคคลและการทำงาน',
+                'subtitle' => 'ประวัติส่วนบุคคลและครอบครัว',
                 'icon' => 'user-round',
                 'items' => [
-                    '', 'position', 'job_description_history', 'education',
-                    'family', 'rename', 'license', 'award', 'insignia',
-                    'scholarships', 'benefit', 'position_manage', 'blame', 'signature',
+                    '', 'family', 'rename', 'signature',
+                ],
+            ],
+            [
+                'key' => 'work',
+                'title' => 'งานและหน้าที่',
+                'subtitle' => 'ตำแหน่ง วิชาชีพ และคำอธิบายงาน',
+                'icon' => 'briefcase-business',
+                'items' => [
+                    'position', 'job_description_history', 'position_manage', 'license',
                 ],
             ],
             [
                 'key' => 'development',
-                'title' => 'การพัฒนาและประเมินผล',
-                'subtitle' => 'การอบรมและเส้นทางพัฒนา',
+                'title' => 'การพัฒนา',
+                'subtitle' => 'การอบรมและแผนพัฒนารายบุคคล',
                 'icon' => 'chart-no-axes-combined',
-                'items' => ['develop', 'training_roadmap'],
+                'items' => ['develop', 'training_roadmap', 'idp', 'education', 'scholarships'],
+            ],
+            [
+                'key' => 'appraisal',
+                'title' => 'การประเมินผล',
+                'subtitle' => 'ตั้งแต่ทดลองงานถึงผลประจำปี',
+                'icon' => 'clipboard-list',
+                'items' => ['performance_appraisal'],
             ],
             [
                 'key' => 'health',
                 'title' => 'สุขภาพและความปลอดภัย',
                 'subtitle' => 'ข้อมูลสุขภาพที่เกี่ยวข้องกับงาน',
                 'icon' => 'heart-pulse',
-                'items' => ['health'],
+                'items' => ['health', 'occupational_health'],
+            ],
+            [
+                'key' => 'compensation',
+                'title' => 'เงินเดือนและค่าตอบแทน',
+                'subtitle' => 'ข้อมูลการเงินส่วนบุคคล',
+                'icon' => 'banknote',
+                'items' => ['payroll', 'tax_documents'],
+            ],
+            [
+                'key' => 'welfare',
+                'title' => 'บ้านพักและสวัสดิการ',
+                'subtitle' => 'สิทธิประโยชน์และที่พัก',
+                'icon' => 'house-heart',
+                'items' => ['benefit', 'housing'],
+            ],
+            [
+                'key' => 'recognition',
+                'title' => 'เกียรติประวัติและวินัย',
+                'subtitle' => 'รางวัล เครื่องราชฯ และประวัติวินัย',
+                'icon' => 'award',
+                'items' => ['award', 'insignia', 'blame'],
+            ],
+            [
+                'key' => 'offboarding',
+                'title' => 'การส่งมอบและสิ้นสุดงาน',
+                'subtitle' => 'ส่งมอบงานและปิดกระบวนการ',
+                'icon' => 'log-out',
+                'items' => ['handover', 'exit_interview'],
             ],
         ];
 

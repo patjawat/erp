@@ -21,6 +21,7 @@ $notify = ApproveHelper::Info();
 $total = $notify['total'];
 $jdNotify = $notify['jd_acknowledgement'] ?? ['total' => 0, 'datas' => []];
 $pendingJd = $jdNotify['datas'][0] ?? null;
+$idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
 ?>
 <style>
     /* container สำหรับ animation เปิด–ปิด */
@@ -112,14 +113,26 @@ $pendingJd = $jdNotify['datas'][0] ?? null;
                             </span>
                         </a>
                     <?php endif; ?>
-                    <?php if (($total - (int) $jdNotify['total']) > 0): ?>
+                    <?php if ((int) $idpNotify['total'] > 0): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-start py-3" href="<?= Url::to($idpNotify['url']) ?>">
+                            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="target" style="width: 19px;"></i>
+                            </span>
+                            <span class="text-wrap">
+                                <span class="d-block fw-semibold">IDP รอดำเนินการ</span>
+                                <small class="text-body-secondary"><?= (int) $idpNotify['total'] ?> รายการที่ต้องตรวจสอบหรือปรับปรุง</small>
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $idpNotify['total']; ?>
+                    <?php if ($otherTotal > 0): ?>
                         <a class="dropdown-item d-flex gap-3 align-items-center py-3" href="<?= Url::to(['/approve-v2/leave']) ?>">
                             <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
                                 <i data-lucide="list-checks" style="width: 19px;"></i>
                             </span>
                             <span>
                                 <span class="d-block fw-semibold">รายการรออนุมัติ</span>
-                                <small class="text-body-secondary"><?= $total - (int) $jdNotify['total'] ?> รายการ</small>
+                                <small class="text-body-secondary"><?= $otherTotal ?> รายการ</small>
                             </span>
                         </a>
                     <?php endif; ?>

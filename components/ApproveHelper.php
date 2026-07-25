@@ -15,6 +15,7 @@ use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 use app\modules\jd\models\JdEmployee;
 use app\modules\jd\models\JdEmployeeAcknowledgement;
+use app\modules\hr\models\IdpPlan;
 
 // การแจ้งเตือนต่างๆ
 class ApproveHelper extends Component
@@ -23,10 +24,11 @@ class ApproveHelper extends Component
     public static function Info()
     {
         $jdAcknowledgement = self::JdAcknowledgement();
+        $idp = self::Idp();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $idp['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -36,7 +38,27 @@ class ApproveHelper extends Component
             'assetMove' => self::AssetMove(),
             'requisitionV2' => self::RequisitionV2(),
             'jd_acknowledgement' => $jdAcknowledgement,
+            'idp' => $idp,
         ];
+    }
+
+    public static function Idp(): array
+    {
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) return ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
+            $reviewPlans = IdpPlan::find()->where(['supervisor_emp_id' => $me->id, 'status' => 'submitted'])->orderBy(['submitted_at' => SORT_ASC])->all();
+            $revisionPlans = IdpPlan::find()->where(['emp_id' => $me->id, 'status' => 'revision'])->orderBy(['reviewed_at' => SORT_DESC])->all();
+            $datas = array_merge($reviewPlans, $revisionPlans);
+            $first = $datas[0] ?? null;
+            $url = $first && (int) $first->supervisor_emp_id === (int) $me->id && $first->status === 'submitted'
+                ? ['/hr/idp/employee', 'emp_id' => $first->emp_id]
+                : ['/profile', 'name' => 'idp'];
+            return ['title' => 'IDP รอดำเนินการ', 'total' => count($datas), 'datas' => $datas, 'url' => $url];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load IDP notifications: ' . $th->getMessage(), __METHOD__);
+            return ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
+        }
     }
 
     /**

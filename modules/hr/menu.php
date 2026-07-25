@@ -25,6 +25,16 @@ use yii\helpers\Url;
         <span class="d-none d-sm-inline">ผังโครงสร้างองค์กร</span>
     </a>
 
+    <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
+    <a href="<?= Url::to(['/hr/workforce/index']) ?>"
+       aria-label="งาน HRD"
+       class="btn <?= in_array($active, ['workforce', 'idp', 'training-roadmap', 'jd', 'appraisal', 'health', 'exit'], true) ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+       data-pjax="0">
+        <i data-lucide="briefcase-business" width="16" height="16" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">งาน HRD</span>
+    </a>
+    <?php endif; ?>
+
     <div class="dropdown">
         <button class="btn <?= in_array($active, ['setting', 'training-roadmap'], true) ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle d-inline-flex align-items-center gap-2"
                 type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" aria-label="ตั้งค่า">

@@ -35,6 +35,10 @@ $this->registerCss(<<<CSS
 .profile-nav-item__icon{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;color:#718096}
 .profile-nav-item__icon svg{width:14px;height:14px}
 .profile-nav-item__count{min-width:24px;padding:.15rem .4rem;color:#4a5568;background:#eef2f7;border-radius:999px;font-size:.7rem;font-variant-numeric:tabular-nums;text-align:center}
+.profile-nav-item.is-coming-soon{cursor:default}
+.profile-nav-item.is-coming-soon:hover{background:transparent}
+.profile-nav-item.is-coming-soon .profile-nav-item__title,.profile-nav-item.is-coming-soon .profile-nav-item__icon{color:#475569}
+.profile-nav-item__status{flex:0 0 auto;padding:.16rem .42rem;color:#475569;background:#eef2f7;border:1px solid rgba(100,116,139,.16);border-radius:999px;font-size:.62rem;font-weight:600;line-height:1.2;white-space:nowrap}
 @media(prefers-reduced-motion:reduce){.profile-nav-group__chevron{transition:none}}
 CSS);
 
@@ -83,11 +87,29 @@ if (!$isSelfProfile):
                         $menuUrl = $list['url'] ?? ['/hr/employees/view', 'id' => $model->id, 'name' => $list['name']];
                         if ($isSelfProfile && ($list['name'] ?? '') === 'training_roadmap') {
                             $menuUrl = ['/profile', 'name' => 'training_roadmap'];
+                        } elseif ($isSelfProfile && ($list['name'] ?? '') === 'idp') {
+                            $menuUrl = ['/profile', 'name' => 'idp'];
+                        } elseif (!$isSelfProfile && ($list['name'] ?? '') === 'idp') {
+                            $menuUrl = ['/hr/idp/employee', 'emp_id' => $model->id];
                         } elseif ($isSelfProfile && !isset($list['url'])) {
                             $menuUrl = ['/profile', 'name' => $list['name']];
                         }
                         $itemActive = ((string) ($list['name'] ?? '') === (string) $name);
+                        $comingSoon = !empty($list['coming_soon']);
                     ?>
+                    <?php if ($comingSoon): ?>
+                    <div class="profile-nav-item is-coming-soon"
+                         role="link"
+                         aria-disabled="true"
+                         title="เตรียมเปิดใช้งาน">
+                        <span class="profile-nav-item__icon"><?= $list['icon'] ?></span>
+                        <span class="profile-nav-item__copy">
+                            <span class="profile-nav-item__title"><?= Html::encode($list['title']) ?></span>
+                            <span class="profile-nav-item__subtitle"><?= Html::encode($list['subtitle']) ?></span>
+                        </span>
+                        <span class="profile-nav-item__status">เตรียมเปิดใช้</span>
+                    </div>
+                    <?php else: ?>
                     <a href="<?= Url::to($menuUrl) ?>"
                        class="profile-nav-item <?= $itemActive ? 'is-active' : '' ?>"
                        aria-current="<?= $itemActive ? 'page' : 'false' ?>"
@@ -99,6 +121,7 @@ if (!$isSelfProfile):
                         </span>
                         <?php if ((int) $list['count'] > 0): ?><span class="profile-nav-item__count"><?= (int) $list['count'] ?></span><?php endif ?>
                     </a>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             </details>
@@ -112,6 +135,13 @@ if (!$isSelfProfile):
         <?= $this->render('@app/modules/hr/views/training-roadmap/_employee_panel', [
             'employee' => $model,
             'plans' => $trainingPlans ?? $model->trainingPlans,
+        ]) ?>
+        <?php elseif($name === 'idp'):?>
+        <?= $this->render('@app/modules/hr/views/idp/_employee_panel', [
+            'employee' => $model,
+            'cycle' => $idpCycle ?? null,
+            'plan' => $idpPlan ?? null,
+            'isSelfProfile' => $isSelfProfile,
         ]) ?>
         <?php elseif($name):?>
         <div>
