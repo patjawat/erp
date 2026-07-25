@@ -87,6 +87,19 @@ class UpdateRoleController extends Controller
             ['name' => 'health', 'type' => 1, 'description' => 'ตรวจสุขภาพ'],
             ['name' => '/*', 'type' => 2, 'description' => ''],
 
+            // ระบบบ้านพัก
+            ['name' => 'housing.user', 'type' => 2, 'description' => 'ใช้งานระบบบ้านพักและสวัสดิการ'],
+            ['name' => 'housing.staff', 'type' => 2, 'description' => 'จัดการข้อมูลบ้านพักและผู้พัก'],
+            ['name' => 'housing.committee.recorder', 'type' => 2, 'description' => 'บันทึกผลมติคณะกรรมการบ้านพัก'],
+            ['name' => 'housing.guest.approver', 'type' => 2, 'description' => 'อนุญาตบุคคลภายนอกเข้าพัก'],
+            ['name' => 'housing.finance', 'type' => 2, 'description' => 'จัดทำใบแจ้งค่าใช้จ่าย'],
+            ['name' => 'housing.cashier', 'type' => 2, 'description' => 'รับชำระและออกใบเสร็จ'],
+            ['name' => 'housing.receipt.void', 'type' => 2, 'description' => 'ยกเลิกใบเสร็จบ้านพัก'],
+            ['name' => 'housing.maintenance', 'type' => 2, 'description' => 'จัดการงานซ่อมของบ้านพัก'],
+            ['name' => 'housing.report', 'type' => 2, 'description' => 'ดูรายงานบ้านพัก'],
+            ['name' => 'housing.admin', 'type' => 2, 'description' => 'บริหารระบบบ้านพักทั้งหมด'],
+            ['name' => '/housing/*', 'type' => 2, 'description' => 'ระบบจัดการบ้านพัก'],
+
             // ผู้ช่วย AI
             ['name' => '/ai/*', 'type' => 2, 'description' => 'เข้าใช้งานโมดูลผู้ช่วย AI'],
             ['name' => 'ai.chat.use', 'type' => 2, 'description' => 'ใช้ AI Chat'],
@@ -283,6 +296,27 @@ class UpdateRoleController extends Controller
             ['child' => 'vehicle', 'parent'  => 'admin'],
             ['child' => 'meeting', 'parent'  => 'admin'],
             ['child' => 'plan', 'parent'  => 'admin'],
+
+            // ระบบบ้านพัก
+            ['child' => 'housing.user', 'parent' => 'user'],
+            ['child' => 'housing.admin', 'parent' => 'admin'],
+            ['child' => 'housing.user', 'parent' => 'housing.staff'],
+            ['child' => 'housing.staff', 'parent' => 'housing.admin'],
+            ['child' => 'housing.committee.recorder', 'parent' => 'housing.admin'],
+            ['child' => 'housing.guest.approver', 'parent' => 'housing.admin'],
+            ['child' => 'housing.finance', 'parent' => 'housing.admin'],
+            ['child' => 'housing.cashier', 'parent' => 'housing.admin'],
+            ['child' => 'housing.receipt.void', 'parent' => 'housing.admin'],
+            ['child' => 'housing.maintenance', 'parent' => 'housing.admin'],
+            ['child' => 'housing.report', 'parent' => 'housing.admin'],
+            ['child' => '/housing/*', 'parent' => 'housing.user'],
+            ['child' => '/housing/*', 'parent' => 'housing.staff'],
+            ['child' => '/housing/*', 'parent' => 'housing.committee.recorder'],
+            ['child' => '/housing/*', 'parent' => 'housing.guest.approver'],
+            ['child' => '/housing/*', 'parent' => 'housing.finance'],
+            ['child' => '/housing/*', 'parent' => 'housing.cashier'],
+            ['child' => '/housing/*', 'parent' => 'housing.maintenance'],
+            ['child' => '/housing/*', 'parent' => 'housing.report'],
 
             // ผู้ช่วย AI
             ['child' => 'ai', 'parent' => 'admin'],
