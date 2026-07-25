@@ -135,6 +135,17 @@ $menuItems = [
         'active' => 'medical',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>'
     ],
+    [
+        'show' => Yii::$app->user->can('housing.user')
+            || Yii::$app->user->can('housing.staff')
+            || Yii::$app->user->can('housing.admin'),
+        'label' => 'บ้านพักและสวัสดิการ',
+        'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')
+            ? ['/housing/dashboard/index']
+            : ['/housing/my/index'],
+        'active' => 'housing',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V8l6-5 6 5v13"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path></svg>'
+    ],
 ];
 
 // 3. Logic หาชื่อระบบอัตโนมัติจากเมนู
