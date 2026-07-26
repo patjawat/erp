@@ -81,6 +81,11 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
                     </div>
                 <?php endforeach; endif; ?>
             </section>
+            <section class="detail-section overflow-hidden mt-3">
+                <div class="p-3"><h2 class="section-title">ประวัติค่าใช้จ่ายที่ปิดรอบแล้ว</h2></div>
+                <?php if ($expenseHistory === []): ?><div class="empty-note">ยังไม่มีประวัติค่าใช้จ่ายที่ปิดรอบ</div>
+                <?php else: foreach ($expenseHistory as $expense): ?><div class="unit-row p-3 d-flex justify-content-between gap-3"><div><strong><?= Html::encode($expense->period->name) ?></strong><div class="small text-muted"><?= Html::encode($expense->payer_name ?: 'ห้องว่าง') ?> · <?= Html::encode($expense->unit_name ?: 'ทั้งหลัง') ?></div></div><div class="text-end"><strong><?= Yii::$app->formatter->asDecimal($expense->total_amount, 2) ?> บาท</strong><div class="small text-muted">คงเหลือ <?= Yii::$app->formatter->asDecimal($expense->balance_amount, 2) ?></div></div></div><?php endforeach; endif; ?>
+            </section>
         </div>
         <div class="col-xl-5">
             <section class="detail-section overflow-hidden mb-3">

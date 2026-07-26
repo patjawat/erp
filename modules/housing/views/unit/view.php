@@ -71,6 +71,8 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                     <dt class="col-sm-3">ความจุ</dt><dd class="col-sm-9"><?= Html::encode((string) ($location->capacity ?: 'ไม่ระบุ')) ?></dd>
                     <dt class="col-sm-3">รายละเอียด</dt><dd class="col-sm-9"><?= nl2br(Html::encode($location->description ?: 'ไม่มีรายละเอียดเพิ่มเติม')) ?></dd>
                 </dl>
+                <hr><h2 class="h6">ประวัติค่าใช้จ่ายที่ปิดรอบแล้ว</h2>
+                <?php if ($expenseHistory === []): ?><div class="small detail-muted">ยังไม่มีประวัติค่าใช้จ่าย</div><?php else: ?><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>เดือน</th><th>ผู้รับผิดชอบ</th><th class="text-end">ค่าใช้จ่าย</th><th class="text-end">ชำระแล้ว</th><th class="text-end">คงเหลือ</th></tr></thead><tbody><?php foreach ($expenseHistory as $expense): ?><tr><td><?= Html::encode($expense->period->name) ?></td><td><?= Html::encode($expense->payer_name ?: 'ห้องว่าง') ?></td><td class="text-end"><?= Yii::$app->formatter->asDecimal($expense->total_amount, 2) ?></td><td class="text-end"><?= Yii::$app->formatter->asDecimal($expense->paid_amount, 2) ?></td><td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($expense->balance_amount, 2) ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?>
             </div>
         </section>
         <section class="tab-pane fade" id="housing-photos">

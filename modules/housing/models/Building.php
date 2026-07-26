@@ -35,6 +35,7 @@ final class Building extends HousingActiveRecord
             ],
             [['responsible_employee_id'], 'validateResponsibleEmployee'],
             [['code'], 'string', 'max' => 50],
+            [['electric_account_no'], 'string', 'max' => 100],
             [['code'], 'unique'],
             [['name'], 'string', 'max' => 255],
             [['building_type'], 'in', 'range' => array_keys(self::typeOptions())],
@@ -62,6 +63,7 @@ final class Building extends HousingActiveRecord
             'sort_order' => 'ลำดับแสดงผล',
             'building_image' => 'รูปภาพบ้านพัก',
             'responsible_employee_id' => 'ผู้รับผิดชอบดูแล',
+            'electric_account_no' => 'หมายเลขผู้ใช้ไฟฟ้า',
         ];
     }
 

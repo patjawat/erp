@@ -10,6 +10,7 @@ use app\modules\housing\models\AssetAssignment;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Floor;
 use app\modules\housing\models\LocationPhoto;
+use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
 use Yii;
@@ -84,6 +85,11 @@ final class UnitController extends BaseController
             'photos' => $photos,
             'assetImages' => $assetImages,
             'returnBuildingId' => $return_building_id,
+            'expenseHistory' => MonthlyAccount::find()->joinWith('period')->where([
+                'housing_monthly_account.unit_id' => $unit->id,
+                'housing_billing_period.status' => 'closed',
+            ])->andFilterWhere($room ? ['housing_monthly_account.room_id' => $room->id] : [])
+                ->orderBy(['housing_billing_period.start_date' => SORT_DESC])->limit(24)->all(),
         ]);
     }
 

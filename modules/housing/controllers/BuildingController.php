@@ -10,6 +10,7 @@ use app\modules\hr\models\Employees;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Floor;
 use app\modules\housing\models\Occupancy;
+use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\services\HousingAccessService;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -87,6 +88,10 @@ final class BuildingController extends BaseController
             'occupancies' => $occupancies,
             'maintenanceRequests' => $model->getMaintenanceRequests()->with('assignedEmployee')->limit(20)->all(),
             'buildingImage' => $buildingImage,
+            'expenseHistory' => MonthlyAccount::find()->joinWith('period')->where([
+                'housing_monthly_account.building_id' => $model->id,
+                'housing_billing_period.status' => 'closed',
+            ])->orderBy(['housing_billing_period.start_date' => SORT_DESC])->limit(20)->all(),
         ]);
     }
 

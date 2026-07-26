@@ -26,6 +26,7 @@ $form = ActiveForm::begin([
     <div class="col-md-6"><?= $form->field($model, 'status')->dropDownList(Building::statusOptions()) ?></div>
     <div class="col-md-4"><?= $form->field($model, 'sort_order')->input('number') ?></div>
     <div class="col-md-8"><?= $form->field($model, 'address')->textarea(['rows' => 2]) ?></div>
+    <div class="col-md-4"><?= $form->field($model, 'electric_account_no')->textInput(['maxlength' => true]) ?></div>
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 3]) ?></div>
     <div class="col-12">
         <?php if ($inactiveResponsible !== null): ?>
