@@ -64,7 +64,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     </ul>
     <div class="tab-content">
         <section class="tab-pane fade" id="housing-general">
-            <div class="soft-panel p-3">
+            <div class="soft-panel p-3 mb-3">
                 <dl class="row mb-0">
                     <dt class="col-sm-3">รหัส</dt><dd class="col-sm-9"><?= Html::encode($location->code) ?></dd>
                     <dt class="col-sm-3">ชื่อ</dt><dd class="col-sm-9"><?= Html::encode($location->name) ?></dd>
@@ -73,6 +73,28 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                 </dl>
                 <hr><h2 class="h6">ประวัติค่าใช้จ่ายที่ปิดรอบแล้ว</h2>
                 <?php if ($expenseHistory === []): ?><div class="small detail-muted">ยังไม่มีประวัติค่าใช้จ่าย</div><?php else: ?><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>เดือน</th><th>ผู้รับผิดชอบ</th><th class="text-end">ค่าใช้จ่าย</th><th class="text-end">ชำระแล้ว</th><th class="text-end">คงเหลือ</th></tr></thead><tbody><?php foreach ($expenseHistory as $expense): ?><tr><td><?= Html::encode($expense->period->name) ?></td><td><?= Html::encode($expense->payer_name ?: 'ห้องว่าง') ?></td><td class="text-end"><?= Yii::$app->formatter->asDecimal($expense->total_amount, 2) ?></td><td class="text-end"><?= Yii::$app->formatter->asDecimal($expense->paid_amount, 2) ?></td><td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($expense->balance_amount, 2) ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?>
+            </div>
+            <div class="soft-panel overflow-hidden">
+                <div class="p-3 border-bottom">
+                    <h2 class="h5 mb-1">ผู้พักอาศัยปัจจุบัน</h2>
+                    <div class="small detail-muted">ข้อมูลเจ้าหน้าที่ผู้ครอบครองห้องพักหรือบ้านพัก</div>
+                </div>
+                <?php if ($occupancies === []): ?>
+                    <div class="p-4 text-center detail-muted">ยังไม่มีผู้พักอาศัยในปัจจุบัน</div>
+                <?php else: ?>
+                    <?php foreach ($occupancies as $occupancy): ?>
+                        <div class="p-3 border-bottom">
+                            <div class="fw-semibold"><?= Html::encode($occupancy->employee?->fullname() ?: 'รหัสบุคลากร ' . $occupancy->emp_id) ?></div>
+                            <div class="row g-2 small mt-1">
+                                <div class="col-md-6"><span class="detail-muted">ตำแหน่ง:</span> <?= Html::encode($occupancy->employee?->positionName() ?: 'ไม่ระบุ') ?></div>
+                                <div class="col-md-6"><span class="detail-muted">หน่วยงาน/สถานที่ทำงาน:</span> <?= Html::encode($occupancy->employee?->departmentName() ?: 'ไม่ระบุ') ?></div>
+                            </div>
+                            <?php if ($occupancy->residents !== []): ?>
+                                <div class="small mt-2"><span class="detail-muted">ผู้พักร่วม:</span> <?= Html::encode(implode(', ', array_map(static fn($resident): string => trim($resident->first_name . ' ' . $resident->last_name), $occupancy->residents))) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </section>
         <section class="tab-pane fade" id="housing-photos">

@@ -11,6 +11,7 @@ use app\modules\housing\models\Building;
 use app\modules\housing\models\Floor;
 use app\modules\housing\models\LocationPhoto;
 use app\modules\housing\models\MonthlyAccount;
+use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
 use Yii;
@@ -77,6 +78,16 @@ final class UnitController extends BaseController
                 ->indexBy('ref')
                 ->all();
         }
+        $occupancyQuery = Occupancy::find()
+            ->with(['employee', 'residents'])
+            ->where([
+                'unit_id' => $unit->id,
+                'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+            ])
+            ->orderBy(['start_date' => SORT_ASC, 'id' => SORT_ASC]);
+        if ($room !== null) {
+            $occupancyQuery->andWhere(['room_id' => $room->id]);
+        }
 
         return $this->render('view', [
             'unit' => $unit,
@@ -84,6 +95,7 @@ final class UnitController extends BaseController
             'assets' => $assets,
             'photos' => $photos,
             'assetImages' => $assetImages,
+            'occupancies' => $occupancyQuery->all(),
             'returnBuildingId' => $return_building_id,
             'expenseHistory' => MonthlyAccount::find()->joinWith('period')->where([
                 'housing_monthly_account.unit_id' => $unit->id,

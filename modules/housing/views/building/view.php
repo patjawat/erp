@@ -95,6 +95,8 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
                 <?php else: foreach ($occupancies as $occupancy): ?>
                     <div class="unit-row p-3">
                         <strong><?= Html::encode($occupancy->employee?->fullname() ?: 'รหัสบุคลากร ' . $occupancy->emp_id) ?></strong>
+                        <div class="small mt-1"><span class="text-muted">ตำแหน่ง:</span> <?= Html::encode($occupancy->employee?->positionName() ?: 'ไม่ระบุ') ?></div>
+                        <div class="small"><span class="text-muted">หน่วยงาน/สถานที่ทำงาน:</span> <?= Html::encode($occupancy->employee?->departmentName() ?: 'ไม่ระบุ') ?></div>
                         <div class="small text-muted"><?= Html::encode($occupancy->unit?->name ?: '') ?><?= $occupancy->room ? ' · ' . Html::encode($occupancy->room->name) : '' ?></div>
                         <?php if ($occupancy->residents !== []): ?><div class="small mt-2">ผู้พักร่วม: <?= Html::encode(implode(', ', array_map(static fn($resident): string => trim($resident->first_name . ' ' . $resident->last_name), $occupancy->residents))) ?></div><?php endif; ?>
                     </div>
