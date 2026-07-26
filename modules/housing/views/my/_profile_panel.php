@@ -131,6 +131,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
         $room = $occupancy->room;
         $building = $unit?->building;
         $handover = $occupancy->handover;
+        $checkout = $occupancy->checkout;
     ?>
         <?php if ($mode === 'allocated' && !$handover): ?>
             <div class="alert alert-info d-flex align-items-start gap-2">
@@ -159,6 +160,12 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
             <div class="housing-detail"><div class="housing-label">ที่อยู่</div><strong><?= Html::encode($building?->address ?: 'ยังไม่ระบุ') ?></strong></div>
         </div>
         <?php if ($mode === 'resident'): ?>
+            <?php if ($checkout): ?>
+                <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+                    <div><strong>กำลังดำเนินการส่งคืนบ้านพัก</strong><div class="small mt-1"><?= Html::encode(\app\modules\housing\models\Checkout::statusOptions()[$checkout->status] ?? $checkout->status) ?></div></div>
+                    <?= Html::a('เปิดเอกสารส่งคืน', ['/housing/my/checkout', 'id' => $checkout->id], ['class' => 'btn btn-outline-dark']) ?>
+                </div>
+            <?php endif; ?>
             <?php
             $tabs = [
                 'overview' => ['label' => 'ภาพรวม', 'icon' => 'layout-dashboard'],
@@ -190,6 +197,9 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                         <?php else: foreach ($recentExpenses as $account): ?><div class="d-flex justify-content-between gap-3 py-2 border-bottom"><div><strong><?= Html::encode($account->period?->name ?: 'ไม่ระบุเดือน') ?></strong><div class="small text-muted"><?= Html::encode([MonthlyAccount::PAYMENT_PAID => 'ชำระแล้ว', MonthlyAccount::PAYMENT_PARTIAL => 'ชำระบางส่วน', MonthlyAccount::PAYMENT_UNPAID => 'ยังไม่ชำระ'][$account->payment_status] ?? $account->payment_status) ?></div></div><div class="money"><strong><?= Yii::$app->formatter->asDecimal($account->total_amount, 2) ?> บาท</strong><div class="small <?= (float)$account->balance_amount > 0 ? 'text-danger' : 'text-success' ?>">คงเหลือ <?= Yii::$app->formatter->asDecimal($account->balance_amount, 2) ?></div></div></div><?php endforeach; endif; ?>
                     </div>
                 </section>
+                <?php if (!$checkout): ?>
+                <div class="d-flex justify-content-end mt-3"><?= Html::a('แจ้งคืนบ้านพัก', ['/housing/my/create-checkout'], ['class' => 'btn btn-outline-danger open-modal', 'data-size' => 'modal-lg']) ?></div>
+                <?php endif; ?>
                 <section class="resident-section">
                     <div class="resident-section__head"><div><h3 class="h6 mb-1">การแจ้งซ่อมล่าสุด</h3><div class="small text-muted">แสดง 3 รายการล่าสุด</div></div><div class="d-flex gap-2"><?= Html::a('ดูประวัติทั้งหมด', ['/profile', 'name' => 'housing', 'housing_tab' => 'maintenance'], ['class' => 'btn btn-sm btn-outline-primary']) ?><?= Html::a('แจ้งปัญหา', ['/housing/my/create-maintenance'], ['class' => 'btn btn-sm btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div></div>
                     <div class="resident-section__body">
@@ -287,7 +297,9 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                 <section class="resident-section">
                     <div class="resident-section__head"><div><h3 class="h6 mb-1">เอกสารบ้านพัก</h3><div class="small text-muted">เอกสารที่เกี่ยวข้องกับการเข้าพักของคุณ</div></div></div>
                     <div class="resident-section__body">
-                        <?php if ($handover): ?><div class="d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>เอกสารรับมอบ <?= Html::encode($handover->handover_no) ?></strong><div class="small text-muted">วันที่รับมอบ <?= Yii::$app->formatter->asDate($handover->handover_date, 'php:d/m/Y') ?></div></div><?= Html::a('เปิดเอกสารรับมอบ', ['/housing/my/handover', 'id' => $handover->id], ['class' => 'btn btn-outline-primary']) ?></div><?php else: ?><div class="text-muted">ยังไม่มีเอกสารที่เกี่ยวข้อง</div><?php endif; ?>
+                        <?php if ($handover): ?><div class="d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>เอกสารรับมอบ <?= Html::encode($handover->handover_no) ?></strong><div class="small text-muted">วันที่รับมอบ <?= Yii::$app->formatter->asDate($handover->handover_date, 'php:d/m/Y') ?></div></div><?= Html::a('เปิดเอกสารรับมอบ', ['/housing/my/handover', 'id' => $handover->id], ['class' => 'btn btn-outline-primary']) ?></div><?php endif; ?>
+                        <?php if ($checkout): ?><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 mt-3 border-top"><div><strong>เอกสารส่งคืน <?= Html::encode($checkout->checkout_no) ?></strong><div class="small text-muted">วันที่ต้องการคืน <?= Yii::$app->formatter->asDate($checkout->requested_date, 'php:d/m/Y') ?></div></div><?= Html::a('เปิดเอกสารส่งคืน', ['/housing/my/checkout', 'id' => $checkout->id], ['class' => 'btn btn-outline-primary']) ?></div><?php endif; ?>
+                        <?php if (!$handover && !$checkout): ?><div class="text-muted">ยังไม่มีเอกสารที่เกี่ยวข้อง</div><?php endif; ?>
                     </div>
                 </section>
             <?php endif; ?>

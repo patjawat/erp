@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace app\modules\housing\controllers;
 
 use app\modules\housing\models\Building;
+use app\modules\housing\models\Checkout;
 use app\modules\housing\models\Handover;
 use app\modules\housing\models\HousingRequest;
 use app\modules\housing\models\MaintenanceRequest;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\housing\services\HandoverWorkflowService;
+use app\modules\housing\services\CheckoutWorkflowService;
 use app\modules\housing\services\HousingContextService;
 use app\modules\housing\services\RequestNumberService;
 use app\modules\housing\services\RequestWorkflowService;
+use app\modules\housing\services\UnitStatusService;
 use app\modules\hr\models\Employees;
 use Yii;
 use yii\filters\AccessControl;
@@ -37,6 +40,7 @@ final class MyController extends Controller
                 'actions' => [
                     'submit' => ['POST'],
                     'sign-handover' => ['POST'],
+                    'sign-checkout' => ['POST'],
                 ],
             ],
         ];
@@ -201,6 +205,72 @@ final class MyController extends Controller
         return $this->render('maintenance-form', ['model' => $model, 'occupancy' => $occupancy]);
     }
 
+    public function actionCreateCheckout()
+    {
+        $context = (new HousingContextService())->forUser((int)Yii::$app->user->id);
+        $occupancy = $context['occupancy'];
+        $employee = $context['employee'];
+        if (!$occupancy || !$employee || $context['mode'] !== 'resident') {
+            throw new \DomainException('ยื่นคำขอคืนได้เมื่อมีสถานะเข้าพักอยู่');
+        }
+        $existing = Checkout::findOne(['occupancy_id' => $occupancy->id]);
+        if ($existing) {
+            return $this->redirect(['checkout', 'id' => $existing->id]);
+        }
+        $model = new Checkout([
+            'checkout_no' => $this->nextCheckoutNumber(),
+            'occupancy_id' => $occupancy->id,
+            'resident_emp_id' => $employee->id,
+            'resident_name' => $employee->fullname(),
+            'requested_date' => date('Y-m-d'),
+        ]);
+        if ($model->load(Yii::$app->request->post())) {
+            $model->occupancy_id = $occupancy->id;
+            $model->resident_emp_id = $employee->id;
+            $model->resident_name = $employee->fullname();
+        }
+        if (Yii::$app->request->isPost && $model->save()) {
+            (new UnitStatusService())->refresh((int)$occupancy->unit_id);
+            Yii::$app->session->setFlash('success', 'ส่งคำขอคืนบ้านพักแล้ว ผู้ดูแลจะนัดหมายเพื่อตรวจรับคืน');
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['status' => 'success', 'redirect' => \yii\helpers\Url::to(['/housing/my/checkout', 'id' => $model->id])];
+            }
+            return $this->redirect(['checkout', 'id' => $model->id]);
+        }
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['title' => 'แจ้งคืนบ้านพัก', 'content' => $this->renderAjax('_checkout_modal', ['model' => $model, 'occupancy' => $occupancy])];
+        }
+        return $this->render('checkout-request', ['model' => $model, 'occupancy' => $occupancy]);
+    }
+
+    public function actionCheckout(int $id)
+    {
+        $model = $this->findOwnCheckout($id);
+        return $this->render('checkout', [
+            'model' => $model,
+            'photos' => Uploads::find()->where(['ref' => $model->ref, 'name' => 'housing_checkout_condition'])->orderBy('id')->all(),
+        ]);
+    }
+
+    public function actionSignCheckout(int $id)
+    {
+        $model = $this->findOwnCheckout($id);
+        if (!Yii::$app->request->post('resident_ack')) {
+            Yii::$app->session->setFlash('error', 'กรุณายืนยันการส่งคืนบ้านพักและอุปกรณ์');
+            return $this->redirect(['checkout', 'id' => $id]);
+        }
+        try {
+            $employee = Employees::findOne(['user_id' => Yii::$app->user->id]);
+            (new CheckoutWorkflowService())->signResident($model, (int)($employee?->id ?? 0));
+            Yii::$app->session->setFlash('success', 'ลงนามส่งคืนแล้ว รอผู้ดูแลตรวจรับและปิดรายการ');
+        } catch (\Throwable $e) {
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        }
+        return $this->redirect(['checkout', 'id' => $id]);
+    }
+
     private function findOwnHandover(int $id): Handover
     {
         $employee = Employees::findOne(['user_id' => Yii::$app->user->id]);
@@ -213,5 +283,24 @@ final class MyController extends Controller
             throw new NotFoundHttpException('ไม่พบเอกสารรับมอบที่มีสิทธิ์ดำเนินการ');
         }
         return $model;
+    }
+
+    private function findOwnCheckout(int $id): Checkout
+    {
+        $employee = Employees::findOne(['user_id' => Yii::$app->user->id]);
+        $model = Checkout::find()->joinWith('occupancy')
+            ->with(['occupancy.employee', 'occupancy.unit.building', 'occupancy.unit.floor', 'occupancy.room'])
+            ->where(['housing_checkout.id' => $id, 'housing_occupancy.emp_id' => $employee?->id ?? 0])->one();
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบเอกสารส่งคืนบ้านพักที่มีสิทธิ์ดำเนินการ');
+        }
+        return $model;
+    }
+
+    private function nextCheckoutNumber(): string
+    {
+        $prefix = 'HCO-' . substr((string)((int)date('Y') + 543), -2) . '-';
+        $last = Checkout::find()->where(['like', 'checkout_no', $prefix . '%', false])->orderBy(['checkout_no' => SORT_DESC])->select('checkout_no')->scalar();
+        return $prefix . str_pad((string)($last ? (int)substr((string)$last, -4) + 1 : 1), 4, '0', STR_PAD_LEFT);
     }
 }

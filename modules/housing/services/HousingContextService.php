@@ -18,15 +18,16 @@ final class HousingContextService
 {
     public function forUser(int $userId, array $options = []): array
     {
-        $tab = in_array(($options['tab'] ?? 'overview'), ['overview', 'expenses', 'maintenance', 'assets', 'documents'], true)
-            ? (string)$options['tab']
+        $requestedTab = (string)($options['tab'] ?? 'overview');
+        $tab = in_array($requestedTab, ['overview', 'expenses', 'maintenance', 'assets', 'documents'], true)
+            ? $requestedTab
             : 'overview';
         $employee = Employees::findOne(['user_id' => $userId]);
         if (!$employee) {
             return ['mode' => 'unavailable', 'employee' => null, 'occupancy' => null, 'request' => null, 'assets' => [], 'photos' => [], 'recentExpenses' => [], 'recentMaintenance' => [], 'expenseProvider' => null, 'maintenanceProvider' => null, 'maintenancePhotos' => [], 'summary' => [], 'tab' => $tab];
         }
         $occupancy = Occupancy::find()
-            ->with(['unit.building', 'unit.floor', 'room', 'handover'])
+            ->with(['unit.building', 'unit.floor', 'room', 'handover', 'checkout'])
             ->where(['emp_id' => $employee->id, 'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE]])
             ->orderBy(['id' => SORT_DESC])
             ->one();
