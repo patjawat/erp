@@ -227,7 +227,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <hr class="my-4">
         <h6 class="fw-semibold mb-2"><i class="bi bi-code-slash me-1"></i> นำไปใช้งานจริง (จากโมดูลอื่น)</h6>
         <p class="small text-muted mb-2">เมื่อต้องการพิมพ์เอกสารจริง (เช่น จากรายการขอไปราชการ) ให้เรียกใช้ Service แล้วส่งข้อมูลจริงเข้าไป:</p>
-        <pre class="small bg-light rounded-3 p-3 border mb-0" style="font-size: 0.8rem;"><code><?= Html::encode("use app\\modules\\pdfTemplate\\services\\PdfTemplateService;
+        <pre class="small rounded-3 p-3 border mb-0" style="font-size: 0.8rem;"><code><?= Html::encode("use app\\modules\\pdfTemplate\\services\\PdfTemplateService;
 
 \$service = new PdfTemplateService();
 \$templateId = 1; // id ของเทมเพลต

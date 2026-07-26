@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
 
             <div class="card-body">
                 <div class="d-flex align-items-center mb-4">
-                    <div class="bg-light rounded-3 p-3 me-3">
+                    <div class="rounded-3 p-3 me-3">
                         <?php
                         echo Html::img('@web/img/loading.gif', [
                             'class' => 'rounded-4 me-3 shadow lazyload',
