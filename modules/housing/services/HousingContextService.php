@@ -11,6 +11,7 @@ use app\modules\housing\models\LocationPhoto;
 use app\modules\housing\models\MaintenanceRequest;
 use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\models\Occupancy;
+use app\modules\housing\models\Receipt;
 use app\modules\hr\models\Employees;
 use yii\data\ActiveDataProvider;
 
@@ -24,7 +25,7 @@ final class HousingContextService
             : 'overview';
         $employee = Employees::findOne(['user_id' => $userId]);
         if (!$employee) {
-            return ['mode' => 'unavailable', 'employee' => null, 'occupancy' => null, 'request' => null, 'assets' => [], 'photos' => [], 'recentExpenses' => [], 'recentMaintenance' => [], 'expenseProvider' => null, 'maintenanceProvider' => null, 'maintenancePhotos' => [], 'summary' => [], 'tab' => $tab];
+            return ['mode' => 'unavailable', 'employee' => null, 'occupancy' => null, 'request' => null, 'assets' => [], 'photos' => [], 'recentExpenses' => [], 'recentMaintenance' => [], 'receipts' => [], 'expenseProvider' => null, 'maintenanceProvider' => null, 'maintenancePhotos' => [], 'summary' => [], 'tab' => $tab];
         }
         $occupancy = Occupancy::find()
             ->with(['unit.building', 'unit.floor', 'room', 'handover', 'checkout'])
@@ -116,6 +117,15 @@ final class HousingContextService
                 ]);
             }
             $maintenance = $maintenanceProvider ? $maintenanceProvider->getModels() : $recentMaintenance;
+            $receipts = in_array($tab, ['expenses', 'documents'], true)
+                ? Receipt::find()
+                    ->joinWith(['payment.allocations.invoice'])
+                    ->with(['payment.allocations.invoice.monthlyAccount.period'])
+                    ->where(['housing_invoice.occupancy_id' => $occupancy->id])
+                    ->orderBy(['housing_receipt.issued_at' => SORT_DESC, 'housing_receipt.id' => SORT_DESC])
+                    ->limit(24)
+                    ->all()
+                : [];
             $maintenancePhotos = [];
             $maintenanceRefs = array_values(array_filter(array_map(static fn(MaintenanceRequest $item): ?string => $item->ref, $maintenance)));
             if ($maintenanceRefs !== []) {
@@ -145,6 +155,7 @@ final class HousingContextService
                     ->all() : [],
                 'recentExpenses' => $recentExpenses,
                 'recentMaintenance' => $recentMaintenance,
+                'receipts' => $receipts,
                 'expenseProvider' => $expenseProvider,
                 'maintenanceProvider' => $maintenanceProvider,
                 'maintenancePhotos' => $maintenancePhotos,
@@ -170,6 +181,7 @@ final class HousingContextService
             'photos' => [],
             'recentExpenses' => [],
             'recentMaintenance' => [],
+            'receipts' => [],
             'expenseProvider' => null,
             'maintenanceProvider' => null,
             'maintenancePhotos' => [],

@@ -9,6 +9,7 @@ use app\modules\housing\models\Checkout;
 use app\modules\housing\models\Handover;
 use app\modules\housing\models\HousingRequest;
 use app\modules\housing\models\MaintenanceRequest;
+use app\modules\housing\models\Receipt;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\housing\services\HandoverWorkflowService;
@@ -269,6 +270,24 @@ final class MyController extends Controller
             Yii::$app->session->setFlash('error', $e->getMessage());
         }
         return $this->redirect(['checkout', 'id' => $id]);
+    }
+
+    public function actionReceipt(int $id, bool $print = false)
+    {
+        $employee = Employees::findOne(['user_id' => Yii::$app->user->id]);
+        $model = Receipt::find()
+            ->joinWith(['payment.allocations.invoice'])
+            ->with(['payment.allocations.invoice.items', 'payment.allocations.invoice.monthlyAccount.period'])
+            ->where(['housing_receipt.id' => $id, 'housing_invoice.payer_emp_id' => $employee?->id ?? 0])
+            ->one();
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบใบเสร็จที่มีสิทธิ์เปิดดู');
+        }
+        if ($print) {
+            $this->layout = false;
+            return $this->render('receipt-print', ['receipt' => $model]);
+        }
+        return $this->render('receipt', ['receipt' => $model]);
     }
 
     private function findOwnHandover(int $id): Handover

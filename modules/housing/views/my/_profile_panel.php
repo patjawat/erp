@@ -21,6 +21,7 @@ $expenseProvider = $context['expenseProvider'] ?? null;
 $maintenanceProvider = $context['maintenanceProvider'] ?? null;
 $summary = $context['summary'] ?? [];
 $maintenancePhotos = $context['maintenancePhotos'] ?? [];
+$receipts = $context['receipts'] ?? [];
 $yearOptions = [];
 for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
     $yearOptions[$year] = (string)($year + 543);
@@ -266,6 +267,17 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                     </details>
                     <?php endforeach; endif; ?>
                     <?php if ($expenseProvider && $expenseProvider->getTotalCount() > 0): ?><div class="mt-3 pt-3 border-top"><?= DataSummaryWidget::widget(['dataProvider' => $expenseProvider]) ?></div><?php endif; ?>
+                    <?php if ($receipts !== []): ?>
+                        <div class="mt-4 pt-3 border-top">
+                            <h3 class="h6 mb-2">ใบเสร็จรับเงินล่าสุด</h3>
+                            <?php foreach (array_slice($receipts, 0, 5) as $receipt): ?>
+                                <div class="d-flex justify-content-between align-items-center gap-3 py-2 border-bottom">
+                                    <div><strong><?= Html::encode($receipt->receipt_no) ?></strong><div class="small text-muted"><?= Yii::$app->formatter->asDate($receipt->issued_at, 'php:d/m/Y') ?></div></div>
+                                    <div class="text-end"><strong><?= Yii::$app->formatter->asDecimal($receipt->amount, 2) ?> บาท</strong><div><?= Html::a('ดูใบเสร็จ', ['/housing/my/receipt', 'id' => $receipt->id], ['class' => 'small']) ?></div></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </section>
             <?php elseif ($activeTab === 'maintenance'):
@@ -299,7 +311,13 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                     <div class="resident-section__body">
                         <?php if ($handover): ?><div class="d-flex flex-wrap justify-content-between align-items-center gap-3"><div><strong>เอกสารรับมอบ <?= Html::encode($handover->handover_no) ?></strong><div class="small text-muted">วันที่รับมอบ <?= Yii::$app->formatter->asDate($handover->handover_date, 'php:d/m/Y') ?></div></div><?= Html::a('เปิดเอกสารรับมอบ', ['/housing/my/handover', 'id' => $handover->id], ['class' => 'btn btn-outline-primary']) ?></div><?php endif; ?>
                         <?php if ($checkout): ?><div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 mt-3 border-top"><div><strong>เอกสารส่งคืน <?= Html::encode($checkout->checkout_no) ?></strong><div class="small text-muted">วันที่ต้องการคืน <?= Yii::$app->formatter->asDate($checkout->requested_date, 'php:d/m/Y') ?></div></div><?= Html::a('เปิดเอกสารส่งคืน', ['/housing/my/checkout', 'id' => $checkout->id], ['class' => 'btn btn-outline-primary']) ?></div><?php endif; ?>
-                        <?php if (!$handover && !$checkout): ?><div class="text-muted">ยังไม่มีเอกสารที่เกี่ยวข้อง</div><?php endif; ?>
+                        <?php foreach ($receipts as $receipt): ?>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 mt-3 border-top">
+                                <div><strong>ใบเสร็จรับเงิน <?= Html::encode($receipt->receipt_no) ?></strong><div class="small text-muted"><?= Yii::$app->formatter->asDate($receipt->issued_at, 'php:d/m/Y') ?> · <?= Yii::$app->formatter->asDecimal($receipt->amount, 2) ?> บาท</div></div>
+                                <?= Html::a('เปิดใบเสร็จ', ['/housing/my/receipt', 'id' => $receipt->id], ['class' => 'btn btn-outline-success']) ?>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (!$handover && !$checkout && $receipts === []): ?><div class="text-muted">ยังไม่มีเอกสารที่เกี่ยวข้อง</div><?php endif; ?>
                     </div>
                 </section>
             <?php endif; ?>
