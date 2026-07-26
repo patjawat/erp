@@ -188,4 +188,36 @@ class DepreciationProfile extends ActiveRecord
             self::STATUS_DRAFT => 'ร่าง',
         ];
     }
+
+    /**
+     * คืนค่าแสดงสถานะให้ทุกหน้าของเกณฑ์ค่าเสื่อมใช้รูปแบบเดียวกัน
+     *
+     * @return array{class:string,label:string,icon:string}
+     */
+    public static function getStatusBadgeConfigFor(string $status): array
+    {
+        $map = [
+            self::STATUS_ACTIVE => [
+                'class' => 'dp-status dp-status--active',
+                'label' => 'ใช้งาน',
+                'icon' => 'circle-check',
+            ],
+            self::STATUS_DRAFT => [
+                'class' => 'dp-status dp-status--draft',
+                'label' => 'ร่าง',
+                'icon' => 'file-pen-line',
+            ],
+            self::STATUS_INACTIVE => [
+                'class' => 'dp-status dp-status--inactive',
+                'label' => 'ยกเลิกใช้งาน',
+                'icon' => 'archive',
+            ],
+        ];
+
+        return $map[$status] ?? [
+            'class' => 'dp-status dp-status--inactive',
+            'label' => self::statusOptions()[$status] ?? $status,
+            'icon' => 'circle',
+        ];
+    }
 }

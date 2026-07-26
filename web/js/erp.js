@@ -150,6 +150,7 @@ function erpHideModal(modalTarget) {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      erpRestoreModalFocus(modalEl);
       resolve();
     }
 
@@ -195,6 +196,20 @@ function erpHideModal(modalTarget) {
   });
 }
 window.erpHideModal = erpHideModal;
+
+function erpRestoreModalFocus(modalEl) {
+  var trigger = modalEl && modalEl.erpReturnFocus;
+  if (!trigger) {
+    return;
+  }
+
+  modalEl.erpReturnFocus = null;
+  window.setTimeout(function () {
+    if (document.contains(trigger) && typeof trigger.focus === "function") {
+      trigger.focus();
+    }
+  }, 0);
+}
 
 function erpShowModal(modalTarget, config) {
   var modalEl =
@@ -490,13 +505,14 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
           }
 
           if (response.status === "success") {
+            var isWarning = response.level === "warning";
             await erpHideModal("#main-modal");
 
             Swal.fire({
-              icon: "success",
-              title: "ดำเนินการสำเร็จ",
+              icon: isWarning ? "warning" : "success",
+              title: isWarning ? "บันทึกข้อมูลแล้ว แต่ต้องตรวจสอบ" : "ดำเนินการสำเร็จ",
               text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
-              timer: 1500,
+              timer: isWarning ? 3000 : 1500,
               showConfirmButton: false,
             }).then(async () => {
               if (typeof successCallback === "function") {
@@ -712,7 +728,7 @@ function hideLoading() {
   $("#loader").hide();
 }
 
-function beforLoadModal() {
+function beforLoadModal(size) {
   console.log("beforLoadModal");
   erpShowModal("#main-modal");
   // $('#modal-dialog').modal('show');
@@ -722,10 +738,19 @@ function beforLoadModal() {
   $("#main-modal .modal-dialog").removeClass(
     "modal-sm modal-md modal-lg modal-xl modal-xxl"
   );
-  $("#main-modal .modal-dialog").addClass("modal-sm");
+  $("#main-modal .modal-dialog").addClass(size || "modal-sm");
   $("#modal-dialog").removeClass("fade");
   $("#main-modal .modal-body").html(
-    '<div class="d-flex justify-content-center"><div class="spinner-border" style="width: 3rem; height: 3rem;" role="status"></div></div><h6 class="text-center mt-3">Loading...</h6>'
+    '<div class="placeholder-glow" role="status" aria-live="polite" aria-busy="true">' +
+      '<span class="visually-hidden">กำลังโหลดแบบฟอร์ม</span>' +
+      '<div class="placeholder col-5 rounded mb-4" style="height: 1.5rem;" aria-hidden="true"></div>' +
+      '<div class="row g-3" aria-hidden="true">' +
+        '<div class="col-md-4"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-12 rounded" style="height: 2.75rem;"></span></div>' +
+        '<div class="col-md-8"><span class="placeholder col-4 mb-2"></span><span class="placeholder col-12 rounded" style="height: 2.75rem;"></span></div>' +
+        '<div class="col-md-6"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-12 rounded" style="height: 2.75rem;"></span></div>' +
+        '<div class="col-md-6"><span class="placeholder col-5 mb-2"></span><span class="placeholder col-12 rounded" style="height: 2.75rem;"></span></div>' +
+      '</div>' +
+    '</div>'
   );
 }
 
@@ -794,11 +819,32 @@ $("body").on("click", ".setview", function (e) {
 });
 $("body").on("click", ".open-modal", function (e) {
   e.preventDefault();
+  var trigger = this;
   var url = $(this).attr("href");
   var size = $(this).data("size");
+  var modalElement = document.querySelector("#main-modal");
+
+  if (modalElement) {
+    modalElement.erpReturnFocus = trigger;
+    var restoreModalTriggerFocus = function () {
+      erpRestoreModalFocus(modalElement);
+    };
+    if (typeof jQuery !== "undefined") {
+      jQuery(modalElement)
+        .off("hidden.bs.modal.erpReturnFocus")
+        .one("hidden.bs.modal.erpReturnFocus", restoreModalTriggerFocus);
+      jQuery(modalElement)
+        .off("click.erpReturnFocus", '[data-bs-dismiss="modal"]')
+        .one("click.erpReturnFocus", '[data-bs-dismiss="modal"]', function () {
+          window.setTimeout(restoreModalTriggerFocus, 400);
+        });
+    } else {
+      modalElement.addEventListener("hidden.bs.modal", restoreModalTriggerFocus, { once: true });
+    }
+  }
 
   // แสดง loading หรืออื่นๆ
-  if (typeof beforLoadModal === "function") beforLoadModal();
+  if (typeof beforLoadModal === "function") beforLoadModal(size);
 
   $.ajax({
     type: "get",

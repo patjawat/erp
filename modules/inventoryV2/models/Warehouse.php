@@ -26,6 +26,13 @@ use app\modules\hr\models\Organization;
 class Warehouse extends \yii\db\ActiveRecord
 {
     /**
+     * ประเภทคลังที่ถือเป็น "คลังย่อย" ในมุมของ inventoryV2 (sub-stock/ใบขอเบิก/บันทึกจ่าย)
+     * รวม รพ.สต. (BRANCH) ด้วย เพราะพนักงาน รพ.สต. (employees.branch='BRANCH')
+     * เบิก-จ่ายผ่าน flow เดียวกับคลังย่อย (idiom เดิมของระบบ inventory: ['SUB','BRANCH'])
+     */
+    const SUB_STOCK_TYPES = ['SUB', 'BRANCH'];
+
+    /**
      * {@inheritdoc}
      */
     public static function tableName()
@@ -256,7 +263,7 @@ class Warehouse extends \yii\db\ActiveRecord
         // (idiom เดียวกับ can('warehouse') ที่ IssueController/เมนูใช้) — ค่า default ยังคงกรองเฉพาะ officer เดิม
         if ($allowWarehouseScope && (Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse'))) {
             return self::find()
-                ->where(['warehouse_type' => 'SUB'])
+                ->where(['warehouse_type' => self::SUB_STOCK_TYPES])
                 ->andWhere(['or', ['delete' => null], ['delete' => '']])
                 ->orderBy('warehouse_name')
                 ->all();
@@ -264,7 +271,7 @@ class Warehouse extends \yii\db\ActiveRecord
 
         $userId = (string) Yii::$app->user->id;
         return self::find()
-            ->where(['warehouse_type' => 'SUB'])
+            ->where(['warehouse_type' => self::SUB_STOCK_TYPES])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
             ->andWhere(new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')"))
             ->orderBy('warehouse_name')
@@ -292,7 +299,7 @@ class Warehouse extends \yii\db\ActiveRecord
         }
 
         $all = self::find()
-            ->where(['warehouse_type' => 'SUB'])
+            ->where(['warehouse_type' => self::SUB_STOCK_TYPES])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
             ->orderBy('warehouse_name')
             ->all();

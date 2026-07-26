@@ -205,7 +205,7 @@ $hasAdvancedFilters = !empty($model->q_department)
                 <h6 class="small fw-semibold text-primary mb-2">
                     <i class="fa-solid fa-gear me-1"></i>สถานะระบบ
                 </h6>
-                <div class="bg-light rounded-3 p-3">
+                <div class="rounded-3 p-3">
                     <?= $form->field($model, 'all_status')->checkBox()->label('แสดงสถานะทั้งหมด') ?>
                 </div>
             </div>

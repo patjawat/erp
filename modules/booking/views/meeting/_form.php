@@ -34,82 +34,23 @@ $equipmentItemRenderer = function ($index, $label, $name, $checked, $value) {
     $checkedAttr = $checked ? ' checked' : '';
 
     return <<<HTML
-<label class="equipment-item" for="{$id}">
-    <input class="equipment-input" type="checkbox" name="{$name}" id="{$id}" value="{$encodedValue}"{$checkedAttr}>
-    <span class="equipment-label">{$encodedLabel}</span>
-</label>
+<div class="col">
+    <label class="equipment-item d-flex align-items-start gap-2 w-100 h-100 m-0 p-3 border rounded-3 bg-body-tertiary" for="{$id}">
+        <input class="equipment-input form-check-input flex-shrink-0 mt-1" type="checkbox" name="{$name}" id="{$id}" value="{$encodedValue}"{$checkedAttr}>
+        <span class="equipment-label text-body lh-sm text-break">{$encodedLabel}</span>
+    </label>
+</div>
 HTML;
 };
 
 ?>
 <style>
-    .meeting-form-page {
-        --meeting-bg: linear-gradient(180deg, #f8fbff 0%, #f5f7fb 100%);
-        --meeting-card-border: rgba(15, 23, 42, 0.08);
-        --meeting-surface: #ffffff;
-        --meeting-muted: #64748b;
-    }
-
-    .meeting-form-page .meeting-shell {
-        background: var(--meeting-bg);
-        border-radius: 24px;
-        padding: 1rem;
-    }
-
-    .meeting-form-page .meeting-card {
-        border: 1px solid var(--meeting-card-border);
-        border-radius: 20px;
-        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
-        background: var(--meeting-surface);
-    }
-
-    .meeting-form-page .meeting-card .card-body {
-        padding: 1.25rem;
-    }
-
-    .meeting-form-page .meeting-hero {
-        padding: 1rem 1rem 0.25rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .meeting-form-page .meeting-kicker {
-        color: var(--meeting-muted);
-        font-size: 0.95rem;
-    }
-
-    .meeting-form-page .meeting-section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 0.85rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .meeting-form-page .meeting-section-title::before {
-        content: "";
-        width: 0.4rem;
-        height: 1.2rem;
-        border-radius: 999px;
-        background: linear-gradient(180deg, #0d6efd 0%, #4ea1ff 100%);
-        flex: 0 0 auto;
-    }
-
-    .meeting-form-page .meeting-preview {
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 18px;
-        overflow: hidden;
-        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-    }
-
     .meeting-form-page .meeting-preview-frame {
         aspect-ratio: 16 / 9;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: #f8fafc;
     }
 
     .meeting-form-page .room-img,
@@ -120,99 +61,31 @@ HTML;
         display: block;
     }
 
-    .meeting-form-page .meeting-meta {
-        color: var(--meeting-muted);
-        font-size: 0.92rem;
-    }
-
-    .meeting-form-page .meeting-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.45rem 0.75rem;
-        border-radius: 999px;
-        background: #eef4ff;
-        color: #1d4ed8;
-        font-weight: 600;
-        font-size: 0.9rem;
-        white-space: nowrap;
-    }
-
     .meeting-form-page .meeting-actions {
         position: sticky;
         bottom: 0;
-        padding-top: 0.75rem;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), #fff 35%);
+        background-color: var(--bs-card-bg);
         z-index: 1;
     }
 
-    .meeting-form-page .equipment-list {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-    }
-
     .meeting-form-page .equipment-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.65rem;
-        margin: 0;
-        padding: 0.8rem 0.9rem;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 14px;
-        background: #fbfdff;
-        min-height: 58px;
         cursor: pointer;
     }
 
-    .meeting-form-page .equipment-input {
-        margin-top: 0.2rem;
-        flex: 0 0 auto;
-    }
-
-    .meeting-form-page .equipment-label {
-        margin: 0;
-        line-height: 1.35;
-        word-break: break-word;
-        color: #0f172a;
-    }
-
     .meeting-form-page .equipment-item:hover {
-        border-color: rgba(13, 110, 253, 0.28);
-        background: #f8fbff;
-    }
-
-    @media (min-width: 576px) {
-        .meeting-form-page .equipment-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (min-width: 1200px) {
-        .meeting-form-page .equipment-list {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
+        border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
+        background-color: var(--bs-primary-bg-subtle) !important;
     }
 
     @media (max-width: 991.98px) {
-        .meeting-form-page .meeting-shell {
-            padding: 0.75rem;
-            border-radius: 18px;
-        }
-
-        .meeting-form-page .meeting-card .card-body {
-            padding: 1rem;
-        }
-
         .meeting-form-page .meeting-actions {
             position: static;
-            background: transparent;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-lg-3 meeting-form-page">
-    <div class="meeting-shell">
+    <div class="meeting-shell bg-body-tertiary rounded-4 p-2 p-lg-3">
         <?php $form = ActiveForm::begin([
             'id' => 'meeting-form',
             'validateOnChange' => true,
@@ -226,12 +99,12 @@ HTML;
 
 
 
-    <div class="row">
-        <div class="col-7">
-            <div class="card text-start">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-xl-7">
+            <div class="card border shadow-sm rounded-4 h-100 text-start">
                 <div class="card-body">
-                    <h4 class="fw-medium mb-2">จองห้องประชุม</h4>
-                    <p class="card-text">กรอกข้อมูลเพื่อจองห้องประชุม</p>
+                    <h4 class="fw-semibold text-body mb-2">จองห้องประชุม</h4>
+                    <p class="card-text text-body-secondary">กรอกข้อมูลเพื่อจองห้องประชุม</p>
 
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
@@ -351,7 +224,7 @@ HTML;
                                     $model->equipmentItems(),
                                     [
                                         'item' => $equipmentItemRenderer,
-                                        'class' => 'equipment-list',
+                                        'class' => 'equipment-list row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-2',
                                     ]
                                 )->label('รายการอุปกรณ์') ?>
                             </div>
@@ -362,7 +235,7 @@ HTML;
                             </div>
                         </div>
 
-                        <div class="meeting-actions">
+                        <div class="meeting-actions pt-3 mt-3 border-top">
                             <div class="d-grid gap-2 d-sm-flex justify-content-between">
                                 <div>
                                     <?= Html::a('<i class="fa-solid fa-arrow-left me-1"></i> ยกเลิก', ['index'], [
@@ -381,19 +254,21 @@ HTML;
             </div>
 
             <div class="col-12 col-xl-5">
-                <div class="card meeting-card h-100">
+                <div class="card border shadow-sm rounded-4 h-100">
                     <div class="card-body">
-                        <div class="meeting-hero">
-                            <h4 class="fw-bold mb-2">ข้อมูลห้องประชุม</h4>
-                            <p class="meeting-kicker mb-0">ดูรายละเอียดห้องและรูปแบบที่เลือกแบบเรียลไทม์</p>
+                        <div class="mb-3">
+                            <h4 class="fw-semibold text-body mb-2">ข้อมูลห้องประชุม</h4>
+                            <p class="text-body-secondary mb-0">ดูรายละเอียดห้องและรูปแบบที่เลือกแบบเรียลไทม์</p>
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                            <p class="card-text room-title mb-0"><?= Html::encode($room->title ?? 'รายละเอียดห้องประชุมที่เลือก') ?></p>
-                            <span class="meeting-chip">ความจุ: <span class="seat"><?= $roomSeat ?></span> คน</span>
+                            <p class="card-text room-title fw-semibold text-body mb-0"><?= Html::encode($room->title ?? 'รายละเอียดห้องประชุมที่เลือก') ?></p>
+                            <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis fw-semibold px-3 py-2">
+                                ความจุ: <span class="seat"><?= $roomSeat ?></span> คน
+                            </span>
                         </div>
 
-                        <div class="meeting-preview mb-3">
+                        <div class="meeting-preview mb-3 border rounded-4 overflow-hidden bg-body-tertiary">
                             <div class="meeting-preview-frame">
                                 <?php if ($room && $roomImage): ?>
                                     <?= Html::img($roomImage, ['class' => 'room-img', 'alt' => 'รูปห้องประชุม']) ?>
@@ -404,11 +279,11 @@ HTML;
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                            <p class="card-text mb-0">รูปแบบการจัดห้องประชุม</p>
-                            <p class="room-layout-title mb-0 fw-semibold"><?= Html::encode($roomLayoutTitle) ?></p>
+                            <p class="card-text text-body mb-0">รูปแบบการจัดห้องประชุม</p>
+                            <p class="room-layout-title text-body-secondary mb-0 fw-semibold"><?= Html::encode($roomLayoutTitle) ?></p>
                         </div>
 
-                        <div class="meeting-preview mb-3">
+                        <div class="meeting-preview mb-3 border rounded-4 overflow-hidden bg-body-tertiary">
                             <div class="meeting-preview-frame">
                                 <?php if ($roomLayoutImage && ($roomLayoutImage['isFile'] ?? false)): ?>
                                     <?= Html::img($roomLayoutImage['image'], ['class' => 'room-layout-img', 'alt' => 'รูปแบบห้องประชุม']) ?>
@@ -418,11 +293,11 @@ HTML;
                             </div>
                         </div>
 
-                        <hr class="my-3">
+                        <hr class="my-3 border-secondary-subtle opacity-100">
 
                         <div class="mb-3">
-                            <h4 class="fw-bold mb-2">กฎระเบียบการใช้ห้องประชุม</h4>
-                            <ul class="small ps-3 mb-0">
+                            <h4 class="fw-semibold text-body mb-2">กฎระเบียบการใช้ห้องประชุม</h4>
+                            <ul class="small text-body-secondary ps-3 mb-0">
                                 <li class="mb-1">ห้ามนำอาหารและเครื่องดื่มเข้าห้องประชุม</li>
                                 <li class="mb-1">กรุณาจองล่วงหน้าอย่างน้อย 1 วัน</li>
                                 <li class="mb-1">หากต้องการยกเลิก กรุณาแจ้งล่วงหน้าอย่างน้อย 3 ชั่วโมง</li>

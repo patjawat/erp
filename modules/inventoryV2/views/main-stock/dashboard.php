@@ -47,7 +47,7 @@ $this->registerJsFile('@web/apexcharts/apexcharts.min.js', ['position' => View::
         </svg>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted small mb-0"><?= Html::encode($currentWarehouseName) ?> — ภาพรวมสต็อก ใบเบิกรอจ่าย และแนวโน้มรับเข้า-จ่ายออก</p>
+    <p class="text-body-secondary small mb-0"><?= Html::encode($currentWarehouseName) ?>: ภาพรวมสต็อก ใบเบิกรอจ่าย และแนวโน้มรับเข้า-จ่ายออก</p>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -55,9 +55,9 @@ $this->registerJsFile('@web/apexcharts/apexcharts.min.js', ['position' => View::
 <div class="container-fluid px-3 px-md-4">
     <div class="row g-3 align-items-center justify-content-between">
         <div class="col-12 col-lg-auto">
-            <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse" class="d-inline">
+            <form method="get" action="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" id="form-warehouse">
                 <label for="warehouseFilter" class="form-label visually-hidden">เลือกคลัง</label>
-                <select name="warehouse_id" class="form-select form-select-sm border shadow-sm rounded-pill px-3" id="warehouseFilter" style="min-width: 180px;">
+                <select name="warehouse_id" class="form-select form-select-sm border shadow-sm rounded-pill px-3" id="warehouseFilter">
                     <option value="all" <?= $currentWarehouseId === null ? 'selected' : '' ?>>แสดงคลังทั้งหมด</option>
                     <?php foreach ($warehouses as $w): ?>
                         <option value="<?= (int)$w->id ?>" <?= (int)$w->id === (int)$currentWarehouseId ? 'selected' : '' ?>><?= Html::encode($w->warehouse_name) ?></option>
@@ -105,11 +105,49 @@ $kpiEndpoints = [
     ],
 ];
 
-$kpiCard = function (string $key, string $tone, string $label, string $value, string $unit, string $cta) use ($kpiEndpoints) {
+$kpiToneClasses = [
+    'primary' => [
+        'border' => 'border-primary-subtle',
+        'number' => 'text-primary-emphasis',
+        'cta' => 'text-primary-emphasis',
+    ],
+    'warning' => [
+        'border' => 'border-warning-subtle',
+        'number' => 'text-warning-emphasis',
+        'cta' => 'text-warning-emphasis',
+    ],
+    'danger' => [
+        'border' => 'border-danger-subtle',
+        'number' => 'text-danger-emphasis',
+        'cta' => 'text-danger-emphasis',
+    ],
+    'value' => [
+        'border' => 'border-secondary-subtle',
+        'number' => 'text-body-emphasis',
+        'cta' => 'text-body-secondary',
+    ],
+];
+
+$kpiCard = function (string $key, string $tone, string $label, string $value, string $unit, string $cta) use ($kpiEndpoints, $kpiToneClasses) {
     $cfg = $kpiEndpoints[$key];
+    $toneClasses = $kpiToneClasses[$tone] ?? $kpiToneClasses['primary'];
     $isDisabled = $cfg['count'] <= 0;
     $attrs = [
-        'class' => 'kpi-card kpi-card--' . $tone . ($isDisabled ? ' is-disabled' : ''),
+        'class' => implode(' ', [
+            'kpi-card',
+            'card',
+            'h-100',
+            'border',
+            'border-top',
+            'border-3',
+            $toneClasses['border'],
+            'shadow-sm',
+            'rounded-4',
+            'text-body',
+            'text-decoration-none',
+            'overflow-hidden',
+            $isDisabled ? 'is-disabled pe-none opacity-50' : '',
+        ]),
         'href' => $cfg['full'],
         'data-kpi-key' => $key,
         'data-oc-endpoint' => $cfg['endpoint'],
@@ -123,13 +161,15 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     $attrStr = '';
     foreach ($attrs as $k => $v) $attrStr .= ' ' . $k . '="' . htmlspecialchars((string) $v, ENT_QUOTES) . '"';
     return '<a' . $attrStr . '>'
-        . '<div class="kpi-card__body">'
-        .   '<p class="kpi-card__label">' . htmlspecialchars($label) . '</p>'
-        .   '<div class="kpi-card__value">'
-        .     '<span class="kpi-card__num">' . $value . '</span>'
-        .     '<span class="kpi-card__unit">' . htmlspecialchars($unit) . '</span>'
+        . '<div class="card-body d-flex flex-column p-3">'
+        .   '<p class="small fw-semibold text-body-secondary mb-2">' . htmlspecialchars($label) . '</p>'
+        .   '<div class="d-flex align-items-baseline gap-2 lh-1">'
+        .     '<span class="fs-3 fw-bold ' . $toneClasses['number'] . '">' . $value . '</span>'
+        .     '<span class="small text-body-secondary">' . htmlspecialchars($unit) . '</span>'
         .   '</div>'
-        .   '<span class="kpi-card__cta">' . htmlspecialchars($cta) . ' <i class="bi bi-arrow-right" aria-hidden="true"></i></span>'
+        .   '<span class="kpi-card__cta d-inline-flex align-items-center gap-1 small fw-semibold mt-3 ' . $toneClasses['cta'] . '">'
+        .       htmlspecialchars($cta) . ' <i class="bi bi-arrow-right" aria-hidden="true"></i>'
+        .   '</span>'
         . '</div>'
         . '</a>';
 };
@@ -166,7 +206,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                 <div class="movement-toolbar" role="toolbar" aria-label="ตัวกรองข้อมูลกราฟ">
                     <div class="movement-toolbar__field">
                         <label class="movement-label" for="movementYear">ปีงบประมาณ (พ.ศ.)</label>
-                        <select id="movementYear" class="movement-select">
+                        <select id="movementYear" class="movement-select form-select form-select-sm">
                             <?php foreach ($yearOptions as $y): ?>
                                 <option value="<?= (int)$y ?>" <?= (int)$y === (int)$defaultYear ? 'selected' : '' ?>><?= (int)$y ?></option>
                             <?php endforeach; ?>
@@ -195,7 +235,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                                 <button type="button" class="seg-control__item is-active" data-value="year" role="radio" aria-checked="true">ทั้งปี</button>
                                 <button type="button" class="seg-control__item" data-value="month" role="radio" aria-checked="false">รายเดือน</button>
                             </div>
-                            <select id="movementMonth" class="movement-select" hidden aria-label="เลือกเดือน">
+                            <select id="movementMonth" class="movement-select form-select form-select-sm" hidden aria-label="เลือกเดือน">
                                 <?php
                                 $monthNamesTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
                                 $monthFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -249,15 +289,15 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
 
         <!-- รายการเบิกที่รอจัดของ -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary-gradient text-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card border shadow-sm h-100">
+                <div class="card-header text-bg-primary py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="text-white mb-0 small fw-normal"><i class="bi bi-box-seam me-1"></i>รายการเบิกที่รอจัดของ</h6>
-                    <span class="badge text-bg-light text-dark"><?= count($pendingRequisitions) ?></span>
+                    <span class="badge rounded-pill bg-body text-body border"><?= count($pendingRequisitions) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         <?php if (empty($pendingRequisitions)): ?>
-                            <div class="list-group-item border-0 p-4 text-center text-muted">
+                            <div class="list-group-item border-0 p-4 text-center text-body-secondary">
                                 <i class="bi bi-inbox fs-2"></i>
                                 <p class="mb-0 mt-2 small">ไม่มีใบขอเบิกรอดำเนินการ</p>
                             </div>
@@ -271,7 +311,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                                 $statusInfo = \app\modules\inventoryV2\models\StockOrder::getStatusBadgeConfigFor($req->status);
                                 $statusIcon = !empty($statusInfo['icon']) ? '<i data-lucide="' . Html::encode($statusInfo['icon']) . '" class="me-1" style="width:14px;height:14px;vertical-align:-0.2em"></i>' : '';
                                 ?>
-                                <div class="list-group-item border-0 border-start border-3 border-primary px-3 py-2 pending-item">
+                                <div class="list-group-item border-0 border-bottom px-3 py-2 text-body pending-item">
                                     <div class="d-flex justify-content-between align-items-start gap-2">
                                         <div class="min-w-0">
                                             <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
@@ -279,7 +319,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                                                 <span class="<?= $statusInfo['class'] ?>"><?= $statusIcon . Html::encode($statusInfo['label']) ?></span>
                                             </div>
                                             <div class="fw-bold text-truncate"><?= Html::encode($subName) ?></div>
-                                            <small class="text-muted"><?= $detailCount ?> รายการ · <?= $timeAgo ?></small>
+                                            <small class="text-body-secondary"><?= $detailCount ?> รายการ · <?= $timeAgo ?></small>
                                         </div>
                                         <?= Html::a('จัดของจ่าย', ['/inventory-v2/issue/process', 'id' => $req->id], ['class' => 'btn btn-primary btn-sm rounded-pill flex-shrink-0']) ?>
                                     </div>
@@ -289,7 +329,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 py-2 text-center">
-                    <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="small text-muted text-decoration-none">ดูรายการค้างจ่ายทั้งหมด <i class="bi bi-chevron-right"></i></a>
+                    <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="small text-body-secondary text-decoration-none">ดูรายการค้างจ่ายทั้งหมด <i class="bi bi-chevron-right"></i></a>
                 </div>
             </div>
         </div>
@@ -306,9 +346,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                     <span id="kpiOffcanvasWarehouse"><?= Html::encode($currentWarehouseName) ?></span>
                 </p>
             </div>
-            <button type="button" class="kpi-oc__close" data-bs-dismiss="offcanvas" aria-label="ปิด">
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
+            <button type="button" class="btn-close flex-shrink-0" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
         </header>
         <div class="kpi-oc__content" id="kpiOffcanvasContent" aria-live="polite">
             <!-- AJAX content injected here -->
@@ -325,18 +363,16 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                             <i class="bi bi-arrow-down-left-circle" aria-hidden="true"></i>
                             <span id="movementItemsDirLabel">รับเข้า</span>
                         </span>
-                        <button type="button" class="movement-items-modal__close" data-bs-dismiss="modal" aria-label="ปิด">
-                            <i class="bi bi-x-lg" aria-hidden="true"></i>
-                        </button>
+                        <button type="button" class="btn-close flex-shrink-0" data-bs-dismiss="modal" aria-label="ปิด"></button>
                     </div>
                     <h5 id="movementItemsModalTitle" class="movement-items-modal__title">
                         <span class="movement-items-modal__cat-dot" id="movementItemsCatDot" aria-hidden="true"></span>
                         <span id="movementItemsCatName">ประเภทพัสดุ</span>
                     </h5>
                     <p class="movement-items-modal__caption">
-                        <span id="movementItemsPeriod">—</span>
+                        <span id="movementItemsPeriod">ไม่ระบุ</span>
                         <span class="movement-items-modal__caption-sep" aria-hidden="true">·</span>
-                        <span id="movementItemsWarehouse">—</span>
+                        <span id="movementItemsWarehouse">ไม่ระบุ</span>
                     </p>
                 </header>
 
@@ -363,7 +399,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
                         <i class="bi bi-info-circle" aria-hidden="true"></i>
                         <span id="movementItemsFootNote">มูลค่าจ่ายออกอ้างราคาทุนตามล็อตที่บันทึก</span>
                     </span>
-                    <button type="button" class="btn-light btn-sm rounded-pill px-3" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">ปิด</button>
                 </footer>
             </div>
         </div>
@@ -373,90 +409,61 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
 
 
 <style>
-.main-stock-dashboard {
-    --ink-1: #1a202c; --ink-2: #4a5568; --ink-3: #718096; --ink-4: #a0aec0;
-    --surface: #ffffff; --surface-2: #f7f9fc; --surface-3: #eef2f7; --surface-hover: #f1f5f9;
-    --line: rgba(15, 23, 42, 0.08); --line-strong: rgba(15, 23, 42, 0.14);
-    --primary: #0d6efd; --primary-ink: #0a58ca; --primary-soft: rgba(13, 110, 253, 0.08); --primary-line: rgba(13, 110, 253, 0.22);
-    --success: #15803d; --warning: #b45309; --danger: #b91c1c;
+.main-stock-dashboard,
+.kpi-oc,
+.movement-items-modal {
+    --ink-1: var(--bs-emphasis-color);
+    --ink-2: var(--bs-body-color);
+    --ink-3: var(--bs-secondary-color);
+    --ink-4: var(--bs-tertiary-color);
+    --surface: var(--bs-body-bg);
+    --surface-2: var(--bs-secondary-bg);
+    --surface-3: var(--bs-tertiary-bg);
+    --surface-hover: var(--bs-tertiary-bg);
+    --line: var(--bs-border-color-translucent);
+    --line-strong: var(--bs-border-color);
+    --primary: var(--bs-primary);
+    --primary-ink: var(--bs-primary-text-emphasis);
+    --primary-soft: var(--bs-primary-bg-subtle);
+    --primary-line: var(--bs-primary-border-subtle);
+    --success: var(--bs-success-text-emphasis);
+    --success-soft: var(--bs-success-bg-subtle);
+    --warning: var(--bs-warning-text-emphasis);
+    --warning-soft: var(--bs-warning-bg-subtle);
+    --danger: var(--bs-danger-text-emphasis);
+    --danger-soft: var(--bs-danger-bg-subtle);
     --radius: 10px; --radius-sm: 8px; --radius-xs: 6px;
-    --shadow-1: 0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03);
+    --shadow-1: var(--bs-box-shadow-sm);
+    --shadow-2: var(--bs-box-shadow);
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --t-fast: 120ms; --t-mid: 180ms;
+    --t-fast: 120ms; --t-mid: 180ms; --t-slow: 240ms;
 }
 
-/* ─── KPI cards (unified) ─── */
+/* KPI cards keep only interaction behavior; layout and color come from Bootstrap utilities. */
 .main-stock-dashboard .kpi-card {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-1);
-    height: 100%;
-    text-decoration: none;
-    color: var(--ink-1);
-    overflow: hidden;
-    position: relative;
-    transition: transform var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease), border-color var(--t-fast) var(--ease);
-}
-.main-stock-dashboard .kpi-card::before {
-    content: '';
-    position: absolute; left: 0; right: 0; top: 0;
-    height: 3px;
-    background: var(--kpi-accent, var(--primary));
+    transition: transform var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease);
 }
 .main-stock-dashboard .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
-    color: var(--ink-1);
-    text-decoration: none;
-    border-color: var(--line-strong);
+    box-shadow: var(--bs-box-shadow) !important;
 }
 .main-stock-dashboard .kpi-card:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-1);
-    border-color: var(--primary);
-}
-.main-stock-dashboard .kpi-card.is-disabled {
-    pointer-events: none;
-    opacity: 0.6;
-}
-.main-stock-dashboard .kpi-card.is-disabled .kpi-card__cta { color: var(--ink-3); }
-.main-stock-dashboard .kpi-card__body { padding: 0.95rem 1rem 0.85rem; }
-.main-stock-dashboard .kpi-card__label {
-    margin: 0 0 0.35rem;
-    font-size: 0.78rem; font-weight: 600;
-    color: var(--ink-3);
-    line-height: 1.2;
-}
-.main-stock-dashboard .kpi-card__value {
-    display: flex; align-items: baseline; gap: 0.4rem;
-    line-height: 1.1;
-}
-.main-stock-dashboard .kpi-card__num {
-    font-size: 1.65rem; font-weight: 700;
-    color: var(--kpi-num, var(--ink-1));
-    font-variant-numeric: tabular-nums;
-}
-.main-stock-dashboard .kpi-card__unit { font-size: 0.78rem; color: var(--ink-3); }
-.main-stock-dashboard .kpi-card__cta {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    margin-top: 0.6rem;
-    font-size: 0.78rem; font-weight: 600;
-    color: var(--kpi-cta, var(--primary-ink));
+    box-shadow: 0 0 0 var(--bs-focus-ring-width) var(--bs-focus-ring-color), var(--shadow-1) !important;
 }
 .main-stock-dashboard .kpi-card__cta i {
     transition: transform var(--t-fast) var(--ease);
 }
 .main-stock-dashboard .kpi-card:hover .kpi-card__cta i { transform: translateX(2px); }
 
-/* Tones — top accent + number + cta only */
-.main-stock-dashboard .kpi-card--primary  { --kpi-accent: var(--primary);  --kpi-num: var(--primary-ink);  --kpi-cta: var(--primary-ink); }
-.main-stock-dashboard .kpi-card--warning  { --kpi-accent: var(--warning);  --kpi-num: var(--warning);      --kpi-cta: var(--warning); }
-.main-stock-dashboard .kpi-card--danger   { --kpi-accent: var(--danger);   --kpi-num: var(--danger);       --kpi-cta: var(--danger); }
-.main-stock-dashboard .kpi-card--value    { --kpi-accent: #1a202c;         --kpi-num: var(--ink-1);        --kpi-cta: var(--ink-2); }
 .main-stock-dashboard .pending-item { transition: background-color var(--t-fast) var(--ease); }
-.main-stock-dashboard .pending-item:hover { background-color: rgba(13, 110, 253, 0.04); }
+.main-stock-dashboard .pending-item:hover { background-color: var(--primary-soft); }
+.main-stock-dashboard .badge.text-primary { color: var(--bs-primary-text-emphasis) !important; }
+.main-stock-dashboard .badge.text-info { color: var(--bs-info-text-emphasis) !important; }
+.main-stock-dashboard .badge.text-success { color: var(--bs-success-text-emphasis) !important; }
+.main-stock-dashboard .badge.text-warning { color: var(--bs-warning-text-emphasis) !important; }
+.main-stock-dashboard .badge.text-danger { color: var(--bs-danger-text-emphasis) !important; }
+.main-stock-dashboard .badge.text-secondary { color: var(--bs-secondary-text-emphasis) !important; }
 .main-stock-dashboard #warehouseFilter:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* ─── Movement card ─── */
@@ -479,7 +486,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--ink-1);
     line-height: 1.2;
 }
-.main-stock-dashboard .movement-card__title i { color: var(--primary); font-size: 1.05rem; }
+.main-stock-dashboard .movement-card__title i { color: var(--primary-ink); font-size: 1.05rem; }
 .main-stock-dashboard .movement-card__chip {
     display: inline-flex; align-items: center; gap: 0.3rem;
     background: var(--surface-3); color: var(--ink-2);
@@ -500,22 +507,8 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     line-height: 1; display: block;
 }
 .main-stock-dashboard .movement-select {
-    appearance: none;
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 0.4rem 1.85rem 0.4rem 0.7rem;
     min-height: 36px; min-width: 110px;
-    font-size: 0.85rem; color: var(--ink-1);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='%234a5568'><path d='M3.205 5.795l4.795 4.795 4.795-4.795-1.41-1.41-3.385 3.385-3.385-3.385z'/></svg>");
-    background-repeat: no-repeat; background-position: right 0.55rem center; background-size: 0.7rem;
-    transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
     cursor: pointer;
-}
-.main-stock-dashboard .movement-select:hover { border-color: var(--primary-line); }
-.main-stock-dashboard .movement-select:focus-visible {
-    outline: none; border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-soft);
 }
 .main-stock-dashboard .movement-select:disabled { opacity: 0.55; cursor: not-allowed; }
 
@@ -539,11 +532,11 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     background: var(--surface-hover); color: var(--ink-1);
 }
 .main-stock-dashboard .seg-control__item.is-active {
-    background: var(--surface); color: var(--primary-ink);
-    box-shadow: 0 0 0 1px var(--primary-line), 0 1px 2px rgba(13, 110, 253, 0.12);
+    background: var(--primary-soft); color: var(--primary-ink);
+    box-shadow: inset 0 0 0 1px var(--primary-line), var(--bs-box-shadow-sm);
 }
 .main-stock-dashboard .seg-control__item:focus-visible {
-    outline: none; box-shadow: 0 0 0 3px var(--primary-soft);
+    outline: none; box-shadow: 0 0 0 var(--bs-focus-ring-width) var(--bs-focus-ring-color);
 }
 .main-stock-dashboard .seg-control__item:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -646,7 +639,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     font-size: 0.74rem; color: var(--ink-3);
     line-height: 1.25;
 }
-.main-stock-dashboard .movement-hint i { color: var(--primary); font-size: 0.85rem; }
+.main-stock-dashboard .movement-hint i { color: var(--primary-ink); font-size: 0.85rem; }
 
 /* ─── Source-of-truth note (snapshot vs realtime) ─── */
 .main-stock-dashboard .movement-source-note {
@@ -667,7 +660,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     .main-stock-dashboard .movement-skeleton__bar,
-    .main-stock-dashboard .kpi-card-link,
+    .main-stock-dashboard .kpi-card,
     .main-stock-dashboard .pending-item,
     .main-stock-dashboard .seg-control__item,
     .main-stock-dashboard .movement-select,
@@ -677,18 +670,12 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
 
 /* ═══════════════ KPI Offcanvas ═══════════════ */
 .kpi-oc {
-    --ink-1: #1a202c; --ink-2: #4a5568; --ink-3: #718096; --ink-4: #a0aec0;
-    --surface: #ffffff; --surface-2: #f7f9fc; --surface-3: #eef2f7; --surface-hover: #f1f5f9;
-    --line: rgba(15, 23, 42, 0.08); --line-strong: rgba(15, 23, 42, 0.14);
-    --primary: #0d6efd; --primary-ink: #0a58ca; --primary-soft: rgba(13, 110, 253, 0.08);
-    --success: #15803d; --warning: #b45309; --danger: #b91c1c;
-    --radius: 10px; --radius-sm: 8px; --radius-xs: 6px;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --t-fast: 120ms; --t-mid: 180ms; --t-slow: 240ms;
     width: 460px !important;
     max-width: 100vw;
     border: 0;
-    box-shadow: -8px 0 30px rgba(15,23,42,0.10);
+    background: var(--surface);
+    color: var(--ink-1);
+    box-shadow: var(--bs-box-shadow);
     transition: transform var(--t-slow) var(--ease) !important;
 }
 @media (max-width: 575.98px) {
@@ -713,17 +700,6 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
 }
 .kpi-oc__sub-sep { color: var(--ink-4); }
-.kpi-oc__close {
-    appearance: none; background: transparent; border: 0; cursor: pointer;
-    width: 32px; height: 32px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 6px; color: var(--ink-3);
-    flex-shrink: 0;
-    transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
-}
-.kpi-oc__close:hover { background: var(--surface-hover); color: var(--ink-1); }
-.kpi-oc__close:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--primary-soft); color: var(--ink-1); }
-
 /* Content body */
 .kpi-oc__content {
     flex: 1; min-height: 0;
@@ -771,7 +747,7 @@ $kpiCard = function (string $key, string $tone, string $label, string $value, st
     padding: 0 0.5rem;
 }
 .kpi-oc__row + .kpi-oc__row {
-    border-top: 1px solid rgba(15, 23, 42, 0.04);
+    border-top: 1px solid var(--line);
 }
 .kpi-oc__row-link {
     display: flex; align-items: center; gap: 0.7rem;
@@ -879,7 +855,7 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
 .kpi-oc__skel-row {
     display: flex; align-items: center; gap: 0.7rem;
     padding: 0.65rem 0.55rem;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+    border-bottom: 1px solid var(--line);
 }
 .kpi-oc__skel-block {
     background: linear-gradient(90deg, var(--surface-3) 0%, var(--surface-2) 50%, var(--surface-3) 100%);
@@ -906,7 +882,7 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
 .kpi-oc__error i {
     width: 56px; height: 56px;
     display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(185, 28, 28, 0.10); color: var(--danger);
+    background: var(--danger-soft); color: var(--danger);
     border-radius: 14px; font-size: 1.5rem;
     margin-bottom: 0.4rem;
 }
@@ -944,7 +920,7 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
     border: 1px solid var(--line-strong);
     transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.kpi-oc__foot-link:hover { background: var(--surface-hover); border-color: var(--primary-line, rgba(13,110,253,0.22)); color: var(--primary-ink); text-decoration: none; }
+.kpi-oc__foot-link:hover { background: var(--surface-hover); border-color: var(--primary-line); color: var(--primary-ink); text-decoration: none; }
 .kpi-oc__foot-link i { transition: transform var(--t-fast) var(--ease); }
 .kpi-oc__foot-link:hover i { transform: translateX(2px); }
 
@@ -954,19 +930,6 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
 }
 
 /* ═══════════════ Movement items modal ═══════════════ */
-.movement-items-modal {
-    --ink-1: #1a202c; --ink-2: #4a5568; --ink-3: #718096; --ink-4: #a0aec0;
-    --surface: #ffffff; --surface-2: #f7f9fc; --surface-3: #eef2f7; --surface-hover: #f1f5f9;
-    --line: rgba(15, 23, 42, 0.08); --line-strong: rgba(15, 23, 42, 0.14);
-    --primary: #0d6efd; --primary-ink: #0a58ca; --primary-soft: rgba(13, 110, 253, 0.08);
-    --success: #15803d; --success-soft: rgba(21,128,61,0.10);
-    --warning: #b45309; --warning-soft: rgba(180,83,9,0.10);
-    --danger: #b91c1c; --danger-soft: rgba(185,28,28,0.10);
-    --radius: 10px; --radius-sm: 8px; --radius-xs: 6px;
-    --shadow-2: 0 18px 50px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06);
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --t-fast: 120ms; --t-mid: 180ms;
-}
 .movement-items-modal .modal-dialog { max-width: 760px; }
 .movement-items-modal .movement-items-modal__content {
     border: 0; border-radius: var(--radius);
@@ -1006,21 +969,10 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
 }
 .movement-items-modal__dir-badge i { font-size: 0.95rem; }
 .movement-items-modal__dir-badge[data-direction="IN"] {
-    color: var(--success); background: var(--success-soft); border-color: rgba(21,128,61,0.18);
+    color: var(--success); background: var(--success-soft); border-color: var(--bs-success-border-subtle);
 }
 .movement-items-modal__dir-badge[data-direction="OUT"] {
-    color: var(--warning); background: var(--warning-soft); border-color: rgba(180,83,9,0.18);
-}
-.movement-items-modal__close {
-    appearance: none; background: transparent; border: 0; cursor: pointer;
-    width: 30px; height: 30px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 6px; color: var(--ink-3);
-    transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
-}
-.movement-items-modal__close:hover { background: var(--surface-hover); color: var(--ink-1); }
-.movement-items-modal__close:focus-visible {
-    outline: none; box-shadow: 0 0 0 3px var(--primary-soft); color: var(--ink-1);
+    color: var(--warning); background: var(--warning-soft); border-color: var(--bs-warning-border-subtle);
 }
 
 .movement-items-modal__title {
@@ -1031,7 +983,6 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
 .movement-items-modal__cat-dot {
     width: 12px; height: 12px; border-radius: 999px; flex-shrink: 0;
     background: var(--ink-4);
-    box-shadow: 0 0 0 3px rgba(13,110,253,0.0);
 }
 .movement-items-modal__caption {
     margin: 0; font-size: 0.78rem; color: var(--ink-3); line-height: 1.3;
@@ -1093,7 +1044,7 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
     vertical-align: middle;
 }
 .movement-items-modal__table tbody tr:last-child td { border-bottom: 0; }
-.movement-items-modal__table tbody tr:nth-child(even) td { background: rgba(15,23,42,0.012); }
+.movement-items-modal__table tbody tr:nth-child(even) td { background: var(--surface-2); }
 .movement-items-modal__table tbody tr:hover td { background: var(--surface-hover); }
 .movement-items-modal__table td.is-num {
     text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-1);
@@ -1214,7 +1165,7 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
     cursor: pointer;
     transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.movement-items-modal__state-action:hover { background: var(--surface-hover); border-color: var(--primary-line, rgba(13,110,253,0.22)); }
+.movement-items-modal__state-action:hover { background: var(--surface-hover); border-color: var(--primary-line); }
 
 /* Foot */
 .movement-items-modal__foot {
@@ -1230,14 +1181,6 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
     min-width: 0;
 }
 .movement-items-modal__foot-hint i { color: var(--ink-4); }
-.movement-items-modal__foot .btn-light {
-    background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink-1);
-    transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
-}
-.movement-items-modal__foot .btn-light:hover {
-    background: var(--surface-hover); border-color: var(--ink-4); color: var(--ink-1);
-}
-
 /* Mobile */
 @media (max-width: 575.98px) {
     .movement-items-modal .modal-dialog { margin: 0.5rem; }
@@ -1256,7 +1199,6 @@ a.kpi-oc__row-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--pr
     .movement-items-modal.fade .modal-dialog,
     .movement-items-modal.show .modal-dialog { transition: none !important; transform: none !important; opacity: 1 !important; }
     .movement-items-modal__skel-block { animation: none !important; }
-    .movement-items-modal__close { transition: none !important; }
     .main-stock-dashboard #mainWarehouseChart .apexcharts-bar-area { transition: none !important; }
 }
 </style>
@@ -1303,7 +1245,21 @@ $(document).ready(function() {
 
     var chartInstance = null;
 
+    function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function getChartTheme() {
+        return {
+            text: cssVar('--bs-emphasis-color'),
+            muted: cssVar('--bs-secondary-color'),
+            line: cssVar('--bs-border-color-translucent'),
+            tooltip: document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light'
+        };
+    }
+
     function buildOptions(data) {
+        var chartTheme = getChartTheme();
         var canDrill = (state.direction === 'IN' || state.direction === 'OUT');
         var chartEvents = canDrill ? {
             dataPointSelection: function(event, ctx, cfg) {
@@ -1320,11 +1276,11 @@ $(document).ready(function() {
         };
         var closedFlags = data.closed_flags || [];
         var commonTheme = {
-            grid: { borderColor: 'rgba(15,23,42,0.06)', strokeDashArray: 4, padding: { left: 8, right: 8, top: 0, bottom: 0 } },
+            grid: { borderColor: chartTheme.line, strokeDashArray: 4, padding: { left: 8, right: 8, top: 0, bottom: 0 } },
             dataLabels: { enabled: false },
             legend: { show: false },
             tooltip: {
-                theme: 'light',
+                theme: chartTheme.tooltip,
                 x: {
                     formatter: function(val, opts) {
                         if (data.mode !== 'year') return val;
@@ -1350,11 +1306,11 @@ $(document).ready(function() {
                     categories: data.months,
                     axisBorder: { show: false },
                     axisTicks: { show: false },
-                    labels: { style: { colors: '#718096', fontSize: '12px' } }
+                    labels: { style: { colors: chartTheme.muted, fontSize: '12px' } }
                 },
                 yaxis: {
                     labels: {
-                        style: { colors: '#718096', fontSize: '11px' },
+                        style: { colors: chartTheme.muted, fontSize: '11px' },
                         formatter: function(v) { return fmtCompact(v); }
                     }
                 },
@@ -1379,11 +1335,11 @@ $(document).ready(function() {
                 axisBorder: { show: false },
                 axisTicks: { show: false },
                 labels: {
-                    style: { colors: '#718096', fontSize: '11px' },
+                    style: { colors: chartTheme.muted, fontSize: '11px' },
                     formatter: function(v) { return fmtCompact(v); }
                 }
             },
-            yaxis: { labels: { style: { colors: '#1a202c', fontSize: '12px' } } },
+            yaxis: { labels: { style: { colors: chartTheme.text, fontSize: '12px' } } },
             plotOptions: { bar: { borderRadius: 4, borderRadiusApplication: 'end', horizontal: true, distributed: true, barHeight: '68%' } },
             colors: rows.map(function(r) { return r.color; }),
             fill: { opacity: 1 },
@@ -1442,9 +1398,9 @@ $(document).ready(function() {
         flags.forEach(function(f) { f ? closed++ : open++; });
         var msg = '';
         if (closed > 0 && open === 0) {
-            msg = 'ทุกเดือนปิดงวดแล้ว — ยอดตรงกับรายงานที่ส่งบัญชี';
+            msg = 'ทุกเดือนปิดงวดแล้ว: ยอดตรงกับรายงานที่ส่งบัญชี';
         } else if (closed === 0 && open > 0) {
-            msg = 'ยังไม่ได้ปิดเดือน — แสดงเป็น real-time ที่ยังเปลี่ยนได้';
+            msg = 'ยังไม่ได้ปิดเดือน: แสดงเป็น real-time ที่ยังเปลี่ยนได้';
         } else {
             msg = closed + ' เดือนปิดงวดแล้ว (ตรงกับบัญชี) · ' + open + ' เดือนยังไม่ปิด (real-time)';
         }
@@ -1551,6 +1507,16 @@ $(document).ready(function() {
     // Initial render from server data
     render(initialData);
 
+    // ApexCharts paints text and grid colors into SVG, so refresh them when Bootstrap theme changes.
+    var themeObserver = new MutationObserver(function() {
+        if (!chartInstance || !lastChartData) return;
+        chartInstance.updateOptions(buildOptions(lastChartData), false, false);
+    });
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-bs-theme']
+    });
+
     // ═══════════════ Movement drill-down modal ═══════════════
     var modalEl = document.getElementById('movementItemsModal');
     var bsModal = modalEl && window.bootstrap ? new bootstrap.Modal(modalEl, { focus: true }) : null;
@@ -1586,7 +1552,7 @@ $(document).ready(function() {
             seriesEntry = series[cfg.seriesIndex];
             monthIdx = cfg.dataPointIndex;
         } else {
-            // month mode: distributed horizontal — rows were re-sorted in buildOptions
+            // month mode: distributed horizontal; rows were re-sorted in buildOptions
             // Replicate that sort to map dataPointIndex → series entry
             monthIdx = (data.month || 1) - 1;
             var rows = series.map(function(s, i) {
@@ -1616,9 +1582,9 @@ $(document).ready(function() {
     }
 
     function setModalHeader(opts) {
-        \$modalCatName.text(opts.categoryName || '—');
+        \$modalCatName.text(opts.categoryName || 'ไม่ระบุ');
         \$modalCatDot.css('background', opts.categoryColor || 'var(--ink-4)');
-        \$modalPeriod.text(opts.periodHint || '—');
+        \$modalPeriod.text(opts.periodHint || 'ไม่ระบุ');
         \$modalWarehouse.text(opts.warehouseName || 'ทั้งหมด');
         var dir = opts.direction || 'IN';
         \$modalDirBadge.attr('data-direction', dir);
@@ -1696,7 +1662,7 @@ $(document).ready(function() {
                 '<td class="col-thumb">' + thumbHtml(it.img, it.name) + '</td>' +
                 '<td class="col-code">' + escapeHtml(it.code) + '</td>' +
                 '<td class="col-name">' + escapeHtml(it.name) + '</td>' +
-                '<td class="col-unit">' + escapeHtml(unit || '—') + '</td>' +
+                '<td class="col-unit">' + escapeHtml(unit || 'ไม่ระบุ') + '</td>' +
                 '<td class="is-num">' + qty + '</td>' +
                 '<td class="is-num is-value">' + val + '</td>' +
                 '</tr>';
@@ -1758,9 +1724,9 @@ $(document).ready(function() {
             }
             var s = res.summary || {};
             // refresh header from server-side authoritative labels
-            \$modalPeriod.text(s.period_label || params.periodHint || '—');
+            \$modalPeriod.text(s.period_label || params.periodHint || 'ไม่ระบุ');
             \$modalWarehouse.text(s.warehouse_name || 'ทั้งหมด');
-            \$modalCatName.text(s.category_name || params.categoryName || '—');
+            \$modalCatName.text(s.category_name || params.categoryName || 'ไม่ระบุ');
             \$modalCatDot.css('background', s.category_color || params.categoryColor || 'var(--ink-4)');
             // summary numbers
             \$modalCount.text((s.count || 0).toLocaleString('th-TH'));
@@ -1889,7 +1855,7 @@ $(document).ready(function() {
         openKpi(card);
     });
 
-    // Search ใน offcanvas — debounce 250ms
+    // Search ใน offcanvas: debounce 250ms
     $(document).on('input', '[data-oc-search]', function() {
         var val = this.value;
         if (!kpiOcLastReq) return;
@@ -1904,12 +1870,12 @@ $(document).ready(function() {
         if (kpiOcLastReq) loadKpiOc(kpiOcLastReq.endpoint, kpiOcLastReq.q);
     });
 
-    // เปลี่ยน filter คลัง → ปิด offcanvas (form submit reload หน้าอยู่แล้ว — แค่ป้องกัน flash)
+    // เปลี่ยน filter คลังแล้วปิด offcanvas เพื่อป้องกัน flash ระหว่าง submit
     $('#warehouseFilter').on('change', function() {
         if (kpiOcInstance && kpiOcEl.classList.contains('show')) kpiOcInstance.hide();
     });
 
-    // Clear last request เมื่อปิด — กัน race condition
+    // Clear last request เมื่อปิดเพื่อกัน race condition
     if (kpiOcEl) {
         kpiOcEl.addEventListener('hidden.bs.offcanvas', function() {
             kpiOcLastReq = null;

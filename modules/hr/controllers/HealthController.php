@@ -9,11 +9,9 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\ModalHelper;
-use app\modules\health\models\HealthScreenSearch;
 use yii\web\NotFoundHttpException;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeeDetail;
-use app\modules\hr\models\EmployeeDetailSearch;
 
 /**
  * HealthController implements the CRUD actions for EmployeeDetail model.
@@ -45,24 +43,12 @@ class HealthController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new HealthScreenSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        return $this->redirect(['/health/health-screen/index']);
     }
 
     public function actionDashboard()
     {
-        $searchModel = new EmployeeDetailSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('dashboard', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        return $this->redirect(['/health/default/index']);
     }
 
 

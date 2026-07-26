@@ -149,43 +149,6 @@ $valueWidth = 'col-12 col-md-8 col-lg-9';
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 mt-4">
-            <div class="card-header bg-danger bg-opacity-10 border-0 py-3 rounded-top-4">
-                <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-heart-pulse me-2"></i>ข้อมูลประวัติการตรวจสุขภาพ</h6>
-            </div>
-            <div class="card-body">
-                <?php
-                $healthData = $model->healthData();
-                $hasHealth = !empty($healthData['result']);
-                ?>
-                <?php if ($hasHealth): ?>
-                <p class="text-muted small mb-2">ผลการตรวจสุขภาพล่าสุด</p>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <?php
-                    $bmiLabel = is_array($healthData['result']) ? ($healthData['result']['label'] ?? null) : null;
-                    $bmiColor = (is_array($healthData['result']) && !empty($healthData['result']['color'])) ? trim(explode(' ', $healthData['result']['color'])[0]) : 'primary';
-                    if ($bmiLabel):
-                    ?>
-                    <span class="badge bg-<?= $bmiColor ?> bg-opacity-10 text-<?= $bmiColor ?> border border-<?= $bmiColor ?>-subtle rounded-pill fw-medium px-2 py-1"><?= Html::encode($bmiLabel) ?></span>
-                    <?php endif; ?>
-                    <?php if (!empty($healthData['id'])): ?>
-                    <a href="<?= Url::to(['/me/health/view', 'id' => $healthData['id']]) ?>" class="btn btn-sm btn-outline-danger rounded-pill open-modal" data-size="modal-xl">
-                        <i class="bi bi-eye me-1"></i> ดูผลตรวจ
-                    </a>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="<?= Url::to(['/me/health/index']) ?>" class="btn btn-danger btn-sm rounded-pill">
-                        <i class="bi bi-list-ul me-1"></i> ประวัติการตรวจสุขภาพทั้งหมด
-                    </a>
-                    <a href="<?= Url::to(['/me/health/create', 'name' => 'health', 'title' => 'แบบคัดกรองสุขภาพ']) ?>" class="btn btn-outline-danger btn-sm rounded-pill open-modal" data-size="modal-xl" data-pjax="0">
-                        <i class="bi bi-plus-lg me-1"></i> บันทึก/ทำแบบคัดกรองใหม่
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mt-4">
             <div class="card-header bg-success bg-opacity-10 border-0 py-3 rounded-top-4">
                 <h6 class="mb-0 fw-bold text-success"><i class="bi bi-graph-up-arrow me-2"></i>KPI / ตัวชี้วัดผลงาน</h6>
             </div>

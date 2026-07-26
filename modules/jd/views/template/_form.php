@@ -1,16 +1,11 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\bootstrap5\ActiveForm;
-use yii\web\JsExpression;
 use yii\web\View;
 use app\widgets\TomSelectWidget;
 use app\modules\jd\models\JdTemplate;
 use app\components\CategoriseHelper;
-use app\components\AppHelper;
-use app\widgets\datepicker\DatepickerThai;
-use kartik\widgets\Select2;
 
 /** @var yii\web\View $this */
 /** @var JdTemplate $model */
@@ -27,6 +22,14 @@ $toLines = function ($text) {
     $lines = preg_split('/\r\n|\r|\n/', (string) $text, -1, PREG_SPLIT_NO_EMPTY);
     return array_map('trim', $lines);
 };
+$kpiItems = json_decode((string) $model->kpis, true);
+if (!is_array($kpiItems)) {
+    $kpiItems = array_map(static fn($line) => [
+        'indicator' => $line,
+        'target' => '',
+        'expectation' => '',
+    ], $toLines($model->kpis));
+}
 ?>
 <?php $form = ActiveForm::begin(['id' => 'jd-template-form']); ?>
 
@@ -200,25 +203,22 @@ $toLines = function ($text) {
             </div>
             <div class="col-12">
                 <hr class="my-2">
-                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                    <p class="text-muted small mb-0">ระบุ KPI หลักที่ใช้วัดความสำเร็จของตำแหน่งนี้</p>
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="kpis-rows" data-placeholder="เช่น ความพึงพอใจของผู้ใช้งาน ≥ 90%">
-                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
-                    </button>
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                    <div><h6 class="fw-semibold mb-1">ตัวชี้วัดผลการปฏิบัติงาน</h6><p class="text-muted small mb-0">ข้อมูลชื่อตัวชี้วัดจะถูกนำไปใช้ต่อในระบบ KPI</p></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-kpi-row"><i class="bi bi-plus-lg me-1"></i>เพิ่มตัวชี้วัด</button>
                 </div>
                 <?= Html::activeHiddenInput($model, 'kpis', ['id' => 'jd-template-kpis']) ?>
                 <div id="kpis-rows" class="jd-item-rows mb-2">
-                    <?php foreach ($toLines($model->kpis) as $line): ?>
-                    <div class="input-group mb-2 jd-row">
-                        <input type="text" class="form-control jd-row-input" value="<?= Html::encode($line) ?>" placeholder="ตัวชี้วัดผลงาน...">
-                        <button type="button" class="btn btn-outline-danger btn-remove-row" title="ลบ"><i class="bi bi-trash"></i></button>
+                    <?php foreach ($kpiItems as $item): ?>
+                    <div class="border rounded-3 p-3 mb-2 jd-kpi-row">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5"><label class="form-label small fw-semibold">ชื่อตัวชี้วัด</label><input type="text" class="form-control" data-kpi="indicator" value="<?= Html::encode($item['indicator'] ?? '') ?>" placeholder="เช่น ความพึงพอใจของผู้รับบริการ"></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">เป้าหมาย</label><input type="text" class="form-control" data-kpi="target" value="<?= Html::encode($item['target'] ?? '') ?>" placeholder="เช่น ไม่น้อยกว่า 90%"></div>
+                            <div class="col-md-3"><label class="form-label small fw-semibold">ความคาดหวัง</label><input type="text" class="form-control" data-kpi="expectation" value="<?= Html::encode($item['expectation'] ?? '') ?>" placeholder="ผลลัพธ์ที่ต้องการ"></div>
+                            <div class="col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-remove-kpi" aria-label="ลบตัวชี้วัด"><i class="bi bi-trash"></i></button></div>
+                        </div>
                     </div>
                     <?php endforeach; ?>
-                </div>
-                <div class="mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-primary btn-add-row" data-target="kpis-rows" data-placeholder="เช่น จำนวน Feature ที่ส่งมอบต่อ Sprint ≥ 3">
-                        <i class="bi bi-plus-lg me-1"></i> เพิ่มหัวข้อ
-                    </button>
                 </div>
             </div>
         </div>
@@ -324,53 +324,14 @@ $toLines = function ($text) {
                     ->textInput(['type' => 'number', 'min' => 1, 'class' => 'form-control', 'placeholder' => '1'])
                     ->label('Headcount (อัตรา)') ?>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">ผู้อนุมัติ JD (ดึงจากโครงสร้างหัวหน้า/ผังองค์กร <a href="<?= Url::to(['/hr/organization/diagram']) ?>" target="_blank" class="small">ตั้งค่า <i class="bi bi-box-arrow-up-right"></i></a> — เลือกพนักงานที่อนุมัติ JD)</label>
-                <?= Html::activeHiddenInput($model, 'jd_approved_by', ['id' => 'jd-approved-by']) ?>
-                <?php
-                $resultsJs = "function(data,p){p.page=p.page||1;return{results:data.results,pagination:{more:(p.page*30)<(data.total_count||999)}};}";
-                $formatRepo = "var formatRepo=function(repo){if(repo.loading)return repo.avatar;return '<div>'+repo.avatar+'</div>';};";
-                $this->registerJs($formatRepo, View::POS_HEAD);
-                ?>
-                <?= Select2::widget([
-                    'name' => 'jd_approved_picker',
-                    'value' => '',
-                    'initValueText' => $model->jd_approved_by ?: '— เลือกพนักงาน —',
-                    'options' => ['placeholder' => 'พิมพ์ชื่อเพื่อค้นหา...', 'id' => 'jd-approved-picker'],
-                    'pluginEvents' => [
-                        'select2:select' => new JsExpression('function(e) {
-                            var d = $(this).select2("data")[0];
-                            if (d && d.id) {
-                                var pos = (d.position_name_text || d.position_name || "").trim();
-                                $("#jd-approved-by").val(pos ? (d.fullname + " (" + pos + ")") : (d.fullname || ""));
-                            }
-                        }'),
-                        'select2:clear' => new JsExpression('function() { $("#jd-approved-by").val(""); }'),
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                        'minimumInputLength' => 0,
-                        'ajax' => [
-                            'url' => Url::to(['/depdrop/employee-by-id']),
-                            'dataType' => 'json',
-                            'delay' => 250,
-                            'data' => new JsExpression('function(params) { return {q: params.term || "", page: params.page || 1}; }'),
-                            'processResults' => new JsExpression($resultsJs),
-                            'cache' => true,
-                        ],
-                        'escapeMarkup' => new JsExpression('function(m) { return m; }'),
-                        'templateSelection' => new JsExpression('function(item) { return item.fullname || item.text || item.id || ""; }'),
-                        'templateResult' => new JsExpression('formatRepo'),
-                    ],
-                ]) ?>
-            </div>
-            <div class="col-md-2">
-                <?= $form->field($model, 'jd_approved_at')->widget(DatepickerThai::class, [
-                    'options' => [
-                        'placeholder' => 'ว/ด/พ.ศ.',
-                        'value' => $model->jd_approved_at ? AppHelper::convertToThai($model->jd_approved_at) : '',
-                    ],
-                ])->label('วันที่อนุมัติ') ?>
+            <div class="col-md-6">
+                <div class="border rounded-3 p-3 h-100">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-pen fs-4 text-primary" aria-hidden="true"></i>
+                        <div class="flex-grow-1"><h6 class="fw-semibold mb-1">การลงนามเอกสาร</h6><p class="text-muted small mb-2">กำหนดผู้จัดทำ ผู้ตรวจสอบ และผู้อนุมัติด้วยรายชื่อบุคลากรในข้อ 10 โดยระบบจะแสดงช่องลงนามแทนข้อความที่พิมพ์เอง</p>
+                        <?php if (!$model->isNewRecord): ?><?= Html::a('กำหนดผู้ลงนาม', ['structure', 'id' => $model->id, '#' => 'block-approval'], ['class' => 'btn btn-sm btn-outline-primary']) ?><?php else: ?><span class="small text-muted">บันทึกข้อมูลพื้นฐานก่อน แล้วระบบจะเปิดหน้ากำหนดผู้ลงนามให้</span><?php endif; ?></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -391,7 +352,6 @@ $toLines = function ($text) {
 <?php
 $fieldMapJs = json_encode([
     'core-competency-rows' => 'jd-template-core_competency',
-    'kpis-rows' => 'jd-template-kpis',
     'benefits-rows' => 'jd-template-benefits',
 ]);
 $this->registerJs(<<<JS
@@ -420,6 +380,26 @@ $this->registerJs(<<<JS
             });
             hid.value = vals.join("\\n");
         });
+        var kpis = [];
+        document.querySelectorAll("#kpis-rows .jd-kpi-row").forEach(function(row) {
+            var item = {};
+            row.querySelectorAll("[data-kpi]").forEach(function(input) {
+                item[input.dataset.kpi] = (input.value || "").trim();
+            });
+            if (item.indicator || item.target || item.expectation) kpis.push(item);
+        });
+        document.getElementById("jd-template-kpis").value = JSON.stringify(kpis);
+    });
+
+    var addKpiButton = document.getElementById("add-kpi-row");
+    if (addKpiButton) addKpiButton.addEventListener("click", function() {
+        document.getElementById("kpis-rows").insertAdjacentHTML("beforeend",
+            '<div class="border rounded-3 p-3 mb-2 jd-kpi-row"><div class="row g-2 align-items-end">' +
+            '<div class="col-md-5"><label class="form-label small fw-semibold">ชื่อตัวชี้วัด</label><input type="text" class="form-control" data-kpi="indicator" placeholder="เช่น ความพึงพอใจของผู้รับบริการ"></div>' +
+            '<div class="col-md-3"><label class="form-label small fw-semibold">เป้าหมาย</label><input type="text" class="form-control" data-kpi="target" placeholder="เช่น ไม่น้อยกว่า 90%"></div>' +
+            '<div class="col-md-3"><label class="form-label small fw-semibold">ความคาดหวัง</label><input type="text" class="form-control" data-kpi="expectation" placeholder="ผลลัพธ์ที่ต้องการ"></div>' +
+            '<div class="col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-remove-kpi" aria-label="ลบตัวชี้วัด"><i class="bi bi-trash"></i></button></div>' +
+            '</div></div>');
     });
 
     document.querySelectorAll(".btn-add-row").forEach(function(btn) {
@@ -432,6 +412,10 @@ $this->registerJs(<<<JS
         if (e.target.closest(".btn-remove-row")) {
             var row = e.target.closest(".jd-row");
             if (row) row.remove();
+        }
+        if (e.target.closest(".btn-remove-kpi")) {
+            var kpiRow = e.target.closest(".jd-kpi-row");
+            if (kpiRow) kpiRow.remove();
         }
     });
 })();

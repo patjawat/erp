@@ -1026,7 +1026,8 @@ private function mapVehicleType($input) {
                 $leave->thai_year = $item['LEAVE_YEAR_ID'];
                 $leave->date_start = $item['LEAVE_DATE_BEGIN'];
                 $leave->date_end = $item['LEAVE_DATE_END'];
-                $leave->status = $this->getStatus($item['STATUS_CODE'])['status'];
+                // ใช้โค้ดดิบจาก leave_register (LEAVE_STATUS_CODE) — ตาราง leave_status มีแค่ Z ทำให้ join แล้ว STATUS_CODE เป็น NULL
+                $leave->status = $this->getStatus($item['LEAVE_STATUS_CODE'])['status'];
 
                 if ($item['DAY_TYPE_ID'] == 2) {
                     $leave->date_start_type = 0.5;
@@ -1052,8 +1053,12 @@ private function mapVehicleType($input) {
                     'fullname' => $item['LEAVE_PERSON_FULLNAME'],
                     'leave_type_id' => $item['LEAVE_TYPE_ID'],
                     'leave_type_name' => $item['LEAVE_TYPE_NAME'],
-                    'status_code' => $item['STATUS_CODE'],
-                    'status_name' => $item['STATUS_NAME'],
+                    'status_code' => $item['LEAVE_STATUS_CODE'],
+                    'status_name' => $this->leaveStatusNameTh($item['LEAVE_STATUS_CODE']),
+                    // ขั้นตอนที่ "ผ่านจริง" จากระบบต้นทาง (ใช้สร้างการอนุมัติใน create-approve-leave)
+                    'milestone_leader' => empty($item['LEAVE_ACCEPT_BY_ID']) ? 0 : 1,     // หัวหน้ารับทราบ/เห็นชอบ
+                    'milestone_check' => empty($item['USER_CONFIRM_CHECK_ID']) ? 0 : 1,   // ผู้ตรวจสอบ
+                    'milestone_director' => empty($item['TOP_LEADER_AC_ID']) ? 0 : 1,     // ผอ.อนุมัติ
                     'location_id' => $item['LOCATION_ID'],
                     'location' => $item['LOCATION_NAME'],
                     'reason' => $item['LEAVE_BECAUSE'],
@@ -1101,6 +1106,36 @@ private function mapVehicleType($input) {
     {
 
         switch ($variable) {
+            // ===== โค้ดตัวอักษรเดี่ยวจาก hos-office (leave_register.LEAVE_STATUS_CODE) =====
+            // Z = ผ่านครบทุกขั้น (หัวหน้า+ตรวจสอบ+ผอ.) = อนุมัติสมบูรณ์
+            case 'Z':
+                $level = 4;
+                $approve_status = 'Pass';
+                $status = 'Approve';
+                break;
+            // A/B/E/S = ยังอยู่ระหว่างดำเนินการ (ผอ.ยังไม่อนุมัติ) = รอ
+            case 'A': // เพิ่งยื่น ยังไม่มีใครดำเนินการ
+            case 'B': // แทบไม่ดำเนินการ
+            case 'E': // หัวหน้าเห็นชอบ รอตรวจสอบ
+            case 'S': // ผ่านตรวจสอบแล้ว รอ ผอ.อนุมัติ
+                $level = 1;
+                $approve_status = 'Pending';
+                $status = 'Pending';
+                break;
+            // N = ยกเลิก
+            case 'N':
+                $level = 0;
+                $approve_status = '';
+                $status = 'Cancel';
+                break;
+            // D = ไม่อนุมัติ
+            case 'D':
+                $level = 0;
+                $approve_status = '';
+                $status = 'Reject';
+                break;
+
+            // ===== โค้ดแบบคำเต็ม (รองรับ tenant อื่นที่ใช้คำเต็ม) =====
             //  รอเห็นชอบ
             case 'Pending':
                 $level = 1;
@@ -1149,11 +1184,6 @@ private function mapVehicleType($input) {
                 $approve_status = '';
                 $status = 'Reject';
                 break;
-            case 'Z':
-                $level = 0;
-                $approve_status = '';
-                $status = 'Approve';
-                break;
 
             default:
                 $level = 0;
@@ -1168,6 +1198,21 @@ private function mapVehicleType($input) {
         ];
     }
 
+    // ชื่อสถานะภาษาไทยจากโค้ดตัวอักษรเดี่ยวของ hos-office (เก็บลง data_json.status_name)
+    private function leaveStatusNameTh($code)
+    {
+        $map = [
+            'Z' => 'อนุมัติ',
+            'A' => 'รอดำเนินการ',
+            'B' => 'รอดำเนินการ',
+            'E' => 'รอตรวจสอบ',
+            'S' => 'รอผู้อำนวยการอนุมัติ',
+            'N' => 'ยกเลิก',
+            'D' => 'ไม่อนุมัติ',
+        ];
+        return $map[$code] ?? $code;
+    }
+
     public function UpdateStatus()
     {
         // อัปเดตสถานะ leave จาก 'Allow' เป็น 'Approve' เฉพาะที่มี thai_year
@@ -1178,6 +1223,11 @@ private function mapVehicleType($input) {
 
     public function actionCreateApproveLeave()
     {
+
+        // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
+        // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
+        $deleted = Approve::deleteAll(['name' => 'leave']);
+        echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
 
         $leaves = Leave::find()->all();
         $num = 1;
@@ -1193,9 +1243,25 @@ private function mapVehicleType($input) {
                 $data = [];
             }
 
+            // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
+            if (array_key_exists('milestone_leader', $data)) {
+                $passed = [
+                    1 => !empty($data['milestone_leader']),   // หัวหน้ารับทราบ/เห็นชอบ
+                    2 => !empty($data['milestone_leader']),
+                    3 => !empty($data['milestone_check']),     // ผู้ตรวจสอบ
+                    4 => !empty($data['milestone_director']),  // ผอ.อนุมัติ
+                ];
+            } else {
+                // Fallback (กรณียังไม่ได้ re-run actionLeave): อนุมานจากสถานะใบลา
+                // เฉพาะใบที่อนุมัติสมบูรณ์เท่านั้นที่ถือว่าผ่านครบทุกระดับ
+                $approved = ($item->status === 'Approve');
+                $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
+            }
+
             foreach ([1, 2, 3, 4] as $level) {
                 $empId = $data['approve_' . $level] ?? null;
-                if (empty($empId)) {
+                // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
+                if (empty($empId) || empty($passed[$level])) {
                     continue;
                 }
                 $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];

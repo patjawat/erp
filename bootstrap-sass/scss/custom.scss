@@ -14,6 +14,11 @@ $h5-font-size: $font-size-base * 1.125;
 $h6-font-size: $font-size-base;
 
 
+// Google Fonts ต้องอยู่บนสุดของ CSS output (CSS @import ต้องมาก่อน rule อื่น
+// ไม่งั้น browser จะ ignore) โหลดเฉพาะน้ำหนักที่ใช้จริง: body=IBM Plex, header=Mitr, เสริม=Sarabun
+// (ตัด Noto Sans Thai ที่ไม่ถูกอ้างถึง + weight 100/200 + Sarabun italic ออกเพื่อลด payload)
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Mitr:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
+
 @import "../node_modules/bootstrap/scss/bootstrap";
 @import "../node_modules/bootstrap/scss/variables";
 @import "../node_modules/bootstrap/scss/maps";
@@ -22,8 +27,6 @@ $h6-font-size: $font-size-base;
 @import "./_utilities";
 @import "./card";
 // @import "./_calenda";
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&family=Noto+Sans+Thai:wght@100..900&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap');
 
 
 
@@ -51,113 +54,52 @@ $h6-font-size: $font-size-base;
 
 
 
-// 2. สร้าง Loop เพื่อสร้างเงาตามสีของแต่ละ Button
-@each $color, $value in $theme-colors {
-  .btn-#{$color} {
-    transition: all 0.2s ease-in-out;
-    // ใช้ rgba() สร้างเงาจากค่าสีแบรนด์
-    box-shadow: 0 4px 6px -1px rgba($value, 0.25), 0 2px 4px -2px rgba($value, 0.1);
-    border: none;
-
-    &:hover {
-      transform: translateY(-2px);
-      // ใช้ฟังก์ชัน tint-color หรือ shade-color ของ Bootstrap เพื่อปรับสีตอน hover
-      background-color: shade-color($value, 10%);
-      box-shadow: 0 10px 15px -3px rgba($value, 0.4), 0 4px 6px -4px rgba($value, 0.2);
-    }
-  }
-}
-
+// ปุ่ม: flat + restraint ตาม DESIGN.md (motion บอก state ไม่ใช่ decoration)
+// ไม่มี lift/glow; hover = เข้มขึ้น, focus = ring ที่มองเห็นได้ (a11y)
 @each $color, $value in $theme-colors {
 
-  // --- ปุ่มแบบปกติ (Solid) ---
+  // --- Solid ---
   .btn-#{$color} {
-    box-shadow: 0 4px 6px -1px rgba($value, 0.25), 0 2px 4px -2px rgba($value, 0.1);
-    transition: all 0.2s ease-in-out;
-    border: none;
-
-    &:hover {
-      transform: translateY(-2px);
-      background-color: shade-color($value, 10%);
-      box-shadow: 0 10px 15px -3px rgba($value, 0.4), 0 4px 6px -4px rgba($value, 0.2);
-    }
-  }
-
-  // --- ปุ่มแบบ Outline (ใหม่!) ---
-  .btn-outline-#{$color} {
-    transition: all 0.2s ease-in-out;
-    // เงาเริ่มต้นจะบางมากจนเกือบมองไม่เห็น (Soft look)
-    box-shadow: 0 2px 4px 0 rgba($value, 0.05);
-
-    &:hover {
-      transform: translateY(-2px);
-      // เมื่อ hover ให้พื้นหลังมีสีจางๆ (สไตล์ Tailwind จะไม่เป็นสีทึบไปเลยทันที)
-      background-color: rgba($value, 0.1);
-      color: $value; // รักษาความเข้มของตัวหนังสือ
-      border-color: $value;
-      box-shadow: 0 8px 12px -3px rgba($value, 0.2), 0 4px 6px -2px rgba($value, 0.1);
-    }
-
-    &:active {
-      transform: translateY(0);
-      background-color: $value; // เมื่อกดค่อยให้เป็นสีเต็ม
-      color: #fff;
-    }
-  }
-}
-
-@each $color, $value in $theme-colors {
-
-  // --- ปุ่มปกติ (Tailwind Flat Style with Soft Glow) ---
-  .btn-#{$color} {
-    background-color: $value;
     border: 1px solid transparent;
-    color: color-contrast($value);
-    font-weight: 500; // Tailwind มักใช้ Font Medium
-    border-radius: 0.5rem; // ปรับให้โค้งมนแบบ rounded-lg
-    
-    // เงาพื้นฐานแบบแบน
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 
     &:hover {
-      background-color: shade-color($value, 10%); // เข้มขึ้นนิดเดียว
-      
-      // --- จุดเด่น: แสงฟุ้งตามสีของปุ่ม (Colored Ring/Shadow) ---
-      // ปรับค่า rgba($value, 0.4) เพื่อให้ฟุ้งมากหรือน้อยตามใจชอบ
-      box-shadow: 0 10px 15px -3px rgba($value, 0.3), 
-                  0 4px 6px -4px rgba($value, 0.3);
-      
-      transform: translateY(-1px);
+      background-color: shade-color($value, 8%);
     }
 
     &:active {
-      background-color: shade-color($value, 20%);
-      transform: translateY(0);
+      background-color: shade-color($value, 16%);
       box-shadow: none;
     }
-    
-    // โฟกัสแบบ Ring (Tailwind Style)
-    &:focus {
+
+    &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px rgba($value, 0.5);
+      box-shadow: 0 0 0 3px rgba($value, 0.35);
     }
   }
 
-  // --- ปุ่ม Outline (Tailwind Style) ---
+  // --- Outline ---
   .btn-outline-#{$color} {
-    border: 1.5px solid $value;
-    background-color: transparent;
-    color: $value;
+    border: 1px solid $value;
     border-radius: 0.5rem;
+    transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 
     &:hover {
-      background-color: rgba($value, 0.05); // ฟุ้งๆ ใสๆ พื้นหลัง
-      color: shade-color($value, 15%);
-      border-color: shade-color($value, 15%);
-      
-      // เงาสีจางๆ ตามสีปุ่ม
-      box-shadow: 0 4px 12px rgba($value, 0.15);
+      background-color: rgba($value, 0.08);
+      color: shade-color($value, 12%);
+      border-color: shade-color($value, 12%);
+    }
+
+    &:active {
+      background-color: $value;
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba($value, 0.30);
     }
   }
 }
@@ -204,230 +146,6 @@ body {
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
   }
-}
-
-.calendar-bg-primary {
-  background-color: var(--bg-primary);
-  color: '#fffff';
-}
-
-
-.mitr-extralight {
-  font-family: "Mitr", sans-serif;
-  font-weight: 200;
-  font-style: normal;
-}
-
-.mitr-light {
-  font-family: "Mitr", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-}
-
-.mitr-regular {
-  font-family: "Mitr", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.mitr-medium {
-  font-family: "Mitr", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.mitr-semibold {
-  font-family: "Mitr", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.mitr-bold {
-  font-family: "Mitr", sans-serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-
-.ibm-plex-sans-thai-thin {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 100;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-extralight {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 200;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-light {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-regular {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-medium {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-semibold {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-bold {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-
-.ibm-plex-sans-thai-thin {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 100;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-extralight {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 200;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-light {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-regular {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-medium {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-semibold {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.ibm-plex-sans-thai-bold {
-  font-family: "IBM Plex Sans Thai", sans-serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-.sarabun-thin {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 100;
-  font-style: normal;
-}
-
-.sarabun-extralight {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 200;
-  font-style: normal;
-}
-
-.sarabun-light {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-}
-
-.sarabun-regular {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.sarabun-medium {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.sarabun-semibold {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.sarabun-bold {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 700;
-  font-style: normal;
-}
-
-.sarabun-extrabold {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 800;
-  font-style: normal;
-}
-
-.sarabun-thin-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 100;
-  font-style: italic;
-}
-
-.sarabun-extralight-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 200;
-  font-style: italic;
-}
-
-.sarabun-light-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 300;
-  font-style: italic;
-}
-
-.sarabun-regular-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 400;
-  font-style: italic;
-}
-
-.sarabun-medium-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 400;
-  font-style: italic;
-}
-
-.sarabun-semibold-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 600;
-  font-style: italic;
-}
-
-.sarabun-bold-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 700;
-  font-style: italic;
-}
-
-.sarabun-extrabold-italic {
-  font-family: "Sarabun", sans-serif;
-  font-weight: 800;
-  font-style: italic;
 }
 
 .offcanvas {
@@ -500,7 +218,7 @@ textarea:focus {
 
 .autocomplete-item.selected .item-title,
 .autocomplete-item.selected .item-desc {
-  color: var(--bg-gray-600);
+  color: var(--bs-gray-600);
 }
 
 
@@ -821,53 +539,54 @@ textarea:focus {
   border-radius: 20px;
 }
 
+// Badge: ใช้ token semantic (DESIGN.md) ให้ตัวอักษร contrast ≥ 4.5:1 บนพื้น soft
 .badge-warning {
-  color: #f4c238;
-  background-color: rgba(244, 194, 56, .1);
+  color: #b45309;
+  background-color: rgba(180, 83, 9, .10);
 }
 
 .badge-success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  color: #15803d;
+  background-color: rgba(21, 128, 61, .10);
 }
 
 
 
 .badge-danger {
-  background-color: #fff3e0;
-  color: #e65100;
+  color: #b91c1c;
+  background-color: rgba(185, 28, 28, .10);
 }
 
 .badge-soft-primary {
-  color: #1f58c7;
-  background-color: rgba(31, 88, 199, .1);
+  color: #0a58ca;
+  background-color: rgba(13, 110, 253, .10);
 }
 
 .badge-soft-info {
-  color: #196bad;
-  background-color: rgba(31, 88, 199, .1);
+  color: #155e93;
+  background-color: rgba(21, 94, 147, .10);
 }
 
 .badge-soft-warning {
-  color: #d96f04;
-  background-color: rgb(234 174 22 / 26%);
+  color: #b45309;
+  background-color: rgba(180, 83, 9, .12);
 }
 
 .badge-soft-danger {
-  color: #c73f34;
-  background-color: rgb(234 223 222);
+  color: #b91c1c;
+  background-color: rgba(185, 28, 28, .10);
 }
 
 
 .badge-soft-success {
-  color: #009688;
-  background-color: rgb(224 243 225);
+  color: #15803d;
+  background-color: rgba(21, 128, 61, .10);
 }
 
 
 .badge-soft-secondary {
-  color: #a4a9b4;
-  background-color: rgba(164, 169, 180, .1);
+  color: #5b6370;
+  background-color: rgba(91, 99, 112, .12);
 }
 
 
@@ -1190,12 +909,11 @@ textarea:focus {
 }
 
 .section-title {
-  border-left: 4px solid var(--bs-primary);
-  padding: 10px;
+  padding: 0.5rem 0 0.75rem;
   margin-bottom: 20px;
-  color: #333;
-  font-weight: 400;
-  background-color: #d9e6f782
+  color: #1a202c;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 // @import "bootstrap";
@@ -1369,6 +1087,310 @@ textarea:focus {
 
 }
 
+
+/* ==========================================================================
+   Dark mode (MVP chrome) — เปิดใช้เมื่อ data-bs-theme="dark"
+   เก็บค่าเลือกรายคนใน cookie `theme_mode` (อ่านฝั่ง PHP ใน layout)
+   Bootstrap 5.3 จัดการคอมโพเนนต์ของตัวเองอัตโนมัติ; บล็อกนี้เติมเฉพาะพื้นผิว
+   ที่ธีมนี้ hardcode สีอ่อนไว้ (การ์ด/แถบเมนู/ฟุตเตอร์/ตาราง ฯลฯ)
+   ========================================================================== */
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+
+  /* ── ใช้พาเลตต์ dark มาตรฐานของ Bootstrap 5.3 ล้วน ──────────────────────────
+     ไม่ override --bs-body-bg / --bs-body-color / --bs-secondary-bg / --bs-tertiary-bg /
+     --bs-border-color / --bs-emphasis-color เอง → ปล่อยให้ค่า default ของ Bootstrap
+     ทำงาน (จะได้ไม่เพี้ยน). บล็อกนี้แค่ (1) remap gray ramp ที่ธีม override ไว้ในโหมด
+     light กลับด้วย "hex มาตรฐานของ Bootstrap เอง" และ (2) ชี้พื้นผิวที่ธีม hardcode
+     สีอ่อน ให้ไปใช้ตัวแปรมาตรฐานของ Bootstrap */
+
+  /* remap gray ramp (ธีมตั้งค่า light ไว้ที่ :root ซึ่ง match ในโหมด dark ด้วย)
+     ใช้ค่า hex มาตรฐานของ Bootstrap gray-100..900 สลับตำแหน่งสำหรับพื้นมืด */
+  --bs-gray-100: #212529;
+  --bs-gray-200: #2b3035;
+  --bs-gray-300: #343a40;
+  --bs-gray-300-rgb: 52, 58, 64;
+  --bs-gray-400: #495057;
+  --bs-gray-500: #6c757d;
+  --bs-gray-600: #adb5bd;
+  --bs-gray-700: #ced4da;
+  --bs-gray-800: #dee2e6;
+  --bs-gray-900: #f8f9fa;
+
+  /* var ของธีมเอง → ผูกกับตัวแปรมาตรฐานของ Bootstrap */
+  --bg-primary: var(--bs-primary);
+
+  /* var แถบเมนูใน <style> ของ layout (themes/v4/layouts/main.php) → ใช้ subtle มาตรฐาน */
+  --erp-primary: var(--bs-primary-text-emphasis);
+  --erp-primary-light: var(--bs-primary-bg-subtle);
+  --erp-icon-bg-active: var(--bs-primary-bg-subtle);
+  --erp-bg: var(--bs-body-bg);
+
+  /* พื้นหน้าเพจ — ธีม hardcode `body{background:#eff6ff}` และ
+     `.page-content-wrapper{background:#eceff2}` ไว้ ต้อง override ให้ใช้พื้นมาตรฐาน */
+  body { background-color: var(--bs-body-bg) !important; color: var(--bs-body-color); }
+  .page-content-wrapper { background-color: var(--bs-body-bg) !important; }
+
+  /* Bootstrap คอมไพล์ .card{--bs-card-bg} แบบ static ต่อการ์ด — ตั้งใหม่ที่ระดับ .card
+     ให้ยกจากพื้นเพจ (ใช้ secondary-bg มาตรฐาน; ปล่อย colored card เช่น .text-bg-primary) */
+  .card { --bs-card-bg: var(--bs-secondary-bg); }
+
+  /* พื้นผิว content ที่ธีม hardcode สีอ่อนไว้ → พื้นมาตรฐาน secondary-bg */
+  .card-header,
+  .card-footer,
+  .filter-section,
+  .form-container,
+  .form-section,
+  .right-setting,
+  .setting-sidebar,
+  .navbar-brand-box,
+  .sidebar,
+  .footer,
+  .tab-content,
+  .meeting-table,
+  .report-usage__card,
+  .dashboard-card {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color) !important;
+  }
+
+  /* ฟุตเตอร์ shell ที่ใช้ utility bg-white / text-dark */
+  footer.bg-white { background-color: var(--bs-secondary-bg) !important; }
+  footer .text-dark { color: var(--bs-body-color) !important; }
+
+  /* แถบเมนูแนวนอน (inline style ใน main.php ใช้สีอ่อน hardcode) */
+  .erp-nav-item { color: var(--bs-secondary-color); }
+  .erp-nav-item:hover {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+  }
+  .erp-nav-item.active,
+  .erp-nav-item-active {
+    background-color: var(--bs-primary-bg-subtle);
+    border-bottom-color: var(--bs-primary-text-emphasis);
+    color: var(--bs-primary-text-emphasis);
+  }
+  .erp-nav-item.active .erp-icon-box {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+  }
+  .erp-icon-box,
+  .erp-icon-box-md,
+  .erp-icon-box-xl {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+  }
+
+  /* ช่องค้นหาใน header (hardcode ขาว) */
+  .app-search .form-control {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+  }
+
+  /* หัวข้อ section */
+  .section-title {
+    color: var(--bs-emphasis-color);
+    border-bottom-color: var(--bs-border-color) !important;
+  }
+
+  /* Dropdown: theme เดิม hardcode พื้นขาวและข้อความสีเข้มไว้ท้ายไฟล์ */
+  .dropdown-menu {
+    --bs-dropdown-color: var(--bs-body-color);
+    --bs-dropdown-bg: var(--bs-secondary-bg);
+    --bs-dropdown-border-color: var(--bs-border-color);
+    --bs-dropdown-link-color: var(--bs-body-color);
+    --bs-dropdown-link-hover-color: var(--bs-body-color);
+    --bs-dropdown-link-hover-bg: var(--bs-tertiary-bg);
+    --bs-dropdown-link-active-color: var(--bs-white);
+    --bs-dropdown-link-active-bg: var(--bs-primary);
+    --bs-dropdown-link-disabled-color: var(--bs-secondary-color);
+    --bs-dropdown-header-color: var(--bs-secondary-color);
+    background-color: var(--bs-dropdown-bg);
+    border: 1px solid var(--bs-dropdown-border-color);
+    color: var(--bs-dropdown-color);
+  }
+  .dropdown-item {
+    background-color: transparent !important;
+    color: var(--bs-dropdown-link-color);
+  }
+  .dropdown-item:hover,
+  .dropdown-item:focus {
+    background-color: var(--bs-dropdown-link-hover-bg) !important;
+    color: var(--bs-dropdown-link-hover-color) !important;
+  }
+  .dropdown-item.active,
+  .dropdown-item:active {
+    background-color: var(--bs-dropdown-link-active-bg) !important;
+    color: var(--bs-dropdown-link-active-color) !important;
+  }
+  .dropdown-item.disabled,
+  .dropdown-item:disabled {
+    background-color: transparent !important;
+    color: var(--bs-dropdown-link-disabled-color) !important;
+  }
+  .dropdown-header {
+    color: var(--bs-dropdown-header-color);
+  }
+  .dropdown-divider {
+    border-top-color: var(--bs-border-color);
+  }
+  .dropdown-menu .text-dark {
+    color: var(--bs-body-color) !important;
+  }
+
+  /* .text-muted ธีม hardcode `color:#6c757d !important` (บรรทัด ~1842)
+     ต้อง !important เพื่อทับกลับ → ใช้ secondary-color มาตรฐาน (คอนทราสต์พอในโหมดมืด) */
+  .text-muted { color: var(--bs-secondary-color) !important; }
+
+  /* form-control / form-select — ยืนยันให้ใช้พื้นผิว/ตัวอักษร/เส้นมาตรฐานของ dark
+     (:focus ด้านนอกใช้สีแบรนด์ specificity สูงกว่า จึงยังทำงาน) */
+  .form-control,
+  .form-select {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+  }
+  .form-control:disabled,
+  .form-control[readonly] {
+    background-color: var(--bs-secondary-bg);
+  }
+  .form-check-input {
+    --bs-form-check-bg: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+  }
+
+  /* Modal: Bootstrap ตั้ง --bs-modal-bg = body-bg (เท่ากับ input) เลยกลืนกัน
+     → ยกพื้น modal เป็น secondary-bg ให้ input (body-bg) ที่เข้มกว่าเด่นขึ้น */
+  .modal-content { background-color: var(--bs-secondary-bg); }
+  .modal-header,
+  .modal-footer { border-color: var(--bs-border-color); }
+
+  /* Select2 (krajee-bs5): theme ของ library hardcode สีโหมดสว่าง และถูกโหลดหลัง
+     AppAsset. ใช้ selector ที่ specificity สูงกว่าให้ครอบคลุมทั้ง control และ dropdown
+     (dropdown append ไปที่ body แต่ยังอยู่ใต้ html[data-bs-theme="dark"]). */
+  .select2-dropdown {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+  }
+
+  /* กล่องปิด (single/multiple): !important ใช้ทับ custom rule ใน _variables.scss
+     ซึ่งต้องใช้ !important เพื่อชนะ stylesheet ของ widget ที่โหลดภายหลัง */
+  .select2-container--krajee-bs5 .select2-selection,
+  .select2-container--krajee-bs5 .select2-selection--single,
+  .select2-container--krajee-bs5 .select2-selection--multiple {
+    background-color: var(--bs-tertiary-bg) !important;
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+  }
+
+  .select2-container--krajee-bs5 .select2-selection--single {
+    background-image: var(
+      --bs-form-select-bg-img,
+      url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dee2e6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e")
+    );
+  }
+
+  .select2-container--krajee-bs5 .select2-selection--single .select2-selection__rendered,
+  .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__rendered {
+    color: var(--bs-body-color);
+  }
+  .select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder,
+  .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__placeholder {
+    color: var(--bs-secondary-color);
+  }
+
+  .select2-container--krajee-bs5 .select2-selection__clear,
+  .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice__remove {
+    color: var(--bs-body-color);
+    text-shadow: none;
+  }
+
+  .select2-container--krajee-bs5 .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+  }
+
+  .select2-container--krajee-bs5.select2-container--disabled .select2-selection,
+  .select2-container--krajee-bs5.select2-container--disabled .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-secondary-color);
+  }
+
+  /* ช่องค้นหาใน dropdown: override เฉพาะสีพื้นเพื่อคง search icon ของ widget */
+  .select2-container--krajee-bs5 .select2-search--dropdown .select2-search__field {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+  }
+  .select2-container--krajee-bs5 .select2-search__field::placeholder {
+    color: var(--bs-secondary-color);
+  }
+
+  .select2-container--krajee-bs5 .select2-results__group {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+    text-shadow: none;
+  }
+
+  .select2-container--krajee-bs5 .select2-results__option.loading-results,
+  .select2-container--krajee-bs5 .load-more {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+  }
+
+  /* option ปกติ/unselected */
+  .select2-container--krajee-bs5 .select2-results__option,
+  .select2-container--krajee-bs5 .select2-results__option[aria-selected],
+  .select2-container--krajee-bs5 li.select2-results__option {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+  }
+
+  /* option ที่ถูกเลือกอยู่ */
+  .select2-container--krajee-bs5 .select2-results__option.select2-results__option--selected,
+  .select2-container--krajee-bs5 .select2-results__option[aria-selected=true] {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+  }
+
+  /* option ที่ hover/highlight: !important ใช้ทับ global custom rule เดิม */
+  .select2-container--krajee-bs5 .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--bs-primary) !important;
+    color: var(--bs-white) !important;
+  }
+
+  .select2-container--krajee-bs5 .select2-results__option[aria-disabled=true] {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+  }
+
+  /* .btn-light ใช้สีอ่อนคงที่ ไม่พลิกตามธีม → ขาวจ้าเกินในโหมดมืด
+     remap ตัวแปร --bs-btn-* ของปุ่มให้เป็นพื้นผิว dark มาตรฐาน (คุม hover/active ครบ) */
+  .btn-light {
+    --bs-btn-bg: var(--bs-tertiary-bg);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-color: var(--bs-body-color);
+    --bs-btn-hover-bg: var(--bs-secondary-bg);
+    --bs-btn-hover-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--bs-body-color);
+    --bs-btn-active-bg: var(--bs-secondary-bg);
+    --bs-btn-active-border-color: var(--bs-border-color);
+    --bs-btn-active-color: var(--bs-emphasis-color);
+  }
+  /* รูลเก่า `.btn .btn-light:hover{#cacaca}` (บรรทัด ~1044) hardcode พื้นเทาอ่อน
+     specificity สูงกว่า var → ต้องทับตรงๆ ด้วย selector ที่สูงกว่าในโหมดมืด */
+  .btn-light:hover,
+  .btn .btn-light:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+  }
+}
+
 a.active,
 a:focus,
 a:hover {
@@ -1433,8 +1455,8 @@ a:hover {
 }
 
 .file-upload-btn:hover {
-  border-color: var(--primary-color);
-  background-color: rgba(67, 97, 238, 0.05);
+  border-color: var(--bs-primary);
+  background-color: rgba(var(--bs-primary-rgb), 0.05);
 }
 
 
@@ -1552,7 +1574,7 @@ a:hover {
 
 
 .card .card-title {
-  font-weight: 300 !important;
+  font-weight: 500 !important;
   color: $headings-color !important;
 }
 
@@ -1605,14 +1627,21 @@ th {
   border-radius: 30px;
 }
 
+// คืน focus ring ที่มองเห็นได้ (WCAG 2.4.7) — ใช้สีแบรนด์แทนการลบทิ้ง
 .form-control:focus {
-  box-shadow: none;
+  border-color: rgba(var(--bs-primary-rgb), 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
 }
 
-input,
+// ตัวอักษรที่ผู้ใช้พิมพ์ใช้สี body ปกติ (ไม่บังคับเทา) — เทาเฉพาะ placeholder
+input {
+  font-weight: 300;
+}
+
 input::placeholder {
   font-weight: 300;
-  color: var(--bs-gray-600) !important;
+  color: var(--bs-gray-600);
+  opacity: 1;
 }
 
 // .select2-container--krajee-bs5 .select2-selection--single .select2-selection__placeholder {
@@ -1999,7 +2028,7 @@ h4,
 h5,
 h6 {
   font-family: var(--bs-header-font-family);
-  color: var(--bs-gray-600);
+  color: var(--bs-gray-800);
   font-weight: 400;
 }
 
@@ -2066,7 +2095,6 @@ fieldset {
   padding: 15px 30px 10px 30px;
   letter-spacing: .05em;
   font-size: .6875rem;
-  text-transform: uppercase;
   color: #4b4b5a;
   font-weight: 600;
 }
@@ -2153,7 +2181,7 @@ fieldset {
 }
 
 .ah-400 {
-  height: 40000px
+  height: 400px
 }
 
 .ah-450 {
@@ -2352,9 +2380,9 @@ fieldset {
   color: #e9ecef
 }
 
-.navbar-header .hamburg-icon:focus {
-  outline: 0;
-  box-shadow: none
+.navbar-header .hamburg-icon:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 2px;
 }
 
 .navbar-brand-box {
@@ -2752,7 +2780,6 @@ small {
   padding: 15px 30px 10px 30px;
   letter-spacing: .05em;
   font-size: .6875rem;
-  text-transform: uppercase;
   color: #4b4b5a;
   font-weight: 600
 }
@@ -3168,20 +3195,20 @@ small {
   border: none !important;
   border-radius: 0.5rem !important;
   padding: 10px 20px !important;
-  color: #555 !important;
-  background-color: #f8f9fa !important;
+  color: var(--bs-gray-700) !important;
+  background-color: var(--bs-gray-100) !important;
   margin-right: 10px !important;
-  transition: background-color 0.3s, color 0.3s !important;
+  transition: background-color 0.15s, color 0.15s !important;
 }
 
 .nav-tabs .nav-link.active {
-  background-color: #007bff !important;
+  background-color: var(--bs-primary) !important;
   color: #fff !important;
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: #e9ecef !important;
-  color: #007bff !important;
+  background-color: var(--bs-gray-200) !important;
+  color: var(--bs-primary) !important;
 }
 
 .tab-content {
@@ -3239,23 +3266,23 @@ small {
 }
 
 .status-badge.approved {
-  background-color: #f8f9fa;
-  color: #0d6efd;
+  background-color: rgba(13, 110, 253, .10);
+  color: #0a58ca;
 }
 
 .status-badge.confirmed {
-  background-color: #84c889;
-  color: white;
+  background-color: rgba(21, 128, 61, .10);
+  color: #15803d;
 }
 
 .status-badge.rejected {
-  background-color: #dc3545;
-  color: white;
+  background-color: rgba(185, 28, 28, .10);
+  color: #b91c1c;
 }
 
 .status-badge.cancelled {
-  background-color: #dc3545;
-  color: white;
+  background-color: rgba(91, 99, 112, .12);
+  color: #4b5563;
 }
 
 .name-title {
@@ -3294,6 +3321,7 @@ small {
 }
 
 
+// สรุปตัวเลข: surface card ขาว (ไม่ใช่พื้น gradient) — สีสื่อความหมายที่ "ตัวเลข" ตามหมวด
 .report-usage {
 
   &__header {
@@ -3301,36 +3329,29 @@ small {
   }
 
   &__card {
-    padding: 24px;
-    border-radius: 16px;
-    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    color: var(--bs-gray-800);
     font-weight: 500;
 
-    &--green {
-      background: linear-gradient(135deg,#00a86b,#00c48c);
-    }
-
-    &--blue {
-      background: linear-gradient(135deg,#3b82f6,#6366f1);
-    }
-
-    &--orange {
-      background: linear-gradient(135deg,#ff7a18,#ffb347);
-    }
-
-    &--purple {
-      background: linear-gradient(135deg,#8b5cf6,#a855f7);
-    }
+    &--green  { --ru-accent: #15803d; }
+    &--blue   { --ru-accent: #0a58ca; }
+    &--orange { --ru-accent: #b45309; }
+    &--purple { --ru-accent: #6d28d9; }
   }
 
   &__label {
     font-size: 14px;
-    opacity: .9;
+    color: var(--bs-gray-600);
   }
 
   &__value {
     font-size: 28px;
     font-weight: 700;
+    color: var(--ru-accent, var(--bs-gray-900));
   }
 
 }
@@ -3342,52 +3363,60 @@ small {
   }
 }
 
+// Dashboard card: surface ขาว + เส้น 1px (ไม่มี gradient/glass/lift) — สีหมวดอยู่ที่ accent
 .dashboard-card {
 
-  padding: 24px;
-  border-radius: 16px;
-  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: var(--bs-gray-800);
   position: relative;
   overflow: hidden;
 
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  transition: all .25s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow .18s ease, border-color .18s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+    border-color: rgba(15, 23, 42, 0.14);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   }
 
-  /* glass highlight */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-
-    background: linear-gradient(
-      135deg,
-      rgba(255,255,255,.25),
-      rgba(255,255,255,0)
-    );
-
-    opacity: .4;
-  }
-
-  &--green {
-    background: linear-gradient(135deg,#34d399,#059669);
-  }
-
-  &--blue {
-    background: linear-gradient(135deg,#60a5fa,#2563eb);
-  }
-
-  &--orange {
-    background: linear-gradient(135deg,#fb923c,#ea580c);
-  }
-
-  &--purple {
-    background: linear-gradient(135deg,#a78bfa,#7c3aed);
-  }
+  &--green  { --dash-accent: #15803d; }
+  &--blue   { --dash-accent: #0a58ca; }
+  &--orange { --dash-accent: #b45309; }
+  &--purple { --dash-accent: #6d28d9; }
 
 }
 
+
+// ===== Accessibility: prefers-reduced-motion =====
+// ปิด motion ที่เพิ่มเองสำหรับผู้ใช้ที่ตั้งค่า reduce motion
+// (Bootstrap core มี guard ของตัวเองอยู่แล้ว ตรงนี้คุมเฉพาะที่เราเพิ่ม)
+@media (prefers-reduced-motion: reduce) {
+
+  .noti-animate,
+  .dropdown-menu {
+    animation: none !important;
+  }
+
+  .zoom-in,
+  .zoom-in-sm,
+  .property-card,
+  .dashboard-card,
+  .card,
+  .hover-card,
+  .btn,
+  [class^="btn-"],
+  [class*=" btn-"] {
+    transition: none !important;
+  }
+
+  .zoom-in:hover,
+  .zoom-in-sm:hover,
+  .property-card:hover,
+  .hover-card:hover,
+  .file-remove:hover {
+    transform: none !important;
+  }
+}

@@ -36,13 +36,6 @@ $menuItems = [
         'active' => ['employees', 'organization','default'],
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>'
     ],
-    [
-        'label' => 'ข้อมูลสุขภาพ', 
-        'show' => Yii::$app->user->can('health') ? true : false,
-         'url' => ['/health/default/index'], 
-        'active' => ['health'],
-        'icon' => '<i data-lucide="heart-plus"></i>'
-    ],
      [
          'show' => Yii::$app->user->can('vehicle') ? true : false,
         'label' => 'จองรถ', 
@@ -141,6 +134,17 @@ $menuItems = [
         'url' => ['/helpdesk/medical/dashboard'], 
         'active' => 'medical',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>'
+    ],
+    [
+        'show' => Yii::$app->user->can('housing.user')
+            || Yii::$app->user->can('housing.staff')
+            || Yii::$app->user->can('housing.admin'),
+        'label' => 'บ้านพัก',
+        'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')
+            ? ['/housing/dashboard/index']
+            : ['/housing/my/index'],
+        'active' => 'housing',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V8l6-5 6 5v13"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path></svg>'
     ],
 ];
 

@@ -17,6 +17,12 @@ use yii\bootstrap5\Breadcrumbs;
       margin-bottom: 5px;
       font-size: 13px;
    }
+   .page-title-box .page-subtitle {
+      color: #495057;
+   }
+   [data-bs-theme="dark"] .page-title-box .page-subtitle {
+      color: #ced4da;
+   }
    /* จัดการปุ่มในมือถือให้ดูเรียบร้อย */
    @media (max-width: 991.98px) {
       .action-box {
@@ -51,7 +57,7 @@ use yii\bootstrap5\Breadcrumbs;
                <div class="title-text mt-2 mt-lg-0">
                   <?= isset($this->blocks['page-title']) ? $this->blocks['page-title'] : ''; ?>
                   <?php if (isset($this->blocks['sub-title']) && trim($this->blocks['sub-title']) !== ''): ?>
-                     <div class="text-muted small mt-1"><?= $this->blocks['sub-title'] ?></div>
+                     <div class="page-subtitle small mt-1"><?= $this->blocks['sub-title'] ?></div>
                   <?php endif; ?>
                </div>
             </div>

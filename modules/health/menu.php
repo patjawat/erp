@@ -10,7 +10,7 @@ use yii\helpers\Url;
     </a>
     <a href="<?= Url::to(['/health/health-screen']) ?>" class="btn <?= $active !== 'list' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i data-lucide="scan-heart"></i> 
-        ทะเบียนข้อมูลสุขภาพ
+        ทะเบียนตรวจสุขภาพ
     </a>
 
     <div class="dropdown">

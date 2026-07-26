@@ -168,8 +168,8 @@ foreach ($appointments as $appointment) {
                     'data-confirm-text' => 'ระบบจะบันทึกผู้รับและเผยแพร่เอกสารทันที',
                     'data-confirm-label' => 'บันทึกและเผยแพร่',
                 ]) ?>
-                <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>บันทึกเป็นฉบับร่าง', ['class' => 'btn btn-light btn-block']) ?>
-                <?= Html::a('ยกเลิก', ['view', 'id' => $model->id], ['class' => 'btn btn-light btn-block']) ?>
+                <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>บันทึกเป็นฉบับร่าง', ['class' => 'btn btn-outline-secondary btn-block']) ?>
+                <?= Html::a('ยกเลิก', ['view', 'id' => $model->id], ['class' => 'btn btn-outline-secondary btn-block']) ?>
             </div>
         </div>
     </aside>

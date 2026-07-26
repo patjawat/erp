@@ -3,6 +3,7 @@
 namespace app\modules\medsop\services;
 
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\medsop\components\RichText;
 use app\modules\medsop\models\Document;
 use app\modules\medsop\models\DocumentRevision;
 use app\modules\medsop\models\DocumentStep;
@@ -23,6 +24,10 @@ class DocumentService
 
     public function save(Document $document, array $stepRows, array $mediaFiles = [], ?UploadedFile $coverFile = null): bool
     {
+        // กรอง Rich Text ให้เหลือเฉพาะแท็กที่อนุญาตก่อนบันทึก (กัน stored XSS)
+        // objective เป็น required — ถ้า sanitize แล้วว่าง validation จะจับได้เอง
+        $document->objective = RichText::sanitize($document->objective);
+        $document->scope = RichText::sanitize($document->scope);
         try {
             $relatedDocuments = $this->relatedDocumentMap($stepRows);
             $steps = $this->normalizeSteps($stepRows, $relatedDocuments, (int) $document->id);
@@ -140,8 +145,8 @@ class DocumentService
                 'id' => (int) ($row['id'] ?? 0),
                 'source_index' => $sourceIndex,
                 'title' => $title,
-                'description' => trim((string) ($row['description'] ?? '')),
-                'caution' => trim((string) ($row['caution'] ?? '')),
+                'description' => RichText::sanitize($row['description'] ?? ''),
+                'caution' => RichText::sanitize($row['caution'] ?? ''),
                 'related_links' => $this->normalizeRelatedLinks((array) ($row['related_links'] ?? []), $relatedDocuments, $currentDocumentId),
                 'keep_media' => array_map('intval', (array) ($row['keep_media'] ?? [])),
             ];

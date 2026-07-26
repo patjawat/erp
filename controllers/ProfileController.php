@@ -14,6 +14,15 @@ use yii\bootstrap5\ActiveForm;
 use app\modules\hr\models\Employees;
 use app\modules\usermanager\models\User;
 use app\modules\hr\models\EmployeeDetail;
+use app\modules\hr\models\EmployeeDetailSearch;
+use app\modules\hr\models\EmployeeTrainingPlan;
+use app\modules\hr\models\IdpCycle;
+use app\modules\hr\models\IdpPlan;
+use app\modules\housing\services\HousingContextService;
+use app\modules\housing\models\Building;
+use app\modules\housing\models\Unit;
+use app\modules\housing\models\Handover;
+use app\modules\housing\models\Occupancy;
 
 class ProfileController extends \yii\web\Controller
 
@@ -56,10 +65,93 @@ class ProfileController extends \yii\web\Controller
     {
         $name = $this->request->get('name');
         $model = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        if ($model && in_array($name, ['health', 'occupational_health'], true)) {
+            return $this->redirect([
+                '/health/health-screen/index',
+                'HealthScreenSearch[emp_id]' => (int) $model->id,
+            ]);
+        }
+        $trainingPlans = [];
+        $idpCycle = null;
+        $idpPlan = null;
+        $dataProvider = null;
+        $housingContext = null;
+        $housingVacancies = [];
+        $housingActionCount = $model ? (int)Handover::find()
+            ->joinWith('occupancy')
+            ->where([
+                'housing_occupancy.emp_id' => $model->id,
+                'housing_handover.status' => Handover::STATUS_DRAFT,
+            ])
+            ->andWhere(['is not', 'housing_handover.handed_over_signed_at', null])
+            ->andWhere(['housing_handover.received_signed_at' => null])
+            ->count() : 0;
+        if ($model && $name === 'training_roadmap') {
+            $trainingPlans = EmployeeTrainingPlan::find()
+                ->where(['emp_id' => $model->id])
+                ->with(['roadmap.phases.activities', 'results'])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+        } elseif ($model && $name === 'idp') {
+            $idpCycle = IdpCycle::current();
+            $idpPlan = $idpCycle
+                ? IdpPlan::find()->where(['cycle_id' => $idpCycle->id, 'emp_id' => $model->id])
+                    ->with(['cycle', 'employee', 'supervisor', 'goals.activities'])->one()
+                : null;
+        } elseif ($model && $name === 'housing') {
+            $housingContext = (new HousingContextService())->forUser((int)Yii::$app->user->id, [
+                'tab' => $this->request->get('housing_tab', 'overview'),
+                'expenseYear' => $this->request->get('expense_year'),
+                'maintenanceStatus' => $this->request->get('maintenance_status', 'all'),
+                'maintenanceYear' => $this->request->get('maintenance_year'),
+            ]);
+            if ($housingContext['mode'] === 'applicant') {
+                $buildings = Building::find()
+                    ->with(['units.floor', 'units.rooms'])
+                    ->where(['housing_building.status' => Building::STATUS_ACTIVE])
+                    ->orderBy(['housing_building.sort_order' => SORT_ASC, 'housing_building.name' => SORT_ASC])
+                    ->all();
+                foreach ($buildings as $building) {
+                    if ($building->building_type === Building::TYPE_HOUSE && !$building->units) {
+                        $unit = null;
+                        $room = null;
+                        $housingVacancies[] = compact('building', 'unit', 'room');
+                        continue;
+                    }
+                    foreach ($building->units as $unit) {
+                        if ($unit->rooms) {
+                            foreach ($unit->rooms as $room) {
+                                if ($room->status === Unit::STATUS_VACANT) {
+                                    $housingVacancies[] = compact('building', 'unit', 'room');
+                                }
+                            }
+                        } elseif ($unit->status === Unit::STATUS_VACANT) {
+                            $room = null;
+                            $housingVacancies[] = compact('building', 'unit', 'room');
+                        }
+                    }
+                }
+            }
+        } elseif ($model && $name) {
+            $searchModel = new EmployeeDetailSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query
+                ->where(['emp_id' => $model->id, 'name' => $name])
+                ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"))
+                ->addOrderBy(['id' => SORT_DESC]);
+            $dataProvider->pagination->pageSize = 8;
+        }
         // if($model){
         return $this->render('@app/modules/hr/views/employees/view', [
             'model' => $model ? $model : new Employees(),
             'name' => $name,
+            'trainingPlans' => $trainingPlans,
+            'idpCycle' => $idpCycle,
+            'idpPlan' => $idpPlan,
+            'dataProvider' => $dataProvider,
+            'housingContext' => $housingContext,
+            'housingVacancies' => $housingVacancies,
+            'housingActionCount' => $housingActionCount,
         ]);
         // }else{
         //     return $this->renderContent('<h1 class="text-center">ไม่พบข้อมูลพนักงาน</h1>');

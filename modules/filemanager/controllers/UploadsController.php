@@ -7,6 +7,9 @@ use yii\web\Response;
 use yii\web\UploadedFile;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
+use app\modules\housing\services\HousingUploadService;
+use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 
 class UploadsController extends \yii\web\Controller
 {
@@ -21,6 +24,11 @@ class UploadsController extends \yii\web\Controller
     {
         $id = Yii::$app->request->get('id');
         $model = Uploads::findOne($id);
+        if ($model === null) {
+            throw new NotFoundHttpException('File not found.');
+        }
+        $this->assertCanViewHousingUpload($model);
+
         $filename = $model->real_filename;
         $filepathCheck = FileManagerHelper::getUploadPath() . $model->ref . '/thumbnail/' . $filename;
         if (!file_exists($filepathCheck)) {
@@ -28,17 +36,15 @@ class UploadsController extends \yii\web\Controller
         } else {
             $filepath = $filepathCheck;
         }
-        $this->setHttpHeaders($model->type);
-        \Yii::$app->response->data = file_get_contents($filepath);
-        return \Yii::$app->response;
-        if ($model->name == 'logo') {
-            return \Yii::$app->response;
+        if (!is_file($filepath)) {
+            throw new NotFoundHttpException('File not found.');
         }
-        if (!Yii::$app->user->isGuest) {
-            return \Yii::$app->response;
-        } else {
-            return false;
-        }
+
+        return Yii::$app->response->sendFile(
+            $filepath,
+            $model->file_name ?: $model->real_filename,
+            ['inline' => true]
+        );
     }
 
 
@@ -46,20 +52,32 @@ class UploadsController extends \yii\web\Controller
     {
         $model = Uploads::findOne($id);
         if (!$model) {
-            throw new \yii\web\NotFoundHttpException('File not found.');
+            throw new NotFoundHttpException('File not found.');
         }
+        $this->assertCanViewHousingUpload($model);
 
         $filePath = Yii::getAlias('@app/modules/filemanager/fileupload/')
             . $model->ref . '/' . $model->real_filename;
 
         if (!file_exists($filePath)) {
-            throw new \yii\web\NotFoundHttpException('File not found.');
+            throw new NotFoundHttpException('File not found.');
         }
 
         return Yii::$app->response->sendFile($filePath, null, [
             'inline' => true,
             'cache' => true,
         ]);
+    }
+
+    private function assertCanViewHousingUpload(Uploads $upload): void
+    {
+        if (!HousingUploadService::isProtectedSlot($upload->name)) {
+            return;
+        }
+        if (Yii::$app->user->isGuest
+            || (!Yii::$app->user->can('housing.staff') && !Yii::$app->user->can('housing.admin'))) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูไฟล์นี้');
+        }
     }
 
 

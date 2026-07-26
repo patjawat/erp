@@ -26,7 +26,7 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 w-100">
     <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
-        <span class="text-primary"><i class="fa-solid fa-desktop"></i></span>
+        <span class="text-primary-emphasis"><i class="fa-solid fa-desktop"></i></span>
         ทะเบียนครุภัณฑ์
     </h4>
 </div>
@@ -45,30 +45,28 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
 <?php $this->endBlock(); ?>
 <?php Pjax::end(); ?>
 
+<div class="equip-register-page">
 <?= $this->render('kpi_summary', ['equipStats' => $equipStats]) ?>
 
-<div class="card">
+<div class="card border shadow-sm">
     <div class="card-body p-3">
         <?php echo $this->render('_search', ['model' => $searchModel]); ?>
     </div>
 </div>
 
-
-
-
-<div class="card">
-    <div class="px-4 py-3 border-bottom d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="border-color: rgb(241, 245, 249); background-color: rgba(248, 250, 252, 0.5);">
+<div class="card border shadow-sm">
+    <div class="card-header bg-body-tertiary px-4 py-3 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-2">
-            <div class="p-2 rounded-3" style="background-color: rgb(219, 234, 254);">
-                <i data-lucide="notepad-text" class="text-primary"></i>
+            <div class="p-2 rounded-3 bg-primary-subtle text-primary-emphasis">
+                <i data-lucide="notepad-text"></i>
             </div>
             <h5 class="m-0 fw-bold">รายการทะเบียนคุมครุภัณฑ์</h5>
-            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
+            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle rounded-pill fw-medium px-2 py-1">
                 <?= number_format($dataProvider->getTotalCount(), 0) ?> รายการ
             </span>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="d-flex gap-2 p-1 rounded-3 border" style="background-color: rgb(241, 245, 249); border-color: rgb(226, 232, 240);">
+            <div class="d-flex gap-2 p-1 rounded-3 border bg-body">
                 <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, [
                     'class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'),
                     'data-pjax' => 0,
@@ -103,6 +101,7 @@ $isTableView = SiteHelper::getDisplay() !== 'grid';
         ]);
         ?>
     </div>
+</div>
 </div>
 
 <span id="totalCount" class="d-none"><?= (int) $dataProvider->getTotalCount(); ?></span>

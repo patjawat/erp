@@ -7,13 +7,16 @@ use app\modules\hr\models\Employees;
 use app\modules\jd\models\JdEmployee;
 use app\modules\jd\models\JdEmployeeSection;
 use app\modules\jd\models\JdEmployeeAcknowledgement;
+use app\modules\jd\components\RichText;
 use app\modules\jd\models\JdChangeRequest;
 use app\modules\jd\models\JdTemplate;
 use app\modules\jd\models\JdTemplateBlock;
+use app\modules\jd\services\JdApprovalService;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use app\components\SiteHelper;
 
 class EmployeeJdController extends Controller
 {
@@ -28,6 +31,7 @@ class EmployeeJdController extends Controller
                     'import-template' => ['POST'],
                     'acknowledge' => ['POST'],
                     'activate' => ['POST'],
+                    'sign' => ['POST'],
                     'delete-section' => ['POST'],
                 ],
             ],
@@ -37,9 +41,8 @@ class EmployeeJdController extends Controller
     public function actionView($emp_id, $id = null)
     {
         $employee = $this->findEmployee($emp_id);
-        $this->assertCanView($employee);
         $jd = $id
-            ? JdEmployee::find()->where(['id' => (int) $id, 'emp_id' => $emp_id])->with(['sections', 'template'])->one()
+            ? JdEmployee::find()->where(['id' => (int) $id, 'emp_id' => $emp_id])->with(['sections', 'template', 'approvalRows.employee'])->one()
             : JdEmployee::findCurrent((int) $emp_id);
         if ($id && !$jd) {
             throw new NotFoundHttpException('ไม่พบ JD ฉบับที่ต้องการ');
@@ -47,6 +50,7 @@ class EmployeeJdController extends Controller
         if (!$jd) {
             $jd = new JdEmployee(['emp_id' => (int) $emp_id]);
         }
+        $this->assertCanView($employee, $jd);
 
         return $this->render('view', [
             'employee' => $employee,
@@ -60,7 +64,7 @@ class EmployeeJdController extends Controller
         $employee = $this->findEmployee($emp_id);
         $this->assertCanManage();
         $existingDraft = JdEmployee::find()
-            ->where(['emp_id' => $emp_id, 'status' => JdEmployee::STATUS_DRAFT])
+            ->where(['emp_id' => $emp_id, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
             ->orderBy(['id' => SORT_DESC])
             ->one();
         if ($existingDraft) {
@@ -138,7 +142,7 @@ class EmployeeJdController extends Controller
         $employee = $this->findEmployee($emp_id);
         $this->assertCanManage();
         $existingDraft = JdEmployee::find()
-            ->where(['emp_id' => $emp_id, 'status' => JdEmployee::STATUS_DRAFT])
+            ->where(['emp_id' => $emp_id, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
             ->orderBy(['id' => SORT_DESC])
             ->one();
         if ($existingDraft) {
@@ -250,27 +254,104 @@ class EmployeeJdController extends Controller
         }
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            $current = JdEmployee::findCurrent((int) $jd->emp_id);
-            if ($current && $current->id !== $jd->id) {
-                $current->status = JdEmployee::STATUS_RETIRED;
-                $current->effective_to = date('Y-m-d', strtotime($effectiveFrom . ' -1 day'));
-                $current->save(false);
-                $jd->supersedes_id = $current->id;
-            }
-            $jd->status = JdEmployee::STATUS_ACTIVE;
             $jd->effective_from = $effectiveFrom;
-            $jd->effective_to = null;
-            $jd->approved_by = (int) Yii::$app->user->id;
-            $jd->approved_at = date('Y-m-d H:i:s');
             $jd->save(false);
+            (new JdApprovalService())->start($jd);
             $transaction->commit();
+        } catch (\DomainException $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
+            return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
         } catch (\Throwable $e) {
             $transaction->rollBack();
             throw $e;
         }
 
-        Yii::$app->session->setFlash('success', 'กำหนด JD Revision ' . $jd->revision_no . ' เป็นฉบับปัจจุบันแล้ว');
-        return $this->redirect(['/hr/employees/view', 'id' => $jd->emp_id, 'name' => 'job_description_current']);
+        Yii::$app->session->setFlash('success', 'ส่ง JD Revision ' . $jd->revision_no . ' เข้าสู่กระบวนการลงนามแล้ว');
+        return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
+    }
+
+    public function actionSign($id)
+    {
+        $jd = JdEmployee::findOne($id);
+        if (!$jd || $jd->status !== JdEmployee::STATUS_PENDING) {
+            throw new NotFoundHttpException('ไม่พบ JD ที่รอลงนาม');
+        }
+        $employee = UserHelper::GetEmployee();
+        if (!$employee) {
+            throw new NotFoundHttpException('ไม่พบบัญชีบุคลากรของผู้ใช้งาน');
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $published = (new JdApprovalService())->sign($jd, $employee);
+            $transaction->commit();
+        } catch (\DomainException $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
+            return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+
+        Yii::$app->session->setFlash('success', $published
+            ? 'ลงนามครบทุกลำดับและประกาศใช้ JD Revision ' . $jd->revision_no . ' แล้ว'
+            : 'ลงนามเรียบร้อย ระบบส่งต่อให้ผู้ลงนามลำดับถัดไปแล้ว');
+        return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
+    }
+
+    public function actionPdf($id)
+    {
+        $jd = JdEmployee::find()
+            ->where(['id' => (int) $id])
+            ->with(['employee', 'sections', 'approvalRows.employee'])
+            ->one();
+        if (!$jd) {
+            throw new NotFoundHttpException('ไม่พบเอกสาร JD ที่ต้องการพิมพ์');
+        }
+        $this->assertCanView($jd->employee, $jd);
+
+        $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 12,
+            'margin_bottom' => 14,
+            'fontDir' => array_merge($defaultConfig['fontDir'], [$fontPath]),
+            'fontdata' => $defaultFontConfig['fontdata'] + [
+                'thsarabunnew' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                    'I' => 'THSarabunNew-Italic.ttf',
+                    'BI' => 'THSarabunNew BoldItalic.ttf',
+                ],
+            ],
+            'default_font' => 'thsarabunnew',
+            'tempDir' => Yii::getAlias('@runtime/mpdf'),
+        ]);
+        $mpdf->SetTitle('JD - ' . $jd->employee->fullname);
+        $mpdf->SetAuthor((string) (SiteHelper::getInfo()['company_name'] ?? 'ERP Hospital'));
+        $mpdf->SetHTMLFooter(
+            '<table style="width:100%;border-top:0.3mm solid #777;font-size:10pt;color:#555">'
+            . '<tr><td>JD Revision ' . (int) $jd->revision_no . '</td>'
+            . '<td style="text-align:right">หน้า {PAGENO} จาก {nbpg}</td></tr></table>'
+        );
+        $pdfHtml = $this->renderPartial('_pdf', [
+            'jd' => $jd,
+            'employee' => $jd->employee,
+            'siteInfo' => SiteHelper::getInfo(),
+            'logoPath' => Yii::getAlias('@webroot/images/Logo-moph.png'),
+        ]);
+        $mpdf->WriteHTML($pdfHtml);
+
+        $safeName = preg_replace('/[^a-zA-Z0-9_-]+/', '_', 'JD_' . $jd->emp_id . '_R' . $jd->revision_no);
+        return $mpdf->Output($safeName . '.pdf', \Mpdf\Output\Destination::INLINE);
     }
 
     public function actionAcknowledge($id)
@@ -370,7 +451,33 @@ class EmployeeJdController extends Controller
             'jd_employee_id' => $jd->id,
             'sort_order' => (int) JdEmployeeSection::find()->where(['jd_employee_id' => $jd->id])->max('sort_order') + 1,
         ]);
-        if ($section->load(Yii::$app->request->post()) && $section->save()) {
+        if ($section->load(Yii::$app->request->post())) {
+            $payloadJson = Yii::$app->request->post('section_payload');
+            if ($payloadJson !== null && $section->section_code) {
+                $payload = json_decode((string) $payloadJson, true);
+                if (!is_array($payload)) {
+                    $section->addError('data_json', 'รูปแบบข้อมูลหัวข้อไม่ถูกต้อง');
+                } else {
+                    $payload['intro'] = RichText::sanitize($payload['intro'] ?? '');
+                    foreach (($payload['items'] ?? []) as &$item) {
+                        if (!is_array($item)) {
+                            $item = [];
+                            continue;
+                        }
+                        foreach ($item as $key => $value) {
+                            if ($key !== 'employee_id') {
+                                $item[$key] = RichText::sanitize((string) $value);
+                            }
+                        }
+                    }
+                    unset($item);
+                    $section->setData($payload);
+                }
+            } else {
+                $section->content = RichText::sanitize($section->content);
+            }
+        }
+        if (!$section->hasErrors() && Yii::$app->request->isPost && $section->save()) {
             Yii::$app->session->setFlash('success', 'เพิ่มหัวข้อแล้ว');
             return $this->redirect(['view', 'emp_id' => $emp_id, 'id' => $jd->id]);
         }
@@ -386,7 +493,33 @@ class EmployeeJdController extends Controller
         }
         $jd = $section->jdEmployee;
         $employee = $jd->employee;
-        if ($section->load(Yii::$app->request->post()) && $section->save()) {
+        if ($section->load(Yii::$app->request->post())) {
+            $payloadJson = Yii::$app->request->post('section_payload');
+            if ($payloadJson !== null && $section->section_code) {
+                $payload = json_decode((string) $payloadJson, true);
+                if (!is_array($payload)) {
+                    $section->addError('data_json', 'รูปแบบข้อมูลหัวข้อไม่ถูกต้อง');
+                } else {
+                    $payload['intro'] = RichText::sanitize($payload['intro'] ?? '');
+                    foreach (($payload['items'] ?? []) as &$item) {
+                        if (!is_array($item)) {
+                            $item = [];
+                            continue;
+                        }
+                        foreach ($item as $key => $value) {
+                            if ($key !== 'employee_id') {
+                                $item[$key] = RichText::sanitize((string) $value);
+                            }
+                        }
+                    }
+                    unset($item);
+                    $section->setData($payload);
+                }
+            } else {
+                $section->content = RichText::sanitize($section->content);
+            }
+        }
+        if (!$section->hasErrors() && Yii::$app->request->isPost && $section->save()) {
             Yii::$app->session->setFlash('success', 'บันทึกหัวข้อแล้ว');
             return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
         }
@@ -472,10 +605,18 @@ class EmployeeJdController extends Controller
         return $model;
     }
 
-    protected function assertCanView(Employees $employee): void
+    protected function assertCanView(Employees $employee, ?JdEmployee $jd = null): void
     {
         $me = UserHelper::GetEmployee();
+        $isAssignedSigner = $jd && !$jd->isNewRecord && $me
+            ? \app\modules\approveV2\models\Approve::find()->where([
+                'name' => JdApprovalService::APPROVE_NAME,
+                'from_id' => (string) $jd->id,
+                'emp_id' => (int) $me->id,
+            ])->exists()
+            : false;
         if ((!$me || (int) $employee->id !== (int) $me->id)
+            && !$isAssignedSigner
             && !Yii::$app->user->can('hr')
             && !Yii::$app->user->can('admin')) {
             throw new NotFoundHttpException('The requested page does not exist.');

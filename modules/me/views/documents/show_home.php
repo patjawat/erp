@@ -69,8 +69,7 @@ $elapsedLabel = function ($date) {
 <div class="d-flex flex-column gap-2">
     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
         <?php $detailId = $item->detail_id ?? $item->id; ?>
-        <div id="<?= $detailId ?>" class="card border border-light shadow-sm hover-shadow transition-all overflow-hidden p-0 mb-2"
-            style="border-radius: 16px;">
+        <div id="<?= $detailId ?>" class="card rounded-4 shadow-sm hover-shadow transition-all overflow-hidden p-0 mb-2">
             <div class="row g-0 align-items-center">
                 <div class="position-absolute start-0 top-0 bottom-0 bg-primary" style="width: 4px;"></div>
                 <div class="col-auto py-3 ps-4 pe-3">

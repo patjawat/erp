@@ -182,7 +182,7 @@ $resultsJs = <<<JS
     </div>
 
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm mb-4 bg-white">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <h6 class="fw-bold mb-3 text-secondary">ตั้งค่าการขอใช้รถ</h6>
                 <div class="mb-3">

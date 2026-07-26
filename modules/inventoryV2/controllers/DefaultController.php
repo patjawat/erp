@@ -81,12 +81,8 @@ class DefaultController extends Controller
             $dataProvider->sort->defaultOrder = ['warehouse_name' => SORT_ASC];
         }
 
-        if (!\Yii::$app->user->can('admin') && !\Yii::$app->user->can('warehouse')) {
-            $userId = (string) \Yii::$app->user->id;
-            $dataProvider->query->andWhere(
-                new Expression("JSON_CONTAINS(COALESCE(data_json,'{}'), '\"$userId\"', '$.officer')")
-            );
-        }
+        // แสดงคลังทั้งหมดในหน้าตั้งค่า เพื่อให้กำหนดผู้รับผิดชอบคลังได้
+        // โดยไม่ต้องมีสิทธิ์ officer ในคลังนั้นมาก่อน (เดิมกรองเฉพาะคลังที่ตนเป็น officer)
 
         $models = $dataProvider->getModels();
         $departmentNames = [];

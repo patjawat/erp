@@ -8,7 +8,7 @@ use app\modules\am\models\AssetCondition;
 
 /** @var yii\web\View $this */
 
-// ตัวเลือกสำหรับ popover แบบ enum — ดึงจาก model เดียวกับที่ฟอร์มใช้ เพื่อไม่ให้ค่าเพี้ยนกัน
+// ตัวเลือกสำหรับ popover แบบ enum ดึงจาก model เดียวกับที่ฟอร์มใช้เพื่อไม่ให้ค่าเพี้ยนกัน
 $conditionOptions = [];
 foreach (
     AssetCondition::find()->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC, 'name' => SORT_ASC])->all() as $c
@@ -39,7 +39,7 @@ $config = Json::encode([
 ?>
 
 <style>
-    /* ===== Quick inline edit — โทน token ตาม PRODUCT.md ===== */
+    /* ===== Quick inline edit: โทน token ตาม PRODUCT.md ===== */
     .qedit,
     .qedit-modal {
         cursor: pointer;
@@ -48,7 +48,7 @@ $config = Json::encode([
             box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* พื้นที่คลิกของ popover cell — เผยร่องรอยว่าคลิกแก้ได้เมื่อ hover */
+    /* พื้นที่คลิกของ popover cell เผยร่องรอยว่าคลิกแก้ได้เมื่อ hover */
     .qedit {
         display: inline-block;
         padding: 2px 6px;
@@ -58,12 +58,12 @@ $config = Json::encode([
 
     .qedit:hover,
     .qedit:focus-visible {
-        background-color: #f1f5f9;
+        background-color: var(--bs-tertiary-bg);
         outline: none;
     }
 
     .qedit:focus-visible {
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        box-shadow: 0 0 0 var(--bs-focus-ring-width) var(--bs-focus-ring-color);
     }
 
     /* ปากกาเล็ก ๆ บอกใบ้ตอน hover เท่านั้น (ไม่รกตอนปกติ) */
@@ -72,7 +72,7 @@ $config = Json::encode([
         font-family: "Font Awesome 6 Free";
         font-weight: 900;
         font-size: 9px;
-        color: #94a3b8;
+        color: var(--bs-tertiary-color);
         margin-left: 5px;
         opacity: 0;
         transition: opacity 120ms ease;
@@ -84,8 +84,8 @@ $config = Json::encode([
     }
 
     .qedit-modal:hover {
-        background-color: #f1f5f9;
-        box-shadow: 0 0 0 4px #f1f5f9;
+        background-color: var(--bs-tertiary-bg);
+        box-shadow: 0 0 0 4px var(--bs-tertiary-bg);
     }
 
     .qedit.is-saving {
@@ -99,10 +99,11 @@ $config = Json::encode([
         z-index: 1060;
         min-width: 208px;
         max-width: 288px;
-        background: #fff;
-        border: 1px solid rgba(15, 23, 42, 0.14);
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 1px solid var(--bs-border-color);
         border-radius: 10px;
-        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.05);
+        box-shadow: var(--bs-box-shadow);
         padding: 0.7rem 0.75rem;
         opacity: 0;
         transform: translateY(-4px);
@@ -118,7 +119,7 @@ $config = Json::encode([
     .qedit-pop__title {
         font-size: 0.78rem;
         font-weight: 600;
-        color: #4a5568;
+        color: var(--bs-secondary-color);
         margin-bottom: 0.5rem;
     }
 
@@ -135,9 +136,9 @@ $config = Json::encode([
         gap: 0.5rem;
         width: 100%;
         text-align: left;
-        border: 1px solid rgba(15, 23, 42, 0.10);
-        background: #fff;
-        color: #1a202c;
+        border: 1px solid var(--bs-border-color);
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
         border-radius: 8px;
         padding: 0.42rem 0.6rem;
         font-size: 0.86rem;
@@ -147,19 +148,19 @@ $config = Json::encode([
     }
 
     .qedit-chip:hover {
-        background: #f7f9fc;
+        background: var(--bs-secondary-bg);
     }
 
     .qedit-chip.is-active {
-        border-color: #0d6efd;
-        color: #0a58ca;
-        background: rgba(13, 110, 253, 0.06);
+        border-color: var(--bs-primary-border-subtle);
+        color: var(--bs-primary-text-emphasis);
+        background: var(--bs-primary-bg-subtle);
         font-weight: 600;
     }
 
     .qedit-chip__check {
         opacity: 0;
-        color: #0d6efd;
+        color: var(--bs-primary-text-emphasis);
         font-size: 0.8rem;
     }
 
@@ -175,27 +176,20 @@ $config = Json::encode([
     .qedit-pop__input .form-control {
         min-height: 40px;
         border-radius: 8px;
-        border: 1px solid rgba(15, 23, 42, 0.14);
+        border: 1px solid var(--bs-border-color);
         font-size: 0.9rem;
     }
 
     .qedit-pop__input .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 var(--bs-focus-ring-width) var(--bs-focus-ring-color);
     }
 
     .qedit-pop__save {
         flex-shrink: 0;
         min-width: 40px;
         border-radius: 8px;
-        border: none;
-        background: #0d6efd;
-        color: #fff;
         font-weight: 600;
-    }
-
-    .qedit-pop__save:hover {
-        background: #0a58ca;
     }
 
     /* ===== Undo toast ===== */
@@ -208,12 +202,13 @@ $config = Json::encode([
         display: flex;
         align-items: center;
         gap: 0.85rem;
-        background: #1a202c;
-        color: #fff;
+        background: var(--bs-secondary-bg);
+        color: var(--bs-body-color);
+        border: 1px solid var(--bs-border-color);
         border-radius: 999px;
         padding: 0.55rem 0.7rem 0.55rem 1.1rem;
         font-size: 0.86rem;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+        box-shadow: var(--bs-box-shadow);
         opacity: 0;
         pointer-events: none;
         transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -227,17 +222,10 @@ $config = Json::encode([
     }
 
     .qedit-toast__btn {
-        border: none;
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
         font-weight: 600;
         border-radius: 999px;
         padding: 0.28rem 0.85rem;
         cursor: pointer;
-    }
-
-    .qedit-toast__btn:hover {
-        background: rgba(255, 255, 255, 0.22);
     }
 
     @media (min-width: 992px) {
@@ -289,7 +277,7 @@ $js = <<<JS
         toast.id = 'qedit-toast';
         toast.className = 'qedit-toast';
         toast.hidden = true;
-        toast.innerHTML = '<span class="qedit-toast__msg"></span><button type="button" class="qedit-toast__btn">ยกเลิก</button>';
+        toast.innerHTML = '<span class="qedit-toast__msg"></span><button type="button" class="qedit-toast__btn btn btn-sm btn-outline-secondary rounded-pill">ยกเลิก</button>';
         document.body.appendChild(toast);
     }
 
@@ -348,11 +336,11 @@ $js = <<<JS
         } else if (type === 'number') {
             body.innerHTML = '<div class="qedit-pop__input">'
                 + '<input type="number" step="0.01" min="0" class="form-control qedit-pop__field" value="' + esc(value) + '">'
-                + '<button type="button" class="qedit-pop__save"><i class="fa-solid fa-check"></i></button></div>';
+                + '<button type="button" class="qedit-pop__save btn btn-primary"><i class="fa-solid fa-check"></i></button></div>';
         } else if (type === 'date') {
             body.innerHTML = '<div class="qedit-pop__input">'
                 + '<input type="text" id="qedit-date-field" autocomplete="off" class="form-control qedit-pop__field" value="' + esc(value) + '" placeholder="วว/ดด/ปปปป (พ.ศ.)">'
-                + '<button type="button" class="qedit-pop__save"><i class="fa-solid fa-check"></i></button></div>';
+                + '<button type="button" class="qedit-pop__save btn btn-primary"><i class="fa-solid fa-check"></i></button></div>';
         }
     }
 
@@ -370,7 +358,7 @@ $js = <<<JS
         buildBody(current.type, current.field, current.value);
         placePop(anchor);
 
-        // วันที่ใช้ DatepickerThai (พ.ศ.) — bind หลัง input อยู่ใน DOM แล้ว
+        // วันที่ใช้ DatepickerThai (พ.ศ.); bind หลัง input อยู่ใน DOM แล้ว
         if (current.type === 'date' && typeof thaiDatepicker === 'function') {
             thaiDatepicker('#qedit-date-field');
         }
@@ -379,7 +367,7 @@ $js = <<<JS
         if (fld) { fld.focus(); if (current.type !== 'date' && fld.select) { fld.select(); } }
     }
 
-    // ส่งค่าไปบันทึก — optimistic + undo
+    // ส่งค่าไปบันทึกแบบ optimistic พร้อม undo
     function save(id, field, value, cell, oldValue, oldHtml, isUndo) {
         cell.classList.add('is-saving');
         var data = { field: field, value: value };

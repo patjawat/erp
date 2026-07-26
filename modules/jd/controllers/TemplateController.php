@@ -7,6 +7,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 use yii\helpers\Url;
 use app\components\AppHelper;
 use app\modules\jd\models\JdTemplate;
@@ -15,12 +16,22 @@ use app\modules\jd\models\JdTemplateSection;
 use app\modules\jd\models\JdTemplateBlock;
 use app\modules\jd\services\JdAiDraftService;
 use app\modules\jd\data\MophSeedData;
+use app\modules\jd\components\RichText;
 
 class TemplateController extends Controller
 {
     public function behaviors()
     {
         return array_merge(parent::behaviors(), [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['hr', 'admin'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::class,
                 'actions' => [
@@ -128,6 +139,19 @@ class TemplateController extends Controller
                     if (!is_array($payload)) {
                         throw new \RuntimeException('ข้อมูลหมวด ' . $block->title . ' มีรูปแบบไม่ถูกต้อง');
                     }
+                    $payload['intro'] = RichText::sanitize($payload['intro'] ?? '');
+                    foreach (($payload['items'] ?? []) as &$item) {
+                        if (!is_array($item)) {
+                            $item = [];
+                            continue;
+                        }
+                        foreach ($item as $key => $value) {
+                            if ($key !== 'employee_id') {
+                                $item[$key] = RichText::sanitize((string) $value);
+                            }
+                        }
+                    }
+                    unset($item);
                     $block->setData($payload);
                     $block->updated_at = date('Y-m-d H:i:s');
                     if (!$block->save()) {

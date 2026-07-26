@@ -244,13 +244,18 @@ class FileManagerHelper extends Component
      * @param UploadedFile $file ไฟล์จาก getInstanceByName/getInstancesByName
      * @param string $ref โฟลเดอร์ใน fileupload
      * @param string|null $name ชื่อ slot (จำเป็นเมื่อ replaceSlot=true)
-     * @param bool $replaceSlot ถ้า true จะลบไฟล์เดิมที่ ref+name เดียวกันก่อนบันทึก
+     * @param bool $replaceSlot ถ้า true จะลบไฟล์เดิมที่ ref+name เดียวกันหลังบันทึกไฟล์ใหม่สำเร็จ
      * @return Uploads|null โมเดล Uploads ที่สร้าง หรือ null ถ้าล้มเหลว
      */
     public static function saveUploadedFile(UploadedFile $file, string $ref, ?string $name = null, bool $replaceSlot = false): ?Uploads
     {
+        $oldUploads = $replaceSlot && $name !== null
+            ? Uploads::find()->where(['ref' => $ref, 'name' => $name])->all()
+            : [];
         self::CreateDir($ref);
-        $fileName = $file->baseName . '.' . $file->extension;
+        $extensionSuffix = $file->extension === '' ? '' : '.' . $file->extension;
+        $maxBaseLength = max(1, 150 - mb_strlen($extensionSuffix, 'UTF-8'));
+        $fileName = mb_substr($file->baseName, 0, $maxBaseLength, 'UTF-8') . $extensionSuffix;
         $realFileName = md5($file->baseName . microtime(true) . random_bytes(4)) . '.' . $file->extension;
         $savePath = self::getUploadPath() . $ref . '/' . $realFileName;
         if (!$file->saveAs($savePath)) {
@@ -263,11 +268,6 @@ class FileManagerHelper extends Component
                 Yii::warning('สร้าง thumbnail ไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
             }
         }
-        if ($replaceSlot && $name !== null) {
-            foreach (Uploads::find()->where(['ref' => $ref, 'name' => $name])->all() as $old) {
-                self::Deletefile($old->id);
-            }
-        }
         $model = new Uploads();
         $model->ref = $ref;
         $model->name = $name;
@@ -275,10 +275,25 @@ class FileManagerHelper extends Component
         $model->real_filename = $realFileName;
         $model->type = self::checkFileType(strtolower($file->extension));
         $model->size = $file->size;
-        if (!$model->save(false)) {
+        try {
+            $saved = $model->save(false);
+        } catch (\Throwable $exception) {
+            Yii::error($exception, __METHOD__);
+            $saved = false;
+        }
+        if (!$saved) {
             @unlink($savePath);
             @unlink(self::getUploadPath() . $ref . '/thumbnail/' . $realFileName);
             return null;
+        }
+        foreach ($oldUploads as $old) {
+            try {
+                if (!self::Deletefile($old->id)) {
+                    Yii::warning('ลบไฟล์เดิมใน slot ไม่สำเร็จ upload ID: ' . $old->id, __METHOD__);
+                }
+            } catch (\Throwable $exception) {
+                Yii::error($exception, __METHOD__);
+            }
         }
         return $model;
     }
@@ -379,19 +394,20 @@ class FileManagerHelper extends Component
     public static function Deletefile($id)
     {
         $model = Uploads::findOne(['id' => $id]);
-        if ($model !== null) {
-            $filename = self::getUploadPath() . $model->ref . '/' . $model->real_filename;
-            $thumbnail = self::getUploadPath() . $model->ref . '/thumbnail/' . $model->real_filename;
-            if ($model->delete()) {
-                @unlink($filename);
-                @unlink($thumbnail);
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+        if ($model === null) {
             return false;
         }
+
+        $filename = self::getUploadPath() . $model->ref . '/' . $model->real_filename;
+        $thumbnail = self::getUploadPath() . $model->ref . '/thumbnail/' . $model->real_filename;
+        foreach ([$thumbnail, $filename] as $path) {
+            if (is_file($path) && !@unlink($path)) {
+                Yii::warning('ลบไฟล์ไม่สำเร็จ: ' . $path, __METHOD__);
+                return false;
+            }
+        }
+
+        return (bool) $model->delete();
     }
 
     public static function checkFileType($type)

@@ -44,6 +44,36 @@ Extracted from [PRODUCT.md](PRODUCT.md).
 9. **Thai-first labels, English-only code** — ข้อความผู้ใช้เห็นต้องเป็นไทยกระชับ ตัวอักษร/class/ตัวแปรในโค้ดเป็นอังกฤษ
 10. **Preserve over rewrite** — เพิ่ม/ปรับ UI ได้ ห้ามแตะ business logic, schema, route, permission, AJAX behavior ที่มีอยู่แล้ว
 
+## Bootstrap-first UI Contract (บังคับ)
+
+ข้อกำหนดส่วนนี้มีลำดับความสำคัญสูงกว่าตัวอย่างหรือ token เดิมในเอกสาร และใช้กับทุก module, view, partial, widget และ stylesheet ที่สร้างหรือแก้ไขใหม่
+
+1. **ต้องใช้ Bootstrap 5.3 classes ก่อนเสมอ** สำหรับ layout, spacing, typography, form, button, card, table, border, background, text color, display, responsive behavior และ status
+2. **ห้าม hardcode ค่าสีใน implementation** รวมถึง `#hex`, `rgb()`, `rgba()`, `hsl()`, `hsla()` และ named colors ใน PHP/HTML/CSS/JavaScript
+3. **ห้ามใช้ inline `style`** หาก Bootstrap utility หรือ component class ทำสิ่งเดียวกันได้
+4. **ต้องใช้ semantic, theme-aware classes** เช่น `bg-body`, `bg-body-tertiary`, `text-body`, `text-body-secondary`, `border`, `btn-outline-*`, `bg-*-subtle` และ `text-*-emphasis`
+5. **ห้ามใช้ light-only classes** เช่น `bg-light`, `text-bg-light` และ `btn-light` ใน UI ที่ต้องรองรับ dark mode
+6. หาก Bootstrap ไม่มี class ที่ครอบคลุม custom component จริง ๆ ให้ใช้ Bootstrap CSS variables เช่น `var(--bs-body-bg)`, `var(--bs-secondary-bg)`, `var(--bs-border-color)`, `var(--bs-emphasis-color)` และ `var(--bs-*-bg-subtle)` ห้ามสร้างสี literal ใหม่
+7. Project token ที่จำเป็นต้องมีต้อง map ไปยัง Bootstrap CSS variables เท่านั้น เช่น `--module-surface: var(--bs-body-bg)` ห้ามกำหนดเป็นค่าสีโดยตรง
+8. ทุกหน้าต้องทำงานภายใต้ `data-bs-theme="light"` และ `data-bs-theme="dark"` โดยไม่ต้องเขียน selector แยกเพื่อแก้สีเฉพาะหน้า
+
+ตัวอย่าง:
+
+```html
+<!-- ผ่าน -->
+<section class="card bg-body border">
+    <p class="text-body-secondary mb-0">รายละเอียด</p>
+    <span class="badge bg-success-subtle text-success-emphasis">สำเร็จ</span>
+</section>
+
+<!-- ไม่ผ่าน -->
+<section style="background:#fff;border:1px solid #dee2e6">
+    <p style="color:#6c757d">รายละเอียด</p>
+</section>
+```
+
+Code review ต้องไม่ผ่านเมื่อพบสี hardcoded, inline visual styles ที่แทนด้วย Bootstrap ได้ หรือ component ที่ไม่เปลี่ยนตาม Bootstrap color mode
+
 ## Design Tokens
 
 ยกจาก `modules/inventoryV2/views/sub-stock/issue.php` เป็นมาตรฐานกลาง ทุก surface ใหม่ใช้ token ชุดนี้:
@@ -80,9 +110,20 @@ Extracted from [PRODUCT.md](PRODUCT.md).
 --success: #15803d   --success-soft: rgba(21,128,61,0.10)
 --warning: #b45309   --warning-soft: rgba(180,83,9,0.10)
 --danger:  #b91c1c   --danger-soft:  rgba(185,28,28,0.10)
+
+/* compact desktop row actions: สีระบุหน้าที่ ไม่ใช่ status */
+--action-view:         #0dcaf0
+--action-view-hover:   #0bb5d8
+--action-view-ink:     #052c35
+--action-edit:         #ffc107
+--action-edit-hover:   #e5ad06
+--action-edit-ink:     #332701
+--action-delete:       #dc3545
+--action-delete-hover: #bb2d3b
+--action-delete-ink:   #ffffff
 ```
 
-> Bootstrap defaults (`#198754`, `#dc3545`, `#ffc107`) **เลิกใช้** — สีเหล่านี้ contrast กับ tinted bg ไม่พอ ใช้ token semantic ด้านบนแทน
+> Bootstrap defaults (`#198754`, `#dc3545`, `#ffc107`) **เลิกใช้เป็นสี semantic/status ทั่วไป** เพราะ contrast กับ tinted bg ไม่พอ ให้ใช้ token semantic ด้านบนแทน ข้อยกเว้นเดียวคือ `--action-edit` และ `--action-delete` ใน compact desktop row actions ซึ่งเป็นสีระบุหน้าที่แบบคงที่ตาม pattern ด้านล่าง ห้ามนำไปใช้กับ CTA หลัก, status badge หรือข้อความเตือน
 
 ### Radius
 ```
@@ -136,6 +177,19 @@ Canonical classes — reference implementation อยู่ใน `modules/inven
 | `.btn-light` | `--surface-2` bg, `--line-strong` border, hover `--surface-hover` |
 | `.btn-save` + `.btn-save__label` + `.btn-save__progress` | ปุ่ม submit ที่มี progress bar ภายในและ success state (เปลี่ยนเป็น `--success`) |
 | `.icon-btn` | Icon-only ghost button 30px, hover = `--surface-hover` + `--ink-1` |
+| `.row-actions` | กลุ่มปุ่มคอลัมน์ "จัดการ" บน desktop table; `display:flex`, center, gap 4px, ความกว้างภายในอย่างน้อย 108px |
+| `.row-action` | Icon-only 32×32px, `--radius-sm` (8px), icon 14-16px, no shrink, active `translateY(1px)`, disabled opacity 0.55 |
+| `.row-action--view` | eye icon, `--action-view` + `--action-view-ink`, hover `--action-view-hover`, focus ring `rgba(13,202,240,0.24)` |
+| `.row-action--edit` | pencil icon, `--action-edit` + `--action-edit-ink`, hover `--action-edit-hover`, focus ring `rgba(255,193,7,0.24)` |
+| `.row-action--delete` | trash icon, `--action-delete` + `--action-delete-ink`, hover `--action-delete-hover`, focus ring `--danger-soft`; ใช้กับ destructive action เท่านั้น |
+
+**Compact row action rules**
+- ใช้เฉพาะตาราง desktop (≥992px) ที่มีคอลัมน์ "จัดการ" และมี 2-3 actions ต่อแถว
+- ลำดับมาตรฐานจากซ้ายไปขวา: ดูรายละเอียด → แก้ไข → ลบ
+- สีทั้งสามเป็น action-role mapping แบบคงที่: ฟ้า = ดู, เหลือง = แก้ไข, แดง = ลบ ห้ามสลับความหมายระหว่างหน้า
+- ทุกปุ่มต้องมี `title` และ `aria-label` ที่รวมชื่อรายการ เช่น `ดูรายละเอียด เครื่องปรับอากาศ`
+- ห้ามใช้สีชุดนี้กับ page-level action; CTA หลักยังคงใช้ `.btn-primary` และ action รองใช้ `.btn-light`
+- Module ที่ต้อง namespace class สามารถเติม prefix ได้ เช่น `.dp-row-action--view`; ขนาด สี ลำดับ และ state ต้องคงตาม canonical pattern
 
 ### Status & Display
 | Class | spec |
@@ -351,11 +405,14 @@ JS); ?>
 - Column alignment: text **left**, number **right** + `tabular-nums`, date **right** + `tabular-nums`
 - Header: sticky, `--surface-2` bg, `fw 600`, no all-caps
 - Zebra striping: ใช้ `:nth-child(even) { background: rgba(0,0,0,0.012); }` เท่านั้น — เบาๆ
+- คอลัมน์ "จัดการ": header และ `.row-actions` จัดกึ่งกลาง, กว้างพอสำหรับปุ่ม 32px จำนวน 3 ปุ่ม + gap 4px โดยปุ่มห้าม flex-shrink
+- Action colors ใช้ compact row action mapping เท่านั้น: view ฟ้า, edit เหลือง, delete แดง
 
 ### Mobile (<992px)
 - Table ที่กว้างเกินจอ → collapse เป็น card list (ดู `activity-feed` ใน `use_history.php`)
 - ห้าม horizontal scroll table; ห้าม truncate column สำคัญ
 - Card: avatar/icon ซ้าย, content กลาง, value/qty ขวา
+- ห้ามย่อ compact row action เหลือ 32px บน mobile; ใช้ touch target ≥44×44px โดย view เป็น `.btn-primary` พร้อมข้อความ, edit เป็น `.btn-light` พร้อมข้อความ และ delete เป็น icon-only สี danger พร้อม `aria-label`
 
 ### Number & status
 - ตัวเลขจำนวนเงิน: ใช้ thousand separator + decimal คงที่ตาม unit (บาท: `0`, %: `1`, qty: `0-2`)
@@ -445,6 +502,7 @@ Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](mo
 - **Color contrast**: body text ≥4.5:1, large text ≥3:1 — ระวัง muted gray บนพื้น tinted ขาว
 - **Touch target ≥44×44px** — mobile module ใช้นิ้วโป้งกดระหว่างเดิน; `.btn-block` และ qty-stepper ครอบไว้แล้ว
 - **Keyboard / screen reader**: ใช้ semantic HTML, ARIA label ที่ลิงก์/ปุ่ม icon-only; segmented control ใช้ `role="radiogroup"` + `aria-checked`
+- **Desktop density exception**: `.row-action` อนุญาต 32×32px เฉพาะ desktop table ≥992px; ต้องมี `title`, `aria-label`, focus ring 3px และเปลี่ยนเป็นปุ่ม ≥44×44px เมื่อเข้าสู่ mobile card
 - **Reduced motion**: เคารพ `prefers-reduced-motion` กับ animation/transition ทุกตัว (ดู Motion Guidance § Reduced motion)
 - **Focus management**: focus ring ต้องเห็นชัดทุก interactive (`--primary` 3px ring), ไม่ลบ `outline` โดยไม่มี alternative
 - **Live region**: `aria-live="polite"` สำหรับ panel ที่ update แบบ async (selected item, balance hint, undo toast)

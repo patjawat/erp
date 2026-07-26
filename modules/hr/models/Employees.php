@@ -814,13 +814,6 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
             [
-                'title' => 'ข้อมูลตรวจสุขภาพประจำปี',
-                'icon' => '<i data-lucide="heart-pulse" class="lucide-icon text-primary"></i>',
-                'name' => 'health',
-                'subtitle' => 'ข้อมูลตรวจสุขภาพประจำปี',
-                'count' => 0,
-            ],
-            [
                 'title' => 'ข้อมูลประวัติการดำรงตำแหน่ง',
                 'icon' => '<i data-lucide="briefcase" class="lucide-icon text-primary"></i>',
                 'name' => 'position',
@@ -884,6 +877,14 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
             [
+                'title' => 'Training Roadmap',
+                'icon' => '<i data-lucide="signpost" class="lucide-icon text-primary"></i>',
+                'name' => 'training_roadmap',
+                'url' => ['/hr/training-roadmap/employee', 'emp_id' => $this->id],
+                'subtitle' => 'แผนพัฒนา สมรรถนะ และจุดประเมิน',
+                'count' => $this->getTrainingPlans()->count(),
+            ],
+            [
                 'title' => 'การรับทุน',
                 'icon' => '<i data-lucide="hand-coins" class="lucide-icon text-primary"></i>',
                 'name' => 'scholarships',
@@ -919,6 +920,130 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => 0,
             ],
         ];
+    }
+
+    /**
+     * Groups the employee profile navigation without changing the legacy
+     * menu definitions or their routes.
+     */
+    public function generalMenuGroups()
+    {
+        $items = [];
+        foreach ($this->generalMenu() as $item) {
+            $items[$item['name']] = $item;
+        }
+
+        $comingSoon = static function (string $name, string $title, string $subtitle, string $icon): array {
+            return [
+                'name' => $name,
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'icon' => '<i data-lucide="' . $icon . '" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+                'coming_soon' => true,
+            ];
+        };
+        $items += [
+            'idp' => [
+                'name' => 'idp',
+                'title' => 'IDP ของฉัน',
+                'subtitle' => 'เป้าหมาย กิจกรรม และความก้าวหน้า',
+                'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+            ],
+            'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
+            'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
+            'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
+            'housing' => [
+                'name' => 'housing',
+                'title' => 'บ้านพัก',
+                'subtitle' => 'คำขอเข้าพัก ค่าใช้จ่าย และแจ้งซ่อม',
+                'icon' => '<i data-lucide="house" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+                'url' => ['/profile', 'name' => 'housing'],
+            ],
+            'handover' => $comingSoon('handover', 'การส่งมอบงาน', 'งาน ทรัพย์สิน สิทธิ์ระบบ และความรู้', 'list-checks'),
+            'exit_interview' => $comingSoon('exit_interview', 'Exit Interview', 'แบบสัมภาษณ์ก่อนสิ้นสุดการทำงาน', 'messages-square'),
+        ];
+
+        $definitions = [
+            [
+                'key' => 'general',
+                'title' => 'ข้อมูลทั่วไป',
+                'subtitle' => 'ประวัติส่วนบุคคลและครอบครัว',
+                'icon' => 'user-round',
+                'items' => [
+                    '', 'family', 'rename', 'signature',
+                ],
+            ],
+            [
+                'key' => 'work',
+                'title' => 'งานและหน้าที่',
+                'subtitle' => 'ตำแหน่ง วิชาชีพ และคำอธิบายงาน',
+                'icon' => 'briefcase-business',
+                'items' => [
+                    'position', 'job_description_history', 'position_manage', 'license',
+                ],
+            ],
+            [
+                'key' => 'development',
+                'title' => 'การพัฒนา',
+                'subtitle' => 'การอบรมและแผนพัฒนารายบุคคล',
+                'icon' => 'chart-no-axes-combined',
+                'items' => ['develop', 'training_roadmap', 'idp', 'education', 'scholarships'],
+            ],
+            [
+                'key' => 'appraisal',
+                'title' => 'การประเมินผล',
+                'subtitle' => 'ตั้งแต่ทดลองงานถึงผลประจำปี',
+                'icon' => 'clipboard-list',
+                'items' => ['performance_appraisal'],
+            ],
+            [
+                'key' => 'compensation',
+                'title' => 'เงินเดือนและค่าตอบแทน',
+                'subtitle' => 'ข้อมูลการเงินส่วนบุคคล',
+                'icon' => 'banknote',
+                'items' => ['payroll', 'tax_documents'],
+            ],
+            [
+                'key' => 'welfare',
+                'title' => 'บ้านพักและสวัสดิการ',
+                'subtitle' => 'สิทธิประโยชน์และที่พัก',
+                'icon' => 'house-heart',
+                'items' => ['benefit', 'housing'],
+            ],
+            [
+                'key' => 'recognition',
+                'title' => 'เกียรติประวัติและวินัย',
+                'subtitle' => 'รางวัล เครื่องราชฯ และประวัติวินัย',
+                'icon' => 'award',
+                'items' => ['award', 'insignia', 'blame'],
+            ],
+            [
+                'key' => 'offboarding',
+                'title' => 'การส่งมอบและสิ้นสุดงาน',
+                'subtitle' => 'ส่งมอบงานและปิดกระบวนการ',
+                'icon' => 'log-out',
+                'items' => ['handover', 'exit_interview'],
+            ],
+        ];
+
+        $groups = [];
+        foreach ($definitions as $definition) {
+            $groupItems = [];
+            foreach ($definition['items'] as $name) {
+                if (array_key_exists($name, $items)) {
+                    $groupItems[] = $items[$name];
+                }
+            }
+            if ($groupItems) {
+                $definition['items'] = $groupItems;
+                $groups[] = $definition;
+            }
+        }
+
+        return $groups;
     }
 
     /** จำนวนหัวข้อในคำอธิบายงาน (JD) ของพนักงาน */
@@ -1716,6 +1841,15 @@ class Employees extends Yii\db\ActiveRecord
     public function getDevelopmentMenber()
     {
         return $this->hasMany(DevelopmentDetail::class, ['emp_id' => 'id'])->andOnCondition(['name' => 'member']);
+    }
+
+    /**
+     * Training Roadmaps assigned to this employee.
+     */
+    public function getTrainingPlans()
+    {
+        return $this->hasMany(EmployeeTrainingPlan::class, ['emp_id' => 'id'])
+            ->orderBy(['id' => SORT_DESC]);
     }
 
 

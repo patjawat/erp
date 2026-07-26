@@ -419,8 +419,9 @@ public function behaviors()
             }
         }
 
-        // หน้าเบิก: สิทธิ์ระดับ warehouse เลือกคลังที่รับของได้ทุกคลัง
-        $subWarehouses = Warehouse::findSubWarehousesForUser(true);
+        // คลังที่รับของ: แสดงเฉพาะคลังที่ user ถูกกำหนดเป็นเจ้าหน้าที่รับผิดชอบ (data_json.officer)
+        // ไม่เปิด warehouse scope กว้าง เพื่อไม่ให้ admin/warehouse เห็นคลังที่ตัวเองไม่ได้รับผิดชอบ
+        $subWarehouses = Warehouse::findSubWarehousesForUser();
 
         $approver = null;
         if ($requester['department_id']) {

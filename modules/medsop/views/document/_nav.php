@@ -16,7 +16,7 @@ if ($access->isAdmin()) {
 <nav class="medsop-nav d-flex flex-wrap align-items-center justify-content-lg-end gap-1" aria-label="เมนู MedSOP">
     <?php foreach ($items as [$key, $label, $icon, $url]): ?>
         <?= Html::a('<i class="bi ' . $icon . ' me-1" aria-hidden="true"></i>' . Html::encode($label), $url, [
-            'class' => 'btn btn-sm px-3 ' . ($active === $key ? 'btn-primary' : 'btn-light'),
+            'class' => 'btn btn-sm px-3 ' . ($active === $key ? 'btn-primary' : 'btn-outline-secondary'),
             'aria-current' => $active === $key ? 'page' : null,
         ]) ?>
     <?php endforeach; ?>

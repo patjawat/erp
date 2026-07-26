@@ -1,9 +1,7 @@
 <?php
-
-use yii\helpers\Url;
-use yii\helpers\Html;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use yii\helpers\Url;
 
 $deptIds = array_filter([$me->department]);
 if ($me->department && ($org = Organization::findOne($me->department))) {
@@ -14,15 +12,15 @@ $listsMemberTeam = Employees::find()
 ->where(['department' => $deptIds, 'status' => 1])
 ->andWhere(['<>','id',1])->all();
 ?>
-        <div class="row g-3 align-items-center justify-content-between mb-4">
+        <div class="row g-3 align-items-center justify-content-between mb-4 mt-4">
             <div class="col-12 col-sm-auto">
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center">
                     <div class="bg-primary bg-opacity-10 text-primary rounded-4 d-flex align-items-center justify-content-center"
                          style="width: 48px; height: 48px;">
                         <i class="bi bi-people-fill fs-4"></i>
                     </div>
                     <div>
-                        <h3 class="mb-0" style="font-size: 1.1rem; color: #334155;"><?= $me->departmentName() ?></h3>
+                        <h3 class="mb-0" style="font-size: 1.1rem;"><?= $me->departmentName() ?></h3>
                         <p class="text-muted mb-0" style="font-size: 0.8rem;">
                             ทีมงานทั้งหมด <span class="fw-bold text-primary"><?= count($listsMemberTeam) ?></span> คน
                         </p>
@@ -30,7 +28,7 @@ $listsMemberTeam = Employees::find()
                 </div>
             </div>
             <div class="col-12 col-sm-auto">
-                <button class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border text-muted" style="font-size: 0.75rem;">ดูทั้งหมด</button>
+                <button class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border text-muted">ดูทั้งหมด</button>
             </div>
         </div>
 
@@ -39,8 +37,8 @@ $listsMemberTeam = Employees::find()
                 <div class="overflow-auto pe-2" style="max-height: 450px; scrollbar-width: thin;">
                     <div class="d-flex flex-column gap-2">
                         <?php foreach ($listsMemberTeam as $item): ?>
-                        <div class="d-flex align-items-center justify-content-between p-3 rounded-4 border border-light bg-white shadow-sm transition-all">
-                            <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                        <div class="card mb-1 flex-row align-items-center justify-content-between p-3 rounded-4 shadow-sm transition-all">
+                            <div class="d-flex align-items-center flex-grow-1 min-w-0">
                                 <?= $item->getAvatar(false) ?>
                             </div>
                             <div class="dropdown flex-shrink-0 ms-2">
@@ -60,12 +58,6 @@ $listsMemberTeam = Employees::find()
                                             KPI Profile
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id, 'name' => 'health']) ?>">
-                                            <i class="bi bi-heart-pulse text-danger"></i>
-                                            ข้อมูลสุขภาพ
-                                        </a>
-                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -78,5 +70,5 @@ $listsMemberTeam = Employees::find()
 <style>
 .transition-all { transition: all 0.2s ease-in-out; }
 .overflow-auto::-webkit-scrollbar { width: 4px; }
-.overflow-auto::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+.overflow-auto::-webkit-scrollbar-thumb { background: var(--bs-border-color); border-radius: 10px; }
 </style>

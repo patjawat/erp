@@ -11,6 +11,37 @@ $this->title = $model->fullname;
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนบุคลากร', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+$this->registerCss(<<<CSS
+.profile-section-nav{display:grid;gap:.65rem;margin-bottom:1rem}
+.profile-nav-group{overflow:hidden;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.profile-nav-group__summary{display:flex;align-items:center;min-height:58px;gap:.7rem;padding:.7rem .8rem;cursor:pointer;list-style:none;color:#1a202c;background:#eef2f7}
+.profile-nav-group__summary::-webkit-details-marker{display:none}
+.profile-nav-group__summary:hover{background:#e7edf5}
+.profile-nav-group__summary:focus-visible,.profile-nav-item:focus-visible{outline:3px solid rgba(13,110,253,.18);outline-offset:-3px}
+.profile-nav-group__icon{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;color:#334155;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:8px}
+.profile-nav-group__icon svg{width:17px;height:17px}
+.profile-nav-group__copy,.profile-nav-item__copy{min-width:0;flex:1}
+.profile-nav-group__title,.profile-nav-item__title{display:block;color:#1a202c;font-size:.86rem;font-weight:600;line-height:1.3}
+.profile-nav-group__title{font-size:.9rem}
+.profile-nav-group__subtitle,.profile-nav-item__subtitle{display:block;margin-top:.12rem;overflow:hidden;color:#718096;font-size:.72rem;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+.profile-nav-group__chevron{width:16px;height:16px;flex:0 0 16px;color:#718096;transition:transform 180ms cubic-bezier(.16,1,.3,1)}
+.profile-nav-group[open] .profile-nav-group__chevron{transform:rotate(180deg)}
+.profile-nav-group__items{position:relative;padding:.45rem .45rem .55rem 3rem;background:#fff;border-top:1px solid rgba(15,23,42,.08)}
+.profile-nav-group__items::before{position:absolute;top:.7rem;bottom:.8rem;left:1.7rem;width:1px;background:rgba(100,116,139,.28);content:""}
+.profile-nav-item{display:flex;align-items:center;width:100%;min-height:44px;gap:.5rem;padding:.4rem .5rem;color:#1a202c;border-radius:8px;text-decoration:none}
+.profile-nav-item:hover{color:#1a202c;background:#f1f5f9}
+.profile-nav-item.is-active{color:#0a58ca;background:#f7f9fc;box-shadow:inset 0 0 0 1px rgba(13,110,253,.22)}
+.profile-nav-item.is-active .profile-nav-item__title,.profile-nav-item.is-active .profile-nav-item__icon{color:#0a58ca}
+.profile-nav-item__icon{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;color:#718096}
+.profile-nav-item__icon svg{width:14px;height:14px}
+.profile-nav-item__count{min-width:24px;padding:.15rem .4rem;color:#4a5568;background:#eef2f7;border-radius:999px;font-size:.7rem;font-variant-numeric:tabular-nums;text-align:center}
+.profile-nav-item__count.is-alert{color:#fff;background:#b91c1c;font-weight:700}
+.profile-nav-item.is-coming-soon{cursor:default}
+.profile-nav-item.is-coming-soon:hover{background:transparent}
+.profile-nav-item.is-coming-soon .profile-nav-item__title,.profile-nav-item.is-coming-soon .profile-nav-item__icon{color:#475569}
+.profile-nav-item__status{flex:0 0 auto;padding:.16rem .42rem;color:#475569;background:#eef2f7;border:1px solid rgba(100,116,139,.16);border-radius:999px;font-size:.62rem;font-weight:600;line-height:1.2;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.profile-nav-group__chevron{transition:none}}
+CSS);
 
 
 ?>
@@ -19,9 +50,14 @@ $this->params['breadcrumbs'][] = $this->title;
 ข้อมูลส่วนบุคคล | <?=$this->title;?>
 <?php $this->endBlock(); ?>
 
+<?php
+$isSelfProfile = Yii::$app->controller->uniqueId === 'profile';
+if (!$isSelfProfile):
+?>
 <?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/hr/menu', ['active' => 'employees']) ?>
 <?php $this->endBlock(); ?>
+<?php endif; ?>
 
 
 
@@ -32,26 +68,101 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php //  $this->render('member_on_dep',['model' => $model])?>
 
         <?=Html::a('<i class="bi bi-cloud-plus-fill fs-3"></i> แบบสารสนเทศเบื้องต้น', ['upload-basic-doc', 'id' => $model->id], ['class' => 'w-100 mb-3 btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']])?>
-        <div class="list-group">
-            <?php foreach($model->generalMenu() as $list):?>
-            <a href="<?=Url::to(['/hr/employees/view','id' => $model->id,'name' => $list['name']])?>"
-                class="list-group-item list-group-item-action d-flex gap-3 py-2" aria-current="true">
-                <div class="rounded-2 flex-shrink-0 px-3 py-2 text-body-secondary bg-light"><?=$list['icon']?></div>
-                <div class="d-flex gap-2 w-100 justify-content-between">
-                    <div>
-                        <p class="fw-bold mb-0 text-primary"><?=$list['title']?></p>
-                        <p class="mb-0 opacity-75 fw-light"><?=$list['subtitle']?></p>
+        <nav class="profile-section-nav" aria-label="เมนูข้อมูลส่วนบุคคล">
+            <?php foreach ($model->generalMenuGroups() as $group):
+                $groupNames = array_column($group['items'], 'name');
+                $groupActive = in_array((string) $name, array_map('strval', $groupNames), true);
+                $groupOpen = $groupActive || (!$name && $group['key'] === 'general');
+            ?>
+            <details class="profile-nav-group" <?= $groupOpen ? 'open' : '' ?>>
+                <summary class="profile-nav-group__summary">
+                    <span class="profile-nav-group__icon"><i data-lucide="<?= Html::encode($group['icon']) ?>" aria-hidden="true"></i></span>
+                    <span class="profile-nav-group__copy">
+                        <span class="profile-nav-group__title"><?= Html::encode($group['title']) ?></span>
+                        <span class="profile-nav-group__subtitle"><?= Html::encode($group['subtitle']) ?></span>
+                    </span>
+                    <i data-lucide="chevron-down" class="profile-nav-group__chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="profile-nav-group__items">
+                    <?php foreach ($group['items'] as $list):
+                        $menuUrl = $list['url'] ?? ['/hr/employees/view', 'id' => $model->id, 'name' => $list['name']];
+                        if ($isSelfProfile && ($list['name'] ?? '') === 'training_roadmap') {
+                            $menuUrl = ['/profile', 'name' => 'training_roadmap'];
+                        } elseif ($isSelfProfile && ($list['name'] ?? '') === 'idp') {
+                            $menuUrl = ['/profile', 'name' => 'idp'];
+                        } elseif (($list['name'] ?? '') === 'housing') {
+                            $menuUrl = $isSelfProfile
+                                ? ['/profile', 'name' => 'housing']
+                                : ['/housing/request/index'];
+                        } elseif (!$isSelfProfile && ($list['name'] ?? '') === 'idp') {
+                            $menuUrl = ['/hr/idp/employee', 'emp_id' => $model->id];
+                        } elseif ($isSelfProfile && !isset($list['url'])) {
+                            $menuUrl = ['/profile', 'name' => $list['name']];
+                        }
+                        $itemActive = ((string) ($list['name'] ?? '') === (string) $name);
+                        $comingSoon = !empty($list['coming_soon']);
+                        $itemCount = (($list['name'] ?? '') === 'housing' && $isSelfProfile)
+                            ? (int)($housingActionCount ?? 0)
+                            : (int)($list['count'] ?? 0);
+                        $isHousingAlert = (($list['name'] ?? '') === 'housing' && $isSelfProfile && $itemCount > 0);
+                    ?>
+                    <?php if ($comingSoon): ?>
+                    <div class="profile-nav-item is-coming-soon"
+                         role="link"
+                         aria-disabled="true"
+                         title="เตรียมเปิดใช้งาน">
+                        <span class="profile-nav-item__icon"><?= $list['icon'] ?></span>
+                        <span class="profile-nav-item__copy">
+                            <span class="profile-nav-item__title"><?= Html::encode($list['title']) ?></span>
+                            <span class="profile-nav-item__subtitle"><?= Html::encode($list['subtitle']) ?></span>
+                        </span>
+                        <span class="profile-nav-item__status">เตรียมเปิดใช้</span>
                     </div>
-                    <small class="opacity-50 text-nowrap"><?=$list['count']?></small>
+                    <?php else: ?>
+                    <a href="<?= Url::to($menuUrl) ?>"
+                       class="profile-nav-item <?= $itemActive ? 'is-active' : '' ?>"
+                       aria-current="<?= $itemActive ? 'page' : 'false' ?>"
+                       data-pjax="<?= isset($list['url']) ? '0' : '1' ?>">
+                        <span class="profile-nav-item__icon"><?= $list['icon'] ?></span>
+                        <span class="profile-nav-item__copy">
+                            <span class="profile-nav-item__title"><?= Html::encode($list['title']) ?></span>
+                            <span class="profile-nav-item__subtitle"><?= Html::encode($list['subtitle']) ?></span>
+                        </span>
+                        <?php if ($itemCount > 0): ?><span class="profile-nav-item__count <?= $isHousingAlert ? 'is-alert' : '' ?>"><?= $itemCount ?></span><?php endif ?>
+                    </a>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
-            </a>
-            <?php endforeach;?>
-        </div>
+            </details>
+            <?php endforeach; ?>
+        </nav>
     </div>
 
     <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
         <?php echo $this->render('box_summary',['model' => $model, 'name' => $name])?>
-        <?php if($name):?>
+        <?php if($name === 'training_roadmap'):?>
+        <?= $this->render('@app/modules/hr/views/training-roadmap/_employee_panel', [
+            'employee' => $model,
+            'plans' => $trainingPlans ?? $model->trainingPlans,
+        ]) ?>
+        <?php elseif($name === 'idp'):?>
+        <?= $this->render('@app/modules/hr/views/idp/_employee_panel', [
+            'employee' => $model,
+            'cycle' => $idpCycle ?? null,
+            'plan' => $idpPlan ?? null,
+            'isSelfProfile' => $isSelfProfile,
+        ]) ?>
+        <?php elseif($name === 'housing'):?>
+        <?= $this->render('@app/modules/housing/views/my/_profile_panel', [
+            'context' => $housingContext ?? [
+                'mode' => 'unavailable',
+                'employee' => $model,
+                'occupancy' => null,
+                'request' => null,
+            ],
+            'vacancies' => $housingVacancies ?? [],
+        ]) ?>
+        <?php elseif($name):?>
         <div>
             <?php echo $this->render('./lists/'.$name.'_list',['model' => $model,'name' => $name, 'dataProvider' => $dataProvider])?>
         </div>

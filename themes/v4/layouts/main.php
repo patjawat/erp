@@ -11,13 +11,15 @@ BootstapIconAsset::register($this);
 
 $site = Categorise::findOne(['name' => 'site']);
 $colorName = isset($site->data_json['theme_color_name']) ? $site->data_json['theme_color_name'] : 'blue';
+// โหมดสว่าง/มืด เก็บรายคนใน cookie (ค่าอื่นถือเป็น light = ใช้สีแบรนด์)
+$activeTheme = (isset($_COOKIE['theme_mode']) && $_COOKIE['theme_mode'] === 'dark') ? 'dark' : $colorName;
 $moduleId = Yii::$app->controller->module->id;
 
 AppAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?php echo Yii::$app->language; ?>" class="h-100" data-bs-theme="<?php echo $colorName; ?>">
+<html lang="<?php echo Yii::$app->language; ?>" class="h-100" data-bs-theme="<?php echo $activeTheme; ?>">
 
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
@@ -256,7 +258,8 @@ AppAsset::register($this);
 
 
 
-    <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center">
+    <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center"
+        id="erpPrimaryNavbar">
         <div class="erp-nav-list">
             <?= $this->render('navbar') ?>
         </div>

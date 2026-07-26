@@ -19,6 +19,9 @@ if (!empty($headerBrand['google_font_href'])) {
 }
 $notify = ApproveHelper::Info();
 $total = $notify['total'];
+$jdNotify = $notify['jd_acknowledgement'] ?? ['total' => 0, 'datas' => []];
+$pendingJd = $jdNotify['datas'][0] ?? null;
+$idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
 ?>
 <style>
     /* container สำหรับ animation เปิด–ปิด */
@@ -82,16 +85,77 @@ $total = $notify['total'];
     <div class="d-flex align-items-center">
         <div class="d-flex align-items-center gap-1">
 
-            <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="header-btn position-relative">
-                <i data-lucide="bell"></i>
-                <?php if ($total > 0): ?>
-                    <span class="position-absolute bottom-0 start-0 translate-middle badge rounded-pill text-bg-danger"><?= $total ?> </span>
-                <?php endif; ?>
-            </a>
-            <button class="header-btn" id="toggleNavbar">
+            <div class="dropdown">
+                <button type="button"
+                    class="header-btn position-relative border-0"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="การแจ้งเตือน">
+                    <i data-lucide="bell"></i>
+                    <?php if ($total > 0): ?>
+                        <span class="position-absolute bottom-0 start-0 translate-middle badge rounded-pill text-bg-danger"><?= $total ?></span>
+                    <?php endif; ?>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="min-width: 320px;">
+                    <div class="px-3 py-2 border-bottom">
+                        <div class="fw-semibold">การแจ้งเตือน</div>
+                        <small class="text-body-secondary"><?= $total > 0 ? 'มี ' . $total . ' รายการที่ต้องดำเนินการ' : 'ไม่มีรายการใหม่' ?></small>
+                    </div>
+                    <?php if ($pendingJd): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-start py-3"
+                            href="<?= Url::to(['/hr/employees/view', 'id' => $pendingJd->emp_id, 'name' => 'job_description_current']) ?>">
+                            <span class="rounded-circle bg-warning-subtle text-warning-emphasis d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="file-signature" style="width: 19px;"></i>
+                            </span>
+                            <span class="text-wrap">
+                                <span class="d-block fw-semibold">JD รอลงนามรับทราบ</span>
+                                <small class="text-body-secondary">Job Description Revision <?= (int) $pendingJd->revision_no ?></small>
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ((int) $idpNotify['total'] > 0): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-start py-3" href="<?= Url::to($idpNotify['url']) ?>">
+                            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="target" style="width: 19px;"></i>
+                            </span>
+                            <span class="text-wrap">
+                                <span class="d-block fw-semibold">IDP รอดำเนินการ</span>
+                                <small class="text-body-secondary"><?= (int) $idpNotify['total'] ?> รายการที่ต้องตรวจสอบหรือปรับปรุง</small>
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $idpNotify['total']; ?>
+                    <?php if ($otherTotal > 0): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-center py-3" href="<?= Url::to(['/approve-v2/leave']) ?>">
+                            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="list-checks" style="width: 19px;"></i>
+                            </span>
+                            <span>
+                                <span class="d-block fw-semibold">รายการรออนุมัติ</span>
+                                <small class="text-body-secondary"><?= $otherTotal ?> รายการ</small>
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($total === 0): ?>
+                        <div class="px-3 py-4 text-center text-body-secondary">
+                            <i data-lucide="check-circle-2" class="mb-2"></i>
+                            <div class="small">ดำเนินการครบแล้ว</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <button type="button"
+                class="header-btn"
+                id="toggleNavbar"
+                aria-controls="erpPrimaryNavbar"
+                aria-expanded="false">
                 <i data-lucide="menu"></i>
             </button>
             <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><i data-lucide="maximize"></i> </button>
+            <?php $isDark = (isset($_COOKIE['theme_mode']) && $_COOKIE['theme_mode'] === 'dark'); ?>
+            <button type="button" class="header-btn" id="toggleTheme" title="สลับโหมดสว่าง/มืด" aria-label="สลับโหมดสว่าง/มืด">
+                <i data-lucide="<?= $isDark ? 'sun' : 'moon-star' ?>"></i>
+            </button>
             <?php if(yii::$app->user->can('admin')):?>
             <a href="<?= Url::to(['/settings']) ?>" class="header-btn">
                 <i data-lucide="settings"></i>
@@ -149,19 +213,55 @@ $(function () {
     /* ======================
      * Toggle Navbar
      * ====================== */
-    $('#toggleNavbar').on('click', function () {
+    $(document)
+        .off('click.erpNavbar', '#toggleNavbar')
+        .on('click.erpNavbar', '#toggleNavbar', function (event) {
+        event.preventDefault();
         const nav = $('.navbar-fixed-container');
+        const willOpen = !nav.hasClass('show');
 
-        if (!nav.hasClass('show')) {
+        if (willOpen) {
             nav.removeClass('d-none').addClass('show');
         } else {
             nav.removeClass('show');
         }
+
+        $(this).attr('aria-expanded', String(willOpen));
     });
 
-    /* โหมดสีใช้ data-bs-theme จาก layout (ยกเลิก dark mode แล้ว) */
-    $('html').attr('data-bs-theme', '$colorName');
-    localStorage.removeItem('theme');
+    /* ======================
+     * สลับโหมดสว่าง/มืด (เก็บรายคนใน cookie theme_mode; light = ใช้สีแบรนด์ '$colorName')
+     * ค่าเริ่มต้นถูก render จากฝั่ง PHP แล้ว ที่นี่จัดการเฉพาะตอนกดสลับ
+     * ====================== */
+    function erpSetThemeIcon(isDark) {
+        var button = document.getElementById('toggleTheme');
+        if (!button) return;
+
+        var currentIcon = button.querySelector('svg.lucide, i[data-lucide]');
+        var nextIcon = document.createElement('i');
+        nextIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon-star');
+        nextIcon.setAttribute('aria-hidden', 'true');
+
+        if (currentIcon) {
+            currentIcon.replaceWith(nextIcon);
+        } else {
+            button.prepend(nextIcon);
+        }
+
+        var actionLabel = isDark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด';
+        button.setAttribute('title', actionLabel);
+        button.setAttribute('aria-label', actionLabel);
+
+        if (window.lucide && window.lucide.createIcons) {
+            window.lucide.createIcons();
+        }
+    }
+    $('#toggleTheme').on('click', function () {
+        var toDark = document.documentElement.getAttribute('data-bs-theme') !== 'dark';
+        document.documentElement.setAttribute('data-bs-theme', toDark ? 'dark' : '$colorName');
+        document.cookie = 'theme_mode=' + (toDark ? 'dark' : 'light') + ';path=/;max-age=31536000;samesite=lax';
+        erpSetThemeIcon(toDark);
+    });
 
     /* ======================
      * Fullscreen

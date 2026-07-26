@@ -223,6 +223,7 @@ $this->registerJs($formatRepoJs, View::POS_HEAD);
                     'action' => Url::to(['create']),
                     'options' => ['data-modal-submit' => $isModal ? '1' : '0', 'enctype' => 'multipart/form-data'],
                 ]); ?>
+                <?= Html::hiddenInput('appreciation_request_token', $requestToken ?? '') ?>
 
                 <div class="appreciation-composer appreciation-composer--form">
                 <div class="appreciation-composer__intro d-flex align-items-center gap-3 mb-3">
@@ -340,13 +341,21 @@ $createUrl = Url::to(['create']);
 $successHeartUrl = Url::to('@web/img/appreciation/success-heart-v2.png');
 $js = <<<JS
 (function() {
-    var form = document.getElementById('appreciation-form');
-    if (!form || form.getAttribute('data-modal-submit') !== '1') return;
     var successHeartPreload = new Image();
     successHeartPreload.src = '{$successHeartUrl}';
-    form.addEventListener('submit', function(e) {
+
+    $(document)
+      .off('submit.appreciationCreate', '#appreciation-form')
+      .on('submit.appreciationCreate', '#appreciation-form', function(e) {
         e.preventDefault();
+        var form = this;
         var \$form = $(form);
+
+        if (form.getAttribute('data-modal-submit') !== '1' || \$form.data('submitting') === true) {
+            return false;
+        }
+
+        \$form.data('submitting', true);
         \$form.find('button[type=submit]').prop('disabled', true);
         $.ajax({
             url: '{$createUrl}',
@@ -385,12 +394,18 @@ $js = <<<JS
             } else if (res.success === false && res.redirect_url) {
                 window.location.href = res.redirect_url;
             } else if (res.success === false && res.content) {
+                \$form.data('submitting', false);
                 $('#main-modal .modal-body').html(res.content);
+                \$form.find('button[type=submit]').prop('disabled', false);
+            } else {
+                \$form.data('submitting', false);
                 \$form.find('button[type=submit]').prop('disabled', false);
             }
         }).fail(function() {
+            \$form.data('submitting', false);
             \$form.find('button[type=submit]').prop('disabled', false);
         });
+        return false;
     });
 })();
 JS;
