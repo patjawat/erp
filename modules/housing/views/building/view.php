@@ -64,7 +64,7 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
             <section class="detail-section overflow-hidden">
                 <div class="p-3 d-flex justify-content-between align-items-center gap-2">
                     <h2 class="section-title"><?= $isFlat ? 'ชั้น ยูนิต และห้องพัก' : 'รายละเอียดพื้นที่บ้านพัก' ?></h2>
-                    <?= Html::a('เปิดกระดานห้องพัก', ['/housing/unit/index', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+                    <?= Html::a('เปิดภาพรวม', ['/housing/unit/index', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                 </div>
                 <?php if ($units === []): ?>
                     <div class="empty-note">ยังไม่มียูนิตหรือพื้นที่พักอาศัยในรายการนี้</div>

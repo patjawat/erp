@@ -21,6 +21,8 @@ use app\modules\hr\models\IdpPlan;
 use app\modules\housing\services\HousingContextService;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Unit;
+use app\modules\housing\models\Handover;
+use app\modules\housing\models\Occupancy;
 
 class ProfileController extends \yii\web\Controller
 
@@ -75,6 +77,15 @@ class ProfileController extends \yii\web\Controller
         $dataProvider = null;
         $housingContext = null;
         $housingVacancies = [];
+        $housingActionCount = $model ? (int)Handover::find()
+            ->joinWith('occupancy')
+            ->where([
+                'housing_occupancy.emp_id' => $model->id,
+                'housing_handover.status' => Handover::STATUS_DRAFT,
+            ])
+            ->andWhere(['is not', 'housing_handover.handed_over_signed_at', null])
+            ->andWhere(['housing_handover.received_signed_at' => null])
+            ->count() : 0;
         if ($model && $name === 'training_roadmap') {
             $trainingPlans = EmployeeTrainingPlan::find()
                 ->where(['emp_id' => $model->id])
@@ -88,7 +99,12 @@ class ProfileController extends \yii\web\Controller
                     ->with(['cycle', 'employee', 'supervisor', 'goals.activities'])->one()
                 : null;
         } elseif ($model && $name === 'housing') {
-            $housingContext = (new HousingContextService())->forUser((int)Yii::$app->user->id);
+            $housingContext = (new HousingContextService())->forUser((int)Yii::$app->user->id, [
+                'tab' => $this->request->get('housing_tab', 'overview'),
+                'expenseYear' => $this->request->get('expense_year'),
+                'maintenanceStatus' => $this->request->get('maintenance_status', 'all'),
+                'maintenanceYear' => $this->request->get('maintenance_year'),
+            ]);
             if ($housingContext['mode'] === 'applicant') {
                 $buildings = Building::find()
                     ->with(['units.floor', 'units.rooms'])
@@ -135,6 +151,7 @@ class ProfileController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
             'housingContext' => $housingContext,
             'housingVacancies' => $housingVacancies,
+            'housingActionCount' => $housingActionCount,
         ]);
         // }else{
         //     return $this->renderContent('<h1 class="text-center">ไม่พบข้อมูลพนักงาน</h1>');

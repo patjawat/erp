@@ -5,7 +5,7 @@ use app\modules\housing\models\Unit;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'กระดานห้องพัก';
+$this->title = 'ภาพรวม';
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'dashboard']) ?><?php $this->endBlock();
 

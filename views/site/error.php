@@ -8,8 +8,9 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = $name;
+$this->title = $name ?? 'ไม่พบข้อมูล';
 $me = Yii::$app->employee::GetEmployee();
+$employeeName = $me?->fullname ?: 'ผู้ใช้งาน';
 ?>
 
 <!-- Error 404 Template 1 - Bootstrap Brain Component -->
@@ -26,7 +27,7 @@ $me = Yii::$app->employee::GetEmployee();
             <i class="bi bi-exclamation-circle-fill text-danger display-4"></i>
             <span class="display-1 fw-bold bsb-flip-h">4</span>
           </h2>
-          <h3 class="h2 mb-2"> ไม่อนุญาต <?=$me->fullname?></h3>
+          <h3 class="h2 mb-2">ไม่อนุญาต <?= Html::encode($employeeName) ?></h3>
           <p class="mb-5">หากต้องการกรุณาติดต่อผู้ดูแลระบบ</p>
           <!-- <a class="btn bsb-btn-5xl btn-dark rounded-pill px-5 fs-6 m-0" href="<?=Url::to(['/me'])?>" role="button">Back to Home</a> -->
         </div>
@@ -38,4 +39,3 @@ $me = Yii::$app->employee::GetEmployee();
     
 </div>
  </div>
- 

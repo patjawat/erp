@@ -20,6 +20,7 @@ use app\modules\appreciation\models\AppreciationProgramYear;
 use app\modules\appreciation\models\AppreciationReward;
 use app\modules\appreciation\models\AppreciationValue;
 use app\modules\appreciation\services\AppreciationPointService;
+use app\modules\appreciation\services\AppreciationTelegramService;
 use app\modules\hr\models\Employees;
 use app\modules\notify\models\Notify;
 
@@ -133,8 +134,25 @@ class DefaultController extends Controller
         $model->frame_style = Appreciation::FRAME_CLASSIC;
         $programYear = AppreciationProgramYear::active();
         $model->points_given = $programYear ? $programYear->points_per_thank : Yii::$app->getModule('appreciation')->pointsPerThank;
+        $requestToken = (string) Yii::$app->request->post('appreciation_request_token', '');
+        if ($requestToken === '') {
+            $requestToken = Yii::$app->security->generateRandomString(32);
+        }
 
         if ($model->load(Yii::$app->request->post())) {
+            $processedRequests = (array) Yii::$app->session->get('appreciation_processed_requests', []);
+            if (isset($processedRequests[$requestToken])) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'success' => true,
+                        'message' => 'เพื่อนของคุณได้รับข้อความขอบคุณแล้ว',
+                        'feed_url' => Url::to(['index']),
+                    ];
+                }
+                return $this->redirect(['/me']);
+            }
+
             $savedImagePath = null;
             try {
                 if ($programYear && $model->badge_type) {
@@ -154,7 +172,13 @@ class DefaultController extends Controller
                     }
                 }
                 if (!$model->hasErrors() && $model->save(false)) {
+                    $processedRequests[$requestToken] = (int) $model->id;
+                    if (count($processedRequests) > 20) {
+                        $processedRequests = array_slice($processedRequests, -20, null, true);
+                    }
+                    Yii::$app->session->set('appreciation_processed_requests', $processedRequests);
                     Notify::createForAppreciation($model);
+                    AppreciationTelegramService::sendToRecipient($model);
                     $this->updateChallengeProgress($model, 'send');
                     Yii::$app->session->setFlash('success', 'เพื่อนของคุณได้รับข้อความขอบคุณแล้ว');
                     if (Yii::$app->request->isAjax) {
@@ -186,7 +210,7 @@ class DefaultController extends Controller
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
                     'success' => false,
-                    'content' => $this->renderAjax('create', ['model' => $model, 'me' => $me, 'isModal' => true]),
+                    'content' => $this->renderAjax('create', ['model' => $model, 'me' => $me, 'isModal' => true, 'requestToken' => $requestToken]),
                 ];
             }
         }
@@ -195,7 +219,7 @@ class DefaultController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="bi bi-heart me-1"></i> ส่งคำขอบคุณให้เพื่อน',
-                'content' => $this->renderAjax('create', ['model' => $model, 'me' => $me, 'isModal' => true]),
+                'content' => $this->renderAjax('create', ['model' => $model, 'me' => $me, 'isModal' => true, 'requestToken' => $requestToken]),
                 'footer' => '',
             ];
         }
@@ -204,6 +228,7 @@ class DefaultController extends Controller
             'model' => $model,
             'me' => $me,
             'isModal' => false,
+            'requestToken' => $requestToken,
         ]);
     }
 

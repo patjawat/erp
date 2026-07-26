@@ -90,6 +90,18 @@ JS);
 <button class="btn btn-primary">ยืนยันจัดสรร</button>
 <?= Html::endForm() ?>
 <?php endif; ?>
-<?php if ($model->status === HousingRequest::STATUS_ALLOCATED): ?><?= Html::beginForm(['activate', 'id' => $model->id], 'post', ['class' => 'd-grid gap-2']) ?><label class="form-label">วันที่เข้าอยู่จริง</label><input type="date" name="start_date" value="<?= date('Y-m-d') ?>" class="form-control" required><button class="btn btn-primary">ยืนยันเข้าอยู่</button><?= Html::endForm() ?><?php endif; ?>
+<?php if ($model->status === HousingRequest::STATUS_ALLOCATED): ?>
+<div class="alert alert-info mb-2">จัดสรรที่พักแล้ว ขั้นตอนต่อไปคือตรวจสภาพ อุปกรณ์ ค่ามิเตอร์ และลงนามรับมอบ</div>
+<?= Html::a(
+    $model->occupancy?->handover ? 'เปิดเอกสารรับมอบ' : 'จัดทำเอกสารรับมอบ',
+    $model->occupancy?->handover
+        ? ['/housing/handover/view', 'id' => $model->occupancy->handover->id]
+        : ['/housing/handover/prepare', 'request_id' => $model->id],
+    ['class' => 'btn btn-primary']
+) ?>
+<?php endif; ?>
+<?php if ($model->status === HousingRequest::STATUS_ACTIVE && $model->occupancy?->handover): ?>
+<?= Html::a('ดูและพิมพ์เอกสารรับมอบ', ['/housing/handover/view', 'id' => $model->occupancy->handover->id], ['class' => 'btn btn-outline-primary']) ?>
+<?php endif; ?>
 </div></div></div>
 </div></div>

@@ -22,4 +22,5 @@ final class MonthlyAccount extends HousingActiveRecord
     public function getPeriod():ActiveQuery{return $this->hasOne(BillingPeriod::class,['id'=>'billing_period_id']);}
     public function getBuilding():ActiveQuery{return $this->hasOne(Building::class,['id'=>'building_id']);}
     public function getUnit():ActiveQuery{return $this->hasOne(Unit::class,['id'=>'unit_id']);}
+    public function getInvoice():ActiveQuery{return $this->hasOne(Invoice::class,['monthly_account_id'=>'id']);}
 }
