@@ -20,7 +20,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     'style' => 'width:96px;height:112px',
     'onerror' => "this.onerror=null;this.src='" . Url::to('@web/img/placeholder_cid.png') . "'",
 ]) ?>
-<div><div class="small text-muted">ผู้ยื่นคำขอ</div><div class="h5 mb-1"><?= Html::encode($employeeName) ?></div><div class="text-muted"><?= Html::encode($employee?->positionName() ?: 'ไม่ระบุตำแหน่ง') ?> · <?= Html::encode($employee?->departmentName() ?: 'ไม่ระบุหน่วยงาน') ?></div></div>
+<div><div class="small text-body-secondary">ผู้ยื่นคำขอ</div><div class="h5 mb-1"><?= Html::encode($employeeName) ?></div><div class="text-body-secondary"><?= Html::encode($employee?->positionName() ?: 'ไม่ระบุตำแหน่ง') ?> · <?= Html::encode($employee?->departmentName() ?: 'ไม่ระบุหน่วยงาน') ?></div></div>
 </div>
 <dl class="row mb-0">
 <dt class="col-sm-4">ชื่อผู้ยื่น</dt><dd class="col-sm-8"><strong><?= Html::encode($employeeName) ?></strong></dd>
@@ -45,7 +45,7 @@ $eligible = $employeeActive && !($model->request_type === HousingRequest::TYPE_M
 <div class="d-flex align-items-center gap-2"><i data-lucide="<?= $activeOccupancy ? 'home' : 'circle-check' ?>" class="text-<?= $activeOccupancy ? 'warning' : 'success' ?>"></i><span>ที่พักปัจจุบัน: <strong><?= $activeOccupancy ? 'มีข้อมูลเข้าพักอยู่' : 'ไม่พบการเข้าพักปัจจุบัน' ?></strong></span></div>
 <?php if (!$eligible): ?><div class="alert alert-warning mt-3 mb-0">คำขอนี้ยังไม่ผ่านเงื่อนไขเบื้องต้น กรุณาตรวจสอบประเภทคำขอหรือสถานะบุคลากรก่อนดำเนินการต่อ</div><?php endif; ?>
 </div></div>
-<div class="card border-0 shadow-sm mt-3"><div class="card-header bg-body fw-semibold">ประวัติสถานะ</div><ul class="list-group list-group-flush"><?php foreach ($model->logs as $log): ?><li class="list-group-item"><strong><?= Html::encode(HousingRequest::statusOptions()[$log->to_status] ?? $log->to_status) ?></strong><div class="small text-muted"><?= Html::encode($log->acted_at) ?><?= $log->comment ? ' · ' . Html::encode($log->comment) : '' ?></div></li><?php endforeach; ?></ul></div></div>
+<div class="card border-0 shadow-sm mt-3"><div class="card-header bg-body fw-semibold">ประวัติสถานะ</div><ul class="list-group list-group-flush"><?php foreach ($model->logs as $log): ?><li class="list-group-item"><strong><?= Html::encode(HousingRequest::statusOptions()[$log->to_status] ?? $log->to_status) ?></strong><div class="small text-body-secondary"><?= Html::encode($log->acted_at) ?><?= $log->comment ? ' · ' . Html::encode($log->comment) : '' ?></div></li><?php endforeach; ?></ul></div></div>
 <div class="col-lg-4">
 <div class="card border-0 shadow-sm"><div class="card-header bg-body fw-semibold">การดำเนินการ</div><div class="card-body d-grid gap-2">
 <?php if ($model->status === HousingRequest::STATUS_DRAFT): ?>

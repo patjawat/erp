@@ -20,7 +20,7 @@ $scopeOptions = array_intersect_key(MaintenanceRequest::scopeOptions(), array_fl
     MaintenanceRequest::SCOPE_ROOM,
 ]));
 ?>
-<div class="alert alert-light border"><div class="small text-muted">สถานที่แจ้งปัญหา</div><strong><?= Html::encode($locationName) ?></strong></div>
+<div class="alert alert-light border"><div class="small text-body-secondary">สถานที่แจ้งปัญหา</div><strong><?= Html::encode($locationName) ?></strong></div>
 <div class="row g-3">
     <div class="col-md-8"><?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'เช่น น้ำรั่วบริเวณห้องน้ำ']) ?></div>
     <div class="col-md-4"><?= $form->field($model, 'priority')->dropDownList(MaintenanceRequest::priorityOptions()) ?></div>
@@ -30,7 +30,7 @@ $scopeOptions = array_intersect_key(MaintenanceRequest::scopeOptions(), array_fl
     <div class="col-12"><?= $form->field($model, 'before_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('เพิ่มภาพประกอบได้สูงสุด 10 ภาพ ขนาดไม่เกิน 10 MB ต่อไฟล์') ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('ส่งรายการแจ้งปัญหา', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php ActiveForm::end();

@@ -14,7 +14,7 @@ $form = ActiveForm::begin(['id' => $formId]);
     <div class="col-md-6"><?= $form->field($model, 'status')->dropDownList(Unit::statusOptions()) ?></div>
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 2]) ?></div>
 </div>
-<div class="mt-3 d-flex justify-content-end gap-2"><?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?><?= Html::submitButton('เพิ่มห้อง', ['class' => 'btn btn-primary']) ?></div>
+<div class="mt-3 d-flex justify-content-end gap-2"><?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?><?= Html::submitButton('เพิ่มห้อง', ['class' => 'btn btn-primary']) ?></div>
 <?php ActiveForm::end();
 $this->registerJs("handleFormSubmit('#{$formId}', null, function(r){if(r&&r.container&&typeof erpReloadPjax==='function'){erpReloadPjax(r.container);}});");
 ?>

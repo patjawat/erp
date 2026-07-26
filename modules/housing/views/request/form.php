@@ -10,8 +10,8 @@ $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this-
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'request']) ?><?php $this->endBlock();
 ?>
 <style>
-.request-form-page{--rq-border:#dce6f0;--rq-soft:#f5f8fb;--rq-ink:#26384a;color:var(--rq-ink)}
-.request-form-page .form-shell{background:#fff;border:1px solid var(--rq-border);border-radius:.85rem;max-width:920px;margin:auto;overflow:hidden}
+.request-form-page{--rq-border:var(--bs-border-color);--rq-soft:var(--bs-tertiary-bg);--rq-ink:var(--bs-emphasis-color);color:var(--rq-ink)}
+.request-form-page .form-shell{background:var(--bs-body-bg);border:1px solid var(--rq-border);border-radius:.85rem;max-width:920px;margin:auto;overflow:hidden}
 .request-form-page .form-intro{background:var(--rq-soft);border-bottom:1px solid var(--rq-border);padding:1rem 1.25rem}
 .request-form-page .form-body{padding:1.25rem}
 .request-form-page .form-label{font-weight:600}
@@ -22,7 +22,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <div class="form-shell">
     <div class="form-intro">
         <h1 class="h5 mb-1"><?= Html::encode($this->title) ?></h1>
-        <div class="small text-muted">เลือกได้เฉพาะบุคลากรที่ยังปฏิบัติงาน ระบบจะตรวจคำขอซ้ำและสถานะการพักอาศัยก่อนบันทึก</div>
+        <div class="small text-body-secondary">เลือกได้เฉพาะบุคลากรที่ยังปฏิบัติงาน ระบบจะตรวจคำขอซ้ำและสถานะการพักอาศัยก่อนบันทึก</div>
     </div>
     <?php $form = ActiveForm::begin(); ?>
     <div class="form-body">
@@ -47,7 +47,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
         </div>
     </div>
     <div class="form-footer">
-        <?= Html::a('ยกเลิก', $model->isNewRecord ? ['index'] : ['view', 'id' => $model->id], ['class' => 'btn btn-light']) ?>
+        <?= Html::a('ยกเลิก', $model->isNewRecord ? ['index'] : ['view', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
         <?= Html::submitButton('บันทึกร่างคำขอ', ['class' => 'btn btn-primary px-4']) ?>
     </div>
     <?php ActiveForm::end(); ?>

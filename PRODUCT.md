@@ -68,3 +68,16 @@ create / edit ของ record ในหน้า list ให้เปิดฟ�
 ## Design
 
 See [DESIGN.md](DESIGN.md).
+
+### Bootstrap-first UI (ข้อบังคับ)
+
+- ทุก module และทุกหน้าต้องใช้ Bootstrap 5.3 component/utility classes เป็นค่าเริ่มต้น
+- ห้าม hardcode สี พื้นหลัง สีข้อความ สีเส้นขอบ หรือสถานะด้วย `#hex`, `rgb()`, `rgba()`, `hsl()`, `hsla()` และ named colors
+- ห้ามใช้ inline `style` สำหรับงานที่มี Bootstrap class รองรับ
+- ต้องใช้ class ที่รองรับ color mode เช่น `bg-body`, `bg-body-tertiary`, `text-body-secondary`, `border`, `bg-*-subtle` และ `text-*-emphasis`
+- ห้ามใช้ `bg-light`, `text-bg-light` และ `btn-light` ในหน้าที่รองรับ dark mode
+- กรณี custom component ที่ Bootstrap class ไม่ครอบคลุม ให้ใช้ Bootstrap CSS variables เท่านั้น ห้ามเพิ่มสี literal ใหม่
+- UI ทุกหน้าต้องผ่านทั้ง `data-bs-theme="light"` และ `data-bs-theme="dark"`
+- Pull request หรือ code review ต้องไม่ผ่านเมื่อฝ่าฝืนข้อกำหนดนี้
+
+รายละเอียดและตัวอย่าง canonical ดูที่ [DESIGN.md](DESIGN.md) → **Bootstrap-first UI Contract (บังคับ)**

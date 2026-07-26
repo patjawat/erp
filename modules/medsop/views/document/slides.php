@@ -7,7 +7,7 @@ $this->title = 'สไลด์ ' . $model->title;
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>ใช้ปุ่มลูกศรซ้ายและขวาเพื่อเปลี่ยนหน้า<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?><?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับไปหน้าเอกสาร', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-light']) ?><?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?><?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับไปหน้าเอกสาร', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?><?php $this->endBlock(); ?>
 
 <div class="medsop-slide-deck" data-slide-deck tabindex="0">
     <section class="medsop-slide is-active" data-slide>
@@ -30,7 +30,7 @@ $this->title = 'สไลด์ ' . $model->title;
         </div>
     </section>
     <?php endforeach; ?>
-    <footer class="medsop-slide-controls"><button type="button" class="btn btn-light" data-slide-prev><i class="bi bi-arrow-left"></i><span>ก่อนหน้า</span></button><div><strong data-slide-current>1</strong><span>/</span><span data-slide-total><?= count($model->steps) + 1 ?></span></div><button type="button" class="btn btn-primary" data-slide-next><span>ถัดไป</span><i class="bi bi-arrow-right"></i></button><button type="button" class="btn btn-light" data-slide-fullscreen aria-label="แสดงเต็มหน้าจอ"><i class="bi bi-arrows-fullscreen"></i></button></footer>
+    <footer class="medsop-slide-controls"><button type="button" class="btn btn-outline-secondary" data-slide-prev><i class="bi bi-arrow-left"></i><span>ก่อนหน้า</span></button><div><strong data-slide-current>1</strong><span>/</span><span data-slide-total><?= count($model->steps) + 1 ?></span></div><button type="button" class="btn btn-primary" data-slide-next><span>ถัดไป</span><i class="bi bi-arrow-right"></i></button><button type="button" class="btn btn-outline-secondary" data-slide-fullscreen aria-label="แสดงเต็มหน้าจอ"><i class="bi bi-arrows-fullscreen"></i></button></footer>
 </div>
 <?php
 $this->registerJs(<<<'JS'

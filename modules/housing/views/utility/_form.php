@@ -62,7 +62,7 @@ $form = ActiveForm::begin(['id' => 'utility-form']);
 </div>
 <?php endif; ?>
 <div class="mt-3 text-end">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('บันทึกข้อมูล', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php

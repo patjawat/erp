@@ -40,8 +40,8 @@ use yii\helpers\Html;
                         ) ?>
 
                         <div class="min-w-0 flex-grow-1">
-                            <div class="small text-muted mb-0"><?= Html::encode($item->code ?: '-') ?></div>
-                            <div class="small text-muted mb-0">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
+                            <div class="small text-body-secondary mb-0"><?= Html::encode($item->code ?: '-') ?></div>
+                            <div class="small text-body-secondary mb-0">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
                             <div class="fw-semibold text-truncate"><?= Html::encode($titleName) ?></div>
                             <div class="mt-1 d-flex align-items-center flex-wrap gap-1">
                                 <span class="text-body-secondary small">สภาพ :</span>
@@ -58,11 +58,11 @@ use yii\helpers\Html;
                       </div>
 
 
-                    <div class="small text-muted mb-2"><?= Html::encode($catTitle) ?></div>
+                    <div class="small text-body-secondary mb-2"><?= Html::encode($catTitle) ?></div>
                     <div class="mt-auto d-flex justify-content-between align-items-end">
                         <div>
-                            <div class="small text-muted">ราคาแรกรับ</div>
-                            <div class="fw-bold text-primary"><?= Html::encode(number_format($price, 2)) ?></div>
+                            <div class="small text-body-secondary">ราคาแรกรับ</div>
+                            <div class="fw-bold text-primary-emphasis"><?= Html::encode(number_format($price, 2)) ?></div>
                         </div>
                         <div class="d-flex gap-1">
                             <?= Html::a('<i class="fa fa-eye"></i>', ['view-asset', 'id' => $item->id], ['class' => 'btn btn-sm btn-primary', 'data-pjax' => 0]) ?>

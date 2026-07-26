@@ -1200,7 +1200,7 @@ class Asset extends \yii\db\ActiveRecord
     }
 
     /**
-     * Badge แสดง "ระดับความเสี่ยง" — ใช้ไอคอนนำ (ต่างจาก status/condition ที่ใช้จุด) เพื่อให้สแกนแยกหมวดได้
+     * Badge แสดง "ระดับความเสี่ยง": ใช้ไอคอนนำ (ต่างจาก status/condition ที่ใช้จุด) เพื่อให้สแกนแยกหมวดได้
      */
     public function getRiskLevelBadge()
     {
@@ -1213,22 +1213,17 @@ class Asset extends \yii\db\ActiveRecord
         ];
 
         if (!isset($map[$level])) {
-            return '<span class="text-body-tertiary small" title="ยังไม่ประเมิน">—</span>';
+            return '<span class="text-body-tertiary small" title="ยังไม่ประเมิน">ไม่ระบุ</span>';
         }
 
         $info = $map[$level];
-        $themes = [
-            'success' => ['bg' => 'rgb(236, 253, 245)', 'text' => 'rgb(4, 120, 87)',  'border' => 'rgb(167, 243, 208)'],
-            'warning' => ['bg' => 'rgb(254, 252, 232)', 'text' => 'rgb(161, 98, 7)',  'border' => 'rgb(254, 240, 138)'],
-            'danger'  => ['bg' => 'rgb(255, 241, 242)', 'text' => 'rgb(190, 18, 60)', 'border' => 'rgb(254, 205, 211)'],
-        ];
-        $color = $themes[$info['theme']];
+        $theme = $info['theme'];
 
-        return '<span class="badge rounded-pill fw-bold border d-inline-flex align-items-center justify-content-center gap-1" '
-             . 'title="ระดับความเสี่ยง: ' . $info['label'] . '" '
-             . 'style="background-color: ' . $color['bg'] . '; color: ' . $color['text'] . '; border-color: ' . $color['border'] . '; font-size: 11px; padding: 4px 10px; line-height: 1;">'
-             . '<i class="fa-solid ' . $info['icon'] . '" aria-hidden="true" style="font-size: 10px;"></i>'
-             . '<span>' . $info['label'] . '</span>'
+        return '<span class="badge rounded-pill fw-semibold border d-inline-flex align-items-center justify-content-center gap-1 '
+             . 'bg-' . $theme . '-subtle text-' . $theme . '-emphasis border-' . $theme . '-subtle px-2 py-1" '
+             . 'title="' . Html::encode('ระดับความเสี่ยง: ' . $info['label']) . '">'
+             . '<i class="fa-solid ' . Html::encode($info['icon']) . ' fa-xs" aria-hidden="true"></i>'
+             . '<span>' . Html::encode($info['label']) . '</span>'
              . '</span>';
     }
 
@@ -1237,33 +1232,17 @@ class Asset extends \yii\db\ActiveRecord
      */
     private function renderBadge($text, $theme)
     {
-        // กำหนดชุดสีอ้างอิงตามที่คุณออกแบบไว้ (โทนพาสเทลแบบ Tailwind)
-        $themes = [
-            'success' => [ // สีเขียว
-                'bg' => 'rgb(236, 253, 245)', 'text' => 'rgb(4, 120, 87)', 'border' => 'rgb(167, 243, 208)', 'dot' => 'rgb(16, 185, 129)'
-            ],
-            'info' => [ // สีฟ้า
-                'bg' => 'rgb(240, 249, 255)', 'text' => 'rgb(3, 105, 161)', 'border' => 'rgb(186, 230, 253)', 'dot' => 'rgb(14, 165, 233)'
-            ],
-            'warning' => [ // สีเหลือง/ส้ม
-                'bg' => 'rgb(254, 252, 232)', 'text' => 'rgb(161, 98, 7)', 'border' => 'rgb(254, 240, 138)', 'dot' => 'rgb(234, 179, 8)'
-            ],
-            'danger' => [ // สีแดง
-                'bg' => 'rgb(255, 241, 242)', 'text' => 'rgb(190, 18, 60)', 'border' => 'rgb(254, 205, 211)', 'dot' => 'rgb(244, 63, 94)'
-            ],
-            'secondary' => [ // สีเทา
-                'bg' => 'rgb(243, 244, 246)', 'text' => 'rgb(55, 65, 81)', 'border' => 'rgb(229, 231, 235)', 'dot' => 'rgb(107, 114, 128)'
-            ],
-        ];
+        $theme = strtolower(trim((string) $theme));
+        $theme = preg_replace('/^(bg|text|border)-/', '', $theme);
+        $allowedThemes = ['primary', 'secondary', 'success', 'info', 'warning', 'danger'];
+        if (!in_array($theme, $allowedThemes, true)) {
+            $theme = 'secondary';
+        }
 
-        // เลือกชุดสี ถ้าไม่มีให้ใช้สีเทา (secondary)
-        $color = $themes[$theme] ?? $themes['secondary'];
-
-        // สร้าง HTML
-        return '<span class="badge rounded-pill fw-bold border d-inline-flex align-items-center justify-content-center gap-1" ' .
-               'style="background-color: '.$color['bg'].'; color: '.$color['text'].'; border-color: '.$color['border'].'; font-size: 11px; padding: 4px 10px;">' .
-               '<span class="rounded-circle" style="width: 6px; height: 6px; background-color: '.$color['dot'].';"></span>' .
-               $text .
-               '</span>';
+        return '<span class="badge rounded-pill fw-semibold border d-inline-flex align-items-center justify-content-center gap-1 '
+            . 'bg-' . $theme . '-subtle text-' . $theme . '-emphasis border-' . $theme . '-subtle px-2 py-1">'
+            . '<i class="fa-solid fa-circle fa-2xs text-' . $theme . '-emphasis" aria-hidden="true"></i>'
+            . Html::encode((string) $text)
+            . '</span>';
     }
 }

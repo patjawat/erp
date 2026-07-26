@@ -75,7 +75,7 @@ $form = ActiveForm::begin([
     </div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('บันทึกข้อมูล', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php ActiveForm::end();

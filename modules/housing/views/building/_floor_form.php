@@ -18,7 +18,7 @@ $form = ActiveForm::begin(['id' => $formId]);
     <div class="col-md-8"><?= $form->field($model, 'description')->textarea(['rows' => 2]) ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton($isNewRecord ? 'เพิ่มชั้น' : 'บันทึกการแก้ไข', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php ActiveForm::end();

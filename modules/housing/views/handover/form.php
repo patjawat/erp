@@ -15,13 +15,13 @@ $locationName = implode(' / ', array_filter([
 ]));
 ?>
 <style>
-.handover-page{--ho-ink:#1a202c;--ho-muted:#4a5568;--ho-line:rgba(15,23,42,.1);--ho-surface:#fff;--ho-surface-2:#f7f9fc;--ho-primary:#0d6efd;color:var(--ho-ink)}
-.handover-shell{max-width:1120px;margin:0 auto}.handover-section{background:var(--ho-surface);border:1px solid var(--ho-line);border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-bottom:1rem}
+.handover-page{--ho-ink:var(--bs-emphasis-color);--ho-muted:var(--bs-secondary-color);--ho-line:var(--bs-border-color-translucent);--ho-surface:var(--bs-body-bg);--ho-surface-2:var(--bs-tertiary-bg);--ho-primary:var(--bs-primary);color:var(--ho-ink)}
+.handover-shell{max-width:1120px;margin:0 auto}.handover-section{background:var(--ho-surface);border:1px solid var(--ho-line);border-radius:10px;box-shadow:0 1px 2px var(--bs-border-color-translucent);margin-bottom:1rem}
 .handover-section__head{padding:.9rem 1.1rem;border-bottom:1px solid var(--ho-line);background:var(--ho-surface-2)}.handover-section__body{padding:1.1rem}
 .handover-title{font-size:.98rem;font-weight:600;margin:0}.handover-caption{font-size:.8rem;color:var(--ho-muted);margin-top:.2rem}
 .handover-context{display:flex;flex-wrap:wrap;gap:1.25rem}.handover-context>div{min-width:180px}.handover-context small{display:block;color:var(--ho-muted);margin-bottom:.15rem}
 .asset-table th{background:var(--ho-surface-2);font-size:.8rem;color:var(--ho-muted);font-weight:600}.asset-table td,.asset-table th{padding:.65rem .8rem;vertical-align:middle}
-.asset-check{width:1.1rem;height:1.1rem}.form-control,.form-select{min-height:42px;border-radius:8px}.form-control:focus,.form-select:focus{border-color:var(--ho-primary);box-shadow:0 0 0 3px rgba(13,110,253,.08)}
+.asset-check{width:1.1rem;height:1.1rem}.form-control,.form-select{min-height:42px;border-radius:8px}.form-control:focus,.form-select:focus{border-color:var(--ho-primary);box-shadow:0 0 0 3px var(--bs-primary-bg-subtle)}
 @media(max-width:767.98px){.handover-section__body{padding:.9rem}.asset-table thead{display:none}.asset-table,.asset-table tbody,.asset-table tr,.asset-table td{display:block;width:100%}.asset-table tr{padding:.8rem;border-bottom:1px solid var(--ho-line)}.asset-table td{border:0;padding:.25rem 0}.asset-table td[data-label]::before{content:attr(data-label);display:block;font-size:.75rem;color:var(--ho-muted);font-weight:600;margin-bottom:.15rem}}
 </style>
 <div class="container-fluid py-3 handover-page">
@@ -51,7 +51,7 @@ $locationName = implode(' / ', array_filter([
 <section class="handover-section">
     <div class="handover-section__head"><h2 class="handover-title">ตรวจรับอุปกรณ์และของใช้</h2><div class="handover-caption">ตรวจสภาพและทำเครื่องหมายรับทราบทุกรายการก่อนลงนาม</div></div>
     <?php if ($assetItems === []): ?>
-        <div class="handover-section__body text-center text-muted">สถานที่นี้ยังไม่มีรายการอุปกรณ์ สามารถดำเนินการบันทึกสภาพห้องต่อได้</div>
+        <div class="handover-section__body text-center text-body-secondary">สถานที่นี้ยังไม่มีรายการอุปกรณ์ สามารถดำเนินการบันทึกสภาพห้องต่อได้</div>
     <?php else: ?>
         <div class="table-responsive"><table class="table asset-table mb-0"><thead><tr><th>รายการ</th><th style="width:110px">จำนวน</th><th style="width:190px">สภาพเมื่อรับมอบ</th><th>หมายเหตุ</th><th class="text-center" style="width:90px">ตรวจแล้ว</th></tr></thead><tbody>
         <?php foreach ($assetItems as $item): $key = (string)$item['asset_id']; ?>
@@ -81,7 +81,7 @@ $locationName = implode(' / ', array_filter([
     </div></div>
 </section>
 <div class="d-flex flex-wrap justify-content-end gap-2">
-    <?= Html::a('ยกเลิก', ['/housing/request/view', 'id' => $request->id], ['class' => 'btn btn-light']) ?>
+    <?= Html::a('ยกเลิก', ['/housing/request/view', 'id' => $request->id], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::submitButton('บันทึกร่างเอกสารรับมอบ', ['class' => 'btn btn-primary px-4']) ?>
 </div>
 <?php ActiveForm::end(); ?>

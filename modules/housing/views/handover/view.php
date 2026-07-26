@@ -40,18 +40,18 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <div class="row g-3">
 <div class="col-lg-8">
     <div class="card border-0 shadow-sm mb-3"><div class="card-header bg-body fw-semibold">อุปกรณ์และของใช้ที่ตรวจรับ</div>
-    <?php if ($model->assetItems() === []): ?><div class="card-body text-muted">ไม่มีรายการอุปกรณ์</div><?php else: ?><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>รายการ</th><th>จำนวน</th><th>สภาพ</th><th>หมายเหตุ</th><th>ตรวจแล้ว</th></tr></thead><tbody>
+    <?php if ($model->assetItems() === []): ?><div class="card-body text-body-secondary">ไม่มีรายการอุปกรณ์</div><?php else: ?><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>รายการ</th><th>จำนวน</th><th>สภาพ</th><th>หมายเหตุ</th><th>ตรวจแล้ว</th></tr></thead><tbody>
     <?php foreach ($model->assetItems() as $item): ?><tr><td><strong><?= Html::encode($item['item_name']) ?></strong></td><td><?= Html::encode(Yii::$app->formatter->asDecimal($item['quantity'], 2) . ' ' . $item['unit_name']) ?></td><td><?= Html::encode(AssetAssignment::conditionOptions()[$item['condition']] ?? $item['condition']) ?></td><td><?= Html::encode($item['note'] ?: '—') ?></td><td><?= $item['acknowledged'] ? '<span class="text-success">ตรวจแล้ว</span>' : '<span class="text-danger">ยังไม่ตรวจ</span>' ?></td></tr><?php endforeach; ?>
     </tbody></table></div><?php endif; ?></div>
     <div class="card border-0 shadow-sm"><div class="card-header bg-body fw-semibold">สภาพห้องและรูปถ่าย</div><div class="card-body">
         <p><?= nl2br(Html::encode($model->condition_note ?: 'ไม่มีหมายเหตุเพิ่มเติม')) ?></p>
-        <?php if ($photos !== []): ?><div class="row g-2"><?php foreach ($photos as $photo): ?><div class="col-6 col-md-4"><img src="<?= Html::encode(FileManagerHelper::getImg($photo->id)) ?>" class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" alt="สภาพห้องวันรับมอบ"></div><?php endforeach; ?></div><?php else: ?><div class="small text-muted">ยังไม่มีรูปถ่ายสภาพห้อง</div><?php endif; ?>
+        <?php if ($photos !== []): ?><div class="row g-2"><?php foreach ($photos as $photo): ?><div class="col-6 col-md-4"><img src="<?= Html::encode(FileManagerHelper::getImg($photo->id)) ?>" class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" alt="สภาพห้องวันรับมอบ"></div><?php endforeach; ?></div><?php else: ?><div class="small text-body-secondary">ยังไม่มีรูปถ่ายสภาพห้อง</div><?php endif; ?>
     </div></div>
 </div>
 <div class="col-lg-4">
     <div class="card border-0 shadow-sm"><div class="card-header bg-body fw-semibold">การลงนามรับมอบ</div><div class="card-body">
-        <div class="mb-3"><div class="small text-muted">ผู้ส่งมอบ</div><strong><?= Html::encode($model->handed_over_by_name) ?></strong><?php if ($model->handed_over_signed_at): ?><div class="small text-success mt-1">ลงนามแล้ว <?= Yii::$app->formatter->asDatetime($model->handed_over_signed_at, 'php:d/m/Y H:i') ?></div><?php endif; ?></div>
-        <div class="mb-3"><div class="small text-muted">ผู้รับมอบ</div><strong><?= Html::encode($model->received_by_name) ?></strong><?php if ($model->received_signed_at): ?><div class="small text-success mt-1">ลงนามแล้ว <?= Yii::$app->formatter->asDatetime($model->received_signed_at, 'php:d/m/Y H:i') ?></div><?php endif; ?></div>
+        <div class="mb-3"><div class="small text-body-secondary">ผู้ส่งมอบ</div><strong><?= Html::encode($model->handed_over_by_name) ?></strong><?php if ($model->handed_over_signed_at): ?><div class="small text-success mt-1">ลงนามแล้ว <?= Yii::$app->formatter->asDatetime($model->handed_over_signed_at, 'php:d/m/Y H:i') ?></div><?php endif; ?></div>
+        <div class="mb-3"><div class="small text-body-secondary">ผู้รับมอบ</div><strong><?= Html::encode($model->received_by_name) ?></strong><?php if ($model->received_signed_at): ?><div class="small text-success mt-1">ลงนามแล้ว <?= Yii::$app->formatter->asDatetime($model->received_signed_at, 'php:d/m/Y H:i') ?></div><?php endif; ?></div>
         <?php if ($model->status === Handover::STATUS_DRAFT && !$model->handed_over_signed_at): ?>
         <div class="alert alert-info small">ผู้ดูแลลงนามในฐานะผู้ส่งมอบก่อน จากนั้นผู้รับมอบจะได้รับแจ้งให้ลงนามผ่านเมนูบ้านพักของตนเอง</div>
         <?= Html::beginForm(['sign-sender', 'id' => $model->id], 'post', ['class' => 'd-grid gap-3']) ?>

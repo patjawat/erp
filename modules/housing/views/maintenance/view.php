@@ -7,7 +7,7 @@ $this->title = $model->ticket_no;
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'maintenance']) ?><?php $this->endBlock();
 $renderPhotos = static function (array $photos, string $label) use ($model): string {
-    if ($photos === []) return '<div class="text-muted small">ยังไม่มีรูปภาพ</div>';
+    if ($photos === []) return '<div class="text-body-secondary small">ยังไม่มีรูปภาพ</div>';
     $html = '<div class="row g-2">';
     foreach ($photos as $photo) {
         $html .= '<div class="col-6 col-md-3"><img class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" src="' . Html::encode(FileManagerHelper::getImg($photo->id)) . '" alt="' . Html::encode($label) . '" loading="lazy" decoding="async">';
@@ -20,7 +20,7 @@ $renderPhotos = static function (array $photos, string $label) use ($model): str
     <?php foreach (['success', 'warning', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?>
         <div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?>" role="alert"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div>
     <?php endif; endforeach; ?>
-    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><div><h1 class="h4 mb-1"><?= Html::encode($model->title) ?></h1><div class="text-muted"><?= Html::encode($model->building->name ?? '') ?> · <?= Html::encode($model->location_note ?: 'ไม่ระบุจุด') ?></div></div><div><?= Html::a('<i data-lucide="pencil"></i> ปรับปรุงรายการ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-xl']) ?> <?= Html::a('กลับรายการ', ['index', 'building_id' => $model->building_id], ['class' => 'btn btn-outline-secondary']) ?></div></div>
+    <div class="d-flex flex-wrap justify-content-between gap-3 mb-3"><div><h1 class="h4 mb-1"><?= Html::encode($model->title) ?></h1><div class="text-body-secondary"><?= Html::encode($model->building->name ?? '') ?> · <?= Html::encode($model->location_note ?: 'ไม่ระบุจุด') ?></div></div><div><?= Html::a('<i data-lucide="pencil"></i> ปรับปรุงรายการ', ['update', 'id' => $model->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-xl']) ?> <?= Html::a('กลับรายการ', ['index', 'building_id' => $model->building_id], ['class' => 'btn btn-outline-secondary']) ?></div></div>
     <div class="row g-3">
         <div class="col-lg-8"><div class="card border-0 shadow-sm"><div class="card-body">
             <h2 class="h6">รายละเอียดปัญหา</h2><p><?= nl2br(Html::encode($model->description)) ?></p><hr>

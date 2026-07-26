@@ -13,7 +13,7 @@ $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this-
         <?= $form->field($model, 'request_no')->textInput(['readonly' => true]) ?>
         <?= $form->field($model, 'preferred_building_type')->dropDownList(Building::typeOptions(), ['prompt' => 'ไม่ระบุ']) ?>
         <?= $form->field($model, 'reason')->textarea(['rows' => 5, 'placeholder' => 'ระบุเหตุผลและข้อมูลที่ต้องการให้คณะกรรมการพิจารณา']) ?>
-        <div class="d-flex justify-content-end gap-2"><?= Html::submitButton('บันทึกร่าง', ['class' => 'btn btn-light']) ?><?= Html::submitButton('ส่งคำขอ', ['class' => 'btn btn-primary', 'name' => 'submit', 'value' => '1']) ?></div>
+        <div class="d-flex justify-content-end gap-2"><?= Html::submitButton('บันทึกร่าง', ['class' => 'btn btn-outline-secondary']) ?><?= Html::submitButton('ส่งคำขอ', ['class' => 'btn btn-primary', 'name' => 'submit', 'value' => '1']) ?></div>
         <?php ActiveForm::end(); ?>
     </div></div>
 </div>

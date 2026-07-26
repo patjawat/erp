@@ -12,7 +12,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
 <?= $form->field($model, 'caption')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ภาพภายในห้อง มุมด้านหน้าต่าง']) ?>
 <?= $form->field($model, 'is_primary')->checkbox() ?>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('เพิ่มรูปภาพ', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php

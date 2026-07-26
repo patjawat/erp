@@ -144,7 +144,11 @@ $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile
                     <?php endif; ?>
                 </div>
             </div>
-            <button class="header-btn" id="toggleNavbar">
+            <button type="button"
+                class="header-btn"
+                id="toggleNavbar"
+                aria-controls="erpPrimaryNavbar"
+                aria-expanded="false">
                 <i data-lucide="menu"></i>
             </button>
             <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><i data-lucide="maximize"></i> </button>
@@ -209,14 +213,20 @@ $(function () {
     /* ======================
      * Toggle Navbar
      * ====================== */
-    $('#toggleNavbar').on('click', function () {
+    $(document)
+        .off('click.erpNavbar', '#toggleNavbar')
+        .on('click.erpNavbar', '#toggleNavbar', function (event) {
+        event.preventDefault();
         const nav = $('.navbar-fixed-container');
+        const willOpen = !nav.hasClass('show');
 
-        if (!nav.hasClass('show')) {
+        if (willOpen) {
             nav.removeClass('d-none').addClass('show');
         } else {
             nav.removeClass('show');
         }
+
+        $(this).attr('aria-expanded', String(willOpen));
     });
 
     /* ======================
@@ -224,10 +234,27 @@ $(function () {
      * ค่าเริ่มต้นถูก render จากฝั่ง PHP แล้ว ที่นี่จัดการเฉพาะตอนกดสลับ
      * ====================== */
     function erpSetThemeIcon(isDark) {
-        var el = document.querySelector('#toggleTheme i');
-        if (!el) return;
-        el.setAttribute('data-lucide', isDark ? 'sun' : 'moon-star');
-        if (window.lucide && lucide.createIcons) { lucide.createIcons(); }
+        var button = document.getElementById('toggleTheme');
+        if (!button) return;
+
+        var currentIcon = button.querySelector('svg.lucide, i[data-lucide]');
+        var nextIcon = document.createElement('i');
+        nextIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon-star');
+        nextIcon.setAttribute('aria-hidden', 'true');
+
+        if (currentIcon) {
+            currentIcon.replaceWith(nextIcon);
+        } else {
+            button.prepend(nextIcon);
+        }
+
+        var actionLabel = isDark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด';
+        button.setAttribute('title', actionLabel);
+        button.setAttribute('aria-label', actionLabel);
+
+        if (window.lucide && window.lucide.createIcons) {
+            window.lucide.createIcons();
+        }
     }
     $('#toggleTheme').on('click', function () {
         var toDark = document.documentElement.getAttribute('data-bs-theme') !== 'dark';

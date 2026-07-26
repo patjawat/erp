@@ -18,31 +18,31 @@ $statusMeta = [
     Unit::STATUS_INACTIVE => ['label' => 'งดใช้งาน', 'class' => 'is-inactive'],
 ];
 $this->registerCss(<<<CSS
-.housing-board{--hb-line:rgba(15,23,42,.09);--hb-ink:#1a202c;--hb-muted:#64748b}
-.housing-toolbar,.housing-room-board{background:#fff;border:1px solid var(--hb-line);border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.housing-board{--hb-line:var(--bs-border-color-translucent);--hb-ink:var(--bs-emphasis-color);--hb-muted:var(--bs-secondary-color)}
+.housing-toolbar,.housing-room-board{background:var(--bs-body-bg);border:1px solid var(--hb-line);border-radius:10px;box-shadow:0 1px 2px var(--bs-border-color-translucent)}
 .housing-status-strip{display:flex;gap:.5rem;overflow-x:auto;padding:.25rem 0 .5rem;scrollbar-width:thin}
-.housing-status-filter{display:inline-flex;align-items:center;gap:.45rem;min-height:40px;padding:.45rem .75rem;border:1px solid var(--hb-line);border-radius:8px;background:#fff;color:var(--hb-ink);text-decoration:none;white-space:nowrap}
-.housing-status-filter:hover,.housing-status-filter:focus-visible{border-color:rgba(13,110,253,.35);color:#0a58ca}
-.housing-status-filter.is-active{border-color:#0d6efd;box-shadow:0 0 0 3px rgba(13,110,253,.08)}
+.housing-status-filter{display:inline-flex;align-items:center;gap:.45rem;min-height:40px;padding:.45rem .75rem;border:1px solid var(--hb-line);border-radius:8px;background:var(--bs-body-bg);color:var(--hb-ink);text-decoration:none;white-space:nowrap}
+.housing-status-filter:hover,.housing-status-filter:focus-visible{border-color:var(--bs-primary-border-subtle);color:var(--bs-primary-text-emphasis)}
+.housing-status-filter.is-active{border-color:var(--bs-primary);box-shadow:0 0 0 3px var(--bs-primary-bg-subtle)}
 .housing-status-filter__count{font-variant-numeric:tabular-nums;font-weight:700}
 .housing-building+.housing-building{border-top:1px solid var(--hb-line)}
-.housing-building__head{padding:1rem 1.1rem;background:#f7f9fc;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.housing-building__head{padding:1rem 1.1rem;background:var(--bs-tertiary-bg);display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .housing-floor{padding:1rem 1.1rem}
 .housing-floor+.housing-floor{border-top:1px dashed var(--hb-line)}
-.housing-floor__label{font-size:.8rem;font-weight:600;color:#4a5568;margin-bottom:.65rem}
+.housing-floor__label{font-size:.8rem;font-weight:600;color:var(--bs-secondary-color);margin-bottom:.65rem}
 .housing-unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem}
-.housing-unit{position:relative;display:flex;flex-direction:column;min-height:145px;padding:.85rem;border:1px solid var(--hb-line);border-radius:8px;color:var(--hb-ink);background:#fff;text-decoration:none;transition:border-color 120ms ease,box-shadow 120ms ease}
-.housing-unit:hover,.housing-unit:focus-visible{border-color:rgba(13,110,253,.35);box-shadow:0 6px 18px rgba(15,23,42,.06);color:var(--hb-ink)}
+.housing-unit{position:relative;display:flex;flex-direction:column;min-height:145px;padding:.85rem;border:1px solid var(--hb-line);border-radius:8px;color:var(--hb-ink);background:var(--bs-body-bg);text-decoration:none;transition:border-color 120ms ease,box-shadow 120ms ease}
+.housing-unit:hover,.housing-unit:focus-visible{border-color:var(--bs-primary-border-subtle);box-shadow:0 6px 18px var(--bs-border-color-translucent);color:var(--hb-ink)}
 .housing-unit__head{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
 .housing-unit__code{font-weight:700}.housing-unit__type{font-size:.75rem;color:var(--hb-muted);margin-top:.15rem}
 .housing-unit__status{font-size:.72rem;font-weight:600;border-radius:999px;padding:.25rem .5rem}
-.housing-unit__status.is-vacant{background:rgba(21,128,61,.10);color:#15803d}
-.housing-unit__status.is-occupied{background:rgba(13,110,253,.08);color:#0a58ca}
-.housing-unit__status.is-reserved,.housing-unit__status.is-move-out{background:rgba(180,83,9,.10);color:#b45309}
-.housing-unit__status.is-maintenance{background:rgba(185,28,28,.10);color:#b91c1c}
-.housing-unit__status.is-inactive{background:#eef2f7;color:#4a5568}
+.housing-unit__status.is-vacant{background:var(--bs-success-bg-subtle);color:var(--bs-success-text-emphasis)}
+.housing-unit__status.is-occupied{background:var(--bs-primary-bg-subtle);color:var(--bs-primary-text-emphasis)}
+.housing-unit__status.is-reserved,.housing-unit__status.is-move-out{background:var(--bs-warning-bg-subtle);color:var(--bs-warning-text-emphasis)}
+.housing-unit__status.is-maintenance{background:var(--bs-danger-bg-subtle);color:var(--bs-danger-text-emphasis)}
+.housing-unit__status.is-inactive{background:var(--bs-tertiary-bg);color:var(--bs-secondary-color)}
 .housing-unit__rooms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem;margin-top:.8rem}
-.housing-room{padding:.45rem .5rem;border-radius:6px;background:#f7f9fc;font-size:.76rem;min-width:0}
+.housing-room{padding:.45rem .5rem;border-radius:6px;background:var(--bs-tertiary-bg);font-size:.76rem;min-width:0}
 .housing-room strong,.housing-room span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .housing-room span{color:var(--hb-muted);margin-top:.1rem}
 .housing-unit__empty{margin:auto 0;color:var(--hb-muted);font-size:.82rem}
@@ -75,7 +75,7 @@ CSS);
                 <?= Html::dropDownList('building_id', $filters['building_id'], $buildingOptions, ['id' => 'housing-building', 'class' => 'form-select', 'prompt' => 'ทุกอาคาร']) ?>
             </div>
             <div class="col-4 col-lg-auto"><button class="btn btn-primary w-100">ค้นหา</button></div>
-            <div class="col-12 col-lg-auto"><?= Html::a('ล้างตัวกรอง', ['index'], ['class' => 'btn btn-light w-100']) ?></div>
+            <div class="col-12 col-lg-auto"><?= Html::a('ล้างตัวกรอง', ['index'], ['class' => 'btn btn-outline-secondary w-100']) ?></div>
         </div>
     </form>
 
@@ -109,9 +109,9 @@ CSS);
                 <header class="housing-building__head">
                     <div>
                         <h2 class="h6 fw-semibold mb-1"><?= Html::encode($building->name) ?></h2>
-                        <div class="small text-muted"><?= Html::encode(Building::typeOptions()[$building->building_type] ?? $building->building_type) ?></div>
+                        <div class="small text-body-secondary"><?= Html::encode(Building::typeOptions()[$building->building_type] ?? $building->building_type) ?></div>
                     </div>
-                    <span class="small text-muted"><?= array_sum(array_map('count', $floorGroups)) ?> ยูนิต</span>
+                    <span class="small text-body-secondary"><?= array_sum(array_map('count', $floorGroups)) ?> ยูนิต</span>
                 </header>
                 <?php foreach ($floorGroups as $floorId => $units): ?>
                     <?php $floorName = $floorId && $units[0]->floor ? $units[0]->floor->name : ($building->building_type === Building::TYPE_HOUSE ? 'บ้านพัก' : 'ไม่ระบุชั้น'); ?>
@@ -141,7 +141,7 @@ CSS);
             </section>
         <?php endforeach; ?>
         <?php if (!$rendered): ?>
-            <div class="housing-empty"><div class="fw-semibold">ไม่พบห้องตามตัวกรอง</div><div class="small text-muted mt-1">ลองเปลี่ยนอาคาร สถานะ หรือคำค้นหา</div></div>
+            <div class="housing-empty"><div class="fw-semibold">ไม่พบห้องตามตัวกรอง</div><div class="small text-body-secondary mt-1">ลองเปลี่ยนอาคาร สถานะ หรือคำค้นหา</div></div>
         <?php endif; ?>
     </div>
 </div>

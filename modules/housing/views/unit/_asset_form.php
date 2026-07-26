@@ -22,7 +22,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 2]) ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('บันทึกรายการ', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php

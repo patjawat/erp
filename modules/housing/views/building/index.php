@@ -25,7 +25,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <?php endif; ?>
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-body d-flex align-items-center justify-content-between gap-2">
-            <div><div class="fw-semibold">บ้านพักและแฟลต</div><div class="small text-muted">ข้อมูลอาคารหลักก่อนแบ่งชั้นและยูนิต</div></div>
+            <div><div class="fw-semibold">บ้านพักและแฟลต</div><div class="small text-body-secondary">ข้อมูลอาคารหลักก่อนแบ่งชั้นและยูนิต</div></div>
             <?= Html::a('<i data-lucide="plus"></i> เพิ่มรายการ', ['create', 'title' => 'เพิ่มบ้านพัก/แฟลต'], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-lg']) ?>
         </div>
         <?php Pjax::begin(['id' => 'housing-building-container', 'enablePushState' => false]); ?>
@@ -73,13 +73,13 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             <td>
                                 <?php if ($model->hasActiveResponsibleEmployee()): ?>
                                     <div class="fw-semibold"><?= Html::encode($model->responsibleEmployee->fullname()) ?></div>
-                                    <div class="small text-muted"><?= Html::encode($model->responsibleEmployee->positionName()) ?></div>
+                                    <div class="small text-body-secondary"><?= Html::encode($model->responsibleEmployee->positionName()) ?></div>
                                 <?php else: ?>
                                     <div class="text-warning-emphasis fw-semibold">
                                         <?= Html::encode($model->responsibleStatusLabel()) ?>
                                     </div>
                                     <?php if ($model->responsibleEmployee !== null): ?>
-                                        <div class="small text-muted"><?= Html::encode($model->responsibleEmployee->fullname()) ?></div>
+                                        <div class="small text-body-secondary"><?= Html::encode($model->responsibleEmployee->fullname()) ?></div>
                                     <?php endif; ?>
                                     <?= Html::a('กำหนดใหม่', ['update', 'id' => $model->id, 'title' => 'กำหนดผู้รับผิดชอบ'], [
                                         'class' => 'btn btn-sm btn-outline-warning open-modal mt-1',
@@ -117,7 +117,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             <?php endif; ?>
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between gap-2"><strong><?= Html::encode($model->code . ' · ' . $model->name) ?></strong><span><?= Html::encode(Building::typeOptions()[$model->building_type] ?? '') ?></span></div>
-                                <div class="small text-muted mt-1"><?= number_format(count($model->floors)) ?> ชั้น · <?= number_format(count($model->units)) ?> ยูนิต</div>
+                                <div class="small text-body-secondary mt-1"><?= number_format(count($model->floors)) ?> ชั้น · <?= number_format(count($model->units)) ?> ยูนิต</div>
                                 <?php if ($model->hasActiveResponsibleEmployee()): ?>
                                     <div class="small mt-1">ผู้รับผิดชอบ: <?= Html::encode($model->responsibleEmployee->fullname()) ?></div>
                                 <?php else: ?>
@@ -151,7 +151,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <?php if ($dataProvider->totalCount === 0): ?><div class="text-center py-5"><div class="fw-semibold">ยังไม่มีข้อมูลบ้านพักหรือแฟลต</div><div class="text-muted small mt-1">เพิ่มอาคารแรกเพื่อเริ่มจัดวางยูนิตและห้อง</div></div><?php endif; ?>
+            <?php if ($dataProvider->totalCount === 0): ?><div class="text-center py-5"><div class="fw-semibold">ยังไม่มีข้อมูลบ้านพักหรือแฟลต</div><div class="text-body-secondary small mt-1">เพิ่มอาคารแรกเพื่อเริ่มจัดวางยูนิตและห้อง</div></div><?php endif; ?>
         </div>
         <div class="card-footer bg-body"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></div>
         <?php Pjax::end(); ?>

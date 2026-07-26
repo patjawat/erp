@@ -13,9 +13,9 @@ $form = ActiveForm::begin(['id' => 'housing-checkout-request-form', 'options' =>
 </div>
 <?= $form->field($model, 'requested_date')->input('date', ['min' => date('Y-m-d')]) ?>
 <?= $form->field($model, 'move_out_reason')->textarea(['rows' => 4, 'placeholder' => 'ระบุเหตุผลและข้อมูลที่ผู้ดูแลควรทราบ']) ?>
-<div class="small text-muted mb-3">หลังส่งคำขอ ผู้ดูแลจะตรวจสภาพ อุปกรณ์ เลขมิเตอร์ และจัดทำเอกสารให้ลงนาม</div>
+<div class="small text-body-secondary mb-3">หลังส่งคำขอ ผู้ดูแลจะตรวจสภาพ อุปกรณ์ เลขมิเตอร์ และจัดทำเอกสารให้ลงนาม</div>
 <div class="d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('ส่งคำขอคืนบ้านพัก', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php ActiveForm::end();

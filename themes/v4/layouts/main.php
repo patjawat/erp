@@ -258,7 +258,8 @@ AppAsset::register($this);
 
 
 
-    <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center">
+    <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center"
+        id="erpPrimaryNavbar">
         <div class="erp-nav-list">
             <?= $this->render('navbar') ?>
         </div>

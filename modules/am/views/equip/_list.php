@@ -65,7 +65,7 @@ $receiveAgeText = static function ($receiveDate): string {
     return 'ผ่านมา ' . implode(' ', $parts);
 };
 
-// สิทธิแก้ไข inline — ใช้เกณฑ์เดียวกับปุ่ม "แก้ไข" ในคอลัมน์จัดการ
+// สิทธิแก้ไข inline ใช้เกณฑ์เดียวกับปุ่ม "แก้ไข" ในคอลัมน์จัดการ
 $canEdit = Yii::$app->user->can('asset');
 
 // สร้าง attribute สำหรับเซลล์ที่แก้ไขได้ผ่าน popover
@@ -81,31 +81,92 @@ $qedit = static function (string $field, string $type, $value, string $title) us
 };
 ?>
 
+<style>
+.equip-register-table {
+    min-width: 1420px;
+    color: var(--bs-body-color);
+}
+.equip-register-table > thead {
+    background-color: var(--bs-tertiary-bg);
+}
+.equip-register-table > thead > tr,
+.equip-register-table > tbody > tr:not(.equip-group-row) {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+.equip-register-table .equip-table-heading {
+    color: var(--bs-secondary-color);
+    font-size: 0.6875rem;
+    letter-spacing: 0.05em;
+}
+.equip-col-select { width: 44px; }
+.equip-col-asset { min-width: 220px; }
+.equip-col-gfmis { width: 140px; }
+.equip-col-category { width: 160px; }
+.equip-col-assignment { width: 224px; }
+.equip-col-date { width: 155px; }
+.equip-col-price { width: 144px; }
+.equip-col-risk { width: 140px; }
+.equip-col-status { width: 112px; }
+.equip-col-actions { width: 200px; }
+.equip-register-table .equip-group-row > td {
+    background-color: var(--bs-secondary-bg);
+    border-top: 1px solid var(--bs-border-color);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.equip-group-title {
+    color: var(--bs-emphasis-color);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+.equip-group-count,
+.equip-meta-xs {
+    color: var(--bs-secondary-color);
+    font-size: 0.6875rem;
+}
+.equip-thumb-shell {
+    width: 56px;
+    height: 56px;
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-tertiary-color);
+}
+.equip-thumb-image {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+}
+.equip-asset-title {
+    max-width: 200px;
+    color: var(--bs-emphasis-color);
+    cursor: pointer;
+}
+.equip-assignment-value { max-width: 180px; }
+.equip-risk-stack { min-width: 92px; }
+</style>
 
 <div class="equip-list-scroll">
     <div class="table-responsive">
-        <table class="table equip-register-table mb-0">
-            <thead style="background-color: white;">
-                <tr style="border-bottom: 1px solid rgb(226, 232, 240);">
+        <table class="table align-middle equip-register-table mb-0">
+            <thead>
+                <tr>
                     <?php if ($canEdit): ?>
-                        <th class="px-3 py-3 border-0 text-center align-middle" style="width: 44px;">
+                        <th class="equip-col-select px-3 py-3 border-0 text-center align-middle">
                             <input type="checkbox" class="form-check-input equip-bulk-all" aria-label="เลือกทั้งหมด">
                         </th>
                     <?php endif; ?>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="min-width: 220px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ข้อมูลครุภัณฑ์</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 140px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">GFMIS</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 160px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">หมวดหมู่</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 224px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 155px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">วันที่รับ</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
-                    <th class="px-3 py-3 border-0 text-uppercase fw-bold text-center" style="width: 140px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ · ความเสี่ยง</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
-                    <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
+                    <th class="equip-table-heading equip-col-asset px-4 py-3 border-0 text-uppercase fw-bold">ข้อมูลครุภัณฑ์</th>
+                    <th class="equip-table-heading equip-col-gfmis px-4 py-3 border-0 text-uppercase fw-bold">GFMIS</th>
+                    <th class="equip-table-heading equip-col-category px-4 py-3 border-0 text-uppercase fw-bold">หมวดหมู่</th>
+                    <th class="equip-table-heading equip-col-assignment px-4 py-3 border-0 text-uppercase fw-bold">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
+                    <th class="equip-table-heading equip-col-date px-4 py-3 border-0 text-uppercase fw-bold text-center">วันที่รับ</th>
+                    <th class="equip-table-heading equip-col-price px-4 py-3 border-0 text-uppercase fw-bold text-end">ราคาแรกรับ (฿)</th>
+                    <th class="equip-table-heading equip-col-risk px-3 py-3 border-0 text-uppercase fw-bold text-center">สภาพ · ความเสี่ยง</th>
+                    <th class="equip-table-heading equip-col-status px-4 py-3 border-0 text-uppercase fw-bold text-center">สถานะ</th>
+                    <th class="equip-table-heading equip-col-actions px-4 py-3 border-0 text-uppercase fw-bold text-center">การจัดการ</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                // จัดกลุ่มรายการตาม "ประเภท" (asset_type) — หมวดหมู่ (asset_category) แสดงเป็น badge รายแถว
+                // จัดกลุ่มรายการตาม "ประเภท" (asset_type); หมวดหมู่ (asset_category) แสดงเป็น badge รายแถว
                 $groups = [];
                 foreach ($dataProvider->getModels() as $m) {
                     $groupTitle = trim((string) ($m->assetType?->title ?? '')) ?: 'ไม่ระบุประเภท';
@@ -114,9 +175,9 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                 ?>
                 <?php foreach ($groups as $groupTitle => $groupItems): ?>
                     <tr class="equip-group-row">
-                        <td colspan="<?= $canEdit ? 10 : 9 ?>" class="px-4 py-2 border-0" style="background-color: rgb(248, 250, 252); border-top: 1px solid rgb(226, 232, 240); border-bottom: 1px solid rgb(226, 232, 240);">
-                            <span class="fw-bold text-uppercase" style="font-size: 12px; letter-spacing: 0.05em; color: rgb(71, 85, 105);"><?= Html::encode((string) $groupTitle) ?></span>
-                            <span class="ms-2" style="font-size: 11px; color: rgb(148, 163, 184);">(<?= count($groupItems) ?>)</span>
+                        <td colspan="<?= $canEdit ? 10 : 9 ?>" class="px-4 py-2">
+                            <span class="equip-group-title fw-bold text-uppercase"><?= Html::encode((string) $groupTitle) ?></span>
+                            <span class="equip-group-count ms-2">(<?= count($groupItems) ?>)</span>
                         </td>
                     </tr>
                     <?php foreach ($groupItems as $item): ?>
@@ -129,7 +190,7 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                     if ($location === '') {
                         $location = $item->departmentName();
                     }
-                    // คอลัมน์ "หมวดหมู่" อิงหมวดทรัพย์สิน (asset_category) เท่านั้น — ไม่ fallback ไปประเภท
+                    // คอลัมน์ "หมวดหมู่" อิงหมวดทรัพย์สิน (asset_category) เท่านั้น ไม่ fallback ไปประเภท
                     $catTitle = trim((string) ($item->assetCategory?->title ?? ''));
                     $catUnset = $catTitle === '';
                     if ($catUnset) {
@@ -144,7 +205,7 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                     $ownerName = $ownerEmp?->fullname ?: '';
                     ?>
 
-                    <tr data-qedit-id="<?= (int) $item->id ?>" style="border-bottom: 1px solid rgb(241, 245, 249);">
+                    <tr data-qedit-id="<?= (int) $item->id ?>">
                         <?php if ($canEdit): ?>
                             <td class="px-3 py-3 border-0 text-center align-middle">
                                 <input type="checkbox" class="form-check-input equip-bulk-check" value="<?= (int) $item->id ?>" aria-label="เลือกรายการ">
@@ -152,32 +213,31 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                         <?php endif; ?>
                         <td class="px-4 py-3 border-0">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 border" style="width: 40px; height: 40px; background-color: rgb(248, 250, 252); border-color: rgb(226, 232, 240); color: rgb(148, 163, 184);">
+                                <div class="equip-thumb-shell rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 border">
                                     <?= Html::img(
                                         $item->ShowImg()['image'],
                                         [
-                                            'class' => 'rounded border flex-shrink-0',
-                                            'style' => 'width:56px;height:56px;object-fit:cover;',
+                                            'class' => 'equip-thumb-image rounded border flex-shrink-0',
                                             'alt' => $titleName,
                                         ]
                                     ) ?>
                                 </div>
-                                <div><span class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 200px;"><?= $titleName; ?></span>
-                                    <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);"><span><?= $item->code; ?></span></div>
+                                <div><span class="equip-asset-title fw-bold d-block text-truncate"><?= Html::encode($titleName) ?></span>
+                                    <div class="equip-meta-xs d-flex align-items-center mt-1 font-monospace"><span><?= Html::encode($item->code) ?></span></div>
                                     <?php if ($licensePlate !== ''): ?>
-                                        <div class="d-flex align-items-center mt-1"><span style="font-size: 11px; color: rgb(100, 116, 139);">ทะเบียน :</span> <span class="fw-bold"><?= Html::encode($licensePlate) ?></span></div>
+                                        <div class="d-flex align-items-center mt-1 gap-1"><span class="equip-meta-xs">ทะเบียน:</span> <span class="fw-bold small text-body"><?= Html::encode($licensePlate) ?></span></div>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </td>
                         <td class="px-4 py-3 border-0">
-                            <span class="font-monospace" style="font-size: 12px; color: rgb(71, 85, 105);"><?= Html::encode($item->gfmis ?: '-') ?></span>
+                            <span class="font-monospace small text-body-secondary"><?= Html::encode($item->gfmis ?: '-') ?></span>
                         </td>
                         <td class="px-4 py-3 border-0">
                             <?php if ($catUnset): ?>
-                                <?php $catBadge = '<span class="badge rounded-2 fw-medium bg-warning text-dark" style="font-size: 11px; padding: 4px 10px;">' . Html::encode($catTitle) . '</span>'; ?>
+                                <?php $catBadge = '<span class="badge rounded-2 fw-medium bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">' . Html::encode($catTitle) . '</span>'; ?>
                             <?php else: ?>
-                                <?php $catBadge = '<span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;">' . Html::encode($catTitle) . '</span>'; ?>
+                                <?php $catBadge = '<span class="badge rounded-2 fw-medium bg-body-tertiary text-body-secondary border px-2 py-1">' . Html::encode($catTitle) . '</span>'; ?>
                             <?php endif; ?>
                             <?php if ($canEdit): ?>
                                 <a href="<?= \yii\helpers\Url::to(['/am/equip/quick-edit', 'id' => $item->id, 'section' => 'category']) ?>" class="open-modal qedit-modal text-decoration-none" data-size="modal-md" title="เปลี่ยนประเภท / หมวดหมู่"><?= $catBadge ?></a>
@@ -188,8 +248,8 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                         <td class="px-4 py-3 border-0">
                             <?php
                             $assignBlock = '<div class="d-flex flex-column gap-1">'
-                                . '<div class="d-flex align-items-center gap-2" style="color: rgb(30, 41, 59);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin flex-shrink-0" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="fw-semibold text-truncate" style="font-size: 14px; max-width: 180px;">' . Html::encode($item->departmentName() ?: '—') . '</span></div>'
-                                . '<div class="d-flex align-items-center gap-2" style="color: rgb(100, 116, 139);"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user flex-shrink-0" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="text-truncate" style="font-size: 12px; max-width: 180px;">' . Html::encode($ownerName ?: '—') . '</span></div>'
+                                . '<div class="d-flex align-items-center gap-2 text-body"><i class="bi bi-geo-alt text-body-secondary flex-shrink-0" aria-hidden="true"></i><span class="equip-assignment-value fw-semibold text-truncate">' . Html::encode($item->departmentName() ?: 'ไม่ระบุ') . '</span></div>'
+                                . '<div class="d-flex align-items-center gap-2 text-body-secondary"><i class="bi bi-person flex-shrink-0" aria-hidden="true"></i><span class="equip-assignment-value small text-truncate">' . Html::encode($ownerName ?: 'ไม่ระบุ') . '</span></div>'
                                 . '</div>';
                             ?>
                             <?php if ($canEdit): ?>
@@ -198,19 +258,19 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                                 <?= $assignBlock ?>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139); font-size: 12px;">
+                        <td class="px-4 py-3 border-0 text-center fw-medium small text-body-secondary">
                             <span<?= $qedit('receive_date', 'date', $item->receive_date ? \app\components\AppHelper::DateFormDb(substr((string) $item->receive_date, 0, 10)) : '', 'วันที่รับเข้า') ?>>
                             <?php if ($item->receive_date): ?>
                                 <div><?= Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) ?></div>
                                 <div class="small text-primary mt-1"><?= Html::encode($receiveAgeText($item->receive_date)) ?></div>
                             <?php else: ?>
-                                <span class="text-body-tertiary">—</span>
+                                <span class="text-body-tertiary">ไม่ระบุ</span>
                             <?php endif; ?>
                             </span>
                         </td>
-                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><span<?= $qedit('price', 'number', $price, 'ราคาแรกรับ (บาท)') ?>><?= number_format($price, 2) ?></span></td>
+                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace text-body-emphasis"><span<?= $qedit('price', 'number', $price, 'ราคาแรกรับ (บาท)') ?>><?= number_format($price, 2) ?></span></td>
                         <td class="px-3 py-3 border-0 text-center">
-                            <div class="d-inline-flex flex-column align-items-stretch gap-1" style="min-width: 92px;">
+                            <div class="equip-risk-stack d-inline-flex flex-column align-items-stretch gap-1">
                                 <span<?= $qedit('asset_condition', 'enum', $item->asset_condition, 'สภาพครุภัณฑ์') ?>><?= $item->getConditionBadge() ?></span>
                                 <span<?= $qedit('risk_level', 'enum', $item->risk_level, 'ระดับความเสี่ยง') ?>><?= $item->getRiskLevelBadge() ?></span>
                             </div>

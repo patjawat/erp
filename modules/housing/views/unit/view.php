@@ -20,24 +20,24 @@ $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this-
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'unit']) ?><?php $this->endBlock();
 ?>
 <style>
-.housing-detail{--h-bg:#f7fafc;--h-soft:#eef5ff;--h-border:#dce6f0;--h-ink:#26384a;--h-muted:#60758a;--h-primary:#4c84c6;color:var(--h-ink)}
-.housing-detail .soft-panel{background:#fff;border:1px solid var(--h-border);border-radius:.8rem}
+.housing-detail{--h-bg:var(--bs-tertiary-bg);--h-soft:var(--bs-primary-bg-subtle);--h-border:var(--bs-border-color);--h-ink:var(--bs-emphasis-color);--h-muted:var(--bs-secondary-color);--h-primary:var(--bs-primary);color:var(--h-ink)}
+.housing-detail .soft-panel{background:var(--bs-body-bg);border:1px solid var(--h-border);border-radius:.8rem}
 .housing-detail .detail-muted{color:var(--h-muted)}
 .housing-detail .nav-tabs{border-color:var(--h-border)}
 .housing-detail .nav-tabs .nav-link{color:var(--h-muted);min-height:44px}
-.housing-detail .nav-tabs .nav-link.active{color:var(--h-primary)!important;background:#fff!important;border-color:transparent transparent var(--h-primary)!important;border-bottom-width:2px;font-weight:600}
+.housing-detail .nav-tabs .nav-link.active{color:var(--h-primary)!important;background:var(--bs-body-bg)!important;border-color:transparent transparent var(--h-primary)!important;border-bottom-width:2px;font-weight:600}
 .housing-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.75rem}
 .housing-summary__item{padding:.9rem 1rem;background:var(--h-bg);border:1px solid var(--h-border);border-radius:.7rem}
 .housing-summary__value{font-weight:700;font-size:1.1rem;margin-top:.2rem}
 .housing-photo-main{aspect-ratio:4/3;width:100%;object-fit:cover;border-radius:.7rem;background:var(--h-bg);border:1px solid var(--h-border)}
-.housing-photo-empty{aspect-ratio:4/3;border:1px dashed #b8c7d6;border-radius:.7rem;background:var(--h-bg);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--h-muted)}
+.housing-photo-empty{aspect-ratio:4/3;border:1px dashed var(--bs-border-color);border-radius:.7rem;background:var(--h-bg);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--h-muted)}
 .housing-photo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem}
 .housing-photo-thumb{aspect-ratio:1;width:100%;object-fit:cover;border-radius:.5rem;border:2px solid transparent}
 .housing-photo-thumb.is-primary{border-color:var(--h-primary)}
 .housing-asset-thumb{width:52px;height:52px;object-fit:cover;border-radius:.5rem;background:var(--h-bg);border:1px solid var(--h-border)}
 .housing-condition{display:inline-flex;align-items:center;min-height:28px;padding:.2rem .55rem;border-radius:999px;font-size:.8rem;font-weight:600}
-.housing-condition--normal{color:#287a51;background:#e8f5ee}.housing-condition--repair{color:#8a6415;background:#fff4dc}
-.housing-condition--damaged,.housing-condition--lost{color:#a23a43;background:#fcebec}
+.housing-condition--normal{color:var(--bs-success-text-emphasis);background:var(--bs-success-bg-subtle)}.housing-condition--repair{color:var(--bs-warning-text-emphasis);background:var(--bs-warning-bg-subtle)}
+.housing-condition--damaged,.housing-condition--lost{color:var(--bs-danger-text-emphasis);background:var(--bs-danger-bg-subtle)}
 .housing-detail .btn-primary{background:var(--h-primary);border-color:var(--h-primary)}
 @media(max-width:1199.98px){.housing-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:767.98px){.housing-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.housing-detail .table-responsive table{min-width:980px}.page-heading-actions{width:100%}.page-heading-actions .btn{flex:1;min-height:44px}.housing-photo-actions .btn{min-height:44px;display:inline-flex;align-items:center}}
@@ -62,8 +62,8 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     </div>
     <ul class="nav nav-tabs mb-3" role="tablist">
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#housing-general" type="button">ข้อมูลทั่วไป</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#housing-photos" type="button">รูปภาพ <span class="badge text-bg-light ms-1"><?= count($photos) ?></span></button></li>
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#housing-assets" type="button">อุปกรณ์และของใช้ <span class="badge text-bg-light ms-1"><?= count($assets) ?></span></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#housing-photos" type="button">รูปภาพ <span class="badge bg-body-tertiary text-body ms-1"><?= count($photos) ?></span></button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#housing-assets" type="button">อุปกรณ์และของใช้ <span class="badge bg-body-tertiary text-body ms-1"><?= count($assets) ?></span></button></li>
     </ul>
     <div class="tab-content">
         <section class="tab-pane fade" id="housing-general">

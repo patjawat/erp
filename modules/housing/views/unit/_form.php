@@ -19,7 +19,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['data-list-url' => Url
     <div class="col-md-6"><?= $form->field($model, 'sort_order')->input('number') ?></div>
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 2]) ?></div>
 </div>
-<div class="mt-3 d-flex justify-content-end gap-2"><?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?><?= Html::submitButton('บันทึกยูนิต', ['class' => 'btn btn-primary']) ?></div>
+<div class="mt-3 d-flex justify-content-end gap-2"><?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?><?= Html::submitButton('บันทึกยูนิต', ['class' => 'btn btn-primary']) ?></div>
 <?php ActiveForm::end();
 $this->registerJs("handleFormSubmit('#{$formId}', null, function(r){if(r&&r.container&&typeof erpReloadPjax==='function'&&erpReloadPjax(r.container)){return;}window.location.href=document.querySelector('#{$formId}').dataset.listUrl;});");
 ?>

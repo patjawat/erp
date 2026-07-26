@@ -27,7 +27,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
     <div class="col-md-6"><?= $form->field($model, 'after_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('เพิ่มภายหลังได้ รวมไม่เกิน 10 ภาพ ขนาดไม่เกิน 10 MB และความละเอียดไม่เกิน 50 ล้านพิกเซลต่อไฟล์') ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
     <?= Html::submitButton('บันทึกแจ้งซ่อม', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php

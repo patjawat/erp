@@ -24,12 +24,12 @@ $account = $allocation?->invoice?->monthlyAccount;
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             <div class="row g-4">
-                <div class="col-md-6"><div class="text-muted small">เลขที่ใบเสร็จ</div><div class="fw-semibold"><?= Html::encode($receipt->receipt_no) ?></div></div>
-                <div class="col-md-6"><div class="text-muted small">สถานะ</div><span class="badge <?= $receipt->status === 'issued' ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $receipt->status === 'issued' ? 'ออกใบเสร็จแล้ว' : 'ยกเลิกแล้ว' ?></span></div>
-                <div class="col-md-6"><div class="text-muted small">วันที่รับชำระ</div><div><?= Yii::$app->formatter->asDatetime($payment->paid_at, 'php:d/m/Y H:i') ?></div></div>
-                <div class="col-md-6"><div class="text-muted small">วิธีชำระ</div><div><?= $payment->payment_method === 'transfer' ? 'เงินโอน' : 'เงินสด' ?></div></div>
-                <div class="col-md-6"><div class="text-muted small">รอบค่าใช้จ่าย</div><div><?= Html::encode($account?->period?->name ?? '-') ?></div></div>
-                <div class="col-md-6"><div class="text-muted small">เลขอ้างอิง</div><div><?= Html::encode($payment->reference_no ?: '-') ?></div></div>
+                <div class="col-md-6"><div class="text-body-secondary small">เลขที่ใบเสร็จ</div><div class="fw-semibold"><?= Html::encode($receipt->receipt_no) ?></div></div>
+                <div class="col-md-6"><div class="text-body-secondary small">สถานะ</div><span class="badge <?= $receipt->status === 'issued' ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $receipt->status === 'issued' ? 'ออกใบเสร็จแล้ว' : 'ยกเลิกแล้ว' ?></span></div>
+                <div class="col-md-6"><div class="text-body-secondary small">วันที่รับชำระ</div><div><?= Yii::$app->formatter->asDatetime($payment->paid_at, 'php:d/m/Y H:i') ?></div></div>
+                <div class="col-md-6"><div class="text-body-secondary small">วิธีชำระ</div><div><?= $payment->payment_method === 'transfer' ? 'เงินโอน' : 'เงินสด' ?></div></div>
+                <div class="col-md-6"><div class="text-body-secondary small">รอบค่าใช้จ่าย</div><div><?= Html::encode($account?->period?->name ?? '-') ?></div></div>
+                <div class="col-md-6"><div class="text-body-secondary small">เลขอ้างอิง</div><div><?= Html::encode($payment->reference_no ?: '-') ?></div></div>
             </div>
             <div class="rounded-3 bg-success-subtle p-4 mt-4 d-flex justify-content-between align-items-center">
                 <span class="fw-semibold">จำนวนเงินที่รับ</span>

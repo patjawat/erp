@@ -43,7 +43,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
     <div class="row g-2 g-lg-3 align-items-center">
         <div class="col-12 col-lg-3">
             <div class="input-group w-100">
-                <span class="input-group-text bg-body border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                <span class="input-group-text bg-body border-end-0 text-body-secondary"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
                 <?= $form->field($model, 'q', [
                     'template' => '{input}',
                     'options' => ['class' => 'flex-grow-1 min-w-0 mb-0'],
@@ -160,11 +160,11 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
 <!-- ตัวกรองเพิ่มเติม: แสดงเมื่อกด "ตัวกรองเพิ่มเติม" (หรือเปิดอัตโนมัติถ้ามีค่ากรองอยู่) -->
 <div class="collapse mt-3 pt-3 border-top <?= $hasAdvancedFilters ? 'show' : '' ?>" id="collapseFilter">
-    <p class="text-muted small mb-3"><i class="fa-solid fa-info-circle me-1"></i> หน่วยงาน · ผู้รับผิดชอบ · วิธีได้มา · ช่วงราคา</p>
+    <p class="text-body-secondary small mb-3"><i class="fa-solid fa-info-circle me-1"></i> หน่วยงาน · ผู้รับผิดชอบ · วิธีได้มา · ช่วงราคา</p>
 
     <!-- กลุ่ม: หน่วยงาน & ผู้รับผิดชอบ -->
     <div class="mb-3">
-        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">หน่วยงาน & ผู้รับผิดชอบ</span>
+        <span class="d-block small text-uppercase fw-semibold text-body-secondary mb-2">หน่วยงาน & ผู้รับผิดชอบ</span>
         <div class="row g-3">
             <div class="col-12 col-md-6">
                 <div class="d-flex align-items-end align-items-center gap-2">
@@ -233,7 +233,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
     <!-- กลุ่ม: กรองเฉพาะ -->
     <div class="mb-3">
-        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">กรองเฉพาะ</span>
+        <span class="d-block small text-uppercase fw-semibold text-body-secondary mb-2">กรองเฉพาะ</span>
         <div class="row g-3">
             <div class="col-12">
                 <div class="d-flex flex-wrap gap-3">
@@ -254,7 +254,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
     <!-- กลุ่ม: วิธีได้มา & งบประมาณ -->
     <div class="mb-3">
-        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">วิธีได้มา & งบประมาณ</span>
+        <span class="d-block small text-uppercase fw-semibold text-body-secondary mb-2">วิธีได้มา & งบประมาณ</span>
         <div class="row g-3">
             <div class="col-12 col-sm-6 col-md-4 col-lg">
                 <?= $form->field($model, 'method_get')->widget(Select2::classname(), [
@@ -288,7 +288,7 @@ $toolbarFieldOpts = ['options' => ['class' => 'mb-0']];
 
     <!-- กลุ่ม: ช่วงราคา -->
     <div>
-        <span class="d-block small text-uppercase fw-semibold text-secondary mb-2">ช่วงราคา (บาท)</span>
+        <span class="d-block small text-uppercase fw-semibold text-body-secondary mb-2">ช่วงราคา (บาท)</span>
         <div class="row g-3">
             <div class="col-12 col-sm-4">
                 <?= $form->field($model, 'price1')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'placeholder' => 'ราคาต่ำสุด'])->label('ราคาต่ำสุด (ขึ้นไป)'); ?>
@@ -335,7 +335,7 @@ $('.btn-export-excel').click(function(e) {
         text: "คุณต้องการส่งออกข้อมูลตามเงื่อนไขนี้เป็นไฟล์ Excel ใช่หรือไม่?",
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#28a745',
+        confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--bs-success').trim(),
         confirmButtonText: 'ใช่, ดาวน์โหลดเลย!',
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {

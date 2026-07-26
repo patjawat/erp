@@ -7,24 +7,24 @@ $form = ActiveForm::begin(['id' => 'monthly-account-form']);
 $location = implode(' / ', array_filter([$account->building_name, $account->unit_name, $account->room_name]));
 ?>
 <style>
-.monthly-entry{--entry-bg:#f6f9fc;--entry-border:#dce6f0;--entry-ink:#26384a;--entry-muted:#60758a;color:var(--entry-ink)}
+.monthly-entry{--entry-bg:var(--bs-tertiary-bg);--entry-border:var(--bs-border-color);--entry-ink:var(--bs-emphasis-color);--entry-muted:var(--bs-secondary-color);color:var(--entry-ink)}
 .monthly-entry .entry-context{background:var(--entry-bg);border:1px solid var(--entry-border);border-radius:.75rem;padding:1rem}
 .monthly-entry .entry-location{color:var(--entry-muted);font-size:.875rem;margin-top:.2rem}
 .monthly-entry .entry-meta{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.75rem}
-.monthly-entry .entry-chip{background:#fff;border:1px solid var(--entry-border);border-radius:999px;color:#425b72;font-size:.8rem;padding:.3rem .65rem}
+.monthly-entry .entry-chip{background:var(--bs-body-bg);border:1px solid var(--entry-border);border-radius:999px;color:var(--bs-secondary-color);font-size:.8rem;padding:.3rem .65rem}
 .monthly-entry .expense-list{border:1px solid var(--entry-border);border-radius:.75rem;overflow:hidden}
 .monthly-entry .expense-row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(140px,180px) minmax(170px,1.2fr);gap:.75rem;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--entry-border)}
 .monthly-entry .expense-row:last-child{border-bottom:0}
-.monthly-entry .expense-row:focus-within{background:#f8fbff}
+.monthly-entry .expense-row:focus-within{background:var(--bs-tertiary-bg)}
 .monthly-entry .expense-name{font-weight:600}
 .monthly-entry .expense-unit{color:var(--entry-muted);font-size:.78rem}
 .monthly-entry .amount-wrap{position:relative}
-.monthly-entry .amount-wrap::after{content:"บาท";position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:#687d91;font-size:.8rem;pointer-events:none}
+.monthly-entry .amount-wrap::after{content:"บาท";position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:var(--bs-secondary-color);font-size:.8rem;pointer-events:none}
 .monthly-entry .amount-input{padding-right:3.2rem;font-variant-numeric:tabular-nums;font-weight:600}
-.monthly-entry .payment-panel{background:#f4f8fd;border:1px solid #ccdded;border-radius:.75rem;padding:1rem}
+.monthly-entry .payment-panel{background:var(--bs-tertiary-bg);border:1px solid var(--bs-border-color);border-radius:.75rem;padding:1rem}
 .monthly-entry .payment-total{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
 .monthly-entry .balance-preview{font-variant-numeric:tabular-nums}
-.monthly-entry .entry-footer{position:sticky;bottom:-1rem;background:#fff;border-top:1px solid var(--entry-border);margin:1rem -1rem -1rem;padding:.85rem 1rem;z-index:2}
+.monthly-entry .entry-footer{position:sticky;bottom:-1rem;background:var(--bs-body-bg);border-top:1px solid var(--entry-border);margin:1rem -1rem -1rem;padding:.85rem 1rem;z-index:2}
 @media(max-width:767.98px){
  .monthly-entry .expense-row{grid-template-columns:1fr 145px}
  .monthly-entry .expense-note{grid-column:1/-1}
@@ -52,7 +52,7 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
     <div class="d-flex justify-content-between align-items-end mb-2">
         <div>
             <div class="fw-semibold">รายการค่าใช้จ่าย</div>
-            <div class="small text-muted">กรอกเฉพาะรายการที่เกิดขึ้นในเดือนนี้</div>
+            <div class="small text-body-secondary">กรอกเฉพาะรายการที่เกิดขึ้นในเดือนนี้</div>
         </div>
     </div>
 
@@ -91,7 +91,7 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
     <div class="payment-panel">
         <div class="row g-3 align-items-end">
             <div class="col-lg-4">
-                <div class="small text-muted">ค่าใช้จ่ายรวม</div>
+                <div class="small text-body-secondary">ค่าใช้จ่ายรวม</div>
                 <div class="payment-total"><span id="account-total">0.00</span> <span class="fs-6 fw-normal">บาท</span></div>
             </div>
             <div class="col-lg-4">
@@ -107,7 +107,7 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="small text-muted">ยอดคงเหลือ</div>
+                <div class="small text-body-secondary">ยอดคงเหลือ</div>
                 <div class="fs-5 fw-semibold balance-preview"><span id="account-balance">0.00</span> บาท</div>
             </div>
             <div class="col-12">
@@ -124,7 +124,7 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
     </div>
 
     <div class="entry-footer d-flex flex-wrap justify-content-end gap-2">
-        <?= Html::button($isLocked ? 'ปิด' : 'ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
+        <?= Html::button($isLocked ? 'ปิด' : 'ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
         <?php if (!$isLocked): ?>
             <?= Html::submitButton('บันทึกค่าใช้จ่าย', ['class' => 'btn btn-primary px-4']) ?>
         <?php endif; ?>

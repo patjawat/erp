@@ -44,6 +44,36 @@ Extracted from [PRODUCT.md](PRODUCT.md).
 9. **Thai-first labels, English-only code** — ข้อความผู้ใช้เห็นต้องเป็นไทยกระชับ ตัวอักษร/class/ตัวแปรในโค้ดเป็นอังกฤษ
 10. **Preserve over rewrite** — เพิ่ม/ปรับ UI ได้ ห้ามแตะ business logic, schema, route, permission, AJAX behavior ที่มีอยู่แล้ว
 
+## Bootstrap-first UI Contract (บังคับ)
+
+ข้อกำหนดส่วนนี้มีลำดับความสำคัญสูงกว่าตัวอย่างหรือ token เดิมในเอกสาร และใช้กับทุก module, view, partial, widget และ stylesheet ที่สร้างหรือแก้ไขใหม่
+
+1. **ต้องใช้ Bootstrap 5.3 classes ก่อนเสมอ** สำหรับ layout, spacing, typography, form, button, card, table, border, background, text color, display, responsive behavior และ status
+2. **ห้าม hardcode ค่าสีใน implementation** รวมถึง `#hex`, `rgb()`, `rgba()`, `hsl()`, `hsla()` และ named colors ใน PHP/HTML/CSS/JavaScript
+3. **ห้ามใช้ inline `style`** หาก Bootstrap utility หรือ component class ทำสิ่งเดียวกันได้
+4. **ต้องใช้ semantic, theme-aware classes** เช่น `bg-body`, `bg-body-tertiary`, `text-body`, `text-body-secondary`, `border`, `btn-outline-*`, `bg-*-subtle` และ `text-*-emphasis`
+5. **ห้ามใช้ light-only classes** เช่น `bg-light`, `text-bg-light` และ `btn-light` ใน UI ที่ต้องรองรับ dark mode
+6. หาก Bootstrap ไม่มี class ที่ครอบคลุม custom component จริง ๆ ให้ใช้ Bootstrap CSS variables เช่น `var(--bs-body-bg)`, `var(--bs-secondary-bg)`, `var(--bs-border-color)`, `var(--bs-emphasis-color)` และ `var(--bs-*-bg-subtle)` ห้ามสร้างสี literal ใหม่
+7. Project token ที่จำเป็นต้องมีต้อง map ไปยัง Bootstrap CSS variables เท่านั้น เช่น `--module-surface: var(--bs-body-bg)` ห้ามกำหนดเป็นค่าสีโดยตรง
+8. ทุกหน้าต้องทำงานภายใต้ `data-bs-theme="light"` และ `data-bs-theme="dark"` โดยไม่ต้องเขียน selector แยกเพื่อแก้สีเฉพาะหน้า
+
+ตัวอย่าง:
+
+```html
+<!-- ผ่าน -->
+<section class="card bg-body border">
+    <p class="text-body-secondary mb-0">รายละเอียด</p>
+    <span class="badge bg-success-subtle text-success-emphasis">สำเร็จ</span>
+</section>
+
+<!-- ไม่ผ่าน -->
+<section style="background:#fff;border:1px solid #dee2e6">
+    <p style="color:#6c757d">รายละเอียด</p>
+</section>
+```
+
+Code review ต้องไม่ผ่านเมื่อพบสี hardcoded, inline visual styles ที่แทนด้วย Bootstrap ได้ หรือ component ที่ไม่เปลี่ยนตาม Bootstrap color mode
+
 ## Design Tokens
 
 ยกจาก `modules/inventoryV2/views/sub-stock/issue.php` เป็นมาตรฐานกลาง ทุก surface ใหม่ใช้ token ชุดนี้:
