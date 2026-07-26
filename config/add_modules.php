@@ -96,5 +96,5 @@ $modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PD
 $modules['medsop'] = ['class' => 'app\modules\medsop\Module'];  // ระบบคลังเอกสาร SOP/WI
 $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 $modules['ai'] = ['class' => 'app\modules\ai\Module'];
-$modules['housing'] = ['class' => 'app\modules\housing\Module'];  // บ้านพักและสวัสดิการ
+$modules['housing'] = ['class' => 'app\modules\housing\Module'];  // บ้านพัก
 return $modules;

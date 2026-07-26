@@ -52,6 +52,18 @@ $this->registerCss(<<<CSS
 CSS);
 ?>
 <div class="container-fluid py-3 housing-board">
+    <?php if (($responsibleAttentionCount ?? 0) > 0): ?>
+        <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+            <div class="d-flex gap-2 align-items-start">
+                <i data-lucide="triangle-alert" class="flex-shrink-0 mt-1" style="width:18px;height:18px"></i>
+                <div>
+                    <div class="fw-semibold">มี <?= number_format($responsibleAttentionCount) ?> รายการที่ต้องกำหนดผู้รับผิดชอบ</div>
+                    <div class="small">กรุณาตรวจสอบบ้านพักที่ยังไม่มีผู้รับผิดชอบ หรือผู้รับผิดชอบไม่ได้ปฏิบัติงานแล้ว</div>
+                </div>
+            </div>
+            <?= Html::a('ตรวจสอบผู้รับผิดชอบ', ['/housing/building/index'], ['class' => 'btn btn-sm btn-outline-warning']) ?>
+        </div>
+    <?php endif; ?>
     <form class="housing-toolbar p-3 mb-3" method="get" action="<?= Url::to(['index']) ?>">
         <div class="row g-2 align-items-end">
             <div class="col-12 col-lg-4">

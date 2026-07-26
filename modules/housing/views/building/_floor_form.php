@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 $formId = 'housing-floor-form';
+$isNewRecord = $model->isNewRecord;
 $form = ActiveForm::begin(['id' => $formId]);
 ?>
 <?= $form->field($model, 'building_id')->hiddenInput()->label(false) ?>
@@ -18,7 +19,7 @@ $form = ActiveForm::begin(['id' => $formId]);
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
     <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>
-    <?= Html::submitButton('เพิ่มชั้น', ['class' => 'btn btn-primary']) ?>
+    <?= Html::submitButton($isNewRecord ? 'เพิ่มชั้น' : 'บันทึกการแก้ไข', ['class' => 'btn btn-primary']) ?>
 </div>
 <?php ActiveForm::end();
 $this->registerJs("handleFormSubmit('#{$formId}', null, function(r){if(r&&r.container&&typeof erpReloadPjax==='function'){erpReloadPjax(r.container);}});");
