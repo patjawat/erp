@@ -9,6 +9,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\Employees;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Floor;
+use app\modules\housing\models\Occupancy;
 use app\modules\housing\services\HousingAccessService;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -64,6 +65,29 @@ final class BuildingController extends BaseController
     public function actionCreate()
     {
         return $this->save(new Building(), 'เพิ่มบ้านพัก/แฟลต');
+    }
+
+    public function actionView(int $id)
+    {
+        $model = $this->findModel($id);
+        $model->populateRelation('floors', $model->getFloors()->with(['units.rooms'])->all());
+        $units = $model->getUnits()->with(['floor', 'rooms', 'assets', 'photos.upload'])->orderBy(['floor_id' => SORT_ASC, 'sort_order' => SORT_ASC])->all();
+        $occupancies = Occupancy::find()
+            ->with(['employee', 'residents', 'unit', 'room'])
+            ->joinWith('unit')
+            ->where(['housing_unit.building_id' => $model->id])
+            ->andWhere(['housing_occupancy.status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE]])
+            ->orderBy(['housing_unit.code' => SORT_ASC, 'housing_occupancy.start_date' => SORT_ASC])
+            ->all();
+        $buildingImage = Uploads::find()->where(['ref' => $model->ref, 'name' => 'building_image'])->one();
+
+        return $this->render('view', [
+            'model' => $model,
+            'units' => $units,
+            'occupancies' => $occupancies,
+            'maintenanceRequests' => $model->getMaintenanceRequests()->with('assignedEmployee')->limit(20)->all(),
+            'buildingImage' => $buildingImage,
+        ]);
     }
 
     public function actionUpdate(int $id)

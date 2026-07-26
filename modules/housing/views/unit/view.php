@@ -7,6 +7,10 @@ use yii\helpers\Html;
 $location = $room ?? $unit;
 $locationName = $room ? $room->code . ' · ' . $room->name : $unit->code . ' · ' . $unit->name;
 $locationSub = implode(' · ', array_filter([$unit->building->name ?? null, $unit->floor->name ?? null]));
+$backUrl = $returnBuildingId
+    ? ['/housing/building/view', 'id' => $returnBuildingId]
+    : ['index'];
+$backLabel = $returnBuildingId ? 'รายละเอียด ' . ($unit->building->name ?? 'บ้านพัก/แฟลต') : 'ยูนิตและห้อง';
 $totalValue = array_sum(array_map(static fn(AssetAssignment $asset) => $asset->totalValue(), $assets));
 $monthlyRent = array_sum(array_map(static fn(AssetAssignment $asset) => $asset->totalMonthlyRent(), $assets));
 $normalCount = count(array_filter($assets, static fn(AssetAssignment $asset) => $asset->condition_status === AssetAssignment::CONDITION_NORMAL));
@@ -41,7 +45,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 </style>
 <div class="container-fluid py-3 housing-detail">
     <nav aria-label="เส้นทางนำทาง" class="small mb-2">
-        <?= Html::a('ยูนิตและห้อง', ['index'], ['class' => 'text-decoration-none']) ?><span class="mx-2 detail-muted">/</span><span aria-current="page"><?= Html::encode($locationName) ?></span>
+        <?= Html::a(Html::encode($backLabel), $backUrl, ['class' => 'text-decoration-none']) ?><span class="mx-2 detail-muted">/</span><span aria-current="page"><?= Html::encode($locationName) ?></span>
     </nav>
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
@@ -49,7 +53,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
             <div class="detail-muted mt-1"><?= Html::encode($locationSub) ?></div>
         </div>
         <div class="d-flex gap-2 page-heading-actions">
-            <?= Html::a('<i data-lucide="arrow-left"></i> กลับรายการ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('<i data-lucide="arrow-left"></i> ' . ($returnBuildingId ? 'กลับหน้ารายละเอียดแฟลต' : 'กลับรายการ'), $backUrl, ['class' => 'btn btn-outline-secondary']) ?>
             <?php if (!$room): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูล', ['update', 'id' => $unit->id, 'title' => 'แก้ไขยูนิต'], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?><?php endif; ?>
         </div>
     </div>

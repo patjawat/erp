@@ -33,7 +33,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
             <tbody><?php foreach ($dataProvider->models as $model): ?><tr>
                 <td><strong><?= Html::encode($model->ticket_no) ?></strong></td>
                 <td><?= Html::encode($model->building->name ?? '—') ?><div class="small text-muted"><?= Html::encode($model->location_note ?: 'ไม่ระบุจุด') ?></div></td>
-                <td><strong><?= Html::encode($model->title) ?></strong><div class="small text-muted text-truncate" style="max-width:280px"><?= Html::encode($model->description) ?></div></td>
+                <td><strong><?= Html::encode($model->title) ?></strong><div class="small text-muted"><?= Html::encode(MaintenanceRequest::reporterTypeOptions()[$model->reporter_type] ?? '') ?> · <?= Html::encode(MaintenanceRequest::scopeOptions()[$model->problem_scope] ?? '') ?></div><div class="small text-muted text-truncate" style="max-width:280px"><?= Html::encode($model->description) ?></div></td>
                 <td><?= Yii::$app->formatter->asDatetime($model->reported_at, 'php:d/m/Y H:i') ?></td>
                 <td><span class="priority-pill priority-<?= Html::encode($model->priority) ?>"><?= Html::encode(MaintenanceRequest::priorityOptions()[$model->priority] ?? $model->priority) ?></span></td>
                 <td><span class="status-pill status-<?= Html::encode($model->status) ?>"><?= Html::encode(MaintenanceRequest::statusOptions()[$model->status] ?? $model->status) ?></span></td>

@@ -9,6 +9,9 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
 <div class="row g-3">
     <div class="col-md-7"><?= $form->field($model, 'building_id')->dropDownList($buildingOptions, ['prompt' => 'เลือกบ้านพักหรือแฟลต']) ?></div>
     <div class="col-md-5"><?= $form->field($model, 'location_note')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ห้อง 101, ชั้น 2 หรือบริเวณส่วนกลาง']) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'reporter_type')->dropDownList(MaintenanceRequest::reporterTypeOptions(), ['id' => 'maintenance-reporter-type']) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'problem_scope')->dropDownList(MaintenanceRequest::scopeOptions()) ?></div>
+    <div class="col-12" id="maintenance-occupancy-field"><?= $form->field($model, 'occupancy_id')->dropDownList($occupancyOptions, ['prompt' => 'เลือกผู้พักอาศัยและที่พัก']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'reported_at')->input('datetime-local') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'reporter_name')->textInput(['maxlength' => true]) ?></div>
     <div class="col-md-8"><?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'เช่น น้ำรั่วบริเวณห้องน้ำ']) ?></div>
@@ -16,6 +19,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 3, 'placeholder' => 'อธิบายปัญหาที่พบและผลกระทบ']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'assigned_employee_id')->dropDownList($employeeOptions, ['prompt' => 'ยังไม่มอบหมาย']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'status')->dropDownList(MaintenanceRequest::statusOptions()) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'acknowledgement_status')->dropDownList(MaintenanceRequest::acknowledgementOptions()) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'repaired_at')->input('datetime-local') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'expense_amount')->input('number', ['min' => 0, 'step' => '.01']) ?></div>
     <div class="col-12"><?= $form->field($model, 'resolution')->textarea(['rows' => 3, 'placeholder' => 'บันทึกวิธีแก้ไขหรือเหตุผลที่ไม่สามารถดำเนินการ']) ?></div>
@@ -29,4 +33,18 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
 <?php
 ActiveForm::end();
 $this->registerJs("handleFormSubmit('#{$formId}', null, function(r){if(r&&r.redirect){window.location.href=r.redirect;}});");
+$this->registerJs("
+function toggleMaintenanceReporterFields(){
+    var isResident = $('#maintenance-reporter-type').val() === 'resident';
+    $('#maintenance-occupancy-field').toggle(isResident);
+    if (!isResident) {
+        $('#maintenancerequest-occupancy_id').val('');
+        $('#maintenancerequest-acknowledgement_status').val('not_required');
+    } else if ($('#maintenancerequest-acknowledgement_status').val() === 'not_required') {
+        $('#maintenancerequest-acknowledgement_status').val('pending');
+    }
+}
+$('#maintenance-reporter-type').on('change', toggleMaintenanceReporterFields);
+toggleMaintenanceReporterFields();
+");
 ?>

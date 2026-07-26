@@ -9,6 +9,7 @@ use app\modules\filemanager\models\Uploads;
 use app\modules\hr\models\Employees;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\MaintenanceRequest;
+use app\modules\housing\models\Occupancy;
 use app\modules\housing\services\HousingAccessService;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -104,6 +105,23 @@ final class MaintenanceController extends BaseController
             $model->repaired_at = $this->toInputDateTime($model->repaired_at);
         }
         if ($model->load(Yii::$app->request->post())) {
+            if ($model->reporter_type === MaintenanceRequest::REPORTER_RESIDENT && $model->occupancy_id) {
+                $occupancy = Occupancy::find()->with('employee')->where([
+                    'id' => $model->occupancy_id,
+                    'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+                ])->one();
+                if ($occupancy !== null) {
+                    $model->reporter_emp_id = $occupancy->emp_id;
+                    $model->reporter_name = $occupancy->employee?->fullname() ?: $model->reporter_name;
+                    $model->acknowledgement_status = $model->acknowledgement_status === MaintenanceRequest::ACK_NOT_REQUIRED
+                        ? MaintenanceRequest::ACK_PENDING
+                        : $model->acknowledgement_status;
+                }
+            } else {
+                $model->occupancy_id = null;
+                $model->reporter_emp_id = null;
+                $model->acknowledgement_status = MaintenanceRequest::ACK_NOT_REQUIRED;
+            }
             $model->before_photos = UploadedFile::getInstances($model, 'before_photos');
             $model->after_photos = UploadedFile::getInstances($model, 'after_photos');
             $model->reported_at = $this->toDatabaseDateTime($model->reported_at);
@@ -142,6 +160,7 @@ final class MaintenanceController extends BaseController
             'model' => $model,
             'buildingOptions' => $this->buildingOptions(),
             'employeeOptions' => $this->employeeOptions(),
+            'occupancyOptions' => $this->occupancyOptions($model->building_id ? (int) $model->building_id : null),
         ];
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -170,6 +189,28 @@ final class MaintenanceController extends BaseController
             'id',
             static fn(Employees $employee) => $employee->fullname()
         );
+    }
+
+    private function occupancyOptions(?int $buildingId = null): array
+    {
+        $items = [];
+        $query = Occupancy::find()
+            ->with(['employee', 'unit.building', 'room'])
+            ->where(['housing_occupancy.status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE]])
+            ->orderBy(['unit_id' => SORT_ASC, 'room_id' => SORT_ASC]);
+        if ($buildingId !== null) {
+            $query->joinWith('unit')->andWhere(['housing_unit.building_id' => $buildingId]);
+        }
+        $occupancies = $query->all();
+        foreach ($occupancies as $occupancy) {
+            $residentName = $occupancy->employee?->fullname() ?: ('รหัสบุคลากร ' . $occupancy->emp_id);
+            $location = $occupancy->unit?->building?->name . ' / ' . $occupancy->unit?->name;
+            if ($occupancy->room !== null) {
+                $location .= ' / ' . $occupancy->room->name;
+            }
+            $items[$occupancy->id] = $residentName . ' (' . $location . ')';
+        }
+        return $items;
     }
 
     private function photos(MaintenanceRequest $model, string $slot): array

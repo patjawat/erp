@@ -48,9 +48,12 @@ final class UnitController extends BaseController
         return $this->render('index', ['dataProvider' => $provider]);
     }
 
-    public function actionView(int $id, ?int $room_id = null)
+    public function actionView(int $id, ?int $room_id = null, ?int $return_building_id = null)
     {
         [$unit, $room] = $this->findLocation($id, $room_id);
+        if ($return_building_id !== null && (int) $unit->building_id !== $return_building_id) {
+            $return_building_id = null;
+        }
         $assetQuery = AssetAssignment::find()
             ->where(['unit_id' => $unit->id, 'is_active' => 1])
             ->andWhere($room ? ['room_id' => $room->id] : ['room_id' => null])
@@ -80,6 +83,7 @@ final class UnitController extends BaseController
             'assets' => $assets,
             'photos' => $photos,
             'assetImages' => $assetImages,
+            'returnBuildingId' => $return_building_id,
         ]);
     }
 

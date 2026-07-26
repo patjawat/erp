@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\modules\housing\models;
 
+use app\modules\hr\models\Employees;
 use yii\db\ActiveQuery;
 
 final class Occupancy extends HousingActiveRecord
@@ -71,5 +72,10 @@ final class Occupancy extends HousingActiveRecord
     public function getResidents(): ActiveQuery
     {
         return $this->hasMany(Resident::class, ['occupancy_id' => 'id']);
+    }
+
+    public function getEmployee(): ActiveQuery
+    {
+        return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
 }

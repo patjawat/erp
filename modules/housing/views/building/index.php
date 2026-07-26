@@ -93,8 +93,8 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             <td><span class="badge <?= $model->status === Building::STATUS_ACTIVE ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' ?>"><?= Html::encode(Building::statusOptions()[$model->status] ?? $model->status) ?></span></td>
                             <td class="text-end">
                                 <?= Html::a('เพิ่มชั้น', ['create-floor', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
-                                <?= Html::a('ประวัติซ่อม', ['/housing/maintenance/index', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
                                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
+                                <?= Html::a('<i data-lucide="eye" style="width:16px;height:16px"></i><span class="visually-hidden">รายละเอียด</span>', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info', 'title' => 'ดูรายละเอียด', 'aria-label' => 'ดูรายละเอียด ' . $model->name]) ?>
                                 <?= Html::a('ลบ', ['delete', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบรายการนี้?']) ?>
                             </td>
                         </tr>
@@ -141,6 +141,11 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                         <?php endforeach; ?>
                                     </div>
                                 <?php endif; ?>
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <?= Html::a('เพิ่มชั้น', ['create-floor', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
+                                    <?= Html::a('แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
+                                    <?= Html::a('<i data-lucide="eye" style="width:16px;height:16px"></i> รายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
+                                </div>
                             </div>
                         </div>
                     </li>

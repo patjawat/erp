@@ -28,6 +28,9 @@ $renderPhotos = static function (array $photos, string $label) use ($model): str
         <aside class="col-lg-4"><div class="card border-0 shadow-sm"><div class="card-body"><dl class="row mb-0 small">
             <dt class="col-5">เลขที่</dt><dd class="col-7"><?= Html::encode($model->ticket_no) ?></dd>
             <dt class="col-5">ผู้แจ้ง</dt><dd class="col-7"><?= Html::encode($model->reporter_name) ?></dd>
+            <dt class="col-5">ประเภทผู้แจ้ง</dt><dd class="col-7"><?= Html::encode(MaintenanceRequest::reporterTypeOptions()[$model->reporter_type] ?? $model->reporter_type) ?></dd>
+            <dt class="col-5">ขอบเขตปัญหา</dt><dd class="col-7"><?= Html::encode(MaintenanceRequest::scopeOptions()[$model->problem_scope] ?? $model->problem_scope) ?></dd>
+            <?php if ($model->reporter_type === MaintenanceRequest::REPORTER_RESIDENT): ?><dt class="col-5">การรับทราบ</dt><dd class="col-7"><?= Html::encode(MaintenanceRequest::acknowledgementOptions()[$model->acknowledgement_status] ?? $model->acknowledgement_status) ?></dd><?php endif; ?>
             <dt class="col-5">วันที่แจ้ง</dt><dd class="col-7"><?= Yii::$app->formatter->asDatetime($model->reported_at, 'php:d/m/Y H:i') ?></dd>
             <dt class="col-5">สถานะ</dt><dd class="col-7"><?= Html::encode(MaintenanceRequest::statusOptions()[$model->status] ?? $model->status) ?></dd>
             <dt class="col-5">ความเร่งด่วน</dt><dd class="col-7"><?= Html::encode(MaintenanceRequest::priorityOptions()[$model->priority] ?? $model->priority) ?></dd>

@@ -20,6 +20,19 @@ final class MaintenanceRequest extends HousingActiveRecord
     public const PRIORITY_URGENT = 'urgent';
     public const PRIORITY_EMERGENCY = 'emergency';
 
+    public const REPORTER_CARETAKER = 'caretaker';
+    public const REPORTER_RESIDENT = 'resident';
+
+    public const SCOPE_STRUCTURE = 'structure';
+    public const SCOPE_COMMON = 'common';
+    public const SCOPE_HOUSE = 'house';
+    public const SCOPE_UNIT = 'unit';
+    public const SCOPE_ROOM = 'room';
+
+    public const ACK_NOT_REQUIRED = 'not_required';
+    public const ACK_PENDING = 'pending';
+    public const ACK_ACKNOWLEDGED = 'acknowledged';
+
     public $before_photos;
     public $after_photos;
 
@@ -31,8 +44,8 @@ final class MaintenanceRequest extends HousingActiveRecord
     public function rules(): array
     {
         return [
-            [['building_id', 'reported_at', 'reporter_name', 'title', 'description'], 'required'],
-            [['building_id', 'assigned_employee_id', 'created_by', 'updated_by'], 'integer'],
+            [['building_id', 'reported_at', 'reporter_type', 'problem_scope', 'reporter_name', 'title', 'description'], 'required'],
+            [['building_id', 'occupancy_id', 'reporter_emp_id', 'assigned_employee_id', 'created_by', 'updated_by'], 'integer'],
             [['reported_at', 'repaired_at', 'closed_at'], 'safe'],
             [['description', 'resolution'], 'string'],
             [['expense_amount'], 'number', 'min' => 0],
@@ -42,7 +55,15 @@ final class MaintenanceRequest extends HousingActiveRecord
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['priority'], 'default', 'value' => self::PRIORITY_NORMAL],
             [['status'], 'default', 'value' => self::STATUS_NEW],
+            [['reporter_type'], 'default', 'value' => self::REPORTER_CARETAKER],
+            [['problem_scope'], 'default', 'value' => self::SCOPE_STRUCTURE],
+            [['acknowledgement_status'], 'default', 'value' => self::ACK_NOT_REQUIRED],
             [['expense_amount'], 'default', 'value' => 0],
+            [['reporter_type'], 'in', 'range' => array_keys(self::reporterTypeOptions())],
+            [['problem_scope'], 'in', 'range' => array_keys(self::scopeOptions())],
+            [['acknowledgement_status'], 'in', 'range' => array_keys(self::acknowledgementOptions())],
+            [['occupancy_id'], 'required', 'when' => static fn(self $model): bool => $model->reporter_type === self::REPORTER_RESIDENT],
+            [['occupancy_id'], 'validateOccupancy'],
             [['before_photos', 'after_photos'], 'file',
                 'extensions' => ['jpg', 'jpeg', 'png', 'webp'],
                 'mimeTypes' => ['image/jpeg', 'image/png', 'image/webp'],
@@ -66,6 +87,10 @@ final class MaintenanceRequest extends HousingActiveRecord
             'location_note' => 'จุดที่พบปัญหา',
             'reported_at' => 'วันที่และเวลาแจ้ง',
             'reporter_name' => 'ผู้แจ้ง',
+            'reporter_type' => 'ประเภทผู้แจ้ง',
+            'problem_scope' => 'ขอบเขตปัญหา',
+            'occupancy_id' => 'ผู้พักอาศัย/ที่พัก',
+            'acknowledgement_status' => 'การรับทราบของผู้พักอาศัย',
             'title' => 'หัวข้อปัญหา',
             'description' => 'รายละเอียดปัญหา',
             'priority' => 'ความเร่งด่วน',
@@ -105,6 +130,53 @@ final class MaintenanceRequest extends HousingActiveRecord
     public function getAssignedEmployee(): ActiveQuery
     {
         return $this->hasOne(Employees::class, ['id' => 'assigned_employee_id']);
+    }
+
+    public function getOccupancy(): ActiveQuery
+    {
+        return $this->hasOne(Occupancy::class, ['id' => 'occupancy_id']);
+    }
+
+    public function validateOccupancy(string $attribute): void
+    {
+        if (!$this->$attribute) {
+            return;
+        }
+        $occupancy = Occupancy::find()->with('unit')->where([
+            'id' => $this->$attribute,
+            'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+        ])->one();
+        if ($occupancy === null || (int) $occupancy->unit?->building_id !== (int) $this->building_id) {
+            $this->addError($attribute, 'ผู้พักอาศัยที่เลือกไม่ได้อยู่ในบ้านพักหรือแฟลตรายการนี้');
+        }
+    }
+
+    public static function reporterTypeOptions(): array
+    {
+        return [
+            self::REPORTER_CARETAKER => 'ผู้ดูแลบ้านพักแจ้ง',
+            self::REPORTER_RESIDENT => 'ผู้พักอาศัยแจ้ง',
+        ];
+    }
+
+    public static function scopeOptions(): array
+    {
+        return [
+            self::SCOPE_STRUCTURE => 'โครงสร้าง/ภายนอกอาคาร',
+            self::SCOPE_COMMON => 'พื้นที่ส่วนกลาง',
+            self::SCOPE_HOUSE => 'ภายในบ้านพัก',
+            self::SCOPE_UNIT => 'ภายในยูนิต',
+            self::SCOPE_ROOM => 'ภายในห้องพัก',
+        ];
+    }
+
+    public static function acknowledgementOptions(): array
+    {
+        return [
+            self::ACK_NOT_REQUIRED => 'ไม่ต้องรับทราบ',
+            self::ACK_PENDING => 'รอผู้พักอาศัยรับทราบ',
+            self::ACK_ACKNOWLEDGED => 'ผู้พักอาศัยรับทราบแล้ว',
+        ];
     }
 
     public static function statusOptions(): array
