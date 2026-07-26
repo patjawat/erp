@@ -6,7 +6,7 @@ use app\modules\housing\models\Checkout;
 
 /** @var string $active */
 $primaryItems = [
-    'dashboard' => ['label' => 'กระดานห้องพัก', 'url' => ['/housing/dashboard/index'], 'icon' => 'layout-dashboard'],
+    'dashboard' => ['label' => 'ภาพรวม', 'url' => ['/housing/dashboard/index'], 'icon' => 'layout-dashboard'],
     'building' => ['label' => 'บ้านพักและแฟลต', 'url' => ['/housing/building/index'], 'icon' => 'building-2'],
     'unit' => ['label' => 'ยูนิตและห้อง', 'url' => ['/housing/unit/index'], 'icon' => 'door-open'],
     'request' => ['label' => 'คำขอ', 'url' => ['/housing/request/index'], 'icon' => 'clipboard-list'],
