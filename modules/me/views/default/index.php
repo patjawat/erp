@@ -122,7 +122,7 @@ $this->registerCss(<<<'CSS'
 }
 .erp-quick-service .text-xs {
     width: 100%;
-    color: #475569 !important;
+    color: var(--bs-body-color) !important;
     font-size: 1rem !important;
     line-height: 1.35;
     text-align: center;
@@ -498,7 +498,7 @@ if (!empty($upcomingHealth)): ?>
         <div class="erp-quick-services h-100">
             <div class="erp-quick-service">
                 <a href="<?= Url::to(['/leave']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-heart"></i>
                         </div>
@@ -508,7 +508,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/repair-v2']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="wrench"></i>
                         </div>
@@ -518,7 +518,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/booking-vehicle/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="car-front"></i>
                         </div>
@@ -528,7 +528,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/booking-meeting/calendar']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="calendar-days"></i>
                         </div>
@@ -538,7 +538,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="erp-quick-service">
                 <a href="<?= Url::to(!empty(env('DEVELOPMENT_USER_URL')) ? env('DEVELOPMENT_USER_URL') : ['/me/development']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="graduation-cap"></i>
                         </div>
@@ -548,7 +548,7 @@ if (!empty($upcomingHealth)): ?>
             </div>
             <div class="erp-quick-service">
                 <a href="<?= Url::to(['/me/purchase']) ?>" class="text-decoration-none text-body d-block h-100">
-                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                    <div class="card rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer shadow-hover">
                         <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
                             <i data-lucide="shopping-cart"></i>
                         </div>

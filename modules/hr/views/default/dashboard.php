@@ -663,6 +663,40 @@ $this->registerCss(<<<'CSS'
         min-height: 280px;
     }
 }
+
+/* Dark mode: remap หน้านี้ให้ใช้พื้นผิว/เส้น/ตัวอักษรมาตรฐาน Bootstrap */
+[data-bs-theme="dark"] .hr-dashboard {
+    --hr-surface: var(--bs-secondary-bg);
+    --hr-surface-1: var(--bs-tertiary-bg);
+    --hr-surface-2: var(--bs-tertiary-bg);
+    --hr-line: var(--bs-border-color);
+    --hr-ink-1: var(--bs-emphasis-color);
+    --hr-ink-2: var(--bs-body-color);
+    --hr-ink-3: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .hr-dashboard-summary-card {
+    background: var(--bs-secondary-bg);
+}
+
+[data-bs-theme="dark"] .hr-dashboard .card:has(.hr-dashboard-chart) .card-header {
+    background: var(--bs-tertiary-bg);
+}
+
+[data-bs-theme="dark"] .hr-dashboard .card:has(.hr-dashboard-chart) .card-header h6 {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .hr-dashboard .card-footer.bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+}
+
+[data-bs-theme="dark"] .hr-person-panel__sheet,
+[data-bs-theme="dark"] .hr-filter-confirm,
+[data-bs-theme="dark"] .hr-chart-tooltip {
+    background: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+}
 CSS);
 ?>
 <?php $this->beginBlock('page-title'); ?>
