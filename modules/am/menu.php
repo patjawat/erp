@@ -3,13 +3,13 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
-<div class="d-flex gap-2">
-    <a href="<?= Url::to(['/am']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
+<div class="am-action-menu d-flex flex-wrap gap-2">
+    <a href="<?= Url::to(['/am']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-light' : 'btn-primary' ?>">
         <i data-lucide="layout-grid"></i>
         ภาพรวม
     </a>
     <div class="dropdown d-inline-block">
-        <button class="btn <?= in_array($active, ['land','building','structure','equip'], true) ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= in_array($active, ['land','building','structure','equip'], true) ? 'btn-primary' : 'btn-light' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fa-solid fa-star text-warning me-1"></i>
             <span class="d-none d-sm-inline">ทะเบียนทรัพย์สิน</span>
         </button>
@@ -22,7 +22,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="dropdown d-inline-block">
-        <button class="btn <?= $active !== 'work' ? 'btn-outline-primary' : 'btn-primary' ?>" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= $active !== 'work' ? 'btn-light' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 3v12" />
                 <path d="m8 11 4 4 4-4" />
@@ -50,7 +50,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="dropdown d-inline-block">
-        <button class="btn <?= $active !== 'depreciation' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูค่าเสื่อมราคา อยู่ระหว่างพัฒนา">
+        <button class="btn <?= $active !== 'depreciation' ? 'btn-light' : 'btn-primary' ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูค่าเสื่อมราคา อยู่ระหว่างพัฒนา">
             <i data-lucide="trending-down" style="width:1rem;height:1rem;"></i>
             <span class="d-none d-sm-inline">ค่าเสื่อมราคา</span>
             <span class="visually-hidden">อยู่ระหว่างพัฒนา</span>
@@ -89,7 +89,7 @@ use yii\helpers\Url;
 
 
     <div class="dropdown">
-        <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn <?= $active !== 'setting' ? 'btn-light' : 'btn-primary' ?> dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
                 <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
                 <circle cx="12" cy="12" r="3" />
@@ -164,6 +164,75 @@ use yii\helpers\Url;
 // เมนูถูก render ทุกหน้า am → offcanvas + JS พร้อมใช้ทุกที่ ไม่ต้องแยกหน้า index เต็ม (ยังคงลิงก์ไว้ในปุ่ม "เปิดหน้าเต็ม")
 ?>
 <style>
+    .am-action-menu {
+        --am-primary: #0d6efd;
+        --am-primary-ink: #0a58ca;
+        --am-primary-soft: rgba(13, 110, 253, .08);
+        --am-surface-2: #f7f9fc;
+        --am-surface-hover: #f1f5f9;
+        --am-ink-1: #1a202c;
+        --am-ink-2: #4a5568;
+        --am-line-strong: rgba(15, 23, 42, .14);
+    }
+    [data-bs-theme="dark"] .am-action-menu {
+        --am-surface-2: #2b3035;
+        --am-surface-hover: #343a40;
+        --am-ink-1: #f1f5f9;
+        --am-ink-2: #e2e8f0;
+        --am-line-strong: rgba(255, 255, 255, .2);
+        --am-primary-soft: rgba(110, 168, 254, .2);
+    }
+    .am-action-menu .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        min-height: 44px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background-color 120ms cubic-bezier(.16, 1, .3, 1),
+            border-color 120ms cubic-bezier(.16, 1, .3, 1),
+            color 120ms cubic-bezier(.16, 1, .3, 1),
+            box-shadow 120ms cubic-bezier(.16, 1, .3, 1),
+            transform 80ms cubic-bezier(.16, 1, .3, 1);
+    }
+    .am-action-menu .btn-primary {
+        border-color: var(--am-primary);
+        background: var(--am-primary);
+        color: #fff;
+    }
+    .am-action-menu .btn-primary:hover {
+        border-color: var(--am-primary-ink);
+        background: var(--am-primary-ink);
+        color: #fff;
+    }
+    .am-action-menu .btn-primary:active {
+        transform: translateY(1px);
+    }
+    .am-action-menu .btn-primary:focus-visible {
+        box-shadow: 0 0 0 3px var(--am-primary-soft);
+    }
+    .am-action-menu .btn-light {
+        border-color: var(--am-line-strong);
+        background: var(--am-surface-2);
+        color: var(--am-ink-2);
+    }
+    .am-action-menu .btn-light:hover {
+        border-color: var(--am-line-strong);
+        background: var(--am-surface-hover);
+        color: var(--am-ink-1);
+    }
+    .am-action-menu .btn-light:focus-visible {
+        box-shadow: 0 0 0 3px var(--am-primary-soft);
+    }
+    .am-action-menu > .dropdown > .btn > i {
+        color: currentColor !important;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .am-action-menu .btn {
+            transition: none !important;
+        }
+    }
     /* เว้นด้านบนให้พ้น header สูง (.header-fixed ของธีม) ไม่ให้ทับหัว offcanvas */
     #am-setting-offcanvas {
         top: 72px;

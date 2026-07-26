@@ -9,6 +9,7 @@ use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
+use app\components\AppHelper;
 use app\modules\am\models\DepreciationProfile;
 use app\modules\am\models\DepreciationProfileRate;
 use app\modules\am\services\DepreciationProfileResolver;
@@ -198,15 +199,20 @@ class DepreciationProfileController extends Controller
         $model = new DepreciationProfile();
         $model->loadDefaultValues();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            // เปิดผ่าน .open-modal → ตอบ JSON ให้ erp.js ปิด modal + reload pjax
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['status' => 'success', 'message' => 'สร้างเกณฑ์ค่าเสื่อมเรียบร้อย', 'container' => '#am-dp-container'];
+        if ($model->load(Yii::$app->request->post())) {
+            $this->convertProfileDatesToGregorian($model);
+            if ($model->save()) {
+                // เปิดผ่าน .open-modal → ตอบ JSON ให้ erp.js ปิด modal + reload pjax
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'success', 'message' => 'สร้างเกณฑ์ค่าเสื่อมเรียบร้อย', 'container' => '#am-dp-container'];
+                }
+                Yii::$app->session->setFlash('success', 'สร้างเกณฑ์ค่าเสื่อมเรียบร้อย');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
-            Yii::$app->session->setFlash('success', 'สร้างเกณฑ์ค่าเสื่อมเรียบร้อย');
-            return $this->redirect(['view', 'id' => $model->id]);
         }
+
+        $this->convertProfileDatesToThai($model);
 
         // GET/validation-fail ผ่าน AJAX → ส่งเนื้อหาฟอร์มเข้า modal
         if (Yii::$app->request->isAjax) {
@@ -225,14 +231,19 @@ class DepreciationProfileController extends Controller
         $model = $this->findModel($id);
 
         // ป้องกันแก้เกณฑ์ที่ถูกใช้แล้ว (กระทบ snapshot ทรัพย์สินเก่า) — แนะนำสร้างเกณฑ์ใหม่
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['status' => 'success', 'message' => 'บันทึกการแก้ไขเรียบร้อย (ไม่กระทบ snapshot ทรัพย์สินเดิม)', 'container' => '#am-dp-container'];
+        if ($model->load(Yii::$app->request->post())) {
+            $this->convertProfileDatesToGregorian($model);
+            if ($model->save()) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'success', 'message' => 'บันทึกการแก้ไขเรียบร้อย (ไม่กระทบ snapshot ทรัพย์สินเดิม)', 'container' => '#am-dp-container'];
+                }
+                Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขเรียบร้อย (ไม่กระทบ snapshot ทรัพย์สินเดิม)');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
-            Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขเรียบร้อย (ไม่กระทบ snapshot ทรัพย์สินเดิม)');
-            return $this->redirect(['view', 'id' => $model->id]);
         }
+
+        $this->convertProfileDatesToThai($model);
 
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -284,6 +295,30 @@ class DepreciationProfileController extends Controller
             return $this->redirect(['view', 'id' => $pid]);
         }
         return $this->redirect(['index']);
+    }
+
+    private function convertProfileDatesToGregorian(DepreciationProfile $model): void
+    {
+        foreach (['effective_from', 'effective_to'] as $attribute) {
+            $value = $model->{$attribute};
+            if ($value === null || $value === '') {
+                $model->{$attribute} = null;
+                continue;
+            }
+
+            $converted = AppHelper::convertToGregorian($value);
+            $model->{$attribute} = $converted ?? $value;
+        }
+    }
+
+    private function convertProfileDatesToThai(DepreciationProfile $model): void
+    {
+        foreach (['effective_from', 'effective_to'] as $attribute) {
+            $value = $model->{$attribute};
+            if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                $model->{$attribute} = AppHelper::convertToThai($value);
+            }
+        }
     }
 
     protected function findModel($id)
