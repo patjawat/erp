@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\modules\housing\models\HousingRequest;
 
 /** @var string $active */
 $items = [
@@ -12,11 +13,17 @@ $items = [
     'request' => ['label' => 'คำขอ', 'url' => ['/housing/request/index'], 'icon' => 'clipboard-list'],
     'guest' => ['label' => 'บุคคลภายนอก', 'url' => ['/housing/guest/index'], 'icon' => 'user-round-plus'],
 ];
+$newRequestCount = (int)HousingRequest::find()
+    ->where(['status' => HousingRequest::STATUS_SUBMITTED])
+    ->count();
 ?>
 <div class="d-flex flex-wrap gap-2">
     <?php foreach ($items as $key => $item): ?>
         <?= Html::a(
-            '<i data-lucide="' . $item['icon'] . '"></i> ' . Html::encode($item['label']),
+            '<i data-lucide="' . $item['icon'] . '"></i> ' . Html::encode($item['label'])
+                . ($key === 'request' && $newRequestCount > 0
+                    ? ' <span class="badge rounded-pill text-bg-danger ms-1">' . $newRequestCount . '</span>'
+                    : ''),
             $item['url'],
             ['class' => 'btn btn-sm ' . ($active === $key ? 'btn-primary' : 'btn-outline-secondary')]
         ) ?>

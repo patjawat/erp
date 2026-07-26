@@ -91,7 +91,7 @@ final class HousingRequest extends HousingActiveRecord
             self::STATUS_COMMITTEE_REVIEW => 'รอพิจารณา',
             self::STATUS_APPROVED => 'อนุมัติ',
             self::STATUS_REJECTED => 'ไม่อนุมัติ',
-            self::STATUS_ALLOCATED => 'จัดสรรแล้ว',
+            self::STATUS_ALLOCATED => 'รอรับมอบ',
             self::STATUS_ACTIVE => 'เข้าอยู่แล้ว',
             self::STATUS_COMPLETED => 'ดำเนินการเสร็จ',
             self::STATUS_CANCELLED => 'ยกเลิก',

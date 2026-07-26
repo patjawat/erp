@@ -9,7 +9,6 @@ use app\modules\housing\models\Building;
 use app\modules\housing\models\HousingRequest;
 use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\Room;
-use app\modules\housing\models\Resident;
 use app\modules\housing\models\Unit;
 use app\modules\housing\services\RequestWorkflowService;
 use app\modules\housing\services\RequestNumberService;
@@ -206,35 +205,12 @@ final class RequestController extends BaseController
         if (!$occupancy || $request->status !== HousingRequest::STATUS_ALLOCATED) {
             throw new \DomainException('ไม่พบการจัดสรรที่พร้อมยืนยันเข้าอยู่');
         }
-        $occupancy->status = Occupancy::STATUS_ACTIVE;
-        $occupancy->start_date = Yii::$app->request->post('start_date') ?: date('Y-m-d');
-        $occupancy->save(false, ['status', 'start_date', 'updated_at', 'updated_by']);
-        $employee = Employees::findOne($occupancy->emp_id);
-        if ($employee && !Resident::find()->where(['occupancy_id' => $occupancy->id, 'resident_type' => 'employee'])->exists()) {
-            $resident = new Resident([
-                'occupancy_id' => $occupancy->id,
-                'resident_type' => 'employee',
-                'relationship' => 'self',
-                'prefix' => $employee->prefix,
-                'first_name' => $employee->fname,
-                'last_name' => $employee->lname,
-                'citizen_id' => $employee->cid,
-                'phone' => $employee->phone,
-                'start_date' => $occupancy->start_date,
-                'count_for_charge' => true,
-            ]);
-            if (!$resident->save()) {
-                throw new \RuntimeException(implode(' ', $resident->getFirstErrors()));
-            }
-        }
-        (new UnitStatusService())->refresh((int)$occupancy->unit_id);
-        (new RequestWorkflowService())->transition($request, HousingRequest::STATUS_ACTIVE, 'ยืนยันเข้าอยู่');
-        return $this->redirect(['view', 'id' => $id]);
+        return $this->redirect(['/housing/handover/prepare', 'request_id' => $id]);
     }
 
     private function findModel(int $id): HousingRequest
     {
-        if (($model = HousingRequest::find()->with(['logs', 'decision', 'occupancy.unit', 'occupancy.room'])->where(['housing_request.id' => $id])->one()) === null) {
+        if (($model = HousingRequest::find()->with(['logs', 'decision', 'occupancy.unit', 'occupancy.room', 'occupancy.handover'])->where(['housing_request.id' => $id])->one()) === null) {
             throw new NotFoundHttpException('ไม่พบคำขอ');
         }
         return $model;

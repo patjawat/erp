@@ -78,4 +78,9 @@ final class Occupancy extends HousingActiveRecord
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);
     }
+
+    public function getHandover(): ActiveQuery
+    {
+        return $this->hasOne(Handover::class, ['occupancy_id' => 'id']);
+    }
 }

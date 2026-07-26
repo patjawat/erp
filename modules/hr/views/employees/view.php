@@ -35,6 +35,7 @@ $this->registerCss(<<<CSS
 .profile-nav-item__icon{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;color:#718096}
 .profile-nav-item__icon svg{width:14px;height:14px}
 .profile-nav-item__count{min-width:24px;padding:.15rem .4rem;color:#4a5568;background:#eef2f7;border-radius:999px;font-size:.7rem;font-variant-numeric:tabular-nums;text-align:center}
+.profile-nav-item__count.is-alert{color:#fff;background:#b91c1c;font-weight:700}
 .profile-nav-item.is-coming-soon{cursor:default}
 .profile-nav-item.is-coming-soon:hover{background:transparent}
 .profile-nav-item.is-coming-soon .profile-nav-item__title,.profile-nav-item.is-coming-soon .profile-nav-item__icon{color:#475569}
@@ -100,6 +101,10 @@ if (!$isSelfProfile):
                         }
                         $itemActive = ((string) ($list['name'] ?? '') === (string) $name);
                         $comingSoon = !empty($list['coming_soon']);
+                        $itemCount = (($list['name'] ?? '') === 'housing' && $isSelfProfile)
+                            ? (int)($housingActionCount ?? 0)
+                            : (int)($list['count'] ?? 0);
+                        $isHousingAlert = (($list['name'] ?? '') === 'housing' && $isSelfProfile && $itemCount > 0);
                     ?>
                     <?php if ($comingSoon): ?>
                     <div class="profile-nav-item is-coming-soon"
@@ -123,7 +128,7 @@ if (!$isSelfProfile):
                             <span class="profile-nav-item__title"><?= Html::encode($list['title']) ?></span>
                             <span class="profile-nav-item__subtitle"><?= Html::encode($list['subtitle']) ?></span>
                         </span>
-                        <?php if ((int) $list['count'] > 0): ?><span class="profile-nav-item__count"><?= (int) $list['count'] ?></span><?php endif ?>
+                        <?php if ($itemCount > 0): ?><span class="profile-nav-item__count <?= $isHousingAlert ? 'is-alert' : '' ?>"><?= $itemCount ?></span><?php endif ?>
                     </a>
                     <?php endif; ?>
                     <?php endforeach; ?>
