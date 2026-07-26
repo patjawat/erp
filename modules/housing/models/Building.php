@@ -81,6 +81,12 @@ final class Building extends HousingActiveRecord
         return $this->hasOne(Employees::class, ['id' => 'responsible_employee_id']);
     }
 
+    public function getMaintenanceRequests(): ActiveQuery
+    {
+        return $this->hasMany(MaintenanceRequest::class, ['building_id' => 'id'])
+            ->orderBy(['reported_at' => SORT_DESC]);
+    }
+
     public function validateResponsibleEmployee(string $attribute): void
     {
         if ($this->$attribute === null || $this->$attribute === '') {

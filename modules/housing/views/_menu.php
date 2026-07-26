@@ -7,6 +7,7 @@ $items = [
     'dashboard' => ['label' => 'กระดานห้องพัก', 'url' => ['/housing/dashboard/index'], 'icon' => 'layout-dashboard'],
     'building' => ['label' => 'บ้านพักและแฟลต', 'url' => ['/housing/building/index'], 'icon' => 'building-2'],
     'unit' => ['label' => 'ยูนิตและห้อง', 'url' => ['/housing/unit/index'], 'icon' => 'door-open'],
+    'maintenance' => ['label' => 'แจ้งซ่อม', 'url' => ['/housing/maintenance/index'], 'icon' => 'wrench'],
     'request' => ['label' => 'คำขอ', 'url' => ['/housing/request/index'], 'icon' => 'clipboard-list'],
     'guest' => ['label' => 'บุคคลภายนอก', 'url' => ['/housing/guest/index'], 'icon' => 'user-round-plus'],
 ];
