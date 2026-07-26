@@ -148,6 +148,10 @@ $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile
                 <i data-lucide="menu"></i>
             </button>
             <button type="button" class="header-btn d-none d-lg-flex" id="toggleFullscreen"><i data-lucide="maximize"></i> </button>
+            <?php $isDark = (isset($_COOKIE['theme_mode']) && $_COOKIE['theme_mode'] === 'dark'); ?>
+            <button type="button" class="header-btn" id="toggleTheme" title="สลับโหมดสว่าง/มืด" aria-label="สลับโหมดสว่าง/มืด">
+                <i data-lucide="<?= $isDark ? 'sun' : 'moon-star' ?>"></i>
+            </button>
             <?php if(yii::$app->user->can('admin')):?>
             <a href="<?= Url::to(['/settings']) ?>" class="header-btn">
                 <i data-lucide="settings"></i>
@@ -215,9 +219,22 @@ $(function () {
         }
     });
 
-    /* โหมดสีใช้ data-bs-theme จาก layout (ยกเลิก dark mode แล้ว) */
-    $('html').attr('data-bs-theme', '$colorName');
-    localStorage.removeItem('theme');
+    /* ======================
+     * สลับโหมดสว่าง/มืด (เก็บรายคนใน cookie theme_mode; light = ใช้สีแบรนด์ '$colorName')
+     * ค่าเริ่มต้นถูก render จากฝั่ง PHP แล้ว ที่นี่จัดการเฉพาะตอนกดสลับ
+     * ====================== */
+    function erpSetThemeIcon(isDark) {
+        var el = document.querySelector('#toggleTheme i');
+        if (!el) return;
+        el.setAttribute('data-lucide', isDark ? 'sun' : 'moon-star');
+        if (window.lucide && lucide.createIcons) { lucide.createIcons(); }
+    }
+    $('#toggleTheme').on('click', function () {
+        var toDark = document.documentElement.getAttribute('data-bs-theme') !== 'dark';
+        document.documentElement.setAttribute('data-bs-theme', toDark ? 'dark' : '$colorName');
+        document.cookie = 'theme_mode=' + (toDark ? 'dark' : 'light') + ';path=/;max-age=31536000;samesite=lax';
+        erpSetThemeIcon(toDark);
+    });
 
     /* ======================
      * Fullscreen
