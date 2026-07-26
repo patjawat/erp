@@ -14,10 +14,12 @@ use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
+use app\modules\housing\services\HousingUploadService;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\UploadedFile;
@@ -74,7 +76,8 @@ final class UnitController extends BaseController
         )));
         if ($assetRefs !== []) {
             $assetImages = Uploads::find()
-                ->where(['ref' => $assetRefs, 'name' => 'housing_asset_photo'])
+                ->where(['ref' => $assetRefs, 'name' => HousingUploadService::SLOT_ASSET_PHOTO])
+                ->orderBy(['id' => SORT_ASC])
                 ->indexBy('ref')
                 ->all();
         }
@@ -121,8 +124,44 @@ final class UnitController extends BaseController
         if ($model->getRooms()->exists()) {
             Yii::$app->session->setFlash('error', 'ไม่สามารถลบยูนิตที่มีห้องอยู่ได้');
         } else {
-            $model->delete();
-            Yii::$app->session->setFlash('success', 'ลบยูนิตเรียบร้อย');
+            $uploadService = new HousingUploadService();
+            $assetRefs = AssetAssignment::find()
+                ->select('ref')
+                ->where(['unit_id' => $model->id])
+                ->column();
+            $locationUploadIds = array_map(
+                'intval',
+                LocationPhoto::find()
+                    ->select('upload_id')
+                    ->where(['unit_id' => $model->id])
+                    ->column()
+            );
+            $uploadIds = array_merge(
+                $locationUploadIds,
+                $uploadService->findIdsByRefsAndSlots(
+                    [(string) $model->ref],
+                    [HousingUploadService::SLOT_LOCATION_PHOTO]
+                ),
+                $uploadService->findIdsByRefsAndSlots(
+                    $assetRefs,
+                    [HousingUploadService::SLOT_ASSET_PHOTO]
+                )
+            );
+            try {
+                if ($model->delete() === false) {
+                    throw new \RuntimeException('ไม่สามารถลบยูนิตได้');
+                }
+                $failedIds = $uploadService->deleteUploads($uploadIds);
+                if ($failedIds !== []) {
+                    Yii::warning('ลบไฟล์ของยูนิตไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+                    Yii::$app->session->setFlash('warning', 'ลบยูนิตแล้ว แต่มีไฟล์รูปภาพบางรายการรอการตรวจสอบ');
+                } else {
+                    Yii::$app->session->setFlash('success', 'ลบยูนิตเรียบร้อย');
+                }
+            } catch (\Throwable $exception) {
+                Yii::error($exception, __METHOD__);
+                Yii::$app->session->setFlash('error', 'ไม่สามารถลบยูนิตได้ กรุณาตรวจสอบข้อมูลที่เกี่ยวข้องแล้วลองใหม่');
+            }
         }
         return $this->redirect(['index']);
     }
@@ -166,11 +205,22 @@ final class UnitController extends BaseController
     {
         $model = $this->findAssetModel($id);
         $redirect = $this->locationUrl((int) $model->unit_id, $model->room_id ? (int) $model->room_id : null);
-        foreach (Uploads::find()->where(['ref' => $model->ref, 'name' => 'housing_asset_photo'])->all() as $upload) {
-            FileManagerHelper::Deletefile($upload->id);
+        $uploadService = new HousingUploadService();
+        $uploadIds = $uploadService->findIdsByRefsAndSlots(
+            [(string) $model->ref],
+            [HousingUploadService::SLOT_ASSET_PHOTO]
+        );
+        if ($model->delete() === false) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบรายการอุปกรณ์ได้ กรุณาลองใหม่อีกครั้ง');
+            return $this->redirect($redirect);
         }
-        $model->delete();
-        Yii::$app->session->setFlash('success', 'ลบรายการอุปกรณ์แล้ว');
+        $failedIds = $uploadService->deleteUploads($uploadIds);
+        if ($failedIds !== []) {
+            Yii::warning('ลบรูปอุปกรณ์ไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+            Yii::$app->session->setFlash('warning', 'ลบรายการอุปกรณ์แล้ว แต่มีไฟล์รูปภาพรอการตรวจสอบ');
+        } else {
+            Yii::$app->session->setFlash('success', 'ลบรายการอุปกรณ์แล้ว');
+        }
         return $this->redirect($redirect);
     }
 
@@ -182,38 +232,68 @@ final class UnitController extends BaseController
             $model->photo_file = UploadedFile::getInstance($model, 'photo_file');
         }
         if (Yii::$app->request->isPost && $model->validate()) {
-            $upload = FileManagerHelper::saveUploadedFile(
-                $model->photo_file,
-                (string) ($room?->ref ?? $unit->ref),
-                'housing_location_photo',
-                false
-            );
-            if ($upload === null) {
-                $model->addError('photo_file', 'ไม่สามารถจัดเก็บรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
-            } else {
+            $transaction = Yii::$app->db->beginTransaction();
+            $uploadService = new HousingUploadService();
+            $upload = null;
+            try {
+                $this->lockLocation($unit->id, $room?->id);
+                $upload = FileManagerHelper::saveUploadedFile(
+                    $model->photo_file,
+                    (string) ($room?->ref ?? $unit->ref),
+                    HousingUploadService::SLOT_LOCATION_PHOTO,
+                    false
+                );
+                if ($upload === null) {
+                    $model->addError('photo_file', 'ไม่สามารถจัดเก็บรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+                    throw new \RuntimeException('จัดเก็บรูปภาพสถานที่ไม่สำเร็จ');
+                }
                 $model->upload_id = $upload->id;
                 if (!$this->locationHasPrimaryPhoto($unit, $room)) {
                     $model->is_primary = 1;
                 }
-                $transaction = Yii::$app->db->beginTransaction();
                 if ($model->is_primary) {
                     LocationPhoto::updateAll(
                         ['is_primary' => 0],
                         ['unit_id' => $unit->id, 'room_id' => $room?->id]
                     );
                 }
-                if ($model->save(false)) {
-                    $transaction->commit();
-                    Yii::$app->session->setFlash('success', 'เพิ่มรูปภาพแล้ว');
-                    return $this->redirect($this->locationUrl($unit->id, $room?->id));
+                if (!$model->save(false)) {
+                    throw new \RuntimeException('บันทึกข้อมูลรูปภาพสถานที่ไม่สำเร็จ');
                 }
-                $transaction->rollBack();
-                FileManagerHelper::Deletefile($upload->id);
+                $transaction->commit();
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'message' => 'เพิ่มรูปภาพแล้ว',
+                        'redirect' => Url::to($this->locationUrl($unit->id, $room?->id)),
+                    ];
+                }
+                Yii::$app->session->setFlash('success', 'เพิ่มรูปภาพแล้ว');
+                return $this->redirect($this->locationUrl($unit->id, $room?->id));
+            } catch (\Throwable $exception) {
+                if ($upload !== null) {
+                    $failedIds = $uploadService->deleteUploads([(int) $upload->id]);
+                    if ($failedIds !== []) {
+                        Yii::error('ย้อนกลับรูปสถานที่ไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+                    }
+                }
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                $model->setOldAttributes(null);
+                $model->id = null;
+                if (!$model->hasErrors('photo_file')) {
+                    $model->addError('photo_file', 'ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+                }
+                Yii::error($exception, __METHOD__);
             }
         }
         if (Yii::$app->request->isPost && Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['errors' => ActiveForm::validate($model)];
+            return ['errors' => $model->hasErrors()
+                ? $this->activeFormErrors($model)
+                : ActiveForm::validate($model)];
         }
         $params = ['model' => $model, 'unit' => $unit, 'room' => $room];
         if (Yii::$app->request->isAjax) {
@@ -228,16 +308,26 @@ final class UnitController extends BaseController
         $photo = $this->findPhotoModel($id);
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            $this->lockLocation((int) $photo->unit_id, $photo->room_id ? (int) $photo->room_id : null);
+            if (!$photo->refresh()) {
+                throw new NotFoundHttpException('ไม่พบรูปภาพ');
+            }
             LocationPhoto::updateAll(
                 ['is_primary' => 0],
                 ['unit_id' => $photo->unit_id, 'room_id' => $photo->room_id]
             );
-            $photo->updateAttributes(['is_primary' => 1]);
+            if (LocationPhoto::updateAll(['is_primary' => 1], ['id' => $photo->id]) < 1) {
+                throw new \RuntimeException('ไม่สามารถกำหนดภาพหลักได้');
+            }
+            $photo->is_primary = 1;
             $transaction->commit();
             Yii::$app->session->setFlash('success', 'กำหนดภาพหลักแล้ว');
         } catch (\Throwable $exception) {
-            $transaction->rollBack();
-            throw $exception;
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            Yii::error($exception, __METHOD__);
+            Yii::$app->session->setFlash('error', 'ไม่สามารถกำหนดภาพหลักได้ กรุณาลองใหม่อีกครั้ง');
         }
         return $this->redirect($this->locationUrl((int) $photo->unit_id, $photo->room_id ? (int) $photo->room_id : null));
     }
@@ -246,12 +336,19 @@ final class UnitController extends BaseController
     {
         $photo = $this->findPhotoModel($id);
         $redirect = $this->locationUrl((int) $photo->unit_id, $photo->room_id ? (int) $photo->room_id : null);
-        $wasPrimary = (bool) $photo->is_primary;
-        $uploadId = (int) $photo->upload_id;
-        $unitId = (int) $photo->unit_id;
-        $roomId = $photo->room_id ? (int) $photo->room_id : null;
-        if ($photo->delete()) {
-            FileManagerHelper::Deletefile($uploadId);
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->lockLocation((int) $photo->unit_id, $photo->room_id ? (int) $photo->room_id : null);
+            if (!$photo->refresh()) {
+                throw new NotFoundHttpException('ไม่พบรูปภาพ');
+            }
+            $wasPrimary = (bool) $photo->is_primary;
+            $uploadId = (int) $photo->upload_id;
+            $unitId = (int) $photo->unit_id;
+            $roomId = $photo->room_id ? (int) $photo->room_id : null;
+            if ($photo->delete() === false) {
+                throw new \RuntimeException('ไม่สามารถลบข้อมูลรูปภาพได้');
+            }
             if ($wasPrimary) {
                 $replacement = LocationPhoto::find()
                     ->where(['unit_id' => $unitId, 'room_id' => $roomId])
@@ -259,6 +356,21 @@ final class UnitController extends BaseController
                     ->one();
                 $replacement?->updateAttributes(['is_primary' => 1]);
             }
+            $transaction->commit();
+        } catch (\Throwable $exception) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            Yii::error($exception, __METHOD__);
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+            return $this->redirect($redirect);
+        }
+
+        $failedIds = (new HousingUploadService())->deleteUploads([$uploadId]);
+        if ($failedIds !== []) {
+            Yii::warning('ลบไฟล์รูปสถานที่ไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+            Yii::$app->session->setFlash('warning', 'ลบข้อมูลรูปภาพแล้ว แต่ไฟล์ยังรอการตรวจสอบ');
+        } else {
             Yii::$app->session->setFlash('success', 'ลบรูปภาพแล้ว');
         }
         return $this->redirect($redirect);
@@ -292,33 +404,89 @@ final class UnitController extends BaseController
             $model->room_id = $room?->id;
             $model->image_file = UploadedFile::getInstance($model, 'image_file');
         }
-        if (Yii::$app->request->isPost && $model->validate() && $model->save(false)) {
-            if ($model->image_file !== null) {
-                $upload = FileManagerHelper::saveUploadedFile(
-                    $model->image_file,
-                    (string) $model->ref,
-                    'housing_asset_photo',
-                    true
-                );
-                if ($upload === null) {
-                    $model->addError('image_file', 'ไม่สามารถจัดเก็บรูปอุปกรณ์ได้ กรุณาลองใหม่อีกครั้ง');
+        if (Yii::$app->request->isPost && $model->validate()) {
+            $wasNewRecord = $model->isNewRecord;
+            $transaction = Yii::$app->db->beginTransaction();
+            $uploadService = new HousingUploadService();
+            $newUpload = null;
+            $oldUploadIds = [];
+            try {
+                if (!$model->save(false)) {
+                    throw new \RuntimeException('ไม่สามารถบันทึกรายการอุปกรณ์ได้');
+                }
+                if ($model->image_file !== null) {
+                    $oldUploadIds = $uploadService->findIdsByRefsAndSlots(
+                        [(string) $model->ref],
+                        [HousingUploadService::SLOT_ASSET_PHOTO]
+                    );
+                    $newUpload = FileManagerHelper::saveUploadedFile(
+                        $model->image_file,
+                        (string) $model->ref,
+                        HousingUploadService::SLOT_ASSET_PHOTO,
+                        false
+                    );
+                    if ($newUpload === null) {
+                        $model->addError('image_file', 'ไม่สามารถจัดเก็บรูปอุปกรณ์ได้ กรุณาลองใหม่อีกครั้ง');
+                        throw new \RuntimeException('จัดเก็บรูปอุปกรณ์ไม่สำเร็จ');
+                    }
+                }
+                $transaction->commit();
+            } catch (\Throwable $exception) {
+                if ($newUpload !== null) {
+                    $failedIds = $uploadService->deleteUploads([(int) $newUpload->id]);
+                    if ($failedIds !== []) {
+                        Yii::error('ย้อนกลับรูปอุปกรณ์ไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+                    }
+                }
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                if ($wasNewRecord) {
+                    $model->setOldAttributes(null);
+                    $model->id = null;
+                }
+                if (!$model->hasErrors('image_file')) {
+                    $model->addError('image_file', 'ไม่สามารถบันทึกรายการและรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+                }
+                Yii::error($exception, __METHOD__);
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['errors' => $this->activeFormErrors($model)];
                 }
             }
+
             if (!$model->hasErrors()) {
+                $failedCleanupIds = $newUpload === null
+                    ? []
+                    : $uploadService->deleteUploads($oldUploadIds);
+                $hasCleanupWarning = $failedCleanupIds !== [];
+                if ($hasCleanupWarning) {
+                    Yii::warning('ลบรูปอุปกรณ์เดิมไม่สำเร็จ upload IDs: ' . implode(',', $failedCleanupIds), __METHOD__);
+                }
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return [
                         'status' => 'success',
-                        'message' => 'บันทึกรายการอุปกรณ์แล้ว',
+                        'level' => $hasCleanupWarning ? 'warning' : 'success',
+                        'message' => $hasCleanupWarning
+                            ? 'บันทึกรายการแล้ว แต่มีรูปภาพเดิมรอการตรวจสอบ'
+                            : 'บันทึกรายการอุปกรณ์แล้ว',
                         'redirect' => $this->locationUrl($unit->id, $room?->id),
                     ];
+                }
+                if ($hasCleanupWarning) {
+                    Yii::$app->session->setFlash('warning', 'บันทึกรายการแล้ว แต่มีรูปภาพเดิมรอการตรวจสอบ');
+                } else {
+                    Yii::$app->session->setFlash('success', 'บันทึกรายการอุปกรณ์แล้ว');
                 }
                 return $this->redirect($this->locationUrl($unit->id, $room?->id));
             }
         }
         if (Yii::$app->request->isPost && Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['errors' => ActiveForm::validate($model)];
+            return ['errors' => $model->hasErrors()
+                ? $this->activeFormErrors($model)
+                : ActiveForm::validate($model)];
         }
         $params = ['model' => $model, 'unit' => $unit, 'room' => $room];
         if (Yii::$app->request->isAjax) {
@@ -373,6 +541,22 @@ final class UnitController extends BaseController
         return LocationPhoto::find()
             ->where(['unit_id' => $unit->id, 'room_id' => $room?->id, 'is_primary' => 1])
             ->exists();
+    }
+
+    private function lockLocation(int $unitId, ?int $roomId): void
+    {
+        $db = Yii::$app->db;
+        $tableName = $roomId === null ? Unit::tableName() : Room::tableName();
+        $locationId = $roomId ?? $unitId;
+        $quotedTable = $db->quoteTableName($tableName);
+        $quotedId = $db->quoteColumnName('id');
+        $lockedId = $db->createCommand(
+            "SELECT {$quotedId} FROM {$quotedTable} WHERE {$quotedId} = :id FOR UPDATE",
+            [':id' => $locationId]
+        )->queryScalar();
+        if ($lockedId === false) {
+            throw new NotFoundHttpException('ไม่พบสถานที่สำหรับจัดการรูปภาพ');
+        }
     }
 
     private function locationUrl(int $unitId, ?int $roomId): array

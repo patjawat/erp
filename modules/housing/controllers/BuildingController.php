@@ -12,6 +12,7 @@ use app\modules\housing\models\Floor;
 use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\services\HousingAccessService;
+use app\modules\housing\services\HousingUploadService;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -43,7 +44,8 @@ final class BuildingController extends BaseController
             $provider->getModels()
         )));
         $buildingImages = $refs === [] ? [] : Uploads::find()
-            ->where(['ref' => $refs, 'name' => 'building_image'])
+            ->where(['ref' => $refs, 'name' => HousingUploadService::SLOT_BUILDING_IMAGE])
+            ->orderBy(['id' => SORT_ASC])
             ->indexBy('ref')
             ->all();
         $eligibleEmployeeIds = HousingAccessService::eligibleEmployeeIds();
@@ -80,7 +82,10 @@ final class BuildingController extends BaseController
             ->andWhere(['housing_occupancy.status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE]])
             ->orderBy(['housing_unit.code' => SORT_ASC, 'housing_occupancy.start_date' => SORT_ASC])
             ->all();
-        $buildingImage = Uploads::find()->where(['ref' => $model->ref, 'name' => 'building_image'])->one();
+        $buildingImage = Uploads::find()
+            ->where(['ref' => $model->ref, 'name' => HousingUploadService::SLOT_BUILDING_IMAGE])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
 
         return $this->render('view', [
             'model' => $model,
@@ -147,8 +152,26 @@ final class BuildingController extends BaseController
         if ($model->getUnits()->exists() || $model->getFloors()->exists()) {
             Yii::$app->session->setFlash('error', 'ไม่สามารถลบได้ เนื่องจากมีข้อมูลชั้นหรือยูนิตอยู่ในอาคารนี้');
         } else {
-            $model->delete();
-            Yii::$app->session->setFlash('success', 'ลบข้อมูลเรียบร้อย');
+            $uploadService = new HousingUploadService();
+            $uploadIds = $uploadService->findIdsByRefsAndSlots(
+                [(string) $model->ref],
+                [HousingUploadService::SLOT_BUILDING_IMAGE]
+            );
+            try {
+                if ($model->delete() === false) {
+                    throw new \RuntimeException('ไม่สามารถลบข้อมูลอาคารได้');
+                }
+                $failedIds = $uploadService->deleteUploads($uploadIds);
+                if ($failedIds !== []) {
+                    Yii::warning('ลบไฟล์รูปอาคารไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+                    Yii::$app->session->setFlash('warning', 'ลบข้อมูลแล้ว แต่มีไฟล์รูปภาพบางรายการรอการตรวจสอบ');
+                } else {
+                    Yii::$app->session->setFlash('success', 'ลบข้อมูลเรียบร้อย');
+                }
+            } catch (\Throwable $exception) {
+                Yii::error($exception, __METHOD__);
+                Yii::$app->session->setFlash('error', 'ไม่สามารถลบข้อมูลได้ กรุณาตรวจสอบข้อมูลที่เกี่ยวข้องแล้วลองใหม่');
+            }
         }
         return $this->redirect(['index']);
     }
@@ -158,26 +181,80 @@ final class BuildingController extends BaseController
         if ($model->load(Yii::$app->request->post())) {
             $model->building_image = UploadedFile::getInstance($model, 'building_image');
         }
-        if (Yii::$app->request->isPost && $model->validate() && $model->save(false)) {
-            if ($model->building_image !== null) {
-                $upload = FileManagerHelper::saveUploadedFile(
-                    $model->building_image,
-                    (string) $model->ref,
-                    'building_image',
-                    true
-                );
-                if ($upload === null) {
-                    $model->addError('building_image', 'ไม่สามารถจัดเก็บรูปภาพบ้านพักได้ กรุณาลองใหม่อีกครั้ง');
-                    if (Yii::$app->request->isAjax) {
-                        Yii::$app->response->format = Response::FORMAT_JSON;
-                        return ['errors' => ActiveForm::validate($model)];
-                    }
-                    return $this->renderForm($model, $title);
+        if (Yii::$app->request->isPost && $model->validate()) {
+            $wasNewRecord = $model->isNewRecord;
+            $transaction = Yii::$app->db->beginTransaction();
+            $uploadService = new HousingUploadService();
+            $newUpload = null;
+            $oldUploadIds = [];
+            try {
+                if (!$model->save(false)) {
+                    throw new \RuntimeException('ไม่สามารถบันทึกข้อมูลอาคารได้');
                 }
+                if ($model->building_image !== null) {
+                    $oldUploadIds = $uploadService->findIdsByRefsAndSlots(
+                        [(string) $model->ref],
+                        [HousingUploadService::SLOT_BUILDING_IMAGE]
+                    );
+                    $newUpload = FileManagerHelper::saveUploadedFile(
+                        $model->building_image,
+                        (string) $model->ref,
+                        HousingUploadService::SLOT_BUILDING_IMAGE,
+                        false
+                    );
+                    if ($newUpload === null) {
+                        $model->addError('building_image', 'ไม่สามารถจัดเก็บรูปภาพบ้านพักได้ กรุณาลองใหม่อีกครั้ง');
+                        throw new \RuntimeException('จัดเก็บรูปภาพอาคารไม่สำเร็จ');
+                    }
+                }
+                $transaction->commit();
+            } catch (\Throwable $exception) {
+                if ($newUpload !== null) {
+                    $failedCleanupIds = $uploadService->deleteUploads([(int) $newUpload->id]);
+                    if ($failedCleanupIds !== []) {
+                        Yii::error('ย้อนกลับไฟล์รูปอาคารไม่สำเร็จ upload IDs: ' . implode(',', $failedCleanupIds), __METHOD__);
+                    }
+                }
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                if ($wasNewRecord) {
+                    $model->setOldAttributes(null);
+                    $model->id = null;
+                }
+                if (!$model->hasErrors('building_image')) {
+                    $model->addError('building_image', 'ไม่สามารถบันทึกข้อมูลและรูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+                }
+                Yii::error($exception, __METHOD__);
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['errors' => $this->activeFormErrors($model)];
+                }
+                return $this->renderForm($model, $title);
+            }
+
+            $failedCleanupIds = $newUpload === null
+                ? []
+                : $uploadService->deleteUploads($oldUploadIds);
+            $hasCleanupWarning = $failedCleanupIds !== [];
+            if ($hasCleanupWarning) {
+                Yii::warning('ลบรูปอาคารเดิมไม่สำเร็จ upload IDs: ' . implode(',', $failedCleanupIds), __METHOD__);
             }
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['status' => 'success', 'message' => 'บันทึกข้อมูลเรียบร้อย', 'container' => '#housing-building-container'];
+                return [
+                    'status' => 'success',
+                    'level' => $hasCleanupWarning ? 'warning' : 'success',
+                    'message' => $hasCleanupWarning
+                        ? 'บันทึกข้อมูลแล้ว แต่มีรูปภาพเดิมรอการตรวจสอบ'
+                        : 'บันทึกข้อมูลเรียบร้อย',
+                    'container' => '#housing-building-container',
+                ];
+            }
+            if ($hasCleanupWarning) {
+                Yii::$app->session->setFlash('warning', 'บันทึกข้อมูลแล้ว แต่มีรูปภาพเดิมรอการตรวจสอบ');
+            } else {
+                Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อย');
             }
             return $this->redirect(['index']);
         }
@@ -191,7 +268,8 @@ final class BuildingController extends BaseController
     private function renderForm(Building $model, string $title)
     {
         $buildingImage = $model->isNewRecord ? null : Uploads::find()
-            ->where(['ref' => $model->ref, 'name' => 'building_image'])
+            ->where(['ref' => $model->ref, 'name' => HousingUploadService::SLOT_BUILDING_IMAGE])
+            ->orderBy(['id' => SORT_DESC])
             ->one();
         $inactiveResponsible = null;
         if (!$model->isNewRecord && $model->responsibleEmployee !== null

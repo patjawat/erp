@@ -40,10 +40,13 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 .housing-condition--damaged,.housing-condition--lost{color:#a23a43;background:#fcebec}
 .housing-detail .btn-primary{background:var(--h-primary);border-color:var(--h-primary)}
 @media(max-width:1199.98px){.housing-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:767.98px){.housing-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.housing-detail .table-responsive table{min-width:980px}.page-heading-actions{width:100%}.page-heading-actions .btn{flex:1;min-height:44px}}
+@media(max-width:767.98px){.housing-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.housing-detail .table-responsive table{min-width:980px}.page-heading-actions{width:100%}.page-heading-actions .btn{flex:1;min-height:44px}.housing-photo-actions .btn{min-height:44px;display:inline-flex;align-items:center}}
 @media(prefers-reduced-motion:reduce){.housing-detail *{scroll-behavior:auto!important;transition:none!important}}
 </style>
 <div class="container-fluid py-3 housing-detail">
+    <?php foreach (['success', 'warning', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?>
+        <div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?>" role="alert"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div>
+    <?php endif; endforeach; ?>
     <nav aria-label="เส้นทางนำทาง" class="small mb-2">
         <?= Html::a(Html::encode($backLabel), $backUrl, ['class' => 'text-decoration-none']) ?><span class="mx-2 detail-muted">/</span><span aria-current="page"><?= Html::encode($locationName) ?></span>
     </nav>
@@ -102,9 +105,9 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                 <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">รูปภาพ<?= $room ? 'ห้องพัก' : 'บ้านพัก/ยูนิต' ?></h2><?= Html::a('<i data-lucide="image-plus"></i> เพิ่มรูปภาพ', ['upload-photo', 'unit_id' => $unit->id, 'room_id' => $room?->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
                 <?php if ($photos): ?><div class="row g-3">
                     <?php foreach ($photos as $photo): ?><div class="col-6 col-md-4 col-xl-3">
-                        <img src="<?= Html::encode(FileManagerHelper::getImg($photo->upload_id)) ?>" class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" alt="<?= Html::encode($photo->caption ?: $locationName) ?>">
+                        <img src="<?= Html::encode(FileManagerHelper::getImg($photo->upload_id)) ?>" class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" alt="<?= Html::encode($photo->caption ?: $locationName) ?>" loading="lazy" decoding="async">
                         <div class="small mt-2"><?= Html::encode($photo->caption ?: 'ไม่มีคำอธิบาย') ?></div>
-                        <div class="d-flex gap-1 mt-2"><?php if (!$photo->is_primary): ?><?= Html::a('ใช้เป็นภาพหลัก', ['set-primary-photo', 'id' => $photo->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-method' => 'post']) ?><?php else: ?><span class="badge bg-primary-subtle text-primary-emphasis align-self-center">ภาพหลัก</span><?php endif; ?><?= Html::a('ลบ', ['delete-photo', 'id' => $photo->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ลบรูปภาพนี้หรือไม่?']) ?></div>
+                        <div class="d-flex gap-1 mt-2 housing-photo-actions"><?php if (!$photo->is_primary): ?><?= Html::a('ใช้เป็นภาพหลัก', ['set-primary-photo', 'id' => $photo->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-method' => 'post']) ?><?php else: ?><span class="badge bg-primary-subtle text-primary-emphasis align-self-center">ภาพหลัก</span><?php endif; ?><?= Html::a('ลบ', ['delete-photo', 'id' => $photo->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ลบรูปภาพนี้หรือไม่?']) ?></div>
                     </div><?php endforeach; ?>
                 </div><?php else: ?><div class="housing-photo-empty"><div><i data-lucide="images"></i><div class="fw-semibold mt-2">ยังไม่มีรูปภาพ</div><div class="small">เพิ่มภาพเพื่อบันทึกสภาพและรายละเอียดของสถานที่</div></div></div><?php endif; ?>
             </div>
@@ -124,7 +127,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                         <?php if ($assets): ?><div class="table-responsive"><table class="table table-hover align-middle mb-0">
                             <thead><tr><th>รูป</th><th>รายการ</th><th class="text-center">จำนวน</th><th>สภาพ</th><th class="text-end">ราคาต่อหน่วย</th><th class="text-end">มูลค่ารวม</th><th class="text-end">ค่าเช่า/เดือน</th><th>วันที่นำเข้า</th><th class="text-end">จัดการ</th></tr></thead>
                             <tbody><?php foreach ($assets as $asset): $assetImage = $assetImages[$asset->ref] ?? null; ?><tr>
-                                <td><?php if ($assetImage): ?><img class="housing-asset-thumb" src="<?= Html::encode(FileManagerHelper::getImg($assetImage->id)) ?>" alt="<?= Html::encode($asset->item_name) ?>"><?php else: ?><div class="housing-asset-thumb d-flex align-items-center justify-content-center detail-muted"><i data-lucide="package"></i></div><?php endif; ?></td>
+                                <td><?php if ($assetImage): ?><img class="housing-asset-thumb" src="<?= Html::encode(FileManagerHelper::getImg($assetImage->id)) ?>" alt="<?= Html::encode($asset->item_name) ?>" loading="lazy" decoding="async"><?php else: ?><div class="housing-asset-thumb d-flex align-items-center justify-content-center detail-muted"><i data-lucide="package"></i></div><?php endif; ?></td>
                                 <td><strong><?= Html::encode($asset->item_name) ?></strong><div class="small detail-muted"><?= Html::encode($asset->category ?: 'ไม่ระบุหมวด') ?></div></td>
                                 <td class="text-center"><?= Html::encode(Yii::$app->formatter->asDecimal($asset->quantity, 2) . ' ' . $asset->unit_name) ?></td>
                                 <td><span class="housing-condition housing-condition--<?= Html::encode($asset->condition_status) ?>"><?= Html::encode(AssetAssignment::conditionOptions()[$asset->condition_status] ?? $asset->condition_status) ?></span></td>
@@ -137,8 +140,8 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                 </div>
                 <aside class="col-xl-3"><div class="soft-panel p-3 position-sticky" style="top:1rem">
                     <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">รูปภาพ</h2><?= Html::a('<i data-lucide="image-plus"></i> เพิ่ม', ['upload-photo', 'unit_id' => $unit->id, 'room_id' => $room?->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
-                    <?php if ($primaryPhoto): ?><img class="housing-photo-main" src="<?= Html::encode(FileManagerHelper::getImg($primaryPhoto->upload_id)) ?>" alt="<?= Html::encode($primaryPhoto->caption ?: $locationName) ?>"><div class="small mt-2"><?= Html::encode($primaryPhoto->caption ?: 'ภาพหลัก') ?></div>
-                    <?php if (count($photos) > 1): ?><div class="housing-photo-grid mt-3"><?php foreach (array_slice($photos, 0, 4) as $photo): ?><button class="border-0 bg-transparent p-0" type="button" data-bs-toggle="tab" data-bs-target="#housing-photos" aria-label="ดูรูปภาพทั้งหมด"><img class="housing-photo-thumb<?= $photo->is_primary ? ' is-primary' : '' ?>" src="<?= Html::encode(FileManagerHelper::getImg($photo->upload_id)) ?>" alt=""></button><?php endforeach; ?></div><?php endif; ?>
+                    <?php if ($primaryPhoto): ?><img class="housing-photo-main" src="<?= Html::encode(FileManagerHelper::getImg($primaryPhoto->upload_id)) ?>" alt="<?= Html::encode($primaryPhoto->caption ?: $locationName) ?>" decoding="async"><div class="small mt-2"><?= Html::encode($primaryPhoto->caption ?: 'ภาพหลัก') ?></div>
+                    <?php if (count($photos) > 1): ?><div class="housing-photo-grid mt-3"><?php foreach (array_slice($photos, 0, 4) as $photo): ?><button class="border-0 bg-transparent p-0" type="button" data-bs-toggle="tab" data-bs-target="#housing-photos" aria-label="ดูรูปภาพทั้งหมด"><img class="housing-photo-thumb<?= $photo->is_primary ? ' is-primary' : '' ?>" src="<?= Html::encode(FileManagerHelper::getImg($photo->upload_id)) ?>" alt="" loading="lazy" decoding="async"></button><?php endforeach; ?></div><?php endif; ?>
                     <?php else: ?><div class="housing-photo-empty"><div><i data-lucide="image"></i><div class="small mt-2">ยังไม่มีรูปภาพ</div></div></div><?php endif; ?>
                     <hr><dl class="row small mb-0"><dt class="col-5 detail-muted">รหัส</dt><dd class="col-7"><?= Html::encode($location->code) ?></dd><dt class="col-5 detail-muted">อาคาร</dt><dd class="col-7"><?= Html::encode($unit->building->name ?? '—') ?></dd><dt class="col-5 detail-muted">ชั้น</dt><dd class="col-7"><?= Html::encode($unit->floor->name ?? 'ไม่ระบุ') ?></dd><dt class="col-5 detail-muted">ความจุ</dt><dd class="col-7"><?= Html::encode((string) ($location->capacity ?: 'ไม่ระบุ')) ?></dd></dl>
                 </div></aside>

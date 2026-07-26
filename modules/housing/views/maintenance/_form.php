@@ -23,8 +23,8 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
     <div class="col-md-6"><?= $form->field($model, 'repaired_at')->input('datetime-local') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'expense_amount')->input('number', ['min' => 0, 'step' => '.01']) ?></div>
     <div class="col-12"><?= $form->field($model, 'resolution')->textarea(['rows' => 3, 'placeholder' => 'บันทึกวิธีแก้ไขหรือเหตุผลที่ไม่สามารถดำเนินการ']) ?></div>
-    <div class="col-md-6"><?= $form->field($model, 'before_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('เพิ่มได้ไม่เกิน 10 ภาพ ขนาดไม่เกิน 10 MB ต่อไฟล์') ?></div>
-    <div class="col-md-6"><?= $form->field($model, 'after_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('เพิ่มภายหลังเมื่อดำเนินการแล้วได้') ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'before_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('รวมได้ไม่เกิน 10 ภาพ ขนาดไม่เกิน 10 MB และความละเอียดไม่เกิน 50 ล้านพิกเซลต่อไฟล์') ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'after_photos')->fileInput(['multiple' => true, 'accept' => 'image/jpeg,image/png,image/webp'])->hint('เพิ่มภายหลังได้ รวมไม่เกิน 10 ภาพ ขนาดไม่เกิน 10 MB และความละเอียดไม่เกิน 50 ล้านพิกเซลต่อไฟล์') ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">
     <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data-bs-dismiss' => 'modal']) ?>

@@ -18,7 +18,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['enctype' => 'multipar
     <div class="col-md-3"><?= $form->field($model, 'monthly_rent')->input('number', ['min' => 0, 'step' => '.01']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'condition_status')->dropDownList(AssetAssignment::conditionOptions()) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'assigned_at')->input('date') ?></div>
-    <div class="col-12"><?= $form->field($model, 'image_file')->fileInput(['accept' => 'image/jpeg,image/png,image/webp'])->hint('รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 10 MB') ?></div>
+    <div class="col-12"><?= $form->field($model, 'image_file')->fileInput(['accept' => 'image/jpeg,image/png,image/webp'])->hint('รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 10 MB และความละเอียดไม่เกิน 50 ล้านพิกเซล') ?></div>
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 2]) ?></div>
 </div>
 <div class="mt-3 d-flex justify-content-end gap-2">

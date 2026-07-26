@@ -8,6 +8,9 @@ $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this-
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'unit']) ?><?php $this->endBlock();
 ?>
 <div class="container-fluid py-3">
+<?php foreach (['success', 'warning', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?>
+<div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?>" role="alert"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div>
+<?php endif; endforeach; ?>
 <div class="card border-0 shadow-sm">
 <div class="card-header bg-body d-flex justify-content-between align-items-center"><div><div class="fw-semibold">ยูนิตและห้อง</div><div class="small text-muted">รองรับบ้านพักทั้งหลัง แฟลตครอบครัว และแฟลตโสดสองห้อง</div></div><?= Html::a('<i data-lucide="plus"></i> เพิ่มยูนิต', ['create', 'title' => 'เพิ่มยูนิต'], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-xl']) ?></div>
 <?php Pjax::begin(['id' => 'housing-unit-container', 'enablePushState' => false]); ?>

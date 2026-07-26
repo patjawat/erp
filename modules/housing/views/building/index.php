@@ -11,8 +11,8 @@ $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this-
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'building']) ?><?php $this->endBlock();
 ?>
 <div class="container-fluid py-3">
-    <?php foreach (['success', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?>
-        <div class="alert alert-<?= $type === 'error' ? 'danger' : 'success' ?>"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div>
+    <?php foreach (['success', 'warning', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?>
+        <div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?>"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div>
     <?php endif; endforeach; ?>
     <?php if (($responsibleAttentionCount ?? 0) > 0): ?>
         <div class="alert alert-warning d-flex gap-2 align-items-start" role="alert">

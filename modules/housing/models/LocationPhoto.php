@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\modules\housing\models;
 
 use app\modules\filemanager\models\Uploads;
+use app\modules\housing\validators\HousingImageDimensionsValidator;
 use yii\db\ActiveQuery;
 
 final class LocationPhoto extends HousingActiveRecord
@@ -30,6 +31,7 @@ final class LocationPhoto extends HousingActiveRecord
                 'maxSize' => 10 * 1024 * 1024,
                 'skipOnEmpty' => false,
             ],
+            [['photo_file'], HousingImageDimensionsValidator::class],
         ];
     }
 

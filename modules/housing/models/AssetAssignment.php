@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\modules\housing\models;
 
+use app\modules\housing\validators\HousingImageDimensionsValidator;
 use yii\db\ActiveQuery;
 
 final class AssetAssignment extends HousingActiveRecord
@@ -43,6 +44,7 @@ final class AssetAssignment extends HousingActiveRecord
                 'maxSize' => 10 * 1024 * 1024,
                 'skipOnEmpty' => true,
             ],
+            [['image_file'], HousingImageDimensionsValidator::class],
             [['room_id'], 'validateRoom'],
         ];
     }

@@ -68,7 +68,7 @@ $form = ActiveForm::begin([
                     <?= $form->field($model, 'building_image')->fileInput([
                         'accept' => 'image/jpeg,image/png,image/webp',
                         'class' => 'form-control',
-                    ])->hint('รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB รูปใหม่จะแทนที่รูปเดิม') ?>
+                    ])->hint('รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB และความละเอียดไม่เกิน 50 ล้านพิกเซล รูปใหม่จะแทนที่รูปเดิม') ?>
                 </div>
             </div>
         </div>

@@ -6,6 +6,7 @@ namespace app\modules\housing\models;
 
 use app\modules\hr\models\Employees;
 use app\modules\housing\services\HousingAccessService;
+use app\modules\housing\validators\HousingImageDimensionsValidator;
 use yii\db\ActiveQuery;
 
 final class Building extends HousingActiveRecord
@@ -48,6 +49,7 @@ final class Building extends HousingActiveRecord
                 'maxSize' => 10 * 1024 * 1024,
                 'skipOnEmpty' => true,
             ],
+            [['building_image'], HousingImageDimensionsValidator::class],
         ];
     }
 

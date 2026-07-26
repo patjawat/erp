@@ -490,13 +490,14 @@ function handleFormSubmit(formSelector, actionUrl, successCallback) {
           }
 
           if (response.status === "success") {
+            var isWarning = response.level === "warning";
             await erpHideModal("#main-modal");
 
             Swal.fire({
-              icon: "success",
-              title: "ดำเนินการสำเร็จ",
+              icon: isWarning ? "warning" : "success",
+              title: isWarning ? "บันทึกข้อมูลแล้ว แต่ต้องตรวจสอบ" : "ดำเนินการสำเร็จ",
               text: response.message || "บันทึกข้อมูลเรียบร้อยแล้ว",
-              timer: 1500,
+              timer: isWarning ? 3000 : 1500,
               showConfirmButton: false,
             }).then(async () => {
               if (typeof successCallback === "function") {

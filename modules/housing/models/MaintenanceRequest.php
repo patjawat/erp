@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\modules\housing\models;
 
 use app\modules\hr\models\Employees;
+use app\modules\housing\validators\HousingImageDimensionsValidator;
 use Yii;
 use yii\db\ActiveQuery;
 
@@ -71,6 +72,7 @@ final class MaintenanceRequest extends HousingActiveRecord
                 'maxFiles' => 10,
                 'skipOnEmpty' => true,
             ],
+            [['before_photos', 'after_photos'], HousingImageDimensionsValidator::class],
             [['assigned_employee_id'], 'exist',
                 'targetClass' => Employees::class,
                 'targetAttribute' => ['assigned_employee_id' => 'id'],
