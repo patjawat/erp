@@ -89,6 +89,10 @@ if (!$isSelfProfile):
                             $menuUrl = ['/profile', 'name' => 'training_roadmap'];
                         } elseif ($isSelfProfile && ($list['name'] ?? '') === 'idp') {
                             $menuUrl = ['/profile', 'name' => 'idp'];
+                        } elseif (($list['name'] ?? '') === 'housing') {
+                            $menuUrl = $isSelfProfile
+                                ? ['/profile', 'name' => 'housing']
+                                : ['/housing/request/index'];
                         } elseif (!$isSelfProfile && ($list['name'] ?? '') === 'idp') {
                             $menuUrl = ['/hr/idp/employee', 'emp_id' => $model->id];
                         } elseif ($isSelfProfile && !isset($list['url'])) {
@@ -142,6 +146,16 @@ if (!$isSelfProfile):
             'cycle' => $idpCycle ?? null,
             'plan' => $idpPlan ?? null,
             'isSelfProfile' => $isSelfProfile,
+        ]) ?>
+        <?php elseif($name === 'housing'):?>
+        <?= $this->render('@app/modules/housing/views/my/_profile_panel', [
+            'context' => $housingContext ?? [
+                'mode' => 'unavailable',
+                'employee' => $model,
+                'occupancy' => null,
+                'request' => null,
+            ],
+            'vacancies' => $housingVacancies ?? [],
         ]) ?>
         <?php elseif($name):?>
         <div>

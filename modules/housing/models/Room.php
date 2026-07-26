@@ -46,4 +46,17 @@ final class Room extends HousingActiveRecord
     {
         return $this->hasOne(Unit::class, ['id' => 'unit_id']);
     }
+
+    public function getAssets(): ActiveQuery
+    {
+        return $this->hasMany(AssetAssignment::class, ['room_id' => 'id'])
+            ->andWhere(['is_active' => 1])
+            ->orderBy(['item_name' => SORT_ASC]);
+    }
+
+    public function getPhotos(): ActiveQuery
+    {
+        return $this->hasMany(LocationPhoto::class, ['room_id' => 'id'])
+            ->orderBy(['is_primary' => SORT_DESC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC]);
+    }
 }

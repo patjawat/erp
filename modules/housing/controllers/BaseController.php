@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace app\modules\housing\controllers;
 
+use yii\base\Model;
 use yii\filters\AccessControl;
+use yii\helpers\Html;
 use yii\web\Controller;
 
 abstract class BaseController extends Controller
@@ -22,5 +24,15 @@ abstract class BaseController extends Controller
                 ],
             ],
         ]);
+    }
+
+    protected function activeFormErrors(Model $model): array
+    {
+        $result = [];
+        foreach ($model->getErrors() as $attribute => $errors) {
+            $result[Html::getInputId($model, $attribute)] = $errors;
+        }
+
+        return $result;
     }
 }

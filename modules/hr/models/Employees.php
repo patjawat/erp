@@ -954,7 +954,14 @@ class Employees extends Yii\db\ActiveRecord
             'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
             'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
             'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
-            'housing' => $comingSoon('housing', 'บ้านพัก', 'คำขอเข้าพัก ค่าใช้จ่าย และแจ้งซ่อม', 'house'),
+            'housing' => [
+                'name' => 'housing',
+                'title' => 'บ้านพัก',
+                'subtitle' => 'คำขอเข้าพัก ค่าใช้จ่าย และแจ้งซ่อม',
+                'icon' => '<i data-lucide="house" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+                'url' => ['/profile', 'name' => 'housing'],
+            ],
             'handover' => $comingSoon('handover', 'การส่งมอบงาน', 'งาน ทรัพย์สิน สิทธิ์ระบบ และความรู้', 'list-checks'),
             'exit_interview' => $comingSoon('exit_interview', 'Exit Interview', 'แบบสัมภาษณ์ก่อนสิ้นสุดการทำงาน', 'messages-square'),
         ];

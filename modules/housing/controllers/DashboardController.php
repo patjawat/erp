@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\modules\housing\controllers;
 
 use app\modules\housing\models\Building;
+use app\modules\housing\services\HousingAccessService;
 use app\modules\housing\models\Unit;
 use yii\db\Expression;
 
@@ -46,6 +47,15 @@ final class DashboardController extends BaseController
             $countQuery->andWhere(['building_id' => $building_id]);
         }
         $counts = $countQuery->all();
+        $eligibleEmployeeIds = HousingAccessService::eligibleEmployeeIds();
+        $responsibleAttentionCount = (int) Building::find()
+            ->where($eligibleEmployeeIds === []
+                ? []
+                : ['or',
+                    ['responsible_employee_id' => null],
+                    ['not in', 'responsible_employee_id', $eligibleEmployeeIds],
+                ])
+            ->count();
 
         return $this->render('index', [
             'buildings' => $buildings,
@@ -53,6 +63,7 @@ final class DashboardController extends BaseController
             'visibleUnitIds' => $visibleUnitIds,
             'counts' => $counts,
             'filters' => compact('building_id', 'status', 'q'),
+            'responsibleAttentionCount' => $responsibleAttentionCount,
         ]);
     }
 }

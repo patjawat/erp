@@ -11,6 +11,7 @@ $form = ActiveForm::begin(['id' => $formId, 'options' => ['data-list-url' => Url
     <div class="col-md-6"><?= $form->field($model, 'floor_id')->dropDownList($floorOptions, ['prompt' => 'ไม่ระบุชั้น']) ?></div>
     <div class="col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?></div>
     <div class="col-md-8"><?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?></div>
+    <div class="col-md-4"><?= $form->field($model, 'electric_account_no')->textInput(['maxlength' => true]) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'occupancy_mode')->dropDownList(Unit::modeOptions()) ?></div>
     <div class="col-md-3"><?= $form->field($model, 'capacity')->input('number', ['min' => 1]) ?></div>
     <div class="col-md-3"><?= $form->field($model, 'status')->dropDownList(Unit::statusOptions()) ?></div>

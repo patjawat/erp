@@ -4,7 +4,7 @@ use app\modules\housing\models\HousingRequest;
 use app\modules\housing\models\Unit;
 use yii\helpers\Html;
 
-$this->title = 'บ้านพักและสวัสดิการ';
+$this->title = 'บ้านพัก';
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 ?>
 <div class="container-fluid py-3">

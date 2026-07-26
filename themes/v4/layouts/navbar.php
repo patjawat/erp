@@ -139,7 +139,7 @@ $menuItems = [
         'show' => Yii::$app->user->can('housing.user')
             || Yii::$app->user->can('housing.staff')
             || Yii::$app->user->can('housing.admin'),
-        'label' => 'บ้านพักและสวัสดิการ',
+        'label' => 'บ้านพัก',
         'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')
             ? ['/housing/dashboard/index']
             : ['/housing/my/index'],

@@ -54,6 +54,7 @@ final class HousingRequest extends HousingActiveRecord
             'reason' => 'เหตุผล',
             'status' => 'สถานะ',
             'staff_note' => 'หมายเหตุเจ้าหน้าที่',
+            'requested_at' => 'วันที่ยื่นคำขอ',
         ];
     }
 

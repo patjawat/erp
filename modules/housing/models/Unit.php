@@ -32,6 +32,7 @@ final class Unit extends HousingActiveRecord
             [['description'], 'string'],
             [['code'], 'string', 'max' => 50],
             [['name'], 'string', 'max' => 150],
+            [['electric_account_no'], 'string', 'max' => 100],
             [['code'], 'unique'],
             [['occupancy_mode'], 'in', 'range' => array_keys(self::modeOptions())],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
@@ -48,6 +49,7 @@ final class Unit extends HousingActiveRecord
             'floor_id' => 'ชั้น',
             'code' => 'รหัสยูนิต',
             'name' => 'ชื่อยูนิต',
+            'electric_account_no' => 'หมายเลขผู้ใช้ไฟฟ้า',
             'occupancy_mode' => 'รูปแบบการพัก',
             'capacity' => 'ความจุ (ถ้ามี)',
             'monthly_base_fee' => 'ค่าพื้นฐานต่อเดือน',
@@ -71,6 +73,20 @@ final class Unit extends HousingActiveRecord
     {
         return $this->hasMany(Room::class, ['unit_id' => 'id'])
             ->orderBy(['sort_order' => SORT_ASC, 'code' => SORT_ASC]);
+    }
+
+    public function getAssets(): ActiveQuery
+    {
+        return $this->hasMany(AssetAssignment::class, ['unit_id' => 'id'])
+            ->andWhere(['room_id' => null, 'is_active' => 1])
+            ->orderBy(['item_name' => SORT_ASC]);
+    }
+
+    public function getPhotos(): ActiveQuery
+    {
+        return $this->hasMany(LocationPhoto::class, ['unit_id' => 'id'])
+            ->andWhere(['room_id' => null])
+            ->orderBy(['is_primary' => SORT_DESC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC]);
     }
 
     public static function modeOptions(): array
