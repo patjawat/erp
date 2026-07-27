@@ -49,6 +49,7 @@ $phone = (string) ($data['phone'] ?? '');
 $passengers = (string) ($data['passengers'] ?? '');
 $notes = (string) ($data['notes'] ?? ($data['coment'] ?? ''));
 $driver = (string) ($data['driver'] ?? '');
+$companions = $vehicle->companions();
 $dateRange = ((string) $vehicle->date_start === (string) $vehicle->date_end || !$vehicle->date_end)
     ? $formatDate((string) $vehicle->date_start)
     : ($formatDate((string) $vehicle->date_start) . ' ถึง ' . $formatDate((string) $vehicle->date_end));
@@ -163,6 +164,55 @@ $canEdit = in_array($status, ['Pending', 'รออนุมัติ'], true);
     text-align: right;
     overflow-wrap: anywhere;
 }
+.vv-people {
+    display: flex;
+    flex-direction: column;
+}
+.vv-person {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--ink-line);
+}
+.vv-person:last-child { border-bottom: 0; padding-bottom: 0; }
+.vv-person:first-child { padding-top: 0; }
+.vv-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--ink-line);
+    background: var(--surface-2);
+}
+.vv-avatar.is-guest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-4);
+}
+.vv-avatar.is-guest svg { width: 1.15rem; height: 1.15rem; }
+.vv-person-body { min-width: 0; flex: 1; }
+.vv-person-name {
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.vv-person-role {
+    margin-top: 1px;
+    color: var(--ink-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+.vv-people-count {
+    margin-left: var(--space-2xs);
+    color: var(--ink-4);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
 .vv-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -231,6 +281,31 @@ $canEdit = in_array($status, ['Pending', 'รออนุมัติ'], true);
                 <?php if ($driver !== ''): ?><div class="vv-row"><span class="vv-label">ผู้ขับ</span><span class="vv-value"><?= Html::encode($driver) ?></span></div><?php endif; ?>
                 <?php if ($notes !== ''): ?><div class="vv-row"><span class="vv-label">หมายเหตุ</span><span class="vv-value"><?= Html::encode($notes) ?></span></div><?php endif; ?>
             </section>
+
+            <?php if (($companions['count'] ?? 0) > 0): ?>
+                <section class="vv-card">
+                    <h2 class="vv-card-title">
+                        ผู้ร่วมเดินทาง
+                        <span class="vv-people-count"><?= (int) $companions['count'] ?> คน</span>
+                    </h2>
+                    <div class="vv-people">
+                        <?php foreach ($companions['items'] as $companion): ?>
+                            <?php $emp = $companion['employee']; ?>
+                            <div class="vv-person">
+                                <?php if ($emp): ?>
+                                    <img class="vv-avatar" src="<?= Html::encode($emp->showAvatar()) ?>" alt="" loading="lazy">
+                                <?php else: ?>
+                                    <span class="vv-avatar is-guest" aria-hidden="true"><i data-lucide="user"></i></span>
+                                <?php endif; ?>
+                                <div class="vv-person-body">
+                                    <div class="vv-person-name"><?= Html::encode($companion['name']) ?></div>
+                                    <div class="vv-person-role"><?= Html::encode($emp ? $emp->positionName() : 'บุคคลภายนอก') ?></div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
 
             <?php if ($canEdit): ?>
                 <div class="vv-actions">

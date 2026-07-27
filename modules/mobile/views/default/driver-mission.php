@@ -22,6 +22,7 @@ $reason = (string) ($vehicle?->reason ?? '');
 $requestCode = (string) ($vehicle?->code ?? $mission->vehicle_id);
 $plate = (string) ($mission->license_plate ?? '');
 $requester = (string) ($vehicle?->employee?->fullname ?? '-');
+$companions = $vehicle ? $vehicle->companions() : ['items' => [], 'count' => 0];
 $dateText = '-';
 try {
     $dateText = $mission->date_start ? ThaiDateHelper::formatThaiDate($mission->date_start, 'short') : '-';
@@ -134,6 +135,55 @@ $statusOptions = [
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-sm);
+}
+.dmu-people {
+    display: flex;
+    flex-direction: column;
+}
+.dmu-person {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) 0;
+    border-bottom: 1px solid var(--ink-line);
+}
+.dmu-person:first-child { padding-top: 0; }
+.dmu-person:last-child { border-bottom: 0; padding-bottom: 0; }
+.dmu-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--ink-line);
+    background: var(--surface-2);
+}
+.dmu-avatar.is-guest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-4);
+}
+.dmu-avatar.is-guest svg { width: 1.15rem; height: 1.15rem; }
+.dmu-person-body { min-width: 0; flex: 1; }
+.dmu-person-name {
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.dmu-person-role {
+    margin-top: 1px;
+    color: var(--ink-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+}
+.dmu-count {
+    margin-left: auto;
+    color: var(--ink-4);
+    font-size: var(--fs-sm);
+    font-weight: 600;
 }
 .dmu-card .form-label {
     color: var(--ink-2);
@@ -387,6 +437,31 @@ $statusOptions = [
                 </div>
             </div>
         </section>
+
+        <?php if (($companions['count'] ?? 0) > 0): ?>
+            <section class="dmu-card" aria-label="ผู้ร่วมเดินทาง">
+                <h3 class="dmu-card-title">
+                    <i data-lucide="users" aria-hidden="true"></i> ผู้ร่วมเดินทาง
+                    <span class="dmu-count"><?= (int) $companions['count'] ?> คน</span>
+                </h3>
+                <div class="dmu-people">
+                    <?php foreach ($companions['items'] as $companion): ?>
+                        <?php $emp = $companion['employee']; ?>
+                        <div class="dmu-person">
+                            <?php if ($emp): ?>
+                                <img class="dmu-avatar" src="<?= Html::encode($emp->showAvatar()) ?>" alt="" loading="lazy">
+                            <?php else: ?>
+                                <span class="dmu-avatar is-guest" aria-hidden="true"><i data-lucide="user"></i></span>
+                            <?php endif; ?>
+                            <div class="dmu-person-body">
+                                <div class="dmu-person-name"><?= Html::encode($companion['name']) ?></div>
+                                <div class="dmu-person-role"><?= Html::encode($emp ? $emp->positionName() : 'บุคคลภายนอก') ?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
 
         <?php $form = ActiveForm::begin(['id' => 'driver-mission-form']); ?>
 
