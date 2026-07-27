@@ -213,7 +213,7 @@ class TemplateController extends Controller
             $block->template_id = $copy->id;
             $block->save(false);
         }
-        Yii::$app->session->setFlash('success', 'สร้าง Revision ' . $copy->revision_no . ' เป็นฉบับร่างแล้ว');
+        Yii::$app->session->setFlash('success', 'สร้าง JD ฉบับที่ ' . $copy->revision_no . ' เป็นฉบับร่างแล้ว');
         return $this->redirect(['structure', 'id' => $copy->id]);
     }
 

@@ -27,7 +27,7 @@ foreach ($approvalRows as $approvalRow) {
                 <div class="jd-document__intro"><?= RichText::render($data['intro']) ?></div>
             <?php endif; ?>
             <?php if (!empty($data['items']) && is_array($data['items'])): ?>
-                <?php $columns = JdTemplateBlock::editorColumns($section->block_type ?: 'named_items'); ?>
+                <?php $columns = JdTemplateBlock::editorColumns(JdTemplateBlock::editorType($section->block_type ?: 'named_items', $section->section_code)); ?>
                 <?php if ($section->block_type === 'approval'): ?>
                     <div class="jd-signatures">
                     <?php foreach ($data['items'] as $index => $item): ?>
