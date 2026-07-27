@@ -141,6 +141,9 @@ class PdfTemplateService
             if (isset($item['line_height_percent']) && (is_numeric($item['line_height_percent']) || $item['line_height_percent'] === '')) {
                 $pos['line_height_percent'] = $item['line_height_percent'] !== '' ? $this->clamp01((float) $item['line_height_percent']) : 0.04;
             }
+            if (isset($item['companion_show_position'])) {
+                $pos['companion_show_position'] = !empty($item['companion_show_position']) ? 1 : 0;
+            }
             if (isset($item['position_x_percent']) && (is_numeric($item['position_x_percent']) || $item['position_x_percent'] === '')) {
                 $pos['position_x_percent'] = $item['position_x_percent'] !== '' ? $this->clamp01((float) $item['position_x_percent']) : 0.5;
             }
@@ -212,6 +215,7 @@ class PdfTemplateService
                 'leave_type_id' => $item['leave_type_id'] ?? '',
                 'line_height_percent' => isset($item['line_height_percent']) ? (float) $item['line_height_percent'] : 0.04,
                 'position_x_percent' => isset($item['position_x_percent']) ? (float) $item['position_x_percent'] : 0.5,
+                'companion_show_position' => !empty($item['companion_show_position']) ? 1 : 0,
                 'approval_display_style' => $item['approval_display_style'] ?? 'text',
                 'approval_show_when' => $item['approval_show_when'] ?? '',
                 'approval_level' => isset($item['approval_level']) ? (int) $item['approval_level'] : 1,
@@ -608,6 +612,62 @@ class PdfTemplateService
                             $pdf->SetXY($xPos, $y);
                             $pdf->Write(0, $encStr);
                         }
+                        $y += $lineHeightMm;
+                    }
+                    continue;
+                }
+
+                // รายชื่อผู้ร่วมเดินทางแนวตั้ง — วาดทีละบรรทัดตาม line height
+                // (แทนที่จะโดนตัดเหลือบรรทัดเดียวเหมือน field ปกติ)
+                // ตั้งค่าได้: line_height_percent (ระยะห่างบรรทัด), companion_show_position (แสดงตำแหน่งต่อท้าย)
+                if (in_array($lookupKey, ['companion_names_vertical', 'companion_names_numbered'], true)) {
+                    $numbered = ($lookupKey === 'companion_names_numbered');
+                    $showPosition = !empty($item['companion_show_position']);
+                    // แหล่งข้อมูลหลัก: travel_party_members (มีตำแหน่งด้วย); fallback: สตริงที่คั่นด้วย \n
+                    $members = isset($values['travel_party_members']) && is_array($values['travel_party_members'])
+                        ? $values['travel_party_members']
+                        : [];
+                    if (count($members) === 0) {
+                        $rawText = (string) ($values[$lookupKey] ?? '');
+                        foreach (preg_split('/\r\n|\r|\n/', $rawText) ?: [] as $ln) {
+                            $ln = trim($ln);
+                            if ($ln !== '') {
+                                $members[] = ['fullname' => $ln, 'position' => ''];
+                            }
+                        }
+                    }
+                    if (count($members) === 0) {
+                        continue;
+                    }
+                    $mm = $this->fieldToPdfMm($item, $pageW, $pageH);
+                    $fontSize = (int) ($item['font_size'] ?? 14);
+                    $fontStyle = !empty($item['font_bold']) ? 'B' : '';
+                    $alignment = isset($item['alignment']) && in_array($item['alignment'], ['L', 'C', 'R'], true) ? $item['alignment'] : 'L';
+                    $pdf->SetFont('THSarabunNew', $fontStyle, $fontSize);
+                    $lineHeightPercent = isset($item['line_height_percent']) && $item['line_height_percent'] !== '' ? (float) $item['line_height_percent'] : 0.04;
+                    $lineHeightMm = $lineHeightPercent * $pageH;
+                    $boxWidth = max(1.0, (float) ($mm['width'] ?? 1.0));
+                    $y = $mm['y'] + $this->fontSizeToBaselineOffset($fontSize, $pageW);
+                    $lineNo = 0;
+                    foreach ($members as $member) {
+                        $lineNo++;
+                        $fullname = trim((string) ($member['fullname'] ?? ''));
+                        if ($fullname === '') {
+                            continue;
+                        }
+                        $line = ($numbered ? $lineNo . '. ' : '') . $fullname;
+                        if ($showPosition) {
+                            $position = trim((string) ($member['position'] ?? ''));
+                            if ($position !== '') {
+                                $line .= '  ' . $position;
+                            }
+                        }
+                        $enc = iconv('UTF-8', 'cp874//IGNORE', $line);
+                        $encStr = $enc !== false ? $enc : $line;
+                        $tw = $pdf->GetStringWidth($encStr);
+                        $x = $this->alignX($alignment, $mm['x'], $boxWidth, $tw);
+                        $pdf->SetXY($x, $y);
+                        $pdf->Write(0, $encStr);
                         $y += $lineHeightMm;
                     }
                     continue;

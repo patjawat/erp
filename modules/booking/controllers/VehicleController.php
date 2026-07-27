@@ -1345,6 +1345,7 @@ class VehicleController extends Controller
         }
 
         $info = SiteHelper::getInfo();
+        $printCompanions = $model->companions();
         $modelData = [
             'director' => $info['company_name'],
             'fullname' => $model->employee?->fullname,
@@ -1373,8 +1374,19 @@ class VehicleController extends Controller
             'emp_signature' => $model->userRequest()['signature'],
             'driver_signature' => $model->driver?->getInfo()['signature'],
             'director_signature' => Yii::getAlias('@web') . '/images/signature.png',
+            // ผู้ร่วมเดินทาง (companions) — แนวนอน + แนวตั้ง (fabric.Text รองรับ \n)
+            'companion_names' => $printCompanions['names'],
+            'companion_names_vertical' => $printCompanions['names_vertical'],
+            'companion_names_numbered' => $printCompanions['names_numbered'],
+            'companion_total' => (string) $printCompanions['count'],
+            'passenger_name' => $printCompanions['names'],
+            'passenger_total' => (string) $printCompanions['count'],
 
         ];
+        // แยกช่องตามเลขในเทมเพลต: companion_1, companion_2, ...
+        foreach ($printCompanions['indexed'] as $companionPos => $companionName) {
+            $modelData['companion_' . $companionPos] = $companionName;
+        }
         if ($model) {
             if ($this->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
@@ -1526,7 +1538,24 @@ class VehicleController extends Controller
         }
 
         $dataJson = is_array($model->data_json) ? $model->data_json : [];
-        return [
+        $companions = $model->companions();
+        $companionNames = $companions['names'];
+        $companionTotal = (string) $companions['count'];
+        // แยกช่องตามเลขในเทมเพลต: companion_1, companion_2, ... (ช่องที่ไม่มีคน resolver คืน '')
+        $companionIndexed = [];
+        foreach ($companions['indexed'] as $companionPos => $companionName) {
+            $companionIndexed['companion_' . $companionPos] = $companionName;
+        }
+        // loop แนวตั้ง (field type travel_party_list) — เรียงชื่อ+ตำแหน่งลงทีละบรรทัดตาม line height
+        $travelPartyMembers = [];
+        foreach ($companions['items'] as $companionItem) {
+            $companionEmp = $companionItem['employee'];
+            $travelPartyMembers[] = [
+                'fullname' => $companionItem['name'],
+                'position' => $companionEmp && method_exists($companionEmp, 'positionName') ? (string) ($companionEmp->positionName() ?? '') : '',
+            ];
+        }
+        return array_merge([
             'id' => (int) $model->id,
             'code' => (string) ($model->code ?? ''),
             'thai_year' => (string) ($model->thai_year ?? ''),
@@ -1599,14 +1628,25 @@ class VehicleController extends Controller
                 'fullname' => (string) ($driver->fullname ?? ''),
                 'employeeTypeName' => $driverEmployeeTypeName,
             ],
+            // ผู้ร่วมเดินทาง (companions) สำหรับวางลงเทมเพลต PDF
+            'companion_names' => $companionNames,                       // แนวนอน (comma)
+            'companion_names_vertical' => $companions['names_vertical'], // แนวตั้ง 1 คน/บรรทัด (กล่องเดียว รองรับได้เฉพาะ fabric fallback)
+            'companion_names_numbered' => $companions['names_numbered'], // แนวตั้ง มีเลขนำ
+            'companion_total' => $companionTotal,
+            // loop แนวตั้งจริงบน PDF: วาง field ชนิด travel_party_list แล้วตั้ง line height
+            'travel_party_members' => $travelPartyMembers,
             'data_json' => [
                 'phone' => (string) ($dataJson['phone'] ?? ''),
-                'passenger_total' => (string) ($dataJson['passenger_total'] ?? ''),
-                'passenger_name' => (string) ($dataJson['passenger_name'] ?? ''),
+                'passenger_total' => (string) (!empty($dataJson['passenger_total']) ? $dataJson['passenger_total'] : $companionTotal),
+                'passenger_name' => (string) (!empty($dataJson['passenger_name']) ? $dataJson['passenger_name'] : $companionNames),
+                'companion_names' => $companionNames,
+                'companion_names_vertical' => $companions['names_vertical'],
+                'companion_names_numbered' => $companions['names_numbered'],
+                'companion_total' => $companionTotal,
                 'note' => (string) ($dataJson['note'] ?? ''),
                 'req_driver_id' => (string) ($dataJson['req_driver_id'] ?? ''),
             ],
-        ] + $approverData;
+        ], $approverData, $companionIndexed);
     }
 
     private function resolvePdfEmployeeTypeName($employee): string

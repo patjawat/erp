@@ -224,6 +224,60 @@ class Vehicle extends \yii\db\ActiveRecord
 
     }
 
+    /**
+     * ผู้ร่วมเดินทาง (companions) จาก data_json['companions'].
+     * ค่าที่เป็นตัวเลข = บุคลากร (resolve จากทะเบียน), ค่าอื่น = บุคคลภายนอก (free text).
+     *
+     * คืน single source ที่ทุกหน้า (view/show/print) และ PDF payload ใช้ร่วมกัน:
+     *   items          = [['employee' => Employees|null, 'name' => string, 'is_staff' => bool], ...]
+     *   names          = "ชื่อ 1, ชื่อ 2, ..."      (แนวนอน คั่น comma — PDF/legacy)
+     *   names_vertical = "ชื่อ 1\nชื่อ 2\n..."        (แนวตั้ง 1 คนต่อบรรทัด)
+     *   names_numbered = "1. ชื่อ 1\n2. ชื่อ 2\n..."  (แนวตั้ง มีเลขนำ)
+     *   indexed        = [1 => 'ชื่อ 1', 2 => 'ชื่อ 2', ...] (วางทีละช่องตามเลขในเทมเพลต)
+     *   count          = จำนวนคน
+     */
+    public function companions()
+    {
+        $raw = is_array($this->data_json)
+            ? ($this->data_json['companions'] ?? [])
+            : ((json_decode((string) $this->data_json, true) ?: [])['companions'] ?? []);
+
+        if (is_string($raw)) {
+            $raw = explode(',', $raw);
+        }
+        $raw = is_array($raw)
+            ? array_values(array_filter(array_map(static fn ($v) => trim((string) $v), $raw), static fn ($v) => $v !== ''))
+            : [];
+
+        $empIds = array_values(array_map('intval', array_filter($raw, 'ctype_digit')));
+        $employees = $empIds
+            ? Employees::find()->where(['id' => $empIds])->indexBy('id')->all()
+            : [];
+
+        $items = [];
+        $names = [];
+        $numbered = [];
+        $indexed = [];
+        foreach ($raw as $entry) {
+            $emp = (ctype_digit($entry) && isset($employees[(int) $entry])) ? $employees[(int) $entry] : null;
+            $name = $emp ? $emp->fullname() : $entry;
+            $items[] = ['employee' => $emp, 'name' => $name, 'is_staff' => $emp !== null];
+            $names[] = $name;
+            $position = count($names);
+            $numbered[] = $position . '. ' . $name;
+            $indexed[$position] = $name;
+        }
+
+        return [
+            'items' => $items,
+            'names' => implode(', ', $names),
+            'names_vertical' => implode("\n", $names),
+            'names_numbered' => implode("\n", $numbered),
+            'indexed' => $indexed,
+            'count' => count($items),
+        ];
+    }
+
     //แสดงวันเวลาที่แสดง
     public function viewCreated()
     {

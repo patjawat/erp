@@ -24,6 +24,36 @@
         }
     }
 
+    // Fellow travelers (ผู้ร่วมเดินทาง): resolve any previously-saved companions
+    // into an id => label map so the Select2 multiple can re-render its chips on
+    // edit. Numeric entries are staff (look up the full name); anything else is a
+    // free-text guest name kept verbatim.
+    $companionDataJson = is_array($model->data_json)
+        ? $model->data_json
+        : (json_decode((string) $model->data_json, true) ?: []);
+    $companionSaved = $companionDataJson['companions'] ?? [];
+    if (is_string($companionSaved)) {
+        $companionSaved = array_filter(array_map('trim', explode(',', $companionSaved)));
+    }
+    $companionSaved = is_array($companionSaved) ? $companionSaved : [];
+    $companionInit = [];
+    foreach ($companionSaved as $companion) {
+        $companion = (string) $companion;
+        if ($companion === '') {
+            continue;
+        }
+        if (ctype_digit($companion)) {
+            try {
+                $emp = Employees::findOne((int) $companion);
+                $companionInit[$companion] = $emp ? $emp->fullname() : $companion;
+            } catch (\Throwable $e) {
+                $companionInit[$companion] = $companion;
+            }
+        } else {
+            $companionInit[$companion] = $companion;
+        }
+    }
+
     $formatJs = <<<'JS'
     var formatRepo = function (repo) {
         if (repo.loading) {
@@ -49,6 +79,20 @@
     // Register the formatting script
     $this->registerJs($formatJs, View::POS_HEAD);
 
+    // Companion (ผู้ร่วมเดินทาง) Select2 renderers: avatar in the results list,
+    // compact full name in the selected chips.
+    $companionJs = <<<'JS'
+    function formatCompanion(repo) {
+        if (repo.loading) return repo.text || 'กำลังค้นหา...';
+        if (repo.avatar) return '<div class="d-flex align-items-center">' + repo.avatar + '</div>';
+        return repo.text;
+    }
+    function formatCompanionSelection(repo) {
+        return repo.fullname || repo.text || repo.id;
+    }
+    JS;
+    $this->registerJs($companionJs, View::POS_HEAD);
+
     // script to parse the results into the format expected by Select2
     $resultsJs = <<<JS
     function (data, params) {
@@ -72,7 +116,9 @@
     <div class="col-md-8">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <h6 class="fw-bold mb-3 text-primary border-start border-4 border-primary ps-2">ข้อมูลการเดินทาง</h6>
+                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-geo-alt text-primary"></i> ข้อมูลการเดินทาง
+                </h6>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <?= $form->field($model, 'date_start')->widget(\app\widgets\datepicker\DatepickerThai::class, [
@@ -175,6 +221,9 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
+                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-card-text text-primary"></i> รายละเอียดเพิ่มเติม
+                </h6>
                 <div class="mb-3">
                     <?php echo $form->field($model, 'reason')->textInput(['rows' => 3])->label('วัตถุประสงค์') ?>
                 </div>
@@ -182,7 +231,31 @@
                     <?php echo $form->field($model, 'data_json[phone]')->textInput()->label('เบอร์โทรติดต่อ') ?>
                 </div>
                 <div class="mb-3">
-                    <?php echo $form->field($model, 'data_json[note]')->textArea(['rows' => 3, 'placeholder' => 'ระบุชื่อ-นามสกุล ตำแหน่ง คั่นด้วยเครื่องหมาย , (ถ้ามี)'])->label('ผู้ร่วมเดินทาง') ?>
+                    <?php echo $form->field($model, 'data_json[companions]')->widget(Select2::classname(), [
+    'data'          => $companionInit,
+    'options'       => [
+        'placeholder' => 'พิมพ์ชื่อบุคลากรเพื่อค้นหา หรือพิมพ์ชื่อผู้ร่วมเดินทางภายนอกได้',
+        'multiple'    => true,
+        'id'          => 'vehicle-companions',
+    ],
+    'pluginOptions' => [
+        'tags'               => true,   // อนุญาตให้พิมพ์ชื่อบุคคลภายนอกเพิ่มเองได้
+        'allowClear'         => true,
+        'minimumInputLength' => 0,
+        'dropdownParent'     => '#main-modal',
+        'ajax'               => [
+            'url'            => Url::to(['/depdrop/employee-by-id']),
+            'dataType'       => 'json',
+            'delay'          => 250,
+            'data'           => new JsExpression("function(params) { return { q: params.term || '', page: params.page }; }"),
+            'processResults' => new JsExpression($resultsJs),
+            'cache'          => true,
+        ],
+        'escapeMarkup'      => new JsExpression('function (markup) { return markup; }'),
+        'templateResult'    => new JsExpression('formatCompanion'),
+        'templateSelection' => new JsExpression('formatCompanionSelection'),
+    ],
+])->label('ผู้ร่วมเดินทาง')->hint('เลือกจากทะเบียนบุคลากร หรือพิมพ์ชื่อผู้ร่วมเดินทางภายนอกแล้วกด Enter'); ?>
                 </div>
                 <div class="mb-0">
                     <?php echo $form->field($model, 'data_json[coment]')->textArea(['rows' => 3, 'placeholder' => 'เพิ่มเติม เช่น สถานที่รับ หรือ อื่นๆ ...'])->label('หมายเหตุ') ?>
@@ -260,9 +333,11 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm bg-primary-subtle">
-            <div class="card-body text-primary-emphasis">
-
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-badge text-primary"></i> ผู้บังคับบัญชา / ผู้อนุมัติ
+                </h6>
                 <?php
                     try {
                         if ($model->isNewRecord) {
@@ -432,6 +507,8 @@
 </div>
 <?php echo $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?php echo $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?php // readable companion list kept in sync from #vehicle-companions for PDF/legacy views ?>
+<?php echo $form->field($model, 'data_json[note]')->hiddenInput(['id' => 'companions-note'])->label(false) ?>
 
 
 <?php ActiveForm::end(); ?>
@@ -483,6 +560,30 @@
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });
+
+    // Keep the readable companion list (data_json[note]) in sync with the
+    // Select2 selections so PDF export and legacy views still have plain names.
+    function syncCompanionNote() {
+        var \$c = \$('#vehicle-companions');
+        if (!\$c.length) return;
+        var names = [];
+        if (\$c.hasClass('select2-hidden-accessible')) {
+            // Select2 is initialised: pull the rich objects (fullname available).
+            (\$c.select2('data') || []).forEach(function (d) {
+                names.push((d.fullname || d.text || d.id || '').toString().trim());
+            });
+        } else {
+            // Called before Select2 finished initialising (AJAX-injected form):
+            // fall back to the selected <option> text (full name on edit).
+            \$c.find('option:selected').each(function () {
+                names.push((\$(this).text() || \$(this).val() || '').toString().trim());
+            });
+        }
+        \$('#companions-note').val(names.filter(Boolean).join(', '));
+    }
+    \$('#vehicle-companions').on('change', syncCompanionNote);
+    // Defer the first run so kartik's Select2 init has a chance to complete.
+    setTimeout(syncCompanionNote, 0);
 
 
     \$(document).ready(function () {
