@@ -133,7 +133,7 @@ class EmployeeJdController extends Controller
             throw $e;
         }
 
-        Yii::$app->session->setFlash('success', 'สร้าง JD Revision ' . $jd->revision_no . ' จาก Template แล้ว กรุณาตรวจสอบก่อนประกาศใช้');
+        Yii::$app->session->setFlash('success', 'สร้าง JD ฉบับที่ ' . $jd->revision_no . ' จาก Template แล้ว กรุณาตรวจสอบก่อนประกาศใช้');
         return $this->redirect(['view', 'emp_id' => $emp_id, 'id' => $jd->id]);
     }
 
@@ -489,7 +489,7 @@ class EmployeeJdController extends Controller
         $this->assertCanManage();
         $section = JdEmployeeSection::findOne($id);
         if (!$section || !$section->jdEmployee || $section->jdEmployee->status !== JdEmployee::STATUS_DRAFT) {
-            throw new NotFoundHttpException('JD ที่ประกาศใช้แล้วแก้ไขไม่ได้ กรุณาสร้าง Revision ใหม่');
+            throw new NotFoundHttpException('JD ที่ประกาศใช้แล้วแก้ไขไม่ได้ กรุณาสร้าง JD ฉบับใหม่');
         }
         $jd = $section->jdEmployee;
         $employee = $jd->employee;
