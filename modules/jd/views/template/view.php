@@ -44,7 +44,7 @@ $row = function (string $label, ?string $value, bool $nl2br = false) {
     <?= Html::submitButton('<i class="bi bi-copy me-1"></i>คัดลอก Template', ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::endForm() ?>
     <?= Html::beginForm(['new-revision', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
-    <?= Html::submitButton('<i class="bi bi-clock-history me-1"></i>สร้าง Revision ใหม่', ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::submitButton('<i class="bi bi-file-earmark-plus me-1"></i>สร้าง JD', ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::endForm() ?>
 </div>
 <?php $this->endBlock(); ?>

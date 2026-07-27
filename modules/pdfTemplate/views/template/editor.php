@@ -275,6 +275,18 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                                 <input type="number" id="sel-position-x-percent" class="form-control" min="0" max="100" step="1" placeholder="50" title="จุดเริ่มต้นคอลัมน์ตำแหน่ง (0–100%)">
                             </div>
                         </div>
+                        <div id="companion-vertical-settings" class="d-none">
+                            <hr class="my-2">
+                            <p class="small fw-medium text-primary mb-2">ผู้ร่วมเดินทาง (แนวตั้ง)</p>
+                            <div class="mb-2">
+                                <label class="form-label small">ระยะห่างระหว่างบรรทัด (%)</label>
+                                <input type="number" id="sel-companion-line-height" class="form-control" min="1" max="20" step="0.5" placeholder="4" title="เปอร์เซ็นต์ของความสูงหน้า (เช่น 4 = 4%)">
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sel-companion-show-position">
+                                <label class="form-check-label small" for="sel-companion-show-position">แสดงตำแหน่งต่อท้ายชื่อด้วย</label>
+                            </div>
+                        </div>
                         <div id="signature-size-settings" class="d-none">
                             <hr class="my-2">
                             <p class="small fw-medium text-primary mb-2">ขนาดลายเซ็น</p>
@@ -476,6 +488,12 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
         return lookupKey === 'approval_status' || ['approver_fullname', 'approver_position', 'approver_employee_type', 'approver_approve_date', 'approver_signature'].indexOf(lookupKey) >= 0;
     }
 
+    // ผู้ร่วมเดินทางแบบแนวตั้ง (รองรับตั้งระยะห่างบรรทัด + เลือกแสดงตำแหน่ง)
+    function isCompanionVertical(path) {
+        var key = LABEL_TO_KEY[path] || path;
+        return key === 'companion_names_vertical' || key === 'companion_names_numbered';
+    }
+
     function isSignatureField(lookupKey) {
         return typeof lookupKey === 'string' && lookupKey.length > 0 && lookupKey.lastIndexOf('_signature') === lookupKey.length - 10;
     }
@@ -573,10 +591,11 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
             var width = Math.max(16, toPx(item.width_percent || 0.2, s.w));
             var path = (item.source || item.field || '').trim();
             var isList = path === 'travel_party_list' || (LABEL_TO_KEY[path] || path) === 'travel_party_list';
+            var isCompVert = isCompanionVertical(path);
             var members = state.realData && state.realData.travel_party_members && Array.isArray(state.realData.travel_party_members) ? state.realData.travel_party_members : [];
             var lineH = (item.line_height_percent != null && item.line_height_percent !== '') ? parseFloat(item.line_height_percent) : 0.04;
-            var rowCount = isList ? Math.max(1, members.length) : 1;
-            var height = isList ? toPx(lineH * rowCount, s.h) : Math.max(20, toPx(item.height_percent || 0.03, s.h));
+            var rowCount = (isList || isCompVert) ? Math.max(1, members.length) : 1;
+            var height = (isList || isCompVert) ? toPx(lineH * rowCount, s.h) : Math.max(20, toPx(item.height_percent || 0.03, s.h));
             var div = document.createElement('div');
             div.className = 'field-box' + (state.selectedId === item.id ? ' selected' : '');
             div.dataset.id = item.id;
@@ -591,6 +610,17 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
             var text;
             if (isList && members.length > 0) {
                 text = members.map(function(m) { return (m.fullname || '') + ' | ' + (m.position || ''); }).join('\n');
+                div.style.whiteSpace = 'pre-line';
+                div.style.fontSize = '11px';
+                div.style.lineHeight = '1.2';
+            } else if (isCompVert && members.length > 0) {
+                var compNumbered = (LABEL_TO_KEY[path] || path) === 'companion_names_numbered';
+                var compShowPos = !!item.companion_show_position;
+                text = members.map(function(m, i) {
+                    var line = (compNumbered ? (i + 1) + '. ' : '') + (m.fullname || '');
+                    if (compShowPos && m.position) line += '  ' + m.position;
+                    return line;
+                }).join('\n');
                 div.style.whiteSpace = 'pre-line';
                 div.style.fontSize = '11px';
                 div.style.lineHeight = '1.2';
@@ -614,7 +644,12 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                 text = isList ? 'รายการคณะเดินทาง (loop)' : (isApproverField ? fallbackLabel : fallbackLabel);
             }
             div.textContent = text || 'ฟิลด์';
-            if (isList) {
+            if (isCompVert) {
+                div.style.whiteSpace = 'pre-line';
+                div.style.overflow = 'hidden';
+                div.style.textOverflow = 'clip';
+                div.style.wordBreak = 'break-word';
+            } else if (isList) {
                 div.style.whiteSpace = 'normal';
                 div.style.overflow = 'hidden';
                 div.style.textOverflow = 'clip';
@@ -651,6 +686,13 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                 var positionXInput = document.getElementById('sel-position-x-percent');
                 if (lineHeightInput) lineHeightInput.value = isListField && (item.line_height_percent != null) ? (parseFloat(item.line_height_percent) * 100) : '4';
                 if (positionXInput) positionXInput.value = isListField && (item.position_x_percent != null) ? (parseFloat(item.position_x_percent) * 100) : '50';
+                var isCompVertField = isCompanionVertical(item.source || item.field || '');
+                var compBlock = document.getElementById('companion-vertical-settings');
+                if (compBlock) compBlock.classList.toggle('d-none', !isCompVertField);
+                var compLineHeightInput = document.getElementById('sel-companion-line-height');
+                if (compLineHeightInput) compLineHeightInput.value = isCompVertField && (item.line_height_percent != null) ? (parseFloat(item.line_height_percent) * 100) : '4';
+                var compShowPosInput = document.getElementById('sel-companion-show-position');
+                if (compShowPosInput) compShowPosInput.checked = isCompVertField && !!item.companion_show_position;
                 var isLeaveField = isLeaveSummaryField(lookupKeySel);
                 var leaveTypeBlock = document.getElementById('leave-type-settings');
                 if (leaveTypeBlock) leaveTypeBlock.classList.toggle('d-none', !isLeaveField);
@@ -737,6 +779,10 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                 out.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
                 out.position_x_percent = item.position_x_percent != null ? item.position_x_percent : 0.5;
             }
+            if (isCompanionVertical(src)) {
+                out.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
+                out.companion_show_position = item.companion_show_position ? 1 : 0;
+            }
             if (item.leave_type_id) {
                 out.leave_type_id = item.leave_type_id;
             }
@@ -774,6 +820,10 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                 if (src === 'travel_party_list') {
                     row.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
                     row.position_x_percent = item.position_x_percent != null ? item.position_x_percent : 0.5;
+                }
+                if (isCompanionVertical(src)) {
+                    row.line_height_percent = item.line_height_percent != null ? item.line_height_percent : 0.04;
+                    row.companion_show_position = item.companion_show_position ? 1 : 0;
                 }
                 if (src === 'approval_status') {
                     row.approval_display_style = (item.approval_display_style && ['checkmark', 'circle', 'text'].indexOf(item.approval_display_style) >= 0) ? item.approval_display_style : 'text';
@@ -842,6 +892,25 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
         if (item && (item.source || item.field) === 'travel_party_list') {
             var v = parseFloat(this.value);
             item.line_height_percent = isNaN(v) ? 0.04 : (v / 100);
+            renderOverlay();
+        }
+    });
+    var compLineHeightEl = document.getElementById('sel-companion-line-height');
+    if (compLineHeightEl) compLineHeightEl.addEventListener('input', function() {
+        var id = document.getElementById('sel-field-id').value;
+        var item = state.layout.find(function(x) { return String(x.id) === id; });
+        if (item && isCompanionVertical(item.source || item.field || '')) {
+            var v = parseFloat(this.value);
+            item.line_height_percent = isNaN(v) ? 0.04 : (v / 100);
+            renderOverlay();
+        }
+    });
+    var compShowPosEl = document.getElementById('sel-companion-show-position');
+    if (compShowPosEl) compShowPosEl.addEventListener('change', function() {
+        var id = document.getElementById('sel-field-id').value;
+        var item = state.layout.find(function(x) { return String(x.id) === id; });
+        if (item && isCompanionVertical(item.source || item.field || '')) {
+            item.companion_show_position = this.checked ? 1 : 0;
             renderOverlay();
         }
     });
@@ -939,6 +1008,10 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
         if (source === 'travel_party_list') {
             newItem.line_height_percent = 0.04;
             newItem.position_x_percent = 0.5;
+        }
+        if (isCompanionVertical(source)) {
+            newItem.line_height_percent = 0.04;
+            newItem.companion_show_position = 0;
         }
         if (source === 'approval_status') {
             newItem.approval_display_style = 'text';

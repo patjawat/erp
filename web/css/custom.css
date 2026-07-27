@@ -15099,8 +15099,8 @@ small, .small {
   border: none !important;
   border-radius: 0.5rem !important;
   padding: 10px 20px !important;
-  color: var(--bs-gray-700) !important;
-  background-color: var(--bs-gray-100) !important;
+  color: var(--bs-body-color) !important;
+  background-color: var(--bs-tertiary-bg) !important;
   margin-right: 10px !important;
   transition: background-color 0.15s, color 0.15s !important;
 }
@@ -15111,13 +15111,13 @@ small, .small {
 }
 
 .nav-tabs .nav-link:hover {
-  background-color: var(--bs-gray-200) !important;
+  background-color: var(--bs-secondary-bg) !important;
   color: var(--bs-primary) !important;
 }
 
 .tab-content {
   border-radius: 0.5rem !important;
-  background-color: #fff !important;
+  background-color: var(--bs-body-bg) !important;
 }
 
 .tab-pane h3, .tab-pane .h3 {
@@ -15130,15 +15130,15 @@ small, .small {
 }
 
 .nav-pills .nav-link {
-  color: #333;
+  color: var(--bs-body-color);
   border-radius: 0;
   padding: 10px 20px;
 }
 
 .nav-pills .nav-link.active {
   background-color: transparent;
-  border-bottom: 2px solid #0d6efd;
-  color: #0d6efd;
+  border-bottom: 2px solid var(--bs-primary);
+  color: var(--bs-primary);
   font-weight: 400;
 }
 

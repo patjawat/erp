@@ -33,6 +33,23 @@ $this->params['breadcrumbs'][] = $this->title;
 .file-upload {
     height: 800px !important;
 }
+
+[data-bs-theme="dark"] #pills-send .kv-tree-root,
+[data-bs-theme="dark"] #pills-send .kv-tree-list,
+[data-bs-theme="dark"] #pills-send .kv-tree-input-widget .kv-focussed {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] #pills-send .kv-node-detail:focus,
+[data-bs-theme="dark"] #pills-send .kv-node-detail:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+[data-bs-theme="dark"] #pills-send .kv-has-checkbox .kv-selected > .kv-tree-list .kv-node-detail {
+    background-color: rgba(var(--bs-primary-rgb), 0.3);
+    color: var(--bs-emphasis-color);
+}
 </style>
 
 
@@ -233,10 +250,15 @@ $this->params['breadcrumbs'][] = $this->title;
                             'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
                             'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
                             'fontAwesome' => true,
-                            'asDropdown' => true,
+                            // เรนเดอร์แบบ inline (ไม่ใช่ dropdown) เพื่อให้เลือกได้บน modal
+                            // dropdown แบบเดิมถูก overflow ของ .modal-body (modal-dialog-scrollable) ตัดจนเลือกไม่ได้
+                            'asDropdown' => false,
                             'multiple' => true,
                             'cascadeSelectChildren' => false,
-                            'options' => ['disabled' => false],
+                            'options' => [
+                                'id' => 'documents-tags-department',
+                                'disabled' => false,
+                            ],
                         ])->label('ส่งหน่วยงาน');
                         ?>
 

@@ -100,7 +100,7 @@ table{width:100%;border-collapse:collapse}
                 </tr>
             </table>
         <?php elseif ($items !== []): ?>
-            <?php $columns = JdTemplateBlock::editorColumns($section->block_type ?: 'named_items'); ?>
+            <?php $columns = JdTemplateBlock::editorColumns(JdTemplateBlock::editorType($section->block_type ?: 'named_items', $section->section_code)); ?>
             <table class="data-table">
                 <thead>
                 <tr>

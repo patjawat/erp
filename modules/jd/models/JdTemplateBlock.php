@@ -48,7 +48,7 @@ class JdTemplateBlock extends ActiveRecord
             'responsibilities' => ['4. หน้าที่ความรับผิดชอบหลัก', 'groups'],
             'kpi' => ['5. ตัวชี้วัดผลการปฏิบัติงาน', 'kpi'],
             'qualifications' => ['6. คุณสมบัติประจำตำแหน่ง', 'groups'],
-            'competencies' => ['7. สมรรถนะหลักประจำตำแหน่ง', 'named_items'],
+            'competencies' => ['7. สมรรถนะหลักประจำตำแหน่ง (Competencies)', 'competency'],
             'role_boundary' => ['8. ขอบเขตบทบาทและการแบ่งความรับผิดชอบ', 'boundary'],
             'working_conditions' => ['9. สภาพการทำงาน', 'named_items'],
             'approval' => ['10. การอนุมัติเอกสาร', 'approval'],
@@ -64,11 +64,31 @@ class JdTemplateBlock extends ActiveRecord
             'groups' => ['group' => 'หมวดย่อย', 'details' => 'รายละเอียด'],
             'authority' => ['subject' => 'เรื่อง', 'can_do' => 'ตัดสินใจ/ดำเนินการได้', 'approval' => 'ต้องประสานหรือขออนุมัติ'],
             'kpi' => ['indicator' => 'ชื่อตัวชี้วัด', 'target' => 'เป้าหมาย', 'expectation' => 'ความคาดหวัง'],
+            'competency' => ['competency' => 'สมรรถนะ', 'behavior' => 'พฤติกรรมที่แสดงออก', 'required_level' => 'ระดับที่ต้องการ'],
             'named_items' => ['name' => 'หัวข้อ', 'description' => 'คำอธิบาย'],
             'boundary' => ['responsibility' => 'ทำได้/รับผิดชอบ', 'coordinate' => 'ต้องไม่ทำ/ต้องประสาน'],
             'approval' => ['role' => 'ขั้นตอนการลงนาม', 'employee_id' => 'ผู้ลงนาม'],
         ];
         return $map[$type] ?? $map['named_items'];
+    }
+
+    public static function editorType(string $type, ?string $sectionCode = null): string
+    {
+        return $sectionCode === 'competencies' ? 'competency' : $type;
+    }
+
+    public static function isTabularType(string $type): bool
+    {
+        return in_array($type, [
+            'fields',
+            'matrix',
+            'groups',
+            'authority',
+            'kpi',
+            'competency',
+            'named_items',
+            'boundary',
+        ], true);
     }
 
     public static function ensureForTemplate(int $templateId): void

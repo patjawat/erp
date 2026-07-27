@@ -19,7 +19,14 @@ class BookingVehicleDataSource implements DataSourceInterface
 
     public function getFieldDefinitions(): array
     {
-        return [
+        // ช่องผู้ร่วมเดินทางแยกตามลำดับเลข (companion_1 ... companion_10)
+        // สำหรับเทมเพลตที่พิมพ์เลขลำดับไว้แล้วและวางชื่อทีละช่องแนวตั้ง
+        $companionSlots = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $companionSlots[] = ['source' => 'companion_' . $i, 'label' => 'ผู้ร่วมเดินทาง คนที่ ' . $i];
+        }
+
+        return array_merge([
             // ข้อมูลเอกสารคำขอ
             ['source' => 'code', 'label' => 'เลขที่คำขอ'],
             ['source' => 'thai_year', 'label' => 'ปีงบประมาณ'],
@@ -67,10 +74,18 @@ class BookingVehicleDataSource implements DataSourceInterface
 
             // ข้อมูลเพิ่มเติมจาก data_json
             ['source' => 'data_json.phone', 'label' => 'เบอร์โทรผู้ขอ (data_json)'],
+            ['source' => 'companion_names_vertical', 'label' => 'รายชื่อผู้ร่วมเดินทาง (แนวตั้ง 1 คน/บรรทัด) — ตั้ง line height ได้'],
+            ['source' => 'companion_names_numbered', 'label' => 'รายชื่อผู้ร่วมเดินทาง (แนวตั้ง มีเลขนำ 1./2./3.)'],
+            ['source' => 'travel_party_list', 'label' => 'รายชื่อผู้ร่วมเดินทาง (loop แนวตั้ง ชื่อ+ตำแหน่งแยกคอลัมน์)'],
+            ['source' => 'companion_names', 'label' => 'รายชื่อผู้ร่วมเดินทาง (แนวนอน, คั่นด้วย ,)'],
+            ['source' => 'companion_total', 'label' => 'จำนวนผู้ร่วมเดินทาง'],
+            ['source' => 'data_json.companion_names', 'label' => 'รายชื่อผู้ร่วมเดินทาง (data_json)'],
+            ['source' => 'data_json.companion_names_vertical', 'label' => 'รายชื่อผู้ร่วมเดินทาง แนวตั้ง (data_json)'],
+            ['source' => 'data_json.companion_total', 'label' => 'จำนวนผู้ร่วมเดินทาง (data_json)'],
             ['source' => 'data_json.passenger_total', 'label' => 'จำนวนผู้โดยสาร (data_json)'],
             ['source' => 'data_json.passenger_name', 'label' => 'รายชื่อผู้โดยสาร (data_json)'],
-            ['source' => 'data_json.note', 'label' => 'หมายเหตุ (data_json)'],
+            ['source' => 'data_json.note', 'label' => 'หมายเหตุ / ผู้ร่วมเดินทาง (data_json.note)'],
             ['source' => 'data_json.req_driver_id', 'label' => 'พนักงานขับที่ร้องขอ (data_json)'],
-        ];
+        ], $companionSlots);
     }
 }
