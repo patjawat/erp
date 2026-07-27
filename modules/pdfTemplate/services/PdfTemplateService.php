@@ -775,12 +775,23 @@ class PdfTemplateService
                 if ($isSignature) {
                     $imagePath = $this->resolveSignatureImagePath($text, $signatureTempPaths);
                     if ($imagePath !== null && is_file($imagePath)) {
-                        $pdf->Image($imagePath, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
+                        $imgType = $this->detectFpdfImageType($imagePath);
+                        if ($imgType !== null) {
+                            $pdf->Image($imagePath, $mm['x'], $mm['y'], $mm['width'], $mm['height'], $imgType);
+                            continue;
+                        }
+                        // ไฟล์ลายเซ็นไม่ใช่รูปที่ FPDF รองรับ (เช่น .pdf) — ข้ามไปแทนที่จะพังทั้งเอกสาร
+                        Yii::warning('Signature file is not a supported image, skipped: ' . $imagePath, __METHOD__);
                         continue;
                     }
                 }
                 if ($isSignature && is_file($text)) {
-                    $pdf->Image($text, $mm['x'], $mm['y'], $mm['width'], $mm['height']);
+                    $imgType = $this->detectFpdfImageType($text);
+                    if ($imgType !== null) {
+                        $pdf->Image($text, $mm['x'], $mm['y'], $mm['width'], $mm['height'], $imgType);
+                    } else {
+                        Yii::warning('Signature file is not a supported image, skipped: ' . $text, __METHOD__);
+                    }
                     continue;
                 }
                 $dateFormat = !empty($item['date_format']) && is_string($item['date_format']) ? trim($item['date_format']) : '';
@@ -866,6 +877,34 @@ class PdfTemplateService
             }
         }
         return null;
+    }
+
+    /**
+     * ตรวจว่าไฟล์เป็นรูปภาพที่ FPDF->Image() รองรับหรือไม่ โดยดูจากเนื้อหาไฟล์จริง
+     * (ไม่พึ่งนามสกุล เพราะ FPDF เดา parser จากนามสกุลและจะพังถ้าไม่ใช่ png/jpg/gif).
+     *
+     * @param string $path path สัมบูรณ์ไปยังไฟล์
+     * @return string|null ชนิดที่ส่งให้ FPDF ('PNG'|'JPG'|'GIF') หรือ null ถ้าไม่รองรับ
+     */
+    private function detectFpdfImageType(string $path): ?string
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+        $info = @getimagesize($path);
+        if ($info === false || !isset($info[2])) {
+            return null;
+        }
+        switch ($info[2]) {
+            case IMAGETYPE_PNG:
+                return 'PNG';
+            case IMAGETYPE_JPEG:
+                return 'JPG';
+            case IMAGETYPE_GIF:
+                return 'GIF';
+            default:
+                return null;
+        }
     }
 
     /**
