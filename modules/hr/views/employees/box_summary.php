@@ -25,18 +25,28 @@ use app\components\AgeProcessHelper;
                 </a>
             </div>
 
+            <?php
+            $kpiCycle = $model->getLatestKpiCycle();
+            $kpiCount = (int) $model->getKpiActiveCount();
+            $kpiUrl = (Yii::$app->controller->uniqueId === 'profile')
+                ? ['/profile', 'name' => 'kpi']
+                : ['/hr/employees/view', 'id' => $model->id, 'name' => 'kpi'];
+            ?>
             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12">
-                <div class="card card-body">
+                <a class="card card-body text-decoration-none <?= ($name ?? '') === 'kpi' ? 'border-primary' : '' ?>"
+                   href="<?= Url::to($kpiUrl) ?>" aria-label="ดูตัวชี้วัด KPI">
                     <div class="d-flex">
                         <div class="avatar-md rounded-circle bg-light">
-                            <i class="bi bi-clock fs-md avatar-title text-primary"></i>
+                            <i class="bi bi-bullseye fs-md avatar-title text-primary"></i>
                         </div>
                         <div class="flex-grow-1 text-end">
                             <h5 class="text-dark"><span data-plugin="counterup">KPI</span></h5>
-                            <p class="text-muted mb-0 text-truncate">0</p>
+                            <p class="text-muted mb-0 text-truncate">
+                                <?= $kpiCycle ? $kpiCount . ' ตัว · ปี ' . (int) $kpiCycle->fiscal_year : 'ยังไม่มีข้อมูล' ?>
+                            </p>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12">
                 <div class="card card-body">

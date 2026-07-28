@@ -90,6 +90,7 @@ $modules['leave'] = ['class' => 'app\modules\leave\Module'];  // ระบบล
 $modules['appreciation'] = ['class' => 'app\modules\appreciation\Module'];  // พลังแห่งคำขอบคุณ (Appreciation Wall)
 $modules['notify'] = ['class' => 'app\modules\notify\Module'];  // แจ้งเตือน (การขออนุมัติลา/จัดซื้อ/ลงเวลา ฯลฯ)
 $modules['jd'] = ['class' => 'app\modules\jd\Module'];  // คำอธิบายงาน (JD) ต่อตำแหน่ง / พนักงาน
+$modules['kpi'] = ['class' => 'app\modules\kpi\Module'];  // KPI ประจำปีรายบุคคล (seed จาก JD)
 $modules['development'] = ['class' => 'app\modules\development\Module'];  // Development (เครื่องมือพัฒนา)
 $modules['mobile'] = ['class' => 'app\modules\mobile\Module'];  // บริการออนไลน์ (แอปมือถือ)
 $modules['pdf-template'] = ['class' => 'app\modules\pdfTemplate\Module'];  // PDF Template positioning (resolution-independent), URL: /pdf-template

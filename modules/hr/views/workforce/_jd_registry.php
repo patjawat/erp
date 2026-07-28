@@ -37,8 +37,12 @@ $statusClasses = [
             'placeholder' => 'ค้นหาชื่อบุคลากรหรือตำแหน่ง',
         ]) ?>
     </div>
+    <label class="d-inline-flex align-items-center gap-1 small text-nowrap mb-0">
+        <?= Html::checkbox('show_all', ($showAll ?? false), ['value' => 1, 'class' => 'form-check-input mt-0']) ?>
+        แสดงทั้งหมด (รวมผู้ที่ไม่ได้ปฏิบัติงาน)
+    </label>
     <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-primary']) ?>
-    <?php if (trim((string) Yii::$app->request->get('jd_q')) !== ''): ?>
+    <?php if (trim((string) Yii::$app->request->get('jd_q')) !== '' || ($showAll ?? false)): ?>
         <?= Html::a('ล้างการค้นหา', ['/hr/workforce/index', 'section' => 'jd'], ['class' => 'btn btn-outline-secondary']) ?>
     <?php endif; ?>
     <?= Html::endForm() ?>

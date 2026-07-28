@@ -105,6 +105,9 @@ class Employees extends Yii\db\ActiveRecord
     public $range2;  // ช่วงตัวเลข
     public $user_register; // สถานะลงทะเยียน
 
+    /** รหัสสถานะ "ยังปฏิบัติงานอยู่" (categorise emp_status: 1 = ปฏิบัติราชการ) */
+    public const STATUS_WORKING = '1';
+
     public static function tableName()
     {
         return 'employees';
@@ -828,6 +831,13 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => $this->getJdHistoryCount(),
             ],
             [
+                'title' => 'ตัวชี้วัด KPI',
+                'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
+                'name' => 'kpi',
+                'subtitle' => 'KPI ประจำปี บันทึกผลงาน และสรุปย้อนหลัง',
+                'count' => $this->getKpiActiveCount(),
+            ],
+            [
                 'title' => 'ข้อมูลการศึกษา',
                 'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
                 'name' => 'education',
@@ -982,7 +992,7 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ตำแหน่ง วิชาชีพ และคำอธิบายงาน',
                 'icon' => 'briefcase-business',
                 'items' => [
-                    'position', 'job_description_history', 'position_manage', 'license',
+                    'position', 'job_description_history', 'kpi', 'position_manage', 'license',
                 ],
             ],
             [
@@ -1070,6 +1080,37 @@ class Employees extends Yii\db\ActiveRecord
     public function getJdHistoryCount(): int
     {
         return (int) \app\modules\jd\models\JdEmployee::find()->where(['emp_id' => $this->id])->count();
+    }
+
+    /** ชุด KPI ประจำปีทั้งหมดของพนักงาน (ใหม่สุดก่อน) */
+    public function getKpiCycles()
+    {
+        return $this->hasMany(\app\modules\kpi\models\KpiCycle::class, ['emp_id' => 'id'])
+            ->orderBy(['fiscal_year' => SORT_DESC, 'id' => SORT_DESC]);
+    }
+
+    /** ชุด KPI ปีล่าสุดของพนักงาน */
+    public function getLatestKpiCycle()
+    {
+        if (!class_exists(\app\modules\kpi\models\KpiCycle::class)) {
+            return null;
+        }
+        return \app\modules\kpi\models\KpiCycle::find()
+            ->where(['emp_id' => $this->id])
+            ->orderBy(['fiscal_year' => SORT_DESC, 'id' => SORT_DESC])
+            ->one();
+    }
+
+    /** จำนวน KPI (active) ในชุดปีล่าสุด — ใช้แสดงบนการ์ดโปรไฟล์ */
+    public function getKpiActiveCount(): int
+    {
+        $cycle = $this->getLatestKpiCycle();
+        if (!$cycle) {
+            return 0;
+        }
+        return (int) \app\modules\kpi\models\KpiItem::find()
+            ->where(['cycle_id' => $cycle->id, 'status' => \app\modules\kpi\models\KpiItem::STATUS_ACTIVE])
+            ->count();
     }
 
     // คำนำหน้า
