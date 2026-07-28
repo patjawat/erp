@@ -38,6 +38,36 @@ class EmployeeJdController extends Controller
         ]);
     }
 
+    public function actionInbox()
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            throw new NotFoundHttpException('ไม่พบบัญชีบุคลากรของผู้ใช้งาน');
+        }
+
+        $rows = \app\modules\approveV2\models\Approve::find()
+            ->where([
+                'name' => JdApprovalService::APPROVE_NAME,
+                'emp_id' => (int) $me->id,
+                'status' => 'Pending',
+            ])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $items = [];
+        foreach ($rows as $row) {
+            $jd = JdEmployee::find()->where(['id' => (int) $row->from_id])->with('employee')->one();
+            if ($jd && $jd->status === JdEmployee::STATUS_PENDING) {
+                $items[] = ['approve' => $row, 'jd' => $jd];
+            }
+        }
+
+        return $this->render('inbox', [
+            'employee' => $me,
+            'items' => $items,
+        ]);
+    }
+
     public function actionView($emp_id, $id = null)
     {
         $employee = $this->findEmployee($emp_id);

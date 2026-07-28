@@ -70,6 +70,15 @@ class JdApprovalService
         if (!$jd->save(false)) {
             throw new \RuntimeException('ไม่สามารถเริ่มกระบวนการลงนามได้');
         }
+
+        $firstSigner = Approve::findOne([
+            'name' => self::APPROVE_NAME,
+            'from_id' => (string) $jd->id,
+            'status' => 'Pending',
+        ]);
+        if ($firstSigner) {
+            JdTelegramService::notifyPendingSigner($jd, $firstSigner);
+        }
     }
 
     public function sign(JdEmployee $jd, Employees $employee): bool
@@ -104,6 +113,7 @@ class JdApprovalService
         if ($next) {
             $next->status = 'Pending';
             $next->save(false);
+            JdTelegramService::notifyPendingSigner($jd, $next);
             return false;
         }
 

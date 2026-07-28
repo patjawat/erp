@@ -294,6 +294,13 @@ $config = [
             'telegrambot/*',
             'dms/webhook/receive',
             // '*',
+            // JD: หน้าที่ผู้ลงนาม/เจ้าของ JD (ผู้ใช้ทั่วไป) ต้องเข้าถึงได้ — controller มี guard ภายในเอง
+            'jd/employee-jd/inbox',
+            'jd/employee-jd/view',
+            'jd/employee-jd/sign',
+            'jd/employee-jd/pdf',
+            'jd/employee-jd/acknowledge',
+            'jd/employee-jd/request-review',
             'line/*',
             // 'me/*',
             // 'line-group/*',

@@ -24,11 +24,12 @@ class ApproveHelper extends Component
     public static function Info()
     {
         $jdAcknowledgement = self::JdAcknowledgement();
+        $jdSignature = self::JdSignature();
         $idp = self::Idp();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $idp['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $idp['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -38,8 +39,48 @@ class ApproveHelper extends Component
             'assetMove' => self::AssetMove(),
             'requisitionV2' => self::RequisitionV2(),
             'jd_acknowledgement' => $jdAcknowledgement,
+            'jd_signature' => $jdSignature,
             'idp' => $idp,
         ];
+    }
+
+    /**
+     * JD ที่รอให้ผู้ใช้ปัจจุบันลงนาม (ผู้จัดทำ/ผู้ตรวจสอบ/ผู้อนุมัติ) ตามลำดับที่ถึงคิว
+     */
+    public static function JdSignature(): array
+    {
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return ['title' => 'JD รอลงนาม', 'total' => 0, 'datas' => []];
+            }
+
+            $rows = Approve::find()
+                ->where([
+                    'name' => \app\modules\jd\services\JdApprovalService::APPROVE_NAME,
+                    'emp_id' => (int) $me->id,
+                    'status' => 'Pending',
+                ])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+
+            $datas = [];
+            foreach ($rows as $row) {
+                $jd = JdEmployee::find()->where(['id' => (int) $row->from_id])->one();
+                if ($jd && $jd->status === JdEmployee::STATUS_PENDING) {
+                    $datas[] = ['approve' => $row, 'jd' => $jd];
+                }
+            }
+
+            return [
+                'title' => 'JD รอลงนาม',
+                'total' => count($datas),
+                'datas' => $datas,
+            ];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load pending JD signatures: ' . $th->getMessage(), __METHOD__);
+            return ['title' => 'JD รอลงนาม', 'total' => 0, 'datas' => []];
+        }
     }
 
     public static function Idp(): array
