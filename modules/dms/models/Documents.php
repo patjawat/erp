@@ -96,7 +96,10 @@ class Documents extends \yii\db\ActiveRecord
                     $this->document_org = '0';
                 }
             }
-            if ($this->document_type !== 'DT2') {
+            // ล้าง tags_department เฉพาะฟอร์มส่ง (send) ที่ไม่ใช่ DT2 เท่านั้น
+            // เพราะฟอร์มส่งจะโชว์ tree "ส่งถึงหน่วยงาน" เฉพาะ DT2 ส่วนประเภทอื่นใช้ Select2 document_org แทน
+            // ฟอร์มรับ (receive) โชว์ tree "ส่งหน่วยงาน" เสมอ จึงต้องเก็บค่าไว้ ไม่ล้างทิ้ง
+            if ($this->document_group === 'send' && $this->document_type !== 'DT2') {
                 $this->tags_department = '';
             }
             return true;
