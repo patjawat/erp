@@ -71,6 +71,13 @@ use yii\helpers\Url;
                         </span>
                     </span>
                 </div>
+                <?php $sentDepartments = $item->document_type !== 'DT2' ? $item->viewTagsDepartment() : ''; ?>
+                <?php if ($sentDepartments !== ''): ?>
+                    <div class="d-flex align-items-start gap-1 fs-13 mt-1">
+                        <span class="text-muted text-nowrap"><i class="fa-solid fa-share-nodes"></i> ส่งหน่วยงาน :</span>
+                        <span><?= $sentDepartments ?></span>
+                    </div>
+                <?php endif; ?>
                     <?php echo $item->StackDocumentTags('comment') ?>
             </td>
             <td>

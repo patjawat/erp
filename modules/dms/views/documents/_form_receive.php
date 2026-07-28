@@ -397,14 +397,13 @@ $js = <<< JS
         });
 
     handleFormSubmit('#form-document', null, async function(response) {
-        if(response.container){
-            await $.pjax.reload({
-                container: response.container,
-                history: false,
-                timeout: false
-            });
-        }else{
-             await location.reload();
+        // ใช้ helper กลางที่เช็ค pjax ให้ก่อน ถ้าไม่มี pjax (undefined) จะ fallback ไป reload ทั้งหน้า
+        // กัน error: Cannot read properties of undefined (reading 'reload')
+        var reloaded = response.container && typeof window.erpReloadPjax === 'function'
+            ? window.erpReloadPjax(response.container)
+            : false;
+        if (!reloaded) {
+            location.reload();
         }
     });
 
