@@ -518,8 +518,9 @@ class EmployeeJdController extends Controller
     {
         $this->assertCanManage();
         $section = JdEmployeeSection::findOne($id);
-        if (!$section || !$section->jdEmployee || $section->jdEmployee->status !== JdEmployee::STATUS_DRAFT) {
-            throw new NotFoundHttpException('JD ที่ประกาศใช้แล้วแก้ไขไม่ได้ กรุณาสร้าง JD ฉบับใหม่');
+        $editableStatuses = [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_ACTIVE];
+        if (!$section || !$section->jdEmployee || !in_array($section->jdEmployee->status, $editableStatuses, true)) {
+            throw new NotFoundHttpException('JD ที่อยู่ระหว่างรอลงนามหรือถูกยกเลิกแล้วแก้ไขไม่ได้');
         }
         $jd = $section->jdEmployee;
         $employee = $jd->employee;

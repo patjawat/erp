@@ -42,7 +42,6 @@ $isOwner = $me && (int) $me->id === (int) $model->id;
                 <?php else: ?>
                     <p class="text-muted mb-3">กรุณาตรวจสอบหน้าที่ ความรับผิดชอบ และ KPI เป้าหมายทุกหัวข้อก่อนดำเนินการ</p>
                     <div class="d-flex flex-wrap justify-content-end gap-2">
-                        <?= Html::a('<i class="bi bi-chat-left-text me-1"></i>ขอทบทวน JD', ['/jd/employee-jd/request-review', 'id' => $jd->id], ['class' => 'btn btn-outline-secondary']) ?>
                         <?= Html::beginForm(['/jd/employee-jd/acknowledge', 'id' => $jd->id], 'post', ['class' => 'd-inline']) ?>
                         <?= Html::submitButton('<i class="bi bi-pen me-1"></i>ลงนามรับทราบ', ['class' => 'btn btn-primary', 'data-confirm' => 'ยืนยันว่าคุณได้อ่านและรับทราบ JD Revision นี้แล้วหรือไม่?']) ?>
                         <?= Html::endForm() ?>
