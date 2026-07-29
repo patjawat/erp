@@ -85,20 +85,30 @@ class ApproveHelper extends Component
 
     public static function Idp(): array
     {
+        $default = ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
         try {
             $me = UserHelper::GetEmployee();
-            if (!$me) return ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
+            if (!$me) return $default;
+            // หัวหน้า: แผนรอเห็นชอบ
             $reviewPlans = IdpPlan::find()->where(['supervisor_emp_id' => $me->id, 'status' => 'submitted'])->orderBy(['submitted_at' => SORT_ASC])->all();
+            // เจ้าหน้าที่: แผนที่ถูกส่งกลับให้ปรับปรุง
             $revisionPlans = IdpPlan::find()->where(['emp_id' => $me->id, 'status' => 'revision'])->orderBy(['reviewed_at' => SORT_DESC])->all();
-            $datas = array_merge($reviewPlans, $revisionPlans);
-            $first = $datas[0] ?? null;
-            $url = $first && (int) $first->supervisor_emp_id === (int) $me->id && $first->status === 'submitted'
-                ? ['/hr/idp/employee', 'emp_id' => $first->emp_id]
-                : ['/profile', 'name' => 'idp'];
+            // HR/admin: แผนรอเปิดบันทึก (approved) + รอปิดรอบ (assessment)
+            $hrPlans = [];
+            if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')) {
+                $hrPlans = IdpPlan::find()->where(['status' => ['approved', 'assessment']])->orderBy(['updated_at' => SORT_ASC])->all();
+            }
+            $datas = array_merge($reviewPlans, $hrPlans, $revisionPlans);
+            $url = ['/profile', 'name' => 'idp'];
+            if ($reviewPlans) {
+                $url = ['/hr/idp/employee', 'emp_id' => $reviewPlans[0]->emp_id];
+            } elseif ($hrPlans) {
+                $url = ['/hr/idp/index'];
+            }
             return ['title' => 'IDP รอดำเนินการ', 'total' => count($datas), 'datas' => $datas, 'url' => $url];
         } catch (\Throwable $th) {
             Yii::warning('Unable to load IDP notifications: ' . $th->getMessage(), __METHOD__);
-            return ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
+            return $default;
         }
     }
 

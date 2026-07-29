@@ -303,6 +303,8 @@ $config = [
             'jd/employee-jd/request-review',
             // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
             'kpi/manage/*',
+            // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
+            'hr/idp/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

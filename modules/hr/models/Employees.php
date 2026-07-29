@@ -1714,6 +1714,33 @@ class Employees extends Yii\db\ActiveRecord
         return $leader !== null && $leader === (int) $this->id;
     }
 
+    /**
+     * รหัสบุคลากรของหัวหน้า (leader1) ตามหน่วยงานที่สังกัด — ใช้หน่วยงานก่อน แล้วค่อยกลุ่มงานแม่
+     * แหล่งเดียวกับ KpiService::isSupervisorOf() คืน null ถ้าหาไม่พบหรือชี้กลับมาที่ตัวเอง
+     */
+    public function supervisorEmpId()
+    {
+        try {
+            $units = $this->orgUnits();
+            foreach (['unit', 'group'] as $key) {
+                $node = $units[$key] ?? null;
+                if (!$node) {
+                    continue;
+                }
+                $json = $node->data_json;
+                if (!is_array($json)) {
+                    $json = json_decode((string) $json, true) ?: [];
+                }
+                $leader = isset($json['leader1']) && $json['leader1'] !== '' ? (int) $json['leader1'] : 0;
+                if ($leader && $leader !== (int) $this->id) {
+                    return $leader;
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+        return null;
+    }
+
     public function expertiseName()
     {
         return isset($this->empExpertise) ? $this->empExpertise->title : $this->expertise;
