@@ -13,6 +13,8 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
+use yii\widgets\ActiveForm;
 
 /**
  * หน้าจัดการ KPI รายบุคคลแบบเต็ม (แยกจากหน้าโปรไฟล์) — เพิ่ม/แก้ KPI เป้าหมาย น้ำหนัก และบันทึกผลงาน
@@ -32,8 +34,8 @@ class ManageController extends Controller
                 'actions' => [
                     'create-cycle' => ['post'],
                     'add-item' => ['post'],
-                    'update-item' => ['post'],
                     'remove-item' => ['post'],
+                    'delete-item' => ['post'],
                     'approve' => ['post'],
                     'save-entries' => ['post'],
                 ],
@@ -135,8 +137,11 @@ class ManageController extends Controller
         return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
     }
 
-    /** บันทึกรายละเอียด KPI ทีละตัว (indicator/target/weight/type/frequency) — หัวหน้า/HR */
-    public function actionUpdateItem(int $id)
+    /**
+     * แก้ไขรายละเอียด KPI ทีละตัว ผ่าน AJAX modal (.open-modal)
+     * GET → ส่งฟอร์มเข้า modal · POST → validate/save แล้วตอบ JSON ให้ปิด modal + reload รายการ
+     */
+    public function actionEditItem(int $id)
     {
         $item = KpiItem::findOne($id);
         if (!$item) {
@@ -144,32 +149,29 @@ class ManageController extends Controller
         }
         $cycle = $this->findCycle((int) $item->cycle_id);
         $this->assertManage($cycle);
-        $post = Yii::$app->request->post();
+        $req = Yii::$app->request;
 
-        $item->indicator = trim((string) ($post['indicator'] ?? $item->indicator)) ?: $item->indicator;
-        $item->target_text = trim((string) ($post['target_text'] ?? '')) ?: null;
-        $tv = $post['target_value'] ?? '';
-        $item->target_value = ($tv === '' || $tv === null) ? null : (float) $tv;
-        $item->unit = trim((string) ($post['unit'] ?? '')) ?: null;
-        $item->value_type = in_array($post['value_type'] ?? '', [KpiItem::TYPE_NUMERIC, KpiItem::TYPE_QUALITATIVE], true)
-            ? $post['value_type'] : $item->value_type;
-        $item->frequency = in_array($post['frequency'] ?? '', [KpiItem::FREQ_MONTHLY, KpiItem::FREQ_QUARTERLY, KpiItem::FREQ_YEARLY], true)
-            ? $post['frequency'] : $item->frequency;
-        $item->aggregation = in_array($post['aggregation'] ?? '', [KpiItem::AGG_SUM, KpiItem::AGG_AVG, KpiItem::AGG_MIN, KpiItem::AGG_MAX, KpiItem::AGG_LAST], true)
-            ? $post['aggregation'] : $item->aggregation;
-        $item->direction = in_array($post['direction'] ?? '', [KpiItem::DIR_ASC, KpiItem::DIR_DESC], true)
-            ? $post['direction'] : $item->direction;
-        foreach ([1, 2, 3, 4, 5] as $l) {
-            $lv = $post['level' . $l] ?? '';
-            $item->{'level' . $l} = ($lv === '' || $lv === null) ? null : (float) $lv;
+        if ($req->isPost && $item->load($req->post())) {
+            if ($item->save()) {
+                if ($req->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    // ไม่ส่ง container → erp.js จะ location.reload หลังบันทึกสำเร็จ (รีเฟรชอัตโนมัติ)
+                    return ['status' => 'success', 'message' => 'บันทึกการแก้ไข KPI แล้ว'];
+                }
+                return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
+            }
+            if ($req->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validate($item);
+            }
         }
-        $w = $post['weight'] ?? '';
-        $item->weight = ($w === '' || $w === null) ? 0 : (float) $w;
 
-        if ($item->save()) {
-            Yii::$app->session->setFlash('success', 'บันทึกรายละเอียด KPI แล้ว');
-        } else {
-            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . json_encode($item->getErrors(), JSON_UNESCAPED_UNICODE));
+        if ($req->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'แก้ไข KPI · ' . $item->indicator,
+                'content' => $this->renderAjax('_form_item', ['item' => $item, 'cycle' => $cycle]),
+            ];
         }
         return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
     }
@@ -190,6 +192,22 @@ class ManageController extends Controller
         $item->removed_reason = trim((string) Yii::$app->request->post('reason')) ?: null;
         $item->save(false);
         Yii::$app->session->setFlash('success', 'ยกเลิก KPI แล้ว (ข้อมูลผลงานเดิมยังถูกเก็บไว้)');
+        return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
+    }
+
+    /** ลบ KPI ถาวร (ลบตัวชี้วัด + ผลงานรายเดือน + คะแนน ผ่าน FK cascade) */
+    public function actionDeleteItem(int $id)
+    {
+        $item = KpiItem::findOne($id);
+        if (!$item) {
+            throw new NotFoundHttpException('ไม่พบ KPI');
+        }
+        $cycle = $this->findCycle((int) $item->cycle_id);
+        $this->assertManage($cycle);
+
+        $name = (string) $item->indicator;
+        $item->delete();
+        Yii::$app->session->setFlash('success', 'ลบ KPI “' . $name . '” ถาวรแล้ว');
         return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
     }
 

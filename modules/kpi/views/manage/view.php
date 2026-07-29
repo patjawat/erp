@@ -23,7 +23,9 @@ $this->params['breadcrumbs'][] = ['label' => 'งานบุคลากร', '
 $this->params['breadcrumbs'][] = ['label' => $employee->fullname, 'url' => ['/hr/employees/view', 'id' => $employee->id]];
 $this->params['breadcrumbs'][] = 'KPI';
 
-$this->registerCss('.tnum{font-variant-numeric:tabular-nums}.min-w-0{min-width:0}.kpi-months .form-control{text-align:center}');
+$this->registerCss('.tnum{font-variant-numeric:tabular-nums}.min-w-0{min-width:0}.kpi-tbl td,.kpi-tbl th{white-space:nowrap}.kpi-tbl .kpi-name-col{position:sticky;left:0;z-index:2;background:var(--bs-body-bg);min-width:13rem;max-width:22rem;white-space:normal}.kpi-tbl .mcol{min-width:3.25rem}.kpi-mcell{flex:1 0 5rem;min-width:5rem}.kpi-chevron{transition:transform .18s ease}[aria-expanded="true"] .kpi-chevron{transform:rotate(90deg)}');
+// กัน Enter ในช่องกรอกรายเดือนไม่ให้ submit ฟอร์ม (บันทึกเฉพาะกดปุ่มบันทึก)
+$this->registerJs('$(document).on("keydown", ".kpi-months input", function(e){ if(e.key==="Enter"){ e.preventDefault(); } });');
 
 $statusTone = [
     KpiCycle::STATUS_DRAFT => 'warning',
@@ -186,7 +188,7 @@ $weightOk = abs($sumWeightActive - 100) < 0.01;
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center gap-2 mb-2 flex-wrap">
         <h6 class="fw-semibold mb-0">ตัวชี้วัด <span class="text-body-secondary fw-normal">(<?= count($items) ?>)</span></h6>
         <?php if ($canManage): ?>
             <?= Html::a('<i class="bi bi-plus-lg me-1"></i>เพิ่ม KPI', ['add-item', 'cycle_id' => $cycle->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-method' => 'post']) ?>
@@ -196,166 +198,118 @@ $weightOk = abs($sumWeightActive - 100) < 0.01;
     <?php if (!$items): ?>
         <div class="card bg-body border"><div class="card-body text-center text-body-secondary py-4">ยังไม่มี KPI ในชุดนี้<?= $canManage ? ' — กด “เพิ่ม KPI”' : '' ?></div></div>
     <?php else: ?>
-        <?php $no = 0; foreach ($items as $it): ?>
-            <?php
-            $removed = $it->status === KpiItem::STATUS_REMOVED;
-            $no++;
-            $r = $rows[$it->id];
-            $level = $r['level'];
-            $scoreC = $r['scoreC'];
-            $summary = $r['summary'];
-            $thr = $r['thr'];
-            $filled = $r['filled'];
-            $tone = $levelTone($level);
-            ?>
-            <div class="card bg-body border mb-3 <?= $removed ? 'opacity-75' : '' ?>">
-                <div class="card-body">
-                    <!-- แถวที่ 1: ตัวชี้วัด + ผลลัพธ์ (ระดับ/คะแนน) -->
-                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                        <div class="min-w-0 flex-grow-1">
-                            <div class="fw-semibold">
-                                <span class="badge bg-primary-subtle text-primary-emphasis me-1">KPI <?= $no ?></span><?= Html::encode($it->indicator) ?>
-                                <?php if ($it->source_type === KpiItem::SOURCE_JD): ?><span class="badge bg-secondary-subtle text-secondary-emphasis ms-1 fw-normal">จาก JD</span><?php endif; ?>
-                                <?php if ($removed): ?><span class="badge bg-secondary-subtle text-secondary-emphasis ms-1 fw-normal">ยกเลิกกลางปี</span><?php endif; ?>
-                            </div>
-                            <div class="small text-body-secondary mt-1 d-flex flex-wrap gap-3">
-                                <span><i class="bi bi-bullseye me-1"></i>เป้า <span class="text-body"><?= Html::encode($it->target_text ?: ($it->target_value !== null ? $fmt($it->target_value) . ($it->unit ? ' ' . $it->unit : '') : '—')) ?></span></span>
-                                <span><i class="bi bi-percent me-1"></i>น้ำหนัก <span class="text-body tnum"><?= $it->weight > 0 ? $fmt($it->weight) . '%' : '—' ?></span></span>
-                                <span><i class="bi bi-sigma me-1"></i><?= Html::encode($aggOptions[$it->aggregation] ?? $it->aggregation) ?> · <i class="bi bi-arrow-<?= $it->direction === KpiItem::DIR_DESC ? 'down' : 'up' ?>-short"></i><?= $it->direction === KpiItem::DIR_DESC ? 'น้อยดี' : 'มากดี' ?></span>
-                                <span><i class="bi bi-calendar-check me-1"></i>บันทึก <span class="tnum"><?= $filled ?>/12</span></span>
-                            </div>
-                        </div>
-                        <?php $resultTinted = ($it->value_type === KpiItem::TYPE_NUMERIC && $level !== null); ?>
-                        <div class="text-end rounded-3 px-3 py-2 <?= $resultTinted ? 'bg-' . $tone . '-subtle border border-' . $tone . '-subtle' : '' ?>">
-                            <?php if ($it->value_type === KpiItem::TYPE_NUMERIC): ?>
-                                <div class="small text-body-secondary">ผลงานสรุป</div>
-                                <div class="fs-5 fw-bold tnum <?= $summary['value'] === null ? 'text-body-secondary' : ($resultTinted ? 'text-' . $tone . '-emphasis' : 'text-body') ?>"><?= $summary['value'] === null ? '—' : $fmt($summary['value']) . ($it->unit ? ' ' . Html::encode($it->unit) : '') ?></div>
-                                <?php if ($resultTinted): ?>
-                                    <div class="small fw-semibold text-<?= $tone ?>-emphasis">ระดับ <?= $level ?>/5 · คะแนน <span class="tnum"><?= $fmt($scoreC) ?></span></div>
-                                <?php elseif ($thr === []): ?>
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">ยังไม่ตั้งเกณฑ์ระดับ</span>
+        <!-- ===== ตารางแสดงผล (อ่านอย่างเดียว) — ภาพรวมทุก KPI ===== -->
+        <div class="card bg-body border">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0 small kpi-tbl">
+                    <thead>
+                        <tr class="text-body-secondary">
+                            <th class="kpi-name-col">ชื่อ KPI</th>
+                            <?php foreach (KpiService::FISCAL_MONTHS as $cm): ?><th class="text-center mcol"><?= KpiService::MONTH_LABELS_TH[$cm] ?></th><?php endforeach; ?>
+                            <th class="text-center">สรุป</th>
+                            <th class="text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider align-middle">
+                    <?php $no = 0; foreach ($items as $it): ?>
+                        <?php
+                        $removed = $it->status === KpiItem::STATUS_REMOVED;
+                        $no++;
+                        $r = $rows[$it->id];
+                        $level = $r['level'];
+                        $scoreC = $r['scoreC'];
+                        $thr = $r['thr'];
+                        $tone = $levelTone($level);
+                        $isNum = $it->value_type === KpiItem::TYPE_NUMERIC;
+                        ?>
+                        <tr class="<?= $removed ? 'opacity-75' : '' ?>">
+                            <td class="kpi-name-col">
+                                <?php if ($canRecordNow && !$removed): ?>
+                                    <button type="button" class="btn btn-sm btn-link text-body text-decoration-none p-0 text-start" data-bs-toggle="collapse" data-bs-target="#rec-<?= $it->id ?>" aria-expanded="false" aria-controls="rec-<?= $it->id ?>" title="คลิกเพื่อกรอก/แก้ไขผลรายเดือน">
+                                        <i class="bi bi-chevron-right kpi-chevron me-1"></i><span class="badge bg-primary-subtle text-primary-emphasis">KPI <?= $no ?></span> <span class="fw-semibold"><?= Html::encode($it->indicator) ?></span><?php if ($it->source_type === KpiItem::SOURCE_JD): ?> <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">JD</span><?php endif; ?>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="badge bg-primary-subtle text-primary-emphasis">KPI <?= $no ?></span>
+                                    <span class="fw-semibold"><?= Html::encode($it->indicator) ?></span>
+                                    <?php if ($it->source_type === KpiItem::SOURCE_JD): ?><span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">JD</span><?php endif; ?>
+                                    <?php if ($removed): ?><span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">ยกเลิก</span><?php endif; ?>
                                 <?php endif; ?>
-                            <?php else: ?>
-                                <span class="badge bg-info-subtle text-info-emphasis">เชิงคุณภาพ</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- แถบระดับ 1–5 (ไฮไลต์ระดับที่ได้) -->
-                    <?php if ($thr !== []): ?>
-                        <div class="row row-cols-5 g-1 mt-3">
-                            <?php foreach ([1, 2, 3, 4, 5] as $l): ?>
-                                <?php $on = ($level !== null && $l === $level); ?>
-                                <div class="col">
-                                    <div class="text-center rounded-2 py-1 px-1 border <?= $on ? 'border-primary bg-primary-subtle text-primary-emphasis fw-semibold' : 'bg-body-tertiary text-body-secondary' ?>">
-                                        <div class="small">ระดับ <?= $l ?></div>
-                                        <div class="small tnum"><?= isset($thr[$l]) ? $fmt($thr[$l]) : '–' ?></div>
-                                    </div>
+                                <div class="text-body-secondary fs-13 mt-1">
+                                    <i class="bi bi-bullseye me-1"></i>เป้า <?= Html::encode($it->target_text ?: ($it->target_value !== null ? $fmt($it->target_value) . ($it->unit ? ' ' . $it->unit : '') : '—')) ?>
+                                    <span class="mx-1">·</span>น้ำหนัก <?= $it->weight > 0 ? $fmt($it->weight) . '%' : '—' ?>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($canManage && !$removed): ?>
-                        <div class="mt-2 d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-<?= $it->id ?>"><i class="bi bi-sliders me-1"></i>ตั้งค่าเกณฑ์ / น้ำหนัก</button>
-                            <?= Html::a('<i class="bi bi-trash me-1"></i>ยกเลิก', ['remove-item', 'id' => $it->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ยกเลิก KPI นี้? (ผลงานเดิมจะยังถูกเก็บไว้)']) ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($canManage && !$removed): ?>
-                    <!-- ฟอร์มตั้งค่า (ซ่อน) -->
-                    <div class="collapse" id="edit-<?= $it->id ?>">
-                        <form method="post" action="<?= Url::to(['update-item', 'id' => $it->id]) ?>" class="card-body border-top bg-body-tertiary">
-                            <?= $csrf ?>
-                            <div class="row g-3">
-                                <div class="col-12 col-lg-6"><label class="form-label small fw-semibold mb-1">ชื่อตัวชี้วัด</label><input type="text" name="indicator" value="<?= Html::encode($it->indicator) ?>" class="form-control form-control-sm"></div>
-                                <div class="col-6 col-lg-3"><label class="form-label small fw-semibold mb-1">เป้าหมาย (ข้อความ)</label><input type="text" name="target_text" value="<?= Html::encode($it->target_text) ?>" class="form-control form-control-sm" placeholder="เช่น ≥90%"></div>
-                                <div class="col-3 col-lg-2"><label class="form-label small fw-semibold mb-1">เป้า (ตัวเลข)</label><input type="number" step="any" name="target_value" value="<?= $it->target_value !== null ? Html::encode($fmt($it->target_value)) : '' ?>" class="form-control form-control-sm"></div>
-                                <div class="col-3 col-lg-1"><label class="form-label small fw-semibold mb-1">หน่วย</label><input type="text" name="unit" value="<?= Html::encode($it->unit) ?>" class="form-control form-control-sm"></div>
-
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold mb-1">คะแนนตามระดับค่าเป้าหมาย <span class="text-body-secondary fw-normal">— ผลงานถึงเกณฑ์ระดับใด ได้คะแนนระดับนั้น</span></label>
-                                    <div class="row row-cols-5 g-1">
-                                        <?php foreach ([1, 2, 3, 4, 5] as $l): ?>
-                                            <div class="col">
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text">ร.<?= $l ?></span>
-                                                    <input type="number" step="any" name="level<?= $l ?>" value="<?= $it->{'level' . $l} !== null ? Html::encode($fmt($it->{'level' . $l})) : '' ?>" class="form-control">
+                            </td>
+                            <?php for ($fi = 1; $fi <= 12; $fi++): ?>
+                                <?php $e = $entries[$it->id][$fi] ?? null; $val = $e ? ($e->value_num !== null ? $fmt($e->value_num) : ($e->value_text ?: '')) : ''; ?>
+                                <td class="text-center mcol"><span class="tnum" title="<?= Html::encode($val) ?>"><?= $val !== '' ? Html::encode($val) : '<span class="text-body-secondary">·</span>' ?></span></td>
+                            <?php endfor; ?>
+                            <td class="text-center text-nowrap">
+                                <?php if (!$isNum): ?>
+                                    <span class="badge bg-info-subtle text-info-emphasis">เชิงคุณภาพ</span>
+                                <?php elseif ($thr === []): ?>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">ไม่มีเกณฑ์</span>
+                                <?php elseif ($level === null): ?>
+                                    <span class="text-body-secondary">·</span>
+                                <?php else: ?>
+                                    <span class="badge bg-<?= $tone ?>-subtle text-<?= $tone ?>-emphasis">ระดับ <?= $level ?>/5</span>
+                                    <span class="tnum ms-1">(<?= $fmt($scoreC) ?>)</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if ($canManage): ?>
+                                    <div class="dropdown d-inline-block">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">จัดการ</button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li><a class="dropdown-item open-modal" href="<?= Url::to(['edit-item', 'id' => $it->id]) ?>" data-size="modal-lg"><i class="bi bi-pencil-square me-2"></i>แก้ไข</a></li>
+                                            <?php if (!$removed): ?>
+                                                <li><?= Html::a('<i class="bi bi-slash-circle me-2"></i>ยกเลิก', ['remove-item', 'id' => $it->id], ['class' => 'dropdown-item', 'data-method' => 'post', 'data-confirm' => 'ยกเลิก KPI นี้? (เก็บผลงานเดิมไว้ แต่ไม่คิดคะแนน)']) ?></li>
+                                            <?php endif; ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><?= Html::a('<i class="bi bi-trash me-2"></i>ลบ', ['delete-item', 'id' => $it->id], ['class' => 'dropdown-item text-danger', 'data-method' => 'post', 'data-confirm' => 'ลบ KPI นี้ถาวร? ผลงานรายเดือนและคะแนนจะถูกลบทั้งหมด กู้คืนไม่ได้']) ?></li>
+                                        </ul>
+                                    </div>
+                                <?php elseif ($removed): ?>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">ยกเลิก</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php if ($canRecordNow && !$removed): ?>
+                            <tr class="kpi-rec-detail">
+                                <td colspan="15" class="p-0 border-0">
+                                    <div class="collapse" id="rec-<?= $it->id ?>">
+                                        <div class="bg-primary-subtle border-top border-bottom border-primary-subtle p-3">
+                                            <form method="post" action="<?= Url::to(['save-entries', 'kpi_item_id' => $it->id]) ?>" class="kpi-months">
+                                                <?= $csrf ?>
+                                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                                    <span class="small fw-semibold"><i class="bi bi-calendar3 me-1"></i>กรอกผลงานรายเดือน (ต.ค.–ก.ย.) · <?= Html::encode($it->indicator) ?></span>
+                                                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i>บันทึก</button>
                                                 </div>
-                                            </div>
-                                        <?php endforeach; ?>
+                                                <div class="overflow-x-auto"><div class="d-flex gap-2 pb-1">
+                                                    <?php foreach (KpiService::FISCAL_MONTHS as $idx => $cm): ?>
+                                                        <?php $fi = $idx + 1; $e = $entries[$it->id][$fi] ?? null; ?>
+                                                        <div class="kpi-mcell">
+                                                            <label class="form-label small text-body-secondary mb-1 d-block text-center"><?= KpiService::MONTH_LABELS_TH[$cm] ?></label>
+                                                            <?php if ($isNum): ?>
+                                                                <input type="number" step="any" name="m[<?= $fi ?>]" value="<?= $e && $e->value_num !== null ? Html::encode($fmt($e->value_num)) : '' ?>" class="form-control form-control-sm text-center tnum">
+                                                            <?php else: ?>
+                                                                <input type="text" name="mt[<?= $fi ?>]" value="<?= $e ? Html::encode($e->value_text) : '' ?>" class="form-control form-control-sm text-center">
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div></div>
+                                            </form>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="col-6 col-lg-3">
-                                    <label class="form-label small fw-semibold mb-1">ชนิดผล</label>
-                                    <div class="btn-group btn-group-sm w-100" role="group">
-                                        <?php foreach ($typeOptions as $val => $lbl): ?>
-                                            <input type="radio" class="btn-check" name="value_type" id="vt-<?= $it->id ?>-<?= $val ?>" value="<?= $val ?>" autocomplete="off" <?= $it->value_type === $val ? 'checked' : '' ?>>
-                                            <label class="btn btn-outline-secondary" for="vt-<?= $it->id ?>-<?= $val ?>"><?= $lbl ?></label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-lg-3">
-                                    <label class="form-label small fw-semibold mb-1">ทิศทาง</label>
-                                    <div class="btn-group btn-group-sm w-100" role="group">
-                                        <?php foreach ($dirOptions as $val => $lbl): ?>
-                                            <input type="radio" class="btn-check" name="direction" id="dir-<?= $it->id ?>-<?= $val ?>" value="<?= $val ?>" autocomplete="off" <?= $it->direction === $val ? 'checked' : '' ?>>
-                                            <label class="btn btn-outline-secondary" for="dir-<?= $it->id ?>-<?= $val ?>"><?= $lbl ?></label>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-lg-2"><label class="form-label small fw-semibold mb-1">วิธีสรุป</label><?= Html::dropDownList('aggregation', $it->aggregation, $aggOptions, ['class' => 'form-select form-select-sm']) ?></div>
-                                <div class="col-3 col-lg-2"><label class="form-label small fw-semibold mb-1">ความถี่</label><?= Html::dropDownList('frequency', $it->frequency, $freqOptions, ['class' => 'form-select form-select-sm']) ?></div>
-                                <div class="col-3 col-lg-2"><label class="form-label small fw-semibold mb-1">น้ำหนัก %</label><input type="number" step="any" name="weight" value="<?= $fmt($it->weight) ?>" class="form-control form-control-sm text-end tnum"></div>
-
-                                <div class="col-12 text-end"><button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i>บันทึกการตั้งค่า</button></div>
-                            </div>
-                        </form>
-                    </div>
-                <?php endif; ?>
-
-                <!-- ผลงานรายเดือน ต.ค.–ก.ย. -->
-                <div class="card-body border-top">
-                    <?php if ($canRecordNow && !$removed): ?>
-                        <form method="post" action="<?= Url::to(['save-entries', 'kpi_item_id' => $it->id]) ?>" class="kpi-months">
-                            <?= $csrf ?>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="small fw-semibold"><i class="bi bi-calendar3 me-1"></i>ผลงานรายเดือน (ต.ค.–ก.ย.)</span>
-                                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save me-1"></i>บันทึกผลงาน</button>
-                            </div>
-                            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2">
-                                <?php foreach (KpiService::FISCAL_MONTHS as $idx => $cm): ?>
-                                    <?php $fi = $idx + 1; $e = $entries[$it->id][$fi] ?? null; ?>
-                                    <div class="col">
-                                        <label class="form-label small text-body-secondary mb-1"><?= KpiService::MONTH_LABELS_TH[$cm] ?></label>
-                                        <?php if ($it->value_type === KpiItem::TYPE_NUMERIC): ?>
-                                            <input type="number" step="any" name="m[<?= $fi ?>]" value="<?= $e && $e->value_num !== null ? Html::encode($fmt($e->value_num)) : '' ?>" class="form-control form-control-sm tnum">
-                                        <?php else: ?>
-                                            <input type="text" name="mt[<?= $fi ?>]" value="<?= $e ? Html::encode($e->value_text) : '' ?>" class="form-control form-control-sm">
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </form>
-                    <?php else: ?>
-                        <div class="small fw-semibold mb-2 text-body-secondary"><i class="bi bi-calendar3 me-1"></i>ผลงานรายเดือน (ต.ค.–ก.ย.)</div>
-                        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2">
-                            <?php foreach (KpiService::FISCAL_MONTHS as $idx => $cm): ?>
-                                <?php $fi = $idx + 1; $e = $entries[$it->id][$fi] ?? null; $val = $e ? ($e->value_num !== null ? $fmt($e->value_num) : ($e->value_text ?: '')) : ''; ?>
-                                <div class="col">
-                                    <div class="border rounded-2 px-2 py-1 h-100">
-                                        <div class="small text-body-secondary"><?= KpiService::MONTH_LABELS_TH[$cm] ?></div>
-                                        <div class="fw-semibold text-truncate tnum" title="<?= Html::encode($val) ?>"><?= $val !== '' ? Html::encode($val) : '<span class="text-body-secondary">·</span>' ?></div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-        <?php endforeach; ?>
+        </div>
+        <?php if ($canRecordNow): ?>
+            <p class="text-body-secondary small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>คลิกที่ชื่อตัวชี้วัดเพื่อกรอก/แก้ไขผลงานรายเดือน</p>
+        <?php endif; ?>
     <?php endif; ?>
 <?php endif; ?>
