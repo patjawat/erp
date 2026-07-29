@@ -15,6 +15,7 @@ use app\modules\helpdesk\models\Helpdesk;
 use app\modules\inventory\models\StockEvent;
 use app\modules\jd\models\JdEmployee;
 use app\modules\jd\models\JdEmployeeAcknowledgement;
+use app\modules\jd\models\JdChangeRequest;
 use app\modules\hr\models\IdpPlan;
 
 // การแจ้งเตือนต่างๆ
@@ -25,11 +26,12 @@ class ApproveHelper extends Component
     {
         $jdAcknowledgement = self::JdAcknowledgement();
         $jdSignature = self::JdSignature();
+        $jdChangeReview = self::JdChangeReview();
         $idp = self::Idp();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $idp['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -40,8 +42,30 @@ class ApproveHelper extends Component
             'requisitionV2' => self::RequisitionV2(),
             'jd_acknowledgement' => $jdAcknowledgement,
             'jd_signature' => $jdSignature,
+            'jd_change_review' => $jdChangeReview,
             'idp' => $idp,
         ];
+    }
+
+    /**
+     * HR/admin: คำขอทบทวน JD ที่ยังเปิดอยู่ (รอ HR รับ/ไม่รับ)
+     */
+    public static function JdChangeReview(): array
+    {
+        $default = ['title' => 'คำขอทบทวน JD', 'total' => 0, 'datas' => [], 'url' => ['/jd/employee-jd/review-inbox']];
+        try {
+            if (!Yii::$app->user->can('hr') && !Yii::$app->user->can('admin')) {
+                return $default;
+            }
+            $rows = JdChangeRequest::find()
+                ->where(['status' => JdChangeRequest::openStatuses()])
+                ->orderBy(['submitted_at' => SORT_ASC])
+                ->all();
+            return ['title' => 'คำขอทบทวน JD', 'total' => count($rows), 'datas' => $rows, 'url' => ['/jd/employee-jd/review-inbox']];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load JD change reviews: ' . $th->getMessage(), __METHOD__);
+            return $default;
+        }
     }
 
     /**
@@ -125,6 +149,19 @@ class ApproveHelper extends Component
 
             $jd = JdEmployee::findCurrent((int) $me->id);
             if (!$jd) {
+                return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
+            }
+
+            // ถ้ามีคำขอทบทวนที่ยังเปิดอยู่ ระบบพักการลงนามรับทราบไว้ (ตรงกับหน้า JD) — ไม่ต้องเด้งเตือนค้าง
+            if ($jd->openChangeRequest !== null) {
+                return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
+            }
+
+            // กำลังมีฉบับร่าง/รอลงนามที่ revision สูงกว่า (HR รับคำขอแล้วกำลังทำฉบับใหม่) → ไม่ต้องเด้งให้รับทราบฉบับเดิม
+            if (JdEmployee::find()
+                ->where(['emp_id' => (int) $me->id, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
+                ->andWhere(['>', 'revision_no', (int) $jd->revision_no])
+                ->exists()) {
                 return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
             }
 

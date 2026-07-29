@@ -38,7 +38,10 @@ $isOwner = $me && (int) $me->id === (int) $model->id;
                     </div>
                 <?php elseif ($review): ?>
                     <?php $reviewLabels = JdChangeRequest::statusLabels(); ?>
-                    <div class="alert alert-warning mb-0"><strong><?= Html::encode($reviewLabels[$review->status] ?? $review->status) ?></strong><div class="small mt-1">ส่งคำขอทบทวนเมื่อ <?= Yii::$app->formatter->asDatetime($review->submitted_at, 'php:d/m/Y H:i') ?> น. ระบบพักการลงนามไว้จนกว่า HR จะดำเนินการ</div></div>
+                    <div class="alert alert-warning mb-2"><strong><?= Html::encode($reviewLabels[$review->status] ?? $review->status) ?></strong><div class="small mt-1">ส่งคำขอทบทวนเมื่อ <?= Yii::$app->formatter->asDatetime($review->submitted_at, 'php:d/m/Y H:i') ?> น. ระบบพักการลงนามไว้จนกว่า HR จะดำเนินการ</div></div>
+                    <div class="d-flex justify-content-end">
+                        <?= Html::a('<i class="bi bi-x-circle me-1"></i>ยกเลิกคำขอทบทวน', ['/jd/employee-jd/cancel-review', 'id' => $review->id], ['class' => 'btn btn-sm btn-outline-secondary', 'data-method' => 'post', 'data-confirm' => 'ยกเลิกคำขอทบทวนนี้? จะกลับมาลงนามรับทราบ JD ฉบับปัจจุบันได้']) ?>
+                    </div>
                 <?php else: ?>
                     <p class="text-muted mb-3">กรุณาตรวจสอบหน้าที่ ความรับผิดชอบ และ KPI เป้าหมายทุกหัวข้อก่อนดำเนินการ</p>
                     <div class="d-flex flex-wrap justify-content-end gap-2">
