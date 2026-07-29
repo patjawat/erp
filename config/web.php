@@ -301,6 +301,8 @@ $config = [
             'jd/employee-jd/pdf',
             'jd/employee-jd/acknowledge',
             'jd/employee-jd/request-review',
+            // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
+            'kpi/manage/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

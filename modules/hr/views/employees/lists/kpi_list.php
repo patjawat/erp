@@ -43,14 +43,17 @@ if (!in_array($currentFy, $selectableYears, true)) {
 rsort($selectableYears);
 
 $manageUrl = ['/kpi/manage/view', 'emp_id' => $model->id, 'fiscal_year' => $selectedYear];
+$canManage = KpiService::isHrOrAdmin() || KpiService::isSupervisorOf((int) $model->id);
 ?>
 
 <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
     <div>
         <h5 class="mb-1 fw-semibold">ตัวชี้วัด KPI ประจำปี</h5>
-        <div class="text-body-secondary small">ปีงบประมาณ ต.ค.–ก.ย. · การเพิ่ม/แก้ KPI และบันทึกผลงานทำได้ในหน้าจัดการ</div>
+        <div class="text-body-secondary small">ปีงบประมาณ ต.ค.–ก.ย. · คลิกชื่อตัวชี้วัดเพื่อบันทึกผลรายเดือน</div>
     </div>
-    <?= Html::a('<i class="bi bi-pencil-square me-1"></i>จัดการ / บันทึกผลงาน KPI', $manageUrl, ['class' => 'btn btn-sm btn-primary']) ?>
+    <?php if ($canManage): ?>
+        <?= Html::a('<i class="bi bi-gear me-1"></i>จัดการ KPI (เพิ่ม/แก้ไข)', $manageUrl, ['class' => 'btn btn-sm btn-outline-primary']) ?>
+    <?php endif; ?>
 </div>
 
 <!-- แท็บเลือกปีงบประมาณ (ย้อนหลัง) -->
@@ -87,6 +90,7 @@ $manageUrl = ['/kpi/manage/view', 'emp_id' => $model->id, 'fiscal_year' => $sele
     foreach ($items as $it) {
         $totalWeight += (float) $it->weight;
     }
+    $canRecordNow = KpiService::canRecord($cycle) && ($cycle->status === KpiCycle::STATUS_ACTIVE || KpiService::isHrOrAdmin());
     ?>
     <div class="card bg-body border mb-3"><div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
         <div>
@@ -104,16 +108,25 @@ $manageUrl = ['/kpi/manage/view', 'emp_id' => $model->id, 'fiscal_year' => $sele
         <div class="card bg-body border"><div class="table-responsive">
             <table class="table table-hover align-middle mb-0 small">
                 <thead><tr class="text-body-secondary">
-                    <th>ตัวชี้วัด</th><th class="text-nowrap">เป้าหมาย</th><th class="text-center">น้ำหนัก</th>
+                    <th>ตัวชี้วัด</th>
                     <?php foreach (KpiService::FISCAL_MONTHS as $cm): ?><th class="text-center px-1"><?= KpiService::MONTH_LABELS_TH[$cm] ?></th><?php endforeach; ?>
                     <th class="text-center text-nowrap">สรุปผล</th>
                 </tr></thead>
                 <tbody>
                 <?php foreach ($items as $it): ?>
                     <tr>
-                        <td><?= Html::encode($it->indicator) ?><?php if ($it->source_type === KpiItem::SOURCE_JD): ?> <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">JD</span><?php endif; ?></td>
-                        <td class="text-nowrap"><?= Html::encode($it->target_text ?: '—') ?></td>
-                        <td class="text-center tnum"><?= $it->weight > 0 ? $fmt($it->weight) . '%' : '—' ?></td>
+                        <td>
+                            <?php if ($canRecordNow): ?>
+                                <a href="<?= Url::to(['/kpi/manage/record-item', 'id' => $it->id]) ?>" class="open-modal fw-semibold text-decoration-none" data-size="modal-lg" data-pjax="0" title="คลิกเพื่อบันทึก/แก้ไขผลรายเดือน"><?= Html::encode($it->indicator) ?></a>
+                            <?php else: ?>
+                                <span class="fw-semibold"><?= Html::encode($it->indicator) ?></span>
+                            <?php endif; ?>
+                            <?php if ($it->source_type === KpiItem::SOURCE_JD): ?> <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">JD</span><?php endif; ?>
+                            <div class="text-body-secondary fs-13 mt-1">
+                                <i class="bi bi-bullseye me-1"></i>เป้า <?= Html::encode($it->target_text ?: ($it->target_value !== null ? $fmt($it->target_value) . ($it->unit ? ' ' . $it->unit : '') : '—')) ?>
+                                <span class="mx-1">·</span>น้ำหนัก <?= $it->weight > 0 ? $fmt($it->weight) . '%' : '—' ?>
+                            </div>
+                        </td>
                         <?php for ($fi = 1; $fi <= 12; $fi++): ?>
                             <?php $e = $entries[$it->id][$fi] ?? null; $val = $e ? ($e->value_num !== null ? $fmt($e->value_num) : ($e->value_text ? '•' : '')) : ''; ?>
                             <td class="text-center px-1 tnum" title="<?= $e && $e->value_text ? Html::encode($e->value_text) : '' ?>"><?= $val !== '' ? Html::encode($val) : '<span class="text-body-secondary">·</span>' ?></td>
@@ -140,6 +153,6 @@ $manageUrl = ['/kpi/manage/view', 'emp_id' => $model->id, 'fiscal_year' => $sele
                 </tbody>
             </table>
         </div></div>
-        <p class="text-body-secondary small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>บันทึกผลงานรายเดือนและแก้ไข KPI ได้ที่ปุ่ม “จัดการ / บันทึกผลงาน KPI”</p>
+        <p class="text-body-secondary small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i><?= $canRecordNow ? 'คลิกที่ชื่อตัวชี้วัดเพื่อบันทึก/แก้ไขผลรายเดือน · การเพิ่ม/แก้ KPI ทำได้ที่หน้าจัดการ' : 'การบันทึกผลจะเปิดใช้เมื่อชุด KPI ได้รับการอนุมัติ' ?></p>
     <?php endif; ?>
 <?php endif; ?>

@@ -284,6 +284,89 @@ class ManageController extends Controller
         return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
     }
 
+    /**
+     * บันทึกผลรายเดือนของ KPI 1 ตัว ผ่าน AJAX modal (สำหรับหน้าโปรไฟล์ที่พื้นที่จำกัด)
+     * GET → ส่งฟอร์มเข้า modal · POST → บันทึกแล้วตอบ JSON ให้ปิด modal + reload
+     */
+    public function actionRecordItem(int $id)
+    {
+        $item = KpiItem::findOne($id);
+        if (!$item) {
+            throw new NotFoundHttpException('ไม่พบ KPI');
+        }
+        $cycle = $this->findCycle((int) $item->cycle_id);
+        if (!KpiService::canRecord($cycle)) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์บันทึกผลของ KPI นี้');
+        }
+        $req = Yii::$app->request;
+
+        if ($req->isPost) {
+            if ($cycle->status !== KpiCycle::STATUS_ACTIVE && !KpiService::isHrOrAdmin()) {
+                if ($req->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'error', 'message' => 'ต้องอนุมัติชุด KPI ก่อนจึงจะบันทึกผลได้'];
+                }
+                return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
+            }
+            $this->saveMonthlyForItem((int) $item->id);
+            if ($req->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ['status' => 'success', 'message' => 'บันทึกผลงานรายเดือนแล้ว'];
+            }
+            return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
+        }
+
+        if ($req->isAjax) {
+            $entryMap = [];
+            foreach (KpiEntry::find()->where(['kpi_item_id' => $item->id, 'period_type' => KpiEntry::PERIOD_MONTH])->all() as $e) {
+                $entryMap[(int) $e->period_index] = $e;
+            }
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'บันทึกผลงานรายเดือน · ' . $item->indicator,
+                'content' => $this->renderAjax('_form_entries', ['item' => $item, 'entryMap' => $entryMap]),
+            ];
+        }
+        return $this->redirect(['view', 'emp_id' => $cycle->emp_id, 'fiscal_year' => $cycle->fiscal_year]);
+    }
+
+    /** upsert ผลรายเดือน 12 ช่องของ KPI 1 ตัว จาก post m[fi]/mt[fi] */
+    private function saveMonthlyForItem(int $itemId): void
+    {
+        $nums = (array) Yii::$app->request->post('m', []);
+        $texts = (array) Yii::$app->request->post('mt', []);
+        $existing = [];
+        foreach (KpiEntry::find()->where(['kpi_item_id' => $itemId, 'period_type' => KpiEntry::PERIOD_MONTH])->all() as $e) {
+            $existing[(int) $e->period_index] = $e;
+        }
+        $now = date('Y-m-d H:i:s');
+        $uid = (int) Yii::$app->user->id;
+        for ($fi = 1; $fi <= 12; $fi++) {
+            $numRaw = $nums[$fi] ?? '';
+            $textRaw = trim((string) ($texts[$fi] ?? ''));
+            $hasNum = ($numRaw !== '' && $numRaw !== null);
+            $hasText = ($textRaw !== '');
+            $entry = $existing[$fi] ?? null;
+            if (!$hasNum && !$hasText) {
+                if ($entry) {
+                    $entry->delete();
+                }
+                continue;
+            }
+            if (!$entry) {
+                $entry = new KpiEntry(['kpi_item_id' => $itemId, 'period_type' => KpiEntry::PERIOD_MONTH, 'period_index' => $fi]);
+            }
+            $entry->value_num = $hasNum ? (float) $numRaw : null;
+            $entry->value_text = $hasText ? $textRaw : null;
+            $entry->recorded_by = $uid;
+            $entry->recorded_at = $now;
+            if ($entry->confirm_status === KpiEntry::CONFIRM_REVISE) {
+                $entry->confirm_status = KpiEntry::CONFIRM_PENDING;
+            }
+            $entry->save();
+        }
+    }
+
     // ---- helpers ----
 
     private function findEmployee(int $id): Employees
