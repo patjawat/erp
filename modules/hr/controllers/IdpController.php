@@ -184,8 +184,14 @@ class IdpController extends Controller
     {
         $plan = $this->findPlan($id);
         $this->assertOwner($plan);
+        $emptyGoals = [];
+        foreach ($plan->goals as $goal) {
+            if (!$goal->activities) $emptyGoals[] = $goal->title;
+        }
         if (!$plan->canEdit() || !$plan->goals) {
             Yii::$app->session->setFlash('warning', 'กรุณาเพิ่มเป้าหมายอย่างน้อย 1 รายการก่อนส่งแผน');
+        } elseif ($emptyGoals) {
+            Yii::$app->session->setFlash('warning', 'กรุณาเพิ่มกิจกรรมพัฒนาอย่างน้อย 1 รายการในทุกเป้าหมายก่อนส่งแผน (ยังไม่มีกิจกรรม: ' . implode(', ', $emptyGoals) . ')');
         } else {
             $plan->status = 'submitted';
             $plan->submitted_at = date('Y-m-d H:i:s');
