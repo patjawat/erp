@@ -238,6 +238,8 @@ $weightOk = abs($sumWeightActive - 100) < 0.01;
                                     <i class="bi bi-bullseye me-1"></i>เป้า <?= Html::encode($it->target_text ?: ($it->target_value !== null ? $fmt($it->target_value) . ($it->unit ? ' ' . $it->unit : '') : '—')) ?>
                                     <span class="mx-1">·</span>น้ำหนัก <?= $it->weight > 0 ? $fmt($it->weight) . '%' : '—' ?>
                                 </div>
+                                <?php if (trim((string) $it->formula) !== ''): ?><div class="text-body-secondary fs-13"><i class="bi bi-calculator me-1"></i><?= Html::encode($it->formula) ?></div><?php endif; ?>
+                                <?php if (trim((string) $it->evidence) !== ''): ?><div class="text-body-secondary fs-13"><i class="bi bi-paperclip me-1"></i><?= Html::encode($it->evidence) ?></div><?php endif; ?>
                             </td>
                             <?php for ($fi = 1; $fi <= 12; $fi++): ?>
                                 <?php $e = $entries[$it->id][$fi] ?? null; $val = $e ? ($e->value_num !== null ? $fmt($e->value_num) : ($e->value_text ?: '')) : ''; ?>
