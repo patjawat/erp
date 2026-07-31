@@ -91,8 +91,10 @@ try {
         ];
     };
 
+    // eager-load ความสัมพันธ์ emp เพื่อเลี่ยง N+1 (ดึงช่างทั้งทีมด้วย query เดียว)
     $teamRows = HelpdeskDetail::find()
         ->where(['name' => 'repair_team', 'helpdesk_id' => (int) $model->id])
+        ->with('emp')
         ->orderBy(['id' => SORT_ASC])
         ->all();
 
@@ -113,9 +115,9 @@ try {
 
 <div class="position-sticky top-0">
     <div class="card shadow-sm">
-        <div class="card-header fw-bold d-flex align-items-center gap-2">
-            <i class="fa-solid fa-user-pen"></i>
-            <span>ข้อมูลผู้แจ้ง</span>
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+            <h2 class="h6 fw-bold mb-0">ข้อมูลผู้แจ้ง</h2>
         </div>
         <div class="card-body p-4">
             <div class="d-flex align-items-center gap-3">
@@ -125,7 +127,7 @@ try {
                     </div>
                 <?php else: ?>
                     <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-3 text-secondary flex-shrink-0">
-                        <i class="bi bi-person-circle"></i>
+                        <i class="fa-solid fa-circle-user fs-3" aria-hidden="true"></i>
                     </div>
                 <?php endif; ?>
                 <div>
@@ -137,19 +139,19 @@ try {
     </div>
 
     <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold d-flex align-items-center gap-2">
-            <i class="fa-solid fa-user-check"></i>
-            <span>ผู้รับเรื่องซ่อม</span>
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+            <h2 class="h6 fw-bold mb-0">ผู้รับเรื่องซ่อม</h2>
         </div>
         <div class="card-body p-4">
             <div class="d-flex align-items-center gap-3">
                 <?php if (!empty($receiver['avatar'])): ?>
                     <div class="flex-shrink-0 rounded-3 border border-secondary-subtle overflow-hidden bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center lh-1">
-                        <?= Html::img($receiver['avatar'], ['class' => 'avatar rounded-circle shadow', 'alt' => '']) ?>
+                        <?= Html::img($receiver['avatar'], ['class' => 'avatar rounded-circle shadow', 'alt' => '', 'loading' => 'lazy']) ?>
                     </div>
                 <?php else: ?>
                     <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-3 text-secondary flex-shrink-0">
-                        <i class="bi bi-person-circle"></i>
+                        <i class="fa-solid fa-circle-user fs-3" aria-hidden="true"></i>
                     </div>
                 <?php endif; ?>
                 <div>
@@ -164,18 +166,18 @@ try {
     </div>
 
     <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold d-flex align-items-center justify-content-between gap-2">
-            <span class="d-flex align-items-center gap-2">
-                <i class="fa-solid fa-user-gear"></i>
+        <div class="card-header d-flex align-items-center justify-content-between gap-2">
+            <h2 class="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
                 <span>ช่างผู้รับผิดชอบงานซ่อม</span>
-            </span>
+            </h2>
             <?= Html::a(
-                '<i class="fa-solid fa-user-plus me-1"></i> เพิ่มช่าง',
+                '<i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i> เพิ่มช่าง',
                 ['/helpdesk/team/create', 'helpdesk_id' => $model->id],
                 [
                     'class' => 'btn btn-sm btn-outline-primary btn-assign-team',
                     'data' => [
-                        'title' => '<i class="fa-solid fa-user-plus me-1"></i> เพิ่มช่างผู้รับผิดชอบ',
+                        'title' => '<i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i> เพิ่มช่างผู้รับผิดชอบ',
                         'size' => 'modal-md',
                     ],
                 ]
@@ -187,11 +189,11 @@ try {
                     <div class="d-flex align-items-center gap-3<?= $idx > 0 ? ' pt-2 border-top border-secondary-subtle' : '' ?>">
                         <?php if (!empty($assignee['avatar'])): ?>
                             <div class="flex-shrink-0 rounded-3 border border-secondary-subtle overflow-hidden bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center lh-1">
-                                <?= Html::img($assignee['avatar'], ['class' => 'avatar rounded-circle shadow', 'alt' => '']) ?>
+                                <?= Html::img($assignee['avatar'], ['class' => 'avatar rounded-circle shadow', 'alt' => '', 'loading' => 'lazy']) ?>
                             </div>
                         <?php else: ?>
                             <div class="rounded-3 border border-secondary-subtle bg-secondary bg-opacity-10 p-3 text-secondary flex-shrink-0">
-                                <i class="bi bi-person-circle"></i>
+                                <i class="fa-solid fa-circle-user fs-3" aria-hidden="true"></i>
                             </div>
                         <?php endif; ?>
                         <div class="min-w-0 flex-grow-1">
@@ -201,14 +203,14 @@ try {
                     </div>
                 <?php endforeach; ?>
             </div>
-            <p class="text-muted small mb-0 mt-3">หนึ่งงานซ่อมสามารถมีช่างร่วมได้หลายคน — กด «เพิ่มช่าง» ทีละคน</p>
+            <p class="text-muted small mb-0 mt-3">หนึ่งงานซ่อมมีช่างร่วมได้หลายคน กด «เพิ่มช่าง» เพื่อเพิ่มทีละคน</p>
         </div>
     </div>
 
     <div class="card shadow-sm mt-3">
-        <div class="card-header fw-bold d-flex align-items-center gap-2">
-            <i class="fa-solid fa-database"></i>
-            <span>ข้อมูลประกอบงานซ่อม</span>
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-database" aria-hidden="true"></i>
+            <h2 class="h6 fw-bold mb-0">ข้อมูลประกอบงานซ่อม</h2>
         </div>
         <div class="card-body p-4">
             <div class="d-flex justify-content-between py-1">

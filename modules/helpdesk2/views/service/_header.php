@@ -30,13 +30,13 @@ $returnUrl = $returnUrl ?? null;
                 <div class="d-flex flex-wrap gap-2 justify-content-end">
                     <?php if ($returnUrl !== null && $returnUrl !== ''): ?>
                         <?= Html::a(
-                            '<i class="bi bi-arrow-left me-1"></i>กลับรายการ',
+                            '<i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>กลับรายการ',
                             $returnUrl,
                             ['class' => 'btn btn-sm btn-outline-secondary']
                         ) ?>
                     <?php endif; ?>
                     <?= Html::a(
-                        '<i class="fa-solid fa-print me-1"></i>พิมพ์ใบส่งซ่อม',
+                        '<i class="fa-solid fa-print me-1" aria-hidden="true"></i>พิมพ์ใบส่งซ่อม',
                         ['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id],
                         ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']
                     ) ?>

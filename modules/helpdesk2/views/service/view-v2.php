@@ -19,7 +19,8 @@ $createdAt = $model->created_at ?? null;
 $externalBillCount = (int) ($model->getExternalRepairBillsCount() ?? 0);
 
 $badgeClass = static function (string $color): string {
-    return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
+    // ใช้ contract ของโปรเจกต์: bg-*-subtle + text-*-emphasis → ผ่าน WCAG AA และคุม dark mode อัตโนมัติ
+    return 'badge bg-' . $color . '-subtle text-' . $color . '-emphasis border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
 };
 
 $statusMeta = [
@@ -31,7 +32,7 @@ $statusMeta = [
 ];
 
 $statusInfo = $statusMeta[$statusCode] ?? ['label' => 'ไม่ทราบสถานะ', 'color' => 'secondary', 'icon' => 'fa-solid fa-circle'];
-$statusBadge = Html::tag('span', '<i class="' . $statusInfo['icon'] . ' me-1"></i>' . Html::encode($statusInfo['label']), [
+$statusBadge = Html::tag('span', '<i class="' . $statusInfo['icon'] . ' me-1" aria-hidden="true"></i>' . Html::encode($statusInfo['label']), [
     'class' => $badgeClass($statusInfo['color']),
 ]);
 
@@ -58,12 +59,12 @@ try {
     $slaBadgeHtml = '';
 }
 if ($slaBadgeHtml === '') {
-    $slaBadgeHtml = Html::tag('span', '<i class="fa-regular fa-clock me-1"></i>ไม่มี SLA', [
+    $slaBadgeHtml = Html::tag('span', '<i class="fa-regular fa-clock me-1" aria-hidden="true"></i>ไม่มี SLA', [
         'class' => $badgeClass('secondary'),
     ]);
 }
 
-$descriptionSummary = Html::encode($model->title ?: '—');
+$descriptionSummary = Html::encode($model->title ?: '-');
 $descriptionExtra = '';
 if (!empty($dataJson['repair_note']) && is_string($dataJson['repair_note'])) {
     $descriptionExtra = Html::encode($dataJson['repair_note']);
@@ -97,14 +98,8 @@ $costLabor = is_numeric($dataJson['cost_labor'] ?? null) ? (float) $dataJson['co
 $costParts = is_numeric($dataJson['cost_parts'] ?? null) ? (float) $dataJson['cost_parts'] : 0.0;
 $costTotalForm = is_numeric($dataJson['cost_total'] ?? null) ? (float) $dataJson['cost_total'] : 0.0;
 
-// Mock data (used when controller doesn't provide $logs).
-$mockTimeline = [
-    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-22 minutes')), 'message' => 'อัปเดตสถานะงานซ่อม'],
-    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-2 hours')), 'message' => 'รับเรื่องเรียบร้อยแล้ว รอช่างดำเนินการตรวจสอบ'],
-    (object) ['created_at' => date('Y-m-d H:i:s', strtotime('-5 hours')), 'message' => 'สร้างงานซ่อมใหม่'],
-];
-
-$timelineItems = isset($logs) ? $logs : $mockTimeline;
+// ประวัติการดำเนินการมาจาก service_record จริงที่ controller ส่งมาเท่านั้น (ไม่มีข้อมูลจำลอง)
+$timelineItems = (isset($logs) && is_array($logs)) ? $logs : [];
 $commentsItems = [];
 if (isset($comments) && is_array($comments)) {
     $commentsItems = $comments;
@@ -120,14 +115,13 @@ if (isset($comments) && is_array($comments)) {
         } catch (\Throwable $e) {
             $requesterName = '-';
         }
-        $ratingStars = str_repeat('★', max(0, min(5, $feedbackRating)));
-        $ratingText = $feedbackRating > 0 ? ('คะแนนความพึงพอใจ: ' . $feedbackRating . '/5 ' . $ratingStars) : '';
-        $message = trim($ratingText . ($feedbackComment !== '' ? ("\n" . $feedbackComment) : ''));
+        // ส่งคะแนนเป็นข้อมูลแยก (ไม่ยัด ★ ลงในข้อความ) เพื่อให้ _comments เรนเดอร์ดาวแบบมี aria-label
         $commentsItems[] = (object) [
             'is_staff' => false,
             'user' => (object) ['name' => $requesterName],
             'created_at' => $feedbackDate !== '' ? $feedbackDate : null,
-            'message' => $message !== '' ? $message : '-',
+            'rating' => max(0, min(5, $feedbackRating)),
+            'message' => $feedbackComment,
         ];
     }
 }
@@ -142,7 +136,6 @@ $expenseCount = 0;
 $totalExpense = 0.0;
 foreach ($detailRows as $d) {
     $nameCode = strtolower((string) ($d->name ?? ''));
-    $titleTextRaw = strtolower((string) ($d->title ?? ''));
     $dj = is_array($d->data_json ?? null) ? $d->data_json : [];
     if ($nameCode === 'service_record') {
         $serviceRecordCount++;
@@ -187,12 +180,10 @@ if ($returnUrl !== null && $returnUrl !== '') {
 }
 $receiveUrl = Url::to($receiveRoute);
 $sendRepairUrl = Url::to($sendRepairRoute);
-$recordMethodUrl = Url::to(['/helpdesk/service-record/create', 'helpdesk_id' => $model->id, 'title' => 'บันทึกวิธีดำเนินการซ่อม #' . $model->repair_number]);
 $partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
 $expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
 $billUploadUrl = Url::to(['/helpdesk/service/external-bill-form', 'id' => $model->id, 'title' => 'อัปโหลดบิลค่าใช้จ่าย #' . $model->repair_number]);
 $closeJobUrl = Url::to(['/helpdesk/service/update-status', 'id' => $model->id, 'title' => 'ปิดงานซ่อม #' . $model->repair_number]);
-$printSendRepairUrl = Url::to(['/helpdesk/service/print-send-repair-pdf', 'id' => $model->id]);
 $editTicketLiteUrl = Url::to(['/helpdesk/service/edit-ticket-form', 'id' => $model->id, 'title' => 'แก้ไขใบแจ้งซ่อม #' . $model->repair_number]);
 
 $requiredDone = 0;
@@ -220,9 +211,11 @@ $isWorkflowFinished = $isClosed;
 
 $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
     if ($activeStep === $stepNumber) {
-        return 'border border-primary-subtle bg-primary bg-opacity-10 rounded-3 p-3';
+        // ขั้นตอนที่กำลังทำ = current state → primary tint ใช้ได้ตามหลัก
+        return 'bg-primary bg-opacity-10 border border-primary-subtle rounded-3 p-3';
     }
-    return 'border border-secondary border-opacity-25 rounded-3 p-3';
+    // ขั้นตอนอื่น = พื้น tertiary ไม่มีกรอบ เลี่ยงการ์ดซ้อนการ์ด
+    return 'bg-body-tertiary rounded-3 p-3';
 };
 
 ?>
@@ -252,8 +245,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
             ]); ?>
 
             <div class="card shadow-sm mt-3">
-                <div class="card-header fw-bold d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <span><i class="bi bi-signpost-split me-1"></i> ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)</span>
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h2 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-1" aria-hidden="true"></i> ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)</h2>
                     <?= Html::tag('span', 'คืบหน้า ' . $requiredProgress . '%', ['class' => $badgeClass($requiredProgress >= 100 ? 'success' : 'info')]) ?>
                 </div>
                 <div class="card-body p-4">
@@ -275,9 +268,9 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
                                     <?php if (!$isReceived): ?>
-                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
                                     <?php endif; ?>
-                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 </div>
                             </div>
                         </div>
@@ -291,9 +284,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', $isStarted ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
                                     <?php if (!$isStarted): ?>
-                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1" aria-hidden="true"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
                                     <?php endif; ?>
-                                    <?php //  Html::a('<i class="fa-solid fa-pen-to-square me-1"></i> บันทึกวิธีดำเนินการ', $recordMethodUrl, ['class' => 'btn btn-sm btn-outline-dark btn-open-repair-method']) ?>
                                 </div>
                             </div>
                         </div>
@@ -307,7 +299,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', $hasRootCauseData ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($hasRootCauseData ? 'success' : 'secondary')]) ?>
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-pen-to-square me-1"></i> ลงข้อมูล',
+                                        '<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> ลงข้อมูล',
                                         ['/helpdesk/service/root-cause-form', 'id' => $model->id],
                                         [
                                             'class' => 'btn btn-sm btn-outline-primary open-modal',
@@ -327,11 +319,11 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?php endif; ?>
                                     <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
                                     <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
+                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1" aria-hidden="true"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
                                     <?php $partsLegacyUrl = Url::to(['/helpdesk/repair-parts/create-legacy', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่จากคลัง (เดิม) #' . $model->repair_number]); ?>
-                                    <?= Html::a('<i class="fa-solid fa-boxes-stacked me-1"></i> เบิกอะไหล่จากคลัง', $partsLegacyUrl, ['class' => 'btn btn-sm btn-outline-primary btn-open-part-legacy']) ?>
-                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-warning btn-open-expense-pos']) ?>
-                                    <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?= Html::a('<i class="fa-solid fa-boxes-stacked me-1" aria-hidden="true"></i> เบิกอะไหล่จากคลัง', $partsLegacyUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-legacy']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1" aria-hidden="true"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-expense-pos']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1" aria-hidden="true"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                 </div>
                             </div>
                         </div>
@@ -348,7 +340,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     <?= Html::tag('span', $isFinished ? 'ปิดงานแล้ว' : ($isClosed ? 'จบงาน (ยกเลิก)' : 'ยังไม่ปิดงาน'), ['class' => $badgeClass($isFinished ? 'success' : ($isClosed ? 'danger' : 'secondary'))]) ?>
                                     <?php if (!$isClosed): ?>
                                         <?= Html::a(
-                                            '<i class="fa-solid fa-flag-checkered me-1"></i> ปิดงาน',
+                                            '<i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i> ปิดงาน',
                                             $closeJobUrl,
                                             [
                                                 'class' => 'btn btn-sm btn-primary open-modal',
@@ -356,7 +348,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                             ]
                                         ) ?>
                                         <?= Html::a(
-                                            '<i class="fa-solid fa-ban me-1"></i> ยกเลิกงานซ่อม',
+                                            '<i class="fa-solid fa-ban me-1" aria-hidden="true"></i> ยกเลิกงานซ่อม',
                                             ['/helpdesk/service/cancel', 'id' => $model->id],
                                             [
                                                 'class' => 'btn btn-sm btn-outline-danger btn-cancel-repair',
@@ -371,26 +363,13 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
             </div>
 
                 <div class="card shadow-sm mt-3">
-                <div class="card-header fw-bold d-flex flex-wrap align-items-center gap-2">
-                    <span class="flex-grow-1 min-w-0"><i class="bi bi-journal-check me-1"></i> มาตรฐานการบันทึกงานซ่อม</span>
-                    <div class="d-flex flex-wrap gap-2 ms-auto">
-                       
-                        
-                    </div>
+                <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                    <h2 class="h6 fw-bold mb-0 flex-grow-1 min-w-0"><i class="fa-solid fa-clipboard-list me-1" aria-hidden="true"></i> มาตรฐานการบันทึกงานซ่อม</h2>
                 </div>
                 <div class="card-body p-4">
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <?= Html::tag('span', ($isReceived ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'รับเรื่อง', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($isStarted ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'เริ่มดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($hasRootCauseData ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกสาเหตุปัญหา', ['class' => $badgeClass($hasRootCauseData ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($partCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกอะไหล่', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($expenseCount > 0 ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'บันทึกค่าใช้จ่าย', ['class' => $badgeClass($expenseCount > 0 ? 'success' : 'secondary')]) ?>
-                        <?= Html::tag('span', ($isClosed ? '<i class="bi bi-check-circle-fill me-1"></i>' : '<i class="bi bi-hourglass-split me-1"></i>') . 'ปิดงาน', ['class' => $badgeClass($isClosed ? 'success' : 'secondary')]) ?>
-                    </div>
-
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
+                            <div class="bg-body-tertiary rounded-3 p-3 h-100">
                                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                     <div class="small text-muted mb-0">สาเหตุของปัญหา</div>
                                 </div>
@@ -405,7 +384,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
+                            <div class="bg-body-tertiary rounded-3 p-3 h-100">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                                     <div class="small text-muted mb-0">สรุปอะไหล่และค่าใช้จ่าย</div>
                                     <?= Html::tag('span', Html::encode($repairModeInfo['label']), ['class' => $badgeClass($repairModeInfo['color'])]) ?>
@@ -425,7 +404,7 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                 </div>
                                 <div class="d-flex justify-content-between py-1">
                                     <span class="text-muted">ค่าใช้จ่ายรวม</span>
-                                    <span class="fw-bold text-danger"><?= number_format($totalCostDisplay, 2) ?> บาท</span>
+                                    <span class="fw-bold text-body-emphasis"><?= number_format($totalCostDisplay, 2) ?> บาท</span>
                                 </div>
                                 <div class="d-flex justify-content-between py-1">
                                     <span class="text-muted">ค่าแรง (ฟอร์มสรุป)</span>
@@ -455,13 +434,13 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
 
             <!-- Description -->
             <div class="card shadow-sm mt-3">
-                <div class="card-header fw-bold">รายละเอียดงานซ่อม</div>
+                <div class="card-header"><h2 class="h6 fw-bold mb-0">รายละเอียดงานซ่อม</h2></div>
                 <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-12">
                             <div class="d-flex align-items-start gap-2">
-                                <div class="erp-icon-box bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3 p-2">
-                                    <i class="bi bi-clipboard2-check"></i>
+                                <div class="erp-icon-box bg-body-tertiary text-body-secondary border rounded-3 p-2">
+                                    <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
                                 </div>
                                 <div>
                                     <div class="fw-bold mb-1"><?= $descriptionSummary ?></div>
@@ -507,8 +486,8 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
 
             <!-- Attachments -->
             <div class="card shadow-sm mt-3">
-                <div class="card-header fw-bold d-flex align-items-center justify-content-between gap-2">
-                    <span>ไฟล์แนบ</span>
+                <div class="card-header d-flex align-items-center justify-content-between gap-2">
+                    <h2 class="h6 fw-bold mb-0">ไฟล์แนบ</h2>
                     <span class="text-muted small">รูปภาพที่ผู้แจ้งแนบมา</span>
                 </div>
                 <div class="card-body p-4">
