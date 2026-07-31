@@ -69,7 +69,7 @@ final class AssetAssignment extends HousingActiveRecord
     public function validateRoom(string $attribute): void
     {
         if ($this->room_id && !Room::find()->where(['id' => $this->room_id, 'unit_id' => $this->unit_id])->exists()) {
-            $this->addError($attribute, 'ห้องที่เลือกไม่ได้อยู่ในยูนิตนี้');
+            $this->addError($attribute, 'ห้องย่อยที่เลือกไม่ได้อยู่ในห้องนี้');
         }
     }
 

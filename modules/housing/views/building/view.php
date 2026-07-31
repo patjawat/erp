@@ -52,8 +52,8 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
         </div>
         <div class="metric-band">
             <?php if ($isFlat): ?><div><div class="small text-body-secondary">จำนวนชั้น</div><div class="metric-value"><?= number_format(count($model->floors)) ?></div></div><?php endif; ?>
-            <div><div class="small text-body-secondary"><?= $isFlat ? 'ยูนิตทั้งหมด' : 'พื้นที่พักอาศัย' ?></div><div class="metric-value"><?= number_format(count($units)) ?></div></div>
-            <div><div class="small text-body-secondary">ยูนิตที่มีผู้พัก</div><div class="metric-value"><?= number_format($occupiedUnits) ?></div></div>
+            <div><div class="small text-body-secondary"><?= $isFlat ? 'ห้องทั้งหมด' : 'พื้นที่พักอาศัย' ?></div><div class="metric-value"><?= number_format(count($units)) ?></div></div>
+            <div><div class="small text-body-secondary">ห้องที่มีผู้พัก</div><div class="metric-value"><?= number_format($occupiedUnits) ?></div></div>
             <div><div class="small text-body-secondary">ผู้พักอาศัยปัจจุบัน</div><div class="metric-value"><?= number_format($residentCount) ?> คน</div></div>
             <div><div class="small text-body-secondary">ผู้รับผิดชอบดูแล</div><div class="metric-value fs-6"><?= Html::encode($model->responsibleEmployee?->fullname() ?: 'ยังไม่ได้กำหนด') ?></div></div>
         </div>
@@ -63,15 +63,15 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
         <div class="col-xl-7">
             <section class="detail-section overflow-hidden">
                 <div class="p-3 d-flex justify-content-between align-items-center gap-2">
-                    <h2 class="section-title"><?= $isFlat ? 'ชั้น ยูนิต และห้องพัก' : 'รายละเอียดพื้นที่บ้านพัก' ?></h2>
+                    <h2 class="section-title"><?= $isFlat ? 'ชั้น ห้อง และห้องย่อย' : 'รายละเอียดพื้นที่บ้านพัก' ?></h2>
                     <?= Html::a('เปิดภาพรวม', ['/housing/unit/index', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                 </div>
                 <?php if ($units === []): ?>
-                    <div class="empty-note">ยังไม่มียูนิตหรือพื้นที่พักอาศัยในรายการนี้</div>
+                    <div class="empty-note">ยังไม่มีห้องหรือพื้นที่พักอาศัยในรายการนี้</div>
                 <?php else: foreach ($units as $unit): ?>
                     <div class="unit-row p-3">
                         <div class="d-flex justify-content-between gap-3">
-                            <div><strong><?= Html::encode($unit->name) ?></strong><div class="small text-body-secondary"><?= Html::encode($unit->floor?->name ?: ($isFlat ? 'ยังไม่ระบุชั้น' : 'บ้านพัก')) ?> · <?= number_format(count($unit->rooms)) ?> ห้อง</div></div>
+                            <div><strong><?= Html::encode($unit->name) ?></strong><div class="small text-body-secondary"><?= Html::encode($unit->floor?->name ?: ($isFlat ? 'ยังไม่ระบุชั้น' : 'บ้านพัก')) ?> · <?= number_format(count($unit->rooms)) ?> ห้องย่อย</div></div>
                             <div class="text-end"><span class="status-pill"><?= Html::encode(Unit::statusOptions()[$unit->status] ?? $unit->status) ?></span><div class="small text-body-secondary mt-1"><?= Yii::$app->formatter->asDecimal($unit->monthly_base_fee ?: 0, 2) ?> บาท/เดือน</div></div>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-2">

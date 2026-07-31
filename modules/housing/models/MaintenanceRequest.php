@@ -167,8 +167,8 @@ final class MaintenanceRequest extends HousingActiveRecord
             self::SCOPE_STRUCTURE => 'โครงสร้าง/ภายนอกอาคาร',
             self::SCOPE_COMMON => 'พื้นที่ส่วนกลาง',
             self::SCOPE_HOUSE => 'ภายในบ้านพัก',
-            self::SCOPE_UNIT => 'ภายในยูนิต',
-            self::SCOPE_ROOM => 'ภายในห้องพัก',
+            self::SCOPE_UNIT => 'ภายในห้อง',
+            self::SCOPE_ROOM => 'ภายในห้องย่อย',
         ];
     }
 

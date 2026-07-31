@@ -216,7 +216,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                     <dt class="col-sm-4">ประเภทที่พัก</dt><dd class="col-sm-8"><?= Html::encode($building?->building_type === 'house' ? 'บ้านพัก' : 'แฟลต') ?></dd>
                     <dt class="col-sm-4">อาคาร/บ้านพัก</dt><dd class="col-sm-8"><?= Html::encode($building?->name ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">ชั้น</dt><dd class="col-sm-8"><?= Html::encode($unit?->floor?->name ?: 'ไม่ระบุ') ?></dd>
-                    <dt class="col-sm-4">ยูนิต/ห้อง</dt><dd class="col-sm-8"><?= Html::encode(implode(' / ', array_filter([$unit?->name, $room?->name])) ?: 'ไม่ระบุ') ?></dd>
+                    <dt class="col-sm-4">ห้อง/ห้องย่อย</dt><dd class="col-sm-8"><?= Html::encode(implode(' / ', array_filter([$unit?->name, $room?->name])) ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">รหัสที่พัก</dt><dd class="col-sm-8"><?= Html::encode($room?->code ?: $unit?->code ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">รายละเอียด</dt><dd class="col-sm-8"><?= nl2br(Html::encode($room?->description ?: $unit?->description ?: $building?->description ?: 'ไม่มีรายละเอียดเพิ่มเติม')) ?></dd>
                 </dl></div>

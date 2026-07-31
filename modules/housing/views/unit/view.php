@@ -10,7 +10,7 @@ $locationSub = implode(' · ', array_filter([$unit->building->name ?? null, $uni
 $backUrl = $returnBuildingId
     ? ['/housing/building/view', 'id' => $returnBuildingId]
     : ['index'];
-$backLabel = $returnBuildingId ? 'รายละเอียด ' . ($unit->building->name ?? 'บ้านพัก/แฟลต') : 'ยูนิตและห้อง';
+$backLabel = $returnBuildingId ? 'รายละเอียด ' . ($unit->building->name ?? 'บ้านพัก/แฟลต') : 'ห้องพัก';
 $totalValue = array_sum(array_map(static fn(AssetAssignment $asset) => $asset->totalValue(), $assets));
 $monthlyRent = array_sum(array_map(static fn(AssetAssignment $asset) => $asset->totalMonthlyRent(), $assets));
 $normalCount = count(array_filter($assets, static fn(AssetAssignment $asset) => $asset->condition_status === AssetAssignment::CONDITION_NORMAL));
@@ -57,7 +57,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
         </div>
         <div class="d-flex gap-2 page-heading-actions">
             <?= Html::a('<i data-lucide="arrow-left"></i> ' . ($returnBuildingId ? 'กลับหน้ารายละเอียดแฟลต' : 'กลับรายการ'), $backUrl, ['class' => 'btn btn-outline-secondary']) ?>
-            <?php if (!$room): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูล', ['update', 'id' => $unit->id, 'title' => 'แก้ไขยูนิต'], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?><?php else: ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขห้อง', ['update-room', 'id' => $room->id], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?><?php endif; ?>
+            <?php if (!$room): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูล', ['update', 'id' => $unit->id, 'title' => 'แก้ไขห้อง'], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?><?php else: ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขห้องย่อย', ['update-room', 'id' => $room->id], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?><?php endif; ?>
         </div>
     </div>
     <ul class="nav nav-tabs mb-3" role="tablist">
@@ -102,7 +102,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
         </section>
         <section class="tab-pane fade" id="housing-photos">
             <div class="soft-panel p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">รูปภาพ<?= $room ? 'ห้องพัก' : 'บ้านพัก/ยูนิต' ?></h2><?= Html::a('<i data-lucide="image-plus"></i> เพิ่มรูปภาพ', ['upload-photo', 'unit_id' => $unit->id, 'room_id' => $room?->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
+                <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">รูปภาพ<?= $room ? 'ห้องย่อย' : 'บ้านพัก/ห้อง' ?></h2><?= Html::a('<i data-lucide="image-plus"></i> เพิ่มรูปภาพ', ['upload-photo', 'unit_id' => $unit->id, 'room_id' => $room?->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
                 <?php if ($photos): ?><div class="row g-3">
                     <?php foreach ($photos as $photo): ?><div class="col-6 col-md-4 col-xl-3">
                         <img src="<?= Html::encode(FileManagerHelper::getImg($photo->upload_id)) ?>" class="w-100 rounded border" style="aspect-ratio:4/3;object-fit:cover" alt="<?= Html::encode($photo->caption ?: $locationName) ?>" loading="lazy" decoding="async">

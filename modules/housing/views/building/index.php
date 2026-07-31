@@ -25,14 +25,14 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <?php endif; ?>
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-body d-flex align-items-center justify-content-between gap-2">
-            <div><div class="fw-semibold">บ้านพักและแฟลต</div><div class="small text-body-secondary">ข้อมูลอาคารหลักก่อนแบ่งชั้นและยูนิต</div></div>
+            <div><div class="fw-semibold">บ้านพักและแฟลต</div><div class="small text-body-secondary">ข้อมูลอาคารหลักก่อนแบ่งชั้นและห้อง</div></div>
             <?= Html::a('<i data-lucide="plus"></i> เพิ่มรายการ', ['create', 'title' => 'เพิ่มบ้านพัก/แฟลต'], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-lg']) ?>
         </div>
         <?php Pjax::begin(['id' => 'housing-building-container', 'enablePushState' => false]); ?>
         <div class="card-body p-0">
             <div class="d-none d-lg-block">
                 <table class="table table-hover align-middle mb-0">
-                    <thead><tr><th style="width:72px">รูปภาพ</th><th>รหัส</th><th>ชื่อ</th><th>ผู้รับผิดชอบ</th><th>ประเภท</th><th class="text-end">ชั้น</th><th class="text-end">ยูนิต</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead>
+                    <thead><tr><th style="width:72px">รูปภาพ</th><th>รหัส</th><th>ชื่อ</th><th>ผู้รับผิดชอบ</th><th>ประเภท</th><th class="text-end">ชั้น</th><th class="text-end">ห้อง</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead>
                     <tbody>
                     <?php foreach ($dataProvider->models as $model): ?>
                         <tr>
@@ -117,7 +117,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             <?php endif; ?>
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between gap-2"><strong><?= Html::encode($model->code . ' · ' . $model->name) ?></strong><span><?= Html::encode(Building::typeOptions()[$model->building_type] ?? '') ?></span></div>
-                                <div class="small text-body-secondary mt-1"><?= number_format(count($model->floors)) ?> ชั้น · <?= number_format(count($model->units)) ?> ยูนิต</div>
+                                <div class="small text-body-secondary mt-1"><?= number_format(count($model->floors)) ?> ชั้น · <?= number_format(count($model->units)) ?> ห้อง</div>
                                 <?php if ($model->hasActiveResponsibleEmployee()): ?>
                                     <div class="small mt-1">ผู้รับผิดชอบ: <?= Html::encode($model->responsibleEmployee->fullname()) ?></div>
                                 <?php else: ?>
@@ -151,7 +151,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <?php if ($dataProvider->totalCount === 0): ?><div class="text-center py-5"><div class="fw-semibold">ยังไม่มีข้อมูลบ้านพักหรือแฟลต</div><div class="text-body-secondary small mt-1">เพิ่มอาคารแรกเพื่อเริ่มจัดวางยูนิตและห้อง</div></div><?php endif; ?>
+            <?php if ($dataProvider->totalCount === 0): ?><div class="text-center py-5"><div class="fw-semibold">ยังไม่มีข้อมูลบ้านพักหรือแฟลต</div><div class="text-body-secondary small mt-1">เพิ่มอาคารแรกเพื่อเริ่มจัดวางห้องและห้องย่อย</div></div><?php endif; ?>
         </div>
         <div class="card-footer bg-body"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></div>
         <?php Pjax::end(); ?>

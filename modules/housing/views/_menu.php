@@ -8,7 +8,7 @@ use app\modules\housing\models\Checkout;
 $primaryItems = [
     'dashboard' => ['label' => 'ภาพรวม', 'url' => ['/housing/dashboard/index'], 'icon' => 'layout-dashboard'],
     'building' => ['label' => 'บ้านพักและแฟลต', 'url' => ['/housing/building/index'], 'icon' => 'building-2'],
-    'unit' => ['label' => 'ยูนิตและห้อง', 'url' => ['/housing/unit/index'], 'icon' => 'door-open'],
+    'unit' => ['label' => 'ห้องพัก', 'url' => ['/housing/unit/index'], 'icon' => 'door-open'],
     'request' => ['label' => 'คำขอ', 'url' => ['/housing/request/index'], 'icon' => 'clipboard-list'],
 ];
 $operationItems = [

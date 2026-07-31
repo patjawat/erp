@@ -84,7 +84,7 @@ CSS);
     <form class="housing-toolbar p-3 mb-3" method="get" action="<?= Url::to(['index']) ?>">
         <div class="row g-2 align-items-end">
             <div class="col-12 col-lg-4">
-                <label for="housing-q" class="form-label small fw-semibold">ค้นหายูนิตหรือห้อง</label>
+                <label for="housing-q" class="form-label small fw-semibold">ค้นหาห้องหรือห้องย่อย</label>
                 <input id="housing-q" name="q" class="form-control" value="<?= Html::encode($filters['q'] ?? '') ?>" placeholder="เช่น A101 หรือ บ้านพัก 01">
             </div>
             <div class="col-8 col-lg-4">
@@ -128,7 +128,7 @@ CSS);
                         <h2 class="h6 fw-semibold mb-1"><?= Html::encode($building->name) ?></h2>
                         <div class="small text-body-secondary"><?= Html::encode(Building::typeOptions()[$building->building_type] ?? $building->building_type) ?></div>
                     </div>
-                    <span class="small text-body-secondary"><?= array_sum(array_map('count', $floorGroups)) ?> ยูนิต</span>
+                    <span class="small text-body-secondary"><?= array_sum(array_map('count', $floorGroups)) ?> ห้อง</span>
                 </header>
                 <?php foreach ($floorGroups as $floorId => $units): ?>
                     <?php $floorName = $floorId && $units[0]->floor ? $units[0]->floor->name : ($building->building_type === Building::TYPE_HOUSE ? 'บ้านพัก' : 'ไม่ระบุชั้น'); ?>
@@ -138,7 +138,7 @@ CSS);
                             <?php foreach ($units as $unit): $meta = $statusMeta[$unit->status] ?? ['label' => $unit->status, 'class' => 'is-inactive']; ?>
                                 <div class="housing-unit <?= $meta['class'] ?>">
                                     <div class="housing-unit__head">
-                                        <div><div class="housing-unit__code"><?= Html::a(Html::encode($unit->code), ['/housing/unit/view', 'id' => $unit->id], ['class' => 'stretched-link', 'title' => 'ดูรายละเอียดห้องพัก']) ?></div><div class="housing-unit__type"><?= Html::encode(Unit::modeOptions()[$unit->occupancy_mode] ?? '') ?></div></div>
+                                        <div><div class="housing-unit__code"><?= Html::a(Html::encode($unit->code), ['/housing/unit/view', 'id' => $unit->id], ['class' => 'stretched-link', 'title' => 'ดูรายละเอียดห้อง']) ?></div><div class="housing-unit__type"><?= Html::encode(Unit::modeOptions()[$unit->occupancy_mode] ?? '') ?></div></div>
                                         <span class="housing-unit__status <?= $meta['class'] ?>"><?= Html::encode($meta['label']) ?></span>
                                     </div>
                                     <?php if ($unit->rooms): ?>

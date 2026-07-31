@@ -60,10 +60,10 @@ $eligible = $employeeActive && !($model->request_type === HousingRequest::TYPE_M
 <label class="form-label mb-0">วันที่มีมติ</label>
 <input type="date" name="decision_date" value="<?= date('Y-m-d') ?>" class="form-control" required>
 <input name="meeting_reference" class="form-control" placeholder="เลขอ้างอิงการประชุม">
-<label class="form-label mb-0 mt-1">จัดสรรบ้านพักหรือห้อง</label>
+<label class="form-label mb-0 mt-1">จัดสรรที่พัก (บ้านพัก/ห้อง/ห้องย่อย)</label>
 <?= Html::dropDownList('allocation_target', null, $allocationOptions, [
     'class' => 'form-select',
-    'prompt' => $allocationOptions ? 'เลือกที่พักว่างเมื่ออนุมัติ' : 'ยังไม่มีบ้านพักหรือห้องว่าง',
+    'prompt' => $allocationOptions ? 'เลือกที่พักว่างเมื่ออนุมัติ' : 'ยังไม่มีที่พักว่าง',
     'id' => 'allocation-target',
 ]) ?>
 <div class="form-text">ต้องเลือกที่พักเมื่ออนุมัติ หากไม่อนุมัติไม่ต้องเลือก</div>
@@ -77,7 +77,7 @@ document.querySelector('[data-confirm-allocation="1"]')?.addEventListener('click
     const target = document.getElementById('allocation-target');
     if (!target || !target.value) {
         event.preventDefault();
-        alert('กรุณาเลือกบ้านพักหรือห้องที่จะจัดสรร ก่อนกดอนุมัติ');
+        alert('กรุณาเลือกที่พักที่จะจัดสรร ก่อนกดอนุมัติ');
     }
 });
 JS);
@@ -85,7 +85,7 @@ JS);
 <?php endif; ?>
 <?php if ($model->status === HousingRequest::STATUS_APPROVED): ?>
 <?= Html::beginForm(['allocate', 'id' => $model->id], 'post', ['class' => 'd-grid gap-2']) ?>
-<label class="form-label">บ้านพักหรือห้องว่าง</label>
+<label class="form-label">ที่พักว่างที่จะจัดสรร</label>
 <?= Html::dropDownList('allocation_target', null, $allocationOptions, ['class' => 'form-select', 'prompt' => 'เลือกที่พักที่จะจัดสรร', 'required' => true]) ?>
 <button class="btn btn-primary">ยืนยันจัดสรร</button>
 <?= Html::endForm() ?>

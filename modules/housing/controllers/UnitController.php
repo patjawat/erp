@@ -122,19 +122,19 @@ final class UnitController extends BaseController
 
     public function actionCreate()
     {
-        return $this->save(new Unit(), 'เพิ่มยูนิต');
+        return $this->save(new Unit(), 'เพิ่มห้อง');
     }
 
     public function actionUpdate(int $id)
     {
-        return $this->save($this->findModel($id), 'แก้ไขยูนิต');
+        return $this->save($this->findModel($id), 'แก้ไขห้อง');
     }
 
     public function actionDelete(int $id)
     {
         $model = $this->findModel($id);
         if ($model->getRooms()->exists()) {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบยูนิตที่มีห้องอยู่ได้');
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบห้องที่มีห้องย่อยอยู่ได้');
         } else {
             $uploadService = new HousingUploadService();
             $assetRefs = AssetAssignment::find()
@@ -161,18 +161,18 @@ final class UnitController extends BaseController
             );
             try {
                 if ($model->delete() === false) {
-                    throw new \RuntimeException('ไม่สามารถลบยูนิตได้');
+                    throw new \RuntimeException('ไม่สามารถลบห้องได้');
                 }
                 $failedIds = $uploadService->deleteUploads($uploadIds);
                 if ($failedIds !== []) {
-                    Yii::warning('ลบไฟล์ของยูนิตไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
-                    Yii::$app->session->setFlash('warning', 'ลบยูนิตแล้ว แต่มีไฟล์รูปภาพบางรายการรอการตรวจสอบ');
+                    Yii::warning('ลบไฟล์ของห้องไม่สำเร็จ upload IDs: ' . implode(',', $failedIds), __METHOD__);
+                    Yii::$app->session->setFlash('warning', 'ลบห้องแล้ว แต่มีไฟล์รูปภาพบางรายการรอการตรวจสอบ');
                 } else {
-                    Yii::$app->session->setFlash('success', 'ลบยูนิตเรียบร้อย');
+                    Yii::$app->session->setFlash('success', 'ลบห้องเรียบร้อย');
                 }
             } catch (\Throwable $exception) {
                 Yii::error($exception, __METHOD__);
-                Yii::$app->session->setFlash('error', 'ไม่สามารถลบยูนิตได้ กรุณาตรวจสอบข้อมูลที่เกี่ยวข้องแล้วลองใหม่');
+                Yii::$app->session->setFlash('error', 'ไม่สามารถลบห้องได้ กรุณาตรวจสอบข้อมูลที่เกี่ยวข้องแล้วลองใหม่');
             }
         }
         return $this->redirect(['index']);
@@ -198,7 +198,7 @@ final class UnitController extends BaseController
             if ($model->save()) {
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
-                    return ['status' => 'success', 'message' => $isNew ? 'เพิ่มห้องเรียบร้อย' : 'บันทึกห้องเรียบร้อย', 'container' => '#housing-unit-container'];
+                    return ['status' => 'success', 'message' => $isNew ? 'เพิ่มห้องย่อยเรียบร้อย' : 'บันทึกห้องย่อยเรียบร้อย', 'container' => '#housing-unit-container'];
                 }
                 return $this->redirect(['index']);
             }
@@ -206,7 +206,7 @@ final class UnitController extends BaseController
         $params = ['model' => $model, 'unit' => $unit];
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => ($model->isNewRecord ? 'เพิ่มห้องใน ' : 'แก้ไขห้องใน ') . $unit->code, 'content' => $this->renderAjax('_room_form', $params)];
+            return ['title' => ($model->isNewRecord ? 'เพิ่มห้องย่อยใน ' : 'แก้ไขห้องย่อยใน ') . $unit->code, 'content' => $this->renderAjax('_room_form', $params)];
         }
         return $this->render('_room_form', $params);
     }
@@ -408,7 +408,7 @@ final class UnitController extends BaseController
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['status' => 'success', 'message' => 'บันทึกยูนิตเรียบร้อย', 'container' => '#housing-unit-container'];
+                return ['status' => 'success', 'message' => 'บันทึกห้องเรียบร้อย', 'container' => '#housing-unit-container'];
             }
             return $this->redirect(['index']);
         }
@@ -537,7 +537,7 @@ final class UnitController extends BaseController
     private function findModel(int $id): Unit
     {
         if (($model = Unit::findOne($id)) === null) {
-            throw new NotFoundHttpException('ไม่พบยูนิต');
+            throw new NotFoundHttpException('ไม่พบห้อง');
         }
         return $model;
     }
@@ -549,7 +549,7 @@ final class UnitController extends BaseController
         if ($roomId !== null) {
             $room = Room::findOne(['id' => $roomId, 'unit_id' => $unit->id]);
             if ($room === null) {
-                throw new NotFoundHttpException('ไม่พบห้องพักในยูนิตนี้');
+                throw new NotFoundHttpException('ไม่พบห้องย่อยในห้องนี้');
             }
         }
         return [$unit, $room];
@@ -558,7 +558,7 @@ final class UnitController extends BaseController
     private function findRoomModel(int $id): Room
     {
         if (($model = Room::findOne($id)) === null) {
-            throw new NotFoundHttpException('ไม่พบห้องพัก');
+            throw new NotFoundHttpException('ไม่พบห้องย่อย');
         }
         return $model;
     }
