@@ -49,7 +49,19 @@ final class UnitController extends BaseController
                 ->orderBy(['building_id' => SORT_ASC, 'floor_id' => SORT_ASC, 'sort_order' => SORT_ASC, 'code' => SORT_ASC]),
             'pagination' => ['pageSize' => 30],
         ]);
-        return $this->render('index', ['dataProvider' => $provider]);
+        $unitIds = array_map(static fn(Unit $unit): int => (int) $unit->id, $provider->getModels());
+        $occupants = [];
+        if ($unitIds !== []) {
+            $occupancies = Occupancy::find()
+                ->with('employee')
+                ->where(['unit_id' => $unitIds, 'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE]])
+                ->orderBy(['start_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+            foreach ($occupancies as $occupancy) {
+                $occupants[(int) $occupancy->unit_id][(int) ($occupancy->room_id ?? 0)][] = $occupancy;
+            }
+        }
+        return $this->render('index', ['dataProvider' => $provider, 'occupants' => $occupants]);
     }
 
     public function actionView(int $id, ?int $room_id = null, ?int $return_building_id = null)
@@ -169,19 +181,34 @@ final class UnitController extends BaseController
     public function actionCreateRoom(int $unit_id)
     {
         $unit = $this->findModel($unit_id);
-        $model = new Room(['unit_id' => $unit->id]);
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ['status' => 'success', 'message' => 'เพิ่มห้องเรียบร้อย', 'container' => '#housing-unit-container'];
+        return $this->saveRoom(new Room(['unit_id' => $unit->id]), $unit);
+    }
+
+    public function actionUpdateRoom(int $id)
+    {
+        $room = $this->findRoomModel($id);
+        return $this->saveRoom($room, $this->findModel((int) $room->unit_id));
+    }
+
+    private function saveRoom(Room $model, Unit $unit)
+    {
+        $isNew = $model->isNewRecord;
+        if ($model->load(Yii::$app->request->post())) {
+            $model->unit_id = $unit->id;
+            if ($model->save()) {
+                if (Yii::$app->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return ['status' => 'success', 'message' => $isNew ? 'เพิ่มห้องเรียบร้อย' : 'บันทึกห้องเรียบร้อย', 'container' => '#housing-unit-container'];
+                }
+                return $this->redirect(['index']);
             }
-            return $this->redirect(['index']);
         }
+        $params = ['model' => $model, 'unit' => $unit];
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => 'เพิ่มห้องใน ' . $unit->code, 'content' => $this->renderAjax('_room_form', ['model' => $model, 'unit' => $unit])];
+            return ['title' => ($model->isNewRecord ? 'เพิ่มห้องใน ' : 'แก้ไขห้องใน ') . $unit->code, 'content' => $this->renderAjax('_room_form', $params)];
         }
-        return $this->render('_room_form', ['model' => $model, 'unit' => $unit]);
+        return $this->render('_room_form', $params);
     }
 
     public function actionCreateAsset(int $unit_id, ?int $room_id = null)
@@ -385,10 +412,18 @@ final class UnitController extends BaseController
             }
             return $this->redirect(['index']);
         }
+        if (Yii::$app->request->isPost && Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['errors' => $model->hasErrors()
+                ? $this->activeFormErrors($model)
+                : ActiveForm::validate($model)];
+        }
+        $floors = Floor::find()->with('building')->orderBy(['building_id' => SORT_ASC, 'floor_no' => SORT_ASC])->all();
         $params = [
             'model' => $model,
             'buildingOptions' => ArrayHelper::map(Building::find()->orderBy('name')->all(), 'id', 'name'),
-            'floorOptions' => ArrayHelper::map(Floor::find()->with('building')->orderBy(['building_id' => SORT_ASC, 'floor_no' => SORT_ASC])->all(), 'id', fn(Floor $f) => ($f->building->name ?? '') . ' · ' . $f->name),
+            'floorOptions' => ArrayHelper::map($floors, 'id', fn(Floor $f) => ($f->building->name ?? '') . ' · ' . $f->name),
+            'floorBuildingMap' => ArrayHelper::map($floors, 'id', 'building_id'),
         ];
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -518,6 +553,14 @@ final class UnitController extends BaseController
             }
         }
         return [$unit, $room];
+    }
+
+    private function findRoomModel(int $id): Room
+    {
+        if (($model = Room::findOne($id)) === null) {
+            throw new NotFoundHttpException('ไม่พบห้องพัก');
+        }
+        return $model;
     }
 
     private function findAssetModel(int $id): AssetAssignment

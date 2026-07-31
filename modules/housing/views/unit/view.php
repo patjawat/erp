@@ -57,7 +57,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
         </div>
         <div class="d-flex gap-2 page-heading-actions">
             <?= Html::a('<i data-lucide="arrow-left"></i> ' . ($returnBuildingId ? 'กลับหน้ารายละเอียดแฟลต' : 'กลับรายการ'), $backUrl, ['class' => 'btn btn-outline-secondary']) ?>
-            <?php if (!$room): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูล', ['update', 'id' => $unit->id, 'title' => 'แก้ไขยูนิต'], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?><?php endif; ?>
+            <?php if (!$room): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูล', ['update', 'id' => $unit->id, 'title' => 'แก้ไขยูนิต'], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?><?php else: ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขห้อง', ['update-room', 'id' => $room->id], ['class' => 'btn btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?><?php endif; ?>
         </div>
     </div>
     <ul class="nav nav-tabs mb-3" role="tablist">

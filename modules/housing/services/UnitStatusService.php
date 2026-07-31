@@ -32,21 +32,21 @@ final class UnitStatusService
             if (in_array($room->status, [Unit::STATUS_MAINTENANCE, Unit::STATUS_INACTIVE], true)) {
                 continue;
             }
+            // A whole-unit occupancy (room_id IS NULL) takes every room in the unit,
+            // matching Occupancy::validateAvailability(); count it toward each room.
+            $roomScope = ['or', ['room_id' => $room->id], ['room_id' => null]];
             $roomHasActive = Occupancy::find()->where([
                 'unit_id' => $unitId,
-                'room_id' => $room->id,
                 'status' => Occupancy::STATUS_ACTIVE,
-            ])->exists();
+            ])->andWhere($roomScope)->exists();
             $roomHasAllocated = Occupancy::find()->where([
                 'unit_id' => $unitId,
-                'room_id' => $room->id,
                 'status' => Occupancy::STATUS_ALLOCATED,
-            ])->exists();
+            ])->andWhere($roomScope)->exists();
             $roomHasMoveOut = Checkout::find()->joinWith('occupancy')->where([
                 'housing_occupancy.unit_id' => $unitId,
-                'housing_occupancy.room_id' => $room->id,
                 'housing_checkout.status' => [Checkout::STATUS_REQUESTED, Checkout::STATUS_INSPECTION, Checkout::STATUS_AWAITING_STAFF],
-            ])->exists();
+            ])->andWhere(['or', ['housing_occupancy.room_id' => $room->id], ['housing_occupancy.room_id' => null]])->exists();
             $room->updateAttributes([
                 'status' => $roomHasMoveOut ? Unit::STATUS_MOVE_OUT : ($roomHasActive ? Unit::STATUS_OCCUPIED : ($roomHasAllocated ? Unit::STATUS_RESERVED : Unit::STATUS_VACANT)),
             ]);
