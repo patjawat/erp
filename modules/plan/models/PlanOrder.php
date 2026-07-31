@@ -38,7 +38,65 @@ use app\modules\plan\models\PlanOrderItem;
  */
 class PlanOrder extends \yii\db\ActiveRecord
 {
+    /**
+     * เกณฑ์ราคาต่อหน่วยของครุภัณฑ์ต่ำกว่าเกณฑ์ (บาท)
+     * ครุภัณฑ์ที่ราคา/หน่วย < ค่านี้ ให้จัดเป็น INV_03 (ค่าครุภัณฑ์ต่ำกว่าเกณฑ์)
+     * *** แก้ค่านี้จุดเดียวหากระเบียบเปลี่ยน ***
+     */
+    const MINOR_ASSET_THRESHOLD = 10000;
 
+    /**
+     * หมวดพัสดุ (asset_group) ที่แสดงในแผนพัสดุ => plan_category ปลายทาง
+     * (ครุภัณฑ์ต่ำกว่าเกณฑ์ไม่แยกหมวด ใช้ราคากรองเป็น INV_03)
+     * asset_group code: 1 ที่ดิน, 2 อาคาร, 3 สิ่งปลูกสร้าง, 4 ครุภัณฑ์, 7 วัสดุ
+     */
+    const ASSET_GROUP_TO_CATEGORY = [
+        '1' => 'INV_02', // ที่ดิน -> ค่าที่ดินและสิ่งก่อสร้าง
+        '2' => 'INV_02', // อาคาร
+        '3' => 'INV_02', // สิ่งปลูกสร้าง
+        '4' => 'INV_01', // ครุภัณฑ์ (ราคา<เกณฑ์ -> INV_03)
+        '7' => 'OPS_03', // วัสดุ -> ค่าวัสดุ
+    ];
+
+    /**
+     * map ประเภทวัสดุ (asset_type M*) -> plan_item ใต้ ค่าวัสดุ (OPS_03)
+     * ใช้ตอนเลือกหมวด=วัสดุ (ผู้ใช้เลือกช่องเดียว = ประเภทวัสดุ) ระบบตั้ง plan_item ให้เอง
+     * ตัวที่ไม่มีคู่ -> P78 (วัสดุอื่นๆ) ; ทุกตัวรวมยอดขึ้น "ค่าวัสดุ" เหมือนกัน
+     */
+    const ASSET_TYPE_TO_VASDU_ITEM = [
+        'M1' => 'P85', 'M2' => 'P86', 'M3' => 'P82', 'M4' => 'P80', 'M5' => 'P84',
+        'M6' => 'P87', 'M7' => 'P79', 'M9' => 'P88', 'M10' => 'P89', 'M12' => 'P81',
+        'M18' => 'P83', 'M19' => 'P91', 'M20' => 'P79', 'M22' => 'P90', 'M23' => 'P92',
+        'M24' => 'P93', 'M26' => 'P90',
+    ];
+
+    public static function vasduItemForAssetType($assetTypeCode)
+    {
+        return self::ASSET_TYPE_TO_VASDU_ITEM[(string) $assetTypeCode] ?? 'P78';
+    }
+
+    /**
+     * แปลงหมวดพัสดุ (asset_group) เป็น plan_type_id + plan_category_id
+     * @param string $assetGroupCode รหัส asset_group (1-7)
+     * @param float|null $unitPrice ราคาต่อหน่วย (ใช้แยกครุภัณฑ์ต่ำกว่าเกณฑ์)
+     * @return array{plan_type_id:string, plan_category_id:string}|null
+     */
+    public static function mapAssetGroupToPlan($assetGroupCode, $unitPrice = null)
+    {
+        $code = (string) $assetGroupCode;
+        if (!isset(self::ASSET_GROUP_TO_CATEGORY[$code])) {
+            return null;
+        }
+        $category = self::ASSET_GROUP_TO_CATEGORY[$code];
+
+        // ครุภัณฑ์ราคาต่อหน่วยต่ำกว่าเกณฑ์ -> ครุภัณฑ์ต่ำกว่าเกณฑ์
+        if ($code === '4' && $unitPrice !== null && (float) $unitPrice > 0 && (float) $unitPrice < self::MINOR_ASSET_THRESHOLD) {
+            $category = 'INV_03';
+        }
+
+        $type = strpos($category, 'INV') === 0 ? 'INV' : 'OPS';
+        return ['plan_type_id' => $type, 'plan_category_id' => $category];
+    }
 
     /**
      * {@inheritdoc}
@@ -164,6 +222,42 @@ class PlanOrder extends \yii\db\ActiveRecord
         ];
     }
 
+
+    /**
+     * ก่อนบันทึกทุกครั้ง: ถ้ามี plan_item_id ที่ผูกกับ plan_item จริง
+     * ให้ derive plan_category_id + plan_type_id จากสาย item เสมอ
+     * เพื่อกันข้อมูลปนเปื้อน (ฟอร์มบางตัว hardcode/hidden ค่าหมวดที่ผิด เช่น PER_04, PE, OE)
+     * source of truth เดียว = plan_item_id -> plan_item.category_id -> plan_category -> plan_type
+     */
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        // หมวด=วัสดุ (asset_group 7): ผู้ใช้เลือกช่องเดียว (ประเภทวัสดุ) -> ตั้ง plan_item ให้อัตโนมัติ
+        if ((string) $this->asset_group_id === '7' && !empty($this->asset_type_id)) {
+            $this->plan_item_id = self::vasduItemForAssetType($this->asset_type_id);
+        }
+
+        if (!empty($this->plan_item_id)) {
+            $chain = (new \yii\db\Query())
+                ->select(['cat' => 'i.category_id', 'type' => 'c.category_id'])
+                ->from(['i' => 'categorise'])
+                ->leftJoin(['c' => 'categorise'], 'c.code = i.category_id AND c.name = :cat', [':cat' => 'plan_category'])
+                ->where(['i.name' => 'plan_item', 'i.code' => $this->plan_item_id])
+                ->one();
+
+            if ($chain && $chain['cat'] !== null) {
+                $this->plan_category_id = $chain['cat'];
+                if ($chain['type'] !== null) {
+                    $this->plan_type_id = $chain['type'];
+                }
+            }
+        }
+
+        return true;
+    }
 
     public function getAssetGroup()
     {
@@ -293,6 +387,88 @@ class PlanOrder extends \yii\db\ActiveRecord
             'view' => $title,
 
         ];
+    }
+
+    /**
+     * รวมยอดสำหรับหน้า "ติดตามแผนรายจ่าย" (/plan/overview)
+     * รวมผ่านสายที่เชื่อถือได้เท่านั้น: plan_order.plan_item_id -> plan_item.category_id
+     * -> plan_category -> plan_type (ไม่ใช้ plan_type_id/plan_category_id บน plan_order ที่ปนเปื้อน)
+     *
+     * คืนค่าโครงสร้าง:
+     *   [
+     *     'types' => [
+     *        'PER' => ['title'=>..., 'categories'=>[ ['code','title','m1'..'m12','total'], ... ],
+     *                  'sub'=>['m1'..'m12'=>..,'total'=>..]],
+     *        ...
+     *     ],
+     *     'grand' => ['m1'..'m12'=>..,'total'=>..],
+     *   ]
+     * ทุก plan_category จะถูกแสดงเสมอ (LEFT JOIN) แม้ยอดเป็น 0
+     *
+     * @param int $thaiYear ปีงบประมาณ (พ.ศ.)
+     * @param string|null $status กรองเฉพาะสถานะ (เช่น 'approve'); null = ทุกสถานะ
+     * @return array
+     */
+    public static function overviewByType($thaiYear, $status = null)
+    {
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $months[] = "COALESCE(SUM(o.month_$i),0) AS m$i";
+        }
+        $monthSelect = implode(",\n", $months);
+
+        // กรองสถานะไว้ใน ON ของ LEFT JOIN เพื่อให้ทุกหมวดยังแสดง (ยอด 0) แม้ไม่มีแผนตรงสถานะ
+        $params = [':year' => $thaiYear];
+        $statusCond = '';
+        if ($status !== null && $status !== '' && $status !== 'all') {
+            $statusCond = ' AND o.status = :status';
+            $params[':status'] = $status;
+        }
+
+        $sql = "
+            SELECT
+                t.code AS type_code, t.title AS type_title,
+                c.code AS cat_code, c.title AS cat_title,
+                COALESCE(SUM(o.order_price),0) AS total,
+                $monthSelect
+            FROM categorise t
+            JOIN categorise c ON c.category_id = t.code AND c.name = 'plan_category'
+            LEFT JOIN categorise i ON i.category_id = c.code AND i.name = 'plan_item'
+            LEFT JOIN plan_order o ON o.plan_item_id = i.code AND o.thai_year = :year{$statusCond}
+            WHERE t.name = 'plan_type'
+            GROUP BY t.code, t.title, c.code, c.title
+            ORDER BY FIELD(t.code,'PER','OPS','INV','OTH'), c.code
+        ";
+
+        $rows = Yii::$app->db->createCommand($sql, $params)->queryAll();
+
+        $keys  = ['total', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12'];
+        $blank = array_fill_keys($keys, 0.0);
+
+        $types = [];
+        $grand = $blank;
+
+        foreach ($rows as $r) {
+            $tc = $r['type_code'];
+            if (!isset($types[$tc])) {
+                $types[$tc] = [
+                    'title'      => $r['type_title'],
+                    'categories' => [],
+                    'sub'        => $blank,
+                ];
+            }
+
+            $cat = ['code' => $r['cat_code'], 'title' => $r['cat_title']];
+            foreach ($keys as $k) {
+                $val = (float) $r[$k];
+                $cat[$k] = $val;
+                $types[$tc]['sub'][$k] += $val;
+                $grand[$k] += $val;
+            }
+            $types[$tc]['categories'][] = $cat;
+        }
+
+        return ['types' => $types, 'grand' => $grand];
     }
 
     public static function listOverviewSummary($thaiYear, $categoryId)

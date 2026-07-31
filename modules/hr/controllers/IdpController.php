@@ -17,6 +17,7 @@ use app\modules\hr\models\IdpActivity;
 use app\modules\hr\models\IdpCycle;
 use app\modules\hr\models\IdpGoal;
 use app\modules\hr\models\IdpPlan;
+use app\modules\hr\services\IdpTelegramService;
 
 class IdpController extends Controller
 {
@@ -34,6 +35,8 @@ class IdpController extends Controller
                     'submit' => ['POST'],
                     'approve' => ['POST'],
                     'return' => ['POST'],
+                    'open' => ['POST'],
+                    'close' => ['POST'],
                     'delete-goal' => ['POST'],
                     'delete-activity' => ['POST'],
                 ],
@@ -117,11 +120,10 @@ class IdpController extends Controller
         }
         $plan = IdpPlan::findOne(['cycle_id' => $cycle->id, 'emp_id' => $employee->id]);
         if (!$plan) {
-            $leader = $employee->leader();
             $plan = new IdpPlan([
                 'cycle_id' => $cycle->id,
                 'emp_id' => $employee->id,
-                'supervisor_emp_id' => $leader?->id,
+                'supervisor_emp_id' => $employee->supervisorEmpId(),
                 'status' => 'draft',
                 'progress_percent' => 0,
             ]);
@@ -182,13 +184,22 @@ class IdpController extends Controller
     {
         $plan = $this->findPlan($id);
         $this->assertOwner($plan);
+        $emptyGoals = [];
+        foreach ($plan->goals as $goal) {
+            if (!$goal->activities) $emptyGoals[] = $goal->title;
+        }
         if (!$plan->canEdit() || !$plan->goals) {
             Yii::$app->session->setFlash('warning', 'กรุณาเพิ่มเป้าหมายอย่างน้อย 1 รายการก่อนส่งแผน');
+        } elseif ($emptyGoals) {
+            Yii::$app->session->setFlash('warning', 'กรุณาเพิ่มกิจกรรมพัฒนาอย่างน้อย 1 รายการในทุกเป้าหมายก่อนส่งแผน (ยังไม่มีกิจกรรม: ' . implode(', ', $emptyGoals) . ')');
         } else {
             $plan->status = 'submitted';
             $plan->submitted_at = date('Y-m-d H:i:s');
+            $plan->supervisor_emp_id = $plan->employee?->supervisorEmpId() ?: $plan->supervisor_emp_id;
             $plan->save(false);
-            Yii::$app->session->setFlash('success', 'ส่ง IDP ให้หัวหน้าพิจารณาแล้ว');
+            IdpTelegramService::notifySubmitted($plan);
+            $target = $plan->supervisor_emp_id ? 'หัวหน้าพิจารณา' : 'HR ตรวจสอบ (ยังไม่พบหัวหน้าในระบบ)';
+            Yii::$app->session->setFlash('success', 'ส่ง IDP ให้' . $target . 'แล้ว');
         }
         return $this->redirect(['/profile', 'name' => 'idp']);
     }
@@ -197,11 +208,46 @@ class IdpController extends Controller
     {
         $plan = $this->findPlan($id);
         $this->assertCanReview($plan);
-        $plan->status = 'in_progress';
+        $plan->status = 'approved';
         $plan->supervisor_comment = trim((string) Yii::$app->request->post('supervisor_comment'));
         $plan->reviewed_at = date('Y-m-d H:i:s');
         $plan->save(false);
-        Yii::$app->session->setFlash('success', 'อนุมัติ IDP แล้ว');
+        IdpTelegramService::notifyApproved($plan);
+        Yii::$app->session->setFlash('success', 'หัวหน้าเห็นชอบแผน IDP แล้ว รอ HR ตรวจสอบและเปิดให้บันทึกผล');
+        return $this->redirect(['employee', 'emp_id' => $plan->emp_id]);
+    }
+
+    public function actionOpen($id)
+    {
+        $plan = $this->findPlan($id);
+        $this->assertCanManage();
+        if ($plan->status !== 'approved') {
+            Yii::$app->session->setFlash('warning', 'เปิดให้บันทึกผลได้เฉพาะแผนที่หัวหน้าเห็นชอบแล้ว');
+        } else {
+            $plan->status = 'in_progress';
+            $plan->reviewed_at = date('Y-m-d H:i:s');
+            $plan->save(false);
+            IdpTelegramService::notifyOpened($plan);
+            Yii::$app->session->setFlash('success', 'เปิดให้เจ้าหน้าที่บันทึกผลการดำเนินการแล้ว');
+        }
+        return $this->redirect(['employee', 'emp_id' => $plan->emp_id]);
+    }
+
+    public function actionClose($id)
+    {
+        $plan = $this->findPlan($id);
+        $this->assertCanManage();
+        if (!in_array($plan->status, ['in_progress', 'assessment'], true)) {
+            Yii::$app->session->setFlash('warning', 'ปิดรอบได้เฉพาะแผนที่กำลังดำเนินการหรือรอปิดรอบ');
+        } else {
+            $summary = trim((string) Yii::$app->request->post('employee_summary'));
+            if ($summary !== '') $plan->employee_summary = $summary;
+            $plan->status = 'completed';
+            $plan->completed_at = date('Y-m-d H:i:s');
+            $plan->save(false);
+            IdpTelegramService::notifyClosed($plan);
+            Yii::$app->session->setFlash('success', 'ปิด IDP ประจำปีเรียบร้อยแล้ว');
+        }
         return $this->redirect(['employee', 'emp_id' => $plan->emp_id]);
     }
 
@@ -217,6 +263,7 @@ class IdpController extends Controller
             $plan->supervisor_comment = $comment;
             $plan->reviewed_at = date('Y-m-d H:i:s');
             $plan->save(false);
+            IdpTelegramService::notifyReturned($plan);
             Yii::$app->session->setFlash('success', 'ส่งแผนกลับให้พนักงานปรับปรุงแล้ว');
         }
         return $this->redirect(['employee', 'emp_id' => $plan->emp_id]);
@@ -263,7 +310,7 @@ class IdpController extends Controller
     {
         if ($this->canManage()) return;
         $this->assertOwner($plan);
-        $editable = $plan->canEdit() || ($allowProgress && in_array($plan->status, ['approved', 'in_progress', 'assessment'], true));
+        $editable = $plan->canEdit() || ($allowProgress && in_array($plan->status, ['in_progress', 'assessment'], true));
         if (!$editable) throw new ForbiddenHttpException('แผนนี้ไม่อยู่ในสถานะที่แก้ไขได้');
     }
 
@@ -278,7 +325,7 @@ class IdpController extends Controller
     {
         if ($this->canManage()) return;
         $me = UserHelper::GetEmployee();
-        if (!$me || ((int) $me->id !== (int) $employee->id && (int) $me->id !== (int) ($employee->leader()?->id ?? 0))) {
+        if (!$me || ((int) $me->id !== (int) $employee->id && (int) $me->id !== (int) ($employee->supervisorEmpId() ?? 0))) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดู IDP นี้');
         }
     }

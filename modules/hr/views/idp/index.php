@@ -18,9 +18,9 @@ $models = $dataProvider->getModels();
     </div>
     <div class="idp-surface">
         <div class="idp-actions" aria-label="รายการที่ต้องดำเนินการ">
-            <div class="idp-action"><span class="idp-action__icon"><i data-lucide="user-round-check"></i></span><span><span class="idp-action__label">รอหัวหน้าพิจารณา</span><span class="idp-action__value d-block"><?= (int)($counts['submitted'] ?? 0) ?> รายการ</span></span></div>
-            <div class="idp-action"><span class="idp-action__icon is-warning"><i data-lucide="file-pen-line"></i></span><span><span class="idp-action__label">ฉบับร่าง</span><span class="idp-action__value d-block"><?= (int)($counts['draft'] ?? 0) ?> รายการ</span></span></div>
-            <div class="idp-action"><span class="idp-action__icon is-danger"><i data-lucide="clock-alert"></i></span><span><span class="idp-action__label">เกินกำหนด</span><span class="idp-action__value d-block">0 รายการ</span></span></div>
+            <div class="idp-action"><span class="idp-action__icon"><i data-lucide="user-round-check"></i></span><span><span class="idp-action__label">รอหัวหน้าเห็นชอบ</span><span class="idp-action__value d-block"><?= (int)($counts['submitted'] ?? 0) ?> รายการ</span></span></div>
+            <div class="idp-action"><span class="idp-action__icon is-warning"><i data-lucide="folder-open"></i></span><span><span class="idp-action__label">รอ HR เปิดบันทึก</span><span class="idp-action__value d-block"><?= (int)($counts['approved'] ?? 0) ?> รายการ</span></span></div>
+            <div class="idp-action"><span class="idp-action__icon"><i data-lucide="flag-triangle-right"></i></span><span><span class="idp-action__label">รอปิดรอบ</span><span class="idp-action__value d-block"><?= (int)($counts['assessment'] ?? 0) ?> รายการ</span></span></div>
         </div>
         <form class="idp-toolbar" method="get">
             <div><label for="idp-cycle">รอบ IDP</label><select id="idp-cycle" name="cycle_id" class="form-select"><?php foreach($cycles as $item): ?><option value="<?= $item->id ?>" <?= $cycle && $cycle->id == $item->id ? 'selected' : '' ?>><?= Html::encode($item->title) ?></option><?php endforeach ?></select></div>

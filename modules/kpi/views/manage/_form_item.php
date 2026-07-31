@@ -51,6 +51,9 @@ $form = ActiveForm::begin([
     <div class="col-6 col-md-3"><?= $form->field($item, 'frequency')->dropDownList($freqOptions)->label('ความถี่') ?></div>
 
     <div class="col-6 col-md-4"><?= $form->field($item, 'weight')->textInput(['type' => 'number', 'step' => 'any', 'class' => 'form-control text-end'])->label('น้ำหนัก (%)') ?></div>
+
+    <div class="col-12"><?= $form->field($item, 'formula')->textarea(['rows' => 2, 'placeholder' => 'เช่น (จำนวนงานพิธีการ × 100 ÷ จำนวนงานทั้งหมดที่วางแผนไว้)'])->label('สูตรคำนวณ') ?></div>
+    <div class="col-12"><?= $form->field($item, 'evidence')->textarea(['rows' => 2, 'placeholder' => 'เช่น โครงการแผนงาน หนังสือเชิญ รายงานผลการจัดงาน ภาพกิจกรรม'])->label('หลักฐาน / เอกสารอ้างอิง') ?></div>
 </div>
 
 <div class="d-flex justify-content-end gap-2 mt-3">

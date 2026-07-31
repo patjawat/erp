@@ -35,6 +35,7 @@ final class Unit extends HousingActiveRecord
             [['electric_account_no'], 'string', 'max' => 100],
             [['code'], 'unique'],
             [['occupancy_mode'], 'in', 'range' => array_keys(self::modeOptions())],
+            [['occupancy_mode'], 'validateModeChange'],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['status'], 'default', 'value' => self::STATUS_VACANT],
             [['capacity'], 'integer', 'min' => 1, 'skipOnEmpty' => true],
@@ -57,6 +58,30 @@ final class Unit extends HousingActiveRecord
             'status' => 'สถานะ',
             'sort_order' => 'ลำดับแสดงผล',
         ];
+    }
+
+    /**
+     * ห้ามสลับ "รูปแบบการพัก" ข้ามเส้นแบ่ง แยกห้อง (shared) ↔ ทั้งยูนิต ขณะที่ยูนิต
+     * ยังมีการจัดสรรหรือมีผู้พักอยู่ เพราะโครงสร้าง occupancy (ระดับห้อง vs ทั้งยูนิต)
+     * จะไม่สอดคล้องกับ mode ทันที
+     */
+    public function validateModeChange(string $attribute): void
+    {
+        if ($this->isNewRecord || !$this->isAttributeChanged($attribute)) {
+            return;
+        }
+        $wasShared = $this->getOldAttribute($attribute) === self::MODE_SHARED;
+        $isShared = $this->{$attribute} === self::MODE_SHARED;
+        if ($wasShared === $isShared) {
+            return;
+        }
+        $hasOccupancy = Occupancy::find()->where([
+            'unit_id' => $this->id,
+            'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+        ])->exists();
+        if ($hasOccupancy) {
+            $this->addError($attribute, 'ไม่สามารถเปลี่ยนรูปแบบการพักระหว่าง "แยกห้อง" กับ "ทั้งยูนิต" ได้ เนื่องจากยูนิตนี้มีการจัดสรรหรือมีผู้พักอยู่ กรุณาย้ายออกหรือยกเลิกการจัดสรรก่อน');
+        }
     }
 
     public function getBuilding(): ActiveQuery

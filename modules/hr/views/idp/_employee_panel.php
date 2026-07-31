@@ -6,7 +6,7 @@ echo $this->render('_styles');
 $isOwner = (int)(\app\components\UserHelper::GetEmployee()?->id ?? 0) === (int)$employee->id;
 $canManage = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
 $canEdit = $plan && $isOwner && $plan->canEdit();
-$canProgress = $plan && $isOwner && in_array($plan->status, ['approved','in_progress','assessment'], true);
+$canProgress = $plan && $isOwner && in_array($plan->status, ['in_progress','assessment'], true);
 $stage = 1;
 if ($plan) {
     if (in_array($plan->status, ['submitted','revision'], true)) $stage = 2;
@@ -50,7 +50,7 @@ if ($plan) {
                         <?php if($canEdit || $canProgress): ?><?= Html::a($canProgress?'บันทึกผล':'แก้ไข', ['/hr/idp/activity','goal_id'=>$goal->id,'id'=>$activity->id], ['class'=>'btn btn-sm btn-outline-primary open-modal','data-size'=>'modal-lg']) ?><?php endif ?>
                     </div>
                     <?php endforeach ?>
-                    <?php if($canEdit): ?><div class="ms-md-5 mt-2"><?= Html::a('<i class="bi bi-plus-circle me-1"></i> เพิ่มกิจกรรมพัฒนา', ['/hr/idp/activity','goal_id'=>$goal->id], ['class'=>'btn btn-sm btn-link open-modal','data-size'=>'modal-lg']) ?></div><?php endif ?>
+                    <?php if($canEdit || $canProgress): ?><div class="ms-md-5 mt-2"><?= Html::a('<i class="bi bi-plus-circle me-1"></i> เพิ่มกิจกรรมพัฒนา', ['/hr/idp/activity','goal_id'=>$goal->id], ['class'=>'btn btn-sm btn-link open-modal','data-size'=>'modal-lg']) ?></div><?php endif ?>
                 </section>
                 <?php endforeach ?>
             </div>
@@ -64,9 +64,34 @@ if ($plan) {
                 <div class="col-12"><label class="form-label" for="supervisor-comment">ความคิดเห็นถึงพนักงาน</label><textarea id="supervisor-comment" name="supervisor_comment" class="form-control" rows="3"></textarea></div>
                 <div class="col-12 d-flex justify-content-end gap-2">
                     <?= Html::submitButton('ส่งกลับให้ปรับปรุง',['class'=>'btn btn-outline-warning','formaction'=>Url::to(['/hr/idp/return','id'=>$plan->id])]) ?>
-                    <?= Html::submitButton('อนุมัติแผน IDP',['class'=>'btn btn-primary']) ?>
+                    <?= Html::submitButton('หัวหน้าเห็นชอบแผน',['class'=>'btn btn-primary']) ?>
                 </div><?= Html::endForm() ?>
             </div>
+            <?php endif ?>
+
+            <?php if($canManage && $plan->status==='approved'): ?>
+            <div class="idp-review"><h3 class="h6">HR ตรวจสอบและเปิดให้บันทึกผล</h3>
+                <?= Html::beginForm(['/hr/idp/open','id'=>$plan->id],'post',['class'=>'row g-2']) ?>
+                <p class="col-12 small text-muted mb-1">หัวหน้าเห็นชอบแผนแล้ว ตรวจสอบความถูกต้องแล้วกด "เปิดให้บันทึกผล" เพื่อให้เจ้าหน้าที่บันทึกความก้าวหน้าได้ (หากต้องแก้ไข ระบุหมายเหตุแล้วส่งกลับปรับปรุง)</p>
+                <div class="col-12"><label class="form-label" for="hr-open-comment">หมายเหตุ (กรณีส่งกลับปรับปรุงต้องระบุ)</label><textarea id="hr-open-comment" name="supervisor_comment" class="form-control" rows="2"></textarea></div>
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <?= Html::submitButton('ส่งกลับปรับปรุง',['class'=>'btn btn-outline-warning','formaction'=>Url::to(['/hr/idp/return','id'=>$plan->id])]) ?>
+                    <?= Html::submitButton('เปิดให้บันทึกผล',['class'=>'btn btn-primary']) ?>
+                </div><?= Html::endForm() ?>
+            </div>
+            <?php endif ?>
+
+            <?php if($canManage && in_array($plan->status, ['in_progress','assessment'], true)): ?>
+            <div class="idp-review"><h3 class="h6">ปิด IDP ประจำปี</h3>
+                <?= Html::beginForm(['/hr/idp/close','id'=>$plan->id],'post',['class'=>'row g-2']) ?>
+                <div class="col-12"><label class="form-label" for="idp-close-summary">สรุปผลการพัฒนาปลายรอบ</label><textarea id="idp-close-summary" name="employee_summary" class="form-control" rows="3"><?= Html::encode($plan->employee_summary) ?></textarea></div>
+                <div class="col-12 d-flex justify-content-end"><?= Html::submitButton('ปิด IDP ประจำปี',['class'=>'btn btn-success','data'=>['confirm'=>'ยืนยันปิดรอบ IDP ประจำปี? หลังปิดแล้วเจ้าหน้าที่จะบันทึกผลเพิ่มไม่ได้']]) ?></div>
+                <?= Html::endForm() ?>
+            </div>
+            <?php endif ?>
+
+            <?php if($plan->status==='completed'): ?>
+            <div class="idp-review"><h3 class="h6">ปิดรอบเรียบร้อยแล้ว</h3><p class="small text-muted mb-1"><?php if($plan->completed_at): ?>ปิดเมื่อ <?= Yii::$app->formatter->asDatetime($plan->completed_at,'php:d M Y H:i') ?> น.<?php endif ?></p><?php if($plan->employee_summary): ?><div><?= nl2br(Html::encode($plan->employee_summary)) ?></div><?php endif ?></div>
             <?php endif ?>
         <?php endif ?>
     </div>

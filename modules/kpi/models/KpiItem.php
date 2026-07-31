@@ -76,6 +76,7 @@ class KpiItem extends ActiveRecord
             [['direction'], 'default', 'value' => self::DIR_ASC],
             [['created_at', 'updated_at', 'confirmed_at', 'removed_at'], 'safe'],
             [['indicator', 'target_text'], 'string', 'max' => 500],
+            [['formula', 'evidence'], 'string'],
             [['removed_reason'], 'string', 'max' => 500],
             [['unit'], 'string', 'max' => 50],
             [['source_type'], 'in', 'range' => [self::SOURCE_JD, self::SOURCE_MANUAL]],

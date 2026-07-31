@@ -100,8 +100,9 @@ class PersonnelController extends Controller
     {
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget()+1),
-            'plan_group_id' => 'personnel', // Default to material type
-            'plan_category_id' => 'PER',
+            'plan_group_id' => 'personnel',
+            // plan_category_id/plan_type_id ถูก derive จาก plan_item_id ที่ PlanOrder::beforeSave()
+            // (เดิมตั้ง 'PER' ตายตัวซึ่งไม่ใช่รหัสหมวดจริง ทำให้ข้อมูลปนเปื้อน)
         ]);
 
         if ($model->load(Yii::$app->request->post())) {

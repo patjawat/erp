@@ -75,8 +75,9 @@ class ExpensesController extends Controller
         $model = new PlanOrder([
             'thai_year' => (AppHelper::YearBudget() + 1),
             'plan_group_id' => 'expenses',
-            'plan_category_id' => 'PER_04', //รายจ่ายจากการดำเนินงาน
-            'plan_type_id' => 'OPS', //ค่าใช้สอย
+            // plan_category_id / plan_type_id ถูก derive จาก plan_item_id ที่ PlanOrder::beforeSave()
+            // จึงไม่ตั้งค่าตายตัวที่นี่ (เดิม hardcode 'PER_04'/'OPS' ทำให้ข้อมูลปนเปื้อน)
+            'plan_type_id' => 'OPS',
         ]);
         $items = []; // ไม่มีรายการเดิม
 

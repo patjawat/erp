@@ -22,6 +22,7 @@ $total = $notify['total'];
 $jdNotify = $notify['jd_acknowledgement'] ?? ['total' => 0, 'datas' => []];
 $pendingJd = $jdNotify['datas'][0] ?? null;
 $jdSignNotify = $notify['jd_signature'] ?? ['total' => 0, 'datas' => []];
+$jdReviewNotify = $notify['jd_change_review'] ?? ['total' => 0, 'datas' => [], 'url' => ['/jd/employee-jd/review-inbox']];
 $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
 ?>
 <style>
@@ -126,6 +127,17 @@ $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile
                             </span>
                         </a>
                     <?php endif; ?>
+                    <?php if ((int) $jdReviewNotify['total'] > 0): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-start py-3" href="<?= Url::to($jdReviewNotify['url']) ?>">
+                            <span class="rounded-circle bg-warning-subtle text-warning-emphasis d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="file-search" style="width: 19px;"></i>
+                            </span>
+                            <span class="text-wrap">
+                                <span class="d-block fw-semibold">คำขอทบทวน JD</span>
+                                <small class="text-body-secondary"><?= (int) $jdReviewNotify['total'] ?> คำขอรอ HR รับ/ไม่รับ</small>
+                            </span>
+                        </a>
+                    <?php endif; ?>
                     <?php if ((int) $idpNotify['total'] > 0): ?>
                         <a class="dropdown-item d-flex gap-3 align-items-start py-3" href="<?= Url::to($idpNotify['url']) ?>">
                             <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
@@ -137,7 +149,7 @@ $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile
                             </span>
                         </a>
                     <?php endif; ?>
-                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $jdSignNotify['total'] - (int) $idpNotify['total']; ?>
+                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $jdSignNotify['total'] - (int) $jdReviewNotify['total'] - (int) $idpNotify['total']; ?>
                     <?php if ($otherTotal > 0): ?>
                         <a class="dropdown-item d-flex gap-3 align-items-center py-3" href="<?= Url::to(['/approve-v2/leave']) ?>">
                             <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">

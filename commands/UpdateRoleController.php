@@ -162,6 +162,9 @@ class UpdateRoleController extends Controller
             ['name' => '/am/asset-document/*', 'type' => 2, 'description' => ''],
 
             ['name' => '/depdrop/*', 'type' => 2, 'description' => ''],
+            ['name' => '/hr/*', 'type' => 2, 'description' => 'ระบบงานบุคลากร (HR) ทั้งหมด'],
+            ['name' => '/jd/*', 'type' => 2, 'description' => 'คำอธิบายงาน (JD)'],
+            ['name' => '/kpi/*', 'type' => 2, 'description' => 'ตัวชี้วัด KPI'],
             ['name' => '/hr/employees/*', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/computer/*', 'type' => 2, 'description' => ''],
             ['name' => '/helpdesk/default/repair-select', 'type' => 2, 'description' => ''],
@@ -191,6 +194,8 @@ class UpdateRoleController extends Controller
             ['name' => '/hr/employees/view', 'type' => 2, 'description' => ''],
 
             ['name' => '/plan/*', 'type' => 2, 'description' => ''],
+            ['name' => 'planApprove', 'type' => 2, 'description' => 'ผู้อนุมัติแผนของหน่วยงาน'],
+            ['name' => '/plan/approve/*', 'type' => 2, 'description' => 'หน้าอนุมัติแผนหน่วยงาน'],
 
             //Router
             ['name' => '/hr/leave/*', 'type' => 2, 'description' => ''],
@@ -363,6 +368,14 @@ class UpdateRoleController extends Controller
             ['child' => '/dms/*', 'parent' => 'document'],
             //แผนงานและโครงดาร
             ['child' => '/plan/*', 'parent' => 'plan'],
+            // อนุมัติแผน — ผอ.(director)/admin (ApproveController เช็ค can('planApprove') อีกชั้น)
+            // planApprove เข้าถึงระบบแผนงาน /plan ได้ทั้งหมด (อนุมัติผ่านระบบแผนงาน)
+            ['child' => '/plan/*', 'parent' => 'planApprove'],
+            ['child' => '/plan/approve/*', 'parent' => 'planApprove'],
+            ['child' => 'planApprove', 'parent' => 'director'],
+            ['child' => 'planApprove', 'parent' => 'admin'],
+            // ผู้ดูแลแผน (role plan) รวมสิทธิ์อนุมัติแผน
+            ['child' => 'planApprove', 'parent' => 'plan'],
 
             ['child' => '/am/*', 'parent' => 'user'],
             ['child' => '/am/asset/depreciation', 'parent' => 'user'],
@@ -450,6 +463,10 @@ class UpdateRoleController extends Controller
             ['child' => '/hr/default/index', 'parent' => 'user'],
             ['child' => '/hr/employees/view', 'parent' => 'user'],
             ['child' => '/hr/employees/*', 'parent' => 'hr'],
+            // เจ้าหน้าที่ฝ่ายบุคคล (hr) เข้าระบบงานบุคลากร/JD/KPI ได้ทั้งหมด (controller มี guard can('hr') ในหน้าที่จำกัดอยู่แล้ว)
+            ['child' => '/hr/*', 'parent' => 'hr'],
+            ['child' => '/jd/*', 'parent' => 'hr'],
+            ['child' => '/kpi/*', 'parent' => 'hr'],
 
             //ระบบลา
             ['child' => '/hr/leave/create', 'parent' => 'user'],
@@ -522,7 +539,8 @@ class UpdateRoleController extends Controller
             ['child' => '/warehouse/*', 'parent' => 'warehouse'],
             ['child' => '/purchase/po-order/index', 'parent' => 'purchase'],
 
-            ['child' => '/plan/*', 'parent' => 'user'],
+            // /plan/* จำกัดเฉพาะ role 'plan' (+ admin ผ่าน /*) — ไม่เปิดให้ user ทั่วไป
+            // หัวหน้าหน่วยงานจัดทำแผนผ่าน /me/plan (อยู่ใต้ role user) แทน
             ['child' => '/health/*', 'parent' => 'health'],
             ['child' => '/health/health-screen/print', 'parent' => 'user'],
             ['child' => '/mobile/*', 'parent' => 'user'],
