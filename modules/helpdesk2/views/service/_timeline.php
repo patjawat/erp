@@ -4,9 +4,9 @@ use yii\helpers\Html;
 /** @var array $items */
 ?>
 
-<div class="card shadow-sm mt-3">
-    <div class="card-header"><h2 class="h6 fw-bold mb-0">ประวัติการดำเนินการ</h2></div>
-    <div class="card-body p-4">
+<section aria-labelledby="repair-history-title">
+    <h3 class="h6 fw-bold mb-3" id="repair-history-title">ประวัติการดำเนินการ</h3>
+    <div>
         <?php if (empty($items)): ?>
             <div class="text-muted">ยังไม่มีประวัติการดำเนินการ</div>
         <?php else: ?>
@@ -42,5 +42,4 @@ use yii\helpers\Html;
             </ol>
         <?php endif; ?>
     </div>
-</div>
-
+</section>

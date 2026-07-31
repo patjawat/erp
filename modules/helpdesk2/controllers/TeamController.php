@@ -7,6 +7,7 @@ use yii\web\Response;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
+use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 use app\modules\helpdesk2\models\HelpdeskSearch;
 
@@ -122,31 +123,78 @@ class TeamController extends Controller
     public function actionCreate()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $helpdesk_id = $this->request->get('helpdesk_id');
+        $helpdeskId = (int) $this->request->get('helpdesk_id');
+        $helpdesk = $this->findHelpdeskModel($helpdeskId);
         $model = new HelpdeskDetail([
-            'helpdesk_id' => $helpdesk_id,
+            'helpdesk_id' => $helpdeskId,
         ]);
+        $eligibleTechnicians = Helpdesk::TechnicianList($helpdesk->repair_group);
+        $eligibleTechnicianIds = array_map(
+            static fn($employee): int => (int) $employee->id,
+            $eligibleTechnicians
+        );
+        $assignedTechnicianIds = array_map('intval', HelpdeskDetail::find()
+            ->select('emp_id')
+            ->where([
+                'helpdesk_id' => $helpdeskId,
+                'name' => 'repair_team',
+            ])
+            ->column());
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post())) {
-                $model->name = 'repair_team';
-                if($model->save()){
-                    return [
-                        'status' => 'success'
-                    ];
-                }
+            if (!$model->load($this->request->post())) {
+                return [
+                    'status' => 'error',
+                    'message' => 'รูปแบบข้อมูลไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง',
+                ];
             }
-        } else {
-            $model->loadDefaultValues();
+
+            $model->helpdesk_id = $helpdeskId;
+            $model->emp_id = (int) $model->emp_id;
+            $model->name = 'repair_team';
+            $model->status = 'active';
+            $model->title = 'ช่างผู้รับผิดชอบงานซ่อม';
+
+            if (Helpdesk::repairRoleName($helpdesk->repair_group) === null) {
+                $model->addError('emp_id', 'ใบแจ้งซ่อมยังไม่ได้ระบุแผนกช่างที่รับงาน');
+            } elseif ($model->emp_id <= 0) {
+                $model->addError('emp_id', 'กรุณาเลือกช่างผู้รับผิดชอบ');
+            } elseif (!in_array((int) $model->emp_id, $eligibleTechnicianIds, true)) {
+                $model->addError('emp_id', 'บุคลากรที่เลือกไม่มีสิทธิ์ในระบบงานซ่อมของแผนกนี้');
+            } elseif (in_array((int) $model->emp_id, $assignedTechnicianIds, true)) {
+                $model->addError('emp_id', 'ช่างคนนี้ได้รับมอบหมายในงานซ่อมแล้ว');
+            }
+
+            if (!$model->hasErrors() && $model->save()) {
+                return [
+                    'status' => 'success',
+                    'message' => 'เพิ่มช่างผู้รับผิดชอบเรียบร้อยแล้ว',
+                ];
+            }
+
+            $message = $model->getFirstError('emp_id') ?: 'ไม่สามารถเพิ่มช่างผู้รับผิดชอบได้';
+            return [
+                'status' => 'error',
+                'message' => $message,
+                'errors' => $model->getErrors(),
+            ];
         }
 
+        $model->loadDefaultValues();
+        $availableTechnicians = array_values(array_filter(
+            $eligibleTechnicians,
+            static fn($employee): bool => !in_array((int) $employee->id, $assignedTechnicianIds, true)
+        ));
+
         return [
-            'title' =>  $this->request->get('title'),
-            'content' =>   $this->renderAjax('create', [
+            'title' => 'เพิ่มช่างผู้รับผิดชอบ',
+            'content' => $this->renderAjax('_form', [
                 'model' => $model,
-            ])
+                'helpdesk' => $helpdesk,
+                'technicians' => $availableTechnicians,
+                'repairGroupLabel' => $helpdesk->viewRepairGroup() ?: 'ยังไม่ระบุแผนกช่าง',
+            ]),
         ];
-      
     }
 
     /**
@@ -179,5 +227,14 @@ class TeamController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    private function findHelpdeskModel(int $id): Helpdesk
+    {
+        if ($id > 0 && ($model = Helpdesk::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('ไม่พบใบแจ้งซ่อมที่ต้องการมอบหมายช่าง');
     }
 }

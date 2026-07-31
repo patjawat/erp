@@ -3,6 +3,7 @@ use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\modules\helpdesk2\models\Helpdesk;
 $this->title = $title;
 $this->params['breadcrumbs'][] = 'ระบบงานซ่อม';
 $this->params['breadcrumbs'][] = $this->title;
@@ -52,6 +53,13 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
 <?php
 $urlSummary = Url::to(['/helpdesk/repair/summary', 'repair_group' =>  $searchModel->repair_group]);
 $urlUserJob = Url::to(['/helpdesk/repair/user-job', 'repair_group' => $searchModel->repair_group, 'auth_item' => 'technician']);
+$repairStatusOptions = Helpdesk::repairStatusOptions();
+$statusChartLabels = json_encode([
+    $repairStatusOptions['pending'],
+    $repairStatusOptions['receive'],
+    $repairStatusOptions['in_progress'],
+    $repairStatusOptions['success'],
+], JSON_UNESCAPED_UNICODE);
 
 $js = <<< JS
 
@@ -133,7 +141,7 @@ $js = <<< JS
       dataLabels: {
         enabled: false
       },
-      labels: ['ร้องขอ', 'รับเรื่อง', 'ดำเนินการ', 'เสร็จสิ้น'],
+      labels: {$statusChartLabels},
       legend: {
       },
       fill: {

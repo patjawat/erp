@@ -2,7 +2,9 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use app\modules\helpdesk2\helpers\HelpdeskSlaHelper;
+use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
+use app\modules\hr\models\Employees;
 
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
 /** @var string|null $returnUrl */
@@ -13,7 +15,7 @@ $ticketId = $model->id ?? '-';
 $titleText = 'หมายเลขงานซ่อม #' . $ticketId;
 
 $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
-$statusCode = (string) ($model->status ?? 'pending');
+$statusCode = Helpdesk::normalizeRepairStatus($model->status ?? 'pending');
 $urgencyCode = $dataJson['urgency'] ?? null;
 $createdAt = $model->created_at ?? null;
 $externalBillCount = (int) ($model->getExternalRepairBillsCount() ?? 0);
@@ -23,32 +25,19 @@ $badgeClass = static function (string $color): string {
     return 'badge bg-' . $color . '-subtle text-' . $color . '-emphasis border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
 };
 
-$statusMeta = [
-    'pending' => ['label' => 'เปิดงาน', 'color' => 'warning', 'icon' => 'fa-solid fa-circle-info'],
-    'receive' => ['label' => 'รับเรื่อง', 'color' => 'info', 'icon' => 'fa-solid fa-inbox'],
-    'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info', 'icon' => 'fa-solid fa-gears'],
-    'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success', 'icon' => 'fa-regular fa-circle-check'],
-    'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger', 'icon' => 'fa-solid fa-ban'],
-];
+$statusMeta = Helpdesk::repairStatusMeta();
 
 $statusInfo = $statusMeta[$statusCode] ?? ['label' => 'ไม่ทราบสถานะ', 'color' => 'secondary', 'icon' => 'fa-solid fa-circle'];
 $statusBadge = Html::tag('span', '<i class="' . $statusInfo['icon'] . ' me-1" aria-hidden="true"></i>' . Html::encode($statusInfo['label']), [
     'class' => $badgeClass($statusInfo['color']),
 ]);
 
-$priorityMap = [
-    '1' => ['label' => 'ต่ำ', 'color' => 'primary'],
-    '2' => ['label' => 'ปานกลาง', 'color' => 'info'],
-    '3' => ['label' => 'สูง', 'color' => 'warning'],
-    '4' => ['label' => 'วิกฤต', 'color' => 'danger'],
-    'low' => ['label' => 'ต่ำ', 'color' => 'primary'],
-    'medium' => ['label' => 'ปานกลาง', 'color' => 'info'],
-    'high' => ['label' => 'สูง', 'color' => 'warning'],
-    'critical' => ['label' => 'วิกฤต', 'color' => 'danger'],
-];
-
-$priorityInfo = is_scalar($urgencyCode) ? ($priorityMap[(string) $urgencyCode] ?? ['label' => 'ไม่ระบุ', 'color' => 'secondary']) : ['label' => 'ไม่ระบุ', 'color' => 'secondary'];
-$priorityBadge = Html::tag('span', Html::encode('ความสำคัญ: ' . $priorityInfo['label']), [
+$priorityInfo = Helpdesk::repairUrgencyInfo(is_scalar($urgencyCode) ? $urgencyCode : '');
+$priorityContent = Html::tag('i', '', [
+    'class' => $priorityInfo['icon'] . ' me-1',
+    'aria-hidden' => 'true',
+]) . Html::encode('ความเร่งด่วน: ' . $priorityInfo['label']);
+$priorityBadge = Html::tag('span', $priorityContent, [
     'class' => $badgeClass($priorityInfo['color']),
 ]);
 
@@ -75,6 +64,64 @@ if (!empty($dataJson['repair_note']) && is_string($dataJson['repair_note'])) {
 $locationLabel = '-';
 if (!empty($dataJson['location']) && is_string($dataJson['location'])) {
     $locationLabel = Html::encode($dataJson['location']);
+}
+
+$requester = [
+    'fullname' => 'ยังไม่ระบุ',
+    'department' => '-',
+];
+try {
+    $requesterData = $model->getUserReq();
+    if (is_array($requesterData) && $requesterData !== []) {
+        $requester = array_merge($requester, $requesterData);
+    }
+} catch (\Throwable $e) {
+    // คงค่า fallback เมื่อข้อมูลผู้แจ้งไม่พร้อมใช้งาน
+}
+
+$receiver = [
+    'fullname' => 'ยังไม่มีผู้รับเรื่อง',
+    'department' => '-',
+    'avatar' => null,
+    'received_at' => null,
+];
+try {
+    $receiveLog = HelpdeskDetail::find()
+        ->where([
+            'helpdesk_id' => (int) $model->id,
+            'name' => 'service_record',
+            'status' => 'รับเรื่อง',
+        ])
+        ->orderBy(['id' => SORT_DESC])
+        ->one();
+    if ($receiveLog) {
+        $receiver['received_at'] = $receiveLog->created_at ?? null;
+
+        if (!empty($receiveLog->emp_id)) {
+            $receiveEmp = Employees::findOne(['id' => (int) $receiveLog->emp_id]);
+            if (!$receiveEmp) {
+                $receiveEmp = Employees::findOne(['user_id' => (int) $receiveLog->emp_id]);
+            }
+            if ($receiveEmp) {
+                $receiver['fullname'] = $receiveEmp->fullname ?? $receiver['fullname'];
+                $receiver['department'] = method_exists($receiveEmp, 'departmentName')
+                    ? ($receiveEmp->departmentName() ?? $receiver['department'])
+                    : $receiver['department'];
+                $receiver['avatar'] = method_exists($receiveEmp, 'ShowAvatar') ? $receiveEmp->ShowAvatar() : null;
+            }
+        }
+    }
+} catch (\Throwable $e) {
+    // คงค่า fallback เมื่อข้อมูลผู้รับเรื่องไม่พร้อมใช้งาน
+}
+
+$receiverReceivedAtLabel = null;
+if (!empty($receiver['received_at'])) {
+    try {
+        $receiverReceivedAtLabel = (string) \Yii::$app->formatter->asDatetime($receiver['received_at']);
+    } catch (\Throwable $e) {
+        $receiverReceivedAtLabel = (string) $receiver['received_at'];
+    }
 }
 
 $assetCodeLabel = Html::encode($model->asset_number ?: ($dataJson['asset_code'] ?? '-'));
@@ -108,13 +155,7 @@ if (isset($comments) && is_array($comments)) {
     $feedbackRating = (int) ($model->rating ?? 0);
     $feedbackDate = (string) ($dataJson['comment_date'] ?? '');
     if ($feedbackRating > 0 || $feedbackComment !== '') {
-        $requesterName = '-';
-        try {
-            $reqInfo = $model->getUserReq();
-            $requesterName = (string) ($reqInfo['fullname'] ?? '-');
-        } catch (\Throwable $e) {
-            $requesterName = '-';
-        }
+        $requesterName = (string) ($requester['fullname'] ?? '-');
         // ส่งคะแนนเป็นข้อมูลแยก (ไม่ยัด ★ ลงในข้อความ) เพื่อให้ _comments เรนเดอร์ดาวแบบมี aria-label
         $commentsItems[] = (object) [
             'is_staff' => false,
@@ -174,12 +215,15 @@ $hasRootCauseData = trim((string) ($model->data_json['root_cause'] ?? '')) !== '
 
 $receiveRoute = ['/helpdesk/service/receive', 'id' => $model->id];
 $sendRepairRoute = ['/helpdesk/service/send-repair', 'id' => $model->id];
+$refreshRoute = ['/helpdesk/service/view-v2', 'id' => $model->id];
 if ($returnUrl !== null && $returnUrl !== '') {
     $receiveRoute['returnUrl'] = $returnUrl;
     $sendRepairRoute['returnUrl'] = $returnUrl;
+    $refreshRoute['returnUrl'] = $returnUrl;
 }
 $receiveUrl = Url::to($receiveRoute);
 $sendRepairUrl = Url::to($sendRepairRoute);
+$refreshUrl = Url::to($refreshRoute);
 $partsUrl = Url::to(['/helpdesk/repair-parts/create', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่งานซ่อม #' . $model->repair_number]);
 $expenseUrl = Url::to(['/helpdesk/expenses/create', 'helpdesk_id' => $model->id, 'title' => 'ลงค่าใช้จ่ายงานซ่อม #' . $model->repair_number]);
 $billUploadUrl = Url::to(['/helpdesk/service/external-bill-form', 'id' => $model->id, 'title' => 'อัปโหลดบิลค่าใช้จ่าย #' . $model->repair_number]);
@@ -229,21 +273,11 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
 
 ?>
 
-<div class="container-fluid py-3">
-    <div class="row g-3">
-        <!-- RIGHT -->
-        <div class="col-lg-4">
-            <?= $this->render('_sidebar', [
-                'model' => $model,
-                'statusInfo' => $statusInfo,
-                'priorityInfo' => $priorityInfo,
-                'statusBadge' => $statusBadge,
-                'priorityBadge' => $priorityBadge,
-                'slaBadgeHtml' => $slaBadgeHtml,
-            ]); ?>
-        </div>
-        <!-- LEFT -->
-        <div class="col-lg-8">
+<div
+    id="helpdesk-service-view-v2"
+    data-refresh-url="<?= Html::encode($refreshUrl) ?>"
+    aria-busy="false"
+>
             <?= $this->render('_header', [
                 'model' => $model,
                 'titleText' => $titleText,
@@ -251,9 +285,28 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                 'priorityBadge' => $priorityBadge,
                 'slaBadgeHtml' => $slaBadgeHtml,
                 'returnUrl' => $returnUrl,
+                'requester' => $requester,
+                'descriptionSummary' => $descriptionSummary,
+                'descriptionExtra' => $descriptionExtra,
+                'locationLabel' => $locationLabel,
             ]); ?>
 
-            <div class="card shadow-sm mt-3">
+            <div class="row g-4 mt-0 align-items-start">
+                <aside class="col-12 col-lg-4 order-2 order-lg-1" aria-labelledby="repair-activity-heading">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h2 id="repair-activity-heading" class="h6 fw-bold mb-0">ความเคลื่อนไหวของงาน</h2>
+                            <div class="text-body-secondary small mt-1">ประวัติการดำเนินงานและความคิดเห็นของผู้แจ้ง</div>
+                        </div>
+                        <div class="card-body p-3">
+                            <?= $this->render('_timeline', ['items' => $timelineItems]); ?>
+                            <?= $this->render('_comments', ['comments' => $commentsItems]); ?>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="col-12 col-lg-8 order-1 order-lg-2">
+            <div class="card shadow-sm">
                 <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <h2 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-1" aria-hidden="true"></i> ขั้นตอนงานซ่อม</h2>
                     <?= Html::tag('span', 'คืบหน้า ' . $requiredProgress . '%', ['class' => $badgeClass($requiredProgress >= 100 ? 'success' : 'info')]) ?>
@@ -275,9 +328,44 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                     <span class="repair-step__title">รับเรื่อง</span>
                                     <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
                                 </div>
+                                <?php if ($isReceived): ?>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <?php if (!empty($receiver['avatar'])): ?>
+                                            <?= Html::img($receiver['avatar'], [
+                                                'class' => 'rounded-circle border border-secondary-subtle object-fit-cover flex-shrink-0',
+                                                'alt' => '',
+                                                'loading' => 'lazy',
+                                                'width' => 32,
+                                                'height' => 32,
+                                            ]) ?>
+                                        <?php else: ?>
+                                            <span class="rounded-circle border border-secondary-subtle bg-secondary-subtle text-secondary-emphasis d-inline-flex align-items-center justify-content-center flex-shrink-0 p-2 lh-1" aria-hidden="true">
+                                                <i class="fa-solid fa-user-check"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                        <div class="overflow-hidden">
+                                            <div class="small text-body-secondary">ผู้รับเรื่องซ่อม</div>
+                                            <div class="d-flex flex-wrap align-items-baseline gap-1">
+                                                <span class="fw-semibold text-break"><?= Html::encode($receiver['fullname'] ?? '-') ?></span>
+                                                <?php if (!empty($receiver['department']) && $receiver['department'] !== '-'): ?>
+                                                    <span class="small text-body-secondary text-break">(<?= Html::encode($receiver['department']) ?>)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($receiverReceivedAtLabel !== null): ?>
+                                                <div class="small text-body-secondary">
+                                                    <i class="fa-regular fa-clock me-1" aria-hidden="true"></i>รับเรื่องเมื่อ: <?= Html::encode($receiverReceivedAtLabel) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="repair-step__actions">
                                     <?php if (!$isReceived): ?>
-                                        <?= Html::a('<i class="fa-solid fa-inbox me-1" aria-hidden="true"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                                <?= Html::button('<i class="fa-solid fa-inbox me-1" aria-hidden="true"></i> รับเรื่อง', [
+                                    'type' => 'button',
+                                    'class' => 'btn btn-sm btn-outline-primary receive-order',
+                                    'data' => ['url' => $receiveUrl],
+                                ]) ?>
                                     <?php endif; ?>
                                     <?= Html::a('<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 </div>
@@ -296,7 +384,11 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                 </div>
                                 <?php if (!$isStarted): ?>
                                     <div class="repair-step__actions">
-                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1" aria-hidden="true"></i> ส่งซ่อม / เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
+                                        <?= Html::button('<i class="fa-solid fa-truck-fast me-1" aria-hidden="true"></i> ส่งซ่อม / เริ่มงาน', [
+                                            'type' => 'button',
+                                            'class' => 'btn btn-sm btn-outline-info btn-send-repair',
+                                            'data' => ['url' => $sendRepairUrl],
+                                        ]) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -374,11 +466,14 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                                 'data' => ['size' => 'modal-md'],
                                             ]
                                         ) ?>
-                                        <?= Html::a(
+                                        <?= Html::button(
                                             '<i class="fa-solid fa-ban me-1" aria-hidden="true"></i> ยกเลิกงานซ่อม',
-                                            ['/helpdesk/service/cancel', 'id' => $model->id],
                                             [
+                                                'type' => 'button',
                                                 'class' => 'btn btn-sm btn-outline-danger btn-cancel-repair',
+                                                'data' => [
+                                                    'url' => Url::to(['/helpdesk/service/cancel', 'id' => $model->id]),
+                                                ],
                                             ]
                                         ) ?>
                                     </div>
@@ -386,16 +481,51 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                             </div>
                         </li>
                     </ol>
+
+                    <section class="border-top mt-4 pt-4" aria-labelledby="repair-responsibility-heading">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                            <h3 id="repair-responsibility-heading" class="h6 fw-bold mb-0">
+                                <i class="fa-solid fa-users-gear me-1" aria-hidden="true"></i> ผู้รับผิดชอบและข้อมูลอ้างอิง
+                            </h3>
+                            <?= Html::a(
+                                '<i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i> เพิ่มช่าง',
+                                ['/helpdesk/team/create', 'helpdesk_id' => $model->id],
+                                [
+                                    'class' => 'btn btn-sm btn-outline-primary btn-assign-team',
+                                    'aria-controls' => 'assign-team-offcanvas',
+                                ]
+                            ) ?>
+                        </div>
+
+                        <?= $this->render('_participants', [
+                            'model' => $model,
+                        ]); ?>
+
+                        <div class="border-top mt-4 pt-3">
+                            <div class="d-flex justify-content-between gap-3 py-1">
+                                <span class="text-muted">รหัสครุภัณฑ์</span>
+                                <span class="fw-medium text-end text-break"><?= $assetCodeLabel ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 py-1">
+                                <span class="text-muted">วันที่ต้องการให้ซ่อม</span>
+                                <span class="fw-medium text-end text-break"><?= $requestRepairDateLabel ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 py-1">
+                                <span class="text-muted">อัปเดต</span>
+                                <span class="fw-medium text-end text-break"><?= Html::encode($createdAt ? \Yii::$app->formatter->asDatetime($createdAt) : '-') ?></span>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
 
-                <div class="card shadow-sm mt-3">
+                <div class="card shadow-sm mt-4">
                 <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                    <h2 class="h6 fw-bold mb-0 flex-grow-1 min-w-0"><i class="fa-solid fa-clipboard-list me-1" aria-hidden="true"></i> มาตรฐานการบันทึกงานซ่อม</h2>
+                    <h2 class="h6 fw-bold mb-0 flex-grow-1 overflow-hidden"><i class="fa-solid fa-clipboard-list me-1" aria-hidden="true"></i> สรุปผลการดำเนินงาน</h2>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                    <div class="d-flex flex-column gap-4">
+                        <div>
                             <div class="bg-body-tertiary rounded-3 p-3 h-100">
                                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                                     <div class="small text-muted mb-0">สาเหตุของปัญหา</div>
@@ -410,7 +540,7 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div>
                             <div class="bg-body-tertiary rounded-3 p-3 h-100">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                                     <div class="small text-muted mb-0">สรุปอะไหล่และค่าใช้จ่าย</div>
@@ -450,126 +580,82 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                         <?= $model->getExternalRepairBillsHtml() ?>
                                     </div>
                                 <?php endif; ?>
-                                <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
-                                    <div class="small text-muted">ลงบันทึกตามรูปแบบการซ่อมได้จากส่วน “ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)” ด้านบน</div>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Description -->
-            <div class="card shadow-sm mt-3">
-                <div class="card-header"><h2 class="h6 fw-bold mb-0">รายละเอียดงานซ่อม</h2></div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <div class="d-flex align-items-start gap-2">
-                                <div class="erp-icon-box bg-body-tertiary text-body-secondary border rounded-3 p-2">
-                                    <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold mb-1"><?= $descriptionSummary ?></div>
-                                    <?php if ($descriptionExtra !== ''): ?>
-                                        <div class="text-muted"><?= nl2br($descriptionExtra) ?></div>
-                                    <?php else: ?>
-                                        <div class="text-muted">ไม่มีรายละเอียดเพิ่มเติม</div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="d-flex justify-content-between py-1">
-                                <span class="text-muted">รหัสครุภัณฑ์</span>
-                                <span class="fw-medium"><?= $assetCodeLabel ?></span>
-                            </div>
-                            <div class="d-flex justify-content-between py-1">
-                                <span class="text-muted">สถานที่</span>
-                                <span class="fw-medium"><?= $locationLabel ?></span>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="d-flex justify-content-between py-1">
-                                <span class="text-muted">วันที่ต้องการให้ซ่อม</span>
-                                <span class="fw-medium"><?= $requestRepairDateLabel ?></span>
-                            </div>
-                            <div class="d-flex justify-content-between py-1">
-                                <span class="text-muted">อัปเดต</span>
-                                <span class="fw-medium"><?= Html::encode($createdAt ? \Yii::$app->formatter->asDatetime($createdAt) : '-') ?></span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-
-            <!-- Timeline -->
-            <?= $this->render('_timeline', ['items' => $timelineItems]); ?>
-
-            <!-- Comments -->
-            <?= $this->render('_comments', ['comments' => $commentsItems]); ?>
-
-            <!-- Attachments -->
-            <div class="card shadow-sm mt-3">
-                <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                    <h2 class="h6 fw-bold mb-0">ไฟล์แนบ</h2>
-                    <span class="text-muted small">รูปภาพที่ผู้แจ้งแนบมา</span>
-                </div>
-                <div class="card-body p-4">
-                    <?= $model->imageRequest ?>
-                </div>
-            </div>
-        </div>
-
-
-    </div>
-</div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="repair-method-offcanvas" aria-labelledby="repair-method-offcanvas-label">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="repair-method-offcanvas-label">บันทึกวิธีดำเนินการซ่อม</h5>
+        <h2 class="offcanvas-title h5" id="repair-method-offcanvas-label">บันทึกวิธีดำเนินการซ่อม</h2>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="repair-method-offcanvas-content" class="text-muted small">กำลังโหลดฟอร์ม...</div>
+        <div id="repair-method-offcanvas-content" class="text-muted small" role="status" aria-live="polite" aria-atomic="true" aria-busy="false">กำลังโหลดฟอร์ม...</div>
     </div>
 </div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="expense-pos-offcanvas" aria-labelledby="expense-pos-offcanvas-label">
     <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title" id="expense-pos-offcanvas-label">บันทึกค่าใช้จ่าย (POS)</h5>
+        <h2 class="offcanvas-title h5" id="expense-pos-offcanvas-label">บันทึกค่าใช้จ่าย (POS)</h2>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="expense-pos-offcanvas-content" class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>
+        <div id="expense-pos-offcanvas-content" class="text-muted small" role="status" aria-live="polite" aria-atomic="true" aria-busy="false">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>
     </div>
 </div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="part-legacy-offcanvas" aria-labelledby="part-legacy-offcanvas-label">
     <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title" id="part-legacy-offcanvas-label">เบิกอะไหล่จากคลัง</h5>
+        <h2 class="offcanvas-title h5" id="part-legacy-offcanvas-label">เบิกอะไหล่จากคลัง</h2>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="part-legacy-offcanvas-content" class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>
+        <div id="part-legacy-offcanvas-content" class="text-muted small" role="status" aria-live="polite" aria-atomic="true" aria-busy="false">กำลังโหลดเมนูเบิกอะไหล่...</div>
     </div>
 </div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="part-pos-offcanvas" aria-labelledby="part-pos-offcanvas-label">
     <div class="offcanvas-header border-bottom">
-        <h5 class="offcanvas-title" id="part-pos-offcanvas-label">เบิกอะไหล่จากคลัง</h5>
+        <h2 class="offcanvas-title h5" id="part-pos-offcanvas-label">เบิกอะไหล่จากคลัง</h2>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <div id="part-pos-offcanvas-content" class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>
+        <div id="part-pos-offcanvas-content" class="text-muted small" role="status" aria-live="polite" aria-atomic="true" aria-busy="false">กำลังโหลดเมนูเบิกอะไหล่...</div>
     </div>
 </div>
 
+<div class="offcanvas offcanvas-end" tabindex="-1" id="assign-team-offcanvas" aria-labelledby="assign-team-offcanvas-label">
+    <div class="offcanvas-header border-bottom">
+        <h2 class="offcanvas-title h5" id="assign-team-offcanvas-label">เพิ่มช่างผู้รับผิดชอบ</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="assign-team-offcanvas-content" role="status" aria-live="polite" aria-atomic="false" aria-busy="false">
+            <div class="text-body-secondary small">กำลังโหลดรายชื่อช่าง...</div>
+        </div>
+    </div>
+</div>
+</div>
+
 <?php
+// Bootstrap ไม่มี responsive width utility สำหรับ offcanvas จึง override เฉพาะแผงที่ต้องใช้พื้นที่เพิ่มผ่าน CSS variable
 // Stepper แนวตั้ง: ผูกสีกับ Bootstrap CSS vars ทั้งหมด → theme-aware light/dark เอง, ไม่ต้อง build global
 $css = <<<CSS
+#part-pos-offcanvas { --bs-offcanvas-width: 100vw; }
+#assign-team-offcanvas {
+    --bs-offcanvas-width: min(100vw, 32rem);
+    /* เว้นพื้นที่ให้ header-fixed ของระบบ เพื่อให้หัว Offcanvas และปุ่มปิดไม่ถูกบัง */
+    top: 72px;
+    height: calc(100% - 72px);
+}
+@media (min-width: 576px) {
+    #part-pos-offcanvas { --bs-offcanvas-width: min(90vw, 56rem); }
+}
 .repair-stepper { --rp-marker: 2rem; }
 .repair-step { display: flex; gap: .875rem; padding-bottom: 1.25rem; }
 .repair-step:last-child { padding-bottom: 0; }
@@ -600,15 +686,226 @@ $css = <<<CSS
 .repair-step__title { font-weight: 600; }
 .repair-step__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .625rem; }
 .repair-step__actions:empty { display: none; }
+@media (pointer: coarse), (max-width: 767.98px) {
+    #helpdesk-service-view-v2 .btn,
+    #helpdesk-service-view-v2 .dropdown-item,
+    #helpdesk-service-view-v2 .btn-close {
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    #helpdesk-service-view-v2 .btn-close {
+        min-width: 2.75rem;
+    }
+}
 CSS;
 $this->registerCss($css);
 
 $js = <<<JS
+var repairViewRefreshRequest = null;
+
+function repairCsrfData() {
+  var data = {};
+  if (typeof yii !== 'undefined' && typeof yii.getCsrfParam === 'function') {
+    data[yii.getCsrfParam()] = yii.getCsrfToken();
+  }
+  return data;
+}
+
+function setRepairActionPending(actionElement, pending, pendingText) {
+  var action = $(actionElement);
+
+  if (pending) {
+    if (action.data('request-pending')) {
+      return false;
+    }
+
+    action.data('request-pending', true);
+    action.data('original-html', action.html());
+    action
+      .prop('disabled', true)
+      .addClass('disabled')
+      .attr({
+        'aria-disabled': 'true',
+        'aria-busy': 'true',
+        'tabindex': '-1'
+      })
+      .html(
+        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' +
+        '<span>' + pendingText + '</span>'
+      );
+
+    return true;
+  }
+
+  var originalHtml = action.data('original-html');
+  if (typeof originalHtml === 'string') {
+    action.html(originalHtml);
+  }
+  action
+    .prop('disabled', false)
+    .removeData('request-pending')
+    .removeData('original-html')
+    .removeClass('disabled')
+    .removeAttr('aria-disabled aria-busy tabindex');
+
+  return true;
+}
+
+function findRepairViewInResponse(response) {
+  var html = response;
+
+  if (typeof response === 'string') {
+    try {
+      var parsedResponse = JSON.parse(response);
+      if (parsedResponse && typeof parsedResponse.content === 'string') {
+        html = parsedResponse.content;
+      }
+    } catch (error) {
+      html = response;
+    }
+  } else if (response && typeof response.content === 'string') {
+    html = response.content;
+  }
+
+  if (typeof html !== 'string') {
+    return $();
+  }
+
+  var parsed = $.parseHTML(html, document, true);
+  return $('<div>').append(parsed).find('#helpdesk-service-view-v2').first();
+}
+
+function disposeRepairViewOverlays(currentView) {
+  currentView.find('.offcanvas').each(function () {
+    var instance = bootstrap.Offcanvas.getInstance(this);
+    if (instance) {
+      instance.dispose();
+    }
+  });
+
+  $('.offcanvas-backdrop').remove();
+  if (!$('.modal.show').length) {
+    $('body').css({ overflow: '', paddingRight: '' });
+  }
+}
+
+function refreshRepairView(options) {
+  options = options || {};
+
+  if (repairViewRefreshRequest) {
+    return repairViewRefreshRequest;
+  }
+
+  var currentView = $('#helpdesk-service-view-v2').first();
+  if (!currentView.length) {
+    return $.Deferred().reject().promise();
+  }
+
+  var refreshUrl = options.url || currentView.data('refresh-url') || window.location.href;
+  var scrollTop = window.scrollY;
+  var activeElementId = document.activeElement && document.activeElement.id
+    ? document.activeElement.id
+    : '';
+
+  currentView.attr('aria-busy', 'true');
+  repairViewRefreshRequest = $.ajax({
+    type: 'get',
+    url: refreshUrl,
+    dataType: 'text',
+    cache: false
+  });
+
+  repairViewRefreshRequest
+    .done(function (html) {
+      var nextView = findRepairViewInResponse(html);
+      if (!nextView.length) {
+        Swal.fire({
+          title: 'อัปเดตข้อมูลไม่สำเร็จ',
+          text: 'รูปแบบข้อมูลที่ได้รับไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง',
+          icon: 'error'
+        });
+        return;
+      }
+
+      disposeRepairViewOverlays(currentView);
+      currentView.replaceWith(nextView);
+
+      window.requestAnimationFrame(function () {
+        window.scrollTo(0, scrollTop);
+
+        var focusTarget = activeElementId
+          ? document.getElementById(activeElementId)
+          : null;
+
+        if (!focusTarget) {
+          focusTarget = nextView.find('h1').get(0);
+          if (focusTarget) {
+            focusTarget.setAttribute('tabindex', '-1');
+          }
+        }
+
+        if (focusTarget) {
+          focusTarget.focus({ preventScroll: true });
+        }
+      });
+    })
+    .fail(function () {
+      Swal.fire({
+        title: 'อัปเดตข้อมูลไม่สำเร็จ',
+        text: 'ไม่สามารถโหลดข้อมูลงานซ่อมล่าสุดได้ กรุณาลองใหม่อีกครั้ง',
+        icon: 'error'
+      });
+    })
+    .always(function () {
+      $('#helpdesk-service-view-v2').attr('aria-busy', 'false');
+      repairViewRefreshRequest = null;
+    });
+
+  return repairViewRefreshRequest;
+}
+
+function submitRepairAction(actionElement, options) {
+  if (!setRepairActionPending(actionElement, true, options.pendingText)) {
+    return null;
+  }
+
+  Swal.fire({
+    title: options.pendingTitle,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: function () {
+      Swal.showLoading();
+    }
+  });
+
+  return $.ajax({
+    type: 'post',
+    url: options.url,
+    dataType: 'json',
+    data: repairCsrfData()
+  })
+    .done(options.success)
+    .fail(function () {
+      Swal.fire({
+        title: 'ไม่สำเร็จ',
+        text: options.errorText,
+        icon: 'error'
+      });
+    })
+    .always(function () {
+      setRepairActionPending(actionElement, false, '');
+    });
+}
+
+window.refreshRepairView = refreshRepairView;
+
 // Support legacy callbacks from team form (view.php)
-window.loadFormTeam = function () { window.location.reload(); };
-window.loadListTeam = function () { window.location.reload(); };
-window.loadFormServiceRecord = function () { window.location.reload(); };
-window.loadTimeline = function () { window.location.reload(); };
+window.loadFormTeam = refreshRepairView;
+window.loadListTeam = refreshRepairView;
+window.loadFormServiceRecord = refreshRepairView;
+window.loadTimeline = refreshRepairView;
 
 $('body').off('click.repairMethodClose').on('click.repairMethodClose', '#repair-method-offcanvas [data-bs-dismiss="offcanvas"]', function () {
   // รีเซ็ตข้อความโหลด และเรียก hide ซ้ำเพื่อกันกรณี bootstrap ไม่ซ่อนจริง
@@ -619,16 +916,20 @@ $('body').off('click.repairMethodClose').on('click.repairMethodClose', '#repair-
     }
   } catch (e) {}
 
-  $('#repair-method-offcanvas-content').html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
+  $('#repair-method-offcanvas-content')
+    .attr('aria-busy', 'false')
+    .html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
 });
 
-$('body').on('click', 'a.btn-open-repair-method', function (e) {
+$('body').off('click.repairMethodOpen').on('click.repairMethodOpen', 'a.btn-open-repair-method', function (e) {
   e.preventDefault();
   var url = $(this).attr('href');
   var offcanvasEl = document.getElementById('repair-method-offcanvas');
   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
   offcanvasEl.__repairOffcanvasInstance = offcanvas;
-  $('#repair-method-offcanvas-content').html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
+  $('#repair-method-offcanvas-content')
+    .attr('aria-busy', 'true')
+    .html('<div class="text-muted small">กำลังโหลดฟอร์ม...</div>');
   offcanvas.show();
 
   $.ajax({
@@ -637,10 +938,14 @@ $('body').on('click', 'a.btn-open-repair-method', function (e) {
     dataType: 'json',
     success: function (response) {
       $('#repair-method-offcanvas-label').html(response.title || 'บันทึกวิธีดำเนินการซ่อม');
-      $('#repair-method-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์ม</div>');
+      $('#repair-method-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html(response.content || '<div class="text-danger small">ไม่พบฟอร์ม</div>');
     },
     error: function () {
-      $('#repair-method-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดฟอร์มได้</div>');
+      $('#repair-method-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html('<div class="text-danger small">ไม่สามารถโหลดฟอร์มได้</div>');
       Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดฟอร์มบันทึกวิธีดำเนินการซ่อมได้', icon: 'error' });
     }
   });
@@ -651,7 +956,9 @@ $('body').off('click.expensePosOpen').on('click.expensePosOpen', 'a.btn-open-exp
   var url = $(this).attr('href');
   var offcanvasEl = document.getElementById('expense-pos-offcanvas');
   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-  $('#expense-pos-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>');
+  $('#expense-pos-offcanvas-content')
+    .attr('aria-busy', 'true')
+    .html('<div class="text-muted small">กำลังโหลดเมนูบันทึกค่าใช้จ่าย...</div>');
   offcanvas.show();
 
   $.ajax({
@@ -660,10 +967,14 @@ $('body').off('click.expensePosOpen').on('click.expensePosOpen', 'a.btn-open-exp
     dataType: 'json',
     success: function (response) {
       $('#expense-pos-offcanvas-label').html(response.title || 'บันทึกค่าใช้จ่าย (POS)');
-      $('#expense-pos-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มค่าใช้จ่าย</div>');
+      $('#expense-pos-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html(response.content || '<div class="text-danger small">ไม่พบฟอร์มค่าใช้จ่าย</div>');
     },
     error: function () {
-      $('#expense-pos-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูบันทึกค่าใช้จ่ายได้</div>');
+      $('#expense-pos-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html('<div class="text-danger small">ไม่สามารถโหลดเมนูบันทึกค่าใช้จ่ายได้</div>');
       Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูบันทึกค่าใช้จ่ายได้', icon: 'error' });
     }
   });
@@ -674,7 +985,9 @@ $('body').off('click.partPosOpen').on('click.partPosOpen', 'a.btn-open-part-pos'
   var url = $(this).attr('href');
   var offcanvasEl = document.getElementById('part-pos-offcanvas');
   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-  $('#part-pos-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
+  $('#part-pos-offcanvas-content')
+    .attr('aria-busy', 'true')
+    .html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
   offcanvas.show();
 
   $.ajax({
@@ -683,47 +996,65 @@ $('body').off('click.partPosOpen').on('click.partPosOpen', 'a.btn-open-part-pos'
     dataType: 'json',
     success: function (response) {
       $('#part-pos-offcanvas-label').html(response.title || 'เบิกอะไหล่จากคลัง');
-      $('#part-pos-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
+      $('#part-pos-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
     },
     error: function () {
-      $('#part-pos-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
+      $('#part-pos-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
       Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูเบิกอะไหล่ได้', icon: 'error' });
     }
   });
 });
 
-// Open "assign team" form in main modal
-$('body').on('click', 'a.btn-assign-team', function (e) {
+// Open "assign team" form in its dedicated offcanvas
+$('body').off('click.assignTeamOpen').on('click.assignTeamOpen', 'a.btn-assign-team', function (e) {
   e.preventDefault();
   var url = $(this).attr('href');
-  var title = $(this).data('title') || 'มอบหมายช่าง';
-  var size = $(this).data('size') || 'modal-md';
+  var offcanvasElement = document.getElementById('assign-team-offcanvas');
+  var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasElement);
+  var content = $('#assign-team-offcanvas-content');
 
-  if (typeof beforLoadModal === 'function') { beforLoadModal(); }
+  content
+    .attr('aria-busy', 'true')
+    .html('<div class="text-body-secondary small">กำลังโหลดรายชื่อช่าง...</div>');
+  offcanvas.show();
 
   $.ajax({
     type: 'get',
     url: url,
     dataType: 'json',
     success: function (response) {
-      var modal = $('#main-modal');
-      modal.find('#main-modal-label').html(response.title || title);
-      modal.find('.modal-body').html(response.content || '');
-      modal.find('.modal-footer').html(response.footer || '');
-      modal.find('.modal-dialog')
-        .removeClass('modal-sm modal-md modal-lg modal-xl modal-xxl')
-        .addClass(size);
-      modal.modal('show');
+      $('#assign-team-offcanvas-label').text(response.title || 'เพิ่มช่างผู้รับผิดชอบ');
+      content
+        .attr('aria-busy', 'false')
+        .html(response.content || '<div class="alert alert-secondary mb-0">ไม่พบรายชื่อช่างที่เลือกได้</div>');
+
+      window.requestAnimationFrame(function () {
+        var firstOption = content.find('input[type="radio"]').first().get(0);
+        var emptyState = content.find('[data-assign-team-empty]').first().get(0);
+        if (firstOption) {
+          firstOption.focus({ preventScroll: true });
+        } else if (emptyState) {
+          emptyState.focus({ preventScroll: true });
+        }
+      });
     },
     error: function () {
-      Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดฟอร์มมอบหมายช่างได้', icon: 'error' });
+      content
+        .attr('aria-busy', 'false')
+        .html('<div class="alert alert-danger mb-0">ไม่สามารถโหลดรายชื่อช่างได้ กรุณาลองใหม่อีกครั้ง</div>');
     }
   });
 });
 
-$('body').on('click', 'a.receive-order', function (e) {
+$('body').off('click.receiveOrder').on('click.receiveOrder', '.receive-order', function (e) {
   e.preventDefault();
-  var url = $(this).attr('href');
+  if ($(this).data('request-pending')) return;
+  var actionElement = this;
+  var url = $(this).data('url');
 
   Swal.fire({
     title: 'ยืนยันการรับเรื่อง',
@@ -737,10 +1068,11 @@ $('body').on('click', 'a.receive-order', function (e) {
     if (!result.isConfirmed) {
       return;
     }
-    $.ajax({
-      type: 'get',
+    submitRepairAction(actionElement, {
       url: url,
-      dataType: 'json',
+      pendingText: 'กำลังรับเรื่อง...',
+      pendingTitle: 'กำลังรับเรื่อง',
+      errorText: 'ไม่สามารถรับเรื่องได้ กรุณาลองใหม่อีกครั้ง',
       success: function (response) {
         Swal.fire({
           title: 'รับเรื่องแล้ว',
@@ -748,23 +1080,20 @@ $('body').on('click', 'a.receive-order', function (e) {
           timer: 900,
           showConfirmButton: false
         }).then(function () {
-          window.location.href = (response && response.url) ? response.url : window.location.href;
-        });
-      },
-      error: function () {
-        Swal.fire({
-          title: 'ไม่สำเร็จ',
-          text: 'ไม่สามารถรับเรื่องได้ กรุณาลองใหม่อีกครั้ง',
-          icon: 'error'
+          refreshRepairView({
+            url: (response && response.url) ? response.url : null
+          });
         });
       }
     });
   });
 });
 
-$('body').on('click', 'a.btn-send-repair', function (e) {
+$('body').off('click.sendRepair').on('click.sendRepair', '.btn-send-repair', function (e) {
   e.preventDefault();
-  var url = $(this).attr('href');
+  if ($(this).data('request-pending')) return;
+  var actionElement = this;
+  var url = $(this).data('url');
 
   Swal.fire({
     title: 'ยืนยันการส่งซ่อม',
@@ -778,34 +1107,39 @@ $('body').on('click', 'a.btn-send-repair', function (e) {
     if (!result.isConfirmed) {
       return;
     }
-    $.ajax({
-      type: 'get',
+    submitRepairAction(actionElement, {
       url: url,
-      dataType: 'json',
-      success: function () {
+      pendingText: 'กำลังส่งซ่อม...',
+      pendingTitle: 'กำลังส่งซ่อม',
+      errorText: 'ไม่สามารถส่งซ่อมได้ กรุณาลองใหม่อีกครั้ง',
+      success: function (response) {
+        if (!response || response.status !== 'success') {
+          Swal.fire({
+            title: 'ไม่สำเร็จ',
+            text: 'ระบบไม่สามารถเปลี่ยนสถานะเป็นส่งซ่อมได้',
+            icon: 'error'
+          });
+          return;
+        }
+
         Swal.fire({
           title: 'ส่งซ่อมแล้ว',
           icon: 'success',
           timer: 900,
           showConfirmButton: false
         }).then(function () {
-          window.location.reload();
-        });
-      },
-      error: function () {
-        Swal.fire({
-          title: 'ไม่สำเร็จ',
-          text: 'ไม่สามารถส่งซ่อมได้ กรุณาลองใหม่อีกครั้ง',
-          icon: 'error'
+          refreshRepairView();
         });
       }
     });
   });
 });
 
-$('body').on('click', 'a.btn-cancel-repair', function (e) {
+$('body').off('click.cancelRepair').on('click.cancelRepair', '.btn-cancel-repair', function (e) {
   e.preventDefault();
-  var url = $(this).attr('href');
+  if ($(this).data('request-pending')) return;
+  var actionElement = this;
+  var url = $(this).data('url');
   Swal.fire({
     title: 'ยืนยันการยกเลิกงานซ่อม',
     text: 'ต้องการยกเลิกงานซ่อมรายการนี้ใช่หรือไม่?',
@@ -816,10 +1150,11 @@ $('body').on('click', 'a.btn-cancel-repair', function (e) {
     reverseButtons: false
   }).then(function (result) {
     if (!result.isConfirmed) return;
-    $.ajax({
-      type: 'get',
+    submitRepairAction(actionElement, {
       url: url,
-      dataType: 'json',
+      pendingText: 'กำลังยกเลิก...',
+      pendingTitle: 'กำลังยกเลิกงานซ่อม',
+      errorText: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้',
       success: function (response) {
         if (response && response.status === 'success') {
           Swal.fire({
@@ -828,14 +1163,11 @@ $('body').on('click', 'a.btn-cancel-repair', function (e) {
             timer: 900,
             showConfirmButton: false
           }).then(function () {
-            window.location.reload();
+            refreshRepairView();
           });
         } else {
           Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถยกเลิกงานได้', icon: 'error' });
         }
-      },
-      error: function () {
-        Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', icon: 'error' });
       }
     });
   });
@@ -896,7 +1228,9 @@ $('body').off('click.partLegacyOpen').on('click.partLegacyOpen', 'a.btn-open-par
   var url = $(this).attr('href');
   var offcanvasEl = document.getElementById('part-legacy-offcanvas');
   var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-  $('#part-legacy-offcanvas-content').html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
+  $('#part-legacy-offcanvas-content')
+    .attr('aria-busy', 'true')
+    .html('<div class="text-muted small">กำลังโหลดเมนูเบิกอะไหล่...</div>');
   offcanvas.show();
 
   $.ajax({
@@ -905,10 +1239,14 @@ $('body').off('click.partLegacyOpen').on('click.partLegacyOpen', 'a.btn-open-par
     dataType: 'json',
     success: function (response) {
       $('#part-legacy-offcanvas-label').html(response.title || 'เบิกอะไหล่จากคลัง');
-      $('#part-legacy-offcanvas-content').html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
+      $('#part-legacy-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html(response.content || '<div class="text-danger small">ไม่พบฟอร์มเบิกอะไหล่</div>');
     },
     error: function () {
-      $('#part-legacy-offcanvas-content').html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
+      $('#part-legacy-offcanvas-content')
+        .attr('aria-busy', 'false')
+        .html('<div class="text-danger small">ไม่สามารถโหลดเมนูเบิกอะไหล่ได้</div>');
       Swal.fire({ title: 'ไม่สำเร็จ', text: 'ไม่สามารถเปิดเมนูเบิกอะไหล่ได้', icon: 'error' });
     }
   });
@@ -916,4 +1254,3 @@ $('body').off('click.partLegacyOpen').on('click.partLegacyOpen', 'a.btn-open-par
 JS;
 $this->registerJs($js);
 ?>
-

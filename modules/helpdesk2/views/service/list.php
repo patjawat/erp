@@ -26,13 +26,7 @@ $soft = static function (string $color): string {
     return 'badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1';
 };
 
-$statusMeta = [
-    'pending' => ['label' => 'เปิดงาน', 'color' => 'warning'],
-    'receive' => ['label' => 'รับเรื่อง', 'color' => 'info'],
-    'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info'],
-    'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success'],
-    'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger'],
-];
+$statusMeta = Helpdesk::repairStatusMeta();
 
 /* ---------- current status filter (multi) ---------- */
 $currentStatusFilter = $searchModel->status ?? [];
@@ -40,6 +34,10 @@ if (!is_array($currentStatusFilter)) {
     $currentStatusFilter = $currentStatusFilter !== null && $currentStatusFilter !== '' ? [(string) $currentStatusFilter] : [];
 }
 $currentStatusFilter = array_values(array_filter(array_map('strval', $currentStatusFilter), static fn($v) => $v !== ''));
+$currentStatusFilter = array_values(array_map(
+    static fn(string $status): string => Helpdesk::normalizeRepairStatus($status),
+    $currentStatusFilter
+));
 
 /* ---------- status counts — single GROUP BY (เดิม 5+1 COUNT ต่อโหลด) ---------- */
 $statusCounts = array_fill_keys(array_keys($statusMeta), 0);
@@ -52,7 +50,7 @@ if (isset($dataProvider->query)) {
             ->asArray()
             ->all();
         foreach ($rows as $r) {
-            $code = (string) ($r['status'] ?? '');
+            $code = Helpdesk::normalizeRepairStatus($r['status'] ?? '');
             if (isset($statusCounts[$code])) {
                 $statusCounts[$code] = (int) $r['cnt'];
             }
@@ -202,22 +200,31 @@ $renderTeam = function ($model) use ($teamEmpIdsByRepair, $teamEmpsById, &$teamA
 };
 
 $statusBadge = function ($model) use ($statusMeta, $soft) {
-    $code = (string) ($model->status ?? 'pending');
-    $info = $statusMeta[$code] ?? ['label' => ($model->repairStatus?->title ?? 'ไม่ทราบสถานะ'), 'color' => 'secondary'];
-    return Html::tag('span', Html::encode($info['label']), ['class' => $soft($info['color'])]);
+    $code = Helpdesk::normalizeRepairStatus($model->status ?? 'pending');
+    $info = $statusMeta[$code] ?? [
+        'label' => 'ไม่ทราบสถานะ',
+        'color' => 'secondary',
+        'icon' => 'fa-regular fa-circle-question',
+    ];
+    $content = Html::tag('i', '', [
+        'class' => $info['icon'] . ' me-1',
+        'aria-hidden' => 'true',
+    ]) . Html::encode($info['label']);
+    return Html::tag('span', $content, ['class' => $soft($info['color'])]);
 };
 
-$allowedColors = ['primary', 'secondary', 'success', 'danger', 'warning', 'info'];
-$urgencyBadge = function ($model) use ($urgencyByCode, $soft, $allowedColors) {
-    $code = is_array($model->data_json ?? null) ? (string) ($model->data_json['urgency'] ?? '') : '';
+$urgencyBadge = function ($model) use ($urgencyByCode, $soft) {
+    $rawCode = is_array($model->data_json ?? null) ? ($model->data_json['urgency'] ?? '') : '';
+    $code = Helpdesk::normalizeRepairUrgency($rawCode);
+    $info = Helpdesk::repairUrgencyInfo($rawCode);
     $cat = $code !== '' ? ($urgencyByCode[$code] ?? null) : null;
-    if ($cat === null) {
-        return Html::tag('span', 'ไม่ระบุ', ['class' => $soft('secondary')]);
-    }
-    $color = is_array($cat->data_json ?? null) ? (string) ($cat->data_json['color'] ?? 'secondary') : 'secondary';
-    $color = in_array($color, $allowedColors, true) ? $color : 'secondary';
+    $label = trim((string) ($cat->title ?? $info['label']));
+    $content = Html::tag('i', '', [
+        'class' => $info['icon'] . ' me-1',
+        'aria-hidden' => 'true',
+    ]) . Html::encode($label);
     // ใช้เฉพาะ title สั้น (สูง / ปานกลาง / ต่ำ) — คำอธิบายเต็มอยู่หน้ารายละเอียด
-    return Html::tag('span', Html::encode((string) $cat->title), ['class' => $soft($color), 'title' => (string) $cat->title]);
+    return Html::tag('span', $content, ['class' => $soft($info['color']), 'title' => $label]);
 };
 
 /** จำนวนวันนับจากวันแจ้ง — inline แบบ subtle (สีเฉพาะเมื่อค้างเกิน 7 วัน) */
@@ -256,7 +263,7 @@ $viewReturn = (is_string($backUrl) && $backUrl !== '' && $backUrl[0] === '/' && 
     && substr($backUrl, 0, 2) !== '//' && preg_match('#^/helpdesk/#', $backUrl)) ? $backUrl : null;
 
 $renderActions = function ($model, bool $iconOnly) use ($viewReturn) {
-    if ((string) $model->status === 'pending') {
+    if (Helpdesk::normalizeRepairStatus($model->status) === 'pending') {
         $label = $iconOnly ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-circle-exclamation me-1"></i> รับเรื่อง';
         return Html::a($label, ['/helpdesk/service/receive', 'id' => $model->id], [
             'class' => 'receive-order btn btn-sm btn-outline-primary',
@@ -341,13 +348,20 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                         $isActiveStatus = in_array($statusCode, $currentStatusFilter, true);
                         $cls = $isActiveStatus ? $soft($meta['color']) : $soft('secondary') . ' opacity-75';
                         ?>
+                        <?php
+                        $statusFilterContent = Html::tag('i', '', [
+                            'class' => $meta['icon'] . ' me-1',
+                            'aria-hidden' => 'true',
+                        ]) . Html::encode($meta['label'] . ' ' . number_format($count));
+                        ?>
                         <?= Html::a(
-                            Html::encode($meta['label'] . ' ' . number_format($count)),
+                            $statusFilterContent,
                             $buildStatusUrl($statusCode),
                             [
                                 'class' => 'hd-status-pill text-decoration-none ' . $cls,
                                 'title' => 'คลิกเพื่อเลือก/ยกเลิกสถานะ ' . $meta['label'],
                                 'aria-pressed' => $isActiveStatus ? 'true' : 'false',
+                                'encode' => false,
                             ]
                         ) ?>
                     <?php endforeach; ?>
@@ -382,10 +396,10 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                                 <th class="hd-table__no" scope="col">#</th>
                                 <th scope="col">เลขที่ / วันที่แจ้ง</th>
                                 <th scope="col">ผู้แจ้ง</th>
+                                <th scope="col">ความเร่งด่วน</th>
                                 <th scope="col">อุปกรณ์ / ครุภัณฑ์</th>
                                 <th class="hd-table__problem" scope="col">รายละเอียดปัญหา</th>
                                 <th class="hd-col-tech" scope="col">ช่าง</th>
-                                <th scope="col">ความเร่งด่วน</th>
                                 <th scope="col">สถานะ</th>
                                 <th class="hd-table__action" scope="col">จัดการ</th>
                             </tr>
@@ -407,7 +421,7 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                                 } catch (\Throwable $e) {
                                 }
                                 $created = $item->viewCreated()['full'] ?? '-';
-                                $isClosed = in_array((string) $item->status, ['success', 'cancel'], true);
+                                $isClosed = in_array(Helpdesk::normalizeRepairStatus($item->status), ['success', 'cancel'], true);
                                 ?>
                                 <tr class="<?= $isClosed ? 'hd-row--closed' : '' ?>">
                                     <td class="hd-table__no"><?= $offset + $key + 1 ?></td>
@@ -418,6 +432,7 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                                         </div>
                                     </td>
                                     <td><?= $renderPerson($person) ?></td>
+                                    <td><?= $urgencyBadge($item) ?></td>
                                     <td class="hd-table__device">
                                         <div class="hd-clamp-2 fw-medium" title="<?= Html::encode($deviceLabel) ?>"><?= Html::encode($deviceLabel) ?></div>
                                         <?php if (!empty($item->asset_number)): ?>
@@ -431,7 +446,6 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                                         <?php endif; ?>
                                     </td>
                                     <td class="hd-col-tech"><?= $renderTeam($item) ?></td>
-                                    <td><?= $urgencyBadge($item) ?></td>
                                     <td><?= $statusBadge($item) ?></td>
                                     <td class="hd-table__action">
                                         <div class="hd-row-actions"><?= $renderActions($item, true) ?></div>
@@ -455,7 +469,7 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
                             $problem = (string) ($item->title ?? '-');
                         }
                         $created = $item->viewCreated()['full'] ?? '-';
-                        $isClosed = in_array((string) $item->status, ['success', 'cancel'], true);
+                        $isClosed = in_array(Helpdesk::normalizeRepairStatus($item->status), ['success', 'cancel'], true);
                         ?>
                         <li class="hd-card <?= $isClosed ? 'hd-card--closed' : '' ?>">
                             <div class="hd-card__head">
@@ -824,8 +838,12 @@ $hasFilter = !empty($currentStatusFilter) || $isMine
 
 <?php
 $js = <<<JS
-$('body').on('click', '.receive-order', function (e) {
+$('body').off('click.serviceReceiveOrder').on('click.serviceReceiveOrder', '.receive-order', function (e) {
     e.preventDefault();
+    let action = $(this);
+    if (action.data('request-pending')) {
+        return;
+    }
     let url = $(this).attr('href');
 
     Swal.fire({
@@ -839,10 +857,18 @@ $('body').on('click', '.receive-order', function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
+            action
+                .data('request-pending', true)
+                .addClass('disabled')
+                .attr({ 'aria-disabled': 'true', 'aria-busy': 'true' });
+
             $.ajax({
-                type: "get",
+                type: "post",
                 url: url,
                 dataType: "json",
+                data: (typeof yii !== 'undefined' && typeof yii.getCsrfParam === 'function')
+                    ? { [yii.getCsrfParam()]: yii.getCsrfToken() }
+                    : {},
                 success: function (response) {
                     if (response.status === 'success') {
                         Swal.fire({
@@ -859,6 +885,12 @@ $('body').on('click', '.receive-order', function (e) {
                 },
                 error: function () {
                     Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+                },
+                complete: function () {
+                    action
+                        .removeData('request-pending')
+                        .removeClass('disabled')
+                        .removeAttr('aria-disabled aria-busy');
                 }
             });
         }

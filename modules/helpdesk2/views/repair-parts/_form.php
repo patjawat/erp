@@ -47,7 +47,7 @@ foreach (($subWarehouses ?? []) as $w) {
             </div>
 
             <div class="row g-2">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-lg-3">
                     <?= Html::label('คลังย่อยที่ต้องการเบิก', 'part-sub-warehouse-id', ['class' => 'form-label']) ?>
                     <select id="part-sub-warehouse-id" class="form-select">
                         <option value="">เลือกคลังย่อย...</option>
@@ -56,16 +56,16 @@ foreach (($subWarehouses ?? []) as $w) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-lg-5">
                     <?= Html::label('ค้นหาอะไหล่ (inventoryV2)', 'part-search', ['class' => 'form-label']) ?>
                     <input type="text" id="part-search" class="form-control" placeholder="พิมพ์ชื่อหรือรหัสอะไหล่...">
                     <div id="part-search-result" class="list-group mt-2"></div>
                 </div>
-                <div class="col-6 col-md-1">
+                <div class="col-6 col-lg-2">
                     <?= Html::label('จำนวนเบิก', 'part-qty', ['class' => 'form-label']) ?>
                     <input type="number" id="part-qty" class="form-control" min="0" step="0.01" value="1">
                 </div>
-                <div class="col-6 col-md-1 d-grid align-content-end">
+                <div class="col-6 col-lg-2 d-grid align-content-end">
                     <button type="button" class="btn btn-outline-primary" id="part-add-btn">
                         <i class="fa-solid fa-plus me-1"></i> เพิ่ม
                     </button>
@@ -352,4 +352,3 @@ partRenderCart();
 JS;
 $this->registerJs($js);
 ?>
-

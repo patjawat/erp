@@ -5,6 +5,7 @@ namespace app\modules\helpdesk2\controllers;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Response;
+use yii\filters\VerbFilter;
 use yii\db\Expression;
 use yii\data\ActiveDataProvider;
 use app\models\Categorise;
@@ -27,6 +28,21 @@ use yii\helpers\ArrayHelper;
 
 class ServiceController extends \yii\web\Controller
 {
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['verbs'] = [
+            'class' => VerbFilter::class,
+            'actions' => [
+                'receive' => ['post'],
+                'send-repair' => ['post'],
+                'cancel' => ['post'],
+            ],
+        ];
+
+        return $behaviors;
+    }
+
     /**
      * จำกัด URL ย้อนกลับให้เป็น path ภายในแอปใต้ /helpdesk/ เท่านั้น (กันพาไปเว็บภายนอก)
      */
@@ -582,11 +598,38 @@ class ServiceController extends \yii\web\Controller
         $me = UserHelper::GetEmployee();
 
         if ($this->request->isPost) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
+            $existingDataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+            $saved = false;
+            $isValid = true;
+            $message = 'ไม่สามารถบันทึกข้อมูลได้';
+
             if ($model->load($this->request->post())) {
-                $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+                $submittedDataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
+                $dataJson = $existingDataJson;
+
+                foreach (['root_cause', 'diagnosis'] as $field) {
+                    $dataJson[$field] = trim((string) ($submittedDataJson[$field] ?? ''));
+                }
+
+                if (array_key_exists('repair_channel', $submittedDataJson)) {
+                    $repairChannel = trim((string) $submittedDataJson['repair_channel']);
+                    $allowedRepairChannels = array_keys($model->listRepairChannel());
+                    if ($repairChannel !== '' && !in_array($repairChannel, $allowedRepairChannels, true)) {
+                        $isValid = false;
+                        $message = 'รูปแบบงานซ่อมไม่ถูกต้อง กรุณาเลือกใหม่อีกครั้ง';
+                    } else {
+                        $dataJson['repair_channel'] = $repairChannel;
+                    }
+                }
+
                 $model->data_json = $dataJson;
-                if ($model->save(false, ['data_json'])) {
+
+                if ($isValid && $dataJson === $existingDataJson) {
+                    $saved = true;
+                    $message = 'ข้อมูลเป็นปัจจุบันแล้ว';
+                } elseif ($isValid && $model->save(false, ['data_json'])) {
+                    $saved = true;
+                    $message = 'บันทึกสาเหตุและการวินิจฉัยเรียบร้อยแล้ว';
                     try {
                         $log = new HelpdeskDetail();
                         $log->helpdesk_id = $model->id;
@@ -595,6 +638,7 @@ class ServiceController extends \yii\web\Controller
                         $log->status = 'บันทึกสาเหตุ';
                         $log->title = 'บันทึกสาเหตุของปัญหาและการวินิจฉัย';
                         $log->data_json = [
+                            'repair_channel' => (string) ($dataJson['repair_channel'] ?? ''),
                             'root_cause' => (string) ($dataJson['root_cause'] ?? ''),
                             'diagnosis' => (string) ($dataJson['diagnosis'] ?? ''),
                         ];
@@ -602,10 +646,23 @@ class ServiceController extends \yii\web\Controller
                     } catch (\Throwable $e) {
                         // ไม่ให้กระทบการบันทึกหลัก
                     }
-                    return ['status' => 'success'];
                 }
             }
-            return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกข้อมูลได้'];
+
+            if ($this->request->isAjax) {
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => $saved ? 'success' : 'error',
+                    'message' => $message,
+                ];
+            }
+
+            if ($saved) {
+                \Yii::$app->session->setFlash('success', $message);
+                return $this->redirect(['view-v2', 'id' => $model->id]);
+            }
+
+            $model->addError('data_json', $message);
         }
 
         if ($this->request->isAjax) {
@@ -696,58 +753,123 @@ class ServiceController extends \yii\web\Controller
         ];
 
         if ($this->request->isPost) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
+            $saved = false;
+            $message = 'ไม่สามารถบันทึกข้อมูลได้';
             $selectedRepairTeamEmpId = (int) $this->request->post('repair_team_emp_id', 0);
+
             if ($model->load($this->request->post())) {
-                if ($model->save(false, ['device_type_id', 'asset_number', 'repair_group'])) {
-                    if ($selectedRepairTeamEmpId > 0) {
-                        $repairTeam = HelpdeskDetail::find()
-                            ->where(['helpdesk_id' => (int) $model->id, 'name' => 'repair_team'])
-                            ->orderBy(['id' => SORT_DESC])
-                            ->one();
-                        if (!$repairTeam) {
-                            $repairTeam = new HelpdeskDetail();
+                $model->device_type_id = trim((string) ($model->device_type_id ?? ''));
+                $model->asset_number = trim((string) ($model->asset_number ?? ''));
+                $model->repair_group = trim((string) ($model->repair_group ?? ''));
+                $eligibleTechnicianIds = array_map(
+                    static fn(Employees $employee): int => (int) $employee->id,
+                    Helpdesk::TechnicianList($model->repair_group)
+                );
+
+                $isValid = true;
+                if ($model->device_type_id !== '' && !Categorise::find()
+                    ->where(['name' => 'device_type', 'code' => $model->device_type_id])
+                    ->exists()) {
+                    $isValid = false;
+                    $message = 'ประเภทอุปกรณ์ไม่ถูกต้อง กรุณาเลือกใหม่อีกครั้ง';
+                } elseif ($model->asset_number !== '' && !Asset::find()
+                    ->where(['asset_group_id' => 4, 'code' => $model->asset_number])
+                    ->exists()) {
+                    $isValid = false;
+                    $message = 'รหัสครุภัณฑ์ไม่ถูกต้อง กรุณาเลือกใหม่อีกครั้ง';
+                } elseif ($model->repair_group !== '' && !Categorise::find()
+                    ->where(['name' => 'repair_group', 'code' => $model->repair_group])
+                    ->exists()) {
+                    $isValid = false;
+                    $message = 'แผนกช่างไม่ถูกต้อง กรุณาเลือกใหม่อีกครั้ง';
+                } elseif ($selectedRepairTeamEmpId > 0
+                    && !in_array($selectedRepairTeamEmpId, $eligibleTechnicianIds, true)) {
+                    $isValid = false;
+                    $message = 'ช่างผู้รับผิดชอบไม่มีสิทธิ์ในระบบงานซ่อมของแผนกที่เลือก';
+                }
+
+                $after = [
+                    'device_type_id' => $model->device_type_id,
+                    'asset_number' => $model->asset_number,
+                    'repair_team_emp_id' => (string) $selectedRepairTeamEmpId,
+                    'repair_group' => $model->repair_group,
+                ];
+
+                if ($isValid && $after === $before) {
+                    $saved = true;
+                    $message = 'ข้อมูลเป็นปัจจุบันแล้ว';
+                } elseif ($isValid) {
+                    $transaction = Yii::$app->db->beginTransaction();
+                    try {
+                        if (!$model->save(false, ['device_type_id', 'asset_number', 'repair_group'])) {
+                            throw new \RuntimeException('Unable to save helpdesk ticket');
+                        }
+
+                        if ($selectedRepairTeamEmpId > 0) {
+                            $repairTeam = $currentRepairTeam ?: new HelpdeskDetail();
                             $repairTeam->helpdesk_id = (int) $model->id;
                             $repairTeam->name = 'repair_team';
+                            $repairTeam->emp_id = $selectedRepairTeamEmpId;
+                            $repairTeam->status = 'active';
+                            $repairTeam->title = 'ช่างผู้รับผิดชอบงานซ่อม';
+                            if (!$repairTeam->save(false)) {
+                                throw new \RuntimeException('Unable to save repair team');
+                            }
+                        } else {
+                            HelpdeskDetail::deleteAll([
+                                'helpdesk_id' => (int) $model->id,
+                                'name' => 'repair_team',
+                            ]);
                         }
-                        $repairTeam->emp_id = $selectedRepairTeamEmpId;
-                        $repairTeam->status = 'active';
-                        $repairTeam->title = 'ช่างผู้รับผิดชอบงานซ่อม';
-                        $repairTeam->save(false);
-                    } else {
-                        HelpdeskDetail::deleteAll([
-                            'helpdesk_id' => (int) $model->id,
-                            'name' => 'repair_team',
-                        ]);
-                    }
-                    try {
-                        $log = new HelpdeskDetail();
-                        $log->helpdesk_id = $model->id;
-                        $log->name = 'service_record';
-                        $log->emp_id = $me->id ?? null;
-                        $log->status = 'แก้ไขใบแจ้งซ่อม';
-                        $log->title = 'แก้ไขข้อมูลใบแจ้งซ่อม (ประเภทอุปกรณ์/รหัสครุภัณฑ์/ช่าง/แผนกช่าง)';
-                        $log->data_json = [
-                            'before' => $before,
-                            'after' => [
-                                'device_type_id' => (string) ($model->device_type_id ?? ''),
-                                'asset_number' => (string) ($model->asset_number ?? ''),
-                                'repair_team_emp_id' => (string) $selectedRepairTeamEmpId,
-                                'repair_group' => (string) ($model->repair_group ?? ''),
-                            ],
-                        ];
-                        $log->save(false);
+
+                        $transaction->commit();
+                        $saved = true;
+                        $message = 'แก้ไขข้อมูลใบแจ้งซ่อมเรียบร้อยแล้ว';
                     } catch (\Throwable $e) {
-                        // ไม่ให้กระทบการบันทึกหลัก
+                        if ($transaction->isActive) {
+                            $transaction->rollBack();
+                        }
+                        Yii::error('Edit helpdesk ticket failed: ' . $e->getMessage(), __METHOD__);
                     }
-                    return ['status' => 'success'];
+
+                    if ($saved) {
+                        try {
+                            $log = new HelpdeskDetail();
+                            $log->helpdesk_id = $model->id;
+                            $log->name = 'service_record';
+                            $log->emp_id = $me->id ?? null;
+                            $log->status = 'แก้ไขใบแจ้งซ่อม';
+                            $log->title = 'แก้ไขข้อมูลใบแจ้งซ่อม (ประเภทอุปกรณ์/รหัสครุภัณฑ์/ช่าง/แผนกช่าง)';
+                            $log->data_json = [
+                                'before' => $before,
+                                'after' => $after,
+                            ];
+                            $log->save(false);
+                        } catch (\Throwable $e) {
+                            // ไม่ให้กระทบการบันทึกหลัก
+                        }
+                    }
                 }
             }
-            return ['status' => 'error', 'message' => 'ไม่สามารถบันทึกข้อมูลได้'];
+
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => $saved ? 'success' : 'error',
+                    'message' => $message,
+                ];
+            }
+
+            if ($saved) {
+                Yii::$app->session->setFlash('success', $message);
+                return $this->redirect(['view-v2', 'id' => $model->id]);
+            }
+
+            $model->addError('device_type_id', $message);
         }
 
         $technicianList = ArrayHelper::map(
-            Employees::find()->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all(),
+            Helpdesk::TechnicianList($model->repair_group),
             'id',
             static function ($e) {
                 return trim((string) (($e->fullname ?? '') ?: (($e->fname ?? '') . ' ' . ($e->lname ?? ''))));
@@ -1290,7 +1412,7 @@ class ServiceController extends \yii\web\Controller
             'urgency' => (string) (($model->viewUrgent()['title'] ?? '') ?: ''),
             'repair_result' => (string) ($model->repair_result ?? ''),
             'repair_type' => (string) ($model->repair_type ?? ''),
-            'status_title' => (string) ($model->repairStatus?->title ?? ''),
+            'status_title' => Helpdesk::repairStatusLabel($model->status),
             'org_name' => (string) ($senderEmp ? $senderEmp->departmentName() : ''),
             'employee_type' => $requesterEmployeeType,
             'requester_fullname' => (string) ($senderEmp ? $senderEmp->fullname : ''),

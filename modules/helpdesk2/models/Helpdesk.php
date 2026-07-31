@@ -199,6 +199,113 @@ class Helpdesk extends \yii\db\ActiveRecord
             'external' => 'ซ่อมภายนอก',
         ];
     }
+
+    /**
+     * ชื่อและรูปแบบสถานะงานซ่อมมาตรฐาน ใช้ร่วมกันทุกหน้าของระบบ
+     */
+    public static function repairStatusMeta(): array
+    {
+        return [
+            'pending' => [
+                'label' => 'รอรับเรื่อง',
+                'color' => 'warning',
+                'icon' => 'fa-regular fa-clock',
+            ],
+            'receive' => [
+                'label' => 'รับเรื่องแล้ว',
+                'color' => 'info',
+                'icon' => 'fa-solid fa-user-check',
+            ],
+            'in_progress' => [
+                'label' => 'กำลังดำเนินการ',
+                'color' => 'primary',
+                'icon' => 'fa-solid fa-gears',
+            ],
+            'success' => [
+                'label' => 'เสร็จสิ้น',
+                'color' => 'success',
+                'icon' => 'fa-regular fa-circle-check',
+            ],
+            'cancel' => [
+                'label' => 'ยกเลิก',
+                'color' => 'danger',
+                'icon' => 'fa-solid fa-ban',
+            ],
+        ];
+    }
+
+    /** รองรับข้อมูลเดิมที่เคยบันทึกเป็น Cancel ตัวพิมพ์ใหญ่ */
+    public static function normalizeRepairStatus($status): string
+    {
+        $code = strtolower(trim((string) $status));
+        return $code !== '' ? $code : 'pending';
+    }
+
+    public static function repairStatusOptions(): array
+    {
+        return array_map(
+            static fn(array $meta): string => $meta['label'],
+            static::repairStatusMeta()
+        );
+    }
+
+    public static function repairStatusLabel($status): string
+    {
+        $code = static::normalizeRepairStatus($status);
+        return static::repairStatusMeta()[$code]['label'] ?? 'ไม่ทราบสถานะ';
+    }
+
+    /**
+     * ระดับความเร่งด่วนพร้อมสีและไอคอนเชิงความหมาย
+     */
+    public static function repairUrgencyMeta(): array
+    {
+        return [
+            'low' => [
+                'label' => 'ต่ำ',
+                'color' => 'secondary',
+                'icon' => 'fa-solid fa-arrow-down',
+            ],
+            'medium' => [
+                'label' => 'ปานกลาง',
+                'color' => 'info',
+                'icon' => 'fa-solid fa-minus',
+            ],
+            'high' => [
+                'label' => 'สูง',
+                'color' => 'warning',
+                'icon' => 'fa-solid fa-arrow-up',
+            ],
+            'critical' => [
+                'label' => 'วิกฤต',
+                'color' => 'danger',
+                'icon' => 'fa-solid fa-triangle-exclamation',
+            ],
+        ];
+    }
+
+    /** รองรับรหัสความเร่งด่วนเดิมแบบตัวเลข 1-4 */
+    public static function normalizeRepairUrgency($urgency): string
+    {
+        return match (strtolower(trim((string) $urgency))) {
+            '1', 'low' => 'low',
+            '2', 'medium' => 'medium',
+            '3', 'high' => 'high',
+            '4', 'critical' => 'critical',
+            default => '',
+        };
+    }
+
+    public static function repairUrgencyInfo($urgency): array
+    {
+        $code = static::normalizeRepairUrgency($urgency);
+        return static::repairUrgencyMeta()[$code] ?? [
+            'label' => 'ไม่ระบุ',
+            'color' => 'secondary',
+            'icon' => 'fa-regular fa-circle-question',
+        ];
+    }
+
     //ผลการซ่อม
     public static function getRepairResultList()
     {
@@ -218,13 +325,14 @@ class Helpdesk extends \yii\db\ActiveRecord
         foreach ($models as $model) {
             $imgUrl = FileManagerHelper::getImg($model->id);
             $html .= Html::img($imgUrl, [
-                'class' => 'img-thumbnail me-2 mb-2',
-                'style' => 'max-width: 200px; max-height: 200px;',
+                'class' => 'img-thumbnail img-fluid h-auto object-fit-cover',
                 'alt' => 'รูปแจ้งซ่อม',
+                'loading' => 'lazy',
+                'width' => 200,
             ]);
         }
 
-        return $html ?: '<p><i>ไม่มีรูปภาพประกอบ</i></p>';
+        return $html ?: '<p class="text-body-secondary fst-italic mb-0">ไม่มีรูปภาพประกอบ</p>';
     }
 
     // แสดงรูปภาพ
@@ -457,61 +565,49 @@ class Helpdesk extends \yii\db\ActiveRecord
         };
     }
 
+    /** RBAC role ของช่างตามแผนกที่รับงานซ่อม */
+    public static function repairRoleName($group): ?string
+    {
+        return match ((string) $group) {
+            '1' => 'technician',
+            '2' => 'computer',
+            '3' => 'medical',
+            default => null,
+        };
+    }
+
     // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
     public function listTecName()
     {
-        $item_name = '';
-        // ซ่อมบำรุง
-        if ($this->repair_group == 1) {
-            $item_name = 'technician';
-            // 2 คือศูนย์คอมพิวเตอร์
-        } elseif ($this->repair_group == 2) {
-            $item_name = 'computer';
-            // 3 คือศูนย์เครื่องมือแพทย์
-        } elseif ($this->repair_group == 3) {
-            $item_name = 'medical';
-        } else {
-            $item_name = 'technician';
-        }
-
-        $sql = "SELECT concat(emp.fname,' ',emp.lname) as fullname,emp.user_id FROM employees emp
-        INNER JOIN user ON user.id = emp.user_id
-        INNER JOIN auth_assignment auth ON auth.user_id = user.id
-        where auth.item_name = :item_name";
-        $querys = \Yii::$app
-            ->db
-            ->createCommand($sql)
-            ->bindValue(':item_name', $item_name)
-            ->queryAll();
-
-        return ArrayHelper::map($querys, 'user_id', 'fullname');
+        return ArrayHelper::map(
+            static::TechnicianList($this->repair_group),
+            'user_id',
+            static fn(Employees $employee): string => trim((string) $employee->fullname)
+        );
     }
 
-
-    // ช่างเทคนิค แสดงตามชื่อกลุ่มที่ส่งมา
+    /**
+     * บุคลากรที่ยังปฏิบัติงานและมีสิทธิ์ในระบบซ่อมของแผนกที่รับงาน
+     * repair_group 1=technician, 2=computer, 3=medical
+     */
     public static function TechnicianList($group)
     {
-        $item_name = '';
-        // ซ่อมบำรุง
-        if ($group == 1) {
-            $item_name = 'technician';
-            // 2 คือศูนย์คอมพิวเตอร์
-        } elseif ($group == 2) {
-            $item_name = 'computer';
-            // 3 คือศูนย์เครื่องมือแพทย์
-        } elseif ($group == 3) {
-            $item_name = 'medical';
-        } else {
-            $item_name = 'technician';
+        $roleName = static::repairRoleName($group);
+        if ($roleName === null) {
+            return [];
         }
 
-        $employees = Employees::find()
+        return Employees::find()
             ->alias('emp')
-            ->innerJoin('user', 'user.id = emp.user_id')
-            ->innerJoin('auth_assignment auth', 'auth.user_id = user.id')
-            ->where(['auth.item_name' => $item_name])
+            ->innerJoin('auth_assignment auth', 'auth.user_id = emp.user_id')
+            ->where([
+                'auth.item_name' => $roleName,
+                'emp.status' => 1,
+            ])
+            ->andWhere(['<>', 'emp.user_id', 0])
+            ->distinct()
+            ->orderBy(['emp.fname' => SORT_ASC, 'emp.lname' => SORT_ASC])
             ->all();
-        return  $employees;
     }
 
     //รายการอุกรณ์
@@ -614,11 +710,7 @@ class Helpdesk extends \yii\db\ActiveRecord
 
     public function ListStatus()
     {
-        $list = Categorise::find()
-            ->andWhere(['name' => 'repair_status'])
-            // ->andWhere(['IN', 'code', [3, 4, 5]])
-            ->all();
-        return ArrayHelper::map($list, 'code', 'title');
+        return static::repairStatusOptions();
     }
     // แสดงปีงบประมานทั้งหมด
     public function ListThaiYear()
@@ -808,12 +900,7 @@ class Helpdesk extends \yii\db\ActiveRecord
     // สถานะงานซ่อม
     public static function listRepairStatus()
     {
-        $model = Categorise::find()
-            ->where(['name' => 'repair_status'])
-            ->andWhere(['<>', 'code', 5])
-            ->all();
-
-        return ArrayHelper::map($model, 'code', 'title');
+        return static::repairStatusOptions();
     }
 
     //  ภาพทีม
@@ -856,51 +943,49 @@ class Helpdesk extends \yii\db\ActiveRecord
     // แสดงสถานะ
     public function viewUrgent()
     {
-        try {
-            $model = Categorise::find()->where(['name' => 'helpdesk_urgency', 'code' => $this->data_json['urgency']])->one();
-            $color = is_array($model->data_json ?? null) ? ($model->data_json['color'] ?? 'secondary') : 'secondary';
-            return [
-                'title' => $model->title,
-                'description' => $model->title . ' - ' . $model->code,
-                'view' => '<span class="badge bg-' . $model->data_json['color'] . '">' . $model->title . '</span>',
-                'color' => $color,
-            ];
-        } catch (\Throwable $th) {
-            return [
-                'title' => '',
-                'description' => '',
-                'view' => '',
-                'color' => 'secondary',
-            ];
-        }
+        $rawCode = is_array($this->data_json ?? null) ? ($this->data_json['urgency'] ?? '') : '';
+        $code = static::normalizeRepairUrgency($rawCode);
+        $info = static::repairUrgencyInfo($rawCode);
+        $model = $code !== ''
+            ? Categorise::findOne(['name' => 'helpdesk_urgency', 'code' => $code])
+            : null;
+        $title = trim((string) ($model->title ?? $info['label']));
+
+        $content = Html::tag('i', '', [
+            'class' => $info['icon'] . ' me-1',
+            'aria-hidden' => 'true',
+        ]) . Html::encode($title);
+
+        return [
+            'title' => $title,
+            'description' => $code !== '' ? $title . ' - ' . $code : $title,
+            'view' => Html::tag('span', $content, [
+                'class' => 'badge bg-' . $info['color'] . '-subtle text-' . $info['color']
+                    . '-emphasis border border-' . $info['color'] . '-subtle rounded-pill fw-medium px-2 py-1',
+            ]),
+            'color' => $info['color'],
+            'icon' => $info['icon'],
+        ];
     }
 
     public function viewStatus()
     {
-        try {
-            if (isset($this->data_json['urgency'])) {
-                $model = Categorise::findOne(['name' => 'repair_status', 'code' => $this->status]);
+        $code = static::normalizeRepairStatus($this->status);
+        $meta = static::repairStatusMeta()[$code] ?? [
+            'label' => 'ไม่ทราบสถานะ',
+            'color' => 'secondary',
+            'icon' => 'fa-regular fa-circle-question',
+        ];
 
-                if ($model->code == 'pending') {
-                    return '<span class="badge rounded-pill bg-danger-subtle"><i class="fa-solid fa-triangle-exclamation"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 'receive') {
-                    return '<span class="badge rounded-pill bg-warning-subtle"><i class="fa-solid fa-user-check"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 'in_progress') {
-                    return '<span class="badge rounded-pill bg-primary-subtle"><i class="fa-solid fa-person-digging text-primary"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 'success') {
-                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-circle-check text-success"></i> ' . $model->title . '</span>';
-                }
-                if ($model->code == 'cancel') {
-                    return '<span class="badge rounded-pill bg-success-subtle"><i class="fa-solid fa-circle-minus text-danger"></i> ' . $model->title . '</span>';
-                }
-            }
-            //code...
-        } catch (\Throwable $th) {
-            return 'ไม่ระบุ';
-        }
+        $content = Html::tag('i', '', [
+            'class' => $meta['icon'] . ' me-1',
+            'aria-hidden' => 'true',
+        ]) . Html::encode($meta['label']);
+
+        return Html::tag('span', $content, [
+            'class' => 'badge bg-' . $meta['color'] . '-subtle text-' . $meta['color']
+                . '-emphasis border border-' . $meta['color'] . '-subtle rounded-pill fw-medium px-2 py-1',
+        ]);
     }
 
     public function UrgencyName()

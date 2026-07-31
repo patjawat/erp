@@ -5,6 +5,7 @@ use yii\web\View;
 use kartik\widgets\ActiveForm;
 use kartik\select2\Select2;
 use iamsaint\datetimepicker\Datetimepicker;
+use app\modules\helpdesk2\models\Helpdesk;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\Helpdesk $model */
@@ -18,14 +19,16 @@ $this->params['breadcrumbs'][] = ['label' => 'งานซ่อมของช�
 $this->params['breadcrumbs'][] = $this->title;
 
 $statusOrder = ['pending' => 1, 'receive' => 2, 'in_progress' => 3, 'success' => 4, 'cancel' => 0];
-$currentStep = $statusOrder[$model->status] ?? 0;
+$statusCode = Helpdesk::normalizeRepairStatus($model->status);
+$statusLabels = Helpdesk::repairStatusOptions();
+$currentStep = $statusOrder[$statusCode] ?? 0;
 $timelineSteps = [
-    ['key' => 'pending',  'label' => 'รอรับเรื่อง',  'icon' => 'bi-hourglass-split'],
-    ['key' => 'receive',  'label' => 'รับเรื่อง',     'icon' => 'bi-person-check'],
-    ['key' => 'in_progress', 'label' => 'กำลังดำเนินการ', 'icon' => 'bi-tools'],
-    ['key' => 'success',  'label' => 'เสร็จสิ้น',     'icon' => 'bi-check-circle'],
+    ['key' => 'pending',  'label' => $statusLabels['pending'],  'icon' => 'bi-hourglass-split'],
+    ['key' => 'receive',  'label' => $statusLabels['receive'],  'icon' => 'bi-person-check'],
+    ['key' => 'in_progress', 'label' => $statusLabels['in_progress'], 'icon' => 'bi-tools'],
+    ['key' => 'success',  'label' => $statusLabels['success'],     'icon' => 'bi-check-circle'],
 ];
-$isCancelled = ($model->status === 'cancel');
+$isCancelled = ($statusCode === 'cancel');
 
 // แปลงค่าเวลาเริ่ม/เสร็จจาก Y-m-d H:i เป็น ว/ด/พ.ศ. เวลา สำหรับแสดงในฟอร์ม
 $startAtValue = $model->data_json['start_at'] ?? '';

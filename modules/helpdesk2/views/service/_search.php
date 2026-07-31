@@ -5,6 +5,7 @@ use yii\helpers\Html;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
+use app\modules\helpdesk2\models\Helpdesk;
 
 /** @var yii\web\View $this */
 /** @var app\modules\helpdesk2\models\HelpdeskSearch $model */
@@ -31,13 +32,7 @@ use app\modules\hr\models\Organization;
     </div>
     <div class="col-6 col-lg-3">
         <?php
-        $statusOptions = [
-            'pending' => 'เปิดงาน',
-            'receive' => 'รับเรื่อง',
-            'in_progress' => 'กำลังดำเนินการ',
-            'success' => 'เสร็จสิ้น',
-            'cancel' => 'ยกเลิก',
-        ];
+        $statusOptions = Helpdesk::repairStatusOptions();
         echo $form->field($model, 'status')->widget(Select2::classname(), [
             'data' => $statusOptions,
             'options' => [

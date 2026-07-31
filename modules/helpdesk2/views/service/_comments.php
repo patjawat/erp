@@ -4,9 +4,9 @@ use yii\helpers\Html;
 /** @var array $comments */
 ?>
 
-<div class="card shadow-sm mt-3">
-    <div class="card-header"><h2 class="h6 fw-bold mb-0">การให้คะแนนและการลงความเห็นของผู้แจ้ง</h2></div>
-    <div class="card-body p-4">
+<section class="border-top mt-4 pt-4" aria-labelledby="repair-comments-title">
+    <h3 class="h6 fw-bold mb-3" id="repair-comments-title">การให้คะแนนและความคิดเห็นของผู้แจ้ง</h3>
+    <div>
         <?php if (empty($comments)): ?>
             <div class="text-muted">ยังไม่มีการให้คะแนนหรือความเห็นจากผู้แจ้ง</div>
         <?php else: ?>
@@ -36,8 +36,8 @@ use yii\helpers\Html;
                     ?>
 
                     <div class="d-flex <?= $isStaff ? 'justify-content-end' : 'justify-content-start' ?>">
-                        <div class="comment-box <?= $isStaff ? 'bg-primary-subtle text-primary-emphasis border border-primary-subtle' : 'bg-body-tertiary border' ?> rounded-3 p-3 w-75">
-                            <div class="d-flex justify-content-between align-items-center gap-3 mb-1">
+                        <div class="comment-box <?= $isStaff ? 'bg-primary-subtle text-primary-emphasis border border-primary-subtle' : 'bg-body-tertiary border' ?> rounded-3 p-3 w-100">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
                                 <div class="fw-medium small"><?= Html::encode($name ?: ($isStaff ? 'เจ้าหน้าที่' : 'ผู้แจ้ง')) ?></div>
                                 <div class="text-muted small">
                                     <?= Html::encode($createdAt ? \Yii::$app->formatter->asDatetime($createdAt) : '-') ?>
@@ -62,5 +62,4 @@ use yii\helpers\Html;
             </div>
         <?php endif; ?>
     </div>
-</div>
-
+</section>

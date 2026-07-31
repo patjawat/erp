@@ -32,7 +32,7 @@ $repairHistorys = Helpdesk::find()->where(['asset_number' => $model->code])->all
                 <td><?= $item->viewUrgent()['view'] ?></td>
                 <td class="px-4 py-3 text-end fw-medium">0.00</td>
                 <td class="px-4 py-3 text-center">
-                    <?= $item->repairStatus?->title ?? '-' ?>
+                    <?= $item->viewStatus() ?>
                 </td>
             </tr>
         <?php endforeach; ?>

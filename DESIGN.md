@@ -183,6 +183,23 @@ Canonical classes — reference implementation อยู่ใน `modules/inven
 | `.row-action--edit` | pencil icon, `--action-edit` + `--action-edit-ink`, hover `--action-edit-hover`, focus ring `rgba(255,193,7,0.24)` |
 | `.row-action--delete` | trash icon, `--action-delete` + `--action-delete-ink`, hover `--action-delete-hover`, focus ring `--danger-soft`; ใช้กับ destructive action เท่านั้น |
 
+**ลำดับปุ่มใน action group (บังคับ)**
+- ปุ่มดำเนินการหลัก เช่น “บันทึก”, “ยืนยัน”, “สร้าง” อยู่ก่อน และปุ่ม “ยกเลิก” ต้องอยู่ **ขวาสุดเสมอ**
+- ลำดับใน DOM ต้องตรงกับลำดับที่เห็น: primary action ก่อน, cancel action หลัง ห้ามแก้ตำแหน่งด้วย `flex-row-reverse`, `order-*` หรือ CSS เฉพาะหน้า
+- ใช้ wrapper มาตรฐาน `d-grid d-sm-flex justify-content-sm-end gap-2`; เมื่อจอแคบและปุ่มเรียงแนวตั้ง ปุ่ม “ยกเลิก” ต้องเป็นปุ่มสุดท้ายด้านล่าง
+- ปุ่มยกเลิกใช้ `btn btn-outline-secondary` และ `data-bs-dismiss="modal"` เมื่ออยู่ใน modal
+- SweetAlert ใช้ `reverseButtons: false` เพื่อให้ปุ่มยืนยันอยู่ซ้ายและปุ่มยกเลิกอยู่ขวา
+
+```php
+<div class="d-grid d-sm-flex justify-content-sm-end gap-2">
+    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary']) ?>
+    <?= Html::button('ยกเลิก', [
+        'class' => 'btn btn-outline-secondary',
+        'data' => ['bs-dismiss' => 'modal'],
+    ]) ?>
+</div>
+```
+
 **Compact row action rules**
 - ใช้เฉพาะตาราง desktop (≥992px) ที่มีคอลัมน์ "จัดการ" และมี 2-3 actions ต่อแถว
 - ลำดับมาตรฐานจากซ้ายไปขวา: ดูรายละเอียด → แก้ไข → ลบ
@@ -379,8 +396,10 @@ public function actionCreate()
 ```php
 <?php $form = ActiveForm::begin(['id' => 'dp-form', 'options' => ['data-list-url' => Url::to(['index'])]]); ?>
     ... fields ...
-    <?= Html::button('ยกเลิก', ['class' => 'btn btn-light', 'data' => ['bs-dismiss' => 'modal']]) ?>
-    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary']) ?>
+    <div class="d-grid d-sm-flex justify-content-sm-end gap-2">
+        <?= Html::submitButton('บันทึก', ['class' => 'btn btn-primary']) ?>
+        <?= Html::button('ยกเลิก', ['class' => 'btn btn-outline-secondary', 'data' => ['bs-dismiss' => 'modal']]) ?>
+    </div>
 <?php ActiveForm::end();
 $this->registerJs(<<<JS
 handleFormSubmit('#dp-form', null, async function (r) {
