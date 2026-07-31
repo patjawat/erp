@@ -1715,6 +1715,30 @@ class Employees extends Yii\db\ActiveRecord
     }
 
     /**
+     * หน่วยงาน (tree node) ทั้งหมดที่บุคลากรนี้เป็นหัวหน้า (leader1)
+     * @return Organization[]
+     */
+    public function ledOrganizations()
+    {
+        return Organization::find()
+            ->where(new \yii\db\Expression(
+                "JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1')) = :leaderId",
+                [':leaderId' => (string) $this->id]
+            ))
+            ->orderBy(['lvl' => SORT_ASC, 'name' => SORT_ASC])
+            ->all();
+    }
+
+    /**
+     * เป็นหัวหน้าหน่วยงานอย่างน้อย 1 หน่วยหรือไม่
+     * @return bool
+     */
+    public function isDepartmentHead()
+    {
+        return !empty($this->ledOrganizations());
+    }
+
+    /**
      * รหัสบุคลากรของหัวหน้า (leader1) ตามหน่วยงานที่สังกัด — ใช้หน่วยงานก่อน แล้วค่อยกลุ่มงานแม่
      * แหล่งเดียวกับ KpiService::isSupervisorOf() คืน null ถ้าหาไม่พบหรือชี้กลับมาที่ตัวเอง
      */

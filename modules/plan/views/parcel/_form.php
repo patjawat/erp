@@ -13,11 +13,68 @@ use app\modules\am\components\AssetHelper;
 /** @var $model app\modules\plan\models\Plan */
 /** @var $items app\modules\plan\models\PlanItem[] */
 
-$form = ActiveForm::begin([
-    'id' => 'form',
-    'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
-    'validationUrl' => ['/plan/parcel/validator']
-]);
+// หมวดพัสดุ (asset_group) -> plan_category ที่ใช้ดึงรายการ (item pool)
+// ครุภัณฑ์ต่ำกว่าเกณฑ์ไม่แยกหมวด รวมอยู่ใต้ "ครุภัณฑ์" (item เป็นตัวกำหนด INV_01/INV_03)
+$groupLabels = ['1' => 'ที่ดิน', '2' => 'อาคาร', '3' => 'สิ่งปลูกสร้าง', '4' => 'ครุภัณฑ์', '7' => 'วัสดุ'];
+$groupCats   = [
+    '1' => ['INV_02'], '2' => ['INV_02'], '3' => ['INV_02'],
+    '4' => ['INV_01', 'INV_03'],
+    '7' => ['OPS_03'],
+];
+
+$itemRows = Categorise::find()
+    ->where(['name' => 'plan_item'])
+    ->andWhere(['category_id' => ['INV_01', 'INV_02', 'INV_03', 'OPS_03']])
+    ->orderBy('code')
+    ->all();
+$itemsByCat = [];
+foreach ($itemRows as $r) {
+    $itemsByCat[$r->category_id][] = [$r->code, $r->title];
+}
+$groupItems = [];
+foreach ($groupCats as $g => $cats) {
+    $groupItems[$g] = [];
+    foreach ($cats as $c) {
+        foreach (($itemsByCat[$c] ?? []) as $it) {
+            $groupItems[$g][] = $it;
+        }
+    }
+}
+
+// preselect หมวดพัสดุ (โหมดแก้ไข): จาก asset_group_id หรืออนุมานจากหมวดของ item
+$curItem  = (string) $model->plan_item_id;
+$curGroup = (string) $model->asset_group_id;
+if ($curGroup === '' && $curItem !== '') {
+    $ci = Categorise::findOne(['code' => $curItem, 'name' => 'plan_item']);
+    if ($ci) {
+        foreach ($groupCats as $g => $cats) {
+            if (in_array($ci->category_id, $cats, true)) {
+                $curGroup = $g;
+                break;
+            }
+        }
+    }
+}
+$model->asset_group_id = $curGroup;
+
+// ประเภทวัสดุ (asset_type M1-M16) สำหรับดึงการเบิกปีก่อน
+$assetTypes = ArrayHelper::map(
+    Categorise::find()->where(['name' => 'asset_type'])->andWhere(['like', 'code', 'M%', false])->orderBy('code')->all(),
+    'code',
+    'title'
+);
+
+// scope: 'plan' = ระบบแผนงาน (เลือกหน่วยงานได้) | 'me' = หัวหน้าจัดทำ (ล็อกหน่วยงานตัวเอง)
+$scope        = $scope ?? 'plan';
+$lockDept     = $lockDept ?? null;
+$lockDeptName = $lockDeptName ?? '';
+
+$form = ActiveForm::begin(array_merge(
+    ['id' => 'form'],
+    $scope === 'me'
+        ? ['enableAjaxValidation' => false]
+        : ['enableAjaxValidation' => true, 'validationUrl' => ['/plan/parcel/validator']]
+));
 ?>
 
 <div class="row">
@@ -34,41 +91,38 @@ $form = ActiveForm::begin([
                         <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
                     </div>
                     <div class="col-md-9">
-                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                            'name' => 'department',
-                            'id' => 'treeID',
-                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                            'value' => 1,
-                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                            'fontAwesome' => true,
-                            'asDropdown' => true,
-                            'multiple' => false,
-                            'options' => ['disabled' => false],
-                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        <?php if ($scope === 'me' && $lockDept): ?>
+                            <?= $form->field($model, 'department_id')->hiddenInput(['id' => 'treeID', 'value' => $lockDept])->label(false) ?>
+                            <label class="form-label">หน่วยงาน</label>
+                            <div class="form-control-plaintext fw-semibold"><?= Html::encode($lockDeptName) ?></div>
+                        <?php else: ?>
+                            <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
+                                'name' => 'department',
+                                'id' => 'treeID',
+                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
+                                'value' => 1,
+                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                                'fontAwesome' => true,
+                                'asDropdown' => true,
+                                'multiple' => false,
+                                'options' => ['disabled' => false],
+                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        <?php endif; ?>
                     </div>
 
                    
                     <div class="col-lg-6 col-md-6 col-sm-12">
-                         <?php
-
-                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(categorise::find()->where(['name' => 'plan_item','category_id' => $model->plan_category_id])->all(), 'code', 'title'),
-                            'options' => [
-                                'placeholder' => 'เลือกหมวดพัสดุ',
-                                'id' => 'plan_type_id'
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                                console.log($(this).val());
-                            // $(this).submit(); 
-                            }",
-                            ],
-                        ])->label('หมวด');
-                        ?>
+                        <?= $form->field($model, 'asset_group_id')->dropDownList($groupLabels, [
+                            'id' => 'asset-group-select',
+                            'prompt' => '-- เลือกหมวดพัสดุ --',
+                        ])->label('หมวดพัสดุ') ?>
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-sm-12" id="item-select-wrap">
+                        <?= $form->field($model, 'plan_item_id')->dropDownList([], [
+                            'id' => 'planorder-plan_item_id',
+                            'prompt' => '-- เลือกรายการ --',
+                        ])->label('รายการ') ?>
                     </div>
                      <div class="col-lg-3 col-md-3 col-sm-12">
                         <?php
@@ -124,12 +178,41 @@ $form = ActiveForm::begin([
                
 
                 <hr>
+                <div class="card bg-light border-0 mb-3" id="vasdu-wrap" style="display:none">
+                    <div class="card-body py-2">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small mb-1">ประเภทวัสดุ <span class="text-danger">*</span></label>
+                                <?= Html::activeDropDownList($model, 'asset_type_id', $assetTypes, [
+                                    'id' => 'pull-asset-type',
+                                    'class' => 'form-select form-select-sm',
+                                    'prompt' => '-- เลือกประเภทวัสดุ --',
+                                ]) ?>
+                            </div>
+                            <div class="col-md-auto">
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" id="pull-include-children">
+                                    <label class="form-check-label small" for="pull-include-children">รวมหน่วยงานย่อย (กรณีกลุ่มงานแม่)</label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-info text-white" id="btn-pull-consumption">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ดึงจากการเบิกปีก่อน
+                                </button>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted" id="pull-info">ระบบจะดึงรายการที่หน่วยงานเบิกใช้ปีก่อน แล้วเฉลี่ยเป็นรายเดือน (÷12) ให้อัตโนมัติ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6>รายการในแผน</h6>
                     <div>
                         <button type="button" class="btn btn-secondary btn-disable" disabled><i class="fa-solid fa-ban"></i> เพิ่มรายการ</button>
                         <button type="button" class="btn btn-primary" id="add-row"><i class="fa-solid fa-circle-plus"></i> เพิ่มรายการ</button>
-                        <?= Html::a('<i class="bi bi-ui-checks"></i> เพิ่มรายการ', ['/plan/parcel/list-asset-item'], ['class' => 'btn btn-primary', 'id' => 'btn-show-asset']) ?>
+                        <?php if ($scope !== 'me'): ?>
+                            <?= Html::a('<i class="bi bi-ui-checks"></i> เพิ่มรายการ', ['/plan/parcel/list-asset-item'], ['class' => 'btn btn-primary', 'id' => 'btn-show-asset']) ?>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <table class="table table-bordered" id="item-table">
@@ -205,6 +288,12 @@ $js = <<<JS
 checkBtnAdd()
 function checkBtnAdd()
 {
+    if('$scope' === 'me'){
+                    $('.btn-disable').hide()
+                    $('#add-row').show()
+                    $('#btn-show-asset').hide()
+                    return
+    }
     if($('#planorder-price_ref').val() === 'MARKET'){
                     $('.btn-disable').hide()
                     $('#add-row').show()
@@ -382,4 +471,84 @@ $(document).ready(function() {
 
 JS;
 $this->registerJs($js);
+
+// cascade: หมวดพัสดุ -> รายการ (กรอง item ตามหมวด)
+$giJson = \yii\helpers\Json::encode($groupItems);
+$ciJson = \yii\helpers\Json::encode($curItem);
+$cascadeJs = <<<JS
+(function(){
+    var groupItems = $giJson;
+    var curItem = $ciJson;
+    var groupSel = document.getElementById('asset-group-select');
+    var itemSel = document.getElementById('planorder-plan_item_id');
+    if (!groupSel || !itemSel) return;
+    var itemWrap  = document.getElementById('item-select-wrap');
+    var vasduWrap = document.getElementById('vasdu-wrap');
+    function loadItems(sel){
+        itemSel.innerHTML = '<option value="">-- เลือกรายการ --</option>';
+        (groupItems[groupSel.value] || []).forEach(function(r){
+            var o = document.createElement('option');
+            o.value = r[0]; o.textContent = r[1];
+            if (String(r[0]) === String(sel)) o.selected = true;
+            itemSel.appendChild(o);
+        });
+    }
+    // หมวด=วัสดุ (7): ใช้ประเภทวัสดุช่องเดียว ซ่อน "รายการ"; หมวดอื่น: ใช้ "รายการ"
+    function toggleWraps(){
+        var isVasdu = (String(groupSel.value) === '7');
+        if (vasduWrap) vasduWrap.style.display = isVasdu ? '' : 'none';
+        if (itemWrap)  itemWrap.style.display  = isVasdu ? 'none' : '';
+    }
+    groupSel.addEventListener('change', function(){ loadItems(''); toggleWraps(); });
+    if (groupSel.value) { loadItems(curItem); }
+    toggleWraps();
+})();
+JS;
+$this->registerJs($cascadeJs);
+
+// ปุ่ม "ดึงจากการเบิกปีก่อน" -> เติมตารางรายการ + เฉลี่ยรายเดือน (÷12)
+$pullUrl = \yii\helpers\Url::to(['pull-consumption']);
+$pullJs = <<<JS
+$('#btn-pull-consumption').on('click', function(){
+    var atype = $('#pull-asset-type').val();
+    var dept  = $('#treeID').val() || $('[name="department"]').val();
+    var year  = $('#planorder-thai_year').val();
+    var incChild = $('#pull-include-children').is(':checked') ? 1 : 0;
+    if(!atype){ Swal.fire('กรุณาเลือกประเภทวัสดุก่อน'); return; }
+    if(!dept){ Swal.fire('กรุณาเลือกหน่วยงานก่อน'); return; }
+    $('#pull-info').text('กำลังดึงข้อมูล...');
+    $.post('$pullUrl', {department_id: dept, asset_type_id: atype, thai_year: year, include_children: incChild}, function(res){
+        if(res.status !== 'success'){ $('#pull-info').text(res.message || 'เกิดข้อผิดพลาด'); return; }
+        if(!res.items.length){ $('#pull-info').text('ไม่พบการเบิกใช้ของหน่วยงานนี้ในปี ' + res.prev_year); return; }
+        var tbody = $('#item-table tbody'); tbody.empty();
+        var total = 0, idx = 0;
+        res.items.forEach(function(it){
+            var qty = parseFloat(it.qty_year) || 0;
+            var price = parseFloat(it.last_price) || 0;
+            var lineTotal = qty * price;
+            total += lineTotal;
+            var nameEsc = $('<div>').text(it.name).html();
+            tbody.append('<tr>' +
+                '<td><input type="text" name="items[' + idx + '][item_name]" class="form-control" value="' + nameEsc + '"></td>' +
+                '<td><input type="number" name="items[' + idx + '][qty]" class="form-control qty" value="' + qty + '"></td>' +
+                '<td><input type="number" step="0.01" name="items[' + idx + '][unit_price]" class="form-control price" value="' + price + '"></td>' +
+                '<td class="total text-end">' + lineTotal.toFixed(2) + '</td>' +
+                '<td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>' +
+                '</tr>');
+            idx++;
+        });
+        // เฉลี่ยยอดรวมเป็นรายเดือน (÷12) เดือนสุดท้ายรับเศษ
+        var per = Math.floor((total / 12) * 100) / 100, acc = 0;
+        for(var m = 1; m <= 12; m++){
+            var val = (m < 12) ? per : (total - acc);
+            $('#planorder-month_' + m).val(val.toFixed(2));
+            if(m < 12) acc += per;
+        }
+        $('#planorder-order_price').val(total.toFixed(2));
+        var scopeTxt = (res.child_count > 0) ? (' (รวม ' + res.child_count + ' หน่วยย่อย)') : '';
+        $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>ดึง ' + res.count + ' รายการ จากการเบิกปี ' + res.prev_year + scopeTxt + ' — เฉลี่ย ÷12 แล้ว (แก้ไข/เพิ่มได้)');
+    }, 'json').fail(function(){ $('#pull-info').text('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); });
+});
+JS;
+$this->registerJs($pullJs);
 ?>

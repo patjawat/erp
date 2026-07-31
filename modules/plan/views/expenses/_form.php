@@ -64,8 +64,9 @@ $form = ActiveForm::begin([
                         echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
                             'data' => $listPlanItems,
                             'options' => [
-                                'id' => 'plan_category_id',
+                                'id' => 'plan_item_select',
                                 'placeholder' => 'เลือกรายการค่าใช้สอย',
+                                'required' => true,
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,

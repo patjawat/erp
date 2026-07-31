@@ -69,6 +69,7 @@ $form = ActiveForm::begin([
                             'options' => [
                                 'id' => 'plan_item_id',
                                 'placeholder' => 'เลือกประเภทค่าใช้จ่าย',
+                                'required' => true,
                             ],
                             'type' => DepDrop::TYPE_SELECT2,
                             'select2Options' => ['pluginOptions' => ['allowClear' => true]],

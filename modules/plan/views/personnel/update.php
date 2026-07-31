@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrder $model */
 
-$this->title = 'แก้ไขแผนคน';
+$this->title = 'แก้ไขแผนบุคลากร';
 $this->params['breadcrumbs'][] = ['label' => 'Plan Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->title, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';

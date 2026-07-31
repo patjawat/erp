@@ -1,23 +1,62 @@
 <?php
 
-use app\modules\plan\models\PlanOrder;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-$this->title = 'ติดตามแผนรายจ่าย';
+/** @var yii\web\View $this */
+/** @var int $thaiYear */
+/** @var array $years */
+/** @var string $status */
+/** @var array $summary */
+
+$statusOptions = [
+    'all'     => 'ทุกสถานะ',
+    'approve' => 'อนุมัติแล้ว',
+    'submit'  => 'รออนุมัติ',
+    'draft'   => 'ร่าง',
+    'reject'  => 'ไม่อนุมัติ',
+];
+$status = $status ?? 'all';
+
+$this->title = 'แผนรายจ่าย';
 $this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
+
+// ลำดับเดือนตามปีงบประมาณ (เริ่ม ต.ค.) + สีประจำไตรมาส
+$monthCols = [
+    ['k' => 'm10', 'l' => 'ต.ค.', 'q' => 1],
+    ['k' => 'm11', 'l' => 'พ.ย.', 'q' => 1],
+    ['k' => 'm12', 'l' => 'ธ.ค.', 'q' => 1],
+    ['k' => 'm1',  'l' => 'ม.ค.', 'q' => 2],
+    ['k' => 'm2',  'l' => 'ก.พ.', 'q' => 2],
+    ['k' => 'm3',  'l' => 'มี.ค.', 'q' => 2],
+    ['k' => 'm4',  'l' => 'เม.ย.', 'q' => 3],
+    ['k' => 'm5',  'l' => 'พ.ค.', 'q' => 3],
+    ['k' => 'm6',  'l' => 'มิ.ย.', 'q' => 3],
+    ['k' => 'm7',  'l' => 'ก.ค.', 'q' => 4],
+    ['k' => 'm8',  'l' => 'ส.ค.', 'q' => 4],
+    ['k' => 'm9',  'l' => 'ก.ย.', 'q' => 4],
+];
+$qClass = [1 => 'bg-primary', 2 => 'bg-secondary', 3 => 'bg-success', 4 => 'bg-danger'];
+
+$shortPrev = substr((string) ($thaiYear - 1), -2); // ปีของ ต.ค.-ธ.ค.
+$shortCur  = substr((string) $thaiYear, -2);        // ปีของ ม.ค.-ก.ย.
+
+$fmt = fn($v) => number_format((float) $v, 2);
+$cell = fn($v, $q) => '<td class="text-end ' . $qClass[$q] . ' text-dark bg-opacity-25">' . number_format((float) $v, 2) . '</td>';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex align-items-center gap-2 mb-1">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-clock-icon lucide-clipboard-clock">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-clock">
             <path d="M16 14v2.2l1.6 1" />
             <path d="M16 4h2a2 2 0 0 1 2 2v.832" />
             <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2" />
             <circle cx="16" cy="16" r="6" />
             <rect x="8" y="2" width="8" height="4" rx="1" />
         </svg>
-        <?= $this->title ?>
+        <?= Html::encode($this->title) ?>
     </h4>
 </div>
 <?php $this->endBlock(); ?>
@@ -26,1150 +65,88 @@ $this->params['breadcrumbs'][] = $this->title;
 <?= $this->render('@app/modules/plan/menu', ['active' => 'overview']) ?>
 <?php $this->endBlock(); ?>
 
+<div class="d-flex align-items-center gap-2 mb-3">
+    <?php $form = \yii\widgets\ActiveForm::begin(['method' => 'get', 'action' => ['index'], 'options' => ['class' => 'd-flex align-items-center gap-2']]); ?>
+    <label class="fw-medium mb-0">ปีงบประมาณ</label>
+    <select name="thai_year" class="form-select w-auto" onchange="this.form.submit()">
+        <?php foreach ($years as $y): ?>
+            <option value="<?= $y ?>" <?= (int) $y === $thaiYear ? 'selected' : '' ?>><?= $y ?></option>
+        <?php endforeach; ?>
+    </select>
+    <label class="fw-medium mb-0 ms-2">สถานะ</label>
+    <select name="status" class="form-select w-auto" onchange="this.form.submit()">
+        <?php foreach ($statusOptions as $val => $label): ?>
+            <option value="<?= $val ?>" <?= $status === $val ? 'selected' : '' ?>><?= $label ?></option>
+        <?php endforeach; ?>
+    </select>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+</div>
 
-<table class="table table-bordered table-hover table-overview">
+<div class="table-responsive">
+<table class="table table-bordered table-hover table-overview align-middle">
     <thead>
         <tr>
-            <td width="30%" rowspan="2" colspan="4" class="fw-semibold text-center align-middle">รายการ</td>
-            <td width="10%" rowspan="2" class="fw-semibold text-center text-center align-middle">แผนปี 2569</td>
+            <td rowspan="2" colspan="2" class="fw-semibold text-center align-middle" style="min-width:260px">รายการ</td>
+            <td rowspan="2" class="fw-semibold text-center align-middle">แผนปี <?= $thaiYear ?></td>
             <td colspan="3" class="fw-semibold text-center bg-primary text-dark bg-opacity-25">ไตรมาส 1</td>
-            <td colspan="3" class="fw-semibold  text-center bg-secondary text-dark bg-opacity-25">ไตรมาส 2</td>
-            <td colspan="3" class="fw-semibold  text-center bg-success text-dark bg-opacity-25">ไตรมาส 3</td>
-            <td colspan="3" class="fw-semibold  text-center bg-danger text-dark bg-opacity-25">ไตรมาส 4</td>
+            <td colspan="3" class="fw-semibold text-center bg-secondary text-dark bg-opacity-25">ไตรมาส 2</td>
+            <td colspan="3" class="fw-semibold text-center bg-success text-dark bg-opacity-25">ไตรมาส 3</td>
+            <td colspan="3" class="fw-semibold text-center bg-danger text-dark bg-opacity-25">ไตรมาส 4</td>
         </tr>
         <tr>
-            <td width="5%" class="fw-semibold text-center bg-primary text-dark bg-opacity-25">ต.ค. 68</td>
-            <td width="5%" class="fw-semibold text-center bg-primary text-dark bg-opacity-25">พ.ย. 68</td>
-            <td width="5%" class="fw-semibold text-center bg-primary text-dark bg-opacity-25">ธ.ค. 68</td>
-            <td width="5%" class="fw-semibold text-center bg-secondary text-dark bg-opacity-25">ม.ค. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-secondary text-dark bg-opacity-25">ก.พ. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-secondary text-dark bg-opacity-25">มี.ค. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-success text-dark bg-opacity-25">เม.ย. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-success text-dark bg-opacity-25">พ.ค. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-success text-dark bg-opacity-25">มิ.ย. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-danger text-dark bg-opacity-25">ก.ค. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-danger text-dark bg-opacity-25">ส.ค. 69</td>
-            <td width="5%" class="fw-semibold text-center bg-danger text-dark bg-opacity-25">ก.ย. 69</td>
+            <?php foreach ($monthCols as $m): ?>
+                <?php $yy = $m['q'] === 1 ? $shortPrev : $shortCur; ?>
+                <td class="fw-semibold text-center <?= $qClass[$m['q']] ?> text-dark bg-opacity-25"><?= $m['l'] . ' ' . $yy ?></td>
+            <?php endforeach; ?>
         </tr>
     </thead>
-    <tbody class="align-middle table-group-divider">
-        <tr>
-            <td colspan="4" class="fw-semibold"><i class="fa-solid fa-caret-right"></i> รายจ่าย</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i> รายจ่ายบุคลากร</td>
-        </tr>
+    <tbody class="table-group-divider">
+        <?php if (empty($summary['types'])): ?>
+            <tr><td colspan="15" class="text-center text-muted py-3">ยังไม่มีข้อมูลแผนสำหรับปีงบประมาณ <?= $thaiYear ?></td></tr>
+        <?php endif; ?>
 
-         <?php
-        $sql1 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_01'";
+        <?php foreach ($summary['types'] as $typeCode => $type): ?>
+            <!-- หัวข้อประเภท -->
+            <tr>
+                <td colspan="15" class="fw-semibold bg-warning text-dark bg-opacity-25">
+                    <i class="fa-solid fa-chevron-right me-1"></i><?= Html::encode($type['title']) ?>
+                </td>
+            </tr>
 
-        $query1 = Yii::$app->db->createCommand($sql1)->queryOne();
-        ?>
+            <?php foreach ($type['categories'] as $cat): ?>
+                <tr>
+                    <td style="width:16px"></td>
+                    <td><?= Html::encode($cat['title']) ?></td>
+                    <td class="text-end"><?= $fmt($cat['total']) ?></td>
+                    <?php foreach ($monthCols as $m): ?>
+                        <?= $cell($cat[$m['k']], $m['q']) ?>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
 
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าจ้างลูกจ้างชั่วคราว / พนักงานกระทรวง</td>
-            <td class="text-end"><?=$query1['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query1['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query1['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query1['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query1['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query1['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query1['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query1['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query1['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query1['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query1['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query1['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query1['m9']?></td>
-        </tr>
+            <!-- รวมประเภท -->
+            <tr class="fw-semibold table-light">
+                <td colspan="2" class="text-end">รวม<?= Html::encode($type['title']) ?></td>
+                <td class="text-end"><?= $fmt($type['sub']['total']) ?></td>
+                <?php foreach ($monthCols as $m): ?>
+                    <td class="text-end <?= $qClass[$m['q']] ?> text-dark bg-opacity-25"><?= $fmt($type['sub'][$m['k']]) ?></td>
+                <?php endforeach; ?>
+            </tr>
+        <?php endforeach; ?>
 
-         <?php
-        $sql2 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_02'";
-
-        $query2 = Yii::$app->db->createCommand($sql2)->queryOne();
-        ?>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าล่วงเวลางานบริการ / งานสนับสนุน</td>
-            <td class="text-end"><?=$query2['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query2['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query2['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query2['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query2['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query2['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query2['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query2['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query2['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query2['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query2['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query2['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query2['m9']?></td>
-
-        </tr>
-           <?php
-        $sql3 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                    COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_03'";
-
-        $query3 = Yii::$app->db->createCommand($sql3)->queryOne();
-        ?>
-        
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนการปฏิบัติงานเวรผลัดบ่ายหรือผลัดดึกของเจ้าหน้าที่</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m9']?></td>
-
-        </tr>
-          <?php
-        $sql4 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                     COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_04'";
-
-        $query4 = Yii::$app->db->createCommand($sql4)->queryOne();
-        ?>
-       
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเงินเพิ่มพิเศษไม่ทำเวชปฏิบัติส่วนตัว หรือปฏิบัติงาน รพ.เอกชน</td>
-            <td class="text-end"><?=$query3['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query3['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query3['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query3['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query3['m9']?></td>
-
-        </tr>
-          <?php
-        $sql5 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_05'";
-
-        $query5 = Yii::$app->db->createCommand($sql5)->queryOne();
-        ?>
-       
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.11)</td>
-            <td class="text-end"><?=$query5['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query5['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query5['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query5['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query5['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query5['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query5['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query5['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query5['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query5['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query5['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query5['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query5['m9']?></td>
-
-        </tr>
-          <?php
-        $sql6 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_06'";
-
-        $query6 = Yii::$app->db->createCommand($sql6)->queryOne();
-        ?>
-         
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนตามผลการปฏิบัติงาน (ฉ.12)</td>
-            <td class="text-end"><?=$query6['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query6['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query6['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query6['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query6['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query6['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query6['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query6['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query6['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query6['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query6['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query6['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query6['m9']?></td>
-
-        </tr>
-         <?php
-        $sql7 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_07'";
-
-        $query7 = Yii::$app->db->createCommand($sql7)->queryOne();
-        ?>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินเพิ่ม (พ.ต.ส)</td>
-            <td class="text-end"><?=$query7['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query7['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query7['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query7['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query7['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query7['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query7['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query7['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query7['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query7['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query7['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query7['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query7['m9']?></td>
-
-        </tr>
-
-         <?php
-        $sql8 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_08'";
-
-        $query8 = Yii::$app->db->createCommand($sql8)->queryOne();
-        ?>
-      
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานของเจ้าหน้าที่ (นอกเวลา) ฉ5</td>
-            <td class="text-end"><?=$query8['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query8['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query8['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query8['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query8['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query8['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query8['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query8['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query8['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query8['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query8['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query8['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query8['m9']?></td>
-
-        </tr>
-
-        <?php
-        $sql9 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_09'";
-
-        $query9 = Yii::$app->db->createCommand($sql9)->queryOne();
-        ?>
-         
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเจ้าหน้าที่ปฏิบัติงานในคลินิกพิเศษเฉพาะทางนอกเวลาราชการ (SMC)</td>
-            <td class="text-end"><?=$query9['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query9['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query9['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query9['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query9['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query9['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query9['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query9['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query9['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query9['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query9['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query9['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query9['m9']?></td>
-
-        </tr>
-
-          
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-         <?php
-        $sql10 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_10'";
-
-        $query10 = Yii::$app->db->createCommand($sql10)->queryOne();
-        ?>
-         
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">เงินค่าใช้จ่ายบุคลากรอื่น</td>
-            <td class="text-end"><?=$query10['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query10['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query10['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query10['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query10['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query10['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query10['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query10['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query10['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query10['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query10['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query10['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query10['m9']?></td>
-
-        </tr>
-
-          <?php
-        $sql11 = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                   COALESCE(SUM(o.order_price),0) AS total,
-                    COALESCE(SUM(o.month_1),0) AS m1,
-                    COALESCE(SUM(o.month_2),0) AS m2,
-                    COALESCE(SUM(o.month_3),0) AS m3,
-                    COALESCE(SUM(o.month_4),0) AS m4,
-                    COALESCE(SUM(o.month_5),0) AS m5,
-                    COALESCE(SUM(o.month_6),0) AS m6,
-                    COALESCE(SUM(o.month_7),0) AS m7,
-                    COALESCE(SUM(o.month_8),0) AS m8,
-                    COALESCE(SUM(o.month_9),0) AS m9,
-                    COALESCE(SUM(o.month_10),0) AS m10,
-                    COALESCE(SUM(o.month_11),0) AS m11,
-                    COALESCE(SUM(o.month_12),0) AS m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'PER'
-                    AND c.code = 'PER_11'";
-
-        $query11 = Yii::$app->db->createCommand($sql11)->queryOne();
-        ?>
-        <!-- 0.00 เป็น <?=$query11['m10']?> เริ่มจาก m10-m9 -->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าตอบแทนเบี้ยเลี้ยงเหมาจ่าย (ฉ.10)</td>
-            <td class="text-end"><?=$query11['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query11['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query11['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$query11['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query11['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query11['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$query11['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query11['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query11['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$query11['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query11['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query11['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$query11['m9']?></td>
-
-        </tr>
-
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายจากการดำเนินงาน</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่ายา</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าเวชภัณฑ์มิใช่ยา</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าวัสดุ</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าสาธารณูปโภค</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <?php
-        //ค่าใช้สอย
-        $queryExpense = "SELECT t.code,t.title,c.category_id,c.code,c.title,i.code,i.title,
-                    SUM(o.order_price) as total,
-                    SUM(o.month_1) as m1,
-                    SUM(o.month_2) as m2,
-                    SUM(o.month_3) as m3,
-                    SUM(o.month_4) as m4,
-                    SUM(o.month_5) as m5,
-                    SUM(o.month_6) as m6,
-                    SUM(o.month_7) as m7,
-                    SUM(o.month_8) as m8,
-                    SUM(o.month_9) as m9,
-                    SUM(o.month_10) as m10,
-                    SUM(o.month_11) as m11,
-                    SUM(o.month_12) as m12
-                    FROM `plan_order` o
-                    LEFT JOIN categorise i ON i.code = o.plan_item_id
-                    LEFT JOIN categorise c ON c.code = i.category_id
-                    LEFT JOIN categorise t ON t.code = c.category_id
-                    WHERE i.name = 'plan_item'
-                    AND c.name = 'plan_category'
-                    AND t.name = 'plan_type'
-                    AND c.category_id = 'OPS'
-                    AND c.code = 'OPS_05'";
-
-        $OPS = Yii::$app->db->createCommand($queryExpense)->queryOne();
-        ?>
-        <tr class="yellow">
-
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้สอย</td>
-            <td class="text-end"><?=$OPS['total']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$OPS['m10']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$OPS['m11']?></td>
-            <td class="text-end bg-primary text-dark bg-opacity-25"><?=$OPS['m12']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$OPS['m1']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$OPS['m2']?></td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25"><?=$OPS['m3']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m4']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m5']?></td>
-            <td class="text-end bg-success text-dark bg-opacity-25"><?=$OPS['m6']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$OPS['m7']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$OPS['m8']?></td>
-            <td class="text-end bg-danger text-dark bg-opacity-25"><?=$OPS['m9']?></td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าใช้จ่ายดำเนินงานอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายลงทุน</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าที่ดินและสิ่งก่อสร้าง</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">ค่าครุภัณฑ์ต่ำกว่าเกณฑ์</td>
-            <td class="text-end">4,500.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">4,500.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-
-        </tr>
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายจ่ายอื่น</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายจ่ายสนับสนุน รพ.สต. รพช. รพท. รพศ. สสอ. สสจ.</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายจ่ายอื่นๆ</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr>
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายรับจากการดำเนินงาน</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลสำหรับโครงการสุขภาพถ้วนหน้า UC</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลสำหรับโครงการสุขภาพถ้วนหน้า UC งบลงทุน</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับจากระบบปฏิบัติการฉุกเฉิน (EMS)</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลเบิกจ่ายตรงกรมบัญชีกลาง</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลผู้ป่วยเบิกต้นสังกัด</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลเบิกจาก อปท.</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลจากกองทุนประกันสังคม</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลแรงงานต่างด้าว</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับค่ารักษาพยาบาลและการบริการอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr>
-            <td width="10px"></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>รายรับอื่น</td>
-        </tr>
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับเงินช่วยเหลือ</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับเงินอุดหนุน</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับจากการบริจาค</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับดอกเบี้ยเงินฝากธนาคาร</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับอื่น</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr class="yellow">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td colspan="2">รายรับไม่ทราบแหล่งที่มา</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-secondary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-        </tr> <!---->
-        <tr>
-            <td></td>
-            <td colspan="16" class="bg-warning text-dark bg-opacity-25"><i class="fa-solid fa-chevron-right me-1"></i>งบกลาง (ไม่เกินร้อยละ 2-3.5 ของประมาณการรายจ่าย)</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td colspan="14"></td>
-        </tr>
-        <tr class="td-sum">
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td width="10px"></td>
-            <td class="text-right">รวมรายจ่าย</td>
-            <td class="text-end">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-primary text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-success text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
-            <td class="text-end bg-danger text-dark bg-opacity-25">0.00</td>
+        <!-- รวมทั้งสิ้น -->
+        <tr class="fw-bold table-active">
+            <td colspan="2" class="text-end">รวมรายจ่ายทั้งสิ้น</td>
+            <td class="text-end"><?= $fmt($summary['grand']['total']) ?></td>
+            <?php foreach ($monthCols as $m): ?>
+                <td class="text-end"><?= $fmt($summary['grand'][$m['k']]) ?></td>
+            <?php endforeach; ?>
         </tr>
     </tbody>
 </table>
+</div>
+
+<p class="text-muted small mt-2">
+    <i class="fa-solid fa-circle-info me-1"></i>
+    รวมยอดจากคำขอที่ผูกรายการ (plan item) ในปีงบประมาณ <?= $thaiYear ?> — หมวดรายรับ/งบกลางยังไม่รวมในตารางนี้ (ยังไม่มีชุดข้อมูล)
+</p>
