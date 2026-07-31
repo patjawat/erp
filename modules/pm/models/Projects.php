@@ -149,9 +149,16 @@ class Projects extends ActiveRecord
         return $this->hasOne(Organization::class, ['id' => 'department_id']);
     }
 
+    /** ชื่อหน่วยงานโหนดเดียว (แบบสั้น) */
     public function departmentName(): string
     {
         return $this->department->name ?? '-';
+    }
+
+    /** ชื่อหน่วยงานตามลำดับชั้นในผังองค์กร เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ" */
+    public function departmentPath(string $sep = ' › '): string
+    {
+        return $this->department ? $this->department->pathLabel($sep) : '-';
     }
 
     public function statusLabel(): string
@@ -177,5 +184,41 @@ class Projects extends ActiveRecord
             return null;
         }
         return Employees::findOne(['user_id' => $this->created_by]);
+    }
+
+    /**
+     * รหัสย่อของหน่วยงาน (จาก medsop_organization_setting.code ซึ่งเป็นรหัสหน่วยงานกลาง)
+     * ถ้ายังไม่กำหนด จะ fallback เป็น ORG{id}
+     */
+    public static function orgCode(?int $departmentId): string
+    {
+        if (!$departmentId) {
+            return 'ORG';
+        }
+        $setting = \app\modules\medsop\models\OrganizationSetting::findOne($departmentId);
+        return ($setting && $setting->code) ? $setting->code : 'ORG' . $departmentId;
+    }
+
+    /**
+     * สร้างรหัสโครงการอัตโนมัติตามรูปแบบใน pm_setting.code_pattern
+     * token: {org} รหัสย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก (ต่อหน่วยงาน+ปี)
+     */
+    public static function generateCode(?int $departmentId, ?int $thaiYear): string
+    {
+        $thaiYear = $thaiYear ?: (int) (date('Y') + 543);
+        $pattern = PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
+
+        // ลำดับรัน = จำนวนโครงการของหน่วยงาน+ปีนี้ (รวมที่ลบแบบ soft) + 1 เพื่อไม่ใช้เลขซ้ำ
+        $seq = (int) self::find()
+            ->where(['thai_year' => $thaiYear])
+            ->andWhere($departmentId ? ['department_id' => $departmentId] : ['department_id' => null])
+            ->count() + 1;
+
+        return strtr($pattern, [
+            '{org}' => self::orgCode($departmentId),
+            '{year}' => (string) $thaiYear,
+            '{yy}' => substr((string) $thaiYear, -2),
+            '{sequence}' => str_pad((string) $seq, 4, '0', STR_PAD_LEFT),
+        ]);
     }
 }

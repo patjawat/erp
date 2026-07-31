@@ -9,11 +9,12 @@ use yii\helpers\Html;
 /** @var app\modules\pm\models\ProjectResponsible[] $responsibles */
 
 $this->title = 'เขียนโครงการใหม่';
-$this->params['breadcrumbs'][] = ['label' => 'โครงการ', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'แผนงาน/โครงการ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
+$this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
+$this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'projects']) ?><?php $this->endBlock();
 ?>
 <div class="projects-create container-fluid">
-    <h4 class="mb-3"><?= Html::encode($this->title) ?></h4>
     <?= $this->render('_form', [
         'model' => $model,
         'objectives' => $objectives,

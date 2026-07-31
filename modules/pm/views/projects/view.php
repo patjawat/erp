@@ -6,8 +6,10 @@ use yii\helpers\Html;
 /** @var app\modules\pm\models\Projects $model */
 
 $this->title = $model->name;
-$this->params['breadcrumbs'][] = ['label' => 'โครงการ', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'แผนงาน/โครงการ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
+$this->beginBlock('page-title'); ?>แผนงาน/โครงการ<?php $this->endBlock();
+$this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'projects']) ?><?php $this->endBlock();
 \yii\web\YiiAsset::register($this);
 
 $fmt = Yii::$app->formatter;
@@ -32,7 +34,7 @@ $text = function ($v) {
         <div>
             <h4 class="mb-0"><?= Html::encode($model->name) ?></h4>
             <span class="badge <?= $model->statusBadgeClass() ?>"><?= Html::encode($model->statusLabel()) ?></span>
-            <span class="text-muted ms-2">ปีงบประมาณ <?= Html::encode($model->thai_year) ?> · <?= Html::encode($model->departmentName()) ?></span>
+            <span class="text-muted ms-2">ปีงบประมาณ <?= Html::encode($model->thai_year) ?> · <?= Html::encode($model->departmentPath()) ?></span>
         </div>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์', '#', ['class' => 'btn btn-outline-secondary', 'onclick' => 'window.print();return false;']) ?>

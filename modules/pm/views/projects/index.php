@@ -11,26 +11,30 @@ use app\modules\pm\models\Projects;
 /** @var app\modules\pm\models\ProjectsSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'โครงการ';
+$this->title = 'แผนงาน/โครงการ';
 $this->params['breadcrumbs'][] = $this->title;
+$this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
+$this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'projects']) ?><?php $this->endBlock();
 ?>
 <div class="projects-index container-fluid">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0"><i class="fa-solid fa-diagram-project me-1"></i> <?= Html::encode($this->title) ?></h4>
-        <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เขียนโครงการ', ['create'], ['class' => 'btn btn-success']) ?>
-    </div>
 
     <?php if (Yii::$app->session->hasFlash('success')): ?>
         <div class="alert alert-success"><?= Yii::$app->session->getFlash('success') ?></div>
     <?php endif; ?>
 
     <?php Pjax::begin(); ?>
+
+    <?= $this->render('_search', ['model' => $searchModel]) ?>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="text-muted small">พบ <?= $dataProvider->getTotalCount() ?> โครงการ</div>
+        <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เขียนโครงการ', ['create'], ['class' => 'btn btn-success']) ?>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
-                'filterModel' => $searchModel,
                 'tableOptions' => ['class' => 'table table-hover align-middle'],
                 'columns' => [
                     ['class' => 'yii\grid\SerialColumn'],
@@ -49,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'department_id',
                         'label' => 'หน่วยงาน',
                         'value' => function (Projects $m) {
-                            return $m->departmentName();
+                            return $m->departmentPath();
                         },
                     ],
                     [

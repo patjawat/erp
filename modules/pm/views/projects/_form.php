@@ -14,11 +14,6 @@ use app\modules\hr\models\Organization;
 /** @var app\modules\pm\models\ProjectIndicator[] $indicators */
 /** @var ProjectResponsible[] $responsibles */
 
-$orgList = ArrayHelper::map(
-    Organization::find()->orderBy(['lvl' => SORT_ASC, 'name' => SORT_ASC])->all(),
-    'id',
-    'name'
-);
 $roleList = ProjectResponsible::roleList();
 
 $form = ActiveForm::begin(['id' => 'project-form']);
@@ -34,15 +29,19 @@ $form = ActiveForm::begin(['id' => 'project-form']);
     <div class="card-body">
         <div class="row">
             <div class="col-md-8"><?= $form->field($model, 'name')->textInput(['maxlength' => true, 'placeholder' => 'ชื่อโครงการ']) ?></div>
-            <div class="col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'เว้นว่างได้']) ?></div>
+            <div class="col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'เว้นว่าง = ออกอัตโนมัติ'])->hint('เว้นว่างไว้ ระบบจะออกรหัสให้ตามรูปแบบในหน้าตั้งค่า') ?></div>
         </div>
         <div class="row">
             <div class="col-md-3"><?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600]) ?></div>
-            <div class="col-md-6"><?= $form->field($model, 'department_id')->widget(Select2::class, [
-                'data' => $orgList,
-                'options' => ['placeholder' => 'เลือกหน่วยงาน'],
-                'pluginOptions' => ['allowClear' => true],
-            ]) ?></div>
+            <div class="col-md-6"><?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::class, [
+                'query' => Organization::find()->where(['tb_name' => 'diagram'])->addOrderBy('root, lft'),
+                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
+                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
+                'fontAwesome' => true,
+                'asDropdown' => true,
+                'multiple' => false,
+                'options' => ['placeholder' => 'เลือกหน่วยงานจากผังองค์กร'],
+            ])->label('หน่วยงานเจ้าของโครงการ') ?></div>
             <div class="col-md-3"><?= $form->field($model, 'status')->dropDownList(Projects::statusList()) ?></div>
         </div>
     </div>

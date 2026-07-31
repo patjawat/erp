@@ -130,6 +130,14 @@ class ProjectsController extends Controller
         $post = $this->request->post();
         $tx = Yii::$app->db->beginTransaction();
         try {
+            // สร้างรหัสโครงการอัตโนมัติเมื่อยังไม่กรอก (เฉพาะตอนสร้างใหม่)
+            if ($model->isNewRecord && trim((string) $model->code) === '') {
+                $model->code = Projects::generateCode(
+                    $model->department_id ? (int) $model->department_id : null,
+                    $model->thai_year ? (int) $model->thai_year : null
+                );
+            }
+
             if (!$model->save()) {
                 $tx->rollBack();
                 return false;
