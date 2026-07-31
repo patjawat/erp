@@ -75,6 +75,9 @@ class GeneralController extends \yii\web\Controller
             ]);
         }
 
+        // จัดกลุ่ม: งานที่ยังค้าง (เปิดงาน/รับเรื่อง/กำลังดำเนินการ) ขึ้นก่อน,
+        // งานที่ปิดแล้ว (เสร็จสิ้น/ยกเลิก) ไปท้าย — ภายในกลุ่มยังใหม่สุดก่อน (id DESC จาก sort ต่อท้าย)
+        $dataProvider->query->orderBy(new Expression("(helpdesk.status IN ('success','cancel')) ASC"));
         $dataProvider->sort->defaultOrder = ['id' => SORT_DESC];
 
         return $this->render('@app/modules/helpdesk2/views/service/list', [
