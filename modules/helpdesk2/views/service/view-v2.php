@@ -207,15 +207,24 @@ if (!$isReceived) {
 } elseif (!$isClosed) {
     $activeStep = 5;
 }
-$isWorkflowFinished = $isClosed;
 
-$stepCardClass = static function (int $stepNumber) use ($activeStep): string {
-    if ($activeStep === $stepNumber) {
-        // ขั้นตอนที่กำลังทำ = current state → primary tint ใช้ได้ตามหลัก
-        return 'bg-primary bg-opacity-10 border border-primary-subtle rounded-3 p-3';
+// สถานะรายขั้น: เสร็จแล้ว (ขั้นที่ 4 เป็น optional จึงถือว่าเสร็จเมื่อมีกิจกรรมหรือปิดงานแล้ว)
+$stepDone = [
+    1 => $isReceived,
+    2 => $isStarted,
+    3 => $hasRootCauseData,
+    4 => $hasStep4Activity || $isClosed,
+    5 => $isClosed,
+];
+// map ขั้น → สถานะ marker: current | done | cancel | todo (ขั้นสุดท้ายที่ปิดแบบยกเลิก = cancel)
+$stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished): string {
+    if ($activeStep === $n) {
+        return 'current';
     }
-    // ขั้นตอนอื่น = พื้น tertiary ไม่มีกรอบ เลี่ยงการ์ดซ้อนการ์ด
-    return 'bg-body-tertiary rounded-3 p-3';
+    if (!empty($stepDone[$n])) {
+        return ($n === 5 && !$isFinished) ? 'cancel' : 'done';
+    }
+    return 'todo';
 };
 
 ?>
@@ -246,60 +255,66 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
 
             <div class="card shadow-sm mt-3">
                 <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <h2 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-1" aria-hidden="true"></i> ขั้นตอนทำงานสำหรับช่าง (ทำตามลำดับ)</h2>
+                    <h2 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-1" aria-hidden="true"></i> ขั้นตอนงานซ่อม</h2>
                     <?= Html::tag('span', 'คืบหน้า ' . $requiredProgress . '%', ['class' => $badgeClass($requiredProgress >= 100 ? 'success' : 'info')]) ?>
                 </div>
                 <div class="card-body p-4">
-                    <div class="alert alert-primary mb-3" role="alert">
-                        เริ่มจากรับเรื่อง → ส่งซ่อม/เริ่มงาน → บันทึกวิธีดำเนินการ → ปิดงานให้เสร็จสมบูรณ์
-                    </div>
-
-                    <div class="progress mb-3" role="progressbar" aria-label="workflow-progress" aria-valuenow="<?= $requiredProgress ?>" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress mb-4" role="progressbar" aria-label="ความคืบหน้างานซ่อม" aria-valuenow="<?= $requiredProgress ?>" aria-valuemin="0" aria-valuemax="100" style="height: .5rem;">
                         <div class="progress-bar <?= $isClosed ? 'bg-success' : '' ?>" style="width: <?= $requiredProgress ?>%"></div>
                     </div>
 
-                    <div class="d-flex flex-column gap-2">
-                        <div class="<?= $stepCardClass(1) ?>">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">1) รับเรื่อง</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <?php if ($activeStep === 1): ?>
-                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
-                                    <?php endif; ?>
+                    <?php $partsLegacyUrl = Url::to(['/helpdesk/repair-parts/create-legacy', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่จากคลัง (เดิม) #' . $model->repair_number]); ?>
+                    <ol class="repair-stepper list-unstyled mb-0">
+                        <?php $st = $stepState(1); ?>
+                        <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
+                            <div class="repair-step__rail">
+                                <span class="repair-step__marker"><?php if ($st === 'done'): ?><i class="fa-solid fa-check" aria-hidden="true"></i><?php else: ?>1<?php endif; ?></span>
+                            </div>
+                            <div class="repair-step__body">
+                                <div class="repair-step__head">
+                                    <span class="repair-step__title">รับเรื่อง</span>
                                     <?= Html::tag('span', $isReceived ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isReceived ? 'success' : 'secondary')]) ?>
+                                </div>
+                                <div class="repair-step__actions">
                                     <?php if (!$isReceived): ?>
-                                        <?= Html::a('<i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
+                                        <?= Html::a('<i class="fa-solid fa-inbox me-1" aria-hidden="true"></i> รับเรื่อง', $receiveUrl, ['class' => 'btn btn-sm btn-outline-primary receive-order']) ?>
                                     <?php endif; ?>
                                     <?= Html::a('<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> แก้ไขใบแจ้งซ่อม', $editTicketLiteUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                 </div>
                             </div>
-                        </div>
+                        </li>
 
-                        <div class="<?= $stepCardClass(2) ?>">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">2) ส่งซ่อม / เริ่มดำเนินการ</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <?php if ($activeStep === 2): ?>
-                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
-                                    <?php endif; ?>
-                                    <?= Html::tag('span', $isStarted ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
-                                    <?php if (!$isStarted): ?>
-                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1" aria-hidden="true"></i> ส่งซ่อม/เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
-                                    <?php endif; ?>
-                                </div>
+                        <?php $st = $stepState(2); ?>
+                        <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
+                            <div class="repair-step__rail">
+                                <span class="repair-step__marker"><?php if ($st === 'done'): ?><i class="fa-solid fa-check" aria-hidden="true"></i><?php else: ?>2<?php endif; ?></span>
                             </div>
-                        </div>
+                            <div class="repair-step__body">
+                                <div class="repair-step__head">
+                                    <span class="repair-step__title">ส่งซ่อม / เริ่มดำเนินการ</span>
+                                    <?= Html::tag('span', $isStarted ? 'เสร็จแล้ว' : 'รอดำเนินการ', ['class' => $badgeClass($isStarted ? 'success' : 'secondary')]) ?>
+                                </div>
+                                <?php if (!$isStarted): ?>
+                                    <div class="repair-step__actions">
+                                        <?= Html::a('<i class="fa-solid fa-truck-fast me-1" aria-hidden="true"></i> ส่งซ่อม / เริ่มงาน', $sendRepairUrl, ['class' => 'btn btn-sm btn-outline-info btn-send-repair']) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </li>
 
-                        <div class="<?= $stepCardClass(3) ?>">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">3) บันทึกสาเหตุของปัญหา</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <?php if ($activeStep === 3): ?>
-                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
-                                    <?php endif; ?>
+                        <?php $st = $stepState(3); ?>
+                        <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
+                            <div class="repair-step__rail">
+                                <span class="repair-step__marker"><?php if ($st === 'done'): ?><i class="fa-solid fa-check" aria-hidden="true"></i><?php else: ?>3<?php endif; ?></span>
+                            </div>
+                            <div class="repair-step__body">
+                                <div class="repair-step__head">
+                                    <span class="repair-step__title">บันทึกสาเหตุของปัญหา</span>
                                     <?= Html::tag('span', $hasRootCauseData ? 'เสร็จแล้ว' : 'ยังไม่บันทึก', ['class' => $badgeClass($hasRootCauseData ? 'success' : 'secondary')]) ?>
+                                </div>
+                                <div class="repair-step__actions">
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> ลงข้อมูล',
+                                        '<i class="fa-solid fa-pen-to-square me-1" aria-hidden="true"></i> ลงข้อมูลวินิจฉัย',
                                         ['/helpdesk/service/root-cause-form', 'id' => $model->id],
                                         [
                                             'class' => 'btn btn-sm btn-outline-primary open-modal',
@@ -308,37 +323,49 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                     ) ?>
                                 </div>
                             </div>
-                        </div>
+                        </li>
 
-                        <div class="<?= $stepCardClass(4) ?>">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">4) อะไหล่ / ค่าใช้จ่าย (ถ้ามี)</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <?php if ($activeStep === 4): ?>
-                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
-                                    <?php endif; ?>
-                                    <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
-                                    <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1" aria-hidden="true"></i> เบิกอะไหล่', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
-                                    <?php $partsLegacyUrl = Url::to(['/helpdesk/repair-parts/create-legacy', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่จากคลัง (เดิม) #' . $model->repair_number]); ?>
-                                    <?= Html::a('<i class="fa-solid fa-boxes-stacked me-1" aria-hidden="true"></i> เบิกอะไหล่จากคลัง', $partsLegacyUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-legacy']) ?>
-                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1" aria-hidden="true"></i> ลงค่าใช้จ่าย', $expenseUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-expense-pos']) ?>
-                                    <?= Html::a('<i class="fa-solid fa-file-arrow-up me-1" aria-hidden="true"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?php $st = $stepState(4); ?>
+                        <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
+                            <div class="repair-step__rail">
+                                <span class="repair-step__marker"><?php if ($st === 'done'): ?><i class="fa-solid fa-check" aria-hidden="true"></i><?php else: ?>4<?php endif; ?></span>
+                            </div>
+                            <div class="repair-step__body">
+                                <div class="repair-step__head">
+                                    <span class="repair-step__title">อะไหล่ / ค่าใช้จ่าย <span class="text-body-secondary fw-normal">(ถ้ามี)</span></span>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?= Html::tag('span', 'อะไหล่ ' . number_format($partCount) . ' รายการ', ['class' => $badgeClass($partCount > 0 ? 'success' : 'secondary')]) ?>
+                                        <?= Html::tag('span', 'ค่าใช้จ่าย ' . number_format($expenseCount) . ' รายการ', ['class' => $badgeClass($expenseCount > 0 ? 'warning' : 'secondary')]) ?>
+                                    </div>
+                                </div>
+                                <div class="repair-step__actions">
+                                    <?= Html::a('<i class="fa-regular fa-file-lines me-1" aria-hidden="true"></i> เบิกอะไหล่ (POS)', $partsUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-part-pos']) ?>
+                                    <?= Html::a('<i class="fa-solid fa-money-bill-wave me-1" aria-hidden="true"></i> ลงค่าใช้จ่าย (POS)', $expenseUrl, ['class' => 'btn btn-sm btn-outline-secondary btn-open-expense-pos']) ?>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa-solid fa-ellipsis me-1" aria-hidden="true"></i> เพิ่มเติม<?php if ($externalBillCount > 0): ?> <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= number_format($externalBillCount) ?></span><?php endif; ?>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><?= Html::a('<i class="fa-solid fa-boxes-stacked me-2" aria-hidden="true"></i> เบิกอะไหล่จากคลัง (เดิม)', $partsLegacyUrl, ['class' => 'dropdown-item btn-open-part-legacy']) ?></li>
+                                            <li><?= Html::a('<i class="fa-solid fa-file-arrow-up me-2" aria-hidden="true"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </li>
 
-                        <div class="<?= $stepCardClass(5) ?>">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div class="fw-medium">5) ปิดงาน</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <?php if ($activeStep === 5): ?>
-                                        <?= Html::tag('span', 'กำลังทำ', ['class' => $badgeClass('primary')]) ?>
-                                    <?php elseif ($isWorkflowFinished): ?>
-                                        <?= Html::tag('span', 'สิ้นสุดกระบวนการ', ['class' => $badgeClass($isFinished ? 'success' : 'danger')]) ?>
-                                    <?php endif; ?>
+                        <?php $st = $stepState(5); ?>
+                        <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
+                            <div class="repair-step__rail">
+                                <span class="repair-step__marker"><?php if ($st === 'done'): ?><i class="fa-solid fa-check" aria-hidden="true"></i><?php elseif ($st === 'cancel'): ?><i class="fa-solid fa-xmark" aria-hidden="true"></i><?php else: ?>5<?php endif; ?></span>
+                            </div>
+                            <div class="repair-step__body">
+                                <div class="repair-step__head">
+                                    <span class="repair-step__title">ปิดงาน</span>
                                     <?= Html::tag('span', $isFinished ? 'ปิดงานแล้ว' : ($isClosed ? 'จบงาน (ยกเลิก)' : 'ยังไม่ปิดงาน'), ['class' => $badgeClass($isFinished ? 'success' : ($isClosed ? 'danger' : 'secondary'))]) ?>
-                                    <?php if (!$isClosed): ?>
+                                </div>
+                                <?php if (!$isClosed): ?>
+                                    <div class="repair-step__actions">
                                         <?= Html::a(
                                             '<i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i> ปิดงาน',
                                             $closeJobUrl,
@@ -354,11 +381,11 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
                                                 'class' => 'btn btn-sm btn-outline-danger btn-cancel-repair',
                                             ]
                                         ) ?>
-                                    <?php endif; ?>
-                                </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ol>
                 </div>
             </div>
 
@@ -541,6 +568,41 @@ $stepCardClass = static function (int $stepNumber) use ($activeStep): string {
 </div>
 
 <?php
+// Stepper แนวตั้ง: ผูกสีกับ Bootstrap CSS vars ทั้งหมด → theme-aware light/dark เอง, ไม่ต้อง build global
+$css = <<<CSS
+.repair-stepper { --rp-marker: 2rem; }
+.repair-step { display: flex; gap: .875rem; padding-bottom: 1.25rem; }
+.repair-step:last-child { padding-bottom: 0; }
+.repair-step__rail { position: relative; flex: 0 0 var(--rp-marker); display: flex; justify-content: center; }
+.repair-step:not(:last-child) .repair-step__rail::after {
+    content: ""; position: absolute; top: var(--rp-marker); bottom: -1.25rem; left: 50%;
+    width: 2px; transform: translateX(-50%); background: var(--bs-border-color);
+}
+.repair-step.is-done .repair-step__rail::after { background: var(--bs-success); }
+.repair-step__marker {
+    position: relative; z-index: 1; width: var(--rp-marker); height: var(--rp-marker);
+    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: .8125rem; line-height: 1;
+    border: 2px solid var(--bs-border-color); background: var(--bs-body-bg); color: var(--bs-secondary-color);
+}
+.repair-step.is-done .repair-step__marker { background: var(--bs-success); border-color: var(--bs-success); color: var(--bs-white); }
+.repair-step.is-cancel .repair-step__marker { background: var(--bs-danger); border-color: var(--bs-danger); color: var(--bs-white); }
+.repair-step.is-current .repair-step__marker {
+    border-color: var(--bs-primary); color: var(--bs-primary); background: var(--bs-primary-bg-subtle);
+    box-shadow: 0 0 0 4px var(--bs-primary-bg-subtle);
+}
+.repair-step__body { flex: 1 1 auto; min-width: 0; padding: .25rem 0; }
+.repair-step.is-current .repair-step__body {
+    background: var(--bs-primary-bg-subtle); border: 1px solid var(--bs-primary-border-subtle);
+    border-radius: .5rem; padding: .625rem .875rem; margin-top: -.125rem;
+}
+.repair-step__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+.repair-step__title { font-weight: 600; }
+.repair-step__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .625rem; }
+.repair-step__actions:empty { display: none; }
+CSS;
+$this->registerCss($css);
+
 $js = <<<JS
 // Support legacy callbacks from team form (view.php)
 window.loadFormTeam = function () { window.location.reload(); };
