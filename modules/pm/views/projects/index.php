@@ -6,208 +6,91 @@ use yii\widgets\Pjax;
 use yii\grid\GridView;
 use yii\grid\ActionColumn;
 use app\modules\pm\models\Projects;
+
 /** @var yii\web\View $this */
 /** @var app\modules\pm\models\ProjectsSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Projects';
+$this->title = 'โครงการ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="projects-index">
+<div class="projects-index container-fluid">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="fa-solid fa-diagram-project me-1"></i> <?= Html::encode($this->title) ?></h4>
+        <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เขียนโครงการ', ['create'], ['class' => 'btn btn-success']) ?>
+    </div>
 
-    <p>
-        <?= Html::a('Create Projects', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?php if (Yii::$app->session->hasFlash('success')): ?>
+        <div class="alert alert-success"><?= Yii::$app->session->getFlash('success') ?></div>
+    <?php endif; ?>
 
     <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'name',
-            'description:ntext',
-            'emp_id',
-            'status',
-            //'start_date',
-            //'end_date',
-            //'percentage_complete',
-            [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Projects $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
-            ],
-        ],
-    ]); ?>
-
-    <?php Pjax::end(); ?>
-
-</div>
-
-<div class="container">
-    <div class="row g-3">
-        <div class="col-md-6 col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        Office Management
-                    </h5>
-                    <p class="card-text">
-                        An office management app project streamlines administrative tasks by integrating tools for
-                        scheduling, communication, and task management, enhancing...
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img alt="Profile picture of Anthony Lewis" class="avatar me-2"
-                                src="https://placehold.co/30x30" />
-                            <div>
-                                <div>
-                                    Anthony Lewis
-                                </div>
-                                <div class="text-muted">
-                                    Project Leader
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-muted">
-                            Deadline
-                            <br />
-                            14 Jan 2024
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-tasks task-icon me-2">
-                        </i>
-                        <div>
-                            Tasks: 6/10
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <div class="avatar bg-light text-muted d-flex align-items-center justify-content-center">
-                            +1
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        Office Management
-                    </h5>
-                    <p class="card-text">
-                        An office management app project streamlines administrative tasks by integrating tools for
-                        scheduling, communication, and task management, enhancing...
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img alt="Profile picture of Anthony Lewis" class="avatar me-2"
-                                src="https://placehold.co/30x30" />
-                            <div>
-                                <div>
-                                    Anthony Lewis
-                                </div>
-                                <div class="text-muted">
-                                    Project Leader
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-muted">
-                            Deadline
-                            <br />
-                            14 Jan 2024
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-tasks task-icon me-2">
-                        </i>
-                        <div>
-                            Tasks: 6/10
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <div class="avatar bg-light text-muted d-flex align-items-center justify-content-center">
-                            +1
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        Office Management
-                    </h5>
-                    <p class="card-text">
-                        An office management app project streamlines administrative tasks by integrating tools for
-                        scheduling, communication, and task management, enhancing...
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img alt="Profile picture of Anthony Lewis" class="avatar me-2"
-                                src="https://placehold.co/30x30" />
-                            <div>
-                                <div>
-                                    Anthony Lewis
-                                </div>
-                                <div class="text-muted">
-                                    Project Leader
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-muted">
-                            Deadline
-                            <br />
-                            14 Jan 2024
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-tasks task-icon me-2">
-                        </i>
-                        <div>
-                            Tasks: 6/10
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <img alt="Profile picture of team member" class="avatar me-1"
-                            src="https://placehold.co/30x30" />
-                        <div class="avatar bg-light text-muted d-flex align-items-center justify-content-center">
-                            +1
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-body">
+            <?= GridView::widget([
+                'dataProvider' => $dataProvider,
+                'filterModel' => $searchModel,
+                'tableOptions' => ['class' => 'table table-hover align-middle'],
+                'columns' => [
+                    ['class' => 'yii\grid\SerialColumn'],
+                    [
+                        'attribute' => 'code',
+                        'headerOptions' => ['style' => 'width:110px'],
+                    ],
+                    [
+                        'attribute' => 'name',
+                        'format' => 'raw',
+                        'value' => function (Projects $m) {
+                            return Html::a(Html::encode($m->name), ['view', 'id' => $m->id], ['class' => 'fw-semibold text-decoration-none']);
+                        },
+                    ],
+                    [
+                        'attribute' => 'department_id',
+                        'label' => 'หน่วยงาน',
+                        'value' => function (Projects $m) {
+                            return $m->departmentName();
+                        },
+                    ],
+                    [
+                        'attribute' => 'thai_year',
+                        'headerOptions' => ['style' => 'width:90px'],
+                    ],
+                    [
+                        'attribute' => 'budget_total',
+                        'format' => ['decimal', 2],
+                        'headerOptions' => ['style' => 'width:120px'],
+                        'contentOptions' => ['class' => 'text-end'],
+                    ],
+                    [
+                        'attribute' => 'status',
+                        'format' => 'raw',
+                        'filter' => Projects::statusList(),
+                        'headerOptions' => ['style' => 'width:130px'],
+                        'value' => function (Projects $m) {
+                            return '<span class="badge ' . $m->statusBadgeClass() . '">' . Html::encode($m->statusLabel()) . '</span>';
+                        },
+                    ],
+                    [
+                        'class' => ActionColumn::class,
+                        'headerOptions' => ['style' => 'width:100px'],
+                        'urlCreator' => function ($action, Projects $model, $key, $index, $column) {
+                            return Url::toRoute([$action, 'id' => $model->id]);
+                        },
+                        'buttons' => [
+                            'delete' => function ($url, Projects $model) {
+                                return Html::a('<i class="fa-solid fa-trash"></i>', $url, [
+                                    'class' => 'text-danger',
+                                    'data-confirm' => 'ยืนยันการลบโครงการนี้?',
+                                    'data-method' => 'post',
+                                ]);
+                            },
+                        ],
+                    ],
+                ],
+            ]); ?>
         </div>
     </div>
+    <?php Pjax::end(); ?>
+
 </div>
