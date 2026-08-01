@@ -92,6 +92,13 @@ if (!isset($planYears[$curPlanYear])) {
     <div class="collapse mt-3" id="collapseFilter">
         <div class="row">
             <div class="col-lg-3 col-md-3 col-sm-12">
+                <?= $form->field($model, 'unit_type')->widget(Select2::class, [
+                    'data' => ArrayHelper::map(categorise::find()->where(['name' => 'org_unit_type', 'active' => 1])->orderBy('sort')->all(), 'code', 'title'),
+                    'options' => ['placeholder' => 'ทุกประเภทหน่วยงาน', 'id' => 'unit_type_parcel'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('ประเภทหน่วยงาน') ?>
+            </div>
+            <div class="col-lg-3 col-md-3 col-sm-12">
                 <?php
 
                 echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [

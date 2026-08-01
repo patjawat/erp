@@ -11,6 +11,9 @@ use app\modules\plan\models\PlanOrder;
  */
 class PlanOrderSearch extends PlanOrder
 {
+    /** ตัวกรองประเภทหน่วยงาน (org_unit_type code) */
+    public $unit_type;
+
     /**
      * {@inheritdoc}
      */
@@ -19,7 +22,7 @@ class PlanOrderSearch extends PlanOrder
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at','plan_type_id','asset_type_id','asset_category_id','plan_category_id','thai_year','department_id','plan_category_id',
-                    'plan_item_id',], 'safe'],
+                    'plan_item_id', 'unit_type',], 'safe'],
             [['budget_total', 'budget_used'], 'number'],
         ];
     }
@@ -86,6 +89,12 @@ class PlanOrderSearch extends PlanOrder
             ->andFilterWhere(['like', 'status', $this->status])
             ->andFilterWhere(['like', 'emp_id', $this->emp_id])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
+
+        // กรองตามประเภทหน่วยงาน — subquery เลี่ยงชื่อคอลัมน์ชนกับ join
+        if (!empty($this->unit_type)) {
+            $query->andWhere(['plan_unit_id' => (new \yii\db\Query())
+                ->select('id')->from('org_unit')->where(['unit_type' => $this->unit_type])]);
+        }
 
         return $dataProvider;
     }

@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item->description ?></td>
                         <td class="text-end"><?= number_format($item->order_price, 2) ?></td>
                         <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
-                        <td><?= $item->departmentName() ?></td>
+                        <td><?= Html::encode($item->departmentName()) ?><?php if ($t = $item->unitTypeTitle()): ?> <span class="badge text-bg-light border"><?= Html::encode($t) ?></span><?php endif; ?></td>
                         <td><?= $item->viewStatus()['view'] ?></td>
                         <td class="text-center">
                             <?= $this->render('action', ['model' => $item]) ?>

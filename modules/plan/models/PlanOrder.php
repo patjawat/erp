@@ -379,12 +379,24 @@ class PlanOrder extends \yii\db\ActiveRecord
 
     public function departmentName()
     {
-        $model =  Organization::findOne(['id' => $this->department_id]);
-        if ($model) {
-            return $model->name;
-        } else {
-            return '-';
+        // ชื่อจากทะเบียนหน่วยงาน (org_unit) ก่อน — ครอบคลุมหน่วยนอกผัง + คงชื่อตามปี
+        if ($this->plan_unit_id && ($unit = $this->planUnit)) {
+            return $unit->name;
         }
+        $model = Organization::findOne(['id' => $this->department_id]);
+        return $model ? $model->name : '-';
+    }
+
+    /** ชื่อประเภทหน่วยงาน (org_unit_type) สำหรับแสดง/กรอง */
+    public function unitTypeTitle()
+    {
+        if ($this->plan_unit_id && ($unit = $this->planUnit) && $unit->unit_type) {
+            return (string) Categorise::find()
+                ->select('title')
+                ->where(['name' => 'org_unit_type', 'code' => $unit->unit_type])
+                ->scalar();
+        }
+        return '';
     }
 
     public function listBudgetType()
