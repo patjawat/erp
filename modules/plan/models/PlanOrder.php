@@ -152,7 +152,7 @@ class PlanOrder extends \yii\db\ActiveRecord
                 'default',
                 'value' => 0
             ],
-            [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'department_id', 'plan_unit_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['plan_group_id', 'thai_year', 'department_id', 'asset_group_id', 'price_ref'], 'required'],
             [['description', 'reference'], 'string'],
             [
@@ -284,6 +284,12 @@ class PlanOrder extends \yii\db\ActiveRecord
     public function getBudge()
     {
         return $this->hasOne(Categorise::class, ['code' => 'plan_budget_type_id'])->andOnCondition(['name' => 'budget_type']);
+    }
+
+    /** หน่วยงานในทะเบียนกลาง (org_unit) — ผูกด้วย plan_unit_id */
+    public function getPlanUnit()
+    {
+        return $this->hasOne(\app\modules\settings\models\OrgUnit::class, ['id' => 'plan_unit_id']);
     }
 
 
