@@ -312,6 +312,31 @@ class PlanOrder extends \yii\db\ActiveRecord
         return $this->hasOne(\app\modules\settings\models\OrgUnit::class, ['id' => 'plan_unit_id']);
     }
 
+    /**
+     * snapshot ข้อมูลผู้อนุมัติ ณ ปัจจุบัน (ชื่อ/emp/ตำแหน่ง) สำหรับผสานลง data_json
+     * เก็บเป็นค่าคงที่ เพื่อคงประวัติแม้ผู้อนุมัติเปลี่ยนชื่อ/บทบาทภายหลัง
+     */
+    public static function decisionStamp($reason = null): array
+    {
+        $hasUser = \Yii::$app->has('user') && !\Yii::$app->user->isGuest;
+        $stamp = [
+            'approver_id' => $hasUser ? \Yii::$app->user->id : null,
+            'decided_at'  => date('Y-m-d H:i:s'),
+        ];
+        $emp = $hasUser ? \app\components\UserHelper::GetEmployee() : null;
+        if ($emp) {
+            $stamp['approver_emp_id'] = $emp->id;
+            $stamp['approver_name']   = $emp->fullname();
+            if (method_exists($emp, 'positionName')) {
+                $stamp['approver_position'] = $emp->positionName();
+            }
+        }
+        if ($reason !== null && $reason !== '') {
+            $stamp['reject_reason'] = $reason;
+        }
+        return $stamp;
+    }
+
 
     public function getPlanType()
     {

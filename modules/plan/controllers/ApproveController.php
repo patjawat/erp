@@ -111,12 +111,7 @@ class ApproveController extends Controller
         if (!is_array($json)) {
             $json = json_decode((string) $json, true) ?: [];
         }
-        $json['approver_id'] = Yii::$app->user->id;
-        $json['decided_at']  = date('Y-m-d H:i:s');
-        if ($reason !== null && $reason !== '') {
-            $json['reject_reason'] = $reason;
-        }
-        $model->data_json = $json;
+        $model->data_json = array_merge($json, PlanOrder::decisionStamp($reason));
     }
 
     private function yearOptions()

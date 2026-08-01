@@ -154,6 +154,8 @@ class PlanOrderController extends Controller
         if ($model->load(Yii::$app->request->post())) {
             // $model->updated_at = time();
             $model->status = 'approve';
+            $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+            $model->data_json = array_merge($json, PlanOrder::decisionStamp());
             if ($model->save(false)) {
                 return [
                     'status' => 'success',
@@ -204,6 +206,11 @@ class PlanOrderController extends Controller
         $model = $this->findModel($id);
         if ($model) {
             $model->status = $status;
+            if (in_array($status, ['approve', 'reject'], true)) {
+                $reason = trim((string) $this->request->post('reason', ''));
+                $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+                $model->data_json = array_merge($json, PlanOrder::decisionStamp($reason !== '' ? $reason : null));
+            }
             $model->save(false);
               return $this->redirect(['/plan/'.$model->plan_group_id.'/index']);
             return [
