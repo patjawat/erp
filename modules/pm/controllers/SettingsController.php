@@ -34,6 +34,11 @@ class SettingsController extends Controller
 
     public function actionIndex()
     {
+        // ปิดการใช้งานชั่วคราว — ย้ายการตั้งค่าอักษรย่อหน่วยงานไปทะเบียนหน่วยงานกลาง (/settings/org-unit)
+        // กันผู้ใช้แก้ไขซ้ำซ้อนระหว่างช่วงพัฒนา
+        Yii::$app->session->setFlash('warning', 'หน้าตั้งค่านี้ถูกย้ายไปทะเบียนหน่วยงานกลาง (กำลังพัฒนา)');
+        return $this->redirect(['/pm/default/index']);
+
         if (Yii::$app->request->isPost) {
             $post = Yii::$app->request->post();
 

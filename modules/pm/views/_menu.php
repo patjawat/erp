@@ -8,7 +8,7 @@ $items = [
     'overview' => ['label' => 'ภาพรวม', 'url' => ['/pm/default/index'], 'icon' => 'layout-dashboard'],
     'projects' => ['label' => 'แผนงาน/โครงการ', 'url' => ['/pm/projects/index'], 'icon' => 'folder-kanban'],
     'report' => ['label' => 'รายงาน', 'url' => ['/pm/report/index'], 'icon' => 'bar-chart-3'],
-    'settings' => ['label' => 'ตั้งค่า', 'url' => ['/pm/settings/index'], 'icon' => 'settings'],
+    // 'settings' ถูกซ่อน — ย้ายอักษรย่อหน่วยงานไปทะเบียนหน่วยงานกลาง /settings/org-unit
 ];
 ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
