@@ -26,7 +26,7 @@ $locationName = implode(' / ', array_filter([
 </style>
 <div class="container-fluid py-3 handover-page">
 <div class="handover-shell">
-<?= Html::a('<i data-lucide="arrow-left"></i> กลับไปคำขอ', ['/housing/request/view', 'id' => $request->id], ['class' => 'btn btn-outline-secondary mb-3']) ?>
+<?= Html::a('<i class="bi bi-arrow-left"></i> กลับไปคำขอ', ['/housing/request/view', 'id' => $request->id], ['class' => 'btn btn-outline-secondary mb-3']) ?>
 <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
 <section class="handover-section">
     <div class="handover-section__head"><h2 class="handover-title">ข้อมูลการจัดสรร</h2><div class="handover-caption">ตรวจชื่อผู้รับมอบและสถานที่ก่อนบันทึก</div></div>

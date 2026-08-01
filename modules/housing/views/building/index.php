@@ -16,7 +16,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <?php endif; endforeach; ?>
     <?php if (($responsibleAttentionCount ?? 0) > 0): ?>
         <div class="alert alert-warning d-flex gap-2 align-items-start" role="alert">
-            <i data-lucide="triangle-alert" class="flex-shrink-0 mt-1" style="width:18px;height:18px"></i>
+            <i class="bi bi-exclamation-triangle flex-shrink-0 mt-1" style="font-size:18px"></i>
             <div>
                 <div class="fw-semibold">มี <?= number_format($responsibleAttentionCount) ?> รายการที่ต้องกำหนดผู้รับผิดชอบ</div>
                 <div class="small">บ้านพักที่ยังไม่มีผู้รับผิดชอบ หรือผู้รับผิดชอบย้าย ลาออก หรือสิ้นสุดการปฏิบัติงาน จะแสดงคำเตือนในรายการ</div>
@@ -26,7 +26,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-body d-flex align-items-center justify-content-between gap-2">
             <div><div class="fw-semibold">บ้านพักและแฟลต</div><div class="small text-body-secondary">ข้อมูลอาคารหลักก่อนแบ่งชั้นและห้อง</div></div>
-            <?= Html::a('<i data-lucide="plus"></i> เพิ่มรายการ', ['create', 'title' => 'เพิ่มบ้านพัก/แฟลต'], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-lg']) ?>
+            <?= Html::a('<i class="bi bi-plus-lg"></i> เพิ่มรายการ', ['create', 'title' => 'เพิ่มบ้านพัก/แฟลต'], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-lg']) ?>
         </div>
         <?php Pjax::begin(['id' => 'housing-building-container', 'enablePushState' => false]); ?>
         <div class="card-body p-0">
@@ -47,7 +47,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                     ]) ?>
                                 <?php else: ?>
                                     <div class="rounded-2 bg-body-tertiary d-flex align-items-center justify-content-center text-secondary" style="width:52px;height:40px" aria-label="ยังไม่มีรูปภาพ">
-                                        <i data-lucide="image" style="width:18px;height:18px"></i>
+                                        <i class="bi bi-image" style="font-size:18px"></i>
                                     </div>
                                 <?php endif; ?>
                             </td>
@@ -58,7 +58,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                     <div class="d-flex flex-wrap gap-1 mt-1">
                                         <?php foreach ($model->floors as $floor): ?>
                                             <?= Html::a(
-                                                '<i data-lucide="pencil" style="width:12px;height:12px"></i> ' . Html::encode($floor->name),
+                                                '<i class="bi bi-pencil" style="font-size:12px"></i> ' . Html::encode($floor->name),
                                                 ['update-floor', 'id' => $floor->id],
                                                 [
                                                     'class' => 'btn btn-sm btn-outline-secondary open-modal',
@@ -94,7 +94,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             <td class="text-end">
                                 <?= Html::a('เพิ่มชั้น', ['create-floor', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
                                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
-                                <?= Html::a('<i data-lucide="eye" style="width:16px;height:16px"></i><span class="visually-hidden">รายละเอียด</span>', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info', 'title' => 'ดูรายละเอียด', 'aria-label' => 'ดูรายละเอียด ' . $model->name]) ?>
+                                <?= Html::a('<i class="bi bi-eye" style="font-size:16px"></i><span class="visually-hidden">รายละเอียด</span>', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info', 'title' => 'ดูรายละเอียด', 'aria-label' => 'ดูรายละเอียด ' . $model->name]) ?>
                                 <?= Html::a('ลบ', ['delete', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบรายการนี้?']) ?>
                             </td>
                         </tr>
@@ -144,7 +144,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                 <div class="d-flex flex-wrap gap-2 mt-3">
                                     <?= Html::a('เพิ่มชั้น', ['create-floor', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
                                     <?= Html::a('แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
-                                    <?= Html::a('<i data-lucide="eye" style="width:16px;height:16px"></i> รายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
+                                    <?= Html::a('<i class="bi bi-eye" style="font-size:16px"></i> รายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
                                 </div>
                             </div>
                         </div>

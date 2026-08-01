@@ -72,7 +72,7 @@ CSS);
     <?php if (($responsibleAttentionCount ?? 0) > 0): ?>
         <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
             <div class="d-flex gap-2 align-items-start">
-                <i data-lucide="triangle-alert" class="flex-shrink-0 mt-1" style="width:18px;height:18px"></i>
+                <i class="bi bi-exclamation-triangle flex-shrink-0 mt-1" style="font-size:18px"></i>
                 <div>
                     <div class="fw-semibold">มี <?= number_format($responsibleAttentionCount) ?> รายการที่ต้องกำหนดผู้รับผิดชอบ</div>
                     <div class="small">กรุณาตรวจสอบบ้านพักที่ยังไม่มีผู้รับผิดชอบ หรือผู้รับผิดชอบไม่ได้ปฏิบัติงานแล้ว</div>

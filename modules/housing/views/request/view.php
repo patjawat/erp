@@ -41,8 +41,8 @@ $eligible = $employeeActive && !($model->request_type === HousingRequest::TYPE_M
 <div class="card border-0 shadow-sm mt-3">
 <div class="card-header bg-body fw-semibold">ผลตรวจสอบเบื้องต้น</div>
 <div class="card-body">
-<div class="d-flex align-items-center gap-2 mb-2"><i data-lucide="<?= $employeeActive ? 'check-circle-2' : 'alert-circle' ?>" class="text-<?= $employeeActive ? 'success' : 'danger' ?>"></i><span>สถานะบุคลากร: <strong><?= $employeeActive ? 'ยังปฏิบัติงาน' : 'ไม่ได้ปฏิบัติงาน' ?></strong></span></div>
-<div class="d-flex align-items-center gap-2"><i data-lucide="<?= $activeOccupancy ? 'home' : 'circle-check' ?>" class="text-<?= $activeOccupancy ? 'warning' : 'success' ?>"></i><span>ที่พักปัจจุบัน: <strong><?= $activeOccupancy ? 'มีข้อมูลเข้าพักอยู่' : 'ไม่พบการเข้าพักปัจจุบัน' ?></strong></span></div>
+<div class="d-flex align-items-center gap-2 mb-2"><i class="bi <?= $employeeActive ? 'bi-check-circle' : 'bi-exclamation-circle' ?> text-<?= $employeeActive ? 'success' : 'danger' ?>"></i><span>สถานะบุคลากร: <strong><?= $employeeActive ? 'ยังปฏิบัติงาน' : 'ไม่ได้ปฏิบัติงาน' ?></strong></span></div>
+<div class="d-flex align-items-center gap-2"><i class="bi <?= $activeOccupancy ? 'bi-house' : 'bi-check-circle' ?> text-<?= $activeOccupancy ? 'warning' : 'success' ?>"></i><span>ที่พักปัจจุบัน: <strong><?= $activeOccupancy ? 'มีข้อมูลเข้าพักอยู่' : 'ไม่พบการเข้าพักปัจจุบัน' ?></strong></span></div>
 <?php if (!$eligible): ?><div class="alert alert-warning mt-3 mb-0">คำขอนี้ยังไม่ผ่านเงื่อนไขเบื้องต้น กรุณาตรวจสอบประเภทคำขอหรือสถานะบุคลากรก่อนดำเนินการต่อ</div><?php endif; ?>
 </div></div>
 <div class="card border-0 shadow-sm mt-3"><div class="card-header bg-body fw-semibold">ประวัติสถานะ</div><ul class="list-group list-group-flush"><?php foreach ($model->logs as $log): ?><li class="list-group-item"><strong><?= Html::encode(HousingRequest::statusOptions()[$log->to_status] ?? $log->to_status) ?></strong><div class="small text-body-secondary"><?= Html::encode($log->acted_at) ?><?= $log->comment ? ' · ' . Html::encode($log->comment) : '' ?></div></li><?php endforeach; ?></ul></div></div>

@@ -13,7 +13,7 @@ $this->beginBlock('page-action');?><?=$this->render('../_menu',['active'=>'utili
 <div class="container-fluid py-3 charge-types-page"><div class="soft-panel overflow-hidden">
 <div class="p-3 d-flex flex-wrap justify-content-between align-items-start gap-3">
 <div><h1 class="h5 mb-1">รายการค่าใช้จ่ายของโรงพยาบาล</h1><div class="small text-body-secondary">กำหนดชื่อ หมวด วิธีคำนวณ และหน่วยนับให้ตรงกับระเบียบของแต่ละแห่ง</div></div>
-<div class="d-flex flex-wrap gap-2"><?=Html::a('ลงค่าใช้จ่ายรายเดือน',['monthly'],['class'=>'btn btn-outline-primary'])?> <?=Html::a('<i data-lucide="plus"></i> เพิ่มประเภทค่าใช้จ่าย',['create-charge-type'],['class'=>'btn btn-primary open-modal','data-size'=>'modal-lg'])?></div>
+<div class="d-flex flex-wrap gap-2"><?=Html::a('ลงค่าใช้จ่ายรายเดือน',['monthly'],['class'=>'btn btn-outline-primary'])?> <?=Html::a('<i class="bi bi-plus-lg"></i> เพิ่มประเภทค่าใช้จ่าย',['create-charge-type'],['class'=>'btn btn-primary open-modal','data-size'=>'modal-lg'])?></div>
 </div>
 <?php if($models):?><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>รหัส/ชื่อรายการ</th><th>หมวด</th><th>วิธีคำนวณ</th><th>หน่วย</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead><tbody>
 <?php foreach($models as $model):?><tr>
