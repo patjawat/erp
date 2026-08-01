@@ -430,6 +430,28 @@ class PlanOrder extends \yii\db\ActiveRecord
             ->sum('order_price');
     }
 
+    /**
+     * สรุปจำนวน/ยอดเงินแยกตามประเภทหน่วยงาน (org_unit_type) ของปี
+     * @return array แต่ละแถว: ['code','title','n','amt']
+     */
+    public function summaryByUnitType()
+    {
+        return (new \yii\db\Query())
+            ->select([
+                'code'  => 'o.unit_type',
+                'title' => 'c.title',
+                'n'     => 'COUNT(*)',
+                'amt'   => 'COALESCE(SUM(p.order_price),0)',
+            ])
+            ->from(['p' => 'plan_order'])
+            ->innerJoin(['o' => 'org_unit'], 'o.id = p.plan_unit_id')
+            ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
+            ->where(['p.thai_year' => (int) $this->thai_year])
+            ->groupBy(['o.unit_type', 'c.title'])
+            ->orderBy(['amt' => SORT_DESC])
+            ->all();
+    }
+
 
     public function viewStatus()
     {

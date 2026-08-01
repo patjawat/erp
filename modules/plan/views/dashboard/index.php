@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\helpers\Html;
 $this->title = 'ภาพรวมแผนงาน';
 $this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -76,6 +77,23 @@ if ($activePills): ?>
                 <?= $searchModel->countStatus($p['status']) ?> รายการ ·
                 <strong><?= number_format($searchModel->sumStatus($p['status']), 2) ?></strong> บาท
             </span>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<?php $byUnitType = $searchModel->summaryByUnitType(); ?>
+<?php if (count($byUnitType) > 1): ?>
+    <h5 class="mb-3 text-muted">แยกตามประเภทหน่วยงาน</h5>
+    <div class="row g-3 mb-4">
+        <?php foreach ($byUnitType as $ut): ?>
+            <div class="col-6 col-md-3">
+                <div class="card h-100 border-start border-4 border-info">
+                    <div class="card-body py-2 px-3">
+                        <div class="text-muted small text-nowrap"><?= Html::encode($ut['title'] ?: 'ไม่ระบุประเภท') ?> · <?= (int) $ut['n'] ?> รายการ</div>
+                        <div class="fs-5 fw-bold text-info text-nowrap"><?= number_format((float) $ut['amt'], 2) ?> <small class="fw-normal">บาท</small></div>
+                    </div>
+                </div>
+            </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
