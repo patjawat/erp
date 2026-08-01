@@ -597,12 +597,26 @@ class Asset extends \yii\db\ActiveRecord
         }
     }
 
-    /** วิธีการได้มา (ชื่อจาก categorise name=method_get) */
+    /** วิธีได้มา (ชื่อจาก categorise name=method_get) */
     public function methodGetName()
     {
         try {
             $cat = CategoriseHelper::CategoriseByCodeName($this->data_json['method_get'] ?? null, 'method_get');
             return $cat ? $cat->title : '-';
+        } catch (\Throwable $th) {
+            return '-';
+        }
+    }
+
+    /** วิธีการได้มา (ชื่อจาก categorise name=purchase — ตรงกับฟิลด์ purchase ในฟอร์ม) */
+    public function purchaseName()
+    {
+        try {
+            $cat = CategoriseHelper::CategoriseByCodeName($this->purchase ?? null, 'purchase');
+            if ($cat) {
+                return $cat->title;
+            }
+            return trim((string) ($this->data_json['purchase_text'] ?? '')) ?: '-';
         } catch (\Throwable $th) {
             return '-';
         }
