@@ -28,12 +28,12 @@ $plans = $planProvider->getModels();
         ]) ?>
     </header>
 
-    <section class="trm-ops-metrics" aria-label="ตัวชี้วัด Training Roadmap">
-        <div class="trm-ops-metric"><span>บุคลากรใหม่ 90 วัน</span><strong><?= number_format($metrics['new_hires']) ?></strong><small>ตั้งแต่ <?= Html::encode($newHireSince) ?></small></div>
-        <div class="trm-ops-metric is-warning"><span>ยังไม่ได้รับ TRM</span><strong><?= number_format($metrics['unassigned']) ?></strong><small>ควรตรวจสอบและมอบหมาย</small></div>
-        <div class="trm-ops-metric is-progress"><span>กำลังดำเนินการ</span><strong><?= number_format($metrics['in_progress']) ?></strong><small>รวมรอเริ่มและรอประเมิน</small></div>
-        <div class="trm-ops-metric is-danger"><span>เกินกำหนด</span><strong><?= number_format($metrics['overdue']) ?></strong><small>ยังไม่ปิดแผน</small></div>
-    </section>
+    <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
+        ['label' => 'บุคลากรใหม่ 90 วัน', 'value' => $metrics['new_hires'], 'icon' => 'bi-person-plus', 'color' => 'primary', 'hint' => 'ตั้งแต่ ' . $newHireSince],
+        ['label' => 'ยังไม่ได้รับ TRM', 'value' => $metrics['unassigned'], 'icon' => 'bi-exclamation-triangle', 'color' => 'warning', 'hint' => 'ควรตรวจสอบและมอบหมาย'],
+        ['label' => 'กำลังดำเนินการ', 'value' => $metrics['in_progress'], 'icon' => 'bi-hourglass-split', 'color' => 'info', 'hint' => 'รวมรอเริ่มและรอประเมิน'],
+        ['label' => 'เกินกำหนด', 'value' => $metrics['overdue'], 'icon' => 'bi-clock-history', 'color' => 'danger', 'hint' => 'ยังไม่ปิดแผน'],
+    ]]) ?>
 
     <section class="trm-card mt-3">
         <div class="trm-section-head">
