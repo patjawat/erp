@@ -15,12 +15,13 @@ $this->beginBlock('page-action');?><?=$this->render('../_menu',['active'=>'utili
 <div><h1 class="h5 mb-1">รายการค่าใช้จ่ายของโรงพยาบาล</h1><div class="small text-body-secondary">กำหนดชื่อ หมวด วิธีคำนวณ และหน่วยนับให้ตรงกับระเบียบของแต่ละแห่ง</div></div>
 <div class="d-flex flex-wrap gap-2"><?=Html::a('ลงค่าใช้จ่ายรายเดือน',['monthly'],['class'=>'btn btn-outline-primary'])?> <?=Html::a('<i class="bi bi-plus-lg"></i> เพิ่มประเภทค่าใช้จ่าย',['create-charge-type'],['class'=>'btn btn-primary open-modal','data-size'=>'modal-lg'])?></div>
 </div>
-<?php if($models):?><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>รหัส/ชื่อรายการ</th><th>หมวด</th><th>วิธีคำนวณ</th><th>หน่วย</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead><tbody>
+<?php if($models):?><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>รหัส/ชื่อรายการ</th><th>หมวด</th><th>วิธีคำนวณ</th><th>หน่วย</th><th class="text-end">อัตราตั้งต้น</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead><tbody>
 <?php foreach($models as $model):?><tr>
 <td><strong><?=Html::encode($model->name)?></strong><div class="small text-body-secondary"><?=Html::encode($model->code)?></div></td>
 <td><?=Html::encode(ChargeType::categoryOptions()[$model->category]??$model->category)?></td>
 <td><span class="method-pill"><?=Html::encode(ChargeType::methodOptions()[$model->calculation_method]??$model->calculation_method)?></span></td>
 <td><?=Html::encode($model->unit_name?:'บาท')?></td>
+<td class="text-end"><?php if($model->default_rate!==null&&$model->default_rate!==''):?><strong><?=Yii::$app->formatter->asDecimal($model->default_rate,2)?></strong> <span class="small text-body-secondary">บาท/<?=Html::encode($model->unit_name?:'หน่วย')?></span><?php else:?><span class="text-body-secondary">—</span><?php endif;?></td>
 <td><span class="badge <?=$model->status==='active'?'bg-success-subtle text-success-emphasis':'bg-secondary-subtle text-secondary'?>"><?=$model->status==='active'?'เปิดใช้งาน':'ปิดใช้งาน'?></span></td>
 <td class="text-end"><?=Html::a('แก้ไข',['update-charge-type','id'=>$model->id],['class'=>'btn btn-sm btn-outline-secondary open-modal','data-size'=>'modal-lg'])?></td>
 </tr><?php endforeach;?></tbody></table></div>

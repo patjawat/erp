@@ -127,7 +127,8 @@ final class UtilityController extends BaseController
     {
         if($type->calculation_method===ChargeType::METHOD_EQUIPMENT&&$account->unit_id)return (float)AssetAssignment::find()->where(['unit_id'=>$account->unit_id,'room_id'=>$account->room_id,'is_active'=>1])->sum(new Expression('quantity * monthly_rent'));
         $rate=HousingRate::find()->where(['charge_type_id'=>$type->id,'status'=>'active'])->andWhere(['<=','effective_from',$account->period->start_date])->andWhere(['or',['effective_to'=>null],['>=','effective_to',$account->period->start_date]])->orderBy(['unit_id'=>SORT_DESC,'building_id'=>SORT_DESC,'effective_from'=>SORT_DESC])->one();
-        $value=(float)($rate?->rate??0);
+        // อัตราเฉพาะ (ราย อาคาร/ห้อง) มาก่อน ถ้าไม่มีให้ใช้อัตราตั้งต้นที่ตั้งไว้บนประเภทค่าใช้จ่าย
+        $value=(float)($rate?->rate??$type->default_rate??0);
         return $type->calculation_method===ChargeType::METHOD_PER_PERSON?$value*$account->occupants_over_15:$value;
     }
 

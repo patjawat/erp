@@ -13,8 +13,9 @@ $form = ActiveForm::begin(['id' => 'utility-form']);
     <div class="col-md-6"><?= $form->field($model, 'category')->dropDownList(ChargeType::categoryOptions()) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'calculation_method')->dropDownList(ChargeType::methodOptions()) ?></div>
     <div class="col-md-4"><?= $form->field($model, 'unit_name')->textInput(['maxlength' => true, 'placeholder' => 'หน่วย, ห้อง, คน, เครื่อง']) ?></div>
-    <div class="col-md-4"><?= $form->field($model, 'sort_order')->input('number', ['min' => 0]) ?></div>
-    <div class="col-md-4"><?= $form->field($model, 'status')->dropDownList(['active' => 'เปิดใช้งาน', 'inactive' => 'ปิดใช้งาน']) ?></div>
+    <div class="col-md-4"><?= $form->field($model, 'default_rate')->input('number', ['step' => '.01', 'min' => 0, 'placeholder' => 'เช่น 20.00'])->hint('ใส่ราคาต่อหน่วยไว้เลย ระบบจะเติมให้อัตโนมัติเวลาลงรายเดือน · วิธี “อัตราต่อคน” จะคูณจำนวนผู้พักอายุเกิน 15 ปีให้เอง') ?></div>
+    <div class="col-md-2"><?= $form->field($model, 'sort_order')->input('number', ['min' => 0]) ?></div>
+    <div class="col-md-2"><?= $form->field($model, 'status')->dropDownList(['active' => 'เปิดใช้งาน', 'inactive' => 'ปิดใช้งาน']) ?></div>
     <div class="col-12"><?= $form->field($model, 'description')->textarea(['rows' => 3]) ?></div>
 </div>
 <?php elseif ($kind === 'period'): ?>

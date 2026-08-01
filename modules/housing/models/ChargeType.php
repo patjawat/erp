@@ -21,6 +21,7 @@ final class ChargeType extends HousingActiveRecord
         [['code','name','category','calculation_method'],'required'],
         [['code'],'string','max'=>50], [['code'],'unique'],
         [['name'],'string','max'=>150], [['unit_name'],'string','max'=>50],
+        [['default_rate'],'number','min'=>0],
         [['description'],'string'],
         [['category'],'in','range'=>array_keys(self::categoryOptions())],
         [['calculation_method'],'in','range'=>array_keys(self::methodOptions())],
@@ -33,6 +34,7 @@ final class ChargeType extends HousingActiveRecord
     public function attributeLabels(): array { return [
         'code'=>'รหัสรายการ', 'name'=>'ชื่อค่าใช้จ่าย', 'category'=>'หมวดค่าใช้จ่าย',
         'calculation_method'=>'วิธีคำนวณ', 'unit_name'=>'หน่วยนับ',
+        'default_rate'=>'อัตราตั้งต้น (ต่อหน่วย/ต่อคน)',
         'description'=>'รายละเอียด', 'status'=>'สถานะ', 'sort_order'=>'ลำดับแสดงผล',
     ]; }
 
