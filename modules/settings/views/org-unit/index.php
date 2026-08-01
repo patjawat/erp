@@ -79,6 +79,7 @@ $totalYear = array_sum($srcCounts);
                     <?= Html::hiddenInput('thai_year', $year) ?>
                     <?= Html::submitButton('<i class="fa-solid fa-arrows-rotate me-1"></i> ซิงก์จากผัง', ['class' => 'btn btn-sm btn-outline-primary']) ?>
                 <?= Html::endForm() ?>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#type-modal"><i class="fa-solid fa-tags me-1"></i> ประเภท</button>
                 <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#add-manual"><i class="fa-solid fa-plus me-1"></i> เพิ่มหน่วยงานภายใน</button>
             </div>
         </div>
@@ -214,3 +215,64 @@ $totalYear = array_sum($srcCounts);
     <?php endif; ?>
 </div>
 <?= Html::endForm() ?>
+
+<!-- Modal: จัดการประเภทหน่วยงาน -->
+<div class="modal fade" id="type-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-tags me-2"></i>จัดการประเภทหน่วยงาน</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">ตั้งประเภทได้เองตามบริบทของโรงพยาบาล เช่น หน่วยงาน / ทีมประสาน / เครือข่าย / อำเภอ ฯลฯ</p>
+
+                <?= Html::beginForm(['type-add'], 'post', ['class' => 'input-group input-group-sm mb-3']) ?>
+                    <?= Html::hiddenInput('thai_year', $year) ?>
+                    <input type="text" name="title" class="form-control" placeholder="ชื่อประเภทใหม่" required>
+                    <button class="btn btn-success"><i class="fa-solid fa-plus me-1"></i> เพิ่ม</button>
+                <?= Html::endForm() ?>
+
+                <?= Html::beginForm(['type-save'], 'post') ?>
+                    <?= Html::hiddenInput('thai_year', $year) ?>
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:70px">ลำดับ</th>
+                                <th>ชื่อประเภท</th>
+                                <th class="text-center" style="width:70px">ใช้งาน</th>
+                                <th style="width:90px">ใช้อยู่</th>
+                                <th style="width:40px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($manageTypes as $t): $used = (int) ($typeCounts[$t->code] ?? 0); ?>
+                                <tr>
+                                    <td><input type="number" name="types[<?= $t->id ?>][sort]" value="<?= (int) $t->sort ?>" class="form-control form-control-sm" style="width:60px"></td>
+                                    <td><input type="text" name="types[<?= $t->id ?>][title]" value="<?= Html::encode($t->title) ?>" class="form-control form-control-sm"></td>
+                                    <td class="text-center">
+                                        <?= Html::hiddenInput("types[{$t->id}][active]", 0) ?>
+                                        <input type="checkbox" name="types[<?= $t->id ?>][active]" value="1" class="form-check-input" <?= $t->active ? 'checked' : '' ?>>
+                                    </td>
+                                    <td><span class="badge text-bg-light border"><?= $used ?> หน่วย</span></td>
+                                    <td class="text-center">
+                                        <?php if (!$used): ?>
+                                            <?= Html::a('<i class="fa-solid fa-trash"></i>', ['type-delete', 'id' => $t->id], [
+                                                'class' => 'btn btn-sm btn-outline-danger border-0',
+                                                'data-method' => 'post',
+                                                'data-confirm' => 'ลบประเภท "' . Html::encode($t->title) . '"?',
+                                            ]) ?>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <div class="text-end">
+                        <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึกประเภท', ['class' => 'btn btn-sm btn-primary']) ?>
+                    </div>
+                <?= Html::endForm() ?>
+            </div>
+        </div>
+    </div>
+</div>

@@ -29,6 +29,9 @@ class OrgUnitController extends Controller
                     'add' => ['post'],
                     'sync' => ['post'],
                     'delete' => ['post'],
+                    'type-add' => ['post'],
+                    'type-save' => ['post'],
+                    'type-delete' => ['post'],
                 ],
             ],
         ];
@@ -66,7 +69,76 @@ class OrgUnitController extends Controller
             'typeCounts' => $this->typeCounts($year),
             'srcCounts' => $this->srcCounts($year),
             'levels' => $this->levelMap(),
+            'manageTypes' => Categorise::find()->where(['name' => 'org_unit_type'])->orderBy(['sort' => SORT_ASC])->all(),
         ]);
+    }
+
+    /** เพิ่มประเภทหน่วยงาน (categorise org_unit_type) — code สร้างอัตโนมัติ, ผู้ใช้กรอกแค่ชื่อ */
+    public function actionTypeAdd()
+    {
+        $year = (int) ($this->request->post('thai_year') ?: PlanHelper::currentPlanYear());
+        $title = trim((string) $this->request->post('title', ''));
+        if ($title !== '') {
+            $max = (int) (new Query())->from('categorise')
+                ->where(['name' => 'org_unit_type'])->max('CAST(sort AS UNSIGNED)');
+            Yii::$app->db->createCommand()->insert('categorise', [
+                'name' => 'org_unit_type',
+                'code' => $this->genTypeCode(),
+                'title' => $title,
+                'sort' => (string) ($max + 1),
+                'active' => 1,
+            ])->execute();
+            Yii::$app->session->setFlash('success', 'เพิ่มประเภท "' . $title . '" แล้ว');
+        }
+        return $this->redirect(['index', 'thai_year' => $year]);
+    }
+
+    /** บันทึกชื่อ/สถานะ/ลำดับ ประเภท (bulk) */
+    public function actionTypeSave()
+    {
+        $year = (int) ($this->request->post('thai_year') ?: PlanHelper::currentPlanYear());
+        foreach ((array) $this->request->post('types', []) as $id => $d) {
+            $c = Categorise::findOne(['id' => (int) $id, 'name' => 'org_unit_type']);
+            if ($c === null) {
+                continue;
+            }
+            $title = trim((string) ($d['title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+            $c->title = $title;
+            $c->active = !empty($d['active']) ? 1 : 0;
+            if (isset($d['sort'])) {
+                $c->sort = (string) (int) $d['sort'];
+            }
+            $c->save(false);
+        }
+        Yii::$app->session->setFlash('success', 'บันทึกประเภทหน่วยงานเรียบร้อย');
+        return $this->redirect(['index', 'thai_year' => $year]);
+    }
+
+    /** ลบประเภท — กันลบถ้ามีหน่วยงานใช้อยู่ (ทุกปี) */
+    public function actionTypeDelete($id)
+    {
+        $c = Categorise::findOne(['id' => (int) $id, 'name' => 'org_unit_type']);
+        if ($c !== null) {
+            if (OrgUnit::find()->where(['unit_type' => $c->code])->exists()) {
+                Yii::$app->session->setFlash('error', 'ลบไม่ได้ — ประเภท "' . $c->title . '" มีหน่วยงานใช้อยู่ (ปิดใช้แทนได้)');
+            } else {
+                $c->delete();
+                Yii::$app->session->setFlash('success', 'ลบประเภทแล้ว');
+            }
+        }
+        return $this->redirect(['index']);
+    }
+
+    private function genTypeCode(): string
+    {
+        do {
+            $code = 'OU_' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+            $exists = (new Query())->from('categorise')->where(['name' => 'org_unit_type', 'code' => $code])->exists();
+        } while ($exists);
+        return $code;
     }
 
     /** บันทึกแบบกลุ่ม — อักษรย่อ/ประเภท/เปิดใช้ (+ ชื่อ/หัวหน้า สำหรับหน่วย manual) */
