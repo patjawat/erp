@@ -63,7 +63,7 @@ $form = ActiveForm::begin(['id' => 'me-plan-form']);
     <div class="card-body">
         <div class="row">
             <div class="col-md-3">
-                <?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600])->label('ปีงบประมาณ') ?>
+                <?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600, 'readonly' => true])->label('ปีงบประมาณ')->hint('ตามรอบทำแผนที่เปิด') ?>
             </div>
             <div class="col-md-9">
                 <?php if (count($orgList) > 1): ?>

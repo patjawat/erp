@@ -9,6 +9,7 @@ use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\modules\plan\components\PlanHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
@@ -46,6 +47,9 @@ class ParcelController extends Controller
     public function actionIndex()
     {
         $searchModel = new PlanOrderSearch();
+        if (!$this->request->get('PlanOrderSearch')) {
+            $searchModel->thai_year = PlanHelper::currentPlanYear(); // default = ปีที่เปิด (เลือกปีเก่าได้)
+        }
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'parcel']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
@@ -191,7 +195,7 @@ class ParcelController extends Controller
     public function actionCreate()
 {
     $model = new PlanOrder([
-        'thai_year'        => (AppHelper::YearBudget() + 1),
+        'thai_year'        => \app\modules\plan\components\PlanHelper::currentPlanYear(),
         'plan_group_id'    => 'parcel',   // Default to material type
         'plan_type_id'     => 'INV',
         'plan_category_id' => 'INV_01',

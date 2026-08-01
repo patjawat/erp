@@ -11,6 +11,16 @@ use yii\helpers\ArrayHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanItemSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+
+$planYears = ArrayHelper::map(
+    \app\modules\plan\models\PlanOrder::find()->select('thai_year')->where(['not', ['thai_year' => null]])->distinct()->orderBy(['thai_year' => SORT_DESC])->asArray()->all(),
+    'thai_year',
+    'thai_year'
+);
+$curPlanYear = \app\modules\plan\components\PlanHelper::currentPlanYear();
+if (!isset($planYears[$curPlanYear])) {
+    $planYears = [$curPlanYear => $curPlanYear] + $planYears;
+}
 ?>
 
 <div class="plan-item-search">
@@ -24,7 +34,11 @@ use yii\helpers\ArrayHelper;
     ]); ?>
     <div class="row">
         <div class="col-lg-2">
-            <?= $form->field($model, 'thai_year')->textInput(['placeholder' => 'ปีงบประมาณ'])->label(false) ?>
+            <?= $form->field($model, 'thai_year')->widget(Select2::class, [
+                'data' => $planYears,
+                'options' => ['placeholder' => 'ปีงบประมาณ (ทุกปี)'],
+                'pluginOptions' => ['allowClear' => true],
+            ])->label(false) ?>
         </div>
                        <div class="col-lg-7">
                         <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [

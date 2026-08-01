@@ -18,7 +18,7 @@ class OverviewController extends Controller
      */
     public function actionIndex()
     {
-        $thaiYear = (int) $this->request->get('thai_year', AppHelper::YearBudget());
+        $thaiYear = (int) $this->request->get('thai_year', \app\modules\plan\components\PlanHelper::currentPlanYear());
         $status   = (string) $this->request->get('status', 'all'); // ค่าเริ่มต้น = ทั้งหมด
 
         $summary = PlanOrder::overviewByType($thaiYear, $status);

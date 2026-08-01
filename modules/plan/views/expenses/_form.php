@@ -41,7 +41,7 @@ $form = ActiveForm::begin([
                 <!-- ข้อมูลแผน -->
                 <div class="row">
                     <div class="col-md-3">
-                        <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
+                        <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true, 'readonly' => true])->hint('ตามรอบทำแผนที่เปิด') ?>
                     </div>
                     <div class="col-md-9">
                         <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [

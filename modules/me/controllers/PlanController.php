@@ -12,6 +12,7 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderItem;
+use app\modules\plan\components\PlanHelper;
 
 /**
  * PlanController — หัวหน้าหน่วยงานจัดทำ/ติดตามแผนของหน่วยงานตนเอง (/me/plan)
@@ -93,7 +94,7 @@ class PlanController extends Controller
     /** รายการแผนของหน่วยงาน + สรุปตามประเภท/หมวด + ค้นหา/กรอง */
     public function actionIndex()
     {
-        $thaiYear   = (int) $this->request->get('thai_year', AppHelper::YearBudget() + 1);
+        $thaiYear   = (int) $this->request->get('thai_year', \app\modules\plan\components\PlanHelper::currentPlanYear());
         $status     = (string) $this->request->get('status', 'all');
         $q          = trim((string) $this->request->get('q', ''));
         $deptFilter = (int) $this->request->get('department_id', 0);
@@ -203,8 +204,11 @@ class PlanController extends Controller
     /** สร้างแผนใหม่ */
     public function actionCreate()
     {
+        if (!PlanHelper::canAdd()) {
+            throw new ForbiddenHttpException('รอบทำแผนปิดรับข้อมูลแล้ว');
+        }
         $model = new PlanOrder([
-            'thai_year'     => AppHelper::YearBudget() + 1,
+            'thai_year'     => \app\modules\plan\components\PlanHelper::currentPlanYear(),
             'department_id' => $this->ledOrgIds[0],
             'emp_id'        => (string) $this->me->id,
             'status'        => 'draft',
@@ -227,8 +231,11 @@ class PlanController extends Controller
     /** จัดทำแผนพัสดุ (ฟอร์มเต็ม + ดึงเบิก) — ล็อกหน่วยงาน = หน่วยของหัวหน้า */
     public function actionCreateParcel()
     {
+        if (!PlanHelper::canAdd()) {
+            throw new ForbiddenHttpException('รอบทำแผนปิดรับข้อมูลแล้ว');
+        }
         $model = new PlanOrder([
-            'thai_year'     => AppHelper::YearBudget() + 1,
+            'thai_year'     => \app\modules\plan\components\PlanHelper::currentPlanYear(),
             'plan_group_id' => 'parcel',
             'department_id' => $this->ledOrgIds[0],
             'emp_id'        => (string) $this->me->id,
@@ -327,6 +334,9 @@ class PlanController extends Controller
         if (!in_array($model->status, ['draft', 'reject'], true)) {
             throw new ForbiddenHttpException('แผนที่ส่งขออนุมัติหรืออนุมัติแล้ว แก้ไขไม่ได้');
         }
+        if (!PlanHelper::canEdit($model->thai_year)) {
+            throw new ForbiddenHttpException('รอบทำแผนปิดการแก้ไขแล้ว (ติดต่อผู้ดูแลแผน)');
+        }
 
         if ($model->load($this->request->post())) {
             $model->plan_group_id = $this->groupForItem($model->plan_item_id);
@@ -346,7 +356,7 @@ class PlanController extends Controller
     public function actionSubmit($id)
     {
         $model = $this->findModel($id);
-        if (in_array($model->status, ['draft', 'reject'], true)) {
+        if (in_array($model->status, ['draft', 'reject'], true) && PlanHelper::canAdd($model->thai_year)) {
             $model->status = 'submit';
             $model->save(false);
             Yii::$app->session->setFlash('success', 'ส่งขออนุมัติแล้ว');
@@ -358,7 +368,7 @@ class PlanController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        if ($model->status === 'draft') {
+        if ($model->status === 'draft' && PlanHelper::canEdit($model->thai_year)) {
             $model->delete();
             Yii::$app->session->setFlash('success', 'ลบแผนแล้ว');
         }
@@ -398,7 +408,7 @@ class PlanController extends Controller
     /** ตัวเลือกปีงบ (ปีถัดไป + ปีที่มีข้อมูลแล้ว) */
     private function yearOptions()
     {
-        $next = AppHelper::YearBudget() + 1;
+        $next = \app\modules\plan\components\PlanHelper::currentPlanYear();
         $years = PlanOrder::find()
             ->select('thai_year')
             ->where(['department_id' => $this->ledOrgIds])

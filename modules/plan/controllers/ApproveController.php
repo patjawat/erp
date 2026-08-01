@@ -43,7 +43,7 @@ class ApproveController extends Controller
     /** รายการแผนหน่วยงานที่ส่งขออนุมัติ (แยกตามสถานะ) */
     public function actionIndex()
     {
-        $thaiYear = (int) $this->request->get('thai_year', AppHelper::YearBudget() + 1);
+        $thaiYear = (int) $this->request->get('thai_year', \app\modules\plan\components\PlanHelper::currentPlanYear());
         $status   = $this->request->get('status', 'submit');
         $group    = (string) $this->request->get('group', 'all'); // department|parcel|personnel|expenses|all
 

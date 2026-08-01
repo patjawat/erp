@@ -4,6 +4,7 @@ use yii\db\Query;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\helpers\ArrayHelper;
+use app\modules\plan\components\PlanHelper;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\Employees $me */
@@ -179,17 +180,25 @@ uasort($byCat, function ($a, $b) use ($bucketOrder) {
 </div>
 <?php endif; ?>
 
-<div class="d-flex justify-content-end mb-2">
-    <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa-solid fa-plus me-1"></i> จัดทำแผนใหม่
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            <li><?= Html::a('<i class="fa-solid fa-box-open me-2"></i> แผนพัสดุ (ครุภัณฑ์/วัสดุ)', ['create-parcel'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร', ['create'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i class="fa-solid fa-file-invoice-dollar me-2"></i> แผนค่าใช้สอย', ['create'], ['class' => 'dropdown-item']) ?></li>
-        </ul>
-    </div>
+<?php $phase = PlanHelper::phase($thaiYear); ?>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="small text-muted">
+        รอบทำแผนปี <?= $thaiYear ?> :
+        <span class="badge <?= PlanHelper::phaseClass($phase) ?>"><?= PlanHelper::phaseLabel($phase) ?></span>
+        <?php if ($phase === PlanHelper::PHASE_LOCK): ?><span class="text-warning">— เพิ่มใหม่ได้ แต่แก้ของเดิมไม่ได้</span><?php endif; ?>
+    </span>
+    <?php if (PlanHelper::canAdd($thaiYear)): ?>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-plus me-1"></i> จัดทำแผนใหม่
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><?= Html::a('<i class="fa-solid fa-box-open me-2"></i> แผนพัสดุ (ครุภัณฑ์/วัสดุ)', ['create-parcel'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร', ['create'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-file-invoice-dollar me-2"></i> แผนค่าใช้สอย', ['create'], ['class' => 'dropdown-item']) ?></li>
+            </ul>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="card">
@@ -235,15 +244,21 @@ uasort($byCat, function ($a, $b) use ($bucketOrder) {
                             <?php endif; ?>
                         </td>
                         <td class="text-end">
+                            <?php
+                            $rowCanEdit = PlanHelper::canEdit($m->thai_year);
+                            $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
+                            ?>
                             <div class="d-flex gap-1 justify-content-end">
-                                <?php if ($editable): ?>
+                                <?php if ($editable && $rowCanEdit): ?>
                                     <?= Html::a('<i class="fa-solid fa-pen"></i>', ['update', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']) ?>
+                                <?php endif; ?>
+                                <?php if ($editable && $rowCanAdd): ?>
                                     <?= Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งขออนุมัติ', ['submit', 'id' => $m->id], [
                                         'class' => 'btn btn-sm btn-outline-primary',
                                         'data' => ['method' => 'post', 'confirm' => 'ส่งแผนนี้ขออนุมัติ?'],
                                     ]) ?>
                                 <?php endif; ?>
-                                <?php if ($m->status === 'draft'): ?>
+                                <?php if ($m->status === 'draft' && $rowCanEdit): ?>
                                     <?= Html::a('<i class="fa-solid fa-trash"></i>', ['delete', 'id' => $m->id], [
                                         'class' => 'btn btn-sm btn-outline-danger',
                                         'title' => 'ลบ',

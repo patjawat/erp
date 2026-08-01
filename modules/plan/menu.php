@@ -76,6 +76,10 @@ use yii\helpers\Html;
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             <li>
+                <?= Html::a('<i class="fa-solid fa-calendar-check me-2"></i> รอบทำแผน', ['/plan/plan-period'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
                 <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภท', ['/plan/plan-type'], ['class' => 'dropdown-item']) ?>
             </li>
             <li>
