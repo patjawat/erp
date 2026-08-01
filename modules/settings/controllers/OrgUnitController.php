@@ -165,6 +165,7 @@ class OrgUnitController extends Controller
                 $errors[] = $model->name . ': ' . implode(' ', $model->getFirstErrors());
             }
         }
+        OrgUnit::syncToMedsop($year); // mirror อักษรย่อ/สถานะ ไป medsop
         if ($errors) {
             Yii::$app->session->setFlash('warning', 'บันทึกบางส่วนไม่สำเร็จ: ' . implode(' | ', $errors));
         } else {
@@ -189,6 +190,7 @@ class OrgUnitController extends Controller
             'sort' => 999,
         ]);
         if ($model->save()) {
+            OrgUnit::syncToMedsop($year);
             Yii::$app->session->setFlash('success', 'เพิ่มหน่วยงาน "' . $model->name . '" แล้ว');
         } else {
             Yii::$app->session->setFlash('error', 'เพิ่มไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
@@ -201,6 +203,7 @@ class OrgUnitController extends Controller
     {
         $year = (int) ($this->request->post('thai_year') ?: PlanHelper::currentPlanYear());
         $r = OrgUnit::syncStructure($year);
+        OrgUnit::syncToMedsop($year);
         Yii::$app->session->setFlash('success', "ซิงก์จากผังโครงสร้างแล้ว — เพิ่ม {$r['added']}, อัปเดต {$r['updated']} หน่วย");
         return $this->redirect(['index', 'thai_year' => $year]);
     }

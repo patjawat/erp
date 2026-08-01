@@ -256,6 +256,38 @@ class OrgUnit extends ActiveRecord
         return ['orgCodes' => $orgCodes, 'teams' => $teams];
     }
 
+    /**
+     * mirror อักษรย่อ/สถานะ จากทะเบียน -> ตาราง medsop (เฉพาะปีที่เปิดใช้ปัจจุบัน)
+     * ให้ระบบออกเลขเอกสาร medsop อ่านค่าเดิมของตัวเองต่อได้ โดยแก้จุดเดียวที่ทะเบียน
+     */
+    public static function syncToMedsop(int $thaiYear): void
+    {
+        if ($thaiYear !== (int) \app\modules\plan\components\PlanHelper::currentPlanYear()) {
+            return; // sync เฉพาะปีปัจจุบัน — แก้ปีเก่าไม่กระทบ medsop
+        }
+        $now = date('Y-m-d H:i:s');
+        $db = Yii::$app->db;
+        $hasOrg = static::tableExists('medsop_organization_setting');
+        $hasTeam = static::tableExists('medsop_team_setting');
+
+        foreach (static::find()->where(['thai_year' => $thaiYear])->all() as $u) {
+            if ($u->source === self::SOURCE_STRUCTURE && $u->ref_id && $hasOrg) {
+                $db->createCommand()->upsert('medsop_organization_setting',
+                    ['organization_id' => (int) $u->ref_id, 'code' => $u->code, 'active' => (int) $u->active, 'created_at' => $now, 'updated_at' => $now],
+                    ['code' => $u->code, 'active' => (int) $u->active, 'updated_at' => $now]
+                )->execute();
+            } elseif ($u->source === self::SOURCE_MANUAL && $hasTeam) {
+                $tgId = is_array($u->data_json) ? (int) ($u->data_json['team_group_id'] ?? 0) : 0;
+                if ($tgId > 0) {
+                    $db->createCommand()->upsert('medsop_team_setting',
+                        ['team_group_id' => $tgId, 'code' => $u->code, 'active' => (int) $u->active, 'created_at' => $now, 'updated_at' => $now],
+                        ['code' => $u->code, 'active' => (int) $u->active, 'updated_at' => $now]
+                    )->execute();
+                }
+            }
+        }
+    }
+
     private static function codeTaken(int $thaiYear, string $code, int $exceptId): bool
     {
         return static::find()
