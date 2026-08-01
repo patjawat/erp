@@ -256,6 +256,24 @@ class PlanOrder extends \yii\db\ActiveRecord
             }
         }
 
+        // เฟส 2: ผูกทะเบียนหน่วยงาน (org_unit) แบบ dual-write
+        if (empty($this->plan_unit_id) && !empty($this->department_id) && !empty($this->thai_year)) {
+            // ฟอร์มเดิม (เลือกหน่วยจากผัง) -> เติม plan_unit_id จากหน่วยในโครงสร้างปีเดียวกัน
+            $this->plan_unit_id = (new \yii\db\Query())
+                ->select('id')->from('org_unit')
+                ->where(['thai_year' => (int) $this->thai_year, 'source' => 'structure', 'ref_id' => (int) $this->department_id])
+                ->scalar() ?: null;
+        } elseif (!empty($this->plan_unit_id) && empty($this->department_id)) {
+            // ฟอร์มใหม่ (เลือกจากทะเบียน) -> เติม department_id กลับถ้าเป็นหน่วยในโครงสร้าง (manual = null)
+            $refId = (new \yii\db\Query())
+                ->select('ref_id')->from('org_unit')
+                ->where(['id' => (int) $this->plan_unit_id, 'source' => 'structure'])
+                ->scalar();
+            if ($refId) {
+                $this->department_id = (int) $refId;
+            }
+        }
+
         return true;
     }
 
