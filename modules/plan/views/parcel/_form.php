@@ -69,6 +69,25 @@ $scope        = $scope ?? 'plan';
 $lockDept     = $lockDept ?? null;
 $lockDeptName = $lockDeptName ?? '';
 
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ จัดกลุ่มตามประเภท (scope=plan)
+$ouGroups = [];
+$ouRefMap = [];
+if ($scope !== 'me') {
+    $ouRows = (new \yii\db\Query())
+        ->select(['o.id', 'o.name', 'o.ref_id', 'type_title' => 'c.title'])
+        ->from(['o' => 'org_unit'])
+        ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
+        ->where(['o.thai_year' => (int) $model->thai_year, 'o.active' => 1])
+        ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
+        ->all();
+    foreach ($ouRows as $r) {
+        $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
+        $ouRefMap[$r['id']] = $r['ref_id'] !== null ? (int) $r['ref_id'] : null;
+    }
+    // ให้ pull JS แปลง plan_unit_id -> tree.id (ref_id) ; null=หน่วยนอกผัง
+    $this->registerJs('window.__ouRef = ' . \yii\helpers\Json::encode($ouRefMap) . ';', \yii\web\View::POS_HEAD);
+}
+
 $form = ActiveForm::begin(array_merge(
     ['id' => 'form'],
     $scope === 'me'
@@ -96,18 +115,11 @@ $form = ActiveForm::begin(array_merge(
                             <label class="form-label">หน่วยงาน</label>
                             <div class="form-control-plaintext fw-semibold"><?= Html::encode($lockDeptName) ?></div>
                         <?php else: ?>
-                            <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                                'name' => 'department',
-                                'id' => 'treeID',
-                                'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                                'value' => 1,
-                                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                                'fontAwesome' => true,
-                                'asDropdown' => true,
-                                'multiple' => false,
-                                'options' => ['disabled' => false],
-                            ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                            <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
+                                'data' => $ouGroups,
+                                'options' => ['id' => 'plan-unit', 'placeholder' => '-- เลือกหน่วยงาน --'],
+                                'pluginOptions' => ['allowClear' => false],
+                            ])->label('หน่วยงาน')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)'); ?>
                         <?php endif; ?>
                     </div>
 
@@ -512,7 +524,8 @@ $pullUrl = \yii\helpers\Url::to(['pull-consumption']);
 $pullJs = <<<JS
 $('#btn-pull-consumption').on('click', function(){
     var atype = $('#pull-asset-type').val();
-    var dept  = $('#treeID').val() || $('[name="department"]').val();
+    var puid  = $('#plan-unit').val();
+    var dept  = (window.__ouRef && puid) ? window.__ouRef[puid] : ($('#treeID').val() || $('[name="department"]').val());
     var year  = $('#planorder-thai_year').val();
     var incChild = $('#pull-include-children').is(':checked') ? 1 : 0;
     if(!atype){ Swal.fire('กรุณาเลือกประเภทวัสดุก่อน'); return; }

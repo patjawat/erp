@@ -12,6 +12,18 @@ use app\modules\am\components\AssetHelper;
 /** @var $model app\modules\plan\models\Plan */
 /** @var $items app\modules\plan\models\PlanItem[] */
 
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ จัดกลุ่มตามประเภท
+$ouGroups = [];
+foreach ((new \yii\db\Query())
+    ->select(['o.id', 'o.name', 'type_title' => 'c.title'])
+    ->from(['o' => 'org_unit'])
+    ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
+    ->where(['o.thai_year' => (int) $model->thai_year, 'o.active' => 1])
+    ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
+    ->all() as $r) {
+    $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
+}
+
 $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -33,18 +45,11 @@ $form = ActiveForm::begin([
                         <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true, 'readonly' => true])->hint('ตามรอบทำแผนที่เปิด') ?>
                     </div>
                     <div class="col-md-9">
-                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                            'name' => 'department',
-                            'id' => 'treeID',
-                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                            'value' => 1,
-                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                            'fontAwesome' => true,
-                            'asDropdown' => true,
-                            'multiple' => false,
-                            'options' => ['disabled' => false],
-                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
+                            'data' => $ouGroups,
+                            'options' => ['id' => 'plan-unit', 'placeholder' => '-- เลือกหน่วยงาน --'],
+                            'pluginOptions' => ['allowClear' => false],
+                        ])->label('หน่วยงาน')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)'); ?>
                     </div>
 
 

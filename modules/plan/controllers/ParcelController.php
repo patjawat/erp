@@ -176,7 +176,7 @@ class ParcelController extends Controller
 
 
             $model->description == '' ? $model->addError('description', $requiredName) : null;
-            $model->department_id == '' ? $model->addError('department_id', $requiredName) : null;
+            $model->plan_unit_id == '' ? $model->addError('plan_unit_id', $requiredName) : null;
             // $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {

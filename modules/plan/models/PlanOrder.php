@@ -153,7 +153,9 @@ class PlanOrder extends \yii\db\ActiveRecord
                 'value' => 0
             ],
             [['thai_year', 'department_id', 'plan_unit_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
-            [['plan_group_id', 'thai_year', 'department_id', 'asset_group_id', 'price_ref'], 'required'],
+            [['plan_group_id', 'thai_year', 'asset_group_id', 'price_ref'], 'required'],
+            // ต้องระบุหน่วยงานอย่างน้อยหนึ่ง: ทะเบียน (plan_unit_id) หรือผังเดิม (department_id)
+            [['plan_unit_id'], 'required', 'when' => function ($m) { return empty($m->department_id); }, 'enableClientValidation' => false, 'message' => 'กรุณาเลือกหน่วยงาน'],
             [['description', 'reference'], 'string'],
             [
                 [
