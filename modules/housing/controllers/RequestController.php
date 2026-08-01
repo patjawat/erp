@@ -298,15 +298,15 @@ final class RequestController extends BaseController
     private function resolveAllocationTarget(string $target): array
     {
         if (!preg_match('/^(building|unit|room):(\d+)$/', $target, $matches)) {
-            throw new \DomainException('กรุณาเลือกบ้านพักหรือห้องที่จะจัดสรร');
+            throw new \DomainException('กรุณาเลือกที่พักที่จะจัดสรร');
         }
         if ($matches[1] === 'room') {
             $room = Room::find()->with('unit')->where(['id' => (int)$matches[2], 'status' => Unit::STATUS_VACANT])->one();
             if (!$room || !$room->unit) {
-                throw new \DomainException('ห้องที่เลือกไม่ว่างหรือไม่มีอยู่แล้ว');
+                throw new \DomainException('ห้องย่อยที่เลือกไม่ว่างหรือไม่มีอยู่แล้ว');
             }
             if ($room->unit->occupancy_mode !== Unit::MODE_SHARED) {
-                throw new \DomainException('ยูนิตนี้เป็นรูปแบบพักทั้งยูนิต ไม่สามารถจัดสรรแยกห้องได้ หากต้องการจัดสรรรายห้องให้แก้ไขรูปแบบการพักเป็น "แฟลตโสด (แยกห้อง)" ก่อน');
+                throw new \DomainException('ห้องนี้เป็นรูปแบบพักทั้งห้อง ไม่สามารถจัดสรรแยกห้องย่อยได้ หากต้องการจัดสรรรายห้องย่อยให้แก้ไขรูปแบบการพักเป็น "แฟลตโสด (แยกห้องย่อย)" ก่อน');
             }
             return [$room->unit, (int)$room->id];
         }
@@ -315,7 +315,7 @@ final class RequestController extends BaseController
                 ->where(['id' => (int)$matches[2], 'status' => Building::STATUS_ACTIVE, 'building_type' => Building::TYPE_HOUSE])
                 ->one();
             if (!$building || $building->getUnits()->exists()) {
-                throw new \DomainException('บ้านพักที่เลือกไม่ว่างหรือมีการแบ่งยูนิตแล้ว');
+                throw new \DomainException('บ้านพักที่เลือกไม่ว่างหรือมีการแบ่งห้องแล้ว');
             }
             $unit = new Unit([
                 'building_id' => $building->id,
@@ -332,10 +332,10 @@ final class RequestController extends BaseController
         }
         $unit = Unit::find()->where(['id' => (int)$matches[2], 'status' => Unit::STATUS_VACANT])->one();
         if (!$unit) {
-            throw new \DomainException('บ้านพักที่เลือกไม่ว่างหรือไม่มีอยู่แล้ว');
+            throw new \DomainException('ห้องที่เลือกไม่ว่างหรือไม่มีอยู่แล้ว');
         }
         if ($unit->occupancy_mode === Unit::MODE_SHARED) {
-            throw new \DomainException('ยูนิตนี้เป็นรูปแบบแยกห้อง ต้องจัดสรรเป็นรายห้อง หากต้องการจัดสรรทั้งยูนิตให้แก้ไขรูปแบบการพักก่อน');
+            throw new \DomainException('ห้องนี้เป็นรูปแบบแยกห้องย่อย ต้องจัดสรรเป็นรายห้องย่อย หากต้องการจัดสรรทั้งห้องให้แก้ไขรูปแบบการพักก่อน');
         }
         return [$unit, null];
     }

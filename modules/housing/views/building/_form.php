@@ -31,7 +31,7 @@ $form = ActiveForm::begin([
     <div class="col-12">
         <?php if ($inactiveResponsible !== null): ?>
             <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" role="alert">
-                <i data-lucide="triangle-alert" class="flex-shrink-0 mt-1" style="width:18px;height:18px"></i>
+                <i class="bi bi-exclamation-triangle flex-shrink-0 mt-1" style="font-size:18px"></i>
                 <div>
                     <div class="fw-semibold">ต้องกำหนดผู้รับผิดชอบใหม่</div>
                     <div class="small">

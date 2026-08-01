@@ -303,13 +303,16 @@ class AssetController extends Controller
             $dataJson = [];
         }
 
-        $organizationName = trim((string) ($siteInfo['company_name'] ?? '')) ?: 'ส่วนราชการ';
+        $organizationName = trim((string) ($siteInfo['company_name'] ?? '')) ?: '-';
         $assetTypeTitle = trim((string) ($dataJson['asset_type_text'] ?? $model->assetType?->title ?? $model->AssetTypeName() ?? '')) ?: '-';
         $assetName = trim((string) ($dataJson['asset_name'] ?? $model->asset_name ?? $model->AssetitemName() ?? '')) ?: '-';
         $location = trim((string) ($dataJson['location'] ?? $model->departmentName() ?? '')) ?: '-';
         $vendor = $this->resolveVendorDetails($model, $dataJson);
         $budgetType = trim((string) ($model->budgetTypeName() ?? ($dataJson['budget_type_text'] ?? ''))) ?: '-';
-        $purchaseMethod = trim((string) ($model->methodGetName() ?? $dataJson['method_get_text'] ?? '')) ?: '-';
+        // "วิธีการได้มา" ในรายงาน = ฟิลด์ purchase (categorise name=purchase) ไม่ใช่ method_get
+        $purchaseMethod = trim((string) ($model->purchaseName() ?? $dataJson['purchase_text'] ?? '')) ?: '-';
+        // หน่วยงานผู้รับผิดชอบ (แยกจาก "ส่วนราชการ" ที่เป็นชื่อหน่วยงานหลัก/รพ.)
+        $departmentName = trim((string) ($model->departmentName() ?? '')) ?: '-';
         $docNo = $this->extractDocumentNumber($model, $dataJson);
         $assetCode = trim((string) ($model->code ?? '')) ?: '-';
         $unit = trim((string) ($dataJson['unit'] ?? '')) ?: 'เครื่อง';
@@ -367,6 +370,7 @@ class AssetController extends Controller
             'model' => $model,
             'siteInfo' => $siteInfo,
             'organizationName' => $organizationName,
+            'departmentName' => $departmentName,
             'assetTypeTitle' => $assetTypeTitle,
             'assetName' => $assetName,
             'assetCode' => $assetCode,

@@ -34,7 +34,7 @@ $form = ActiveForm::begin(['id' => 'utility-form']);
     <div class="col-md-6"><?= $form->field($model, 'charge_type_id')->dropDownList($chargeTypes, ['prompt' => 'เลือกประเภท']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'calculation_type')->dropDownList(['flat' => 'เหมาจ่าย', 'per_unit' => 'ต่อหน่วย']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'building_id')->dropDownList($buildings, ['prompt' => 'ทุกบ้านพัก']) ?></div>
-    <div class="col-md-6"><?= $form->field($model, 'unit_id')->dropDownList($units, ['prompt' => 'ทุกยูนิต']) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'unit_id')->dropDownList($units, ['prompt' => 'ทุกห้อง']) ?></div>
     <div class="col-md-3"><?= $form->field($model, 'rate')->input('number', ['step' => '.01']) ?></div>
     <div class="col-md-3"><?= $form->field($model, 'minimum_charge')->input('number', ['step' => '.01']) ?></div>
     <div class="col-md-3"><?= $form->field($model, 'effective_from')->input('date') ?></div>
@@ -46,7 +46,7 @@ $form = ActiveForm::begin(['id' => 'utility-form']);
     <div class="col-md-4"><?= $form->field($model, 'meter_no')->textInput() ?></div>
     <div class="col-md-4"><?= $form->field($model, 'name')->textInput() ?></div>
     <div class="col-md-6"><?= $form->field($model, 'building_id')->dropDownList($buildings, ['prompt' => 'เลือกอาคาร']) ?></div>
-    <div class="col-md-6"><?= $form->field($model, 'unit_id')->dropDownList($units, ['prompt' => 'ไม่ระบุยูนิต']) ?></div>
+    <div class="col-md-6"><?= $form->field($model, 'unit_id')->dropDownList($units, ['prompt' => 'ไม่ระบุห้อง']) ?></div>
     <div class="col-md-6"><?= $form->field($model, 'installed_at')->input('date') ?></div>
     <div class="col-md-6"><?= $form->field($model, 'status')->dropDownList(['active' => 'ใช้งาน', 'inactive' => 'งดใช้งาน']) ?></div>
 </div>

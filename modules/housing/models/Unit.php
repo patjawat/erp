@@ -48,8 +48,8 @@ final class Unit extends HousingActiveRecord
         return [
             'building_id' => 'อาคาร',
             'floor_id' => 'ชั้น',
-            'code' => 'รหัสยูนิต',
-            'name' => 'ชื่อยูนิต',
+            'code' => 'รหัสห้อง',
+            'name' => 'ชื่อห้อง',
             'electric_account_no' => 'หมายเลขผู้ใช้ไฟฟ้า',
             'occupancy_mode' => 'รูปแบบการพัก',
             'capacity' => 'ความจุ (ถ้ามี)',
@@ -61,8 +61,8 @@ final class Unit extends HousingActiveRecord
     }
 
     /**
-     * ห้ามสลับ "รูปแบบการพัก" ข้ามเส้นแบ่ง แยกห้อง (shared) ↔ ทั้งยูนิต ขณะที่ยูนิต
-     * ยังมีการจัดสรรหรือมีผู้พักอยู่ เพราะโครงสร้าง occupancy (ระดับห้อง vs ทั้งยูนิต)
+     * ห้ามสลับ "รูปแบบการพัก" ข้ามเส้นแบ่ง แยกห้องย่อย (shared) ↔ ทั้งห้อง ขณะที่ห้อง
+     * ยังมีการจัดสรรหรือมีผู้พักอยู่ เพราะโครงสร้าง occupancy (ระดับห้องย่อย vs ทั้งห้อง)
      * จะไม่สอดคล้องกับ mode ทันที
      */
     public function validateModeChange(string $attribute): void
@@ -80,7 +80,7 @@ final class Unit extends HousingActiveRecord
             'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
         ])->exists();
         if ($hasOccupancy) {
-            $this->addError($attribute, 'ไม่สามารถเปลี่ยนรูปแบบการพักระหว่าง "แยกห้อง" กับ "ทั้งยูนิต" ได้ เนื่องจากยูนิตนี้มีการจัดสรรหรือมีผู้พักอยู่ กรุณาย้ายออกหรือยกเลิกการจัดสรรก่อน');
+            $this->addError($attribute, 'ไม่สามารถเปลี่ยนรูปแบบการพักระหว่าง "แยกห้องย่อย" กับ "ทั้งห้อง" ได้ เนื่องจากห้องนี้มีการจัดสรรหรือมีผู้พักอยู่ กรุณาย้ายออกหรือยกเลิกการจัดสรรก่อน');
         }
     }
 
@@ -117,9 +117,9 @@ final class Unit extends HousingActiveRecord
     public static function modeOptions(): array
     {
         return [
-            self::MODE_FAMILY => 'ครอบครัว (ทั้งยูนิต)',
-            self::MODE_SHARED => 'แฟลตโสด (แยกห้อง)',
-            self::MODE_SINGLE_UNIT => 'บุคคลเดียว (ทั้งยูนิต)',
+            self::MODE_FAMILY => 'ครอบครัว (ทั้งห้อง)',
+            self::MODE_SHARED => 'แฟลตโสด (แยกห้องย่อย)',
+            self::MODE_SINGLE_UNIT => 'บุคคลเดียว (ทั้งห้อง)',
         ];
     }
 

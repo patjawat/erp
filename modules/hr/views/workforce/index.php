@@ -27,12 +27,12 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
     </header>
 
     <?php if ($section === 'overview'): ?>
-        <section class="workforce-metrics" aria-label="ตัวชี้วัดงานบุคลากร">
-            <div class="workforce-metric"><span class="workforce-metric__label">บุคลากรที่ปฏิบัติงาน</span><strong class="workforce-metric__value"><?= number_format($metrics['employees']) ?></strong><span class="workforce-metric__hint">สถานะปฏิบัติราชการ</span></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">มี JD ปัจจุบัน</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_active']) ?></strong><span class="workforce-metric__hint">รอลงนาม <?= number_format($metrics['jd_pending']) ?> คน</span></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">IDP ในรอบปัจจุบัน</span><strong class="workforce-metric__value"><?= number_format($metrics['idp_total']) ?></strong><span class="workforce-metric__hint">ต้องดำเนินการ <?= number_format($metrics['idp_action']) ?> แผน</span></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">TRM กำลังดำเนินการ</span><strong class="workforce-metric__value"><?= number_format($metrics['trm_in_progress']) ?></strong><span class="workforce-metric__hint">Roadmap ใช้งาน <?= number_format($metrics['trm_active']) ?> แบบ</span></div>
-        </section>
+        <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
+            ['label' => 'บุคลากรที่ปฏิบัติงาน', 'value' => $metrics['employees'], 'icon' => 'bi-people-fill', 'color' => 'primary', 'hint' => 'สถานะปฏิบัติราชการ'],
+            ['label' => 'มี JD ปัจจุบัน', 'value' => $metrics['jd_active'], 'icon' => 'bi-file-earmark-text', 'color' => 'info', 'hint' => 'รอลงนาม ' . number_format($metrics['jd_pending']) . ' คน'],
+            ['label' => 'IDP ในรอบปัจจุบัน', 'value' => $metrics['idp_total'], 'icon' => 'bi-bullseye', 'color' => 'warning', 'hint' => 'ต้องดำเนินการ ' . number_format($metrics['idp_action']) . ' แผน'],
+            ['label' => 'TRM กำลังดำเนินการ', 'value' => $metrics['trm_in_progress'], 'icon' => 'bi-signpost-2', 'color' => 'success', 'hint' => 'Roadmap ใช้งาน ' . number_format($metrics['trm_active']) . ' แบบ'],
+        ]]) ?>
 
         <div class="workforce-grid">
             <section class="workforce-panel">
@@ -53,22 +53,22 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
             </aside>
         </div>
     <?php elseif ($section === 'jd'): ?>
-        <section class="workforce-metrics" aria-label="ตัวชี้วัด JD">
-            <div class="workforce-metric"><span class="workforce-metric__label">บุคลากรที่ปฏิบัติงาน</span><strong class="workforce-metric__value"><?= number_format($metrics['employees']) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">มี JD ปัจจุบัน</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_active']) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">อยู่ระหว่างลงนาม</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_approval_pending']) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">ยังไม่ได้กำหนด JD</span><strong class="workforce-metric__value"><?= number_format($metrics['jd_missing']) ?></strong></div>
-        </section>
+        <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
+            ['label' => 'บุคลากรที่ปฏิบัติงาน', 'value' => $metrics['employees'], 'icon' => 'bi-people-fill', 'color' => 'primary'],
+            ['label' => 'มี JD ปัจจุบัน', 'value' => $metrics['jd_active'], 'icon' => 'bi-file-earmark-check', 'color' => 'success'],
+            ['label' => 'อยู่ระหว่างลงนาม', 'value' => $metrics['jd_approval_pending'], 'icon' => 'bi-pen', 'color' => 'warning'],
+            ['label' => 'ยังไม่ได้กำหนด JD', 'value' => $metrics['jd_missing'], 'icon' => 'bi-file-earmark-x', 'color' => 'danger'],
+        ]]) ?>
         <div class="mt-3">
             <?= $this->render('_jd_registry', compact('jdDataProvider', 'jdByEmployee', 'approvalByJd', 'acknowledgedJdIds', 'showAll')) ?>
         </div>
     <?php elseif ($section === 'kpi'): ?>
-        <section class="workforce-metrics" aria-label="ตัวชี้วัด KPI">
-            <div class="workforce-metric"><span class="workforce-metric__label">บุคลากรที่ปฏิบัติงาน</span><strong class="workforce-metric__value"><?= number_format($metrics['employees']) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">มีชุด KPI ปีนี้</span><strong class="workforce-metric__value"><?= number_format($metrics['kpi_current'] ?? 0) ?></strong><span class="workforce-metric__hint">ใช้งาน <?= number_format($metrics['kpi_active'] ?? 0) ?> ชุด</span></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">รออนุมัติ/ร่าง</span><strong class="workforce-metric__value"><?= number_format($metrics['kpi_pending'] ?? 0) ?></strong></div>
-            <div class="workforce-metric"><span class="workforce-metric__label">ยังไม่มีชุด KPI</span><strong class="workforce-metric__value"><?= number_format($metrics['kpi_missing'] ?? 0) ?></strong></div>
-        </section>
+        <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
+            ['label' => 'บุคลากรที่ปฏิบัติงาน', 'value' => $metrics['employees'], 'icon' => 'bi-people-fill', 'color' => 'primary'],
+            ['label' => 'มีชุด KPI ปีนี้', 'value' => $metrics['kpi_current'] ?? 0, 'icon' => 'bi-bullseye', 'color' => 'success', 'hint' => 'ใช้งาน ' . number_format($metrics['kpi_active'] ?? 0) . ' ชุด'],
+            ['label' => 'รออนุมัติ/ร่าง', 'value' => $metrics['kpi_pending'] ?? 0, 'icon' => 'bi-hourglass-split', 'color' => 'warning'],
+            ['label' => 'ยังไม่มีชุด KPI', 'value' => $metrics['kpi_missing'] ?? 0, 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
+        ]]) ?>
         <div class="mt-3">
             <?= $this->render('_kpi_registry', compact('kpiDataProvider', 'kpiByEmployee', 'kpiItemCounts', 'departments', 'currentFy', 'showAll')) ?>
         </div>

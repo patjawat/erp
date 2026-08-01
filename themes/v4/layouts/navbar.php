@@ -81,10 +81,18 @@ $menuItems = [
     [
         
         'show' => Yii::$app->user->can('plan') ? true : false,
-        'label' => 'แผนงาน/โครงการ', 
-        'url' => ['/plan/dashboard'], 
+        'label' => 'แผนงบประมาณ',
+        'url' => ['/plan/dashboard'],
         'active' => 'plan',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
+    ],
+    [
+        // TODO: จำกัดสิทธิ์ตามบทบาทที่เหมาะสมภายหลัง (ตอนนี้เปิดให้ผู้ใช้ที่ล็อกอินทุกคน)
+        'show' => !Yii::$app->user->isGuest,
+        'label' => 'แผนงาน/โครงการ',
+        'url' => ['/pm/default/index'],
+        'active' => 'pm',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>'
     ],
     [
         'show' =>  (Yii::$app->user->can('hr') ? true : false),
