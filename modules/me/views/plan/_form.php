@@ -110,6 +110,7 @@ $form = ActiveForm::begin(['id' => 'me-plan-form']);
         <div class="row">
             <div class="col-md-12">
                 <?= $form->field($model, 'description')->textInput(['maxlength' => 255])->label('วัตถุประสงค์ (ถ้ามี)') ?>
+                <?= $form->field($model, 'reference')->textarea(['rows' => 2, 'placeholder' => 'เอกสาร/หลักฐาน ประกอบการพิจารณา'])->label('เอกสาร/ข้อมูลอ้างอิง') ?>
             </div>
         </div>
 

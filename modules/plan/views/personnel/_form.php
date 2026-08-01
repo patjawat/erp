@@ -91,6 +91,7 @@ $form = ActiveForm::begin([
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                        <?= $form->field($model, 'reference')->textarea(['rows' => 2, 'placeholder' => 'เอกสาร/หลักฐาน ประกอบการพิจารณา'])->label('เอกสาร/ข้อมูลอ้างอิง') ?>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php

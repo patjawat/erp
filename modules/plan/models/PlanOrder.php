@@ -154,7 +154,7 @@ class PlanOrder extends \yii\db\ActiveRecord
             ],
             [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['plan_group_id', 'thai_year', 'department_id', 'asset_group_id', 'price_ref'], 'required'],
-            [['description'], 'string'],
+            [['description', 'reference'], 'string'],
             [
                 [
                     'plan_category_id',
@@ -355,6 +355,16 @@ class PlanOrder extends \yii\db\ActiveRecord
             ->andFilterWhere(['thai_year' => $this->thai_year])
             ->andFilterWhere(['plan_group_id' => $planGroup])
             ->count();
+    }
+
+    /** ยอดเงินรวม (order_price) ตามสถานะ/กลุ่ม (คู่กับ countStatus) */
+    public function sumStatus($statusCode = null, $planGroup = null)
+    {
+        return (float) self::find()
+            ->andFilterWhere(['status' => $statusCode])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->andFilterWhere(['plan_group_id' => $planGroup])
+            ->sum('order_price');
     }
 
 
