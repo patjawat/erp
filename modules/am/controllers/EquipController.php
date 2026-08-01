@@ -419,6 +419,10 @@ class EquipController extends Controller
                 $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
 
                 if ($model->save()) {
+                    // ฟอร์มบันทึกผ่าน AJAX (beforeSubmit) — คืน JSON ให้ JS รีโหลด/แจ้งสำเร็จ; ถ้าไม่ใช่ AJAX ค่อย redirect
+                    if ($this->request->isAjax) {
+                        return ['status' => 'success', 'id' => $model->id];
+                    }
                     return $this->redirect(['view', 'id' => $model->id]);
                 } else {
                     return $model->getErrors();
@@ -469,6 +473,10 @@ class EquipController extends Controller
             if ($model->save()) {
                 $model->updateFsn();
                 $this->CheckUpdateData($model);
+                // ฟอร์มบันทึกผ่าน AJAX (beforeSubmit) — คืน JSON ให้ JS รีโหลด/แจ้งสำเร็จ; ถ้าไม่ใช่ AJAX ค่อย redirect
+                if ($this->request->isAjax) {
+                    return ['status' => 'success', 'id' => $model->id];
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 Yii::$app->response->format = Response::FORMAT_JSON;

@@ -370,6 +370,53 @@ class Asset extends \yii\db\ActiveRecord
         parent::afterFind();
     }
 
+    /**
+     * flow ทะเบียนครุภัณฑ์ (group 4): ล็อกค่าเสื่อมจากหมวดทรัพย์สิน + ตั้งหมายเลขครุภัณฑ์เต็ม (code = mirror ของ fsn_number)
+     *
+     * รองรับช่วงเปลี่ยนผ่านฟอร์มเก่า: ฟอร์มเดิมส่งหมายเลขเต็มมาที่ code และส่ง prefix มาที่ fsn_number
+     * ถ้ายังไม่มีหมายเลขเต็มเลย จะ generate จาก prefix + ปีงบประมาณ (ทำเฉพาะตอน save จริง ไม่กิน sequence ตอน ajax validate)
+     */
+    protected function applyEquipCategoryRules(): void
+    {
+        $prefix = trim((string) $this->asset_category_id);
+        if ($prefix === '') {
+            return; // ไม่ใช่ flow ที่ผูกกับหมวดทรัพย์สิน (เช่น group 2/3 legacy) — ไม่ยุ่ง
+        }
+
+        // 1) ค่าเสื่อมจากหมวด (หมวดเป็นแหล่งเดียว) — override เฉพาะเมื่อหมวดกำหนดค่าไว้
+        //    ถ้าหมวดยังไม่กำหนด (NULL) คงค่าเดิมของ asset ไว้ ไม่ลบทิ้ง (กันข้อมูลค่าเสื่อมเดิมหาย)
+        $category = AssetCategory::find()
+            ->where(['name' => 'asset_category', 'code' => $prefix])
+            ->one();
+        if ($category !== null) {
+            if ($category->useful_life !== null && $category->useful_life !== '') {
+                $this->useful_life = $category->useful_life;
+            }
+            if ($category->depreciation_rate !== null && $category->depreciation_rate !== '') {
+                $this->depreciation_rate = $category->depreciation_rate;
+            }
+        }
+
+        // 2) หมายเลขครุภัณฑ์เต็ม + mirror
+        $looksFull = static function ($s): bool {
+            $s = trim((string) $s);
+            return $s !== '' && strpos($s, '/') !== false;
+        };
+
+        if ($looksFull($this->fsn_number)) {
+            $number = trim((string) $this->fsn_number);      // ฟอร์มใหม่: เลขเต็มอยู่ที่ fsn_number แล้ว
+        } elseif ($looksFull($this->code)) {
+            $number = trim((string) $this->code);            // ฟอร์มเก่า: เลขเต็มอยู่ที่ code
+        } else {
+            $number = AssetNumberGenerator::generate($prefix, $this->on_year); // ยังไม่มี → สร้างใหม่
+        }
+
+        if ($number !== '') {
+            $this->fsn_number = $number;
+            $this->code = $number;
+        }
+    }
+
     public function beforeSave($insert)
     {
         // flow ทะเบียนครุภัณฑ์: ล็อกค่าเสื่อมจากหมวด + fsn_number เป็นหมายเลขเต็ม (code = mirror)
