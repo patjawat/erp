@@ -125,14 +125,17 @@ class OrgUnit extends ActiveRecord
         $added = 0;
         $updated = 0;
 
+        // เรียงตามลำดับผังจริง: (root, lft) — tree มีได้หลาย root, lft ซ้ำข้าม root ได้
         $nodes = (new Query())
             ->from('tree')
             ->where(['active' => 1])
             ->andWhere(['>', 'lvl', 0])
-            ->orderBy(['lft' => SORT_ASC])
+            ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
             ->all();
 
+        $seq = 0;
         foreach ($nodes as $node) {
+            $seq += 10; // ลำดับต่อเนื่องทั้งผัง (เว้นช่องไว้แทรก)
             $refId = (int) $node['id'];
             $data = $node['data_json'];
             if (is_string($data)) {
@@ -154,9 +157,8 @@ class OrgUnit extends ActiveRecord
                     'ref_id' => $refId,
                     'unit_type' => self::TYPE_ORG,
                     'active' => 1,
-                    'sort' => (int) $node['lft'],
                 ]);
-                // carry-forward จากปีล่าสุดก่อนหน้า
+                // carry-forward อักษรย่อ/ประเภท/สถานะ จากปีล่าสุดก่อนหน้า
                 $prev = static::find()
                     ->where(['source' => self::SOURCE_STRUCTURE, 'ref_id' => $refId])
                     ->andWhere(['<', 'thai_year', $thaiYear])
@@ -166,16 +168,16 @@ class OrgUnit extends ActiveRecord
                     $row->code = $prev->code;
                     $row->unit_type = $prev->unit_type;
                     $row->active = $prev->active;
-                    $row->sort = $prev->sort;
                 }
                 $added++;
             } else {
                 $updated++;
             }
 
-            // อัปเดตจากผังเสมอ
+            // อัปเดตจากผังเสมอ (ชื่อ/หัวหน้า/ลำดับตามผัง)
             $row->name = (string) $node['name'];
             $row->leader_emp_id = $leader;
+            $row->sort = $seq;
             $row->save(false);
         }
 

@@ -76,7 +76,7 @@ $renderSettingCard = static function (array $item): string {
     <section class="mb-4">
         <?= $renderSectionTitle('fa-solid fa-building', 'องค์กรและพื้นฐาน', 'ข้อมูลหลักขององค์กรและรูปแบบหน้าตาระบบ') ?>
         <div class="row g-3">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6 col-xl-4">
                 <?= $renderSettingCard([
                     'url' => Url::to(['/settings/company']),
                     'title' => 'ข้อมูลองค์กร',
@@ -85,7 +85,16 @@ $renderSettingCard = static function (array $item): string {
                     'color' => 'primary',
                 ]) ?>
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6 col-xl-4">
+                <?= $renderSettingCard([
+                    'url' => Url::to(['/settings/org-unit']),
+                    'title' => 'ทะเบียนหน่วยงาน',
+                    'subtitle' => 'อักษรย่อ ประเภท หัวหน้า และหน่วยงานภายใน',
+                    'icon' => 'fa-solid fa-sitemap',
+                    'color' => 'success',
+                ]) ?>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
                 <?= $renderSettingCard([
                     'url' => Url::to(['/setting']),
                     'title' => 'ตั้งค่าสี',
