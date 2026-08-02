@@ -22,18 +22,9 @@ if (!isset($planYears[$curPlanYear])) {
     $planYears = [$curPlanYear => $curPlanYear] + $planYears;
 }
 
-// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีที่ค้นหา จัดกลุ่มตามประเภท
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีที่ค้นหา — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า
 $ouYear = (int) ($model->thai_year ?: $curPlanYear);
-$ouGroups = [];
-foreach ((new \yii\db\Query())
-    ->select(['o.id', 'o.name', 'type_title' => 'c.title'])
-    ->from(['o' => 'org_unit'])
-    ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
-    ->where(['o.thai_year' => $ouYear, 'o.active' => 1])
-    ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
-    ->all() as $r) {
-    $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
-}
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 ?>
 
 <div class="plan-item-search">

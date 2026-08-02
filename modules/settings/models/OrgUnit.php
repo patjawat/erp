@@ -288,6 +288,42 @@ class OrgUnit extends ActiveRecord
         }
     }
 
+    /**
+     * ข้อมูลสำหรับ Select2 ของแผน — จัดกลุ่มตามประเภท + เยื้องตามลำดับชั้นผัง (เหมือนหน้าตั้งค่า)
+     * คืน: [ชื่อประเภท => [org_unit_id => ชื่อ(เยื้อง)]]
+     */
+    public static function groupedForSelect(int $thaiYear): array
+    {
+        $rows = (new Query())
+            ->select(['o.id', 'o.name', 'o.source', 'type_title' => 'c.title', 'lvl' => 't.lvl'])
+            ->from(['o' => 'org_unit'])
+            ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
+            ->leftJoin(['t' => 'tree'], 't.id = o.ref_id')
+            ->where(['o.thai_year' => $thaiYear, 'o.active' => 1])
+            ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
+            ->all();
+
+        $groups = [];
+        foreach ($rows as $r) {
+            $indent = '';
+            if ($r['source'] === self::SOURCE_STRUCTURE && (int) $r['lvl'] > 1) {
+                $indent = str_repeat("\u{00A0}\u{00A0}\u{00A0}", (int) $r['lvl'] - 1);
+            }
+            $groups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $indent . $r['name'];
+        }
+        return $groups;
+    }
+
+    /** map org_unit_id => ref_id (tree.id) ของปี — ใช้ให้ pull การเบิกแปลงกลับเป็น tree.id */
+    public static function refMap(int $thaiYear): array
+    {
+        $map = [];
+        foreach (static::find()->select(['id', 'ref_id'])->where(['thai_year' => $thaiYear, 'active' => 1])->asArray()->all() as $r) {
+            $map[$r['id']] = $r['ref_id'] !== null ? (int) $r['ref_id'] : null;
+        }
+        return $map;
+    }
+
     private static function codeTaken(int $thaiYear, string $code, int $exceptId): bool
     {
         return static::find()

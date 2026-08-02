@@ -12,17 +12,8 @@ use app\modules\am\components\AssetHelper;
 /** @var $model app\modules\plan\models\Plan */
 /** @var $items app\modules\plan\models\PlanItem[] */
 
-// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ จัดกลุ่มตามประเภท
-$ouGroups = [];
-foreach ((new \yii\db\Query())
-    ->select(['o.id', 'o.name', 'type_title' => 'c.title'])
-    ->from(['o' => 'org_unit'])
-    ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
-    ->where(['o.thai_year' => (int) $model->thai_year, 'o.active' => 1])
-    ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
-    ->all() as $r) {
-    $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
-}
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
 
 $form = ActiveForm::begin([
     'id' => 'form',

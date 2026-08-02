@@ -69,23 +69,12 @@ $scope        = $scope ?? 'plan';
 $lockDept     = $lockDept ?? null;
 $lockDeptName = $lockDeptName ?? '';
 
-// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ จัดกลุ่มตามประเภท (scope=plan)
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า (scope=plan)
 $ouGroups = [];
-$ouRefMap = [];
 if ($scope !== 'me') {
-    $ouRows = (new \yii\db\Query())
-        ->select(['o.id', 'o.name', 'o.ref_id', 'type_title' => 'c.title'])
-        ->from(['o' => 'org_unit'])
-        ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
-        ->where(['o.thai_year' => (int) $model->thai_year, 'o.active' => 1])
-        ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
-        ->all();
-    foreach ($ouRows as $r) {
-        $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
-        $ouRefMap[$r['id']] = $r['ref_id'] !== null ? (int) $r['ref_id'] : null;
-    }
+    $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
     // ให้ pull JS แปลง plan_unit_id -> tree.id (ref_id) ; null=หน่วยนอกผัง
-    $this->registerJs('window.__ouRef = ' . \yii\helpers\Json::encode($ouRefMap) . ';', \yii\web\View::POS_HEAD);
+    $this->registerJs('window.__ouRef = ' . \yii\helpers\Json::encode(\app\modules\settings\models\OrgUnit::refMap((int) $model->thai_year)) . ';', \yii\web\View::POS_HEAD);
 }
 
 $form = ActiveForm::begin(array_merge(
