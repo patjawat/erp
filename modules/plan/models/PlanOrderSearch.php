@@ -81,7 +81,7 @@ class PlanOrderSearch extends PlanOrder
             'asset_type_id' => $this->asset_type_id,
             'asset_category_id' => $this->asset_category_id,
             'plan_category_id' => $this->plan_category_id,
-            'plan_item_id' => $this->plan_category_id
+            'plan_item_id' => $this->plan_item_id,
         ]);
 
         $query->andFilterWhere(['like', 'plan_group_id', $this->plan_group_id])

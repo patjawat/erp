@@ -97,23 +97,14 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             </div>
             <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
-
-                        echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type'])->all(), 'code', 'title'),
+                        // กรองเฉพาะหมวดค่าใช้สอย (plan_category ใต้ OPS) — ไม่แสดงตัวเลือกของพัสดุ/บุคลากร
+                        echo $form->field($model, 'plan_category_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_category', 'category_id' => 'OPS'])->orderBy('code')->all(), 'code', 'title'),
                             'options' => [
                                 'placeholder' => 'เลือกรายการค่าใช้จ่าย',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                            ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() { 
-                                    if($(this).val() == 'PE1'){
-                                        $('#planorder-wage_type_id').prop('disabled', false).trigger('change');
-                                        } else {
-                                            $('#planorder-wage_type_id').prop('disabled', true).trigger('change');
-                                    }
-                                }",
                             ],
                         ])->label(false);
                         ?>
