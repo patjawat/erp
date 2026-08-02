@@ -99,7 +99,7 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
                         <?php
                         // กรองเฉพาะหมวดค่าใช้สอย (plan_category ใต้ OPS) — ไม่แสดงตัวเลือกของพัสดุ/บุคลากร
                         echo $form->field($model, 'plan_category_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_category', 'category_id' => 'OPS'])->orderBy('code')->all(), 'code', 'title'),
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_category', 'category_id' => 'OPS'])->andWhere(['not', ['code' => 'OPS_03']])->orderBy('code')->all(), 'code', 'title'),
                             'options' => [
                                 'placeholder' => 'เลือกรายการค่าใช้จ่าย',
                             ],

@@ -19,6 +19,7 @@ $planItems = Categorise::find()
     ->where(['i.name' => 'plan_item'])
     ->andWhere(['t.name' => 'plan_category'])
     ->andWhere('t.category_id = :category_id', [':category_id' => 'OPS'])
+    ->andWhere(['not', ['i.category_id' => 'OPS_03']]) // ตัดหมวดค่าวัสดุ — วัสดุทำผ่านแผนพัสดุ
     ->asArray()
     ->all();
 
