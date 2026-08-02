@@ -73,12 +73,6 @@ $phase = PlanHelper::phase($thaiYear);
 <?= $this->render('@app/modules/me/menu', ['active' => 'plan']) ?>
 <?php $this->endBlock(); ?>
 
-<style>
-.me-chip, .me-type { transition: background-color .15s ease-out, border-color .15s ease-out; }
-.me-chip:hover, .me-type:hover { background-color: var(--bs-secondary-bg); }
-@media (prefers-reduced-motion: reduce) { .me-chip, .me-type { transition: none; } }
-</style>
-
 <?php if ($flash = Yii::$app->session->getFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show"><?= Html::encode($flash) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -108,64 +102,67 @@ $phase = PlanHelper::phase($thaiYear);
     <?php endif; ?>
 </div>
 
-<!-- ภาพรวม: งบที่วางแผน + กรองตามสถานะ -->
+<!-- ภาพรวมตามสถานะ (คลิกเพื่อกรอง) -->
+<div class="d-flex flex-wrap justify-content-between align-items-end mb-3">
+    <h5 class="text-muted mb-0">
+        ภาพรวมแผนปี <?= $thaiYear ?>
+        <small class="text-body-secondary">· <?= number_format($grandCnt) ?> รายการ · <?= number_format($grandAmt, 2) ?> บาท</small>
+    </h5>
+    <?php if ($status !== 'all'): ?>
+        <?= Html::a('<i class="fa-solid fa-list me-1"></i>แสดงทุกสถานะ', $link(['status' => 'all']), ['class' => 'btn btn-sm btn-link text-decoration-none p-0']) ?>
+    <?php endif; ?>
+</div>
 <?php
-$statusChips = [
-    'all'     => ['label' => 'ทั้งหมด',    'c' => $grandCnt,               'color' => 'primary'],
-    'draft'   => ['label' => 'ร่าง',       'c' => $byStatus['draft']['c'],  'color' => 'secondary'],
-    'submit'  => ['label' => 'รออนุมัติ',  'c' => $byStatus['submit']['c'], 'color' => 'warning'],
-    'approve' => ['label' => 'อนุมัติ',     'c' => $byStatus['approve']['c'],'color' => 'success'],
-    'reject'  => ['label' => 'ไม่อนุมัติ',  'c' => $byStatus['reject']['c'], 'color' => 'danger'],
+$statusCards = [
+    'draft'   => ['label' => 'ร่าง',       'color' => 'secondary', 'icon' => 'fa-solid fa-file-lines'],
+    'submit'  => ['label' => 'รออนุมัติ',  'color' => 'warning',   'icon' => 'fa-solid fa-hourglass-half'],
+    'approve' => ['label' => 'อนุมัติ',     'color' => 'success',   'icon' => 'fa-solid fa-circle-check'],
+    'reject'  => ['label' => 'ไม่อนุมัติ',  'color' => 'danger',    'icon' => 'fa-solid fa-circle-xmark'],
 ];
 ?>
-<div class="card border mb-3">
-    <div class="card-body">
-        <div class="row g-3 align-items-center">
-            <div class="col-12 col-lg-auto">
-                <div class="text-body-secondary small">งบประมาณที่วางแผน ปี <?= $thaiYear ?></div>
-                <div class="h4 fw-semibold text-body mb-0"><?= number_format($grandAmt, 2) ?> <small class="fw-normal text-body-secondary">บาท</small></div>
-            </div>
-            <div class="col-12 col-lg">
-                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-                    <?php foreach ($statusChips as $key => $sc): $active = $status === $key; ?>
-                        <a href="<?= $link(['status' => $key]) ?>" class="me-chip text-decoration-none d-inline-flex align-items-center gap-2 px-3 py-2 rounded border <?= $active ? 'border-primary border-2 bg-body-tertiary' : '' ?>">
-                            <span class="badge bg-<?= $sc['color'] ?>-subtle text-<?= $sc['color'] ?>-emphasis"><?= $sc['label'] ?></span>
-                            <span class="fw-semibold text-body"><?= number_format($sc['c']) ?></span>
-                        </a>
-                    <?php endforeach; ?>
+<div class="row g-3 mb-4">
+    <?php foreach ($statusCards as $key => $sc): $active = $status === $key; ?>
+        <div class="col-6 col-md-3">
+            <a href="<?= $link(['status' => $active ? 'all' : $key]) ?>" class="card h-100 border-start border-4 border-<?= $sc['color'] ?> border-top-0 border-end-0 border-bottom-0 text-decoration-none <?= $active ? 'shadow-sm bg-body-tertiary' : '' ?>">
+                <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
+                    <div class="min-w-0">
+                        <div class="text-muted small text-nowrap"><?= $sc['label'] ?> · <?= number_format($byStatus[$key]['c']) ?> รายการ</div>
+                        <div class="fs-5 fw-bold text-<?= $sc['color'] ?> text-nowrap"><?= number_format($byStatus[$key]['a'], 2) ?> <small class="fw-normal">บาท</small></div>
+                    </div>
+                    <i class="<?= $sc['icon'] ?> fs-2 text-<?= $sc['color'] ?> opacity-50 ms-2"></i>
                 </div>
-            </div>
+            </a>
         </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
-<!-- แยกตามประเภทคำขอ -->
+<!-- แยกตามประเภทคำขอ (คลิกเพื่อกรอง) -->
+<h5 class="text-muted mb-3">แยกตามประเภทคำขอ</h5>
 <?php
 $typeCards = [
-    'parcel'    => ['label' => 'พัสดุ',     'icon' => 'fa-box-open'],
-    'personnel' => ['label' => 'บุคลากร',   'icon' => 'fa-user-group'],
-    'expenses'  => ['label' => 'ค่าใช้สอย', 'icon' => 'fa-file-invoice-dollar'],
+    'parcel'    => ['label' => 'คำขอพัสดุ',    'icon' => 'fa-box-open'],
+    'personnel' => ['label' => 'คำขอบุคลากร',   'icon' => 'fa-user-group'],
+    'expenses'  => ['label' => 'คำขอค่าใช้สอย', 'icon' => 'fa-file-invoice-dollar'],
 ];
-$tcKeys = array_keys($typeCards);
 ?>
-<div class="card border mb-3">
-    <div class="card-body">
-        <div class="row g-0 text-center">
-            <?php foreach ($typeCards as $key => $tc): $active = $type === $key; ?>
-                <div class="col-4 <?= $key !== end($tcKeys) ? 'border-end' : '' ?>">
-                    <a href="<?= $link(['type' => $active ? 'all' : $key]) ?>" class="me-type d-block text-decoration-none rounded p-2 <?= $active ? 'border border-primary border-2 bg-body-tertiary' : '' ?>">
-                        <div class="text-body-secondary small"><i class="fa-solid <?= $tc['icon'] ?> me-1"></i><?= $tc['label'] ?></div>
-                        <div class="h5 fw-semibold text-body mb-0 mt-1"><?= number_format($byType[$key]['count']) ?> <small class="fw-normal text-body-secondary">รายการ</small></div>
-                        <div class="small text-body-secondary"><?= number_format($byType[$key]['amount'], 2) ?> บาท</div>
-                    </a>
+<div class="row g-4 mb-4">
+    <?php foreach ($typeCards as $key => $tc): $active = $type === $key; ?>
+        <div class="col-md-4">
+            <a href="<?= $link(['type' => $active ? 'all' : $key]) ?>" class="card p-4 h-100 text-decoration-none text-body <?= $active ? 'border-primary border-2 shadow-sm' : '' ?>">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="mb-0 text-muted"><?= $tc['label'] ?></h6>
+                    <i class="fa-solid <?= $tc['icon'] ?> fs-4 text-muted"></i>
                 </div>
-            <?php endforeach; ?>
+                <h2 class="fw-bold mb-0"><?= number_format($byType[$key]['count']) ?> <small class="text-muted fs-6">รายการ</small></h2>
+                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-coins me-1"></i><?= number_format($byType[$key]['amount'], 2) ?> บาท</div>
+                <?php if ($active): ?><div class="small text-primary mt-2"><i class="fa-solid fa-filter me-1"></i>กำลังกรองประเภทนี้ (คลิกเพื่อยกเลิก)</div><?php endif; ?>
+            </a>
         </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- รายการแผน -->
-<div class="card border">
+<div class="card">
     <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">
         <span class="fw-semibold">
             รายการแผน
@@ -291,7 +288,7 @@ $tcKeys = array_keys($typeCards);
         <i class="fa-solid fa-table-list me-1"></i> สรุปตามหมวด <i class="fa-solid fa-chevron-down small ms-1"></i>
     </button>
     <div class="collapse" id="catSummary">
-        <div class="card border">
+        <div class="card">
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead class="bg-body-tertiary">
