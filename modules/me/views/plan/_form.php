@@ -56,6 +56,9 @@ $monthCols = [
     'month_7'  => 'ก.ค.', 'month_8'  => 'ส.ค.', 'month_9'  => 'ก.ย.',
 ];
 
+// โหลด asset Select2 (หน้านี้ใช้ native select + init เอง จึงต้อง register plugin ให้พร้อม)
+\kartik\select2\Select2Asset::register($this);
+
 $form = ActiveForm::begin(['id' => 'me-plan-form']);
 ?>
 
@@ -169,6 +172,16 @@ $js = <<<JS
     var catSel  = document.getElementById('me-plan-category');
     var itemSel = document.getElementById('planorder-plan_item_id');
 
+    // เปิด Select2 (ค้นหาได้) ทั้งสามช่อง — ช่วยเลือกรายการที่มีจำนวนมาก
+    var hasSelect2 = window.jQuery && jQuery.fn && jQuery.fn.select2;
+    if (hasSelect2) {
+        jQuery(typeSel).select2({ width: '100%' });
+        jQuery(catSel).select2({ width: '100%', placeholder: '— เลือกหมวด —' });
+        jQuery(itemSel).select2({ width: '100%', placeholder: '— เลือกรายการ —' });
+    }
+    // อัปเดต Select2 หลังเติม option ใหม่ โดยไม่ retrigger event ผู้ใช้
+    function refresh(sel){ if (hasSelect2) jQuery(sel).trigger('change.select2'); }
+
     function fill(sel, list, placeholder, selected){
         sel.innerHTML = '';
         var opt0 = document.createElement('option');
@@ -180,6 +193,7 @@ $js = <<<JS
             if (String(row[0]) === String(selected)) o.selected = true;
             sel.appendChild(o);
         });
+        refresh(sel);
     }
 
     function loadCats(selectedCat){
