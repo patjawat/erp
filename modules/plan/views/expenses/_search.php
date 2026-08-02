@@ -21,6 +21,19 @@ $curPlanYear = \app\modules\plan\components\PlanHelper::currentPlanYear();
 if (!isset($planYears[$curPlanYear])) {
     $planYears = [$curPlanYear => $curPlanYear] + $planYears;
 }
+
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีที่ค้นหา จัดกลุ่มตามประเภท
+$ouYear = (int) ($model->thai_year ?: $curPlanYear);
+$ouGroups = [];
+foreach ((new \yii\db\Query())
+    ->select(['o.id', 'o.name', 'type_title' => 'c.title'])
+    ->from(['o' => 'org_unit'])
+    ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
+    ->where(['o.thai_year' => $ouYear, 'o.active' => 1])
+    ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
+    ->all() as $r) {
+    $ouGroups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $r['name'];
+}
 ?>
 
 <div class="plan-item-search">
@@ -41,17 +54,10 @@ if (!isset($planYears[$curPlanYear])) {
             ])->label(false) ?>
         </div>
                        <div class="col-lg-7">
-                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                            'name' => 'department',
-                            'id' => 'treeID',
-                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                            'value' => 1,
-                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                            'fontAwesome' => true,
-                            'asDropdown' => true,
-                            'multiple' => false,
-                            'options' => ['disabled' => false],
+                        <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
+                            'data' => $ouGroups,
+                            'options' => ['placeholder' => 'ทุกหน่วยงาน (จากทะเบียน)'],
+                            'pluginOptions' => ['allowClear' => true],
                         ])->label(false); ?>
                     </div>
         <div class="col-lg-2">
