@@ -153,6 +153,26 @@ class PlanController extends Controller
             }
         }
 
+        // สรุปตามสถานะ + ยอดรวมทั้งปี (สำหรับภาพรวมด้านบน)
+        $byStatus = [
+            'draft'   => ['c' => 0, 'a' => 0.0],
+            'submit'  => ['c' => 0, 'a' => 0.0],
+            'approve' => ['c' => 0, 'a' => 0.0],
+            'reject'  => ['c' => 0, 'a' => 0.0],
+        ];
+        $grandCnt = 0;
+        $grandAmt = 0.0;
+        foreach ($sumRows as $r) {
+            $c = (int) $r['cnt'];
+            $a = (float) $r['amt'];
+            if (isset($byStatus[$r['status']])) {
+                $byStatus[$r['status']]['c'] += $c;
+                $byStatus[$r['status']]['a'] += $a;
+            }
+            $grandCnt += $c;
+            $grandAmt += $a;
+        }
+
         // ใช้ตัวกรองกับรายการที่แสดง
         $query = clone $base;
         if ($status !== 'all') {
@@ -194,6 +214,9 @@ class PlanController extends Controller
             'orgs'       => $this->me->ledOrganizations(),
             'byType'     => $byType,
             'byCat'      => $byCat,
+            'byStatus'   => $byStatus,
+            'grandCnt'   => $grandCnt,
+            'grandAmt'   => $grandAmt,
             'status'     => $status,
             'q'          => $q,
             'deptFilter' => $deptFilter,

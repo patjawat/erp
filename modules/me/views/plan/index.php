@@ -14,6 +14,9 @@ use app\modules\plan\components\PlanHelper;
 /** @var app\modules\hr\models\Organization[] $orgs */
 /** @var array $byType */
 /** @var array $byCat */
+/** @var array $byStatus */
+/** @var int $grandCnt */
+/** @var float $grandAmt */
 /** @var string $status */
 /** @var string $q */
 /** @var int $deptFilter */
@@ -22,9 +25,10 @@ use app\modules\plan\components\PlanHelper;
 $this->title = 'แผนของหน่วยงาน';
 $this->params['breadcrumbs'][] = $this->title;
 
-$orgNames = ArrayHelper::map($orgs, 'id', 'name');
+$orgNames  = ArrayHelper::map($orgs, 'id', 'name');
+$multiDept = count($orgNames) > 1;
 
-// map รหัส item -> ชื่อรายการ + หมวด สำหรับแสดงผล
+// map รหัส item -> ชื่อรายการ + หมวด
 $itemIds = array_filter(ArrayHelper::getColumn($models, 'plan_item_id'));
 $itemMap = [];
 if ($itemIds) {
@@ -40,20 +44,40 @@ if ($itemIds) {
 }
 
 $statusMeta = [
-    'draft'  => ['label' => 'ร่าง', 'class' => 'bg-secondary'],
-    'submit' => ['label' => 'รออนุมัติ', 'class' => 'bg-warning text-dark'],
-    'approve' => ['label' => 'อนุมัติ', 'class' => 'bg-success'],
-    'reject' => ['label' => 'ไม่อนุมัติ', 'class' => 'bg-danger'],
+    'draft'   => ['label' => 'ร่าง',       'color' => 'secondary'],
+    'submit'  => ['label' => 'รออนุมัติ',  'color' => 'warning'],
+    'approve' => ['label' => 'อนุมัติ',     'color' => 'success'],
+    'reject'  => ['label' => 'ไม่อนุมัติ',  'color' => 'danger'],
+    'renew'   => ['label' => 'ปรับแผน',    'color' => 'info'],
 ];
+
+// สร้างลิงก์โดยคงตัวกรองปัจจุบัน แล้ว override เฉพาะที่ระบุ
+$link = function (array $ov) use ($thaiYear, $status, $type, $q, $deptFilter) {
+    return Url::to(['index',
+        'thai_year'     => $ov['thai_year']     ?? $thaiYear,
+        'status'        => $ov['status']        ?? $status,
+        'type'          => $ov['type']          ?? $type,
+        'q'             => $ov['q']             ?? $q,
+        'department_id' => $ov['department_id'] ?? $deptFilter,
+    ]);
+};
+
+$phase = PlanHelper::phase($thaiYear);
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<h4 class="fw-medium text-body mb-0"><i class="fa-solid fa-folder-tree me-2"></i><?= $this->title ?></h4>
+<h4 class="fw-semibold text-body mb-0"><i class="fa-solid fa-folder-tree me-2"></i><?= Html::encode($this->title) ?></h4>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
 <?= $this->render('@app/modules/me/menu', ['active' => 'plan']) ?>
 <?php $this->endBlock(); ?>
+
+<style>
+.me-chip, .me-type { transition: background-color .15s ease-out, border-color .15s ease-out; }
+.me-chip:hover, .me-type:hover { background-color: var(--bs-secondary-bg); }
+@media (prefers-reduced-motion: reduce) { .me-chip, .me-type { transition: none; } }
+</style>
 
 <?php if ($flash = Yii::$app->session->getFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show"><?= Html::encode($flash) ?>
@@ -61,132 +85,15 @@ $statusMeta = [
     </div>
 <?php endif; ?>
 
-<?php
-// การ์ด 3 ประเภทคำขอ
-$typeCards = [
-    ['key' => 'parcel',    'label' => 'คำขอพัสดุ',    'icon' => 'fa-box-open',            'class' => 'primary'],
-    ['key' => 'personnel', 'label' => 'คำขอบุคลากร',   'icon' => 'fa-user-group',          'class' => 'info'],
-    ['key' => 'expenses',  'label' => 'คำขอค่าใช้สอย', 'icon' => 'fa-file-invoice-dollar', 'class' => 'success'],
-];
-?>
-<div class="row g-3 mb-3">
-    <?php foreach ($typeCards as $tc): ?>
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100 <?= $type === $tc['key'] ? 'border border-2 border-' . $tc['class'] : '' ?>">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="text-muted mb-2"><?= $tc['label'] ?></h6>
-                            <div class="small text-muted">จำนวน</div>
-                            <div class="h2 fw-bold mb-0"><?= number_format($byType[$tc['key']]['count']) ?></div>
-                        </div>
-                        <div class="rounded-3 bg-<?= $tc['class'] ?> bg-opacity-10 d-flex align-items-center justify-content-center" style="width:56px;height:56px">
-                            <i class="fa-solid <?= $tc['icon'] ?> fs-4 text-<?= $tc['class'] ?>"></i>
-                        </div>
-                    </div>
-                    <a href="<?= Url::to(['index', 'thai_year' => $thaiYear, 'type' => $tc['key']]) ?>" class="btn btn-link p-0 mt-2 text-decoration-none">
-                        รายละเอียดเพิ่มเติม <i class="fa-solid fa-chevron-right small ms-1"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    <?php endforeach; ?>
-</div>
-
-<div class="card mb-3">
-    <div class="card-body py-2">
-        <form method="get" class="row g-2 align-items-end">
-            <input type="hidden" name="type" value="<?= Html::encode($type) ?>">
-            <div class="col-6 col-md-2">
-                <label class="form-label small mb-1">ปีงบประมาณ</label>
-                <select name="thai_year" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <?php foreach ($years as $y): ?>
-                        <option value="<?= $y ?>" <?= (int) $y === $thaiYear ? 'selected' : '' ?>><?= $y ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label small mb-1">สถานะ</label>
-                <select name="status" class="form-select form-select-sm">
-                    <option value="all" <?= $status === 'all' ? 'selected' : '' ?>>ทุกสถานะ</option>
-                    <?php foreach ($statusMeta as $k => $s): ?>
-                        <option value="<?= $k ?>" <?= $status === $k ? 'selected' : '' ?>><?= $s['label'] ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <?php if (count($orgNames) > 1): ?>
-                <div class="col-12 col-md-3">
-                    <label class="form-label small mb-1">หน่วยงาน</label>
-                    <select name="department_id" class="form-select form-select-sm">
-                        <option value="0">ทุกหน่วยงาน</option>
-                        <?php foreach ($orgNames as $id => $name): ?>
-                            <option value="<?= $id ?>" <?= (int) $deptFilter === (int) $id ? 'selected' : '' ?>><?= Html::encode($name) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            <?php endif; ?>
-            <div class="col-12 col-md">
-                <label class="form-label small mb-1">ค้นหา (รายการ / วัตถุประสงค์)</label>
-                <input type="text" name="q" value="<?= Html::encode($q) ?>" class="form-control form-control-sm" placeholder="พิมพ์คำค้น...">
-            </div>
-            <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-magnifying-glass me-1"></i>ค้นหา</button>
-                <?= Html::a('ล้าง', ['index', 'thai_year' => $thaiYear], ['class' => 'btn btn-sm btn-light']) ?>
-            </div>
-        </form>
+<!-- แถบดำเนินการ: รอบทำแผน + จัดทำแผนใหม่ -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="text-body-secondary small">
+        รอบทำแผนปี <?= $thaiYear ?>
+        <span class="badge <?= PlanHelper::phaseClass($phase) ?> ms-1"><?= PlanHelper::phaseLabel($phase) ?></span>
+        <?php if ($phase === PlanHelper::PHASE_LOCK): ?>
+            <span class="text-warning-emphasis ms-1">— เพิ่มใหม่ได้ แต่แก้ของเดิมไม่ได้</span>
+        <?php endif; ?>
     </div>
-</div>
-
-<?php
-// ตารางสรุปตามหมวด (คำขอทั้งหมด / อนุมัติแล้ว)
-$bucketOrder = ['parcel' => 1, 'personnel' => 2, 'expenses' => 3, 'other' => 4];
-$bucketLabel = ['parcel' => 'พัสดุ', 'personnel' => 'บุคลากร', 'expenses' => 'ค่าใช้สอย', 'other' => 'อื่นๆ'];
-uasort($byCat, function ($a, $b) use ($bucketOrder) {
-    return [$bucketOrder[$a['bucket']] ?? 9, $a['title']] <=> [$bucketOrder[$b['bucket']] ?? 9, $b['title']];
-});
-?>
-<?php if (!empty($byCat)): ?>
-<div class="card mb-3">
-    <div class="card-header bg-light fw-semibold"><i class="fa-solid fa-table-list me-1"></i> สรุปคำขอตามหมวด</div>
-    <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-            <thead class="table-light text-center">
-                <tr>
-                    <th rowspan="2" class="align-middle text-start">หมวด</th>
-                    <th colspan="2">คำขอทั้งหมด</th>
-                    <th colspan="2">อนุมัติแล้ว</th>
-                </tr>
-                <tr>
-                    <th class="text-end">รายการ</th><th class="text-end">วงเงิน (บาท)</th>
-                    <th class="text-end">รายการ</th><th class="text-end">วงเงิน (บาท)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($byCat as $cat): ?>
-                    <tr>
-                        <td>
-                            <span class="badge bg-secondary bg-opacity-25 text-dark me-1"><?= $bucketLabel[$cat['bucket']] ?? '-' ?></span>
-                            <?= Html::encode($cat['title']) ?>
-                        </td>
-                        <td class="text-end"><?= number_format($cat['total_cnt']) ?></td>
-                        <td class="text-end"><?= number_format($cat['total_amt'], 2) ?></td>
-                        <td class="text-end"><?= number_format($cat['appr_cnt']) ?></td>
-                        <td class="text-end text-success"><?= number_format($cat['appr_amt'], 2) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
-<?php endif; ?>
-
-<?php $phase = PlanHelper::phase($thaiYear); ?>
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <span class="small text-muted">
-        รอบทำแผนปี <?= $thaiYear ?> :
-        <span class="badge <?= PlanHelper::phaseClass($phase) ?>"><?= PlanHelper::phaseLabel($phase) ?></span>
-        <?php if ($phase === PlanHelper::PHASE_LOCK): ?><span class="text-warning">— เพิ่มใหม่ได้ แต่แก้ของเดิมไม่ได้</span><?php endif; ?>
-    </span>
     <?php if (PlanHelper::canAdd($thaiYear)): ?>
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -201,13 +108,102 @@ uasort($byCat, function ($a, $b) use ($bucketOrder) {
     <?php endif; ?>
 </div>
 
-<div class="card">
+<!-- ภาพรวม: งบที่วางแผน + กรองตามสถานะ -->
+<?php
+$statusChips = [
+    'all'     => ['label' => 'ทั้งหมด',    'c' => $grandCnt,               'color' => 'primary'],
+    'draft'   => ['label' => 'ร่าง',       'c' => $byStatus['draft']['c'],  'color' => 'secondary'],
+    'submit'  => ['label' => 'รออนุมัติ',  'c' => $byStatus['submit']['c'], 'color' => 'warning'],
+    'approve' => ['label' => 'อนุมัติ',     'c' => $byStatus['approve']['c'],'color' => 'success'],
+    'reject'  => ['label' => 'ไม่อนุมัติ',  'c' => $byStatus['reject']['c'], 'color' => 'danger'],
+];
+?>
+<div class="card border mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-lg-auto">
+                <div class="text-body-secondary small">งบประมาณที่วางแผน ปี <?= $thaiYear ?></div>
+                <div class="h4 fw-semibold text-body mb-0"><?= number_format($grandAmt, 2) ?> <small class="fw-normal text-body-secondary">บาท</small></div>
+            </div>
+            <div class="col-12 col-lg">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    <?php foreach ($statusChips as $key => $sc): $active = $status === $key; ?>
+                        <a href="<?= $link(['status' => $key]) ?>" class="me-chip text-decoration-none d-inline-flex align-items-center gap-2 px-3 py-2 rounded border <?= $active ? 'border-primary border-2 bg-body-tertiary' : '' ?>">
+                            <span class="badge bg-<?= $sc['color'] ?>-subtle text-<?= $sc['color'] ?>-emphasis"><?= $sc['label'] ?></span>
+                            <span class="fw-semibold text-body"><?= number_format($sc['c']) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- แยกตามประเภทคำขอ -->
+<?php
+$typeCards = [
+    'parcel'    => ['label' => 'พัสดุ',     'icon' => 'fa-box-open'],
+    'personnel' => ['label' => 'บุคลากร',   'icon' => 'fa-user-group'],
+    'expenses'  => ['label' => 'ค่าใช้สอย', 'icon' => 'fa-file-invoice-dollar'],
+];
+$tcKeys = array_keys($typeCards);
+?>
+<div class="card border mb-3">
+    <div class="card-body">
+        <div class="row g-0 text-center">
+            <?php foreach ($typeCards as $key => $tc): $active = $type === $key; ?>
+                <div class="col-4 <?= $key !== end($tcKeys) ? 'border-end' : '' ?>">
+                    <a href="<?= $link(['type' => $active ? 'all' : $key]) ?>" class="me-type d-block text-decoration-none rounded p-2 <?= $active ? 'border border-primary border-2 bg-body-tertiary' : '' ?>">
+                        <div class="text-body-secondary small"><i class="fa-solid <?= $tc['icon'] ?> me-1"></i><?= $tc['label'] ?></div>
+                        <div class="h5 fw-semibold text-body mb-0 mt-1"><?= number_format($byType[$key]['count']) ?> <small class="fw-normal text-body-secondary">รายการ</small></div>
+                        <div class="small text-body-secondary"><?= number_format($byType[$key]['amount'], 2) ?> บาท</div>
+                    </a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<!-- รายการแผน -->
+<div class="card border">
+    <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="fw-semibold">
+            รายการแผน
+            <?php if ($status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter): ?>
+                <span class="text-body-secondary fw-normal">(กรองอยู่)</span>
+            <?php endif; ?>
+        </span>
+        <form method="get" class="d-flex flex-wrap align-items-center gap-2">
+            <input type="hidden" name="status" value="<?= Html::encode($status) ?>">
+            <input type="hidden" name="type" value="<?= Html::encode($type) ?>">
+            <select name="thai_year" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                <?php foreach ($years as $y): ?>
+                    <option value="<?= $y ?>" <?= (int) $y === $thaiYear ? 'selected' : '' ?>><?= $y ?></option>
+                <?php endforeach; ?>
+            </select>
+            <?php if ($multiDept): ?>
+                <select name="department_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="0">ทุกหน่วยงาน</option>
+                    <?php foreach ($orgNames as $id => $name): ?>
+                        <option value="<?= $id ?>" <?= (int) $deptFilter === (int) $id ? 'selected' : '' ?>><?= Html::encode($name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+            <div class="input-group input-group-sm w-auto">
+                <input type="text" name="q" value="<?= Html::encode($q) ?>" class="form-control form-control-sm" placeholder="ค้นหารายการ / วัตถุประสงค์">
+                <button type="submit" class="btn btn-outline-secondary"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <?php if ($status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter): ?>
+                <?= Html::a('ล้างตัวกรอง', ['index', 'thai_year' => $thaiYear], ['class' => 'btn btn-sm btn-link text-decoration-none']) ?>
+            <?php endif; ?>
+        </form>
+    </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+            <thead class="bg-body-tertiary">
                 <tr>
                     <th>รายการ</th>
-                    <th>หน่วยงาน</th>
+                    <?php if ($multiDept): ?><th>หน่วยงาน</th><?php endif; ?>
                     <th class="text-end">ยอดรวม (บาท)</th>
                     <th class="text-center">สถานะ</th>
                     <th class="text-end">จัดการ</th>
@@ -215,39 +211,47 @@ uasort($byCat, function ($a, $b) use ($bucketOrder) {
             </thead>
             <tbody>
                 <?php if (empty($models)): ?>
-                    <?php $filtered = $status !== 'all' || $q !== '' || $deptFilter; ?>
-                    <tr><td colspan="5" class="text-center text-muted py-4">
-                        <?= $filtered
-                            ? 'ไม่พบรายการตามเงื่อนไขที่ค้นหา'
-                            : 'ยังไม่มีแผนในปีงบประมาณ ' . $thaiYear . ' — กด "จัดทำแผนใหม่" เพื่อเริ่ม' ?>
+                    <?php $filtered = $status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter; ?>
+                    <tr><td colspan="<?= $multiDept ? 5 : 4 ?>" class="text-center text-body-secondary py-5">
+                        <?php if ($filtered): ?>
+                            <i class="fa-solid fa-filter-circle-xmark fs-3 d-block mb-2 opacity-50"></i>
+                            ไม่พบรายการตามเงื่อนไข
+                            <div class="mt-2"><?= Html::a('ล้างตัวกรอง', ['index', 'thai_year' => $thaiYear], ['class' => 'btn btn-sm btn-outline-secondary']) ?></div>
+                        <?php else: ?>
+                            <i class="fa-solid fa-clipboard-list fs-3 d-block mb-2 opacity-50"></i>
+                            ยังไม่มีแผนในปีงบประมาณ <?= $thaiYear ?>
+                            <?php if (PlanHelper::canAdd($thaiYear)): ?>
+                                <div class="mt-1">กดปุ่ม <span class="fw-semibold">จัดทำแผนใหม่</span> ด้านบนเพื่อเริ่ม</div>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </td></tr>
                 <?php endif; ?>
                 <?php foreach ($models as $m): ?>
                     <?php
                     $it = $itemMap[$m->plan_item_id] ?? null;
-                    $st = $statusMeta[$m->status] ?? ['label' => $m->status, 'class' => 'bg-secondary'];
+                    $st = $statusMeta[$m->status] ?? ['label' => $m->status, 'color' => 'secondary'];
                     $editable = in_array($m->status, ['draft', 'reject'], true);
                     $dj = is_array($m->data_json) ? $m->data_json : (json_decode((string) $m->data_json, true) ?: []);
+                    $rowCanEdit = PlanHelper::canEdit($m->thai_year);
+                    $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
                     ?>
                     <tr>
                         <td>
-                            <div class="fw-semibold"><?= Html::encode($it['item'] ?? $m->plan_item_id ?? '-') ?></div>
-                            <?php if (!empty($it['cat'])): ?><small class="text-muted"><?= Html::encode($it['cat']) ?></small><?php endif; ?>
-                            <?php if (!empty($m->description)): ?><div class="small text-muted"><?= Html::encode($m->description) ?></div><?php endif; ?>
+                            <div class="fw-semibold text-body"><?= Html::encode($it['item'] ?? $m->plan_item_id ?? '-') ?></div>
+                            <?php if (!empty($it['cat'])): ?><small class="text-body-secondary"><?= Html::encode($it['cat']) ?></small><?php endif; ?>
+                            <?php if (!empty($m->description)): ?><div class="small text-body-secondary"><?= Html::encode($m->description) ?></div><?php endif; ?>
                         </td>
-                        <td><?= Html::encode($orgNames[$m->department_id] ?? '-') ?></td>
-                        <td class="text-end"><?= number_format((float) $m->order_price, 2) ?></td>
+                        <?php if ($multiDept): ?>
+                            <td class="text-body-secondary"><?= Html::encode($orgNames[$m->department_id] ?? '-') ?></td>
+                        <?php endif; ?>
+                        <td class="text-end fw-semibold"><?= number_format((float) $m->order_price, 2) ?></td>
                         <td class="text-center">
-                            <span class="badge <?= $st['class'] ?>"><?= $st['label'] ?></span>
+                            <span class="badge bg-<?= $st['color'] ?>-subtle text-<?= $st['color'] ?>-emphasis"><?= $st['label'] ?></span>
                             <?php if ($m->status === 'reject' && !empty($dj['reject_reason'])): ?>
-                                <div class="small text-danger mt-1"><i class="fa-solid fa-comment-dots me-1"></i><?= Html::encode($dj['reject_reason']) ?></div>
+                                <div class="small text-danger-emphasis mt-1"><i class="fa-solid fa-comment-dots me-1"></i><?= Html::encode($dj['reject_reason']) ?></div>
                             <?php endif; ?>
                         </td>
                         <td class="text-end">
-                            <?php
-                            $rowCanEdit = PlanHelper::canEdit($m->thai_year);
-                            $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
-                            ?>
                             <div class="d-flex gap-1 justify-content-end">
                                 <?php if ($editable && $rowCanEdit): ?>
                                     <?= Html::a('<i class="fa-solid fa-pen"></i>', ['update', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']) ?>
@@ -273,3 +277,47 @@ uasort($byCat, function ($a, $b) use ($bucketOrder) {
         </table>
     </div>
 </div>
+
+<!-- สรุปตามหมวด (พับเก็บ) -->
+<?php if (!empty($byCat)):
+    $bucketOrder = ['parcel' => 1, 'personnel' => 2, 'expenses' => 3, 'other' => 4];
+    $bucketLabel = ['parcel' => 'พัสดุ', 'personnel' => 'บุคลากร', 'expenses' => 'ค่าใช้สอย', 'other' => 'อื่นๆ'];
+    uasort($byCat, function ($a, $b) use ($bucketOrder) {
+        return [$bucketOrder[$a['bucket']] ?? 9, $a['title']] <=> [$bucketOrder[$b['bucket']] ?? 9, $b['title']];
+    });
+?>
+<div class="mt-3">
+    <button class="btn btn-sm btn-link text-decoration-none px-0" type="button" data-bs-toggle="collapse" data-bs-target="#catSummary">
+        <i class="fa-solid fa-table-list me-1"></i> สรุปตามหมวด <i class="fa-solid fa-chevron-down small ms-1"></i>
+    </button>
+    <div class="collapse" id="catSummary">
+        <div class="card border">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="bg-body-tertiary">
+                        <tr>
+                            <th>หมวด</th>
+                            <th class="text-end">รายการ</th>
+                            <th class="text-end">วงเงินรวม (บาท)</th>
+                            <th class="text-end">อนุมัติแล้ว (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($byCat as $cat): ?>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis me-1"><?= $bucketLabel[$cat['bucket']] ?? '-' ?></span>
+                                    <?= Html::encode($cat['title']) ?>
+                                </td>
+                                <td class="text-end"><?= number_format($cat['total_cnt']) ?></td>
+                                <td class="text-end"><?= number_format($cat['total_amt'], 2) ?></td>
+                                <td class="text-end text-success-emphasis"><?= number_format($cat['appr_amt'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
