@@ -5,6 +5,7 @@ use app\components\UserHelper;
 use app\modules\jd\models\JdChangeRequest;
 
 $jd = $model->getCurrentJd();
+$approvalRows = $jd ? $jd->approvalRows : [];
 $canManage = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
 $me = UserHelper::GetEmployee();
 $isOwner = $me && (int) $me->id === (int) $model->id;
@@ -22,11 +23,23 @@ $isOwner = $me && (int) $me->id === (int) $model->id;
             <?php endif; ?>
         <?php endif; ?>
     </div>
-    <?= Html::a('<i class="bi bi-clock-history me-1"></i>ดูประวัติ', ['/hr/employees/view', 'id' => $model->id, 'name' => 'job_description_history'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+    <div class="d-flex flex-wrap justify-content-end gap-2">
+        <?php if ($jd): ?>
+            <?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i>พิมพ์ PDF', ['/jd/employee-jd/pdf', 'id' => $jd->id], [
+                'class' => 'btn btn-sm btn-outline-danger',
+                'target' => '_blank',
+                'rel' => 'noopener',
+            ]) ?>
+        <?php endif; ?>
+        <?= Html::a('<i class="bi bi-clock-history me-1"></i>ดูประวัติ', ['/hr/employees/view', 'id' => $model->id, 'name' => 'job_description_history'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+    </div>
 </div>
 
 <?php if ($jd): ?>
-    <?= $this->render('@app/modules/jd/views/employee-jd/_document', ['jd' => $jd]) ?>
+    <?= $this->render('@app/modules/jd/views/employee-jd/_document', [
+        'jd' => $jd,
+        'approvalRows' => $approvalRows,
+    ]) ?>
     <?php if ($isOwner): $ack = $jd->acknowledgement; $review = $jd->openChangeRequest; ?>
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-body">

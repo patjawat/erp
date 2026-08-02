@@ -32,15 +32,17 @@ $activityCount = 0; foreach ($model->phases as $phase) $activityCount += count($
                     <div class="trm-phase__rail"><div class="trm-phase__num"><?= $index + 1 ?></div><div class="trm-phase__line"></div></div>
                     <div class="trm-phase__head">
                         <div><div class="trm-period"><?= Html::encode($phase->period_label ?: 'ระยะที่ ' . ($index + 1)) ?></div><h3 class="trm-phase__title"><?= Html::encode($phase->title) ?></h3><?php if ($phase->description): ?><div class="trm-meta mt-1"><?= Html::encode($phase->description) ?></div><?php endif ?></div>
-                        <div class="d-flex gap-1">
-                            <?= Html::a('แก้ไข', ['phase', 'roadmap_id' => $model->id, 'id' => $phase->id, 'title' => 'แก้ไขระยะพัฒนา'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
-                            <?= Html::a('เพิ่มกิจกรรม', ['activity', 'phase_id' => $phase->id, 'title' => 'เพิ่มกิจกรรม'], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
+                        <div class="trm-phase__actions">
+                            <?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไข', ['phase', 'roadmap_id' => $model->id, 'id' => $phase->id, 'title' => 'แก้ไขระยะพัฒนา'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
+                            <?= Html::a('<i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มกิจกรรม', ['activity', 'phase_id' => $phase->id, 'title' => 'เพิ่มกิจกรรม'], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
                         </div>
                     </div>
                     <?php if ($phase->activities): foreach ($phase->activities as $activity): ?>
                     <div class="trm-activity">
                         <div><div class="trm-activity__title"><?= Html::encode($activity->title) ?><?= $activity->is_required ? ' <span class="text-danger" title="กิจกรรมบังคับ">*</span>' : '' ?></div><?php if ($activity->description): ?><div class="trm-activity__desc"><?= Html::encode($activity->description) ?></div><?php endif ?><div class="trm-tags"><span class="trm-tag"><?= Html::encode(TrainingRoadmapActivity::typeOptions()[$activity->activity_type] ?? $activity->activity_type) ?></span><span class="trm-tag"><?= Html::encode(TrainingRoadmapActivity::requirementOptions()[$activity->requirement_type] ?? $activity->requirement_type) ?></span><?php if ($activity->competency_code): ?><span class="trm-tag"><?= Html::encode($activity->competency_code) ?> · ระดับ <?= (int) $activity->competency_level ?></span><?php endif ?></div></div>
-                        <?= Html::a('แก้ไข', ['activity', 'phase_id' => $phase->id, 'id' => $activity->id, 'title' => 'แก้ไขกิจกรรม'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
+                        <div class="trm-activity__actions">
+                            <?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไข', ['activity', 'phase_id' => $phase->id, 'id' => $activity->id, 'title' => 'แก้ไขกิจกรรม'], ['class' => 'btn btn-sm btn-outline-secondary open-modal trm-action-btn', 'data-size' => 'modal-lg']) ?>
+                        </div>
                     </div>
                     <?php endforeach; else: ?><div class="trm-meta py-2">ยังไม่มีกิจกรรมในระยะนี้</div><?php endif ?>
                 </article>

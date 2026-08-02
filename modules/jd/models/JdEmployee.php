@@ -108,7 +108,7 @@ class JdEmployee extends ActiveRecord
             ->where(['emp_id' => $employeeId, 'status' => self::STATUS_ACTIVE])
             ->andWhere(['or', ['effective_from' => null], ['<=', 'effective_from', $today]])
             ->andWhere(['or', ['effective_to' => null], ['>=', 'effective_to', $today]])
-            ->with(['sections', 'template'])
+            ->with(['sections', 'template', 'approvalRows.employee', 'publisherEmployee'])
             ->orderBy(['effective_from' => SORT_DESC, 'revision_no' => SORT_DESC, 'id' => SORT_DESC])
             ->one();
     }

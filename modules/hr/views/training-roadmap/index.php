@@ -114,7 +114,7 @@ $plans = $planProvider->getModels();
                             <td><?= Html::encode($plan->start_date) ?><div class="trm-meta">ถึง <?= Html::encode($plan->target_end_date ?: '-') ?></div></td>
                             <td class="trm-progress-cell"><div class="d-flex justify-content-between trm-meta mb-1"><span>ความก้าวหน้า</span><strong><?= (int) $plan->progress_percent ?>%</strong></div><div class="trm-progress"><span style="width:<?= min(100, (float) $plan->progress_percent) ?>%"></span></div></td>
                             <td><span class="trm-status trm-status--<?= Html::encode($plan->status) ?>"><?= Html::encode(EmployeeTrainingPlan::statusOptions()[$plan->status] ?? $plan->status) ?></span></td>
-                            <td class="text-end"><?= Html::a('เปิดแผน', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?></td>
+                            <td class="text-end"><div class="d-inline-flex gap-1"><?= Html::a('เปิดแผน', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?><?= Html::a('<i class="bi bi-file-earmark-pdf"></i>', ['pdf', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'data-pjax' => '0', 'title' => 'พิมพ์ TRM แบบหน้าเดียว', 'aria-label' => 'พิมพ์ TRM แบบหน้าเดียว']) ?></div></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>

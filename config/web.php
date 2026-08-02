@@ -308,6 +308,9 @@ $config = [
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
             'hr/idp/*',
+            // Training Roadmap: every action has an authenticated role/ownership
+            // guard in the controller (HR/admin, employee, leader, mentor or assessor).
+            'hr/training-roadmap/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',
