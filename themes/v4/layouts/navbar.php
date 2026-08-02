@@ -149,7 +149,7 @@ $menuItems = [
         'label' => 'บ้านพัก',
         'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')
             ? ['/housing/dashboard/index']
-            : ['/housing/my/index'],
+            : ['/profile', 'name' => 'housing'],
         'active' => 'housing',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V8l6-5 6 5v13"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path></svg>'
     ],
