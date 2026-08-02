@@ -72,7 +72,7 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>'
     ],
     [
-        'show' => !Yii::$app->user->isGuest,
+        'show' => Yii::$app->user->can('medsop'),
         'label' => 'คลัง SOP/WI',
         'url' => ['/medsop/document/dashboard'],
         'active' => 'medsop',
@@ -87,8 +87,7 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
     ],
     [
-        // TODO: จำกัดสิทธิ์ตามบทบาทที่เหมาะสมภายหลัง (ตอนนี้เปิดให้ผู้ใช้ที่ล็อกอินทุกคน)
-        'show' => !Yii::$app->user->isGuest,
+        'show' => Yii::$app->user->can('pm'),
         'label' => 'แผนงาน/โครงการ',
         'url' => ['/pm/default/index'],
         'active' => 'pm',
