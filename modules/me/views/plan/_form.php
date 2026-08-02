@@ -172,15 +172,11 @@ $js = <<<JS
     var catSel  = document.getElementById('me-plan-category');
     var itemSel = document.getElementById('planorder-plan_item_id');
 
-    // เปิด Select2 (ค้นหาได้) ทั้งสามช่อง — ช่วยเลือกรายการที่มีจำนวนมาก
+    // Select2 เฉพาะช่องรายการ (ตัวเลือกเยอะ ต้องค้นหา) — ประเภท/หมวดคงเป็น select ปกติ (cascade เดิม)
     var hasSelect2 = window.jQuery && jQuery.fn && jQuery.fn.select2;
     if (hasSelect2) {
-        jQuery(typeSel).select2({ width: '100%' });
-        jQuery(catSel).select2({ width: '100%', placeholder: '— เลือกหมวด —' });
-        jQuery(itemSel).select2({ width: '100%', placeholder: '— เลือกรายการ —' });
+        jQuery(itemSel).select2({ width: '100%', placeholder: '— เลือกรายการ —', allowClear: true });
     }
-    // อัปเดต Select2 หลังเติม option ใหม่ โดยไม่ retrigger event ผู้ใช้
-    function refresh(sel){ if (hasSelect2) jQuery(sel).trigger('change.select2'); }
 
     function fill(sel, list, placeholder, selected){
         sel.innerHTML = '';
@@ -193,7 +189,6 @@ $js = <<<JS
             if (String(row[0]) === String(selected)) o.selected = true;
             sel.appendChild(o);
         });
-        refresh(sel);
     }
 
     function loadCats(selectedCat){
@@ -202,6 +197,7 @@ $js = <<<JS
     }
     function loadItems(selectedItem){
         fill(itemSel, itemsByCat[catSel.value] || [], '— เลือกรายการ —', selectedItem || '');
+        if (hasSelect2) jQuery(itemSel).trigger('change'); // refresh Select2 หลังเปลี่ยน option (itemSel ไม่มี handler จึงปลอดภัย)
     }
 
     typeSel.addEventListener('change', function(){ curCat=''; curItem=''; loadCats(''); });
