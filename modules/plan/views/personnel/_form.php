@@ -12,6 +12,9 @@ use app\modules\am\components\AssetHelper;
 /** @var $model app\modules\plan\models\Plan */
 /** @var $items app\modules\plan\models\PlanItem[] */
 
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
+
 $form = ActiveForm::begin([
     'id' => 'form',
     'enableAjaxValidation' => true,  // เปิดการใช้งาน AjaxValidation
@@ -30,21 +33,14 @@ $form = ActiveForm::begin([
                 <!-- ข้อมูลแผน -->
                 <div class="row">
                     <div class="col-md-3">
-                        <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true]) ?>
+                        <?= $form->field($model, 'thai_year')->textInput(['maxlength' => true, 'readonly' => true])->hint('ตามรอบทำแผนที่เปิด') ?>
                     </div>
                     <div class="col-md-9">
-                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                            'name' => 'department',
-                            'id' => 'treeID',
-                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                            'value' => 1,
-                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                            'fontAwesome' => true,
-                            'asDropdown' => true,
-                            'multiple' => false,
-                            'options' => ['disabled' => false],
-                        ])->label('หน่วยงานภายในตามโครงสร้าง'); ?>
+                        <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
+                            'data' => $ouGroups,
+                            'options' => ['id' => 'plan-unit', 'placeholder' => '-- เลือกหน่วยงาน --'],
+                            'pluginOptions' => ['allowClear' => false],
+                        ])->label('หน่วยงาน')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)'); ?>
                     </div>
 
 
@@ -69,6 +65,7 @@ $form = ActiveForm::begin([
                             'options' => [
                                 'id' => 'plan_item_id',
                                 'placeholder' => 'เลือกประเภทค่าใช้จ่าย',
+                                'required' => true,
                             ],
                             'type' => DepDrop::TYPE_SELECT2,
                             'select2Options' => ['pluginOptions' => ['allowClear' => true]],
@@ -90,6 +87,7 @@ $form = ActiveForm::begin([
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?= $form->field($model, 'description')->textInput()->label('วัตถุประสงค์') ?>
+                        <?= $form->field($model, 'reference')->textarea(['rows' => 2, 'placeholder' => 'เอกสาร/หลักฐาน ประกอบการพิจารณา'])->label('เอกสาร/ข้อมูลอ้างอิง') ?>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php

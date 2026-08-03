@@ -4,6 +4,7 @@ use yii\helpers\Html;
 
 /** @var app\modules\am\models\Asset $model */
 /** @var string $organizationName */
+/** @var string $departmentName */
 /** @var string $assetTypeTitle */
 /** @var string $assetName */
 /** @var string $assetCode */
@@ -16,6 +17,7 @@ use yii\helpers\Html;
 /** @var array $rows */
 
 $organizationName = trim((string) ($organizationName ?? '')) ?: '-';
+$departmentName = trim((string) ($departmentName ?? '')) ?: '-';
 $assetTypeTitle = trim((string) ($assetTypeTitle ?? '')) ?: '-';
 $assetName = trim((string) ($assetName ?? '')) ?: '-';
 $assetCode = trim((string) ($assetCode ?? '')) ?: '-';
@@ -106,6 +108,19 @@ $itemText = static function ($value): string {
         vertical-align: top;
         font-size: 12pt;
         line-height: 1.15;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* คอลัมน์ซ้าย: เว้นช่องว่างขวาให้พ้นคอลัมน์ที่สอง (กันข้อความไทยที่ไม่ตัดบรรทัดล้นไปทับ) */
+    .meta-table td.col-l {
+        padding-right: 8mm;
+    }
+
+    /* คอลัมน์ขวา: ขยับเข้าไปทางขวาให้ห่างจากคอลัมน์ซ้าย */
+    .meta-table td.col-r {
+        padding-left: 4mm;
     }
 
     .meta-table .meta-label {
@@ -205,30 +220,30 @@ $itemText = static function ($value): string {
                         <col style="width:50%;">
                     </colgroup>
                     <tr>
-                        <td><span style="font-size: 18px;font-weight: bold;">ประเภทครุภัณฑ์&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($assetTypeTitle) ?></span></td>
-                        <td><span style="font-size: 18px;font-weight: bold;">รหัส&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($assetCode) ?></span></td>
+                        <td class="col-l"><span style="font-size: 18px;font-weight: bold;">ประเภทครุภัณฑ์&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($assetTypeTitle) ?></span></td>
+                        <td class="col-r"><span style="font-size: 18px;font-weight: bold;">รหัส&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($assetCode) ?></span></td>
                     </tr>
                     <tr>
-                        <td><span style="font-size: 18px;font-weight: bold;">สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($location) ?></span></td>
-                        <td><span style="font-size: 18px;font-weight: bold;">ชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorTitle) ?></span></td>
+                        <td class="col-l"><span style="font-size: 18px;font-weight: bold;">สถานที่ตั้ง/หน่วยงานที่รับผิดชอบ&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($location) ?></span></td>
+                        <td class="col-r"><span style="font-size: 18px;font-weight: bold;">ชื่อผู้ขาย/ผู้รับจ้าง/ผู้บริจาค&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorTitle) ?></span></td>
                     </tr>
                     <tr>
-                        <td><span style="font-size: 18px;font-weight: bold;">ที่อยู่&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorAddress) ?></span></td>
-                        <td><span style="font-size: 18px;font-weight: bold;">โทรศัพท์&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorPhone) ?></span></td>
+                        <td class="col-l"><span style="font-size: 18px;font-weight: bold;">ที่อยู่&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorAddress) ?></span></td>
+                        <td class="col-r"><span style="font-size: 18px;font-weight: bold;">โทรศัพท์&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($vendorPhone) ?></span></td>
                     </tr>
                     <tr>
-                        <td><span style="font-size: 18px;font-weight: bold;">ประเภทเงิน&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($budgetType) ?></span></td>
-                        <td><span style="font-size: 18px;font-weight: bold;">วิธีการได้มา&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($purchaseMethod) ?></span></td>
+                        <td class="col-l"><span style="font-size: 18px;font-weight: bold;">ประเภทเงิน&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($budgetType) ?></span></td>
+                        <td class="col-r"><span style="font-size: 18px;font-weight: bold;">วิธีการได้มา&nbsp;</span><span style="font-size: 18px;"><?= Html::encode($purchaseMethod) ?></span></td>
                     </tr>
                 </table>
             </td>
             <td class="top-right">
                 <table class="right-panel">
                     <tr>
-                        <td style="font-size: 18px;font-weight: bold;">ส่วนราชการ</td>
+                        <td><span style="font-size: 18px;font-weight: bold;">ส่วนราชการ</span> <?= Html::encode($organizationName) ?></td>
                     </tr>
                     <tr>
-                        <td><span style="font-size: 18px;font-weight: bold;">หน่วยงาน</span> <?= Html::encode($organizationName) ?></td>
+                        <td><span style="font-size: 18px;font-weight: bold;">หน่วยงาน</span> <?= Html::encode($departmentName) ?></td>
                     </tr>
                     <tr>
                         <td><span style="font-size: 18px;font-weight: bold;">แบบรุ่น</span> <?= Html::encode($assetName) ?></td>

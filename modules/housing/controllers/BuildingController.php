@@ -150,7 +150,7 @@ final class BuildingController extends BaseController
     {
         $model = $this->findModel($id);
         if ($model->getUnits()->exists() || $model->getFloors()->exists()) {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบได้ เนื่องจากมีข้อมูลชั้นหรือยูนิตอยู่ในอาคารนี้');
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบได้ เนื่องจากมีข้อมูลชั้นหรือห้องอยู่ในอาคารนี้');
         } else {
             $uploadService = new HousingUploadService();
             $uploadIds = $uploadService->findIdsByRefsAndSlots(

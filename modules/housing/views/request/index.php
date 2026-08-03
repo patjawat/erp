@@ -12,7 +12,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <div class="card border-0 shadow-sm">
 <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-start gap-2">
 <div><div class="fw-semibold">รายการคำขอ</div><div class="small text-body-secondary">ตรวจสอบ บันทึกผลมติ และจัดสรรที่พัก</div></div>
-<?= Html::a('<i data-lucide="plus"></i> สร้างคำขอ', ['create'], ['class' => 'btn btn-primary']) ?>
+<?= Html::a('<i class="bi bi-plus-lg"></i> สร้างคำขอ', ['create'], ['class' => 'btn btn-primary']) ?>
 </div>
 <div class="card-body border-bottom py-2">
 <div class="d-flex flex-wrap gap-2">

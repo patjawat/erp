@@ -98,6 +98,70 @@ class Organization extends \yii\db\ActiveRecord
     }
 
     /**
+     * ชื่อหน่วยงานตามลำดับชั้นในผังองค์กร (ราก → โหนดนี้)
+     * @return string[]
+     */
+    public function pathNames(): array
+    {
+        $names = [];
+        try {
+            foreach ($this->parents()->all() as $ancestor) {
+                $names[] = $ancestor->name;
+            }
+        } catch (\Throwable $e) {
+            // ไม่มี behavior/ข้อมูลผิดปกติ — คืนเฉพาะชื่อตัวเอง
+        }
+        $names[] = $this->name;
+        return $names;
+    }
+
+    /**
+     * ชื่อเต็มตามผังองค์กร เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ"
+     */
+    public function pathLabel(string $sep = ' › '): string
+    {
+        return implode($sep, $this->pathNames());
+    }
+
+    /**
+     * ข้อมูลสำหรับ Select2 แบบจัดกลุ่ม (optgroup ตามหน่วยงานบนสุด/ราก)
+     * คืน [ 'ชื่อราก' => [ id => 'กลุ่มงาน › งาน', ... ], ... ] — query เดียว ไม่ N+1
+     *
+     * @param bool $activeOnly เอาเฉพาะ active=1
+     * @param string $sep
+     * @return array
+     */
+    public static function groupedByRoot(bool $activeOnly = true, string $sep = ' › '): array
+    {
+        $query = static::find()->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC]);
+        if ($activeOnly) {
+            $query->andWhere(['active' => 1]);
+        }
+        $all = $query->all();
+
+        $grouped = [];
+        foreach ($all as $node) {
+            if ((int) $node->lvl === 0) {
+                continue; // รากเป็นหัวข้อกลุ่ม ไม่ให้เลือกเอง
+            }
+            // หาบรรพบุรุษภายในรากเดียวกัน (in-memory, n เล็ก)
+            $chain = [];
+            foreach ($all as $a) {
+                if ($a->root === $node->root && $a->lft < $node->lft && $a->rgt > $node->rgt) {
+                    $chain[(int) $a->lft] = $a->name;
+                }
+            }
+            ksort($chain);
+            $rootName = reset($chain) ?: $node->name; // บรรพบุรุษตัวแรก = ราก
+            array_shift($chain); // ตัดรากออก (เป็นชื่อกลุ่มแล้ว)
+            $chain[] = $node->name;
+            $grouped[$rootName][$node->id] = implode($sep, $chain);
+        }
+
+        return $grouped;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function rules()

@@ -9,9 +9,13 @@ use app\models\UploadCsvForm;
 use app\modules\dms\models\DocumentsDetail;
 use app\modules\hr\models\EmployeeDetailSearch;
 use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeeTrainingPlan;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\EmployeesSearch;
+use app\modules\hr\models\IdpCycle;
+use app\modules\hr\models\IdpPlan;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\ProbationCase;
 use app\modules\hr\models\UploadCsv;
 use app\modules\hr\helpers\EmployeeImportHelper;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -280,9 +284,25 @@ class EmployeesController extends Controller
     {
         $name = $this->request->get('name');
         $model = $this->findModel($id);
-         $me = UserHelper::GetEmployee();
-         
-        if($model->id != $me->id && !Yii::$app->user->can('hr')){
+        $me = UserHelper::GetEmployee();
+        $isSelf = $me && (int) $model->id === (int) $me->id;
+        $isHr = Yii::$app->user->can('hr');
+        $isManager = $me && $me->canManageWorkProfileOf($model);
+
+        if (!$isSelf && !$isHr && !$isManager) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $requestedManagerView = $this->request->get('view') === 'manager';
+        $profileMode = $requestedManagerView && ($isManager || $isHr)
+            ? 'manager'
+            : ($isManager && !$isHr ? 'manager' : ($isSelf ? 'self' : 'hr'));
+        $managerSections = [
+            '', 'employment_contract', 'position_history', 'job_description_history',
+            'kpi', 'license', 'develop', 'idp', 'training_roadmap',
+            'annual_appraisal', 'performance_appraisal',
+        ];
+        if ($profileMode === 'manager' && !in_array((string) $name, $managerSections, true)) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
@@ -293,19 +313,57 @@ class EmployeesController extends Controller
             ]);
         }
 
-        $searchModel = new EmployeeDetailSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->where(['emp_id' => $model->id, 'name' => $name]);
-        $dataProvider->query->orderBy(
-            new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc")
-        );
-        $dataProvider->pagination->pageSize = 8;
+        $searchModel = null;
+        $dataProvider = null;
+        $trainingPlans = [];
+        $idpCycle = null;
+        $idpPlan = null;
+        $probationCases = [];
+        $probationActionCount = 0;
+
+        if ($name === 'training_roadmap') {
+            $trainingPlans = EmployeeTrainingPlan::find()->where(['emp_id' => $model->id])
+                ->with(['roadmap.phases.activities', 'results'])->orderBy(['id' => SORT_DESC])->all();
+        } elseif ($name === 'idp') {
+            $idpCycle = IdpCycle::current();
+            $idpPlan = $idpCycle ? IdpPlan::find()->where(['cycle_id' => $idpCycle->id, 'emp_id' => $model->id])
+                ->with(['cycle', 'employee', 'supervisor', 'goals.activities'])->one() : null;
+        } elseif ($name === 'performance_appraisal') {
+            $probationCases = ProbationCase::find()
+                ->with(['employee', 'template', 'rounds.evaluations.evaluator', 'decision', 'acknowledgement'])
+                ->where(['employee_id' => $model->id])
+                ->orderBy(['updated_at' => SORT_DESC, 'id' => SORT_DESC])->all();
+            if ($me) {
+                foreach ($probationCases as $case) {
+                    foreach ($case->rounds as $round) foreach ($round->evaluations as $evaluation) {
+                        if ((int) $evaluation->evaluator_employee_id === (int) $me->id && $evaluation->status === 'open') $probationActionCount++;
+                    }
+                    if ((int) $case->final_recommender_employee_id === (int) $me->id && $case->status === 'waiting_decision') $probationActionCount++;
+                }
+            }
+        } elseif ($name === 'annual_appraisal') {
+            // Reserved for the twice-yearly appraisal workflow that will be implemented next.
+        } elseif ($name) {
+            $detailName = in_array($name, ['employment_contract', 'position_history'], true) ? 'position' : $name;
+            $searchModel = new EmployeeDetailSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+            $dataProvider->query->where(['emp_id' => $model->id, 'name' => $detailName]);
+            $dataProvider->query->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.date_start') desc"));
+            $dataProvider->pagination->pageSize = 8;
+        }
 
         return $this->render('view', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'model' => $model,
             'name' => $name,
+            'profileMode' => $profileMode,
+            'viewerEmployee' => $me,
+            'trainingPlans' => $trainingPlans,
+            'idpCycle' => $idpCycle,
+            'idpPlan' => $idpPlan,
+            'probationCases' => $probationCases,
+            'probationActionCount' => $probationActionCount,
         ]);
     }
 

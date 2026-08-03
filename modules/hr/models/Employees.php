@@ -105,6 +105,9 @@ class Employees extends Yii\db\ActiveRecord
     public $range2;  // ช่วงตัวเลข
     public $user_register; // สถานะลงทะเยียน
 
+    /** รหัสสถานะ "ยังปฏิบัติงานอยู่" (categorise emp_status: 1 = ปฏิบัติราชการ) */
+    public const STATUS_WORKING = '1';
+
     public static function tableName()
     {
         return 'employees';
@@ -828,6 +831,13 @@ class Employees extends Yii\db\ActiveRecord
                 'count' => $this->getJdHistoryCount(),
             ],
             [
+                'title' => 'ตัวชี้วัด KPI',
+                'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
+                'name' => 'kpi',
+                'subtitle' => 'KPI ประจำปี บันทึกผลงาน และสรุปย้อนหลัง',
+                'count' => $this->getKpiActiveCount(),
+            ],
+            [
                 'title' => 'ข้อมูลการศึกษา',
                 'icon' => '<i data-lucide="graduation-cap" class="lucide-icon text-primary"></i>',
                 'name' => 'education',
@@ -951,7 +961,13 @@ class Employees extends Yii\db\ActiveRecord
                 'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
                 'count' => 0,
             ],
-            'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
+            'performance_appraisal' => [
+                'name' => 'performance_appraisal',
+                'title' => 'การประเมินทดลองงาน',
+                'subtitle' => 'งานประเมินเดือนที่ 1, 2 และ 3 ของฉัน',
+                'icon' => '<i data-lucide="clipboard-check" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+            ],
             'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
             'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
             'housing' => [
@@ -982,7 +998,7 @@ class Employees extends Yii\db\ActiveRecord
                 'subtitle' => 'ตำแหน่ง วิชาชีพ และคำอธิบายงาน',
                 'icon' => 'briefcase-business',
                 'items' => [
-                    'position', 'job_description_history', 'position_manage', 'license',
+                    'position', 'job_description_history', 'kpi', 'position_manage', 'license',
                 ],
             ],
             [
@@ -1070,6 +1086,37 @@ class Employees extends Yii\db\ActiveRecord
     public function getJdHistoryCount(): int
     {
         return (int) \app\modules\jd\models\JdEmployee::find()->where(['emp_id' => $this->id])->count();
+    }
+
+    /** ชุด KPI ประจำปีทั้งหมดของพนักงาน (ใหม่สุดก่อน) */
+    public function getKpiCycles()
+    {
+        return $this->hasMany(\app\modules\kpi\models\KpiCycle::class, ['emp_id' => 'id'])
+            ->orderBy(['fiscal_year' => SORT_DESC, 'id' => SORT_DESC]);
+    }
+
+    /** ชุด KPI ปีล่าสุดของพนักงาน */
+    public function getLatestKpiCycle()
+    {
+        if (!class_exists(\app\modules\kpi\models\KpiCycle::class)) {
+            return null;
+        }
+        return \app\modules\kpi\models\KpiCycle::find()
+            ->where(['emp_id' => $this->id])
+            ->orderBy(['fiscal_year' => SORT_DESC, 'id' => SORT_DESC])
+            ->one();
+    }
+
+    /** จำนวน KPI (active) ในชุดปีล่าสุด — ใช้แสดงบนการ์ดโปรไฟล์ */
+    public function getKpiActiveCount(): int
+    {
+        $cycle = $this->getLatestKpiCycle();
+        if (!$cycle) {
+            return 0;
+        }
+        return (int) \app\modules\kpi\models\KpiItem::find()
+            ->where(['cycle_id' => $cycle->id, 'status' => \app\modules\kpi\models\KpiItem::STATUS_ACTIVE])
+            ->count();
     }
 
     // คำนำหน้า
@@ -1671,6 +1718,80 @@ class Employees extends Yii\db\ActiveRecord
         $leader = isset($json['leader1']) && $json['leader1'] !== '' ? (int) $json['leader1'] : null;
 
         return $leader !== null && $leader === (int) $this->id;
+    }
+
+    /**
+     * หน่วยงาน (tree node) ทั้งหมดที่บุคลากรนี้เป็นหัวหน้า (leader1)
+     * @return Organization[]
+     */
+    public function ledOrganizations()
+    {
+        return Organization::find()
+            ->where(new \yii\db\Expression(
+                "JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1')) = :leaderId",
+                [':leaderId' => (string) $this->id]
+            ))
+            ->orderBy(['lvl' => SORT_ASC, 'name' => SORT_ASC])
+            ->all();
+    }
+
+    /**
+     * เป็นหัวหน้าหน่วยงานอย่างน้อย 1 หน่วยหรือไม่
+     * @return bool
+     */
+    public function isDepartmentHead()
+    {
+        return !empty($this->ledOrganizations());
+    }
+
+    /** Whether this employee may open another employee's work profile. */
+    public function canManageWorkProfileOf(self $employee): bool
+    {
+        if ((int) $this->id === (int) $employee->id) {
+            return false;
+        }
+        try {
+            $targetNode = $employee->empDepartment;
+            if (!$targetNode) {
+                return false;
+            }
+            foreach ($this->ledOrganizations() as $ledNode) {
+                if ((int) $ledNode->root === (int) $targetNode->root
+                    && (int) $targetNode->lft >= (int) $ledNode->lft
+                    && (int) $targetNode->rgt <= (int) $ledNode->rgt) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+        return false;
+    }
+
+    /**
+     * รหัสบุคลากรของหัวหน้า (leader1) ตามหน่วยงานที่สังกัด — ใช้หน่วยงานก่อน แล้วค่อยกลุ่มงานแม่
+     * แหล่งเดียวกับ KpiService::isSupervisorOf() คืน null ถ้าหาไม่พบหรือชี้กลับมาที่ตัวเอง
+     */
+    public function supervisorEmpId()
+    {
+        try {
+            $units = $this->orgUnits();
+            foreach (['unit', 'group'] as $key) {
+                $node = $units[$key] ?? null;
+                if (!$node) {
+                    continue;
+                }
+                $json = $node->data_json;
+                if (!is_array($json)) {
+                    $json = json_decode((string) $json, true) ?: [];
+                }
+                $leader = isset($json['leader1']) && $json['leader1'] !== '' ? (int) $json['leader1'] : 0;
+                if ($leader && $leader !== (int) $this->id) {
+                    return $leader;
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+        return null;
     }
 
     public function expertiseName()

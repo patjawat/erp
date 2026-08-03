@@ -13,10 +13,10 @@ if ($access->isAdmin()) {
     $items[] = ['setting', 'ตั้งค่า', 'bi-gear', ['/medsop/document/setting']];
 }
 ?>
-<nav class="medsop-nav d-flex flex-wrap align-items-center justify-content-lg-end gap-1" aria-label="เมนู MedSOP">
+<nav class="medsop-nav d-flex flex-wrap align-items-center justify-content-lg-end gap-2" aria-label="เมนู MedSOP">
     <?php foreach ($items as [$key, $label, $icon, $url]): ?>
-        <?= Html::a('<i class="bi ' . $icon . ' me-1" aria-hidden="true"></i>' . Html::encode($label), $url, [
-            'class' => 'btn btn-sm px-3 ' . ($active === $key ? 'btn-primary' : 'btn-outline-secondary'),
+        <?= Html::a('<i class="bi ' . $icon . '" aria-hidden="true"></i><span class="d-none d-sm-inline">' . Html::encode($label) . '</span>', $url, [
+            'class' => 'btn d-inline-flex align-items-center gap-2 ' . ($active === $key ? 'btn-primary' : 'btn-outline-primary'),
             'aria-current' => $active === $key ? 'page' : null,
         ]) ?>
     <?php endforeach; ?>

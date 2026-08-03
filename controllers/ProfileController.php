@@ -18,6 +18,7 @@ use app\modules\hr\models\EmployeeDetailSearch;
 use app\modules\hr\models\EmployeeTrainingPlan;
 use app\modules\hr\models\IdpCycle;
 use app\modules\hr\models\IdpPlan;
+use app\modules\hr\models\ProbationCase;
 use app\modules\housing\services\HousingContextService;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Unit;
@@ -74,6 +75,8 @@ class ProfileController extends \yii\web\Controller
         $trainingPlans = [];
         $idpCycle = null;
         $idpPlan = null;
+        $probationCases = [];
+        $probationActionCount = 0;
         $dataProvider = null;
         $housingContext = null;
         $housingVacancies = [];
@@ -132,6 +135,26 @@ class ProfileController extends \yii\web\Controller
                     }
                 }
             }
+        } elseif ($model && $name === 'performance_appraisal') {
+            $probationCases = ProbationCase::find()
+                ->with(['employee', 'template', 'rounds.evaluations.evaluator', 'rounds.acknowledgement', 'decision', 'acknowledgement'])
+                ->where(['or',
+                    ['employee_id' => $model->id],
+                    ['supervisor_employee_id' => $model->id],
+                    ['group_head_employee_id' => $model->id],
+                    ['director_employee_id' => $model->id],
+                ])
+                ->orderBy(['updated_at' => SORT_DESC, 'id' => SORT_DESC])
+                ->all();
+            foreach ($probationCases as $case) {
+                foreach ($case->rounds as $round) foreach ($round->evaluations as $evaluation) {
+                    if ((int)$evaluation->evaluator_employee_id === (int)$model->id && $evaluation->status === 'open') $probationActionCount++;
+                }
+                if ((int)$case->final_recommender_employee_id === (int)$model->id && $case->status === 'waiting_decision') $probationActionCount++;
+                foreach ($case->rounds as $round) {
+                    if ((int)$case->director_employee_id === (int)$model->id && $round->status === 'waiting_acknowledgement') $probationActionCount++;
+                }
+            }
         } elseif ($model && $name) {
             $searchModel = new EmployeeDetailSearch();
             $dataProvider = $searchModel->search($this->request->queryParams);
@@ -148,6 +171,8 @@ class ProfileController extends \yii\web\Controller
             'trainingPlans' => $trainingPlans,
             'idpCycle' => $idpCycle,
             'idpPlan' => $idpPlan,
+            'probationCases' => $probationCases,
+            'probationActionCount' => $probationActionCount,
             'dataProvider' => $dataProvider,
             'housingContext' => $housingContext,
             'housingVacancies' => $housingVacancies,

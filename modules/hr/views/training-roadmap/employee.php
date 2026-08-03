@@ -25,7 +25,7 @@ $isSelfProfile = $isSelfProfile ?? false;
             </div>
             <div class="d-flex justify-content-between trm-meta mt-3 mb-1"><span>ความก้าวหน้า</span><span><?= $done ?> จาก <?= $total ?> กิจกรรม</span></div>
             <div class="trm-progress" role="progressbar" aria-valuenow="<?= (float) $plan->progress_percent ?>" aria-valuemin="0" aria-valuemax="100"><span style="width:<?= min(100, (float) $plan->progress_percent) ?>%"></span></div>
-            <div class="mt-3"><?= Html::a('เปิดแผนรายบุคคล', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary']) ?></div>
+            <div class="mt-3 d-flex gap-2 flex-wrap"><?= Html::a('เปิดแผนรายบุคคล', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary']) ?><?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i>พิมพ์ PDF', ['pdf', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'data-pjax' => '0']) ?></div>
         </div>
     <?php endforeach; else: ?><div class="trm-empty"><h3>ยังไม่ได้รับมอบหมาย Training Roadmap</h3><p>เมื่อ HR หรือหัวหน้างานมอบหมาย แผนและความก้าวหน้าจะแสดงที่นี่</p></div><?php endif ?>
     </div>

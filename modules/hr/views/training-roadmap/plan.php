@@ -12,7 +12,7 @@ foreach ($model->results as $result) $resultsByActivity[$result->activity_id] = 
 <div class="trm-shell" id="employee-roadmap-plan">
     <div class="trm-page-head">
         <div><span class="trm-status trm-status--<?= Html::encode($model->status) ?>"><?= Html::encode(EmployeeTrainingPlan::statusOptions()[$model->status] ?? $model->status) ?></span><h1 class="mt-2"><?= Html::encode($model->roadmap->title) ?></h1><p><?= Html::encode($model->employee->fullname) ?> · <?= Html::encode($model->start_date) ?> ถึง <?= Html::encode($model->target_end_date ?: 'ยังไม่กำหนด') ?></p></div>
-        <div class="text-end"><div class="fw-semibold"><?= number_format((float) $model->progress_percent, 0) ?>%</div><div class="trm-meta">ความก้าวหน้า</div></div>
+        <div class="text-end"><div class="fw-semibold"><?= number_format((float) $model->progress_percent, 0) ?>%</div><div class="trm-meta mb-2">ความก้าวหน้า</div><?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i>พิมพ์ TRM', ['pdf', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'data-pjax' => '0']) ?></div>
     </div>
     <div class="trm-builder">
         <main class="trm-builder__main trm-card">

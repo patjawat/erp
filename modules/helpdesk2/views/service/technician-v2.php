@@ -29,11 +29,10 @@ foreach ($tickets as $t) {
     }
 }
 
-$statusFilterOptions = [
-    'pending' => 'รอรับเรื่อง',
-    'receive' => 'รับเรื่องแล้ว',
-    'in_progress' => 'กำลังดำเนินการ',
-];
+$statusFilterOptions = array_intersect_key(
+    Helpdesk::repairStatusOptions(),
+    array_flip(['pending', 'receive', 'in_progress'])
+);
 ?>
 
 <div class="row g-3">
@@ -230,4 +229,3 @@ $statusFilterOptions = [
         </div>
     </div>
 </div>
-

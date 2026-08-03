@@ -44,6 +44,9 @@ class PersonnelController extends Controller
     public function actionIndex()
     {
         $searchModel = new PlanOrderSearch();
+        if (!$this->request->get('PlanOrderSearch')) {
+            $searchModel->thai_year = \app\modules\plan\components\PlanHelper::currentPlanYear();
+        }
         $dataProvider = $searchModel->search($this->request->queryParams);
          $dataProvider->query->andFilterWhere(['plan_group_id' => 'personnel']);
 
@@ -99,9 +102,10 @@ class PersonnelController extends Controller
     public function actionCreate()
     {
         $model = new PlanOrder([
-            'thai_year' => (AppHelper::YearBudget()+1),
-            'plan_group_id' => 'personnel', // Default to material type
-            'plan_category_id' => 'PER',
+            'thai_year' => \app\modules\plan\components\PlanHelper::currentPlanYear(),
+            'plan_group_id' => 'personnel',
+            // plan_category_id/plan_type_id ถูก derive จาก plan_item_id ที่ PlanOrder::beforeSave()
+            // (เดิมตั้ง 'PER' ตายตัวซึ่งไม่ใช่รหัสหมวดจริง ทำให้ข้อมูลปนเปื้อน)
         ]);
 
         if ($model->load(Yii::$app->request->post())) {

@@ -35,11 +35,11 @@ class IdpPlan extends ActiveRecord
     {
         return [
             'draft' => 'ฉบับร่าง',
-            'submitted' => 'รอหัวหน้าพิจารณา',
+            'submitted' => 'รอหัวหน้าเห็นชอบ',
             'revision' => 'ให้ปรับปรุง',
-            'approved' => 'อนุมัติแล้ว',
+            'approved' => 'รอ HR เปิดบันทึก',
             'in_progress' => 'กำลังดำเนินการ',
-            'assessment' => 'รอประเมินผล',
+            'assessment' => 'รอปิดรอบ',
             'completed' => 'เสร็จสิ้น',
             'cancelled' => 'ยกเลิก',
         ];

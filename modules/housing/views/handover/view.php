@@ -20,10 +20,10 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <div class="container-fluid py-3" style="max-width:1120px">
 <?php foreach (['success', 'warning', 'error'] as $type): if (Yii::$app->session->hasFlash($type)): ?><div class="alert alert-<?= $type === 'error' ? 'danger' : $type ?>"><?= Html::encode(Yii::$app->session->getFlash($type)) ?></div><?php endif; endforeach; ?>
 <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
-    <?= Html::a('<i data-lucide="arrow-left"></i> กลับไปคำขอ', ['/housing/request/view', 'id' => $requestId], ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::a('<i class="bi bi-arrow-left"></i> กลับไปคำขอ', ['/housing/request/view', 'id' => $requestId], ['class' => 'btn btn-outline-secondary']) ?>
     <div class="d-flex gap-2">
-        <?php if ($model->status === Handover::STATUS_DRAFT && !$model->handed_over_signed_at): ?><?= Html::a('<i data-lucide="pencil"></i> แก้ไขข้อมูลตรวจรับ', ['prepare', 'request_id' => $requestId], ['class' => 'btn btn-outline-primary']) ?><?php endif; ?>
-        <?= Html::a('<i data-lucide="printer"></i> พิมพ์เอกสาร', ['print', 'id' => $model->id], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
+        <?php if ($model->status === Handover::STATUS_DRAFT && !$model->handed_over_signed_at): ?><?= Html::a('<i class="bi bi-pencil"></i> แก้ไขข้อมูลตรวจรับ', ['prepare', 'request_id' => $requestId], ['class' => 'btn btn-outline-primary']) ?><?php endif; ?>
+        <?= Html::a('<i class="bi bi-printer"></i> พิมพ์เอกสาร', ['print', 'id' => $model->id], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
     </div>
 </div>
 <div class="card border-0 shadow-sm mb-3">

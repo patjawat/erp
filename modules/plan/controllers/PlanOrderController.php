@@ -146,11 +146,16 @@ class PlanOrderController extends Controller
     public function actionApprove($id)
     {
            Yii::$app->response->format = Response::FORMAT_JSON;
+           if (!Yii::$app->user->can('planApprove')) {
+               return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์อนุมัติแผน (เฉพาะผู้อนุมัติ)'];
+           }
             $model = $this->findModel($id); // โหลดแผนหลัก
 
         if ($model->load(Yii::$app->request->post())) {
             // $model->updated_at = time();
             $model->status = 'approve';
+            $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+            $model->data_json = array_merge($json, PlanOrder::decisionStamp());
             if ($model->save(false)) {
                 return [
                     'status' => 'success',
@@ -194,9 +199,18 @@ class PlanOrderController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $id = $this->request->post('id');
         $status = $this->request->post('status');
+        // การตัดสินใจอนุมัติ/ไม่อนุมัติ ต้องมีสิทธิ์ planApprove (ผู้ส่งคำขอ 'submit' ทำได้ตามปกติ)
+        if (in_array($status, ['approve', 'reject'], true) && !Yii::$app->user->can('planApprove')) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์ไม่อนุมัติแผน (เฉพาะผู้อนุมัติ)'];
+        }
         $model = $this->findModel($id);
         if ($model) {
             $model->status = $status;
+            if (in_array($status, ['approve', 'reject'], true)) {
+                $reason = trim((string) $this->request->post('reason', ''));
+                $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+                $model->data_json = array_merge($json, PlanOrder::decisionStamp($reason !== '' ? $reason : null));
+            }
             $model->save(false);
               return $this->redirect(['/plan/'.$model->plan_group_id.'/index']);
             return [

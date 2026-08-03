@@ -28,21 +28,15 @@ if (empty($skipDashboardBreadcrumbs)) {
     $this->params['breadcrumbs'][] = $this->title;
 }
 
-$statusLabels = ['open' => 0, 'in_progress' => 0, 'success' => 0, 'cancel' => 0];
+$statusLabels = array_fill_keys(array_keys(Helpdesk::repairStatusMeta()), 0);
 foreach ($statusSummary as $row) {
-    $code = $row['status'];
-    if ($code === 'pending' || $code === 'receive') {
-        $statusLabels['open'] += (int) $row['cnt'];
-    } elseif ($code === 'in_progress') {
-        $statusLabels['in_progress'] += (int) $row['cnt'];
-    } elseif ($code === 'success') {
-        $statusLabels['success'] += (int) $row['cnt'];
-    } elseif ($code === 'cancel') {
-        $statusLabels['cancel'] += (int) $row['cnt'];
+    $code = Helpdesk::normalizeRepairStatus($row['status'] ?? null);
+    if (array_key_exists($code, $statusLabels)) {
+        $statusLabels[$code] += (int) $row['cnt'];
     }
 }
 
-$chartLabels = json_encode(['เปิดอยู่', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
+$chartLabels = json_encode(array_values(Helpdesk::repairStatusOptions()), JSON_UNESCAPED_UNICODE);
 $chartData = json_encode(array_values($statusLabels));
 
 $this->registerJsFile('@web/libs/chartjs/chart.umd.min.js', ['depends' => [\yii\web\JqueryAsset::class]]); // self-hosted chart.js@4 (เดิม jsdelivr)
@@ -50,13 +44,17 @@ $this->registerJsFile('@web/libs/chartjs/chart.umd.min.js', ['depends' => [\yii\
 $js = <<<JS
 const ctx = document.getElementById('statusChart');
 if (ctx) {
+  const rootStyles = getComputedStyle(document.documentElement);
+  const statusColors = ['warning', 'info', 'primary', 'success', 'danger'].map(function (name) {
+    return rootStyles.getPropertyValue('--bs-' + name).trim();
+  });
   new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: {$chartLabels},
       datasets: [{
         data: {$chartData},
-        backgroundColor: ['#0d6efd', '#fd7e14', '#198754', '#6c757d'],
+        backgroundColor: statusColors,
       }]
     },
     options: {
@@ -76,10 +74,14 @@ $this->registerJs($js);
 $receiveJs = <<<JS
 $(document).off('click.helpdeskDashReceive', 'a.helpdesk-dashboard-receive').on('click.helpdeskDashReceive', 'a.helpdesk-dashboard-receive', function (e) {
   e.preventDefault();
+  var action = $(this);
+  if (action.data('request-pending')) {
+    return;
+  }
   var url = $(this).attr('href');
   Swal.fire({
     title: 'ยืนยันการรับเรื่อง',
-    text: 'รับเรื่องนี้แล้วระบบจะบันทึกสถานะเป็น «รับเรื่อง» และแสดงในทะเบียนงานซ่อม',
+    text: 'รับเรื่องนี้แล้วระบบจะบันทึกสถานะเป็น «รับเรื่องแล้ว» และแสดงในทะเบียนงานซ่อม',
     icon: 'question',
     showCancelButton: true,
     confirmButtonText: 'รับเรื่อง',
@@ -88,10 +90,18 @@ $(document).off('click.helpdeskDashReceive', 'a.helpdesk-dashboard-receive').on(
     if (!result.isConfirmed) {
       return;
     }
+    action
+      .data('request-pending', true)
+      .addClass('disabled')
+      .attr({ 'aria-disabled': 'true', 'aria-busy': 'true' });
+
     $.ajax({
-      type: 'get',
+      type: 'post',
       url: url,
       dataType: 'json',
+      data: (typeof yii !== 'undefined' && typeof yii.getCsrfParam === 'function')
+        ? { [yii.getCsrfParam()]: yii.getCsrfToken() }
+        : {},
       success: function (response) {
         if (response && response.status === 'success') {
           Swal.fire({
@@ -112,6 +122,12 @@ $(document).off('click.helpdeskDashReceive', 'a.helpdesk-dashboard-receive').on(
           text: 'ไม่สามารถรับเรื่องได้ กรุณาลองใหม่อีกครั้ง',
           icon: 'error'
         });
+      },
+      complete: function () {
+        action
+          .removeData('request-pending')
+          .removeClass('disabled')
+          .removeAttr('aria-disabled aria-busy');
       }
     });
   });
@@ -430,4 +446,3 @@ $this->registerJs($receiveJs);
             </div>
         </div>
     </div>
-

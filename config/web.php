@@ -294,6 +294,26 @@ $config = [
             'telegrambot/*',
             'dms/webhook/receive',
             // '*',
+            // JD: หน้าที่ผู้ลงนาม/เจ้าของ JD (ผู้ใช้ทั่วไป) ต้องเข้าถึงได้ — controller มี guard ภายในเอง
+            'jd/employee-jd/inbox',
+            'jd/employee-jd/view',
+            'jd/employee-jd/sign',
+            'jd/employee-jd/pdf',
+            'jd/employee-jd/acknowledge',
+            'jd/employee-jd/request-review',
+            'jd/employee-jd/cancel-review',
+            'jd/employee-jd/resolve-review',
+            'jd/employee-jd/review-inbox',
+            // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
+            'kpi/manage/*',
+            // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
+            'hr/idp/*',
+            // Training Roadmap: every action has an authenticated role/ownership
+            // guard in the controller (HR/admin, employee, leader, mentor or assessor).
+            'hr/training-roadmap/*',
+            // Probation appraisal: authenticated users enter through Profile;
+            // every action checks the assigned employee/leader/director in the controller.
+            'hr/probation-appraisal/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

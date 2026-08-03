@@ -78,14 +78,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?>
                     </td>
                     <td><?= $item->planType?->title ?></td>
-                    <td>
-                        <?= $item->planItem?->title ?>
-                        <?= $item->assetType?->title ?>
-                    </td>
+                    <td><?= Html::encode($item->assetType?->title ?: ($item->planItem?->title ?? '-')) ?></td>
                     <td><?= $item->description ?></td>
                     <td class="text-end"><?= number_format((float)($item->order_price ?? 0), 2) ?></td>
                     <td class="text-center"><?=$item->budge?->title ?? '-'?></td>
-                    <td><?= $item->departmentName() ?></td>
+                    <td><?= Html::encode($item->departmentName()) ?><?php if ($t = $item->unitTypeTitle()): ?> <span class="badge text-bg-light border"><?= Html::encode($t) ?></span><?php endif; ?></td>
                     <td><?= $item->viewStatus()['view'] ?></td>
                     <td class="text-center">
                         <?=$this->render('action',['model' => $item])?>

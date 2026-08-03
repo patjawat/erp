@@ -4,14 +4,14 @@ use yii\helpers\Html;
 /** @var array $items */
 ?>
 
-<div class="card shadow-sm mt-3">
-    <div class="card-header fw-bold">ประวัติการดำเนินการ</div>
-    <div class="card-body p-4">
+<section aria-labelledby="repair-history-title">
+    <h3 class="h6 fw-bold mb-3" id="repair-history-title">ประวัติการดำเนินการ</h3>
+    <div>
         <?php if (empty($items)): ?>
             <div class="text-muted">ยังไม่มีประวัติการดำเนินการ</div>
         <?php else: ?>
             <ol class="list-unstyled mb-0">
-                <?php foreach ($items as $i => $log): ?>
+                <?php foreach ($items as $log): ?>
                     <?php
                     $createdAt = null;
                     $message = '';
@@ -25,8 +25,8 @@ use yii\helpers\Html;
                     ?>
                     <li class="d-flex gap-3 mb-3">
                         <div class="flex-shrink-0">
-                            <div class="border border-primary-subtle bg-primary bg-opacity-10 text-primary rounded-3 p-2">
-                                <i class="fa-regular fa-clock"></i>
+                            <div class="bg-body-tertiary text-body-secondary border rounded-3 p-2">
+                                <i class="fa-regular fa-clock" aria-hidden="true"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1">
@@ -37,13 +37,9 @@ use yii\helpers\Html;
                                 <?= Html::encode($createdAt ? \Yii::$app->formatter->asDatetime($createdAt) : '-') ?>
                             </div>
                         </div>
-                        <?php if ($i !== count($items) - 1): ?>
-                            <div class="d-none"></div>
-                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ol>
         <?php endif; ?>
     </div>
-</div>
-
+</section>

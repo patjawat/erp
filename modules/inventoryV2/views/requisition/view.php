@@ -10,6 +10,11 @@ YiiAsset::register($this);
 $this->title = 'รายละเอียดใบขอเบิก: ' . $model->order_no;
 
 $userId = Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
+$canInventory = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+$canCreateRequisition = !Yii::$app->user->isGuest && (
+    Yii::$app->user->can('admin')
+    || !empty(\app\modules\inventoryV2\models\Warehouse::findSubWarehousesForUser(true))
+);
 $approverEmpId = $model->getIssueSignatureEmpId('approver');
 $isCurrentUserApprover = false;
 if ($approverEmpId && $userId) {
@@ -147,7 +152,7 @@ $revisions = $model->getApproverRevisions();
         <hr>
         <?php $showApproveButton = in_array($model->status, [StockOrder::STATUS_DRAFT, StockOrder::STATUS_PENDING], true) && $isCurrentUserApprover; ?>
         <div class="form-group d-flex justify-content-between">
-            <div>
+            <div class="d-flex gap-2">
                 <?php if ($showApproveButton): ?>
                     <?= Html::a('<i class="bi bi-check-circle"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success btn-lg',
@@ -157,7 +162,30 @@ $revisions = $model->getApproverRevisions();
                         ]
                     ]) ?>
                 <?php endif; ?>
-              
+                <?php if ($model->canRestore($userId, $canInventory)): ?>
+                    <?= Html::button('<i class="bi bi-arrow-clockwise"></i> คืนสถานะเป็นฉบับร่าง', [
+                        'type' => 'button',
+                        'class' => 'btn btn-outline-success js-restore',
+                        'data' => [
+                            'url' => Url::to(['restore', 'id' => $model->id]),
+                            'order-no' => $model->order_no,
+                            'bs-toggle' => 'tooltip',
+                            'bs-title' => 'คืนใบที่ยกเลิกแล้วกลับมาเป็นฉบับร่าง เพื่อแก้ไขและส่งอนุมัติเบิกใหม่ (ยังไม่ตัดสต็อกจนกว่าคลังจะจ่าย)',
+                        ],
+                    ]) ?>
+                <?php endif; ?>
+                <?php if ($canCreateRequisition && $model->canCopy()): ?>
+                    <?= Html::button('<i class="bi bi-files"></i> คัดลอกเป็นใบเบิกใหม่', [
+                        'type' => 'button',
+                        'class' => 'btn btn-outline-info js-copy',
+                        'data' => [
+                            'url' => Url::to(['copy', 'id' => $model->id]),
+                            'order-no' => $model->order_no,
+                            'bs-toggle' => 'tooltip',
+                            'bs-title' => 'คัดลอกใบนี้เป็นใบเบิกใหม่ (ฉบับร่าง) พร้อมรายการเดิม เพื่อเบิกซ้ำได้สะดวก — จะไม่แก้ไขใบเดิม',
+                        ],
+                    ]) ?>
+                <?php endif; ?>
             </div>
 
             <div>
@@ -176,3 +204,57 @@ $revisions = $model->getApproverRevisions();
         </div>
     <?php endif; ?>
 </div>
+
+<?php
+$csrfParam = Yii::$app->request->csrfParam;
+$csrfToken = Yii::$app->request->csrfToken;
+$this->registerCss('.swal2-actions.req-swal-actions { flex-direction: row-reverse !important; justify-content: center; }');
+$this->registerJs(<<<JS
+(function () {
+    if (document.body.dataset.reqConfirmBound) return;
+    document.body.dataset.reqConfirmBound = '1';
+    function submitPost(url) {
+        var f = document.createElement('form');
+        f.method = 'post'; f.action = url;
+        var t = document.createElement('input');
+        t.type = 'hidden'; t.name = '{$csrfParam}'; t.value = '{$csrfToken}';
+        f.appendChild(t); document.body.appendChild(f); f.submit();
+    }
+    var CFG = {
+        'js-restore': {
+            title: 'คืนสถานะเป็นฉบับร่าง?',
+            html: function (n) { return 'ใบ <strong>' + n + '</strong> ที่ยกเลิกแล้ว จะถูกคืนกลับมาเป็น<strong>ฉบับร่าง</strong> ให้แก้ไขและ<strong>ส่งอนุมัติเบิกใหม่</strong>ได้<br><span class="text-muted">ยังไม่ตัดสต็อกจนกว่าคลังจะจ่าย</span>'; },
+            fallback: function (n) { return 'คืนใบ ' + n + ' ที่ยกเลิกแล้วกลับมาเป็นฉบับร่างเพื่อเบิกใหม่?'; },
+            confirmText: 'คืนสถานะ', color: '#198754'
+        },
+        'js-copy': {
+            title: 'คัดลอกเป็นใบเบิกใหม่?',
+            html: function (n) { return 'สร้างใบเบิก<strong>ใหม่ (ฉบับร่าง)</strong> จากใบ <strong>' + n + '</strong> พร้อมรายการวัสดุเดิม<br><span class="text-muted">ใบเดิมไม่ถูกแก้ไข — ระบบจะพาไปหน้าแก้ไขให้ปรับจำนวนก่อนส่งอนุมัติ</span>'; },
+            fallback: function (n) { return 'คัดลอกใบ ' + n + ' เป็นใบเบิกใหม่ (ฉบับร่าง)?'; },
+            confirmText: 'คัดลอก', color: '#0dcaf0'
+        }
+    };
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.js-restore, .js-copy');
+        if (!btn) return;
+        var key = btn.classList.contains('js-restore') ? 'js-restore' : 'js-copy';
+        var c = CFG[key], url = btn.getAttribute('data-url'), n = btn.getAttribute('data-order-no') || '';
+        if (!url) return;
+        e.preventDefault();
+        var tip = window.bootstrap && bootstrap.Tooltip && bootstrap.Tooltip.getInstance(btn);
+        if (tip) tip.hide();
+        if (!window.Swal) { if (confirm(c.fallback(n))) submitPost(url); return; }
+        Swal.fire({
+            title: c.title, html: c.html(n), icon: 'question', iconColor: c.color,
+            showCancelButton: true, confirmButtonText: c.confirmText, cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: c.color, reverseButtons: true, customClass: { actions: 'req-swal-actions' }
+        }).then(function (r) { if (r.isConfirmed) submitPost(url); });
+    });
+    if (window.bootstrap && bootstrap.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            if (!bootstrap.Tooltip.getInstance(el)) new bootstrap.Tooltip(el);
+        });
+    }
+})();
+JS, \yii\web\View::POS_END);
+?>

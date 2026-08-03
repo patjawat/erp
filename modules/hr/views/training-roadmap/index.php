@@ -28,12 +28,12 @@ $plans = $planProvider->getModels();
         ]) ?>
     </header>
 
-    <section class="trm-ops-metrics" aria-label="ตัวชี้วัด Training Roadmap">
-        <div class="trm-ops-metric"><span>บุคลากรใหม่ 90 วัน</span><strong><?= number_format($metrics['new_hires']) ?></strong><small>ตั้งแต่ <?= Html::encode($newHireSince) ?></small></div>
-        <div class="trm-ops-metric is-warning"><span>ยังไม่ได้รับ TRM</span><strong><?= number_format($metrics['unassigned']) ?></strong><small>ควรตรวจสอบและมอบหมาย</small></div>
-        <div class="trm-ops-metric is-progress"><span>กำลังดำเนินการ</span><strong><?= number_format($metrics['in_progress']) ?></strong><small>รวมรอเริ่มและรอประเมิน</small></div>
-        <div class="trm-ops-metric is-danger"><span>เกินกำหนด</span><strong><?= number_format($metrics['overdue']) ?></strong><small>ยังไม่ปิดแผน</small></div>
-    </section>
+    <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
+        ['label' => 'บุคลากรใหม่ 90 วัน', 'value' => $metrics['new_hires'], 'icon' => 'bi-person-plus', 'color' => 'primary', 'hint' => 'ตั้งแต่ ' . $newHireSince],
+        ['label' => 'ยังไม่ได้รับ TRM', 'value' => $metrics['unassigned'], 'icon' => 'bi-exclamation-triangle', 'color' => 'warning', 'hint' => 'ควรตรวจสอบและมอบหมาย'],
+        ['label' => 'กำลังดำเนินการ', 'value' => $metrics['in_progress'], 'icon' => 'bi-hourglass-split', 'color' => 'info', 'hint' => 'รวมรอเริ่มและรอประเมิน'],
+        ['label' => 'เกินกำหนด', 'value' => $metrics['overdue'], 'icon' => 'bi-clock-history', 'color' => 'danger', 'hint' => 'ยังไม่ปิดแผน'],
+    ]]) ?>
 
     <section class="trm-card mt-3">
         <div class="trm-section-head">
@@ -114,7 +114,7 @@ $plans = $planProvider->getModels();
                             <td><?= Html::encode($plan->start_date) ?><div class="trm-meta">ถึง <?= Html::encode($plan->target_end_date ?: '-') ?></div></td>
                             <td class="trm-progress-cell"><div class="d-flex justify-content-between trm-meta mb-1"><span>ความก้าวหน้า</span><strong><?= (int) $plan->progress_percent ?>%</strong></div><div class="trm-progress"><span style="width:<?= min(100, (float) $plan->progress_percent) ?>%"></span></div></td>
                             <td><span class="trm-status trm-status--<?= Html::encode($plan->status) ?>"><?= Html::encode(EmployeeTrainingPlan::statusOptions()[$plan->status] ?? $plan->status) ?></span></td>
-                            <td class="text-end"><?= Html::a('เปิดแผน', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?></td>
+                            <td class="text-end"><div class="d-inline-flex gap-1"><?= Html::a('เปิดแผน', ['plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?><?= Html::a('<i class="bi bi-file-earmark-pdf"></i>', ['pdf', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'data-pjax' => '0', 'title' => 'พิมพ์ TRM แบบหน้าเดียว', 'aria-label' => 'พิมพ์ TRM แบบหน้าเดียว']) ?></div></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>

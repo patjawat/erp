@@ -197,10 +197,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
                                         'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
                                         'fontAwesome' => true,
-                                        'asDropdown' => true,
+                                        // เรนเดอร์แบบ inline (ไม่ใช่ dropdown) เพื่อให้เลือกได้บน modal
+                                        // dropdown แบบเดิมถูก overflow ของ .modal-body (modal-dialog-scrollable) ตัดจนเลือก/เพิ่มหน่วยงานใหม่ไม่ได้ตอนกลับมาแก้ไข
+                                        'asDropdown' => false,
                                         'multiple' => true,
                                         'cascadeSelectChildren' => false,
-                                        'options' => ['disabled' => false],
+                                        'options' => [
+                                            'id' => 'documents-send-tags-department',
+                                            'disabled' => false,
+                                        ],
                                     ])->label('ส่งถึงหน่วยงาน');
                                     ?>
                                 </div>
@@ -417,14 +422,13 @@ $js = <<< JS
         });
 
     handleFormSubmit('#form-document', null, async function(response) {
-        if(response.container){
-            await $.pjax.reload({
-                container: response.container,
-                history: false,
-                timeout: false
-            });
-        }else{
-             await location.reload();
+        // ใช้ helper กลางที่เช็ค pjax ให้ก่อน ถ้าไม่มี pjax (undefined) จะ fallback ไป reload ทั้งหน้า
+        // กัน error: Cannot read properties of undefined (reading 'reload')
+        var reloaded = response.container && typeof window.erpReloadPjax === 'function'
+            ? window.erpReloadPjax(response.container)
+            : false;
+        if (!reloaded) {
+            location.reload();
         }
     });
 

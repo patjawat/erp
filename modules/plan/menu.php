@@ -25,7 +25,7 @@ use yii\helpers\Html;
             <circle cx="16" cy="16" r="6" />
             <rect x="8" y="2" width="8" height="4" rx="1" />
         </svg>
-        ติดตามแผนรายจ่าย
+        แผนรายจ่าย
     </a>
     <a href="<?= Url::to(['/plan/parcel']) ?>"
         class="btn <?= $active !== 'parcel' ? 'btn-outline-primary' : 'btn-primary' ?>">
@@ -36,7 +36,7 @@ use yii\helpers\Html;
             <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path>
             <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
         </svg>
-        แผนครุภัณฑ์
+        แผนพัสดุ
     </a>
     <a href="<?= Url::to(['/plan/personnel']) ?>"
         class="btn <?= $active !== 'personnel' ? 'btn-outline-primary' : 'btn-primary' ?>">
@@ -46,7 +46,7 @@ use yii\helpers\Html;
             <line x1="19" x2="19" y1="8" y2="14" />
             <line x1="22" x2="16" y1="11" y2="11" />
         </svg>
-        แผนคน
+        แผนบุคลากร
     </a>
     <a href="<?= Url::to(['/plan/expenses']) ?>"
         class="btn <?= $active !== 'expenses' ? 'btn-outline-primary' : 'btn-primary' ?>">
@@ -58,9 +58,8 @@ use yii\helpers\Html;
             <path d="M6 12h.01" />
             <circle cx="12" cy="12" r="2" />
         </svg>
-        แผนคำขอรายจ่ายอื่น
+        แผนค่าใช้สอย
     </a>
-
 
     <div class="dropdown">
         <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle"
@@ -76,6 +75,10 @@ use yii\helpers\Html;
         </button>
 
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li>
+                <?= Html::a('<i class="fa-solid fa-calendar-check me-2"></i> รอบทำแผน', ['/plan/plan-period'], ['class' => 'dropdown-item']) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
             <li>
                 <?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภท', ['/plan/plan-type'], ['class' => 'dropdown-item']) ?>
             </li>

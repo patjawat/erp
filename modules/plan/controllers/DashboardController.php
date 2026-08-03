@@ -18,7 +18,7 @@ class DashboardController extends Controller
     public function actionIndex()
     {
          $searchModel = new PlanOrderSearch([
-            'thai_year' =>  AppHelper::YearBudget()
+            'thai_year' =>  \app\modules\plan\components\PlanHelper::currentPlanYear()
          ]);
         $dataProvider = $searchModel->search($this->request->queryParams);
         // $dataProvider->query->andFilterWhere(['plan_group_id' => 'expenses']);

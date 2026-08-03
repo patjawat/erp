@@ -123,6 +123,7 @@ class TrainingRoadmapController extends Controller
 
     public function actionView($id)
     {
+        $this->assertCanManageRoadmaps();
         return $this->render('view', ['model' => $this->findRoadmap($id)]);
     }
 
@@ -303,6 +304,55 @@ class TrainingRoadmapController extends Controller
             throw new NotFoundHttpException('ไม่พบแผนพัฒนารายบุคคล');
         }
         return $this->render('plan', ['model' => $model]);
+    }
+
+    public function actionPdf($id)
+    {
+        $model = EmployeeTrainingPlan::find()->where(['id' => (int) $id])->with([
+            'employee.empDepartment',
+            'roadmap.phases.activities',
+            'roadmap.milestones',
+            'results.activity',
+            'mentor',
+            'assessor',
+        ])->one();
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบแผน Training Roadmap');
+        }
+
+        $me = UserHelper::GetEmployee();
+        $isLeader = $me && (int) ($model->employee?->leader()?->id ?? 0) === (int) $me->id;
+        if (!$this->canManageRoadmaps() && (!$me || ((int) $me->id !== (int) $model->emp_id && !$isLeader))) {
+            throw new NotFoundHttpException('ไม่พบแผน Training Roadmap');
+        }
+
+        $fontPath = Yii::getAlias('@webroot/fonts/THSarabunNew');
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'margin_left' => 8,
+            'margin_right' => 8,
+            'margin_top' => 8,
+            'margin_bottom' => 8,
+            'fontDir' => array_merge($defaultConfig['fontDir'], [$fontPath]),
+            'fontdata' => $defaultFontConfig['fontdata'] + [
+                'thsarabunnew' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                    'I' => 'THSarabunNew-Italic.ttf',
+                    'BI' => 'THSarabunNew BoldItalic.ttf',
+                ],
+            ],
+            'default_font' => 'thsarabunnew',
+            'tempDir' => Yii::getAlias('@runtime/mpdf'),
+        ]);
+        $mpdf->SetTitle('TRM - ' . $model->employee->fullname);
+        $mpdf->shrink_tables_to_fit = 1;
+        $mpdf->WriteHTML($this->renderPartial('_pdf_one_page', ['model' => $model]));
+
+        return $mpdf->Output('TRM_' . (int) $model->emp_id . '_' . (int) $model->id . '.pdf', \Mpdf\Output\Destination::INLINE);
     }
 
     public function actionResult($id)

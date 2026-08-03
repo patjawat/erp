@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\helpdesk2\models\HelpdeskDetail;
 
 $badgeClass = static function (string $color): string {
@@ -8,15 +9,18 @@ $badgeClass = static function (string $color): string {
 };
 
 $dataJson = is_array($model->data_json ?? null) ? $model->data_json : [];
-$statusCode = (string) ($model->status ?? 'pending');
-$statusMap = [
-    'pending' => ['label' => 'เปิดงาน', 'color' => 'warning'],
-    'receive' => ['label' => 'รับเรื่อง', 'color' => 'info'],
-    'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info'],
-    'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success'],
-    'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger'],
+$statusCode = Helpdesk::normalizeRepairStatus($model->status ?? 'pending');
+$statusMap = Helpdesk::repairStatusMeta();
+$statusInfo = $statusMap[$statusCode] ?? [
+    'label' => 'ไม่ทราบสถานะ',
+    'color' => 'secondary',
+    'icon' => 'fa-regular fa-circle-question',
 ];
-$statusInfo = $statusMap[$statusCode] ?? ['label' => ($model->repairStatus?->title ?? '-'), 'color' => 'secondary'];
+$statusLabels = Helpdesk::repairStatusOptions();
+$statusIcon = Html::tag('i', '', [
+    'class' => $statusInfo['icon'] . ' me-1',
+    'aria-hidden' => 'true',
+]);
 
 $detailRows = HelpdeskDetail::find()->where(['helpdesk_id' => $model->id])->orderBy(['id' => SORT_ASC])->all();
 $repairTeamRows = array_values(array_filter($detailRows, static function ($d) {
@@ -109,7 +113,7 @@ $feedbackUrl = Url::to(['/me/repair-v2/feedback', 'id' => $model->id]);
                         <dt class="col-sm-4">สถานที่:</dt><dd class="col-sm-8"><?=Html::encode($location)?></dd>
                         <dt class="col-sm-4">วันที่รับเรื่อง:</dt><dd class="col-sm-8"><?= Html::encode($model->viewCreateDateTime()) ?></dd>
                         <dt class="col-sm-4">สถานะ:</dt>
-                        <dd class="col-sm-8"><span class="<?=$badgeClass($statusInfo['color'])?>"><?=Html::encode($statusInfo['label'])?></span></dd>
+                        <dd class="col-sm-8"><span class="<?=$badgeClass($statusInfo['color'])?>"><?=$statusIcon?><?=Html::encode($statusInfo['label'])?></span></dd>
                     </dl>
                 </div>
             </div>
@@ -185,7 +189,7 @@ $feedbackUrl = Url::to(['/me/repair-v2/feedback', 'id' => $model->id]);
                                 <span class="text-primary fw-bold"><?= (int) $progressPercent ?>%</span>
                             </div>
                             <span class="small fw-semibold text-body">
-                                <?= Html::encode($statusInfo['label']) ?>
+                                <?=$statusIcon?><?= Html::encode($statusInfo['label']) ?>
                             </span>
                         </div>
 
@@ -196,10 +200,10 @@ $feedbackUrl = Url::to(['/me/repair-v2/feedback', 'id' => $model->id]);
                         <div class="d-flex flex-wrap gap-2">
                             <?php
                             $stepMeta = [
-                                ['idx' => 0, 'label' => 'เปิดงาน', 'done' => $stepIndex > 0],
-                                ['idx' => 1, 'label' => 'รับเรื่อง', 'done' => $stepIndex > 1],
-                                ['idx' => 2, 'label' => 'ดำเนินการ', 'done' => $stepIndex > 2],
-                                ['idx' => 3, 'label' => 'ปิดงาน', 'done' => $stepIndex > 3],
+                                ['idx' => 0, 'label' => $statusLabels['pending'], 'done' => $stepIndex > 0],
+                                ['idx' => 1, 'label' => $statusLabels['receive'], 'done' => $stepIndex > 1],
+                                ['idx' => 2, 'label' => $statusLabels['in_progress'], 'done' => $stepIndex > 2],
+                                ['idx' => 3, 'label' => $statusLabels['success'], 'done' => $stepIndex > 3],
                             ];
                             foreach ($stepMeta as $st) {
                                 $isActive = ($stepIndex === $st['idx']);

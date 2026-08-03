@@ -11,6 +11,20 @@ use yii\helpers\ArrayHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanItemSearch $model */
 /** @var yii\widgets\ActiveForm $form */
+
+$planYears = ArrayHelper::map(
+    \app\modules\plan\models\PlanOrder::find()->select('thai_year')->where(['not', ['thai_year' => null]])->distinct()->orderBy(['thai_year' => SORT_DESC])->asArray()->all(),
+    'thai_year',
+    'thai_year'
+);
+$curPlanYear = \app\modules\plan\components\PlanHelper::currentPlanYear();
+if (!isset($planYears[$curPlanYear])) {
+    $planYears = [$curPlanYear => $curPlanYear] + $planYears;
+}
+
+// หน่วยงานจากทะเบียนกลาง (org_unit) ของปีที่ค้นหา — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า
+$ouYear = (int) ($model->thai_year ?: $curPlanYear);
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 ?>
 
 <div class="plan-item-search">
@@ -24,20 +38,17 @@ use yii\helpers\ArrayHelper;
     ]); ?>
     <div class="row">
         <div class="col-lg-2">
-            <?= $form->field($model, 'thai_year')->textInput(['placeholder' => 'ปีงบประมาณ'])->label(false) ?>
+            <?= $form->field($model, 'thai_year')->widget(Select2::class, [
+                'data' => $planYears,
+                'options' => ['placeholder' => 'ปีงบประมาณ (ทุกปี)'],
+                'pluginOptions' => ['allowClear' => true],
+            ])->label(false) ?>
         </div>
                        <div class="col-lg-7">
-                        <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::className(), [
-                            'name' => 'department',
-                            'id' => 'treeID',
-                            'query' => app\modules\hr\models\Organization::find()->addOrderBy('root, lft'),
-                            'value' => 1,
-                            'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                            'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                            'fontAwesome' => true,
-                            'asDropdown' => true,
-                            'multiple' => false,
-                            'options' => ['disabled' => false],
+                        <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
+                            'data' => $ouGroups,
+                            'options' => ['placeholder' => 'ทุกหน่วยงาน (จากทะเบียน)'],
+                            'pluginOptions' => ['allowClear' => true],
                         ])->label(false); ?>
                     </div>
         <div class="col-lg-2">
@@ -77,6 +88,13 @@ use yii\helpers\ArrayHelper;
 
     <div class="collapse mt-3" id="collapseFilter">
         <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-12">
+                <?= $form->field($model, 'unit_type')->widget(Select2::class, [
+                    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'org_unit_type', 'active' => 1])->orderBy('sort')->all(), 'code', 'title'),
+                    'options' => ['placeholder' => 'ทุกประเภทหน่วยงาน', 'id' => 'unit_type_personnel'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('ประเภทหน่วยงาน') ?>
+            </div>
             <div class="col-lg-6 col-md-6 col-sm-12">
                         <?php
 

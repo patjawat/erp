@@ -7,6 +7,9 @@ $layout = app\components\SiteHelper::getInfo()['layout'];
     <?=Html::a('<i class="fa-solid fa-house-medical-flag me-1"></i> ข้อมูลองค์กร',['/settings/company'],['class' => 'nav-link ' . (isset($active) && $active == 'company' ? 'active' : '')])?>
 </li>
 <li class="nav-item">
+    <?=Html::a('<i class="fa-solid fa-sitemap me-1"></i> ทะเบียนหน่วยงาน',['/settings/org-unit'],['class' => 'nav-link ' . (isset($active) && $active == 'org-unit' ? 'active' : '')])?>
+</li>
+<li class="nav-item">
     <?=Html::a('<i class="fas fa-palette me-1"></i> ตั้งค่าสี',['/setting'],['class' => 'nav-link ' . (isset($active) && $active =='color' ? 'active' : '')])?>
 </li>
 <li class="nav-item">

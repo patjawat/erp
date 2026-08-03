@@ -9,6 +9,7 @@ use yii\web\Controller;
 use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
+use app\modules\plan\components\PlanHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
@@ -46,6 +47,9 @@ class ParcelController extends Controller
     public function actionIndex()
     {
         $searchModel = new PlanOrderSearch();
+        if (!$this->request->get('PlanOrderSearch')) {
+            $searchModel->thai_year = PlanHelper::currentPlanYear(); // default = ปีที่เปิด (เลือกปีเก่าได้)
+        }
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'parcel']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
@@ -98,6 +102,71 @@ class ParcelController extends Controller
 
 
 
+    /**
+     * ดึงรายการวัสดุจากการเบิกใช้ (OUT) ของหน่วยงาน ปีงบก่อนหน้า
+     * เฉลี่ยจำนวนเป็นรายเดือน (÷12) + ราคาต่อหน่วยล่าสุด
+     * ที่มา: stock_events (header name='order' OUT + line 'order_item'); หน่วยงาน = ผู้ทำรายการ (emp -> department)
+     */
+    public function actionPullConsumption()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $dept  = (int) ($this->request->post('department_id') ?: $this->request->get('department_id'));
+        $atype = (string) ($this->request->post('asset_type_id') ?: $this->request->get('asset_type_id'));
+        $year  = (int) ($this->request->post('thai_year') ?: $this->request->get('thai_year'));
+        $includeChildren = (int) ($this->request->post('include_children') ?: $this->request->get('include_children'));
+
+        if (!$dept || $atype === '' || !$year) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกหน่วยงาน ประเภทวัสดุ และปีงบประมาณ'];
+        }
+        $prevYear = $year - 1;
+
+        // ขอบเขตหน่วยงาน: หน่วยเดียว หรือ รวมหน่วยย่อยทั้งหมดใต้กลุ่มงาน (nested-set)
+        $deptIds = [$dept];
+        $childCount = 0;
+        if ($includeChildren) {
+            $node = (new \yii\db\Query())->select(['root', 'lft', 'rgt'])->from('tree')->where(['id' => $dept])->one();
+            if ($node) {
+                $children = (new \yii\db\Query())->select('id')->from('tree')
+                    ->where(['root' => $node['root']])
+                    ->andWhere(['>', 'lft', (int) $node['lft']])
+                    ->andWhere(['<', 'rgt', (int) $node['rgt']])
+                    ->column();
+                $deptIds = array_merge($deptIds, $children);
+                $childCount = count($children);
+            }
+        }
+        $deptIds = array_values(array_unique(array_map('intval', $deptIds)));
+        $deptIn = implode(',', $deptIds);
+
+        $sql = "
+            SELECT it.asset_item AS code,
+                   COALESCE(ci.title, it.asset_item) AS name,
+                   SUM(it.qty) AS qty_year,
+                   ROUND(SUM(it.qty) / 12, 2) AS per_month,
+                   CAST(SUBSTRING_INDEX(GROUP_CONCAT(it.unit_price ORDER BY o.movement_date DESC), ',', 1) AS DECIMAL(15,2)) AS last_price
+            FROM stock_events o
+            JOIN stock_events it ON it.category_id = o.id AND it.name = 'order_item'
+            JOIN employees e ON e.id = o.emp_id
+            LEFT JOIN categorise ci ON ci.code = it.asset_item AND ci.name = 'asset_item'
+            WHERE o.name = 'order' AND o.transaction_type = 'OUT'
+              AND o.thai_year = :y AND o.asset_type_id = :a
+              AND e.department IN ($deptIn)
+            GROUP BY it.asset_item, name
+            HAVING qty_year > 0
+            ORDER BY qty_year DESC
+        ";
+        $rows = Yii::$app->db->createCommand($sql, [':y' => $prevYear, ':a' => $atype])->queryAll();
+
+        return [
+            'status'      => 'success',
+            'prev_year'   => $prevYear,
+            'count'       => count($rows),
+            'child_count' => $childCount,
+            'items'       => $rows,
+        ];
+    }
+
     public function actionValidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -107,7 +176,7 @@ class ParcelController extends Controller
 
 
             $model->description == '' ? $model->addError('description', $requiredName) : null;
-            $model->department_id == '' ? $model->addError('department_id', $requiredName) : null;
+            $model->plan_unit_id == '' ? $model->addError('plan_unit_id', $requiredName) : null;
             // $model->data_json['date_end_type'] == '' ? $model->addError('data_json[date_end_type]', $requiredName) : null;
         }
         foreach ($model->getErrors() as $attribute => $errors) {
@@ -126,7 +195,7 @@ class ParcelController extends Controller
     public function actionCreate()
 {
     $model = new PlanOrder([
-        'thai_year'        => (AppHelper::YearBudget() + 1),
+        'thai_year'        => \app\modules\plan\components\PlanHelper::currentPlanYear(),
         'plan_group_id'    => 'parcel',   // Default to material type
         'plan_type_id'     => 'INV',
         'plan_category_id' => 'INV_01',

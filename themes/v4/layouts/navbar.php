@@ -72,7 +72,7 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>'
     ],
     [
-        'show' => !Yii::$app->user->isGuest,
+        'show' => Yii::$app->user->can('medsop'),
         'label' => 'คลัง SOP/WI',
         'url' => ['/medsop/document/dashboard'],
         'active' => 'medsop',
@@ -81,10 +81,17 @@ $menuItems = [
     [
         
         'show' => Yii::$app->user->can('plan') ? true : false,
-        'label' => 'แผนงาน/โครงการ', 
-        'url' => ['/plan/dashboard'], 
+        'label' => 'แผนงบประมาณ',
+        'url' => ['/plan/dashboard'],
         'active' => 'plan',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
+    ],
+    [
+        'show' => Yii::$app->user->can('pm'),
+        'label' => 'แผนงาน/โครงการ',
+        'url' => ['/pm/default/index'],
+        'active' => 'pm',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>'
     ],
     [
         'show' =>  (Yii::$app->user->can('hr') ? true : false),
@@ -101,7 +108,7 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>'
     ],
     [
-        'show' => Yii::$app->user->can('user') ? true : false,
+        'show' => Yii::$app->user->can('hr'),
         'label' => 'ระบบลงเวลา',
         'url' => ['/attendance/default/index'],
         'active' => 'attendance',
@@ -142,7 +149,7 @@ $menuItems = [
         'label' => 'บ้านพัก',
         'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')
             ? ['/housing/dashboard/index']
-            : ['/housing/my/index'],
+            : ['/profile', 'name' => 'housing'],
         'active' => 'housing',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M6 21V8l6-5 6 5v13"></path><path d="M9 21v-6h6v6"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path></svg>'
     ],

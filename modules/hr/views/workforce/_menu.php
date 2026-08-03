@@ -6,6 +6,7 @@ $active = $active ?? 'overview';
 $items = [
     'overview' => ['ภาพรวม', 'layout-dashboard', ['/hr/workforce/index']],
     'jd' => ['JD', 'file-text', ['/hr/workforce/index', 'section' => 'jd']],
+    'kpi' => ['KPI', 'goal', ['/hr/workforce/index', 'section' => 'kpi']],
     'idp' => ['IDP', 'target', ['/hr/idp/index']],
     'trm' => ['TRM', 'signpost', ['/hr/training-roadmap/index']],
     'appraisal' => ['ประเมินผล', 'chart-no-axes-combined', ['/hr/workforce/index', 'section' => 'appraisal']],

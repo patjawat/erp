@@ -98,7 +98,7 @@ $this->params['breadcrumbs'][] = 'ทะเบียนงานซ่อม';
 
                 </ul>
             </div>
-            <?= $item->repairStatus?->title ?? '-' ?>
+            <?= $item->viewStatus() ?>
         </div>
     </div>
 

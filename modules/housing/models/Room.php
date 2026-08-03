@@ -32,9 +32,9 @@ final class Room extends HousingActiveRecord
     public function attributeLabels(): array
     {
         return [
-            'unit_id' => 'ยูนิต',
-            'code' => 'รหัสห้อง',
-            'name' => 'ชื่อห้อง',
+            'unit_id' => 'ห้อง',
+            'code' => 'รหัสห้องย่อย',
+            'name' => 'ชื่อห้องย่อย',
             'capacity' => 'ความจุ (ถ้ามี)',
             'description' => 'รายละเอียด',
             'status' => 'สถานะ',

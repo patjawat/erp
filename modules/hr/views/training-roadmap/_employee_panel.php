@@ -40,7 +40,7 @@ echo $this->render('_styles');
                     <div class="trm-progress" role="progressbar" aria-label="ความก้าวหน้า <?= number_format((float) $plan->progress_percent, 0) ?> เปอร์เซ็นต์" aria-valuenow="<?= (float) $plan->progress_percent ?>" aria-valuemin="0" aria-valuemax="100">
                         <span style="width:<?= min(100, (float) $plan->progress_percent) ?>%"></span>
                     </div>
-                    <div class="mt-3"><?= Html::a('ดูรายละเอียดแผน', ['/hr/training-roadmap/plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?></div>
+                    <div class="mt-3 d-flex gap-2 flex-wrap"><?= Html::a('ดูรายละเอียดแผน', ['/hr/training-roadmap/plan', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-primary', 'data-pjax' => '0']) ?><?= Html::a('<i class="bi bi-file-earmark-pdf me-1"></i>พิมพ์ PDF', ['/hr/training-roadmap/pdf', 'id' => $plan->id], ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'data-pjax' => '0']) ?></div>
                 </article>
             <?php endforeach ?>
         <?php else: ?>

@@ -33,7 +33,7 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
             <?php if ($buildingImage !== null): ?>
                 <?= Html::img(FileManagerHelper::getImg($buildingImage->id), ['class' => 'hero-photo flex-shrink-0', 'alt' => 'รูป ' . $model->name]) ?>
             <?php else: ?>
-                <div class="hero-photo flex-shrink-0 d-flex align-items-center justify-content-center" style="background:var(--h-soft);color:var(--h-muted)"><i data-lucide="building-2" style="width:42px;height:42px"></i></div>
+                <div class="hero-photo flex-shrink-0 d-flex align-items-center justify-content-center" style="background:var(--h-soft);color:var(--h-muted)"><i class="bi bi-building" style="font-size:42px"></i></div>
             <?php endif; ?>
             <div class="flex-grow-1">
                 <div class="d-flex flex-wrap justify-content-between gap-3">
@@ -43,8 +43,8 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
                         <div class="text-body-secondary"><?= Html::encode($model->address ?: 'ยังไม่ได้ระบุที่ตั้ง') ?></div>
                     </div>
                     <div class="d-flex gap-2 align-self-start hero-actions">
-                        <?= Html::a('<i data-lucide="pencil"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
-                        <?= Html::a('<i data-lucide="plus"></i> แจ้งซ่อม', ['/housing/maintenance/create', 'building_id' => $model->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-xl']) ?>
+                        <?= Html::a('<i class="bi bi-pencil"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขบ้านพัก/แฟลต'], ['class' => 'btn btn-outline-secondary open-modal', 'data-size' => 'modal-lg']) ?>
+                        <?= Html::a('<i class="bi bi-plus-lg"></i> แจ้งซ่อม', ['/housing/maintenance/create', 'building_id' => $model->id], ['class' => 'btn btn-primary open-modal', 'data-size' => 'modal-xl']) ?>
                     </div>
                 </div>
                 <p class="mt-3 mb-0" style="max-width:72ch"><?= nl2br(Html::encode($model->description ?: 'ยังไม่มีรายละเอียดเพิ่มเติม')) ?></p>
@@ -52,8 +52,8 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
         </div>
         <div class="metric-band">
             <?php if ($isFlat): ?><div><div class="small text-body-secondary">จำนวนชั้น</div><div class="metric-value"><?= number_format(count($model->floors)) ?></div></div><?php endif; ?>
-            <div><div class="small text-body-secondary"><?= $isFlat ? 'ยูนิตทั้งหมด' : 'พื้นที่พักอาศัย' ?></div><div class="metric-value"><?= number_format(count($units)) ?></div></div>
-            <div><div class="small text-body-secondary">ยูนิตที่มีผู้พัก</div><div class="metric-value"><?= number_format($occupiedUnits) ?></div></div>
+            <div><div class="small text-body-secondary"><?= $isFlat ? 'ห้องทั้งหมด' : 'พื้นที่พักอาศัย' ?></div><div class="metric-value"><?= number_format(count($units)) ?></div></div>
+            <div><div class="small text-body-secondary">ห้องที่มีผู้พัก</div><div class="metric-value"><?= number_format($occupiedUnits) ?></div></div>
             <div><div class="small text-body-secondary">ผู้พักอาศัยปัจจุบัน</div><div class="metric-value"><?= number_format($residentCount) ?> คน</div></div>
             <div><div class="small text-body-secondary">ผู้รับผิดชอบดูแล</div><div class="metric-value fs-6"><?= Html::encode($model->responsibleEmployee?->fullname() ?: 'ยังไม่ได้กำหนด') ?></div></div>
         </div>
@@ -63,19 +63,19 @@ $residentCount = count($occupancies) + array_sum(array_map(static fn($occupancy)
         <div class="col-xl-7">
             <section class="detail-section overflow-hidden">
                 <div class="p-3 d-flex justify-content-between align-items-center gap-2">
-                    <h2 class="section-title"><?= $isFlat ? 'ชั้น ยูนิต และห้องพัก' : 'รายละเอียดพื้นที่บ้านพัก' ?></h2>
+                    <h2 class="section-title"><?= $isFlat ? 'ชั้น ห้อง และห้องย่อย' : 'รายละเอียดพื้นที่บ้านพัก' ?></h2>
                     <?= Html::a('เปิดภาพรวม', ['/housing/unit/index', 'building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                 </div>
                 <?php if ($units === []): ?>
-                    <div class="empty-note">ยังไม่มียูนิตหรือพื้นที่พักอาศัยในรายการนี้</div>
+                    <div class="empty-note">ยังไม่มีห้องหรือพื้นที่พักอาศัยในรายการนี้</div>
                 <?php else: foreach ($units as $unit): ?>
                     <div class="unit-row p-3">
                         <div class="d-flex justify-content-between gap-3">
-                            <div><strong><?= Html::encode($unit->name) ?></strong><div class="small text-body-secondary"><?= Html::encode($unit->floor?->name ?: ($isFlat ? 'ยังไม่ระบุชั้น' : 'บ้านพัก')) ?> · <?= number_format(count($unit->rooms)) ?> ห้อง</div></div>
+                            <div><strong><?= Html::encode($unit->name) ?></strong><div class="small text-body-secondary"><?= Html::encode($unit->floor?->name ?: ($isFlat ? 'ยังไม่ระบุชั้น' : 'บ้านพัก')) ?> · <?= number_format(count($unit->rooms)) ?> ห้องย่อย</div></div>
                             <div class="text-end"><span class="status-pill"><?= Html::encode(Unit::statusOptions()[$unit->status] ?? $unit->status) ?></span><div class="small text-body-secondary mt-1"><?= Yii::$app->formatter->asDecimal($unit->monthly_base_fee ?: 0, 2) ?> บาท/เดือน</div></div>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-2">
-                            <?= Html::a('<i data-lucide="eye" style="width:15px;height:15px"></i> รายละเอียด', ['/housing/unit/view', 'id' => $unit->id, 'return_building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
+                            <?= Html::a('<i class="bi bi-eye" style="font-size:15px"></i> รายละเอียด', ['/housing/unit/view', 'id' => $unit->id, 'return_building_id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
                             <span class="small text-body-secondary align-self-center"><?= number_format(count($unit->assets)) ?> รายการของใช้ · <?= number_format(count($unit->photos)) ?> รูปภาพ</span>
                         </div>
                     </div>

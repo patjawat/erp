@@ -35,6 +35,7 @@ final class Unit extends HousingActiveRecord
             [['electric_account_no'], 'string', 'max' => 100],
             [['code'], 'unique'],
             [['occupancy_mode'], 'in', 'range' => array_keys(self::modeOptions())],
+            [['occupancy_mode'], 'validateModeChange'],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['status'], 'default', 'value' => self::STATUS_VACANT],
             [['capacity'], 'integer', 'min' => 1, 'skipOnEmpty' => true],
@@ -47,8 +48,8 @@ final class Unit extends HousingActiveRecord
         return [
             'building_id' => 'อาคาร',
             'floor_id' => 'ชั้น',
-            'code' => 'รหัสยูนิต',
-            'name' => 'ชื่อยูนิต',
+            'code' => 'รหัสห้อง',
+            'name' => 'ชื่อห้อง',
             'electric_account_no' => 'หมายเลขผู้ใช้ไฟฟ้า',
             'occupancy_mode' => 'รูปแบบการพัก',
             'capacity' => 'ความจุ (ถ้ามี)',
@@ -57,6 +58,30 @@ final class Unit extends HousingActiveRecord
             'status' => 'สถานะ',
             'sort_order' => 'ลำดับแสดงผล',
         ];
+    }
+
+    /**
+     * ห้ามสลับ "รูปแบบการพัก" ข้ามเส้นแบ่ง แยกห้องย่อย (shared) ↔ ทั้งห้อง ขณะที่ห้อง
+     * ยังมีการจัดสรรหรือมีผู้พักอยู่ เพราะโครงสร้าง occupancy (ระดับห้องย่อย vs ทั้งห้อง)
+     * จะไม่สอดคล้องกับ mode ทันที
+     */
+    public function validateModeChange(string $attribute): void
+    {
+        if ($this->isNewRecord || !$this->isAttributeChanged($attribute)) {
+            return;
+        }
+        $wasShared = $this->getOldAttribute($attribute) === self::MODE_SHARED;
+        $isShared = $this->{$attribute} === self::MODE_SHARED;
+        if ($wasShared === $isShared) {
+            return;
+        }
+        $hasOccupancy = Occupancy::find()->where([
+            'unit_id' => $this->id,
+            'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+        ])->exists();
+        if ($hasOccupancy) {
+            $this->addError($attribute, 'ไม่สามารถเปลี่ยนรูปแบบการพักระหว่าง "แยกห้องย่อย" กับ "ทั้งห้อง" ได้ เนื่องจากห้องนี้มีการจัดสรรหรือมีผู้พักอยู่ กรุณาย้ายออกหรือยกเลิกการจัดสรรก่อน');
+        }
     }
 
     public function getBuilding(): ActiveQuery
@@ -92,9 +117,9 @@ final class Unit extends HousingActiveRecord
     public static function modeOptions(): array
     {
         return [
-            self::MODE_FAMILY => 'ครอบครัว (ทั้งยูนิต)',
-            self::MODE_SHARED => 'แฟลตโสด (แยกห้อง)',
-            self::MODE_SINGLE_UNIT => 'บุคคลเดียว (ทั้งยูนิต)',
+            self::MODE_FAMILY => 'ครอบครัว (ทั้งห้อง)',
+            self::MODE_SHARED => 'แฟลตโสด (แยกห้องย่อย)',
+            self::MODE_SINGLE_UNIT => 'บุคคลเดียว (ทั้งห้อง)',
         ];
     }
 

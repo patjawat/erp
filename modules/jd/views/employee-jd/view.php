@@ -17,6 +17,9 @@ foreach ($approvalRows as $approvalRow) {
         break;
     }
 }
+$isActive = $isPersisted && $jd->status === JdEmployee::STATUS_ACTIVE;
+// HR/admin แก้ไขได้ทั้งฉบับร่างและฉบับที่ประกาศใช้แล้ว (ยกเว้นระหว่างรอลงนาม)
+$isEditable = $canManage && ($isDraft || $isActive);
 $labels = JdEmployee::statusLabels();
 $this->title = 'คำอธิบายงาน (JD) · ' . $employee->fullname;
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนบุคลากร', 'url' => ['/hr/employees/index']];
@@ -88,7 +91,13 @@ $this->params['breadcrumbs'][] = 'คำอธิบายงาน';
 <?php endif; ?>
 
 <?php if ($isPersisted && $jd->sections): ?>
-    <?= $this->render('_document', ['jd' => $jd, 'editable' => $isDraft && $canManage, 'approvalRows' => $approvalRows]) ?>
+    <?php if ($isActive && $canManage): ?>
+        <div class="alert alert-primary py-2 d-flex align-items-center gap-2">
+            <i class="bi bi-pencil-square"></i>
+            <div class="small">โหมดแก้ไขสำหรับ HR/ผู้ดูแลระบบ — การแก้ไขจะมีผลกับ JD ฉบับปัจจุบันทันที</div>
+        </div>
+    <?php endif; ?>
+    <?= $this->render('_document', ['jd' => $jd, 'editable' => $isEditable, 'approvalRows' => $approvalRows]) ?>
 <?php else: ?>
     <div class="card border-0 shadow-sm">
         <div class="card-body text-center py-5">

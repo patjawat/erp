@@ -15314,5 +15314,15 @@ small, .small {
     transform: none !important;
   }
 }
+#main-modal .kv-tree-dropdown.show {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  float: none;
+  width: 100%;
+  margin-top: 0.35rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
 
 /*# sourceMappingURL=custom.css.map */

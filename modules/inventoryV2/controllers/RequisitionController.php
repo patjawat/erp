@@ -31,6 +31,8 @@ public function behaviors()
                 'delete' => ['POST'],
                 'cancel' => ['POST'],
                 'recall' => ['POST'],
+                'restore' => ['POST'],
+                'copy' => ['POST'],
                 'approve' => ['POST'],
                 'approve-with-edits' => ['POST'],
                 'save-draft' => ['POST'],
@@ -1496,6 +1498,148 @@ public function behaviors()
         }
 
         return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * คืนสถานะใบที่ยกเลิกแล้วกลับเป็นฉบับร่าง (CANCELLED → DRAFT) เพื่อเบิกใหม่
+     * เฉพาะใบสถานะ CANCELLED และผู้ใช้คือผู้สร้าง หรือ จนท.คลัง
+     * ใบที่เคยจ่ายแล้ว-ยกเลิก ระบบคืนของเข้าคลังไปแล้วตอนยกเลิก การกลับเป็นฉบับร่างจึงไม่แตะสต็อก
+     * (จะตัดสต็อกอีกครั้งก็ต่อเมื่อส่งอนุมัติและคลังจ่ายใหม่)
+     */
+    public function actionRestore($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->status !== StockOrder::STATUS_CANCELLED) {
+            Yii::$app->session->setFlash('warning', 'คืนสถานะได้เฉพาะใบที่ "ยกเลิก" แล้วเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $canInventory = !Yii::$app->user->isGuest && Yii::$app->user->can('inventory');
+        if (!$model->canRestore(Yii::$app->user->id, $canInventory)) {
+            Yii::$app->session->setFlash('warning', 'คืนสถานะได้เฉพาะผู้สร้างใบ หรือเจ้าหน้าที่คลังเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $model->status = StockOrder::STATUS_DRAFT;
+            // ล้างวันที่อนุมัติเดิม เพื่อให้ต้องอนุมัติใหม่ตามรอบใหม่
+            $approverSig = $model->getIssueSignature('approver');
+            $model->setIssueSignatures([
+                'approver' => [
+                    'name' => $approverSig['name'],
+                    'position' => $approverSig['position'],
+                    'date' => '',
+                    'emp_id' => $model->getIssueSignatureEmpId('approver'),
+                ],
+            ]);
+            // ซ่อมข้อมูลใบเก่าที่ created_by ว่าง เพื่อให้เช็คสิทธิ์แก้ไขผ่านหลังคืนสถานะ
+            if (empty($model->created_by)) {
+                $resolvedCreator = $model->getCreatorUserId();
+                if ($resolvedCreator) {
+                    $model->created_by = (int) $resolvedCreator;
+                }
+            }
+            if (!$model->save(false)) {
+                throw new \Exception('ไม่สามารถคืนสถานะใบเบิกได้');
+            }
+            $this->syncApproveRow($model);
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'คืนใบกลับเป็นฉบับร่างแล้ว แก้ไข/ตรวจสอบเสร็จแล้วส่งอนุมัติใหม่อีกครั้ง');
+            return $this->redirect(['update', 'id' => $model->id]);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'ข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * คัดลอกใบที่จ่ายวัสดุแล้วเป็นใบเบิกใหม่ (CONFIRMED → ใบใหม่สถานะ DRAFT)
+     * คัดลอกคลังจ่าย/คลังรับ/เหตุผล/ผู้เห็นชอบ + รายการวัสดุทั้งหมด, ออกเลขที่ใหม่,
+     * ตั้งผู้ขอเบิก = ผู้ใช้ปัจจุบัน แล้วพาไปหน้าแก้ไขเพื่อปรับจำนวนก่อนส่งอนุมัติ
+     */
+    public function actionCopy($id)
+    {
+        $source = $this->findModel($id);
+
+        if (!$source->canCopy()) {
+            Yii::$app->session->setFlash('warning', 'คัดลอกได้เฉพาะใบที่ "จ่ายวัสดุแล้ว" เท่านั้น');
+            return $this->redirect(['view', 'id' => $source->id]);
+        }
+        if (!$this->canCreateRequisition()) {
+            Yii::$app->session->setFlash('warning', 'ไม่มีสิทธิ์สร้างใบขอเบิก');
+            return $this->redirect(['view', 'id' => $source->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $new = new StockOrder();
+            $new->order_type = StockOrder::ORDER_TYPE_OUT;
+            $new->source_type = 'REQUEST';
+            $new->status = StockOrder::STATUS_DRAFT;
+            $new->order_date = date('Y-m-d');
+            $new->order_no = $this->generateOrderNo();
+            $new->main_warehouse_id = $source->main_warehouse_id;
+            $new->sub_warehouse_id = $source->sub_warehouse_id;
+            if (!Yii::$app->user->isGuest) {
+                $new->created_by = Yii::$app->user->id;
+            }
+
+            // เหตุผลการเบิก คัดลอกมาให้แก้ต่อได้
+            $new->setIssueReason($source->getIssueReason());
+
+            // ผู้เห็นชอบ (หัวหน้า) คัดลอกมา แต่ล้างวันที่อนุมัติ
+            $approverEmpId = $source->getIssueSignatureEmpId('approver');
+            $approverSig = $source->getIssueSignature('approver');
+            $new->setIssueSignatures([
+                'approver' => [
+                    'name' => $approverSig['name'],
+                    'position' => $approverSig['position'],
+                    'date' => '',
+                    'emp_id' => $approverEmpId,
+                ],
+            ]);
+
+            // ผู้ขอเบิก = พนักงานจาก user ที่ล็อกอิน
+            $emp = Yii::$app->user->isGuest ? null : Employees::findOne(['user_id' => Yii::$app->user->id]);
+            if ($emp) {
+                $reqData = StockOrder::getEmployeeNameAndPosition($emp->id);
+                $new->setIssueSignatures([
+                    'requester' => [
+                        'name' => $reqData['name'],
+                        'position' => $reqData['position'],
+                        'date' => date('Y-m-d'),
+                        'emp_id' => $emp->id,
+                    ],
+                ]);
+            }
+
+            if (!$new->save()) {
+                throw new \Exception(implode('<br>', $new->getFirstErrors()));
+            }
+
+            foreach ($source->stockDetails as $detail) {
+                $copy = new StockDetail();
+                $copy->stock_order_id = $new->id;
+                $copy->item_code = $detail->item_code;
+                $copy->qty = $detail->qty;
+                $copy->lot_number = '-';
+                if (!$copy->save()) {
+                    throw new \Exception('ไม่สามารถคัดลอกรายการวัสดุได้: ' . implode(', ', $copy->getFirstErrors()));
+                }
+            }
+
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'คัดลอกใบเบิกแล้ว — ตรวจสอบ/ปรับจำนวนแล้วส่งอนุมัติได้เลย');
+            return $this->redirect(['update', 'id' => $new->id]);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'ข้อผิดพลาด: ' . $e->getMessage());
+            return $this->redirect(['view', 'id' => $source->id]);
+        }
     }
 
     protected function findModel($id)

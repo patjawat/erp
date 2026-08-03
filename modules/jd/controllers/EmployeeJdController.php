@@ -33,8 +33,40 @@ class EmployeeJdController extends Controller
                     'activate' => ['POST'],
                     'sign' => ['POST'],
                     'delete-section' => ['POST'],
+                    'cancel-review' => ['POST'],
+                    'resolve-review' => ['POST'],
                 ],
             ],
+        ]);
+    }
+
+    public function actionInbox()
+    {
+        $me = UserHelper::GetEmployee();
+        if (!$me) {
+            throw new NotFoundHttpException('ไม่พบบัญชีบุคลากรของผู้ใช้งาน');
+        }
+
+        $rows = \app\modules\approveV2\models\Approve::find()
+            ->where([
+                'name' => JdApprovalService::APPROVE_NAME,
+                'emp_id' => (int) $me->id,
+                'status' => 'Pending',
+            ])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $items = [];
+        foreach ($rows as $row) {
+            $jd = JdEmployee::find()->where(['id' => (int) $row->from_id])->with('employee')->one();
+            if ($jd && $jd->status === JdEmployee::STATUS_PENDING) {
+                $items[] = ['approve' => $row, 'jd' => $jd];
+            }
+        }
+
+        return $this->render('inbox', [
+            'employee' => $me,
+            'items' => $items,
         ]);
     }
 
@@ -429,6 +461,120 @@ class EmployeeJdController extends Controller
         return $this->render('request-review', compact('jd', 'employee', 'request'));
     }
 
+    /** เจ้าของยกเลิกคำขอทบทวนของตนเอง → กลับมาลงนามรับทราบได้ */
+    public function actionCancelReview($id)
+    {
+        $request = JdChangeRequest::findOne($id);
+        if (!$request) {
+            throw new NotFoundHttpException('ไม่พบคำขอทบทวน');
+        }
+        $me = UserHelper::GetEmployee();
+        if (!$me || (int) $request->emp_id !== (int) $me->id) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+        if (in_array($request->status, JdChangeRequest::openStatuses(), true)) {
+            $request->status = JdChangeRequest::STATUS_CANCELLED;
+            $request->reviewed_at = date('Y-m-d H:i:s');
+            $request->save(false);
+            Yii::$app->session->setFlash('success', 'ยกเลิกคำขอทบทวนแล้ว — กลับมาลงนามรับทราบ JD ได้');
+        } else {
+            Yii::$app->session->setFlash('info', 'คำขอนี้ถูกดำเนินการไปแล้ว');
+        }
+        return $this->redirect(['/hr/employees/view', 'id' => $request->emp_id, 'name' => 'job_description_current']);
+    }
+
+    /** HR: รายการคำขอทบทวน JD ที่ยังเปิดอยู่ */
+    public function actionReviewInbox()
+    {
+        $this->assertCanManage();
+        $requests = JdChangeRequest::find()
+            ->where(['status' => JdChangeRequest::openStatuses()])
+            ->orderBy(['submitted_at' => SORT_ASC])
+            ->all();
+        return $this->render('review-inbox', ['requests' => $requests]);
+    }
+
+    /** HR: รับ/ไม่รับคำขอทบทวน (decision=accept|reject) */
+    public function actionResolveReview($id)
+    {
+        $this->assertCanManage();
+        $request = JdChangeRequest::findOne($id);
+        if (!$request) {
+            throw new NotFoundHttpException('ไม่พบคำขอทบทวน');
+        }
+        if (!in_array($request->status, JdChangeRequest::openStatuses(), true)) {
+            Yii::$app->session->setFlash('info', 'คำขอนี้ถูกดำเนินการไปแล้ว');
+            return $this->redirect(['review-inbox']);
+        }
+        $decision = (string) Yii::$app->request->post('decision');
+        $request->reviewed_by = (int) Yii::$app->user->id;
+        $request->reviewed_at = date('Y-m-d H:i:s');
+        $request->resolution_note = trim((string) Yii::$app->request->post('resolution_note')) ?: null;
+
+        if ($decision === 'reject') {
+            $request->status = JdChangeRequest::STATUS_REJECTED;
+            $request->save(false);
+            Yii::$app->session->setFlash('success', 'ไม่รับคำขอทบทวน — เจ้าของกลับมาลงนามรับทราบ JD ฉบับเดิมได้');
+            return $this->redirect(['review-inbox']);
+        }
+
+        // accept → สร้าง JD ฉบับร่างใหม่ (คัดลอกจากฉบับปัจจุบัน) ให้ HR แก้ไข
+        $empId = (int) $request->emp_id;
+        $existingDraft = JdEmployee::find()
+            ->where(['emp_id' => $empId, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+        if ($existingDraft) {
+            $request->status = JdChangeRequest::STATUS_ACCEPTED;
+            $request->new_jd_employee_id = (int) $existingDraft->id;
+            $request->save(false);
+            Yii::$app->session->setFlash('info', 'มีฉบับร่างอยู่แล้ว — เปิดให้แก้ไขต่อ');
+            return $this->redirect(['view', 'emp_id' => $empId, 'id' => $existingDraft->id]);
+        }
+
+        $employee = $this->findEmployee($empId);
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $current = JdEmployee::findCurrent($empId);
+            $jd = new JdEmployee([
+                'emp_id' => $empId,
+                'revision_no' => (int) JdEmployee::find()->where(['emp_id' => $empId])->max('revision_no') + 1,
+                'status' => JdEmployee::STATUS_DRAFT,
+                'supersedes_id' => $current?->id,
+                'position_code' => (string) ($employee->position_name ?? ''),
+                'position_title' => strip_tags((string) $employee->positionName()),
+                'department_code' => (string) ($employee->department ?? ''),
+                'department_title' => (string) $employee->departmentName(),
+            ]);
+            if (!$jd->save()) {
+                throw new \RuntimeException(implode(', ', $jd->getFirstErrors()));
+            }
+            if ($current) {
+                foreach ($current->sections as $src) {
+                    $section = new JdEmployeeSection([
+                        'jd_employee_id' => $jd->id,
+                        'section_code' => $src->section_code,
+                        'title' => $src->title,
+                        'content' => $src->content,
+                        'block_type' => $src->block_type,
+                        'data_json' => $src->data_json,
+                        'sort_order' => $src->sort_order,
+                    ]);
+                    $section->save(false);
+                }
+            }
+            $request->status = JdChangeRequest::STATUS_ACCEPTED;
+            $request->new_jd_employee_id = (int) $jd->id;
+            $request->save(false);
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+        Yii::$app->session->setFlash('success', 'รับคำขอทบทวน — สร้าง JD ฉบับร่างใหม่แล้ว กรุณาแก้ไขและส่งลงนาม');
+        return $this->redirect(['view', 'emp_id' => $empId, 'id' => $jd->id]);
+    }
+
     public function actionAddSection($emp_id)
     {
         $employee = $this->findEmployee($emp_id);
@@ -488,8 +634,9 @@ class EmployeeJdController extends Controller
     {
         $this->assertCanManage();
         $section = JdEmployeeSection::findOne($id);
-        if (!$section || !$section->jdEmployee || $section->jdEmployee->status !== JdEmployee::STATUS_DRAFT) {
-            throw new NotFoundHttpException('JD ที่ประกาศใช้แล้วแก้ไขไม่ได้ กรุณาสร้าง JD ฉบับใหม่');
+        $editableStatuses = [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_ACTIVE];
+        if (!$section || !$section->jdEmployee || !in_array($section->jdEmployee->status, $editableStatuses, true)) {
+            throw new NotFoundHttpException('JD ที่อยู่ระหว่างรอลงนามหรือถูกยกเลิกแล้วแก้ไขไม่ได้');
         }
         $jd = $section->jdEmployee;
         $employee = $jd->employee;

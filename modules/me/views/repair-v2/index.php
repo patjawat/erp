@@ -19,19 +19,14 @@ $badgeClass = static function (string $color): string {
 };
 
 $urgencyList = Helpdesk::listUrgency();
-$statusMeta = [
-    'pending' => ['label' => 'เปิดงาน', 'color' => 'warning'],
-    'receive' => ['label' => 'รับเรื่อง', 'color' => 'info'],
-    'in_progress' => ['label' => 'กำลังดำเนินการ', 'color' => 'info'],
-    'success' => ['label' => 'เสร็จสิ้น', 'color' => 'success'],
-    'cancel' => ['label' => 'ยกเลิก', 'color' => 'danger'],
-];
+$statusMeta = Helpdesk::repairStatusMeta();
+$statusLabels = Helpdesk::repairStatusOptions();
 
 $workflowSteps = [
-    ['code' => 'pending', 'label' => 'เปิดงาน'],
-    ['code' => 'receive', 'label' => 'รับเรื่อง'],
-    ['code' => 'in_progress', 'label' => 'ดำเนินการ'],
-    ['code' => 'success', 'label' => 'เสร็จสิ้น'],
+    ['code' => 'pending', 'label' => $statusLabels['pending']],
+    ['code' => 'receive', 'label' => $statusLabels['receive']],
+    ['code' => 'in_progress', 'label' => $statusLabels['in_progress']],
+    ['code' => 'success', 'label' => $statusLabels['success']],
 ];
 
 ?>
@@ -104,14 +99,22 @@ $workflowSteps = [
 
                     $vu = $item->viewUrgent();
                     $urgencyColor = 'secondary';
+                    $urgencyIcon = 'fa-regular fa-circle-question';
                     if (!empty($vu['color']) && is_string($vu['color'])) {
                         $c = preg_replace('/[^a-z]/', '', strtolower($vu['color']));
                         $allowed = ['primary', 'secondary', 'success', 'danger', 'warning', 'info'];
                         $urgencyColor = in_array($c, $allowed, true) ? $c : 'secondary';
                     }
+                    if (!empty($vu['icon']) && is_string($vu['icon'])) {
+                        $urgencyIcon = $vu['icon'];
+                    }
 
-                    $statusCode = (string) ($item->status ?? 'pending');
-                    $sInfo = $statusMeta[$statusCode] ?? ['label' => ($item->repairStatus?->title ?? 'ไม่ทราบสถานะ'), 'color' => 'secondary'];
+                    $statusCode = Helpdesk::normalizeRepairStatus($item->status ?? 'pending');
+                    $sInfo = $statusMeta[$statusCode] ?? [
+                        'label' => 'ไม่ทราบสถานะ',
+                        'color' => 'secondary',
+                        'icon' => 'fa-regular fa-circle-question',
+                    ];
                     $location = is_array($item->data_json ?? null) ? (($item->data_json['location'] ?? '') !== '' ? (string) $item->data_json['location'] : '-') : '-';
                     $createdLabel = $item->viewCreated()['full'] ?? $item->viewCreateDateTime();
                     $deviceLabel = $item->deviceType->title ?? '-';
@@ -205,8 +208,8 @@ $workflowSteps = [
                                             <?php if ($durationLabel !== null): ?>
                                                 <span class="<?= $badgeClass('success') ?>"><i class="fa-regular fa-hourglass me-1"></i><?= Html::encode($durationLabel) ?></span>
                                             <?php endif; ?>
-                                            <span class="<?= $badgeClass($urgencyColor) ?>"><?= Html::encode($urgencyLabel) ?></span>
-                                            <span class="<?= $badgeClass($sInfo['color']) ?>"><?= Html::encode($sInfo['label']) ?></span>
+                                            <span class="<?= $badgeClass($urgencyColor) ?>"><i class="<?= Html::encode($urgencyIcon) ?> me-1" aria-hidden="true"></i><?= Html::encode($urgencyLabel) ?></span>
+                                            <span class="<?= $badgeClass($sInfo['color']) ?>"><i class="<?= Html::encode($sInfo['icon']) ?> me-1" aria-hidden="true"></i><?= Html::encode($sInfo['label']) ?></span>
                                             <?php /* move rating to action row */ ?>
                                         </div>
 

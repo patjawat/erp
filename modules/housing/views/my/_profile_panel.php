@@ -34,7 +34,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
 .my-housing .housing-body{padding:1.25rem}
 .my-housing .housing-intro{display:grid;grid-template-columns:72px 1fr;gap:1rem;align-items:center;background:var(--mh-soft);border:1px solid var(--mh-border);border-radius:.75rem;padding:1rem}
 .my-housing .housing-icon{display:grid;place-items:center;width:72px;height:72px;border-radius:1rem;background:var(--bs-primary-bg-subtle);color:var(--bs-primary)}
-.my-housing .housing-icon svg{width:34px;height:34px}
+.my-housing .housing-icon i{font-size:34px;line-height:1}
 .my-housing .housing-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--mh-border);border-left:1px solid var(--mh-border)}
 .my-housing .housing-detail{min-height:82px;padding:.9rem 1rem;border-right:1px solid var(--mh-border);border-bottom:1px solid var(--mh-border)}
 .my-housing .housing-label{color:var(--mh-muted);font-size:.78rem;margin-bottom:.25rem}
@@ -66,7 +66,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
     <div class="housing-head">
         <div><h1 class="h5 mb-1">บ้านพักของฉัน</h1><div class="small text-body-secondary">คำร้อง สถานะการจัดสรร และข้อมูลที่พัก</div></div>
         <?php if ($mode === 'applicant'): ?>
-            <?= Html::a('<i data-lucide="file-pen-line"></i> เขียนคำร้อง', ['/housing/my/create-request'], [
+            <?= Html::a('<i class="bi bi-file-earmark-text"></i> เขียนคำร้อง', ['/housing/my/create-request'], [
                 'class' => 'btn btn-primary open-modal',
                 'data-size' => 'modal-lg',
             ]) ?>
@@ -89,7 +89,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
             ?>
             <div class="vacancy-item">
                 <div>
-                    <div class="vacancy-type"><i data-lucide="<?= $building->building_type === 'house' ? 'house' : 'building-2' ?>"></i><?= Html::encode($building->building_type === 'house' ? 'บ้านพัก' : 'แฟลต') ?></div>
+                    <div class="vacancy-type"><i class="bi <?= $building->building_type === 'house' ? 'bi-house' : 'bi-building' ?>"></i><?= Html::encode($building->building_type === 'house' ? 'บ้านพัก' : 'แฟลต') ?></div>
                     <div class="fw-semibold mt-1"><?= Html::encode($building->name) ?></div>
                 </div>
                 <div class="vacancy-location">
@@ -104,7 +104,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
         </div>
         <?php else: ?>
         <div class="housing-intro">
-            <div class="housing-icon"><i data-lucide="house"></i></div>
+            <div class="housing-icon"><i class="bi bi-house"></i></div>
             <div><h2 class="h6 mb-1">ยังไม่มีที่พักว่าง</h2><p class="text-body-secondary mb-0">ขณะนี้ยังไม่มีบ้านพักหรือห้องว่าง สามารถกลับมาตรวจสอบข้อมูลได้ภายหลัง</p></div>
         </div>
         <?php endif; ?>
@@ -136,22 +136,22 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
     ?>
         <?php if ($mode === 'allocated' && !$handover): ?>
             <div class="alert alert-info d-flex align-items-start gap-2">
-                <i data-lucide="clock-3"></i>
+                <i class="bi bi-clock"></i>
                 <div><strong>ผู้ดูแลกำลังจัดเตรียมเอกสารรับมอบ</strong><div class="small mt-1">เมื่อเอกสารพร้อม ระบบจะแสดงปุ่มให้ตรวจและลงนามในหน้านี้</div></div>
             </div>
         <?php elseif ($mode === 'allocated' && !$handover->handed_over_signed_at): ?>
             <div class="alert alert-warning d-flex align-items-start gap-2">
-                <i data-lucide="file-clock"></i>
+                <i class="bi bi-file-earmark-text"></i>
                 <div><strong>เอกสารรับมอบกำลังรอผู้ดูแลลงนามส่งมอบ</strong><div class="small mt-1">ยังไม่ต้องดำเนินการ ระบบจะแจ้งอีกครั้งเมื่อถึงขั้นตอนของคุณ</div></div>
             </div>
         <?php elseif ($mode === 'allocated' && !$handover->received_signed_at): ?>
             <div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-3">
-                <div class="d-flex align-items-start gap-2"><i data-lucide="bell-ring"></i><div><strong>มีเอกสารรอลงนามรับมอบ</strong><div class="small mt-1">กรุณาตรวจสภาพห้อง อุปกรณ์ และค่ามิเตอร์ก่อนลงนาม</div></div></div>
+                <div class="d-flex align-items-start gap-2"><i class="bi bi-bell"></i><div><strong>มีเอกสารรอลงนามรับมอบ</strong><div class="small mt-1">กรุณาตรวจสภาพห้อง อุปกรณ์ และค่ามิเตอร์ก่อนลงนาม</div></div></div>
                 <?= Html::a('ตรวจและลงนามรับมอบ', ['/housing/my/handover', 'id' => $handover->id], ['class' => 'btn btn-danger']) ?>
             </div>
         <?php endif; ?>
         <div class="housing-intro mb-3">
-            <div class="housing-icon"><i data-lucide="<?= $room ? 'door-open' : 'house' ?>"></i></div>
+            <div class="housing-icon"><i class="bi <?= $room ? 'bi-door-open' : 'bi-house' ?>"></i></div>
             <div><div class="small text-body-secondary"><?= $room ? 'ห้องพักที่ได้รับจัดสรร' : 'บ้านพักที่ได้รับจัดสรร' ?></div><h2 class="h5 mb-1"><?= Html::encode($building?->name ?: $unit?->name ?: 'ที่พัก') ?></h2><div class="text-body-secondary"><?= Html::encode(implode(' / ', array_filter([$unit?->name, $room?->name]))) ?></div></div>
         </div>
         <div class="housing-details">
@@ -169,17 +169,17 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
             <?php endif; ?>
             <?php
             $tabs = [
-                'overview' => ['label' => 'ภาพรวม', 'icon' => 'layout-dashboard'],
-                'expenses' => ['label' => 'ค่าใช้จ่าย', 'icon' => 'receipt-text'],
-                'maintenance' => ['label' => 'แจ้งซ่อม', 'icon' => 'wrench'],
-                'assets' => ['label' => 'ข้อมูลที่พัก', 'icon' => 'house'],
-                'documents' => ['label' => 'เอกสาร', 'icon' => 'file-text'],
+                'overview' => ['label' => 'ภาพรวม', 'icon' => 'bi-speedometer2'],
+                'expenses' => ['label' => 'ค่าใช้จ่าย', 'icon' => 'bi-receipt'],
+                'maintenance' => ['label' => 'แจ้งซ่อม', 'icon' => 'bi-wrench'],
+                'assets' => ['label' => 'ข้อมูลที่พัก', 'icon' => 'bi-house'],
+                'documents' => ['label' => 'เอกสาร', 'icon' => 'bi-file-earmark-text'],
             ];
             ?>
             <nav class="housing-tabs" aria-label="ข้อมูลบ้านพักของฉัน">
                 <?php foreach ($tabs as $tabKey => $tab): ?>
                     <?= Html::a(
-                        '<i data-lucide="' . $tab['icon'] . '"></i> ' . Html::encode($tab['label']),
+                        '<i class="bi ' . $tab['icon'] . '"></i> ' . Html::encode($tab['label']),
                         ['/profile', 'name' => 'housing', 'housing_tab' => $tabKey],
                         ['class' => 'housing-tab ' . ($activeTab === $tabKey ? 'is-active' : ''), 'aria-current' => $activeTab === $tabKey ? 'page' : null]
                     ) ?>
@@ -216,7 +216,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
                     <dt class="col-sm-4">ประเภทที่พัก</dt><dd class="col-sm-8"><?= Html::encode($building?->building_type === 'house' ? 'บ้านพัก' : 'แฟลต') ?></dd>
                     <dt class="col-sm-4">อาคาร/บ้านพัก</dt><dd class="col-sm-8"><?= Html::encode($building?->name ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">ชั้น</dt><dd class="col-sm-8"><?= Html::encode($unit?->floor?->name ?: 'ไม่ระบุ') ?></dd>
-                    <dt class="col-sm-4">ยูนิต/ห้อง</dt><dd class="col-sm-8"><?= Html::encode(implode(' / ', array_filter([$unit?->name, $room?->name])) ?: 'ไม่ระบุ') ?></dd>
+                    <dt class="col-sm-4">ห้อง/ห้องย่อย</dt><dd class="col-sm-8"><?= Html::encode(implode(' / ', array_filter([$unit?->name, $room?->name])) ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">รหัสที่พัก</dt><dd class="col-sm-8"><?= Html::encode($room?->code ?: $unit?->code ?: 'ไม่ระบุ') ?></dd>
                     <dt class="col-sm-4">รายละเอียด</dt><dd class="col-sm-8"><?= nl2br(Html::encode($room?->description ?: $unit?->description ?: $building?->description ?: 'ไม่มีรายละเอียดเพิ่มเติม')) ?></dd>
                 </dl></div>
@@ -285,7 +285,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
             ?>
             <section class="resident-section">
                 <div class="resident-section__head"><div><h3 class="h6 mb-1">การแจ้งซ่อมและประวัติการซ่อม</h3><div class="small text-body-secondary">รายการที่คุณแจ้งและงานส่วนกลางที่เกี่ยวข้องกับอาคารนี้</div></div>
-                <?= Html::a('<i data-lucide="wrench"></i> แจ้งปัญหา', ['/housing/my/create-maintenance'], ['class' => 'btn btn-sm btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
+                <?= Html::a('<i class="bi bi-wrench"></i> แจ้งปัญหา', ['/housing/my/create-maintenance'], ['class' => 'btn btn-sm btn-primary open-modal', 'data-size' => 'modal-lg']) ?></div>
                 <?= Html::beginForm(['/profile'], 'get', ['class' => 'filter-bar']) ?>
                     <?= Html::hiddenInput('name', 'housing') ?><?= Html::hiddenInput('housing_tab', 'maintenance') ?>
                     <div class="filter-field"><label for="maintenance-status">สถานะ</label><?= Html::dropDownList('maintenance_status', Yii::$app->request->get('maintenance_status', 'all'), ['all' => 'ทั้งหมด', 'open' => 'ยังดำเนินการ'] + MaintenanceRequest::statusOptions(), ['id' => 'maintenance-status', 'class' => 'form-select']) ?></div>

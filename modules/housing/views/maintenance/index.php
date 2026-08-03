@@ -24,7 +24,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
             <div><h1 class="h5 mb-1">ประวัติแจ้งซ่อมบ้านพักและแฟลต</h1><div class="small text-body-secondary">บันทึกปัญหา ผลการซ่อม และค่าใช้จ่ายรวม</div></div>
             <div class="d-flex gap-2 maintenance-actions">
                 <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex']) ?><?= Html::dropDownList('building_id', $buildingId, $buildingOptions, ['prompt' => 'ทุกบ้านพัก/แฟลต', 'class' => 'form-select form-select-sm', 'onchange' => 'this.form.submit()']) ?><?= Html::endForm() ?>
-                <?= Html::a('<i data-lucide="plus"></i> แจ้งปัญหา', ['create', 'building_id' => $buildingId], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-xl']) ?>
+                <?= Html::a('<i class="bi bi-plus-lg"></i> แจ้งปัญหา', ['create', 'building_id' => $buildingId], ['class' => 'btn btn-primary btn-sm open-modal', 'data-size' => 'modal-xl']) ?>
             </div>
         </div>
         <div class="summary-band"><div><div class="small text-body-secondary">งานที่ยังไม่ปิด</div><strong><?= $openCount ?> รายการ</strong></div><div><div class="small text-body-secondary">ค่าใช้จ่ายสะสม</div><strong><?= Yii::$app->formatter->asDecimal($totalExpense, 2) ?> บาท</strong></div></div>
@@ -40,7 +40,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                 <td class="text-end"><?= Yii::$app->formatter->asDecimal($model->expense_amount, 2) ?></td>
                 <td class="text-end text-nowrap"><?= Html::a('รายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?> <?= Html::a('ปรับปรุง', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-xl']) ?></td>
             </tr><?php endforeach; ?></tbody>
-        </table></div><?php else: ?><div class="text-center py-5"><i data-lucide="wrench"></i><div class="fw-semibold mt-2">ยังไม่มีประวัติแจ้งซ่อม</div><div class="small text-body-secondary mt-1">เมื่อพบปัญหา ให้กด “แจ้งปัญหา” เพื่อเริ่มบันทึกประวัติ</div></div><?php endif; ?>
+        </table></div><?php else: ?><div class="text-center py-5"><i class="bi bi-wrench"></i><div class="fw-semibold mt-2">ยังไม่มีประวัติแจ้งซ่อม</div><div class="small text-body-secondary mt-1">เมื่อพบปัญหา ให้กด “แจ้งปัญหา” เพื่อเริ่มบันทึกประวัติ</div></div><?php endif; ?>
         <div class="p-3 border-top"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></div>
     </div>
 </div>
