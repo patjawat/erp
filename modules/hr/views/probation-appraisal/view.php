@@ -1,0 +1,89 @@
+<?php
+use yii\helpers\Html;
+
+$this->title = 'แฟ้มประเมินทดลองงาน';
+echo $this->render('_styles');
+$rounds = $model->rounds;
+$current = $model->currentRound();
+$statusIcon = static fn($evaluation) => $evaluation->status === 'submitted' ? 'check' : ($evaluation->status === 'open' ? 'pencil' : 'lock');
+$roundTone = static fn($round) => $round->status === 'completed' ? 'success' : ($round->status === 'scheduled' ? 'secondary' : 'primary');
+?>
+<div class="probation-shell probation-detail-view">
+    <header class="probation-head">
+        <div>
+            <h1><?= Html::encode($model->employee->fullname) ?></h1>
+            <p class="text-body-secondary"><?= Html::encode($model->employee->employeePosition->title ?? $model->employee->position_name) ?> · เริ่มงาน <?= Yii::$app->formatter->asDate($model->start_date, 'php:d/m/Y') ?></p>
+        </div>
+        <?= Html::a('กลับรายการ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+    </header>
+
+    <div class="probation-detail-grid">
+        <main>
+            <section class="probation-card probation-detail-timeline" aria-labelledby="probation-timeline-title">
+                <div class="probation-detail-timeline__head">
+                    <div><h2 id="probation-timeline-title" class="h5 mb-1">เส้นทางการประเมินทดลองงาน</h2><p class="text-body-secondary mb-0">ติดตามผลเดือนที่ 1, 2 และ 3 ตามลำดับ</p></div>
+                    <span class="badge bg-primary-subtle text-primary-emphasis"><?= Html::encode($model->statusLabel) ?></span>
+                </div>
+                <div class="probation-timeline" aria-label="รอบการประเมิน">
+                    <?php foreach ($rounds as $round):
+                        $class = $round->status === 'completed' ? 'is-done' : ($current && $current->id === $round->id ? 'is-current' : '');
+                    ?>
+                        <div class="probation-month <?= $class ?>">
+                            <span class="probation-month__node"><?= $round->month_no ?></span>
+                            <strong>เดือนที่ <?= $round->month_no ?></strong>
+                            <small class="d-block text-body-secondary">ครบกำหนด <?= Yii::$app->formatter->asDate($round->due_date, 'php:d/m/Y') ?></small>
+                        </div>
+                    <?php endforeach ?>
+                </div>
+            </section>
+
+            <div class="probation-rounds">
+                <?php foreach ($rounds as $round): $tone = $roundTone($round); ?>
+                    <section class="probation-round <?= $current && $current->id === $round->id ? 'is-current' : '' ?>" aria-labelledby="round-<?= $round->month_no ?>-title">
+                        <header class="probation-round__header">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="probation-round__number"><?= $round->month_no ?></span>
+                                <div><h2 id="round-<?= $round->month_no ?>-title" class="h5 mb-1">การประเมินเดือนที่ <?= $round->month_no ?></h2><span class="text-body-secondary small">ครบกำหนด <?= Yii::$app->formatter->asDate($round->due_date, 'php:d/m/Y') ?></span></div>
+                            </div>
+                            <span class="badge bg-<?= $tone ?>-subtle text-<?= $tone ?>-emphasis"><?= Html::encode($round->statusLabel) ?></span>
+                        </header>
+                        <div class="probation-workflow" aria-label="ขั้นตอนการประเมินเดือนที่ <?= $round->month_no ?>">
+                            <?php foreach ($round->evaluations as $index => $evaluation):
+                                $class = $evaluation->status === 'submitted' ? 'is-done' : ($evaluation->status === 'open' ? 'is-open' : '');
+                            ?>
+                                <div class="probation-step <?= $class ?>">
+                                    <div class="probation-step__top"><span class="probation-step__sequence">ขั้นตอน <?= $index + 1 ?></span><span class="probation-step__icon"><i data-lucide="<?= $statusIcon($evaluation) ?>"></i></span></div>
+                                    <strong><?= Html::encode($evaluation->roleLabel) ?></strong>
+                                    <small class="d-block text-body-secondary mt-1"><?= Html::encode($evaluation->evaluator->fullname) ?></small>
+                                    <?php if ($evaluation->status === 'submitted'): ?>
+                                        <span class="d-block probation-numeric fw-semibold fs-5 mt-3"><?= number_format($evaluation->percent_score, 2) ?>%</span>
+                                    <?php elseif ($evaluation->status === 'open' && $currentEmployee && (int)$currentEmployee->id === (int)$evaluation->evaluator_employee_id): ?>
+                                        <?= Html::a('ทำแบบประเมิน', ['evaluate', 'id' => $evaluation->id], ['class' => 'btn btn-primary btn-sm mt-3']) ?>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis mt-3"><?= $evaluation->status === 'open' ? 'รอดำเนินการ' : 'ยังไม่เปิด' ?></span>
+                                    <?php endif ?>
+                                </div>
+                            <?php endforeach ?>
+                            <?php $directorStep = count($round->evaluations) + 1; ?>
+                            <div class="probation-step <?= $model->acknowledgement ? 'is-done' : ($model->status === 'waiting_acknowledgement' ? 'is-open' : '') ?>">
+                                <div class="probation-step__top"><span class="probation-step__sequence">ขั้นตอน <?= $directorStep ?></span><span class="probation-step__icon"><i data-lucide="<?= $model->acknowledgement ? 'check' : ($model->status === 'waiting_acknowledgement' ? 'eye' : 'lock') ?>"></i></span></div>
+                                <strong>ผอ.รับทราบ</strong>
+                                <small class="d-block text-body-secondary mt-1"><?= Html::encode($model->director->fullname) ?></small>
+                            </div>
+                        </div>
+                    </section>
+                <?php endforeach ?>
+            </div>
+        </main>
+
+        <aside>
+            <div class="probation-card p-3 probation-sticky">
+                <h2 class="h6">สรุปแฟ้ม</h2>
+                <dl class="mb-0"><dt class="text-body-secondary fw-normal mt-3">Template</dt><dd><?= Html::encode($model->template->name) ?> rev. <?= $model->template->revision_no ?></dd><dt class="text-body-secondary fw-normal">ผู้สรุปผล</dt><dd><?= Html::encode($model->finalRecommender->fullname) ?></dd><dt class="text-body-secondary fw-normal">สถานะ</dt><dd><?= Html::encode($model->statusLabel) ?></dd></dl>
+                <?php if ($model->decision): ?><hr><div class="probation-summary"><div><small class="text-body-secondary">คะแนนเฉลี่ย</small><strong class="d-block fs-4 probation-numeric"><?= number_format($model->decision->average_percent, 2) ?>%</strong></div></div><p class="mt-3 mb-0"><?= nl2br(Html::encode($model->decision->summary_comment)) ?></p><?php endif ?>
+                <?php if ($currentEmployee && (int)$currentEmployee->id === (int)$model->final_recommender_employee_id && $model->status === 'waiting_decision'): ?><div class="d-grid mt-3"><?= Html::a('สรุปผลการจ้าง', ['decision', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></div><?php endif ?>
+                <?php if ($currentEmployee && (int)$currentEmployee->id === (int)$model->director_employee_id && $model->status === 'waiting_acknowledgement'): ?><div class="d-grid mt-3"><?= Html::beginForm(['acknowledge', 'id' => $model->id], 'post').Html::submitButton('รับทราบผลการประเมิน', ['class' => 'btn btn-primary w-100']).Html::endForm() ?></div><?php endif ?>
+            </div>
+        </aside>
+    </div>
+</div>

@@ -311,6 +311,9 @@ $config = [
             // Training Roadmap: every action has an authenticated role/ownership
             // guard in the controller (HR/admin, employee, leader, mentor or assessor).
             'hr/training-roadmap/*',
+            // Probation appraisal: authenticated users enter through Profile;
+            // every action checks the assigned employee/leader/director in the controller.
+            'hr/probation-appraisal/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

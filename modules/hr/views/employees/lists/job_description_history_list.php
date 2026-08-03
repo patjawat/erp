@@ -8,7 +8,7 @@ $labels = JdEmployee::statusLabels();
 ?>
 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
     <div><h5 class="mb-1 fw-semibold">ประวัติคำอธิบายงาน</h5><div class="text-muted small">เก็บทุก Revision ตามช่วงเวลาที่มีผลใช้งาน</div></div>
-    <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
+    <?php if (empty($isManagedProfile) && (Yii::$app->user->can('hr') || Yii::$app->user->can('admin'))): ?>
         <?= Html::a('<i class="bi bi-plus-lg me-1"></i>สร้าง JD', ['/jd/employee-jd/create-draft', 'emp_id' => $model->id], ['class' => 'btn btn-sm btn-primary', 'data-method' => 'post']) ?>
     <?php endif; ?>
 </div>

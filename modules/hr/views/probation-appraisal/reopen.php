@@ -1,0 +1,5 @@
+<?php
+use yii\helpers\Html;
+$this->title='เปิดผลประเมินกลับให้แก้ไข'; echo $this->render('_styles');
+?>
+<div class="probation-shell"><header class="probation-head"><div><h1><?= Html::encode($this->title) ?></h1><p class="text-body-secondary"><?= Html::encode($evaluation->evaluator->fullname) ?> · <?= Html::encode($evaluation->roleLabel) ?> เดือนที่ <?= $evaluation->round->month_no ?></p></div></header><form method="post"><input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>"><div class="probation-card p-3 p-md-4"><div class="alert alert-warning">การเปิดกลับจะทำให้ผู้ประเมินแก้คะแนนและส่งใหม่ได้ ประวัติเหตุผลและเวลาเปิดกลับจะถูกบันทึก</div><label class="form-label" for="reopen-reason">เหตุผลที่เปิดกลับ</label><textarea class="form-control" id="reopen-reason" name="reason" rows="4" required></textarea><div class="probation-form-actions"><?= Html::a('ยกเลิก',['view','id'=>$evaluation->round->case_id],['class'=>'btn btn-outline-secondary']) ?><button class="btn btn-warning" type="submit">เปิดกลับให้แก้ไข</button></div></div></form></div>

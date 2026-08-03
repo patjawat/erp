@@ -44,6 +44,7 @@ rsort($selectableYears);
 
 $manageUrl = ['/kpi/manage/view', 'emp_id' => $model->id, 'fiscal_year' => $selectedYear];
 $canManage = KpiService::isHrOrAdmin() || KpiService::isSupervisorOf((int) $model->id);
+$isManagedProfile = $isManagedProfile ?? false;
 ?>
 
 <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
@@ -61,7 +62,9 @@ $canManage = KpiService::isHrOrAdmin() || KpiService::isSupervisorOf((int) $mode
     <?php foreach ($selectableYears as $fy): ?>
         <li class="nav-item">
             <a class="nav-link <?= $fy === $selectedYear ? 'active' : '' ?> py-1 px-3"
-               href="<?= Url::to(['/profile', 'name' => 'kpi', 'fiscal_year' => $fy]) ?>" data-pjax="1">
+               href="<?= Url::to($isManagedProfile
+                   ? ['/hr/employees/view', 'id' => $model->id, 'name' => 'kpi', 'view' => 'manager', 'fiscal_year' => $fy]
+                   : ['/profile', 'name' => 'kpi', 'fiscal_year' => $fy]) ?>" data-pjax="1">
                 ปี <?= $fy ?><?= $fy === $currentFy ? ' <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">ปัจจุบัน</span>' : '' ?>
             </a>
         </li>

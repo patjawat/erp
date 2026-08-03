@@ -961,7 +961,13 @@ class Employees extends Yii\db\ActiveRecord
                 'icon' => '<i data-lucide="target" class="lucide-icon text-primary"></i>',
                 'count' => 0,
             ],
-            'performance_appraisal' => $comingSoon('performance_appraisal', 'การประเมินผล', 'ทดลองงาน ประจำปี และผลย้อนหลัง', 'clipboard-check'),
+            'performance_appraisal' => [
+                'name' => 'performance_appraisal',
+                'title' => 'การประเมินทดลองงาน',
+                'subtitle' => 'งานประเมินเดือนที่ 1, 2 และ 3 ของฉัน',
+                'icon' => '<i data-lucide="clipboard-check" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+            ],
             'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
             'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
             'housing' => [
@@ -1736,6 +1742,29 @@ class Employees extends Yii\db\ActiveRecord
     public function isDepartmentHead()
     {
         return !empty($this->ledOrganizations());
+    }
+
+    /** Whether this employee may open another employee's work profile. */
+    public function canManageWorkProfileOf(self $employee): bool
+    {
+        if ((int) $this->id === (int) $employee->id) {
+            return false;
+        }
+        try {
+            $targetNode = $employee->empDepartment;
+            if (!$targetNode) {
+                return false;
+            }
+            foreach ($this->ledOrganizations() as $ledNode) {
+                if ((int) $ledNode->root === (int) $targetNode->root
+                    && (int) $targetNode->lft >= (int) $ledNode->lft
+                    && (int) $targetNode->rgt <= (int) $ledNode->rgt) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $th) {
+        }
+        return false;
     }
 
     /**

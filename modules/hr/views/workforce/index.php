@@ -75,9 +75,9 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
     <?php elseif ($section === 'appraisal'): ?>
         <section class="workforce-empty">
             <span class="workforce-empty__icon"><i data-lucide="chart-no-axes-combined"></i></span>
-            <h2>ภาพรวมการประเมินผล (กำลังพัฒนา)</h2>
-            <p>ส่วนนี้จะรวมผลจาก KPI และสมรรถนะ (Competency) เข้าด้วยกันเป็นผลประเมินประจำปี — ดู KPI รายบุคคลได้ที่แท็บ KPI</p>
-            <?= Html::a('ไปที่ KPI', ['/hr/workforce/index', 'section' => 'kpi'], ['class' => 'btn btn-outline-primary']) ?>
+            <h2>การประเมินช่วงทดลองงาน</h2>
+            <p>ติดตามการประเมินเดือนที่ 1, 2 และ 3 ตั้งแต่การมอบหมายจนถึง ผอ.รับทราบผล</p>
+            <?= Html::a('เปิดระบบประเมินทดลองงาน', ['/hr/probation-appraisal/index'], ['class' => 'btn btn-primary']) ?>
         </section>
     <?php else: ?>
         <section class="workforce-empty">

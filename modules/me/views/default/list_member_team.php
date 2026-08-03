@@ -1,6 +1,7 @@
 <?php
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
+use yii\helpers\Html;
 use yii\helpers\Url;
 
 $deptIds = array_filter([$me->department]);
@@ -10,7 +11,7 @@ if ($me->department && ($org = Organization::findOne($me->department))) {
 
 $listsMemberTeam = Employees::find()
 ->where(['department' => $deptIds, 'status' => 1])
-->andWhere(['<>','id',1])->all();
+->andWhere(['<>', 'id', (int) $me->id])->all();
 ?>
         <div class="row g-3 align-items-center justify-content-between mb-4 mt-4">
             <div class="col-12 col-sm-auto">
@@ -46,16 +47,18 @@ $listsMemberTeam = Employees::find()
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2" aria-labelledby="dropdown-member-<?= $item->id ?>">
+                                    <li><h6 class="dropdown-header text-truncate" style="max-width:260px"><?= Html::encode($item->fullname) ?></h6></li>
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id]) ?>">
-                                            <i class="bi bi-person-circle text-primary"></i>
-                                            ข้อมูลพนักงาน
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id, 'view' => 'manager']) ?>">
+                                            <i class="bi bi-folder2-open text-primary team-member-menu__icon"></i>
+                                            แฟ้มประวัติพนักงาน
                                         </a>
                                     </li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id]) ?>">
-                                            <i class="bi bi-graph-up text-info"></i>
-                                            KPI Profile
+                                        <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?= Url::to(['/hr/employees/view', 'id' => $item->id, 'name' => 'performance_appraisal', 'view' => 'manager']) ?>">
+                                            <i class="bi bi-clipboard-check text-success team-member-menu__icon"></i>
+                                            ประเมินทดลองงาน
                                         </a>
                                     </li>
                                 </ul>
@@ -69,6 +72,7 @@ $listsMemberTeam = Employees::find()
 
 <style>
 .transition-all { transition: all 0.2s ease-in-out; }
+.team-member-menu__icon { width: 1.15rem; flex: 0 0 1.15rem; text-align: center; }
 .overflow-auto::-webkit-scrollbar { width: 4px; }
 .overflow-auto::-webkit-scrollbar-thumb { background: var(--bs-border-color); border-radius: 10px; }
 </style>
