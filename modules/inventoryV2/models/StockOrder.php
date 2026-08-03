@@ -710,6 +710,35 @@ public function getToWarehouse()
     }
 
     /**
+     * คืนสถานะใบที่ยกเลิกแล้วกลับเป็นฉบับร่าง (CANCELLED → DRAFT) เพื่อเบิกใหม่
+     * คืนได้เฉพาะใบสถานะ CANCELLED และผู้ใช้คือผู้สร้าง หรือ จนท.คลัง
+     * @param int|null $userId user.id ที่ล็อกอินอยู่
+     * @param bool $hasInventoryPermission ผลของ Yii::$app->user->can('inventory')
+     * @return bool
+     */
+    public function canRestore($userId, $hasInventoryPermission = false)
+    {
+        if ($this->status !== self::STATUS_CANCELLED) {
+            return false;
+        }
+        if ($hasInventoryPermission) {
+            return true;
+        }
+        return $userId && (int) $this->getCreatorUserId() === (int) $userId;
+    }
+
+    /**
+     * คัดลอกใบที่จ่ายวัสดุแล้วเพื่อสร้างใบเบิกใหม่ (CONFIRMED → ใบใหม่ DRAFT)
+     * อำนวยความสะดวกเมื่อต้องการเบิกข้อมูลแบบเดิมซ้ำ ๆ
+     * ตรวจเฉพาะสถานะของใบต้นทาง — สิทธิ์สร้างใบใหม่ตรวจที่ระดับ controller (canCreateRequisition)
+     * @return bool
+     */
+    public function canCopy()
+    {
+        return $this->status === self::STATUS_CONFIRMED;
+    }
+
+    /**
      * user.id ของ "ผู้สร้าง/ผู้ขอเบิก" ใบนี้
      * ยึด created_by ก่อน — ถ้าว่าง (ใบเก่าที่ยังไม่มี) fallback ไปที่ผู้ขอเบิก
      * (issue_requester.emp_id → Employees.user_id)
