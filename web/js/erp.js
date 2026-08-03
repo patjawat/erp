@@ -428,12 +428,30 @@ function erpInjectModalContent($target, html) {
 function erpLoadScript(src) {
   window.__erpScriptLoadCache = window.__erpScriptLoadCache || {};
 
-  if (window.__erpScriptLoadCache[src]) {
-    return window.__erpScriptLoadCache[src];
+  // Normalize to an absolute URL for dedup. Scripts already on the page carry a
+  // relative src attribute (e.g. "/assets/..") while a src parsed out of an ajax
+  // fragment resolves to absolute — comparing raw strings misses the match and
+  // re-loads libraries like bootstrap.bundle.js on every modal open, registering
+  // their data-api handlers twice (dropdowns then open-and-immediately-close).
+  var abs = src;
+  try {
+    abs = new URL(src, document.baseURI).href;
+  } catch (e) {}
+
+  if (window.__erpScriptLoadCache[abs]) {
+    return window.__erpScriptLoadCache[abs];
   }
 
-  window.__erpScriptLoadCache[src] = new Promise(function (resolve, reject) {
-    if (document.querySelector('script[src="' + src.replace(/"/g, '\\"') + '"]')) {
+  window.__erpScriptLoadCache[abs] = new Promise(function (resolve, reject) {
+    // s.src is the resolved (absolute) URL, so this matches regardless of how the
+    // existing tag's src attribute was written.
+    var already = Array.prototype.some.call(
+      document.querySelectorAll("script[src]"),
+      function (s) {
+        return s.src === abs;
+      }
+    );
+    if (already) {
       resolve();
       return;
     }
@@ -450,7 +468,7 @@ function erpLoadScript(src) {
     document.head.appendChild(scriptEl);
   });
 
-  return window.__erpScriptLoadCache[src];
+  return window.__erpScriptLoadCache[abs];
 }
 /**
  * Handle AJAX form submission with confirmation and success feedback.

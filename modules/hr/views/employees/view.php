@@ -14,7 +14,10 @@ $this->params['breadcrumbs'][] = $isRequestedManagedProfile
     : ['label' => 'ทะเบียนบุคลากร', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
-$this->registerCss(<<<CSS
+// หมายเหตุ: ต้อง output CSS นี้เป็น <style> ภายใน Pjax container (ดูด้านล่าง)
+// ไม่ใช้ registerCss เพราะ jquery-pjax ไม่ re-inject <style> ที่อยู่ใน <head>
+// เมื่อเข้าหน้านี้ผ่าน pjax (จากหน้า list) ทำให้เมนูไม่มีสไตล์/เพี้ยน
+$profileNavCss = <<<CSS
 .profile-section-nav{display:grid;gap:.65rem;margin-bottom:1rem}
 .profile-nav-group{overflow:hidden;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .profile-nav-group__summary{display:flex;align-items:center;min-height:58px;gap:.7rem;padding:.7rem .8rem;cursor:pointer;list-style:none;color:#1a202c;background:#eef2f7}
@@ -54,11 +57,12 @@ $this->registerCss(<<<CSS
 .managed-profile-card__body{padding:1rem}
 @media(max-width:575.98px){.managed-profile-context{align-items:flex-start;flex-direction:column}.managed-profile-context .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){.profile-nav-group__chevron{transition:none}}
-CSS);
+CSS;
 
 
 ?>
 <?php Pjax::begin(['id' => 'hr-container','enablePushState' => true,'timeout' => 50000 ]); ?>
+<style><?= $profileNavCss ?></style>
 <?php $this->beginBlock('page-title'); ?>
 <?= $isRequestedManagedProfile ? 'แฟ้มบริหารบุคลากร' : 'ข้อมูลส่วนบุคคล' ?> | <?=$this->title;?>
 <?php $this->endBlock(); ?>

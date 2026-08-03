@@ -3420,3 +3420,22 @@ small {
     transform: none !important;
   }
 }
+
+// ===== TreeViewInput (kartik) ในโมดัลที่เป็น modal-dialog-scrollable =====
+// ปัญหา: dropdown ต้นไม้ (.kv-tree-dropdown เป็น .dropdown-menu position:absolute + Popper)
+//        ถูก .modal-body { overflow-y:auto } ตัดจนกดเลือกหน่วยงานไม่ได้
+// วิธีแก้: บังคับให้เมนูไหลอยู่ใน flow (static) เพื่อให้ modal-body เลื่อนถึงได้แทนการตัดทิ้ง
+//        (พิสูจน์กับ BS 5.3 แล้วว่าเมนูอยู่ในกรอบ modal-body ครบและ scroll ได้)
+// ใช้กับทุก TreeViewInput ที่เปิดใน #main-modal (position.php, position_manage.php ฯลฯ)
+#main-modal {
+  .kv-tree-dropdown.show {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    float: none;
+    width: 100%;
+    margin-top: .35rem;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+}
