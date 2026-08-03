@@ -38,6 +38,7 @@ class ProbationCase extends ProbationActiveRecord
     public function getTemplate() { return $this->hasOne(ProbationTemplate::class, ['id' => 'template_id']); }
     public function getRounds() { return $this->hasMany(ProbationRound::class, ['case_id' => 'id'])->orderBy(['month_no' => SORT_ASC]); }
     public function getDecision() { return $this->hasOne(ProbationDecision::class, ['case_id' => 'id']); }
-    public function getAcknowledgement() { return $this->hasOne(ProbationAcknowledgement::class, ['case_id' => 'id']); }
+    public function getAcknowledgements() { return $this->hasMany(ProbationAcknowledgement::class, ['case_id' => 'id']); }
+    public function getAcknowledgement() { return $this->hasOne(ProbationAcknowledgement::class, ['case_id' => 'id'])->joinWith('round')->andWhere(['probation_round.month_no' => 3]); }
     public function currentRound() { foreach ($this->rounds as $round) if ($round->status !== 'completed') return $round; return null; }
 }

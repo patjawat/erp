@@ -656,7 +656,11 @@ if (!empty($upcomingHealth)): ?>
 
     </div>
     <div class="col-12 col-lg-3">
-        <?= $this->render('list_member_team', ['me' => $me]) ?>
+        <?= $this->render('list_member_team', [
+            'me' => $me,
+            'probationCaseCount' => $probationCaseCount ?? 0,
+            'probationTaskCount' => $probationTaskCount ?? 0,
+        ]) ?>
     </div>
 </div>
 </div>

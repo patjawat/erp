@@ -127,18 +127,17 @@ class ProbationAppraisalService
             $case->save(false);
             return;
         }
-        $round->status = 'completed';
-        $round->completed_at = date('Y-m-d H:i:s');
-        $round->save(false);
-        if ((int) $round->month_no < 3) {
-            $nextRound = ProbationRound::findOne(['case_id' => $case->id, 'month_no' => $round->month_no + 1]);
-            $nextRound->status = 'waiting_self'; $nextRound->opened_at = date('Y-m-d H:i:s'); $nextRound->save(false);
-            $nextSelf = ProbationEvaluation::findOne(['round_id' => $nextRound->id, 'role' => 'self']);
-            $nextSelf->status = 'open'; $nextSelf->save(false);
-        } else {
+        if ((int) $round->month_no === 3) {
+            $round->status = 'waiting_decision';
+            $round->save(false);
             $case->status = 'waiting_decision';
             $case->save(false);
+            return;
         }
+        $round->status = 'waiting_acknowledgement';
+        $round->save(false);
+        $case->status = 'in_progress';
+        $case->save(false);
     }
 
     public function saveDecision(ProbationCase $case, string $recommendation, string $comment, int $employeeId): ProbationDecision
@@ -174,17 +173,38 @@ class ProbationAppraisalService
             'decided_by_employee_id' => $employeeId, 'decided_at' => date('Y-m-d H:i:s'),
         ]);
         if (!$decision->save()) throw new \RuntimeException(implode(', ', $decision->getFirstErrors()));
+        $round->status = 'waiting_acknowledgement'; $round->save(false);
         $case->status = 'waiting_acknowledgement'; $case->save(false);
         return $decision;
     }
 
-    public function acknowledge(ProbationCase $case, int $employeeId): void
+    public function acknowledge(ProbationCase $case, ProbationRound $round, int $employeeId): void
     {
-        if ($case->status !== 'waiting_acknowledgement') throw new \DomainException('รายการนี้ยังไม่พร้อมให้รับทราบ');
+        if ((int) $round->case_id !== (int) $case->id || $round->status !== 'waiting_acknowledgement') throw new \DomainException('รายการนี้ยังไม่พร้อมให้รับทราบ');
         if ((int) $case->director_employee_id !== $employeeId) throw new \DomainException('คุณไม่ได้รับมอบหมายให้รับทราบรายการนี้');
-        $ack = new ProbationAcknowledgement(['case_id' => $case->id, 'director_employee_id' => $employeeId, 'acknowledged_at' => date('Y-m-d H:i:s')]);
+        if ((int) $round->month_no === 3 && !$case->decision) throw new \DomainException('ยังไม่มีผลสรุปการจ้างสำหรับเดือนที่ 3');
+        if ($round->acknowledgement) throw new \DomainException('ผอ.รับทราบผลเดือนนี้แล้ว');
+        $ack = new ProbationAcknowledgement(['case_id' => $case->id, 'round_id' => $round->id, 'director_employee_id' => $employeeId, 'acknowledged_at' => date('Y-m-d H:i:s')]);
         if (!$ack->save()) throw new \RuntimeException(implode(', ', $ack->getFirstErrors()));
+        $round->status = 'completed';
+        $round->completed_at = date('Y-m-d H:i:s');
+        $round->save(false);
+        if ((int) $round->month_no < 3) {
+            $nextRound = ProbationRound::findOne(['case_id' => $case->id, 'month_no' => $round->month_no + 1]);
+            if ($nextRound->status === 'scheduled') {
+                $nextRound->status = 'waiting_self';
+                $nextRound->opened_at = date('Y-m-d H:i:s');
+                $nextRound->save(false);
+                $nextSelf = ProbationEvaluation::findOne(['round_id' => $nextRound->id, 'role' => 'self']);
+                $nextSelf->status = 'open';
+                $nextSelf->save(false);
+            }
+            $case->status = 'in_progress';
+            $case->save(false);
+            return;
+        }
         $case->status = $case->decision->recommendation === 'hire' ? 'completed_hire' : 'completed_no_hire';
-        $case->completed_at = date('Y-m-d H:i:s'); $case->save(false);
+        $case->completed_at = date('Y-m-d H:i:s');
+        $case->save(false);
     }
 }

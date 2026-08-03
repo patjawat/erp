@@ -20,8 +20,10 @@ $nextAction = static function ($case) use ($actorEmployee): ?array {
     if ((int)$case->final_recommender_employee_id === (int)$actorEmployee->id && $case->status === 'waiting_decision') {
         return ['label' => 'สรุปผลการจ้าง', 'url' => ['/hr/probation-appraisal/decision', 'id' => $case->id]];
     }
-    if ((int)$case->director_employee_id === (int)$actorEmployee->id && $case->status === 'waiting_acknowledgement') {
-        return ['label' => 'ตรวจและรับทราบผล', 'url' => ['/hr/probation-appraisal/view', 'id' => $case->id]];
+    foreach ($case->rounds as $round) {
+        if ((int)$case->director_employee_id === (int)$actorEmployee->id && $round->status === 'waiting_acknowledgement') {
+            return ['label' => 'รับทราบผลเดือนที่ '.$round->month_no, 'url' => ['/hr/probation-appraisal/view', 'id' => $case->id]];
+        }
     }
     return null;
 };

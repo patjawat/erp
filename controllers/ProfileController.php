@@ -137,7 +137,7 @@ class ProfileController extends \yii\web\Controller
             }
         } elseif ($model && $name === 'performance_appraisal') {
             $probationCases = ProbationCase::find()
-                ->with(['employee', 'template', 'rounds.evaluations.evaluator', 'decision', 'acknowledgement'])
+                ->with(['employee', 'template', 'rounds.evaluations.evaluator', 'rounds.acknowledgement', 'decision', 'acknowledgement'])
                 ->where(['or',
                     ['employee_id' => $model->id],
                     ['supervisor_employee_id' => $model->id],
@@ -151,7 +151,9 @@ class ProfileController extends \yii\web\Controller
                     if ((int)$evaluation->evaluator_employee_id === (int)$model->id && $evaluation->status === 'open') $probationActionCount++;
                 }
                 if ((int)$case->final_recommender_employee_id === (int)$model->id && $case->status === 'waiting_decision') $probationActionCount++;
-                if ((int)$case->director_employee_id === (int)$model->id && $case->status === 'waiting_acknowledgement') $probationActionCount++;
+                foreach ($case->rounds as $round) {
+                    if ((int)$case->director_employee_id === (int)$model->id && $round->status === 'waiting_acknowledgement') $probationActionCount++;
+                }
             }
         } elseif ($model && $name) {
             $searchModel = new EmployeeDetailSearch();

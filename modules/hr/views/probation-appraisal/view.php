@@ -65,10 +65,18 @@ $roundTone = static fn($round) => $round->status === 'completed' ? 'success' : (
                                 </div>
                             <?php endforeach ?>
                             <?php $directorStep = count($round->evaluations) + 1; ?>
-                            <div class="probation-step <?= $model->acknowledgement ? 'is-done' : ($model->status === 'waiting_acknowledgement' ? 'is-open' : '') ?>">
-                                <div class="probation-step__top"><span class="probation-step__sequence">ขั้นตอน <?= $directorStep ?></span><span class="probation-step__icon"><i data-lucide="<?= $model->acknowledgement ? 'check' : ($model->status === 'waiting_acknowledgement' ? 'eye' : 'lock') ?>"></i></span></div>
+                            <div class="probation-step <?= $round->acknowledgement ? 'is-done' : ($round->status === 'waiting_acknowledgement' ? 'is-open' : '') ?>">
+                                <div class="probation-step__top"><span class="probation-step__sequence">ขั้นตอน <?= $directorStep ?></span><span class="probation-step__icon"><i data-lucide="<?= $round->acknowledgement ? 'check' : ($round->status === 'waiting_acknowledgement' ? 'eye' : 'lock') ?>"></i></span></div>
                                 <strong>ผอ.รับทราบ</strong>
                                 <small class="d-block text-body-secondary mt-1"><?= Html::encode($model->director->fullname) ?></small>
+                                <?php if ($round->acknowledgement): ?>
+                                    <span class="badge bg-success-subtle text-success-emphasis mt-3">รับทราบแล้ว</span>
+                                <?php elseif ($currentEmployee && (int)$currentEmployee->id === (int)$model->director_employee_id && $round->status === 'waiting_acknowledgement'): ?>
+                                    <?= Html::beginForm(['acknowledge', 'id' => $model->id], 'post', ['class' => 'mt-3']) ?>
+                                    <?= Html::hiddenInput('round_id', $round->id) ?>
+                                    <?= Html::submitButton('รับทราบเดือนที่ '.$round->month_no, ['class' => 'btn btn-primary btn-sm']) ?>
+                                    <?= Html::endForm() ?>
+                                <?php endif ?>
                             </div>
                         </div>
                     </section>
@@ -81,8 +89,20 @@ $roundTone = static fn($round) => $round->status === 'completed' ? 'success' : (
                 <h2 class="h6">สรุปแฟ้ม</h2>
                 <dl class="mb-0"><dt class="text-body-secondary fw-normal mt-3">Template</dt><dd><?= Html::encode($model->template->name) ?> rev. <?= $model->template->revision_no ?></dd><dt class="text-body-secondary fw-normal">ผู้สรุปผล</dt><dd><?= Html::encode($model->finalRecommender->fullname) ?></dd><dt class="text-body-secondary fw-normal">สถานะ</dt><dd><?= Html::encode($model->statusLabel) ?></dd></dl>
                 <?php if ($model->decision): ?><hr><div class="probation-summary"><div><small class="text-body-secondary">คะแนนเฉลี่ย</small><strong class="d-block fs-4 probation-numeric"><?= number_format($model->decision->average_percent, 2) ?>%</strong></div></div><p class="mt-3 mb-0"><?= nl2br(Html::encode($model->decision->summary_comment)) ?></p><?php endif ?>
+                <hr>
+                <h2 class="h6 mb-2">พิมพ์แบบประเมิน</h2>
+                <p class="small text-body-secondary mb-2">เลือกเดือนที่ประเมินเสร็จแล้ว</p>
+                <div class="btn-group w-100" role="group" aria-label="เลือกเดือนสำหรับพิมพ์แบบประเมิน">
+                    <?php foreach ($rounds as $round): ?>
+                        <?php $canPrint = $round->status === 'completed' && ((int) $round->month_no !== 3 || $model->decision); ?>
+                        <?php if ($canPrint): ?>
+                            <?= Html::a('เดือน '.$round->month_no, ['pdf', 'id' => $model->id, 'month' => $round->month_no], ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener', 'aria-label' => 'พิมพ์แบบประเมินเดือนที่ '.$round->month_no]) ?>
+                        <?php else: ?>
+                            <?= Html::button('เดือน '.$round->month_no, ['class' => 'btn btn-outline-secondary', 'disabled' => true, 'title' => (int) $round->month_no === 3 && $round->status === 'completed' ? 'ยังไม่ได้สรุปผลการจ้าง' : 'ยังประเมินไม่เสร็จ']) ?>
+                        <?php endif ?>
+                    <?php endforeach ?>
+                </div>
                 <?php if ($currentEmployee && (int)$currentEmployee->id === (int)$model->final_recommender_employee_id && $model->status === 'waiting_decision'): ?><div class="d-grid mt-3"><?= Html::a('สรุปผลการจ้าง', ['decision', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></div><?php endif ?>
-                <?php if ($currentEmployee && (int)$currentEmployee->id === (int)$model->director_employee_id && $model->status === 'waiting_acknowledgement'): ?><div class="d-grid mt-3"><?= Html::beginForm(['acknowledge', 'id' => $model->id], 'post').Html::submitButton('รับทราบผลการประเมิน', ['class' => 'btn btn-primary w-100']).Html::endForm() ?></div><?php endif ?>
             </div>
         </aside>
     </div>

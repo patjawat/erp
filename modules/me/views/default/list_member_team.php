@@ -13,6 +13,26 @@ $listsMemberTeam = Employees::find()
 ->where(['department' => $deptIds, 'status' => 1])
 ->andWhere(['<>', 'id', (int) $me->id])->all();
 ?>
+        <?php if (($probationCaseCount ?? 0) > 0): ?>
+        <section class="card bg-body border shadow-sm p-3 mb-3" aria-labelledby="probation-task-title">
+            <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                    <h3 id="probation-task-title" class="h6 mb-1">งานประเมินทดลองงาน</h3>
+                    <p class="small text-body-secondary mb-0">รายการที่คุณได้รับมอบหมายโดยตรง</p>
+                </div>
+                <?php if (($probationTaskCount ?? 0) > 0): ?>
+                    <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"><?= number_format($probationTaskCount) ?> งาน</span>
+                <?php endif ?>
+            </div>
+            <div class="d-grid mt-3">
+                <?= Html::a(
+                    ($probationTaskCount ?? 0) > 0 ? 'เปิดงานที่ต้องดำเนินการ' : 'ดูรายการประเมิน',
+                    ['/hr/probation-appraisal/index'],
+                    ['class' => ($probationTaskCount ?? 0) > 0 ? 'btn btn-primary' : 'btn btn-outline-secondary']
+                ) ?>
+            </div>
+        </section>
+        <?php endif ?>
         <div class="row g-3 align-items-center justify-content-between mb-4 mt-4">
             <div class="col-12 col-sm-auto">
                 <div class="d-flex align-items-center">

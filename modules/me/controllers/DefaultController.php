@@ -12,6 +12,9 @@ use app\modules\dms\models\Documents;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\helpdesk\models\HelpdeskSearch;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\ProbationCase;
+use app\modules\hr\models\ProbationEvaluation;
+use app\modules\hr\models\ProbationRound;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
 use app\modules\usermanager\models\User;
@@ -57,6 +60,8 @@ class DefaultController extends Controller
         $appreciationReceivedCount = 0;
         $appreciationStatus = ['year'=>null,'earned'=>0,'used'=>0,'balance'=>0,'levelName'=>'เริ่มต้น','levelColor'=>'#2563eb','nextLevelName'=>null,'pointsToNext'=>0,'progress'=>0,'rewardsCount'=>0];
         $unreadDocumentCount = 0;
+        $probationCaseCount = 0;
+        $probationTaskCount = 0;
         try {
             $empId = (int) $model->id;
             $depId = (int) ($model->department ?? 0);
@@ -94,6 +99,27 @@ class DefaultController extends Controller
         }
         if ($model && $model->id) {
             try {
+                $probationCaseCount = (int) ProbationCase::find()->where(['or',
+                    ['employee_id' => $model->id],
+                    ['supervisor_employee_id' => $model->id],
+                    ['group_head_employee_id' => $model->id],
+                    ['director_employee_id' => $model->id],
+                ])->count();
+                $probationTaskCount = (int) ProbationEvaluation::find()
+                    ->where(['evaluator_employee_id' => $model->id, 'status' => 'open'])
+                    ->count();
+                $probationTaskCount += (int) ProbationCase::find()
+                    ->where(['final_recommender_employee_id' => $model->id, 'status' => 'waiting_decision'])
+                    ->count();
+                $probationTaskCount += (int) ProbationRound::find()->alias('r')
+                    ->innerJoin(['c' => ProbationCase::tableName()], 'c.id = r.case_id')
+                    ->where(['c.director_employee_id' => $model->id, 'r.status' => 'waiting_acknowledgement'])
+                    ->count();
+            } catch (\Throwable $e) {
+                $probationCaseCount = 0;
+                $probationTaskCount = 0;
+            }
+            try {
                 $todayCheckinCount = CheckinRecord::find()
                     ->andWhere(['emp_id' => $model->id])
                     ->andWhere(['>=', 'checkin_at', date('Y-m-d 00:00:00')])
@@ -127,6 +153,8 @@ class DefaultController extends Controller
             'appreciationReceivedCount' => $appreciationReceivedCount,
             'appreciationStatus' => $appreciationStatus,
             'unreadDocumentCount' => $unreadDocumentCount,
+            'probationCaseCount' => $probationCaseCount,
+            'probationTaskCount' => $probationTaskCount,
         ]);
     }
 
