@@ -63,7 +63,26 @@ pipeline {
         stage('Build Image') {
             steps {
                 script {
-                    docker.build(FULL_IMAGE_NAME)
+                    // ดึง image เดิมจาก registry มาเป็นแหล่ง cache ก่อน build
+                    // (workspace ถูก deleteDir ทุกครั้ง แต่ layer cache อยู่ที่ Docker daemon
+                    //  เมื่อรวมกับ inline cache ทำให้ build ครั้งถัดไป reuse layer composer ได้)
+                    docker.withRegistry(
+                        'https://index.docker.io/v1/',
+                        DOCKER_HUB_CREDENTIALS
+                    ) {
+                        sh '''
+                            set -e
+                            export DOCKER_BUILDKIT=1
+
+                            docker pull ${FULL_IMAGE_NAME} || true
+
+                            docker build \
+                                --cache-from ${FULL_IMAGE_NAME} \
+                                --build-arg BUILDKIT_INLINE_CACHE=1 \
+                                -t ${FULL_IMAGE_NAME} \
+                                .
+                        '''
+                    }
                 }
             }
         }

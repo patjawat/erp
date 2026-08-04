@@ -31,11 +31,19 @@ RUN apt update && apt install -y nano default-mysql-client
 # take longer than Composer's default process timeout to extract in Docker.
 ENV COMPOSER_PROCESS_TIMEOUT=0
 
-# Step 3: Copy ไฟล์ที่จำเป็นไปยัง image
+# Step 3: ติดตั้ง dependencies ก่อน copy source ทั้งหมด
+# copy เฉพาะ composer.json/composer.lock ก่อน แล้วโหลด deps — layer นี้จะถูก cache
+# ไว้ตราบใดที่ 2 ไฟล์นี้ไม่เปลี่ยน (แก้โค้ด .php ทั่วไปจะไม่ทำให้ต้องโหลด deps ใหม่)
+# ใช้ --no-scripts --no-autoloader เพราะ post-install script ต้องใช้ไฟล์ config
+# ที่ยังไม่ได้ copy เข้ามาในสเต็ปนี้
+COPY composer.json composer.lock /app/
+RUN composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress \
+    --no-scripts --no-autoloader
+
+# Step 4: Copy source ที่เหลือ แล้วรัน composer อีกครั้งเพื่อ gen autoloader + scripts
+# ตอนนี้ deps อยู่ใน vendor แล้ว (vendor/ อยู่ใน .dockerignore จึงไม่ถูกทับ) สเต็ปนี้
+# จะไม่ download อะไรใหม่ ทำแค่ dump-autoload + post-install scripts จึงเร็ว
 COPY ./ /app/
-
-# Step 4: ติดตั้ง dependencies ผ่าน composer
-
 RUN composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
