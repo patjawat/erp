@@ -73,10 +73,12 @@ pipeline {
                         sh '''
                             set -e
                             export DOCKER_BUILDKIT=1
+                            export BUILDKIT_PROGRESS=plain
 
                             docker pull ${FULL_IMAGE_NAME} || true
 
                             docker build \
+                                --progress=plain \
                                 --cache-from ${FULL_IMAGE_NAME} \
                                 --build-arg BUILDKIT_INLINE_CACHE=1 \
                                 -t ${FULL_IMAGE_NAME} \
