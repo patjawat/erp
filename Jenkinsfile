@@ -1,58 +1,136 @@
 pipeline {
     agent any
 
+    options {
+        // ป้องกัน Jenkins checkout อัตโนมัติซ้ำ
+        skipDefaultCheckout(true)
+
+        // เพิ่ม timestamp ใน Console Output
+        timestamps()
+
+        // ป้องกัน Build เดียวกันทำงานซ้อนกัน
+        disableConcurrentBuilds()
+
+        // จำกัดเวลารวมของ Pipeline
+        timeout(time: 90, unit: 'MINUTES')
+    }
+
     environment {
-        DOCKER_IMAGE = "erp"
-        DOCKER_TAG = "latest"
-        DOCKER_HUB_USER = "patjawat"
-        DOCKER_HUB_CREDENTIALS = "erp-docker-hub"
+        DOCKER_IMAGE = 'erp'
+        DOCKER_TAG = 'latest'
+        DOCKER_HUB_USER = 'patjawat'
+        DOCKER_HUB_CREDENTIALS = 'erp-docker-hub'
+
+        // ชื่อ image แบบเต็ม
+        FULL_IMAGE_NAME = "${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}"
     }
 
     stages {
 
-        stage('Cleanup') {
+        stage('Cleanup Workspace') {
             steps {
-                deleteDir() // ลบ workspace เก่าก่อน checkout
+                echo '🧹 Cleaning old workspace...'
+                deleteDir()
             }
         }
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/patjawat/erp.git'
+                echo '📥 Cloning source code...'
+
+                retry(3) {
+                    checkout([
+                        $class: 'GitSCM',
+
+                        branches: [[
+                            name: '*/main'
+                        ]],
+
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/patjawat/erp.git'
+                        ]],
+
+                        extensions: [
+                            [
+                                $class: 'CloneOption',
+                                shallow: true,
+                                depth: 1,
+                                noTags: true,
+                                honorRefspec: true,
+                                timeout: 60
+                            ],
+                            [
+                                $class: 'CheckoutOption',
+                                timeout: 60
+                            ]
+                        ]
+                    ])
+                }
+
+                sh '''
+                    echo "Current commit:"
+                    git log -1 --oneline
+                '''
             }
         }
 
         stage('Build Image') {
             steps {
+                echo "🐳 Building Docker image: ${FULL_IMAGE_NAME}"
+
                 script {
-                    // สร้าง Docker image
-                    docker.build("${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    docker.build(
+                        "${FULL_IMAGE_NAME}",
+                        '--pull .'
+                    )
                 }
             }
         }
 
         stage('Push Image') {
             steps {
+                echo "📤 Pushing Docker image: ${FULL_IMAGE_NAME}"
+
                 script {
-                    // login และ push ไป Docker Hub
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
-                        def app = docker.image("${DOCKER_HUB_USER}/${DOCKER_IMAGE}:${DOCKER_TAG}")
-                        app.push()
+                    docker.withRegistry(
+                        'https://index.docker.io/v1/',
+                        DOCKER_HUB_CREDENTIALS
+                    ) {
+                        docker.image("${FULL_IMAGE_NAME}").push()
                     }
                 }
             }
         }
     }
 
-        post {
-            always {
-                echo "🧹 Cleaning up Docker build cache..."
-                script {
-                    // ใช้ timeout เพื่อป้องกันขั้นตอนค้าง
-                    timeout(time: 1, unit: 'MINUTES') {
-                        sh 'docker system prune -af || true'
-                    }
+    post {
+        success {
+            echo '✅ Build and push completed successfully'
+        }
+
+        failure {
+            echo '❌ Pipeline failed'
+        }
+
+        aborted {
+            echo '⚠️ Pipeline was aborted'
+        }
+
+        always {
+            echo '🧹 Cleaning Jenkins workspace...'
+
+            script {
+                // ลบ workspace แต่ไม่ลบ Docker image และ build cache ทั้งเครื่อง
+                deleteDir()
+
+                // ล้างเฉพาะ container ที่หยุดแล้วและ image ชั่วคราว
+                timeout(time: 5, unit: 'MINUTES') {
+                    sh '''
+                        docker container prune -f || true
+                        docker image prune -f || true
+                    '''
                 }
             }
         }
+    }
 }
