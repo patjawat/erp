@@ -4,7 +4,6 @@
 use kartik\widgets\Select2;
 use yii\web\View;
 use yii\widgets\MaskedInput;
-// use karatae99\datepicker\DatePicker;
 use iamsaint\datetimepicker\Datetimepicker;
 ?>
 <div class="row">

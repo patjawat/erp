@@ -7,7 +7,6 @@ use kartik\tree\TreeView;
 
 use kartik\tree\TreeViewInput;
 
-// use muhsamsul\treeimage\TreeImage;
 use app\widgets\orgchart\TreeImage;
 use app\modules\hr\models\Organization;
 $this->title = "ผังโครงสร้างองค์กร";

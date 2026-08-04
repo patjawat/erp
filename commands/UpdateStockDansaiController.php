@@ -13,7 +13,6 @@ use app\modules\inventory\models\StockEvent;
 use Yii;
 use yii\console\Controller;
 use yii\helpers\BaseConsole;
-use Yiisoft\Arrays\ArrayHelper;
 
 /**
  * update แก้ไขรายการตำแหน่ให้เป็นล่าสุด.

@@ -2,9 +2,9 @@
 
 use app\modules\inventoryV2\models\Warehouse;
 use kartik\widgets\ActiveForm;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\View;
-use Yiisoft\Arrays\ArrayHelper;
 
 /* @var $this yii\web\View */
 

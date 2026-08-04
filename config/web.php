@@ -93,10 +93,6 @@ $config = [
         'LineMsg' => [
             'class' => 'app\components\LineMsg',
         ],
-        'image' => [
-            'class' => 'yii\image\ImageDriver',
-            'driver' => 'GD',  // GD or Imagick
-        ],
         'i18n' => [
             'translations' => [
                 'app*' => [
@@ -165,13 +161,6 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        'redis' => [
-            'class' => 'yii\redis\Connection',
-            'hostname' => 'redis',
-            'port' => env('REDIS_PORT'),
-            'database' => 0,
-        ],
-
         // Session เก็บใน DB เพื่อให้ Dashboard "กำลังออนไลน์" และ /usermanager/session ทำงานได้
         // ต้องรัน migration สร้างตาราง session ก่อน: php yii migrate --migrationPath=@app/migrations
         'session' => [

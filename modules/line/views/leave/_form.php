@@ -14,7 +14,6 @@ use kartik\widgets\Select2;
 use yii\helpers\ArrayHelper;
 use kartik\sortable\Sortable;
 use app\components\SiteHelper;
-// use karatae99\datepicker\DatePicker;
 use app\components\UserHelper;
 use kartik\widgets\ActiveForm;
 use app\widgets\FlatpickrWidget;
@@ -635,4 +634,3 @@ $js = <<< JS
 $this->registerJS($js, View::POS_END);
 
 ?>
-

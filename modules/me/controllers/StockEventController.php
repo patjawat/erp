@@ -11,7 +11,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\inventory\models\Stock;
 use app\modules\inventory\models\StockEvent;
 use app\modules\inventory\models\StockEventSearch;
-use Yiisoft\Arrays\ArrayHelper;
+use yii\helpers\ArrayHelper;
 
 /**
  * StockEventController implements the CRUD actions for StockEvent model.
