@@ -1124,15 +1124,15 @@ class ReceiveController extends Controller
      */
     protected function saveExpenseItemsAndReceipts(StockOrder $model)
     {
-        $expensePost = $this->request->post('ExpenseItems', []);
+        $expensePost = $this->request->post('ExpenseItems');
+        if ($expensePost === null) {
+            return;
+        }
         if (!is_array($expensePost)) {
             return;
         }
         $existing = $model->getExpenseItems();
-        $dir = \Yii::getAlias('@webroot/uploads/receive-receipts');
-        if (!is_dir($dir)) {
-            FileHelper::createDirectory($dir, 0755, true);
-        }
+        $dir = null;
         $expenseList = [];
         foreach ($expensePost as $i => $row) {
             $desc = trim($row['description'] ?? '');
@@ -1140,6 +1140,12 @@ class ReceiveController extends Controller
             $receiptPath = isset($existing[$i]['receipt_path']) ? $existing[$i]['receipt_path'] : null;
             $file = UploadedFile::getInstanceByName('ExpenseItems[' . $i . '][receipt]');
             if ($file && $file->error === \UPLOAD_ERR_OK) {
+                if ($dir === null) {
+                    $dir = \Yii::getAlias('@webroot/uploads/receive-receipts');
+                    if (!is_dir($dir)) {
+                        FileHelper::createDirectory($dir, 0755, true);
+                    }
+                }
                 $baseName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->baseName);
                 $name = $model->id . '_' . $i . '_' . $baseName . '.' . $file->extension;
                 $path = $dir . '/' . $name;
