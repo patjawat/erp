@@ -103,8 +103,13 @@ class ProbationAppraisalController extends Controller
         $evaluation = ProbationEvaluation::find()->with(['round.case.template.items', 'round.evaluations.evaluator', 'scores'])->where(['id' => $id])->one();
         if (!$evaluation) throw new NotFoundHttpException('ไม่พบแบบประเมิน');
         $employee = UserHelper::GetEmployee(); if (!$employee || (int) $evaluation->evaluator_employee_id !== (int) $employee->id) throw new ForbiddenHttpException('ไม่ใช่แบบประเมินที่มอบหมายให้คุณ');
+        if ($evaluation->status === 'submitted') {
+            Yii::$app->session->removeFlash('danger');
+            Yii::$app->session->setFlash('info', 'แบบประเมินนี้ส่งเรียบร้อยแล้ว คะแนนถูกบันทึกครบถ้วน');
+            return $this->redirect(['view', 'id' => $evaluation->round->case_id]);
+        }
         if (Yii::$app->request->isPost) {
-            try { $this->service->submitEvaluation($evaluation, (array) Yii::$app->request->post('scores', [])); Yii::$app->session->setFlash('success', 'ส่งผลประเมินเรียบร้อย'); return $this->redirect(['view', 'id' => $evaluation->round->case_id]); }
+            try { $this->service->submitEvaluation($evaluation, (array) Yii::$app->request->post('scores', []), (string) Yii::$app->request->post('comment', '')); Yii::$app->session->setFlash('success', 'ส่งผลประเมินเรียบร้อย'); return $this->redirect(['view', 'id' => $evaluation->round->case_id]); }
             catch (\Throwable $e) { Yii::$app->session->setFlash('danger', $e->getMessage()); }
         }
         return $this->render('evaluate', compact('evaluation'));

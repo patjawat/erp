@@ -8,6 +8,7 @@ class ProbationEvaluation extends ProbationActiveRecord
     public function rules() { return [
         [['round_id', 'evaluator_employee_id', 'role'], 'required'], [['round_id', 'evaluator_employee_id'], 'integer'],
         [['total_score', 'max_score', 'percent_score'], 'number'], [['submitted_at', 'reopened_at', 'reopen_reason'], 'safe'],
+        [['comment'], 'string'],
         ['role', 'in', 'range' => ['self', 'supervisor', 'group_head']], ['status', 'in', 'range' => ['pending', 'open', 'submitted']],
     ]; }
     public static function roleOptions() { return ['self' => 'ประเมินตนเอง', 'supervisor' => 'หัวหน้างานประเมิน', 'group_head' => 'หัวหน้ากลุ่มงานประเมิน']; }
