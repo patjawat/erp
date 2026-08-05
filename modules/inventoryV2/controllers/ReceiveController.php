@@ -598,6 +598,10 @@ class ReceiveController extends Controller
                 $model->data_json = $json;
 
                 $details = $this->request->post('StockDetail', []);
+                if (!is_array($details)) {
+                    throw new \InvalidArgumentException('รูปแบบรายการวัสดุไม่ถูกต้อง');
+                }
+                $details = $this->normalizeDetailExpiryDates($details);
                 if (!empty($details) && $model->main_warehouse_id) {
                     $warehouse = Warehouse::findOne($model->main_warehouse_id);
                     if ($warehouse) {
@@ -710,6 +714,13 @@ class ReceiveController extends Controller
                     $errors = implode(', ', $model->getFirstErrors());
                     throw new \Exception("ข้อมูลหลักไม่ถูกต้อง: " . $errors);
                 }
+            } catch (\yii\db\Exception $e) {
+                $transaction->rollBack();
+                \Yii::error($e, __METHOD__);
+                return [
+                    'success' => false,
+                    'message' => 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ'
+                ];
             } catch (\Exception $e) {
                 $transaction->rollBack();
                 return [
@@ -773,6 +784,12 @@ class ReceiveController extends Controller
                 $isDraft = false; // เอกสารรับเข้าคลังแล้ว ไม่ให้เปลี่ยนกลับเป็นร่าง
             }
 
+            $detailsData = $this->request->post('StockDetail', []);
+            if (!is_array($detailsData)) {
+                throw new \InvalidArgumentException('รูปแบบรายการวัสดุไม่ถูกต้อง');
+            }
+            $detailsData = $this->normalizeDetailExpiryDates($detailsData);
+
             // Reverse สต็อกเก่าเฉพาะเมื่อเอกสารเคยรับเข้าจริงแล้ว (CONFIRMED)
             if (!$wasDraft) {
                 foreach ($oldItems as $oldItem) {
@@ -815,7 +832,6 @@ class ReceiveController extends Controller
             }
             $model->data_json = $json;
 
-            $detailsData = $this->request->post('StockDetail', []);
             if (!empty($detailsData) && $model->main_warehouse_id) {
                 $warehouse = Warehouse::findOne($model->main_warehouse_id);
                 if ($warehouse) {
@@ -928,6 +944,13 @@ class ReceiveController extends Controller
                 throw new \Exception("ข้อมูลหัวเอกสารไม่ถูกต้อง: " . $errors);
             }
 
+        } catch (\yii\db\Exception $e) {
+            $transaction->rollBack();
+            \Yii::error($e, __METHOD__);
+            return [
+                'success' => false,
+                'message' => 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ'
+            ];
         } catch (\Exception $e) {
             $transaction->rollBack();
             return [
@@ -1163,6 +1186,38 @@ class ReceiveController extends Controller
         }
         $model->setExpenseItems($expenseList);
         $model->save(false);
+    }
+
+    /**
+     * แปลงวันหมดอายุของทุกรายการเป็น Y-m-d ก่อนส่งให้ StockDetail/MySQL
+     * รองรับทั้ง ค.ศ./พ.ศ. และรูปแบบ d/m/Y หรือ Y-m-d
+     */
+    protected function normalizeDetailExpiryDates(array $details)
+    {
+        $rowNum = 0;
+        foreach ($details as &$data) {
+            $rowNum++;
+            if (!is_array($data)) {
+                throw new \InvalidArgumentException('รายการที่ ' . $rowNum . ': รูปแบบข้อมูลไม่ถูกต้อง');
+            }
+
+            $raw = trim((string) ($data['expiry_date'] ?? ''));
+            if ($raw === '') {
+                $data['expiry_date'] = null;
+                continue;
+            }
+
+            $normalized = AppHelper::normalizeDateToDb($raw);
+            if ($normalized === null) {
+                throw new \InvalidArgumentException(
+                    'รายการที่ ' . $rowNum . ': วันหมดอายุไม่ถูกต้อง กรุณาใช้รูปแบบ วัน/เดือน/ปี เช่น 16/08/2571'
+                );
+            }
+            $data['expiry_date'] = $normalized;
+        }
+        unset($data);
+
+        return $details;
     }
 
     /**

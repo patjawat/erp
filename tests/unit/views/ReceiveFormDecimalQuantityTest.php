@@ -16,4 +16,14 @@ class ReceiveFormDecimalQuantityTest extends Unit
         $this->assertStringNotContainsString('qty-input" value="<?= $item->qty ?>" min="1" step="1"', $view);
         $this->assertStringNotContainsString('qty-input" value="1" min="1" step="1"', $view);
     }
+
+    public function testExpiryDateConversionAcceptsGregorianAndBuddhistYears(): void
+    {
+        $view = file_get_contents(__DIR__ . '/../../../modules/inventoryV2/views/receive/_form.php');
+
+        $this->assertNotFalse($view);
+        $this->assertStringContainsString('if (y >= 2400) y -= 543;', $view);
+        $this->assertStringContainsString("err.push('วันหมดอายุ (ใช้รูปแบบ วัน/เดือน/ปี)');", $view);
+        $this->assertStringNotContainsString('parseInt(p[2], 10) - 543', $view);
+    }
 }
