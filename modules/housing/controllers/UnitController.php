@@ -10,11 +10,13 @@ use app\modules\housing\models\AssetAssignment;
 use app\modules\housing\models\Building;
 use app\modules\housing\models\Floor;
 use app\modules\housing\models\LocationPhoto;
+use app\modules\housing\models\Meter;
 use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
 use app\modules\housing\services\HousingUploadService;
+use app\modules\housing\services\UnitStatusService;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\VerbFilter;
@@ -34,6 +36,8 @@ final class UnitController extends BaseController
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'delete-room' => ['POST'],
+                    'toggle-room-status' => ['POST'],
                     'delete-asset' => ['POST'],
                     'delete-photo' => ['POST'],
                     'set-primary-photo' => ['POST'],
@@ -190,18 +194,77 @@ final class UnitController extends BaseController
         return $this->saveRoom($room, $this->findModel((int) $room->unit_id));
     }
 
+    public function actionToggleRoomStatus(int $id)
+    {
+        $room = $this->findRoomModel($id);
+        $isInactive = $room->status === Unit::STATUS_INACTIVE;
+        if (!$isInactive && Occupancy::find()->where([
+            'unit_id' => $room->unit_id,
+            'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+        ])->andWhere(['or', ['room_id' => $room->id], ['room_id' => null]])->exists()) {
+            Yii::$app->session->setFlash('warning', 'ไม่สามารถปิดใช้งานห้องย่อยที่มีผู้พักหรือรอเข้าอยู่ได้');
+            return $this->redirect(['index']);
+        }
+
+        $room->updateAttributes(['status' => $isInactive ? Unit::STATUS_VACANT : Unit::STATUS_INACTIVE]);
+        if ($isInactive) {
+            (new UnitStatusService())->refresh((int) $room->unit_id);
+        }
+        Yii::$app->session->setFlash('success', $isInactive ? 'เปิดใช้งานห้องย่อยแล้ว' : 'ปิดใช้งานห้องย่อยแล้ว');
+        return $this->redirect(['index']);
+    }
+
+    public function actionDeleteRoom(int $id)
+    {
+        $room = $this->findRoomModel($id);
+        $hasReferences = Occupancy::find()->where(['room_id' => $room->id])->exists()
+            || AssetAssignment::find()->where(['room_id' => $room->id])->exists()
+            || LocationPhoto::find()->where(['room_id' => $room->id])->exists()
+            || Meter::find()->where(['room_id' => $room->id])->exists()
+            || MonthlyAccount::find()->where(['room_id' => $room->id])->exists();
+        if ($hasReferences) {
+            Yii::$app->session->setFlash('warning', 'ลบห้องย่อยนี้ไม่ได้ เนื่องจากมีประวัติผู้พัก อุปกรณ์ รูปภาพ มิเตอร์ หรือบัญชีรายเดือน กรุณาปิดใช้งานแทน');
+            return $this->redirect(['index']);
+        }
+
+        try {
+            if ($room->delete() === false) {
+                throw new \RuntimeException('ไม่สามารถลบห้องย่อยได้');
+            }
+            Yii::$app->session->setFlash('success', 'ลบห้องย่อยแล้ว');
+        } catch (\Throwable $exception) {
+            Yii::error($exception, __METHOD__);
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบห้องย่อยได้ เนื่องจากยังมีข้อมูลที่เกี่ยวข้อง');
+        }
+        return $this->redirect(['index']);
+    }
+
     private function saveRoom(Room $model, Unit $unit)
     {
         $isNew = $model->isNewRecord;
         if ($model->load(Yii::$app->request->post())) {
             $model->unit_id = $unit->id;
-            if ($model->save()) {
+            if (!$isNew && $model->status === Unit::STATUS_INACTIVE
+                && $model->isAttributeChanged('status')
+                && Occupancy::find()->where([
+                    'unit_id' => $model->unit_id,
+                    'status' => [Occupancy::STATUS_ALLOCATED, Occupancy::STATUS_ACTIVE],
+                ])->andWhere(['or', ['room_id' => $model->id], ['room_id' => null]])->exists()) {
+                $model->addError('status', 'ปิดใช้งานไม่ได้ เนื่องจากมีผู้พักหรือรอเข้าอยู่');
+            }
+            if (!$model->hasErrors() && $model->save()) {
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return ['status' => 'success', 'message' => $isNew ? 'เพิ่มห้องย่อยเรียบร้อย' : 'บันทึกห้องย่อยเรียบร้อย', 'container' => '#housing-unit-container'];
                 }
                 return $this->redirect(['index']);
             }
+        }
+        if (Yii::$app->request->isPost && Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['errors' => $model->hasErrors()
+                ? $this->activeFormErrors($model)
+                : ActiveForm::validate($model)];
         }
         $params = ['model' => $model, 'unit' => $unit];
         if (Yii::$app->request->isAjax) {
