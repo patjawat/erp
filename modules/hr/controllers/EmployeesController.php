@@ -288,15 +288,23 @@ class EmployeesController extends Controller
         $isSelf = $me && (int) $model->id === (int) $me->id;
         $isHr = Yii::$app->user->can('hr');
         $isManager = $me && $me->canManageWorkProfileOf($model);
+        $isProbationAssignee = $me && ProbationCase::find()
+            ->where(['employee_id' => (int) $model->id])
+            ->andWhere(['or',
+                ['supervisor_employee_id' => (int) $me->id],
+                ['group_head_employee_id' => (int) $me->id],
+                ['director_employee_id' => (int) $me->id],
+                ['final_recommender_employee_id' => (int) $me->id],
+            ])->exists();
 
-        if (!$isSelf && !$isHr && !$isManager) {
+        if (!$isSelf && !$isHr && !$isManager && !$isProbationAssignee) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         $requestedManagerView = $this->request->get('view') === 'manager';
-        $profileMode = $requestedManagerView && ($isManager || $isHr)
+        $profileMode = $requestedManagerView && ($isManager || $isHr || $isProbationAssignee)
             ? 'manager'
-            : ($isManager && !$isHr ? 'manager' : ($isSelf ? 'self' : 'hr'));
+            : (($isManager || $isProbationAssignee) && !$isHr ? 'manager' : ($isSelf ? 'self' : 'hr'));
         $managerSections = [
             '', 'employment_contract', 'position_history', 'job_description_history',
             'kpi', 'license', 'develop', 'idp', 'training_roadmap',
@@ -329,9 +337,18 @@ class EmployeesController extends Controller
             $idpPlan = $idpCycle ? IdpPlan::find()->where(['cycle_id' => $idpCycle->id, 'emp_id' => $model->id])
                 ->with(['cycle', 'employee', 'supervisor', 'goals.activities'])->one() : null;
         } elseif ($name === 'performance_appraisal') {
-            $probationCases = ProbationCase::find()
+            $probationQuery = ProbationCase::find()
                 ->with(['employee', 'template', 'rounds.evaluations.evaluator', 'decision', 'acknowledgement'])
-                ->where(['employee_id' => $model->id])
+                ->where(['employee_id' => $model->id]);
+            if ($isProbationAssignee && !$isManager && !$isHr) {
+                $probationQuery->andWhere(['or',
+                    ['supervisor_employee_id' => (int) $me->id],
+                    ['group_head_employee_id' => (int) $me->id],
+                    ['director_employee_id' => (int) $me->id],
+                    ['final_recommender_employee_id' => (int) $me->id],
+                ]);
+            }
+            $probationCases = $probationQuery
                 ->orderBy(['updated_at' => SORT_DESC, 'id' => SORT_DESC])->all();
             if ($me) {
                 foreach ($probationCases as $case) {

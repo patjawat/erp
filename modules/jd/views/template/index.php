@@ -20,7 +20,8 @@ $statusClasses = ['draft' => 'jd-status--draft', 'review' => 'jd-status--review'
 <div><h4 class="fw-semibold mb-1">คลัง Template JD</h4><div class="text-muted small">จัดทำ Template มาตรฐานและ Template เฉพาะลักษณะงานของแต่ละตำแหน่ง</div></div>
 <?php $this->endBlock(); ?>
 <?php
-$pageAction = Html::a('<i class="bi bi-plus-lg me-1"></i>สร้าง Template', ['create'], ['class' => 'btn btn-primary']);
+$pageAction = Html::a('<i class="bi bi-list-nested me-1"></i>จัดการโครงสร้าง', ['default-structure'], ['class' => 'btn btn-outline-secondary me-2'])
+    . Html::a('<i class="bi bi-plus-lg me-1"></i>สร้าง Template', ['create'], ['class' => 'btn btn-primary']);
 foreach (['action', 'page-action'] as $actionBlock) {
     $this->beginBlock($actionBlock);
     echo $pageAction;

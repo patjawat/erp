@@ -17,6 +17,10 @@ use app\modules\jd\models\JdEmployee;
 use app\modules\jd\models\JdEmployeeAcknowledgement;
 use app\modules\jd\models\JdChangeRequest;
 use app\modules\hr\models\IdpPlan;
+use app\modules\hr\models\ProbationCase;
+use app\modules\hr\models\ProbationEvaluation;
+use app\modules\hr\models\ProbationRound;
+use app\modules\housing\models\Handover;
 
 // การแจ้งเตือนต่างๆ
 class ApproveHelper extends Component
@@ -28,10 +32,12 @@ class ApproveHelper extends Component
         $jdSignature = self::JdSignature();
         $jdChangeReview = self::JdChangeReview();
         $idp = self::Idp();
+        $probation = self::Probation();
+        $housingHandover = self::HousingHandover();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -44,7 +50,108 @@ class ApproveHelper extends Component
             'jd_signature' => $jdSignature,
             'jd_change_review' => $jdChangeReview,
             'idp' => $idp,
+            'probation' => $probation,
+            'housing_handover' => $housingHandover,
         ];
+    }
+
+    public static function HousingHandover(): array
+    {
+        $default = ['title' => 'ลงนามรับรองบ้านพัก', 'total' => 0, 'datas' => []];
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return $default;
+            }
+
+            $rows = Handover::find()
+                ->where([
+                    'received_by_emp_id' => (int) $me->id,
+                    'status' => Handover::STATUS_DRAFT,
+                    'received_signed_at' => null,
+                ])
+                ->andWhere(['is not', 'handed_over_signed_at', null])
+                ->orderBy(['handover_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+
+            return [
+                'title' => 'ลงนามรับรองบ้านพัก',
+                'total' => count($rows),
+                'datas' => $rows,
+            ];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load housing handover notifications: ' . $th->getMessage(), __METHOD__);
+            return $default;
+        }
+    }
+
+    public static function Probation(): array
+    {
+        $default = ['title' => 'ประเมินทดลองงาน', 'total' => 0, 'datas' => []];
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) return $default;
+
+            $items = [];
+            $evaluations = ProbationEvaluation::find()
+                ->alias('evaluation')
+                ->joinWith(['round.case.employee'])
+                ->where([
+                    'evaluation.evaluator_employee_id' => (int) $me->id,
+                    'evaluation.role' => 'group_head',
+                    'evaluation.status' => 'open',
+                ])
+                ->orderBy(['evaluation.id' => SORT_ASC])
+                ->all();
+            foreach ($evaluations as $evaluation) {
+                $case = $evaluation->round->case;
+                $items[] = [
+                    'employee' => $case->employee,
+                    'title' => 'ประเมินทดลองงาน เดือนที่ ' . $evaluation->round->month_no,
+                    'detail' => 'รอการประเมินโดยหัวหน้ากลุ่มงานหรือผู้ที่ได้รับมอบหมาย',
+                    'url' => ['/hr/employees/view', 'id' => $case->employee_id, 'name' => 'performance_appraisal', 'view' => 'manager'],
+                ];
+            }
+
+            $decisionCases = ProbationCase::find()
+                ->with('employee')
+                ->where(['final_recommender_employee_id' => (int) $me->id, 'status' => 'waiting_decision'])
+                ->andWhere(['<>', 'supervisor_employee_id', (int) $me->id])
+                ->orderBy(['updated_at' => SORT_ASC])
+                ->all();
+            foreach ($decisionCases as $case) {
+                $items[] = [
+                    'employee' => $case->employee,
+                    'title' => 'สรุปผลการทดลองงาน',
+                    'detail' => 'รอบันทึกข้อเสนอจ้างต่อหรือไม่จ้างต่อ',
+                    'url' => ['/hr/employees/view', 'id' => $case->employee_id, 'name' => 'performance_appraisal', 'view' => 'manager'],
+                ];
+            }
+
+            $directorRounds = ProbationRound::find()
+                ->alias('round')
+                ->joinWith(['case.employee'])
+                ->where([
+                    'round.status' => 'waiting_acknowledgement',
+                    'probation_case.director_employee_id' => (int) $me->id,
+                ])
+                ->orderBy(['round.id' => SORT_ASC])
+                ->all();
+            foreach ($directorRounds as $round) {
+                $case = $round->case;
+                $items[] = [
+                    'employee' => $case->employee,
+                    'title' => 'รับทราบผลทดลองงาน เดือนที่ ' . $round->month_no,
+                    'detail' => 'รอผู้อำนวยการรับทราบผลการประเมิน',
+                    'url' => ['/hr/employees/view', 'id' => $case->employee_id, 'name' => 'performance_appraisal', 'view' => 'manager'],
+                ];
+            }
+
+            return ['title' => 'ประเมินทดลองงาน', 'total' => count($items), 'datas' => $items];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load probation notifications: ' . $th->getMessage(), __METHOD__);
+            return $default;
+        }
     }
 
     /**

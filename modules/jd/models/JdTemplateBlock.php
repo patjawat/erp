@@ -55,6 +55,28 @@ class JdTemplateBlock extends ActiveRecord
         ];
     }
 
+    public static function hospitalDefinitions(bool $enabledOnly = true): array
+    {
+        $defaults = JdStructureDefault::ordered();
+        if ($defaults === []) {
+            return self::definitions();
+        }
+
+        $definitions = [];
+        $number = 1;
+        foreach ($defaults as $default) {
+            if ($enabledOnly && !(int) $default->is_enabled) {
+                continue;
+            }
+            $definitions[$default->section_code] = [
+                $number . '. ' . $default->title,
+                $default->block_type,
+            ];
+            $number++;
+        }
+        return $definitions;
+    }
+
     public static function editorColumns(string $type): array
     {
         $map = [
@@ -93,16 +115,43 @@ class JdTemplateBlock extends ActiveRecord
 
     public static function ensureForTemplate(int $templateId): void
     {
+        $defaults = JdStructureDefault::ordered();
+        if ($defaults !== []) {
+            $enabledCodes = [];
+            $order = 10;
+            $displayNumber = 1;
+            foreach ($defaults as $default) {
+                $code = (string) $default->section_code;
+                $enabledCodes[] = $code;
+                $block = self::findOne(['template_id' => $templateId, 'section_code' => $code]);
+                if (!$block) {
+                    $block = new self(['template_id' => $templateId, 'section_code' => $code]);
+                    $block->setData(['intro' => '', 'items' => []]);
+                }
+                $block->title = $displayNumber . '. ' . $default->title;
+                $block->block_type = $default->block_type;
+                $block->sort_order = $order;
+                $block->is_enabled = $default->is_enabled;
+                $block->save(false);
+                if ((int) $default->is_enabled === 1) {
+                    $displayNumber++;
+                }
+                $order += 10;
+            }
+            self::updateAll(['is_enabled' => 0], ['and', ['template_id' => $templateId], ['not in', 'section_code', $enabledCodes]]);
+            return;
+        }
+
         $order = 10;
         foreach (self::definitions() as $code => [$title, $type]) {
             $block = self::findOne(['template_id' => $templateId, 'section_code' => $code]);
             if (!$block) {
                 $block = new self(['template_id' => $templateId, 'section_code' => $code]);
+                $block->title = $title;
+                $block->block_type = $type;
+                $block->sort_order = $order;
+                $block->save(false);
             }
-            $block->title = $title;
-            $block->block_type = $type;
-            $block->sort_order = $order;
-            $block->save(false);
             $order += 10;
         }
         self::updateAll(['is_enabled' => 0], ['template_id' => $templateId, 'section_code' => 'authority']);

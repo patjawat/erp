@@ -553,22 +553,46 @@ class DocumentsController extends \yii\web\Controller
             ];
         }
 
-        $ids = $this->request->post('ids', []);
+        $markAllUnread = $this->request->post('mark_all_unread') === '1';
+        if ($markAllUnread) {
+            $unreadQuery = $this->applyDocumentsIndexBaseQuery(
+                Documents::find(),
+                (int) $emp->id,
+                (int) ($emp->department ?? 0),
+                self::HOME_DETAIL_NAMES,
+                self::HOME_DETAIL_NAMES
+            );
+            $ids = $unreadQuery
+                ->andWhere(['tr.id' => null])
+                ->select([new \yii\db\Expression('COALESCE(MIN(te.id), MIN(td.id))')])
+                ->column();
+        } else {
+            $ids = $this->request->post('ids', []);
+        }
         if (!is_array($ids)) {
             $ids = [];
         }
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
 
-        if ($ids === []) {
+        if ($ids === [] && !$markAllUnread) {
             return [
                 'status' => 'error',
                 'message' => 'กรุณาเลือกรายการอย่างน้อย 1 รายการ',
             ];
         }
 
+        if ($ids === []) {
+            return [
+                'status' => 'success',
+                'message' => 'ไม่มีหนังสือที่ยังไม่ได้อ่าน',
+                'totalCount' => 0,
+            ];
+        }
+
         $count = 0;
+        $details = DocumentsDetail::find()->where(['id' => $ids])->indexBy('id')->all();
         foreach ($ids as $detailId) {
-            $detail = DocumentsDetail::findOne($detailId);
+            $detail = $details[$detailId] ?? null;
             if (!$detail) {
                 continue;
             }

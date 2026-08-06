@@ -16,6 +16,8 @@ use app\modules\jd\models\JdEmployeeAcknowledgement;
 use app\modules\approveV2\models\Approve;
 use app\modules\jd\services\JdApprovalService;
 use app\modules\hr\models\Organization;
+use app\modules\hr\models\EmployeePosition;
+use app\modules\hr\models\EmployeeType;
 use app\modules\kpi\models\KpiCycle;
 use app\modules\kpi\models\KpiItem;
 use app\modules\kpi\services\KpiService;
@@ -88,7 +90,17 @@ class WorkforceController extends Controller
         $jdByEmployee = [];
         $approvalByJd = [];
         $acknowledgedJdIds = [];
+        $jdDepartments = [];
+        $jdPositions = [];
+        $jdEmployeeTypes = [];
         if ($section === 'jd') {
+            $jdDepartments = Organization::find()
+                ->where(['>=', 'lvl', 1])
+                ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+                ->all();
+            $jdPositions = EmployeePosition::listItems();
+            $jdEmployeeTypes = EmployeeType::listItems();
+
             $employeeQuery = Employees::find()
                 ->with(['empDepartment', 'employeePosition', 'positionLevel'])
                 ->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC, 'id' => SORT_ASC]);
@@ -102,6 +114,30 @@ class WorkforceController extends Controller
                     ['like', 'lname', $keyword],
                     ['like', 'position_name', $keyword],
                 ]);
+            }
+
+            $departmentId = (int) Yii::$app->request->get('jd_department');
+            if ($departmentId > 0) {
+                $department = Organization::findOne($departmentId);
+                if ($department) {
+                    $departmentIds = Organization::find()
+                        ->select('id')
+                        ->where(['root' => $department->root])
+                        ->andWhere(['>=', 'lft', $department->lft])
+                        ->andWhere(['<=', 'rgt', $department->rgt])
+                        ->column();
+                    $employeeQuery->andWhere(['department' => $departmentIds ?: [$departmentId]]);
+                }
+            }
+
+            $positionId = (int) Yii::$app->request->get('jd_position');
+            if ($positionId > 0) {
+                $employeeQuery->andWhere(['employee_position_id' => $positionId]);
+            }
+
+            $employeeTypeId = (int) Yii::$app->request->get('jd_employee_type');
+            if ($employeeTypeId > 0) {
+                $employeeQuery->andWhere(['employee_type_id' => $employeeTypeId]);
             }
 
             $jdDataProvider = new ActiveDataProvider([
@@ -220,6 +256,9 @@ class WorkforceController extends Controller
             'jdByEmployee' => $jdByEmployee,
             'approvalByJd' => $approvalByJd,
             'acknowledgedJdIds' => $acknowledgedJdIds,
+            'jdDepartments' => $jdDepartments,
+            'jdPositions' => $jdPositions,
+            'jdEmployeeTypes' => $jdEmployeeTypes,
             'kpiDataProvider' => $kpiDataProvider,
             'kpiByEmployee' => $kpiByEmployee,
             'kpiItemCounts' => $kpiItemCounts,

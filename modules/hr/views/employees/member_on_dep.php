@@ -46,8 +46,8 @@ $total  = 0;
                     <?php  foreach($model->listMenberOnDep() as  $key => $emp):?>
 
                     <?php if($key < 11):?>
-                    <a href="<?=Url::to(['/hr/employees/view','id' => $emp->id])?>" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                        title="" data-bs-title="<?php // $emp->fullname?>">
+                    <a href="<?=Url::to(['/hr/employees/view','id' => $emp->id, 'name' => 'performance_appraisal', 'view' => 'manager'])?>" class="me-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="" data-bs-title="<?= Html::encode($emp->fullname) ?> · ประเมินทดลองงาน">
 
 
                         <?php if($model->id == $emp->id):?>

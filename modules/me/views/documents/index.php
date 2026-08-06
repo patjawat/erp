@@ -114,6 +114,16 @@ $isTableView = Yii::$app->request->get('view', 'list') !== 'grid';
                         ทะเบียนหนังสือ <?= number_format($dataProvider->getTotalCount(),0)?> รายการ
                     </h6>
                     <div class="d-flex flex-wrap align-items-center gap-2 w-lg-auto justify-content-start justify-content-lg-end ms-lg-auto">
+                        <?php if ((int) ($documentSummaryCounts['unread'] ?? 0) > 0): ?>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-primary"
+                                id="btn-documents-read-all-unread"
+                                data-url="<?= Html::encode($bulkReadUrl) ?>"
+                                data-count="<?= (int) $documentSummaryCounts['unread'] ?>">
+                                <i class="bi bi-envelope-open me-1" aria-hidden="true"></i>
+                                อ่านหนังสือที่ยังไม่อ่านทั้งหมด
+                            </button>
+                        <?php endif; ?>
                         <?= Html::a('<i class="fa-solid fa-circle-plus me-1" aria-hidden="true"></i> ลงทะเบียน', ['/dms/documents/create'], [
                             'class' => 'btn btn-sm btn-primary text-white shadow-sm open-modal',
                             'data' => ['size' => 'modal-fullscreen'],
@@ -309,6 +319,71 @@ $(document).ready(function() {
             toggleRowState(\$(this));
         });
         updateBulkReadBar();
+    });
+
+    function submitBulkRead(data, url) {
+        data[{$csrfParamJs}] = {$csrfTokenJs};
+
+        Swal.fire({
+            title: 'กำลังบันทึก...',
+            allowOutsideClick: false,
+            didOpen: function () {
+                Swal.showLoading();
+            }
+        });
+
+        $.ajax({
+            type: 'post',
+            url: url,
+            dataType: 'json',
+            data: data,
+            success: function (res) {
+                if (res && res.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกแล้ว',
+                        text: res.message || 'อัปเดตสถานะอ่านเรียบร้อย',
+                        timer: 1300,
+                        showConfirmButton: false
+                    }).then(function () {
+                        window.location.reload();
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สำเร็จ',
+                    text: (res && res.message) ? res.message : 'ไม่สามารถบันทึกสถานะอ่านได้'
+                });
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่สำเร็จ',
+                    text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'
+                });
+            }
+        });
+    }
+
+    $('body').on('click', '#btn-documents-read-all-unread', function (e) {
+        e.preventDefault();
+
+        var url = $(this).data('url');
+        var count = Number($(this).data('count')) || 0;
+        Swal.fire({
+            title: 'เปลี่ยนหนังสือทั้งหมดเป็นอ่านแล้ว?',
+            text: 'หนังสือที่ยังไม่อ่านทั้ง ' + count + ' ฉบับจะเปลี่ยนเป็นอ่านแล้ว รวมรายการในหน้าอื่นด้วย',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'เปลี่ยนทั้งหมดเป็นอ่านแล้ว',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                submitBulkRead({ mark_all_unread: '1' }, url);
+            }
+        });
     });
 
     $('body').on('click', '#btn-documents-bulk-read', function (e) {

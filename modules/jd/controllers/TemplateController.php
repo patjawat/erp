@@ -14,6 +14,7 @@ use app\modules\jd\models\JdTemplate;
 use app\modules\jd\models\JdTemplateSearch;
 use app\modules\jd\models\JdTemplateSection;
 use app\modules\jd\models\JdTemplateBlock;
+use app\modules\jd\models\JdStructureDefault;
 use app\modules\jd\services\JdAiDraftService;
 use app\modules\jd\data\MophSeedData;
 use app\modules\jd\components\RichText;
@@ -41,6 +42,7 @@ class TemplateController extends Controller
                     'copy'          => ['POST'],
                     'new-revision'  => ['POST'],
                     'ai-draft'      => ['POST'],
+                    'default-structure' => ['GET', 'POST'],
                 ],
             ],
         ]);
@@ -167,7 +169,129 @@ class TemplateController extends Controller
             }
         }
 
-        return $this->render('structure', ['model' => $model]);
+        $structureDefaults = [];
+        foreach (JdStructureDefault::ordered() as $default) {
+            $structureDefaults[$default->section_code] = $default;
+        }
+        return $this->render('structure', ['model' => $model, 'structureDefaults' => $structureDefaults]);
+    }
+
+    public function actionDefaultStructure()
+    {
+        if (Yii::$app->db->getTableSchema(JdStructureDefault::tableName(), true) === null) {
+            throw new \RuntimeException('ยังไม่ได้ติดตั้งตารางโครงสร้างเริ่มต้น กรุณารัน migration ก่อนใช้งาน');
+        }
+
+        if (Yii::$app->request->isPost) {
+            $raw = (string) Yii::$app->request->post('structure', '');
+            $rows = json_decode($raw, true);
+            if (!is_array($rows)) {
+                Yii::$app->session->setFlash('error', 'รูปแบบข้อมูลโครงสร้างไม่ถูกต้อง');
+                return $this->redirect(['default-structure']);
+            }
+
+            try {
+                $this->saveDefaultStructure($rows);
+                Yii::$app->session->setFlash('success', 'บันทึกโครงสร้างเริ่มต้นของโรงพยาบาลแล้ว');
+            } catch (\Throwable $e) {
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+            return $this->redirect(['default-structure']);
+        }
+
+        return $this->render('default-structure', [
+            'models' => JdStructureDefault::ordered(),
+            'typeOptions' => JdStructureDefault::typeOptions(),
+        ]);
+    }
+
+    private function saveDefaultStructure(array $rows): void
+    {
+        $typeOptions = JdStructureDefault::typeOptions();
+        $normalized = [];
+        $seenCodes = [];
+        $approval = null;
+
+        foreach ($rows as $index => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $code = preg_replace('/[^a-z0-9_]/', '', strtolower(trim((string) ($row['section_code'] ?? ''))));
+            $title = trim(strip_tags((string) ($row['title'] ?? '')));
+            $type = (string) ($row['block_type'] ?? 'named_items');
+            $helpText = trim(strip_tags((string) ($row['help_text'] ?? '')));
+            if ($code === '' || $title === '') {
+                throw new \RuntimeException('กรุณาระบุชื่อหัวข้อให้ครบทุกรายการ');
+            }
+            if (isset($seenCodes[$code])) {
+                throw new \RuntimeException('พบหัวข้อซ้ำในโครงสร้าง');
+            }
+            if (!isset($typeOptions[$type])) {
+                throw new \RuntimeException('รูปแบบข้อมูลของหัวข้อ “' . $title . '” ไม่ถูกต้อง');
+            }
+            $seenCodes[$code] = true;
+            $item = [
+                'section_code' => $code,
+                'title' => mb_substr($title, 0, 255),
+                'block_type' => $type,
+                'help_text' => mb_substr($helpText, 0, 500),
+                'is_enabled' => !empty($row['is_enabled']) ? 1 : 0,
+                'is_locked' => $code === 'approval' ? 1 : 0,
+            ];
+            if ($code === 'approval') {
+                $item['block_type'] = 'approval';
+                $item['is_enabled'] = 1;
+                $approval = $item;
+            } else {
+                $normalized[] = $item;
+            }
+        }
+
+        if ($approval === null) {
+            $approvalModel = JdStructureDefault::findOne(['section_code' => 'approval']);
+            $approval = [
+                'section_code' => 'approval',
+                'title' => $approvalModel?->title ?: 'การอนุมัติเอกสาร',
+                'block_type' => 'approval',
+                'help_text' => $approvalModel?->help_text ?: '',
+                'is_enabled' => 1,
+                'is_locked' => 1,
+            ];
+        }
+        $normalized[] = $approval;
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $savedCodes = [];
+            foreach ($normalized as $index => $row) {
+                $model = JdStructureDefault::findOne(['section_code' => $row['section_code']]) ?: new JdStructureDefault();
+                $model->setAttributes($row);
+                $model->sort_order = ($index + 1) * 10;
+                if (!$model->save()) {
+                    throw new \RuntimeException(implode(', ', $model->getFirstErrors()));
+                }
+                $savedCodes[] = $model->section_code;
+            }
+
+            $removedCodes = JdStructureDefault::find()
+                ->select('section_code')
+                ->where(['not in', 'section_code', $savedCodes])
+                ->column();
+            if ($removedCodes !== []) {
+                JdStructureDefault::deleteAll(['section_code' => $removedCodes]);
+                JdTemplateBlock::updateAll(['is_enabled' => 0], ['section_code' => $removedCodes]);
+            }
+
+            $templateIds = JdTemplate::find()->select('id')->column();
+            foreach ($templateIds as $templateId) {
+                JdTemplateBlock::ensureForTemplate((int) $templateId);
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
     }
 
     public function actionCopy($id)
