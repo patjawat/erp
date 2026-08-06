@@ -8,21 +8,21 @@ use yii\widgets\Pjax;
 $this->title = 'ห้องพักและห้องย่อย';
 
 /**
- * รวมรายชื่อผู้พักของห้อง (ทั้งห้อง + รายห้องย่อย) เป็นบรรทัดพร้อมป้ายกำกับ
- * @return list<array{label:string,occ:Occupancy}>
+ * รวมรายชื่อผู้พักของห้องทั้งระดับห้องหลักและห้องย่อยตามลำดับที่แสดง
+ * @return list<Occupancy>
  */
-$occupantLines = static function (Unit $unit) use ($occupants): array {
+$occupantList = static function (Unit $unit) use ($occupants): array {
     $map = $occupants[$unit->id] ?? [];
-    $lines = [];
+    $list = [];
     foreach ($map[0] ?? [] as $occ) {
-        $lines[] = ['label' => '', 'occ' => $occ];
+        $list[] = $occ;
     }
     foreach ($unit->rooms as $room) {
         foreach ($map[$room->id] ?? [] as $occ) {
-            $lines[] = ['label' => $room->code, 'occ' => $occ];
+            $list[] = $occ;
         }
     }
-    return $lines;
+    return $list;
 };
 $occupantName = static fn(Occupancy $occ): string => $occ->employee?->fullname() ?: 'บุคลากร #' . $occ->emp_id;
 $roomActions = static function (Unit $unit, Room $room, bool $mobile = false): string {
@@ -81,7 +81,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <td><?= Html::encode($model->building->name ?? '—') ?><div class="small text-body-secondary"><?= Html::encode($model->floor->name ?? 'ไม่ระบุชั้น') ?></div></td>
 <td><?= Html::encode(Unit::modeOptions()[$model->occupancy_mode] ?? $model->occupancy_mode) ?></td>
 <td><?php if ($model->rooms): foreach ($model->rooms as $room): ?><div class="d-flex align-items-center gap-1 mb-1"><?= Html::a(Html::encode($room->code), ['view', 'id' => $model->id, 'room_id' => $room->id], ['class' => 'badge bg-body-secondary text-body text-decoration-none', 'title' => 'ดูรายละเอียดห้องย่อย']) ?><span class="small text-body-secondary"><?= Html::encode(Unit::statusOptions()[$room->status] ?? $room->status) ?></span><?= $roomActions($model, $room) ?></div><?php endforeach; else: ?><span class="text-body-secondary">—</span><?php endif; ?></td>
-<td><?php $lines = $occupantLines($model); if ($lines): foreach ($lines as $line): $occ = $line['occ']; ?><div class="small text-nowrap"><?php if ($line['label']): ?><span class="badge bg-body-secondary text-body me-1"><?= Html::encode($line['label']) ?></span><?php endif; ?><i class="bi bi-person text-body-secondary me-1" style="font-size:14px"></i><?= Html::encode($occupantName($occ)) ?><?php if ($occ->status === Occupancy::STATUS_ALLOCATED): ?> <span class="badge bg-warning-subtle text-warning-emphasis">รอเข้าอยู่</span><?php endif; ?></div><?php endforeach; else: ?><span class="text-body-secondary">—</span><?php endif; ?></td>
+<td><?php $occupancyList = $occupantList($model); if ($occupancyList): foreach ($occupancyList as $occ): ?><div class="small text-nowrap"><i class="bi bi-person text-body-secondary me-1" style="font-size:14px"></i><?= Html::encode($occupantName($occ)) ?><?php if ($occ->status === Occupancy::STATUS_ALLOCATED): ?> <span class="badge bg-warning-subtle text-warning-emphasis">รอเข้าอยู่</span><?php endif; ?></div><?php endforeach; else: ?><span class="text-body-secondary">—</span><?php endif; ?></td>
 <td><span class="badge bg-body-secondary text-body"><?= Html::encode(Unit::statusOptions()[$model->status] ?? $model->status) ?></span></td>
 <td class="text-end"><?= Html::a('รายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-info']) ?> <?= Html::a('เพิ่มห้องย่อย', ['create-room', 'unit_id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?> <?= Html::a('แก้ไข', ['update', 'id' => $model->id, 'title' => 'แก้ไขห้อง'], ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data-size' => 'modal-xl']) ?></td>
 </tr><?php endforeach; ?></tbody></table></div>
@@ -90,8 +90,8 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <li class="list-group-item py-3">
         <div class="d-flex justify-content-between gap-2"><strong><?= Html::encode($model->code . ' · ' . $model->name) ?></strong><span><?= Html::encode(Unit::statusOptions()[$model->status] ?? '') ?></span></div>
         <div class="small text-body-secondary mt-1"><?= Html::encode($model->building->name ?? '') ?> · <?= count($model->rooms) ?> ห้องย่อย</div>
-        <?php $lines = $occupantLines($model); if ($lines): ?>
-            <div class="small mt-1"><?php foreach ($lines as $line): $occ = $line['occ']; ?><div><i class="bi bi-person text-body-secondary me-1" style="font-size:14px"></i><?php if ($line['label']): ?><span class="text-body-secondary"><?= Html::encode($line['label']) ?>:</span> <?php endif; ?><?= Html::encode($occupantName($occ)) ?><?php if ($occ->status === Occupancy::STATUS_ALLOCATED): ?> <span class="text-warning-emphasis">(รอเข้าอยู่)</span><?php endif; ?></div><?php endforeach; ?></div>
+        <?php $occupancyList = $occupantList($model); if ($occupancyList): ?>
+            <div class="small mt-1"><?php foreach ($occupancyList as $occ): ?><div><i class="bi bi-person text-body-secondary me-1" style="font-size:14px"></i><?= Html::encode($occupantName($occ)) ?><?php if ($occ->status === Occupancy::STATUS_ALLOCATED): ?> <span class="text-warning-emphasis">(รอเข้าอยู่)</span><?php endif; ?></div><?php endforeach; ?></div>
         <?php endif; ?>
         <?php if ($model->rooms): ?>
             <div class="mt-3 border-top pt-2">
