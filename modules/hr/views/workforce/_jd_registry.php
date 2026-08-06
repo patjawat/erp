@@ -2,12 +2,17 @@
 
 use app\components\widgets\DataSummaryWidget;
 use app\modules\jd\models\JdEmployee;
+use kartik\select2\Select2;
 use yii\helpers\Html;
+use yii\helpers\ArrayHelper;
 
 /** @var yii\data\ActiveDataProvider $jdDataProvider */
 /** @var array<int, JdEmployee> $jdByEmployee */
 /** @var array<int, array> $approvalByJd */
 /** @var array<int, bool> $acknowledgedJdIds */
+/** @var app\modules\hr\models\Organization[] $jdDepartments */
+/** @var array<int, string> $jdPositions */
+/** @var array<int, string> $jdEmployeeTypes */
 
 $models = $jdDataProvider->getModels();
 $statusLabels = JdEmployee::statusLabels();
@@ -26,25 +31,84 @@ $statusClasses = [
         <?= Html::a('<i data-lucide="settings-2"></i><span>ตั้งค่า JD Template</span>', ['/jd/template/index'], ['class' => 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2']) ?>
     </div>
 
-    <?= Html::beginForm(['/hr/workforce/index'], 'get', ['class' => 'jd-registry__search']) ?>
+    <?= Html::beginForm(['/hr/workforce/index'], 'get', ['class' => 'jd-registry__search d-block']) ?>
     <?= Html::hiddenInput('section', 'jd') ?>
-    <label class="visually-hidden" for="jd-registry-search">ค้นหาบุคลากรหรือตำแหน่ง</label>
-    <div class="jd-registry__search-control">
-        <i data-lucide="search" aria-hidden="true"></i>
-        <?= Html::textInput('jd_q', Yii::$app->request->get('jd_q'), [
-            'id' => 'jd-registry-search',
-            'class' => 'form-control',
-            'placeholder' => 'ค้นหาชื่อบุคลากรหรือตำแหน่ง',
-        ]) ?>
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-lg-4">
+            <label class="form-label small fw-semibold" for="jd-registry-search">คำค้นหา</label>
+            <div class="jd-registry__search-control mw-100">
+                <i data-lucide="search" aria-hidden="true"></i>
+                <?= Html::textInput('jd_q', Yii::$app->request->get('jd_q'), [
+                    'id' => 'jd-registry-search',
+                    'class' => 'form-control',
+                    'placeholder' => 'ชื่อบุคลากรหรือตำแหน่ง',
+                ]) ?>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <label class="form-label small fw-semibold" for="jd-department">หน่วยงาน</label>
+            <?= Select2::widget([
+                'name' => 'jd_department',
+                'value' => Yii::$app->request->get('jd_department'),
+                'data' => ArrayHelper::map($jdDepartments, 'id', 'name'),
+                'options' => [
+                    'id' => 'jd-department',
+                    'placeholder' => 'ทุกหน่วยงาน',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'width' => '100%',
+                ],
+            ]) ?>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <label class="form-label small fw-semibold" for="jd-position">ตำแหน่ง</label>
+            <?= Select2::widget([
+                'name' => 'jd_position',
+                'value' => Yii::$app->request->get('jd_position'),
+                'data' => $jdPositions,
+                'options' => [
+                    'id' => 'jd-position',
+                    'placeholder' => 'ทุกตำแหน่ง',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'width' => '100%',
+                ],
+            ]) ?>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-2">
+            <label class="form-label small fw-semibold" for="jd-employee-type">ประเภท</label>
+            <?= Select2::widget([
+                'name' => 'jd_employee_type',
+                'value' => Yii::$app->request->get('jd_employee_type'),
+                'data' => $jdEmployeeTypes,
+                'options' => [
+                    'id' => 'jd-employee-type',
+                    'placeholder' => 'ทุกประเภท',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                    'width' => '100%',
+                ],
+            ]) ?>
+        </div>
     </div>
-    <label class="d-inline-flex align-items-center gap-1 small text-nowrap mb-0">
-        <?= Html::checkbox('show_all', ($showAll ?? false), ['value' => 1, 'class' => 'form-check-input mt-0']) ?>
-        แสดงทั้งหมด (รวมผู้ที่ไม่ได้ปฏิบัติงาน)
-    </label>
-    <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-primary']) ?>
-    <?php if (trim((string) Yii::$app->request->get('jd_q')) !== '' || ($showAll ?? false)): ?>
-        <?= Html::a('ล้างการค้นหา', ['/hr/workforce/index', 'section' => 'jd'], ['class' => 'btn btn-outline-secondary']) ?>
-    <?php endif; ?>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+        <label class="d-inline-flex align-items-center gap-2 small me-auto mb-0">
+            <?= Html::checkbox('show_all', ($showAll ?? false), ['value' => 1, 'class' => 'form-check-input mt-0']) ?>
+            แสดงทั้งหมด (รวมผู้ที่ไม่ได้ปฏิบัติงาน)
+        </label>
+        <?= Html::submitButton('<i data-lucide="search" aria-hidden="true"></i><span>ค้นหา</span>', ['class' => 'btn btn-primary d-inline-flex align-items-center gap-2']) ?>
+        <?php $hasJdFilters = trim((string) Yii::$app->request->get('jd_q')) !== ''
+            || (int) Yii::$app->request->get('jd_department') > 0
+            || (int) Yii::$app->request->get('jd_position') > 0
+            || (int) Yii::$app->request->get('jd_employee_type') > 0
+            || ($showAll ?? false); ?>
+        <?php if ($hasJdFilters): ?>
+            <?= Html::a('ล้างตัวกรอง', ['/hr/workforce/index', 'section' => 'jd'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?php endif; ?>
+    </div>
     <?= Html::endForm() ?>
 
     <?php if ($models === []): ?>

@@ -24,7 +24,7 @@ class JdAiDraftService
         }
 
         $schema = [];
-        foreach (JdTemplateBlock::definitions() as $code => [$title, $type]) {
+        foreach (JdTemplateBlock::hospitalDefinitions() as $code => [$title, $type]) {
             $schema[$code] = [
                 'intro' => '',
                 'items' => [array_fill_keys(array_keys(JdTemplateBlock::editorColumns($type)), '')],
