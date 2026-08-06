@@ -20,6 +20,7 @@ use app\modules\hr\models\IdpPlan;
 use app\modules\hr\models\ProbationCase;
 use app\modules\hr\models\ProbationEvaluation;
 use app\modules\hr\models\ProbationRound;
+use app\modules\housing\models\Handover;
 
 // การแจ้งเตือนต่างๆ
 class ApproveHelper extends Component
@@ -32,10 +33,11 @@ class ApproveHelper extends Component
         $jdChangeReview = self::JdChangeReview();
         $idp = self::Idp();
         $probation = self::Probation();
+        $housingHandover = self::HousingHandover();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -49,7 +51,38 @@ class ApproveHelper extends Component
             'jd_change_review' => $jdChangeReview,
             'idp' => $idp,
             'probation' => $probation,
+            'housing_handover' => $housingHandover,
         ];
+    }
+
+    public static function HousingHandover(): array
+    {
+        $default = ['title' => 'ลงนามรับรองบ้านพัก', 'total' => 0, 'datas' => []];
+        try {
+            $me = UserHelper::GetEmployee();
+            if (!$me) {
+                return $default;
+            }
+
+            $rows = Handover::find()
+                ->where([
+                    'received_by_emp_id' => (int) $me->id,
+                    'status' => Handover::STATUS_DRAFT,
+                    'received_signed_at' => null,
+                ])
+                ->andWhere(['is not', 'handed_over_signed_at', null])
+                ->orderBy(['handover_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+
+            return [
+                'title' => 'ลงนามรับรองบ้านพัก',
+                'total' => count($rows),
+                'datas' => $rows,
+            ];
+        } catch (\Throwable $th) {
+            Yii::warning('Unable to load housing handover notifications: ' . $th->getMessage(), __METHOD__);
+            return $default;
+        }
     }
 
     public static function Probation(): array

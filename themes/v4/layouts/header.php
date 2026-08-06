@@ -25,6 +25,7 @@ $jdSignNotify = $notify['jd_signature'] ?? ['total' => 0, 'datas' => []];
 $jdReviewNotify = $notify['jd_change_review'] ?? ['total' => 0, 'datas' => [], 'url' => ['/jd/employee-jd/review-inbox']];
 $idpNotify = $notify['idp'] ?? ['total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
 $probationNotify = $notify['probation'] ?? ['total' => 0, 'datas' => []];
+$housingHandoverNotify = $notify['housing_handover'] ?? ['total' => 0, 'datas' => []];
 ?>
 <style>
     /* container สำหรับ animation เปิด–ปิด */
@@ -150,6 +151,18 @@ $probationNotify = $notify['probation'] ?? ['total' => 0, 'datas' => []];
                             </span>
                         </a>
                     <?php endif; ?>
+                    <?php foreach ($housingHandoverNotify['datas'] as $handover): ?>
+                        <a class="dropdown-item d-flex gap-3 align-items-start py-3"
+                            href="<?= Url::to(['/housing/my/handover', 'id' => $handover->id]) ?>">
+                            <span class="rounded-circle bg-warning-subtle text-warning-emphasis d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                <i data-lucide="house-check" style="width: 19px;"></i>
+                            </span>
+                            <span class="text-wrap">
+                                <span class="d-block fw-semibold">ลงนามรับรองบ้านพัก</span>
+                                <small class="text-body-secondary">เอกสาร <?= Html::encode($handover->handover_no) ?> รอคุณตรวจและลงนามรับมอบ</small>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
                     <?php foreach ($probationNotify['datas'] as $probationItem): ?>
                         <a class="dropdown-item d-flex gap-3 align-items-start py-3" href="<?= Url::to($probationItem['url']) ?>">
                             <span class="rounded-circle bg-info-subtle text-info-emphasis d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
@@ -162,7 +175,7 @@ $probationNotify = $notify['probation'] ?? ['total' => 0, 'datas' => []];
                             </span>
                         </a>
                     <?php endforeach; ?>
-                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $jdSignNotify['total'] - (int) $jdReviewNotify['total'] - (int) $idpNotify['total'] - (int) $probationNotify['total']; ?>
+                    <?php $otherTotal = $total - (int) $jdNotify['total'] - (int) $jdSignNotify['total'] - (int) $jdReviewNotify['total'] - (int) $idpNotify['total'] - (int) $probationNotify['total'] - (int) $housingHandoverNotify['total']; ?>
                     <?php if ($otherTotal > 0): ?>
                         <a class="dropdown-item d-flex gap-3 align-items-center py-3" href="<?= Url::to(['/approve-v2/leave']) ?>">
                             <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
