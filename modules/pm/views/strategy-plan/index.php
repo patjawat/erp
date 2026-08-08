@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Html;
 use app\components\widgets\DataSummaryWidget;
-$this->title = 'ทะเบียนแผนยุทธศาสตร์';
+$this->title = 'แผนยุทธศาสตร์';
 $canManage = Yii::$app->user->can('pmStrategyManage');
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'strategy']) ?><?php $this->endBlock();

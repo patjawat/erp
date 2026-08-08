@@ -7,7 +7,7 @@ use yii\helpers\Html;
 $this->registerCss('.pm-module-menu{max-width:100%;overflow-x:auto;scrollbar-width:thin}.pm-module-menu .btn{flex:0 0 auto;min-height:38px}@media(max-width:575.98px){.header-profile{display:none!important}.page-title-box{max-width:100vw;overflow:hidden}}');
 $items = [
     'overview' => ['label' => 'ภาพรวม', 'url' => ['/pm/default/index'], 'icon' => 'layout-dashboard'],
-    'strategy' => ['label' => 'ทะเบียนแผนยุทธศาสตร์', 'url' => ['/pm/strategy-plan/index'], 'icon' => 'map'],
+    'strategy' => ['label' => 'แผนยุทธศาสตร์', 'url' => ['/pm/strategy-plan/index'], 'icon' => 'map'],
     'indicator' => ['label' => 'ตัวชี้วัด', 'url' => ['/pm/strategy-catalog/index', 'type' => 'indicator'], 'icon' => 'gauge'],
     'program' => ['label' => 'แผนงานหลัก', 'url' => ['/pm/strategy-catalog/index', 'type' => 'program'], 'icon' => 'network'],
     'projects' => ['label' => 'แผนงาน/โครงการ', 'url' => ['/pm/projects/index'], 'icon' => 'folder-kanban'],

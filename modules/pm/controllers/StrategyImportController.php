@@ -8,7 +8,7 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
-use app\modules\pm\models\{StrategyPlan,StrategyMission,StrategyIssue,StrategyGoal,StrategyIndicator,StrategyIndicatorValue,StrategySuccessFactor,StrategyMeasure,StrategyProgram,StrategyImportBatch,StrategyImportRow};
+use app\modules\pm\models\{StrategyPlan,StrategyMission,StrategyIssue,StrategyGoal,StrategyIndicator,StrategyIndicatorYear,StrategySuccessFactor,StrategyMeasure,StrategyProgram,StrategyImportBatch,StrategyImportRow};
 use app\modules\pm\services\StrategySpreadsheetParser;
 
 class StrategyImportController extends Controller
@@ -70,7 +70,7 @@ class StrategyImportController extends Controller
         if(trim($p['rca'])!=='')foreach(preg_split('/\r?\n/u',$p['rca']) as $text)if(trim($text)!==''){$f=new StrategySuccessFactor(['goal_id'=>$goal->id,'name'=>trim($text),'factor_type'=>'rca','is_active'=>1]);$f->save(false);}
         if(trim($p['secondary'])!==''){$parts=preg_split('/\s+/',trim($p['secondary']),2);$secCode=$parts[0];if(str_starts_with($secCode,'HOS.')){$sec=StrategyIndicator::findOne(['plan_id'=>$plan->id,'code'=>$secCode])?:new StrategyIndicator(['plan_id'=>$plan->id,'goal_id'=>$goal->id,'parent_id'=>$indicator?->id,'code'=>$secCode,'name'=>$parts[1]??$p['secondary'],'level'=>'hospital','is_active'=>1]);if($sec->isNewRecord)$sec->save(false);}}
         foreach($p['annual'] as $year=>$annual){$measure=null;if(trim($annual['measure'])!==''){$measure=new StrategyMeasure(['goal_id'=>$goal->id,'fiscal_year'=>(int)$year,'name'=>$annual['measure'],'is_active'=>1]);$measure->save(false);}if(trim($annual['program'])!==''){$program=new StrategyProgram(['plan_id'=>$plan->id,'measure_id'=>$measure?->id,'fiscal_year'=>(int)$year,'name'=>$annual['program'],'owner_text'=>$annual['owner']?:null,'is_active'=>1]);$program->save(false);}}
-        if($indicator){foreach($p['values'] as $year=>$value){if($year==='baseline')continue;if($value['target']===null&&$value['actual']===null)continue;$v=StrategyIndicatorValue::findOne(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year])?:new StrategyIndicatorValue(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year]);$v->baseline_value=$p['values']['baseline'];$v->target_value=$value['target'];$v->actual_value=$value['actual'];$v->save(false);}}
+        if($indicator){foreach($p['values'] as $year=>$value){if($year==='baseline')continue;if($value['target']===null&&$value['actual']===null)continue;$v=StrategyIndicatorYear::findOne(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year])?:new StrategyIndicatorYear(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year]);$v->baseline_value=$p['values']['baseline'];$v->target_value=$value['target'];$v->actual_value=$value['actual'];$v->save(false);}}
     }
     private function plan(int $id):StrategyPlan{return StrategyPlan::findOne($id)?:throw new NotFoundHttpException('ไม่พบชุดแผน');}
     private function batch(int $id):StrategyImportBatch{return StrategyImportBatch::findOne($id)?:throw new NotFoundHttpException('ไม่พบชุดนำเข้า');}

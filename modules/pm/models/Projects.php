@@ -69,6 +69,19 @@ class Projects extends ActiveRecord
         ];
     }
 
+    /** ฟิลด์ข้อความยาวที่จัดเป็นข้อ/หัวข้อย่อยได้ — กรอง HTML ก่อนบันทึกเสมอ */
+    public const RICH_TEXT_ATTRIBUTES = ['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail'];
+
+    public function beforeValidate()
+    {
+        foreach (self::RICH_TEXT_ATTRIBUTES as $attribute) {
+            if ($this->$attribute !== null && $this->$attribute !== '') {
+                $this->$attribute = \app\components\RichText::sanitize((string) $this->$attribute) ?: null;
+            }
+        }
+        return parent::beforeValidate();
+    }
+
     public function rules()
     {
         return [

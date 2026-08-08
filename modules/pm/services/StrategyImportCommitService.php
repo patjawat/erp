@@ -3,7 +3,7 @@
 namespace app\modules\pm\services;
 
 use Yii;
-use app\modules\pm\models\{StrategyImportBatch,StrategyGoal,StrategyIndicator,StrategyIndicatorValue,StrategyIssue,StrategyMeasure,StrategyMission,StrategyProgram,StrategySuccessFactor};
+use app\modules\pm\models\{StrategyImportBatch,StrategyGoal,StrategyIndicator,StrategyIndicatorYear,StrategyIssue,StrategyMeasure,StrategyMission,StrategyProgram,StrategySuccessFactor};
 
 class StrategyImportCommitService
 {
@@ -30,6 +30,6 @@ class StrategyImportCommitService
         if(trim($p['rca'])!=='')foreach(preg_split('/\r?\n/u',$p['rca']) as $text)if(trim($text)!==''){$f=new StrategySuccessFactor(['goal_id'=>$goal->id,'name'=>trim($text),'factor_type'=>'rca','is_active'=>1]);$f->save(false);}
         if(trim($p['secondary'])!==''&&preg_match('/^(HOS\.\d+(?:\.\d+)+)\s*[-–:]?\s*(.*)$/us',trim($p['secondary']),$match)){$secCode=$match[1];$secName=trim($match[2])?:trim($p['secondary']);$sec=StrategyIndicator::findOne(['plan_id'=>$plan->id,'code'=>$secCode])?:new StrategyIndicator(['plan_id'=>$plan->id,'goal_id'=>$goal->id,'parent_id'=>$indicator?->id,'code'=>$secCode,'name'=>$secName,'level'=>'hospital','is_active'=>1]);if($sec->isNewRecord)$sec->save(false);}
         foreach($p['annual'] as $year=>$annual){$measure=null;if(trim($annual['measure'])!==''){$measure=new StrategyMeasure(['goal_id'=>$goal->id,'fiscal_year'=>(int)$year,'name'=>$annual['measure'],'is_active'=>1]);$measure->save(false);}if(trim($annual['program'])!==''){$program=new StrategyProgram(['plan_id'=>$plan->id,'measure_id'=>$measure?->id,'fiscal_year'=>(int)$year,'name'=>$annual['program'],'owner_text'=>$annual['owner']?:null,'is_active'=>1]);$program->save(false);}}
-        if($indicator)foreach($p['values'] as $year=>$value){if($year==='baseline'||($value['target']===null&&$value['actual']===null))continue;$v=StrategyIndicatorValue::findOne(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year])?:new StrategyIndicatorValue(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year]);$v->baseline_value=$p['values']['baseline'];$v->target_value=$value['target'];$v->actual_value=$value['actual'];$v->save(false);}
+        if($indicator)foreach($p['values'] as $year=>$value){if($year==='baseline'||($value['target']===null&&$value['actual']===null))continue;$v=StrategyIndicatorYear::findOne(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year])?:new StrategyIndicatorYear(['indicator_id'=>$indicator->id,'fiscal_year'=>(int)$year]);$v->baseline_value=$p['values']['baseline'];$v->target_value=$value['target'];$v->actual_value=$value['actual'];$v->save(false);}
     }
 }

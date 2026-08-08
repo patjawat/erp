@@ -11,6 +11,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title'); ?>แผนงาน/โครงการ<?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'projects']) ?><?php $this->endBlock();
 \yii\web\YiiAsset::register($this);
+app\assets\RichTextAsset::register($this);
 
 $fmt = Yii::$app->formatter;
 $row = function ($no, $title, $body) {
@@ -21,7 +22,7 @@ $row = function ($no, $title, $body) {
         . '<div class="ps-3">' . $body . '</div></div>';
 };
 $text = function ($v) {
-    return $v ? nl2br(Html::encode($v)) : null;
+    return \app\components\RichText::isEmpty($v) ? null : '<div class="erp-richtext">' . \app\components\RichText::render($v) . '</div>';
 };
 ?>
 <div class="projects-view container-fluid">
@@ -104,7 +105,7 @@ $text = function ($v) {
 
             $budgetBody = '<div>งบประมาณรวม <strong>' . $fmt->asDecimal($model->budget_total, 2) . '</strong> บาท'
                 . ($model->budget_source ? ' <span class="text-muted">(' . Html::encode($model->budget_source) . ')</span>' : '') . '</div>'
-                . ($model->budget_detail ? '<div class="mt-1">' . nl2br(Html::encode($model->budget_detail)) . '</div>' : '')
+                . ($model->budget_detail ? '<div class="mt-1">' . $text($model->budget_detail) . '</div>' : '')
                 . '<div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>';
             echo $row(12, 'งบประมาณ', $budgetBody);
             ?>

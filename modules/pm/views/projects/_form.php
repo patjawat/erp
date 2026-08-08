@@ -8,6 +8,10 @@ use app\modules\pm\models\Projects;
 use app\modules\pm\models\ProjectResponsible;
 use app\modules\hr\models\Organization;
 
+app\assets\RichTextAsset::register($this);
+/** ตัวช่วยสร้าง option ของ textarea ที่เปิดแถบจัดรูปแบบข้อความ */
+$rich = fn(string $label, int $rows = 3) => ['rows' => $rows, 'data-richtext' => '1', 'data-rte-label' => $label];
+
 /** @var yii\web\View $this */
 /** @var Projects $model */
 /** @var app\modules\pm\models\ProjectObjective[] $objectives */
@@ -51,7 +55,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
 <div class="card mb-3">
     <div class="card-header fw-semibold">1. หลักการและเหตุผล</div>
     <div class="card-body">
-        <?= $form->field($model, 'rationale')->textarea(['rows' => 4])->label(false) ?>
+        <?= $form->field($model, 'rationale')->textarea($rich('หลักการและเหตุผล', 4))->label(false) ?>
     </div>
 </div>
 
@@ -98,8 +102,8 @@ $form = ActiveForm::begin(['id' => 'project-form']);
 <!-- 4. กลุ่มเป้าหมาย / 5. วิธีดำเนินการ -->
 <div class="card mb-3">
     <div class="card-body">
-        <?= $form->field($model, 'target_group')->textarea(['rows' => 2]) ?>
-        <?= $form->field($model, 'method')->textarea(['rows' => 3]) ?>
+        <?= $form->field($model, 'target_group')->textarea($rich('กลุ่มเป้าหมาย', 2)) ?>
+        <?= $form->field($model, 'method')->textarea($rich('วิธีดำเนินการ', 4)) ?>
     </div>
 </div>
 
@@ -112,15 +116,15 @@ $form = ActiveForm::begin(['id' => 'project-form']);
         </div>
         <?= $form->field($model, 'duration_text')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ไตรมาส 2 ปีงบประมาณ 2569']) ?>
         <?= $form->field($model, 'location')->textInput(['maxlength' => true]) ?>
-        <?= $form->field($model, 'lecturer')->textarea(['rows' => 2]) ?>
+        <?= $form->field($model, 'lecturer')->textarea($rich('วิทยากร', 2)) ?>
     </div>
 </div>
 
 <!-- 9-10. ประเมินผล / ผลที่คาดว่าจะได้รับ -->
 <div class="card mb-3">
     <div class="card-body">
-        <?= $form->field($model, 'evaluation')->textarea(['rows' => 2]) ?>
-        <?= $form->field($model, 'expected_result')->textarea(['rows' => 2]) ?>
+        <?= $form->field($model, 'evaluation')->textarea($rich('การประเมินผลโครงการ', 3)) ?>
+        <?= $form->field($model, 'expected_result')->textarea($rich('ผลที่คาดว่าจะได้รับ', 3)) ?>
     </div>
 </div>
 
@@ -171,7 +175,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
             <div class="col-md-4"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01', 'min' => 0]) ?></div>
             <div class="col-md-8"><?= $form->field($model, 'budget_source')->textInput(['maxlength' => true, 'placeholder' => 'เช่น เงินบำรุง / งบ สปสช. / เงินนอกงบประมาณ']) ?></div>
         </div>
-        <?= $form->field($model, 'budget_detail')->textarea(['rows' => 3, 'placeholder' => 'แจกแจงรายการค่าใช้จ่าย']) ?>
+        <?= $form->field($model, 'budget_detail')->textarea($rich('รายละเอียดงบประมาณ', 3) + ['placeholder' => 'แจกแจงรายการค่าใช้จ่าย']) ?>
         <div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>
     </div>
 </div>

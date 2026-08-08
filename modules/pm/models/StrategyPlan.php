@@ -34,8 +34,14 @@ class StrategyPlan extends StrategyRecord
         return [self::STATUS_DRAFT => 'ฉบับร่าง', self::STATUS_PUBLISHED => 'ประกาศใช้', self::STATUS_ARCHIVED => 'ยกเลิกใช้งาน'];
     }
 
+    public function richTextAttributes(): array { return ['vision', 'source_note']; }
+
     public function getMissions() { return $this->hasMany(StrategyMission::class, ['plan_id' => 'id'])->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC]); }
     public function getIndicators() { return $this->hasMany(StrategyIndicator::class, ['plan_id' => 'id']); }
     public function getPrograms() { return $this->hasMany(StrategyProgram::class, ['plan_id' => 'id']); }
     public function isEditable(): bool { return $this->status === self::STATUS_DRAFT; }
+
+    /** ปีงบประมาณทั้งหมดที่แผนนี้ครอบคลุม */
+    public function fiscalYears(): array { return range((int) $this->start_year, (int) $this->end_year); }
+    public function coversYear(int $year): bool { return $year >= (int) $this->start_year && $year <= (int) $this->end_year; }
 }

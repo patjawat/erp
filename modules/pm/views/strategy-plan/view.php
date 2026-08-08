@@ -1,16 +1,18 @@
 <?php
 use yii\helpers\Html;
+use app\components\RichText;
+app\assets\RichTextAsset::register($this);
 $this->title = $model->name;
 $canManage = Yii::$app->user->can('pmStrategyManage');
 $editable = $canManage && $model->isEditable();
-$this->beginBlock('page-title'); ?>ทะเบียนแผนยุทธศาสตร์<?php $this->endBlock();
+$this->beginBlock('page-title'); ?>แผนยุทธศาสตร์<?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'strategy']) ?><?php $this->endBlock();
 ?>
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
 <div><div class="d-flex align-items-center gap-2 mb-2"><span class="badge <?= $model->status==='published'?'bg-success-subtle text-success':'bg-secondary-subtle text-secondary' ?>"><?= Html::encode($model::statusList()[$model->status]) ?></span><span class="small text-muted"><?= Html::encode($model->code) ?> · รุ่น <?= (int)$model->version ?></span></div><h1 class="h3 mb-1"><?= Html::encode($model->name) ?></h1><p class="text-muted mb-0">พ.ศ. <?= (int)$model->start_year ?>–<?= (int)$model->end_year ?></p></div>
 <?php if ($canManage): ?><div class="d-flex flex-wrap gap-2"><?php if ($editable): ?><?= Html::a('ดาวน์โหลด Template',['/pm/strategy-import/template'],['class'=>'btn btn-outline-secondary','data-pjax'=>0]) ?><?= Html::a('นำเข้าจาก Excel',['/pm/strategy-import/upload','planId'=>$model->id],['class'=>'btn btn-outline-secondary']) ?><?= Html::a('แก้ไขข้อมูลหลัก',['update','id'=>$model->id],['class'=>'btn btn-outline-primary']) ?><?= Html::a('ประกาศใช้',['publish','id'=>$model->id],['class'=>'btn btn-primary','data-method'=>'post','data-confirm'=>'เมื่อประกาศใช้แล้ว ข้อมูลชุดนี้จะถูกล็อก ยืนยันหรือไม่?']) ?><?php else: ?><?= Html::a('สร้างรุ่นใหม่',['clone','id'=>$model->id],['class'=>'btn btn-primary','data-method'=>'post','data-confirm'=>'สร้างฉบับร่างรุ่นใหม่จากชุดแผนนี้?']) ?><?php endif; ?></div><?php endif; ?>
 </div>
-<div class="card border-0 shadow-sm mb-4"><div class="card-body p-4"><div class="small text-muted fw-semibold mb-2">วิสัยทัศน์</div><div class="fs-5"><?= nl2br(Html::encode($model->vision ?: 'ยังไม่ได้ระบุ')) ?></div></div></div>
+<div class="card border-0 shadow-sm mb-4"><div class="card-body p-4"><div class="small text-muted fw-semibold mb-2">วิสัยทัศน์</div><div class="fs-5 erp-richtext"><?= $model->vision ? RichText::render($model->vision) : 'ยังไม่ได้ระบุ' ?></div></div></div>
 <div class="d-flex flex-wrap gap-2 mb-4"><?= Html::a('ทะเบียนตัวชี้วัด',['/pm/strategy-catalog/index','type'=>'indicator','planId'=>$model->id],['class'=>'btn btn-outline-primary']) ?><?= Html::a('ปัจจัยความสำเร็จ/RCA',['/pm/strategy-catalog/index','type'=>'factor','planId'=>$model->id],['class'=>'btn btn-outline-secondary']) ?><?= Html::a('มาตรการ',['/pm/strategy-catalog/index','type'=>'measure','planId'=>$model->id],['class'=>'btn btn-outline-secondary']) ?><?= Html::a('แผนงานหลัก',['/pm/strategy-catalog/index','type'=>'program','planId'=>$model->id],['class'=>'btn btn-outline-secondary']) ?></div>
 <div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 mb-1">โครงสร้างยุทธศาสตร์</h2><p class="small text-muted mb-0">พันธกิจ → ประเด็นยุทธศาสตร์ → เป้าประสงค์</p></div><?php if ($editable): ?><?= Html::a('<i data-lucide="plus" class="me-1"></i> เพิ่มพันธกิจ',['/pm/strategy-structure/create','type'=>'mission','parentId'=>$model->id],['class'=>'btn btn-primary']) ?><?php endif; ?></div>
 <?php if (!$model->missions): ?><div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><div class="text-muted mb-3">ยังไม่มีพันธกิจในชุดแผนนี้</div><?php if ($editable): ?><?= Html::a('เพิ่มพันธกิจแรก',['/pm/strategy-structure/create','type'=>'mission','parentId'=>$model->id],['class'=>'btn btn-outline-primary']) ?><?php endif; ?></div></div><?php endif; ?>

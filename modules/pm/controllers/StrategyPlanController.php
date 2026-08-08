@@ -52,7 +52,7 @@ class StrategyPlanController extends Controller
     private function saveForm(StrategyPlan $model, string $view)
     {
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'บันทึกทะเบียนแผนยุทธศาสตร์แล้ว');
+            Yii::$app->session->setFlash('success', 'บันทึกแผนยุทธศาสตร์แล้ว');
             return $this->redirect(['view', 'id' => $model->id]);
         }
         return $this->render($view, ['model' => $model]);
@@ -114,9 +114,10 @@ class StrategyPlanController extends Controller
             $item->goal_id = $indicator->goal_id ? ($goalMap[$indicator->goal_id] ?? null) : null;
             $item->parent_id = null; $item->save(false);
             $indicatorMap[$indicator->id] = $item->id;
-            foreach ($indicator->values as $value) {
-                $v = new \app\modules\pm\models\StrategyIndicatorValue($value->attributes);
-                $v->id = null; $v->ref = null; $v->isNewRecord = true; $v->indicator_id = $item->id; $v->actual_value = null; $v->save(false);
+            foreach ($indicator->years as $year) {
+                $v = new \app\modules\pm\models\StrategyIndicatorYear($year->attributes);
+                $v->id = null; $v->ref = null; $v->isNewRecord = true; $v->indicator_id = $item->id;
+                $v->actual_value = null; $v->copied_from_id = $year->id; $v->save(false);
             }
         }
         foreach ($source->indicators as $indicator) {
