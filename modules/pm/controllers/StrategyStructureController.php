@@ -8,14 +8,16 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use app\modules\pm\models\{StrategyPlan, StrategyMission, StrategyIssue, StrategyGoal};
+use app\modules\pm\models\{StrategyPlan, StrategyMission, StrategyIssue, StrategyGoal, StrategyTactic};
 
 class StrategyStructureController extends Controller
 {
+    /** ลำดับชั้น: พันธกิจ → ประเด็นยุทธศาสตร์ → เป้าประสงค์ → กลยุทธ์ */
     private const TYPES = [
         'mission' => [StrategyMission::class, 'plan_id'],
         'issue' => [StrategyIssue::class, 'mission_id'],
         'goal' => [StrategyGoal::class, 'issue_id'],
+        'tactic' => [StrategyTactic::class, 'goal_id'],
     ];
 
     public function behaviors(): array
@@ -73,11 +75,17 @@ class StrategyStructureController extends Controller
     {
         if ($type === 'mission') return StrategyPlan::findOne($parentId) ?: throw new NotFoundHttpException('ไม่พบชุดแผน');
         if ($type === 'issue') { $m = StrategyMission::findOne($parentId); return $m?->plan ?: throw new NotFoundHttpException('ไม่พบพันธกิจ'); }
-        $g = StrategyIssue::findOne($parentId); return $g?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบประเด็นยุทธศาสตร์');
+        if ($type === 'tactic') { $g = StrategyGoal::findOne($parentId); return $g?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบเป้าประสงค์'); }
+        $i = StrategyIssue::findOne($parentId); return $i?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบประเด็นยุทธศาสตร์');
     }
     private function planFromModel(string $type, $model): StrategyPlan
     {
-        return $type === 'mission' ? $model->plan : ($type === 'issue' ? $model->mission->plan : $model->issue->mission->plan);
+        return match ($type) {
+            'mission' => $model->plan,
+            'issue' => $model->mission->plan,
+            'tactic' => $model->goal->issue->mission->plan,
+            default => $model->issue->mission->plan,
+        };
     }
     private function assertEditable(StrategyPlan $plan): void
     {

@@ -12,7 +12,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\modules\pm\models\{
     StrategyPlan, StrategyGoal, StrategyIndicator, StrategyIndicatorYear, StrategyIndicatorBaseline,
-    StrategySuccessFactor, StrategyMeasure, StrategyProgram
+    StrategySuccessFactor, StrategyMeasure, StrategyProgram, StrategyTactic
 };
 use app\modules\pm\services\StrategyIndicatorYearCopier;
 
@@ -262,6 +262,7 @@ class StrategyCatalogController extends Controller
         return $this->render('form', [
             'model' => $model, 'type' => $type, 'plan' => $plan,
             'goals' => $this->goalItems($plan),
+            'tactics' => $this->tacticItems($plan),
             'measures' => $this->measureItems($plan),
         ]);
     }
@@ -298,16 +299,22 @@ class StrategyCatalogController extends Controller
         return $items;
     }
 
+    /** มาตรการสร้างจากกลยุทธ์ ส่วนปัจจัยความสำเร็จ/RCA ยังผูกกับเป้าประสงค์โดยตรง */
     private function assignParent($model, string $type, ?int $planId, ?int $parentId): void
     {
         if ($type === 'program') $model->plan_id = $planId;
-        if ($type === 'factor' || $type === 'measure') $model->goal_id = $parentId;
+        if ($type === 'factor') $model->goal_id = $parentId;
+        if ($type === 'measure') {
+            $tactic = StrategyTactic::findOne($parentId) ?: throw new NotFoundHttpException('ไม่พบกลยุทธ์');
+            $model->tactic_id = $tactic->id;
+            $model->goal_id = $tactic->goal_id;
+        }
     }
 
     private function resolvePlan($model, string $type, ?int $planId, ?int $parentId): StrategyPlan
     {
         if ($type === 'program') return StrategyPlan::findOne($planId) ?: throw new NotFoundHttpException('ไม่พบชุดแผน');
-        $goal = StrategyGoal::findOne($parentId);
+        $goal = $type === 'measure' ? StrategyTactic::findOne($parentId)?->goal : StrategyGoal::findOne($parentId);
         return $goal?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบเป้าประสงค์');
     }
 
@@ -327,5 +334,6 @@ class StrategyCatalogController extends Controller
     private function orderFor(string $type): array { return ['sort_order' => SORT_ASC, 'id' => SORT_ASC]; }
     private function assertEditable(StrategyPlan $plan): void { if (!$plan->isEditable()) throw new ForbiddenHttpException('ข้อมูลของแผนที่ประกาศใช้แล้วถูกล็อก'); }
     private function goalItems(StrategyPlan $plan): array { $items=[]; foreach($plan->missions as $m) foreach($m->issues as $i) foreach($i->goals as $g) $items[$g->id]="$g->code — $g->name"; return $items; }
+    private function tacticItems(StrategyPlan $plan): array { $items=[]; foreach($plan->missions as $m) foreach($m->issues as $i) foreach($i->goals as $g) foreach($g->tactics as $t) $items[$t->id]=$g->code.' · '.$t->label(); return $items; }
     private function measureItems(StrategyPlan $plan): array { $items=[]; foreach(StrategyMeasure::find()->joinWith('goal.issue.mission')->where(['pm_strategy_mission.plan_id'=>$plan->id])->all() as $m) $items[$m->id]=trim("$m->code — $m->name", ' —'); return $items; }
 }

@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
 /** @var yii\db\ActiveRecord $model @var string $type @var \app\modules\pm\models\StrategyPlan $plan */
-/** @var array $goals @var array $measures */
+/** @var array $goals @var array $tactics @var array $measures */
 
 app\assets\RichTextAsset::register($this);
 $labels = ['factor' => 'ปัจจัยความสำเร็จ/RCA', 'measure' => 'มาตรการ', 'program' => 'แผนงานหลัก'];
@@ -19,6 +19,7 @@ $form = ActiveForm::begin();
 <?php if ($type === 'measure'): ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput() ?></div>
     <div class="col-12 col-md-4"><?= $form->field($model, 'fiscal_year')->textInput(['type' => 'number']) ?></div>
+    <div class="col-12"><?= $form->field($model, 'tactic_id')->dropDownList($tactics, ['prompt' => 'ยังไม่จัดเข้ากลยุทธ์'])->hint('เป้าประสงค์จะยึดตามกลยุทธ์ที่เลือก') ?></div>
     <div class="col-12"><?= $form->field($model, 'name')->textarea($rich) ?></div>
 <?php elseif ($type === 'factor'): ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput() ?></div>

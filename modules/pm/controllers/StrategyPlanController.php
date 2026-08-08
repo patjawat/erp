@@ -127,12 +127,20 @@ class StrategyPlanController extends Controller
         }
 
         $measureMap = [];
+        $tacticMap = [];
         foreach ($goalMap as $oldGoalId => $newGoalId) {
             foreach (\app\modules\pm\models\StrategySuccessFactor::findAll(['goal_id' => $oldGoalId]) as $factor) {
                 $f = new \app\modules\pm\models\StrategySuccessFactor($factor->attributes); $f->id = null; $f->ref = null; $f->isNewRecord = true; $f->goal_id = $newGoalId; $f->save(false);
             }
+            foreach (\app\modules\pm\models\StrategyTactic::findAll(['goal_id' => $oldGoalId]) as $tactic) {
+                $t = new \app\modules\pm\models\StrategyTactic($tactic->attributes); $t->id = null; $t->ref = null; $t->isNewRecord = true; $t->goal_id = $newGoalId; $t->save(false); $tacticMap[$tactic->id] = $t->id;
+            }
+        }
+        foreach ($goalMap as $oldGoalId => $newGoalId) {
             foreach (\app\modules\pm\models\StrategyMeasure::findAll(['goal_id' => $oldGoalId]) as $measure) {
-                $m = new \app\modules\pm\models\StrategyMeasure($measure->attributes); $m->id = null; $m->ref = null; $m->isNewRecord = true; $m->goal_id = $newGoalId; $m->save(false); $measureMap[$measure->id] = $m->id;
+                $m = new \app\modules\pm\models\StrategyMeasure($measure->attributes); $m->id = null; $m->ref = null; $m->isNewRecord = true; $m->goal_id = $newGoalId;
+                $m->tactic_id = $measure->tactic_id ? ($tacticMap[$measure->tactic_id] ?? null) : null;
+                $m->save(false); $measureMap[$measure->id] = $m->id;
             }
         }
         foreach ($source->programs as $program) {
