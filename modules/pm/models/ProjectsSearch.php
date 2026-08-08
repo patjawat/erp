@@ -13,7 +13,7 @@ class ProjectsSearch extends Projects
     public function rules()
     {
         return [
-            [['id', 'thai_year', 'department_id'], 'integer'],
+            [['id', 'thai_year', 'department_id', 'org_unit_id'], 'integer'],
             [['name', 'code', 'status'], 'safe'],
         ];
     }
@@ -43,6 +43,7 @@ class ProjectsSearch extends Projects
             'id' => $this->id,
             'thai_year' => $this->thai_year,
             'department_id' => $this->department_id,
+            'org_unit_id' => $this->org_unit_id,
             'status' => $this->status,
         ]);
 

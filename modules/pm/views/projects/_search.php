@@ -5,11 +5,13 @@ use yii\helpers\ArrayHelper;
 use kartik\widgets\ActiveForm;
 use kartik\widgets\Select2;
 use app\modules\pm\models\Projects;
-use app\modules\hr\models\Organization;
 
 /** @var yii\web\View $this */
 /** @var app\modules\pm\models\ProjectsSearch $model */
 
+// ค้นหาข้ามปีได้ จึงรวมหน่วยงานของทุกปีในทะเบียน ไม่ผูกกับปีใดปีหนึ่ง
+$ouYear = (int) ($model->thai_year ?: date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 ?>
 <div class="card mb-3">
     <div class="card-header d-flex align-items-center gap-2">
@@ -27,14 +29,10 @@ use app\modules\hr\models\Organization;
                 <?= $form->field($model, 'name')->textInput(['placeholder' => 'ชื่อโครงการ / เลขที่'])->label('ชื่อ/เลขที่โครงการ') ?>
             </div>
             <div class="col-md-3">
-                <?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::class, [
-                    'query' => Organization::find()->where(['tb_name' => 'diagram'])->addOrderBy('root, lft'),
-                    'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                    'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                    'fontAwesome' => true,
-                    'asDropdown' => true,
-                    'multiple' => false,
+                <?= $form->field($model, 'org_unit_id')->widget(Select2::class, [
+                    'data' => $ouGroups,
                     'options' => ['placeholder' => 'ทุกหน่วยงาน'],
+                    'pluginOptions' => ['allowClear' => true],
                 ])->label('หน่วยงาน') ?>
             </div>
             <div class="col-md-2">

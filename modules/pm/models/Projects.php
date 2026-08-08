@@ -82,11 +82,46 @@ class Projects extends ActiveRecord
         return parent::beforeValidate();
     }
 
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+        $this->syncOrgUnit();
+        return true;
+    }
+
+    /**
+     * ผูกทะเบียนหน่วยงานกับผังโครงสร้างแบบสองทาง
+     * ฟอร์มใหม่เลือกจากทะเบียน → เติม department_id กลับเมื่อเป็นหน่วยในผัง (ทีมประสานเป็น null)
+     * ข้อมูลเดิมที่มีแต่ department_id → เติม org_unit_id ของปีเดียวกันให้
+     */
+    public function syncOrgUnit(): void
+    {
+        if (empty($this->thai_year)) {
+            return;
+        }
+        if (!empty($this->org_unit_id)) {
+            $unit = (new \yii\db\Query())->select(['source', 'ref_id'])->from('org_unit')
+                ->where(['id' => (int) $this->org_unit_id])->one();
+            // ทีมประสาน/หน่วยนอกผังไม่มี ref_id — ต้องล้าง department_id ไม่ให้ค้างของเดิม
+            $this->department_id = ($unit && $unit['source'] === \app\modules\settings\models\OrgUnit::SOURCE_STRUCTURE && $unit['ref_id'])
+                ? (int) $unit['ref_id'] : null;
+            return;
+        }
+        if (!empty($this->department_id)) {
+            $this->org_unit_id = (new \yii\db\Query())->select('id')->from('org_unit')
+                ->where(['thai_year' => (int) $this->thai_year, 'source' => \app\modules\settings\models\OrgUnit::SOURCE_STRUCTURE, 'ref_id' => (int) $this->department_id])
+                ->scalar() ?: null;
+        }
+    }
+
     public function rules()
     {
         return [
             [['name'], 'required'],
-            [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'department_id', 'org_unit_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['org_unit_id'], 'required', 'when' => static fn ($m) => empty($m->department_id), 'enableClientValidation' => false, 'message' => 'กรุณาเลือกหน่วยงาน'],
             [['budget_total'], 'number'],
             [['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail', 'data_json'], 'safe'],
             [['start_date', 'end_date', 'dead_line_date', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
@@ -108,6 +143,7 @@ class Projects extends ActiveRecord
             'name' => 'ชื่อโครงการ',
             'thai_year' => 'ปีงบประมาณ',
             'department_id' => 'หน่วยงานเจ้าของโครงการ',
+            'org_unit_id' => 'หน่วยงาน/ทีมเจ้าของโครงการ',
             'strategy_type' => 'ยุทธศาสตร์',
             'rationale' => '1. หลักการและเหตุผล',
             'target_group' => '4. กลุ่มเป้าหมาย',
@@ -162,16 +198,29 @@ class Projects extends ActiveRecord
         return $this->hasOne(Organization::class, ['id' => 'department_id']);
     }
 
+    /** หน่วยงานในทะเบียนกลาง (org_unit) — รองรับทีมประสานที่ไม่มีในผังบุคลากร */
+    public function getOrgUnit()
+    {
+        return $this->hasOne(\app\modules\settings\models\OrgUnit::class, ['id' => 'org_unit_id']);
+    }
+
     /** ชื่อหน่วยงานโหนดเดียว (แบบสั้น) */
     public function departmentName(): string
     {
-        return $this->department->name ?? '-';
+        return $this->orgUnit->name ?? $this->department->name ?? '-';
     }
 
-    /** ชื่อหน่วยงานตามลำดับชั้นในผังองค์กร เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ" */
+    /**
+     * ชื่อหน่วยงานสำหรับแสดงผล
+     * หน่วยในผังแสดงเป็นลำดับชั้น เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ"
+     * ส่วนทีมประสาน/หน่วยนอกผังไม่มีลำดับชั้น จึงแสดงชื่อจากทะเบียนตรง ๆ
+     */
     public function departmentPath(string $sep = ' › '): string
     {
-        return $this->department ? $this->department->pathLabel($sep) : '-';
+        if ($this->department) {
+            return $this->department->pathLabel($sep);
+        }
+        return $this->orgUnit->name ?? '-';
     }
 
     public function statusLabel(): string
@@ -200,23 +249,23 @@ class Projects extends ActiveRecord
     }
 
     /**
-     * รหัสย่อของหน่วยงาน (จาก medsop_organization_setting.code ซึ่งเป็นรหัสหน่วยงานกลาง)
-     * ถ้ายังไม่กำหนด จะ fallback เป็น ORG{id}
+     * อักษรย่อของหน่วยงานจากทะเบียนกลาง (org_unit.code) ซึ่งครอบคลุมทั้งหน่วยในผังและทีมประสาน
+     * ถ้ายังไม่กำหนดอักษรย่อ จะ fallback เป็น ORG{id}
      */
-    public static function orgCode(?int $departmentId): string
+    public static function orgCode(?int $orgUnitId): string
     {
-        if (!$departmentId) {
+        if (!$orgUnitId) {
             return 'ORG';
         }
-        $setting = \app\modules\medsop\models\OrganizationSetting::findOne($departmentId);
-        return ($setting && $setting->code) ? $setting->code : 'ORG' . $departmentId;
+        $code = (new \yii\db\Query())->select('code')->from('org_unit')->where(['id' => (int) $orgUnitId])->scalar();
+        return $code ?: 'ORG' . $orgUnitId;
     }
 
     /**
      * สร้างรหัสโครงการอัตโนมัติตามรูปแบบใน pm_setting.code_pattern
-     * token: {org} รหัสย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก (ต่อหน่วยงาน+ปี)
+     * token: {org} อักษรย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก (ต่อหน่วยงาน+ปี)
      */
-    public static function generateCode(?int $departmentId, ?int $thaiYear): string
+    public static function generateCode(?int $orgUnitId, ?int $thaiYear): string
     {
         $thaiYear = $thaiYear ?: (int) (date('Y') + 543);
         $pattern = PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
@@ -224,11 +273,11 @@ class Projects extends ActiveRecord
         // ลำดับรัน = จำนวนโครงการของหน่วยงาน+ปีนี้ (รวมที่ลบแบบ soft) + 1 เพื่อไม่ใช้เลขซ้ำ
         $seq = (int) self::find()
             ->where(['thai_year' => $thaiYear])
-            ->andWhere($departmentId ? ['department_id' => $departmentId] : ['department_id' => null])
+            ->andWhere($orgUnitId ? ['org_unit_id' => $orgUnitId] : ['org_unit_id' => null])
             ->count() + 1;
 
         return strtr($pattern, [
-            '{org}' => self::orgCode($departmentId),
+            '{org}' => self::orgCode($orgUnitId),
             '{year}' => (string) $thaiYear,
             '{yy}' => substr((string) $thaiYear, -2),
             '{sequence}' => str_pad((string) $seq, 4, '0', STR_PAD_LEFT),

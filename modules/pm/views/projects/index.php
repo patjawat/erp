@@ -50,7 +50,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                         },
                     ],
                     [
-                        'attribute' => 'department_id',
+                        'attribute' => 'org_unit_id',
                         'label' => 'หน่วยงาน',
                         'value' => function (Projects $m) {
                             return $m->departmentPath();

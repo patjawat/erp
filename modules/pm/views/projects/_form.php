@@ -6,11 +6,14 @@ use kartik\widgets\ActiveForm;
 use kartik\widgets\Select2;
 use app\modules\pm\models\Projects;
 use app\modules\pm\models\ProjectResponsible;
-use app\modules\hr\models\Organization;
 
 app\assets\RichTextAsset::register($this);
+app\assets\FormGuardAsset::register($this);
 /** ตัวช่วยสร้าง option ของ textarea ที่เปิดแถบจัดรูปแบบข้อความ */
 $rich = fn(string $label, int $rows = 3) => ['rows' => $rows, 'data-richtext' => '1', 'data-rte-label' => $label];
+
+// หน่วยงานจากทะเบียนกลางของปีนี้ — จัดกลุ่มตามประเภท (หน่วยงาน/ทีมประสาน) และเยื้องตามผัง
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
 
 /** @var yii\web\View $this */
 /** @var Projects $model */
@@ -19,6 +22,10 @@ $rich = fn(string $label, int $rows = 3) => ['rows' => $rows, 'data-richtext' =>
 /** @var ProjectResponsible[] $responsibles */
 
 $roleList = ProjectResponsible::roleList();
+
+// บุคลากรที่ยังปฏิบัติงาน + คนในแถวเดิมที่พ้นจากการปฏิบัติงานไปแล้ว (โครงการปีเก่าต้องคงค่าไว้)
+$people = ProjectResponsible::activeEmployees();
+$empOptions = ProjectResponsible::employeeOptions($responsibles, $people);
 
 $form = ActiveForm::begin(['id' => 'project-form']);
 ?>
@@ -37,15 +44,11 @@ $form = ActiveForm::begin(['id' => 'project-form']);
         </div>
         <div class="row">
             <div class="col-md-3"><?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600]) ?></div>
-            <div class="col-md-6"><?= $form->field($model, 'department_id')->widget(\kartik\tree\TreeViewInput::class, [
-                'query' => Organization::find()->where(['tb_name' => 'diagram'])->addOrderBy('root, lft'),
-                'headingOptions' => ['label' => 'รายชื่อหน่วยงาน'],
-                'rootOptions' => ['label' => '<i class="fa fa-building"></i>'],
-                'fontAwesome' => true,
-                'asDropdown' => true,
-                'multiple' => false,
-                'options' => ['placeholder' => 'เลือกหน่วยงานจากผังองค์กร'],
-            ])->label('หน่วยงานเจ้าของโครงการ') ?></div>
+            <div class="col-md-6"><?= $form->field($model, 'org_unit_id')->widget(Select2::class, [
+                'data' => $ouGroups,
+                'options' => ['placeholder' => '-- เลือกหน่วยงาน --'],
+                'pluginOptions' => ['allowClear' => false],
+            ])->label('หน่วยงาน/ทีมเจ้าของโครงการ')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)') ?></div>
             <div class="col-md-3"><?= $form->field($model, 'status')->dropDownList(Projects::statusList()) ?></div>
         </div>
     </div>
@@ -140,8 +143,8 @@ $form = ActiveForm::begin(['id' => 'project-form']);
                 <thead class="table-light">
                     <tr>
                         <th style="width:32px">#</th>
-                        <th style="width:22%">ประเภท</th>
-                        <th>ชื่อ-สกุล</th>
+                        <th style="width:20%">ประเภท</th>
+                        <th style="width:30%">ชื่อ-นามสกุล</th>
                         <th>ตำแหน่ง</th>
                         <th style="width:15%">เบอร์โทร</th>
                         <th style="width:40px"></th>
@@ -151,13 +154,18 @@ $form = ActiveForm::begin(['id' => 'project-form']);
                     <?php foreach ($responsibles as $i => $r): ?>
                         <tr data-row>
                             <td data-row-index><?= $i + 1 ?></td>
+                            <td><?= Html::dropDownList("Responsibles[$i][role]", $r->role, $roleList, ['class' => 'form-select form-select-sm']) ?></td>
                             <td>
-                                <?= Html::hiddenInput("Responsibles[$i][emp_id]", $r->emp_id) ?>
-                                <?= Html::dropDownList("Responsibles[$i][role]", $r->role, $roleList, ['class' => 'form-select form-select-sm']) ?>
+                                <?= Html::dropDownList("Responsibles[$i][emp_id]", $r->emp_id, $empOptions, [
+                                    'class' => 'form-select form-select-sm', 'data-emp-picker' => '1', 'prompt' => 'ระบุเอง / บุคคลภายนอก',
+                                ]) ?>
+                                <?= Html::textInput("Responsibles[$i][fullname]", $r->fullname, [
+                                    'class' => 'form-control form-control-sm mt-1' . ($r->emp_id ? ' d-none' : ''),
+                                    'data-emp-field' => 'fullname', 'placeholder' => 'พิมพ์ชื่อ-นามสกุล',
+                                ]) ?>
                             </td>
-                            <td><?= Html::textInput("Responsibles[$i][fullname]", $r->fullname, ['class' => 'form-control form-control-sm']) ?></td>
-                            <td><?= Html::textInput("Responsibles[$i][position]", $r->position, ['class' => 'form-control form-control-sm']) ?></td>
-                            <td><?= Html::textInput("Responsibles[$i][phone]", $r->phone, ['class' => 'form-control form-control-sm']) ?></td>
+                            <td><?= Html::textInput("Responsibles[$i][position]", $r->position, ['class' => 'form-control form-control-sm', 'data-emp-field' => 'position']) ?></td>
+                            <td><?= Html::textInput("Responsibles[$i][phone]", $r->phone, ['class' => 'form-control form-control-sm', 'data-emp-field' => 'phone']) ?></td>
                             <td><button type="button" class="btn btn-sm btn-outline-danger" data-remove-row><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
                     <?php endforeach; ?>
@@ -207,13 +215,17 @@ $roleOptions = '';
 foreach ($roleList as $val => $label) {
     $roleOptions .= '<option value="' . Html::encode($val) . '">' . Html::encode($label) . '</option>';
 }
+$empOptionsHtml = '<option value="">ระบุเอง / บุคคลภายนอก</option>';
+foreach ($empOptions as $val => $label) {
+    $empOptionsHtml .= '<option value="' . Html::encode($val) . '">' . Html::encode($label) . '</option>';
+}
 $tplResponsible = str_replace("\n", '', '<tr data-row>'
     . '<td data-row-index></td>'
-    . '<td><input type="hidden" name="Responsibles[__INDEX__][emp_id]" value="">'
-    . '<select name="Responsibles[__INDEX__][role]" class="form-select form-select-sm">' . $roleOptions . '</select></td>'
-    . '<td><input type="text" name="Responsibles[__INDEX__][fullname]" class="form-control form-control-sm"></td>'
-    . '<td><input type="text" name="Responsibles[__INDEX__][position]" class="form-control form-control-sm"></td>'
-    . '<td><input type="text" name="Responsibles[__INDEX__][phone]" class="form-control form-control-sm"></td>'
+    . '<td><select name="Responsibles[__INDEX__][role]" class="form-select form-select-sm">' . $roleOptions . '</select></td>'
+    . '<td><select name="Responsibles[__INDEX__][emp_id]" class="form-select form-select-sm" data-emp-picker="1">' . $empOptionsHtml . '</select>'
+    . '<input type="text" name="Responsibles[__INDEX__][fullname]" class="form-control form-control-sm mt-1" data-emp-field="fullname" placeholder="พิมพ์ชื่อ-นามสกุล"></td>'
+    . '<td><input type="text" name="Responsibles[__INDEX__][position]" class="form-control form-control-sm" data-emp-field="position"></td>'
+    . '<td><input type="text" name="Responsibles[__INDEX__][phone]" class="form-control form-control-sm" data-emp-field="phone"></td>'
     . '<td><button type="button" class="btn btn-sm btn-outline-danger" data-remove-row><i class="fa-solid fa-trash"></i></button></td>'
     . '</tr>');
 
@@ -222,6 +234,7 @@ $templates = \yii\helpers\Json::encode([
     'indicators' => $tplIndicator,
     'responsibles' => $tplResponsible,
 ]);
+$peopleJson = \yii\helpers\Json::encode($people);
 
 $js = <<<JS
 (function(){
@@ -269,6 +282,33 @@ $js = <<<JS
         var name = container ? container.getAttribute('data-rows') : null;
         row.remove();
         if(name) reindex(name);
+    });
+
+    // เลือกชื่อจากทะเบียนแล้วเติมตำแหน่ง/เบอร์โทรให้ ยังแก้ไขต่อได้เอง
+    // ชื่อที่บันทึกเก็บเป็นข้อความของตัวเอง (hidden) เพื่อให้โครงการปีเก่าคงชื่อ ณ ตอนนั้นไว้
+    // เลือก "ระบุเอง" จะเปิดช่องพิมพ์ชื่อ และไม่ล้างค่าที่กรอกไว้เดิม
+    var people = $peopleJson;
+    document.addEventListener('change', function(e){
+        var picker = e.target.closest('[data-emp-picker]');
+        if(!picker) return;
+        var row = picker.closest('[data-row]');
+        var nameInput = row.querySelector('[data-emp-field="fullname"]');
+        var info = people[picker.value];
+
+        if(!picker.value){
+            if(nameInput) nameInput.classList.remove('d-none');
+            return;
+        }
+        if(nameInput) nameInput.classList.add('d-none');
+        if(!info){
+            // คนที่พ้นจากการปฏิบัติงาน — คงชื่อเดิมที่บันทึกไว้ ไม่เขียนทับ
+            return;
+        }
+        if(nameInput) nameInput.value = info.fullname || '';
+        ['position','phone'].forEach(function(field){
+            var input = row.querySelector('[data-emp-field="'+field+'"]');
+            if(input) input.value = info[field] || '';
+        });
     });
 })();
 JS;

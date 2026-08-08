@@ -67,10 +67,11 @@ class ProjectsController extends Controller
         $model->status = Projects::STATUS_DRAFT;
         $model->thai_year = (int) (date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
 
-        // ตั้งค่าเริ่มต้นจากผู้ใช้ปัจจุบัน
+        // ตั้งค่าเริ่มต้นจากผู้ใช้ปัจจุบัน — แปลงหน่วยงานในผังเป็นรายการในทะเบียนของปีนั้น
         $me = UserHelper::GetEmployee();
         if ($me) {
             $model->department_id = $me->department;
+            $model->syncOrgUnit();
         }
 
         if ($this->request->isPost && $model->load($this->request->post())) {
@@ -132,8 +133,9 @@ class ProjectsController extends Controller
         try {
             // สร้างรหัสโครงการอัตโนมัติเมื่อยังไม่กรอก (เฉพาะตอนสร้างใหม่)
             if ($model->isNewRecord && trim((string) $model->code) === '') {
+                $model->syncOrgUnit(); // ต้องรู้หน่วยงานในทะเบียนก่อน จึงจะได้อักษรย่อที่ถูกต้อง
                 $model->code = Projects::generateCode(
-                    $model->department_id ? (int) $model->department_id : null,
+                    $model->org_unit_id ? (int) $model->org_unit_id : null,
                     $model->thai_year ? (int) $model->thai_year : null
                 );
             }
@@ -198,18 +200,31 @@ class ProjectsController extends Controller
         ProjectResponsible::deleteAll(['project_id' => $model->id]);
         $sort = 0;
         foreach ($rows as $row) {
+            $empId = ($row['emp_id'] ?? '') === '' ? null : (int) $row['emp_id'];
             $fullname = trim((string) ($row['fullname'] ?? ''));
+            $position = trim((string) ($row['position'] ?? ''));
+            $phone = trim((string) ($row['phone'] ?? ''));
+
+            // เลือกชื่อจากทะเบียนแล้วแต่ช่องชื่อว่าง (เช่นสคริปต์ไม่ทำงาน) ให้ดึงจากทะเบียนแทน
+            // ไม่เช่นนั้นแถวจะถูกข้ามไปเงียบ ๆ ทั้งที่ผู้ใช้เลือกคนไว้แล้ว
+            if ($empId && ($fullname === '' || $position === '' || $phone === '')) {
+                $info = ProjectResponsible::employeeInfo($empId) ?: [];
+                $fullname = $fullname ?: (string) ($info['fullname'] ?? '');
+                $position = $position ?: (string) ($info['position'] ?? '');
+                $phone = $phone ?: (string) ($info['phone'] ?? '');
+            }
             if ($fullname === '') {
                 continue;
             }
+
             $item = new ProjectResponsible();
             $item->project_id = $model->id;
             $item->sort = $sort++;
             $item->role = $row['role'] ?? ProjectResponsible::ROLE_OWNER;
-            $item->emp_id = ($row['emp_id'] ?? '') === '' ? null : (int) $row['emp_id'];
+            $item->emp_id = $empId;
             $item->fullname = $fullname;
-            $item->position = trim((string) ($row['position'] ?? '')) ?: null;
-            $item->phone = trim((string) ($row['phone'] ?? '')) ?: null;
+            $item->position = $position ?: null;
+            $item->phone = $phone ?: null;
             $item->save();
         }
     }
@@ -218,11 +233,11 @@ class ProjectsController extends Controller
     protected function defaultResponsibles($me): array
     {
         $owner = new ProjectResponsible(['role' => ProjectResponsible::ROLE_OWNER]);
-        if ($me) {
+        if ($me && ($info = ProjectResponsible::employeeInfo((int) $me->id))) {
             $owner->emp_id = $me->id;
-            $owner->fullname = trim(($me->prefix ?? '') . ($me->fname ?? '') . ' ' . ($me->lname ?? ''));
-            $owner->position = $me->position_name;
-            $owner->phone = $me->phone;
+            $owner->fullname = $info['fullname'];
+            $owner->position = $info['position'];
+            $owner->phone = $info['phone'];
         }
         $director = new ProjectResponsible(['role' => ProjectResponsible::ROLE_DIRECTOR]);
 
