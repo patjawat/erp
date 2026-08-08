@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+app\assets\FormGuardAsset::register($this);
 $labels = ['mission' => 'พันธกิจ', 'issue' => 'ประเด็นยุทธศาสตร์', 'goal' => 'เป้าประสงค์', 'tactic' => 'กลยุทธ์'];
 $this->title = ($model->isNewRecord ? 'เพิ่ม' : 'แก้ไข') . $labels[$type];
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();

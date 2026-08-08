@@ -18,6 +18,11 @@ class StrategyTactic extends StrategyRecord
             ['is_active', 'boolean'],
             ['name', 'string'],
             ['code', 'string', 'max' => 50],
+            // กันบันทึกซ้ำจากการกดส่งฟอร์มสองครั้ง — รหัสต้องไม่ซ้ำภายในเป้าประสงค์เดียวกัน
+            ['code', 'unique', 'targetAttribute' => ['goal_id', 'code'],
+                'message' => 'รหัสกลยุทธ์นี้ถูกใช้แล้วในเป้าประสงค์เดียวกัน',
+                'when' => static fn ($model) => trim((string) $model->code) !== ''],
+            ['name', 'unique', 'targetAttribute' => ['goal_id', 'name'], 'message' => 'มีกลยุทธ์ชื่อนี้อยู่แล้วในเป้าประสงค์เดียวกัน'],
         ];
     }
 

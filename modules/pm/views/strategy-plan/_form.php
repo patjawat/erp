@@ -2,6 +2,7 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 app\assets\RichTextAsset::register($this);
+app\assets\FormGuardAsset::register($this);
 $form = ActiveForm::begin();
 ?>
 <div class="card border-0 shadow-sm"><div class="card-body p-4">

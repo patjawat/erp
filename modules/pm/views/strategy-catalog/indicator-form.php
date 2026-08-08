@@ -11,6 +11,7 @@ use app\modules\pm\models\StrategyIndicatorYear;
 /** @var \app\modules\pm\models\StrategyIndicatorBaseline[] $baselines */
 
 app\assets\RichTextAsset::register($this);
+app\assets\FormGuardAsset::register($this);
 $rich = fn(string $label, int $rows = 4) => ['rows' => $rows, 'data-richtext' => '1', 'data-rte-label' => $label];
 $this->title = ($entry->isNewRecord ? 'เพิ่ม' : 'แก้ไข') . 'รายละเอียดตัวชี้วัด (KPI Template) ปี ' . $year;
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();

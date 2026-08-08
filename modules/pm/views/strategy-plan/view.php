@@ -31,7 +31,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                     <span class="badge bg-secondary-subtle text-secondary me-1">กลยุทธ์</span>
                     <?php if ($tactic->code): ?><span class="text-muted"><?= Html::encode($tactic->code) ?></span> <?php endif; ?>
                     <?= Html::encode($tactic->name) ?>
-                    <?php if ($editable): ?><span class="d-inline-flex flex-wrap gap-2 ms-2"><?= Html::a('แก้ไข',['/pm/strategy-structure/update','type'=>'tactic','id'=>$tactic->id],['class'=>'small']) ?><?= Html::a('เพิ่มมาตรการ',['/pm/strategy-catalog/create','type'=>'measure','parentId'=>$tactic->id],['class'=>'small']) ?></span><?php endif; ?>
+                    <?php if ($editable): ?><span class="d-inline-flex flex-wrap gap-2 ms-2"><?= Html::a('แก้ไข',['/pm/strategy-structure/update','type'=>'tactic','id'=>$tactic->id],['class'=>'small']) ?><?= Html::a('เพิ่มมาตรการ',['/pm/strategy-catalog/create','type'=>'measure','parentId'=>$tactic->id],['class'=>'small']) ?><?= Html::a('ลบ',['/pm/strategy-structure/delete','type'=>'tactic','id'=>$tactic->id],['class'=>'small text-danger','data-method'=>'post','data-confirm'=>'ลบกลยุทธ์นี้? มาตรการที่ผูกอยู่จะไม่ถูกลบ แต่จะไม่สังกัดกลยุทธ์ใด']) ?></span><?php endif; ?>
                     <?php if ($tactic->measures): ?>
                         <ul class="small text-muted mt-1 mb-0 ps-3">
                         <?php foreach ($tactic->measures as $measure): ?>

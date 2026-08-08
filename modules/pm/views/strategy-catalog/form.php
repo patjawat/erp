@@ -7,6 +7,7 @@ use yii\widgets\ActiveForm;
 /** @var array $goals @var array $tactics @var array $measures */
 
 app\assets\RichTextAsset::register($this);
+app\assets\FormGuardAsset::register($this);
 $labels = ['factor' => 'ปัจจัยความสำเร็จ/RCA', 'measure' => 'มาตรการ', 'program' => 'แผนงานหลัก'];
 $rich = ['rows' => 4, 'data-richtext' => 'name', 'data-rte-label' => 'รายละเอียด'];
 $this->title = ($model->isNewRecord ? 'เพิ่ม' : 'แก้ไข') . $labels[$type];

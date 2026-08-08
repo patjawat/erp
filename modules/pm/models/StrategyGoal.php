@@ -2,7 +2,7 @@
 namespace app\modules\pm\models;
 class StrategyGoal extends StrategyRecord {
     public static function tableName(): string { return '{{%pm_strategy_goal}}'; }
-    public function rules(): array { return [[['issue_id','code','name'],'required'],[['issue_id','sort_order'],'integer'],['is_active','boolean'],['code','string','max'=>50],['name','string']]; }
+    public function rules(): array { return [[['issue_id','code','name'],'required'],[['issue_id','sort_order'],'integer'],['is_active','boolean'],['code','string','max'=>50],['name','string'],['code','unique','targetAttribute'=>['issue_id','code'],'message'=>'รหัสเป้าประสงค์นี้ถูกใช้แล้วในประเด็นยุทธศาสตร์เดียวกัน']]; }
     public function attributeLabels(): array { return ['code'=>'รหัสเป้าประสงค์','name'=>'เป้าประสงค์','sort_order'=>'ลำดับ','is_active'=>'ใช้งาน']; }
     public function getIssue(){return $this->hasOne(StrategyIssue::class,['id'=>'issue_id']);}
     public function getTactics(){return $this->hasMany(StrategyTactic::class,['goal_id'=>'id'])->orderBy(['sort_order'=>SORT_ASC,'id'=>SORT_ASC]);}
