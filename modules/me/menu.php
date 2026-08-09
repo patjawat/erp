@@ -49,6 +49,34 @@ $menus = [
         คลังหน่วยงาน
     </a>
     <?php $meEmp = \app\components\UserHelper::GetEmployee(); ?>
+    <?php
+    // งานประเมินสมรรถนะ — ขึ้นเฉพาะเมื่อ HR เปิดรอบและมอบหมายให้คนนี้เป็นผู้ประเมิน
+    $competencyPending = 0;
+    if ($meEmp) {
+        try {
+            $competencyPending = (int) \app\modules\hr\models\CompetencyAssignment::find()
+                ->alias('a')
+                ->innerJoin(['r' => \app\modules\hr\models\AppraisalRound::tableName()], 'r.id = a.round_id')
+                ->leftJoin(['ev' => \app\modules\hr\models\CompetencyEvaluation::tableName()], 'ev.assignment_id = a.id')
+                ->where(['a.evaluator_id' => $meEmp->id, 'r.status' => \app\modules\hr\models\AppraisalRound::STATUS_OPEN])
+                ->andWhere(['or', ['ev.id' => null], ['<>', 'ev.status', \app\modules\hr\models\CompetencyEvaluation::STATUS_SUBMITTED]])
+                ->count();
+        } catch (\Throwable $e) {
+            $competencyPending = 0; // ยังไม่ได้ migrate ตารางสมรรถนะ
+        }
+    }
+    ?>
+    <?php if ($competencyPending > 0): ?>
+        <a href="<?= Url::to(['/me/competency']) ?>" class="btn <?= $active !== 'competency' ? 'btn-outline-primary' : 'btn-primary' ?> position-relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-check">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <path d="m9 14 2 2 4-4" />
+            </svg>
+            ประเมินสมรรถนะ
+            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle"><?= $competencyPending ?></span>
+        </a>
+    <?php endif; ?>
     <?php if ($meEmp && $meEmp->isDepartmentHead()): ?>
         <a href="<?= Url::to(['/me/plan']) ?>" class="btn <?= $active !== 'plan' ? 'btn-outline-primary' : 'btn-primary' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list">
