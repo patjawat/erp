@@ -53,6 +53,10 @@ class Projects extends ActiveRecord
     public const STRATEGY_IN = 'in';
     public const STRATEGY_OUT = 'out';
 
+    /** โครงการใช้งบประมาณ ส่วนแผนงาน/กิจกรรมอาจไม่ใช้งบ */
+    public const WORK_PROJECT = 'project';
+    public const WORK_ACTIVITY = 'activity';
+
     public static function tableName()
     {
         return '{{%projects}}';
@@ -68,6 +72,17 @@ class Projects extends ActiveRecord
             self::STATUS_DONE => 'ดำเนินการเสร็จสิ้น',
         ];
     }
+
+    public static function workTypeList(): array
+    {
+        return [
+            self::WORK_PROJECT => 'โครงการ',
+            self::WORK_ACTIVITY => 'แผนงาน/กิจกรรม',
+        ];
+    }
+
+    public function isActivity(): bool { return $this->work_type === self::WORK_ACTIVITY; }
+    public function workTypeLabel(): string { return self::workTypeList()[$this->work_type] ?? self::workTypeList()[self::WORK_PROJECT]; }
 
     /** โครงการในแผน = ผูกกลยุทธ์ไว้ · โครงการนอกแผน = ไม่ได้ผูก */
     public static function strategyTypeList(): array
@@ -113,9 +128,42 @@ class Projects extends ActiveRecord
         $this->strategy_type = $this->isInStrategy() ? self::STRATEGY_IN : self::STRATEGY_OUT;
         // ออกรหัสให้เสมอเมื่อยังไม่มี ครอบคลุมการสร้างจากหน้าแผนยุทธศาสตร์ด้วย
         if ($insert && trim((string) $this->code) === '') {
-            $this->code = self::generateCode($this->org_unit_id ? (int) $this->org_unit_id : null, $this->thai_year ? (int) $this->thai_year : null);
+            $this->code = self::generateCode(
+                $this->org_unit_id ? (int) $this->org_unit_id : null,
+                $this->thai_year ? (int) $this->thai_year : null,
+                (string) ($this->work_type ?: self::WORK_PROJECT)
+            );
+        } elseif (!$insert) {
+            $this->renumberOnTypeChange();
         }
         return true;
+    }
+
+    /**
+     * เปลี่ยนชนิดงานขณะยังเป็นฉบับร่าง ให้ออกรหัสใหม่ตามซีรีส์ใหม่
+     *
+     * ทำเฉพาะฉบับร่างและเฉพาะรหัสที่ระบบออกให้เอง เพราะเมื่อเสนอขออนุมัติแล้ว
+     * รหัสถูกอ้างในเอกสารภายนอก การเปลี่ยนจะทำให้อ้างอิงเดิมเสีย
+     */
+    private function renumberOnTypeChange(): void
+    {
+        $previous = $this->getOldAttribute('work_type');
+        if ($previous === null || $previous === $this->work_type || $this->status !== self::STATUS_DRAFT) {
+            return;
+        }
+        $oldPattern = $previous === self::WORK_ACTIVITY
+            ? PmSetting::value(PmSetting::ACTIVITY_CODE_PATTERN, 'A-{org}-{yy}{sequence}')
+            : PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
+        $prefix = strstr($oldPattern, '{', true);
+        // รหัสที่ผู้ใช้พิมพ์เองไม่ขึ้นต้นด้วยซีรีส์เดิม จึงไม่ควรไปแตะ
+        if ($prefix === false || $prefix === '' || !str_starts_with((string) $this->code, $prefix)) {
+            return;
+        }
+        $this->code = self::generateCode(
+            $this->org_unit_id ? (int) $this->org_unit_id : null,
+            $this->thai_year ? (int) $this->thai_year : null,
+            (string) $this->work_type
+        );
     }
 
     /**
@@ -155,6 +203,8 @@ class Projects extends ActiveRecord
             [['name', 'location', 'duration_text', 'budget_source'], 'string', 'max' => 255],
             [['code'], 'string', 'max' => 50],
             [['strategy_type'], 'string', 'max' => 20],
+            [['work_type'], 'in', 'range' => array_keys(self::workTypeList())],
+            [['work_type'], 'default', 'value' => self::WORK_PROJECT],
             [['status'], 'string', 'max' => 30],
             [['status'], 'in', 'range' => array_keys(self::statusList())],
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
@@ -172,6 +222,7 @@ class Projects extends ActiveRecord
             'department_id' => 'หน่วยงานเจ้าของโครงการ',
             'org_unit_id' => 'หน่วยงาน/ทีมเจ้าของโครงการ',
             'tactic_id' => 'กลยุทธ์ที่รองรับ',
+            'work_type' => 'ชนิดงาน',
             'strategy_type' => 'ยุทธศาสตร์',
             'rationale' => '1. หลักการและเหตุผล',
             'target_group' => '4. กลุ่มเป้าหมาย',
@@ -296,17 +347,19 @@ class Projects extends ActiveRecord
     }
 
     /**
-     * สร้างรหัสโครงการอัตโนมัติตามรูปแบบใน pm_setting.code_pattern
-     * token: {org} อักษรย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก (ต่อหน่วยงาน+ปี)
+     * สร้างรหัสอัตโนมัติตามรูปแบบใน pm_setting — โครงการและแผนงาน/กิจกรรมแยกซีรีส์กัน
+     * token: {org} อักษรย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก
      */
-    public static function generateCode(?int $orgUnitId, ?int $thaiYear): string
+    public static function generateCode(?int $orgUnitId, ?int $thaiYear, string $workType = self::WORK_PROJECT): string
     {
         $thaiYear = $thaiYear ?: (int) (date('Y') + 543);
-        $pattern = PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
+        $pattern = $workType === self::WORK_ACTIVITY
+            ? PmSetting::value(PmSetting::ACTIVITY_CODE_PATTERN, 'A-{org}-{yy}{sequence}')
+            : PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
 
-        // ลำดับรัน = จำนวนโครงการของหน่วยงาน+ปีนี้ (รวมที่ลบแบบ soft) + 1 เพื่อไม่ใช้เลขซ้ำ
+        // ลำดับรันแยกตามชนิดงาน+หน่วยงาน+ปี (รวมที่ลบแบบ soft) เพื่อไม่ใช้เลขซ้ำ
         $seq = (int) self::find()
-            ->where(['thai_year' => $thaiYear])
+            ->where(['thai_year' => $thaiYear, 'work_type' => $workType])
             ->andWhere($orgUnitId ? ['org_unit_id' => $orgUnitId] : ['org_unit_id' => null])
             ->count() + 1;
 

@@ -55,13 +55,15 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                         },
                     ],
                     [
-                        'attribute' => 'strategy_type',
-                        'label' => 'ประเภท',
+                        'attribute' => 'work_type',
+                        'label' => 'ชนิดงาน',
                         'format' => 'raw',
-                        'headerOptions' => ['style' => 'width:130px'],
+                        'headerOptions' => ['style' => 'width:170px'],
                         'value' => function (Projects $m) {
-                            $class = $m->isInStrategy() ? 'bg-primary-subtle text-primary-emphasis' : 'bg-secondary-subtle text-secondary';
-                            return '<span class="badge ' . $class . '">' . Html::encode($m->strategyTypeLabel()) . '</span>';
+                            $work = '<span class="badge ' . ($m->isActivity() ? 'bg-secondary-subtle text-secondary' : 'bg-success-subtle text-success') . '">'
+                                . Html::encode($m->workTypeLabel()) . '</span>';
+                            $plan = '<div class="small text-muted mt-1">' . Html::encode($m->strategyTypeLabel()) . '</div>';
+                            return $work . $plan;
                         },
                     ],
                     [

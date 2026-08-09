@@ -136,7 +136,8 @@ class ProjectsController extends Controller
                 $model->syncOrgUnit(); // ต้องรู้หน่วยงานในทะเบียนก่อน จึงจะได้อักษรย่อที่ถูกต้อง
                 $model->code = Projects::generateCode(
                     $model->org_unit_id ? (int) $model->org_unit_id : null,
-                    $model->thai_year ? (int) $model->thai_year : null
+                    $model->thai_year ? (int) $model->thai_year : null,
+                    (string) ($model->work_type ?: Projects::WORK_PROJECT)
                 );
             }
 

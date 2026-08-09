@@ -47,8 +47,8 @@ class StrategyTactic extends StrategyRecord
     public function getIndicator() { return $this->hasOne(StrategyIndicator::class, ['id' => 'indicator_id']); }
     public function getMeasures() { return $this->hasMany(StrategyMeasure::class, ['tactic_id' => 'id'])->orderBy(['fiscal_year' => SORT_ASC, 'sort_order' => SORT_ASC]); }
 
-    /** โครงการในแผนยุทธศาสตร์ที่รองรับกลยุทธ์นี้ */
-    public function getProjects() { return $this->hasMany(Projects::class, ['tactic_id' => 'id'])->andOnCondition(['deleted_at' => null])->orderBy(['thai_year' => SORT_ASC, 'id' => SORT_ASC]); }
+    /** งานที่ขับเคลื่อนกลยุทธ์นี้ — ทั้งโครงการและแผนงาน/กิจกรรม เรียงโครงการขึ้นก่อน */
+    public function getWorks() { return $this->hasMany(Projects::class, ['tactic_id' => 'id'])->andOnCondition(['deleted_at' => null])->orderBy(['work_type' => SORT_DESC, 'thai_year' => SORT_ASC, 'id' => SORT_ASC]); }
 
     public function label(): string { return trim(($this->code ? $this->code . ' — ' : '') . $this->name); }
 }

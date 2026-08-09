@@ -14,7 +14,7 @@ class ProjectsSearch extends Projects
     {
         return [
             [['id', 'thai_year', 'department_id', 'org_unit_id'], 'integer'],
-            [['name', 'code', 'status', 'strategy_type'], 'safe'],
+            [['name', 'code', 'status', 'strategy_type', 'work_type'], 'safe'],
         ];
     }
 
@@ -46,6 +46,7 @@ class ProjectsSearch extends Projects
             'org_unit_id' => $this->org_unit_id,
             'status' => $this->status,
             'strategy_type' => $this->strategy_type,
+            'work_type' => $this->work_type,
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])

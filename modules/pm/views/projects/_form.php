@@ -51,6 +51,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
             <div class="col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'เว้นว่าง = ออกอัตโนมัติ'])->hint('เว้นว่างไว้ ระบบจะออกรหัสให้ตามรูปแบบในหน้าตั้งค่า') ?></div>
         </div>
         <div class="row">
+            <div class="col-md-3"><?= $form->field($model, 'work_type')->dropDownList(Projects::workTypeList())->hint('โครงการใช้งบประมาณ · แผนงาน/กิจกรรมอาจไม่ใช้งบ') ?></div>
             <div class="col-md-3"><?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600]) ?></div>
             <div class="col-md-6"><?= $form->field($model, 'org_unit_id')->widget(Select2::class, [
                 'data' => $ouGroups,
@@ -69,12 +70,24 @@ $form = ActiveForm::begin(['id' => 'project-form']);
     </div>
 </div>
 
+<?php /* แผนงาน/กิจกรรมกรอกน้อยข้อกว่าโครงการ — ข้อที่เป็นเรื่องของโครงการซ่อนไว้ก่อน เปิดกรอกได้ */ ?>
+<?php $isActivity = $model->isActivity(); ?>
+<?php if ($isActivity): ?>
+<div class="mb-3">
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target=".pm-extra" aria-expanded="false">
+        <i class="fa-solid fa-plus me-1"></i> แสดงข้อมูลเพิ่มเติม (หลักการและเหตุผล · เป้าหมาย/ตัวชี้วัด · งบประมาณ)
+    </button>
+</div>
+<?php endif; ?>
+
 <!-- 1. หลักการและเหตุผล -->
+<div class="<?= $isActivity ? 'collapse pm-extra' : '' ?>">
 <div class="card mb-3">
     <div class="card-header fw-semibold">1. หลักการและเหตุผล</div>
     <div class="card-body">
         <?= $form->field($model, 'rationale')->textarea($rich('หลักการและเหตุผล', 4))->label(false) ?>
     </div>
+</div>
 </div>
 
 <!-- 2. วัตถุประสงค์ -->
@@ -97,6 +110,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
 </div>
 
 <!-- 3. เป้าหมาย/ตัวชี้วัด -->
+<div class="<?= $isActivity ? 'collapse pm-extra' : '' ?>">
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">3. เป้าหมาย/ตัวชี้วัดผลสำเร็จ (สอดคล้องกับวัตถุประสงค์)</span>
@@ -115,6 +129,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
             <?php endforeach; ?>
         </div>
     </div>
+</div>
 </div>
 
 <!-- 4. กลุ่มเป้าหมาย / 5. วิธีดำเนินการ -->
@@ -191,8 +206,9 @@ $form = ActiveForm::begin(['id' => 'project-form']);
 </div>
 
 <!-- 12. งบประมาณ -->
+<div class="<?= $isActivity ? 'collapse pm-extra' : '' ?>">
 <div class="card mb-3">
-    <div class="card-header fw-semibold">12. งบประมาณ</div>
+    <div class="card-header fw-semibold">12. งบประมาณ<?= $isActivity ? ' <span class="small text-muted fw-normal">(แผนงาน/กิจกรรมจะกรอกหรือไม่ก็ได้)</span>' : '' ?></div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-4"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01', 'min' => 0]) ?></div>
@@ -201,6 +217,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
         <?= $form->field($model, 'budget_detail')->textarea($rich('รายละเอียดงบประมาณ', 3) + ['placeholder' => 'แจกแจงรายการค่าใช้จ่าย']) ?>
         <div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>
     </div>
+</div>
 </div>
 
 <div class="d-flex gap-2 mb-4">

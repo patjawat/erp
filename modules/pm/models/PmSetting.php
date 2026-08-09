@@ -16,6 +16,8 @@ use yii\db\ActiveRecord;
 class PmSetting extends ActiveRecord
 {
     public const CODE_PATTERN = 'code_pattern';
+    /** รูปแบบรหัสของแผนงาน/กิจกรรม แยกซีรีส์จากโครงการเพื่อให้ดูรหัสแล้วรู้ชนิดงานทันที */
+    public const ACTIVITY_CODE_PATTERN = 'activity_code_pattern';
 
     public static function tableName()
     {

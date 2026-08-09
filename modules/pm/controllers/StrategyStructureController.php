@@ -29,6 +29,7 @@ class StrategyStructureController extends Controller
         'sub-indicator' => [StrategyIndicator::class, 'parent_id'],
         'tactic' => [StrategyTactic::class, 'indicator_id'],
         'project' => [Projects::class, 'tactic_id'],
+        'activity' => [Projects::class, 'tactic_id'],
     ];
 
     public function behaviors(): array
@@ -76,7 +77,8 @@ class StrategyStructureController extends Controller
             // goal_id เป็นค่าที่ derive จากตัวชี้วัด แต่ต้องมีตั้งแต่ตอน validate
             $model->goal_id = StrategyIndicator::findOne($parentId)?->goal_id;
         }
-        if ($type === 'project') {
+        if ($type === 'project' || $type === 'activity') {
+            $model->work_type = $type === 'activity' ? Projects::WORK_ACTIVITY : Projects::WORK_PROJECT;
             $model->thai_year = (int) (date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
             $model->status = Projects::STATUS_DRAFT;
             // โครงการต้องมีหน่วยงานเจ้าของเสมอ ตั้งต้นจากหน่วยงานของผู้สร้างไว้ก่อน
@@ -108,8 +110,8 @@ class StrategyStructureController extends Controller
         if (!$model) throw new NotFoundHttpException('ไม่พบรายการ');
         $plan = $this->planFromModel($type, $model);
         $this->assertEditable($plan);
-        if ($type === 'project') {
-            // โครงการมีรายละเอียดและประวัติของตัวเอง จึงลบแบบ soft ให้ตรงกับหน้าโครงการ
+        if ($type === 'project' || $type === 'activity') {
+            // โครงการและกิจกรรมมีรายละเอียดกับประวัติของตัวเอง จึงลบแบบ soft ให้ตรงกับหน้าโครงการ
             $model->deleted_at = date('Y-m-d H:i:s');
             $model->deleted_by = Yii::$app->user->id;
             $model->save(false, ['deleted_at', 'deleted_by']);
@@ -133,7 +135,7 @@ class StrategyStructureController extends Controller
             'goal' => StrategyIssue::findOne($parentId)?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบประเด็นยุทธศาสตร์'),
             'indicator' => StrategyGoal::findOne($parentId)?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบเป้าประสงค์'),
             'sub-indicator', 'tactic' => StrategyIndicator::findOne($parentId)?->plan ?: throw new NotFoundHttpException('ไม่พบตัวชี้วัด'),
-            'project' => StrategyTactic::findOne($parentId)?->goal?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบกลยุทธ์'),
+            'project', 'activity' => StrategyTactic::findOne($parentId)?->goal?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบกลยุทธ์'),
         };
     }
     private function planFromModel(string $type, $model): StrategyPlan
@@ -144,7 +146,7 @@ class StrategyStructureController extends Controller
             'goal' => $model->issue->mission->plan,
             'indicator', 'sub-indicator' => $model->plan,
             'tactic' => $model->goal->issue->mission->plan,
-            'project' => $model->tactic->goal->issue->mission->plan,
+            'project', 'activity' => $model->tactic->goal->issue->mission->plan,
         };
     }
     private function assertEditable(StrategyPlan $plan): void

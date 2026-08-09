@@ -8,21 +8,23 @@ app\assets\FormGuardAsset::register($this);
 $labels = [
     'mission' => 'พันธกิจ', 'issue' => 'ประเด็นยุทธศาสตร์', 'goal' => 'เป้าประสงค์',
     'indicator' => 'ตัวชี้วัดหลัก', 'sub-indicator' => 'ตัวชี้วัดรอง',
-    'tactic' => 'กลยุทธ์', 'project' => 'โครงการ',
+    'tactic' => 'กลยุทธ์', 'project' => 'โครงการ', 'activity' => 'แผนงาน/กิจกรรม',
 ];
 // ตัวชี้วัดและโครงการกรอกที่นี่แค่รหัสกับชื่อ รายละเอียดไปทำที่หน้าเฉพาะทาง
 $hints = [
     'indicator' => 'กำหนดเฉพาะรหัสและชื่อ · นิยาม ค่าเป้าหมาย และเกณฑ์คะแนน ไปกรอกที่หน้าตัวชี้วัด',
     'sub-indicator' => 'ตัวชี้วัดย่อยภายใต้ตัวชี้วัดหลัก · รายละเอียดไปกรอกที่หน้าตัวชี้วัด',
     'project' => 'กำหนดเฉพาะรหัสและชื่อ · หลักการเหตุผล งบประมาณ และผู้รับผิดชอบ ไปเขียนที่หน้าโครงการ',
+    'activity' => 'งานที่ไม่ใช้งบประมาณหรือใช้เพียงเล็กน้อย · กำหนดเฉพาะรหัสและชื่อ รายละเอียดไปกรอกที่หน้าโครงการ',
 ];
-$isBrief = in_array($type, ['indicator', 'sub-indicator', 'project'], true);
+$isWork = in_array($type, ['project', 'activity'], true);
+$isBrief = in_array($type, ['indicator', 'sub-indicator'], true) || $isWork;
 $this->title = ($model->isNewRecord ? 'เพิ่ม' : 'แก้ไข') . $labels[$type];
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'strategy']) ?><?php $this->endBlock();
 // หน่วยงานเจ้าของโครงการ — ต้องมีเสมอ ตั้งต้นจากหน่วยงานของผู้สร้างไว้แล้ว
 $ouItems = [];
-if ($type === 'project') {
+if ($isWork) {
     foreach (\app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year) as $group => $units) {
         $ouItems[$group] = $units;
     }
@@ -51,11 +53,11 @@ $form = ActiveForm::begin();
 <?php /* สรุปข้อผิดพลาดไว้บนสุด กันกรณีที่ error ตกอยู่ในฟิลด์ที่ฟอร์มย่อไม่ได้แสดง */ ?>
 <?= $form->errorSummary($model, ['class' => 'alert alert-danger', 'header' => '<div class="fw-semibold mb-1">บันทึกไม่สำเร็จ</div>']) ?>
 <div class="card border-0 shadow-sm"><div class="card-body p-4"><div class="row g-3">
-<?php if ($type === 'project'): ?>
+<?php if ($isWork): ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'เว้นว่าง = ออกอัตโนมัติ']) ?></div>
     <div class="col-12 col-md-3"><?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600]) ?></div>
-    <div class="col-12 col-md-5"><?= $form->field($model, 'org_unit_id')->dropDownList($ouItems, ['prompt' => '-- เลือกหน่วยงาน --'])->label('หน่วยงานเจ้าของโครงการ') ?></div>
-    <div class="col-12"><?= $form->field($model, 'name')->textInput(['maxlength' => true])->label('ชื่อโครงการ') ?></div>
+    <div class="col-12 col-md-5"><?= $form->field($model, 'org_unit_id')->dropDownList($ouItems, ['prompt' => '-- เลือกหน่วยงาน --'])->label('หน่วยงานเจ้าของ') ?></div>
+    <div class="col-12"><?= $form->field($model, 'name')->textInput(['maxlength' => true])->label('ชื่อ' . $labels[$type]) ?></div>
 <?php else: ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?></div>
     <div class="col-12 col-md-2"><?= $form->field($model, 'sort_order')->textInput(['type' => 'number', 'min' => 0]) ?></div>
