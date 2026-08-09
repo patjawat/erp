@@ -69,6 +69,27 @@ class Projects extends ActiveRecord
         ];
     }
 
+    /** โครงการในแผน = ผูกกลยุทธ์ไว้ · โครงการนอกแผน = ไม่ได้ผูก */
+    public static function strategyTypeList(): array
+    {
+        return [
+            self::STRATEGY_IN => 'ในแผนยุทธศาสตร์',
+            self::STRATEGY_OUT => 'นอกแผนยุทธศาสตร์',
+        ];
+    }
+
+    public function isInStrategy(): bool { return !empty($this->tactic_id); }
+
+    /**
+     * ยึดการผูกกลยุทธ์จริงเป็นหลัก ไม่ใช่คอลัมน์ strategy_type
+     * เพราะการลบกลยุทธ์ทำให้ tactic_id ถูกล้างที่ฐานข้อมูลโดยไม่ผ่าน beforeSave
+     * คอลัมน์จึงอาจค้างเป็น in ทั้งที่ไม่ได้สังกัดกลยุทธ์ใดแล้ว
+     */
+    public function strategyTypeLabel(): string
+    {
+        return self::strategyTypeList()[$this->isInStrategy() ? self::STRATEGY_IN : self::STRATEGY_OUT];
+    }
+
     /** ฟิลด์ข้อความยาวที่จัดเป็นข้อ/หัวข้อย่อยได้ — กรอง HTML ก่อนบันทึกเสมอ */
     public const RICH_TEXT_ATTRIBUTES = ['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail'];
 
@@ -88,6 +109,12 @@ class Projects extends ActiveRecord
             return false;
         }
         $this->syncOrgUnit();
+        // ประเภทยุทธศาสตร์ยึดจากการผูกกลยุทธ์ ไม่ให้ตั้งค่าขัดกันเองได้
+        $this->strategy_type = $this->isInStrategy() ? self::STRATEGY_IN : self::STRATEGY_OUT;
+        // ออกรหัสให้เสมอเมื่อยังไม่มี ครอบคลุมการสร้างจากหน้าแผนยุทธศาสตร์ด้วย
+        if ($insert && trim((string) $this->code) === '') {
+            $this->code = self::generateCode($this->org_unit_id ? (int) $this->org_unit_id : null, $this->thai_year ? (int) $this->thai_year : null);
+        }
         return true;
     }
 
@@ -120,7 +147,7 @@ class Projects extends ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['thai_year', 'department_id', 'org_unit_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'department_id', 'org_unit_id', 'tactic_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['org_unit_id'], 'required', 'when' => static fn ($m) => empty($m->department_id), 'enableClientValidation' => false, 'message' => 'กรุณาเลือกหน่วยงาน'],
             [['budget_total'], 'number'],
             [['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail', 'data_json'], 'safe'],
@@ -144,6 +171,7 @@ class Projects extends ActiveRecord
             'thai_year' => 'ปีงบประมาณ',
             'department_id' => 'หน่วยงานเจ้าของโครงการ',
             'org_unit_id' => 'หน่วยงาน/ทีมเจ้าของโครงการ',
+            'tactic_id' => 'กลยุทธ์ที่รองรับ',
             'strategy_type' => 'ยุทธศาสตร์',
             'rationale' => '1. หลักการและเหตุผล',
             'target_group' => '4. กลุ่มเป้าหมาย',
@@ -196,6 +224,12 @@ class Projects extends ActiveRecord
     public function getDepartment()
     {
         return $this->hasOne(Organization::class, ['id' => 'department_id']);
+    }
+
+    /** กลยุทธ์ที่โครงการนี้รองรับ — มีค่าเฉพาะโครงการในแผนยุทธศาสตร์ */
+    public function getTactic()
+    {
+        return $this->hasOne(StrategyTactic::class, ['id' => 'tactic_id']);
     }
 
     /** หน่วยงานในทะเบียนกลาง (org_unit) — รองรับทีมประสานที่ไม่มีในผังบุคลากร */

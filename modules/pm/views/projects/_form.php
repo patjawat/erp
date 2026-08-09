@@ -15,6 +15,14 @@ $rich = fn(string $label, int $rows = 3) => ['rows' => $rows, 'data-richtext' =>
 // หน่วยงานจากทะเบียนกลางของปีนี้ — จัดกลุ่มตามประเภท (หน่วยงาน/ทีมประสาน) และเยื้องตามผัง
 $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
 
+// กลยุทธ์ทั้งหมด จัดกลุ่มตามตัวชี้วัดที่สังกัด เพื่อให้เลือกถูกตัวเมื่อชื่อกลยุทธ์คล้ายกัน
+$tacticGroups = [];
+foreach (\app\modules\pm\models\StrategyTactic::find()->with('indicator', 'goal')->orderBy(['indicator_id' => SORT_ASC, 'sort_order' => SORT_ASC])->all() as $tactic) {
+    $indicator = $tactic->indicator;
+    $group = $indicator ? trim($indicator->code . ' ' . $indicator->name) : 'ยังไม่ผูกตัวชี้วัด';
+    $tacticGroups[$group][$tactic->id] = $tactic->label();
+}
+
 /** @var yii\web\View $this */
 /** @var Projects $model */
 /** @var app\modules\pm\models\ProjectObjective[] $objectives */
@@ -50,6 +58,13 @@ $form = ActiveForm::begin(['id' => 'project-form']);
                 'pluginOptions' => ['allowClear' => false],
             ])->label('หน่วยงาน/ทีมเจ้าของโครงการ')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)') ?></div>
             <div class="col-md-3"><?= $form->field($model, 'status')->dropDownList(Projects::statusList()) ?></div>
+        </div>
+        <div class="row">
+            <div class="col-md-12"><?= $form->field($model, 'tactic_id')->widget(Select2::class, [
+                'data' => $tacticGroups,
+                'options' => ['placeholder' => '-- ไม่ผูก = โครงการนอกแผนยุทธศาสตร์ --'],
+                'pluginOptions' => ['allowClear' => true],
+            ])->label('กลยุทธ์ที่รองรับ')->hint('ผูกกลยุทธ์ = โครงการในแผนยุทธศาสตร์ · เว้นว่าง = โครงการนอกแผนยุทธศาสตร์') ?></div>
         </div>
     </div>
 </div>

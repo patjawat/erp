@@ -334,6 +334,6 @@ class StrategyCatalogController extends Controller
     private function orderFor(string $type): array { return ['sort_order' => SORT_ASC, 'id' => SORT_ASC]; }
     private function assertEditable(StrategyPlan $plan): void { if (!$plan->isEditable()) throw new ForbiddenHttpException('ข้อมูลของแผนที่ประกาศใช้แล้วถูกล็อก'); }
     private function goalItems(StrategyPlan $plan): array { $items=[]; foreach($plan->missions as $m) foreach($m->issues as $i) foreach($i->goals as $g) $items[$g->id]="$g->code — $g->name"; return $items; }
-    private function tacticItems(StrategyPlan $plan): array { $items=[]; foreach($plan->missions as $m) foreach($m->issues as $i) foreach($i->goals as $g) foreach($g->tactics as $t) $items[$t->id]=$g->code.' · '.$t->label(); return $items; }
+    private function tacticItems(StrategyPlan $plan): array { $items=[]; foreach($plan->missions as $m) foreach($m->issues as $i) foreach($i->goals as $g) foreach($g->tactics as $t) $items[$t->id]=($t->indicator?->code ?: $g->code).' · '.$t->label(); return $items; }
     private function measureItems(StrategyPlan $plan): array { $items=[]; foreach(StrategyMeasure::find()->joinWith('goal.issue.mission')->where(['pm_strategy_mission.plan_id'=>$plan->id])->all() as $m) $items[$m->id]=trim("$m->code — $m->name", ' —'); return $items; }
 }

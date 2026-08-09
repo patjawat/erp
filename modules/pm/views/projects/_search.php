@@ -41,6 +41,9 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             <div class="col-md-3">
                 <?= $form->field($model, 'status')->dropDownList(Projects::statusList(), ['prompt' => 'ทุกสถานะ'])->label('สถานะ') ?>
             </div>
+            <div class="col-md-3">
+                <?= $form->field($model, 'strategy_type')->dropDownList(Projects::strategyTypeList(), ['prompt' => 'ทุกประเภท'])->label('ประเภทโครงการ') ?>
+            </div>
         </div>
         <div class="d-flex gap-2 mb-2">
             <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary btn-sm']) ?>
