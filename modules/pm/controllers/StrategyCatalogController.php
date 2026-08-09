@@ -35,7 +35,7 @@ class StrategyCatalogController extends Controller
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'delete' => ['POST'], 'copy-year' => ['POST'], 'cancel-year' => ['POST'],
-                'restore-year' => ['POST'], 'adopt' => ['POST'],
+                'restore-year' => ['POST'],
             ]],
         ];
     }
@@ -43,35 +43,80 @@ class StrategyCatalogController extends Controller
     public function actionIndex(string $type = 'indicator', ?int $planId = null, ?int $year = null)
     {
         if ($type === 'value' || $type === 'year') return $this->redirect(['index', 'type' => 'indicator', 'planId' => $planId, 'year' => $year]);
-        $class = $this->classFor($type);
-        $plan = $planId ? StrategyPlan::findOne($planId) : null;
         $q = trim((string) Yii::$app->request->get('q'));
 
-        // ทะเบียนตัวชี้วัดทำงานรายปีเสมอ — แสดงชุดตัวชี้วัดของปีงบประมาณที่เลือก
-        if ($type === 'indicator' && $plan) {
+        // ทะเบียนตัวชี้วัดเปิดแผนที่ใช้อยู่ปัจจุบันให้เลย ไม่ต้องเลือกชุดแผนก่อน
+        if ($type === 'indicator') {
+            $plan = ($planId ? StrategyPlan::findOne($planId) : null) ?: StrategyPlan::current();
+            if (!$plan) {
+                return $this->render('indicator-index', ['plan' => null, 'plans' => $this->planItems(), 'year' => null,
+                    'q' => $q, 'primaries' => [], 'entries' => [], 'sourceYears' => []]);
+            }
             $year = $this->resolveYear($plan, $year);
-            $query = StrategyIndicatorYear::find()
-                ->joinWith('indicator')
-                ->where(['pm_strategy_indicator.plan_id' => $plan->id, 'pm_strategy_indicator_year.fiscal_year' => $year])
-                ->orderBy(['pm_strategy_indicator_year.sort_order' => SORT_ASC, 'pm_strategy_indicator.code' => SORT_ASC]);
-            if ($q !== '') $query->andWhere(['or', ['like', 'pm_strategy_indicator.code', $q], ['like', 'pm_strategy_indicator.name', $q], ['like', 'pm_strategy_indicator_year.name_override', $q]]);
             $copier = new StrategyIndicatorYearCopier($plan);
-            return $this->render('index', [
-                'type' => $type, 'planId' => $plan->id, 'plan' => $plan, 'year' => $year, 'q' => $q,
-                'plans' => $this->planItems(), 'sourceYears' => array_diff($copier->yearsWithData(), [$year]),
-                'adoptable' => $this->adoptableIndicators($plan, $year),
-                'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 50]]),
+            return $this->render('indicator-index', [
+                'plan' => $plan, 'plans' => $this->planItems(), 'year' => $year, 'q' => $q,
+                'primaries' => $this->planIndicators($plan, $q),
+                'entries' => $this->yearEntries($plan, $year),
+                'sourceYears' => array_diff($copier->yearsWithData(), [$year]),
             ]);
         }
 
+        $class = $this->classFor($type);
+        $plan = $planId ? StrategyPlan::findOne($planId) : null;
         $query = $class::find()->orderBy($this->orderFor($type));
         if ($planId) $this->filterByPlan($query, $type, $planId);
         if ($q !== '') $query->andWhere(['or', ['like', 'code', $q], ['like', 'name', $q]]);
         return $this->render('index', [
             'type' => $type, 'planId' => $planId, 'plan' => $plan, 'year' => $year, 'q' => $q,
-            'plans' => $this->planItems(), 'sourceYears' => [], 'adoptable' => [],
+            'plans' => $this->planItems(),
             'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 20]]),
         ]);
+    }
+
+    /** ตัวชี้วัดหลักของชุดแผน พร้อมตัวชี้วัดรองที่ผูกอยู่ */
+    private function planIndicators(StrategyPlan $plan, string $q): array
+    {
+        $query = StrategyIndicator::find()
+            ->where(['plan_id' => $plan->id, 'parent_id' => null])
+            ->with(['children', 'goal.issue.mission'])
+            ->orderBy(['sort_order' => SORT_ASC, 'code' => SORT_ASC]);
+        if ($q !== '') {
+            // ค้นเจอที่ตัวชี้วัดรองก็ต้องเห็นตัวหลักด้วย จึงกรองด้วยรหัส/ชื่อของทั้งสองระดับ
+            $matched = StrategyIndicator::find()->select('id')
+                ->where(['plan_id' => $plan->id])
+                ->andWhere(['or', ['like', 'code', $q], ['like', 'name', $q]]);
+            $query->andWhere(['or', ['id' => $matched], ['id' => StrategyIndicator::find()->select('parent_id')->where(['id' => $matched])]]);
+        }
+        return $query->all();
+    }
+
+    /** ข้อมูลรายปีของตัวชี้วัดทั้งชุดแผน จัดคีย์ด้วย indicator_id เพื่อไม่ query ซ้ำในลูป */
+    private function yearEntries(StrategyPlan $plan, int $year): array
+    {
+        $rows = StrategyIndicatorYear::find()
+            ->joinWith('indicator', false)
+            ->where(['pm_strategy_indicator.plan_id' => $plan->id, 'pm_strategy_indicator_year.fiscal_year' => $year])
+            ->all();
+        $map = [];
+        foreach ($rows as $row) $map[(int) $row->indicator_id] = $row;
+        return $map;
+    }
+
+    /**
+     * เปิดฟอร์มรายละเอียดตัวชี้วัดของปีที่เลือก
+     * ตัวชี้วัดที่สร้างจากหน้าแผนยุทธศาสตร์ยังไม่มีข้อมูลรายปี จึงเตรียมรายการเปล่าไว้ให้กรอก
+     * โดยยังไม่เขียนฐานข้อมูลจนกว่าจะกดบันทึก
+     */
+    public function actionDetail(int $indicatorId, ?int $year = null)
+    {
+        $indicator = StrategyIndicator::findOne($indicatorId) ?: throw new NotFoundHttpException('ไม่พบตัวชี้วัด');
+        $plan = $indicator->plan;
+        $this->assertEditable($plan);
+        $year = $this->resolveYear($plan, $year);
+        $entry = $indicator->yearEntry($year)
+            ?: new StrategyIndicatorYear(['indicator_id' => $indicator->id, 'fiscal_year' => $year, 'status' => StrategyIndicatorYear::STATUS_ACTIVE]);
+        return $this->indicatorForm($indicator, $entry, $plan, $year);
     }
 
     /** เพิ่มตัวชี้วัดใหม่เข้าปีงบประมาณ — สร้างทั้งตัวชี้วัดแม่และข้อมูลของปีนั้นพร้อมกัน */
@@ -128,17 +173,6 @@ class StrategyCatalogController extends Controller
             Yii::$app->session->setFlash('error', implode(' ', $copier->errors));
         }
         return $this->redirect(['index', 'type' => 'indicator', 'planId' => $plan->id, 'year' => $toYear]);
-    }
-
-    /** นำตัวชี้วัดแม่ที่มีอยู่แล้วในแผนเข้ามาใช้ในปีที่เลือก */
-    public function actionAdopt(int $planId, int $year, int $indicatorId)
-    {
-        $plan = StrategyPlan::findOne($planId) ?: throw new NotFoundHttpException('ไม่พบชุดแผน');
-        $this->assertEditable($plan);
-        $indicator = StrategyIndicator::findOne(['id' => $indicatorId, 'plan_id' => $plan->id]) ?: throw new NotFoundHttpException('ไม่พบตัวชี้วัด');
-        $entry = new StrategyIndicatorYear(['indicator_id' => $indicator->id, 'fiscal_year' => $year, 'status' => StrategyIndicatorYear::STATUS_ACTIVE]);
-        Yii::$app->session->setFlash(...($entry->save() ? ['success', "เพิ่ม {$indicator->code} เข้าปี {$year} แล้ว"] : ['error', 'เพิ่มตัวชี้วัดเข้าปีนี้ไม่สำเร็จ']));
-        return $this->redirect(['index', 'type' => 'indicator', 'planId' => $plan->id, 'year' => $year]);
     }
 
     /** ยกเลิกการใช้ตัวชี้วัดในปีนั้น โดยไม่ลบข้อมูลออกจากทะเบียน */
@@ -286,17 +320,6 @@ class StrategyCatalogController extends Controller
         if ($year && $plan->coversYear($year)) return $year;
         $current = (int) date('Y') + 543 + ((int) date('n') >= 10 ? 1 : 0);
         return $plan->coversYear($current) ? $current : (int) $plan->start_year;
-    }
-
-    /** ตัวชี้วัดในแผนที่ยังไม่ถูกนำเข้าปีที่เลือก */
-    private function adoptableIndicators(StrategyPlan $plan, int $year): array
-    {
-        $used = StrategyIndicatorYear::find()->select('indicator_id')->where(['fiscal_year' => $year]);
-        $items = [];
-        foreach (StrategyIndicator::find()->where(['plan_id' => $plan->id, 'is_active' => true])->andWhere(['not in', 'id', $used])->orderBy(['code' => SORT_ASC])->all() as $item) {
-            $items[$item->id] = "$item->code — $item->name";
-        }
-        return $items;
     }
 
     /** มาตรการสร้างจากกลยุทธ์ ส่วนปัจจัยความสำเร็จ/RCA ยังผูกกับเป้าประสงค์โดยตรง */

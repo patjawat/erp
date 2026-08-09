@@ -41,6 +41,25 @@ class StrategyPlan extends StrategyRecord
     public function getPrograms() { return $this->hasMany(StrategyProgram::class, ['plan_id' => 'id']); }
     public function isEditable(): bool { return $this->status === self::STATUS_DRAFT; }
 
+    /**
+     * แผนยุทธศาสตร์ที่ใช้อยู่ในปัจจุบัน
+     * เลือกฉบับที่ประกาศใช้และครอบคลุมปีงบประมาณปัจจุบันก่อน ถ้ายังไม่ประกาศใช้จึงใช้ฉบับร่าง
+     * และถ้าไม่มีแผนใดครอบคลุมปีนี้เลย ให้ใช้ชุดล่าสุดเพื่อไม่ให้หน้าจอว่างเปล่า
+     */
+    public static function current(): ?self
+    {
+        $year = (int) date('Y') + 543 + ((int) date('n') >= 10 ? 1 : 0);
+        $covering = static fn (string $status) => self::find()
+            ->where(['status' => $status])
+            ->andWhere(['<=', 'start_year', $year])
+            ->andWhere(['>=', 'end_year', $year])
+            ->orderBy(['version' => SORT_DESC]);
+
+        return $covering(self::STATUS_PUBLISHED)->one()
+            ?: $covering(self::STATUS_DRAFT)->one()
+            ?: self::find()->orderBy(['start_year' => SORT_DESC, 'version' => SORT_DESC])->one();
+    }
+
     /** ปีงบประมาณทั้งหมดที่แผนนี้ครอบคลุม */
     public function fiscalYears(): array { return range((int) $this->start_year, (int) $this->end_year); }
     public function coversYear(int $year): bool { return $year >= (int) $this->start_year && $year <= (int) $this->end_year; }
