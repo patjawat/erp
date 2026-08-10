@@ -38,7 +38,8 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 
         <?= $this->render('carlendar_item', ['vehicle_type' => $vehicle_type]) ?>
     </div>
-    <div class="col-lg-4 col-md-12 col-sm-12" id="manual-container">
+    <div class="col-lg-4 col-md-12 col-sm-12 d-flex flex-column gap-3" id="manual-container">
+        <div id="showDriverStatus"></div>
         <div id="showEventToDays"></div>
         <div id="showEventTomorrow"></div>
     </div>
@@ -49,9 +50,24 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
 $urlEventToDays = Url::to(['/booking/vehicle/list-event-todays', 'vehicle_type' => $vehicle_type]);
 $urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow', 'vehicle_type' => $vehicle_type]);
 
+$urlDriverStatus = Url::to(['/booking/vehicle/driver-status']);
+
 $js = <<<JS
             listEventTomorrow()
             listEventToDays()
+            listDriverStatus()
+
+            async function listDriverStatus()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "$urlDriverStatus",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showDriverStatus').html(response.content)
+                    }
+                });
+            }
             async function listEventToDays()
             {
                 await $.ajax({

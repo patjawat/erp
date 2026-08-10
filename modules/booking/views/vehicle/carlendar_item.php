@@ -34,6 +34,14 @@ $vehicleStatus = Categorise::find()->where(['name' => 'vehicle_status'])->all();
     #calendar {
         touch-action: manipulation;
     }
+
+    /* โลโก้ในช่องกิจกรรมของปฏิทิน — ย่อให้เล็กลงเพื่อให้เห็นเวลา/สถานที่ชัดขึ้น */
+    #calendar .fc-vehicle-logo,
+    .fc-popover .fc-vehicle-logo {
+        width: 14px;
+        height: 14px;
+        object-fit: contain;
+    }
 </style>
 
 <div class="card" id="fullscreen-container">

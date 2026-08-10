@@ -15,6 +15,9 @@ use app\components\UserHelper;
 use app\modules\am\models\Asset;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Development;
+use app\modules\hr\models\DevelopmentDetail;
+use app\modules\leave\models\Leave;
 use yii\behaviors\BlameableBehavior;
 use yii\behaviors\TimestampBehavior;
 use app\modules\hr\models\Organization;
@@ -317,6 +320,136 @@ class Vehicle extends \yii\db\ActiveRecord
         return ArrayHelper::map($arrDrivers, 'id', function ($model) {
             return $model->fullname;
         });
+    }
+
+    /**
+     * สถานะพนักงานขับรถในวันที่ระบุ — ใครลา / ไปประชุม-อบรม-ไปราชการ ในวันนั้น
+     *
+     * @param string $date วันที่ในรูปแบบ Y-m-d
+     * @return array ['date','total','absent','available','items' => [['emp_id','fullname','photo','position','entries' => [['type','label','icon','color','detail','date_range','date_short','status']]]]]
+     */
+    public static function driverStatusByDate($date)
+    {
+        $drivers = Employees::find()
+            ->select('e.*')
+            ->from('employees e')
+            ->leftJoin('auth_assignment a', 'e.user_id = a.user_id')
+            ->where(['a.item_name' => 'driver'])
+            ->all();
+
+        $driverIds = ArrayHelper::getColumn($drivers, 'id');
+        $driverById = ArrayHelper::index($drivers, 'id');
+        $items = [];
+
+        // ช่วงวันที่แบบสั้น (ตัดปีออก) เพื่อให้แสดงได้ในแถวเดียว
+        $shortRange = function ($start, $end) {
+            $range = ThaiDateHelper::formatThaiDateRange($start, $end);
+            return trim(preg_replace('/\s+\d{4}$/u', '', $range));
+        };
+
+        // รวมรายการของ พขร. แต่ละคน (คนเดียวอาจทั้งลาและไปอบรมคาบเกี่ยวกันได้)
+        $addEntry = function ($empId, $entry) use (&$items, $driverById) {
+            $empId = (int) $empId;
+            if (!isset($driverById[$empId])) {
+                return;
+            }
+            if (!isset($items[$empId])) {
+                $emp = $driverById[$empId];
+                $items[$empId] = [
+                    'emp_id' => $empId,
+                    'fullname' => $emp->fullname,
+                    'photo' => $emp->showAvatar(),
+                    'position' => $emp->positionName(),
+                    'entries' => [],
+                ];
+            }
+
+            // รายละเอียดที่ซ้ำกับชื่อประเภท (เช่น ลาพักผ่อน/ลาพักผ่อน) ไม่ต้องเก็บ
+            $detail = trim((string) $entry['detail']);
+            $entry['detail'] = ($detail === '' || $detail === trim((string) $entry['label'])) ? '' : $detail;
+
+            // กันรายการซ้ำ เช่น ถูกใส่ชื่อไว้หลายบรรทัดในเรื่องเดียวกัน
+            $key = $entry['type'] . '|' . $entry['label'] . '|' . $entry['date_range'];
+            $items[$empId]['entries'][$key] = $entry;
+        };
+
+        if (!empty($driverIds)) {
+            // 1) การลา
+            $leaves = Leave::find()
+                ->where(['emp_id' => $driverIds, 'deleted_at' => null])
+                ->andWhere(['<=', 'date_start', $date])
+                ->andWhere(['>=', 'date_end', $date])
+                ->andWhere(['NOT IN', 'status', ['Cancel', 'Reject']])
+                ->all();
+
+            foreach ($leaves as $leave) {
+                $typeJson = is_array($leave->leaveType?->data_json) ? $leave->leaveType->data_json : [];
+                $addEntry($leave->emp_id, [
+                    'type' => 'leave',
+                    'label' => $leave->leaveType?->title ?? 'ลา',
+                    'icon' => $typeJson['icon'] ?? '<i class="bi bi-calendar-x"></i>',
+                    'color' => $typeJson['color'] ?? '#f8d7da',
+                    'detail' => $leave->reason,
+                    'date_range' => ThaiDateHelper::formatThaiDateRange($leave->date_start, $leave->date_end),
+                    'date_short' => $shortRange($leave->date_start, $leave->date_end),
+                    'status' => $leave->status,
+                ]);
+            }
+
+            // 2) ไปประชุม/อบรม/ไปราชการ — เป็นผู้ขอเอง หรือถูกใส่ชื่อเป็นผู้ร่วมเดินทาง
+            $memberOf = (new \yii\db\Query())
+                ->select('development_id')
+                ->from('development_detail')
+                ->where(['name' => 'member', 'emp_id' => $driverIds]);
+
+            $developments = Development::find()
+                ->where(['deleted_at' => null])
+                ->andWhere(['<=', 'date_start', $date])
+                ->andWhere(['>=', 'date_end', $date])
+                ->andWhere(['NOT IN', 'status', ['Cancel', 'Reject']])
+                ->andWhere(['OR', ['emp_id' => $driverIds], ['id' => $memberOf]])
+                ->all();
+
+            foreach ($developments as $development) {
+                $empIds = ArrayHelper::getColumn(
+                    DevelopmentDetail::find()
+                        ->where(['development_id' => $development->id, 'name' => 'member'])
+                        ->all(),
+                    'emp_id'
+                );
+                $empIds[] = $development->emp_id;
+
+                $typeTitle = $development->developmentType?->title;
+
+                foreach (array_unique($empIds) as $empId) {
+                    $addEntry($empId, [
+                        'type' => 'development',
+                        'label' => 'อบรม/ไปราชการ',
+                        'icon' => '<i class="bi bi-mortarboard"></i>',
+                        'color' => '#cfe2f3',
+                        'detail' => trim(($typeTitle ? $typeTitle . ': ' : '') . $development->topic),
+                        'date_range' => ThaiDateHelper::formatThaiDateRange($development->date_start, $development->date_end),
+                        'date_short' => $shortRange($development->date_start, $development->date_end),
+                        'status' => $development->status,
+                    ]);
+                }
+            }
+        }
+
+        // เรียงตามชื่อเพื่อให้ลำดับคงที่ทุกครั้งที่โหลด
+        $items = array_values(array_map(function ($item) {
+            $item['entries'] = array_values($item['entries']);
+            return $item;
+        }, $items));
+        usort($items, fn($a, $b) => strcmp((string) $a['fullname'], (string) $b['fullname']));
+
+        return [
+            'date' => $date,
+            'total' => count($drivers),
+            'absent' => count($items),
+            'available' => max(0, count($drivers) - count($items)),
+            'items' => $items,
+        ];
     }
 
     public function listReferType()

@@ -790,6 +790,32 @@ class VehicleController extends Controller
         }
     }
 
+    //แสดง พขร. ที่ลา/ไปอบรม-ไปราชการ ในวันที่เลือก
+    public function actionDriverStatus()
+    {
+        $date = (string) $this->request->get('date', '');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $date = date('Y-m-d');
+        }
+
+        $summary = Vehicle::driverStatusByDate($date);
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => 'พนักงานขับรถไม่พร้อมปฏิบัติงาน',
+                'content' => $this->renderAjax('_driver_status', [
+                    'summary' => $summary,
+                ]),
+            ];
+        }
+
+        return $this->render('_driver_status', [
+            'summary' => $summary,
+        ]);
+    }
+
     //แสดงการจองรถวันพรุ่งนี้
     public function actionListEventTomorrow()
     {
