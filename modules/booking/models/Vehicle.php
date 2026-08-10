@@ -80,7 +80,7 @@ class Vehicle extends \yii\db\ActiveRecord
     {
         return [
             [['code', 'thai_year', 'vehicle_type_id', 'go_type', 'urgent', 'location', 'reason', 'status', 'date_start', 'time_start', 'date_end', 'time_end', 'leader_id', 'emp_id'], 'required', 'message' => 'ต้องระบุ'],
-            [['thai_year', 'go_type', 'document_id', 'owner_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'go_type', 'document_id', 'owner_id', 'development_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['oil_price', 'oil_liter'], 'number'],
             [['date_start', 'date_end', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department', 'refer_type', 'date_filter', 'is_shared'], 'safe'],
             [['ref', 'code', 'vehicle_type_id', 'urgent', 'license_plate', 'location', 'reason', 'status', 'time_start', 'time_end', 'driver_id', 'leader_id', 'emp_id'], 'string', 'max' => 255],
@@ -105,6 +105,7 @@ class Vehicle extends \yii\db\ActiveRecord
             'oil_price' => 'น้ำมันที่เติม',
             'oil_liter' => 'ปริมาณน้ำมัน',
             'document_id' => 'ตามหนังสือ',
+            'development_id' => 'ใบขออนุญาตไปราชการต้นเรื่อง',
             'owner_id' => 'ผู้ดูแลห้องประชุม',
             'urgent' => 'ความเร่งด่วน',
             'license_plate' => 'ทะเบียนยานพาหนะ',

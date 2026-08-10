@@ -10,6 +10,7 @@ use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
+use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use app\modules\development\components\DevelopmentTelegramService;
 use app\modules\hr\models\Employees;
@@ -18,7 +19,9 @@ use yii\behaviors\TimestampBehavior;
 use app\modules\dms\models\Documents;
 use app\modules\approveV2\models\Approve;
 use app\modules\usermanager\models\User;
+use app\modules\booking\models\Vehicle;
 use app\modules\hr\models\DevelopmentDetail;
+use app\modules\hr\models\DevelopmentSummary;
 
 /**
  * This is the model class for table "development".
@@ -145,6 +148,121 @@ class Development extends \yii\db\ActiveRecord
     public function getExpenses()
     {
         return $this->hasMany(DevelopmentDetail::class, ['development_id' => 'id'])->andOnCondition(['name' => 'expense_type']);
+    }
+
+    /** สรุปผลการประชุม/อบรม ของใบนี้ (มีได้ใบละ 1 แถว) */
+    public function getSummaryReport()
+    {
+        return $this->hasOne(DevelopmentSummary::class, ['development_id' => 'id']);
+    }
+
+    /** ใบจองรถที่สร้างจากใบไปราชการใบนี้ */
+    public function getVehicleBookings()
+    {
+        return $this->hasMany(Vehicle::class, ['development_id' => 'id']);
+    }
+
+    /**
+     * ยอดประมาณค่าใช้จ่ายแยกตามหมวด (float ดิบ)
+     *
+     * แหล่งข้อมูลหลักคือช่อง «ประมาณค่าใช้จ่ายฯ» ในฟอร์ม ที่บันทึกลง data_json เป็นคีย์ estimated_cost_*
+     *
+     * @param bool $withLegacyDetails true = บวกรายการ expense_type แบบเก่าเข้าไปด้วย (ใช้ตอนออก PDF)
+     *                                false = คิดจาก data_json อย่างเดียว ไม่ยิง query (ใช้ในหน้าทะเบียน)
+     */
+    public function estimatedCostAmounts(bool $withLegacyDetails = false): array
+    {
+        $dataJson = is_array($this->data_json) ? $this->data_json : [];
+        $amountOf = static function ($value): float {
+            if ($value === null || $value === '') {
+                return 0.0;
+            }
+            return (float) str_replace(',', '', (string) $value);
+        };
+
+        $amounts = [
+            'registration_amount' => $amountOf($dataJson['estimated_cost_registration'] ?? $dataJson['registration_amount'] ?? null),
+            'accommodation_amount' => $amountOf($dataJson['estimated_cost_accommodation'] ?? null),
+            'vehicle_amount' => $amountOf($dataJson['estimated_cost_vehicle_fuel'] ?? null),
+            'allowance_amount' => $amountOf($dataJson['estimated_cost_allowance'] ?? null),
+            'other_amount' => $amountOf($dataJson['estimated_cost_other'] ?? null),
+        ];
+
+        if (!$withLegacyDetails) {
+            return $amounts;
+        }
+
+        foreach ($this->getExpenses()->with('expenseType')->all() as $detail) {
+            $amount = (float) ($detail->qty ?? 0) * (float) ($detail->price ?? 0);
+            $title = $detail->expenseType ? (string) $detail->expenseType->title : '';
+            if (stripos($title, 'ลงทะเบียน') !== false) {
+                $amounts['registration_amount'] += $amount;
+            } elseif (stripos($title, 'ที่พัก') !== false) {
+                $amounts['accommodation_amount'] += $amount;
+            } elseif (stripos($title, 'ยานพาหนะ') !== false || stripos($title, 'พาหนะ') !== false || stripos($title, 'น้ำมัน') !== false) {
+                $amounts['vehicle_amount'] += $amount;
+            } elseif (stripos($title, 'เบี้ยเลี้ยง') !== false) {
+                $amounts['allowance_amount'] += $amount;
+            } else {
+                $amounts['other_amount'] += $amount;
+            }
+        }
+
+        return $amounts;
+    }
+
+    /** ยอดรวมงบประมาณของใบนี้ */
+    public function totalEstimatedCost(bool $withLegacyDetails = false): float
+    {
+        return (float) array_sum($this->estimatedCostAmounts($withLegacyDetails));
+    }
+
+    /**
+     * สถานะสรุปผลสำหรับแสดงในทะเบียน — คืน label/สี/ไอคอน พร้อมใช้
+     *
+     * แดง = ยังไม่บันทึกหรือยังเป็นฉบับร่าง, เหลือง = ส่งแล้วรอรับทราบ, เขียว = รับทราบครบแล้ว
+     */
+    public function summaryState(): array
+    {
+        $status = $this->summaryReport?->status ?? DevelopmentSummary::STATUS_DRAFT;
+
+        return match ($status) {
+            DevelopmentSummary::STATUS_ACKNOWLEDGED => [
+                'status' => $status,
+                'label' => 'รับทราบแล้ว',
+                'color' => 'success',
+                'icon' => 'bi-check-circle-fill',
+            ],
+            DevelopmentSummary::STATUS_SUBMITTED => [
+                'status' => $status,
+                'label' => 'รอผู้รับทราบ',
+                'color' => 'warning',
+                'icon' => 'bi-clock-fill',
+            ],
+            default => [
+                'status' => DevelopmentSummary::STATUS_DRAFT,
+                'label' => $this->summaryReport ? 'ฉบับร่าง ยังไม่ส่ง' : 'ยังไม่สรุปผล',
+                'color' => 'danger',
+                'icon' => 'bi-x-circle-fill',
+            ],
+        };
+    }
+
+    /**
+     * ผู้ใช้ปัจจุบันแก้สรุปผลของใบนี้ได้หรือไม่ — เจ้าของใบและคณะเดินทางทุกคนแก้ได้
+     */
+    public function canEditSummary($empId = null): bool
+    {
+        $empId = $empId ?? (UserHelper::GetEmployee()->id ?? null);
+        if (!$empId) {
+            return false;
+        }
+        if ((string) $this->emp_id === (string) $empId) {
+            return true;
+        }
+        return DevelopmentDetail::find()
+            ->where(['development_id' => $this->id, 'name' => 'member', 'emp_id' => (string) $empId])
+            ->exists();
     }
 
     public function getCreatedBy()

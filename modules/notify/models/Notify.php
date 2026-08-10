@@ -30,6 +30,10 @@ class Notify extends \yii\db\ActiveRecord
     const TYPE_STOCK_APPROVE = 'stock_approve';
     const TYPE_DEVELOPMENT_APPROVE = 'development_approve';
     const TYPE_ASSET_MOVE_APPROVE = 'asset_move_approve';
+    /** ส่งสรุปผลประชุม/อบรม ให้ผู้ที่กำหนดอ่านรับทราบ */
+    const TYPE_DEVELOPMENT_SUMMARY = 'development_summary';
+    /** ผู้รับทราบกดรับทราบแล้ว แจ้งกลับผู้ส่งสรุป */
+    const TYPE_DEVELOPMENT_SUMMARY_ACK = 'development_summary_ack';
     const TYPE_APPRECIATION_THANK = 'appreciation_thank';
     const TYPE_CHALLENGE_WINNER = 'challenge_winner';
 
@@ -46,6 +50,8 @@ class Notify extends \yii\db\ActiveRecord
             self::TYPE_STOCK_APPROVE => 'ขออนุมัติเบิกวัสดุ',
             self::TYPE_DEVELOPMENT_APPROVE => 'ขออนุมัติอบรม/ประชุม/ดูงาน',
             self::TYPE_ASSET_MOVE_APPROVE => 'ขออนุมัติเคลื่อนย้ายครุภัณฑ์',
+            self::TYPE_DEVELOPMENT_SUMMARY => 'สรุปผลประชุม/อบรม รอรับทราบ',
+            self::TYPE_DEVELOPMENT_SUMMARY_ACK => 'รับทราบสรุปผลประชุม/อบรมแล้ว',
             self::TYPE_APPRECIATION_THANK => 'มีคำขอบคุณส่งถึงคุณ',
             self::TYPE_CHALLENGE_WINNER => 'ทำ Challenge ครบเป้า',
         ];
