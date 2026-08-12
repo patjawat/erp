@@ -7,6 +7,17 @@ use yii\web\Controller;
 
 class DefaultController extends Controller
 {
+    /** บังคับล็อกอินเอง เพราะโมดูลอยู่ใน allowActions ระดับแอป */
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), [
+            'authOnly' => [
+                'class' => \yii\filters\AccessControl::class,
+                'rules' => [['allow' => true, 'roles' => ['@']]],
+            ],
+        ]);
+    }
+
     public function actionIndex()
     {
         if (!RosterAccess::canEnter()) {

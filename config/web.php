@@ -307,6 +307,11 @@ $config = [
             // Probation appraisal: authenticated users enter through Profile;
             // every action checks the assigned employee/leader/director in the controller.
             'hr/probation-appraisal/*',
+            // ตารางเวร: สิทธิ์มาจากผังองค์กร (tree.data_json.leader1) ไม่ใช่ RBAC role
+            // หัวหน้าหอผู้ป่วยเป็น role user ธรรมดา จึงผ่าน AccessControl ที่อิง role ไม่ได้
+            // ทุก action มี guard ภายในเอง — RosterAccess::canEnter/canManageUnit/canReviewUnit/canApprove
+            'roster/*',
+            'me/roster/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',

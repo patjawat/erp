@@ -31,6 +31,20 @@ use yii\web\ServerErrorHttpException;
  */
 class PeriodController extends Controller
 {
+    /**
+     * โมดูลนี้อยู่ใน allowActions ของ AccessControl ระดับแอป (สิทธิ์มาจากผังองค์กร ไม่ใช่ role)
+     * จึงต้องบังคับล็อกอินเองที่นี่ ไม่งั้นผู้ใช้ที่ยังไม่ล็อกอินจะเจอ 403 แทนหน้า login
+     */
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), [
+            'authOnly' => [
+                'class' => \yii\filters\AccessControl::class,
+                'rules' => [['allow' => true, 'roles' => ['@']]],
+            ],
+        ]);
+    }
+
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) {

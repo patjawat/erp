@@ -14,7 +14,6 @@ use app\modules\roster\models\Swap;
 use app\modules\roster\models\UnitShift;
 use Yii;
 use yii\web\Controller;
-use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 /**
@@ -27,15 +26,18 @@ class RosterController extends Controller
 {
     private ?Employees $me = null;
 
-    public function beforeAction($action)
+    /**
+     * เส้นทางนี้อยู่ใน allowActions ระดับแอป (เจ้าหน้าที่ทุกคนเข้าดูเวรตัวเองได้
+     * ไม่ผูกกับ role) จึงต้องบังคับล็อกอินเองที่นี่ — ทุก action ตรวจ emp_id ของผู้ใช้อีกชั้น
+     */
+    public function behaviors()
     {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-        if (Yii::$app->user->isGuest) {
-            throw new ForbiddenHttpException('กรุณาเข้าสู่ระบบ');
-        }
-        return true;
+        return array_merge(parent::behaviors(), [
+            'authOnly' => [
+                'class' => \yii\filters\AccessControl::class,
+                'rules' => [['allow' => true, 'roles' => ['@']]],
+            ],
+        ]);
     }
 
     private function employee(): ?Employees
