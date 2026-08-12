@@ -4,6 +4,7 @@ namespace app\modules\approveV2\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -26,7 +27,7 @@ use app\modules\inventory\models\StockEvent;
  * @property string|null $from_id รหัสการขออนุญาต
  * @property string|null $name ชื่อการอนุญาต
  * @property string|null $title ชื่อ
- * @property string|null $data_json
+ * @property array|string|null $data_json
  * @property int|null $emp_id ผู้คตรวจสอลและอนุมัติ
  * @property string|null $status ความเห็น Y ผ่าน N ไม่ผ่าน
  * @property int|null $level ลำดับการอนุมติ
@@ -94,6 +95,65 @@ class Approve extends \yii\db\ActiveRecord
             'deleted_at' => 'วันที่ลบ',
             'deleted_by' => 'ผู้ลบ',
         ];
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        $this->normalizeDataJson();
+    }
+
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
 

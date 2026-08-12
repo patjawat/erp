@@ -280,7 +280,7 @@ $('#form-product').on('beforeSubmit', function (e) {
                     {
                         Swal.fire({
                         title: 'เกิดข้อผิดพลาด!',
-                        text: response.msg,
+                        text: response.message || response.msg || 'ไม่สามารถบันทึกข้อมูลได้',
                         icon: 'error',
                         confirmButtonText: 'ตกลง'
                     });

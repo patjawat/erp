@@ -201,13 +201,29 @@ class ProductController extends Controller
             $model->ref  = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
         }
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost) {
+            if (!$model->load($this->request->post())) {
+                return [
+                    'status' => 'error',
+                    'msg' => 'ไม่พบข้อมูลที่ต้องการบันทึก',
+                ];
+            }
+
+            if (!$model->save()) {
+                $messages = [];
+                foreach ($model->getFirstErrors() as $message) {
+                    $messages[] = $message;
+                }
+
+                return [
+                    'status' => 'error',
+                    'msg' => implode("\n", array_unique($messages)) ?: 'ไม่สามารถบันทึกข้อมูลได้',
+                ];
+            }
+
             $this->UpdateUnit($model);
             return [
                 'title' => $this->request->get('title'),
-                // 'content' => $this->renderAjax('view', [
-                //     'model' => $model,
-                // ]),
                 'container' => '#sm-container',
                 'status' => 'success',
             ];

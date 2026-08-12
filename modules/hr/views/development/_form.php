@@ -377,7 +377,16 @@ $listDocumentMe  = $emp->listDocumentMe();
 }
 </style>
 
-<?php $form = ActiveForm::begin(['id' => 'form-development']); ?>
+<?php $form = ActiveForm::begin([
+    'id' => 'form-development',
+    'options' => [
+        'data-confirm-title' => 'ยืนยันส่งคำขอ?',
+        'data-confirm-text' => 'ระบบจะบันทึกคำขอ สร้างลำดับการอนุมัติ และแจ้งผู้เกี่ยวข้อง',
+        'data-confirm-button' => '<i class="bi bi-check2-circle me-1"></i> ยืนยันบันทึก',
+        'data-loading-title' => 'กำลังบันทึกคำขอ',
+        'data-loading-text' => 'กรุณารอสักครู่ ระบบกำลังสร้างลำดับการอนุมัติ',
+    ],
+]); ?>
 <?php if (!$model->isNewRecord): ?>
 <input type="hidden" name="development_id" value="<?= (int) $model->id ?>">
 <?php endif; ?>
@@ -1041,5 +1050,9 @@ updateEstimatedCostTotal();
 
 JS;
 $this->registerJS($js, View::POS_END);
+
+if ($model->isNewRecord && Yii::$app->controller->module->id === 'me') {
+    $this->registerJS("handleFormSubmit('#form-development');", View::POS_END);
+}
 
 ?>
