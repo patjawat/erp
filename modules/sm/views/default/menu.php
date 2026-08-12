@@ -8,7 +8,7 @@ use yii\helpers\Html;
  *
  * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'setting'
  *
- * ปุ่ม บริหารสัญญา / หลักประกัน ยังปิดไว้ (ยังไม่มี controller)
+ * ปุ่ม หลักประกัน ยังปิดไว้ (ยังไม่มี controller)
  * เมื่อสร้าง controller ใน modules/purchase แล้ว ให้เปลี่ยน <span> เป็น <a href="..."> ได้เลย
  * และต้องลงทะเบียน route ใหม่กับ role 'purchase' ในระบบจัดการสิทธิ์ก่อน (AccessControl อ่านสิทธิ์จากฐานข้อมูล)
  * มิฉะนั้นจะถูกปฏิเสธการเข้าถึง
@@ -31,10 +31,10 @@ $active = $active ?? '';
         <i class="bi bi-file-earmark-text me-1"></i>เขียน TOR
     </a>
 
-    <span class="btn btn-sm btn-outline-secondary rounded-pill px-3 disabled" aria-disabled="true"
-        title="อยู่ระหว่างพัฒนา">
+    <a href="<?= Url::to(['/purchase/contract']) ?>"
+        class="btn btn-sm <?= $active === 'contract' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
         <i class="bi bi-file-earmark-check me-1"></i>บริหารสัญญา
-    </span>
+    </a>
 
     <span class="btn btn-sm btn-outline-secondary rounded-pill px-3 disabled" aria-disabled="true"
         title="อยู่ระหว่างพัฒนา">
@@ -53,6 +53,10 @@ $active = $active ?? '';
             <li><?= Html::a('<i class="bi bi-pc-display me-2"></i>ครุภัณฑ์', ['/sm/asset-item', 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="bi bi-tags me-2"></i>ประเภทวัสดุ', ['/sm/product-type', 'title' => 'ตั้งค่าประเภทวัสดุ'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="bi bi-rulers me-2"></i>หน่วยนับ', ['/sm/product-unit', 'title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item']) ?></li>
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li><?= Html::a('<i class="bi bi-percent me-2"></i>อัตราภาษีหัก ณ ที่จ่าย', ['/purchase/wht-rate'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 </nav>

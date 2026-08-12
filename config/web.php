@@ -327,6 +327,9 @@ $config = [
             // งานเขียน TOR: controller กันสิทธิ์เอง (AccessControl roles=['purchase'])
             // ใส่ไว้ที่นี่เพื่อให้ใช้งานได้ทันทีโดยไม่ต้องไปผูก route ในระบบจัดการสิทธิ์ก่อน
             'purchase/tor/*',
+            // งานบริหารสัญญา + ตั้งค่าอัตราภาษีหัก ณ ที่จ่าย — controller กันสิทธิ์เองเช่นเดียวกัน
+            'purchase/contract/*',
+            'purchase/wht-rate/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',
