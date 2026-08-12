@@ -136,7 +136,7 @@ $form = ActiveForm::begin([
             <i class="bi bi-shield-check me-1"></i>
             <span id="bond-policy-text">กรอกวงเงินที่ใช้เป็นฐาน แล้วระบบจะบอกเกณฑ์ที่ใช้กับวงเงินนั้น</span>
             <div class="mt-2 d-none" id="bond-policy-action">
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" id="bond-policy-fill">
+                <button type="button" class="btn btn-sm btn-primary" id="bond-policy-fill">
                     <i class="bi bi-calculator me-1"></i>เติมอัตราและวงเงินตามเกณฑ์
                 </button>
             </div>

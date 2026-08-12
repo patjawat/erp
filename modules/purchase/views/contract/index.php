@@ -38,7 +38,7 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                 '<i class="bi bi-exclamation-octagon me-1"></i>เลยกำหนดส่งมอบ '
                     . $counters['overdue'] . ' ฉบับ',
                 ['index', 'ContractSearch[thai_year]' => $year, 'ContractSearch[flag]' => 'overdue'],
-                ['class' => 'btn btn-sm btn-danger rounded-pill px-3']
+                ['class' => 'btn btn-sm btn-danger']
             ) ?>
         <?php endif; ?>
         <?php if ($counters['duesoon']): ?>
@@ -46,12 +46,12 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                 '<i class="bi bi-clock-history me-1"></i>ครบกำหนดใน 7 วัน '
                     . $counters['duesoon'] . ' ฉบับ',
                 ['index', 'ContractSearch[thai_year]' => $year, 'ContractSearch[flag]' => 'duesoon'],
-                ['class' => 'btn btn-sm btn-warning rounded-pill px-3']
+                ['class' => 'btn btn-sm btn-warning']
             ) ?>
         <?php endif; ?>
         <?php if ($searchModel->flag): ?>
             <?= Html::a('<i class="bi bi-x-lg me-1"></i>ล้างตัวกรอง', ['index'], [
-                'class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3',
+                'class' => 'btn btn-sm btn-outline-secondary',
             ]) ?>
         <?php endif; ?>
     </div>
@@ -74,13 +74,13 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
         </h6>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ทะเบียนคุม', ['register', 'year' => $year], [
-                'class' => 'btn btn-outline-secondary btn-sm rounded-pill px-3',
+                'class' => 'btn btn-outline-secondary btn-sm',
                 'title' => 'ส่งออกทะเบียนคุมสัญญาทั้งปีเป็นไฟล์ Word',
                 'target' => '_blank',
                 'data' => ['pjax' => 0],
             ]) ?>
             <?= Html::a('<i class="bi bi-plus-circle me-1"></i>บันทึกสัญญาใหม่', ['create'], [
-                'class' => 'btn btn-success btn-sm rounded-pill px-3',
+                'class' => 'btn btn-success btn-sm',
                 'data' => ['pjax' => 0],
             ]) ?>
         </div>
@@ -189,7 +189,7 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                                         บันทึกสัญญาใหม่ได้เลย หรือเลือกจากใบสั่งซื้อที่ออกไว้แล้วเพื่อให้ระบบเติมข้อมูลให้
                                     </div>
                                     <?= Html::a('บันทึกสัญญาใหม่', ['create'], [
-                                        'class' => 'btn btn-success rounded-pill px-4',
+                                        'class' => 'btn btn-success',
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                 </div>

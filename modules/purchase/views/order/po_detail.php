@@ -42,11 +42,11 @@ use yii\helpers\Html;
     </tbody>
 </table>
 <div class="d-flex justify-content-center mt-3">
-    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
+    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำสั่งซื้อ'],['class' => 'btn btn-warning shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
 </div>
 
 <?php else:?>
     <div class="d-flex justify-content-center my-5">
-    <?=Html::a('<i class="fa-solid fa-circle-plus text-white"></i> สร้างคำสั่งซื้อ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างคำสั่งซื้อ'],['class' => 'btn btn-primary rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
+    <?=Html::a('<i class="fa-solid fa-circle-plus text-white"></i> สร้างคำสั่งซื้อ',['/purchase/po-order/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างคำสั่งซื้อ'],['class' => 'btn btn-primary shadow text-center open-modal','data' => ['size' => 'modal-lg']])?>
 </div>
 <?php endif;?>

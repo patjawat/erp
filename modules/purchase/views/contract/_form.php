@@ -80,7 +80,7 @@ $form = ActiveForm::begin([
             </div>
             <?php if ($model->isNewRecord): ?>
                 <?= Html::a('<i class="bi bi-cart-check me-1"></i>เลือกจากใบสั่งซื้อ', ['order-picker', 'title' => 'เลือกใบสั่งซื้อ'], [
-                    'class' => 'btn btn-sm btn-primary rounded-pill px-3 open-modal',
+                    'class' => 'btn btn-sm btn-primary open-modal',
                     'data' => ['size' => 'modal-xl'],
                 ]) ?>
             <?php endif; ?>
@@ -239,7 +239,7 @@ $form = ActiveForm::begin([
             </table>
         </div>
 
-        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="milestone-add">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="milestone-add">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มงวดงาน
         </button>
         <div class="small text-muted mt-2" id="milestone-sum"></div>

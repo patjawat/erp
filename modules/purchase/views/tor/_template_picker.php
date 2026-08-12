@@ -23,11 +23,11 @@ $pickerUrl = Url::to(['template-picker', 'title' => 'คลังแม่แบ
     </div>
 
     <div class="d-flex flex-wrap gap-2 mb-3">
-        <button type="button" class="btn btn-sm rounded-pill px-3 tor-tpl-cat <?= $category === '' ? 'btn-primary' : 'btn-outline-secondary' ?>"
+        <button type="button" class="btn btn-sm tor-tpl-cat <?= $category === '' ? 'btn-primary' : 'btn-outline-secondary' ?>"
             data-cat="">ทั้งหมด</button>
         <?php foreach ($categories as $code => $info): ?>
             <button type="button"
-                class="btn btn-sm rounded-pill px-3 tor-tpl-cat <?= $category === $code ? 'btn-primary' : 'btn-outline-secondary' ?>"
+                class="btn btn-sm tor-tpl-cat <?= $category === $code ? 'btn-primary' : 'btn-outline-secondary' ?>"
                 data-cat="<?= Html::encode($code) ?>">
                 <?= Html::encode($info['label']) ?>
                 <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= $info['count'] ?></span>

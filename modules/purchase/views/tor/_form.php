@@ -111,7 +111,7 @@ $form = ActiveForm::begin([
                 (พ.ร.บ. จัดซื้อจัดจ้างฯ 2560 มาตรา 7) เมื่อจำเป็นต้องอ้างอิงสเปกเฉพาะ ให้ระบุ “หรือเทียบเท่า” กำกับเสมอ
             </div>
             <?= Html::a('<i class="bi bi-collection me-1"></i>เลือกจากคลังแม่แบบ', ['template-picker', 'title' => 'คลังแม่แบบคุณลักษณะ'], [
-                'class' => 'btn btn-sm btn-primary rounded-pill px-3 open-modal',
+                'class' => 'btn btn-sm btn-primary open-modal',
                 'data' => ['size' => 'modal-xl'],
             ]) ?>
         </div>
@@ -223,7 +223,7 @@ $form = ActiveForm::begin([
             </table>
         </div>
 
-        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="tor-row-add">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="tor-row-add">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มแหล่งสืบราคา
         </button>
 

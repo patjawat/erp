@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h6 class="mb-0"><i class="bi bi-table"></i> เกณฑ์ที่ใช้อยู่</h6>
         <?= Html::a('<i class="bi bi-plus-circle me-1"></i>เพิ่มเกณฑ์', ['create'], [
-            'class' => 'btn btn-success btn-sm rounded-pill px-3',
+            'class' => 'btn btn-success btn-sm',
         ]) ?>
     </div>
     <div class="card-body p-0">

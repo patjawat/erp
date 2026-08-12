@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php $this->beginBlock('page-action'); ?>
 <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับทะเบียนหลักประกัน', ['index'], [
-    'class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3',
+    'class' => 'btn btn-sm btn-outline-secondary',
 ]) ?>
 <?php $this->endBlock(); ?>
 

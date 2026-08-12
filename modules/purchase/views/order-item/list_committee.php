@@ -17,7 +17,7 @@ $model = Yii::$app->session->get('order');
 <table class="table">
     <thead class="table-primary">
         <tr>
-            <th scope="col"><?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เลือกกรรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?></th>
+            <th scope="col"><?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เลือกกรรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?></th>
             <th scope="col">ตำแหน่ง</th>
             <th scope="col" style="width: 120px;">ดำเนินการ</th>
             </div>
@@ -40,9 +40,9 @@ $model = Yii::$app->session->get('order');
             <td class="align-middle">
                 <div class="d-flex gap-2">
 
-                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
                     <?= Html::a('<i class="fa-solid fa-trash"></i>', ['/purchase/order-item/delete', 'id' => $item->id, 'container' => 'committee','url' => Url::to(['/purchase/order-item/committee','category_id' => $item->category_id,'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'])], [
-                        'class' => 'btn btn-sm btn-danger rounded-pill delete-committee',
+                        'class' => 'btn btn-sm btn-danger delete-committee',
                         ]) ?>
                         </div>
 

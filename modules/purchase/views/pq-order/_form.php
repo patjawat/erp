@@ -327,7 +327,7 @@ try {
 </div>
 
 <div class="form-group mt-3 d-flex justify-content-center gap-3">
-    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary rounded-pill shadow', 'id' => 'summit']) ?>
+    <?= Html::submitButton('<i class="bi bi-check2-circle"></i> ยืนยัน', ['class' => 'btn btn-primary shadow', 'id' => 'summit']) ?>
     <?= Html::button('ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
 </div>
 

@@ -54,7 +54,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
             </div>
         </div>
         <?= Html::a('ไปหน้าตั้งค่าเกณฑ์', ['/purchase/bond-policy'], [
-            'class' => 'btn btn-sm btn-warning rounded-pill px-3',
+            'class' => 'btn btn-sm btn-warning',
         ]) ?>
     </div>
 <?php endif; ?>
@@ -72,26 +72,26 @@ $kpi = function (string $icon, string $color, $value, string $label) {
             <?= Html::a(
                 '<i class="bi bi-exclamation-octagon me-1"></i>สิ้นอายุแล้ว ' . $counters['expired'] . ' ฉบับ',
                 ['index', 'BondSearch[thai_year]' => $year, 'BondSearch[flag]' => 'expired'],
-                ['class' => 'btn btn-sm btn-danger rounded-pill px-3']
+                ['class' => 'btn btn-sm btn-danger']
             ) ?>
         <?php endif; ?>
         <?php if ($counters['near']): ?>
             <?= Html::a(
                 '<i class="bi bi-clock-history me-1"></i>ใกล้สิ้นอายุ ' . $counters['near'] . ' ฉบับ',
                 ['index', 'BondSearch[thai_year]' => $year, 'BondSearch[flag]' => 'near'],
-                ['class' => 'btn btn-sm btn-warning rounded-pill px-3']
+                ['class' => 'btn btn-sm btn-warning']
             ) ?>
         <?php endif; ?>
         <?php if ($counters['pending']): ?>
             <?= Html::a(
                 '<i class="bi bi-hourglass-split me-1"></i>ยังไม่วาง ' . $counters['pending'] . ' ฉบับ',
                 ['index', 'BondSearch[thai_year]' => $year, 'BondSearch[flag]' => 'pending'],
-                ['class' => 'btn btn-sm btn-outline-warning rounded-pill px-3']
+                ['class' => 'btn btn-sm btn-outline-warning']
             ) ?>
         <?php endif; ?>
         <?php if ($searchModel->flag): ?>
             <?= Html::a('<i class="bi bi-x-lg me-1"></i>ล้างตัวกรอง', ['index'], [
-                'class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3',
+                'class' => 'btn btn-sm btn-outline-secondary',
             ]) ?>
         <?php endif; ?>
     </div>
@@ -149,7 +149,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                                         'create',
                                         'contract_id' => $contract->id,
                                     ], [
-                                        'class' => 'btn btn-sm btn-warning rounded-pill px-3',
+                                        'class' => 'btn btn-sm btn-warning',
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                 </td>
@@ -179,13 +179,13 @@ $kpi = function (string $icon, string $color, $value, string $label) {
         </h6>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ทะเบียนคุม', ['register', 'year' => $year], [
-                'class' => 'btn btn-outline-secondary btn-sm rounded-pill px-3',
+                'class' => 'btn btn-outline-secondary btn-sm',
                 'title' => 'ส่งออกทะเบียนคุมหลักประกันทั้งปีเป็นไฟล์ Word',
                 'target' => '_blank',
                 'data' => ['pjax' => 0],
             ]) ?>
             <?= Html::a('<i class="bi bi-plus-circle me-1"></i>บันทึกหลักประกัน', ['create'], [
-                'class' => 'btn btn-success btn-sm rounded-pill px-3',
+                'class' => 'btn btn-success btn-sm',
                 'data' => ['pjax' => 0],
             ]) ?>
         </div>
@@ -317,7 +317,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                                         เช่น หลักประกันซองที่วางไว้ตั้งแต่ยื่นข้อเสนอ
                                     </div>
                                     <?= Html::a('บันทึกหลักประกัน', ['create'], [
-                                        'class' => 'btn btn-success rounded-pill px-4',
+                                        'class' => 'btn btn-success',
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                 </div>

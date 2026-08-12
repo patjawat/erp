@@ -48,9 +48,9 @@ $date = function ($value) {
 
 <?php $this->beginBlock('page-action'); ?>
 <div class="d-flex flex-wrap gap-2">
-    <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ทะเบียนสัญญา', ['index'], ['class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3']) ?>
+    <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ทะเบียนสัญญา', ['index'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
     <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ร่างสัญญา', ['word', 'id' => $model->id], [
-        'class' => 'btn btn-sm btn-outline-primary rounded-pill px-3',
+        'class' => 'btn btn-sm btn-outline-primary',
         'target' => '_blank',
     ]) ?>
     <?php if ((float) $model->fine_amount > 0): ?>
@@ -59,13 +59,13 @@ $date = function ($value) {
             'id' => $model->id,
             'type' => ContractWordExporter::DOC_FINE,
         ], [
-            'class' => 'btn btn-sm btn-outline-danger rounded-pill px-3',
+            'class' => 'btn btn-sm btn-outline-danger',
             'target' => '_blank',
         ]) ?>
     <?php endif; ?>
-    <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill px-3']) ?>
+    <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary']) ?>
     <?= Html::a('<i class="bi bi-trash me-1"></i>ลบ', ['delete', 'id' => $model->id], [
-        'class' => 'btn btn-sm btn-outline-danger rounded-pill px-3',
+        'class' => 'btn btn-sm btn-outline-danger',
         'data' => [
             'confirm' => 'ยืนยันการลบสัญญา "' . $model->title . '" ?',
             'method' => 'post',
@@ -111,7 +111,7 @@ $date = function ($value) {
             <i class="bi bi-exclamation-octagon me-1"></i>
             <?= Html::encode($wht['reason']) ?> — เอกสารที่พิมพ์ออกไปจะไม่มีจำนวนภาษีหัก ณ ที่จ่าย
         </div>
-        <?= Html::a('ไปที่หน้าตั้งค่าอัตราภาษี', ['/purchase/wht-rate'], ['class' => 'btn btn-sm btn-danger rounded-pill px-3']) ?>
+        <?= Html::a('ไปที่หน้าตั้งค่าอัตราภาษี', ['/purchase/wht-rate'], ['class' => 'btn btn-sm btn-danger']) ?>
     </div>
 <?php endif; ?>
 
@@ -266,7 +266,7 @@ $date = function ($value) {
                 <?= Html::a('<i class="bi bi-plus-circle me-1"></i>บันทึกหลักประกัน', [
                     '/purchase/bond/create',
                     'contract_id' => $model->id,
-                ], ['class' => 'btn btn-sm btn-success rounded-pill px-3']) ?>
+                ], ['class' => 'btn btn-sm btn-success']) ?>
             </div>
             <div class="card-body">
                 <?php if (!$bondPolicy['configured'] && (float) $model->budget > 0): ?>
@@ -276,7 +276,7 @@ $date = function ($value) {
                             <?= Html::encode($bondPolicy['reason']) ?>
                         </div>
                         <?= Html::a('ไปที่หน้าตั้งค่าเกณฑ์', ['/purchase/bond-policy'], [
-                            'class' => 'btn btn-sm btn-danger rounded-pill px-3',
+                            'class' => 'btn btn-sm btn-danger',
                         ]) ?>
                     </div>
                 <?php elseif ($bondPolicy['required'] && !$bondOpen): ?>

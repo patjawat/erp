@@ -28,11 +28,11 @@ $badge = Bond::statusBadge($model->status);
 <div class="d-flex flex-wrap gap-2">
     <?php if (!in_array($model->status, [Bond::STATUS_RETURNED, Bond::STATUS_SEIZED, Bond::STATUS_EXEMPT], true)): ?>
         <?= Html::a('<i class="bi bi-box-arrow-up me-1"></i>บันทึกการคืน/การยึด', ['return', 'id' => $model->id], [
-            'class' => 'btn btn-sm btn-success rounded-pill px-3',
+            'class' => 'btn btn-sm btn-success',
         ]) ?>
     <?php endif; ?>
     <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับทะเบียนหลักประกัน', ['index'], [
-        'class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3',
+        'class' => 'btn btn-sm btn-outline-secondary',
     ]) ?>
 </div>
 <?php $this->endBlock(); ?>

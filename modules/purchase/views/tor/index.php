@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </span>
         </h6>
         <?= Html::a('<i class="bi bi-plus-circle me-1"></i>สร้าง TOR ใหม่', ['create'], [
-            'class' => 'btn btn-success btn-sm rounded-pill px-3',
+            'class' => 'btn btn-success btn-sm',
             'data' => ['pjax' => 0],
         ]) ?>
     </div>
@@ -140,7 +140,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         เริ่มจากสร้าง TOR ใหม่ แล้วเลือกแม่แบบคุณลักษณะเพื่อลดเวลาพิมพ์
                                     </div>
                                     <?= Html::a('สร้าง TOR ใหม่', ['create'], [
-                                        'class' => 'btn btn-success rounded-pill px-4',
+                                        'class' => 'btn btn-success',
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                 </div>

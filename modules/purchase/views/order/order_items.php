@@ -27,7 +27,7 @@ try {
         <thead class="table-primary">
             <tr>
                 <th style="width:500px">
-                    <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เลือกรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เลือกรายการ ' . $orderTypeName], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal shadow', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เลือกรายการ', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เลือกรายการ ' . $orderTypeName], ['class' => 'btn btn-sm btn-primary open-modal shadow', 'data' => ['size' => 'modal-xl']]) ?>
                 </th>
                 <th class="text-center" style="width:80px">หน่วย</th>
                 <th class="text-end">ราคาต่อหน่วย</th>
@@ -80,8 +80,8 @@ try {
                     </td>
                     <td class="align-middle">
                         <div class="d-flex justify-content-center gap-2">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                            <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
+                            <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                            <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
                         </div>
                     </td>
                 </tr>

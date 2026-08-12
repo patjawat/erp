@@ -36,14 +36,14 @@ $html = function ($value) {
 
 <?php $this->beginBlock('page-action'); ?>
 <div class="d-flex flex-wrap gap-2">
-    <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ทะเบียน TOR', ['index'], ['class' => 'btn btn-sm btn-outline-secondary rounded-pill px-3']) ?>
+    <?= Html::a('<i class="bi bi-arrow-left me-1"></i>ทะเบียน TOR', ['index'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
     <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ส่งออก Word', ['word', 'id' => $model->id], [
-        'class' => 'btn btn-sm btn-outline-primary rounded-pill px-3',
+        'class' => 'btn btn-sm btn-outline-primary',
         'target' => '_blank',
     ]) ?>
-    <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill px-3']) ?>
+    <?= Html::a('<i class="bi bi-pencil me-1"></i>แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-primary']) ?>
     <?= Html::a('<i class="bi bi-trash me-1"></i>ลบ', ['delete', 'id' => $model->id], [
-        'class' => 'btn btn-sm btn-outline-danger rounded-pill px-3',
+        'class' => 'btn btn-sm btn-outline-danger',
         'data' => [
             'confirm' => 'ยืนยันการลบ TOR "' . $model->title . '" ?',
             'method' => 'post',
