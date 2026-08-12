@@ -62,12 +62,14 @@ class ImportHosOfficeController extends Controller
         if (BaseConsole::confirm('ยืนยันการนำเข้าทั้งหมด?')) {
             $this->actionEmployee();
             $this->actionUpdatePosition();
-            $this->actionLeave();
-            $this->actionCreateApproveLeave();
+            $this->actionLeaveAll();
             $this->actionDevelopment();
+            $this->actionCreateMoney();
             $this->actionVehicle();
+            $this->actionRefer();
             $this->actionMeeting();
             $this->actionRepairGeneral();
+            $this->actionComputer();
             $this->actionAsset();
             $this->actionMaterial();
         } else {
@@ -76,15 +78,18 @@ class ImportHosOfficeController extends Controller
     }
     public function actionSync()
     {
-         $this->actionUpdatePosition();
-            $this->actionLeave();
-            $this->actionCreateApproveLeave();
-            $this->actionDevelopment();
-            $this->actionVehicle();
-            $this->actionMeeting();
-            $this->actionRepairGeneral();
-            $this->actionAsset();
-            $this->actionMaterial();
+        $this->actionEmployee();
+        $this->actionUpdatePosition();
+        $this->actionLeaveAll();
+        $this->actionDevelopment();
+        $this->actionCreateMoney();
+        $this->actionVehicle();
+        $this->actionRefer();
+        $this->actionMeeting();
+        $this->actionRepairGeneral();
+        $this->actionComputer();
+        $this->actionAsset();
+        $this->actionMaterial();
     }
 
     /**
@@ -100,12 +105,12 @@ class ImportHosOfficeController extends Controller
         }
 
         echo "\n=== 2/4 นำเข้าสิทธิลาพักผ่อน ===\n";
-        if ($this->actionLeaveEntitlements() !== ExitCode::OK) {
+        if ($this->actionLeaveEntitlements($limit) !== ExitCode::OK) {
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
         echo "\n=== 3/4 สร้างประวัติการอนุมัติ ===\n";
-        if ($this->actionCreateApproveLeave() !== ExitCode::OK) {
+        if ($this->actionCreateApproveLeave($limit) !== ExitCode::OK) {
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
@@ -134,10 +139,10 @@ class ImportHosOfficeController extends Controller
     }
 
     //นำเข้าบุคลากร
-    public function actionEmployee()
+    public function actionEmployee($limit = null)
     {
-
-        $sqlPerson = "SELECT 
+        $sqlPerson = "SELECT
+                    p.ID AS HOSOFFICE_ID,
                     pt.HR_PERSON_TYPE_NAME AS person_type_name,
                     hp.HR_POSITION_NAME AS position_name,
                     p.POSITION_IN_WORK AS position_in_work_name,
@@ -189,26 +194,42 @@ class ImportHosOfficeController extends Controller
                 LEFT JOIN hr_person_type pt ON pt.HR_PERSON_TYPE_ID = p.HR_PERSON_TYPE_ID
                 LEFT JOIN hr_position hp ON hp.HR_POSITION_ID = p.HR_POSITION_ID
                 LEFT JOIN hr_status ON hr_status.HR_STATUS_ID = p.HR_STATUS_ID
-                LEFT JOIN hr_level ON hr_level.HR_LEVEL_ID = p.HR_LEVEL_ID";
-        // if (BaseConsole::confirm('Are you sure?')) {
+                LEFT JOIN hr_level ON hr_level.HR_LEVEL_ID = p.HR_LEVEL_ID
+                ORDER BY p.ID";
+        $sqlPerson .= $this->limitSql($limit);
         $querys = \Yii::$app->db2->createCommand($sqlPerson)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(Employees::class, 'HOSOFFICE_ID');
         $num = 1;
         $total = count($querys);
+        $created = 0;
+        $updated = 0;
+        $failed = 0;
         echo "เริ่มนำเข้าข้อมูลบุคลากร...\n";
         foreach ($querys as $person) {
-            $checker = Employees::findOne(['cid' => $person['cid']]);
-            if (!$checker) {
+            try {
+                $sourceId = (string) $person['HOSOFFICE_ID'];
+                $model = isset($existingBySourceId[$sourceId])
+                    ? Employees::findOne($existingBySourceId[$sourceId])
+                    : $this->sourceFallbackQuery(
+                        Employees::find()->where(['cid' => $person['cid']]),
+                        'HOSOFFICE_ID',
+                        $sourceId
+                    )->one();
+                $isNew = $model === null;
                 $mappedType = $this->MapPositionType($person);
-                $ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
-                $model = new Employees();
-                $model->ref = $ref;
-                $this->CreateDir($ref);
-                if ($person['image']) {
+                if ($isNew) {
+                    $model = new Employees();
+                    $model->user_id = 0;
+                    $model->ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+                    $this->CreateDir($model->ref);
+                }
+
+                if ($isNew && $person['image']) {
                     $name = time() . '.jpg';
-                    file_put_contents(\Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $person['image']);
+                    file_put_contents(\Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $model->ref . '/' . $name, $person['image']);
 
                     $upload = new Uploads();
-                    $upload->ref = $ref;
+                    $upload->ref = $model->ref;
                     $upload->name = 'avatar';
                     $upload->file_name = $name;
                     $upload->real_filename = $name;
@@ -216,7 +237,6 @@ class ImportHosOfficeController extends Controller
                     $upload->save(false);
                 }
 
-                $model->user_id = 0;
                 $model->prefix = $person['prefix'];
                 $model->gender = $person['gender'];
                 $model->fname = $person['fname'];
@@ -245,28 +265,31 @@ class ImportHosOfficeController extends Controller
                 $model->education = 0;  // การศึกษา
                 $model->status = $this->MapEmployeeStatus($person);  // สถานะ
                 $model->address = $person['address'];
-                // 1. คัดลอกข้อมูล person มาไว้ในตัวแปรใหม่
-                $old_person_data = $person;
-                // 2. ลบเฉพาะ key 'image' ออก
-                unset($old_person_data['image']);
-
-                $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($person));
-
-                $this->Family($model->id, $model->cid);
+                $personData = $person;
+                unset($personData['image']);
+                $model->data_json = $this->prepareImportedDataJson(
+                    Employees::class,
+                    $model->data_json,
+                    $this->cleanUtf8($personData)
+                );
 
                 if ($model->save(false)) {
+                    $existingBySourceId[$sourceId] = $model->id;
+                    $isNew ? $created++ : $updated++;
+                    $this->Family($model->id, $model->cid);
                 } else {
-                    echo "False \n";
+                    $failed++;
+                    echo "บันทึกบุคลากร CID {$person['cid']} ไม่สำเร็จ\n";
                 }
-            } else {
-                // echo "นำเข้าข้อมูลแล้ว!!  \n";
+            } catch (\Throwable $th) {
+                $failed++;
+                echo "นำเข้าบุคลากร CID {$person['cid']} ไม่สำเร็จ: {$th->getMessage()}\n";
             }
             BaseConsole::updateProgress($num, $total);
             $num++;
         }
-        // } else {
-        //     echo "user typed no\n";
-        // }
+        echo "\nสรุปบุคลากร: สร้าง {$created}, อัปเดต {$updated}, ผิดพลาด {$failed}\n";
+        return $failed > 0 ? ExitCode::UNSPECIFIED_ERROR : ExitCode::OK;
     }
 
 
@@ -320,16 +343,20 @@ class ImportHosOfficeController extends Controller
 
     }
 
-    public function actionUpdatePosition()
+    public function actionUpdatePosition($limit = null)
     {
         // ใช้ batch() หากพนักงานมีจำนวนมากเพื่อประหยัด Memory
-        $querys = Employees::find()->where(['status' => 1])->all();
+        $query = Employees::find()->where(['status' => 1])->orderBy(['id' => SORT_ASC]);
+        if ($limit !== null) {
+            $query->limit(max(1, (int) $limit));
+        }
+        $querys = $query->all();
         $num = 1;
         $total = count($querys);
         echo "เริ่มอัพเดทข้อมูลตำแหน่งงาน...\n";
 
         foreach ($querys as $emp) {
-            $data = is_string($emp->data_json) ? Json::decode($emp->data_json) : $emp->data_json;
+            $data = $this->decodeDataJson($emp->data_json);
             // 1. ค้นหาหรือสร้าง Model ใหม่
             $empDetail = EmployeeDetail::findOne(['emp_id' => $emp->id, 'name' => 'position'])
                 ?? new EmployeeDetail();
@@ -341,8 +368,7 @@ class ImportHosOfficeController extends Controller
 
             $empDetail->emp_id = $emp->id;
             $empDetail->name = 'position';
-            $empDetail->data_json = ArrayHelper::merge($empDetail->data_json ?? [], []);
-            $empDetail->data_json = ArrayHelper::merge($empDetail->data_json ?? [], [
+            $empDetail->data_json = $this->prepareImportedDataJson(EmployeeDetail::class, $empDetail->data_json, [
                 "point" => "",
                 "salary" => $data['salary'] ?? 0,
                 "status" => $emp->status,
@@ -362,7 +388,6 @@ class ImportHosOfficeController extends Controller
 
             ]);
 
-            $emp->save(false);
             // 4. บันทึกข้อมูล (ใช้ save(false) เพื่อข้าม validation หากมั่นใจในข้อมูล)
             if (!$empDetail->save(false)) {
                 \Yii::error("Save Error ID: " . $emp->id . " Errors: " . Json::encode($empDetail->getErrors()));
@@ -380,8 +405,8 @@ class ImportHosOfficeController extends Controller
         // Yii::$app->response->format = Response::FORMAT_JSON;
 
         $data = [];
-        $sql = 'SELECT p.`HR_FNAME`,p.`HR_LNAME`,p.`HR_CID`,f.`NAME`,f.`TYPE`,f.`PHONE`,f.`ADDRESS` FROM hr_tr_family f 
-            LEFT JOIN hr_person p ON p.`ID` = f.`PERSON_ID` 
+        $sql = 'SELECT f.`ID` AS `HOSOFFICE_FAMILY_ID`,p.`HR_FNAME`,p.`HR_LNAME`,p.`HR_CID`,f.`NAME`,f.`TYPE`,f.`PHONE`,f.`ADDRESS` FROM hr_tr_family f
+            LEFT JOIN hr_person p ON p.`ID` = f.`PERSON_ID`
             WHERE p.`HR_CID` = :cid';
         $querys = \Yii::$app
             ->db2
@@ -389,8 +414,14 @@ class ImportHosOfficeController extends Controller
             ->bindParam(':cid', $cid)
             ->queryAll();
 
+        $existingBySourceId = $this->importedRecordIds(
+            EmployeeDetail::class,
+            'HOSOFFICE_FAMILY_ID',
+            ['emp_id' => $emp_id, 'name' => 'family']
+        );
         foreach ($querys as $query) {
             $dataJson = [
+                'HOSOFFICE_FAMILY_ID' => $query['HOSOFFICE_FAMILY_ID'],
                 'fname' => isset(explode(' ', $query['NAME'], 2)[0]) ? explode(' ', $query['NAME'], 2)[0] : '',
                 'lname' => isset(explode(' ', $query['NAME'], 2)[1]) ? explode(' ', $query['NAME'], 2)[1] : '',
                 'family_relation' => $query['TYPE'],
@@ -398,11 +429,20 @@ class ImportHosOfficeController extends Controller
                 'address' => $query['ADDRESS'],
             ];
 
-            $model = new EmployeeDetail();
+            $sourceId = (string) $query['HOSOFFICE_FAMILY_ID'];
+            $model = isset($existingBySourceId[$sourceId])
+                ? EmployeeDetail::findOne($existingBySourceId[$sourceId])
+                : new EmployeeDetail();
             $model->name = 'family';
             $model->emp_id = $emp_id;
-            $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($dataJson));
-            $model->save(false);
+            $model->data_json = $this->prepareImportedDataJson(
+                EmployeeDetail::class,
+                $model->data_json,
+                $this->cleanUtf8($dataJson)
+            );
+            if ($model->save(false)) {
+                $existingBySourceId[$sourceId] = $model->id;
+            }
 
             $data[] = $model;
         }
@@ -423,10 +463,10 @@ class ImportHosOfficeController extends Controller
     }
 
     //จองรถยนต์
-    public function actionVehicle()
+    public function actionVehicle($limit = null)
     {
         // ระบบจองรถย์
-        $querys = Yii::$app->db2->createCommand('SELECT 
+        $sql = 'SELECT
                 p.HR_FNAME, 
                 p.HR_LNAME, 
                 pr.PRIORITY_NAME,
@@ -448,8 +488,15 @@ class ImportHosOfficeController extends Controller
             LEFT JOIN 
                 car_location l ON l.LOCATION_ID = v.RESERVE_LOCATION_ID
             LEFT JOIN 
-                car_priority pr ON CAST(pr.PRIORITY_ID AS UNSIGNED) = v.PRIORITY_ID ORDER BY v.RESERVE_END_DATE ASC;')
-            ->queryAll();
+                car_priority pr ON CAST(pr.PRIORITY_ID AS UNSIGNED) = v.PRIORITY_ID
+            ORDER BY v.RESERVE_END_DATE ASC, v.RESERVE_ID ASC';
+        $sql .= $this->limitSql($limit);
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            Vehicle::class,
+            'RESERVE_ID',
+            ['vehicle_type_id' => 'official']
+        );
         $num = 1;
         $total = count($querys);
         echo "นำเข้าข้อมูลจองรถ...\n";
@@ -457,13 +504,25 @@ class ImportHosOfficeController extends Controller
         foreach ($querys as $key => $item) {
             if ($item['RESERVE_BEGIN_DATE'] && $item['RESERVE_END_DATE']) {
                 $emp = $this->Person($item['RESERVE_PERSON_ID']);
-                $check = Vehicle::find()->where([
-                    'reason' => $item['RESERVE_NAME'],
-                    'date_start' => $item['RESERVE_BEGIN_DATE'],
-                    'date_end' => $item['RESERVE_END_DATE'],
-                    'time_start' => $item['RESERVE_BEGIN_TIME'],
-                    'time_end' => $item['RESERVE_END_TIME'],
-                ])->one();
+                $sourceId = (string) $item['RESERVE_ID'];
+                $check = isset($existingBySourceId[$sourceId])
+                    ? Vehicle::findOne($existingBySourceId[$sourceId])
+                    : null;
+
+                // รองรับข้อมูลที่เคยนำเข้าก่อนบันทึก source ID ลง data_json
+                if (!$check) {
+                    $check = $this->sourceFallbackQuery(
+                        Vehicle::find()->where([
+                            'reason' => $item['RESERVE_NAME'],
+                            'date_start' => $item['RESERVE_BEGIN_DATE'],
+                            'date_end' => $item['RESERVE_END_DATE'],
+                            'time_start' => $item['RESERVE_BEGIN_TIME'],
+                            'time_end' => $item['RESERVE_END_TIME'],
+                        ]),
+                        'RESERVE_ID',
+                        $sourceId
+                    )->one();
+                }
 
                 $model = $check ?? new Vehicle();
                 $check ?? ($model->code  =   \mdm\autonumber\AutoNumber::generate('CAR' . date('ymd') . '-???'));
@@ -473,7 +532,7 @@ class ImportHosOfficeController extends Controller
                 $model->refer_type = 'normal';
                 $model->go_type = 1;
                 $model->urgent = $item['PRIORITY_NAME'];
-                $model->location = $this->checkLocation($item['LOCATION_NAME']);
+                $model->location = $this->checkLocation($item['LOCATION_NAME']) ?? '-';
                 $model->status = $this->BookingStatus($item['STATUS']);
                 $model->leader_id = $this->Person($item['LEADER_PERSON_ID'])?->id;
                 $model->date_start = $item['RESERVE_BEGIN_DATE'] ?? date('Y-m-d');
@@ -485,12 +544,16 @@ class ImportHosOfficeController extends Controller
                 $model->created_at = $item['RESERVE_DATE_TIME'];
                 $model->license_plate = $item['car_req'];
 
-                if ($emp) {
-                    $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($item));
-                }
+                $model->data_json = $this->prepareImportedDataJson(
+                    Vehicle::class,
+                    $model->data_json,
+                    $this->cleanUtf8($item)
+                );
 
-                $model->save(false);
-                $this->createDetail($model, $item);
+                if ($model->save(false)) {
+                    $existingBySourceId[$sourceId] = $model->id;
+                    $this->createDetail($model, $item);
+                }
             }
             BaseConsole::updateProgress($num, $total);
             $num++;
@@ -501,121 +564,79 @@ class ImportHosOfficeController extends Controller
     //สร้างการจัดสรรถยนต์
     protected function createDetail($model, $item)
     {
-        if ($model->date_start && $model->date_end) {
+        if (!$model->date_start || !$model->date_end) {
+            return;
+        }
 
+        $driverId = $this->Person($item['CAR_DRIVER_SET_ID'] ?? null)?->id;
+        $dateRanges = [[$model->date_start, $model->date_end]];
+        if ((string) $model->go_type === '1') {
             $startDate = new DateTime($model->date_start);
-            $endDate = new DateTime($model->date_end);
-
-            $endDate->modify('+1 day');  // เพิ่ม 1 วัน เพื่อให้รวมวันที่สิ้นสุด
-
-            $interval = new DateInterval('P1D');  // ระยะห่าง 1 วัน
-            $period = new DatePeriod($startDate, $interval, $endDate);
-            $driverIdSet = $this->Person($item['CAR_DRIVER_SET_ID'])?->id;
-            //ถ้าเป็นรถยนต์ส่วนตัว
-            if ($model->vehicle_type_id == "personal") {
-                if ($model->go_type == "1") {
-                    $dates = [];
-                    foreach ($period as $date) {
-                        $check1 = VehicleDetail::find()->where(['vehicle_id' => $model->id, 'driver_id' => $driverIdSet])->one();
-                        if (!$check1) {
-                            $newDetail = new VehicleDetail;
-                            $newDetail->date_start = $date->format('Y-m-d');
-                            $newDetail->date_end = $date->format('Y-m-d');
-                            $newDetail->vehicle_id = $model->id;
-                            $newDetail->license_plate = $model->license_plate;
-                            $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
-                            $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
-                            $newDetail->oil_price = $item['OIL_IN_BATH'];
-                            $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                            $newDetail->driver_id = $driverIdSet;
-                            $newDetail->status = $this->BookingStatus($model->status);
-                            $newDetail->save(false);
-                        }
-                    }
-                } else {
-
-                    $check2 = VehicleDetail::find()->where(['vehicle_id' => $model->id, 'driver_id' => $driverIdSet])->one();
-                    if (!$check2) {
-                        $newDetail = new VehicleDetail;
-                        $newDetail->date_start = $model->date_start;
-                        $newDetail->date_end = $model->date_end;
-                        $newDetail->vehicle_id = $model->id;
-                        $newDetail->license_plate = $model->license_plate;
-                        $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
-                        $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
-                        $newDetail->oil_price = $item['CAR_NUMBER_BACK'];
-                        $newDetail->oil_price = $item['OIL_IN_BATH'];
-                        $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                        $newDetail->driver_id = $driverIdSet;
-                        $newDetail->status = $this->BookingStatus($model->status);
-                        $newDetail->save(false);
-                    }
-                }
-
-
-                $checkApprove = Approve::find()->where(['from_id' => $model->id, 'name' => 'vehicle', 'level' => 1])->one();
-                if (!$checkApprove) {
-                    $info = SiteHelper::getInfo();
-                    $newAprove = new Approve();
-                    $newAprove->from_id = $model->id;
-                    $newAprove->name = 'vehicle';
-                    $newAprove->emp_id = $info['director']->id;
-                    $newAprove->title = 'ขออนุมัติใช้รถ';
-                    $newAprove->data_json = ['label' => 'อนุมัติ'];
-                    $newAprove->level = 1;
-                    $newAprove->status = 'Pending';
-                    $newAprove->save(false);
-                }
-            } else {
-
-                if ($model->go_type == "1") {
-                    $dates = [];
-                    foreach ($period as $date) {
-                        $check3 = VehicleDetail::find()->where(['vehicle_id' => $model->id])->one();
-                        if (!$check3) {
-                            $dates[] = $date->format('Y-m-d');
-                            $newDetail = new VehicleDetail;
-                            $newDetail->vehicle_id = $model->id;
-                            $newDetail->date_start = $date->format('Y-m-d');
-                            $newDetail->date_end = $date->format('Y-m-d');
-                            $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
-                            $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
-                            $newDetail->oil_price = $item['OIL_IN_BATH'];
-                            $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                            $newDetail->driver_id = $driverIdSet;
-                            $newDetail->status = $this->BookingStatus($model->status);
-                            $newDetail->save(false);
-                        }
-                    }
-                } else {
-                    $check4 = VehicleDetail::find()->where(['vehicle_id' => $model->id])->one();
-                    if (!$check4) {
-                        $newDetail = new VehicleDetail;
-                        $newDetail->vehicle_id = $model->id;
-                        $newDetail->date_start = $model->date_start;
-                        $newDetail->date_end = $model->date_end;
-                        $newDetail->mileage_start = $item['CAR_NUMBER_BEGIN'];
-                        $newDetail->mileage_end = $item['CAR_NUMBER_BACK'];
-                        $newDetail->oil_price = $item['OIL_IN_BATH'];
-                        $newDetail->oil_liter = $item['OIL_IN_LIT'];
-                        $newDetail->driver_id = $driverIdSet;
-                        $newDetail->status = $this->BookingStatus($model->status);
-                        $newDetail->save(false);
-                    }
-                }
+            $endDate = (new DateTime($model->date_end))->modify('+1 day');
+            $dateRanges = [];
+            foreach (new DatePeriod($startDate, new DateInterval('P1D'), $endDate) as $date) {
+                $dateRanges[] = [$date->format('Y-m-d'), $date->format('Y-m-d')];
             }
+        }
+
+        foreach ($dateRanges as [$dateStart, $dateEnd]) {
+            $detail = VehicleDetail::findOne([
+                'vehicle_id' => $model->id,
+                'date_start' => $dateStart,
+                'date_end' => $dateEnd,
+            ]) ?? new VehicleDetail();
+            $detail->vehicle_id = $model->id;
+            $detail->date_start = $dateStart;
+            $detail->date_end = $dateEnd;
+            $detail->license_plate = $model->license_plate;
+            $detail->mileage_start = $item['CAR_NUMBER_BEGIN'] ?? null;
+            $detail->mileage_end = $item['CAR_NUMBER_BACK'] ?? null;
+            $detail->oil_price = $item['OIL_IN_BATH'] ?? null;
+            $detail->oil_liter = $item['OIL_IN_LIT'] ?? null;
+            $detail->driver_id = $driverId;
+            $detail->status = $this->BookingStatus($model->status);
+            $detail->save(false);
+        }
+
+        if ($model->vehicle_type_id === 'personal') {
+            $approve = Approve::findOne([
+                'from_id' => $model->id,
+                'name' => 'vehicle',
+                'level' => 1,
+            ]) ?? new Approve();
+            $info = SiteHelper::getInfo();
+            $approve->from_id = $model->id;
+            $approve->name = 'vehicle';
+            $approve->emp_id = $info['director']->id ?? null;
+            $approve->title = 'ขออนุมัติใช้รถ';
+            $approve->data_json = $this->prepareImportedDataJson(
+                Approve::class,
+                $approve->data_json,
+                ['label' => 'อนุมัติ']
+            );
+            $approve->level = 1;
+            $approve->status = 'Pending';
+            $approve->save(false);
         }
     }
     // รถพยาบาล
-    public function actionRefer()
+    public function actionRefer($limit = null)
     {
         $sql = "SELECT rt.REFER_TYPE_NAME,c.CAR_REG,l.RECORD_LOCATION_NAME,r.* FROM `car_refer` r
         LEFT JOIN car_index c ON c.CAR_ID = r.CAR_ID
         LEFT JOIN record_location l ON l.RECORD_LOCATION_ID = r.REFER_LOCATION_GO_ID
-        LEFT JOIN car_refer_type rt ON rt.REFER_TYPE_ID = r.REFER_TYPE_ID WHERE r.OUT_DATE IS NOT NULL;";
+        LEFT JOIN car_refer_type rt ON rt.REFER_TYPE_ID = r.REFER_TYPE_ID
+        WHERE r.OUT_DATE IS NOT NULL
+        ORDER BY r.ID";
+        $sql .= $this->limitSql($limit);
         // นำวันลา
         $querys = Yii::$app->db2->createCommand($sql)
             ->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            Vehicle::class,
+            'ID',
+            ['vehicle_type_id' => 'ambulance']
+        );
 
         $num = 1;
         $total = count($querys);
@@ -623,14 +644,25 @@ class ImportHosOfficeController extends Controller
             try {
 
                 $emp = $this->Person($item['USER_REQUEST_ID']);
+                $sourceId = (string) $item['ID'];
+                $check = isset($existingBySourceId[$sourceId])
+                    ? Vehicle::findOne($existingBySourceId[$sourceId])
+                    : null;
 
-                $check = Vehicle::find()->where([
-                    'reason' => $item['REFER_TYPE_NAME'],
-                    'date_start' => $item['OUT_DATE'],
-                    'date_end' => $item['BACK_DATE'],
-                    'time_start' => $item['OUT_TIME'],
-                    'time_end' => $item['BACK_TIME'],
-                ])->one();
+                if (!$check) {
+                    $check = $this->sourceFallbackQuery(
+                        Vehicle::find()->where([
+                            'vehicle_type_id' => 'ambulance',
+                            'reason' => $item['REFER_TYPE_NAME'],
+                            'date_start' => $item['OUT_DATE'],
+                            'date_end' => $item['BACK_DATE'],
+                            'time_start' => $item['OUT_TIME'],
+                            'time_end' => $item['BACK_TIME'],
+                        ]),
+                        'ID',
+                        $sourceId
+                    )->one();
+                }
 
                 $model = $check ?? new Vehicle();
                 $check ?? ($model->code  =   \mdm\autonumber\AutoNumber::generate('AMB' . date('ymd') . '-???'));
@@ -640,7 +672,7 @@ class ImportHosOfficeController extends Controller
                 $model->refer_type = $this->referType($item['REFER_TYPE_NAME']) ?? '-';
                 $model->go_type = 1;
                 $model->urgent = 'ปกติ';
-                $model->location = $this->checkLocation($item['RECORD_LOCATION_NAME']);
+                $model->location = $this->checkLocation($item['RECORD_LOCATION_NAME']) ?? '-';
                 $model->status = 'Pass';
                 $model->leader_id = 0;
                 $model->date_start = $item['OUT_DATE'];
@@ -650,16 +682,22 @@ class ImportHosOfficeController extends Controller
                 $model->emp_id = $emp->id ?? 0;
                 $model->license_plate = $item['CAR_REG'];
 
-                // if($emp){
-                $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($item));
+                $model->data_json = $this->prepareImportedDataJson(
+                    Vehicle::class,
+                    $model->data_json,
+                    $this->cleanUtf8($item)
+                );
 
-                // }
-                $model->save(false);
-                //code...
+                if ($model->save(false)) {
+                    $existingBySourceId[$sourceId] = $model->id;
+                    $this->createDetailRefer($model, $item);
+                }
             } catch (\Throwable $th) {
                 echo "Error processing item: " . json_encode($item) . "\n";
                 echo "Exception: " . $th->getMessage() . "\n";
             }
+            BaseConsole::updateProgress($num, $total);
+            $num++;
         }
         return ExitCode::OK;
     }
@@ -668,23 +706,22 @@ class ImportHosOfficeController extends Controller
     protected function createDetailRefer($model, $item)
     {
         if ($model->date_start && $model->date_end) {
-            // foreach ($period as $date) {
-            $check1 = VehicleDetail::find()->where(['vehicle_id' => $model->id])->one();
-            if (!$check1) {
-                $newDetail = new VehicleDetail;
-                $newDetail->date_start = $model->date_start;
-                $newDetail->date_end = $model->date_end ?? $model->date_start;
-                $newDetail->vehicle_id = $model->id;
-                $newDetail->license_plate = $model->license_plate;
-                $newDetail->mileage_start = $item['CAR_GO_MILE'];
-                $newDetail->mileage_end = $item['CAR_BACK_MILE'];
-                $newDetail->oil_price = $item['ADD_OIL_BATH'];
-                $newDetail->oil_liter = $item['ADD_OIL_LIT'];
-                $newDetail->driver_id = $this->Person($item['DRIVER_ID'])?->id ?? 0;
-                $newDetail->status = $this->BookingStatus($model->status);
-                $newDetail->save(false);
-            }
-            // }
+            $detail = VehicleDetail::findOne([
+                'vehicle_id' => $model->id,
+                'date_start' => $model->date_start,
+                'date_end' => $model->date_end,
+            ]) ?? new VehicleDetail();
+            $detail->date_start = $model->date_start;
+            $detail->date_end = $model->date_end;
+            $detail->vehicle_id = $model->id;
+            $detail->license_plate = $model->license_plate;
+            $detail->mileage_start = $item['CAR_GO_MILE'] ?? null;
+            $detail->mileage_end = $item['CAR_BACK_MILE'] ?? null;
+            $detail->oil_price = $item['ADD_OIL_BATH'] ?? null;
+            $detail->oil_liter = $item['ADD_OIL_LIT'] ?? null;
+            $detail->driver_id = $this->Person($item['DRIVER_ID'] ?? null)?->id ?? 0;
+            $detail->status = $this->BookingStatus($model->status);
+            $detail->save(false);
         }
     }
     // ประเภทการส่งต่อ
@@ -734,6 +771,11 @@ class ImportHosOfficeController extends Controller
     // ตรวจสอบสถานที่
     protected function checkLocation($locationName)
     {
+        $locationName = trim((string) $locationName);
+        if ($locationName === '') {
+            return null;
+        }
+
         $location = Categorise::findOne(['name' => 'document_org', 'title' => $locationName]);
         if (!$location) {
             $maxCode = Categorise::find()
@@ -753,7 +795,7 @@ class ImportHosOfficeController extends Controller
 
 
     // อบรม/ศึกษา/ดูงาน
-    public function actionDevelopment()
+    public function actionDevelopment($limit = null)
     {
         $sql = 'SELECT 
 m.RECORD_MONEY_NAME,
@@ -773,20 +815,29 @@ rl.RECORD_LEVEL_NAME,
                 LEFT JOIN record_car car ON car.CAR_ID = i.CAR
                 LEFT JOIN record_location_prov lp ON lp.LOCATION_PROV_ID = i.LOCATION_PROV_ID
                 LEFT JOIN record_level rl ON rl.ID = i.RECORD_LEVEL_ID
-                LEFT JOIN record_money m ON m.RECORD_MONEY_ID = i.RECORD_MONEY_ID;';
+                LEFT JOIN record_money m ON m.RECORD_MONEY_ID = i.RECORD_MONEY_ID
+                ORDER BY i.ID';
+        $sql .= $this->limitSql($limit);
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(Development::class, 'ID');
 
         // if (BaseConsole::confirm('การพัฒนา ' . count($querys) . ' รายการ ยืนยัน ??')) {
         $num = 1;
         $total = count($querys);
         echo "นำเข้าข้อมูลการพัฒนา...\n";
         foreach ($querys as $item) {
-            $checkModel = Development::findOne(['topic' => $item['RECORD_HEAD_USE']]);
-            if (!$checkModel) {
-                $model = new Development();
-            } else {
-                $model = $checkModel;
+            $sourceId = (string) $item['ID'];
+            $model = isset($existingBySourceId[$sourceId])
+                ? Development::findOne($existingBySourceId[$sourceId])
+                : null;
+            if (!$model) {
+                $model = $this->sourceFallbackQuery(
+                    Development::find()->where(['topic' => $item['RECORD_HEAD_USE']]),
+                    'ID',
+                    $sourceId
+                )->one()
+                    ?? new Development();
             }
 
             if ($item['RECORD_HEAD_USE']) {
@@ -818,10 +869,16 @@ rl.RECORD_LEVEL_NAME,
                     'time_slot' => $this->getDayTypeKey($item['DAY_TYPE_ID']),
                     'claim_type_name' => $item['RECORD_MONEY_NAME'],
                 ];
-                $model->data_json = ArrayHelper::merge($dataJson,$item);
+                $model->data_json = $this->prepareImportedDataJson(
+                    Development::class,
+                    $model->data_json,
+                    $dataJson,
+                    $this->cleanUtf8($item)
+                );
                 $model->vehicle_type_id = $this->mapVehicleType($item['CAR_NAME'])['code'] ?? '';
                 if ($model->save(false)) {
-                    $this->creteDetailMember($model);
+                    $existingBySourceId[$sourceId] = $model->id;
+                    $this->creteDetailMember($model, $item['ID']);
                     $this->creteDevApprove($model);
                 }
             }
@@ -872,7 +929,7 @@ private function mapVehicleType($input) {
 
 
     // นำเข้าส่วนของคณะที่ไปด้วยกัน
-    protected function creteDetailMember($data)
+    protected function creteDetailMember($data, $sourceRecordId)
     {
 
         $sql = "SELECT * FROM `record_index` i 
@@ -880,7 +937,7 @@ private function mapVehicleType($input) {
             WHERE p.RECORD_ID = :record_id";
 
         $querys = Yii::$app->db2->createCommand($sql)
-            ->bindValue(':record_id', $data->data_json['ID'])
+            ->bindValue(':record_id', $sourceRecordId)
             ->queryAll();
         foreach ($querys as $item) {
             try {
@@ -906,7 +963,7 @@ private function mapVehicleType($input) {
 
     protected function creteDevApprove($model)
     {
-        $checkApprove1 = Approve::findOne(['from_id' => $model->id, 'name' => 'development', 'emp_id' => $model->leader_id, 'level' => 1]);
+        $checkApprove1 = Approve::findOne(['from_id' => $model->id, 'name' => 'development', 'level' => 1]);
         if ($checkApprove1) {
             $approve1 = $checkApprove1;
         } else {
@@ -917,14 +974,15 @@ private function mapVehicleType($input) {
         $approve1->level = 1;
         $approve1->emp_id = $model->leader_id;
         $approve1->title = 'เห็นชอบ';
-        $approve1->data_json = [
-            'topic' => 'เห็นชอบ',
-            'approve_date' => null
-        ];
+        $approve1->data_json = $this->prepareImportedDataJson(
+            Approve::class,
+            $approve1->data_json,
+            ['topic' => 'เห็นชอบ', 'approve_date' => null]
+        );
         $approve1->status = $model->status;
         $approve1->save(false);
 
-        $checkApprove2 = Approve::findOne(['from_id' => $model->id, 'name' => 'development', 'emp_id' => $model->leader_group_id, 'level' => 2]);
+        $checkApprove2 = Approve::findOne(['from_id' => $model->id, 'name' => 'development', 'level' => 2]);
         if ($checkApprove2) {
             $approve2 = $checkApprove2;
         } else {
@@ -935,10 +993,11 @@ private function mapVehicleType($input) {
         $approve2->level = 2;
         $approve2->emp_id = $model->leader_group_id;
         $approve2->title = 'เห็นชอบ';
-        $approve2->data_json = [
-            'topic' => 'เห็นชอบ',
-            'approve_date' => null
-        ];
+        $approve2->data_json = $this->prepareImportedDataJson(
+            Approve::class,
+            $approve2->data_json,
+            ['topic' => 'เห็นชอบ', 'approve_date' => null]
+        );
         $approve2->status = $model->status;
         $approve2->save(false);
     }
@@ -981,19 +1040,41 @@ private function mapVehicleType($input) {
         }
     }
 
-    public function actionCreateMoney()
+    public function actionCreateMoney($limit = null)
     {
-
-        $sql = 'SELECT i.RECORD_HEAD_USE,m.MONEY_ID,m.SUMMONEY FROM `grecord_index_money` m LEFT JOIN grecord_index i ON i.ID = m.RECORD_ID WHERE `SUMMONEY` IS NOT NULL;';
+        $sql = 'SELECT MIN(m.ID) AS ID,
+                       m.RECORD_ID,
+                       i.RECORD_HEAD_USE,
+                       m.MONEY_ID,
+                       SUM(m.SUMMONEY) AS SUMMONEY,
+                       GROUP_CONCAT(m.ID ORDER BY m.ID) AS HOSOFFICE_MONEY_IDS
+                FROM `record_index_money` m
+                INNER JOIN record_index i ON i.ID = m.RECORD_ID
+                WHERE m.SUMMONEY IS NOT NULL
+                GROUP BY m.RECORD_ID, i.RECORD_HEAD_USE, m.MONEY_ID
+                ORDER BY MIN(m.ID)';
+        $sql .= $this->limitSql($limit);
         $querys = Yii::$app->db2->createCommand($sql)
             ->queryAll();
+        $developmentBySourceId = $this->importedRecordIds(Development::class, 'ID');
 
         if (count($querys) > 0) {
             foreach ($querys as $item) {
 
                 // try {
 
-                $checkModel = Development::findOne(['topic' => $item['RECORD_HEAD_USE']]);
+                $developmentId = $developmentBySourceId[(string) $item['RECORD_ID']] ?? null;
+                $checkModel = $developmentId
+                    ? Development::findOne($developmentId)
+                    : $this->sourceFallbackQuery(
+                        Development::find()->where(['topic' => $item['RECORD_HEAD_USE']]),
+                        'ID',
+                        $item['RECORD_ID']
+                    )->one();
+                if (!$checkModel) {
+                    echo "ข้ามค่าใช้จ่าย ID {$item['ID']}: ไม่พบทะเบียนไปราชการต้นทาง {$item['RECORD_ID']}\n";
+                    continue;
+                }
                 //  echo 'Create Expense Type : ' . $checkModel->topic . "\n";
                 $checkDetail = DevelopmentDetail::findOne(['development_id' => $checkModel->id, 'name' => 'expense_type', 'category_id' => 'ET' . $item['MONEY_ID']]);
                 if (!$checkDetail) {
@@ -1005,7 +1086,11 @@ private function mapVehicleType($input) {
                 $model->category_id = 'ET' . $item['MONEY_ID'];
                 $model->name = 'expense_type';
                 $model->price = $item['SUMMONEY'];
-                $model->data_json = ArrayHelper::merge($model->data_json,  $this->cleanUtf8($item));
+                $model->data_json = $this->prepareImportedDataJson(
+                    DevelopmentDetail::class,
+                    $model->data_json,
+                    $this->cleanUtf8($item)
+                );
                 if ($model->save(false)) {
                     echo 'Create Expense Type : ' . $model->id . "\n";
                 }
@@ -1020,7 +1105,7 @@ private function mapVehicleType($input) {
     //ระบบลา
     public function actionLeave($limit = null)
     {
-        $limitSql = $limit === null ? '' : ' LIMIT ' . max(1, (int) $limit);
+        $limitSql = $this->limitSql($limit);
         $querys = Yii::$app->db2->createCommand('SELECT
                     lr.ID, lr.LEAVE_YEAR_ID, lr.LEAVE_BECAUSE,
                     lr.LEAVE_DATE_BEGIN, lr.LEAVE_DATE_END, lr.LEAVE_DATE_SUM,
@@ -1048,6 +1133,7 @@ private function mapVehicleType($input) {
         $imported = 0;
         $skipped = 0;
         $failed = 0;
+        $existingBySourceId = $this->importedRecordIds(Leave::class, 'id');
         echo "นำเข้าข้อมูลลา...\n";
 
         foreach ($querys as $key => $item) {
@@ -1067,12 +1153,24 @@ private function mapVehicleType($input) {
                 $userCheckId = $this->Person($item['USER_CONFIRM_CHECK_ID']);
                 $ApproveDirector = $this->Person($item['TOP_LEADER_AC_ID']);
 
-                $checkLeave = Leave::find()->where([
-                    'emp_id' =>  $emp->id,
-                    'thai_year' => $item['LEAVE_YEAR_ID'],
-                    'date_start' => $item['LEAVE_DATE_BEGIN'],
-                    'date_end' => $item['LEAVE_DATE_END'],
-                ])->andWhere(['json_extract(data_json, "$.cid")' => $item['LEAVE_PERSON_CODE']])->one();
+                $sourceId = (string) $item['ID'];
+                $checkLeave = isset($existingBySourceId[$sourceId])
+                    ? Leave::findOne($existingBySourceId[$sourceId])
+                    : null;
+
+                // รองรับข้อมูลเก่าที่ยังไม่มี source ID ใน data_json
+                if (!$checkLeave) {
+                    $checkLeave = $this->sourceFallbackQuery(
+                        Leave::find()->where([
+                            'emp_id' =>  $emp->id,
+                            'thai_year' => $item['LEAVE_YEAR_ID'],
+                            'date_start' => $item['LEAVE_DATE_BEGIN'],
+                            'date_end' => $item['LEAVE_DATE_END'],
+                        ])->andWhere(['json_extract(data_json, "$.cid")' => $item['LEAVE_PERSON_CODE']]),
+                        'id',
+                        $sourceId
+                    )->one();
+                }
 
                 $leaveType = Categorise::findOne(['name' => 'leave_type', 'title' => $item['LEAVE_TYPE_NAME']]);
 
@@ -1143,19 +1241,20 @@ private function mapVehicleType($input) {
                     'approve_fullname_4' => isset($ApproveDirector) ? (string)$ApproveDirector->fullname : 0,
                     'director_id' => $item['TOP_LEADER_AC_ID'],
                     'director_fullname' => $item['TOP_LEADER_AC_NAME'],
-                    'leader' => isset($leaderId) ? (string)$leaderId->id : 0,
+                    'leader' => $leaderLevel2?->id ?? 0,
                     'leader_person_name' => $item['LEADER_PERSON_NAME'],
                     'leader_person_position' => $item['LEADER_PERSON_POSITION'],
                 ];
-                $currentJson = is_array($leave->data_json)
-                    ? $leave->data_json
-                    : Json::decode($leave->data_json ?: '{}');
-                $leave->data_json = Json::encode(
-                    ArrayHelper::merge($currentJson, $leaveJson, $this->cleanUtf8($item))
+                $leave->data_json = $this->prepareImportedDataJson(
+                    Leave::class,
+                    $leave->data_json,
+                    $leaveJson,
+                    $this->cleanUtf8($item)
                 );
 
                 if ($leave->save(false)) {
                     $imported++;
+                    $existingBySourceId[$sourceId] = $leave->id;
                     // $this->CreateApprove($item);
                 }
                 //code...
@@ -1169,15 +1268,15 @@ private function mapVehicleType($input) {
         }
         $this->UpdateStatus();
         echo "\nสรุป: สำเร็จ {$imported}, ข้าม {$skipped}, ผิดพลาด {$failed}, ทั้งหมด {$total} รายการ\n";
-        return ExitCode::OK;
+        return $failed > 0 ? ExitCode::UNSPECIFIED_ERROR : ExitCode::OK;
     }
 
     /**
      * Upsert สิทธิลาพักผ่อนจาก HosOffice.leave_over โดยจับคู่พนักงานด้วย CID
      */
-    public function actionLeaveEntitlements()
+    public function actionLeaveEntitlements($limit = null)
     {
-        $sourceRows = Yii::$app->db2->createCommand("SELECT
+        $sql = "SELECT
                     lo.*,
                     p.HR_CID,
                     ly.DAY_PER_YEAR
@@ -1185,8 +1284,9 @@ private function mapVehicleType($input) {
                 INNER JOIN hr_person p ON p.ID = lo.PERSON_ID
                 LEFT JOIN leave_year ly ON ly.LEAVE_YEAR_ID = lo.OVER_YEAR_ID
                 WHERE CAST(lo.OVER_YEAR_ID AS UNSIGNED) > 0
-                ORDER BY CAST(lo.OVER_YEAR_ID AS UNSIGNED), lo.ID")
-            ->queryAll();
+                ORDER BY CAST(lo.OVER_YEAR_ID AS UNSIGNED), lo.ID";
+        $sql .= $this->limitSql($limit);
+        $sourceRows = Yii::$app->db2->createCommand($sql)->queryAll();
 
         $employeesByCid = [];
         foreach (Employees::find()->all() as $employee) {
@@ -1472,35 +1572,44 @@ private function mapVehicleType($input) {
 
     public function UpdateStatus()
     {
-        // อัปเดตสถานะ leave จาก 'Allow' เป็น 'Approve' เฉพาะที่มี thai_year
-        $count = Yii::$app->db->createCommand("UPDATE `leave` SET status = 'Approve' WHERE `thai_year` IS NOT NULL AND status = 'Allow'")->execute();
+        // จำกัดเฉพาะใบลาที่นำเข้าจาก HosOffice ไม่แก้ใบลาที่สร้างในระบบหลัก
+        $count = Yii::$app->db->createCommand(
+            "UPDATE `leave`
+             SET status = 'Approve'
+             WHERE `thai_year` IS NOT NULL
+               AND status = 'Allow'
+               AND JSON_VALID(`data_json`)
+               AND JSON_EXTRACT(`data_json`, '$.id') IS NOT NULL"
+        )->execute();
         echo "อัปเดตข้อมูลจำนวน $count รายการ \n";
         return ExitCode::OK;
     }
 
-    public function actionCreateApproveLeave()
+    public function actionCreateApproveLeave($limit = null)
     {
-        $transaction = Yii::$app->db->beginTransaction();
+        $transaction = Yii::$app->db->getTransaction();
+        $ownsTransaction = $transaction === null;
+        if ($ownsTransaction) {
+            $transaction = Yii::$app->db->beginTransaction();
+        }
         try {
-            // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
-            // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
-            $deleted = Approve::deleteAll(['name' => 'leave']);
-            echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
-
-            $leaves = Leave::find()->all();
+            $query = Leave::find()
+                ->where('JSON_VALID([[data_json]])')
+                ->andWhere("JSON_EXTRACT([[data_json]], '$.id') IS NOT NULL")
+                ->orderBy(['id' => SORT_ASC]);
+            if ($limit !== null) {
+                $query->limit(max(1, (int) $limit));
+            }
+            $leaves = $query->all();
             $num = 1;
             $total = count($leaves);
+            $created = 0;
+            $updated = 0;
+            $skipped = 0;
             $approvalSteps = $this->leaveApprovalStepDefinitions();
-            echo "สร้างข้อมูลการอนุมัติลา...\n";
+            echo "อัปเดตข้อมูลการอนุมัติลา...\n";
             foreach ($leaves as $item) {
-                // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
-                $data = $item->data_json;
-                if (is_string($data)) {
-                    $data = json_decode($data, true);
-                }
-                if (!is_array($data)) {
-                    $data = [];
-                }
+                $data = $this->decodeDataJson($item->data_json);
 
                 // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
                 if (array_key_exists('milestone_leader', $data)) {
@@ -1521,40 +1630,58 @@ private function mapVehicleType($input) {
                     $empId = $data['approve_' . $level] ?? null;
                     // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
                     if (empty($empId) || empty($passed[$level])) {
+                        $skipped++;
                         continue;
                     }
-                    $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
-                    $approve = Approve::find()->where($obj)->one();
-                    if (!$approve) {
-                        $newApprove = new Approve($obj);
-                        $approvedAt = $this->normalizeApproveDate(match ($level) {
-                            1, 2 => $data['leader_approved_at'] ?? null,
-                            3 => $data['check_approved_at'] ?? null,
-                            4 => $data['director_approved_at'] ?? null,
-                            default => null,
-                        });
-                        $newApprove->title = $step['title'];
-                        $newApprove->data_json = $this->prepareApproveDataJson([
+
+                    $approve = Approve::findOne([
+                        'name' => 'leave',
+                        'from_id' => $item->id,
+                        'level' => $level,
+                    ]);
+                    $isNew = $approve === null;
+                    $approve = $approve ?? new Approve();
+                    $approvedAt = $this->normalizeApproveDate(match ($level) {
+                        1, 2 => $data['leader_approved_at'] ?? null,
+                        3 => $data['check_approved_at'] ?? null,
+                        4 => $data['director_approved_at'] ?? null,
+                        default => null,
+                    });
+                    $approve->name = 'leave';
+                    $approve->from_id = $item->id;
+                    $approve->level = $level;
+                    $approve->emp_id = $empId;
+                    $approve->status = 'Pass';
+                    $approve->title = $step['title'];
+                    $approve->data_json = $this->prepareImportedDataJson(
+                        Approve::class,
+                        $approve->data_json,
+                        [
                             'label' => $step['label'],
                             'title' => $step['title'],
                             'approve_date' => $approvedAt,
-                        ]);
-                        if ($approvedAt !== null) {
-                            $newApprove->created_at = $approvedAt;
-                        }
-                        if (!$newApprove->save(false)) {
-                            throw new \RuntimeException('บันทึกข้อมูลอนุมัติใบลา ID ' . $item->id . ' ระดับ ' . $level . ' ไม่สำเร็จ');
-                        }
+                            'source_system' => 'hosoffice',
+                        ]
+                    );
+                    if ($approvedAt !== null) {
+                        $approve->created_at = $approvedAt;
                     }
+                    if (!$approve->save(false)) {
+                        throw new \RuntimeException('บันทึกข้อมูลอนุมัติใบลา ID ' . $item->id . ' ระดับ ' . $level . ' ไม่สำเร็จ');
+                    }
+                    $isNew ? $created++ : $updated++;
                 }
                 BaseConsole::updateProgress($num, $total);
                 $num++;
             }
 
-            $transaction->commit();
+            if ($ownsTransaction) {
+                $transaction->commit();
+            }
+            echo "สรุปอนุมัติลา: สร้าง {$created}, อัปเดต {$updated}, ข้าม {$skipped}\n";
             return ExitCode::OK;
         } catch (\Throwable $th) {
-            if ($transaction->isActive) {
+            if ($ownsTransaction && $transaction->isActive) {
                 $transaction->rollBack();
             }
             echo "\nสร้างข้อมูลการอนุมัติลาไม่สำเร็จ: {$th->getMessage()}\n";
@@ -1576,14 +1703,126 @@ private function mapVehicleType($input) {
     }
 
     /**
-     * Yii คืน/รับค่า JSON ต่างกันตาม schema: JSON ใช้ array, LONGTEXT ใช้ JSON string
+     * รวม data_json เดิมกับข้อมูลจาก HosOffice และคืนชนิดที่ตรงกับ schema ปลายทาง
+     * เพื่อให้ importer ใช้ได้ทั้งฐานใหม่ที่เป็น JSON และฐาน legacy ที่เป็น LONGTEXT
+     *
+     * @param class-string<\yii\db\ActiveRecord> $modelClass
+     * @param mixed $currentData
+     * @param array ...$updates
+     * @return array|string
      */
-    private function prepareApproveDataJson(array $data)
+    private function prepareImportedDataJson(string $modelClass, $currentData, array ...$updates)
     {
-        $column = Approve::getTableSchema()->getColumn('data_json');
+        $currentData = $this->decodeDataJson($currentData);
+        $merged = ArrayHelper::merge($currentData, ...$updates);
+        $column = $modelClass::getTableSchema()->getColumn('data_json');
+
         return $column && $column->type === \yii\db\Schema::TYPE_JSON
-            ? $data
-            : Json::encode($data);
+            ? $merged
+            : Json::encode($merged);
+    }
+
+    /**
+     * สร้างแผนที่ source ID => primary key เพื่อให้การนำเข้ารอบถัดไป update
+     * แถวเดิม แม้วันที่ เวลา หรือรายละเอียดใน HosOffice จะถูกแก้ไขแล้ว
+     *
+     * @param class-string<\yii\db\ActiveRecord> $modelClass
+     * @return array<string,int>
+     */
+    private function importedRecordIds(string $modelClass, string $sourceKey, array $conditions = []): array
+    {
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $sourceKey)) {
+            throw new \InvalidArgumentException('Invalid HosOffice source key.');
+        }
+
+        $db = Yii::$app->db;
+        $table = $db->quoteTableName($modelClass::tableName());
+        $id = $db->quoteColumnName('id');
+        $dataJson = $db->quoteColumnName('data_json');
+        $jsonPath = '$.' . $sourceKey;
+        $where = [
+            "{$dataJson} IS NOT NULL",
+            "JSON_VALID({$dataJson})",
+            "JSON_EXTRACT({$dataJson}, :filterJsonPath) IS NOT NULL",
+        ];
+        $params = [
+            ':jsonPath' => $jsonPath,
+            ':filterJsonPath' => $jsonPath,
+        ];
+        foreach ($conditions as $column => $value) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/', (string) $column)) {
+                throw new \InvalidArgumentException('Invalid destination filter column.');
+            }
+            $placeholder = ':condition' . count($params);
+            $where[] = $db->quoteColumnName((string) $column) . " = {$placeholder}";
+            $params[$placeholder] = $value;
+        }
+
+        $rows = $db->createCommand(
+            "SELECT {$id}, JSON_UNQUOTE(JSON_EXTRACT({$dataJson}, :jsonPath)) AS source_id
+             FROM {$table}
+             WHERE " . implode(' AND ', $where),
+            $params
+        )->queryAll();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $sourceId = trim((string) ($row['source_id'] ?? ''));
+            if ($sourceId !== '') {
+                $map[$sourceId] = (int) $row['id'];
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Fallback ใช้รับแถว legacy ที่ยังไม่มี source ID เท่านั้น และไม่ยึดแถวของ source อื่น
+     * แม้ข้อมูลชื่อ/วันที่จะบังเอิญตรงกัน
+     */
+    private function sourceFallbackQuery($query, string $sourceKey, $sourceId)
+    {
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $sourceKey)) {
+            throw new \InvalidArgumentException('Invalid HosOffice source key.');
+        }
+
+        $jsonPath = '$.' . $sourceKey;
+        return $query->andWhere(new \yii\db\Expression(
+            "COALESCE(
+                JSON_UNQUOTE(JSON_EXTRACT(
+                    CASE WHEN JSON_VALID([[data_json]]) THEN [[data_json]] ELSE '{}' END,
+                    :fallbackJsonPath
+                )),
+                ''
+            ) IN ('', :fallbackSourceId)",
+            [
+                ':fallbackJsonPath' => $jsonPath,
+                ':fallbackSourceId' => (string) $sourceId,
+            ]
+        ));
+    }
+
+    private function decodeDataJson($data): array
+    {
+        if (is_array($data)) {
+            return $data;
+        }
+
+        if (!is_string($data) || trim($data) === '') {
+            return [];
+        }
+
+        try {
+            $decoded = Json::decode($data, true);
+            return is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            return [];
+        }
+    }
+
+    private function limitSql($limit): string
+    {
+        return $limit === null ? '' : ' LIMIT ' . max(1, (int) $limit);
     }
 
     /**
@@ -1654,14 +1893,16 @@ private function mapVehicleType($input) {
     }
 
     // ระบบห้องประชุม
-    public function actionMeeting()
+    public function actionMeeting($limit = null)
     {
         $this->CreateRoom();
         $sql = "SELECT r.ROOM_ID,r.ROOM_NAME,s.* FROM `room_service` s 
         LEFT JOIN room_index r ON r.ROOM_ID = s.ROOM_ID
-        ORDER BY s.DATE_TIME_REQUEST ASC;";
+        ORDER BY s.DATE_TIME_REQUEST ASC, s.ID ASC";
+        $sql .= $this->limitSql($limit);
         $querys = Yii::$app->db2->createCommand($sql)
             ->queryAll();
+        $existingBySourceId = $this->importedRecordIds(Meeting::class, 'ID');
 
         $num = 1;
         $total = count($querys);
@@ -1670,17 +1911,28 @@ private function mapVehicleType($input) {
             try {
 
                 $emp = $this->Person($item['PERSON_REQUEST_ID']);
+                $sourceId = (string) $item['ID'];
+                $check = isset($existingBySourceId[$sourceId])
+                    ? Meeting::findOne($existingBySourceId[$sourceId])
+                    : null;
 
-                $check = Meeting::find()->where([
-                    'emp_id' => $emp?->id  ?? 0,
-                    'room_id' => $item['ROOM_ID'],
-                    'thai_year' => $item['YEAR_ID'],
-                    'title' => $item['SERVICE_STORY'],
-                    'date_start' => $item['DATE_BEGIN'],
-                    'date_end' => $item['DATE_END'],
-                    'time_start' => $item['TIME_BEGIN'],
-                    'time_end' => $item['TIME_END'],
-                ])->one();
+                // รองรับข้อมูลที่เคยนำเข้าก่อนบันทึก source ID ลง data_json
+                if (!$check) {
+                    $check = $this->sourceFallbackQuery(
+                        Meeting::find()->where([
+                            'emp_id' => $emp?->id  ?? 0,
+                            'room_id' => $item['ROOM_ID'],
+                            'thai_year' => $item['YEAR_ID'],
+                            'title' => $item['SERVICE_STORY'],
+                            'date_start' => $item['DATE_BEGIN'],
+                            'date_end' => $item['DATE_END'],
+                            'time_start' => $item['TIME_BEGIN'],
+                            'time_end' => $item['TIME_END'],
+                        ]),
+                        'ID',
+                        $sourceId
+                    )->one();
+                }
 
                 $model = $check ?? new Meeting();
                 $check ?? ($model->code  =   \mdm\autonumber\AutoNumber::generate('MEETING' . date('ymd', strtotime($item['DATE_BEGIN'])) . '-???'));
@@ -1699,8 +1951,14 @@ private function mapVehicleType($input) {
                     'phone' => $item['PERSON_REQUEST_PHONE'],
                     'meeting_details' => $item['SERVICE_FOR_DETAIL'],
                 ];
-                $model->data_json = ArrayHelper::merge($model->data_json, $dataJson,  $this->cleanUtf8($item));
+                $model->data_json = $this->prepareImportedDataJson(
+                    Meeting::class,
+                    $model->data_json,
+                    $dataJson,
+                    $this->cleanUtf8($item)
+                );
                 if ($model->save(false)) {
+                    $existingBySourceId[$sourceId] = $model->id;
                 }
             } catch (\Throwable $th) {
                 echo 'เกิดข้อผิดพลาด : ' . $item['ID'] . " - " . $th->getMessage() . "\n";
@@ -1717,24 +1975,32 @@ private function mapVehicleType($input) {
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
         foreach ($querys as $item) {
             $room = Categorise::findOne(['name' => 'meeting_room', 'code' => $item['ROOM_ID']]);
-            if (!$room) {
-                $newRoom = new Categorise;
-                $newRoom->name = 'meeting_room';
-                $newRoom->code = $item['ROOM_ID'];
-                $newRoom->title = $item['ROOM_NAME'];
-                $newRoom->data_json = [
-                    'owner' => $this->Person($item['ROOM_PERSON_ID'])?->id,
-                    "location" => "อาคารผู้ป่วยนอก ชั้น 2",
-                    "seat_capacity" => $item['CONTAIN'],
-                    "room_accessory" => [
+            $isNew = $room === null;
+            $room = $room ?? new Categorise();
+            $room->name = 'meeting_room';
+            $room->code = $item['ROOM_ID'];
+            $room->title = $item['ROOM_NAME'];
+            $defaults = $isNew
+                ? [
+                    'location' => 'อาคารผู้ป่วยนอก ชั้น 2',
+                    'room_accessory' => [
                         "คอมพิวเตอร์",
                         "โปรเจคเตอร์",
                         "ไมค์ประชุม"
                     ],
-                    "advance_booking" =>  "1"
-                ];
-                $newRoom->save(false);
-                echo "สร้างห้องประชุม : " . $newRoom->title . "\n";
+                    'advance_booking' => '1',
+                ]
+                : [];
+            $room->data_json = ArrayHelper::merge(
+                $this->decodeDataJson($room->data_json),
+                $defaults,
+                [
+                    'owner' => $this->Person($item['ROOM_PERSON_ID'])?->id,
+                    'seat_capacity' => $item['CONTAIN'],
+                ]
+            );
+            if ($room->save(false) && $isNew) {
+                echo "สร้างห้องประชุม : " . $room->title . "\n";
             }
         }
     }
@@ -1742,7 +2008,7 @@ private function mapVehicleType($input) {
 
 
     // งานซ่อมบำรุง
-    public function actionRepairGeneral()
+    public function actionRepairGeneral($limit = null)
     {
         set_time_limit(0);
         $sql = 'SELECT ot.OTHER_NAME,l.LOCATION_NAME ,p.PRIORITY_NAME,
@@ -1752,9 +2018,16 @@ private function mapVehicleType($input) {
                 LEFT JOIN repair_other ot ON ot.OTHER_ID = r.OTHER_ID
                 LEFT JOIN repair_location_see l ON l.ID = r.LOCATION_SEE_ID
                 LEFT JOIN repair_priority p ON p.PRIORITY_ID = r.PRIORITY_ID
-                LEFT JOIN ar_article a ON a.ARTICLE_ID = r.ARTICLE_ID';
+                LEFT JOIN ar_article a ON a.ARTICLE_ID = r.ARTICLE_ID
+                ORDER BY r.ID';
+        $sql .= $this->limitSql($limit);
 
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            Helpdesk::class,
+            'ID',
+            ['repair_group' => 1]
+        );
         $num = 1;
         $total = count($querys);
 
@@ -1762,13 +2035,21 @@ private function mapVehicleType($input) {
         foreach ($querys as $item) {
             // try {
             $emp = $this->Person($item['USER_REQUEST_ID']);
-            $checkModel = Helpdesk::findOne(['repair_number' => $item['REPAIR_ID']]);
+            $sourceId = (string) $item['ID'];
+            $checkModel = isset($existingBySourceId[$sourceId])
+                ? Helpdesk::findOne($existingBySourceId[$sourceId])
+                : $this->sourceFallbackQuery(
+                    Helpdesk::find()->where(['repair_group' => 1, 'repair_number' => $item['REPAIR_ID']]),
+                    'ID',
+                    $sourceId
+                )->one();
             if (!$checkModel) {
                 $model = new Helpdesk();
             } else {
                 $model = $checkModel;
             }
             // ตรวจสอบว่ามีวันที่ส่งมาไหม
+            $receiveDateTime = null;
             if (!empty($item['TECH_RECEIVE_DATE']) && $item['TECH_RECEIVE_DATE'] !== '0000-00-00') {
                 // รวมวันที่และเวลา
                 $receiveDateTime = trim($item['TECH_RECEIVE_DATE'] . ' ' . ($item['TECH_RECEIVE_TIME'] ?: '00:00:00'));
@@ -1779,15 +2060,19 @@ private function mapVehicleType($input) {
 
 
 
-            // ทำความสะอาดข้อมูลก่อนใช้งาน
-            $cleanItem = $this->cleanUtf8($item);
+            // ไม่เก็บไฟล์รูปแบบ binary ลง data_json เพราะทำให้ JSON/UTF-8 เสีย
+            $sourceData = $item;
+            foreach (['REPAIR_IMG', 'REPAIR_SUCCESS_IMG', 'IMAGES'] as $imageColumn) {
+                unset($sourceData[$imageColumn]);
+            }
+            $cleanItem = $this->cleanUtf8($sourceData);
             $model->repair_group = 1;
             $model->name = 'repair';
             $model->repair_number = $item['REPAIR_ID'];
-            $model->emp_id = $emp->id;
+            $model->emp_id = $emp?->id ?? 0;
             $model->thai_year = $item['YEAR_ID'];
             $model->title = $item['REPAIR_NAME'];
-            $model->created_by = $emp->user_id;
+            $model->created_by = $emp?->user_id;
             $model->status = !empty($item['TECH_SUCCESS_DATE']) ? 'success' : $this->RepairStatus($item);
             $model->created_at = $item['DATE_TIME_REQUEST'];
             $model->date_start = $item['REPAIR_DATE'];
@@ -1810,52 +2095,40 @@ private function mapVehicleType($input) {
                 'accept_emp_id' => '',
                 'accept_name' => '',
                 'accept_time' => $item['TECH_RECEIVE_DATE'] . ' ' . $item['TECH_RECEIVE_TIME'],
-                'create_name' => $emp->fullname,
+                'create_name' => $emp?->fullname ?? $item['USER_REQUEST_NAME'] ?? '',
                 'status_name' => 'ร้องขอ',
                 'location_other' => '',
                 'technician_req' => '0',
                 'technician_name' => '',
             ];
-            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson, $cleanItem);
+            $model->data_json = $this->prepareImportedDataJson(
+                Helpdesk::class,
+                $model->data_json,
+                $dataJson,
+                $cleanItem
+            );
 
             if ($model->save(false)) {
+                $existingBySourceId[$sourceId] = $model->id;
 
                 ################## วันรับเื่อง ม###########################
 
-                if (!empty($item['TECH_RECEIVE_DATE'])) {
-
-                    $receiveData = [
-                        'helpdesk_id' => $model->id,
-                        'title' =>  $item['TECH_RECEIVE_COMMENT'],
-                        'name' => 'service_record',
+                if (!empty($item['TECH_RECEIVE_DATE']) && $item['TECH_RECEIVE_DATE'] !== '0000-00-00') {
+                    $this->upsertRepairServiceRecord($model->id, 'hosoffice_receive', [
+                        'title' => $item['TECH_RECEIVE_COMMENT'],
                         'status' => 'รับเรื่อง',
-                        'created_at' => $receiveDateTime
-                    ];
-
-                    $checkServiceRecordReceived = HelpdeskDetail::findOne($receiveData);
-                    if (!$checkServiceRecordReceived) {
-                        $checkServiceRecordReceived = new HelpdeskDetail($receiveData);
-                        $checkServiceRecordReceived->detachBehavior(0);
-                        $checkServiceRecordReceived->save(false);
-                    }
+                        'created_at' => $receiveDateTime,
+                    ]);
                 }
 
                 ############### วันที่ซ่อม #########################
                 if (!empty($item['TECH_REPAIR_DATE']) && $item['TECH_REPAIR_DATE'] !== '0000-00-00') {
                     // รวมวันที่และเวลา
                     $repairDateTime = trim($item['TECH_REPAIR_DATE'] . ' ' . ($item['TECH_REPAIR_TIME'] ?: '00:00:00'));
-                    $repairData = [
-                        'helpdesk_id' => $model->id,
-                        'name' => 'service_record',
+                    $this->upsertRepairServiceRecord($model->id, 'hosoffice_repair', [
                         'status' => $item['REPAIR_COMMENT'],
-                        'created_at' => $repairDateTime
-                    ];
-                    $checkServiceRecordRepair = HelpdeskDetail::findOne($repairData);
-                    if (!$checkServiceRecordRepair) {
-                        $checkServiceRecordRepair = new HelpdeskDetail($repairData);
-                        $checkServiceRecordRepair->detachBehavior(0);
-                        $checkServiceRecordRepair->save(false);
-                    }
+                        'created_at' => $repairDateTime,
+                    ]);
                 }
 
                 ############### วันที่ซ่อมเสร็จ #########################
@@ -1863,18 +2136,10 @@ private function mapVehicleType($input) {
                 if (!empty($item['TECH_SUCCESS_DATE']) && $item['TECH_SUCCESS_DATE'] !== '0000-00-00') {
                     // รวมวันที่และเวลา
                     $repairSuccessDateTime = trim($item['TECH_SUCCESS_DATE'] . ' ' . ($item['TECH_SUCCESS_TIME'] ?: '00:00:00'));
-                    $repairSucessData = [
-                        'helpdesk_id' => $model->id,
-                        'name' => 'service_record',
+                    $this->upsertRepairServiceRecord($model->id, 'hosoffice_success', [
                         'status' => 'ซ่อมเสร็จ',
-                        'created_at' => $repairSuccessDateTime
-                    ];
-                    $checkServiceRecordRepair = HelpdeskDetail::findOne($repairSucessData);
-                    if (!$checkServiceRecordRepair) {
-                        $checkServiceRecordRepair = new HelpdeskDetail($repairSucessData);
-                        $checkServiceRecordRepair->detachBehavior(0);
-                        $checkServiceRecordRepair->save(false);
-                    }
+                        'created_at' => $repairSuccessDateTime,
+                    ]);
                 }
 
 
@@ -1884,14 +2149,11 @@ private function mapVehicleType($input) {
                     $repairTeamData = [
                         'helpdesk_id' => $model->id,
                         'name' => 'repair_team',
-                        'emp_id' => $techPerson->id ?? 0,
                     ];
-                    $checkServiceRecordTeam = HelpdeskDetail::findOne($repairTeamData);
-                    if (!$checkServiceRecordTeam) {
-                        $checkServiceRecordTeam = new HelpdeskDetail($repairTeamData);
-                        $checkServiceRecordTeam->detachBehavior(0);
-                        $checkServiceRecordTeam->save(false);
-                    }
+                    $repairTeam = HelpdeskDetail::findOne($repairTeamData)
+                        ?? new HelpdeskDetail($repairTeamData);
+                    $repairTeam->emp_id = $techPerson->id;
+                    $repairTeam->save(false);
                 }
                 ############### สิ้นสุด วันรับเื่อง ม #########################
 
@@ -1914,75 +2176,135 @@ private function mapVehicleType($input) {
         echo "นำเข้าข้อมูลซ่อมบำรุงเสร็จสิ้น!\n";
     }
 
-
-    public function actionComputer()
+    private function upsertRepairServiceRecord(int $helpdeskId, string $code, array $attributes): void
     {
-        $sql = 'SELECT * FROM `com_repair` r';
-        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
-        // if (BaseConsole::confirm('งานซ่อมบำรุง ' . count($querys) . ' รายการ ยืนยัน ??')) {
-        $num = 1;
-        $total = count($querys);
-        foreach ($querys as $item) {
-            // try {
-            $emp = $this->Person($item['USER_REQUEST_ID']);
-            $checkModel = Helpdesk::findOne(['title' => $item['SYMPTOM']]);
-            if (!$checkModel) {
-                $model = new Helpdesk();
+        $record = HelpdeskDetail::findOne([
+            'helpdesk_id' => $helpdeskId,
+            'name' => 'service_record',
+            'code' => $code,
+        ]);
+
+        // รับข้อมูลเก่าที่ยังไม่มี code มาใช้ต่อ เพื่อไม่สร้างประวัติซ้ำเมื่ออัปเกรด importer
+        if (!$record) {
+            $query = HelpdeskDetail::find()
+                ->where(['helpdesk_id' => $helpdeskId, 'name' => 'service_record'])
+                ->andWhere(['or', ['code' => null], ['code' => '']]);
+            if ($code === 'hosoffice_receive') {
+                $query->andWhere(['status' => 'รับเรื่อง']);
+            } elseif ($code === 'hosoffice_success') {
+                $query->andWhere(['status' => 'ซ่อมเสร็จ']);
             } else {
-                $model = $checkModel;
+                $query->andWhere(['not in', 'status', ['รับเรื่อง', 'ซ่อมเสร็จ']]);
             }
+            $record = $query->orderBy(['id' => SORT_ASC])->one();
+        }
+
+        $record = $record ?? new HelpdeskDetail();
+        $record->helpdesk_id = $helpdeskId;
+        $record->name = 'service_record';
+        $record->code = $code;
+        $record->setAttributes($attributes, false);
+        $record->detachBehavior(0);
+        $record->save(false);
+    }
+
+
+    public function actionComputer($limit = null)
+    {
+        $sql = 'SELECT p.PRIORITY_NAME,l.LOCATION_NAME,r.*
+                FROM `com_repair` r
+                LEFT JOIN com_priority p ON p.PRIORITY_ID = r.PRIORITY_ID
+                LEFT JOIN com_location l ON l.LOCATION_ID = r.LOCATION_ID
+                ORDER BY r.REPAIR_ID';
+        $sql .= $this->limitSql($limit);
+        $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            Helpdesk::class,
+            'REPAIR_ID',
+            ['repair_group' => 2]
+        );
+
+        foreach ($querys as $item) {
+            $sourceId = (string) $item['REPAIR_ID'];
+            $emp = $this->Person($item['REPAIR_BY_ID']);
+            $model = isset($existingBySourceId[$sourceId])
+                ? Helpdesk::findOne($existingBySourceId[$sourceId])
+                : $this->sourceFallbackQuery(
+                    Helpdesk::find()->where([
+                        'repair_group' => 2,
+                        'repair_number' => 'COM-' . $sourceId,
+                    ]),
+                    'REPAIR_ID',
+                    $sourceId
+                )->one();
+            $model = $model ?? new Helpdesk();
             $model->repair_group = 2;
             $model->name = 'repair';
-            $model->emp_id = $emp->id;
-            $model->thai_year = $item['YEAR_ID'];
-            $model->title = $item['SYMPTOM'];
-            $model->created_by = $emp->user_id;
-            $model->status = $item['REPAIR_STATUS'];
+            $model->repair_number = 'COM-' . $sourceId;
+            $model->emp_id = $emp?->id ?? 0;
+            $model->thai_year = $item['YEAR_ID'] ?: AppHelper::YearBudget($item['DATE_TIME_REQUEST']);
+            $model->title = $item['REPAIR_DETAIL_BEGIN'] ?: ($item['COM_NAME'] ?: 'แจ้งซ่อมคอมพิวเตอร์ #' . $sourceId);
+            $model->created_by = $emp?->user_id;
+            $model->status = $this->RepairStatus($item);
             $model->created_at = $item['DATE_TIME_REQUEST'];
-            $model->date_start = $item['TECH_REPAIR_DATE'];
-            $model->date_end = $item['TECH_SUCCESS_DATE'];
-            $model->rating = $item['FANCINESS_SCORE'];
+            $model->request_repair_date = $item['DATE_WANT_USES'];
+            $model->receive_date = $item['RECEIVE_DATE_TIME'];
+            $model->date_start = $item['RECEIVE_DATE_TIME']
+                ? date('Y-m-d', strtotime($item['RECEIVE_DATE_TIME']))
+                : null;
+            $model->date_end = null;
+            $model->rating = $item['ASSES_SCORE'];
             $dataJson = [
-                'time_start' => $item['REPAIR_TIME'],
-                'end_start' => $item['TECH_REPAIR_TIME'],
+                'time_start' => $item['TIME_WANT_USES'],
                 'status' => $item['REPAIR_STATUS'],
-                'note' => $item['REPAIR_SUCCESS_REMARK'],
+                'note' => $item['RECEIVE_COMMENT'],
                 'phone' => '',
-                'urgency' => '1',
-                'location' => 'งานซ่อมบำรุง',
-                'repair_type' => $item['OUTSIDE_ACTIVE'] == true ? 'ซ่อมภายนอก' : 'ซ่อมภายใน',
+                'urgency' => $item['PRIORITY_ID'],
+                'urgency_name' => $item['PRIORITY_NAME'],
+                'location' => $item['LOCATION_NAME'],
+                'repair_type' => 'ซ่อมภายใน',
                 'send_type' => 'general',
-                'accept_emp_id' => '',
-                'accept_name' => '',
-                'accept_time' => $item['TECH_RECEIVE_DATE'] . ' ' . $item['TECH_RECEIVE_TIME'],
-                'create_name' => $emp->fullname,
-                'status_name' => 'ร้องขอ',
+                'accept_emp_id' => $this->Person($item['RECEIVE_BY_ID'])?->id,
+                'accept_name' => $item['RECEIVE_BY_NAME'],
+                'accept_time' => $item['RECEIVE_DATE_TIME'],
+                'create_name' => $emp?->fullname ?? '',
+                'status_name' => $item['REPAIR_STATUS'],
                 'location_other' => '',
                 'technician_req' => '0',
                 'technician_name' => '',
+                'source_system' => 'hosoffice_com_repair',
             ];
-            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson,  $this->cleanUtf8($item));
+            $sourceData = $item;
+            foreach (['COM_IMG', 'REPAIR_IMG1', 'REPAIR_IMG2', 'REPAIR_IMG3', 'REPAIR_IMG4'] as $imageColumn) {
+                unset($sourceData[$imageColumn]);
+            }
+            $model->data_json = $this->prepareImportedDataJson(
+                Helpdesk::class,
+                $model->data_json,
+                $dataJson,
+                $this->cleanUtf8($sourceData)
+            );
             if ($model->save(false)) {
-                $this->TechRepair($model->id, $item['TECH_REPAIR_ID']);
-                // $this->serviceItems($model, $item);
+                $existingBySourceId[$sourceId] = $model->id;
+                $this->TechRepair($model->id, $item['ENGINEER_REQUEST_ID']);
             } else {
                 echo "Save Error \n";
                 print_r($model->getErrors());
             }
-
-            // } catch (\Throwable $th) {
-
-            // }
         }
-        // }
+        return ExitCode::OK;
     }
 
     private function RepairStatus($data)
     {
         switch ($data['REPAIR_STATUS']) {
             case 'REQUEST':
+            case 'PENDING':
+            case 'WAIT':
                 return 'pending';
+            case 'RECEIVE':
             case 'REPAIR':
+            case 'REPAIR_OUT':
                 return 'in_progress';
             case 'CANCEL':
                 return 'cancel';
@@ -2017,11 +2339,15 @@ private function mapVehicleType($input) {
             $model->emp_id = $emp->id;
             $model->name = 'repair_team';
             $model->category_id = $id;
-            $model->data_json = [
-                'tech_fullname' => $emp->fullname,
-                'tech_position' => $emp->positionName(),
-                'tech_department' => $emp->departmentName(),
-            ];
+            $model->data_json = $this->prepareImportedDataJson(
+                Helpdesk::class,
+                $model->data_json,
+                [
+                    'tech_fullname' => $emp->fullname,
+                    'tech_position' => $emp->positionName(),
+                    'tech_department' => $emp->departmentName(),
+                ]
+            );
             $model->save(false);
             // code...
         } catch (\Throwable $th) {
@@ -2029,7 +2355,7 @@ private function mapVehicleType($input) {
         }
     }
 
-    public function actionAsset()
+    public function actionAsset($limit = null)
     {
 
         // ** Query 
@@ -2069,31 +2395,40 @@ private function mapVehicleType($input) {
                                         LEFT JOIN hr_person person ON person.ID = a.PERSON_ID
                                         LEFT JOIN sup_location_level ll ON ll.LOCATION_LEVEL_ID = a.LOCATION_LEVEL_ID
                                         LEFT JOIN sup_location_level_room lr ON lr.LEVEL_ROOM_ID = a.LEVEL_ROOM_ID
-ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
+ORDER BY `st`.`SUP_TYPE_NAME` ASC, a.ARTICLE_ID ASC";
+        $sql .= $this->limitSql($limit);
         //  End Query
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(Asset::class, 'ARTICLE_ID');
         $num = 1;
         $total = count($querys);
         echo "เริ่มนำเข้าข้อมูลครุภัณฑ์...\n";
         foreach ($querys as $asset) {
             try {
-
-
-                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
-                $checkItem = Asset::findOne(['code' => $asset['ARTICLE_NAME']]);
-                $model = $checkItem ? $checkItem : new Asset([
-                    'ref' => $ref
-                ]);
-
-                if (!$checkItem) {
-                    $this->CreateDir($ref);
+                $sourceId = (string) $asset['ARTICLE_ID'];
+                $assetCode = $asset['ARTICLE_NUM'];
+                $model = isset($existingBySourceId[$sourceId])
+                    ? Asset::findOne($existingBySourceId[$sourceId])
+                    : null;
+                if (!$model && $assetCode) {
+                    $model = $this->sourceFallbackQuery(
+                        Asset::find()->where(['code' => $assetCode]),
+                        'ARTICLE_ID',
+                        $sourceId
+                    )->one();
+                }
+                $isNew = $model === null;
+                if ($isNew) {
+                    $model = new Asset([
+                        'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+                    ]);
+                    $this->CreateDir($model->ref);
                     if ($asset['IMG']) {
-
                         $name = time() . '.jpg';
-                        file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $ref . '/' . $name, $asset['IMG']);
+                        file_put_contents(Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $model->ref . '/' . $name, $asset['IMG']);
 
                         $upload = new Uploads;
-                        $upload->ref = $ref;
+                        $upload->ref = $model->ref;
                         $upload->name = 'asset';
                         $upload->file_name = $name;
                         $upload->real_filename = $name;
@@ -2106,7 +2441,6 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
                 // ตรวจสอบว่ามีข้อมูลในฐานข้อมูลหรือไม่ ถ้าไม่มีให้เพิ่มข้อมูลลงไป
                 $assetType = $asset['DECLINE_NAME'];
                 $assetItemName = $asset['ARTICLE_NAME'];
-                $assetCode = $asset['ARTICLE_NUM'];
                 $vendorName = $asset['VENDOR_NAME'];
                 $methodGet = $asset['METHOD_NAME'];
                 $purchaseText = $asset['BUY_NAME'];
@@ -2115,17 +2449,13 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
                 $onYear = $asset['YEAR_ID'];
                 $price =  $asset['PRICE_PER_UNIT'];
                 $receiveDate = $asset['RECEIVE_DATE'];
-                $assetStatus = $asset['STATUS_NAME'];
                 $assetItem = AssetHelper::CheckAssetItem($assetType, $assetCode, $assetItemName);
-                $assetType =  Categorise::findOne(['title' => $asset['DECLINE_NAME'], 'name' => 'asset_type', 'group_id' => 'EQUIP']);
+                $assetTypeModel = Categorise::findOne(['title' => $asset['DECLINE_NAME'], 'name' => 'asset_type', 'group_id' => 'EQUIP']);
 
-                $checkAsset = $assetCode ? Asset::find()->where(['code' => $assetCode])->one() : null;
                 $org = $departmentName ? Organization::find()->where(['name' => $departmentName])->one() : null;
                 $model->department = $org && isset($org->id) ? $org->id : 0;  // หน่วยงานภายในตามโครงสร้าง
-                // สมมติว่าคุณมี Model ชื่อ YourModel
-                $model = $checkAsset ?? new Asset();
                 $model->asset_group_id = 4;
-                $model->asset_type_id = isset($assetType->code) ? $assetType->code : null;
+                $model->asset_type_id = isset($assetTypeModel->code) ? $assetTypeModel->code : null;
                 $model->asset_item_id = isset($assetItem) ? $assetItem->code : null;
                 $model->code = $assetCode;
                 $model->owner = $this->Person($asset['PERSON_ID'])?->id ?? 0;
@@ -2142,7 +2472,7 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
                     'vendor_id' => $vendorName ? AssetHelper::findByName('vendor', $vendorName) : null,
                     'method_get' => $methodGet ? AssetHelper::findByName('method_get', $methodGet) : null,
                     'budget_type' => $budgetType ? AssetHelper::findByName('budget_type', $budgetType) : null,
-                    'asset_type_text' => $assetType,
+                    'asset_type_text' => $asset['DECLINE_NAME'],
                     'method_get_text' => $methodGet,
                     'purchase_text' => $purchaseText,
                     'budget_type_text' => $budgetType,
@@ -2158,20 +2488,28 @@ ORDER BY `st`.`SUP_TYPE_NAME` ASC;";
                 $model->asset_status = $asset['STATUS_ID'];
 
 
-                $model->data_json = ArrayHelper::merge($model->data_json, $data_json, $this->cleanUtf8($asset));
-                $model->save(false);
-                BaseConsole::updateProgress($num, $total);
-                $num++;
-                //code...
+                $sourceData = $asset;
+                foreach (['IMG', 'IMAGES', 'QRCODE', 'IMG1', 'IMG2'] as $imageColumn) {
+                    unset($sourceData[$imageColumn]);
+                }
+                $model->data_json = ArrayHelper::merge(
+                    $this->decodeDataJson($model->data_json),
+                    $data_json,
+                    $this->cleanUtf8($sourceData)
+                );
+                if ($model->save(false)) {
+                    $existingBySourceId[$sourceId] = $model->id;
+                }
             } catch (\Throwable $th) {
                 echo "เกิดข้อผิดพลาด : " . $asset['ARTICLE_ID'] . " - " . $th->getMessage() . "\n";
-                exit;
             }
+            BaseConsole::updateProgress($num, $total);
+            $num++;
         }
         echo "นำเข้าข้อมูลครุภัณฑ์เสร็จสิ้น!\n";
     }
 
-    public function actionMaterial()
+    public function actionMaterial($limit = null)
     {
         $sql = "SELECT 
 *
@@ -2182,14 +2520,28 @@ LEFT JOIN
 LEFT JOIN 
     sup_type_kind ON sup.SUP_TYPE_KIND_ID = sup_type_kind.SUP_TYPE_KIND_ID
 LEFT JOIN sup_unit u ON u.SUP_UNIT_ID = sup.SUP_UNIT_ID
-WHERE sup.SUP_TYPE_KIND_ID IN('1','2','4') 
-ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC";
+WHERE sup.SUP_TYPE_KIND_ID IN('1','2','4')
+ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC, sup.ID ASC";
+        $sql .= $this->limitSql($limit);
         $querys = Yii::$app->db2->createCommand($sql)->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            Categorise::class,
+            'ID',
+            ['name' => 'asset_item']
+        );
         $num = 1;
         $total = count($querys);
 
         foreach ($querys as $item) {
-            $checkMaterial = Categorise::find()->where(['title' => $item['SUP_NAME'], 'name' => 'asset_item'])->one();
+            unset($item['IMG']);
+            $sourceId = (string) $item['ID'];
+            $checkMaterial = isset($existingBySourceId[$sourceId])
+                ? Categorise::findOne($existingBySourceId[$sourceId])
+                : $this->sourceFallbackQuery(
+                    Categorise::find()->where(['title' => $item['SUP_NAME'], 'name' => 'asset_item']),
+                    'ID',
+                    $sourceId
+                )->one();
             $assetType = Categorise::find()->where(['category_id' => 4, 'name' => 'asset_type', 'title' => $item['SUP_TYPE_NAME']])->one();
             if ($checkMaterial) {
                 $model = $checkMaterial;
@@ -2210,8 +2562,15 @@ ORDER BY `sup_type`.`SUP_TYPE_NAME` ASC";
             $model->category_id = $assetType ? $assetType->code : '';
             $model->code = $item['SUP_FSN_NUM'];
             $model->title = $item['SUP_NAME'];
-            $model->data_json = ArrayHelper::merge($model->data_json, $dataJson,  $this->cleanUtf8($item));
-            $model->save(false);
+            $model->data_json = $this->prepareImportedDataJson(
+                Categorise::class,
+                $model->data_json,
+                $dataJson,
+                $this->cleanUtf8($item)
+            );
+            if ($model->save(false)) {
+                $existingBySourceId[$sourceId] = $model->id;
+            }
 
             BaseConsole::updateProgress($num, $total);
             $num++;

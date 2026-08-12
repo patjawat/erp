@@ -4,6 +4,7 @@ namespace app\modules\am\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
@@ -332,6 +333,9 @@ class Asset extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
+        parent::afterFind();
+        $this->normalizeDataJson();
+
         try {
             // $this->receive_date = AppHelper::DateFormDb($this->receive_date);
             $this->budget_year = isset($this->data_json['budget_year_text']) ? $this->data_json['budget_year_text'] : null;
@@ -367,7 +371,6 @@ class Asset extends \yii\db\ActiveRecord
 
         // $this->asset_name = isset($this->data_json['name']) ? $this->data_json['name'] : '-';
 
-        parent::afterFind();
     }
 
     /**
@@ -488,6 +491,11 @@ class Asset extends \yii\db\ActiveRecord
         if ($this->lifecycle_status === null || $this->lifecycle_status === '') {
             $this->lifecycle_status = $insert ? self::LIFECYCLE_RECEIVED : self::LIFECYCLE_ACTIVE;
         }
+
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
         return parent::beforeSave($insert);
     }
 
@@ -513,6 +521,7 @@ class Asset extends \yii\db\ActiveRecord
     public function afterSave($insert, $changedAttributes)
     {
         parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
         $code = trim((string) ($this->code ?? ''));
         if ($code !== '' && ($this->qr_code_path === null || $this->qr_code_path === '')) {
             $path = $this->generateQrCodeFile();
@@ -540,6 +549,33 @@ class Asset extends \yii\db\ActiveRecord
                 // ignore if table/column not available
             }
         }
+    }
+
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     /**
