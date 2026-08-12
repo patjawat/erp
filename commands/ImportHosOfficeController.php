@@ -1222,9 +1222,6 @@ private function mapVehicleType($input) {
                 $model = $model ?? new LeaveEntitlements();
 
                 $workYear = $employee->workYear();
-                $annualDays = (float) ($row['DAY_PER_YEAR'] ?? 10);
-                $totalDays = (float) $row['DAY_LEAVE_OVER'];
-                $beforeBalance = (float) $row['DAY_LEAVE_OVER_BEFORE'];
 
                 $model->emp_id = $employee->id;
                 $model->position_type_id = $employee->position_type;
@@ -1232,19 +1229,22 @@ private function mapVehicleType($input) {
                 $model->month_of_service = (int) ($workYear['month'] ?? 0);
                 $model->year_of_service = (int) $row['OLDS'];
                 $model->thai_year = $thaiYear;
-                $model->balance = $beforeBalance;
-                $model->leave_on_year = $annualDays;
-                $model->days = $totalDays;
+
+                $entitlement = $this->calculateImportedLeaveEntitlement($model, $row);
+                $model->balance = $entitlement['before_leave_balance'];
+                $model->leave_on_year = $entitlement['leave_days'];
+                $model->days = $entitlement['total_days'];
 
                 $currentJson = is_array($model->data_json)
                     ? $model->data_json
                     : Json::decode($model->data_json ?: '{}');
-                $policy = $model->calLeaveMaxDays();
                 $model->data_json = Json::encode(ArrayHelper::merge($currentJson, [
-                    'before_leave_balance' => $beforeBalance,
-                    'leave_days' => $annualDays,
-                    'accumulation' => $totalDays > $annualDays ? 1 : (int) ($policy['accumulation'] ?? 0),
-                    'leave_max_days' => (float) ($policy['leave_max_days'] ?? 0),
+                    'before_leave_balance' => $entitlement['before_leave_balance'],
+                    'leave_days' => $entitlement['leave_days'],
+                    'accumulation' => $entitlement['accumulation'],
+                    'leave_max_days' => $entitlement['leave_max_days'],
+                    'source_before_leave_balance' => $entitlement['source_before_leave_balance'],
+                    'source_total_days' => $entitlement['source_total_days'],
                     'hosoffice_leave_over_id' => (int) $row['ID'],
                     'hosoffice_person_id' => (string) $row['PERSON_ID'],
                     'hosoffice_person_type_id' => (string) $row['HR_PERSON_TYPE_ID'],
@@ -1271,6 +1271,92 @@ private function mapVehicleType($input) {
 
         echo "สรุปสิทธิลาพักผ่อน: สร้าง {$created}, ปรับปรุง {$updated}, ไม่เปลี่ยน {$unchanged}, ข้าม {$skipped}, ผิดพลาด {$failed}\n";
         return ExitCode::OK;
+    }
+
+    /**
+     * คำนวณสิทธิลาพักผ่อนที่นำเข้าตามนโยบายเดียวกับ /leave/leave-policies
+     *
+     * DAY_LEAVE_OVER คือสิทธิรวมหลัง HosOffice คำนวณแล้ว จึงหักสิทธิประจำปี
+     * เพื่อหา "ยอดยกมา" ที่รวมอยู่ในปีนี้จริง ส่วน DAY_LEAVE_OVER_BEFORE เป็น
+     * ค่าดิบจากปีก่อนซึ่งบางรายการว่างหรือไม่ตรงกับยอดรวม จึงเก็บไว้เพื่ออ้างอิง
+     */
+    private function calculateImportedLeaveEntitlement(LeaveEntitlements $model, array $row): array
+    {
+        $sourceAnnualDays = max(0, (float) ($row['DAY_PER_YEAR'] ?? 10));
+        $sourceTotalDays = max(0, (float) ($row['DAY_LEAVE_OVER'] ?? 0));
+        $sourceBeforeBalance = max(0, (float) ($row['DAY_LEAVE_OVER_BEFORE'] ?? 0));
+
+        static $policyCache = [];
+        $policyKey = $model->position_type_id . ':' . $model->year_of_service;
+        if (!array_key_exists($policyKey, $policyCache)) {
+            $policyCache[$policyKey] = Yii::$app->db->createCommand(
+                'SELECT days, max_days, accumulation
+                 FROM leave_policies
+                 WHERE position_type_id = :position_type_id
+                   AND year_of_service <= :year_of_service
+                 ORDER BY year_of_service DESC
+                 LIMIT 1'
+            )->bindValues([
+                ':position_type_id' => $model->position_type_id,
+                ':year_of_service' => $model->year_of_service,
+            ])->queryOne();
+        }
+        $policy = $policyCache[$policyKey];
+
+        if (!$policy) {
+            $leaveDays = min($sourceAnnualDays, $sourceTotalDays);
+            $beforeBalance = max(0, $sourceTotalDays - $leaveDays);
+
+            return [
+                'before_leave_balance' => $beforeBalance,
+                'leave_days' => $leaveDays,
+                'total_days' => $sourceTotalDays,
+                'accumulation' => $beforeBalance > 0 ? 1 : 0,
+                'leave_max_days' => 0.0,
+                'source_before_leave_balance' => $sourceBeforeBalance,
+                'source_total_days' => $sourceTotalDays,
+            ];
+        }
+
+        $policyDays = max(0, (float) $policy['days']);
+        $annualDays = $policyDays > 0 ? $policyDays : $sourceAnnualDays;
+        $maxDays = max(0, (float) $policy['max_days']);
+        $accumulation = (int) $policy['accumulation'];
+
+        if ($accumulation !== 1) {
+            return [
+                'before_leave_balance' => 0.0,
+                'leave_days' => $annualDays,
+                'total_days' => $annualDays,
+                'accumulation' => 0,
+                'leave_max_days' => $maxDays,
+                'source_before_leave_balance' => $sourceBeforeBalance,
+                'source_total_days' => $sourceTotalDays,
+            ];
+        }
+
+        $cappedSourceTotal = $maxDays > 0
+            ? min($sourceTotalDays, $maxDays)
+            : $sourceTotalDays;
+        $leaveDays = min($annualDays, $cappedSourceTotal);
+        $derivedCarryForward = max(0, $cappedSourceTotal - $leaveDays);
+        $maxCarryForward = $maxDays > 0
+            ? max(0, $maxDays - $leaveDays)
+            : $derivedCarryForward;
+        $beforeBalance = min(
+            $derivedCarryForward,
+            $maxCarryForward
+        );
+
+        return [
+            'before_leave_balance' => $beforeBalance,
+            'leave_days' => $leaveDays,
+            'total_days' => $leaveDays + $beforeBalance,
+            'accumulation' => 1,
+            'leave_max_days' => $maxDays,
+            'source_before_leave_balance' => $sourceBeforeBalance,
+            'source_total_days' => $sourceTotalDays,
+        ];
     }
 
     public function getStatus($variable)

@@ -545,6 +545,7 @@ class LeaveEntitlementsController extends Controller
         $StartRowSheet = 3;
         foreach ($dataProvider->getModels() as $item) {
             $numRow = $StartRowSheet++;
+            $entitlementData = $item->getDataJsonArray();
 
             // ✅ เพิ่มคอลัมน์เลขบัตรประชาชนก่อนชื่อ
             $sheet->setCellValueExplicit(
@@ -555,9 +556,9 @@ class LeaveEntitlementsController extends Controller
             $sheet->setCellValue('B' . $numRow, $item->employee->fullname);
             $sheet->setCellValue('C' . $numRow, $item->employee?->workYear()['ym']);
             $sheet->setCellValue('D' . $numRow, $item->employee?->positionType?->title ?? '-');
-            $sheet->setCellValue('E' . $numRow, $item->data_json['before_leave_balance'] ?? '-');
-            $sheet->setCellValue('F' . $numRow, 10);
-            $sheet->setCellValue('G' . $numRow, isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0);
+            $sheet->setCellValue('E' . $numRow, $entitlementData['before_leave_balance'] ?? '-');
+            $sheet->setCellValue('F' . $numRow, $entitlementData['leave_days'] ?? $item->leave_on_year ?? 0);
+            $sheet->setCellValue('G' . $numRow, $entitlementData['leave_max_days'] ?? 0);
             $sheet->setCellValue('H' . $numRow, $item->days);
             $sheet->setCellValue('I' . $numRow, $item->leaveSummaryDays()['leave_use']);
             $sheet->setCellValue('J' . $numRow, $item->leaveSummaryDays()['leave_balance']);

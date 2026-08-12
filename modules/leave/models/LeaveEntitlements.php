@@ -119,6 +119,23 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
         return $this->hasOne(LeavePolicies::class, ['position_type_id' => 'position_type_id']);
     }
 
+    /**
+     * คืนค่า data_json เป็น array เสมอ รองรับทั้งคอลัมน์ JSON และ LONGTEXT
+     */
+    public function getDataJsonArray(): array
+    {
+        if (is_array($this->data_json)) {
+            return $this->data_json;
+        }
+
+        if (is_string($this->data_json) && trim($this->data_json) !== '') {
+            $decoded = json_decode($this->data_json, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
     public function listEmployee()
     {
         $employees = Employees::find()->where(['status' => '1'])->all();
