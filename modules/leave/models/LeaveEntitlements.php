@@ -4,6 +4,7 @@ namespace app\modules\leave\models;
 
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use app\components\AppHelper;
 use app\modules\hr\models\Employees;
 
@@ -134,6 +135,31 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
         }
 
         return [];
+    }
+
+    /**
+     * ซิงก์คอลัมน์สรุปและเข้ารหัส data_json กลับก่อนบันทึกลงฐานข้อมูล
+     */
+    public function beforeSave($insert)
+    {
+        if (is_array($this->data_json)) {
+            if (array_key_exists('before_leave_balance', $this->data_json)) {
+                $this->balance = (float) $this->data_json['before_leave_balance'];
+            }
+            if (array_key_exists('leave_days', $this->data_json)) {
+                $this->leave_on_year = (float) $this->data_json['leave_days'];
+            }
+            if (
+                array_key_exists('before_leave_balance', $this->data_json)
+                && array_key_exists('leave_days', $this->data_json)
+            ) {
+                $this->days = $this->balance + $this->leave_on_year;
+            }
+
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return parent::beforeSave($insert);
     }
 
     public function listEmployee()
