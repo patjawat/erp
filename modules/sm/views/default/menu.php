@@ -8,10 +8,9 @@ use yii\helpers\Html;
  *
  * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'setting'
  *
- * ปุ่ม หลักประกัน ยังปิดไว้ (ยังไม่มี controller)
- * เมื่อสร้าง controller ใน modules/purchase แล้ว ให้เปลี่ยน <span> เป็น <a href="..."> ได้เลย
- * และต้องลงทะเบียน route ใหม่กับ role 'purchase' ในระบบจัดการสิทธิ์ก่อน (AccessControl อ่านสิทธิ์จากฐานข้อมูล)
- * มิฉะนั้นจะถูกปฏิเสธการเข้าถึง
+ * ทุกปุ่มในแถบนี้ชี้ไป controller ที่กันสิทธิ์ด้วย role 'purchase' เอง และ route ถูกใส่ไว้ใน
+ * allow list ของ AccessControl ระดับแอปแล้ว (config/web.php) จึงใช้งานได้โดยไม่ต้องไปผูก
+ * route ในระบบจัดการสิทธิ์ก่อน
  */
 $active = $active ?? '';
 ?>
@@ -36,10 +35,10 @@ $active = $active ?? '';
         <i class="bi bi-file-earmark-check me-1"></i>บริหารสัญญา
     </a>
 
-    <span class="btn btn-sm btn-outline-secondary rounded-pill px-3 disabled" aria-disabled="true"
-        title="อยู่ระหว่างพัฒนา">
+    <a href="<?= Url::to(['/purchase/bond']) ?>"
+        class="btn btn-sm <?= $active === 'guarantee' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
         <i class="bi bi-shield-check me-1"></i>หลักประกัน
-    </span>
+    </a>
 
     <div class="dropdown">
         <button type="button"
@@ -57,6 +56,7 @@ $active = $active ?? '';
                 <hr class="dropdown-divider">
             </li>
             <li><?= Html::a('<i class="bi bi-percent me-2"></i>อัตราภาษีหัก ณ ที่จ่าย', ['/purchase/wht-rate'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-shield-exclamation me-2"></i>เกณฑ์หลักประกัน', ['/purchase/bond-policy'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 </nav>

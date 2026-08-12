@@ -2,7 +2,9 @@
 
 use yii\helpers\Html;
 use app\components\AppHelper;
+use app\modules\purchase\models\Bond;
 use app\modules\purchase\models\Contract;
+use app\modules\purchase\components\BondCalculator;
 use app\modules\purchase\components\ContractCalculator;
 use app\modules\purchase\components\ContractWordExporter;
 
@@ -19,6 +21,13 @@ $fine = $model->fineInfo();
 $wht = $model->whtInfo();
 $diff = $model->diffFromOrder();
 $ratio = ContractCalculator::fineRatio((float) $model->fine_amount, (float) $model->budget);
+
+$bonds = Bond::forSource(Bond::SOURCE_CONTRACT, $model->id);
+$bondPolicy = BondCalculator::policyFor((float) $model->budget, $model->contract_type);
+// นับเฉพาะใบที่ยังเดินอยู่ ใบที่คืนไปแล้วไม่ถือว่าสัญญานี้ยังมีหลักประกันค้ำอยู่
+$bondOpen = array_filter($bonds, function ($bond) {
+    return in_array($bond->status, Bond::openStatuses(), true);
+});
 
 $date = function ($value) {
     return $value ? AppHelper::convertToThai($value) : '—';
@@ -244,6 +253,121 @@ $date = function ($value) {
                     </div>
                 <?php else: ?>
                     <div class="text-center text-muted py-4">สัญญานี้ไม่ได้แบ่งงวดงาน</div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6 class="mb-0">
+                    หลักประกัน
+                    <span class="badge text-bg-secondary"><?= count($bonds) ?></span>
+                </h6>
+                <?= Html::a('<i class="bi bi-plus-circle me-1"></i>บันทึกหลักประกัน', [
+                    '/purchase/bond/create',
+                    'contract_id' => $model->id,
+                ], ['class' => 'btn btn-sm btn-success rounded-pill px-3']) ?>
+            </div>
+            <div class="card-body">
+                <?php if (!$bondPolicy['configured'] && (float) $model->budget > 0): ?>
+                    <div class="alert alert-danger d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <i class="bi bi-exclamation-octagon me-1"></i>
+                            <?= Html::encode($bondPolicy['reason']) ?>
+                        </div>
+                        <?= Html::a('ไปที่หน้าตั้งค่าเกณฑ์', ['/purchase/bond-policy'], [
+                            'class' => 'btn btn-sm btn-danger rounded-pill px-3',
+                        ]) ?>
+                    </div>
+                <?php elseif ($bondPolicy['required'] && !$bondOpen): ?>
+                    <div class="alert alert-warning">
+                        <div class="fw-medium">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            สัญญานี้เข้าเกณฑ์ต้องวางหลักประกัน
+                            <?= rtrim(rtrim(number_format((float) $bondPolicy['rate'], 2), '0'), '.') ?>%
+                            ของวงเงิน = <?= number_format((float) $bondPolicy['amount'], 2) ?> บาท
+                            แต่ยังไม่มีหลักประกันในทะเบียน
+                        </div>
+                        <?php if ($bondPolicy['law']): ?>
+                            <div class="small text-muted mt-1">อ้างอิง: <?= Html::encode($bondPolicy['law']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                <?php elseif (!$bondPolicy['required'] && $bondPolicy['configured']): ?>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <?= Html::encode($bondPolicy['reason']) ?>
+                        <?php if ($bondPolicy['law']): ?>
+                            <div class="text-muted mt-1">อ้างอิง: <?= Html::encode($bondPolicy['law']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($bonds): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width:150px">ประเภท / รูปแบบ</th>
+                                    <th style="min-width:140px">เลขที่ / ผู้ออก</th>
+                                    <th style="width:120px" class="text-end">วงเงิน</th>
+                                    <th style="width:110px">วางเมื่อ</th>
+                                    <th style="width:130px">สิ้นอายุ</th>
+                                    <th style="width:110px">สถานะ</th>
+                                    <th style="width:90px" class="text-end"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($bonds as $bond): ?>
+                                    <?php
+                                    $bondBadge = Bond::statusBadge($bond->status);
+                                    $bondState = $bond->expiryState();
+                                    ?>
+                                    <tr class="<?= $bondState === BondCalculator::STATE_EXPIRED ? 'table-danger' : ($bondState === BondCalculator::STATE_NEAR ? 'table-warning' : '') ?>">
+                                        <td class="small">
+                                            <?= Html::encode($bond->typeName()) ?>
+                                            <div class="text-muted"><?= Html::encode($bond->bondFormName()) ?></div>
+                                        </td>
+                                        <td class="small">
+                                            <?= Html::encode($bond->doc_ref ?: '—') ?>
+                                            <div class="text-muted"><?= Html::encode($bond->issuer ?: '') ?></div>
+                                        </td>
+                                        <td class="text-end">
+                                            <?php if ($bond->status === Bond::STATUS_EXEMPT): ?>
+                                                <span class="text-muted">ยกเว้น</span>
+                                            <?php else: ?>
+                                                <?= number_format((float) $bond->amount, 2) ?>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="small"><?= $date($bond->place_date) ?></td>
+                                        <td class="small">
+                                            <?= $date($bond->expiry_date) ?>
+                                            <?php if ($bondState === BondCalculator::STATE_EXPIRED): ?>
+                                                <div class="text-danger fw-semibold">สิ้นอายุแล้ว</div>
+                                            <?php elseif ($bondState === BondCalculator::STATE_NEAR): ?>
+                                                <div class="text-warning-emphasis">เหลือ <?= (int) $bond->daysToExpiry() ?> วัน</div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><span class="badge text-bg-<?= $bondBadge['color'] ?>"><?= $bondBadge['label'] ?></span></td>
+                                        <td class="text-end">
+                                            <?= Html::a('<i class="bi bi-pencil"></i>', ['/purchase/bond/update', 'id' => $bond->id], [
+                                                'class' => 'btn btn-sm btn-outline-secondary',
+                                                'title' => 'แก้ไขหลักประกัน',
+                                            ]) ?>
+                                        </td>
+                                    </tr>
+                                    <?php if ($bond->status === Bond::STATUS_EXEMPT && $bond->exempt_reason): ?>
+                                        <tr>
+                                            <td colspan="7" class="small text-muted">
+                                                เหตุผลที่ยกเว้น: <?= Html::encode($bond->exempt_reason) ?>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center text-muted py-3">ยังไม่มีหลักประกันที่ผูกกับสัญญาฉบับนี้</div>
                 <?php endif; ?>
             </div>
         </div>

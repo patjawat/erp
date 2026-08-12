@@ -330,6 +330,9 @@ $config = [
             // งานบริหารสัญญา + ตั้งค่าอัตราภาษีหัก ณ ที่จ่าย — controller กันสิทธิ์เองเช่นเดียวกัน
             'purchase/contract/*',
             'purchase/wht-rate/*',
+            // งานหลักประกัน + ตั้งค่าเกณฑ์หลักประกันตามวงเงิน — controller กันสิทธิ์เองเช่นเดียวกัน
+            'purchase/bond/*',
+            'purchase/bond-policy/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',
