@@ -3,61 +3,56 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 
-$layout = app\components\SiteHelper::getInfo()['layout'];
+/**
+ * เมนูหลักงานพัสดุ (ใช้ร่วมกันระหว่างโมดูล sm และ purchase)
+ *
+ * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'setting'
+ *
+ * ปุ่ม บริหารสัญญา / หลักประกัน ยังปิดไว้ (ยังไม่มี controller)
+ * เมื่อสร้าง controller ใน modules/purchase แล้ว ให้เปลี่ยน <span> เป็น <a href="..."> ได้เลย
+ * และต้องลงทะเบียน route ใหม่กับ role 'purchase' ในระบบจัดการสิทธิ์ก่อน (AccessControl อ่านสิทธิ์จากฐานข้อมูล)
+ * มิฉะนั้นจะถูกปฏิเสธการเข้าถึง
+ */
 $active = $active ?? '';
 ?>
-
-<div class="d-flex gap-2">
+<nav class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end" aria-label="เมนูงานพัสดุ">
     <a href="<?= Url::to(['/sm']) ?>"
-        class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="7" height="9" x="3" y="3" rx="1"></rect>
-            <rect width="7" height="5" x="14" y="3" rx="1"></rect>
-            <rect width="7" height="9" x="14" y="12" rx="1"></rect>
-            <rect width="7" height="5" x="3" y="16" rx="1"></rect>
-        </svg>
-        ภาพรวม
+        class="btn btn-sm <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+        <i class="bi bi-speedometer2 me-1"></i>ภาพรวม
     </a>
+
     <a href="<?= Url::to(['/purchase/order']) ?>"
-        class="btn <?= $active !== 'order' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-check-icon lucide-book-check">
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path>
-            <path d="m9 9.5 2 2 4-4"></path>
-        </svg>
-        ทะเบียนประวัติ
+        class="btn btn-sm <?= $active === 'order' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+        <i class="bi bi-cart-check me-1"></i>จัดซื้อจัดจ้าง
     </a>
+
+    <a href="<?= Url::to(['/purchase/tor']) ?>"
+        class="btn btn-sm <?= $active === 'tor' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+        <i class="bi bi-file-earmark-text me-1"></i>เขียน TOR
+    </a>
+
+    <span class="btn btn-sm btn-outline-secondary rounded-pill px-3 disabled" aria-disabled="true"
+        title="อยู่ระหว่างพัฒนา">
+        <i class="bi bi-file-earmark-check me-1"></i>บริหารสัญญา
+    </span>
+
+    <span class="btn btn-sm btn-outline-secondary rounded-pill px-3 disabled" aria-disabled="true"
+        title="อยู่ระหว่างพัฒนา">
+        <i class="bi bi-shield-check me-1"></i>หลักประกัน
+    </span>
+
     <div class="dropdown">
-        <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle"
-            type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-settings-icon lucide-settings">
-                <path
-                    d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                <circle cx="12" cy="12" r="3" />
-            </svg>
-            <span class="d-none d-sm-inline">ตั้งค่า</span>
+        <button type="button"
+            class="btn btn-sm <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3 dropdown-toggle"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-gear me-1"></i>ตั้งค่า
         </button>
-
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-            <li>
-                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> ผู้แทนจำหน่าย', ['/sm/vendor'], ['class' => 'dropdown-item']) ?>
-            </li>
-            <li>
-                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> วัสดุ', ['/sm/product', 'title' => 'ตั้งค่่าวัสดุ'], ['class' => 'dropdown-item']) ?>
-            </li>
-            <li>
-                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> ครุภัณฑ์', ['/sm/asset-item', 'title' => 'ตั้งค่่าวัสดุ'], ['class' => 'dropdown-item']) ?>
-            </li>
-            <li>
-                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> ประเภทวัสดุ', ['/sm/product-type', 'title' => 'ตั้งค่่าประเภทวัสดุ'], ['class' => 'dropdown-item']) ?>
-            </li>
-            <li>
-                <?= Html::a('<i class="fa-solid fa-caret-right me-1"></i> หน่วยนับ', ['/sm/product-unit', 'title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item']) ?>
-            </li>
-
-
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><?= Html::a('<i class="bi bi-shop me-2"></i>ผู้แทนจำหน่าย', ['/sm/vendor'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-box-seam me-2"></i>วัสดุ', ['/sm/product', 'title' => 'ตั้งค่าวัสดุ'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-pc-display me-2"></i>ครุภัณฑ์', ['/sm/asset-item', 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-tags me-2"></i>ประเภทวัสดุ', ['/sm/product-type', 'title' => 'ตั้งค่าประเภทวัสดุ'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-rulers me-2"></i>หน่วยนับ', ['/sm/product-unit', 'title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
-</div>
+</nav>

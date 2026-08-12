@@ -324,6 +324,9 @@ $config = [
             'hr/document/*',
             'dms/documents/comment-validator',
             'hr/leave/create-validator',
+            // งานเขียน TOR: controller กันสิทธิ์เอง (AccessControl roles=['purchase'])
+            // ใส่ไว้ที่นี่เพื่อให้ใช้งานได้ทันทีโดยไม่ต้องไปผูก route ในระบบจัดการสิทธิ์ก่อน
+            'purchase/tor/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',
