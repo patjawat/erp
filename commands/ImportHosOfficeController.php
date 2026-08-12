@@ -107,7 +107,7 @@ class ImportHosOfficeController extends Controller
         echo "\n=== 3/4 สร้างประวัติการอนุมัติ ===\n";
         $this->actionCreateApproveLeave();
 
-        echo "\n=== 4/4 ปรับ label การอนุมัติ ===\n";
+        echo "\n=== 4/4 ปรับข้อมูลกำกับขั้นอนุมัติ ===\n";
         if ($this->actionFixApproveLabel() !== ExitCode::OK) {
             return ExitCode::UNSPECIFIED_ERROR;
         }
@@ -1401,6 +1401,7 @@ private function mapVehicleType($input) {
         $leaves = Leave::find()->all();
         $num = 1;
         $total = count($leaves);
+        $approvalSteps = $this->leaveApprovalStepDefinitions();
         echo "สร้างข้อมูลการอนุมัติลา...\n";
         foreach ($leaves as $item) {
             // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
@@ -1427,7 +1428,7 @@ private function mapVehicleType($input) {
                 $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
             }
 
-            foreach ([1, 2, 3, 4] as $level) {
+            foreach ($approvalSteps as $level => $step) {
                 $empId = $data['approve_' . $level] ?? null;
                 // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
                 if (empty($empId) || empty($passed[$level])) {
@@ -1437,13 +1438,19 @@ private function mapVehicleType($input) {
                 $approve = Approve::find()->where($obj)->one();
                 if (!$approve) {
                     $newApprove = new Approve($obj);
-                    $approvedAt = match ($level) {
+                    $approvedAt = $this->normalizeApproveDate(match ($level) {
                         1, 2 => $data['leader_approved_at'] ?? null,
                         3 => $data['check_approved_at'] ?? null,
                         4 => $data['director_approved_at'] ?? null,
                         default => null,
-                    };
-                    if (!empty($approvedAt) && $approvedAt !== '0000-00-00' && $approvedAt !== '0000-00-00 00:00:00') {
+                    });
+                    $newApprove->title = $step['title'];
+                    $newApprove->data_json = [
+                        'label' => $step['label'],
+                        'title' => $step['title'],
+                        'approve_date' => $approvedAt,
+                    ];
+                    if ($approvedAt !== null) {
                         $newApprove->created_at = $approvedAt;
                     }
                     $newApprove->save(false);
@@ -1455,34 +1462,73 @@ private function mapVehicleType($input) {
     }
 
     /**
-     * กำหนด label ของการอนุมัติลาตามระดับ และรองรับ data_json ที่เป็น NULL
+     * โครงสร้างมาตรฐานของการอนุมัติลาในข้อมูลที่นำเข้าจาก HosOffice
+     */
+    private function leaveApprovalStepDefinitions(): array
+    {
+        return [
+            1 => ['label' => 'เห็นชอบ', 'title' => 'หัวหน้างาน'],
+            2 => ['label' => 'เห็นชอบ', 'title' => 'หัวหน้ากลุ่มงาน'],
+            3 => ['label' => 'ผ่าน', 'title' => 'เจ้าหน้าที่ตรวจสอบ'],
+            4 => ['label' => 'อนุมัติ', 'title' => 'ผู้อำนวยการ'],
+        ];
+    }
+
+    /**
+     * แปลงวันอนุมัติจาก HosOffice ให้อยู่ในรูปแบบ datetime ของระบบ
+     */
+    private function normalizeApproveDate($value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '' || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
+            return null;
+        }
+
+        $timestamp = strtotime($value);
+        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
+    }
+
+    /**
+     * กำหนด label/title ของการอนุมัติลาตามระดับ และรองรับ data_json ที่เป็น NULL
      */
     public function actionFixApproveLabel()
     {
-        $labels = [
-            1 => 'เห็นชอบ',
-            2 => 'เห็นชอบ',
-            3 => 'ผ่าน',
-            4 => 'อนุมัติ',
-        ];
+        $approvalSteps = $this->leaveApprovalStepDefinitions();
 
         $transaction = Yii::$app->db->beginTransaction();
         $totalAffected = 0;
         try {
-            foreach ($labels as $level => $label) {
+            foreach ($approvalSteps as $level => $step) {
                 Yii::$app->db->createCommand(
-                    'UPDATE `approve_level_setting` SET `label` = :label WHERE `system` = :system AND `level` = :level',
-                    [':label' => $label, ':system' => 'leave', ':level' => $level]
+                    'UPDATE `approve_level_setting`
+                     SET `label` = :label, `title` = :title
+                     WHERE `system` = :system AND `level` = :level',
+                    [
+                        ':label' => $step['label'],
+                        ':title' => $step['title'],
+                        ':system' => 'leave',
+                        ':level' => $level,
+                    ]
                 )->execute();
 
                 $affected = Yii::$app->db->createCommand(
                     "UPDATE `approve`
-                     SET `data_json` = JSON_SET(COALESCE(`data_json`, JSON_OBJECT()), '$.label', :label)
+                     SET `title` = :title,
+                         `data_json` = JSON_SET(
+                             CASE WHEN JSON_VALID(`data_json`) THEN COALESCE(`data_json`, JSON_OBJECT()) ELSE JSON_OBJECT() END,
+                             '$.label', :label,
+                             '$.title', :title
+                         )
                      WHERE `name` = :name AND `level` = :level",
-                    [':label' => $label, ':name' => 'leave', ':level' => $level]
+                    [
+                        ':label' => $step['label'],
+                        ':title' => $step['title'],
+                        ':name' => 'leave',
+                        ':level' => $level,
+                    ]
                 )->execute();
                 $totalAffected += $affected;
-                echo "Level {$level} ({$label}): {$affected} รายการ\n";
+                echo "Level {$level} ({$step['label']} / {$step['title']}): {$affected} รายการ\n";
             }
             $transaction->commit();
         } catch (\Throwable $th) {
@@ -1491,7 +1537,7 @@ private function mapVehicleType($input) {
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
-        echo "สรุปปรับ label {$totalAffected} รายการ\n";
+        echo "สรุปปรับข้อมูลกำกับขั้นอนุมัติ {$totalAffected} รายการ\n";
         return ExitCode::OK;
     }
 
