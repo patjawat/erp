@@ -186,6 +186,42 @@ class Approve extends \yii\db\ActiveRecord
         );
     }
 
+    /**
+     * คืนค่า data_json เป็น array เสมอ รองรับทั้งคอลัมน์ JSON และ LONGTEXT
+     */
+    public function getDataJsonArray(): array
+    {
+        if (is_array($this->data_json)) {
+            return $this->data_json;
+        }
+
+        if (is_string($this->data_json) && trim($this->data_json) !== '') {
+            $decoded = json_decode($this->data_json, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    /**
+     * ชื่อการดำเนินการของขั้นอนุมัติ พร้อม fallback สำหรับข้อมูลเก่า
+     */
+    public function getApproveLabel(): string
+    {
+        $data = $this->getDataJsonArray();
+        $label = trim((string) ($data['label'] ?? ''));
+        if ($label !== '') {
+            return $label;
+        }
+
+        return [
+            1 => 'เห็นชอบ',
+            2 => 'เห็นชอบ',
+            3 => 'ผ่าน',
+            4 => 'อนุมัติ',
+        ][(int) $this->level] ?? '';
+    }
+
     //แสดงรายบการ Approve
     public function viewApproveMsg()
     {
@@ -195,13 +231,7 @@ class Approve extends \yii\db\ActiveRecord
                 return '';
             }
 
-            // กำหนดค่า default สำหรับ label โดยใช้ Null Coalescing Operator (??)
-            // เพื่อป้องกันข้อผิดพลาดหาก data_json หรือ 'label' ไม่มี
-            if ($this->level == 3) {
-                $label = 'ตรวจสอบ';
-            } else {
-                $label = $this->data_json['label'] ?? '';
-            }
+            $label = $this->getApproveLabel();
             $message = '';
 
             switch ($this->status) {
@@ -209,9 +239,7 @@ class Approve extends \yii\db\ActiveRecord
                     $message = 'รอ' . $label;
                     break;
                 case 'Pending':
-                    // เลือกระหว่าง $item->title หรือ $label ขึ้นอยู่กับ $item->level
-                    $suffix = ($this->level == 3 && isset($this->title)) ? $this->title : $label;
-                    $message = 'รอ' . $suffix;
+                    $message = 'รอ' . $label;
                     break;
                 case 'Pass':
                     $message = $label;
@@ -266,11 +294,7 @@ class Approve extends \yii\db\ActiveRecord
                 $icon = '<i class="fa-regular fa-circle-check me-1"></i>';
                 break;
         }
-        if ($this->level == 3) {
-            $label = 'ตรวจสอบ';
-        } else {
-            $label = $this->data_json['label'] ?? null;
-        }
+        $label = Html::encode($this->getApproveLabel());
 
         return '  <span class="badge bg-' . $color . ' bg-opacity-10 text-' . $color . ' border border-' . $color . '-subtle rounded-pill fw-medium px-2 py-1">' . $icon . $status . $label . '</span>';
     }
@@ -305,9 +329,15 @@ class Approve extends \yii\db\ActiveRecord
 
     public function viewApproveDate()
     {
+        $data = $this->getDataJsonArray();
+        $approveDate = trim((string) ($data['approve_date'] ?? ''));
+        if ($approveDate === '') {
+            return null;
+        }
+
         try {
-            $time = explode(' ', $this->data_json['approve_date'])[1];
-            return \Yii::$app->thaiFormatter->asDate($this->data_json['approve_date'], 'medium') . ' ' . $time;
+            $time = explode(' ', $approveDate, 2)[1] ?? '';
+            return trim(\Yii::$app->thaiFormatter->asDate($approveDate, 'medium') . ' ' . $time);
         } catch (\Throwable $th) {
             return null;
         }

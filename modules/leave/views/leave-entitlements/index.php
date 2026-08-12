@@ -95,6 +95,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </thead>
             <tbody class="align-middle table-group-divider">
                 <?php foreach ($dataProvider->getModels() as $key => $item): ?>
+                    <?php $entitlementData = $item->getDataJsonArray(); ?>
                     <tr class="<?=$item->leaveSummaryDays()['leave_balance'] < 0 ? 'table-danger' : null?>">
                         <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
                         <td><?php echo $item->thai_year ?></td>
@@ -103,9 +104,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td scope="row" class="fw-semibold text-end"><?php echo $item->employee?->workYear()['ym']?></td>
                         <td scope="row"><?php echo $item->employee?->positionType?->title ?? '-'?></td>
                             
-                        <td class="text-center"><?= $item->data_json['before_leave_balance'] ?? '-'?></td>
-                        <td class="text-center">10</td>
-                        <td class="text-center"><?=isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0?></td>
+                        <td class="text-center"><?= $entitlementData['before_leave_balance'] ?? '-'?></td>
+                        <td class="text-center"><?= $entitlementData['leave_days'] ?? $item->leave_on_year ?? 0?></td>
+                        <td class="text-center"><?= $entitlementData['leave_max_days'] ?? 0?></td>
                         <td class="text-center bg-success text-dark bg-opacity-25">
                         <p class="text-success mb-0">
                             <?=$item->days ?></td>

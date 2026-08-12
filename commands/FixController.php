@@ -92,20 +92,14 @@ class FixController extends Controller
                 // แก้คำผิด 
                 "UPDATE `approve_level_setting` SET `label` = 'เห็นชอบ' WHERE `system` = 'leave' AND `level` = 1",
                 "UPDATE `approve_level_setting` SET `label` = 'เห็นชอบ' WHERE `system` = 'leave' AND `level` = 2",
-                "UPDATE `approve_level_setting` SET `label` = 'ผาน' WHERE `system` = 'leave' AND `level` = 3",
+                "UPDATE `approve_level_setting` SET `label` = 'ผ่าน' WHERE `system` = 'leave' AND `level` = 3",
                 "UPDATE `approve_level_setting` SET `label` = 'อนุมัติ' WHERE `system` = 'leave' AND `level` = 4",
 
-                // 1. เปลี่ยน เจ้าหน้าที่ตรวจสอบ -> ผ่าน
-                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'ผ่าน') WHERE `data_json`->>'$.label' = 'เจ้าหน้าที่ตรวจสอบ'",
-
-                // 2. เปลี่ยน หัวหน้าเห็นชอบ -> เห็นชอบ
-                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'เห็นชอบ') WHERE `data_json`->>'$.label' = 'หัวหน้าเห็นชอบ'",
-
-                // 3. เปลี่ยน หัวหน้ากลุ่มงานเห็นชอบ -> เห็นชอบ
-                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'เห็นชอบ') WHERE `data_json`->>'$.label' = 'หัวหน้ากลุ่มงานเห็นชอบ'",
-
-                // 4. เปลี่ยน ผอ.อนุมัติ -> อนุมัติ
-                "UPDATE `approve` SET `data_json` = JSON_SET(`data_json`, '$.label', 'อนุมัติ') WHERE `data_json`->>'$.label' = 'ผอ.อนุมัติ'"
+                // กำหนด label ตามระดับเฉพาะระบบลา และรองรับ data_json ที่เป็น NULL
+                "UPDATE `approve` SET `data_json` = JSON_SET(COALESCE(`data_json`, JSON_OBJECT()), '$.label', 'เห็นชอบ') WHERE `name` = 'leave' AND `level` = 1",
+                "UPDATE `approve` SET `data_json` = JSON_SET(COALESCE(`data_json`, JSON_OBJECT()), '$.label', 'เห็นชอบ') WHERE `name` = 'leave' AND `level` = 2",
+                "UPDATE `approve` SET `data_json` = JSON_SET(COALESCE(`data_json`, JSON_OBJECT()), '$.label', 'ผ่าน') WHERE `name` = 'leave' AND `level` = 3",
+                "UPDATE `approve` SET `data_json` = JSON_SET(COALESCE(`data_json`, JSON_OBJECT()), '$.label', 'อนุมัติ') WHERE `name` = 'leave' AND `level` = 4"
             ];
 
             // เริ่มต้น Transaction

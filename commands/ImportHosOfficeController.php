@@ -25,6 +25,7 @@ use app\components\UserHelper;
 use yii\helpers\BaseFileHelper;
 use app\modules\am\models\Asset;
 use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveEntitlements;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Development;
 use app\modules\booking\models\Meeting;
@@ -73,7 +74,7 @@ class ImportHosOfficeController extends Controller
             echo "user typed no\n";
         }
     }
-public function actionSync()
+    public function actionSync()
     {
          $this->actionUpdatePosition();
             $this->actionLeave();
@@ -84,6 +85,37 @@ public function actionSync()
             $this->actionRepairGeneral();
             $this->actionAsset();
             $this->actionMaterial();
+    }
+
+    /**
+     * นำเข้าระบบลาจาก HosOffice ให้ครบในคำสั่งเดียว
+     *
+     * ลำดับ: ใบลา -> สิทธิลาพักผ่อน -> ประวัติอนุมัติ -> label การอนุมัติ
+     */
+    public function actionLeaveAll($limit = null)
+    {
+        echo "=== 1/4 นำเข้าใบลา ===\n";
+        if ($this->actionLeave($limit) !== ExitCode::OK) {
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "\n=== 2/4 นำเข้าสิทธิลาพักผ่อน ===\n";
+        if ($this->actionLeaveEntitlements() !== ExitCode::OK) {
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "\n=== 3/4 สร้างประวัติการอนุมัติ ===\n";
+        if ($this->actionCreateApproveLeave() !== ExitCode::OK) {
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "\n=== 4/4 ปรับข้อมูลกำกับขั้นอนุมัติ ===\n";
+        if ($this->actionFixApproveLabel() !== ExitCode::OK) {
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "\nนำเข้าระบบลาจาก HosOffice เสร็จสมบูรณ์\n";
+        return ExitCode::OK;
     }
     public function actionClearDir()
     {
@@ -986,23 +1018,49 @@ private function mapVehicleType($input) {
     }
 
     //ระบบลา
-    public function actionLeave()
+    public function actionLeave($limit = null)
     {
-        $querys = Yii::$app->db2->createCommand('SELECT *
-                    FROM leave_register
-                    LEFT JOIN leave_type ON leave_register.LEAVE_TYPE_CODE = leave_type.LEAVE_TYPE_ID
-                    LEFT JOIN leave_status ON leave_register.LEAVE_STATUS_CODE = leave_status.STATUS_CODE
-                    LEFT JOIN leave_location ON leave_register.LOCATION_ID = leave_location.LOCATION_ID
-                    LEFT JOIN leave_day_type ON leave_day_type.DAY_TYPE_ID = leave_register.DAY_TYPE_ID
-                    ORDER BY leave_register.ID DESC;')
+        $limitSql = $limit === null ? '' : ' LIMIT ' . max(1, (int) $limit);
+        $querys = Yii::$app->db2->createCommand('SELECT
+                    lr.ID, lr.LEAVE_YEAR_ID, lr.LEAVE_BECAUSE,
+                    lr.LEAVE_DATE_BEGIN, lr.LEAVE_DATE_END, lr.LEAVE_DATE_SUM,
+                    lr.DAY_TYPE_ID, lr.LEAVE_CONTACT, lr.LEAVE_DATETIME_REGIS,
+                    lr.LEAVE_TYPE_CODE, lr.LEAVE_PERSON_ID, lr.LEAVE_PERSON_CODE,
+                    lr.LEAVE_PERSON_FULLNAME, lr.LEAVE_STATUS_CODE,
+                    lr.LEAVE_CONTACT_PHONE, lr.LEAVE_WORK_SEND, lr.LEAVE_WORK_SEND_ID,
+                    lr.LEADER_DEP_PERSON_ID, lr.LEADER_PERSON_ID,
+                    lr.LEADER_PERSON_NAME, lr.LEADER_PERSON_POSITION,
+                    lr.USER_CONFIRM_CHECK_ID, lr.LEAVE_ACCEPT_BY_ID,
+                    lr.LEAVE_ACCEPT_DATETIME, lr.USER_CONFIRM_CHECK_DATE,
+                    lr.TOP_LEADER_AC_ID, lr.TOP_LEADER_AC_NAME,
+                    lr.TOP_LEADER_AC_DATE, lr.TOP_LEADER_AC_DATE_TIME,
+                    lr.LOCATION_ID, lr.WORK_DO, lr.LEAVE_SUM_ALL,
+                    lr.LEAVE_SUM_HOLIDAY, lr.LEAVE_SUM_SETSUN,
+                    lt.LEAVE_TYPE_ID, lt.LEAVE_TYPE_NAME,
+                    ll.LOCATION_NAME
+                    FROM leave_register lr
+                    LEFT JOIN leave_type lt ON lr.LEAVE_TYPE_CODE = lt.LEAVE_TYPE_ID
+                    LEFT JOIN leave_location ll ON lr.LOCATION_ID = ll.LOCATION_ID
+                    ORDER BY lr.ID DESC' . $limitSql)
             ->queryAll();
         $num = 1;
         $total = count($querys);
+        $imported = 0;
+        $skipped = 0;
+        $failed = 0;
         echo "นำเข้าข้อมูลลา...\n";
 
         foreach ($querys as $key => $item) {
             try {
                 $emp = Employees::findOne(['cid' => $item['LEAVE_PERSON_CODE']]);
+                if (!$emp) {
+                    $skipped++;
+                    echo "\nข้าม ID {$item['ID']}: ไม่พบพนักงาน CID {$item['LEAVE_PERSON_CODE']}\n";
+                    BaseConsole::updateProgress($num, $total);
+                    $num++;
+                    continue;
+                }
+
                 $sendwork = $this->Person($item['LEAVE_WORK_SEND_ID']);
                 $leaderLevel1 = $this->Person($item['LEADER_DEP_PERSON_ID']);
                 $leaderLevel2 = $this->Person($item['LEADER_PERSON_ID']);
@@ -1059,6 +1117,9 @@ private function mapVehicleType($input) {
                     'milestone_leader' => empty($item['LEAVE_ACCEPT_BY_ID']) ? 0 : 1,     // หัวหน้ารับทราบ/เห็นชอบ
                     'milestone_check' => empty($item['USER_CONFIRM_CHECK_ID']) ? 0 : 1,   // ผู้ตรวจสอบ
                     'milestone_director' => empty($item['TOP_LEADER_AC_ID']) ? 0 : 1,     // ผอ.อนุมัติ
+                    'leader_approved_at' => $item['LEAVE_ACCEPT_DATETIME'],
+                    'check_approved_at' => $item['USER_CONFIRM_CHECK_DATE'],
+                    'director_approved_at' => $item['TOP_LEADER_AC_DATE_TIME'] ?: $item['TOP_LEADER_AC_DATE'],
                     'location_id' => $item['LOCATION_ID'],
                     'location' => $item['LOCATION_NAME'],
                     'reason' => $item['LEAVE_BECAUSE'],
@@ -1086,20 +1147,216 @@ private function mapVehicleType($input) {
                     'leader_person_name' => $item['LEADER_PERSON_NAME'],
                     'leader_person_position' => $item['LEADER_PERSON_POSITION'],
                 ];
-                $leave->data_json = ArrayHelper::merge($leave->data_json ?? [], $leaveJson,  $this->cleanUtf8($item));
+                $currentJson = is_array($leave->data_json)
+                    ? $leave->data_json
+                    : Json::decode($leave->data_json ?: '{}');
+                $leave->data_json = Json::encode(
+                    ArrayHelper::merge($currentJson, $leaveJson, $this->cleanUtf8($item))
+                );
 
                 if ($leave->save(false)) {
+                    $imported++;
                     // $this->CreateApprove($item);
                 }
                 //code...
             } catch (\Throwable $th) {
-                //throw $th;
+                $failed++;
+                $sourceId = $item['ID'] ?? '-';
+                echo "\nนำเข้า ID {$sourceId} ไม่สำเร็จ: {$th->getMessage()}\n";
             }
             BaseConsole::updateProgress($num, $total);
             $num++;
         }
         $this->UpdateStatus();
+        echo "\nสรุป: สำเร็จ {$imported}, ข้าม {$skipped}, ผิดพลาด {$failed}, ทั้งหมด {$total} รายการ\n";
         return ExitCode::OK;
+    }
+
+    /**
+     * Upsert สิทธิลาพักผ่อนจาก HosOffice.leave_over โดยจับคู่พนักงานด้วย CID
+     */
+    public function actionLeaveEntitlements()
+    {
+        $sourceRows = Yii::$app->db2->createCommand("SELECT
+                    lo.*,
+                    p.HR_CID,
+                    ly.DAY_PER_YEAR
+                FROM leave_over lo
+                INNER JOIN hr_person p ON p.ID = lo.PERSON_ID
+                LEFT JOIN leave_year ly ON ly.LEAVE_YEAR_ID = lo.OVER_YEAR_ID
+                WHERE CAST(lo.OVER_YEAR_ID AS UNSIGNED) > 0
+                ORDER BY CAST(lo.OVER_YEAR_ID AS UNSIGNED), lo.ID")
+            ->queryAll();
+
+        $employeesByCid = [];
+        foreach (Employees::find()->all() as $employee) {
+            $cid = trim((string) $employee->cid);
+            if ($cid !== '') {
+                $employeesByCid[$cid] = $employee;
+            }
+        }
+
+        $created = 0;
+        $updated = 0;
+        $unchanged = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($sourceRows as $row) {
+                $cid = trim((string) $row['HR_CID']);
+                $employee = $employeesByCid[$cid] ?? null;
+                if (!$employee) {
+                    $skipped++;
+                    echo "ข้ามสิทธิ PERSON_ID {$row['PERSON_ID']}: ไม่พบ CID {$cid}\n";
+                    continue;
+                }
+
+                $thaiYear = (int) $row['OVER_YEAR_ID'];
+                $model = LeaveEntitlements::findOne([
+                    'emp_id' => $employee->id,
+                    'thai_year' => $thaiYear,
+                ]);
+                $isNew = $model === null;
+                $model = $model ?? new LeaveEntitlements();
+
+                $workYear = $employee->workYear();
+
+                $model->emp_id = $employee->id;
+                $model->position_type_id = $employee->position_type;
+                $model->leave_type_id = 'LT4';
+                $model->month_of_service = (int) ($workYear['month'] ?? 0);
+                $model->year_of_service = (int) $row['OLDS'];
+                $model->thai_year = $thaiYear;
+
+                $entitlement = $this->calculateImportedLeaveEntitlement($model, $row);
+                $model->balance = $entitlement['before_leave_balance'];
+                $model->leave_on_year = $entitlement['leave_days'];
+                $model->days = $entitlement['total_days'];
+
+                $currentJson = is_array($model->data_json)
+                    ? $model->data_json
+                    : Json::decode($model->data_json ?: '{}');
+                $model->data_json = Json::encode(ArrayHelper::merge($currentJson, [
+                    'before_leave_balance' => $entitlement['before_leave_balance'],
+                    'leave_days' => $entitlement['leave_days'],
+                    'accumulation' => $entitlement['accumulation'],
+                    'leave_max_days' => $entitlement['leave_max_days'],
+                    'source_before_leave_balance' => $entitlement['source_before_leave_balance'],
+                    'source_total_days' => $entitlement['source_total_days'],
+                    'hosoffice_leave_over_id' => (int) $row['ID'],
+                    'hosoffice_person_id' => (string) $row['PERSON_ID'],
+                    'hosoffice_person_type_id' => (string) $row['HR_PERSON_TYPE_ID'],
+                ]));
+
+                if (!$model->getDirtyAttributes()) {
+                    $unchanged++;
+                    continue;
+                }
+
+                if ($model->save(false)) {
+                    $isNew ? $created++ : $updated++;
+                } else {
+                    $failed++;
+                }
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $th) {
+            $transaction->rollBack();
+            echo "นำเข้าสิทธิลาพักผ่อนไม่สำเร็จ: {$th->getMessage()}\n";
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "สรุปสิทธิลาพักผ่อน: สร้าง {$created}, ปรับปรุง {$updated}, ไม่เปลี่ยน {$unchanged}, ข้าม {$skipped}, ผิดพลาด {$failed}\n";
+        return ExitCode::OK;
+    }
+
+    /**
+     * คำนวณสิทธิลาพักผ่อนที่นำเข้าตามนโยบายเดียวกับ /leave/leave-policies
+     *
+     * DAY_LEAVE_OVER คือสิทธิรวมหลัง HosOffice คำนวณแล้ว จึงหักสิทธิประจำปี
+     * เพื่อหา "ยอดยกมา" ที่รวมอยู่ในปีนี้จริง ส่วน DAY_LEAVE_OVER_BEFORE เป็น
+     * ค่าดิบจากปีก่อนซึ่งบางรายการว่างหรือไม่ตรงกับยอดรวม จึงเก็บไว้เพื่ออ้างอิง
+     */
+    private function calculateImportedLeaveEntitlement(LeaveEntitlements $model, array $row): array
+    {
+        $sourceAnnualDays = max(0, (float) ($row['DAY_PER_YEAR'] ?? 10));
+        $sourceTotalDays = max(0, (float) ($row['DAY_LEAVE_OVER'] ?? 0));
+        $sourceBeforeBalance = max(0, (float) ($row['DAY_LEAVE_OVER_BEFORE'] ?? 0));
+
+        static $policyCache = [];
+        $policyKey = $model->position_type_id . ':' . $model->year_of_service;
+        if (!array_key_exists($policyKey, $policyCache)) {
+            $policyCache[$policyKey] = Yii::$app->db->createCommand(
+                'SELECT days, max_days, accumulation
+                 FROM leave_policies
+                 WHERE position_type_id = :position_type_id
+                   AND year_of_service <= :year_of_service
+                 ORDER BY year_of_service DESC
+                 LIMIT 1'
+            )->bindValues([
+                ':position_type_id' => $model->position_type_id,
+                ':year_of_service' => $model->year_of_service,
+            ])->queryOne();
+        }
+        $policy = $policyCache[$policyKey];
+
+        if (!$policy) {
+            $leaveDays = min($sourceAnnualDays, $sourceTotalDays);
+            $beforeBalance = max(0, $sourceTotalDays - $leaveDays);
+
+            return [
+                'before_leave_balance' => $beforeBalance,
+                'leave_days' => $leaveDays,
+                'total_days' => $sourceTotalDays,
+                'accumulation' => $beforeBalance > 0 ? 1 : 0,
+                'leave_max_days' => 0.0,
+                'source_before_leave_balance' => $sourceBeforeBalance,
+                'source_total_days' => $sourceTotalDays,
+            ];
+        }
+
+        $policyDays = max(0, (float) $policy['days']);
+        $annualDays = $policyDays > 0 ? $policyDays : $sourceAnnualDays;
+        $maxDays = max(0, (float) $policy['max_days']);
+        $accumulation = (int) $policy['accumulation'];
+
+        if ($accumulation !== 1) {
+            return [
+                'before_leave_balance' => 0.0,
+                'leave_days' => $annualDays,
+                'total_days' => $annualDays,
+                'accumulation' => 0,
+                'leave_max_days' => $maxDays,
+                'source_before_leave_balance' => $sourceBeforeBalance,
+                'source_total_days' => $sourceTotalDays,
+            ];
+        }
+
+        $cappedSourceTotal = $maxDays > 0
+            ? min($sourceTotalDays, $maxDays)
+            : $sourceTotalDays;
+        $leaveDays = min($annualDays, $cappedSourceTotal);
+        $derivedCarryForward = max(0, $cappedSourceTotal - $leaveDays);
+        $maxCarryForward = $maxDays > 0
+            ? max(0, $maxDays - $leaveDays)
+            : $derivedCarryForward;
+        $beforeBalance = min(
+            $derivedCarryForward,
+            $maxCarryForward
+        );
+
+        return [
+            'before_leave_balance' => $beforeBalance,
+            'leave_days' => $leaveDays,
+            'total_days' => $leaveDays + $beforeBalance,
+            'accumulation' => 1,
+            'leave_max_days' => $maxDays,
+            'source_before_leave_balance' => $sourceBeforeBalance,
+            'source_total_days' => $sourceTotalDays,
+        ];
     }
 
     public function getStatus($variable)
@@ -1223,57 +1480,177 @@ private function mapVehicleType($input) {
 
     public function actionCreateApproveLeave()
     {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
+            // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
+            $deleted = Approve::deleteAll(['name' => 'leave']);
+            echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
 
-        // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
-        // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
-        $deleted = Approve::deleteAll(['name' => 'leave']);
-        echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
-
-        $leaves = Leave::find()->all();
-        $num = 1;
-        $total = count($leaves);
-        echo "สร้างข้อมูลการอนุมัติลา...\n";
-        foreach ($leaves as $item) {
-            // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
-            $data = $item->data_json;
-            if (is_string($data)) {
-                $data = json_decode($data, true);
-            }
-            if (!is_array($data)) {
-                $data = [];
-            }
-
-            // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
-            if (array_key_exists('milestone_leader', $data)) {
-                $passed = [
-                    1 => !empty($data['milestone_leader']),   // หัวหน้ารับทราบ/เห็นชอบ
-                    2 => !empty($data['milestone_leader']),
-                    3 => !empty($data['milestone_check']),     // ผู้ตรวจสอบ
-                    4 => !empty($data['milestone_director']),  // ผอ.อนุมัติ
-                ];
-            } else {
-                // Fallback (กรณียังไม่ได้ re-run actionLeave): อนุมานจากสถานะใบลา
-                // เฉพาะใบที่อนุมัติสมบูรณ์เท่านั้นที่ถือว่าผ่านครบทุกระดับ
-                $approved = ($item->status === 'Approve');
-                $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
-            }
-
-            foreach ([1, 2, 3, 4] as $level) {
-                $empId = $data['approve_' . $level] ?? null;
-                // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
-                if (empty($empId) || empty($passed[$level])) {
-                    continue;
+            $leaves = Leave::find()->all();
+            $num = 1;
+            $total = count($leaves);
+            $approvalSteps = $this->leaveApprovalStepDefinitions();
+            echo "สร้างข้อมูลการอนุมัติลา...\n";
+            foreach ($leaves as $item) {
+                // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
+                $data = $item->data_json;
+                if (is_string($data)) {
+                    $data = json_decode($data, true);
                 }
-                $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
-                $approve = Approve::find()->where($obj)->one();
-                if (!$approve) {
-                    $newApprove = new Approve($obj);
-                    $newApprove->save(false);
+                if (!is_array($data)) {
+                    $data = [];
                 }
+
+                // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
+                if (array_key_exists('milestone_leader', $data)) {
+                    $passed = [
+                        1 => !empty($data['milestone_leader']),   // หัวหน้ารับทราบ/เห็นชอบ
+                        2 => !empty($data['milestone_leader']),
+                        3 => !empty($data['milestone_check']),     // ผู้ตรวจสอบ
+                        4 => !empty($data['milestone_director']),  // ผอ.อนุมัติ
+                    ];
+                } else {
+                    // Fallback (กรณียังไม่ได้ re-run actionLeave): อนุมานจากสถานะใบลา
+                    // เฉพาะใบที่อนุมัติสมบูรณ์เท่านั้นที่ถือว่าผ่านครบทุกระดับ
+                    $approved = ($item->status === 'Approve');
+                    $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
+                }
+
+                foreach ($approvalSteps as $level => $step) {
+                    $empId = $data['approve_' . $level] ?? null;
+                    // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
+                    if (empty($empId) || empty($passed[$level])) {
+                        continue;
+                    }
+                    $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
+                    $approve = Approve::find()->where($obj)->one();
+                    if (!$approve) {
+                        $newApprove = new Approve($obj);
+                        $approvedAt = $this->normalizeApproveDate(match ($level) {
+                            1, 2 => $data['leader_approved_at'] ?? null,
+                            3 => $data['check_approved_at'] ?? null,
+                            4 => $data['director_approved_at'] ?? null,
+                            default => null,
+                        });
+                        $newApprove->title = $step['title'];
+                        $newApprove->data_json = $this->prepareApproveDataJson([
+                            'label' => $step['label'],
+                            'title' => $step['title'],
+                            'approve_date' => $approvedAt,
+                        ]);
+                        if ($approvedAt !== null) {
+                            $newApprove->created_at = $approvedAt;
+                        }
+                        if (!$newApprove->save(false)) {
+                            throw new \RuntimeException('บันทึกข้อมูลอนุมัติใบลา ID ' . $item->id . ' ระดับ ' . $level . ' ไม่สำเร็จ');
+                        }
+                    }
+                }
+                BaseConsole::updateProgress($num, $total);
+                $num++;
             }
-            BaseConsole::updateProgress($num, $total);
-            $num++;
+
+            $transaction->commit();
+            return ExitCode::OK;
+        } catch (\Throwable $th) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            echo "\nสร้างข้อมูลการอนุมัติลาไม่สำเร็จ: {$th->getMessage()}\n";
+            return ExitCode::UNSPECIFIED_ERROR;
         }
+    }
+
+    /**
+     * โครงสร้างมาตรฐานของการอนุมัติลาในข้อมูลที่นำเข้าจาก HosOffice
+     */
+    private function leaveApprovalStepDefinitions(): array
+    {
+        return [
+            1 => ['label' => 'เห็นชอบ', 'title' => 'หัวหน้างาน'],
+            2 => ['label' => 'เห็นชอบ', 'title' => 'หัวหน้ากลุ่มงาน'],
+            3 => ['label' => 'ผ่าน', 'title' => 'เจ้าหน้าที่ตรวจสอบ'],
+            4 => ['label' => 'อนุมัติ', 'title' => 'ผู้อำนวยการ'],
+        ];
+    }
+
+    /**
+     * Yii คืน/รับค่า JSON ต่างกันตาม schema: JSON ใช้ array, LONGTEXT ใช้ JSON string
+     */
+    private function prepareApproveDataJson(array $data)
+    {
+        $column = Approve::getTableSchema()->getColumn('data_json');
+        return $column && $column->type === \yii\db\Schema::TYPE_JSON
+            ? $data
+            : Json::encode($data);
+    }
+
+    /**
+     * แปลงวันอนุมัติจาก HosOffice ให้อยู่ในรูปแบบ datetime ของระบบ
+     */
+    private function normalizeApproveDate($value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '' || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
+            return null;
+        }
+
+        $timestamp = strtotime($value);
+        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
+    }
+
+    /**
+     * กำหนด label/title ของการอนุมัติลาตามระดับ และรองรับ data_json ที่เป็น NULL
+     */
+    public function actionFixApproveLabel()
+    {
+        $approvalSteps = $this->leaveApprovalStepDefinitions();
+
+        $transaction = Yii::$app->db->beginTransaction();
+        $totalAffected = 0;
+        try {
+            foreach ($approvalSteps as $level => $step) {
+                Yii::$app->db->createCommand(
+                    'UPDATE `approve_level_setting`
+                     SET `label` = :label, `title` = :title
+                     WHERE `system` = :system AND `level` = :level',
+                    [
+                        ':label' => $step['label'],
+                        ':title' => $step['title'],
+                        ':system' => 'leave',
+                        ':level' => $level,
+                    ]
+                )->execute();
+
+                $affected = Yii::$app->db->createCommand(
+                    "UPDATE `approve`
+                     SET `title` = :title,
+                         `data_json` = JSON_SET(
+                             CASE WHEN JSON_VALID(`data_json`) THEN COALESCE(`data_json`, JSON_OBJECT()) ELSE JSON_OBJECT() END,
+                             '$.label', :label,
+                             '$.title', :title
+                         )
+                     WHERE `name` = :name AND `level` = :level",
+                    [
+                        ':label' => $step['label'],
+                        ':title' => $step['title'],
+                        ':name' => 'leave',
+                        ':level' => $level,
+                    ]
+                )->execute();
+                $totalAffected += $affected;
+                echo "Level {$level} ({$step['label']} / {$step['title']}): {$affected} รายการ\n";
+            }
+            $transaction->commit();
+        } catch (\Throwable $th) {
+            $transaction->rollBack();
+            echo "ปรับ label ไม่สำเร็จ: {$th->getMessage()}\n";
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "สรุปปรับข้อมูลกำกับขั้นอนุมัติ {$totalAffected} รายการ\n";
+        return ExitCode::OK;
     }
 
     // ระบบห้องประชุม
