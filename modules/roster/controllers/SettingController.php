@@ -29,7 +29,8 @@ class SettingController extends Controller
             return false;
         }
         if (!RosterAccess::canEnter()) {
-            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าหน้าตั้งค่าตารางเวร');
+            $this->redirect(['/roster/default/no-access'])->send();
+            return false;
         }
         return true;
     }

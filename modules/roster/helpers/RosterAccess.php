@@ -34,17 +34,57 @@ class RosterAccess
         return $user->can('roster') || $user->can('hr') || $user->can('admin');
     }
 
+    /**
+     * cache ต่อ request — เมนูบนแถบหลักถูกเรนเดอร์ทุกหน้า และกริดเรียกซ้ำหลายสิบครั้ง
+     * ถ้าไม่ cache จะยิง query ซ้ำโดยไม่จำเป็น
+     * @var array<string, mixed>
+     */
+    private static array $cache = [];
+
+    /** ล้าง cache — ใช้เวลาสลับผู้ใช้ในสคริปต์/เทสต์ */
+    public static function resetCache(): void
+    {
+        static::$cache = [];
+    }
+
+    private static function cacheKey(string $name): string
+    {
+        $uid = Yii::$app->has('user') && !Yii::$app->user->isGuest ? (string) Yii::$app->user->id : 'guest';
+        return $name . ':' . $uid;
+    }
+
     public static function currentEmployee(): ?Employees
     {
         if (!Yii::$app->has('user')) {
             return null; // รันจาก console
         }
+        $key = static::cacheKey('emp');
+        if (array_key_exists($key, static::$cache)) {
+            return static::$cache[$key];
+        }
         try {
             $emp = UserHelper::GetEmployee();
-            return $emp instanceof Employees ? $emp : null;
+            $emp = $emp instanceof Employees ? $emp : null;
         } catch (\Throwable $e) {
-            return null;
+            $emp = null;
         }
+        return static::$cache[$key] = $emp;
+    }
+
+    /** @return Organization[] หน่วยงานที่ผู้ใช้ปัจจุบันเป็นหัวหน้า */
+    private static function ledOrganizations(): array
+    {
+        $key = static::cacheKey('led');
+        if (array_key_exists($key, static::$cache)) {
+            return static::$cache[$key];
+        }
+        $emp = static::currentEmployee();
+        try {
+            $led = $emp ? $emp->ledOrganizations() : [];
+        } catch (\Throwable $e) {
+            $led = [];
+        }
+        return static::$cache[$key] = $led;
     }
 
     /**
@@ -86,7 +126,7 @@ class RosterAccess
             return [];
         }
         $ids = [];
-        foreach ($emp->ledOrganizations() as $node) {
+        foreach (static::ledOrganizations() as $node) {
             $ids[] = (int) $node->id;
         }
         return array_values(array_unique($ids));
@@ -115,7 +155,7 @@ class RosterAccess
             return [];
         }
         $ids = [];
-        foreach ($emp->ledOrganizations() as $node) {
+        foreach (static::ledOrganizations() as $node) {
             $ids[] = (int) $node->id;
             foreach (static::descendantIds($node) as $childId) {
                 $ids[] = $childId;
@@ -162,7 +202,7 @@ class RosterAccess
         if (!$unit) {
             return false;
         }
-        foreach ($emp->ledOrganizations() as $node) {
+        foreach (static::ledOrganizations() as $node) {
             if ((int) $node->id === $unitId) {
                 continue; // หัวหน้าหน่วยนั้นเอง — ไม่ใช่ผู้ตรวจ
             }

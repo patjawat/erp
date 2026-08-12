@@ -37,7 +37,9 @@ class PeriodController extends Controller
             return false;
         }
         if (!RosterAccess::canEnter()) {
-            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าระบบตารางเวร');
+            // ส่งไปหน้าที่อธิบายสาเหตุ แทน 403 เปล่าๆ ที่ผู้ใช้เดาไม่ออกว่าต้องแก้ที่ไหน
+            $this->redirect(['/roster/default/no-access'])->send();
+            return false;
         }
         return true;
     }
