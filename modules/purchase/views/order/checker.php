@@ -18,21 +18,21 @@ $checkerStatus = Approve::find()->where(['name' => 'purchase', 'from_id' => $mod
         <div>
             <?php if($checker):?>
             <?php if($checker->status == 'Pending' &&  Yii::$app->user->can('purchase')):?>
-            <!-- <a class="btn btn-sm btn-primary open-modal" data-size="modal-md"><i class="fa-solid fa-circle-plus me-1"></i> เจ้าหน้าที่พัสดุตรวจสอบ</a> -->
-            <?=Html::a('<i class="fa-regular fa-clock"></i> เจ้าหน้าที่พัสดุตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $checker->id,'title' => 'เจ้าหน้าที่พัสดุตรวจสอบ'],
+            <!-- <a class="btn btn-sm btn-primary open-modal" data-size="modal-md"><i class="bi bi-plus-circle me-1"></i> เจ้าหน้าที่พัสดุตรวจสอบ</a> -->
+            <?=Html::a('<i class="bi bi-clock"></i> เจ้าหน้าที่พัสดุตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $checker->id,'title' => 'เจ้าหน้าที่พัสดุตรวจสอบ'],
                                 ['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?>
             <?php  endif;?>
 
             <?php if($checkerStatus->level == 3):?>
             <?php if($checkerStatus->status == 'Pending'):?>
-            <i class="fa-regular fa-hourglass-half"></i> รอผู้อำนวยการอนุมัติ
+            <i class="bi bi-hourglass-split"></i> รอผู้อำนวยการอนุมัติ
             <?php endif?>
             <?php if($checkerStatus->status == 'Approve'):?>
-            <i class="fa-regular fa-circle-check"></i> ผู้อำนวยการอนุมัติ
+            <i class="bi bi-check-circle"></i> ผู้อำนวยการอนุมัติ
             <?php endif?>
 
             <?php if($checkerStatus->status == 'Reject'):?>
-            <i class="fa-regular fa-circle-xmark"></i> ผู้อำนวยการอนุมัติไม่อนุมัติ
+            <i class="bi bi-x-circle"></i> ผู้อำนวยการอนุมัติไม่อนุมัติ
             <?php endif?>
             <?php endif?>
             <?php endif?>

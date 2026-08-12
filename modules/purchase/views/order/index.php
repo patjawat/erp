@@ -45,7 +45,7 @@ if ($searchModel->date_between == 'pr_create_date') {
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+        <h6 class="text-white mt-2"><i class="bi bi-search"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
         <?= $this->render('_search', ['model' => $searchModel]) ?>
@@ -95,9 +95,9 @@ if ($searchModel->date_between == 'pr_create_date') {
                             <td>
                                 <div class="d-flex justify-content-between">
                                     <?php if ($item->pq_number == ''): ?>
-                                        <i class="fa-regular fa-circle-question text-warning"></i>
+                                        <i class="bi bi-question-circle text-warning"></i>
                                     <?php else: ?>
-                                        <p class="fw-medium text-dark mb-0"><i class="fa-regular fa-circle-check text-primary"></i> <?= $item->pq_number ?></p>
+                                        <p class="fw-medium text-dark mb-0"><i class="bi bi-check-circle text-primary"></i> <?= $item->pq_number ?></p>
                                     <?php endif ?>
                                    <?= $item->requestType()['view'] ?>
                                 </div>
@@ -139,7 +139,7 @@ if ($searchModel->date_between == 'pr_create_date') {
 
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted mb-0 fs-13">
-                                            <i class="fa-regular fa-circle-stop text-danger"></i> ยกเลิกรายการ<span
+                                            <i class="bi bi-stop-circle text-danger"></i> ยกเลิกรายการ<span
                                                 class="text-primary">
                                                 <?= $item->viewStatus()['progress'] ?>%</span>
                                         </span>
@@ -170,20 +170,20 @@ if ($searchModel->date_between == 'pr_create_date') {
 
                                     <?php if ($item->status !== 7): ?>
                                         <ul class="dropdown-menu">
-                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                                 <?php if ($item->status >= 2): ?>
-                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                             <?php endif; ?>
 
                                             <?php if ($item->status >= 3): ?>
-                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> คำสั่งซื้อ', ['/purchase/po-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> คำสั่งซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำสั่งซื้อ', ['/purchase/po-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำสั่งซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                             <?php endif; ?>
 
                                             <?php if ($item->status >= 4): ?>
-                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> ใบตรวจรับ', ['/purchase/gr-order/update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-print"></i> ใบตรวจรับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ใบตรวจรับ', ['/purchase/gr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ใบตรวจรับ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                             <?php endif; ?>
 
-                                            <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => $item->id, 'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => $item->id, 'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                             </li>
                                         </ul>
                                     <?php endif; ?>
@@ -195,16 +195,9 @@ if ($searchModel->date_between == 'pr_create_date') {
                 </tbody>
             </table>
         </div>
-        <div class="d-flex justify-content-center mt-3">
-            <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'class' => 'pagination pagination-sm',
-                ],
-            ]); ?>
-        </div>
+    </div>
+    <div class="card-footer bg-body-tertiary">
+        <?= app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
     </div>
 </div>
 

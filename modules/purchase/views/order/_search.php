@@ -121,28 +121,28 @@ echo $form->field($model, 'request_type')->radioList(
     <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 ms-lg-auto">
         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
 
-            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
+            <?= Html::submitButton('<i class="bi bi-search"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
                 'class' => 'btn btn-primary w-100 w-md-auto',
                 'id' => 'summit'
             ]) ?>
 
             <?= Html::a(
-                '<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
-                ['/purchase/pr-order/create','name' => 'order', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างรายการขอซื้อ'],
+                '<i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
+                ['/purchase/pr-order/create','name' => 'order', 'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างรายการขอซื้อ'],
                 ['class' => 'btn btn-outline-secondary open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-md']]
             ) ?>
 
             <div class="dropdown w-100 w-md-auto">
                 <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"
                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-file-excel"></i>
+                    <i class="bi bi-file-earmark-excel"></i>
                     <span class="d-none d-sm-inline">Excel</span>
                 </button>
 
                 <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
                     <li>
                         <a class="dropdown-item" id="download-button" href="#">
-                            <i class="fa-solid fa-file-csv me-2"></i>ส่งออก
+                            <i class="bi bi-filetype-csv me-2"></i>ส่งออก
                         </a>
                     </li>
                 </ul>

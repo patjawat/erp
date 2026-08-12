@@ -85,13 +85,13 @@ $this->title = 'ระบบจัดซื้อ';
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="process-tab" data-bs-toggle="tab"
                                 data-bs-target="#process" type="button" role="tab" aria-controls="process"
-                                aria-selected="true"><i class="fas fa-file-alt fa-fw"></i>
+                                aria-selected="true"><i class="bi bi-file-earmark-text"></i>
                                 กระบวนการการขอซื้อขอจ้าง</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="board-tab" data-bs-toggle="tab" data-bs-target="#board"
                                 type="button" role="tab" aria-controls="board" aria-selected="true"><i
-                                    class="fas fa-file-alt fa-fw"></i> กรรมการตรวจรับ</button>
+                                    class="bi bi-file-earmark-text"></i> กรรมการตรวจรับ</button>
                         </li>
                     </ul>
                     <?= Html::a('<i class="bi bi-printer me-1"></i>พิมพ์เอกสาร', ['/purchase/order/document', 'id' => 1, 'title' => '<i class="bi bi-printer me-1"></i>พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>

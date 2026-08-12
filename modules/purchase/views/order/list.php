@@ -64,11 +64,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </button>
                                 <ul class="dropdown-menu">
                                     <?php if ($model->status == 3): ?>
-                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบียนคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ลงทะเบียนคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบียนคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="bi bi-printer"></i> ลงทะเบียนคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
                                         <?php endif;?>
-                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> สร้างใบสั่งซื้อ', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
-                                    <li> <?=Html::a('<i class="fa-solid fa-circle-plus text-white"></i> ตรวจรับ',['/purchase/gr-order/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใบตรวจรับ'],['class' => 'open-modal dropdown-item','data' => ['size' => 'modal-xl']])?></li>
+                                    <li><?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์เอกสาร', ['/sm/order/document', 'id' => $model->id, 'title' => '<i class="bi bi-printer"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> สร้างใบสั่งซื้อ', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="bi bi-printer"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                    <li> <?=Html::a('<i class="bi bi-plus-circle text-white"></i> ตรวจรับ',['/purchase/gr-order/update','id' => $model->id,'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างใบตรวจรับ'],['class' => 'open-modal dropdown-item','data' => ['size' => 'modal-xl']])?></li>
                                     </li>
                                 </ul>
                             </div>
