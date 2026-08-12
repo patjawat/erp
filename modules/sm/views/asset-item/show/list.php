@@ -13,10 +13,10 @@ use yii\helpers\Html;
         <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
             <div class="bg-primary bg-opacity-10 text-primary rounded-pill">
             </div>
-            <i data-lucide="file-text"></i>
+            <i class="bi bi-file-earmark-text"></i>
             <?= $this->title?>
         </h6>
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/asset-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['/sm/asset-item/create', 'title' => '<i class="bi bi-plus-circle text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     </div>
 
     <div class="card-body p-0">
@@ -44,8 +44,8 @@ use yii\helpers\Html;
                         <td><?php echo $item->assetType->title ?? '-';?></td>
                        <td class="text-end fw-bold"><?= number_format((float)($item->data_json['price'] ?? 0)) ?></td>
                         <td class="text-center">
-                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="fa-solid fa-eye"></i> แสดงข้อมูลครุภัณฑ์'], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                            <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสทรัพย์สิน'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $item->id, 'title' => '<i class="bi bi-eye"></i> แสดงข้อมูลครุภัณฑ์'], ['class' => 'btn btn-sm btn-info open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขรหัสทรัพย์สิน'], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
 
                         </td>

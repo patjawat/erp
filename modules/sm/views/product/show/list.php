@@ -23,11 +23,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                            <i class="bi bi-three-dots-vertical"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                            <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => 1, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a('<i class="bi bi-plus-circle me-1"></i> สร้างใหม่', ['update', 'id' => 1, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a('<i class="bi bi-eye me-1 text-primary"></i> แสดง', ['update', 'id' => 1, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </div>
                     </div>
                 </div>
@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card">
             <div class="card-body d-flex justify-content-between">
                 <div>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= Html::a('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="bi bi-plus-circle text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                 </div>
                 <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             </div>
@@ -48,7 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php foreach ($dataProvider->getModels() as $model): ?>
             <div class="col-lg-3 col-md-3 col-sm-6">
                 <div class="card">
-                    <?= Html::a(Html::img($model->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']), ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a(Html::img($model->ShowImg(), ['class' => ' card-img-top ', 'style' => 'max-width:100%;height:280px;max-height: 280px;']), ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="d-flex flex-column">
@@ -57,11 +57,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="dropdown float-end">
                                 <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
                                     data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis"></i>
+                                    <i class="bi bi-three-dots"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1 text-warning"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                    <?= Html::a('<i class="bi bi-eye me-1 text-primary"></i> แสดง', ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?= Html::a('<i class="bi bi-pencil-square me-1 text-warning"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                     <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                                         'class' => 'dropdown-item  delete-item',
                                     ]) ?>
@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <?= Html::a($model->title, ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'h5 text-truncate open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a($model->title, ['/sm/product/view', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขเพิ่มสินค้า/บริการ'], ['class' => 'h5 text-truncate open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                             <span
                                 class=""><?= isset($model->data_json['unit']) ? $model->data_json['unit'] : '-' ?></span>
                         </div>

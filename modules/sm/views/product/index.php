@@ -1,7 +1,6 @@
 <?php
 
 use app\components\widgets\DataSummaryWidget;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
@@ -34,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header">
         <div class="d-flex justify-content-between">
-            <h6 class="mt-2"><i data-lucide="search"></i> การค้นหา</h6>
+            <h6 class="mt-2"><i class="bi bi-search"></i> การค้นหา</h6>
         </div>
     </div>
     <div class="card-body">
@@ -47,10 +46,10 @@ $this->params['breadcrumbs'][] = $this->title;
         <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2 text-body">
             <div class="bg-primary bg-opacity-10 text-primary rounded-pill">
             </div>
-            <i data-lucide="file-text"></i>
+            <i class="bi bi-file-earmark-text"></i>
             ทะเบียนวัสดุ
         </h6>
-        <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['/sm/product/create', 'title' => '<i class="bi bi-plus-circle text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     </div>
 
     <div class="card-body">
@@ -111,9 +110,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </button>
 
                                     <ul class="dropdown-menu">
-                                        <li><?= Html::a('<i class="fa-solid fa-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                        <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
-                                        <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                        <li><?= Html::a('<i class="bi bi-eye me-1"></i> แสดง', ['/sm/product/view', 'id' => $model->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                        <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> แก้ไข', ['/sm/product/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square me-1"></i> แก้ไขวัสดุ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                        <li><?= Html::a('<i class="bi bi-trash me-1"></i> ลบทิ้ง', ['/sm/product/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                     </ul>
                                 </div>
                             </td>

@@ -28,7 +28,7 @@ $this->title = 'ระบบจัดซื้อ';
                             <div class="col-md-12">
 
                                 <div class="search">
-                                    <!-- <i class="fa fa-search"></i> -->
+                                    <!-- <i class="bi bi-search"></i> -->
                                     <input type="text" class="form-control" placeholder="ค้นหา">
 
                                 </div>
@@ -39,7 +39,7 @@ $this->title = 'ระบบจัดซื้อ';
                     </div>
                     <div>
                         <div>
-                            <button class="btn btn-sm btn-primary"><i data-lucide="circle-plus"></i>
+                            <button class="btn btn-sm btn-primary"><i class="bi bi-plus-circle"></i>
                                 สร้างใบสั่งซื้อ</button>
                         </div>
                     </div>

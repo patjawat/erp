@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <!-- <div class="card">
     <div class="card-body">
-        <?= Html::a('Update', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square text-warning"></i> แก้ไข'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+        <?= Html::a('Update', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square text-warning"></i> แก้ไข'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
@@ -88,9 +88,9 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <div class="d-flex justify-content-center gap-2">
-    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i> แก้ไข', ['/sm/product/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+    <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['/sm/product/update','id' => $model->id,'title' => '<i class="bi bi-plus-circle text-primary"></i> แก้ไข'], ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]) ?>
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-    <i class="fa-regular fa-circle-xmark"></i>  ปิด
+    <i class="bi bi-x-circle"></i>  ปิด
     </button>
 
 </div>

@@ -4,11 +4,11 @@ use yii\helpers\Html;
 <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
-                    <p><i class="fa-solid fa-circle-info"></i> อันดับวัสดุจัดซื้อมากที่สุด</p>
+                    <p><i class="bi bi-info-circle"></i> อันดับวัสดุจัดซื้อมากที่สุด</p>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
+                            <i class="bi bi-three-dots"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
                             <?= Html::a('<i class="bi bi-gear me-2"></i>ตั้งค่า', ['/sm/product'], ['class' => 'dropdown-item']) ?>

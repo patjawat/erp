@@ -254,12 +254,12 @@ class Order extends \yii\db\ActiveRecord
             case 'planned':
                 $label = 'ในแผน';
                 $color = 'primary';
-                $icon = '<i class="fa-regular fa-circle-check me-1"></i>';
+                $icon = '<i class="bi bi-check-circle me-1"></i>';
                 break;
                 default:
                 $label = 'นอกแผน';
                 $color = 'warning';
-                $icon = '<i class="fa-solid fa-circle-exclamation me-1"></i>';
+                $icon = '<i class="bi bi-exclamation-circle me-1"></i>';
                 break;
         }
 
@@ -444,29 +444,29 @@ class Order extends \yii\db\ActiveRecord
         try {
             if ($this->data_json['pr_leader_confirm'] == 'N') {
                 $userId = $this->data_json['leader1'];
-                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+                $text = '<i class="bi bi-stop-circle text-danger"></i> ไม่เห็นชอบ';
             }
 
             if ($this->data_json['pr_officer_checker'] == 'N') {
                 $userId = $this->data_json['leader1'];
-                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ตรวจสอบไม่ผ่าน';
+                $text = '<i class="bi bi-stop-circle text-danger"></i> ตรวจสอบไม่ผ่าน';
             }
 
             if ($this->data_json['pr_director_confirm'] == 'N') {
-                return '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่อนุมัติ';
+                return '<i class="bi bi-stop-circle text-danger"></i> ไม่อนุมัติ';
             }
 
             if ($this->data_json['pr_leader_confirm'] == '') {
                 $userId = $this->data_json['leader1'];
-                $text = '<i class="fa-regular fa-clock text-warning"></i> รอเห็นชอบ';
+                $text = '<i class="bi bi-clock text-warning"></i> รอเห็นชอบ';
             } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == '') {
                 $userId = $this->data_json['leader1'];
-                $text = '<i class="fa-regular fa-circle-check text-success fs-6"></i> เห็นชอบ | <i class="fa-regular fa-clock text-warning"></i> รอตรวจสอบ';
+                $text = '<i class="bi bi-check-circle text-success fs-6"></i> เห็นชอบ | <i class="bi bi-clock text-warning"></i> รอตรวจสอบ';
             } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == '') {
                 $userId = $this->data_json['pr_officer_checker_id'];
-                $text = '<i class="fa-regular fa-circle-check text-success"></i> ตรวจสอบผ่าน | <i class="fa-regular fa-clock text-warning"></i> รออนุมัติ';
+                $text = '<i class="bi bi-check-circle text-success"></i> ตรวจสอบผ่าน | <i class="bi bi-clock text-warning"></i> รออนุมัติ';
             } elseif ($this->data_json['pr_leader_confirm'] == 'Y' && $this->data_json['pr_officer_checker'] == 'Y' && $this->data_json['pr_director_confirm'] == 'Y') {
-                return '<i class="fa-regular fa-circle-check text-success"></i> อนุมัติ';
+                return '<i class="bi bi-check-circle text-success"></i> อนุมัติ';
             }
 
             $employee = Employees::find()->where(['id' => $userId])->one();
@@ -483,9 +483,9 @@ class Order extends \yii\db\ActiveRecord
             $userId = $this->data_json['pr_officer_checker_id'];
             $employee = Employees::find()->where(['user_id' => $userId])->one();
             if ($this->data_json['pr_officer_checker'] == 'Y') {
-                $text = '<i class="fa-regular fa-circle-check text-success"></i> เห็นชอบ';
+                $text = '<i class="bi bi-check-circle text-success"></i> เห็นชอบ';
             } else {
-                $text = '<i class="fa-regular fa-circle-stop text-danger"></i> ไม่เห็นชอบ';
+                $text = '<i class="bi bi-stop-circle text-danger"></i> ไม่เห็นชอบ';
             }
 
             return $employee->getAvatar(false, $text);
@@ -688,7 +688,7 @@ class Order extends \yii\db\ActiveRecord
     //                     'src' => $emp ? $emp->showAvatar() : null
     //                 ]
     //             ]),
-    //             ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+    //             ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="bi bi-pencil-square"></i> กรรมการตรวจรับ'],
     //             [
     //                 'class' => 'open-modal popover-hover',
     //                 'data' => [
@@ -728,7 +728,7 @@ class Order extends \yii\db\ActiveRecord
                         'src' => $emp->showAvatar()
                     ]
                 ]),
-                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="bi bi-pencil-square"></i> กรรมการตรวจรับ'],
                 [
                     'class' => 'open-modal',
                     'data' => [
@@ -759,7 +759,7 @@ class Order extends \yii\db\ActiveRecord
                 $emp = Employees::findOne(['id' => $item->data_json['employee_id']]);
                 $data .= Html::a(
                     Html::img($emp->ShowAvatar(), ['class' => 'avatar-sm rounded-circle shadow']),
-                    ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'],
+                    ['/purchase/order-item/update', 'id' => $item->id, 'name' => 'committee', 'title' => '<i class="bi bi-pencil-square"></i> กรรมการตรวจรับ'],
                     [
                         'class' => 'open-modal',
                         'data' => [

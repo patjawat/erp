@@ -16,7 +16,7 @@ body {
 								
 							</div>
 							<div class="col-auto float-end ms-auto">
-								<a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_service"><i class="fa fa-plus"></i> Add New </a>
+								<a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_service"><i class="bi bi-plus-lg"></i> Add New </a>
 							</div>
 						</div>
 					</div>
@@ -49,11 +49,11 @@ body {
 											<td>
 												<div class="dropdown action-label">
 													<a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-														<i class="fa fa-dot-circle-o text-success"></i> Active
+														<i class="bi bi-record-circle text-success"></i> Active
 													</a>
 													<div class="dropdown-menu">
-														<a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-success"></i> Active</a>
-														<a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-danger"></i> Inactive</a>
+														<a class="dropdown-item" href="#"><i class="bi bi-record-circle text-success"></i> Active</a>
+														<a class="dropdown-item" href="#"><i class="bi bi-record-circle text-danger"></i> Inactive</a>
 													</div>
 												</div>
 											</td>
@@ -61,8 +61,8 @@ body {
 												<div class="dropdown dropdown-action">
 													<a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
 													<div class="dropdown-menu dropdown-menu-right">
-														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_service"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#delete_service"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
+														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_service"><i class="bi bi-pencil m-r-5"></i> Edit</a>
+														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#delete_service"><i class="bi bi-trash m-r-5"></i> Delete</a>
 													</div>
 												</div>
 											</td>
@@ -79,11 +79,11 @@ body {
 											<td>
 												<div class="dropdown action-label">
 													<a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-														<i class="fa fa-dot-circle-o text-success"></i> Active
+														<i class="bi bi-record-circle text-success"></i> Active
 													</a>
 													<div class="dropdown-menu">
-														<a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-success"></i> Active</a>
-														<a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-danger"></i> Inactive</a>
+														<a class="dropdown-item" href="#"><i class="bi bi-record-circle text-success"></i> Active</a>
+														<a class="dropdown-item" href="#"><i class="bi bi-record-circle text-danger"></i> Inactive</a>
 													</div>
 												</div>
 											</td>
@@ -91,8 +91,8 @@ body {
 												<div class="dropdown dropdown-action">
 													<a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
 													<div class="dropdown-menu dropdown-menu-right">
-														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_service"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#delete_service"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
+														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#edit_service"><i class="bi bi-pencil m-r-5"></i> Edit</a>
+														<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#delete_service"><i class="bi bi-trash m-r-5"></i> Delete</a>
 													</div>
 												</div>
 											</td>

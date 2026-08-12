@@ -19,7 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-        <i class="fa-solid fa-gear"></i>
+        <i class="bi bi-gear"></i>
         <?= $this->title ?>
     </h4>
 </div>
@@ -42,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card">
     <div class="card-header">
-        <h6 class="tmt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+        <h6 class="tmt-2"><i class="bi bi-search"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
         <?= $this->render('@app/modules/sm/views/asset-item/_search', ['model' => $searchModel]) ?>

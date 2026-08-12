@@ -98,7 +98,7 @@ class VendorController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> ' . $model->title,
+                'title' => '<i class="bi bi-eye"></i> ' . $model->title,
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                 ]),
@@ -139,7 +139,7 @@ class VendorController extends Controller
 
         if ($this->request->isAjax) {
             return [
-                'title' => '<i class="fa-regular fa-pen-to-square"></i> สร้างใหม่',
+                'title' => '<i class="bi bi-pencil-square"></i> สร้างใหม่',
                 'content' => $this->renderAjax('create', [
                     'model' => $model,
                 ]),
@@ -215,7 +215,7 @@ class VendorController extends Controller
             if ($this->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
-                    'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข',
+                    'title' => '<i class="bi bi-pencil-square"></i> แก้ไข',
                     'content' => $this->renderAjax('update', [
                         'model' => $model,
                     ]),
@@ -433,7 +433,7 @@ class VendorController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-file-import me-1"></i> นำเข้า Vendor (ผู้แทนจำหน่าย)',
+                'title' => '<i class="bi bi-box-arrow-in-down me-1"></i> นำเข้า Vendor (ผู้แทนจำหน่าย)',
                 'content' => $this->renderAjax('import', []),
             ];
         }

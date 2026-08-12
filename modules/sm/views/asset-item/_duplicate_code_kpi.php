@@ -22,7 +22,7 @@ $duplicateCodeExtraCount = (int) ($duplicateCodeExtraCount ?? 0);
                 ตรวจสอบจากเงื่อนไข `group_id = EQUIP` และ `category_id IS NOT NULL`
             </div>
             <h6 class="mb-0 fw-semibold text-body d-flex align-items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                <i class="bi bi-exclamation-triangle text-danger"></i>
                 KPI รหัส `code` ที่ซ้ำ
             </h6>
         </div>
@@ -60,7 +60,7 @@ $duplicateCodeExtraCount = (int) ($duplicateCodeExtraCount ?? 0);
         <?php if (!empty($duplicateCodeSummary)): ?>
             <div class="table-responsive" style="max-height: 420px;">
                 <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light sticky-top" style="z-index: 1;">
+                    <thead class="bg-body-tertiary sticky-top" style="z-index: 1;">
                         <tr>
                             <th class="text-center" style="width: 64px;">#</th>
                             <th style="width: 150px;">Code</th>
@@ -105,7 +105,7 @@ $duplicateCodeExtraCount = (int) ($duplicateCodeExtraCount ?? 0);
                                 </td>
                                 <td class="text-center">
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-magnifying-glass me-1"></i> ตรวจสอบ',
+                                        '<i class="bi bi-search me-1"></i> ตรวจสอบ',
                                         $inspectUrl,
                                         ['class' => 'btn btn-sm btn-outline-danger']
                                     ) ?>

@@ -8,41 +8,45 @@ use yii\helpers\Html;
  *
  * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'setting'
  *
+ * รูปทรงปุ่มยึดตามแถบเมนูของโมดูลอื่น คือ btn-outline-primary เมื่อไม่ได้เลือก
+ * และ btn-primary เมื่อเลือกอยู่ ขนาดปกติ ไม่ใส่ rounded-pill
+ * (นับจากไฟล์เมนูทั้งระบบ 45 ไฟล์ มี 35 ไฟล์ที่ไม่ใช้ pill และคู่สีนี้ตรงกันทุกไฟล์
+ * ที่ตรวจ — hr, dms, plan, attendance, helpdesk2, leave, inventoryV2)
+ *
  * ทุกปุ่มในแถบนี้ชี้ไป controller ที่กันสิทธิ์ด้วย role 'purchase' เอง และ route ถูกใส่ไว้ใน
  * allow list ของ AccessControl ระดับแอปแล้ว (config/web.php) จึงใช้งานได้โดยไม่ต้องไปผูก
  * route ในระบบจัดการสิทธิ์ก่อน
  */
 $active = $active ?? '';
+
+/** คืน class ของปุ่มตามสถานะที่เลือกอยู่ — เขียนที่เดียวกันปุ่มหลุดมาตรฐานทีละปุ่ม */
+$btn = function (string $key) use ($active): string {
+    return 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outline-primary');
+};
 ?>
 <nav class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end" aria-label="เมนูงานพัสดุ">
-    <a href="<?= Url::to(['/sm']) ?>"
-        class="btn btn-sm <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+    <a href="<?= Url::to(['/sm']) ?>" class="<?= $btn('dashboard') ?>">
         <i class="bi bi-speedometer2 me-1"></i>ภาพรวม
     </a>
 
-    <a href="<?= Url::to(['/purchase/order']) ?>"
-        class="btn btn-sm <?= $active === 'order' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+    <a href="<?= Url::to(['/purchase/order']) ?>" class="<?= $btn('order') ?>">
         <i class="bi bi-cart-check me-1"></i>จัดซื้อจัดจ้าง
     </a>
 
-    <a href="<?= Url::to(['/purchase/tor']) ?>"
-        class="btn btn-sm <?= $active === 'tor' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+    <a href="<?= Url::to(['/purchase/tor']) ?>" class="<?= $btn('tor') ?>">
         <i class="bi bi-file-earmark-text me-1"></i>เขียน TOR
     </a>
 
-    <a href="<?= Url::to(['/purchase/contract']) ?>"
-        class="btn btn-sm <?= $active === 'contract' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+    <a href="<?= Url::to(['/purchase/contract']) ?>" class="<?= $btn('contract') ?>">
         <i class="bi bi-file-earmark-check me-1"></i>บริหารสัญญา
     </a>
 
-    <a href="<?= Url::to(['/purchase/bond']) ?>"
-        class="btn btn-sm <?= $active === 'guarantee' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+    <a href="<?= Url::to(['/purchase/bond']) ?>" class="<?= $btn('guarantee') ?>">
         <i class="bi bi-shield-check me-1"></i>หลักประกัน
     </a>
 
     <div class="dropdown">
-        <button type="button"
-            class="btn btn-sm <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?> rounded-pill px-3 dropdown-toggle"
+        <button type="button" class="<?= $btn('setting') ?> dropdown-toggle"
             data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-gear me-1"></i>ตั้งค่า
         </button>

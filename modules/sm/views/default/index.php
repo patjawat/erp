@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = 'ภาพรวม';
     <div class="card">
       <div class="card-body">
         <div class="d-flex justify-content-between">
-          <p><i class="fa-solid fa-chart-simple me-1"></i>ภาพรวมการสั่งซื้อทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?> </span> รายการ</p>
+          <p><i class="bi bi-bar-chart me-1"></i>ภาพรวมการสั่งซื้อทั้งหมด <span class="badge rounded-pill text-bg-primary"> <?= $dataProvider->getTotalCount() ?> </span> รายการ</p>
           <div class="mb-3">
             <?= $this->render('_search_year', ['model' => $searchModel]) ?></div>
         </div>

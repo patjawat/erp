@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between">
-            <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+            <h6 class="text-white mt-2"><i class="bi bi-search"></i> การค้นหา</h6>
         </div>
     </div>
     <div class="card-body">
@@ -52,9 +52,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex justify-content-between">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
-                <span class="badge text-bg-light"> <?= $dataProvider->getTotalCount() ?></span> รายการ
+                <span class="badge bg-secondary-subtle text-secondary-emphasis"> <?= $dataProvider->getTotalCount() ?></span> รายการ
             </h6>
-            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/sm/product-unit/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
+            <?= Html::a('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['/sm/product-unit/create', 'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างใหม่'], ['class' => 'btn btn-success open-modal', 'data' => ['size' => 'modal-md']]) ?>
 
         </div>
     </div>
@@ -78,8 +78,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                             จัดการ
                                         </button>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                            <li><?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['/sm/product-unit/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
-                                            <li><?= Html::a('<i class="fa-solid fa-trash me-1"></i> ลบทิ้ง', ['/sm/product-unit/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> แก้ไข', ['/sm/product-unit/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?></li>
+                                            <li><?= Html::a('<i class="bi bi-trash me-1"></i> ลบทิ้ง', ['/sm/product-unit/delete', 'id' => $model->id], ['class' => 'dropdown-item delete-item']) ?></li>
                                         </ul>
                                     </div>
                                 </td>
@@ -88,19 +88,9 @@ $this->params['breadcrumbs'][] = $this->title;
             </tbody>
         </table>
 
-        <div class="d-flex justify-content-center">
-            <div class="text-muted">
-                <?= yii\bootstrap5\LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'firstPageLabel' => 'หน้าแรก',
-                    'lastPageLabel' => 'หน้าสุดท้าย',
-                    'options' => [
-                        'listOptions' => 'pagination pagination-sm',
-                        'class' => 'pagination-sm',
-                    ],
-                ]); ?>
-            </div>
-        </div>
+        <div class="pt-2">
+    <?= app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
+</div>
 
 
     </div>

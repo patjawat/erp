@@ -54,7 +54,7 @@ class DocumentController extends \yii\web\Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'status' => 'success',
-                'title' => Html::a('<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/purchase/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
+                'title' => Html::a('<i class="bi bi-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร', Url::to(Yii::getAlias('@web') . '/msword/results/purchase/' . $filename), ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']),
                 'content' => $this->renderAjax('word', ['filename' => $filename]),
             ];
         } else {

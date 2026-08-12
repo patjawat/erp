@@ -20,7 +20,7 @@ use yii\widgets\ActiveForm;
             <?php echo $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...'])->label(false) ?>
         </div>
         <div class="col-1">
-            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
+            <?= Html::submitButton('<i class="bi bi-search"></i>', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>

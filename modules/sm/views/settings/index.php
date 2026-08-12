@@ -31,7 +31,7 @@ use yii\helpers\Html;
                 </thead>
                 <tbody>
                     <tr class="">
-                        <td><i class="fa-regular fa-circle-check"></i> <?=Html::a('xx',['/hr/categorise'],['class' => ''])?>
+                        <td><i class="bi bi-check-circle"></i> <?=Html::a('xx',['/hr/categorise'],['class' => ''])?>
                         </td>
                     </tr>
                     

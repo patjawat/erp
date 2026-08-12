@@ -2,7 +2,6 @@
 
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Fsn;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\helpers\Url;

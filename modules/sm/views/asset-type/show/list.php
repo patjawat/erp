@@ -73,7 +73,7 @@ use kartik\select2\Select2;
                 'vAlign' => 'middle',
                 'width' => '90px',
                 'value' => function($model){
-                    return '<div clas="d-flex gap-3">'.Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/sm/asset-item/view','id' => $model->id],['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-md']]);
+                    return '<div clas="d-flex gap-3">'.Html::a('<i class="bi bi-pencil-square"></i>', ['/sm/asset-item/view','id' => $model->id],['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-md']]);
                 }
             ], */
 
@@ -89,9 +89,9 @@ use kartik\select2\Select2;
             //                 data-bs-toggle="dropdown" aria-expanded="false"><i
             //                     class="bx bx-dots-vertical-rounded fw-bold"></i></button>
             //             <div class="dropdown-menu">
-            //                 '.Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>แก้ไข', ['/hr/position/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]).'
+            //                 '.Html::a('<i class="bi bi-pencil-square me-1"></i>แก้ไข', ['/hr/position/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]).'
 
-            //                 '.Html::a('<i class="fa-solid fa-trash me-1"></i>ลบ', ['/hr/position/delete', 'id' => $model->id], [
+            //                 '.Html::a('<i class="bi bi-trash me-1"></i>ลบ', ['/hr/position/delete', 'id' => $model->id], [
             //             'class' => 'dropdown-item delete-item',
             //             ]).'
             //             </div>

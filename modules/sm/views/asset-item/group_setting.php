@@ -48,9 +48,9 @@ GridView::widget([
                              }",
                     ],
                     'pluginOptions' => [
-                        'labelText' => '<i class="fas fa-fullscreen"></i>',
-                        'onText' => '<i class="fas fa-check"></i>',
-                        'offText' => '<i class="fas fa-remove"></i>',
+                        'labelText' => '<i class="bi bi-arrows-fullscreen"></i>',
+                        'onText' => '<i class="bi bi-check-lg"></i>',
+                        'offText' => '<i class="bi bi-x-lg"></i>',
                         'onColor' => 'success',
                         'offColor' => 'danger',
                         'size' => 'mini',

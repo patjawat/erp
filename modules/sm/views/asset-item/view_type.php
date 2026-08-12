@@ -38,15 +38,15 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center align-items-lg-center gap-2">
         <h5 class="mb-0"><?= Html::encode($model->title) ?></h5>
         <div class="d-flex gap-2 flex-wrap">
-            <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่ากลุ่มครุภัณฑ์', ['/sm/asset-type', 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'btn btn-light']) ?>
-            <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่ากลุ่มวัสดุ', ['/sm/asset-type', 'title' => 'ตั้งค่าวัสดุ'], ['class' => 'btn btn-light']) ?>
+            <?= Html::a('<i class="bi bi-gear me-1"></i> ตั้งค่ากลุ่มครุภัณฑ์', ['/sm/asset-type', 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('<i class="bi bi-gear me-1"></i> ตั้งค่ากลุ่มวัสดุ', ['/sm/asset-type', 'title' => 'ตั้งค่าวัสดุ'], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header bg-primary-gradient text-white py-2 px-3">
-        <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+        <h6 class="text-white mt-2"><i class="bi bi-search"></i> การค้นหา</h6>
     </div>
     <div class="card-body">
         <?= $this->render('_search', ['model' => $searchModel]) ?>
@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= Html::encode($model->code) ?>
                     </span>
                     <?= app\components\AppHelper::Btn([
-                        'title' => '<i class="fa-solid fa-circle-plus"></i> สร้าง' . $model->title,
+                        'title' => '<i class="bi bi-plus-circle"></i> สร้าง' . $model->title,
                         'url' => ['/sm/asset-item/create-item', 'type_code' => $model->code, 'name' => 'asset_item', 'category_id' => $model->code, 'title' => 'สร้าง' . $model->title, 'id' => Yii::$app->getRequest()->getQueryParam('id')],
                         'modal' => true,
                         'size' => 'lg',
