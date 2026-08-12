@@ -333,6 +333,10 @@ $config = [
             // งานหลักประกัน + ตั้งค่าเกณฑ์หลักประกันตามวงเงิน — controller กันสิทธิ์เองเช่นเดียวกัน
             'purchase/bond/*',
             'purchase/bond-policy/*',
+            // งานพิมพ์เอกสาร (สร้างจากแม่แบบ แก้บนจอ แล้วพิมพ์) + หน้าจัดการแม่แบบ
+            // controller กันสิทธิ์เองเช่นเดียวกัน — ระบบพิมพ์เดิม /ms-word/* ไม่ได้ถูกแตะ
+            'purchase/doc/*',
+            'purchase/doc-template/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',
