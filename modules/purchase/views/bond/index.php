@@ -5,6 +5,7 @@ use yii\widgets\Pjax;
 use app\components\AppHelper;
 use app\modules\purchase\models\Bond;
 use app\modules\purchase\models\BondPolicy;
+use app\components\widgets\DataSummaryWidget;
 use app\modules\purchase\components\BondCalculator;
 
 /** @var yii\web\View $this */
@@ -97,7 +98,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
 <?php endif; ?>
 
 <?php if ($missing): ?>
-    <div class="card border-warning mb-3">
+    <div class="card border-warning shadow-sm mb-3">
         <div class="card-header bg-warning-subtle">
             <h6 class="mb-0 text-warning-emphasis">
                 <i class="bi bi-exclamation-triangle me-1"></i>
@@ -108,7 +109,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="bg-body-tertiary">
                         <tr>
                             <th style="width:42px" class="text-center">#</th>
                             <th style="min-width:120px">เลขที่สัญญา</th>
@@ -124,7 +125,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                             <tr>
                                 <td class="text-center text-muted"><?= $i + 1 ?></td>
                                 <td>
-                                    <span class="badge text-bg-light border">
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">
                                         <?= Html::encode($contract->contract_no ?: ($contract->doc_no ?: '—')) ?>
                                     </span>
                                 </td>
@@ -168,11 +169,13 @@ $kpi = function (string $icon, string $color, $value, string $label) {
 </div>
 
 <?php Pjax::begin(['id' => 'bond-container', 'enablePushState' => false]); ?>
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h6 class="mb-0">
+<div class="card border shadow-sm">
+    <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0 d-flex align-items-center gap-2">
             <i class="bi bi-journal-text"></i> รายการหลักประกัน
-            <span class="badge text-bg-secondary"><?= number_format($dataProvider->getTotalCount()) ?></span> ฉบับ
+            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">
+                <?= number_format($dataProvider->getTotalCount()) ?>
+            </span>
         </h6>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ทะเบียนคุม', ['register', 'year' => $year], [
@@ -190,7 +193,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead>
+                <thead class="bg-body-tertiary">
                     <tr>
                         <th style="width:42px" class="text-center">#</th>
                         <th style="min-width:130px">เลขที่ / แหล่ง</th>
@@ -217,7 +220,7 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                         <tr class="<?= $rowClass ?>">
                             <td class="text-center text-muted"><?= $offset + $i + 1 ?></td>
                             <td>
-                                <span class="badge text-bg-light border"><?= Html::encode($item->doc_no ?: '—') ?></span>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis"><?= Html::encode($item->doc_no ?: '—') ?></span>
                                 <?php if ($item->source_type !== Bond::SOURCE_NONE): ?>
                                     <div class="small text-muted">
                                         <i class="bi bi-link-45deg"></i>
@@ -277,19 +280,22 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                                 <div class="d-inline-flex gap-1">
                                     <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-secondary',
-                                        'title' => 'แก้ไข',
+                                        'title' => 'แก้ไข ' . $item->title,
+                                        'aria-label' => 'แก้ไข ' . $item->title,
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                     <?php if (!in_array($item->status, [Bond::STATUS_RETURNED, Bond::STATUS_SEIZED, Bond::STATUS_EXEMPT], true)): ?>
                                         <?= Html::a('<i class="bi bi-box-arrow-up"></i>', ['return', 'id' => $item->id], [
                                             'class' => 'btn btn-sm btn-outline-success',
-                                            'title' => 'บันทึกการคืน/การยึด',
+                                            'title' => 'บันทึกการคืน/การยึด ' . $item->title,
+                                            'aria-label' => 'บันทึกการคืน/การยึด ' . $item->title,
                                             'data' => ['pjax' => 0],
                                         ]) ?>
                                     <?php endif; ?>
                                     <?= Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-danger',
-                                        'title' => 'ลบ',
+                                        'title' => 'ลบ ' . $item->title,
+                                        'aria-label' => 'ลบ ' . $item->title,
                                         'data' => [
                                             'confirm' => 'ยืนยันการลบหลักประกัน "' . $item->title . '" ?',
                                             'method' => 'post',
@@ -321,15 +327,9 @@ $kpi = function (string $icon, string $color, $value, string $label) {
                 </tbody>
             </table>
         </div>
-
-        <?php if ($dataProvider->pagination && $dataProvider->pagination->pageCount > 1): ?>
-            <div class="d-flex justify-content-center py-3">
-                <?= yii\bootstrap5\LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'options' => ['class' => 'pagination pagination-sm mb-0'],
-                ]) ?>
-            </div>
-        <?php endif; ?>
+    </div>
+    <div class="card-footer bg-body-tertiary">
+        <?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
     </div>
 </div>
 <?php Pjax::end(); ?>

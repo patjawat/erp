@@ -57,8 +57,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 
                         <td class="fw-light">
                             <div class="btn-group">
-                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                <?= Html::a('<i class="bi bi-clock"></i> ดำเนินการ', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-outline-primary w-100']) ?>
+                                <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
                                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                     <i class="bi bi-caret-down-fill"></i>
                                 </button>

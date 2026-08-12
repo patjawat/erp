@@ -94,7 +94,7 @@ $this->title = 'ระบบจัดซื้อ';
                                     class="fas fa-file-alt fa-fw"></i> กรรมการตรวจรับ</button>
                         </li>
                     </ul>
-                    <?= Html::a('<i class="fa-solid fa-print"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => 1, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="bi bi-printer me-1"></i>พิมพ์เอกสาร', ['/purchase/order/document', 'id' => 1, 'title' => '<i class="bi bi-printer me-1"></i>พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
 
 

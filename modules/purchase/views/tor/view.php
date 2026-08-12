@@ -145,7 +145,7 @@ $html = function ($value) {
 
                 <div class="table-responsive">
                     <table class="table table-sm align-middle">
-                        <thead class="table-light">
+                        <thead class="bg-body-tertiary">
                             <tr>
                                 <th style="width:36px" class="text-center">ที่</th>
                                 <th>ผู้เสนอราคา</th>
@@ -171,7 +171,7 @@ $html = function ($value) {
                                 </tr>
                             <?php endif; ?>
                         </tbody>
-                        <tfoot class="table-light">
+                        <tfoot class="bg-body-tertiary">
                             <tr>
                                 <th colspan="2" class="text-end">ราคากลาง</th>
                                 <th class="text-end"><?= number_format((float) $model->mid_price, 2) ?></th>

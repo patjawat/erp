@@ -58,7 +58,7 @@ if ($searchModel->date_between == 'pr_create_date') {
         <div class="d-flex justify-content-between  align-items-center">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง
-                <span class="badge text-bg-light">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
             <h6 class="text-white">มูลค่า <?= number_format($sumTotal ?? 0, 2) ?> บาท</h6>
@@ -162,8 +162,8 @@ if ($searchModel->date_between == 'pr_create_date') {
                             </td>
                             <td class="fw-light">
                                 <div class="btn-group">
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $item->id], ['class' => 'btn btn-light w-100']) ?>
-                                    <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                                    <?= Html::a('<i class="bi bi-pencil-square"></i>', ['/purchase/order/view', 'id' => $item->id], ['class' => 'btn btn-outline-primary w-100']) ?>
+                                    <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
                                         data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>

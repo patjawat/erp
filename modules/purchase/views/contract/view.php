@@ -217,7 +217,7 @@ $date = function ($value) {
                 <?php if ($milestones): ?>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-body-tertiary">
                                 <tr>
                                     <th class="text-center" style="width:56px">งวด</th>
                                     <th>รายละเอียด</th>
@@ -305,7 +305,7 @@ $date = function ($value) {
                 <?php if ($bonds): ?>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-body-tertiary">
                                 <tr>
                                     <th style="min-width:150px">ประเภท / รูปแบบ</th>
                                     <th style="min-width:140px">เลขที่ / ผู้ออก</th>

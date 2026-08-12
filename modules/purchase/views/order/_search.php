@@ -129,7 +129,7 @@ echo $form->field($model, 'request_type')->radioList(
             <?= Html::a(
                 '<i class="fa-solid fa-circle-plus"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
                 ['/purchase/pr-order/create','name' => 'order', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างรายการขอซื้อ'],
-                ['class' => 'btn btn-light open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-md']]
+                ['class' => 'btn btn-outline-secondary open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-md']]
             ) ?>
 
             <div class="dropdown w-100 w-md-auto">

@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\Pjax;
 use app\components\AppHelper;
 use app\modules\purchase\models\Contract;
+use app\components\widgets\DataSummaryWidget;
 use app\modules\purchase\components\ContractCalculator;
 
 /** @var yii\web\View $this */
@@ -63,11 +64,13 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
 </div>
 
 <?php Pjax::begin(['id' => 'contract-container', 'enablePushState' => false]); ?>
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h6 class="mb-0">
+<div class="card border shadow-sm">
+    <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0 d-flex align-items-center gap-2">
             <i class="bi bi-journal-text"></i> ทะเบียนสัญญา
-            <span class="badge text-bg-secondary"><?= number_format($dataProvider->getTotalCount()) ?></span> ฉบับ
+            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">
+                <?= number_format($dataProvider->getTotalCount()) ?>
+            </span>
         </h6>
         <div class="d-flex gap-2">
             <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i>ทะเบียนคุม', ['register', 'year' => $year], [
@@ -85,7 +88,7 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead>
+                <thead class="bg-body-tertiary">
                     <tr>
                         <th style="width:42px" class="text-center">#</th>
                         <th style="min-width:130px">เลขที่</th>
@@ -111,7 +114,7 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                         <tr>
                             <td class="text-center text-muted"><?= $offset + $i + 1 ?></td>
                             <td>
-                                <span class="badge text-bg-light border"><?= Html::encode($item->contract_no ?: ($item->doc_no ?: '—')) ?></span>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis"><?= Html::encode($item->contract_no ?: ($item->doc_no ?: '—')) ?></span>
                                 <?php if ($item->order_id): ?>
                                     <div class="small text-muted" title="ผูกกับใบสั่งซื้อในระบบ">
                                         <i class="bi bi-link-45deg"></i> ใบสั่งซื้อ
@@ -155,17 +158,20 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                                 <div class="d-inline-flex gap-1">
                                     <?= Html::a('<i class="bi bi-search"></i>', ['view', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-primary',
-                                        'title' => 'ดูรายละเอียด',
+                                        'title' => 'ดูรายละเอียด ' . $item->title,
+                                        'aria-label' => 'ดูรายละเอียด ' . $item->title,
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                     <?= Html::a('<i class="bi bi-pencil"></i>', ['update', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-secondary',
-                                        'title' => 'แก้ไข',
+                                        'title' => 'แก้ไข ' . $item->title,
+                                        'aria-label' => 'แก้ไข ' . $item->title,
                                         'data' => ['pjax' => 0],
                                     ]) ?>
                                     <?= Html::a('<i class="bi bi-file-earmark-word"></i>', ['word', 'id' => $item->id], [
                                         'class' => 'btn btn-sm btn-outline-secondary',
-                                        'title' => 'ร่างสัญญา (Word)',
+                                        'title' => 'ร่างสัญญา (Word) ' . $item->title,
+                                        'aria-label' => 'ร่างสัญญา (Word) ' . $item->title,
                                         'target' => '_blank',
                                         'data' => ['pjax' => 0],
                                     ]) ?>
@@ -193,15 +199,9 @@ $year = $searchModel->thai_year ?: (int) AppHelper::YearBudget();
                 </tbody>
             </table>
         </div>
-
-        <?php if ($dataProvider->pagination && $dataProvider->pagination->pageCount > 1): ?>
-            <div class="d-flex justify-content-center py-3">
-                <?= yii\bootstrap5\LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'options' => ['class' => 'pagination pagination-sm mb-0'],
-                ]) ?>
-            </div>
-        <?php endif; ?>
+    </div>
+    <div class="card-footer bg-body-tertiary">
+        <?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
     </div>
 </div>
 <?php Pjax::end(); ?>

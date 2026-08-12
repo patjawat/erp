@@ -30,7 +30,7 @@ $pickerUrl = Url::to(['template-picker', 'title' => 'คลังแม่แบ
                 class="btn btn-sm rounded-pill px-3 tor-tpl-cat <?= $category === $code ? 'btn-primary' : 'btn-outline-secondary' ?>"
                 data-cat="<?= Html::encode($code) ?>">
                 <?= Html::encode($info['label']) ?>
-                <span class="badge text-bg-light ms-1"><?= $info['count'] ?></span>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= $info['count'] ?></span>
             </button>
         <?php endforeach; ?>
     </div>
@@ -47,20 +47,20 @@ $pickerUrl = Url::to(['template-picker', 'title' => 'คลังแม่แบ
                 <div class="border rounded p-3 h-100 tor-tpl-card" role="button" data-id="<?= $t->id ?>">
                     <div class="d-flex justify-content-between align-items-start gap-2">
                         <div class="fw-semibold"><?= Html::encode($t->title) ?></div>
-                        <span class="badge text-bg-light border flex-shrink-0"><?= Html::encode($t->categoryName()) ?></span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis flex-shrink-0"><?= Html::encode($t->categoryName()) ?></span>
                     </div>
                     <div class="small text-muted mt-1" style="max-height:3.6em;overflow:hidden">
                         <?= Html::encode(mb_substr(trim(strip_tags((string) $t->spec)), 0, 120)) ?>…
                     </div>
                     <div class="d-flex flex-wrap gap-1 mt-2">
                         <?php if ($t->unit_name): ?>
-                            <span class="badge text-bg-light border">หน่วย: <?= Html::encode($t->unit_name) ?></span>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">หน่วย: <?= Html::encode($t->unit_name) ?></span>
                         <?php endif; ?>
                         <?php if ($t->delivery_days): ?>
-                            <span class="badge text-bg-light border">ส่งมอบ <?= $t->delivery_days ?> วัน</span>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">ส่งมอบ <?= $t->delivery_days ?> วัน</span>
                         <?php endif; ?>
                         <?php if ($t->warranty): ?>
-                            <span class="badge text-bg-light border">ประกัน <?= Html::encode($t->warranty) ?></span>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">ประกัน <?= Html::encode($t->warranty) ?></span>
                         <?php endif; ?>
                         <?php if ($t->ref_price): ?>
                             <span class="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">

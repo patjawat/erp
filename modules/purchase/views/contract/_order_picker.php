@@ -49,7 +49,7 @@ $pickerUrl = Url::to(['order-picker']);
 
 <div class="table-responsive" style="max-height:55vh">
     <table class="table table-hover table-sm align-middle mb-0">
-        <thead class="table-light position-sticky top-0">
+        <thead class="bg-body-tertiary position-sticky top-0">
             <tr>
                 <th style="min-width:120px">เลขที่ PO</th>
                 <th style="min-width:200px">รายการ</th>
@@ -63,7 +63,7 @@ $pickerUrl = Url::to(['order-picker']);
         <tbody>
             <?php foreach ($items as $item): ?>
                 <tr>
-                    <td><span class="badge text-bg-light border"><?= Html::encode($item['po_number'] ?: '—') ?></span></td>
+                    <td><span class="badge bg-secondary-subtle text-secondary-emphasis"><?= Html::encode($item['po_number'] ?: '—') ?></span></td>
                     <td class="small"><?= Html::encode($item['title'] ?: '—') ?></td>
                     <td class="small"><?= Html::encode($item['vendor_name'] ?: '—') ?></td>
                     <td class="text-end"><?= number_format((float) $item['budget'], 2) ?></td>

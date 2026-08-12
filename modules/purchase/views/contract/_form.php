@@ -198,7 +198,7 @@ $form = ActiveForm::begin([
 
         <div class="table-responsive">
             <table class="table table-bordered align-middle" id="milestone-table">
-                <thead class="table-light">
+                <thead class="bg-body-tertiary">
                     <tr>
                         <th style="width:56px" class="text-center">งวด</th>
                         <th style="min-width:200px">รายละเอียดงาน</th>

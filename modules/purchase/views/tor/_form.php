@@ -170,7 +170,7 @@ $form = ActiveForm::begin([
 
         <div class="table-responsive">
             <table class="table table-bordered align-middle" id="tor-price-table">
-                <thead class="table-light">
+                <thead class="bg-body-tertiary">
                     <tr>
                         <th style="width:52px" class="text-center">ที่</th>
                         <th style="min-width:220px">ชื่อผู้เสนอราคา/แหล่งอ้างอิง</th>
