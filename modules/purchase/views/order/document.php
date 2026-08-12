@@ -77,7 +77,7 @@ use yii\web\View;
 
             <div class="d-flex justify-content-between align-items-center bg-primary  p-2 rounded zoom-in">
                 <?= Html::a('ดาวน์โหลดทั้งหมด', ['/purchase/document/download-file','id' => $model->id], ['class' => 'text-white download-btn']) ?>
-                <i class="fa-regular fa-circle-down fs-3 text-white"></i>
+                <i class="bi bi-arrow-down-circle fs-3 text-white"></i>
             </div>
 
         </div>

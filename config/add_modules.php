@@ -98,4 +98,5 @@ $modules['medsop'] = ['class' => 'app\modules\medsop\Module'];  // ระบบ�
 $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 $modules['ai'] = ['class' => 'app\modules\ai\Module'];
 $modules['housing'] = ['class' => 'app\modules\housing\Module'];  // บ้านพัก
+$modules['roster'] = ['class' => 'app\modules\roster\Module'];  // ตารางเวร (จัดเวรรายเดือนต่อหน่วยงาน)
 return $modules;

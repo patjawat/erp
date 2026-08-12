@@ -108,6 +108,15 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" x2="16" y1="11" y2="11"></line></svg>'
     ],
     [
+        // สิทธิ์ตารางเวรมาจากผังองค์กร ไม่ใช่ RBAC — หัวหน้าหอผู้ป่วยเป็น role user ธรรมดา
+        // ถ้า gate ด้วย role อย่างเดียว หัวหน้าหน่วยจะไม่เห็นเมนูนี้เลย แล้วสรุปว่าเข้าระบบไม่ได้
+        'show' => \app\modules\roster\helpers\RosterAccess::canEnter(),
+        'label' => 'ตารางเวร',
+        'url' => ['/roster/period/index'],
+        'active' => 'roster',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path></svg>'
+    ],
+    [
         'show' => Yii::$app->user->can('hr'),
         'label' => 'ระบบลงเวลา',
         'url' => ['/attendance/default/index'],
@@ -116,8 +125,8 @@ $menuItems = [
     ],
     [
         'show' => Yii::$app->user->can('purchase') ? true : false,
-        'label' => 'จัดซื้อจัดจ้าง', 
-        'url' => ['/sm'], 
+        'label' => 'งานพัสดุ',
+        'url' => ['/sm'],
         'active' => 'sm',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>'
     ],
@@ -143,8 +152,7 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>'
     ],
     [
-        'show' => Yii::$app->user->can('housing.user')
-            || Yii::$app->user->can('housing.staff')
+        'show' => Yii::$app->user->can('housing.staff')
             || Yii::$app->user->can('housing.admin'),
         'label' => 'บ้านพัก',
         'url' => Yii::$app->user->can('housing.staff') || Yii::$app->user->can('housing.admin')

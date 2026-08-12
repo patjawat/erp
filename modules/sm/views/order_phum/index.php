@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="d-flex gap-2">
             <?=Html::a('<i class="bi bi-list-ul"></i>',['#','view'=> 'list'],['class' => 'btn btn-outline-primary'])?>
             <?=Html::a('<i class="bi bi-grid"></i>',['#','view'=> 'grid'],['class' => 'btn btn-outline-primary'])?>
-            <?=Html::a('<i class="fa-solid fa-gear"></i>',['#','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal','data' => ['size' => 'modal-md']])?>
+            <?=Html::a('<i class="bi bi-gear"></i>',['#','title' => 'การตั้งค่าบุคลากร'],['class' => 'btn btn-outline-primary open-modal','data' => ['size' => 'modal-md']])?>
         </div>
 
     </div>
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <td>R1C3</td>
             <td>R1C3</td>
             <td>
-                <?= Html::a('<i class="fa-solid fa-eye"></i>', ['view', 'id' => $model->id]) ?>
+                <?= Html::a('<i class="bi bi-eye"></i>', ['view', 'id' => $model->id]) ?>
             </td>
             </tr>
 <?php endforeach;?>

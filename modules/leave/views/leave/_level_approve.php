@@ -163,6 +163,7 @@ $csrfTokenJs = json_encode(Yii::$app->request->csrfToken, JSON_UNESCAPED_SLASHES
                 $userIsChecker = Yii::$app->user->can($name);
                 $userIsOwner = ($item->emp_id == $me->id);
                 $isPending = $item->status === 'Pending';
+                $approveLabel = $item->getApproveLabel();
                 ?>
                 <div class="leave-approval-step <?= $isPending ? 'is-active' : '' ?>">
                     <div class="leave-approval-step__marker">
@@ -194,14 +195,14 @@ $csrfTokenJs = json_encode(Yii::$app->request->csrfToken, JSON_UNESCAPED_SLASHES
                             <div class="d-flex gap-2 flex-wrap justify-content-end">
                                 <?php if ($isPending && ($userIsOwner || (empty($item->emp_id) && $userIsChecker))): ?>
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-circle-check"></i> ' . ($item->data_json['label'] ?? ''),
+                                        '<i class="fa-solid fa-circle-check"></i> ' . Html::encode($approveLabel),
                                         ['/leave/leave/approve-update', 'id' => $item->id],
-                                        ['class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve', 'data' => ['id' => $item->id, 'status' => 'Pass', 'label' => ($item->data_json['label'] ?? '')]]
+                                        ['class' => 'btn btn-sm btn-primary rounded-pill shadow btn-approve', 'data' => ['id' => $item->id, 'status' => 'Pass', 'label' => $approveLabel]]
                                     ); ?>
                                     <?= Html::a(
-                                        '<i class="fa-solid fa-circle-xmark"></i> ไม่' . ($item->data_json['label'] ?? ''),
+                                        '<i class="fa-solid fa-circle-xmark"></i> ไม่' . Html::encode($approveLabel),
                                         ['/leave/leave/approve-update', 'id' => $item->id],
-                                        ['class' => 'btn btn-sm btn-outline-danger rounded-pill border-1 shadow btn-approve', 'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => 'ไม่' . ($item->data_json['label'] ?? '')]]
+                                        ['class' => 'btn btn-sm btn-outline-danger rounded-pill border-1 shadow btn-approve', 'data' => ['id' => $item->id, 'status' => 'Reject', 'label' => 'ไม่' . $approveLabel]]
                                     ); ?>
                                 <?php else: ?>
                                     <?= $item->viewApproveStatus() ?>

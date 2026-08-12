@@ -53,6 +53,10 @@ class Projects extends ActiveRecord
     public const STRATEGY_IN = 'in';
     public const STRATEGY_OUT = 'out';
 
+    /** โครงการใช้งบประมาณ ส่วนแผนงาน/กิจกรรมอาจไม่ใช้งบ */
+    public const WORK_PROJECT = 'project';
+    public const WORK_ACTIVITY = 'activity';
+
     public static function tableName()
     {
         return '{{%projects}}';
@@ -69,17 +73,138 @@ class Projects extends ActiveRecord
         ];
     }
 
+    public static function workTypeList(): array
+    {
+        return [
+            self::WORK_PROJECT => 'โครงการ',
+            self::WORK_ACTIVITY => 'แผนงาน/กิจกรรม',
+        ];
+    }
+
+    public function isActivity(): bool { return $this->work_type === self::WORK_ACTIVITY; }
+    public function workTypeLabel(): string { return self::workTypeList()[$this->work_type] ?? self::workTypeList()[self::WORK_PROJECT]; }
+
+    /** โครงการในแผน = ผูกกลยุทธ์ไว้ · โครงการนอกแผน = ไม่ได้ผูก */
+    public static function strategyTypeList(): array
+    {
+        return [
+            self::STRATEGY_IN => 'ในแผนยุทธศาสตร์',
+            self::STRATEGY_OUT => 'นอกแผนยุทธศาสตร์',
+        ];
+    }
+
+    public function isInStrategy(): bool { return !empty($this->tactic_id); }
+
+    /**
+     * ยึดการผูกกลยุทธ์จริงเป็นหลัก ไม่ใช่คอลัมน์ strategy_type
+     * เพราะการลบกลยุทธ์ทำให้ tactic_id ถูกล้างที่ฐานข้อมูลโดยไม่ผ่าน beforeSave
+     * คอลัมน์จึงอาจค้างเป็น in ทั้งที่ไม่ได้สังกัดกลยุทธ์ใดแล้ว
+     */
+    public function strategyTypeLabel(): string
+    {
+        return self::strategyTypeList()[$this->isInStrategy() ? self::STRATEGY_IN : self::STRATEGY_OUT];
+    }
+
+    /** ฟิลด์ข้อความยาวที่จัดเป็นข้อ/หัวข้อย่อยได้ — กรอง HTML ก่อนบันทึกเสมอ */
+    public const RICH_TEXT_ATTRIBUTES = ['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail'];
+
+    public function beforeValidate()
+    {
+        foreach (self::RICH_TEXT_ATTRIBUTES as $attribute) {
+            if ($this->$attribute !== null && $this->$attribute !== '') {
+                $this->$attribute = \app\components\RichText::sanitize((string) $this->$attribute) ?: null;
+            }
+        }
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+        $this->syncOrgUnit();
+        // ประเภทยุทธศาสตร์ยึดจากการผูกกลยุทธ์ ไม่ให้ตั้งค่าขัดกันเองได้
+        $this->strategy_type = $this->isInStrategy() ? self::STRATEGY_IN : self::STRATEGY_OUT;
+        // ออกรหัสให้เสมอเมื่อยังไม่มี ครอบคลุมการสร้างจากหน้าแผนยุทธศาสตร์ด้วย
+        if ($insert && trim((string) $this->code) === '') {
+            $this->code = self::generateCode(
+                $this->org_unit_id ? (int) $this->org_unit_id : null,
+                $this->thai_year ? (int) $this->thai_year : null,
+                (string) ($this->work_type ?: self::WORK_PROJECT)
+            );
+        } elseif (!$insert) {
+            $this->renumberOnTypeChange();
+        }
+        return true;
+    }
+
+    /**
+     * เปลี่ยนชนิดงานขณะยังเป็นฉบับร่าง ให้ออกรหัสใหม่ตามซีรีส์ใหม่
+     *
+     * ทำเฉพาะฉบับร่างและเฉพาะรหัสที่ระบบออกให้เอง เพราะเมื่อเสนอขออนุมัติแล้ว
+     * รหัสถูกอ้างในเอกสารภายนอก การเปลี่ยนจะทำให้อ้างอิงเดิมเสีย
+     */
+    private function renumberOnTypeChange(): void
+    {
+        $previous = $this->getOldAttribute('work_type');
+        if ($previous === null || $previous === $this->work_type || $this->status !== self::STATUS_DRAFT) {
+            return;
+        }
+        $oldPattern = $previous === self::WORK_ACTIVITY
+            ? PmSetting::value(PmSetting::ACTIVITY_CODE_PATTERN, 'A-{org}-{yy}{sequence}')
+            : PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
+        $prefix = strstr($oldPattern, '{', true);
+        // รหัสที่ผู้ใช้พิมพ์เองไม่ขึ้นต้นด้วยซีรีส์เดิม จึงไม่ควรไปแตะ
+        if ($prefix === false || $prefix === '' || !str_starts_with((string) $this->code, $prefix)) {
+            return;
+        }
+        $this->code = self::generateCode(
+            $this->org_unit_id ? (int) $this->org_unit_id : null,
+            $this->thai_year ? (int) $this->thai_year : null,
+            (string) $this->work_type
+        );
+    }
+
+    /**
+     * ผูกทะเบียนหน่วยงานกับผังโครงสร้างแบบสองทาง
+     * ฟอร์มใหม่เลือกจากทะเบียน → เติม department_id กลับเมื่อเป็นหน่วยในผัง (ทีมประสานเป็น null)
+     * ข้อมูลเดิมที่มีแต่ department_id → เติม org_unit_id ของปีเดียวกันให้
+     */
+    public function syncOrgUnit(): void
+    {
+        if (empty($this->thai_year)) {
+            return;
+        }
+        if (!empty($this->org_unit_id)) {
+            $unit = (new \yii\db\Query())->select(['source', 'ref_id'])->from('org_unit')
+                ->where(['id' => (int) $this->org_unit_id])->one();
+            // ทีมประสาน/หน่วยนอกผังไม่มี ref_id — ต้องล้าง department_id ไม่ให้ค้างของเดิม
+            $this->department_id = ($unit && $unit['source'] === \app\modules\settings\models\OrgUnit::SOURCE_STRUCTURE && $unit['ref_id'])
+                ? (int) $unit['ref_id'] : null;
+            return;
+        }
+        if (!empty($this->department_id)) {
+            $this->org_unit_id = (new \yii\db\Query())->select('id')->from('org_unit')
+                ->where(['thai_year' => (int) $this->thai_year, 'source' => \app\modules\settings\models\OrgUnit::SOURCE_STRUCTURE, 'ref_id' => (int) $this->department_id])
+                ->scalar() ?: null;
+        }
+    }
+
     public function rules()
     {
         return [
             [['name'], 'required'],
-            [['thai_year', 'department_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['thai_year', 'department_id', 'org_unit_id', 'tactic_id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['org_unit_id'], 'required', 'when' => static fn ($m) => empty($m->department_id), 'enableClientValidation' => false, 'message' => 'กรุณาเลือกหน่วยงาน'],
             [['budget_total'], 'number'],
             [['rationale', 'target_group', 'method', 'lecturer', 'evaluation', 'expected_result', 'budget_detail', 'data_json'], 'safe'],
             [['start_date', 'end_date', 'dead_line_date', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['name', 'location', 'duration_text', 'budget_source'], 'string', 'max' => 255],
             [['code'], 'string', 'max' => 50],
             [['strategy_type'], 'string', 'max' => 20],
+            [['work_type'], 'in', 'range' => array_keys(self::workTypeList())],
+            [['work_type'], 'default', 'value' => self::WORK_PROJECT],
             [['status'], 'string', 'max' => 30],
             [['status'], 'in', 'range' => array_keys(self::statusList())],
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
@@ -95,6 +220,9 @@ class Projects extends ActiveRecord
             'name' => 'ชื่อโครงการ',
             'thai_year' => 'ปีงบประมาณ',
             'department_id' => 'หน่วยงานเจ้าของโครงการ',
+            'org_unit_id' => 'หน่วยงาน/ทีมเจ้าของโครงการ',
+            'tactic_id' => 'กลยุทธ์ที่รองรับ',
+            'work_type' => 'ชนิดงาน',
             'strategy_type' => 'ยุทธศาสตร์',
             'rationale' => '1. หลักการและเหตุผล',
             'target_group' => '4. กลุ่มเป้าหมาย',
@@ -149,16 +277,35 @@ class Projects extends ActiveRecord
         return $this->hasOne(Organization::class, ['id' => 'department_id']);
     }
 
+    /** กลยุทธ์ที่โครงการนี้รองรับ — มีค่าเฉพาะโครงการในแผนยุทธศาสตร์ */
+    public function getTactic()
+    {
+        return $this->hasOne(StrategyTactic::class, ['id' => 'tactic_id']);
+    }
+
+    /** หน่วยงานในทะเบียนกลาง (org_unit) — รองรับทีมประสานที่ไม่มีในผังบุคลากร */
+    public function getOrgUnit()
+    {
+        return $this->hasOne(\app\modules\settings\models\OrgUnit::class, ['id' => 'org_unit_id']);
+    }
+
     /** ชื่อหน่วยงานโหนดเดียว (แบบสั้น) */
     public function departmentName(): string
     {
-        return $this->department->name ?? '-';
+        return $this->orgUnit->name ?? $this->department->name ?? '-';
     }
 
-    /** ชื่อหน่วยงานตามลำดับชั้นในผังองค์กร เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ" */
+    /**
+     * ชื่อหน่วยงานสำหรับแสดงผล
+     * หน่วยในผังแสดงเป็นลำดับชั้น เช่น "กลุ่มอำนวยการ › กลุ่มงานบริหารทั่วไป › งานพัสดุ"
+     * ส่วนทีมประสาน/หน่วยนอกผังไม่มีลำดับชั้น จึงแสดงชื่อจากทะเบียนตรง ๆ
+     */
     public function departmentPath(string $sep = ' › '): string
     {
-        return $this->department ? $this->department->pathLabel($sep) : '-';
+        if ($this->department) {
+            return $this->department->pathLabel($sep);
+        }
+        return $this->orgUnit->name ?? '-';
     }
 
     public function statusLabel(): string
@@ -187,35 +334,37 @@ class Projects extends ActiveRecord
     }
 
     /**
-     * รหัสย่อของหน่วยงาน (จาก medsop_organization_setting.code ซึ่งเป็นรหัสหน่วยงานกลาง)
-     * ถ้ายังไม่กำหนด จะ fallback เป็น ORG{id}
+     * อักษรย่อของหน่วยงานจากทะเบียนกลาง (org_unit.code) ซึ่งครอบคลุมทั้งหน่วยในผังและทีมประสาน
+     * ถ้ายังไม่กำหนดอักษรย่อ จะ fallback เป็น ORG{id}
      */
-    public static function orgCode(?int $departmentId): string
+    public static function orgCode(?int $orgUnitId): string
     {
-        if (!$departmentId) {
+        if (!$orgUnitId) {
             return 'ORG';
         }
-        $setting = \app\modules\medsop\models\OrganizationSetting::findOne($departmentId);
-        return ($setting && $setting->code) ? $setting->code : 'ORG' . $departmentId;
+        $code = (new \yii\db\Query())->select('code')->from('org_unit')->where(['id' => (int) $orgUnitId])->scalar();
+        return $code ?: 'ORG' . $orgUnitId;
     }
 
     /**
-     * สร้างรหัสโครงการอัตโนมัติตามรูปแบบใน pm_setting.code_pattern
-     * token: {org} รหัสย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก (ต่อหน่วยงาน+ปี)
+     * สร้างรหัสอัตโนมัติตามรูปแบบใน pm_setting — โครงการและแผนงาน/กิจกรรมแยกซีรีส์กัน
+     * token: {org} อักษรย่อหน่วยงาน · {year} พ.ศ.เต็ม · {yy} พ.ศ.2หลัก · {sequence} ลำดับรัน 4 หลัก
      */
-    public static function generateCode(?int $departmentId, ?int $thaiYear): string
+    public static function generateCode(?int $orgUnitId, ?int $thaiYear, string $workType = self::WORK_PROJECT): string
     {
         $thaiYear = $thaiYear ?: (int) (date('Y') + 543);
-        $pattern = PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
+        $pattern = $workType === self::WORK_ACTIVITY
+            ? PmSetting::value(PmSetting::ACTIVITY_CODE_PATTERN, 'A-{org}-{yy}{sequence}')
+            : PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');
 
-        // ลำดับรัน = จำนวนโครงการของหน่วยงาน+ปีนี้ (รวมที่ลบแบบ soft) + 1 เพื่อไม่ใช้เลขซ้ำ
+        // ลำดับรันแยกตามชนิดงาน+หน่วยงาน+ปี (รวมที่ลบแบบ soft) เพื่อไม่ใช้เลขซ้ำ
         $seq = (int) self::find()
-            ->where(['thai_year' => $thaiYear])
-            ->andWhere($departmentId ? ['department_id' => $departmentId] : ['department_id' => null])
+            ->where(['thai_year' => $thaiYear, 'work_type' => $workType])
+            ->andWhere($orgUnitId ? ['org_unit_id' => $orgUnitId] : ['org_unit_id' => null])
             ->count() + 1;
 
         return strtr($pattern, [
-            '{org}' => self::orgCode($departmentId),
+            '{org}' => self::orgCode($orgUnitId),
             '{year}' => (string) $thaiYear,
             '{yy}' => substr((string) $thaiYear, -2),
             '{sequence}' => str_pad((string) $seq, 4, '0', STR_PAD_LEFT),

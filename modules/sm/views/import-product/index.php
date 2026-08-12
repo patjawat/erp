@@ -39,7 +39,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
                                 </div>
                             </div>
                             <div class="form-text">
-                                <i class="fas fa-info-circle text-info me-1"></i>
+                                <i class="bi bi-info-circle text-info me-1"></i>
                                 รองรับไฟล์ .csv เท่านั้น
                             </div>
                         </div>
@@ -99,7 +99,7 @@ $listProductType = ArrayHelper::map(Categorise::find()->where(['name' => 'asset_
             <div class="d-flex justify-content-center">
                 <div id="import-btn" style="display:none;">
                     <button class="btn btn-success btn-lg px-5 py-3 shadow-sm" id="btn-import" type="button">
-                        <i class="fas fa-file-import me-2"></i>
+                        <i class="bi bi-box-arrow-in-down me-2"></i>
                         <span class="fw-semibold">ยืนยันนำเข้าข้อมูล</span>
                         <div class="spinner-border spinner-border-sm ms-2 d-none" id="import-spinner" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -212,7 +212,7 @@ $(document).ready(function() {
                     html += '<tbody class="table-group-divider">';
                     
                     res.preview.slice(1).forEach(function(row, index){
-                        html += '<tr class="' + (index % 2 === 0 ? 'table-light' : '') + '">';
+                        html += '<tr class="' + (index % 2 === 0 ? 'bg-body-tertiary' : '') + '">';
                         row.forEach(function(cell){ 
                             html += '<td class="text-center">' + (cell || '-') + '</td>'; 
                         });

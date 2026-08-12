@@ -6,9 +6,11 @@ $this->registerCss(<<<CSS
 .workforce-nav__item svg{width:17px;height:17px}
 .workforce-nav__item--overview{--wf-item:#475467;--wf-item-soft:#f2f4f7}
 .workforce-nav__item--jd{--wf-item:#4338ca;--wf-item-soft:#eef2ff}
+.workforce-nav__item--core{--wf-item:#b93815;--wf-item-soft:#fff6ed}
 .workforce-nav__item--idp{--wf-item:#2457a7;--wf-item-soft:#eff6ff}
 .workforce-nav__item--trm{--wf-item:#0f766e;--wf-item-soft:#f0fdfa}
 .workforce-nav__item--appraisal{--wf-item:#9a6700;--wf-item-soft:#fffbeb}
+.workforce-nav__item--talent{--wf-item:#15803d;--wf-item-soft:#f0fdf4}
 .workforce-nav__item--health{--wf-item:#be123c;--wf-item-soft:#fff1f2}
 .workforce-nav__item--exit{--wf-item:#7e22ce;--wf-item-soft:#faf5ff}
 .workforce-nav__item:hover{color:var(--wf-item);border-color:var(--wf-item);background:var(--wf-item-soft)}

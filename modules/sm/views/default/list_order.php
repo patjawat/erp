@@ -30,7 +30,7 @@ use yii\helpers\Html;
                                 <?=isset($model->data_json['order_type_name']) ? $model->data_json['order_type_name'] : ''?>
                             </div>
                             <div class="fw-semibold ">
-                                <i class="fa-solid fa-tag"></i>
+                                <i class="bi bi-tag"></i>
                                 <?= number_format($model->calculateVAT()['priceAfterVAT'],2)?>
                             </div>
                         </div>
@@ -38,16 +38,21 @@ use yii\helpers\Html;
                     <td class="fw-light align-middle"><?=$model->showChecker()['leader']?></td>
                     <td class="fw-light">
                         <div class="btn-group">
-                            <?= Html::a('<i class="fa-regular fa-pen-to-square text-primary"></i>', ['/purchase/order/view', 'id' => $model->id], ['class' => 'btn btn-light w-100']) ?>
-                            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                            <?= Html::a('<i class="bi bi-pencil-square"></i>', ['/purchase/order/view', 'id' => $model->id], [
+                                'class' => 'btn btn-outline-primary w-100',
+                                'title' => 'ดำเนินการ ' . ($model->pr_number ?: ''),
+                                'aria-label' => 'ดำเนินการ ' . ($model->pr_number ?: ''),
+                            ]) ?>
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent"
+                                aria-label="เมนูเพิ่มเติม">
                                 <i class="bi bi-caret-down-fill"></i>
                             </button>
                             <ul class="dropdown-menu">
                                 <?php if ($model->status == 3): ?>
-                                <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบียนคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="fa-solid fa-print"></i> ลงทะเบียนคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
+                                <li><?= Html::a('<i class="bi bi-bag-plus-fill me-1"></i> ลงทะเบียนคุม', ['/purchase/po-order/create', 'id' => $model->id, 'title' => '<i class="bi bi-printer"></i> ลงทะเบียนคุม'], ['class' => 'dropdown-item open-modal-x', 'data' => ['size' => 'modal-md']]) ?>
                                     <?php endif;?>
-                                    <li><?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                    <li><?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์เอกสาร', ['/purchase/order/document','id' => $model->id,'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                 </li>
                                 </li>
                             </ul>
@@ -59,17 +64,12 @@ use yii\helpers\Html;
                 <?php endforeach; ?>
             </tbody>
         </table>
-        <div class="iq-card-footer text-muted d-flex justify-content-between mt-4">
-            <?= yii\bootstrap5\LinkPager::widget([
-                    'pagination' => $dataProvider->pagination,
-                    'firstPageLabel' => 'หน้าแรก',
-                    'lastPageLabel' => 'หน้าสุดท้าย',
-                    'options' => [
-                        'class' => 'pagination pagination-sm',
-                    ],
-                ]); ?>
+        <div class="d-flex justify-content-between align-items-center gap-2 mt-3">
+            <div class="flex-grow-1">
+                <?= app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
+            </div>
                 <div>
-                <?=$dataProvider->getTotalCount() <= 0 ? null :  Html::a('<i class="fa-solid fa-angles-right"></i> แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-light','data' => ['pjax' => 0]])?>
+                <?=$dataProvider->getTotalCount() <= 0 ? null :  Html::a('<i class="bi bi-chevron-double-right"></i> แสดงทั้งหมด',['/purchase/'.($container == 'pr-accept-order' ? 'pr-order' : $container )],['class' => 'btn btn-outline-secondary','data' => ['pjax' => 0]])?>
             </div>
         </div>
     </div>

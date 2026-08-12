@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-        <i class="fa-solid fa-box-open"></i>
+        <i class="bi bi-box-seam"></i>
         <?= Html::encode($this->title) ?>
     </h4>
 </div>
@@ -73,12 +73,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <div class="d-flex gap-2 flex-wrap mt-4">
                     <?= Html::a(
-                        '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข',
-                        ['/sm/asset-item/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'],
+                        '<i class="bi bi-pencil-square me-1"></i> แก้ไข',
+                        ['/sm/asset-item/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'],
                         ['class' => 'btn btn-warning open-modal', 'data' => ['size' => 'modal-lg']]
                     ) ?>
                     <?= Html::a(
-                        '<i class="fa-solid fa-trash me-1"></i> ลบ',
+                        '<i class="bi bi-trash me-1"></i> ลบ',
                         ['/sm/asset-item/delete', 'id' => $model->id],
                         [
                             'class' => 'btn btn-danger delete-item',

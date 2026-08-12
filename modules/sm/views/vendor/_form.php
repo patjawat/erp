@@ -33,7 +33,7 @@ use iamsaint\datetimepicker\Datetimepicker;
                     $vendorCodeInputOptions = [
                         'maxlength' => true,
                         'readonly' => true,
-                        'class' => 'form-control bg-light',
+                        'class' => 'form-control bg-body-tertiary',
                     ];
                     if ($model->isNewRecord) {
                         $vendorCodeInputOptions['placeholder'] = 'สร้างอัตโนมัติ';

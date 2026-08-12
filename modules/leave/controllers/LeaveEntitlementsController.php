@@ -129,7 +129,13 @@ class LeaveEntitlementsController extends Controller
     public function actionCreate()
     {
         $model = new LeaveEntitlements([
-            'thai_year' => $this->request->get('thai_year') ?? AppHelper::YearBudget()
+            'thai_year' => $this->request->get('thai_year') ?? AppHelper::YearBudget(),
+            'data_json' => [
+                'before_leave_balance' => 0,
+                'leave_days' => 10,
+                'accumulation' => 0,
+                'leave_max_days' => 0,
+            ],
         ]);
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
@@ -376,8 +382,24 @@ class LeaveEntitlementsController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $policy = $model->calLeaveMaxDays();
+        $storedDataJson = ArrayHelper::merge([
+            'before_leave_balance' => (float) ($model->balance ?? 0),
+            'leave_days' => (float) ($model->leave_on_year ?? 0),
+            'accumulation' => (int) ($policy['accumulation'] ?? 0),
+            'leave_max_days' => (float) ($policy['leave_max_days'] ?? 0),
+        ], $model->getDataJsonArray());
+        $model->data_json = $storedDataJson;
+        $isLoaded = false;
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && ($isLoaded = $model->load($this->request->post()))) {
+            $model->data_json = ArrayHelper::merge(
+                $storedDataJson,
+                is_array($model->data_json) ? $model->data_json : []
+            );
+        }
+
+        if ($isLoaded && $model->save()) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
             try {
 
@@ -545,6 +567,7 @@ class LeaveEntitlementsController extends Controller
         $StartRowSheet = 3;
         foreach ($dataProvider->getModels() as $item) {
             $numRow = $StartRowSheet++;
+            $entitlementData = $item->getDataJsonArray();
 
             // ✅ เพิ่มคอลัมน์เลขบัตรประชาชนก่อนชื่อ
             $sheet->setCellValueExplicit(
@@ -555,9 +578,9 @@ class LeaveEntitlementsController extends Controller
             $sheet->setCellValue('B' . $numRow, $item->employee->fullname);
             $sheet->setCellValue('C' . $numRow, $item->employee?->workYear()['ym']);
             $sheet->setCellValue('D' . $numRow, $item->employee?->positionType?->title ?? '-');
-            $sheet->setCellValue('E' . $numRow, $item->data_json['before_leave_balance'] ?? '-');
-            $sheet->setCellValue('F' . $numRow, 10);
-            $sheet->setCellValue('G' . $numRow, isset($item->data_json['leave_max_days']) ? $item->data_json['leave_max_days'] : 0);
+            $sheet->setCellValue('E' . $numRow, $entitlementData['before_leave_balance'] ?? '-');
+            $sheet->setCellValue('F' . $numRow, $entitlementData['leave_days'] ?? $item->leave_on_year ?? 0);
+            $sheet->setCellValue('G' . $numRow, $entitlementData['leave_max_days'] ?? 0);
             $sheet->setCellValue('H' . $numRow, $item->days);
             $sheet->setCellValue('I' . $numRow, $item->leaveSummaryDays()['leave_use']);
             $sheet->setCellValue('J' . $numRow, $item->leaveSummaryDays()['leave_balance']);

@@ -10,7 +10,7 @@ $this->title = 'ระบบจัดซื้อ';
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
+<?php echo $this->render('@app/modules/sm/views/default/menu', ['active' => 'order']) ?>
 <?php $this->endBlock(); ?>
 
 <style>
@@ -28,7 +28,7 @@ $this->title = 'ระบบจัดซื้อ';
                             <div class="col-md-12">
 
                                 <div class="search">
-                                    <!-- <i class="fa fa-search"></i> -->
+                                    <!-- <i class="bi bi-search"></i> -->
                                     <input type="text" class="form-control" placeholder="ค้นหา">
 
                                 </div>
@@ -39,7 +39,7 @@ $this->title = 'ระบบจัดซื้อ';
                     </div>
                     <div>
                         <div>
-                            <button class="btn btn-sm btn-primary rounded-pill"><i data-lucide="circle-plus"></i>
+                            <button class="btn btn-sm btn-primary"><i class="bi bi-plus-circle"></i>
                                 สร้างใบสั่งซื้อ</button>
                         </div>
                     </div>
@@ -85,16 +85,16 @@ $this->title = 'ระบบจัดซื้อ';
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="process-tab" data-bs-toggle="tab"
                                 data-bs-target="#process" type="button" role="tab" aria-controls="process"
-                                aria-selected="true"><i class="fas fa-file-alt fa-fw"></i>
+                                aria-selected="true"><i class="bi bi-file-earmark-text"></i>
                                 กระบวนการการขอซื้อขอจ้าง</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="board-tab" data-bs-toggle="tab" data-bs-target="#board"
                                 type="button" role="tab" aria-controls="board" aria-selected="true"><i
-                                    class="fas fa-file-alt fa-fw"></i> กรรมการตรวจรับ</button>
+                                    class="bi bi-file-earmark-text"></i> กรรมการตรวจรับ</button>
                         </li>
                     </ul>
-                    <?= Html::a('<i class="fa-solid fa-print"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => 1, 'title' => '<i class="fa-solid fa-print"></i> พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="bi bi-printer me-1"></i>พิมพ์เอกสาร', ['/purchase/order/document', 'id' => 1, 'title' => '<i class="bi bi-printer me-1"></i>พิมพ์เอกสารประกอบการจัดซื้อ'], ['class' => 'btn btn-outline-secondary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
 
 

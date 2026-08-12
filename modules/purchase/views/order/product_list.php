@@ -4,7 +4,6 @@ use app\models\Categorise;
 use kartik\depdrop\DepDrop;
 use kartik\editable\Editable;
 use kartik\popover\PopoverX;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -31,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="row">
     <div class="row d-flex justify-content-center">
         <div class="col-5">
-                <h4 class="text-center"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> ไม่พบข้อมูล</h4>
+                <h4 class="text-center"><i class="bi bi-exclamation-triangle text-danger me-2"></i> ไม่พบข้อมูล</h4>
         </div>
     </div>
 </div>
@@ -55,26 +54,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 <td> <?=(isset($item->data_json['unit']) ? '<span class="badge rounded-pill bg-success-subtle">'.$item->data_json['unit'].'</span>' : '<span class="badge rounded-pill bg-danger-subtle">ไม่ได้ตั้ง</span>')?></td>
                 <td><?=$item->productType->title ?? '-'?></td>
                 <td class="align-middle">
-                    <?php echo Html::a('<i class="fa-solid fa-circle-plus"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->code, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary rounded-pill shadow text-center open-modal']); ?>
+                    <?php echo Html::a('<i class="bi bi-plus-circle"></i> เลือก', ['/purchase/order/add-item', 'title' => $item->title, 'asset_item' => $item->code, 'code' => $model->code, 'order_id' => $model->id], ['class' => 'btn btn-sm btn-primary shadow text-center open-modal']); ?>
                 </td>
             </tr>
             <?php } ?>
         </tbody>
     </table>
 </div>
-<div class="d-flex justify-content-center">
-                    <div class="text-muted">
-                        <?php echo LinkPager::widget([
-                                        'pagination' => $dataProvider->pagination,
-                                        'firstPageLabel' => 'หน้าแรก',
-                                        'lastPageLabel' => 'หน้าสุดท้าย',
-                                        'options' => [
-                                            'listOptions' => 'pagination pagination-sm',
-                                            'class' => 'pagination-sm',
-                                        ],
-                                    ]); ?>
-                    </div>
-                </div>
+<div class="pt-2">
+    <?= app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
+</div>
 
 <?php } ?>
 <?php

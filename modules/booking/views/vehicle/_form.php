@@ -198,8 +198,16 @@
 )->label('ลักษณะการไป'); ?>
                     </div>
                     <div class="col-12">
+                        <?php
+                        // สถานที่ที่เติมมาจากใบไปราชการ (หรือที่บันทึกไว้เดิม) อาจไม่มีในทะเบียนหน่วยงาน
+                        // ต้องใส่เป็นตัวเลือกเองด้วย ไม่งั้น Select2 แสดงค่าที่เลือกไว้ไม่ได้
+                        $locationList = $model->ListOrg();
+                        if (!empty($model->location) && !isset($locationList[$model->location])) {
+                            $locationList[$model->location] = $model->location;
+                        }
+                        ?>
                         <?php echo $form->field($model, 'location')->widget(Select2::classname(), [
-    'data'          => $model->ListOrg(),
+    'data'          => $locationList,
     'options'       => ['placeholder' => 'เลือกหน่วยงาน'],
     'pluginOptions' => [
         'tags'           => true,  // เปิดให้เพิ่มค่าใหม่ได้
@@ -507,6 +515,8 @@
 </div>
 <?php echo $form->field($model, 'data_json[req_driver_fullname]')->hiddenInput(['maxlength' => true])->label(false) ?>
 <?php echo $form->field($model, 'driver_id')->hiddenInput(['maxlength' => true])->label(false) ?>
+<?php // ใบไปราชการต้นเรื่อง (มีค่าเมื่อเปิดฟอร์มจากเมนู «ขอใช้รถ» ในทะเบียนอบรม/ประชุม/ดูงาน) ?>
+<?php echo $form->field($model, 'development_id')->hiddenInput()->label(false) ?>
 <?php // readable companion list kept in sync from #vehicle-companions for PDF/legacy views ?>
 <?php echo $form->field($model, 'data_json[note]')->hiddenInput(['id' => 'companions-note'])->label(false) ?>
 

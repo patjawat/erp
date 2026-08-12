@@ -29,7 +29,7 @@ use yii\helpers\Json;
 
                 <div class="d-flex justify-content-between">
                     <p style="margin-bottom:0px;">รวมเป็นเงินทั้งสิ้น</p>
-                    <i class="fa-solid fa-wallet fs-1 text-secondary"></i>
+                    <i class="bi bi-wallet2 fs-1 text-secondary"></i>
                 </div>
                 <div class="">
                     <span class="h5"><?=$model->SummaryTotal()?> บาท</span>

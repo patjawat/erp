@@ -8,7 +8,6 @@ use yii\widgets\Pjax;
 
 use kartik\tree\TreeView;
 
-// use muhsamsul\treeimage\TreeImage;
 use kartik\tree\TreeViewInput;
 use app\widgets\orgchart\TreeImage;
 use app\modules\hr\models\Organization;

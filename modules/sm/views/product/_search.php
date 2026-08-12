@@ -66,7 +66,7 @@ use kartik\widgets\ActiveForm;
     <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
         <div class="d-flex flex-column flex-md-row gap-2">
 
-            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
+            <?= Html::submitButton('<i class="bi bi-search"></i> <span class="d-none d-sm-inline">ค้นหา</span>', [
                 'class' => 'btn btn-primary w-100 w-md-auto',
                 'id' => 'summit'
             ]) ?>
@@ -75,19 +75,19 @@ use kartik\widgets\ActiveForm;
             <div class="dropdown w-100 w-md-auto">
                 <button class="btn btn-success dropdown-toggle w-100 w-md-auto" type="button"
                     id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-file-excel"></i>
+                    <i class="bi bi-file-earmark-excel"></i>
                     <span class="d-none d-sm-inline">Excel</span>
                 </button>
 
                 <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
                     <li><?= Html::a(
-                            '<i class="fa-solid fa-file-csv me-2"></i>นำเข้าด้วย CSV',
-                            ['/sm/import-product', 'title' => '<i class="fas fa-file-csv text-white"></i> นำเข้าไฟล์ CSV'],
+                            '<i class="bi bi-filetype-csv me-2"></i>นำเข้าด้วย CSV',
+                            ['/sm/import-product', 'title' => '<i class="bi bi-filetype-csv text-white"></i> นำเข้าไฟล์ CSV'],
                             ['class' => 'dropdown-item open-modal']
                         ) ?>
                     </li>
                     <li><?= Html::a(
-                            '<i class="fa-solid fa-file me-2"></i> ตัวอย่างไฟล์นำเข้า',
+                            '<i class="bi bi-file-earmark me-2"></i> ตัวอย่างไฟล์นำเข้า',
                             'https://docs.google.com/spreadsheets/d/1Z6I-Y7rTwiy_qF68xIgyZEKPthmTnkkezqMfomLfpyQ/edit?usp=sharing',
                             ['class' => 'dropdown-item', 'target' => '_blank']
                         ) ?>

@@ -122,11 +122,21 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 <div class="row">
     <div class="col-6">
         
-        <?= $form->field($model, 'data_json[before_leave_balance]')->textInput(['class' => 'cal-days'])->label('ยอดยกมา') ?>
+        <?= $form->field($model, 'data_json[before_leave_balance]')->textInput([
+            'class' => 'form-control cal-days',
+            'type' => 'number',
+            'min' => 0,
+            'step' => 0.5,
+        ])->label('ยอดยกมา') ?>
         <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสะสมวันลา') ?>
     </div>
     <div class="col-6">
-        <?= $form->field($model, 'data_json[leave_days]')->textInput(['class' => 'cal-days','value' => 10])->label('สิทธิลาประจำปี(10)') ?>
+        <?= $form->field($model, 'data_json[leave_days]')->textInput([
+            'class' => 'form-control cal-days',
+            'type' => 'number',
+            'min' => 0,
+            'step' => 1,
+        ])->label('สิทธิลาประจำปี') ?>
         <?= $form->field($model, 'data_json[leave_max_days]')->textInput()->label('สะสมวันลาได้สูงสุด') ?>
     </div>
 </div>

@@ -33,16 +33,16 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between">
-            <h5><i class="fa-solid fa-circle-info text-primary"></i> ใบสั่งซื้อสินค้า</h5>
+            <h5><i class="bi bi-info-circle text-primary"></i> ใบสั่งซื้อสินค้า</h5>
 
             <div class="dropdown float-end">
                 <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                     aria-expanded="false">
-                    <i class="fa-solid fa-ellipsis"></i>
+                    <i class="bi bi-three-dots"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right">
-                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                    <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="bi bi-pencil-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                     <?= Html::a('<i class="bx bx-trash text-danger me-1"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                             'class' => 'dropdown-item  delete-item',
                             ]) ?>
@@ -202,13 +202,13 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                 <div>
                     <?php if($model->data_json['pr_director_confirm'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-success rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_director_confirm'] == 'N'):?>
-                    <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-person-slash"></i> ไม่อนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-sm btn-danger open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
-                    <?=Html::a('<i class="fa-regular fa-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-warning rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-clock"></i> รออนุมัติ',['/purchase/pr-order/director-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-sm btn-warning  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -241,13 +241,13 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                 <div>
                     <?php if($model->data_json['pr_officer_checker'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-sm btn-success rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_officer_checker'] == 'N'):?>
-                    <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-person-slash"></i> ไม่ผ่าน',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-sm btn-danger open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
-                    <?=Html::a('<i class="fa-regular fa-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
-                                ['class' => 'btn btn-sm btn-warning rounded-pill  open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-clock"></i> ตรวจสอบ',['/purchase/pr-order/checker-confirm','id' => $model->id],
+                                ['class' => 'btn btn-sm btn-warning  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                 </div>
             </div>
@@ -281,13 +281,13 @@ $listPqNumber = ArrayHelper::map(Order::find()->where(['name' => 'order'])->all(
                     <?php if($model->pr_number != ''):?>
                     <?php if($model->data_json['pr_leader_confirm'] == 'Y'):?>
                     <?=Html::a('<i class="bi bi-check2-circle"></i> เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-success  rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                                ['class' => 'btn btn-sm btn-success  open-modal','data' => ['size' => 'modal-md']])?>
                     <?php elseif($model->data_json['pr_leader_confirm'] == 'N'):?>
-                    <?=Html::a('<i class="fa-solid fa-user-slash"></i> ไม่เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-danger rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-person-slash"></i> ไม่เห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-sm btn-danger open-modal','data' => ['size' => 'modal-md']])?>
                     <?php else:?>
-                    <?=Html::a('<i class="fa-regular fa-clock"></i> รอเห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
-                                ['class' => 'btn btn-sm btn-warning rounded-pill open-modal','data' => ['size' => 'modal-md']])?>
+                    <?=Html::a('<i class="bi bi-clock"></i> รอเห็นชอบ',['/purchase/pr-order/leader-confirm','id' => $model->id,'title' => 'หัวหน้าลงความเห็นชอบ'],
+                                ['class' => 'btn btn-sm btn-warning open-modal','data' => ['size' => 'modal-md']])?>
                     <?php endif?>
                     <?php endif?>
                 </div>

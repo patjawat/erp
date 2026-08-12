@@ -49,7 +49,70 @@ $menus = [
         คลังหน่วยงาน
     </a>
     <?php $meEmp = \app\components\UserHelper::GetEmployee(); ?>
+    <?php
+    // งานประเมินสมรรถนะ — ขึ้นเฉพาะเมื่อ HR เปิดรอบและมอบหมายให้คนนี้เป็นผู้ประเมิน
+    $competencyPending = 0;
+    if ($meEmp) {
+        try {
+            $competencyPending = (int) \app\modules\hr\models\CompetencyAssignment::find()
+                ->alias('a')
+                ->innerJoin(['r' => \app\modules\hr\models\AppraisalRound::tableName()], 'r.id = a.round_id')
+                ->leftJoin(['ev' => \app\modules\hr\models\CompetencyEvaluation::tableName()], 'ev.assignment_id = a.id')
+                ->where(['a.evaluator_id' => $meEmp->id, 'r.status' => \app\modules\hr\models\AppraisalRound::STATUS_OPEN])
+                ->andWhere(['or', ['ev.id' => null], ['<>', 'ev.status', \app\modules\hr\models\CompetencyEvaluation::STATUS_SUBMITTED]])
+                ->count();
+        } catch (\Throwable $e) {
+            $competencyPending = 0; // ยังไม่ได้ migrate ตารางสมรรถนะ
+        }
+    }
+    ?>
+    <?php if ($competencyPending > 0): ?>
+        <a href="<?= Url::to(['/me/competency']) ?>" class="btn <?= $active !== 'competency' ? 'btn-outline-primary' : 'btn-primary' ?> position-relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-check">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <path d="m9 14 2 2 4-4" />
+            </svg>
+            ประเมินสมรรถนะ
+            <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle"><?= $competencyPending ?></span>
+        </a>
+    <?php endif; ?>
+    <?php
+    // เวรของฉัน — ขึ้นเมื่อมีเวรที่ประกาศแล้วในเดือนนี้ หรือคนคนนี้ถูกกำหนดให้ขึ้นเวร (จะได้เข้าไปยื่นขอหยุดได้)
+    $showMyRoster = false;
+    if ($meEmp) {
+        try {
+            $showMyRoster = ($meEmp->work_shift ?? '') === 'shift'
+                || \app\modules\roster\models\Item::find()
+                    ->alias('i')
+                    ->innerJoin(['p' => \app\modules\roster\models\Period::tableName()], 'p.id = i.period_id')
+                    ->where(['i.emp_id' => $meEmp->id])
+                    ->andWhere(['p.status' => ['published', 'closed']])
+                    ->andWhere(['>=', 'i.work_date', date('Y-m-01')])
+                    ->exists();
+        } catch (\Throwable $e) {
+            $showMyRoster = false; // ยังไม่ได้ migrate ตารางเวร
+        }
+    }
+    ?>
+    <?php if ($showMyRoster): ?>
+        <a href="<?= Url::to(['/me/roster']) ?>" class="btn <?= $active !== 'roster' ? 'btn-outline-primary' : 'btn-primary' ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-days">
+                <path d="M8 2v4" /><path d="M16 2v4" />
+                <rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+                <path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" />
+            </svg>
+            เวรของฉัน
+        </a>
+    <?php endif; ?>
+
     <?php if ($meEmp && $meEmp->isDepartmentHead()): ?>
+        <a href="<?= Url::to(['/roster/period/index']) ?>" class="btn <?= $active !== 'roster-manage' ? 'btn-outline-primary' : 'btn-primary' ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-table-2">
+                <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
+            </svg>
+            จัดตารางเวร
+        </a>
         <a href="<?= Url::to(['/me/plan']) ?>" class="btn <?= $active !== 'plan' ? 'btn-outline-primary' : 'btn-primary' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-list">
                 <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />

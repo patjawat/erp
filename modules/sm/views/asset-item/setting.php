@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-        <i class="fa-solid fa-gear"></i>
+        <i class="bi bi-gear"></i>
         <?= $this->title ?>
     </h4>
 </div>
@@ -34,19 +34,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="d-flex gap-2 flex-wrap">
             <?= app\components\AppHelper::Btn([
-                'title' => '<i class="fa-solid fa-circle-plus"></i> สร้างกลุ่มครุภัณฑ์',
+                'title' => '<i class="bi bi-plus-circle"></i> สร้างกลุ่มครุภัณฑ์',
                 'url' => ['/sm/asset-type/create', 'name' => 'asset_type', 'category_id' => $code],
                 'modal' => true,
                 'size' => 'lg',
             ]) ?>
-            <?= Html::a('<i class="fa-solid fa-gear me-1"></i> ตั้งค่ากลุ่มทรัพย์สิน', ['/sm/asset-type'], ['class' => 'btn btn-light']) ?>
+            <?= Html::a('<i class="bi bi-gear me-1"></i> ตั้งค่ากลุ่มทรัพย์สิน', ['/sm/asset-type'], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
 </div>
 
 <div class="card shadow-sm border-0">
     <div class="card-header bg-primary-gradient text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h6 class="mb-0 text-white"><i class="fa-solid fa-layer-group me-1"></i> รายการหมวดหมู่ทรัพย์สิน</h6>
+        <h6 class="mb-0 text-white"><i class="bi bi-layers me-1"></i> รายการหมวดหมู่ทรัพย์สิน</h6>
         <span class="small text-white-50">คลิกชื่อหมวดเพื่อเข้าไปดูรายการครุภัณฑ์</span>
     </div>
     <div class="card-body p-0">
@@ -58,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="d-flex align-items-center gap-3">
                             <div class="flex-shrink-0">
                                 <?php if ($model->code == Yii::$app->request->get('code')): ?>
-                                    <i class="fa-regular fa-folder-open fs-2 text-primary"></i>
+                                    <i class="bi bi-folder2-open fs-2 text-primary"></i>
                                 <?php else: ?>
                                     <i class="bi bi-folder-check fs-2"></i>
                                 <?php endif; ?>
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
 
                         <div class="text-end">
-                            <?= Html::a('<i class="fa-regular fa-folder-open me-1"></i> เปิด', ['/sm/asset-item', 'code' => $model->code, 'name' => 'asset_type', 'title' => $model->title], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+                            <?= Html::a('<i class="bi bi-folder2-open me-1"></i> เปิด', ['/sm/asset-item', 'code' => $model->code, 'name' => 'asset_type', 'title' => $model->title], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -19,8 +19,10 @@ use app\components\UserHelper;
 use app\components\ThaiDateHelper;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use yii\helpers\ArrayHelper;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
+use app\modules\hr\models\DevelopmentSummary;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -118,6 +120,8 @@ class DevelopmentController extends Controller
 
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
+        // ทะเบียนแสดงคอลัมน์สถานะสรุปผลต่อแถว — โหลดล่วงหน้ากันยิง query รายแถว
+        $dataProvider->query->with('summaryReport');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -163,6 +167,173 @@ class DevelopmentController extends Controller
             return $this->render('view', [
                 'model' => $model,
             ]);
+        }
+    }
+
+    /**
+     * ฟอร์มสรุปผลประชุม/อบรม ของใบไปราชการหนึ่งใบ (เปิดเป็น modal จากทะเบียน)
+     *
+     * เจ้าของใบและคณะเดินทางแก้ได้ตลอด แม้ผู้รับทราบจะกดรับทราบไปแล้ว
+     * คนอื่นเปิดดูได้อย่างเดียว ผู้ที่ถูกกำหนดให้รับทราบจะเห็นปุ่ม «รับทราบ»
+     *
+     * @param int $id Development ID
+     */
+    public function actionSummary($id)
+    {
+        $model = $this->findModel($id);
+        $me = UserHelper::GetEmployee();
+        $canEdit = $model->canEditSummary($me->id ?? null);
+
+        $summary = $model->summaryReport;
+        if (!$summary && $canEdit) {
+            // สร้างฉบับร่างตอนเปิดฟอร์มครั้งแรก เพราะ widget อัปโหลดไฟล์ต้องมี ref ตั้งแต่ตอน render
+            $summary = new DevelopmentSummary([
+                'development_id' => $model->id,
+                'status' => DevelopmentSummary::STATUS_DRAFT,
+                'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
+            ]);
+            $summary->save(false);
+            $model->populateRelation('summaryReport', $summary);
+        }
+
+        if ($this->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            if (!$canEdit || !$summary) {
+                return ['status' => 'error', 'message' => 'เฉพาะผู้ขอและคณะเดินทางเท่านั้นที่บันทึกสรุปผลได้'];
+            }
+
+            $isSubmit = $this->request->post('do') === 'submit';
+            $summary->scenario = $isSubmit ? DevelopmentSummary::SCENARIO_SUBMIT : DevelopmentSummary::SCENARIO_DEFAULT;
+            $summary->load($this->request->post());
+
+            if (!$summary->validate()) {
+                return [
+                    'status' => 'error',
+                    'message' => implode(' ', $summary->getFirstErrors()),
+                ];
+            }
+
+            $acknowledgerIds = array_values(array_filter((array) $this->request->post('acknowledgers', [])));
+            if ($isSubmit && empty($acknowledgerIds)) {
+                return ['status' => 'error', 'message' => 'กรุณาเลือกผู้รับทราบอย่างน้อย 1 คน'];
+            }
+
+            if ($isSubmit && $summary->status === DevelopmentSummary::STATUS_DRAFT) {
+                $summary->status = DevelopmentSummary::STATUS_SUBMITTED;
+                $summary->submitted_at = date('Y-m-d H:i:s');
+                $summary->submitted_by = Yii::$app->user->id;
+            }
+            $summary->save(false);
+
+            $this->syncSummaryAcknowledgers($summary, $acknowledgerIds);
+            $summary->refreshStatus();
+
+            $message = $isSubmit ? 'ส่งสรุปผลให้ผู้รับทราบเรียบร้อยแล้ว' : 'บันทึกสรุปผลเรียบร้อยแล้ว';
+            if ($isSubmit) {
+                $notified = $summary->notifyAcknowledgers();
+                $message .= ' แจ้งเตือนผู้รับทราบ ' . $notified . ' คน';
+            }
+
+            return [
+                'status' => 'success',
+                'message' => $message,
+            ];
+        }
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $this->request->get('title', '<i class="bi bi-journal-check"></i> สรุปผลประชุม/อบรม'),
+                'content' => $this->renderAjax('_form_summary', [
+                    'model' => $model,
+                    'summary' => $summary,
+                    'canEdit' => $canEdit,
+                    'me' => $me,
+                ]),
+            ];
+        }
+
+        return $this->render('_form_summary', [
+            'model' => $model,
+            'summary' => $summary,
+            'canEdit' => $canEdit,
+            'me' => $me,
+        ]);
+    }
+
+    /**
+     * ผู้รับทราบกดรับทราบสรุปผล
+     *
+     * @param int $id Development ID
+     */
+    public function actionSummaryAcknowledge($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $summary = $model->summaryReport;
+        $me = UserHelper::GetEmployee();
+
+        if (!$summary || $summary->status === DevelopmentSummary::STATUS_DRAFT) {
+            return ['status' => 'error', 'message' => 'ยังไม่มีสรุปผลที่ส่งให้รับทราบ'];
+        }
+
+        $row = Approve::find()
+            ->where([
+                'name' => DevelopmentSummary::APPROVE_NAME,
+                'from_id' => $model->id,
+                'emp_id' => $me->id ?? 0,
+            ])
+            ->one();
+        if (!$row) {
+            return ['status' => 'error', 'message' => 'คุณไม่ได้อยู่ในรายชื่อผู้รับทราบของสรุปผลนี้'];
+        }
+
+        $comment = trim((string) $this->request->post('comment', ''));
+        $row->status = 'Pass';
+        $row->comment = $comment;
+        $row->data_json = ArrayHelper::merge((array) $row->data_json, ['acknowledged_at' => date('Y-m-d H:i:s')]);
+        $row->save(false);
+
+        $summary->refreshStatus();
+        $summary->notifySubmitterAcknowledged($me, $comment);
+
+        return ['status' => 'success', 'message' => 'บันทึกการรับทราบเรียบร้อยแล้ว'];
+    }
+
+    /**
+     * ปรับรายชื่อผู้รับทราบให้ตรงกับที่เลือกไว้ โดยไม่ลบสถานะของคนที่กดรับทราบไปแล้ว
+     *
+     * @param string[] $empIds emp_id ที่เลือกในฟอร์ม
+     */
+    protected function syncSummaryAcknowledgers(DevelopmentSummary $summary, array $empIds): void
+    {
+        $existing = [];
+        foreach ($summary->getAcknowledgers() as $row) {
+            $existing[(string) $row->emp_id] = $row;
+        }
+
+        foreach (array_values($empIds) as $index => $empId) {
+            $empId = (string) $empId;
+            if (isset($existing[$empId])) {
+                $row = $existing[$empId];
+                $row->level = $index + 1;
+                $row->save(false);
+                unset($existing[$empId]);
+                continue;
+            }
+            $row = new Approve([
+                'name' => DevelopmentSummary::APPROVE_NAME,
+                'from_id' => $summary->development_id,
+                'emp_id' => (int) $empId,
+                'level' => $index + 1,
+                'status' => 'Pending',
+            ]);
+            $row->save(false);
+        }
+
+        // คนที่ถูกเอาออกจากรายชื่อ ลบทิ้ง (รวมถึงคนที่กดรับทราบแล้ว เพราะผู้บันทึกตั้งใจเอาออก)
+        foreach ($existing as $row) {
+            $row->delete();
         }
     }
 
@@ -774,16 +945,10 @@ class DevelopmentController extends Controller
         return $list;
     }
 
-    /** รวมค่าใช้จ่ายจากรายการ expense_type (qty * price) สำหรับใส่ใน PDF */
+    /** รวมค่าใช้จ่ายทุกหมวด (ประมาณค่าใช้จ่ายในฟอร์ม + รายการ expense_type เดิม) สำหรับใส่ใน PDF */
     protected function getDevelopmentTotalExpense(Development $model): string
     {
-        $total = 0;
-        foreach ($model->getExpenses()->all() as $detail) {
-            $qty = isset($detail->qty) ? (float) $detail->qty : 0;
-            $price = isset($detail->price) ? (float) $detail->price : 0;
-            $total += $qty * $price;
-        }
-        return number_format($total, 0);
+        return number_format($model->totalEstimatedCost(true), 0);
     }
 
     /**
@@ -816,40 +981,15 @@ class DevelopmentController extends Controller
 
     /**
      * คืนยอดแสดงตามประเภท (ค่าลงทะเบียน, ค่าที่พัก, ค่ายานพาหนะ, ค่าเบี้ยเลี้ยง, ค่าอื่น ๆ) สำหรับใส่ใน PDF.
-     * registration_amount ใช้จาก data_json แล้วบวกจากรายการ expense_type ที่ชื่อประเภทมี "ลงทะเบียน"
+     * หมวดที่ไม่มียอดจะคืนค่าว่าง เพื่อไม่ให้ PDF พิมพ์เลข 0 เต็มฟอร์ม
      */
-    protected function getDevelopmentExpenseAmountsByCategory(Development $model, array $dataJson): array
+    protected function getDevelopmentExpenseAmountsByCategory(Development $model): array
     {
-        $reg = isset($dataJson['registration_amount']) && $dataJson['registration_amount'] !== '' && $dataJson['registration_amount'] !== null
-            ? (float) $dataJson['registration_amount']
-            : 0.0;
-        $acc = 0.0;
-        $veh = 0.0;
-        $all = 0.0;
-        $oth = 0.0;
-        $details = $model->getExpenses()->with('expenseType')->all();
-        foreach ($details as $detail) {
-            $amount = (float) ($detail->qty ?? 0) * (float) ($detail->price ?? 0);
-            $title = $detail->expenseType ? (string) $detail->expenseType->title : '';
-            if (stripos($title, 'ลงทะเบียน') !== false) {
-                $reg += $amount;
-            } elseif (stripos($title, 'ที่พัก') !== false) {
-                $acc += $amount;
-            } elseif (stripos($title, 'ยานพาหนะ') !== false || stripos($title, 'พาหนะ') !== false) {
-                $veh += $amount;
-            } elseif (stripos($title, 'เบี้ยเลี้ยง') !== false) {
-                $all += $amount;
-            } else {
-                $oth += $amount;
-            }
+        $formatted = [];
+        foreach ($model->estimatedCostAmounts(true) as $key => $amount) {
+            $formatted[$key] = $amount > 0 ? number_format($amount, 0) : '';
         }
-        return [
-            'registration_amount' => number_format($reg, 0),
-            'accommodation_amount' => number_format($acc, 0),
-            'vehicle_amount' => number_format($veh, 0),
-            'allowance_amount' => number_format($all, 0),
-            'other_amount' => number_format($oth, 0),
-        ];
+        return $formatted;
     }
 
     /** ชุดฟิลด์เริ่มต้นสำหรับใบขอไปราชการ (ให้เลือกได้ในหน้ากำหนดตำแหน่ง) */
@@ -1138,7 +1278,7 @@ class DevelopmentController extends Controller
             'license_plate' => (string) ($dataJson['license_plate'] ?? ''),
             'distance' => (string) ($dataJson['distance'] ?? ''),
             'total_expense' => $this->getDevelopmentTotalExpense($model),
-        ], $this->getDevelopmentExpenseAmountsByCategory($model, $dataJson), [
+        ], $this->getDevelopmentExpenseAmountsByCategory($model), [
             'date_start' => $model->date_start ? (string) $model->date_start : '',
             'date_end' => $model->date_end ? (string) $model->date_end : '',
             'vehicle_date_start' => $model->vehicle_date_start ? (string) $model->vehicle_date_start : '',

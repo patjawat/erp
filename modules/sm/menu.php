@@ -2,7 +2,7 @@
 use yii\helpers\Url;
 $menuItems = [
     [
-        'title' => '<i class="fa-solid fa-user-tag"></i> บริหารงานพัสดุ',
+        'title' => '<i class="bi bi-person-badge"></i> บริหารงานพัสดุ',
         'url' => '/sm'
     ],
     // [

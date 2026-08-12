@@ -21,7 +21,7 @@ $this->title = 'นำเข้าข้อมูลผู้แทนจำห�
 <div class="d-flex justify-content-center" style="width: 100%">
   <div class="card" style="width: 25%; margin-right:10px;">
     <div class="card-body">
-      <h5 class="card-title"><i class="fa-solid fa-file-import me-1"></i> นำเข้า CSV</h5>
+      <h5 class="card-title"><i class="bi bi-box-arrow-in-down me-1"></i> นำเข้า CSV</h5>
       <h6 class="card-subtitle mb-2 text-muted ">ระบบนำเข้าข้อมูลด้วยไฟล์ CSV</h6>
         <div style="width: 100%" class="d-flex justify-content-center mt-3">
           <?php

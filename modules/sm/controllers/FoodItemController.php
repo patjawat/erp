@@ -74,7 +74,7 @@ class FoodItemController extends Controller
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'title' => '<i class="bi bi-eye"></i> แสดง',
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                 ]),

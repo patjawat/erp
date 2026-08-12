@@ -13,7 +13,7 @@ use yii\helpers\Html;
 ?>
 <div class="row">
     <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
+        <div class="bg-body-tertiary border p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <span class="h5 text-dark"><?=$model->prSummery()['price'];?> บาท</span>
                 <i class="bi bi-plus-circle-fill text-black-50"></i>
@@ -25,10 +25,10 @@ use yii\helpers\Html;
         </div>
     </div>
     <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
+        <div class="bg-body-tertiary border p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <span class="h5 text-dark"><?=number_format($model->pqSummery()['price'],2)?> บาท</span>
-                <i class="fa-solid fa-user-check text-black-50"></i>
+                <i class="bi bi-person-check text-black-50"></i>
             </div>
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <?=Html::a('ทะเบียนคุม',['/purchase/pq-order'])?>
@@ -37,7 +37,7 @@ use yii\helpers\Html;
         </div>
     </div>
     <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
+        <div class="bg-body-tertiary border p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <span class="h5 text-dark"><?=number_format($model->poSummery()['price'],2)?> บาท</span>
                 <i class="bi bi-rocket text-black-50"></i>
@@ -49,7 +49,7 @@ use yii\helpers\Html;
         </div>
     </div>
     <div class="col-3">
-        <div class="text-bg-light p-3 rounded-2">
+        <div class="bg-body-tertiary border p-3 rounded-2">
             <div class="d-flex justify-content-between gap-1 mb-0">
                 <span class="h5 text-dark"><?=number_format($model->orderAccep()['price'],2)?></span>
                 <i class="bi bi-bag-check-fill text-black-50"></i>

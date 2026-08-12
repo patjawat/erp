@@ -93,10 +93,6 @@ $config = [
         'LineMsg' => [
             'class' => 'app\components\LineMsg',
         ],
-        'image' => [
-            'class' => 'yii\image\ImageDriver',
-            'driver' => 'GD',  // GD or Imagick
-        ],
         'i18n' => [
             'translations' => [
                 'app*' => [
@@ -165,13 +161,6 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        'redis' => [
-            'class' => 'yii\redis\Connection',
-            'hostname' => 'redis',
-            'port' => env('REDIS_PORT'),
-            'database' => 0,
-        ],
-
         // Session เก็บใน DB เพื่อให้ Dashboard "กำลังออนไลน์" และ /usermanager/session ทำงานได้
         // ต้องรัน migration สร้างตาราง session ก่อน: php yii migrate --migrationPath=@app/migrations
         'session' => [
@@ -308,12 +297,21 @@ $config = [
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
             'hr/idp/*',
+            // สรุปผลประชุม/อบรม: เจ้าของใบ/คณะเดินทางบันทึกได้ ผู้ที่ถูกกำหนดกดรับทราบได้
+            // — controller มี guard ภายในเอง (canEditSummary / ตรวจรายชื่อผู้รับทราบ)
+            'hr/development/summary',
+            'hr/development/summary-acknowledge',
             // Training Roadmap: every action has an authenticated role/ownership
             // guard in the controller (HR/admin, employee, leader, mentor or assessor).
             'hr/training-roadmap/*',
             // Probation appraisal: authenticated users enter through Profile;
             // every action checks the assigned employee/leader/director in the controller.
             'hr/probation-appraisal/*',
+            // ตารางเวร: สิทธิ์มาจากผังองค์กร (tree.data_json.leader1) ไม่ใช่ RBAC role
+            // หัวหน้าหอผู้ป่วยเป็น role user ธรรมดา จึงผ่าน AccessControl ที่อิง role ไม่ได้
+            // ทุก action มี guard ภายในเอง — RosterAccess::canEnter/canManageUnit/canReviewUnit/canApprove
+            'roster/*',
+            'me/roster/*',
             'line/*',
             // 'me/*',
             // 'line-group/*',
@@ -326,6 +324,15 @@ $config = [
             'hr/document/*',
             'dms/documents/comment-validator',
             'hr/leave/create-validator',
+            // งานเขียน TOR: controller กันสิทธิ์เอง (AccessControl roles=['purchase'])
+            // ใส่ไว้ที่นี่เพื่อให้ใช้งานได้ทันทีโดยไม่ต้องไปผูก route ในระบบจัดการสิทธิ์ก่อน
+            'purchase/tor/*',
+            // งานบริหารสัญญา + ตั้งค่าอัตราภาษีหัก ณ ที่จ่าย — controller กันสิทธิ์เองเช่นเดียวกัน
+            'purchase/contract/*',
+            'purchase/wht-rate/*',
+            // งานหลักประกัน + ตั้งค่าเกณฑ์หลักประกันตามวงเงิน — controller กันสิทธิ์เองเช่นเดียวกัน
+            'purchase/bond/*',
+            'purchase/bond-policy/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',

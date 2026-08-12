@@ -5,7 +5,7 @@ use yii\helpers\Html;
 ?>
 <div class="d-flex justify-content-between">
             <div>
-                <h5><i class="fa-solid fa-circle-info text-primary"></i> ออกใบสั่งซื้อ</h5>
+                <h5><i class="bi bi-info-circle text-primary"></i> ออกใบสั่งซื้อ</h5>
             </div>
            
         </div>
@@ -14,11 +14,11 @@ use yii\helpers\Html;
             <div class="dropdown float-end">
                     <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <i class="fa-solid fa-ellipsis"></i>
+                        <i class="bi bi-three-dots"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <?= Html::a('<i class="fa-regular fa-eye me-1 text-primary"></i> แสดง', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
-                        <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?= Html::a('<i class="bi bi-eye me-1 text-primary"></i> แสดง', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                        <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i> พิมพ์', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         <?= Html::a('<i class="bx bx-trash me-1 text-danger"></i> ลบ', ['/sm/asset-type/delete', 'id' => $model->id], [
                             'class' => 'dropdown-item  delete-item',
                         ]) ?>
@@ -57,7 +57,7 @@ use yii\helpers\Html;
                         </tr>
                         <tr>
                             <td class="text-end">ความเห็น</td>
-                            <td colspan="5"><?= isset($model->data_json['pr_confirm_2']) ? '<span class="badge rounded-pill bg-success-subtle"><i class="fa-regular fa-thumbs-up"></i> ' . $model->data_json['pr_confirm_2'] . '</span>' : '' ?></td>
+                            <td colspan="5"><?= isset($model->data_json['pr_confirm_2']) ? '<span class="badge rounded-pill bg-success-subtle"><i class="bi bi-hand-thumbs-up"></i> ' . $model->data_json['pr_confirm_2'] . '</span>' : '' ?></td>
                         </tr>
                     </tbody>
                 </table>

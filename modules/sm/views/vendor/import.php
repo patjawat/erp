@@ -8,7 +8,7 @@ $this->title = 'นำเข้า Vendor (ผู้แทนจำหน่า�
 <div class="vendor-import-modal">
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <?= Html::a(
-            '<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template (Google Sheet)',
+            '<i class="bi bi-table me-2"></i> ดาวน์โหลด Template (Google Sheet)',
             'https://docs.google.com/spreadsheets/d/1ofAIy6K0JG1zm2FZO9w42wPx9-2LD1rLxb5NZOt5iL0/edit?usp=sharing',
             ['class' => 'btn btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener']
         ) ?>
@@ -18,7 +18,7 @@ $this->title = 'นำเข้า Vendor (ผู้แทนจำหน่า�
     <div class="card border border-2 border-primary border-opacity-25 mb-3" id="drop-zone">
         <div class="card-body text-center py-5">
             <input type="file" id="importFile" name="importFile" accept=".csv,.xlsx,.xls" class="d-none">
-            <p class="mb-2 text-muted"><i class="fa-solid fa-cloud-arrow-up fa-2x"></i></p>
+            <p class="mb-2 text-muted"><i class="bi bi-cloud-arrow-up fs-3"></i></p>
             <p class="mb-2 fw-medium">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
             <p class="mb-0 small text-muted" id="fileName"></p>
             <p class="mb-0 mt-2 d-none text-primary" id="loadingText"><span class="spinner-border spinner-border-sm me-1"></span> กำลังโหลด...</p>
@@ -30,7 +30,7 @@ $this->title = 'นำเข้า Vendor (ผู้แทนจำหน่า�
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">ทั้งหมด: <span id="statTotal">0</span></span>
             <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill fw-medium px-2 py-1">ผ่าน: <span id="statValid">0</span></span>
             <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill fw-medium px-2 py-1">ไม่ผ่าน: <span id="statError">0</span></span>
-            <?= Html::button('<i class="fa-solid fa-download me-1"></i> ส่งออกแถวที่ error', [
+            <?= Html::button('<i class="bi bi-download me-1"></i> ส่งออกแถวที่ error', [
                 'class' => 'btn btn-sm btn-outline-danger',
                 'id' => 'btnExportErrors',
                 'style' => 'display:none',
@@ -38,7 +38,7 @@ $this->title = 'นำเข้า Vendor (ผู้แทนจำหน่า�
         </div>
         <div class="table-responsive" style="max-height: 320px; overflow: auto;">
             <table class="table table-sm table-hover align-middle mb-0" id="previewTable">
-                <thead class="table-light sticky-top">
+                <thead class="bg-body-tertiary sticky-top">
                     <tr>
                         <th class="text-center" style="width: 50px;">ลำดับ</th>
                         <th>รหัส</th>
@@ -54,7 +54,7 @@ $this->title = 'นำเข้า Vendor (ผู้แทนจำหน่า�
             </table>
         </div>
         <div class="mt-3 d-flex justify-content-center">
-            <?= Html::button('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', [
+            <?= Html::button('<i class="bi bi-box-arrow-in-down me-2"></i> นำเข้าข้อมูล', [
                 'class' => 'btn btn-success',
                 'id' => 'btnDoImport',
                 'disabled' => true,
@@ -214,13 +214,13 @@ $js = <<<JS
                 } else {
                     if (typeof Swal !== 'undefined') Swal.fire('ผิดพลาด', res.message || 'นำเข้าไม่สำเร็จ', 'error');
                     else alert(res.message || 'นำเข้าไม่สำเร็จ');
-                    $('#btnDoImport').prop('disabled', false).html('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล');
+                    $('#btnDoImport').prop('disabled', false).html('<i class="bi bi-box-arrow-in-down me-2"></i> นำเข้าข้อมูล');
                 }
             },
             error: function() {
                 if (typeof Swal !== 'undefined') Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
                 else alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-                $('#btnDoImport').prop('disabled', false).html('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล');
+                $('#btnDoImport').prop('disabled', false).html('<i class="bi bi-box-arrow-in-down me-2"></i> นำเข้าข้อมูล');
             }
         });
     }

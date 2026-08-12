@@ -30,7 +30,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="col-lg-8 col-md-12 col-sm-12">
         <?= $this->render('@app/modules/booking/views/vehicle/carlendar_item', ['vehicle_type' => $vehicle_type]); ?>
     </div>
-    <div class="col-lg-4 col-md-12 col-sm-12">
+    <div class="col-lg-4 col-md-12 col-sm-12 d-flex flex-column gap-3">
+        <div id="showDriverStatus"></div>
         <div id="showEventToDays"></div>
         <div id="showEventTomorrow"></div>
     </div>
@@ -40,10 +41,24 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $urlEventToDays = Url::to(['/booking/vehicle/list-event-todays','vehicle_type' => $vehicle_type]);
 $urlEventTomorrow = Url::to(['/booking/vehicle/list-event-tomorrow','vehicle_type' => $vehicle_type]);
+$urlDriverStatus = Url::to(['/booking/vehicle/driver-status']);
 $js = <<<JS
 
             listEventTomorrow()
             listEventToDays()
+            listDriverStatus()
+
+            async function listDriverStatus()
+            {
+                await $.ajax({
+                    type: "get",
+                    url: "$urlDriverStatus",
+                    dataType: "json",
+                    success: function (response) {
+                        $('#showDriverStatus').html(response.content)
+                    }
+                });
+            }
             async function listEventToDays()
             {
                 await $.ajax({

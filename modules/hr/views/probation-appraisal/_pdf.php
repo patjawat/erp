@@ -61,11 +61,13 @@ $isSameLeader = (int) $model->supervisor_employee_id === (int) $model->group_hea
     .small { font-size: 10.5pt; }
     .center { text-align: center; }
     .right { text-align: right; }
-    .page-break { page-break-before: always; }
-    .comment td { height: 20mm; vertical-align: top; }
-    .signatures { margin-top: 5mm; table-layout: fixed; }
-    .signatures td { height: 29mm; text-align: center; vertical-align: bottom; }
-    .ack td { height: 13mm; vertical-align: top; }
+    .keep-together { page-break-inside: avoid; }
+    .comment td { height: 33mm; vertical-align: top; }
+    .comment-role { width: 28%; font-weight: bold; background: #f4f6f8; }
+    .signatures { margin-top: 3mm; table-layout: fixed; page-break-inside: avoid; }
+    .signatures td { height: 55mm; text-align: center; vertical-align: bottom; }
+    .ack { page-break-inside: avoid; }
+    .ack td { height: 55mm; vertical-align: top; }
     .decision td { height: 20mm; vertical-align: top; }
 </style>
 </head>
@@ -119,9 +121,18 @@ $isSameLeader = (int) $model->supervisor_employee_id === (int) $model->group_hea
     <?php endif ?>
 </table>
 
-<div class="page-break"></div>
 <div class="section-title">ความเห็นและข้อเสนอแนะ</div>
-<table class="comment"><tr><td><?= (int) $round->month_no === 3 && $model->decision ? nl2br(Html::encode($model->decision->summary_comment)) : '' ?></td></tr></table>
+<table class="comment keep-together">
+    <?php foreach ($evaluations as $evaluation): ?>
+        <tr>
+            <td class="comment-role"><?= Html::encode($evaluation->roleLabel) ?></td>
+            <td><?= $evaluation->comment ? nl2br(Html::encode($evaluation->comment)) : '-' ?></td>
+        </tr>
+    <?php endforeach ?>
+    <?php if ((int) $round->month_no === 3 && $model->decision): ?>
+        <tr><td class="comment-role">ความเห็นสรุปการจ้าง</td><td><?= nl2br(Html::encode($model->decision->summary_comment)) ?></td></tr>
+    <?php endif ?>
+</table>
 
 <div class="section-title" style="margin-top:5mm">ผู้ประเมิน</div>
 <table class="signatures">

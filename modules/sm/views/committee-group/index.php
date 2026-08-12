@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'bs-placement' => 'top',
                         'bs-toggle' => 'tooltip',
                     ]]) ?>
-            <?= Html::a('<i class="fa-solid fa-file-import me-1"></i>', ['/sm/vendor/import-csv'], [
+            <?= Html::a('<i class="bi bi-box-arrow-in-down me-1"></i>', ['/sm/vendor/import-csv'], [
                 'class' => 'btn btn-outline-primary',
                 'title' => 'นำเข้าข้อมูลจากไฟล์ .csv',
                 'data' => [

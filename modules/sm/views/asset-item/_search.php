@@ -44,7 +44,7 @@ use yii\widgets\ActiveForm;
         </div>
 
         <div class="col-lg-2 col-md-2 col-sm-12">
-            <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i> ค้นหา', ['class' => 'btn btn-primary w-100']) ?>
+            <?= Html::submitButton('<i class="bi bi-search"></i> ค้นหา', ['class' => 'btn btn-primary w-100']) ?>
         </div>
     </div>
 

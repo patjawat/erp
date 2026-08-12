@@ -68,7 +68,7 @@ class AssetTypeController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'title' => '<i class="bi bi-eye"></i> แสดง',
                 'content' => $this->renderAjax('view', [
                     'model' => $model,
                     'searchModel' => $searchModel,
@@ -211,7 +211,7 @@ class AssetTypeController extends Controller
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-eye"></i> แสดง',
+                'title' => '<i class="bi bi-eye"></i> แสดง',
                 'content' => $this->renderAjax('view_type', [
                     'model' => $model,
                     'searchModel' => $searchModel,

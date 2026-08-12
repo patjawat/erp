@@ -15,7 +15,9 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                 <th scope="col" class="dev-col-topic">เรื่อง / ประเภท</th>
                 <th scope="col" class="dev-col-location d-none d-lg-table-cell">สถานที่</th>
                 <th scope="col" class="dev-col-date d-none d-md-table-cell">ช่วงวันที่</th>
+                <th scope="col" class="dev-col-budget d-none d-lg-table-cell text-end">งบประมาณ</th>
                 <th scope="col" class="dev-col-approver d-none d-xl-table-cell" style="width: 147px;">ผู้อนุมัติ</th>
+                <th scope="col" class="dev-col-summary text-center">สรุป</th>
                 <th scope="col" class="dev-col-status text-center">สถานะ</th>
                 <th scope="col" class="dev-col-actions text-end">จัดการ</th>
             </tr>
@@ -23,7 +25,7 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
         <tbody class="align-middle">
             <?php if (empty($models)): ?>
                 <tr>
-                    <td colspan="7">
+                    <td colspan="9">
                         <div class="dev-empty py-5 text-center">
                             <i class="bi bi-inbox dev-empty__icon" aria-hidden="true"></i>
                             <p class="mt-3 mb-1 text-body fw-semibold">ไม่พบรายการตามตัวกรอง</p>
@@ -37,6 +39,8 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                     $typeTitle = $item->developmentType?->title ?? '';
                     $statusHtml = $item->getStatus($item->status)['view'] ?? '-';
                     $dateRange = $item->showDateRange();
+                    $budget = $item->totalEstimatedCost();
+                    $summaryState = $item->summaryState();
                 ?>
                     <tr>
                         <!-- ผู้ขอ -->
@@ -100,9 +104,37 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                             <span class="dev-date"><?= $dateRange ?></span>
                         </td>
 
+                        <!-- งบประมาณ -->
+                        <td class="dev-col-budget d-none d-lg-table-cell text-end">
+                            <?php if ($budget > 0): ?>
+                                <span class="dev-budget"><?= number_format($budget, 0) ?></span>
+                                <span class="dev-budget__unit">บาท</span>
+                            <?php else: ?>
+                                <span class="text-body-tertiary small">ไม่ระบุ</span>
+                            <?php endif; ?>
+                        </td>
+
                         <!-- ผู้อนุมัติ -->
                         <td class="dev-col-approver d-none d-xl-table-cell">
                             <?= $item->stackChecker() ?>
+                        </td>
+
+                        <!-- สรุปผลประชุม/อบรม -->
+                        <td class="dev-col-summary text-center">
+                            <?= Html::a(
+                                '<i class="bi ' . $summaryState['icon'] . '"></i>',
+                                ['/hr/development/summary', 'id' => $item->id, 'title' => '<i class="bi bi-journal-check"></i> สรุปผลประชุม/อบรม'],
+                                [
+                                    'class' => 'dev-summary-mark text-' . $summaryState['color'] . ' open-modal',
+                                    'data' => [
+                                        'size' => 'modal-lg',
+                                        'bs-toggle' => 'tooltip',
+                                        'bs-placement' => 'top',
+                                        'bs-title' => $summaryState['label'],
+                                    ],
+                                    'aria-label' => $summaryState['label'],
+                                ]
+                            ) ?>
                         </td>
 
                         <!-- สถานะ -->
@@ -134,6 +166,27 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                                             '<i class="fa-solid fa-eye fa-fw me-2 text-body-secondary" aria-hidden="true"></i> แสดงรายละเอียด',
                                             ['view', 'id' => $item->id],
                                             ['class' => 'dropdown-item dev-actions-menu__item']
+                                        ) ?>
+                                    </li>
+                                    <li>
+                                        <?= Html::a(
+                                            '<i class="fa-solid fa-clipboard-check fa-fw me-2 text-' . $summaryState['color'] . '" aria-hidden="true"></i> สรุปผลประชุม/อบรม',
+                                            ['/hr/development/summary', 'id' => $item->id, 'title' => '<i class="bi bi-journal-check"></i> สรุปผลประชุม/อบรม'],
+                                            [
+                                                'class' => 'dropdown-item dev-actions-menu__item open-modal',
+                                                'data' => ['size' => 'modal-lg'],
+                                            ]
+                                        ) ?>
+                                    </li>
+                                    <li>
+                                        <?= Html::a(
+                                            '<i class="fa-solid fa-car fa-fw me-2 text-primary" aria-hidden="true"></i> ขอใช้รถ',
+                                            ['/booking/vehicle/create', 'development_id' => $item->id, 'vehicle_type' => 'official', 'title' => '<i class="bi bi-car-front"></i> ขอใช้รถยนต์ทางราชการ'],
+                                            [
+                                                'class' => 'dropdown-item dev-actions-menu__item open-modal',
+                                                'data' => ['size' => 'modal-xl'],
+                                                'title' => 'เปิดฟอร์มจองรถราชการพร้อมข้อมูลจากใบไปราชการนี้',
+                                            ]
                                         ) ?>
                                     </li>
                                     <?php if ($item->development_type_id == 'dev3'): ?>
@@ -328,9 +381,51 @@ $css = <<<CSS
     white-space: nowrap;
 }
 
+/* === คอลัมน์: BUDGET — ตัวเลขชิดขวา อ่านเทียบกันในแนวตั้งได้ === */
+.dev-col-budget {
+    width: 8rem;
+    white-space: nowrap;
+}
+
+.dev-budget {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--bs-body);
+    font-variant-numeric: tabular-nums;
+}
+
+.dev-budget__unit {
+    font-size: 0.75rem;
+    color: var(--bs-body-secondary);
+    margin-left: 0.125rem;
+}
+
 /* === คอลัมน์: APPROVERS === */
 .dev-col-approver {
     min-width: 7rem;
+}
+
+/* === คอลัมน์: SUMMARY — เครื่องหมายเดียว แดง/เหลือง/เขียว === */
+.dev-col-summary {
+    width: 4.5rem;
+}
+
+.dev-summary-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 1.125rem;
+    line-height: 1;
+    text-decoration: none;
+    transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dev-summary-mark:hover,
+.dev-summary-mark:focus-visible {
+    background-color: var(--bs-tertiary-bg);
 }
 
 .dev-col-approver .avatar-stack {
@@ -431,6 +526,7 @@ $css = <<<CSS
 @media (prefers-reduced-motion: reduce) {
     .dev-actions-menu,
     .dev-actions-menu__item,
+    .dev-summary-mark,
     .dev-list-table tbody tr {
         animation: none;
         transition: none;

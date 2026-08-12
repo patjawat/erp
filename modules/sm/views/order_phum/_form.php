@@ -79,7 +79,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
             'type' => Select2::class,
             'title' => 'รายการ',
             'headerOptions' => [
-                'class' => 'table-light',// กำหนดสไตล์ให้กับพื้นหลังของ label
+                'class' => 'bg-body-tertiary',// กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
             'options' => [
                 'data' => ArrayHelper::map(array_map(function ($asset) {
@@ -137,7 +137,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                 'disabled' => 'disabled' // กำหนดให้ input field เป็น readonly
             ],
             'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+                'class' => 'bg-body-tertiary', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
             'title' => 'รายละเอียดเพิ่มเติม',
         ],
@@ -149,7 +149,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                 'style' => 'background: none; border: none; width: 100px;', // กำหนดให้ input field เป็น readonly
             ],
             'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+                'class' => 'bg-body-tertiary', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
         ],
         [
@@ -164,7 +164,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                 JS,
             ],
             'headerOptions' => [
-                'class' => 'table-light',
+                'class' => 'bg-body-tertiary',
                 'style' => 'width: 150px;', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
             'inputTemplate' => '<div class="input-group"><button class="btn btn-primary decrement-btn" type="button">-</button>{input}<button class="btn btn-primary increment-btn" type="button">+</button></div>',
@@ -178,7 +178,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                 'disabled' => 'disabled'// กำหนดให้ input field เป็น readonly
             ],
             'headerOptions' => [
-                'class' => 'table-light', // กำหนดสไตล์ให้กับพื้นหลังของ label
+                'class' => 'bg-body-tertiary', // กำหนดสไตล์ให้กับพื้นหลังของ label
             ],
             'enableError' => true,
         ],
@@ -193,7 +193,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                     <div class="col-sm-6">
                         <a href="ecommerce-product.html" class="btn btn-secondary waves-effect waves-light"
                             data-effect="wave">
-                            <i class="fa-solid fa-trash-can"></i> ยกเลิกใบสั้งซื้อ </a>
+                            <i class="bi bi-trash"></i> ยกเลิกใบสั้งซื้อ </a>
                     </div> <!-- end col -->
                     <div class="col-sm-6">
                         <div class="text-sm-end mt-2 mt-sm-0">
@@ -250,7 +250,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                     id=""
                     class="btn btn-primary"
                 >
-                <i class="fa-solid fa-print"></i> พิมพ์
+                <i class="bi bi-printer"></i> พิมพ์
                 </button>
                 <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-success waves-effect waves-light']) ?>
 
@@ -271,7 +271,7 @@ echo $form->field($model,'schedule')->widget(MultipleInput::class,[
                         <p class="text-muted mb-0">นายปัจวัฒน์ ศรีบุญเรือง</p>
                     </div>
                 </div>
-             <?=Html::a('<i class="fa-solid fa-user-tag"></i>',['/hr/employees/select-emp'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
+             <?=Html::a('<i class="bi bi-person-badge"></i>',['/hr/employees/select-emp'],['class' => 'open-modal','data' => ['size' => 'modal-md']])?>
             </div>
             <div class="card-body">
                 <h6 class="fs-16 fw-bold mb-3">

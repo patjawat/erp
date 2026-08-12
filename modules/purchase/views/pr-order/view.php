@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
+<?php echo $this->render('@app/modules/sm/views/default/menu', ['active' => 'order']) ?>
 <?php $this->endBlock(); ?>
 
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
@@ -34,15 +34,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
-                            <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง</h6>
+                            <h6><i class="bi bi-info-circle text-primary"></i> ใบขอซื้อ/ขอจ้าง</h6>
                             <div class="dropdown float-end">
                                 <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0"
                                     data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-ellipsis"></i>
+                                    <i class="bi bi-three-dots"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                    <?= Html::a('<i class="fa-regular fa-file-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                    <?= Html::a('<i class="bi bi-pencil-square me-1"></i> แก้ไข', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                    <?= Html::a('<i class="bi bi-file-earmark-word me-1"></i> พิมพ์', ['/ms-word/purchase_3', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
 
                                 </div>
                             </div>
@@ -52,15 +52,15 @@ $this->params['breadcrumbs'][] = $this->title;
                             <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
                                 <li class="nav-item">
                                     <a class="nav-link active" data-bs-toggle="pill" href="#home1" role="pill"><i
-                                            class="fa-solid fa-circle-info"></i> รายละเอียดการขอซื้อ</a>
+                                            class="bi bi-info-circle"></i> รายละเอียดการขอซื้อ</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="pill" href="#menu12" role="pill"><i
-                                            class="fa-solid fa-user-tag"></i> กรรมการกำหนดรายละเอียด</a>
+                                            class="bi bi-person-badge"></i> กรรมการกำหนดรายละเอียด</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="pill" href="#menu22" role="pill"><i
-                                            class="fa-solid fa-users"></i> กรรมการตรวจรับ</a>
+                                            class="bi bi-people"></i> กรรมการตรวจรับ</a>
                                 </li>
                             </ul>
 
@@ -80,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
 
                         <div class="d-flex justify-content-between mt-5">
-                            <h6><i class="fa-solid fa-circle-info text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
+                            <h6><i class="bi bi-info-circle text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
 
                         </div>
                         <?= $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="d-grid gap-2">
 
                                     <?php if ($model->status == '' && count($model->ListOrderItems()) > 0): ?>
-                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', [
+                                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ส่งคำขอซื้อ', [
                             '/purchase/pr-order/pr-confirm',
                             'id' => $model->id,
                             'status' => 1,
@@ -98,7 +98,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <?php endif; ?>
 
                                     <?php if($model->status == 1 && $model->data_json['pr_leader_confirm'] == 'Y' && $model->data_json['pr_officer_checker'] == 'Y' && $model->data_json['pr_director_confirm'] == 'Y'):?>
-                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ลงทะเบียนคุม', [
+                                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ลงทะเบียนคุม', [
                             '/purchase/pq-order/update',
                             'id' => $model->id,
 

@@ -11,6 +11,10 @@ class ProbationTemplate extends ProbationActiveRecord
         [['description', 'effective_date'], 'safe'],
         [['name'], 'string', 'max' => 200],
         [['status'], 'in', 'range' => array_keys(self::statusOptions())],
+        [['revision_no'], 'unique',
+            'targetAttribute' => ['position_group_id', 'revision_no'],
+            'message' => 'กลุ่มวิชาชีพนี้มี Revision ดังกล่าวแล้ว',
+        ],
     ]; }
     public static function statusOptions() { return ['draft' => 'ฉบับร่าง', 'active' => 'ใช้งาน', 'retired' => 'เลิกใช้งาน']; }
     public function getItems() { return $this->hasMany(ProbationTemplateItem::class, ['template_id' => 'id'])->andWhere(['active' => 1])->orderBy(['sequence' => SORT_ASC, 'id' => SORT_ASC]); }

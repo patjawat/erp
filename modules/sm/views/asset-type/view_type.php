@@ -9,7 +9,7 @@ use app\components\CategoriseHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\am\models\Fsn $model */
 
-$this->title = '<i class="fa-solid fa-gear"></i> การตั้งค่าครุภัณฑ์';
+$this->title = '<i class="bi bi-gear"></i> การตั้งค่าครุภัณฑ์';
 $this->params['breadcrumbs'][] = ['label' => 'Fsns', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
@@ -30,7 +30,7 @@ $category_id = Yii::$app->request->get('category_id');
         class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
         <h5><?=$model->title?></h5>
     <div class="d-flex gap-2">
-                <?=  Html::a('<i class="fa-solid fa-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-type'],['class' => 'btn btn-light']) ?>
+                <?=  Html::a('<i class="bi bi-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-type'],['class' => 'btn btn-outline-secondary']) ?>
         </div>
 
     </div>

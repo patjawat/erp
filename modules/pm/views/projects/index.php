@@ -46,11 +46,28 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                         'attribute' => 'name',
                         'format' => 'raw',
                         'value' => function (Projects $m) {
-                            return Html::a(Html::encode($m->name), ['view', 'id' => $m->id], ['class' => 'fw-semibold text-decoration-none']);
+                            $link = Html::a(Html::encode($m->name), ['view', 'id' => $m->id], ['class' => 'fw-semibold text-decoration-none']);
+                            // โครงการในแผนบอกกลยุทธ์ที่รองรับ เพื่อให้เห็นที่มาโดยไม่ต้องเปิดดู
+                            if ($m->isInStrategy()) {
+                                $link .= '<div class="small text-muted">กลยุทธ์: ' . Html::encode($m->tactic->name ?? '-') . '</div>';
+                            }
+                            return $link;
                         },
                     ],
                     [
-                        'attribute' => 'department_id',
+                        'attribute' => 'work_type',
+                        'label' => 'ชนิดงาน',
+                        'format' => 'raw',
+                        'headerOptions' => ['style' => 'width:170px'],
+                        'value' => function (Projects $m) {
+                            $work = '<span class="badge ' . ($m->isActivity() ? 'bg-secondary-subtle text-secondary' : 'bg-success-subtle text-success') . '">'
+                                . Html::encode($m->workTypeLabel()) . '</span>';
+                            $plan = '<div class="small text-muted mt-1">' . Html::encode($m->strategyTypeLabel()) . '</div>';
+                            return $work . $plan;
+                        },
+                    ],
+                    [
+                        'attribute' => 'org_unit_id',
                         'label' => 'หน่วยงาน',
                         'value' => function (Projects $m) {
                             return $m->departmentPath();

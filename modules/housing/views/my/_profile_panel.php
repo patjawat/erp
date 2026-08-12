@@ -26,6 +26,38 @@ $yearOptions = [];
 for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
     $yearOptions[$year] = (string)($year + 543);
 }
+$vacancyGroups = ['house' => [], 'flat' => []];
+$flatBuildings = [];
+foreach ($vacancies ?? [] as $vacancy) {
+    if ($vacancy['building']->building_type === 'house') {
+        $vacancyGroups['house'][] = $vacancy;
+        continue;
+    }
+    $buildingId = (int)$vacancy['building']->id;
+    if (!isset($flatBuildings[$buildingId])) {
+        $flatBuildings[$buildingId] = [
+            'building' => $vacancy['building'],
+            'unit' => null,
+            'room' => null,
+            'vacancy_count' => 0,
+            'vacancies' => [],
+        ];
+    }
+    $flatBuildings[$buildingId]['vacancy_count']++;
+    $flatBuildings[$buildingId]['vacancies'][] = $vacancy;
+}
+$vacancyGroups['flat'] = array_values($flatBuildings);
+$vacancyType = (string)Yii::$app->request->get('housing_vacancy_type', 'house');
+if ($vacancyType === 'room') {
+    $vacancyType = 'flat';
+}
+if (!array_key_exists($vacancyType, $vacancyGroups)) {
+    $vacancyType = 'house';
+}
+$vacancyMeta = [
+    'house' => ['label' => 'บ้านพัก', 'summary' => 'หลังว่าง'],
+    'flat' => ['label' => 'แฟลต', 'summary' => 'อาคาร'],
+];
 ?>
 <style>
 .my-housing{--mh-border:var(--bs-border-color);--mh-soft:var(--bs-tertiary-bg);--mh-ink:var(--bs-emphasis-color);--mh-muted:var(--bs-secondary-color);color:var(--mh-ink)}
@@ -41,13 +73,26 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
 .my-housing .request-flow{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:1rem}
 .my-housing .flow-step{padding:.35rem .65rem;border-radius:999px;background:var(--bs-tertiary-bg);color:var(--bs-secondary-color);font-size:.78rem}
 .my-housing .flow-step.is-current{background:var(--bs-primary-bg-subtle);color:var(--bs-primary);font-weight:600}
-.my-housing .vacancy-summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
-.my-housing .vacancy-list{border:1px solid var(--mh-border);border-radius:.75rem;overflow:hidden}
-.my-housing .vacancy-item{display:grid;grid-template-columns:minmax(170px,1.25fr) minmax(130px,1fr) auto;gap:1rem;align-items:center;padding:.85rem 1rem;border-bottom:1px solid var(--mh-border)}
-.my-housing .vacancy-item:last-child{border-bottom:0}
-.my-housing .vacancy-item:hover{background:var(--bs-tertiary-bg)}
-.my-housing .vacancy-type{display:inline-flex;align-items:center;gap:.3rem;color:var(--bs-primary);font-size:.78rem}
+.my-housing .vacancy-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
+.my-housing .vacancy-switch{display:flex;gap:.35rem;padding:.3rem;margin-bottom:1rem;background:var(--bs-tertiary-bg);border-radius:.65rem;overflow-x:auto}
+.my-housing .vacancy-switch__item{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:42px;padding:.5rem .8rem;border-radius:.5rem;color:var(--bs-secondary-color);text-decoration:none;white-space:nowrap}
+.my-housing .vacancy-switch__item:hover{color:var(--bs-emphasis-color);background:var(--bs-body-bg)}
+.my-housing .vacancy-switch__item.is-active{color:var(--bs-primary-text-emphasis);background:var(--bs-body-bg);box-shadow:0 1px 2px var(--bs-border-color-translucent);font-weight:600}
+.my-housing .vacancy-switch__count{font-variant-numeric:tabular-nums}
+.my-housing .vacancy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+.my-housing .vacancy-list.is-flat{grid-template-columns:1fr;gap:.85rem}
+.my-housing .vacancy-item{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;min-height:96px;padding:.9rem 1rem;border:1px solid var(--mh-border);border-radius:.65rem;background:var(--bs-body-bg)}
+.my-housing .vacancy-item.is-flat{display:block;padding:0;overflow:hidden}
+.my-housing .vacancy-flat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:.9rem 1rem;background:var(--mh-soft);border-bottom:1px solid var(--mh-border)}
+.my-housing .vacancy-rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.55rem;padding:.85rem 1rem}
+.my-housing .vacancy-room{padding:.65rem .75rem;border:1px solid var(--mh-border);border-radius:.55rem;background:var(--bs-body-bg)}
+.my-housing .vacancy-room__name{font-weight:600}.my-housing .vacancy-room__meta{margin-top:.15rem;color:var(--bs-secondary-color);font-size:.76rem}
+.my-housing .vacancy-item:hover{border-color:var(--bs-success-border-subtle);background:var(--bs-success-bg-subtle)}
+.my-housing .vacancy-type{color:var(--bs-secondary-color);font-size:.76rem}
+.my-housing .vacancy-name{margin-top:.2rem;font-weight:600}
+.my-housing .vacancy-location{margin-top:.25rem;color:var(--bs-secondary-color);font-size:.8rem}
 .my-housing .vacancy-status{display:inline-flex;padding:.28rem .6rem;border-radius:999px;background:var(--bs-success-bg-subtle);color:var(--bs-success-text-emphasis);font-size:.78rem;font-weight:600}
+.my-housing .vacancy-empty{padding:2.5rem 1rem;border:1px dashed var(--mh-border);border-radius:.75rem;text-align:center}
 .my-housing .resident-section{margin-top:1rem;border:1px solid var(--mh-border);border-radius:.75rem;overflow:hidden}
 .my-housing .resident-section__head{display:flex;align-items-center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;background:var(--mh-soft);border-bottom:1px solid var(--mh-border)}
 .my-housing .resident-section__body{padding:1rem}.my-housing .housing-photo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.65rem}
@@ -59,7 +104,7 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
 .my-housing .housing-tabs{display:flex;gap:.25rem;margin-top:1rem;padding:.3rem;background:var(--bs-tertiary-bg);border-radius:.65rem;overflow-x:auto}.my-housing .housing-tab{display:inline-flex;align-items:center;justify-content:center;min-height:40px;gap:.4rem;padding:.45rem .75rem;color:var(--bs-secondary-color);border-radius:.5rem;text-decoration:none;white-space:nowrap}.my-housing .housing-tab:hover{color:var(--bs-emphasis-color);background:var(--bs-body-bg)}.my-housing .housing-tab.is-active{color:var(--bs-primary-text-emphasis);background:var(--bs-body-bg);box-shadow:0 1px 2px var(--bs-border-color-translucent);font-weight:600}.my-housing .housing-tab:focus-visible{outline:3px solid var(--bs-primary-bg-subtle)}
 .my-housing .overview-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:1rem;border:1px solid var(--mh-border);border-radius:.75rem;overflow:hidden}.my-housing .overview-cell{padding:.85rem 1rem;border-right:1px solid var(--mh-border)}.my-housing .overview-cell:last-child{border-right:0}.my-housing .overview-cell strong{display:block;margin-top:.15rem;font-variant-numeric:tabular-nums}.my-housing .filter-bar{display:flex;flex-wrap:wrap;gap:.65rem;align-items:end;padding:1rem;background:var(--mh-soft);border-bottom:1px solid var(--mh-border)}.my-housing .filter-field{min-width:150px}.my-housing .filter-field label{display:block;margin-bottom:.25rem;color:var(--mh-muted);font-size:.76rem;font-weight:600}.my-housing .filter-field .form-control,.my-housing .filter-field .form-select{min-height:40px}
 @media(max-width:575.98px){.my-housing .housing-intro{grid-template-columns:1fr}.my-housing .housing-details{grid-template-columns:1fr}}
-@media(max-width:767.98px){.my-housing .vacancy-item{grid-template-columns:1fr auto}.my-housing .vacancy-location{grid-column:1/-1;grid-row:2}.my-housing .asset-row{grid-template-columns:1fr auto}.my-housing .asset-condition{grid-column:1/-1}.my-housing .history-summary,.my-housing .overview-strip{grid-template-columns:1fr}.my-housing .overview-cell{border-right:0;border-bottom:1px solid var(--mh-border)}.my-housing .overview-cell:last-child{border-bottom:0}.my-housing .history-row summary{grid-template-columns:1fr auto}.my-housing .history-row .history-mobile-full{grid-column:1/-1}.my-housing .repair-row{grid-template-columns:1fr}.my-housing .repair-row>*{grid-column:1}.my-housing .filter-field{min-width:100%;flex:1}}
+@media(max-width:767.98px){.my-housing .vacancy-list{grid-template-columns:1fr}.my-housing .asset-row{grid-template-columns:1fr auto}.my-housing .asset-condition{grid-column:1/-1}.my-housing .history-summary,.my-housing .overview-strip{grid-template-columns:1fr}.my-housing .overview-cell{border-right:0;border-bottom:1px solid var(--mh-border)}.my-housing .overview-cell:last-child{border-bottom:0}.my-housing .history-row summary{grid-template-columns:1fr auto}.my-housing .history-row .history-mobile-full{grid-column:1/-1}.my-housing .repair-row{grid-template-columns:1fr}.my-housing .repair-row>*{grid-column:1}.my-housing .filter-field{min-width:100%;flex:1}}
 </style>
 <section class="my-housing">
 <div class="housing-panel">
@@ -78,34 +123,66 @@ for ($year = (int)date('Y'); $year >= (int)date('Y') - 9; $year--) {
     <?php elseif ($mode === 'applicant'): ?>
         <div class="vacancy-summary">
             <div><h2 class="h6 mb-1">กระดานบ้านพักว่าง</h2><div class="small text-body-secondary">ข้อมูลบ้านพัก แฟลต และห้องที่ว่างในปัจจุบัน</div></div>
-            <span class="badge bg-primary-subtle text-primary-emphasis"><?= count($vacancies ?? []) ?> รายการว่าง</span>
+            <span class="badge bg-success-subtle text-success-emphasis"><?= count($vacancyGroups[$vacancyType]) ?> <?= Html::encode($vacancyMeta[$vacancyType]['summary']) ?></span>
         </div>
-        <?php if (!empty($vacancies)): ?>
-        <div class="vacancy-list">
-            <?php foreach ($vacancies as $vacancy):
+        <nav class="vacancy-switch" aria-label="เลือกประเภทที่พักว่าง">
+            <?php foreach ($vacancyMeta as $type => $meta): ?>
+                <?= Html::a(
+                    Html::encode($meta['label']) . ' <span class="vacancy-switch__count">' . count($vacancyGroups[$type]) . '</span>',
+                    ['/profile', 'name' => 'housing', 'housing_vacancy_type' => $type],
+                    ['class' => 'vacancy-switch__item ' . ($vacancyType === $type ? 'is-active' : ''), 'aria-current' => $vacancyType === $type ? 'page' : null]
+                ) ?>
+            <?php endforeach; ?>
+        </nav>
+        <?php if ($vacancyGroups[$vacancyType] !== []): ?>
+        <div class="vacancy-list <?= $vacancyType === 'flat' ? 'is-flat' : '' ?>" role="list">
+            <?php foreach ($vacancyGroups[$vacancyType] as $vacancy):
                 $building = $vacancy['building'];
                 $unit = $vacancy['unit'];
                 $room = $vacancy['room'];
+                $locationParts = [$unit?->floor?->name, $unit?->code];
             ?>
-            <div class="vacancy-item">
-                <div>
-                    <div class="vacancy-type"><i class="bi <?= $building->building_type === 'house' ? 'bi-house' : 'bi-building' ?>"></i><?= Html::encode($building->building_type === 'house' ? 'บ้านพัก' : 'แฟลต') ?></div>
-                    <div class="fw-semibold mt-1"><?= Html::encode($building->name) ?></div>
+            <div class="vacancy-item <?= $vacancyType === 'flat' ? 'is-flat' : '' ?>" role="listitem">
+                <?php if ($vacancyType === 'flat'): ?>
+                <div class="vacancy-flat-head">
+                    <div>
+                        <div class="vacancy-type"><?= Html::encode($vacancyMeta[$vacancyType]['label']) ?></div>
+                        <div class="vacancy-name"><?= Html::encode($building->name) ?></div>
+                    </div>
+                    <span class="vacancy-status"><?= number_format((int)$vacancy['vacancy_count']) ?> ห้องว่าง</span>
                 </div>
-                <div class="vacancy-location">
-                    <div><?= Html::encode($unit
-                        ? implode(' / ', array_filter([$unit->floor?->name, $unit->name, $room?->name]))
-                        : 'ว่างทั้งหลัง') ?></div>
-                    <div class="small text-body-secondary"><?= Html::encode($building->address ?: 'ยังไม่ระบุที่ตั้ง') ?></div>
+                <div class="vacancy-rooms" aria-label="ห้องว่างใน <?= Html::encode($building->name) ?>">
+                    <?php foreach ($vacancy['vacancies'] as $flatVacancy):
+                        $flatUnit = $flatVacancy['unit'];
+                        $flatRoom = $flatVacancy['room'];
+                        $roomName = $flatRoom?->code ? 'ห้อง ' . $flatRoom->code : ($flatUnit?->name ?: $flatUnit?->code);
+                        $roomMeta = array_filter([$flatUnit?->floor?->name, $flatUnit?->code]);
+                    ?>
+                    <div class="vacancy-room">
+                        <div class="vacancy-room__name"><?= Html::encode($roomName) ?></div>
+                        <?php if ($roomMeta !== []): ?><div class="vacancy-room__meta"><?= Html::encode(implode(' · ', $roomMeta)) ?></div><?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <div>
+                    <div class="vacancy-type"><?= Html::encode($vacancyMeta[$vacancyType]['label']) ?></div>
+                    <div class="vacancy-name"><?= Html::encode($building->name) ?></div>
+                    <div class="vacancy-location"><?= Html::encode(match ($vacancyType) {
+                        'house' => 'ว่างทั้งหลัง',
+                        'flat' => number_format((int)$vacancy['vacancy_count']) . ' ห้องว่าง',
+                        default => implode(' · ', array_filter($locationParts)),
+                    }) ?></div>
                 </div>
                 <span class="vacancy-status">ว่าง</span>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
         <?php else: ?>
-        <div class="housing-intro">
-            <div class="housing-icon"><i class="bi bi-house"></i></div>
-            <div><h2 class="h6 mb-1">ยังไม่มีที่พักว่าง</h2><p class="text-body-secondary mb-0">ขณะนี้ยังไม่มีบ้านพักหรือห้องว่าง สามารถกลับมาตรวจสอบข้อมูลได้ภายหลัง</p></div>
+        <div class="vacancy-empty">
+            <div class="fw-semibold">ยังไม่มี<?= Html::encode($vacancyMeta[$vacancyType]['label']) ?>ว่าง</div>
+            <div class="small text-body-secondary mt-1">เลือกประเภทอื่นเพื่อตรวจสอบรายการว่าง</div>
         </div>
         <?php endif; ?>
     <?php elseif ($mode === 'request'): ?>

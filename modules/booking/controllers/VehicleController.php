@@ -29,6 +29,7 @@ use app\modules\booking\models\VehicleDetail;
 use app\modules\booking\models\VehicleSearch;
 use app\modules\booking\models\VehicleDetailSearch;
 use app\modules\booking\components\VehicleTelegramNotify;
+use app\modules\hr\models\Development;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -790,6 +791,32 @@ class VehicleController extends Controller
         }
     }
 
+    //แสดง พขร. ที่ลา/ไปอบรม-ไปราชการ ในวันที่เลือก
+    public function actionDriverStatus()
+    {
+        $date = (string) $this->request->get('date', '');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $date = date('Y-m-d');
+        }
+
+        $summary = Vehicle::driverStatusByDate($date);
+
+        if ($this->request->isAjax) {
+            \Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'title' => 'พนักงานขับรถไม่พร้อมปฏิบัติงาน',
+                'content' => $this->renderAjax('_driver_status', [
+                    'summary' => $summary,
+                ]),
+            ];
+        }
+
+        return $this->render('_driver_status', [
+            'summary' => $summary,
+        ]);
+    }
+
     //แสดงการจองรถวันพรุ่งนี้
     public function actionListEventTomorrow()
     {
@@ -1065,6 +1092,11 @@ class VehicleController extends Controller
         ]);
         $model->leader_id = isset($model->Approve()['approve_1']['id']) ? $model->Approve()['approve_1']['id'] : '';
 
+        // เปิดจากทะเบียนอบรม/ประชุม/ดูงาน → เติมข้อมูลจากใบขออนุญาตไปราชการต้นเรื่องให้เลย
+        if (!$this->request->isPost) {
+            $this->prefillFromDevelopment($model, $this->request->get('development_id'));
+        }
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -1111,6 +1143,59 @@ class VehicleController extends Controller
         }
     }
 
+
+    /**
+     * เติมข้อมูลใบจองรถจากใบขออนุญาตไปราชการที่เป็นต้นเรื่อง
+     *
+     * เรียกตอนเปิดฟอร์มจากเมนู «ขอใช้รถ» ในทะเบียนอบรม/ประชุม/ดูงาน
+     * ค่าที่เติมยังแก้ได้ทั้งหมดในฟอร์ม — ที่นี่แค่ลดการพิมพ์ซ้ำ
+     *
+     * @param mixed $developmentId id ของใบไปราชการ (NULL = เปิดฟอร์มจองรถตามปกติ)
+     */
+    protected function prefillFromDevelopment(Vehicle $model, $developmentId): void
+    {
+        if (empty($developmentId)) {
+            return;
+        }
+        $development = Development::findOne((int) $developmentId);
+        if (!$development) {
+            return;
+        }
+
+        $dataJson = is_array($development->data_json) ? $development->data_json : [];
+
+        $model->development_id = (int) $development->id;
+        $model->reason = (string) $development->topic;
+        $model->location = (string) ($dataJson['location'] ?? '');
+        $model->time_start = (string) ($dataJson['vehicle_time_start'] ?? '');
+        $model->time_end = (string) ($dataJson['vehicle_time_end'] ?? '');
+
+        // วันเดินทางใช้วันออก/กลับของยานพาหนะก่อน ถ้าไม่ได้ระบุจึงใช้ช่วงวันไปราชการ
+        $start = $development->vehicle_date_start ?: $development->date_start;
+        $end = $development->vehicle_date_end ?: $development->date_end;
+        $model->date_start = $start ? AppHelper::convertToThai($start) : '';
+        $model->date_end = $end ? AppHelper::convertToThai($end) : '';
+        $model->go_type = ($start && $end && $start !== $end) ? 2 : 1;
+
+        if (!empty($development->leader_id)) {
+            $model->leader_id = $development->leader_id;
+        }
+        if (!empty($development->document_id)) {
+            $model->document_id = $development->document_id;
+        }
+
+        // คณะเดินทางในใบไปราชการ → ผู้ร่วมเดินทางในใบจองรถ (ไม่รวมตัวผู้ขอเอง)
+        $companions = [];
+        foreach ($development->listMemberPrint() as $member) {
+            if (!empty($member->emp_id)) {
+                $companions[] = (string) $member->emp_id;
+            }
+        }
+        $model->data_json = array_merge(
+            is_array($model->data_json) ? $model->data_json : [],
+            ['companions' => $companions]
+        );
+    }
 
     /**
      * Updates an existing Vehicle model.

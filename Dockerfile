@@ -29,13 +29,43 @@ RUN apt update && apt install -y nano default-mysql-client
 
 # Some packages (notably google/apiclient-services) contain many files and can
 # take longer than Composer's default process timeout to extract in Docker.
-ENV COMPOSER_PROCESS_TIMEOUT=0
+# Keep Composer downloads in a BuildKit cache so a transient network failure
+# does not force the next attempt/build to download every package again.
+ENV COMPOSER_PROCESS_TIMEOUT=0 \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache \
+    COMPOSER_MAX_PARALLEL_HTTP=4
 
-# Step 3: Copy ไฟล์ที่จำเป็นไปยัง image
+# Step 3: ติดตั้ง dependencies ก่อน copy source ทั้งหมด
+# copy เฉพาะ composer.json/composer.lock ก่อน แล้วโหลด deps — layer นี้จะถูก cache
+# ไว้ตราบใดที่ 2 ไฟล์นี้ไม่เปลี่ยน (แก้โค้ด .php ทั่วไปจะไม่ทำให้ต้องโหลด deps ใหม่)
+# ใช้ --no-scripts --no-autoloader เพราะ post-install script ต้องใช้ไฟล์ config
+# ที่ยังไม่ได้ copy เข้ามาในสเต็ปนี้
+COPY composer.json composer.lock /app/
+RUN --mount=type=cache,target=/tmp/composer-cache,sharing=locked \
+    set -eu; \
+    attempt=1; \
+    while true; do \
+        set +e; \
+        composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress \
+            --no-scripts --no-autoloader; \
+        status=$?; \
+        set -e; \
+        if [ "$status" -eq 0 ]; then \
+            break; \
+        fi; \
+        if [ "$status" -ne 100 ] || [ "$attempt" -ge 3 ]; then \
+            exit "$status"; \
+        fi; \
+        delay=$((attempt * 15)); \
+        echo "Composer transport failure (exit 100); retrying in ${delay}s..." >&2; \
+        sleep "$delay"; \
+        attempt=$((attempt + 1)); \
+    done
+
+# Step 4: Copy source ที่เหลือ แล้วรัน composer อีกครั้งเพื่อ gen autoloader + scripts
+# ตอนนี้ deps อยู่ใน vendor แล้ว (vendor/ อยู่ใน .dockerignore จึงไม่ถูกทับ) สเต็ปนี้
+# จะไม่ download อะไรใหม่ ทำแค่ dump-autoload + post-install scripts จึงเร็ว
 COPY ./ /app/
-
-# Step 4: ติดตั้ง dependencies ผ่าน composer
-
 RUN composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
@@ -87,4 +117,3 @@ ENV TZ=Asia/Bangkok
 
 # Set PHP timezone configuration
 RUN echo "date.timezone=Asia/Bangkok" > /usr/local/etc/php/conf.d/timezone.ini
-

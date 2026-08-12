@@ -60,7 +60,7 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
             ['label' => 'ยังไม่ได้กำหนด JD', 'value' => $metrics['jd_missing'], 'icon' => 'bi-file-earmark-x', 'color' => 'danger'],
         ]]) ?>
         <div class="mt-3">
-            <?= $this->render('_jd_registry', compact('jdDataProvider', 'jdByEmployee', 'approvalByJd', 'acknowledgedJdIds', 'showAll')) ?>
+            <?= $this->render('_jd_registry', compact('jdDataProvider', 'jdByEmployee', 'approvalByJd', 'acknowledgedJdIds', 'showAll', 'jdDepartments', 'jdPositions', 'jdEmployeeTypes')) ?>
         </div>
     <?php elseif ($section === 'kpi'): ?>
         <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [

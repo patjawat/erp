@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-primary-gradient text-center text-lg-start">
   <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
-    <i class="fa-solid fa-truck-fast"></i>
+    <i class="bi bi-truck"></i>
     <?= $this->title ?>
   </h4>
 </div>
@@ -47,8 +47,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row g-3">
         <div class="col-12">
             <div class="card">
-                <div class="card-header table-light">
-                    <h6 class="mb-0"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
+                <div class="card-header bg-body-tertiary">
+                    <h6 class="mb-0"><i class="bi bi-search"></i> การค้นหา</h6>
                 </div>
                 <div class="card-body">
                     <?= $this->render('_search', ['model' => $searchModel]) ?>
@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="col-12">
             <div class="card">
-                <div class="card-header table-light">
+                <div class="card-header bg-body-tertiary">
                     <div class="d-flex flex-wrap flex-md-nowrap justify-content-between align-items-center gap-2">
                         <h6 class="mb-0">
                             <i class="bi bi-ui-checks"></i> รายการผู้แทนจำหน่าย
@@ -85,8 +85,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php if ($missingCodeCount > 0 || $missingCodeFilterActive): ?>
                             <?= Html::a(
                                 ($missingCodeFilterActive
-                                    ? '<i class="fa-solid fa-list"></i> แสดงรายการทั้งหมด'
-                                    : '<i class="fa-solid fa-gear"></i> ตั้งค่ารหัสที่ยังไม่ครบ'
+                                    ? '<i class="bi bi-list-ul"></i> แสดงรายการทั้งหมด'
+                                    : '<i class="bi bi-gear"></i> ตั้งค่ารหัสที่ยังไม่ครบ'
                                         . ' <span class="badge bg-warning text-dark ms-1">' . $missingCodeCount . '</span>'),
                                 $missingCodeToggleUrl,
                                 [
@@ -98,19 +98,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?php endif; ?>
                             <?php if ($missingCodeCount > 0): ?>
                             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAssignVendorCodes" title="กำหนดรหัสแบบ V001, V002, … อัตโนมัติ">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> กำหนดรหัสอัตโนมัติ
+                                <i class="bi bi-magic"></i> กำหนดรหัสอัตโนมัติ
                             </button>
                             <?php endif; ?>
-                            <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create','title' => 'สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                            <?= Html::a('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['create','title' => 'สร้างใหม่'], ['class' => 'btn btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             <div class="dropdown">
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fa-solid fa-file-excel"></i> Excel
+                                    <i class="bi bi-file-earmark-excel"></i> Excel
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><?= Html::a('<i class="fa-solid fa-table me-2"></i> ดาวน์โหลด Template (Google Sheet)', 'https://docs.google.com/spreadsheets/d/1ofAIy6K0JG1zm2FZO9w42wPx9-2LD1rLxb5NZOt5iL0/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener']) ?></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-file-excel me-2"></i> ส่งออกข้อมูล Vendor', ['/sm/vendor/export-vendor'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
+                                    <li><?= Html::a('<i class="bi bi-table me-2"></i> ดาวน์โหลด Template (Google Sheet)', 'https://docs.google.com/spreadsheets/d/1ofAIy6K0JG1zm2FZO9w42wPx9-2LD1rLxb5NZOt5iL0/edit?usp=sharing', ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener']) ?></li>
+                                    <li><?= Html::a('<i class="bi bi-file-earmark-excel me-2"></i> ส่งออกข้อมูล Vendor', ['/sm/vendor/export-vendor'], ['class' => 'dropdown-item', 'target' => '_blank', 'rel' => 'noopener', 'data-pjax' => 0]) ?></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><?= Html::a('<i class="fa-solid fa-file-import me-2"></i> นำเข้าข้อมูล', ['/sm/vendor/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
+                                    <li><?= Html::a('<i class="bi bi-box-arrow-in-down me-2"></i> นำเข้าข้อมูล', ['/sm/vendor/import'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
                                 </ul>
                             </div>
                         </div>
@@ -143,7 +143,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-body-tertiary">
                                 <tr>
                                     <th class="text-center" style="width: 48px">#</th>
                                     <th class="fw-semibold">รหัส</th>
@@ -160,7 +160,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php if ($dataProvider->getTotalCount() === 0): ?>
                                 <tr>
                                     <td colspan="9" class="text-center text-muted py-5">
-                                        <i class="fa-solid fa-inbox fa-2x mb-2 opacity-50"></i>
+                                        <i class="bi bi-inbox fs-3 mb-2 opacity-50"></i>
                                         <p class="mb-0">ยังไม่มีข้อมูลผู้แทนจำหน่าย</p>
                                         <small>คลิก «สร้างใหม่» หรือ «นำเข้าข้อมูล» เพื่อเพิ่มรายการ</small>
                                     </td>
@@ -214,17 +214,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <td class="text-end">
                                         <div class="d-inline-flex justify-content-end align-items-center gap-1 flex-wrap">
                                         <?php if ($vendorCodeNeedsSetup): ?>
-                                        <?= Html::a('<i class="fa-solid fa-gear"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-warning btn-sm open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'ตั้งค่ารหัส']) ?>
+                                        <?= Html::a('<i class="bi bi-gear"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-warning btn-sm open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'ตั้งค่ารหัส']) ?>
                                         <?php endif; ?>
                                         <div class="btn-group btn-group-sm">
-                                            <?= Html::a('<i class="fa-solid fa-pen-to-square"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'แก้ไข']) ?>
+                                            <?= Html::a('<i class="bi bi-pencil-square"></i>', ['update', 'id' => $item->id], ['class' => 'btn btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg'], 'title' => 'แก้ไข']) ?>
                                             <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                                                 <span class="visually-hidden">เมนู</span>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><?= Html::a('<i class="fa-solid fa-eye me-2"></i> แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
+                                                <li><?= Html::a('<i class="bi bi-eye me-2"></i> แสดง', ['view', 'id' => $item->id], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?></li>
                                                 <li><hr class="dropdown-divider"></li>
-                                                <li><?= Html::a('<i class="fa-solid fa-trash me-2"></i> ลบ', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item text-danger']) ?></li>
+                                                <li><?= Html::a('<i class="bi bi-trash me-2"></i> ลบ', ['delete', 'id' => $item->id], ['class' => 'dropdown-item delete-item text-danger']) ?></li>
                                             </ul>
                                         </div>
                                         </div>
@@ -235,13 +235,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer text-muted d-flex justify-content-center mt-3">
-                        <?= \yii\bootstrap5\LinkPager::widget([
-                            'pagination' => $dataProvider->pagination,
-                            'firstPageLabel' => 'หน้าแรก',
-                            'lastPageLabel' => 'หน้าสุดท้าย',
-                            'options' => ['class' => 'pagination pagination-sm mb-0'],
-                        ]) ?>
+                    <div class="card-footer bg-body-tertiary">
+                        <?= app\components\widgets\DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?>
                     </div>
                 </div>
             </div>
@@ -257,7 +252,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
             <?= Html::hiddenInput('index_query', $indexQueryString) ?>
             <div class="modal-header">
-                <h5 class="modal-title" id="modalAssignVendorCodesLabel"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>กำหนดรหัสอัตโนมัติ</h5>
+                <h5 class="modal-title" id="modalAssignVendorCodesLabel"><i class="bi bi-magic me-2"></i>กำหนดรหัสอัตโนมัติ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -281,7 +276,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <?= Html::submitButton('<i class="fa-solid fa-check me-1"></i> ดำเนินการ', ['class' => 'btn btn-primary']) ?>
+                <?= Html::submitButton('<i class="bi bi-check-lg me-1"></i> ดำเนินการ', ['class' => 'btn btn-primary']) ?>
             </div>
             <?= Html::endForm() ?>
         </div>

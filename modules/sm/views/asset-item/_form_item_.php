@@ -98,11 +98,11 @@ use unclead\multipleinput\MultipleInput;
         'addButtonPosition' => MultipleInput::POS_HEADER,
         'addButtonOptions' => [
             'class' => 'btn btn-sm btn-primary',
-            'label' => '<i class="fa-solid fa-circle-plus"></i>' // also you can use html code
+            'label' => '<i class="bi bi-plus-circle"></i>' // also you can use html code
         ],
         'removeButtonOptions' => [
             'class' => 'btn btn-sm btn-danger',
-            'label' => '<i class="fa-solid fa-trash"></i>'
+            'label' => '<i class="bi bi-trash"></i>'
         ],
     
     ])

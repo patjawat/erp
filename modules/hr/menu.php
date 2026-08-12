@@ -28,7 +28,7 @@ use yii\helpers\Url;
     <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
     <a href="<?= Url::to(['/hr/workforce/index']) ?>"
        aria-label="งาน HRD"
-       class="btn <?= in_array($active, ['workforce', 'idp', 'training-roadmap', 'jd', 'appraisal', 'exit'], true) ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+       class="btn <?= in_array($active, ['workforce', 'idp', 'training-roadmap', 'jd', 'appraisal', 'exit', 'talent', 'core'], true) ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
        data-pjax="0">
         <i data-lucide="briefcase-business" width="16" height="16" aria-hidden="true"></i>
         <span class="d-none d-sm-inline">งาน HRD</span>

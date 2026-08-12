@@ -8,14 +8,14 @@ use yii\web\View;
 <div class="card" style="height: 435px;">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <p><i class="fa-solid fa-user-check text-black-50"></i> ขอซื้อ</p>
+                    <p><i class="bi bi-person-check text-black-50"></i> ขอซื้อ</p>
                     <div class="dropdown float-end">
                         <a href="javascript:void(0)" class="rounded-pill dropdown-toggle me-0" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="fa-solid fa-ellipsis"></i>
+                            <i class="bi bi-three-dots"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <?= Html::a('<i class="fa-solid fa-circle-info text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
+                            <?= Html::a('<i class="bi bi-info-circle text-primary me-2"></i> เพิ่มเติม', ['/sm/order'], ['class' => 'dropdown-item']) ?>
                         </div>
                     </div>
                 </div>

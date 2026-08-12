@@ -49,7 +49,7 @@ use kartik\select2\Select2;
 
 <?php if($dataProvider->getTotalCount() == 0 ):?>
     <div class="form-group mt-4">
-        <?= Html::submitButton('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['class' => 'btn btn-primary']) ?>
+        <?= Html::submitButton('<i class="bi bi-plus-circle"></i> สร้างใหม่', ['class' => 'btn btn-primary']) ?>
     </div>
     <?php endif;?>
 

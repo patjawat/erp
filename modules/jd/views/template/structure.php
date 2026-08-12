@@ -9,6 +9,7 @@ use kartik\select2\Select2Asset;
 
 /** @var yii\web\View $this */
 /** @var app\modules\jd\models\JdTemplate $model */
+/** @var array<string, app\modules\jd\models\JdStructureDefault> $structureDefaults */
 
 $this->title = 'สร้าง Template JD: ' . $model->name;
 $this->params['breadcrumbs'][] = ['label' => 'Template JD', 'url' => ['index']];
@@ -50,6 +51,7 @@ foreach ($model->blocks as $summaryBlock) {
 <div class="jd-toolbar">
     <?= Html::a('<i class="bi bi-arrow-left me-1"></i>คลัง Template', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::a('<i class="bi bi-pencil me-1"></i>ข้อมูล Template', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::a('<i class="bi bi-list-nested me-1"></i>จัดการโครงสร้าง', ['default-structure'], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::beginForm(['copy', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?><?= Html::submitButton('<i class="bi bi-copy me-1"></i>คัดลอก', ['class' => 'btn btn-outline-secondary']) ?><?= Html::endForm() ?>
     <?= Html::beginForm(['new-revision', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?><?= Html::submitButton('<i class="bi bi-file-earmark-plus me-1"></i>สร้าง JD', ['class' => 'btn btn-outline-secondary']) ?><?= Html::endForm() ?>
     <?php if (JdAiDraftService::isConfigured()): ?>
@@ -93,7 +95,8 @@ foreach ($model->blocks as $summaryBlock) {
         ?>
         <section class="jd-section" id="block-<?= Html::encode($block->section_code) ?>" data-block data-code="<?= Html::encode($block->section_code) ?>" data-columns='<?= Html::encode(Json::htmlEncode($columns)) ?>'>
             <header class="jd-section__head">
-                <div><h5 class="fw-semibold mb-1"><?= Html::encode($block->title) ?></h5><div class="small text-muted"><?= Html::encode($sectionHelp[$block->section_code] ?? 'เพิ่ม แก้ไข หรือลบรายการตามความเหมาะสมของตำแหน่ง') ?></div></div>
+                <?php $customHelp = $structureDefaults[$block->section_code]->help_text ?? ''; ?>
+                <div><h5 class="fw-semibold mb-1"><?= Html::encode($block->title) ?></h5><div class="small text-muted"><?= Html::encode($customHelp ?: ($sectionHelp[$block->section_code] ?? 'เพิ่ม แก้ไข หรือลบรายการตามความเหมาะสมของตำแหน่ง')) ?></div></div>
                 <button type="button" class="btn btn-sm btn-outline-primary" data-add><i class="bi bi-plus-lg me-1"></i><?= $editorType === 'approval' ? 'เพิ่มผู้ลงนาม' : ($editorType === 'competency' ? 'เพิ่มสมรรถนะ' : 'เพิ่มรายการ') ?></button>
             </header>
             <div class="jd-section__body">

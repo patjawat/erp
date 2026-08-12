@@ -70,6 +70,8 @@ class DevelopmentController extends Controller
 
         $dataProvider->query->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC]);
         $dataProvider->query->groupBy('development_detail.id');
+        // ทะเบียนแสดงคอลัมน์สถานะสรุปผลต่อแถว — โหลดล่วงหน้ากันยิง query รายแถว
+        $dataProvider->query->with('summaryReport');
 
         return $this->render('index', [
             'searchModel' => $searchModel,

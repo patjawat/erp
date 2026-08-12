@@ -60,9 +60,11 @@ class ProbationAppraisalService
         return $target->setDate((int) $target->format('Y'), (int) $target->format('m'), $day)->format('Y-m-d');
     }
 
-    public function submitEvaluation(ProbationEvaluation $evaluation, array $submittedScores): void
+    public function submitEvaluation(ProbationEvaluation $evaluation, array $submittedScores, string $comment): void
     {
         if ($evaluation->status !== 'open') throw new \DomainException('แบบประเมินนี้ยังไม่เปิดให้บันทึก');
+        $comment = trim($comment);
+        if ($comment === '') throw new \DomainException('กรุณาระบุความคิดเห็นหรือข้อเสนอแนะ');
         $evaluation->populateRelation('round', $evaluation->round);
         $items = $evaluation->round->case->template->items;
         if (!$items) throw new \DomainException('Template ไม่มีข้อประเมิน');
@@ -74,15 +76,16 @@ class ProbationAppraisalService
                 $key = (string) $item->id;
                 if (!array_key_exists($key, $submittedScores) || $submittedScores[$key] === '') throw new \DomainException('กรุณาให้คะแนนทุกข้อ');
                 $score = (float) $submittedScores[$key];
-                if ($score < 0 || $score > (float) $item->max_score) throw new \DomainException('คะแนนต้องอยู่ระหว่าง 0 ถึงคะแนนเต็ม');
+                if ($score < 1 || $score > 5) throw new \DomainException('คะแนนต้องอยู่ระหว่าง 1 ถึง 5');
                 if (abs($score - round($score)) > 0.00001) throw new \DomainException('คะแนนต้องเป็นจำนวนเต็ม');
                 $row = new ProbationEvaluationScore(['evaluation_id' => $evaluation->id, 'template_item_id' => $item->id, 'score' => $score]);
                 if (!$row->save()) throw new \RuntimeException(implode(', ', $row->getFirstErrors()));
-                $total += $score; $max += (float) $item->max_score;
+                $total += $score; $max += 5;
             }
             $evaluation->total_score = $total;
             $evaluation->max_score = $max;
             $evaluation->percent_score = $max > 0 ? round($total * 100 / $max, 2) : 0;
+            $evaluation->comment = $comment;
             $evaluation->status = 'submitted';
             $evaluation->submitted_at = date('Y-m-d H:i:s');
             if (!$evaluation->save()) throw new \RuntimeException(implode(', ', $evaluation->getFirstErrors()));

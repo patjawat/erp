@@ -32,5 +32,5 @@ use app\components\SiteHelper;
 </table>
 
 <div class="d-flex justify-content-center mt-3">
-    <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำขอซื้อ'], ['class' => 'btn btn-warning rounded-pill shadow text-center open-modal', 'data' => ['size' => 'modal-md']]) ?>
+    <?= Html::a('<i class="bi bi-pencil-square"></i> แก้ไข', ['/purchase/pr-order/update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไขคำขอซื้อ'], ['class' => 'btn btn-warning shadow text-center open-modal', 'data' => ['size' => 'modal-md']]) ?>
 </div>

@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-action'); ?>
-<?php echo $this->render('@app/modules/sm/views/default/menu') ?>
+<?php echo $this->render('@app/modules/sm/views/default/menu', ['active' => 'order']) ?>
 <?php $this->endBlock(); ?>
 
 <div class="card">

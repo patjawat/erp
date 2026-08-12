@@ -9,7 +9,7 @@ use yii\helpers\Html;
         <div class="alert alert-<?=$status == true ? 'success' : 'danger'?>" role="alert">
             <h4 class="alert-heading"><i class="bi bi-check-circle-fill"></i> แจ้งเตือน!</h4>
             <p>ดำเนินการเพิ่มข้อมูลจากไฟล์ CSV สำเร็จ</p>
-            <?php echo Html::a('<i class="fa-regular fa-thumbs-up"></i> ดำเนินการสำเร็จ !',['/sm/vendor/'],['class' => $status == true ? 'btn btn-success' : 'btn btn-danger' ])?>
+            <?php echo Html::a('<i class="bi bi-hand-thumbs-up"></i> ดำเนินการสำเร็จ !',['/sm/vendor/'],['class' => $status == true ? 'btn btn-success' : 'btn btn-danger' ])?>
         </div>
 
 
@@ -28,7 +28,7 @@ use yii\helpers\Html;
                 <li><p><?= $x ?></p></li>
             <?php endforeach;?>
             </ul>
-            <?php echo Html::a('<i class="fa-solid fa-rotate-left"></i> ย้อนกลับ !',['/sm/vendor/import-csv'],['class' => $status == true ? 'btn btn-success' : 'btn btn-danger' ])?>
+            <?php echo Html::a('<i class="bi bi-arrow-counterclockwise"></i> ย้อนกลับ !',['/sm/vendor/import-csv'],['class' => $status == true ? 'btn btn-success' : 'btn btn-danger' ])?>
         </div>
     </div>
 </div>

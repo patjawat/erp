@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('action'); ?>
 <a href="<?= Url::to(['/purchase/order']) ?>"
-    class="btn btn-primary rounded-pill">
+    class="btn btn-primary">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-move-left-icon lucide-move-left">
         <path d="M6 8L2 12L6 16" />
         <path d="M2 12H22" />
@@ -38,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-4">
             <div class="card text-bg-secondary mb-3" style="max-width: 18rem;">
                 <div class="card-body">
-                    <div class="text-white h5"><i class="fa-solid fa-triangle-exclamation text-danger"></i> รายการถูกยกเลิก</div>
+                    <div class="text-white h5"><i class="bi bi-exclamation-triangle text-danger"></i> รายการถูกยกเลิก</div>
                     <p class="card-text"><?php echo $model->data_json['cancel_order_note'] ?? '-' ?></p>
                 </div>
             </div>
@@ -63,9 +63,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-8">
             <div class="card">
                 <div class="card-body d-flex justify-content-between align-items-center">
-                    <h6><i class="fa-solid fa-circle-info text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?= $orderTypeName ?></h6>
+                    <h6><i class="bi bi-info-circle text-primary"></i> ใบขอซื้อ/ขอจ้าง : <?= $orderTypeName ?></h6>
 
-                    <?= Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ', ['/purchase/order/cancel-order', 'id' => $model->id], ['class' => 'btn btn-danger rounded-pill shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="bi bi-trash fw-bold"></i> ยกเลิกรายการ', ['/purchase/order/cancel-order', 'id' => $model->id], ['class' => 'btn btn-danger shadow open-modal', 'data' => ['size' => 'modal-md']]) ?>
 
                 </div>
             </div>
@@ -162,12 +162,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= $this->render('order_status', ['model' => $model]) ?>
                             <hr>
                             <div class="d-flex justify-content-center mt-3">
-                                <?= Html::a('<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => $model->id, 'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'btn btn-primary rouned-pull shadow text-center rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                <?= Html::a('<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร', ['/purchase/order/document', 'id' => $model->id, 'title' => '<i class="bi bi-printer-fill"></i> พิมพ์เอกสาร'], ['class' => 'btn btn-primary rouned-pull shadow text-center open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                             </div>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-5">
-                        <h6><i class="fa-solid fa-circle-info text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
+                        <h6><i class="bi bi-info-circle text-primary"></i> รายการขอซื้อ/ขอจ้าง</h6>
 
                     </div>
                     <?php echo $this->render('@app/modules/purchase/views/order/order_items', ['model' => $model]) ?>
@@ -180,7 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="d-grid gap-2">
 
                                 <?php if ($model->status == '' && count($model->ListOrderItems()) > 0): ?>
-                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', [
+                                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ส่งคำขอซื้อ', [
                                         '/purchase/pr-order/pr-confirm',
                                         'id' => $model->id,
                                         'status' => 1,
@@ -188,7 +188,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php endif; ?>
 
                                 <?php if ($model->status == 1 && $model->data_json['pr_leader_confirm'] == 'Y' && $model->data_json['pr_officer_checker'] == 'Y' && $model->data_json['pr_director_confirm'] == 'Y'): ?>
-                                    <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ลงทะเบียนคุม', [
+                                    <?= Html::a('<i class="bi bi-exclamation-circle"></i> ลงทะเบียนคุม', [
                                         '/purchase/pq-order/update',
                                         'id' => $model->id,
 
@@ -224,7 +224,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'category_id' => $model->id,
                         'title' => '<i class="bi bi-person-circle"></i> กรรมการกำหนดรายละเอียด'
                     ], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee_detail', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee_detail', 'title' => '<i class="bi bi-pencil-square"></i> กรรมการกำหนดรายละเอียด'], ['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
             </div>
 
@@ -241,7 +241,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'category_id' => $model->id,
                         'title' => '<i class="bi bi-person-circle"></i> กรรมการตรวจรับ'
                     ], ['class' => 'open-modal', 'data' => ['size' => 'modal-lg']]) ?>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="fa-regular fa-pen-to-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                    <?= Html::a('<i class="bi bi-plus-circle me-1"></i> เพิ่มกรรมการ', ['/purchase/order-item/create', 'id' => $model->id, 'name' => 'committee', 'title' => '<i class="bi bi-pencil-square"></i> กรรมการตรวจรับ'], ['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-md']]) ?>
                 </div>
             </div>
 

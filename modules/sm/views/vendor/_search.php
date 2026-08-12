@@ -27,13 +27,13 @@ use yii\widgets\ActiveForm;
             <input type="hidden" name="VendorSearch[incomplete_only]" value="0">
             <?= Html::checkbox('VendorSearch[incomplete_only]', (int) ($model->incomplete_only ?? 0) === 1, ['value' => '1', 'id' => 'vendorsearch-incomplete_only', 'class' => 'form-check-input']) ?>
             <label class="form-check-label small" for="vendorsearch-incomplete_only">
-                <i class="fa-solid fa-filter-circle-xmark me-1 text-warning"></i> เฉพาะข้อมูลไม่ครบถ้วน
+                <i class="bi bi-funnel me-1 text-warning"></i> เฉพาะข้อมูลไม่ครบถ้วน
             </label>
         </div>
     </div>
     <div class="col-12 col-sm-2 col-md-2 d-flex gap-2">
-        <?= Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา', ['class' => 'btn btn-primary w-100']) ?>
-        <?= Html::a('<i class="fa-solid fa-rotate-left me-1"></i> รีเซ็ต', ['index'], ['class' => 'btn btn-outline-secondary w-100', 'data-pjax' => 0]) ?>
+        <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary w-100']) ?>
+        <?= Html::a('<i class="bi bi-arrow-counterclockwise me-1"></i> รีเซ็ต', ['index'], ['class' => 'btn btn-outline-secondary w-100', 'data-pjax' => 0]) ?>
     </div>
 </div>
 <?php ActiveForm::end(); ?>

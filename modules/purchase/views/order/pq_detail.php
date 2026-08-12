@@ -82,11 +82,11 @@ use yii\widgets\DetailView;
 </table>
 
 <div class="d-flex justify-content-center mt-3">
-    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม'],['class' => 'btn btn-warning rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-xl']])?>
+    <?=Html::a('<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-pencil-square"></i> แก้ไขทะเบียนคุม'],['class' => 'btn btn-warning shadow text-center open-modal','data' => ['size' => 'modal-xl']])?>
 </div>
 
 <?php else:?>
     <div class="d-flex justify-content-center my-5">
-    <?=Html::a('<i class="fa-solid fa-circle-plus text-white"></i> สร้างทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> สร้างทะเบียนคุม'],['class' => 'btn btn-primary rounded-pill shadow text-center open-modal','data' => ['size' => 'modal-xl']])?>
+    <?=Html::a('<i class="bi bi-plus-circle text-white"></i> สร้างทะเบียนคุม',['/purchase/pq-order/update','id' => $model->id,'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างทะเบียนคุม'],['class' => 'btn btn-primary shadow text-center open-modal','data' => ['size' => 'modal-xl']])?>
 </div>
 <?php endif;?>

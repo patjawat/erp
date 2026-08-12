@@ -887,7 +887,22 @@ $("body").on("click", ".open-modal", function (e) {
       }
     },
     error: function (xhr) {
-      // จัดการ error เหมือนเดิม
+      // เดิมเงียบไว้ ทำให้ modal ค้างอยู่ที่ skeleton ตลอดเมื่อ request ล้มเหลว
+      // (เช่น 403 จาก RBAC ที่ตอบกลับเป็นหน้า HTML ไม่ใช่ JSON) — ต้องปิดและบอกสาเหตุ
+      var message = "เปิดแบบฟอร์มไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      if (xhr.status === 403) {
+        message = "คุณไม่ได้รับสิทธิ์ให้เปิดแบบฟอร์มนี้";
+      } else if (xhr.status === 404) {
+        message = "ไม่พบข้อมูลของรายการนี้";
+      } else if (xhr.status >= 500) {
+        message = "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ (" + xhr.status + ")";
+      }
+      console.error("open-modal failed", xhr.status, url);
+      // ใช้ erpHideModal ไม่ใช่ closeModal() เพราะ closeModal จะเด้ง toast "บันทึกสำเร็จ"
+      erpHideModal("#main-modal");
+      if (typeof warning === "function") {
+        warning(message);
+      }
     }
   });
 });

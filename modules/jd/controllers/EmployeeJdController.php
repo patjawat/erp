@@ -198,7 +198,7 @@ class EmployeeJdController extends Controller
                 throw new \RuntimeException(implode(', ', $jd->getFirstErrors()));
             }
             $order = 10;
-            foreach (JdTemplateBlock::definitions() as $code => [$title, $type]) {
+            foreach (JdTemplateBlock::hospitalDefinitions() as $code => [$title, $type]) {
                 $section = new JdEmployeeSection([
                     'jd_employee_id' => $jd->id,
                     'section_code' => $code,
@@ -270,7 +270,7 @@ class EmployeeJdController extends Controller
             Yii::$app->session->setFlash('error', 'ไม่สามารถประกาศใช้ JD ที่ไม่มีรายละเอียดได้');
             return $this->redirect(['view', 'emp_id' => $jd->emp_id, 'id' => $jd->id]);
         }
-        $requiredCodes = array_keys(JdTemplateBlock::definitions());
+        $requiredCodes = array_keys(JdTemplateBlock::hospitalDefinitions());
         $sectionCodes = array_values(array_filter(array_map(static fn($section) => $section->section_code, $jd->sections)));
         $missingCodes = array_diff($requiredCodes, $sectionCodes);
         if ($missingCodes) {

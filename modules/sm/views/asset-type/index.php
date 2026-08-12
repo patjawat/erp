@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body d-flex flex-lg-row flex-md-row flex-sm-column flex-sx-column justify-content-lg-between justify-content-md-between justify-content-sm-center">
     <h4>ตั้งค่ากลุ่ม </h4> 
     <div class="d-flex gap-2">  
-                <?=Html::a('<i class="fa-solid fa-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-item'],['class' => 'btn btn-light'])?>
+                <?=Html::a('<i class="bi bi-chevron-left me-1"></i> ย้อนกลับ',['/sm/asset-item'],['class' => 'btn btn-outline-secondary'])?>
         </div>
     </div>
     </div>
@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card mb-0">
             <div class="card-body">
             <?=app\components\AppHelper::Btn([
-                    'title' =>"<i class='fa-solid fa-circle-plus'></i> สร้างกลุ่มครุภัณฑ์หรือวัสดุ",
+                    'title' =>"<i class='bi bi-plus-circle'></i> สร้างกลุ่มครุภัณฑ์หรือวัสดุ",
                     'url' =>['/sm/asset-type/create','name' => 'asset_type'],
                     'modal' => true, 'size' => 'lg' ])?>
             </div>

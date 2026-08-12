@@ -256,7 +256,7 @@ foreach ($items as $it) {
                                     }
                                     ?>
                                     <td><input type="text" id="expiry-date-<?= $index ?>" name="StockDetail[<?= $index ?>][expiry_date]" class="form-control expiry-date-thai" value="<?= Html::encode($expiryDisplay) ?>" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
-                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="1" step="1"></td>
+                                    <td><input type="number" name="StockDetail[<?= $index ?>][qty]" class="form-control text-center qty-input" value="<?= $item->qty ?>" min="0.01" step="0.01" inputmode="decimal"></td>
                                     <td><input type="number" name="StockDetail[<?= $index ?>][unit_price]" class="form-control text-end price-input" value="<?= $item->unit_price ?>" min="0" step="any" inputmode="decimal"></td>
                                     <td class="text-end fw-bold row-total"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
                                     <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>
@@ -826,9 +826,23 @@ $js = <<< JS
         function convertExpiryThaiToYmd(val) {
             if (!val || typeof val !== 'string') return '';
             var p = val.trim().split(/[\/\-]/);
-            if (p.length !== 3) return val;
-            var d = parseInt(p[0], 10); var m = parseInt(p[1], 10); var y = parseInt(p[2], 10) - 543;
-            if (isNaN(d) || isNaN(m) || isNaN(y) || y < 1900) return val;
+            if (p.length !== 3) return null;
+            var first = parseInt(p[0], 10);
+            var second = parseInt(p[1], 10);
+            var third = parseInt(p[2], 10);
+            if (isNaN(first) || isNaN(second) || isNaN(third)) return null;
+            var y; var m; var d;
+            if (first > 31) {
+                y = first; m = second; d = third;
+            } else {
+                d = first; m = second; y = third;
+            }
+            if (y >= 2400) y -= 543;
+            var parsed = new Date(Date.UTC(y, m - 1, d));
+            if (y < 1900 || y > 2200 || m < 1 || m > 12 || d < 1
+                || parsed.getUTCFullYear() !== y || parsed.getUTCMonth() !== m - 1 || parsed.getUTCDate() !== d) {
+                return null;
+            }
             var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
             return y + '-' + pad(m) + '-' + pad(d);
         }
@@ -840,7 +854,6 @@ $js = <<< JS
         }
 
         $('#receipt-form').on('beforeSubmit', function(e) {
-            applyExpiryConvert();
             var isDraft = $('#save_as_draft').val() === '1';
             if (!isDraft) {
                 // เช็คก่อนว่ามีรายการในตารางไหม (เฉพาะเมื่อบันทึกรับเข้าจริง)
@@ -857,18 +870,21 @@ $js = <<< JS
 
             // เช็ค Lot number, จำนวน, ราคาต่อหน่วย (ทั้งฉบับร่างและรับเข้าจริง)
             var invalidRows = [];
-            $('.item-row').find('input[name*="[lot_number]"], .qty-input, .price-input').removeClass('is-invalid');
+            $('.item-row').find('input[name*="[lot_number]"], .expiry-date-thai, .qty-input, .price-input').removeClass('is-invalid');
             $('.item-row').each(function(index) {
                 var row = $(this);
                 var rowNum = index + 1;
                 var lotInput = row.find('input[name*="[lot_number]"]');
                 var qtyInput = row.find('.qty-input');
                 var priceInput = row.find('.price-input');
+                var expiryInput = row.find('.expiry-date-thai');
                 var lot = (lotInput.val() || '').trim();
                 var qtyVal = qtyInput.val();
                 var priceVal = priceInput.val();
                 var qty = parseFloat(qtyVal);
                 var price = parseFloat(priceVal);
+                var expiryVal = (expiryInput.val() || '').trim();
+                var expiryDate = expiryVal ? convertExpiryThaiToYmd(expiryVal) : '';
                 var itemName = row.find('strong').text().trim() || 'แถวที่ ' + rowNum;
                 var err = [];
                 if (!lot) {
@@ -883,6 +899,10 @@ $js = <<< JS
                     err.push('ราคา/หน่วย (ต้องไม่น้อยกว่า 0)');
                     priceInput.addClass('is-invalid');
                 }
+                if (expiryVal && expiryDate === null) {
+                    err.push('วันหมดอายุ (ใช้รูปแบบ วัน/เดือน/ปี)');
+                    expiryInput.addClass('is-invalid');
+                }
                 if (err.length) invalidRows.push({ rowEl: row, row: rowNum, name: itemName, fields: err });
             });
             if (invalidRows.length > 0) {
@@ -890,7 +910,7 @@ $js = <<< JS
                 if (firstRow && firstRow.scrollIntoView) {
                     firstRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                var msg = 'กรุณากรอกให้ครบในทุกแถว: Lot number, จำนวน (ต้องมากกว่า 0), ราคา/หน่วย (ต้องไม่น้อยกว่า 0)\\n\\n';
+                var msg = 'กรุณาตรวจสอบข้อมูลในแต่ละแถว: Lot number, จำนวน, ราคา/หน่วย และวันหมดอายุ (ถ้าระบุ)\\n\\n';
                 invalidRows.slice(0, 5).forEach(function(r) {
                     msg += 'แถว ' + r.row + ' (' + r.name.substring(0, 30) + (r.name.length > 30 ? '...' : '') + '): ' + r.fields.join(', ') + '\\n';
                 });
@@ -930,6 +950,7 @@ $js = <<< JS
                     width: 560,
                 }).then(function(result) {
                     if (result.isConfirmed) {
+                        applyExpiryConvert();
                         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
                         $.ajax({
                             url: form.attr('action'),
@@ -969,6 +990,7 @@ $js = <<< JS
                 // default order: ปุ่มยืนยันซ้าย ปุ่มยกเลิกขวา
             }).then(function(result) {
                 if (result.isConfirmed) {
+                    applyExpiryConvert();
                     // แสดง Loading ระหว่างรอ Server ประมวลผล
                     Swal.fire({
                         title: {$msgSaving},
@@ -1181,7 +1203,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         '<td class="text-muted small">' + typeLabel + '</td>' +
         '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
         '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
-        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="1" step="1"></td>' +
+        '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="1" min="0.01" step="0.01" inputmode="decimal"></td>' +
         '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="0.00" min="0" step="any" inputmode="decimal"></td>' +
         '<td class="text-end fw-bold row-total">0.00</td>' +
         '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +
@@ -1797,10 +1819,11 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
         }
 
         function ymdToThaiDisplay(ymd) {
-            if (!ymd || ymd.length < 10) return '';
-            var y = parseInt(ymd.substring(0, 4), 10);
-            var m = parseInt(ymd.substring(5, 7), 10);
-            var d = parseInt(ymd.substring(8, 10), 10);
+            var normalized = convertExpiryThaiToYmd(ymd);
+            if (!normalized) return ymd || '';
+            var y = parseInt(normalized.substring(0, 4), 10);
+            var m = parseInt(normalized.substring(5, 7), 10);
+            var d = parseInt(normalized.substring(8, 10), 10);
             var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
             return pad(d) + '/' + pad(m) + '/' + (y + 543);
         }
@@ -1835,7 +1858,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                     '<td class="text-muted small">' + (item.category_title || '-') + '</td>' +
                     '<td><input type="text" name="StockDetail[' + currentIndex + '][lot_number]" class="form-control lot-number-input" value="' + (lotVal || '') + '" placeholder="กรอกหรือกำหนดเอง"></td>' +
                     '<td><input type="text" id="expiry-date-' + currentIndex + '" name="StockDetail[' + currentIndex + '][expiry_date]" class="form-control expiry-date-thai" value="' + (expiryDisplay || '') + '" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>' +
-                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="1" step="1"></td>' +
+                    '<td><input type="number" name="StockDetail[' + currentIndex + '][qty]" class="form-control text-center qty-input" value="' + (item.qty || 1) + '" min="0.01" step="0.01" inputmode="decimal"></td>' +
                     '<td><input type="number" name="StockDetail[' + currentIndex + '][unit_price]" class="form-control text-end price-input" value="' + (item.unit_price || 0) + '" min="0" step="any" inputmode="decimal"></td>' +
                     '<td class="text-end fw-bold row-total">' + ((item.qty || 0) * (item.unit_price || 0)).toFixed(2) + '</td>' +
                     '<td><button type="button" class="btn btn-sm btn-outline-danger btn-remove border-0"><i class="bi bi-trash"></i></button></td>' +

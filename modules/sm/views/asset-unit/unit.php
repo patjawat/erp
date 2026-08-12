@@ -2,7 +2,6 @@
 
 use app\modules\am\components\AssetHelper;
 use app\modules\am\models\Fsn;
-use yii\bootstrap5\LinkPager;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
 use yii\helpers\Url;
@@ -22,7 +21,7 @@ $name = Yii::$app->request->get('name');
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<i class="fa-solid fa-gear"></i> <?=$this->title;?>
+<i class="bi bi-gear"></i> <?=$this->title;?>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>
 <?=$this->title;?>
@@ -44,7 +43,7 @@ $name = Yii::$app->request->get('name');
             <div class="card mb-0">
                   <div class="card-body">
                         <?=app\components\AppHelper::Btn([
-                        'title' => "<i class='fa-solid fa-circle-plus'></i> สร้างหน่วย",
+                        'title' => "<i class='bi bi-plus-circle'></i> สร้างหน่วย",
                         'url' =>['/sm/asset-unit/create-unit' ],
                         'modal' => true,
                         'size' => 'lg'])?>
@@ -74,8 +73,8 @@ $name = Yii::$app->request->get('name');
                   'vAlign' => 'middle',
                   'width' => '90px',
                   'value' => function($model){
-                        return '<div clas="d-flex gap-3">'.Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-pen-to-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary open-modal me-2', 'data' => ['size' => 'modal-lg']])
-                        .Html::a('<i class="fa-regular fa-trash-can"></i>', ['delete', 'id' => $model->id], [
+                        return '<div clas="d-flex gap-3">'.Html::a('<i class="bi bi-pencil-square"></i>', ['update', 'id' => $model->id, 'title' => '<i class="bi bi-pencil-square"></i> แก้ไข'], ['class' => 'btn btn-sm btn-primary open-modal me-2', 'data' => ['size' => 'modal-lg']])
+                        .Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $model->id], [
                               'class' => 'btn btn-sm btn-danger',
                               'data' => [
                               'confirm' => 'Are you sure you want to delete this item?',

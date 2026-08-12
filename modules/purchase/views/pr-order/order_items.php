@@ -9,7 +9,7 @@ use yii\widgets\Pjax;
             <table class="table table-striped">
                 <thead class="table-primary">
                     <tr>
-                        <th style="width:500px"> <?= Html::a('<i class="fa-solid fa-circle-plus text-white"></i> เพิ่มรายการใหม่', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มรายการใหม่'], ['class' => 'btn btn-sm btn-primary rounded-pill open-modal', 'data' => ['size' => 'modal-lg']]) ?></th>
+                        <th style="width:500px"> <?= Html::a('<i class="bi bi-plus-circle text-white"></i> เพิ่มรายการใหม่', ['/purchase/order/product-list', 'order_id' => $model->id, 'title' => '<i class="bi bi-plus-circle text-primary"></i> เพิ่มรายการใหม่'], ['class' => 'btn btn-sm btn-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?></th>
                         <th class="text-center" style="width:80px">หน่วย</th>
                         <th class="text-end">ราคาต่อหน่วย</th>
                         <th class="text-center" style="width:80px">จำนวน</th>
@@ -64,8 +64,8 @@ use yii\widgets\Pjax;
                         </td>
                         <td class="align-middle">
                             <div class="d-flex justify-content-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning rounded-pill open-modal', 'data' => ['size' => 'modal-md']]) ?>
-                                <?= Html::a('<i class="fa-regular fa-trash-can"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger rounded-pill delete-item']) ?>
+                                <?= Html::a('<i class="bi bi-pencil-square"></i>', ['/purchase/order/update-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-warning open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                <?= Html::a('<i class="bi bi-trash"></i>', ['/purchase/order/delete-item', 'id' => $item->id], ['class' => 'btn btn-sm btn-danger delete-item']) ?>
                             </div>
                         </td>
                     </tr>
@@ -89,7 +89,7 @@ use yii\widgets\Pjax;
                     <div class="d-grid gap-2">
                         
                         <?php if ($model->status == '' && count($model->ListOrderItems()) > 0): ?>
-                        <?= Html::a('<i class="fa-solid fa-circle-exclamation"></i> ส่งคำขอซื้อ', [
+                        <?= Html::a('<i class="bi bi-exclamation-circle"></i> ส่งคำขอซื้อ', [
                             '/purchase/pr-order/pr-confirm',
                             'id' => $model->id,
                             'status' => 2,
@@ -99,11 +99,11 @@ use yii\widgets\Pjax;
                         <?php if ($model->approve == 'Y'): ?>
 
                             <?php if ($model->status == 2): ?>
-                        <?= Html::a('ลงทะเบียนคุม', ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('ลงทะเบียนคุม', ['/purchase/pq-order/update', 'id' => $model->id, 'title' => '<i class="bi bi-check-circle"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal shadow', 'data' => ['size' => 'modal-lg']]) ?>
                        <?php endif; ?>
                        
                        <?php if ($model->status == 3): ?>
-                        <?= Html::a('sss', ['/purchase/po-order/update', 'id' => $model->id, 'title' => '<i class="fa-regular fa-circle-check"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal-x shadow', 'data' => ['size' => 'modal-lg']]) ?>
+                        <?= Html::a('sss', ['/purchase/po-order/update', 'id' => $model->id, 'title' => '<i class="bi bi-check-circle"></i> ลงทะเบียนคุม'], ['class' => 'btn btn-primary rounded shadow open-modal-x shadow', 'data' => ['size' => 'modal-lg']]) ?>
                        <?php endif; ?>
 
                         <?php endif; ?>

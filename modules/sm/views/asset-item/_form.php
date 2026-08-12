@@ -90,7 +90,7 @@ $title = Yii::$app->request->get('title');
 
         <div class="form-group mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap">
             <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>
-            <?= Html::button('<i class="fa-solid fa-circle-xmark"></i> ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
+            <?= Html::button('<i class="bi bi-x-circle"></i> ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
         </div>
         <?php ActiveForm::end(); ?>
 
