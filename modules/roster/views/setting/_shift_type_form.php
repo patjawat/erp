@@ -83,3 +83,17 @@ foreach (ShiftType::colorLabels() as $value => $label) {
 </div>
 
 <?php ActiveForm::end(); ?>
+
+<?php
+// ActiveForm ใน modal ต้องผูก handleFormSubmit เอง ไม่งั้น submit แบบเต็มหน้า
+// แล้วเบราว์เซอร์เด้งไปหน้า JSON ดิบแทนที่จะปิด modal
+$this->registerJs(<<<'JS'
+handleFormSubmit('#form', null, async function (response) {
+    if (response.container && typeof erpReloadPjax === 'function'
+        && erpReloadPjax(response.container)) {
+        return;
+    }
+    location.reload();
+});
+JS);
+?>

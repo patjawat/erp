@@ -112,6 +112,10 @@ window.rosterCreateInit = function () {
         \$scope.find('.scope-shift').prop('checked', false);
     });
     render();
+
+    // ActiveForm ใน modal ต้องผูก handleFormSubmit เอง ไม่งั้น submit แบบเต็มหน้า
+    // สร้างเสร็จแล้วพาไปหน้ากริดของแผ่นที่เพิ่งสร้าง (controller ส่ง redirect_url มา)
+    handleFormSubmit('#form');
 };
 window.rosterCreateInit();
 JS;

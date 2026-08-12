@@ -115,6 +115,16 @@ window.rosterShiftFormInit = function () {
     jQuery('#{$startId}, #{$endId}').off('change.shiftForm changeTime.shiftForm')
         .on('change.shiftForm changeTime.timepicker', calc);
     calc();
+
+    // ActiveForm ใน modal ต้องผูก handleFormSubmit เอง ไม่งั้นจะ submit แบบเต็มหน้า
+    // แล้วเบราว์เซอร์เด้งไปหน้า JSON ดิบแทนที่จะปิด modal
+    handleFormSubmit('#form', null, async function (response) {
+        if (response.container && typeof erpReloadPjax === 'function'
+            && erpReloadPjax(response.container)) {
+            return;
+        }
+        location.reload();
+    });
 };
 window.rosterShiftFormInit();
 JS;

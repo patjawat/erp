@@ -109,7 +109,12 @@ class PeriodController extends Controller
             if ($model->save()) {
                 // ไม่ผูกคำขอหยุดเข้าแผ่นใดแผ่นหนึ่ง เพราะเดือนหนึ่งมีหลายแผ่น
                 // ทุกแผ่นอ่านคำขอจาก หน่วย+วันที่ ผ่าน Request::gridForUnit() อยู่แล้ว
-                return ['status' => 'success', 'url' => \yii\helpers\Url::to(['grid', 'id' => $model->id])];
+                return [
+                    'status' => 'success',
+                    'message' => 'สร้างแผ่น "' . $model->title . '" แล้ว',
+                    // handleFormSubmit อ่านคีย์นี้เพื่อพาไปหน้ากริดต่อ
+                    'redirect_url' => \yii\helpers\Url::to(['grid', 'id' => $model->id]),
+                ];
             }
             $first = array_values($model->getFirstErrors());
             return ['status' => 'error', 'message' => $first[0] ?? 'บันทึกไม่สำเร็จ'];
