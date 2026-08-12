@@ -105,7 +105,9 @@ class ImportHosOfficeController extends Controller
         }
 
         echo "\n=== 3/4 สร้างประวัติการอนุมัติ ===\n";
-        $this->actionCreateApproveLeave();
+        if ($this->actionCreateApproveLeave() !== ExitCode::OK) {
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
 
         echo "\n=== 4/4 ปรับข้อมูลกำกับขั้นอนุมัติ ===\n";
         if ($this->actionFixApproveLabel() !== ExitCode::OK) {
@@ -1392,72 +1394,85 @@ private function mapVehicleType($input) {
 
     public function actionCreateApproveLeave()
     {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
+            // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
+            $deleted = Approve::deleteAll(['name' => 'leave']);
+            echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
 
-        // ล้างข้อมูลอนุมัติลาเดิมทั้งหมดก่อนสร้างใหม่
-        // (ของเดิมสร้าง status=Pass ครบทุกระดับทุกใบ รวมถึงใบที่ยกเลิก/ไม่อนุมัติ/ยังรออยู่ — ไม่ถูกต้อง)
-        $deleted = Approve::deleteAll(['name' => 'leave']);
-        echo "ลบข้อมูลอนุมัติลาเดิม {$deleted} รายการ\n";
-
-        $leaves = Leave::find()->all();
-        $num = 1;
-        $total = count($leaves);
-        $approvalSteps = $this->leaveApprovalStepDefinitions();
-        echo "สร้างข้อมูลการอนุมัติลา...\n";
-        foreach ($leaves as $item) {
-            // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
-            $data = $item->data_json;
-            if (is_string($data)) {
-                $data = json_decode($data, true);
-            }
-            if (!is_array($data)) {
-                $data = [];
-            }
-
-            // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
-            if (array_key_exists('milestone_leader', $data)) {
-                $passed = [
-                    1 => !empty($data['milestone_leader']),   // หัวหน้ารับทราบ/เห็นชอบ
-                    2 => !empty($data['milestone_leader']),
-                    3 => !empty($data['milestone_check']),     // ผู้ตรวจสอบ
-                    4 => !empty($data['milestone_director']),  // ผอ.อนุมัติ
-                ];
-            } else {
-                // Fallback (กรณียังไม่ได้ re-run actionLeave): อนุมานจากสถานะใบลา
-                // เฉพาะใบที่อนุมัติสมบูรณ์เท่านั้นที่ถือว่าผ่านครบทุกระดับ
-                $approved = ($item->status === 'Approve');
-                $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
-            }
-
-            foreach ($approvalSteps as $level => $step) {
-                $empId = $data['approve_' . $level] ?? null;
-                // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
-                if (empty($empId) || empty($passed[$level])) {
-                    continue;
+            $leaves = Leave::find()->all();
+            $num = 1;
+            $total = count($leaves);
+            $approvalSteps = $this->leaveApprovalStepDefinitions();
+            echo "สร้างข้อมูลการอนุมัติลา...\n";
+            foreach ($leaves as $item) {
+                // data_json บางแถวไม่ได้ถูกถอดรหัสเป็น array (เก็บเป็น string ใน DB) — normalize ก่อนใช้งาน
+                $data = $item->data_json;
+                if (is_string($data)) {
+                    $data = json_decode($data, true);
                 }
-                $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
-                $approve = Approve::find()->where($obj)->one();
-                if (!$approve) {
-                    $newApprove = new Approve($obj);
-                    $approvedAt = $this->normalizeApproveDate(match ($level) {
-                        1, 2 => $data['leader_approved_at'] ?? null,
-                        3 => $data['check_approved_at'] ?? null,
-                        4 => $data['director_approved_at'] ?? null,
-                        default => null,
-                    });
-                    $newApprove->title = $step['title'];
-                    $newApprove->data_json = [
-                        'label' => $step['label'],
-                        'title' => $step['title'],
-                        'approve_date' => $approvedAt,
+                if (!is_array($data)) {
+                    $data = [];
+                }
+
+                // ระดับที่ "ผ่านจริง" ตาม milestone จากระบบต้นทาง (บันทึกไว้ตอน actionLeave)
+                if (array_key_exists('milestone_leader', $data)) {
+                    $passed = [
+                        1 => !empty($data['milestone_leader']),   // หัวหน้ารับทราบ/เห็นชอบ
+                        2 => !empty($data['milestone_leader']),
+                        3 => !empty($data['milestone_check']),     // ผู้ตรวจสอบ
+                        4 => !empty($data['milestone_director']),  // ผอ.อนุมัติ
                     ];
-                    if ($approvedAt !== null) {
-                        $newApprove->created_at = $approvedAt;
-                    }
-                    $newApprove->save(false);
+                } else {
+                    // Fallback (กรณียังไม่ได้ re-run actionLeave): อนุมานจากสถานะใบลา
+                    // เฉพาะใบที่อนุมัติสมบูรณ์เท่านั้นที่ถือว่าผ่านครบทุกระดับ
+                    $approved = ($item->status === 'Approve');
+                    $passed = [1 => $approved, 2 => $approved, 3 => $approved, 4 => $approved];
                 }
+
+                foreach ($approvalSteps as $level => $step) {
+                    $empId = $data['approve_' . $level] ?? null;
+                    // ไม่มีผู้อนุมัติ หรือระดับนี้ยังไม่ผ่านจริง → ไม่สร้าง
+                    if (empty($empId) || empty($passed[$level])) {
+                        continue;
+                    }
+                    $obj = ['name' => 'leave', 'from_id' => $item->id, 'level' => $level, 'emp_id' => $empId, 'status' => 'Pass'];
+                    $approve = Approve::find()->where($obj)->one();
+                    if (!$approve) {
+                        $newApprove = new Approve($obj);
+                        $approvedAt = $this->normalizeApproveDate(match ($level) {
+                            1, 2 => $data['leader_approved_at'] ?? null,
+                            3 => $data['check_approved_at'] ?? null,
+                            4 => $data['director_approved_at'] ?? null,
+                            default => null,
+                        });
+                        $newApprove->title = $step['title'];
+                        $newApprove->data_json = $this->prepareApproveDataJson([
+                            'label' => $step['label'],
+                            'title' => $step['title'],
+                            'approve_date' => $approvedAt,
+                        ]);
+                        if ($approvedAt !== null) {
+                            $newApprove->created_at = $approvedAt;
+                        }
+                        if (!$newApprove->save(false)) {
+                            throw new \RuntimeException('บันทึกข้อมูลอนุมัติใบลา ID ' . $item->id . ' ระดับ ' . $level . ' ไม่สำเร็จ');
+                        }
+                    }
+                }
+                BaseConsole::updateProgress($num, $total);
+                $num++;
             }
-            BaseConsole::updateProgress($num, $total);
-            $num++;
+
+            $transaction->commit();
+            return ExitCode::OK;
+        } catch (\Throwable $th) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            echo "\nสร้างข้อมูลการอนุมัติลาไม่สำเร็จ: {$th->getMessage()}\n";
+            return ExitCode::UNSPECIFIED_ERROR;
         }
     }
 
@@ -1472,6 +1487,17 @@ private function mapVehicleType($input) {
             3 => ['label' => 'ผ่าน', 'title' => 'เจ้าหน้าที่ตรวจสอบ'],
             4 => ['label' => 'อนุมัติ', 'title' => 'ผู้อำนวยการ'],
         ];
+    }
+
+    /**
+     * Yii คืน/รับค่า JSON ต่างกันตาม schema: JSON ใช้ array, LONGTEXT ใช้ JSON string
+     */
+    private function prepareApproveDataJson(array $data)
+    {
+        $column = Approve::getTableSchema()->getColumn('data_json');
+        return $column && $column->type === \yii\db\Schema::TYPE_JSON
+            ? $data
+            : Json::encode($data);
     }
 
     /**
