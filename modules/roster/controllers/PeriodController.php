@@ -107,6 +107,12 @@ class PeriodController extends Controller
             // ขอบเขตเวรของแผ่นนี้ — ไม่เลือก = ครอบทุกเวรของหน่วย
             $picked = array_map('intval', (array) $this->request->post('unit_shift_ids', []));
             $model->setShiftIds($picked);
+
+            $clash = $this->overlappingSheet($model);
+            if ($clash !== null) {
+                return ['status' => 'error', 'message' => $clash];
+            }
+
             if ($model->save()) {
                 // ไม่ผูกคำขอหยุดเข้าแผ่นใดแผ่นหนึ่ง เพราะเดือนหนึ่งมีหลายแผ่น
                 // ทุกแผ่นอ่านคำขอจาก หน่วย+วันที่ ผ่าน Request::gridForUnit() อยู่แล้ว
@@ -131,6 +137,49 @@ class PeriodController extends Controller
             ]),
             'footer' => ModalHelper::modalFooterSaveClose(),
         ];
+    }
+
+    /**
+     * แผ่นใหม่ครอบเวรทับแผ่นเดิมของหน่วย+เดือนเดียวกันหรือไม่
+     *
+     * เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว (บังคับที่ unique index)
+     * ถ้าปล่อยให้สองแผ่นครอบเวรเดียวกัน กริดของแผ่นที่สองจะดูว่างแต่จัดเวรไม่ได้เลย
+     * เพราะกริดแสดงเฉพาะเวรของแผ่นตัวเอง — สับสนมากจนต้องกันตั้งแต่ตอนสร้าง
+     *
+     * @return string|null ข้อความอธิบาย ถ้าทับ · null ถ้าสร้างได้
+     */
+    private function overlappingSheet(Period $model): ?string
+    {
+        $siblings = Period::find()
+            ->where([
+                'unit_id' => $model->unit_id,
+                'month' => $model->month,
+                'year_ce' => $model->year_ce,
+                'deleted_at' => null,
+            ])
+            ->andFilterWhere(['<>', 'id', $model->id])
+            ->all();
+        if (empty($siblings)) {
+            return null;
+        }
+
+        $mine = $model->sheetShifts();
+        foreach ($siblings as $sibling) {
+            $shared = array_intersect_key($mine, $sibling->sheetShifts());
+            if (empty($shared)) {
+                continue;
+            }
+            $names = array_map(static fn($s) => $s->displayName(), $shared);
+            return sprintf(
+                'แผ่น “%s” ของเดือนนี้ครอบเวร %s อยู่แล้ว — เวรเดียวกันอยู่ได้แผ่นเดียว%s',
+                $sibling->title,
+                implode(' · ', $names),
+                count($mine) === count($shared) && empty($model->shiftIds())
+                    ? ' กรุณาเลือกเฉพาะเวรที่แผ่นนี้รับผิดชอบ'
+                    : ' กรุณาเลือกเวรอื่น'
+            );
+        }
+        return null;
     }
 
     /**
@@ -416,6 +465,27 @@ class PeriodController extends Controller
                 'counts' => $this->dayCounts($period, $day),
                 'summary' => $this->summary($period),
                 'empTotals' => $this->employeeTotals($period, $empId),
+            ];
+        }
+
+        // เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว แม้จะอยู่คนละแผ่น
+        // แต่กริดแสดงเฉพาะเวรของแผ่นตัวเอง ช่องจึงดูว่างทั้งที่ชนอยู่กับอีกแผ่น
+        // ถ้าปล่อยให้ unique rule เด้งเอง ผู้ใช้จะเห็นแค่ "จัดเวรไว้แล้ว" ทั้งที่ตรงหน้าไม่มีอะไร
+        $conflict = Item::find()
+            ->where(['emp_id' => $empId, 'work_date' => $workDate, 'unit_shift_id' => $unitShiftId])
+            ->andWhere(['<>', 'period_id', $period->id])
+            ->one();
+        if ($conflict) {
+            $other = $conflict->period;
+            return [
+                'status' => 'error',
+                'message' => sprintf(
+                    'คนนี้ถูกจัดเวร%s วันที่ %d ไว้แล้วในแผ่น “%s” — เวรเดียวกันจัดซ้ำสองแผ่นไม่ได้ ให้ไปแก้ที่แผ่นนั้น',
+                    $unitShift->displayName(),
+                    $day,
+                    $other ? $other->title : 'อื่น'
+                ),
+                'conflictUrl' => $other ? \yii\helpers\Url::to(['grid', 'id' => $other->id]) : null,
             ];
         }
 
