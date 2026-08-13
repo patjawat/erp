@@ -170,6 +170,9 @@ foreach ($grid as $byDay) {
                     <strong><?= Html::encode($unitShift->displayShort()) ?></strong>
                     <span class="d-none d-md-inline"><?= Html::encode($unitShift->displayName()) ?></span>
                     <span class="d-none d-lg-inline opacity-75 small"><?= Html::encode($unitShift->timeRangeLabel()) ?></span>
+                    <?php if ($unitShift->position_id): ?>
+                        <span class="d-none d-lg-inline opacity-75 small">· <?= Html::encode($unitShift->positionName()) ?></span>
+                    <?php endif; ?>
                     <?php if ($unitShift->is_standby): ?>
                         <i class="bi bi-telephone" title="เวรรอเรียก/นอกหน่วย"></i>
                     <?php endif; ?>
@@ -281,15 +284,18 @@ foreach ($grid as $byDay) {
                             $empTotal += count($items);
                         }
                         ?>
-                        <tr>
+                        <tr class="roster-row" data-position="<?= (int) ($emp['employee_position_id'] ?? 0) ?>">
                             <td class="roster-sticky-col bg-body">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="text-truncate" style="max-width:160px">
+                                    <span class="text-truncate" style="max-width:150px">
                                         <?= Html::encode(trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname'])) ?>
                                     </span>
                                     <?php if (($emp['work_shift'] ?? '') === 'shift'): ?>
                                         <span class="badge bg-info-subtle text-info-emphasis" title="ขึ้นเวร 8">8</span>
                                     <?php endif; ?>
+                                </div>
+                                <div class="small text-body-secondary text-truncate" style="max-width:190px">
+                                    <?= Html::encode($emp['position_name'] ?: 'ไม่ระบุตำแหน่ง') ?>
                                 </div>
                             </td>
 
@@ -445,6 +451,9 @@ $this->registerCss(<<<'CSS'
 .roster-holiday { background-color: var(--bs-danger-bg-subtle); }
 .roster-weekend { background-color: var(--bs-secondary-bg-subtle); }
 .roster-cell.is-saving { opacity: .5; }
+/* เวรที่ระบุวิชาชีพ — หรี่แถวคนที่วิชาชีพไม่ตรง เพื่อไม่ต้องจำว่าใครเป็นอะไร */
+.roster-row.is-dimmed { opacity: .32; }
+.roster-row.is-dimmed .roster-cell { cursor: not-allowed; }
 CSS);
 
 $assignUrl = Url::to(['assign']);
@@ -463,6 +472,7 @@ foreach ($unitShiftList as $unitShift) {
         's' => $unitShift->displayShort(),
         'c' => $unitShift->cellClass(),
         'n' => $unitShift->displayName(),
+        'p' => (int) $unitShift->position_id, // 0 = ไม่จำกัดวิชาชีพ
     ];
 }
 $shiftMetaJson = json_encode($shiftMeta, JSON_UNESCAPED_UNICODE);
@@ -483,6 +493,24 @@ $js = <<<JS
     function currentPen() {
         return jQuery('input[name="shift-pen"]:checked').val();
     }
+
+    // เวรที่ระบุวิชาชีพ — หรี่แถวคนที่ไม่ตรง เพื่อให้หัวหน้าเห็นทันทีว่าคลิกใครได้
+    // (หน่วยหนึ่งมีถึง 4 วิชาชีพ 25 คน จำไม่ไหวว่าใครเป็นพยาบาลใครเป็นผู้ช่วย)
+    function applyPositionFilter() {
+        var pen = currentPen();
+        var meta = shiftMeta[pen];
+        var wanted = meta ? meta.p : 0;
+        if (!wanted) {
+            jQuery('.roster-row').removeClass('is-dimmed');
+            return;
+        }
+        jQuery('.roster-row').each(function () {
+            var \$row = jQuery(this);
+            \$row.toggleClass('is-dimmed', parseInt(\$row.data('position'), 10) !== wanted);
+        });
+    }
+    jQuery('input[name="shift-pen"]').on('change', applyPositionFilter);
+    applyPositionFilter();
 
     function repaintCell(\$cell, items) {
         var \$inner = \$cell.find('.roster-cell-inner');

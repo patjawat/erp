@@ -695,11 +695,22 @@ class PeriodController extends Controller
      */
     private function employeesOfUnit(int $unitId): array
     {
-        return Employees::find()
-            ->select(['id', 'prefix', 'fname', 'lname', 'work_shift', 'employee_position_id'])
-            ->where(['department' => $unitId, 'status' => 1])
-            ->orderBy([new \yii\db\Expression("FIELD(work_shift,'shift') DESC"), 'fname' => SORT_ASC])
-            ->asArray()
+        return (new \yii\db\Query())
+            ->select([
+                'e.id', 'e.prefix', 'e.fname', 'e.lname', 'e.work_shift', 'e.employee_position_id',
+                'position_name' => 'ep.title',
+            ])
+            ->from(['e' => Employees::tableName()])
+            ->leftJoin(['ep' => 'employee_position'], 'ep.id = e.employee_position_id')
+            ->where(['e.department' => $unitId, 'e.status' => 1])
+            // เรียงคนขึ้นเวรก่อน แล้วจัดกลุ่มตามวิชาชีพ เพื่อให้หัวหน้าเห็นว่าใครเป็นพยาบาล
+            // ใครเป็นผู้ช่วย โดยไม่ต้องจำ — หน่วยหนึ่งมีถึง 4 วิชาชีพและ 25 คน
+            ->orderBy([
+                new \yii\db\Expression("FIELD(e.work_shift,'shift') DESC"),
+                'ep.sort' => SORT_ASC,
+                'ep.title' => SORT_ASC,
+                'e.fname' => SORT_ASC,
+            ])
             ->all();
     }
 

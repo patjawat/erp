@@ -40,7 +40,8 @@ $unitShiftList = array_values($unitShifts);
         <thead>
             <tr>
                 <th style="width:26px">#</th>
-                <th style="min-width:150px">ชื่อ-นามสกุล</th>
+                <th style="min-width:140px">ชื่อ-นามสกุล</th>
+                <th style="min-width:90px">ตำแหน่ง</th>
                 <?php for ($d = 1; $d <= $days; $d++): ?>
                     <?php
                     $ts = strtotime($period->dateOfDay($d));
@@ -74,6 +75,7 @@ $unitShiftList = array_values($unitShifts);
                 <tr>
                     <td class="text-center"><?= $index + 1 ?></td>
                     <td><?= Html::encode(trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname'])) ?></td>
+                    <td><?= Html::encode($emp['position_name'] ?? '') ?></td>
                     <?php for ($d = 1; $d <= $days; $d++): ?>
                         <?php
                         $items = $grid[$empId][$d] ?? [];
@@ -100,7 +102,7 @@ $unitShiftList = array_values($unitShifts);
             <?php foreach ($unitShiftList as $unitShift): ?>
                 <?php $need = (int) $unitShift->required_staff; ?>
                 <tr>
-                    <td colspan="2" class="fw-semibold">
+                    <td colspan="3" class="fw-semibold">
                         <?= Html::encode($unitShift->displayName()) ?><?= $need > 0 ? ' (ต้องการ ' . $need . ')' : '' ?>
                     </td>
                     <?php for ($d = 1; $d <= $days; $d++): ?>
