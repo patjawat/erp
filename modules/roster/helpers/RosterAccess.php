@@ -31,7 +31,10 @@ class RosterAccess
             return false; // รันจาก console
         }
         $user = Yii::$app->user;
-        return $user->can('roster') || $user->can('hr') || $user->can('admin');
+        // ไม่รวม role 'hr' — เป็นสิทธิ์ของโมดูลบุคลากร ไม่ใช่ของตารางเวร
+        // และถูกแจกให้หัวหน้าหอผู้ป่วยหลายคน ทำให้เห็นตารางเวรทุกหน่วยงานทั้งโรงพยาบาล
+        // ใครที่ต้องดูข้ามหน่วยจริง ๆ ให้กำหนด role 'roster' ซึ่งมีไว้เพื่อการนี้
+        return $user->can('roster') || $user->can('admin');
     }
 
     /**
