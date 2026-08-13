@@ -857,6 +857,42 @@ class PeriodController extends Controller
         ]);
     }
 
+    /**
+     * เอกสารแลกเวร 1 ใบ สำหรับพิมพ์เก็บเป็นหลักฐาน
+     *
+     * ใบนี้คือสิ่งที่ใช้อ้างอิงตอนคิดค่าตอบแทน เพราะเวรถูกเปลี่ยนมือหลังตารางประกาศแล้ว
+     * จึงต้องมีลายเซ็นครบสามฝ่าย: ผู้ขอ ผู้รับ และหัวหน้าที่อนุมัติ
+     */
+    public function actionSwapPrint($id)
+    {
+        $swap = Swap::findOne((int) $id);
+        if (!$swap) {
+            throw new NotFoundHttpException('ไม่พบใบเปลี่ยนตัวเวร');
+        }
+        // ตรวจสิทธิ์ผ่านรอบเวรของใบนี้ ใช้เกณฑ์เดียวกับการเปิดกริด
+        $period = $this->findPeriod((int) $swap->period_id);
+
+        $this->layout = '@app/views/layouts/print';
+        return $this->render('swap-print', [
+            'swap' => $swap,
+            'period' => $period,
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'approver' => $this->unitLeader((int) $period->unit_id),
+        ]);
+    }
+
+    /** หัวหน้าหน่วยตามผังองค์กร — ใช้เป็นผู้ลงนามอนุมัติในเอกสารแลกเวร */
+    private function unitLeader(int $unitId): ?Employees
+    {
+        $unit = Organization::findOne($unitId);
+        if (!$unit) {
+            return null;
+        }
+        $data = is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true);
+        $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+        return $leaderId ? Employees::findOne($leaderId) : null;
+    }
+
     /** ส่งออก Excel แยกสีตามผลัด — ดู RosterExporter */
     public function actionExport($id)
     {
