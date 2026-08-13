@@ -100,13 +100,21 @@ $unitShiftList = array_values($unitShifts);
         </tbody>
         <tfoot>
             <?php foreach ($unitShiftList as $unitShift): ?>
-                <?php $need = (int) $unitShift->required_staff; ?>
                 <tr>
                     <td colspan="3" class="fw-semibold">
-                        <?= Html::encode($unitShift->displayName()) ?><?= $need > 0 ? ' (ต้องการ ' . $need . ')' : '' ?>
+                        <?= Html::encode($unitShift->displayName()) ?>
+                        <?php $label = $unitShift->requiredLabel(); ?>
+                        <?= $label !== '' ? ' (ต้องการ ' . Html::encode($label) . ')' : '' ?>
                     </td>
                     <?php for ($d = 1; $d <= $days; $d++): ?>
-                        <?php $have = $counts[$d][(int) $unitShift->id] ?? 0; ?>
+                        <?php
+                        // อัตรากำลังต่างกันตามประเภทวัน — เสาร์/อาทิตย์/นักขัตฤกษ์ ใช้ค่าของวันนั้น
+                        $need = $unitShift->requiredFor(
+                            isset($holidays[$d]),
+                            (int) date('w', strtotime($period->dateOfDay($d)))
+                        );
+                        $have = $counts[$d][(int) $unitShift->id] ?? 0;
+                        ?>
                         <td class="text-center p-0 <?= $need > 0 && $have < $need ? 'text-danger-emphasis fw-bold' : '' ?>">
                             <?= $need > 0 ? $have . '/' . $need : $have ?>
                         </td>

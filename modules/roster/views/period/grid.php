@@ -39,9 +39,13 @@ $dowNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 // เวรที่หน่วยนี้ตั้งไว้ — ชื่อและอัตราค่าตอบแทนมาจากหน่วยงาน ไม่ใช่ชนิดกลาง
 $unitShiftList = array_values($unitShifts);
 
-$totalNeededPerDay = 0;
-foreach ($unitShifts as $unitShift) {
-    $totalNeededPerDay += (int) $unitShift->required_staff;
+// ยอดที่ต้องจัดทั้งเดือน — คิดรายวันเพราะเสาร์/อาทิตย์/นักขัตฤกษ์ ใช้คนไม่เท่าวันธรรมดา
+$totalNeeded = 0;
+for ($d = 1; $d <= $days; $d++) {
+    $dow = (int) date('w', strtotime($period->dateOfDay($d)));
+    foreach ($unitShifts as $unitShift) {
+        $totalNeeded += $unitShift->requiredFor(isset($holidays[$d]), $dow);
+    }
 }
 
 // สรุปท้ายแถวรายคน — วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
@@ -66,7 +70,6 @@ foreach ($grid as $empId => $byDay) {
     }
     $empTotals[(int) $empId] = ['work' => $work, 'off' => $off, 'ot' => $ot, 'pay' => $pay];
 }
-$totalNeeded = $totalNeededPerDay * $days;
 $totalAssigned = 0;
 foreach ($grid as $byDay) {
     foreach ($byDay as $items) {
@@ -189,6 +192,9 @@ foreach ($grid as $byDay) {
 
         <div class="d-flex flex-wrap gap-2">
             <?php if ($canEdit): ?>
+                <button type="button" class="btn btn-sm btn-success" id="btn-auto-fill">
+                    <i class="bi bi-magic"></i> จัดเวรอัตโนมัติ
+                </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-copy-previous">
                     <i class="bi bi-clipboard-check"></i> คัดลอกเดือนก่อน
                 </button>
@@ -380,7 +386,6 @@ foreach ($grid as $byDay) {
                 <!-- ตัวนับความครบต่อวัน — หัวใจของกริด บอกทันทีว่าวันไหนคนไม่พอ -->
                 <tfoot class="bg-body-tertiary">
                     <?php foreach ($unitShiftList as $unitShift): ?>
-                        <?php $need = (int) $unitShift->required_staff; ?>
                         <tr>
                             <td class="roster-sticky-col bg-body-tertiary small">
                                 <span class="badge rounded-pill px-2 <?= $unitShift->cellClass() ?>">
@@ -388,11 +393,18 @@ foreach ($grid as $byDay) {
                                 </span>
                                 <span class="ms-1 text-body-secondary">
                                     <?= Html::encode($unitShift->displayName()) ?>
-                                    <?= $need > 0 ? '· ต้องการ ' . $need : '· ไม่ระบุจำนวน' ?>
+                                    <?= $unitShift->hasRequirement()
+                                        ? '· ต้องการ ' . Html::encode($unitShift->requiredLabel())
+                                        : '· ไม่ระบุจำนวน' ?>
                                 </span>
                             </td>
                             <?php for ($d = 1; $d <= $days; $d++): ?>
                                 <?php
+                                // จำนวนที่ต้องการต่างกันตามประเภทวัน — เสาร์/อาทิตย์/นักขัตฤกษ์
+                                $need = $unitShift->requiredFor(
+                                    isset($holidays[$d]),
+                                    (int) date('w', strtotime($period->dateOfDay($d)))
+                                );
                                 $have = $counts[$d][(int) $unitShift->id] ?? 0;
                                 if ($need <= 0) {
                                     $stateClass = 'text-body-secondary';
@@ -487,6 +499,7 @@ $canEditJs = $canEdit ? 'true' : 'false';
 $canReplaceJs = $canReplace ? 'true' : 'false';
 $replaceFormUrl = Url::to(['replace-form']);
 $reviewApproveUrl = Url::to(['review-and-approve', 'id' => $period->id]);
+$autoFillUrl = Url::to(['auto-fill', 'id' => $period->id]);
 
 $shiftMeta = [];
 foreach ($unitShiftList as $unitShift) {
@@ -658,6 +671,81 @@ $js = <<<JS
             notify('warn', 'เชื่อมต่อไม่สำเร็จ');
         });
     });
+
+    jQuery('#btn-auto-fill').on('click', function () {
+        var \$btn = jQuery(this);
+
+        Swal.fire({
+            icon: 'question',
+            title: 'จัดเวรอัตโนมัติ',
+            html: '<div class="text-start small">' +
+                '<ul class="ps-3 mb-2">' +
+                '<li>เติมเฉพาะช่องที่ยังขาดตามอัตรากำลัง — เวรที่จัดไว้แล้วจะไม่ถูกแตะ</li>' +
+                '<li>เลี่ยงวันลา วันไปราชการ และวันที่อนุมัติให้หยุด</li>' +
+                '<li>กระจายภาระงานให้คนที่ได้เวรน้อยก่อน · กดซ้ำได้ ผลจะต่างจากเดิม</li>' +
+                '</ul>' +
+                '<div class="text-body-secondary">เมื่อคนไม่พอจนต้องเลือก จะให้ระบบทำอย่างไร</div>' +
+                '</div>',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: 'เติมให้ครบ (ผ่อนกฎได้)',
+            denyButtonText: 'เฉพาะที่ไม่ผิดกฎ',
+            cancelButtonText: 'ยกเลิก',
+        }).then(function (r) {
+            if (r.isConfirmed) { runAutoFill(\$btn, '1'); }
+            else if (r.isDenied) { runAutoFill(\$btn, '0'); }
+        });
+    });
+
+    function runAutoFill(\$btn, relax) {
+        \$btn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm"></span> กำลังจัด...');
+
+        jQuery.post('{$autoFillUrl}', { relax: relax }, function (res) {
+            \$btn.prop('disabled', false).html('<i class="bi bi-magic"></i> จัดเวรอัตโนมัติ');
+            if (res.status !== 'success') {
+                notify('warn', res.message);
+                return;
+            }
+
+            var msg = 'เติมเวรให้ ' + res.placed + ' ช่อง';
+            if (res.relaxed > 0) { msg += ' (ผ่อนกฎ ' + res.relaxed + ' ช่อง)'; }
+
+            var detail = '';
+            if (res.shortageTotal > 0) {
+                detail += '<div class="fw-semibold text-danger-emphasis mt-2">ยังขาดคน ' +
+                    res.shortageTotal + ' จุด</div><ul class="small mb-0 ps-3">';
+                res.shortages.slice(0, 8).forEach(function (s) {
+                    detail += '<li>วันที่ ' + s.day + ' · ' + s.shift + ' ' + s.have + '/' + s.need + '</li>';
+                });
+                if (res.shortageTotal > 8) { detail += '<li>… อีก ' + (res.shortageTotal - 8) + ' จุด</li>'; }
+                detail += '</ul>';
+            }
+            if (res.warningTotal > 0) {
+                detail += '<div class="fw-semibold text-warning-emphasis mt-2">คำเตือนจากกฎ ' +
+                    res.warningTotal + ' รายการ</div><ul class="small mb-0 ps-3">';
+                res.warnings.slice(0, 8).forEach(function (w) { detail += '<li>' + w + '</li>'; });
+                if (res.warningTotal > 8) { detail += '<li>… อีก ' + (res.warningTotal - 8) + ' รายการ</li>'; }
+                detail += '</ul>';
+            }
+
+            if (detail && typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: res.shortageTotal > 0 ? 'warning' : 'success',
+                    title: msg,
+                    html: '<div class="text-start">' + detail +
+                        '<div class="small text-body-secondary mt-2">ตรวจตารางก่อนส่งตรวจสอบเสมอ</div></div>',
+                    confirmButtonText: 'ดูตาราง',
+                }).then(function () { window.location.reload(); });
+            } else {
+                notify('ok', msg);
+                window.location.reload();
+            }
+        }).fail(function () {
+            \$btn.prop('disabled', false).html('<i class="bi bi-magic"></i> จัดเวรอัตโนมัติ');
+            notify('warn', 'เชื่อมต่อไม่สำเร็จ');
+        });
+    }
 
     jQuery('#btn-copy-previous').on('click', function () {
         if (!window.confirm('คัดลอกเวรจากเดือนก่อนหน้า? ระบบจะจับคู่ตามวันในสัปดาห์ ไม่ใช่เลขวันที่')) { return; }

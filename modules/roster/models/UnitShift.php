@@ -47,7 +47,11 @@ class UnitShift extends RosterActiveRecord
             [['unit_id', 'shift_type_id', 'name'], 'required'],
             [['unit_id', 'shift_type_id', 'position_id', 'cross_midnight', 'required_staff', 'is_standby',
                 'sort_order', 'active', 'created_by', 'updated_by'], 'integer'],
-            [['required_staff'], 'integer', 'min' => 0, 'max' => 99],
+            [['required_staff', 'required_sat', 'required_sun', 'required_holiday'], 'integer', 'min' => 0, 'max' => 99],
+            // ปล่อยว่าง = ใช้ค่าวันธรรมดา จึงต้องเก็บเป็น NULL ไม่ใช่ 0
+            [['required_sat', 'required_sun', 'required_holiday'], 'default', 'value' => null],
+            [['required_sat', 'required_sun', 'required_holiday'], 'filter',
+                'filter' => static fn($v) => ($v === '' || $v === null) ? null : (int) $v],
             // บ่ายดึกยาว 16 ชม. จึงเปิดเพดานถึง 24 ไม่ใช่ 12
             [['hours'], 'number', 'min' => 0, 'max' => 24],
             [['pay_rate'], 'number', 'min' => 0],
@@ -76,7 +80,10 @@ class UnitShift extends RosterActiveRecord
             'end_time' => 'ออกเวร',
             'hours' => 'ชั่วโมง',
             'cross_midnight' => 'ข้ามเที่ยงคืน',
-            'required_staff' => 'จำนวนคนที่ต้องการ',
+            'required_staff' => 'วันธรรมดา',
+            'required_sat' => 'วันเสาร์',
+            'required_sun' => 'วันอาทิตย์',
+            'required_holiday' => 'วันหยุดนักขัตฤกษ์',
             'is_standby' => 'เวรรอเรียก/นอกหน่วย',
             'pay_rate' => 'ค่าตอบแทน (บาท)',
             'pay_unit' => 'หน่วยค่าตอบแทน',
@@ -163,6 +170,54 @@ class UnitShift extends RosterActiveRecord
         $row = (new \yii\db\Query())->select('title')->from('employee_position')
             ->where(['id' => $this->position_id])->scalar();
         return (string) $row;
+    }
+
+    /**
+     * จำนวนคนที่ต้องการของวันนั้น — แยกตามประเภทวัน
+     * หอผู้ป่วยใช้คนวันหยุดไม่เท่าวันธรรมดา ถ้าใช้ตัวเลขเดียวตัวนับจะแดงผิดทุกวันหยุด
+     *
+     * @param bool $isHoliday วันหยุดนักขัตฤกษ์
+     * @param int  $dow       0=อาทิตย์ … 6=เสาร์
+     */
+    public function requiredFor(bool $isHoliday, int $dow): int
+    {
+        if ($isHoliday && $this->required_holiday !== null) {
+            return (int) $this->required_holiday;
+        }
+        if (!$isHoliday && $dow === 6 && $this->required_sat !== null) {
+            return (int) $this->required_sat;
+        }
+        if (!$isHoliday && $dow === 0 && $this->required_sun !== null) {
+            return (int) $this->required_sun;
+        }
+        return (int) $this->required_staff;
+    }
+
+    /**
+     * เวรนี้ระบุอัตรากำลังไว้หรือยัง
+     * เวรที่ใส่เฉพาะเสาร์/อาทิตย์ (วันธรรมดา 0) ก็ถือว่าระบุแล้ว
+     */
+    public function hasRequirement(): bool
+    {
+        return (int) $this->required_staff > 0
+            || (int) $this->required_sat > 0
+            || (int) $this->required_sun > 0
+            || (int) $this->required_holiday > 0;
+    }
+
+    /** สรุปอัตรากำลังให้อ่านง่ายในหน้าตั้งค่า เช่น "2 · ส 1 · อา 1" */
+    public function requiredLabel(): string
+    {
+        if (!$this->hasRequirement()) {
+            return '';
+        }
+        $parts = [(string) (int) $this->required_staff];
+        foreach ([['ส', $this->required_sat], ['อา', $this->required_sun], ['นักขัตฤกษ์', $this->required_holiday]] as [$label, $value]) {
+            if ($value !== null) {
+                $parts[] = $label . ' ' . (int) $value;
+            }
+        }
+        return implode(' · ', $parts);
     }
 
     /** เวรนี้เป็นวันหยุด ไม่ใช่การทำงาน */

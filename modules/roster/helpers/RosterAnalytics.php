@@ -88,11 +88,14 @@ class RosterAnalytics
             $sheetShifts = $period->sheetShifts();
             $counts = Item::countByDayShift((int) $period->id);
             $days = $period->daysInMonth();
+            $holidays = RosterContext::holidays($period->firstDate(), $period->lastDate());
 
             for ($d = 1; $d <= $days; $d++) {
                 $cell = $result[$unitId][$d] ?? ['short' => 0, 'detail' => [], 'configured' => false];
+                $dow = (int) date('w', strtotime($period->dateOfDay($d)));
                 foreach ($sheetShifts as $shiftId => $unitShift) {
-                    $need = (int) $unitShift->required_staff;
+                    // อัตรากำลังต่างกันตามประเภทวัน — ไม่งั้นเสาร์อาทิตย์จะขึ้นขาดคนทั้งที่จัดครบ
+                    $need = $unitShift->requiredFor(isset($holidays[$d]), $dow);
                     if ($need <= 0) {
                         continue;
                     }

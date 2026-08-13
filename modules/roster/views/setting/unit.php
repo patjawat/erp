@@ -148,7 +148,9 @@ foreach ($shifts as $shift) {
                                     <?= $shift->hours !== null ? rtrim(rtrim((string) $shift->hours, '0'), '.') : '–' ?>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-body-tertiary text-body border"><?= (int) $shift->required_staff ?></span>
+                                    <span class="badge bg-body-tertiary text-body border">
+                                        <?= $shift->hasRequirement() ? Html::encode($shift->requiredLabel()) : '–' ?>
+                                    </span>
                                 </td>
                                 <td class="text-end small">
                                     <?= Html::encode($shift->payLabel()) ?>

@@ -6,6 +6,7 @@ use app\components\ApproveLevelResolver;
 use app\components\ModalHelper;
 use app\modules\hr\models\Employees;
 use app\modules\roster\helpers\RosterAccess;
+use app\modules\roster\helpers\RosterAutoScheduler;
 use app\modules\roster\helpers\RosterContext;
 use app\modules\roster\helpers\RosterCopier;
 use app\modules\roster\helpers\RosterExporter;
@@ -507,6 +508,42 @@ class PeriodController extends Controller
         return ['status' => 'success', 'message' => $message];
     }
 
+    /**
+     * จัดเวรอัตโนมัติ — เติมช่องที่ยังขาดให้ครบตามอัตรากำลัง
+     * ไม่ลบเวรที่จัดมือไว้ ถ้าต้องการเริ่มใหม่ให้กด "ล้างทั้งเดือน" ก่อน
+     */
+    public function actionAutoFill($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้แก้ไขไม่ได้'];
+        }
+
+        // หัวหน้าเลือกเองว่าจะให้เติมจนครบแม้ผิดกฎ หรือหยุดที่กฎแล้วเว้นช่องไว้
+        $allowRelax = (string) $this->request->post('relax', '1') === '1';
+
+        try {
+            $result = (new RosterAutoScheduler($period))->run($allowRelax);
+        } catch (\RuntimeException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+
+        if ($result['placed'] === 0 && empty($result['shortages'])) {
+            return ['status' => 'error', 'message' => 'ไม่มีช่องที่ต้องเติม — ตารางครบตามอัตรากำลังแล้ว'];
+        }
+
+        return [
+            'status' => 'success',
+            'placed' => $result['placed'],
+            'relaxed' => $result['relaxed'],
+            'warnings' => array_slice($result['warnings'], 0, 40),
+            'warningTotal' => count($result['warnings']),
+            'shortages' => array_slice($result['shortages'], 0, 40),
+            'shortageTotal' => count($result['shortages']),
+        ];
+    }
+
     /** ล้างเวรทั้งรอบ — ใช้ตอนคัดลอกผิดเดือนแล้วอยากเริ่มใหม่ */
     public function actionClear($id)
     {
@@ -738,11 +775,18 @@ class PeriodController extends Controller
             ->where(['period_id' => $period->id])
             ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
             ->count();
+        // นับเฉพาะเวรของแผ่นนี้ และคิดอัตรากำลังตามประเภทวัน
+        // ถ้าใช้ required_staff คูณจำนวนวันตรง ๆ หน่วยที่ลดคนวันหยุดจะขึ้นว่าจัดไม่ครบตลอด
+        $holidays = RosterContext::holidays($period->firstDate(), $period->lastDate());
         $needed = 0;
-        foreach (UnitShift::mapForUnit((int) $period->unit_id) as $unitShift) {
-            $needed += (int) $unitShift->required_staff;
+        foreach ($period->sheetShifts() as $unitShift) {
+            for ($d = 1, $days = $period->daysInMonth(); $d <= $days; $d++) {
+                $needed += $unitShift->requiredFor(
+                    isset($holidays[$d]),
+                    (int) date('w', strtotime($period->dateOfDay($d)))
+                );
+            }
         }
-        $needed *= $period->daysInMonth();
         return ['assigned' => $assigned, 'needed' => $needed];
     }
 

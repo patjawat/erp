@@ -121,12 +121,17 @@ class RosterExporter
 
         // แถวสรุปจำนวนคนต่อเวรต่อวัน — ตัวเดียวกับที่กริดบนเว็บแสดง
         foreach ($unitShifts as $shiftId => $unitShift) {
-            $need = (int) $unitShift->required_staff;
-            $sheet->setCellValue('B' . $row, $unitShift->displayName() . ($need > 0 ? " (ต้องการ $need)" : ''));
+            $label = $unitShift->requiredLabel();
+            $sheet->setCellValue('B' . $row, $unitShift->displayName() . ($label !== '' ? " (ต้องการ $label)" : ''));
             $sheet->setCellValue('C' . $row, $unitShift->positionName());
             $sheet->getStyle('B' . $row)->getFont()->setBold(true);
             for ($d = 1; $d <= $days; $d++) {
                 $col = Coordinate::stringFromColumnIndex($dayStart - 1 + $d);
+                // อัตรากำลังต่างกันตามประเภทวัน
+                $need = $unitShift->requiredFor(
+                    isset($holidays[$d]),
+                    (int) date('w', strtotime($period->dateOfDay($d)))
+                );
                 $have = $counts[$d][(int) $shiftId] ?? 0;
                 $sheet->setCellValue($col . $row, $need > 0 ? "$have/$need" : $have);
                 if ($need > 0 && $have < $need) {

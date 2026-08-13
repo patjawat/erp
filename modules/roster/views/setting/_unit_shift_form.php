@@ -80,11 +80,26 @@ $positionOptions = ArrayHelper::map(
     <i class="bi bi-clock"></i> <span id="shift-hours-text">กรอกเวลาเข้า-ออกเพื่อคำนวณชั่วโมง</span>
 </div>
 
-<div class="row g-3">
+<label class="form-label fw-semibold mt-2">จำนวนคนที่ต้องการ</label>
+<div class="row g-2 mb-1">
     <div class="col-6 col-md-3">
-        <?= $form->field($model, 'required_staff')->input('number', ['min' => 0, 'max' => 99])
-            ->hint('ใช้เตือนว่าจัดครบหรือยัง') ?>
+        <?= $form->field($model, 'required_staff')->input('number', ['min' => 0, 'max' => 99]) ?>
     </div>
+    <div class="col-6 col-md-3">
+        <?= $form->field($model, 'required_sat')->input('number', ['min' => 0, 'max' => 99, 'placeholder' => 'ตามวันธรรมดา']) ?>
+    </div>
+    <div class="col-6 col-md-3">
+        <?= $form->field($model, 'required_sun')->input('number', ['min' => 0, 'max' => 99, 'placeholder' => 'ตามวันธรรมดา']) ?>
+    </div>
+    <div class="col-6 col-md-3">
+        <?= $form->field($model, 'required_holiday')->input('number', ['min' => 0, 'max' => 99, 'placeholder' => 'ตามวันธรรมดา']) ?>
+    </div>
+</div>
+<div class="form-text mb-3">
+    เว้นว่าง = ใช้ค่าวันธรรมดา · ใช้เตือนว่าจัดครบหรือยัง และเป็นเป้าหมายของการจัดเวรอัตโนมัติ
+</div>
+
+<div class="row g-3">
     <div class="col-6 col-md-4">
         <?= $form->field($model, 'pay_rate')->input('number', ['min' => 0, 'step' => '0.01', 'placeholder' => '600.00'])
             ->label('ค่าตอบแทน (บาท)') ?>
