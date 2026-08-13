@@ -5,8 +5,8 @@ use app\modules\hr\models\Employees;
 $leader = null;
 
 if ($node->data_json) {
-    $json = json_decode($node->data_json, true);
-    $leader = Employees::findOne($json['leader_1'] ?? null);
+    $json = $node->getDataJsonArray();
+    $leader = Employees::findOne($json['leader_1'] ?? $json['leader1'] ?? null);
 }
 
 ?>
