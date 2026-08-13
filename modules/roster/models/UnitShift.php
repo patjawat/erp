@@ -57,7 +57,15 @@ class UnitShift extends RosterActiveRecord
             [['pay_rate'], 'number', 'min' => 0],
             [['start_time', 'end_time', 'data_json', 'created_at', 'updated_at'], 'safe'],
             [['name'], 'string', 'max' => 100],
-            [['short_name'], 'string', 'max' => 10],
+            // อักษรย่อจำกัด 2 ตัว: ตัวหน้าบอกสาย/หน้าที่ ตัวหลังบอกเวลา ซึ่งก็คืออัตราค่าตอบแทน
+            // ยาวกว่านี้ช่องในกริดจะบีบจนอ่านไม่ออกเมื่อคนหนึ่งมีหลายเวรในวันเดียว
+            [['short_name'], 'string', 'max' => 2,
+                'tooLong' => 'อักษรย่อยาวได้ไม่เกิน 2 ตัว — ใช้ตัวหน้าบอกสาย ตัวหลังบอกเวลา เช่น 1ช = Refer 1 เช้า'],
+            [['short_name'], 'filter', 'filter' => static fn($v) => ($v === '' ? null : $v)],
+            // ย่อซ้ำในหน่วยเดียวกัน = อ่านตารางไม่ออกว่าช่องนั้นเป็นเวรไหน และคิดเงินผิดโดยไม่มีใครเห็น
+            // ไม่ยกเว้นเวรที่ปิดใช้งาน เพราะตารางเดือนเก่ายังอ้างถึงอยู่
+            [['short_name'], 'unique', 'targetAttribute' => ['unit_id', 'short_name'],
+                'message' => 'หน่วยงานนี้ใช้อักษรย่อนี้กับเวรอื่นแล้ว'],
             [['ref'], 'string', 'max' => 255],
             [['pay_unit'], 'in', 'range' => [self::PAY_PER_SHIFT, self::PAY_PER_HOUR]],
             [['pay_unit'], 'default', 'value' => self::PAY_PER_SHIFT],
@@ -255,11 +263,18 @@ class UnitShift extends RosterActiveRecord
         return true;
     }
 
-    /** @return self[] เวรที่ใช้งานของหน่วยนี้ เรียงตามลำดับที่ตั้งไว้ */
-    public static function listForUnit(int $unitId): array
+    /**
+     * @param bool $activeOnly false = รวมเวรที่ปิดใช้งานด้วย ใช้ตอนตรวจอักษรย่อซ้ำ
+     *                         เพราะตารางเดือนเก่ายังอ้างถึงเวรที่ปิดไปแล้ว
+     * @return self[] เรียงตามลำดับที่ตั้งไว้
+     */
+    public static function listForUnit(int $unitId, bool $activeOnly = true): array
     {
-        return static::find()
-            ->where(['unit_id' => $unitId, 'active' => 1])
+        $query = static::find()->where(['unit_id' => $unitId]);
+        if ($activeOnly) {
+            $query->andWhere(['active' => 1]);
+        }
+        return $query
             ->orderBy(['sort_order' => SORT_ASC, 'start_time' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
     }
