@@ -39,11 +39,18 @@ class RuleChecker
         return $shift ? $shift->displayName() : 'เวร';
     }
 
-    /** เวรนี้เป็นเวรรอเรียก/นอกหน่วย ที่ไม่นับเป็นชั่วโมงทำงานจริงหรือไม่ */
+    /**
+     * เวรนี้ไม่นับเป็นชั่วโมงทำงานจริงหรือไม่
+     * ครอบทั้งเวรรอเรียก (On call/Refer) และวันหยุด (OFF)
+     * วันหยุดต้อง "ตัด" ช่วงวันทำงานติดต่อกัน ไม่ใช่ต่อให้ยาวขึ้น
+     */
     private function isStandby(?int $unitShiftId): bool
     {
         $shift = $this->shift($unitShiftId);
-        return $shift ? (int) $shift->is_standby === 1 : false;
+        if (!$shift) {
+            return false;
+        }
+        return (int) $shift->is_standby === 1 || $shift->isOff();
     }
 
     /** หมวดของเวร — กฎคู่เวรอ้างหมวด ไม่ได้อ้างชื่อเวรของหน่วย */
@@ -65,9 +72,45 @@ class RuleChecker
      * @param array<string, int[]> $empShifts เวรเดิมของคนนี้ [Y-m-d => [unit_shift_id, ...]]
      * @return string[] ข้อความเตือน (ว่าง = ไม่ผิดกฎ)
      */
+    /**
+     * ตรวจว่าคนนี้ตรงกับตำแหน่งที่เวรกำหนดไว้ไหม
+     * หน่วยงานแยกเวรตามวิชาชีพเพราะอัตราค่าตอบแทนต่างกัน (ชพ/ชป/ชผ)
+     * ถ้าจัดคนผิดวิชาชีพลงช่อง เงินจะคิดผิดโดยไม่มีใครเห็น จึงต้องเตือน
+     */
+    public function checkPosition(int $unitShiftId, int $empId): ?string
+    {
+        $shift = $this->shift($unitShiftId);
+        if (!$shift || !$shift->position_id) {
+            return null; // เวรนี้ไม่จำกัดวิชาชีพ
+        }
+        $empPositionId = (int) (new \yii\db\Query())
+            ->select('employee_position_id')->from('employees')->where(['id' => $empId])->scalar();
+        if ($empPositionId === (int) $shift->position_id) {
+            return null;
+        }
+        $empPosition = $empPositionId
+            ? (string) (new \yii\db\Query())->select('title')->from('employee_position')
+                ->where(['id' => $empPositionId])->scalar()
+            : 'ไม่ได้ระบุตำแหน่ง';
+        return sprintf('%s เป็น%s แต่เวรนี้กำหนดไว้สำหรับ%s — อัตราค่าตอบแทนอาจคิดผิด',
+            'คนนี้', $empPosition, $shift->positionName());
+    }
+
     public function checkAssignment(string $workDate, int $unitShiftId, array $empShifts): array
     {
         $warnings = [];
+
+        // วันหยุดไม่ต้องตรวจกฎเวร — แต่เตือนถ้าวันนั้นมีเวรทำงานอยู่ด้วย
+        if ($this->shift($unitShiftId) && $this->shift($unitShiftId)->isOff()) {
+            foreach ($empShifts[$workDate] ?? [] as $otherShiftId) {
+                $other = $this->shift((int) $otherShiftId);
+                if ($other && !$other->isOff()) {
+                    $warnings[] = sprintf('ทำเครื่องหมายหยุด ทั้งที่วันนี้มี%sอยู่แล้ว', $other->displayName());
+                    break;
+                }
+            }
+            return $warnings;
+        }
         $prevDate = date('Y-m-d', strtotime($workDate . ' -1 day'));
         $nextDate = date('Y-m-d', strtotime($workDate . ' +1 day'));
 

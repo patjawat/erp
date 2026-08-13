@@ -52,6 +52,7 @@ $unitShiftList = array_values($unitShifts);
                     </th>
                 <?php endfor; ?>
                 <th class="text-center" style="width:32px">รวม</th>
+                <th class="text-center" style="width:32px">หยุด</th>
             </tr>
         </thead>
         <tbody>
@@ -59,8 +60,15 @@ $unitShiftList = array_values($unitShifts);
                 <?php
                 $empId = (int) $emp['id'];
                 $total = 0;
+                $offDays = 0;
                 foreach ($grid[$empId] ?? [] as $items) {
-                    $total += count($items);
+                    foreach ($items as $it) {
+                        if ($it->isOff()) {
+                            $offDays++;
+                        } else {
+                            $total++;
+                        }
+                    }
                 }
                 ?>
                 <tr>
@@ -84,6 +92,7 @@ $unitShiftList = array_values($unitShifts);
                         </td>
                     <?php endfor; ?>
                     <td class="text-center fw-semibold"><?= $total ?></td>
+                    <td class="text-center"><?= $offDays ?: '' ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -100,7 +109,7 @@ $unitShiftList = array_values($unitShifts);
                             <?= $need > 0 ? $have . '/' . $need : $have ?>
                         </td>
                     <?php endfor; ?>
-                    <td></td>
+                    <td colspan="2"></td>
                 </tr>
             <?php endforeach; ?>
         </tfoot>

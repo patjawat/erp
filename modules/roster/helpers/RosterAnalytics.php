@@ -189,6 +189,15 @@ class RosterAnalytics
                 }
             }
 
+            // วันหยุด (OFF) ไม่ใช่การทำงาน ต้องตัดออกก่อนนับ ไม่งั้นคนที่ "หยุด" วันเสาร์
+            // จะถูกนับว่า "มาทำงาน" วันเสาร์ แล้วรายงานความเป็นธรรมอ่านกลับด้าน
+            $offShiftIds = [];
+            foreach (UnitShift::listForUnit($unitId) as $unitShift) {
+                if ($unitShift->isOff()) {
+                    $offShiftIds[] = (int) $unitShift->id;
+                }
+            }
+
             $rows = (new Query())
                 ->select(['emp_id', 'work_date', 'unit_shift_id'])
                 ->from(Item::tableName())
@@ -199,6 +208,9 @@ class RosterAnalytics
             // สะสมต่อจากแผ่นอื่นของหน่วยเดียวกัน — คนหนึ่งอาจอยู่ทั้งแผ่นหลักและแผ่น On call
             $stat = $result[$unitId]['perEmployee'] ?? [];
             foreach ($rows as $row) {
+                if (in_array((int) $row['unit_shift_id'], $offShiftIds, true)) {
+                    continue;
+                }
                 $empId = (int) $row['emp_id'];
                 $day = (int) date('j', strtotime($row['work_date']));
                 $stat[$empId] = $stat[$empId] ?? ['total' => 0, 'night' => 0, 'offday' => 0];

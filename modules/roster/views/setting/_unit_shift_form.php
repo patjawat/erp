@@ -11,6 +11,20 @@ use yii\helpers\Html;
 /** @var app\modules\roster\models\ShiftType[] $types */
 
 $typeOptions = ArrayHelper::map($types, 'id', 'title');
+
+// เฉพาะตำแหน่งที่มีคนขึ้นเวรจริง — ไม่งั้นดรอปดาวน์ยาวเป็นร้อยรายการ
+$positionOptions = ArrayHelper::map(
+    (new \yii\db\Query())
+        ->select(['ep.id', 'ep.title'])
+        ->from(['ep' => 'employee_position'])
+        ->innerJoin(['e' => 'employees'], 'e.employee_position_id = ep.id AND e.status = 1')
+        ->where(['ep.active' => 1])
+        ->groupBy(['ep.id', 'ep.title'])
+        ->orderBy(['ep.title' => SORT_ASC])
+        ->all(),
+    'id',
+    'title'
+);
 ?>
 <?php $form = ActiveForm::begin(['id' => 'form', 'options' => ['data-pjax' => false]]); ?>
 
@@ -37,8 +51,17 @@ $typeOptions = ArrayHelper::map($types, 'id', 'title');
 <div class="row g-3">
     <div class="col-12 col-md-6">
         <?= $form->field($model, 'shift_type_id')->dropDownList($typeOptions, ['class' => 'form-select'])
-            ->hint('ใช้จัดกลุ่มในรายงานรวมข้ามหน่วยงาน และผูกกับกฎเวรต่อเนื่อง — บ่ายดึกให้เลือก “ควบเวร”') ?>
+            ->hint('ใช้จัดกลุ่มในรายงานรวมข้ามหน่วยงาน และผูกกับกฎเวรต่อเนื่อง — บ่ายดึกเลือก “ควบเวร” · วันหยุดเลือก “วันหยุด”') ?>
     </div>
+    <div class="col-12 col-md-6">
+        <?= $form->field($model, 'position_id')->dropDownList($positionOptions, [
+            'prompt' => '— ไม่จำกัดวิชาชีพ —',
+            'class' => 'form-select',
+        ])->hint('ระบุเมื่อแยกเวรตามวิชาชีพเพราะอัตราต่างกัน (เช่น ชพ=พยาบาล ชผ=ผู้ช่วย) ระบบจะเตือนถ้าจัดคนผิดวิชาชีพ') ?>
+    </div>
+</div>
+
+<div class="row g-3">
     <div class="col-6 col-md-3">
         <?= $form->field($model, 'start_time')->widget(TimePicker::class, [
             'pluginOptions' => ['showMeridian' => false, 'defaultTime' => false, 'minuteStep' => 5],

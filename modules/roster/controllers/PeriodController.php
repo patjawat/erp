@@ -414,6 +414,7 @@ class PeriodController extends Controller
                 'action' => 'removed',
                 'counts' => $this->dayCounts($period, $day),
                 'summary' => $this->summary($period),
+                'empTotals' => $this->employeeTotals($period, $empId),
             ];
         }
 
@@ -433,6 +434,10 @@ class PeriodController extends Controller
         $checker = new RuleChecker((int) $period->unit_id);
         $shifts = RuleChecker::shiftsOfEmployee($empId, $period->firstDate(), $period->lastDate(), $item->id);
         $warnings = $checker->checkAssignment($workDate, $unitShiftId, $shifts);
+        $positionWarning = $checker->checkPosition($unitShiftId, $empId);
+        if ($positionWarning !== null) {
+            array_unshift($warnings, $positionWarning);
+        }
 
         return [
             'status' => 'success',
@@ -441,7 +446,37 @@ class PeriodController extends Controller
             'warnings' => $warnings,
             'counts' => $this->dayCounts($period, $day),
             'summary' => $this->summary($period),
+            'empTotals' => $this->employeeTotals($period, $empId),
         ];
+    }
+
+    /**
+     * สรุปท้ายแถวของคนหนึ่ง — เวรทำงาน / วันหยุด / เวรนอกเวลา / ค่าตอบแทน
+     * วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+     */
+    private function employeeTotals(Period $period, int $empId): array
+    {
+        $items = Item::find()
+            ->with('unitShift')
+            ->where(['period_id' => $period->id, 'emp_id' => $empId])
+            ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
+            ->all();
+        $work = 0;
+        $off = 0;
+        $ot = 0;
+        $pay = 0.0;
+        foreach ($items as $item) {
+            if ($item->isOff()) {
+                $off++;
+                continue;
+            }
+            $work++;
+            if ($item->isOt()) {
+                $ot++;
+            }
+            $pay += $item->payAmount();
+        }
+        return ['work' => $work, 'off' => $off, 'ot' => $ot, 'pay' => $pay];
     }
 
     /** คัดลอกเวรจากเดือนก่อน — จับคู่ตามวันในสัปดาห์ ดู RosterCopier */

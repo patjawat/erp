@@ -45,7 +45,7 @@ class UnitShift extends RosterActiveRecord
     {
         return [
             [['unit_id', 'shift_type_id', 'name'], 'required'],
-            [['unit_id', 'shift_type_id', 'cross_midnight', 'required_staff', 'is_standby',
+            [['unit_id', 'shift_type_id', 'position_id', 'cross_midnight', 'required_staff', 'is_standby',
                 'sort_order', 'active', 'created_by', 'updated_by'], 'integer'],
             [['required_staff'], 'integer', 'min' => 0, 'max' => 99],
             // บ่ายดึกยาว 16 ชม. จึงเปิดเพดานถึง 24 ไม่ใช่ 12
@@ -69,6 +69,7 @@ class UnitShift extends RosterActiveRecord
         return [
             'unit_id' => 'หน่วยงาน',
             'shift_type_id' => 'หมวดเวร',
+            'position_id' => 'ตำแหน่ง/วิชาชีพ',
             'name' => 'ชื่อเวร',
             'short_name' => 'อักษรย่อ',
             'start_time' => 'เข้าเวร',
@@ -146,6 +147,34 @@ class UnitShift extends RosterActiveRecord
     public function getShiftType()
     {
         return $this->hasOne(ShiftType::class, ['id' => 'shift_type_id']);
+    }
+
+    public function getPosition()
+    {
+        return $this->hasOne(\app\modules\hr\models\EmployeePosition::class, ['id' => 'position_id']);
+    }
+
+    /** ชื่อตำแหน่งที่เวรนี้กำหนดไว้ — ว่าง = ไม่จำกัดวิชาชีพ */
+    public function positionName(): string
+    {
+        if (!$this->position_id) {
+            return '';
+        }
+        $row = (new \yii\db\Query())->select('title')->from('employee_position')
+            ->where(['id' => $this->position_id])->scalar();
+        return (string) $row;
+    }
+
+    /** เวรนี้เป็นวันหยุด ไม่ใช่การทำงาน */
+    public function isOff(): bool
+    {
+        return $this->shiftType ? (int) $this->shiftType->is_off === 1 : false;
+    }
+
+    /** เวรนี้อยู่นอกเวลาราชการ (ใช้นับ OT) */
+    public function isOt(): bool
+    {
+        return $this->shiftType ? (int) $this->shiftType->is_ot === 1 : false;
     }
 
     /**

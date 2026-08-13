@@ -40,7 +40,9 @@ class RosterExporter
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('ตารางเวร');
 
-        $lastCol = Coordinate::stringFromColumnIndex(3 + $days); // A ลำดับ, B ชื่อ, วัน 1..n, รวม
+        // A ลำดับ, B ชื่อ, วัน 1..n, แล้วสรุป 4 คอลัมน์: รวมเวร / วันหยุด / OT / ค่าตอบแทน
+        $sumStart = 3 + $days;
+        $lastCol = Coordinate::stringFromColumnIndex($sumStart + 3);
 
         $sheet->mergeCells("A1:{$lastCol}1");
         $sheet->setCellValue('A1', $period->title . ' — ' . $period->unitName() . ' — ' . $period->monthLabel());
@@ -61,7 +63,9 @@ class RosterExporter
                     ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
             }
         }
-        $sheet->setCellValue($lastCol . '2', 'รวม');
+        foreach (['รวมเวร', 'วันหยุด', 'OT', 'ค่าตอบแทน'] as $i => $label) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($sumStart + $i) . '2', $label);
+        }
         $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
         $sheet->getStyle("A2:{$lastCol}2")->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)
@@ -74,6 +78,9 @@ class RosterExporter
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname']));
             $total = 0;
+            $offDays = 0;
+            $otShifts = 0;
+            $pay = 0.0;
             for ($d = 1; $d <= $days; $d++) {
                 $items = $grid[$empId][$d] ?? [];
                 if (empty($items)) {
@@ -86,7 +93,16 @@ class RosterExporter
                     $labels[] = $item->shiftShort();
                     $fill = $fill ?: ($item->unitShift ? $item->unitShift->excelFill()
                         : ($item->shiftType ? $item->shiftType->excelFill() : null));
+                    // วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+                    if ($item->isOff()) {
+                        $offDays++;
+                        continue;
+                    }
                     $total++;
+                    if ($item->isOt()) {
+                        $otShifts++;
+                    }
+                    $pay += $item->payAmount();
                 }
                 $sheet->setCellValue($col . $row, implode('/', $labels));
                 if ($fill) {
@@ -94,7 +110,9 @@ class RosterExporter
                         ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($fill);
                 }
             }
-            $sheet->setCellValue($lastCol . $row, $total);
+            foreach ([$total, $offDays, $otShifts, $pay > 0 ? round($pay, 2) : null] as $i => $value) {
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($sumStart + $i) . $row, $value);
+            }
             $row++;
         }
 
@@ -124,7 +142,9 @@ class RosterExporter
         for ($d = 1; $d <= $days; $d++) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex(2 + $d))->setWidth(5);
         }
-        $sheet->getColumnDimension($lastCol)->setWidth(7);
+        foreach ([8, 8, 6, 13] as $i => $width) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($sumStart + $i))->setWidth($width);
+        }
         $sheet->freezePane('C3');
         $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
 

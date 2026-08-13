@@ -43,6 +43,29 @@ $totalNeededPerDay = 0;
 foreach ($unitShifts as $unitShift) {
     $totalNeededPerDay += (int) $unitShift->required_staff;
 }
+
+// สรุปท้ายแถวรายคน — วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+$empTotals = [];
+foreach ($grid as $empId => $byDay) {
+    $work = 0;
+    $off = 0;
+    $ot = 0;
+    $pay = 0.0;
+    foreach ($byDay as $items) {
+        foreach ($items as $item) {
+            if ($item->isOff()) {
+                $off++;
+                continue;
+            }
+            $work++;
+            if ($item->isOt()) {
+                $ot++;
+            }
+            $pay += $item->payAmount();
+        }
+    }
+    $empTotals[(int) $empId] = ['work' => $work, 'off' => $off, 'ot' => $ot, 'pay' => $pay];
+}
 $totalNeeded = $totalNeededPerDay * $days;
 $totalAssigned = 0;
 foreach ($grid as $byDay) {
@@ -216,6 +239,12 @@ foreach ($grid as $byDay) {
 
 <!-- กริดจัดเวร -->
 <div class="card border shadow-sm">
+    <div class="card-header bg-body-tertiary text-center py-2">
+        <div class="fw-bold"><?= Html::encode($period->unitName()) ?></div>
+        <div class="small text-body-secondary">
+            <?= Html::encode($period->title) ?> · ประจำเดือน<?= Html::encode($period->monthLabel()) ?>
+        </div>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive roster-scroll">
             <table class="table table-bordered table-sm align-middle mb-0 roster-grid">
@@ -236,7 +265,10 @@ foreach ($grid as $byDay) {
                                 <div class="small opacity-75"><?= $dowNames[(int) date('w', $ts)] ?></div>
                             </th>
                         <?php endfor; ?>
-                        <th class="text-center bg-body-tertiary" style="min-width:70px">รวม</th>
+                        <th class="text-center bg-body-tertiary" style="min-width:56px">รวมเวร</th>
+                        <th class="text-center bg-body-tertiary" style="min-width:48px">วันหยุด</th>
+                        <th class="text-center bg-body-tertiary" style="min-width:48px">OT</th>
+                        <th class="text-end bg-body-tertiary" style="min-width:90px">ค่าตอบแทน</th>
                     </tr>
                 </thead>
 
@@ -325,7 +357,13 @@ foreach ($grid as $byDay) {
                                 </td>
                             <?php endfor; ?>
 
-                            <td class="text-center fw-semibold emp-total" data-emp="<?= $empId ?>"><?= $empTotal ?></td>
+                            <?php $tot = $empTotals[$empId] ?? ['work' => 0, 'off' => 0, 'ot' => 0, 'pay' => 0.0]; ?>
+                            <td class="text-center fw-semibold emp-total" data-emp="<?= $empId ?>"><?= $tot['work'] ?></td>
+                            <td class="text-center emp-off text-body-secondary" data-emp="<?= $empId ?>"><?= $tot['off'] ?></td>
+                            <td class="text-center emp-ot <?= $tot['ot'] ? 'text-warning-emphasis fw-semibold' : 'text-body-secondary' ?>"
+                                data-emp="<?= $empId ?>"><?= $tot['ot'] ?></td>
+                            <td class="text-end emp-pay small <?= $tot['pay'] > 0 ? 'fw-semibold' : 'text-body-secondary' ?>"
+                                data-emp="<?= $empId ?>"><?= $tot['pay'] > 0 ? number_format($tot['pay'], 2) : '–' ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -362,7 +400,14 @@ foreach ($grid as $byDay) {
                                     <?= $need > 0 ? $have . '/' . $need : $have ?>
                                 </td>
                             <?php endfor; ?>
-                            <td></td>
+                            <td colspan="4" class="small text-body-secondary">
+                                <?php if ($unitShift->positionName()): ?>
+                                    <?= Html::encode($unitShift->positionName()) ?>
+                                <?php endif; ?>
+                                <?php if ($unitShift->pay_rate): ?>
+                                    · <?= Html::encode($unitShift->payLabel()) ?>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tfoot>
@@ -465,10 +510,18 @@ $js = <<<JS
         });
     }
 
-    function updateEmpTotal(empId) {
-        var total = 0;
-        jQuery('.roster-cell[data-emp="' + empId + '"] .roster-chip').each(function () { total++; });
-        jQuery('.emp-total[data-emp="' + empId + '"]').text(total);
+    // ตัวเลขท้ายแถวคำนวณฝั่งเซิร์ฟเวอร์ เพราะต้องรู้ว่าเวรไหนเป็นวันหยุด/นอกเวลา และอัตราเท่าไร
+    function updateEmpTotal(empId, totals) {
+        if (!totals) { return; }
+        jQuery('.emp-total[data-emp="' + empId + '"]').text(totals.work);
+        jQuery('.emp-off[data-emp="' + empId + '"]').text(totals.off);
+        var \$ot = jQuery('.emp-ot[data-emp="' + empId + '"]').text(totals.ot);
+        \$ot.toggleClass('text-warning-emphasis fw-semibold', totals.ot > 0)
+           .toggleClass('text-body-secondary', totals.ot === 0);
+        var \$pay = jQuery('.emp-pay[data-emp="' + empId + '"]');
+        \$pay.text(totals.pay > 0 ? totals.pay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '–')
+            .toggleClass('fw-semibold', totals.pay > 0)
+            .toggleClass('text-body-secondary', totals.pay <= 0);
     }
 
     jQuery('body').on('click', '.roster-cell', function () {
@@ -526,7 +579,7 @@ $js = <<<JS
             }
             repaintCell(\$cell, items);
             updateCounts(\$cell.data('day'), res.counts || {});
-            updateEmpTotal(\$cell.data('emp'));
+            updateEmpTotal(\$cell.data('emp'), res.empTotals);
 
             if (res.summary) {
                 jQuery('#summary-assigned').text(res.summary.assigned.toLocaleString());

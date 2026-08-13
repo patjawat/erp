@@ -111,6 +111,36 @@ class Item extends RosterActiveRecord
             : ($this->shiftType ? $this->shiftType->cellClass() : 'bg-secondary-subtle text-secondary-emphasis');
     }
 
+    /**
+     * ช่องนี้เป็นวันหยุด ไม่ใช่เวรทำงาน
+     * ทุกจุดที่ "นับเวร" ต้องข้ามช่องแบบนี้ ไม่งั้นคอลัมน์รวมและรายงานความเป็นธรรม
+     * จะนับวันหยุดเป็นวันทำงาน แล้วอ่านกลับด้าน
+     */
+    public function isOff(): bool
+    {
+        if ($this->unitShift) {
+            return $this->unitShift->isOff();
+        }
+        return $this->shiftType ? (int) $this->shiftType->is_off === 1 : false;
+    }
+
+    public function isOt(): bool
+    {
+        if ($this->unitShift) {
+            return $this->unitShift->isOt();
+        }
+        return $this->shiftType ? (int) $this->shiftType->is_ot === 1 : false;
+    }
+
+    /** ค่าตอบแทนของช่องนี้ตามอัตราที่ตั้งไว้ในนิยามเวร (วันหยุดไม่คิดเงิน) */
+    public function payAmount(): float
+    {
+        if ($this->isOff() || !$this->unitShift) {
+            return 0.0;
+        }
+        return $this->unitShift->payAmount();
+    }
+
     public function getPeriod()
     {
         return $this->hasOne(Period::class, ['id' => 'period_id']);

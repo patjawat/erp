@@ -33,7 +33,7 @@ class ShiftType extends RosterActiveRecord
     {
         return [
             [['code', 'short_name', 'title'], 'required'],
-            [['is_night', 'is_ot', 'is_extra', 'sort_order', 'active', 'created_by', 'updated_by'], 'integer'],
+            [['is_night', 'is_ot', 'is_extra', 'is_off', 'sort_order', 'active', 'created_by', 'updated_by'], 'integer'],
             [['data_json', 'created_at', 'updated_at'], 'safe'],
             [['code'], 'string', 'max' => 20],
             [['short_name'], 'string', 'max' => 10],
@@ -42,7 +42,7 @@ class ShiftType extends RosterActiveRecord
             [['color'], 'in', 'range' => self::COLORS, 'message' => 'เลือกสีจากรายการที่กำหนด'],
             [['code'], 'unique', 'message' => 'รหัสนี้ถูกใช้แล้ว'],
             [['active'], 'default', 'value' => 1],
-            [['is_night', 'is_ot', 'is_extra', 'sort_order'], 'default', 'value' => 0],
+            [['is_night', 'is_ot', 'is_extra', 'is_off', 'sort_order'], 'default', 'value' => 0],
         ];
     }
 
@@ -55,6 +55,7 @@ class ShiftType extends RosterActiveRecord
             'is_night' => 'เป็นเวรดึก',
             'is_ot' => 'นอกเวลาราชการ',
             'is_extra' => 'เป็นเวรเสริม/ควบ',
+            'is_off' => 'เป็นวันหยุด (ไม่ใช่การทำงาน)',
             'color' => 'สีในตาราง',
             'sort_order' => 'ลำดับ',
             'active' => 'ใช้งาน',
