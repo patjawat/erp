@@ -162,11 +162,14 @@ foreach ($grid as $byDay) {
 <div class="card border shadow-sm mb-3">
     <div class="card-body d-flex flex-column flex-lg-row gap-3 justify-content-between align-items-lg-center">
         <div class="d-flex flex-wrap gap-2 align-items-center">
-            <span class="text-body-secondary small me-1">เลือกเวรแล้วคลิกช่อง:</span>
+            <span class="text-body-secondary small me-1 w-100">
+                เลือกเวรแล้วคลิกช่อง — กำลังใส่:
+                <strong class="text-body" id="pen-current">—</strong>
+            </span>
             <?php foreach ($unitShiftList as $i => $unitShift): ?>
                 <input type="radio" class="btn-check" name="shift-pen" id="pen-<?= $unitShift->id ?>"
                        value="<?= $unitShift->id ?>" <?= $i === 0 ? 'checked' : '' ?> autocomplete="off">
-                <label class="btn btn-sm rounded-pill <?= $unitShift->cellClass() ?> border" for="pen-<?= $unitShift->id ?>">
+                <label class="btn btn-sm rounded-pill shift-pen <?= $unitShift->cellClass() ?>" for="pen-<?= $unitShift->id ?>">
                     <strong><?= Html::encode($unitShift->displayShort()) ?></strong>
                     <span class="d-none d-md-inline"><?= Html::encode($unitShift->displayName()) ?></span>
                     <span class="d-none d-lg-inline opacity-75 small"><?= Html::encode($unitShift->timeRangeLabel()) ?></span>
@@ -179,7 +182,7 @@ foreach ($grid as $byDay) {
                 </label>
             <?php endforeach; ?>
             <input type="radio" class="btn-check" name="shift-pen" id="pen-erase" value="erase" autocomplete="off">
-            <label class="btn btn-sm rounded-pill btn-outline-secondary" for="pen-erase">
+            <label class="btn btn-sm rounded-pill shift-pen bg-body-tertiary text-body" for="pen-erase">
                 <i class="bi bi-eraser"></i> ลบ
             </label>
         </div>
@@ -454,6 +457,25 @@ $this->registerCss(<<<'CSS'
 /* เวรที่ระบุวิชาชีพ — หรี่แถวคนที่วิชาชีพไม่ตรง เพื่อไม่ต้องจำว่าใครเป็นอะไร */
 .roster-row.is-dimmed { opacity: .32; }
 .roster-row.is-dimmed .roster-cell { cursor: not-allowed; }
+
+/* ปุ่มเลือกเวร — ต้องเห็นชัดว่ากำลังถืออันไหนอยู่ ไม่งั้นคลิกผิดทั้งเดือนโดยไม่รู้ตัว
+   ปุ่มที่ยังไม่เลือกจะจางและแบน ปุ่มที่เลือกอยู่จะทึบ มีวงแหวน และยกขึ้นมา */
+.shift-pen {
+    border: 2px solid transparent;
+    opacity: .55;
+    filter: grayscale(.35);
+    transition: opacity .15s ease-out, transform .15s ease-out, box-shadow .15s ease-out;
+}
+.shift-pen:hover { opacity: .85; filter: none; }
+.btn-check:checked + .shift-pen {
+    opacity: 1;
+    filter: none;
+    font-weight: 700;
+    border-color: var(--bs-emphasis-color);
+    box-shadow: 0 0 0 .2rem var(--bs-primary-bg-subtle), 0 2px 6px rgba(0, 0, 0, .18);
+    transform: translateY(-1px);
+}
+.btn-check:checked + .shift-pen::before { content: '✓ '; font-weight: 700; }
 CSS);
 
 $assignUrl = Url::to(['assign']);
@@ -473,6 +495,7 @@ foreach ($unitShiftList as $unitShift) {
         'c' => $unitShift->cellClass(),
         'n' => $unitShift->displayName(),
         'p' => (int) $unitShift->position_id, // 0 = ไม่จำกัดวิชาชีพ
+        'o' => (int) $unitShift->sort_order,  // ลำดับการเรียงชิปในช่อง
     ];
 }
 $shiftMetaJson = json_encode($shiftMeta, JSON_UNESCAPED_UNICODE);
@@ -499,6 +522,12 @@ $js = <<<JS
     function applyPositionFilter() {
         var pen = currentPen();
         var meta = shiftMeta[pen];
+
+        // บอกเป็นตัวหนังสือด้วยว่ากำลังถือเวรอะไร สีอย่างเดียวอาจไม่พอถ้าเวรเยอะ
+        jQuery('#pen-current').text(
+            pen === 'erase' ? 'ลบเวร' : (meta ? meta.n + (meta.p ? '' : ' (ทุกวิชาชีพ)') : '—')
+        );
+
         var wanted = meta ? meta.p : 0;
         if (!wanted) {
             jQuery('.roster-row').removeClass('is-dimmed');
@@ -515,12 +544,20 @@ $js = <<<JS
     function repaintCell(\$cell, items) {
         var \$inner = \$cell.find('.roster-cell-inner');
         \$inner.find('.roster-chip').remove();
-        items.forEach(function (shiftId) {
+        // เรียงตามลำดับเวรที่ตั้งไว้ (เช้า→บ่าย→ดึก) ให้ตรงกับที่เซิร์ฟเวอร์วาด
+        // ไม่ใช่ตามลำดับที่คลิก — คลิกบ่ายก่อนเช้าก็ต้องขึ้น "ช/บ"
+        var html = items.slice().sort(function (a, b) {
+            var oa = shiftMeta[a] ? shiftMeta[a].o : 0;
+            var ob = shiftMeta[b] ? shiftMeta[b].o : 0;
+            return oa - ob || a - b;
+        }).map(function (shiftId) {
             var meta = shiftMeta[shiftId];
-            if (!meta) { return; }
-            \$inner.prepend('<span class="roster-chip ' + meta.c + '" data-shift="' + shiftId +
-                '" title="' + meta.n + '">' + meta.s + '</span>');
-        });
+            if (!meta) { return ''; }
+            return '<span class="roster-chip ' + meta.c + '" data-shift="' + shiftId +
+                '" title="' + meta.n + '">' + meta.s + '</span>';
+        }).join('');
+        // ใส่ไว้หน้าสุด เพื่อให้ชิปเวรมาก่อนสัญลักษณ์ลา/ไปราชการ/คำขอ
+        \$inner.prepend(html);
     }
 
     function updateCounts(day, counts) {

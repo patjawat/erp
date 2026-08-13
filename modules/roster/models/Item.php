@@ -162,6 +162,18 @@ class Item extends RosterActiveRecord
             $day = (int) date('j', strtotime($row->work_date));
             $grid[(int) $row->emp_id][$day][] = $row;
         }
+        // เรียงชิปในช่องตามลำดับเวรที่หน่วยตั้งไว้ (เช้า→บ่าย→ดึก) ไม่ใช่ตามลำดับที่คลิก
+        // ไม่งั้นคลิกบ่ายก่อนเช้า ช่องจะขึ้น "บ/ช" ซึ่งอ่านสับสน
+        foreach ($grid as $empId => $byDay) {
+            foreach ($byDay as $day => $items) {
+                usort($items, static function (self $a, self $b) {
+                    $sa = $a->unitShift ? (int) $a->unitShift->sort_order : 0;
+                    $sb = $b->unitShift ? (int) $b->unitShift->sort_order : 0;
+                    return $sa <=> $sb ?: ((int) $a->unit_shift_id <=> (int) $b->unit_shift_id);
+                });
+                $grid[$empId][$day] = $items;
+            }
+        }
         return $grid;
     }
 
