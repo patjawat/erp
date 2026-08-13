@@ -169,7 +169,7 @@ foreach ($grid as $byDay) {
             <?php foreach ($unitShiftList as $i => $unitShift): ?>
                 <input type="radio" class="btn-check" name="shift-pen" id="pen-<?= $unitShift->id ?>"
                        value="<?= $unitShift->id ?>" <?= $i === 0 ? 'checked' : '' ?> autocomplete="off">
-                <label class="btn btn-sm rounded-pill shift-pen <?= $unitShift->cellClass() ?>" for="pen-<?= $unitShift->id ?>">
+                <label class="btn btn-sm shift-pen <?= $unitShift->cellClass() ?>" for="pen-<?= $unitShift->id ?>">
                     <strong><?= Html::encode($unitShift->displayShort()) ?></strong>
                     <span class="d-none d-md-inline"><?= Html::encode($unitShift->displayName()) ?></span>
                     <span class="d-none d-lg-inline opacity-75 small"><?= Html::encode($unitShift->timeRangeLabel()) ?></span>
@@ -182,7 +182,7 @@ foreach ($grid as $byDay) {
                 </label>
             <?php endforeach; ?>
             <input type="radio" class="btn-check" name="shift-pen" id="pen-erase" value="erase" autocomplete="off">
-            <label class="btn btn-sm rounded-pill shift-pen bg-body-tertiary text-body" for="pen-erase">
+            <label class="btn btn-sm shift-pen bg-body-tertiary text-body" for="pen-erase">
                 <i class="bi bi-eraser"></i> ลบ
             </label>
         </div>
