@@ -12,6 +12,8 @@ use yii\helpers\Html;
 /** @var array $holidays */
 /** @var array $weekends */
 /** @var array $leaves */
+/** @var string|null $orgName */
+/** @var array $signatories */
 
 $this->title = 'ตารางเวร ' . $period->unitName() . ' ' . $period->monthLabel();
 
@@ -22,6 +24,9 @@ $unitShiftList = array_values($unitShifts);
 ?>
 <div class="roster-print">
     <div class="text-center mb-2">
+        <?php if (!empty($orgName)): ?>
+            <div class="fw-bold print-org"><?= Html::encode($orgName) ?></div>
+        <?php endif; ?>
         <h5 class="mb-1 fw-bold"><?= Html::encode($period->unitName()) ?></h5>
         <div><?= Html::encode($period->title) ?> ประจำเดือน<?= Html::encode($period->monthLabel()) ?></div>
     </div>
@@ -98,44 +103,32 @@ $unitShiftList = array_values($unitShifts);
                 </tr>
             <?php endforeach; ?>
         </tbody>
-        <tfoot>
-            <?php foreach ($unitShiftList as $unitShift): ?>
-                <tr>
-                    <td colspan="3" class="fw-semibold">
-                        <?= Html::encode($unitShift->displayName()) ?>
-                        <?php $label = $unitShift->requiredLabel(); ?>
-                        <?= $label !== '' ? ' (ต้องการ ' . Html::encode($label) . ')' : '' ?>
-                    </td>
-                    <?php for ($d = 1; $d <= $days; $d++): ?>
-                        <?php
-                        // อัตรากำลังต่างกันตามประเภทวัน — เสาร์/อาทิตย์/นักขัตฤกษ์ ใช้ค่าของวันนั้น
-                        $need = $unitShift->requiredFor(
-                            isset($holidays[$d]),
-                            (int) date('w', strtotime($period->dateOfDay($d)))
-                        );
-                        $have = $counts[$d][(int) $unitShift->id] ?? 0;
-                        ?>
-                        <td class="text-center p-0 <?= $need > 0 && $have < $need ? 'text-danger-emphasis fw-bold' : '' ?>">
-                            <?= $need > 0 ? $have . '/' . $need : $have ?>
-                        </td>
-                    <?php endfor; ?>
-                    <td colspan="2"></td>
-                </tr>
-            <?php endforeach; ?>
-        </tfoot>
+        <?php // ไม่แสดงแถวนับกำลังคนในฉบับพิมพ์ — เป็นเครื่องมือตอนจัด ไม่ใช่ข้อมูลของเอกสารที่ลงนาม ?>
     </table>
 
+    <?php
+    // ชื่อผู้ลงนาม: ใช้คนที่ทำจริง ถ้ายังไม่ถึงขั้นนั้นใช้ผู้ที่ควรจะเป็นตามผังองค์กร
+    // เว้นบรรทัดจุดไข่ปลาไว้เสมอเพื่อให้เซ็นด้วยมือบนกระดาษได้
+    $signBlocks = [
+        ['role' => 'ผู้จัดตารางเวร', 'who' => $signatories['prepared'] ?? ['name' => '', 'position' => '']],
+        ['role' => 'ผู้อนุมัติ', 'who' => $signatories['approved'] ?? ['name' => '', 'position' => '']],
+    ];
+    ?>
     <div class="d-flex justify-content-end gap-5 mt-4 pt-4 small">
-        <div class="text-center">
-            <div>ลงชื่อ ..............................................</div>
-            <div class="mt-1">( .............................................. )</div>
-            <div class="mt-1">ผู้จัดตารางเวร</div>
-        </div>
-        <div class="text-center">
-            <div>ลงชื่อ ..............................................</div>
-            <div class="mt-1">( .............................................. )</div>
-            <div class="mt-1">ผู้อนุมัติ</div>
-        </div>
+        <?php foreach ($signBlocks as $block): ?>
+            <div class="text-center">
+                <div>ลงชื่อ ..............................................</div>
+                <div class="mt-1">
+                    (<?= $block['who']['name'] !== ''
+                        ? ' ' . Html::encode($block['who']['name']) . ' '
+                        : ' .............................................. ' ?>)
+                </div>
+                <?php if ($block['who']['position'] !== ''): ?>
+                    <div><?= Html::encode($block['who']['position']) ?></div>
+                <?php endif; ?>
+                <div class="mt-1"><?= $block['role'] ?></div>
+            </div>
+        <?php endforeach; ?>
     </div>
 </div>
 
@@ -143,6 +136,7 @@ $unitShiftList = array_values($unitShifts);
 $this->registerCss(<<<'CSS'
 @page { size: A4 landscape; margin: 8mm; }
 .roster-print { font-size: 10px; }
+.print-org { font-size: 13px; }
 .print-grid td, .print-grid th { padding: 1px 2px !important; font-size: 9px; line-height: 1.3; }
 .print-chip { display: inline-block; min-width: 13px; padding: 0 2px; border-radius: 2px; font-weight: 700; }
 @media print {

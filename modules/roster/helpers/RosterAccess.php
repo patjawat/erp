@@ -95,6 +95,29 @@ class RosterAccess
      * ถ้าไฟล์โลโก้หายหรือ alias ไม่พร้อม การ resolve จะเงียบๆ กลายเป็น null
      * แปลว่า "ไม่มีใครอนุมัติตารางเวรได้" ซึ่งอันตรายเกินไปสำหรับด่านสิทธิ์
      */
+    /**
+     * ค่าตั้งค่าเว็บจาก categorise.site — อ่านตรงจาก data_json
+     * ไม่ผ่าน SiteHelper เพราะตัวนั้นพังถ้าโลโก้/ชื่อย่อยังไม่ได้ตั้ง
+     */
+    public static function siteSetting(string $key): ?string
+    {
+        $cacheKey = 'site:' . $key;
+        if (array_key_exists($cacheKey, static::$cache)) {
+            return static::$cache[$cacheKey];
+        }
+        try {
+            $value = (new \yii\db\Query())
+                ->select(new \yii\db\Expression('data_json->>' . Yii::$app->db->quoteValue('$.' . $key)))
+                ->from('categorise')
+                ->where(['name' => 'site'])
+                ->scalar();
+            $value = ($value === false || $value === null || $value === '') ? null : (string) $value;
+        } catch (\Throwable $e) {
+            $value = null;
+        }
+        return static::$cache[$cacheKey] = $value;
+    }
+
     public static function directorEmpId(): ?int
     {
         try {

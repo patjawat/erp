@@ -5,6 +5,7 @@ namespace app\modules\roster\controllers;
 use app\components\ApproveLevelResolver;
 use app\components\ModalHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\roster\helpers\RosterAccess;
 use app\modules\roster\helpers\RosterAutoScheduler;
 use app\modules\roster\helpers\RosterContext;
@@ -136,6 +137,55 @@ class PeriodController extends Controller
                 'shiftsByUnit' => $this->shiftsByUnit(array_keys($flat)),
             ]),
             'footer' => ModalHelper::modalFooterSaveClose(),
+        ];
+    }
+
+    /**
+     * ชื่อผู้ลงนามท้ายตารางเวร — ผู้จัดทำ กับ ผู้อนุมัติ
+     *
+     * ยึดคนที่ "ทำจริง" ก่อน (submitted_by / approved_by ซึ่งเก็บเป็น user id)
+     * ถ้ายังไม่ถึงขั้นนั้น ค่อยถอยไปใช้ผู้ที่ "ควรจะเป็น" ตามผังองค์กรและค่าตั้งค่าเว็บ
+     * เพื่อให้พิมพ์ร่างไปเสนอได้โดยไม่ต้องเขียนชื่อด้วยมือ
+     *
+     * @return array{prepared:array{name:string,position:string}, approved:array{name:string,position:string}}
+     */
+    private function signatories(Period $period): array
+    {
+        $byUser = static function (?int $userId): ?Employees {
+            return $userId ? Employees::findOne(['user_id' => $userId]) : null;
+        };
+        $describe = static function (?Employees $emp, string $fallbackPosition = ''): array {
+            if (!$emp) {
+                return ['name' => '', 'position' => $fallbackPosition];
+            }
+            $position = $emp->employeePosition->title ?? ($emp->position_name ?: $fallbackPosition);
+            return [
+                'name' => trim(($emp->prefix ?? '') . $emp->fname . ' ' . $emp->lname),
+                'position' => (string) $position,
+            ];
+        };
+
+        // ผู้จัดทำ: คนที่กดส่งตรวจ ไม่งั้นใช้หัวหน้าหน่วยตามผังองค์กร
+        $preparer = $byUser($period->submitted_by ? (int) $period->submitted_by : null);
+        if (!$preparer) {
+            $unit = Organization::findOne((int) $period->unit_id);
+            $data = $unit ? (is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true)) : null;
+            $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+            $preparer = $leaderId ? Employees::findOne($leaderId) : null;
+        }
+
+        // ผู้อนุมัติ: ผอ. ที่กดอนุมัติ ไม่งั้นใช้ ผอ. ที่ตั้งไว้ในค่าตั้งค่าเว็บ
+        $approverUserId = $period->approved_by ?: $period->published_by;
+        $approver = $byUser($approverUserId ? (int) $approverUserId : null);
+        $directorPosition = (string) (RosterAccess::siteSetting('director_position') ?: 'ผู้อำนวยการ');
+        if (!$approver) {
+            $directorId = RosterAccess::directorEmpId();
+            $approver = $directorId ? Employees::findOne($directorId) : null;
+        }
+
+        return [
+            'prepared' => $describe($preparer),
+            'approved' => $describe($approver, $directorPosition),
         ];
     }
 
@@ -802,6 +852,8 @@ class PeriodController extends Controller
             'holidays' => RosterContext::holidays($period->firstDate(), $period->lastDate()),
             'weekends' => RosterContext::weekends((int) $period->year_ce, (int) $period->month),
             'leaves' => RosterContext::leaves($empIds, $period->firstDate(), $period->lastDate()),
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'signatories' => $this->signatories($period),
         ]);
     }
 
