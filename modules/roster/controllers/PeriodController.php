@@ -544,6 +544,36 @@ class PeriodController extends Controller
         ];
     }
 
+    /**
+     * เปลี่ยนชื่อแผ่นตารางเวร
+     *
+     * ชื่อคือสิ่งที่แยกแผ่นในเดือนเดียวกันออกจากกัน (บ่ายดึก / Refer / On call)
+     * จึงเปลี่ยนได้เฉพาะตอนยังเป็นร่าง — ประกาศแล้วเปลี่ยนชื่อคือเปลี่ยนเอกสารที่แจกไปแล้ว
+     */
+    public function actionRename($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'เปลี่ยนชื่อได้เฉพาะตอนยังเป็นร่าง'];
+        }
+
+        $title = trim((string) $this->request->post('title', ''));
+        if ($title === '') {
+            return ['status' => 'error', 'message' => 'กรุณาระบุชื่อตารางเวร'];
+        }
+        if ($title === $period->title) {
+            return ['status' => 'success', 'title' => $title, 'message' => 'ชื่อเดิม ไม่มีอะไรเปลี่ยน'];
+        }
+
+        $period->title = $title;
+        if (!$period->save()) {
+            $errors = array_merge(...array_values($period->getErrors()));
+            return ['status' => 'error', 'message' => implode(' ', $errors)];
+        }
+        return ['status' => 'success', 'title' => $period->title, 'message' => 'เปลี่ยนชื่อแล้ว'];
+    }
+
     /** ล้างเวรทั้งรอบ — ใช้ตอนคัดลอกผิดเดือนแล้วอยากเริ่มใหม่ */
     public function actionClear($id)
     {
