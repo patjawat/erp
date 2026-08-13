@@ -1230,7 +1230,7 @@ class ImportHosOfficeController extends Controller
                 $model->urgent = $item['PRIORITY_NAME'];
                 $model->location = $this->checkLocation($item['LOCATION_NAME']) ?? '-';
                 $model->status = $this->BookingStatus($item['STATUS']);
-                $model->leader_id = $this->Person($item['LEADER_PERSON_ID'])?->id;
+                $model->leader_id = $this->Person($item['LEADER_PERSON_ID'])?->id ?? 0;
                 $model->date_start = $item['RESERVE_BEGIN_DATE'] ?? date('Y-m-d');
                 $model->date_end = $item['RESERVE_END_DATE'];
                 $model->time_start = $item['RESERVE_BEGIN_TIME'] ?? '00:00';
