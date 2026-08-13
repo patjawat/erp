@@ -127,11 +127,20 @@ class SettingController extends Controller
             return ['status' => 'error', 'message' => $first[0] ?? 'บันทึกไม่สำเร็จ'];
         }
 
+        // อักษรย่อที่หน่วยนี้ใช้ไปแล้ว — ส่งไปให้ฟอร์มเตือนตั้งแต่ตอนพิมพ์ ไม่ต้องรอกดบันทึก
+        $taken = [];
+        foreach (UnitShift::listForUnit((int) $model->unit_id, false) as $other) {
+            if ((int) $other->id !== (int) $model->id && $other->short_name) {
+                $taken[$other->short_name] = $other->displayName();
+            }
+        }
+
         return [
             'title' => ($id ? 'แก้ไข' : 'เพิ่ม') . 'เวรของหน่วยงาน',
             'content' => $this->renderAjax('_unit_shift_form', [
                 'model' => $model,
                 'types' => ShiftType::activeList(),
+                'takenShorts' => $taken,
             ]),
             'footer' => ModalHelper::modalFooterSaveClose(),
         ];

@@ -100,7 +100,8 @@ foreach ($shifts as $shift) {
                         <tr>
                             <th style="width:80px">ย่อ</th>
                             <th>ชื่อเวร</th>
-                            <th style="width:120px">หมวด</th>
+                            <th style="width:150px">ตำแหน่ง</th>
+                            <th style="width:110px">หมวด</th>
                             <th style="width:150px">เวลา</th>
                             <th class="text-center" style="width:90px">ชั่วโมง</th>
                             <th class="text-center" style="width:110px">ต้องการ</th>
@@ -127,6 +128,13 @@ foreach ($shifts as $shift) {
                                         <span class="badge bg-secondary-subtle text-secondary-emphasis">ปิดใช้</span>
                                     <?php endif; ?>
                                 </td>
+                                <td class="small">
+                                    <?php if ($shift->position_id): ?>
+                                        <?= Html::encode($shift->positionName()) ?>
+                                    <?php else: ?>
+                                        <span class="text-body-secondary">ไม่จำกัด</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="small text-body-secondary">
                                     <?= Html::encode($shift->shiftType ? $shift->shiftType->title : '-') ?>
                                 </td>
@@ -140,7 +148,9 @@ foreach ($shifts as $shift) {
                                     <?= $shift->hours !== null ? rtrim(rtrim((string) $shift->hours, '0'), '.') : '–' ?>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-body-tertiary text-body border"><?= (int) $shift->required_staff ?></span>
+                                    <span class="badge bg-body-tertiary text-body border">
+                                        <?= $shift->hasRequirement() ? Html::encode($shift->requiredLabel()) : '–' ?>
+                                    </span>
                                 </td>
                                 <td class="text-end small">
                                     <?= Html::encode($shift->payLabel()) ?>

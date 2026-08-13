@@ -6,6 +6,7 @@ use app\components\ApproveLevelResolver;
 use app\components\ModalHelper;
 use app\modules\hr\models\Employees;
 use app\modules\roster\helpers\RosterAccess;
+use app\modules\roster\helpers\RosterAutoScheduler;
 use app\modules\roster\helpers\RosterContext;
 use app\modules\roster\helpers\RosterCopier;
 use app\modules\roster\helpers\RosterExporter;
@@ -414,6 +415,7 @@ class PeriodController extends Controller
                 'action' => 'removed',
                 'counts' => $this->dayCounts($period, $day),
                 'summary' => $this->summary($period),
+                'empTotals' => $this->employeeTotals($period, $empId),
             ];
         }
 
@@ -433,6 +435,10 @@ class PeriodController extends Controller
         $checker = new RuleChecker((int) $period->unit_id);
         $shifts = RuleChecker::shiftsOfEmployee($empId, $period->firstDate(), $period->lastDate(), $item->id);
         $warnings = $checker->checkAssignment($workDate, $unitShiftId, $shifts);
+        $positionWarning = $checker->checkPosition($unitShiftId, $empId);
+        if ($positionWarning !== null) {
+            array_unshift($warnings, $positionWarning);
+        }
 
         return [
             'status' => 'success',
@@ -441,7 +447,37 @@ class PeriodController extends Controller
             'warnings' => $warnings,
             'counts' => $this->dayCounts($period, $day),
             'summary' => $this->summary($period),
+            'empTotals' => $this->employeeTotals($period, $empId),
         ];
+    }
+
+    /**
+     * สรุปท้ายแถวของคนหนึ่ง — เวรทำงาน / วันหยุด / เวรนอกเวลา / ค่าตอบแทน
+     * วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+     */
+    private function employeeTotals(Period $period, int $empId): array
+    {
+        $items = Item::find()
+            ->with('unitShift')
+            ->where(['period_id' => $period->id, 'emp_id' => $empId])
+            ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
+            ->all();
+        $work = 0;
+        $off = 0;
+        $ot = 0;
+        $pay = 0.0;
+        foreach ($items as $item) {
+            if ($item->isOff()) {
+                $off++;
+                continue;
+            }
+            $work++;
+            if ($item->isOt()) {
+                $ot++;
+            }
+            $pay += $item->payAmount();
+        }
+        return ['work' => $work, 'off' => $off, 'ot' => $ot, 'pay' => $pay];
     }
 
     /** คัดลอกเวรจากเดือนก่อน — จับคู่ตามวันในสัปดาห์ ดู RosterCopier */
@@ -470,6 +506,72 @@ class PeriodController extends Controller
         }
         $message .= ' และยังไม่ได้ตรวจวันลา ควรไล่ดูอีกครั้ง';
         return ['status' => 'success', 'message' => $message];
+    }
+
+    /**
+     * จัดเวรอัตโนมัติ — เติมช่องที่ยังขาดให้ครบตามอัตรากำลัง
+     * ไม่ลบเวรที่จัดมือไว้ ถ้าต้องการเริ่มใหม่ให้กด "ล้างทั้งเดือน" ก่อน
+     */
+    public function actionAutoFill($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้แก้ไขไม่ได้'];
+        }
+
+        // หัวหน้าเลือกเองว่าจะให้เติมจนครบแม้ผิดกฎ หรือหยุดที่กฎแล้วเว้นช่องไว้
+        $allowRelax = (string) $this->request->post('relax', '1') === '1';
+
+        try {
+            $result = (new RosterAutoScheduler($period))->run($allowRelax);
+        } catch (\RuntimeException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+
+        if ($result['placed'] === 0 && empty($result['shortages'])) {
+            return ['status' => 'error', 'message' => 'ไม่มีช่องที่ต้องเติม — ตารางครบตามอัตรากำลังแล้ว'];
+        }
+
+        return [
+            'status' => 'success',
+            'placed' => $result['placed'],
+            'relaxed' => $result['relaxed'],
+            'warnings' => array_slice($result['warnings'], 0, 40),
+            'warningTotal' => count($result['warnings']),
+            'shortages' => array_slice($result['shortages'], 0, 40),
+            'shortageTotal' => count($result['shortages']),
+        ];
+    }
+
+    /**
+     * เปลี่ยนชื่อแผ่นตารางเวร
+     *
+     * ชื่อคือสิ่งที่แยกแผ่นในเดือนเดียวกันออกจากกัน (บ่ายดึก / Refer / On call)
+     * จึงเปลี่ยนได้เฉพาะตอนยังเป็นร่าง — ประกาศแล้วเปลี่ยนชื่อคือเปลี่ยนเอกสารที่แจกไปแล้ว
+     */
+    public function actionRename($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'เปลี่ยนชื่อได้เฉพาะตอนยังเป็นร่าง'];
+        }
+
+        $title = trim((string) $this->request->post('title', ''));
+        if ($title === '') {
+            return ['status' => 'error', 'message' => 'กรุณาระบุชื่อตารางเวร'];
+        }
+        if ($title === $period->title) {
+            return ['status' => 'success', 'title' => $title, 'message' => 'ชื่อเดิม ไม่มีอะไรเปลี่ยน'];
+        }
+
+        $period->title = $title;
+        if (!$period->save()) {
+            $errors = array_merge(...array_values($period->getErrors()));
+            return ['status' => 'error', 'message' => implode(' ', $errors)];
+        }
+        return ['status' => 'success', 'title' => $period->title, 'message' => 'เปลี่ยนชื่อแล้ว'];
     }
 
     /** ล้างเวรทั้งรอบ — ใช้ตอนคัดลอกผิดเดือนแล้วอยากเริ่มใหม่ */
@@ -660,11 +762,22 @@ class PeriodController extends Controller
      */
     private function employeesOfUnit(int $unitId): array
     {
-        return Employees::find()
-            ->select(['id', 'prefix', 'fname', 'lname', 'work_shift', 'employee_position_id'])
-            ->where(['department' => $unitId, 'status' => 1])
-            ->orderBy([new \yii\db\Expression("FIELD(work_shift,'shift') DESC"), 'fname' => SORT_ASC])
-            ->asArray()
+        return (new \yii\db\Query())
+            ->select([
+                'e.id', 'e.prefix', 'e.fname', 'e.lname', 'e.work_shift', 'e.employee_position_id',
+                'position_name' => 'ep.title',
+            ])
+            ->from(['e' => Employees::tableName()])
+            ->leftJoin(['ep' => 'employee_position'], 'ep.id = e.employee_position_id')
+            ->where(['e.department' => $unitId, 'e.status' => 1])
+            // เรียงคนขึ้นเวรก่อน แล้วจัดกลุ่มตามวิชาชีพ เพื่อให้หัวหน้าเห็นว่าใครเป็นพยาบาล
+            // ใครเป็นผู้ช่วย โดยไม่ต้องจำ — หน่วยหนึ่งมีถึง 4 วิชาชีพและ 25 คน
+            ->orderBy([
+                new \yii\db\Expression("FIELD(e.work_shift,'shift') DESC"),
+                'ep.sort' => SORT_ASC,
+                'ep.title' => SORT_ASC,
+                'e.fname' => SORT_ASC,
+            ])
             ->all();
     }
 
@@ -692,11 +805,18 @@ class PeriodController extends Controller
             ->where(['period_id' => $period->id])
             ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
             ->count();
+        // นับเฉพาะเวรของแผ่นนี้ และคิดอัตรากำลังตามประเภทวัน
+        // ถ้าใช้ required_staff คูณจำนวนวันตรง ๆ หน่วยที่ลดคนวันหยุดจะขึ้นว่าจัดไม่ครบตลอด
+        $holidays = RosterContext::holidays($period->firstDate(), $period->lastDate());
         $needed = 0;
-        foreach (UnitShift::mapForUnit((int) $period->unit_id) as $unitShift) {
-            $needed += (int) $unitShift->required_staff;
+        foreach ($period->sheetShifts() as $unitShift) {
+            for ($d = 1, $days = $period->daysInMonth(); $d <= $days; $d++) {
+                $needed += $unitShift->requiredFor(
+                    isset($holidays[$d]),
+                    (int) date('w', strtotime($period->dateOfDay($d)))
+                );
+            }
         }
-        $needed *= $period->daysInMonth();
         return ['assigned' => $assigned, 'needed' => $needed];
     }
 

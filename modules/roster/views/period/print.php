@@ -40,7 +40,8 @@ $unitShiftList = array_values($unitShifts);
         <thead>
             <tr>
                 <th style="width:26px">#</th>
-                <th style="min-width:150px">ชื่อ-นามสกุล</th>
+                <th style="min-width:140px">ชื่อ-นามสกุล</th>
+                <th style="min-width:90px">ตำแหน่ง</th>
                 <?php for ($d = 1; $d <= $days; $d++): ?>
                     <?php
                     $ts = strtotime($period->dateOfDay($d));
@@ -52,6 +53,7 @@ $unitShiftList = array_values($unitShifts);
                     </th>
                 <?php endfor; ?>
                 <th class="text-center" style="width:32px">รวม</th>
+                <th class="text-center" style="width:32px">หยุด</th>
             </tr>
         </thead>
         <tbody>
@@ -59,13 +61,21 @@ $unitShiftList = array_values($unitShifts);
                 <?php
                 $empId = (int) $emp['id'];
                 $total = 0;
+                $offDays = 0;
                 foreach ($grid[$empId] ?? [] as $items) {
-                    $total += count($items);
+                    foreach ($items as $it) {
+                        if ($it->isOff()) {
+                            $offDays++;
+                        } else {
+                            $total++;
+                        }
+                    }
                 }
                 ?>
                 <tr>
                     <td class="text-center"><?= $index + 1 ?></td>
                     <td><?= Html::encode(trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname'])) ?></td>
+                    <td><?= Html::encode($emp['position_name'] ?? '') ?></td>
                     <?php for ($d = 1; $d <= $days; $d++): ?>
                         <?php
                         $items = $grid[$empId][$d] ?? [];
@@ -84,23 +94,32 @@ $unitShiftList = array_values($unitShifts);
                         </td>
                     <?php endfor; ?>
                     <td class="text-center fw-semibold"><?= $total ?></td>
+                    <td class="text-center"><?= $offDays ?: '' ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
         <tfoot>
             <?php foreach ($unitShiftList as $unitShift): ?>
-                <?php $need = (int) $unitShift->required_staff; ?>
                 <tr>
-                    <td colspan="2" class="fw-semibold">
-                        <?= Html::encode($unitShift->displayName()) ?><?= $need > 0 ? ' (ต้องการ ' . $need . ')' : '' ?>
+                    <td colspan="3" class="fw-semibold">
+                        <?= Html::encode($unitShift->displayName()) ?>
+                        <?php $label = $unitShift->requiredLabel(); ?>
+                        <?= $label !== '' ? ' (ต้องการ ' . Html::encode($label) . ')' : '' ?>
                     </td>
                     <?php for ($d = 1; $d <= $days; $d++): ?>
-                        <?php $have = $counts[$d][(int) $unitShift->id] ?? 0; ?>
+                        <?php
+                        // อัตรากำลังต่างกันตามประเภทวัน — เสาร์/อาทิตย์/นักขัตฤกษ์ ใช้ค่าของวันนั้น
+                        $need = $unitShift->requiredFor(
+                            isset($holidays[$d]),
+                            (int) date('w', strtotime($period->dateOfDay($d)))
+                        );
+                        $have = $counts[$d][(int) $unitShift->id] ?? 0;
+                        ?>
                         <td class="text-center p-0 <?= $need > 0 && $have < $need ? 'text-danger-emphasis fw-bold' : '' ?>">
                             <?= $need > 0 ? $have . '/' . $need : $have ?>
                         </td>
                     <?php endfor; ?>
-                    <td></td>
+                    <td colspan="2"></td>
                 </tr>
             <?php endforeach; ?>
         </tfoot>

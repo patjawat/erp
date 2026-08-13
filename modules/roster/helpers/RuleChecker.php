@@ -21,11 +21,30 @@ class RuleChecker
     private array $rules;
     /** @var array<int, UnitShift> index ด้วย unit_shift_id */
     private array $unitShifts;
+    /** หน่วยนี้ยังไม่ได้ตั้งกฎเอง กำลังใช้ชุดแนะนำอยู่ */
+    private bool $usingDefaults = false;
 
     public function __construct(int $unitId)
     {
         $this->rules = \app\modules\roster\models\UnitRule::groupedForUnit($unitId);
+
+        // หน่วยที่ยังไม่เคยตั้งกฎ ใช้ชุดแนะนำเป็นตาข่ายนิรภัยไปก่อน
+        // ไม่งั้นตารางที่ให้คนอยู่เวรติดกันทั้งเดือนจะผ่านโดยไม่มีคำเตือนสักคำ
+        // (ถ้าหน่วยตั้งกฎไว้บ้างแล้ว ถือว่าตั้งใจ — ไม่เติมให้)
+        if (empty($this->rules)) {
+            $this->usingDefaults = true;
+            foreach (\app\modules\roster\models\UnitRule::defaultSet($unitId) as $rule) {
+                $this->rules[$rule->rule_key][] = $rule;
+            }
+        }
+
         $this->unitShifts = UnitShift::mapForUnit($unitId);
+    }
+
+    /** กำลังใช้กฎชุดแนะนำ (หน่วยยังไม่ได้ตั้งเอง) */
+    public function usingDefaults(): bool
+    {
+        return $this->usingDefaults;
     }
 
     private function shift(?int $unitShiftId): ?UnitShift
@@ -39,11 +58,18 @@ class RuleChecker
         return $shift ? $shift->displayName() : 'เวร';
     }
 
-    /** เวรนี้เป็นเวรรอเรียก/นอกหน่วย ที่ไม่นับเป็นชั่วโมงทำงานจริงหรือไม่ */
+    /**
+     * เวรนี้ไม่นับเป็นชั่วโมงทำงานจริงหรือไม่
+     * ครอบทั้งเวรรอเรียก (On call/Refer) และวันหยุด (OFF)
+     * วันหยุดต้อง "ตัด" ช่วงวันทำงานติดต่อกัน ไม่ใช่ต่อให้ยาวขึ้น
+     */
     private function isStandby(?int $unitShiftId): bool
     {
         $shift = $this->shift($unitShiftId);
-        return $shift ? (int) $shift->is_standby === 1 : false;
+        if (!$shift) {
+            return false;
+        }
+        return (int) $shift->is_standby === 1 || $shift->isOff();
     }
 
     /** หมวดของเวร — กฎคู่เวรอ้างหมวด ไม่ได้อ้างชื่อเวรของหน่วย */
@@ -65,9 +91,45 @@ class RuleChecker
      * @param array<string, int[]> $empShifts เวรเดิมของคนนี้ [Y-m-d => [unit_shift_id, ...]]
      * @return string[] ข้อความเตือน (ว่าง = ไม่ผิดกฎ)
      */
+    /**
+     * ตรวจว่าคนนี้ตรงกับตำแหน่งที่เวรกำหนดไว้ไหม
+     * หน่วยงานแยกเวรตามวิชาชีพเพราะอัตราค่าตอบแทนต่างกัน (ชพ/ชป/ชผ)
+     * ถ้าจัดคนผิดวิชาชีพลงช่อง เงินจะคิดผิดโดยไม่มีใครเห็น จึงต้องเตือน
+     */
+    public function checkPosition(int $unitShiftId, int $empId): ?string
+    {
+        $shift = $this->shift($unitShiftId);
+        if (!$shift || !$shift->position_id) {
+            return null; // เวรนี้ไม่จำกัดวิชาชีพ
+        }
+        $empPositionId = (int) (new \yii\db\Query())
+            ->select('employee_position_id')->from('employees')->where(['id' => $empId])->scalar();
+        if ($empPositionId === (int) $shift->position_id) {
+            return null;
+        }
+        $empPosition = $empPositionId
+            ? (string) (new \yii\db\Query())->select('title')->from('employee_position')
+                ->where(['id' => $empPositionId])->scalar()
+            : 'ไม่ได้ระบุตำแหน่ง';
+        return sprintf('%s เป็น%s แต่เวรนี้กำหนดไว้สำหรับ%s — อัตราค่าตอบแทนอาจคิดผิด',
+            'คนนี้', $empPosition, $shift->positionName());
+    }
+
     public function checkAssignment(string $workDate, int $unitShiftId, array $empShifts): array
     {
         $warnings = [];
+
+        // วันหยุดไม่ต้องตรวจกฎเวร — แต่เตือนถ้าวันนั้นมีเวรทำงานอยู่ด้วย
+        if ($this->shift($unitShiftId) && $this->shift($unitShiftId)->isOff()) {
+            foreach ($empShifts[$workDate] ?? [] as $otherShiftId) {
+                $other = $this->shift((int) $otherShiftId);
+                if ($other && !$other->isOff()) {
+                    $warnings[] = sprintf('ทำเครื่องหมายหยุด ทั้งที่วันนี้มี%sอยู่แล้ว', $other->displayName());
+                    break;
+                }
+            }
+            return $warnings;
+        }
         $prevDate = date('Y-m-d', strtotime($workDate . ' -1 day'));
         $nextDate = date('Y-m-d', strtotime($workDate . ' +1 day'));
 
@@ -143,6 +205,15 @@ class RuleChecker
                     $warnings[] = sprintf('ทำงานติดต่อกัน %d วัน (กำหนดไม่เกิน %d)', $run, $maxDays);
                 }
             }
+
+            $maxHours = $this->intRule(\app\modules\roster\models\UnitRule::KEY_MAX_HOURS_PER_WEEK);
+            if ($maxHours !== null && $maxHours > 0) {
+                $hours = $this->weeklyHours($workDate, $unitShiftId, $empShifts);
+                if ($hours > $maxHours) {
+                    $warnings[] = sprintf('สัปดาห์นี้รวม %s ชม. (เกินเพดาน %d ชม.)',
+                        rtrim(rtrim(number_format($hours, 1), '0'), '.'), $maxHours);
+                }
+            }
         }
 
         // ── เวรหมวดเดียวกันติดกันเกินกำหนด ──
@@ -211,6 +282,39 @@ class RuleChecker
             }
         }
         return $best === null ? null : round($best, 2);
+    }
+
+    /**
+     * ชั่วโมงทำงานรวมของสัปดาห์ปฏิทิน (อาทิตย์–เสาร์) ที่ครอบ $workDate
+     * รวมเวรที่กำลังจะจัดเข้าไปด้วย และไม่นับเวรรอเรียก/วันหยุด
+     */
+    public function weeklyHours(string $workDate, ?int $addingShiftId, array $empShifts): float
+    {
+        $ts = strtotime($workDate);
+        $dow = (int) date('w', $ts);
+        $weekStart = strtotime('-' . $dow . ' day', $ts);
+
+        $hours = 0.0;
+        for ($i = 0; $i < 7; $i++) {
+            $date = date('Y-m-d', strtotime('+' . $i . ' day', $weekStart));
+            foreach ($empShifts[$date] ?? [] as $shiftId) {
+                $hours += $this->hoursOf((int) $shiftId);
+            }
+        }
+        if ($addingShiftId !== null) {
+            $hours += $this->hoursOf($addingShiftId);
+        }
+        return $hours;
+    }
+
+    /** ชั่วโมงของเวรหนึ่ง — เวรรอเรียกและวันหยุดไม่นับเป็นชั่วโมงทำงาน */
+    private function hoursOf(int $unitShiftId): float
+    {
+        $shift = $this->shift($unitShiftId);
+        if (!$shift || $this->isStandby($unitShiftId)) {
+            return 0.0;
+        }
+        return (float) ($shift->hours ?? 0);
     }
 
     /**

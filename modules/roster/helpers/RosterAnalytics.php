@@ -88,11 +88,14 @@ class RosterAnalytics
             $sheetShifts = $period->sheetShifts();
             $counts = Item::countByDayShift((int) $period->id);
             $days = $period->daysInMonth();
+            $holidays = RosterContext::holidays($period->firstDate(), $period->lastDate());
 
             for ($d = 1; $d <= $days; $d++) {
                 $cell = $result[$unitId][$d] ?? ['short' => 0, 'detail' => [], 'configured' => false];
+                $dow = (int) date('w', strtotime($period->dateOfDay($d)));
                 foreach ($sheetShifts as $shiftId => $unitShift) {
-                    $need = (int) $unitShift->required_staff;
+                    // อัตรากำลังต่างกันตามประเภทวัน — ไม่งั้นเสาร์อาทิตย์จะขึ้นขาดคนทั้งที่จัดครบ
+                    $need = $unitShift->requiredFor(isset($holidays[$d]), $dow);
                     if ($need <= 0) {
                         continue;
                     }
@@ -189,6 +192,15 @@ class RosterAnalytics
                 }
             }
 
+            // วันหยุด (OFF) ไม่ใช่การทำงาน ต้องตัดออกก่อนนับ ไม่งั้นคนที่ "หยุด" วันเสาร์
+            // จะถูกนับว่า "มาทำงาน" วันเสาร์ แล้วรายงานความเป็นธรรมอ่านกลับด้าน
+            $offShiftIds = [];
+            foreach (UnitShift::listForUnit($unitId) as $unitShift) {
+                if ($unitShift->isOff()) {
+                    $offShiftIds[] = (int) $unitShift->id;
+                }
+            }
+
             $rows = (new Query())
                 ->select(['emp_id', 'work_date', 'unit_shift_id'])
                 ->from(Item::tableName())
@@ -199,6 +211,9 @@ class RosterAnalytics
             // สะสมต่อจากแผ่นอื่นของหน่วยเดียวกัน — คนหนึ่งอาจอยู่ทั้งแผ่นหลักและแผ่น On call
             $stat = $result[$unitId]['perEmployee'] ?? [];
             foreach ($rows as $row) {
+                if (in_array((int) $row['unit_shift_id'], $offShiftIds, true)) {
+                    continue;
+                }
                 $empId = (int) $row['emp_id'];
                 $day = (int) date('j', strtotime($row['work_date']));
                 $stat[$empId] = $stat[$empId] ?? ['total' => 0, 'night' => 0, 'offday' => 0];

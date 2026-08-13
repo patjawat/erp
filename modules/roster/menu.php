@@ -8,13 +8,13 @@ $active = $active ?? '';
 ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
     <a href="<?= Url::to(['/roster/period/index']) ?>"
-       class="btn rounded-pill <?= $active === 'period' ? 'btn-primary' : 'btn-outline-secondary' ?>">
+       class="btn <?= $active === 'period' ? 'btn-primary' : 'btn-outline-primary' ?>">
         <i class="bi bi-calendar3"></i> ทะเบียนรอบเวร
     </a>
 
     <?php if (RosterAccess::canSeeOverview()): ?>
         <a href="<?= Url::to(['/roster/overview/index']) ?>"
-           class="btn rounded-pill <?= $active === 'overview' ? 'btn-primary' : 'btn-outline-secondary' ?>">
+           class="btn <?= $active === 'overview' ? 'btn-primary' : 'btn-outline-primary' ?>">
             <i class="bi bi-clipboard-data"></i> ภาพรวม/ตรวจสอบ
             <?php if (!empty($pendingCount)): ?>
                 <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1"><?= (int) $pendingCount ?></span>
@@ -23,7 +23,7 @@ $active = $active ?? '';
     <?php endif; ?>
 
     <div class="dropdown">
-        <button class="btn rounded-pill dropdown-toggle <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-secondary' ?>"
+        <button class="btn dropdown-toggle <?= $active === 'setting' ? 'btn-primary' : 'btn-outline-primary' ?>"
                 type="button" id="rosterMenuSetting" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-gear"></i> การตั้งค่า
         </button>

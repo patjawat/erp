@@ -14,6 +14,11 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
         '@tests' => '@app/tests',
+        // @webroot/@web ถูกตั้งให้อัตโนมัติเฉพาะในแอปเว็บ งานที่รันจาก console แล้ว
+        // ต้องอ่านไฟล์ใน web/ จึงพังด้วย "Invalid path alias" เช่นการสร้าง PDF ที่ต้อง
+        // โหลดฟอนต์ TH Sarabun จาก web/fonts และตราครุฑจาก web/img
+        '@webroot' => dirname(__DIR__) . '/web',
+        '@web' => '',
     ],
     'components' => [
         'cache' => [

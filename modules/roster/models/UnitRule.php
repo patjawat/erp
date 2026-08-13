@@ -32,6 +32,12 @@ class UnitRule extends RosterActiveRecord
     public const KEY_MAX_CONSECUTIVE_SHIFT = 'max_consecutive_shift';
     /** ทำงานติดต่อกันได้ไม่เกิน int_value วัน (ไม่แยกชนิดเวร) */
     public const KEY_MAX_CONSECUTIVE_WORKDAYS = 'max_consecutive_workdays';
+    /**
+     * ชั่วโมงทำงานรวมต่อสัปดาห์ปฏิทิน ไม่เกิน int_value
+     * จำเป็นเพราะระบบรองรับเวร 16 ชม. (บ่ายดึก) — อยู่ 3 วันติดก็ 48 ชม. แล้ว
+     * ซึ่งกฎ "วันทำงานติดต่อกัน" จับไม่ได้เลย
+     */
+    public const KEY_MAX_HOURS_PER_WEEK = 'max_hours_per_week';
 
     public static function tableName()
     {
@@ -69,6 +75,7 @@ class UnitRule extends RosterActiveRecord
             self::KEY_FORBID_NEXT_DAY => 'ห้ามอยู่เวรนี้แล้วต่อเวรนี้วันถัดไป',
             self::KEY_MAX_CONSECUTIVE_SHIFT => 'เวรชนิดนี้ติดกันสูงสุด (วัน)',
             self::KEY_MAX_CONSECUTIVE_WORKDAYS => 'ทำงานติดต่อกันสูงสุด (วัน)',
+            self::KEY_MAX_HOURS_PER_WEEK => 'ชั่วโมงทำงานสูงสุดต่อสัปดาห์',
         ];
     }
 
@@ -87,21 +94,21 @@ class UnitRule extends RosterActiveRecord
     }
 
     /**
-     * สร้างกฎชุดแนะนำให้หน่วยที่ยังไม่เคยตั้ง — อิงแนวปฏิบัติการจัดเวรพยาบาล
+     * ชุดกฎแนะนำ — อิงแนวปฏิบัติการจัดเวรพยาบาล ยังไม่บันทึกลงฐาน
      * ห้ามดึกติดเช้าวันถัดไป, ห้ามเช้าคู่บ่าย/บ่ายคู่ดึกวันเดียวกัน, ดึกติดกันไม่เกิน 3 วัน
+     *
+     * @return self[]
      */
-    public static function seedDefaults(int $unitId): int
+    public static function defaultSet(int $unitId): array
     {
-        if (static::find()->where(['unit_id' => $unitId])->exists()) {
-            return 0;
-        }
         $types = [];
         foreach (ShiftType::activeList() as $type) {
             $types[$type->code] = (int) $type->id;
         }
-        $created = 0;
-        $add = function (string $key, ?int $intValue, ?array $json, ?int $shiftTypeId) use ($unitId, &$created) {
-            $rule = new static([
+
+        $set = [];
+        $add = function (string $key, ?int $intValue, ?array $json, ?int $shiftTypeId) use ($unitId, &$set) {
+            $set[] = new static([
                 'unit_id' => $unitId,
                 'rule_key' => $key,
                 'int_value' => $intValue,
@@ -109,14 +116,13 @@ class UnitRule extends RosterActiveRecord
                 'shift_type_id' => $shiftTypeId,
                 'active' => 1,
             ]);
-            if ($rule->save()) {
-                $created++;
-            }
         };
 
         $add(self::KEY_MIN_REST_HOURS, 8, null, null);
         $add(self::KEY_MAX_REST_VIOLATIONS, 3, null, null);
         $add(self::KEY_MAX_CONSECUTIVE_WORKDAYS, 6, null, null);
+        // 48 ชม./สัปดาห์ ตามมาตรฐาน ILO C001
+        $add(self::KEY_MAX_HOURS_PER_WEEK, 48, null, null);
         if (isset($types['M'], $types['A'])) {
             $add(self::KEY_FORBID_SAME_DAY, null, ['a' => $types['M'], 'b' => $types['A']], null);
         }
@@ -128,6 +134,21 @@ class UnitRule extends RosterActiveRecord
         }
         if (isset($types['N'])) {
             $add(self::KEY_MAX_CONSECUTIVE_SHIFT, 3, null, $types['N']);
+        }
+        return $set;
+    }
+
+    /** บันทึกชุดกฎแนะนำให้หน่วยที่ยังไม่เคยตั้ง */
+    public static function seedDefaults(int $unitId): int
+    {
+        if (static::find()->where(['unit_id' => $unitId])->exists()) {
+            return 0;
+        }
+        $created = 0;
+        foreach (self::defaultSet($unitId) as $rule) {
+            if ($rule->save()) {
+                $created++;
+            }
         }
         return $created;
     }
