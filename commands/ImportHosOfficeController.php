@@ -30,11 +30,14 @@ use app\modules\hr\models\Employees;
 use app\modules\hr\models\Development;
 use app\modules\booking\models\Meeting;
 use app\modules\booking\models\Vehicle;
+use app\modules\hr\models\EmployeeType;
 use app\modules\hr\models\Organization;
 use app\modules\approveV2\models\Approve;
 use app\modules\hr\models\EmployeeDetail;
+use app\modules\hr\models\EmployeePosition;
 use app\modules\helpdesk2\models\Helpdesk;
 use app\modules\filemanager\models\Uploads;
+use app\modules\hr\models\EmployeePositionGroup;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\booking\models\VehicleDetail;
 use app\modules\helpdesk2\models\HelpdeskDetail;
@@ -61,7 +64,7 @@ class ImportHosOfficeController extends Controller
     {
         if (BaseConsole::confirm('ยืนยันการนำเข้าทั้งหมด?')) {
             $this->actionEmployee();
-            $this->actionUpdatePosition();
+            $this->actionPosition();
             $this->actionLeaveAll();
             $this->actionDevelopment();
             $this->actionCreateMoney();
@@ -79,7 +82,7 @@ class ImportHosOfficeController extends Controller
     public function actionSync()
     {
         $this->actionEmployee();
-        $this->actionUpdatePosition();
+        $this->actionPosition();
         $this->actionLeaveAll();
         $this->actionDevelopment();
         $this->actionCreateMoney();
@@ -308,16 +311,8 @@ class ImportHosOfficeController extends Controller
     }
     public function MapPositionType($data)
     {
-        // กำหนดโครงสร้างข้อมูลสำหรับการ Mapping
-        $map = [
-            'ข้าราชการ' => ['code' => 'PT1', 'title' => 'ข้าราชการ'],
-            'พนักงานราชการ' => ['code' => 'PT2', 'title' => 'พนักงานราชการ'],
-            'พนักงานกระทรวงสาธารณสุข' => ['code' => 'PT3', 'title' => 'พนักงานกระทรวง (พกส.)'],
-            'ลูกจ้างชั่วคราว' => ['code' => 'PT4', 'title' => 'ลูกจ้างชั่วคราวรายเดือน'],
-            'ลูกจ้างรายวัน' => ['code' => 'PT5', 'title' => 'ลูกจ้างชั่วคราวรายวัน'],
-            'ลูกจ้างประจำ' => ['code' => 'PT6', 'title' => 'ลูกจ้างประจำ'],
-            'จ้างเหมาบริการ' => ['code' => 'PT7', 'title' => 'จ้างเหมาบริการรายวัน'],
-        ];
+        // command เดิมยังเรียก method นี้อยู่ จึงใช้ definition ชุดเดียวกับ importer ใหม่
+        $map = $this->hosOfficeEmployeeTypeDefinitions();
         $mapData =  isset($map[$data['person_type_name']]) ? $map[$data['person_type_name']] : [
             'code' => null,
             'title' => 'ไม่พบข้อมูล'
@@ -343,59 +338,760 @@ class ImportHosOfficeController extends Controller
 
     }
 
+    /**
+     * นำเข้า master ตำแหน่ง, ตำแหน่งปัจจุบันของพนักงาน และประวัติ ก.พ.13 จาก HosOffice
+     *
+     * ตำแหน่งและประเภทพนักงานถูก map แยกกัน เพราะ employee_position ของระบบใหม่
+     * เป็น master อิสระ ไม่ควรบังคับให้ชื่อตำแหน่งอยู่ใต้ประเภทเดียวกับต้นทาง
+     */
+    public function actionPosition($limit = null)
+    {
+        echo "เริ่มนำเข้าข้อมูลตำแหน่งจาก HosOffice...\n";
+
+        [$employeeTypesByLegacyCode, $typeCreated] = $this->ensureHosOfficeEmployeeTypes();
+        $positionMaster = $this->importHosOfficePositionMaster();
+        $positionsBySourceId = $positionMaster['by_source_id'];
+        $positionsByTitle = $positionMaster['by_title'];
+        $levelsByTitle = $this->positionLevelsByTitle();
+        $groupsById = EmployeePositionGroup::find()->indexBy('id')->all();
+
+        $employees = Employees::find()->all();
+        $employeesById = ArrayHelper::index($employees, 'id');
+        $employeesByCid = [];
+        foreach ($employees as $employee) {
+            $cid = trim((string) $employee->cid);
+            if ($cid !== '') {
+                $employeesByCid[$cid] = $employee;
+            }
+        }
+        $employeeIdsBySourceId = $this->importedRecordIds(Employees::class, 'HOSOFFICE_ID');
+
+        $sql = "SELECT
+                    p.ID AS HOSOFFICE_PERSON_ID,
+                    p.HR_CID AS cid,
+                    p.HR_PERSON_TYPE_ID,
+                    pt.HR_PERSON_TYPE_NAME AS person_type_name,
+                    p.HR_POSITION_ID AS HOSOFFICE_POSITION_ID,
+                    hp.HR_POSITION_NAME AS position_name,
+                    p.HR_LEVEL_ID,
+                    hl.HR_LEVEL_NAME AS position_level_name,
+                    p.HR_POSITION_NUM AS position_number,
+                    p.POSITION_IN_WORK AS position_in_work,
+                    p.HR_SALARY AS salary,
+                    p.HR_STARTWORK_DATE AS start_work_date,
+                    p.HR_DATE_PUT AS date_put
+                FROM hr_person p
+                LEFT JOIN hr_person_type pt ON pt.HR_PERSON_TYPE_ID = p.HR_PERSON_TYPE_ID
+                LEFT JOIN hr_position hp ON hp.HR_POSITION_ID = p.HR_POSITION_ID
+                LEFT JOIN hr_level hl ON hl.HR_LEVEL_ID = p.HR_LEVEL_ID
+                ORDER BY p.ID";
+        $sql .= $this->limitSql($limit);
+        $sourceRows = Yii::$app->db2->createCommand($sql)->queryAll();
+
+        $employeeByHosOfficeId = [];
+        $currentRowsByHosOfficeId = [];
+        $updated = 0;
+        $unchanged = 0;
+        $skipped = 0;
+        $failed = 0;
+        $num = 1;
+        $total = count($sourceRows);
+        $typeDefinitions = $this->hosOfficeEmployeeTypeDefinitions();
+
+        foreach ($sourceRows as $row) {
+            $sourcePersonId = trim((string) $row['HOSOFFICE_PERSON_ID']);
+            $cid = trim((string) $row['cid']);
+            $employeeId = $employeeIdsBySourceId[$sourcePersonId] ?? null;
+            $employee = $employeeId !== null
+                ? ($employeesById[$employeeId] ?? null)
+                : ($employeesByCid[$cid] ?? null);
+
+            if (!$employee) {
+                $skipped++;
+                echo "\nข้ามตำแหน่ง PERSON_ID {$sourcePersonId}: ไม่พบพนักงาน CID {$cid}\n";
+                BaseConsole::updateProgress($num++, $total);
+                continue;
+            }
+
+            try {
+                $definition = $typeDefinitions[$row['person_type_name']] ?? null;
+                $legacyTypeCode = $definition['code'] ?? null;
+                $employeeType = $legacyTypeCode !== null
+                    ? ($employeeTypesByLegacyCode[$legacyTypeCode] ?? null)
+                    : null;
+                $position = $positionsBySourceId[trim((string) $row['HOSOFFICE_POSITION_ID'])]
+                    ?? $positionsByTitle[$this->normalizePositionTitle($row['position_name'])]
+                    ?? null;
+                $positionGroup = $position && $position->employee_position_group_id
+                    ? ($groupsById[$position->employee_position_group_id] ?? null)
+                    : null;
+                $positionLevel = $levelsByTitle[$this->normalizePositionTitle($row['position_level_name'])] ?? null;
+
+                $employee->employee_type_id = $employeeType?->id;
+                $employee->employee_position_id = $position?->id;
+                $employee->employee_position_group_id = $positionGroup?->id;
+                $employee->position_type = $legacyTypeCode;
+                $employee->position_group = $positionGroup?->legacy_code;
+                $employee->position_name = $position?->legacy_code;
+                $employee->position_level = $positionLevel?->code;
+                $employee->position_number = $this->nullIfBlank($row['position_number']);
+
+                $employee->data_json = $this->prepareImportedDataJson(Employees::class, $employee->data_json, [
+                    'HOSOFFICE_POSITION_ID' => (string) $row['HOSOFFICE_POSITION_ID'],
+                    'HOSOFFICE_PERSON_TYPE_ID' => (string) $row['HR_PERSON_TYPE_ID'],
+                    'employee_type_id' => $employeeType?->id,
+                    'employee_type_text' => $employeeType?->title,
+                    'employee_position_id' => $position?->id,
+                    'employee_position_text' => $position?->title ?? $row['position_name'],
+                    'employee_position_group_id' => $positionGroup?->id,
+                    'employee_position_group_text' => $positionGroup?->title,
+                    'position_type_text' => $row['person_type_name'],
+                    'position_name_text' => $position?->title ?? $row['position_name'],
+                    'position_group_text' => $positionGroup?->title,
+                    'position_level_text' => $row['position_level_name'],
+                    'position_in_work_name' => $this->nullIfBlank($row['position_in_work'], ['-']),
+                    'hr_position_num' => $this->nullIfBlank($row['position_number']),
+                ]);
+
+                if (!$employee->getDirtyAttributes()) {
+                    $unchanged++;
+                } elseif ($employee->save(false)) {
+                    $updated++;
+                } else {
+                    $failed++;
+                    echo "\nบันทึกตำแหน่ง PERSON_ID {$sourcePersonId} ไม่สำเร็จ\n";
+                }
+
+                $employeeByHosOfficeId[$sourcePersonId] = $employee;
+                $currentRowsByHosOfficeId[$sourcePersonId] = $row;
+            } catch (\Throwable $th) {
+                $failed++;
+                echo "\nนำเข้าตำแหน่ง PERSON_ID {$sourcePersonId} ไม่สำเร็จ: {$th->getMessage()}\n";
+            }
+
+            BaseConsole::updateProgress($num++, $total);
+        }
+
+        $currentSummary = $this->importHosOfficeCurrentPositionDetails(
+            $employeeByHosOfficeId,
+            $currentRowsByHosOfficeId,
+            $positionsBySourceId,
+            $levelsByTitle,
+            $groupsById,
+            $employeeTypesByLegacyCode
+        );
+        $historySummary = $this->importHosOfficePositionHistory(
+            $employeeByHosOfficeId,
+            $positionsByTitle,
+            $levelsByTitle,
+            $groupsById,
+            $employeeTypesByLegacyCode
+        );
+
+        $failed += $positionMaster['failed'] + $currentSummary['failed'] + $historySummary['failed'];
+
+        echo "\nสรุป master ตำแหน่ง: สร้าง {$positionMaster['created']}, อัปเดท {$positionMaster['updated']}, ไม่เปลี่ยน {$positionMaster['unchanged']}, ผิดพลาด {$positionMaster['failed']}\n";
+        echo "สรุปประเภทพนักงาน: สร้าง master ใหม่ {$typeCreated}\n";
+        echo "สรุปตำแหน่งพนักงาน: อัปเดท {$updated}, ไม่เปลี่ยน {$unchanged}, ข้าม {$skipped}\n";
+        echo "สรุป snapshot ปัจจุบัน: สร้าง {$currentSummary['created']}, อัปเดท {$currentSummary['updated']}, ไม่เปลี่ยน {$currentSummary['unchanged']}\n";
+        echo "สรุปประวัติ ก.พ.13: สร้าง {$historySummary['created']}, อัปเดท {$historySummary['updated']}, ไม่เปลี่ยน {$historySummary['unchanged']}, ข้าม {$historySummary['skipped']}, จับคู่ตำแหน่งไม่ได้ {$historySummary['unmatched_position']}\n";
+        echo "ผิดพลาดรวม {$failed}\n";
+
+        return $failed > 0 ? ExitCode::UNSPECIFIED_ERROR : ExitCode::OK;
+    }
+
+    /**
+     * รองรับชื่อ command เดิม โดยให้ใช้ importer ตำแหน่งชุดใหม่เหมือนกัน
+     */
     public function actionUpdatePosition($limit = null)
     {
-        // ใช้ batch() หากพนักงานมีจำนวนมากเพื่อประหยัด Memory
-        $query = Employees::find()->where(['status' => 1])->orderBy(['id' => SORT_ASC]);
-        if ($limit !== null) {
-            $query->limit(max(1, (int) $limit));
+        echo "command update-position ใช้กระบวนการเดียวกับ position\n";
+        return $this->actionPosition($limit);
+    }
+
+    /**
+     * @return array{0: array<string,EmployeeType>, 1: int}
+     */
+    private function ensureHosOfficeEmployeeTypes(): array
+    {
+        $byLegacyCode = [];
+        $byTitle = [];
+        foreach (EmployeeType::find()->all() as $employeeType) {
+            $byTitle[$this->normalizePositionTitle($employeeType->title)] = $employeeType;
+            $data = $this->decodeDataJson($employeeType->data_json);
+            foreach ((array) ($data['legacy_codes'] ?? []) as $legacyCode) {
+                $legacyCode = trim((string) $legacyCode);
+                if ($legacyCode !== '') {
+                    $byLegacyCode[$legacyCode] = $employeeType;
+                }
+            }
         }
-        $querys = $query->all();
-        $num = 1;
-        $total = count($querys);
-        echo "เริ่มอัพเดทข้อมูลตำแหน่งงาน...\n";
 
-        foreach ($querys as $emp) {
-            $data = $this->decodeDataJson($emp->data_json);
-            // 1. ค้นหาหรือสร้าง Model ใหม่
-            $empDetail = EmployeeDetail::findOne(['emp_id' => $emp->id, 'name' => 'position'])
-                ?? new EmployeeDetail();
-
-            if (!$empDetail->ref) {
-                $empDetail->ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
+        $created = 0;
+        foreach ($this->hosOfficeEmployeeTypeDefinitions() as $definition) {
+            $legacyCode = $definition['code'];
+            if (isset($byLegacyCode[$legacyCode])) {
+                continue;
             }
 
+            $titleKey = $this->normalizePositionTitle($definition['title']);
+            $employeeType = $byTitle[$titleKey] ?? new EmployeeType();
+            $isNew = $employeeType->getIsNewRecord();
+            if ($isNew) {
+                $employeeType->title = $definition['title'];
+                $employeeType->sort = $definition['sort'];
+                $employeeType->active = 1;
+            }
 
-            $empDetail->emp_id = $emp->id;
-            $empDetail->name = 'position';
-            $empDetail->data_json = $this->prepareImportedDataJson(EmployeeDetail::class, $empDetail->data_json, [
-                "point" => "",
-                "salary" => $data['salary'] ?? 0,
-                "status" => $emp->status,
-                "comment" => "-",
-                "doc_ref" => "คำสั่ง",
-                "date_end" => "",
-                "fullname" => $emp->fullname ?? "ไม่ระบุชื่อ",
-                "expertise" => "",
-                "date_start" => $data['join_date'] ?? null,
-                "department" => "27",
-                "statuslist" => "โอนข้อมูลจาก hos-office",
-                "position_number" => "-",
-                "position_name"       => $emp->position_name,
-                "position_type"       => $emp->position_type,
-                "position_group"      => $emp->position_group,
-                "position_level"      => $emp->position_level,
+            $data = $this->decodeDataJson($employeeType->data_json);
+            $legacyCodes = array_values(array_unique(array_merge(
+                (array) ($data['legacy_codes'] ?? []),
+                [$legacyCode]
+            )));
+            $employeeType->data_json = $this->prepareImportedDataJson(
+                EmployeeType::class,
+                $employeeType->data_json,
+                ['legacy_codes' => $legacyCodes]
+            );
 
+            if ($employeeType->save(false)) {
+                $created += $isNew ? 1 : 0;
+                $byLegacyCode[$legacyCode] = $employeeType;
+                $byTitle[$titleKey] = $employeeType;
+            }
+        }
+
+        return [$byLegacyCode, $created];
+    }
+
+    /**
+     * @return array{
+     *     by_source_id: array<string,EmployeePosition>,
+     *     by_title: array<string,EmployeePosition>,
+     *     created: int,
+     *     updated: int,
+     *     unchanged: int,
+     *     failed: int
+     * }
+     */
+    private function importHosOfficePositionMaster(): array
+    {
+        $positionsByTitle = [];
+        foreach (EmployeePosition::find()->all() as $position) {
+            $titleKey = $this->normalizePositionTitle($position->title);
+            if ($titleKey !== '') {
+                $positionsByTitle[$titleKey] = $position;
+            }
+        }
+
+        $sourceRows = Yii::$app->db2->createCommand(
+            "SELECT HR_POSITION_ID, HR_POSITION_NAME, POSITION_SP_ID,
+                    HR_POSITION_SHORT, ACTIVE, DATE_TIME_SAVE, DATE_TIME_UPDATE
+             FROM hr_position
+             ORDER BY HR_POSITION_ID"
+        )->queryAll();
+
+        $positionsBySourceId = [];
+        $created = 0;
+        $updated = 0;
+        $unchanged = 0;
+        $failed = 0;
+
+        foreach ($sourceRows as $row) {
+            $sourceId = trim((string) $row['HR_POSITION_ID']);
+            $title = trim((string) $row['HR_POSITION_NAME']);
+            $titleKey = $this->normalizePositionTitle($title);
+            if ($sourceId === '' || $titleKey === '') {
+                continue;
+            }
+
+            $position = $positionsByTitle[$titleKey] ?? new EmployeePosition();
+            $isNew = $position->getIsNewRecord();
+            if ($isNew) {
+                $position->title = $title;
+                $position->employee_type_id = null;
+                $position->employee_position_group_id = null;
+                $position->legacy_code = null;
+                $position->sort = ctype_digit($sourceId) ? (int) $sourceId : 0;
+                $position->active = strcasecmp(trim((string) $row['ACTIVE']), 'False') === 0 ? 0 : 1;
+            }
+
+            $position->data_json = $this->prepareImportedDataJson(
+                EmployeePosition::class,
+                $position->data_json,
+                [
+                    'HOSOFFICE_POSITION_ID' => $sourceId,
+                    'hosoffice_position_short' => $this->nullIfBlank($row['HR_POSITION_SHORT']),
+                    'hosoffice_position_sp_id' => $this->nullIfBlank($row['POSITION_SP_ID']),
+                    'hosoffice_active' => $row['ACTIVE'],
+                    'hosoffice_saved_at' => $this->normalizeHosOfficeDateTime($row['DATE_TIME_SAVE']),
+                    'hosoffice_updated_at' => $this->normalizeHosOfficeDateTime($row['DATE_TIME_UPDATE']),
+                ]
+            );
+
+            if (!$position->getDirtyAttributes()) {
+                $unchanged++;
+            } elseif ($position->save(false)) {
+                $isNew ? $created++ : $updated++;
+            } else {
+                $failed++;
+                continue;
+            }
+
+            $positionsByTitle[$titleKey] = $position;
+            $positionsBySourceId[$sourceId] = $position;
+        }
+
+        return [
+            'by_source_id' => $positionsBySourceId,
+            'by_title' => $positionsByTitle,
+            'created' => $created,
+            'updated' => $updated,
+            'unchanged' => $unchanged,
+            'failed' => $failed,
+        ];
+    }
+
+    /**
+     * @return array<string,Categorise>
+     */
+    private function positionLevelsByTitle(): array
+    {
+        $levels = [];
+        foreach (Categorise::find()->where(['name' => 'position_level'])->all() as $level) {
+            $titleKey = $this->normalizePositionTitle($level->title);
+            if ($titleKey !== '') {
+                $levels[$titleKey] = $level;
+            }
+        }
+
+        return $levels;
+    }
+
+    /**
+     * @param array<string,Employees> $employeesByHosOfficeId
+     * @param array<string,array<string,mixed>> $sourceRowsByHosOfficeId
+     * @param array<string,EmployeePosition> $positionsBySourceId
+     * @param array<string,Categorise> $levelsByTitle
+     * @param array<int,EmployeePositionGroup> $groupsById
+     * @param array<string,EmployeeType> $employeeTypesByLegacyCode
+     * @return array{created:int,updated:int,unchanged:int,failed:int}
+     */
+    private function importHosOfficeCurrentPositionDetails(
+        array $employeesByHosOfficeId,
+        array $sourceRowsByHosOfficeId,
+        array $positionsBySourceId,
+        array $levelsByTitle,
+        array $groupsById,
+        array $employeeTypesByLegacyCode
+    ): array {
+        $existingBySourceId = $this->importedRecordIds(
+            EmployeeDetail::class,
+            'HOSOFFICE_CURRENT_POSITION_PERSON_ID',
+            ['name' => 'position']
+        );
+        $typesById = [];
+        foreach ($employeeTypesByLegacyCode as $employeeType) {
+            $typesById[(int) $employeeType->id] = $employeeType;
+        }
+
+        $created = 0;
+        $updated = 0;
+        $unchanged = 0;
+        $failed = 0;
+
+        foreach ($sourceRowsByHosOfficeId as $sourcePersonId => $row) {
+            $employee = $employeesByHosOfficeId[$sourcePersonId] ?? null;
+            if (!$employee) {
+                continue;
+            }
+
+            $detail = isset($existingBySourceId[$sourcePersonId])
+                ? EmployeeDetail::findOne($existingBySourceId[$sourcePersonId])
+                : $this->legacyHosOfficeCurrentPositionDetail((int) $employee->id);
+            $detail = $detail ?? new EmployeeDetail();
+            $isNew = $detail->getIsNewRecord();
+            if (!$detail->ref) {
+                $detail->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            }
+
+            $position = $positionsBySourceId[trim((string) $row['HOSOFFICE_POSITION_ID'])] ?? null;
+            $positionGroup = $position && $position->employee_position_group_id
+                ? ($groupsById[$position->employee_position_group_id] ?? null)
+                : null;
+            $employeeType = $employee->employee_type_id
+                ? ($typesById[(int) $employee->employee_type_id] ?? null)
+                : null;
+            $positionLevel = $levelsByTitle[$this->normalizePositionTitle($row['position_level_name'])] ?? null;
+            [$positionDate, $positionDateSource] = $this->currentPositionDate($row);
+
+            $detail->emp_id = $employee->id;
+            $detail->name = 'position';
+            $detail->data_json = $this->prepareImportedDataJson(EmployeeDetail::class, $detail->data_json, [
+                'HOSOFFICE_CURRENT_POSITION_PERSON_ID' => (string) $sourcePersonId,
+                'HOSOFFICE_POSITION_ID' => (string) $row['HOSOFFICE_POSITION_ID'],
+                'source_system' => 'hosoffice_hr_person',
+                'date_start' => $positionDate,
+                'date_start_source' => $positionDateSource,
+                'date_start_estimated' => true,
+                'date_end' => null,
+                'statuslist' => 'ตำแหน่งปัจจุบันจาก HOSOffice',
+                'doc_ref' => 'HOSOffice hr_person',
+                'fullname' => $employee->fullname ?? 'ไม่ระบุชื่อ',
+                'salary' => $row['salary'] ?? $employee->salary,
+                'status' => $employee->status,
+                'department' => $employee->department,
+                'position_number' => $this->nullIfBlank($row['position_number']),
+                'position_name' => $position?->legacy_code,
+                'position_name_text' => $position?->title ?? $row['position_name'],
+                'position_group' => $positionGroup?->legacy_code,
+                'position_group_text' => $positionGroup?->title,
+                'position_type' => $employee->position_type,
+                'position_type_text' => $employeeType?->title ?? $row['person_type_name'],
+                'position_level' => $positionLevel?->code,
+                'position_level_text' => $row['position_level_name'],
+                'employee_type_id' => $employeeType?->id,
+                'employee_type_text' => $employeeType?->title ?? $row['person_type_name'],
+                'employee_position_id' => $position?->id,
+                'employee_position_text' => $position?->title ?? $row['position_name'],
+                'employee_position_group_id' => $positionGroup?->id,
+                'employee_position_group_text' => $positionGroup?->title,
+                'position_in_work_name' => $this->nullIfBlank($row['position_in_work'], ['-']),
             ]);
 
-            // 4. บันทึกข้อมูล (ใช้ save(false) เพื่อข้าม validation หากมั่นใจในข้อมูล)
-            if (!$empDetail->save(false)) {
-                \Yii::error("Save Error ID: " . $emp->id . " Errors: " . Json::encode($empDetail->getErrors()));
+            if (!$detail->getDirtyAttributes()) {
+                $unchanged++;
+            } elseif ($detail->save(false)) {
+                $isNew ? $created++ : $updated++;
+                $existingBySourceId[$sourcePersonId] = $detail->id;
+            } else {
+                $failed++;
+            }
+        }
+
+        return compact('created', 'updated', 'unchanged', 'failed');
+    }
+
+    /**
+     * @param array<string,Employees> $employeesByHosOfficeId
+     * @param array<string,EmployeePosition> $positionsByTitle
+     * @param array<string,Categorise> $levelsByTitle
+     * @param array<int,EmployeePositionGroup> $groupsById
+     * @param array<string,EmployeeType> $employeeTypesByLegacyCode
+     * @return array{created:int,updated:int,unchanged:int,skipped:int,unmatched_position:int,failed:int}
+     */
+    private function importHosOfficePositionHistory(
+        array $employeesByHosOfficeId,
+        array $positionsByTitle,
+        array $levelsByTitle,
+        array $groupsById,
+        array $employeeTypesByLegacyCode
+    ): array {
+        $sourceRows = Yii::$app->db2->createCommand(
+            "SELECT ID, HR_PERSON_ID, DATE_REG, POSITION_NAME, POSITION_NUMBER,
+                    POSITION_LAVEL, SALARY_LATE, DOC_ETC, USER_EDIT_ID,
+                    DATE_TIME_SAVE, PERSENT_UP, COMMEMT, BOOK_ID, BOOK_REF_ID
+             FROM hr_kp_13
+             ORDER BY HR_PERSON_ID, DATE_REG, ID"
+        )->queryAll();
+        $existingBySourceId = $this->importedRecordIds(
+            EmployeeDetail::class,
+            'HOSOFFICE_KP13_ID',
+            ['name' => 'position']
+        );
+        $typesById = [];
+        foreach ($employeeTypesByLegacyCode as $employeeType) {
+            $typesById[(int) $employeeType->id] = $employeeType;
+        }
+        $positionTitleKeys = array_keys($positionsByTitle);
+        usort($positionTitleKeys, static function ($left, $right) {
+            return mb_strlen($right, 'UTF-8') <=> mb_strlen($left, 'UTF-8');
+        });
+
+        $lastPositionByPerson = [];
+        $created = 0;
+        $updated = 0;
+        $unchanged = 0;
+        $skipped = 0;
+        $unmatched_position = 0;
+        $failed = 0;
+
+        foreach ($sourceRows as $row) {
+            $sourceId = trim((string) $row['ID']);
+            $sourcePersonId = trim((string) $row['HR_PERSON_ID']);
+            $employee = $employeesByHosOfficeId[$sourcePersonId] ?? null;
+            if (!$employee) {
+                $skipped++;
+                continue;
             }
 
-            BaseConsole::updateProgress($num, $total);
-            $num++;
+            try {
+                $resolved = $this->resolveHosOfficeHistoryPosition(
+                    $row['POSITION_NAME'],
+                    $positionsByTitle,
+                    $positionTitleKeys
+                );
+                $position = $resolved['position'];
+                $matchType = $resolved['match_type'];
+                if ($position) {
+                    $lastPositionByPerson[$sourcePersonId] = $position;
+                } else {
+                    $unmatched_position++;
+                    $position = $lastPositionByPerson[$sourcePersonId] ?? null;
+                    $matchType = $position ? 'carried_forward' : 'unmatched';
+                }
+
+                $positionGroup = $position && $position->employee_position_group_id
+                    ? ($groupsById[$position->employee_position_group_id] ?? null)
+                    : null;
+                $employeeType = $employee->employee_type_id
+                    ? ($typesById[(int) $employee->employee_type_id] ?? null)
+                    : null;
+                $positionLevel = $levelsByTitle[$this->normalizePositionTitle($row['POSITION_LAVEL'])] ?? null;
+                $movement = $this->hosOfficeHistoryMovement($row, $matchType);
+                $docRef = $this->hosOfficeHistoryDocumentReference($row);
+
+                $detail = isset($existingBySourceId[$sourceId])
+                    ? EmployeeDetail::findOne($existingBySourceId[$sourceId])
+                    : new EmployeeDetail();
+                $isNew = $detail->getIsNewRecord();
+                if (!$detail->ref) {
+                    $detail->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+                }
+
+                $detail->emp_id = $employee->id;
+                $detail->name = 'position';
+                $detail->data_json = $this->prepareImportedDataJson(
+                    EmployeeDetail::class,
+                    $detail->data_json,
+                    $this->cleanUtf8($row),
+                    [
+                        'HOSOFFICE_KP13_ID' => $sourceId,
+                        'HOSOFFICE_PERSON_ID' => $sourcePersonId,
+                        'source_system' => 'hosoffice_hr_kp_13',
+                        'source_position_text' => $row['POSITION_NAME'],
+                        'source_position_match_type' => $matchType,
+                        'date_start' => $this->normalizeHosOfficeDate($row['DATE_REG']),
+                        'date_end' => null,
+                        'statuslist' => $movement,
+                        'comment' => $this->nullIfBlank($row['COMMEMT']),
+                        'doc_ref' => $docRef,
+                        'fullname' => $employee->fullname ?? 'ไม่ระบุชื่อ',
+                        'salary' => $row['SALARY_LATE'],
+                        'status' => $employee->status,
+                        'department' => $employee->department,
+                        'position_number' => $this->nullIfBlank($row['POSITION_NUMBER']),
+                        'position_name' => $position?->legacy_code,
+                        'position_name_text' => $position?->title,
+                        'position_group' => $positionGroup?->legacy_code,
+                        'position_group_text' => $positionGroup?->title,
+                        'position_type' => $employee->position_type,
+                        'position_type_text' => $employeeType?->title,
+                        'position_level' => $positionLevel?->code,
+                        'position_level_text' => $this->nullIfBlank($row['POSITION_LAVEL']),
+                        'employee_type_id' => $employeeType?->id,
+                        'employee_type_text' => $employeeType?->title,
+                        'employee_position_id' => $position?->id,
+                        'employee_position_text' => $position?->title,
+                        'employee_position_group_id' => $positionGroup?->id,
+                        'employee_position_group_text' => $positionGroup?->title,
+                    ]
+                );
+
+                if (!$detail->getDirtyAttributes()) {
+                    $unchanged++;
+                } elseif ($detail->save(false)) {
+                    $isNew ? $created++ : $updated++;
+                    $existingBySourceId[$sourceId] = $detail->id;
+                } else {
+                    $failed++;
+                }
+            } catch (\Throwable $th) {
+                $failed++;
+                echo "นำเข้าประวัติ ก.พ.13 ID {$sourceId} ไม่สำเร็จ: {$th->getMessage()}\n";
+            }
         }
+
+        return compact('created', 'updated', 'unchanged', 'skipped', 'unmatched_position', 'failed');
+    }
+
+    /**
+     * @param array<string,EmployeePosition> $positionsByTitle
+     * @param string[] $positionTitleKeys
+     * @return array{position:?EmployeePosition,match_type:string}
+     */
+    private function resolveHosOfficeHistoryPosition($sourceTitle, array $positionsByTitle, array $positionTitleKeys): array
+    {
+        $sourceKey = $this->normalizePositionTitle($sourceTitle);
+        if ($sourceKey === '') {
+            return ['position' => null, 'match_type' => 'unmatched'];
+        }
+        if (isset($positionsByTitle[$sourceKey])) {
+            return ['position' => $positionsByTitle[$sourceKey], 'match_type' => 'exact'];
+        }
+
+        $aliases = [
+            'เจ้าพนังาน' => 'เจ้าพนักงาน',
+            'เจ้าพักงาน' => 'เจ้าพนักงาน',
+            'เภสัขกร' => 'เภสัชกร',
+            'ทันตสาธารรสุข' => 'ทันตสาธารณสุข',
+        ];
+        $aliasKey = $this->normalizePositionTitle(strtr((string) $sourceTitle, $aliases));
+        $candidateKeys = [$aliasKey];
+        $withoutCategory = preg_replace('/\s*\(\s*(ทั่วไป|วิชาการ)\s*\)\s*$/u', '', $aliasKey);
+        if (is_string($withoutCategory) && $withoutCategory !== '') {
+            $candidateKeys[] = $this->normalizePositionTitle($withoutCategory);
+        }
+        foreach (array_values($candidateKeys) as $candidateKey) {
+            $withoutLevel = preg_replace('/\s+\d+\s*$/u', '', $candidateKey);
+            if (is_string($withoutLevel) && $withoutLevel !== '') {
+                $candidateKeys[] = $this->normalizePositionTitle($withoutLevel);
+            }
+        }
+
+        foreach (array_unique($candidateKeys) as $candidateKey) {
+            if (isset($positionsByTitle[$candidateKey])) {
+                return ['position' => $positionsByTitle[$candidateKey], 'match_type' => 'normalized'];
+            }
+        }
+
+        foreach ($positionTitleKeys as $titleKey) {
+            if (mb_strlen($titleKey, 'UTF-8') < 4) {
+                continue;
+            }
+            if (mb_strpos($sourceKey, $titleKey, 0, 'UTF-8') !== false) {
+                return ['position' => $positionsByTitle[$titleKey], 'match_type' => 'contained'];
+            }
+        }
+
+        return ['position' => null, 'match_type' => 'unmatched'];
+    }
+
+    private function hosOfficeHistoryMovement(array $row, string $matchType): string
+    {
+        $parts = [];
+        $sourcePositionText = trim((string) ($row['POSITION_NAME'] ?? ''));
+        $comment = trim((string) ($row['COMMEMT'] ?? ''));
+        if ($sourcePositionText !== '' && $matchType !== 'exact') {
+            $parts[] = $sourcePositionText;
+        }
+        if ($comment !== '' && !in_array($comment, $parts, true)) {
+            $parts[] = $comment;
+        }
+
+        return $parts ? implode(' - ', $parts) : 'ข้อมูลประวัติ ก.พ.13 จาก HOSOffice';
+    }
+
+    private function hosOfficeHistoryDocumentReference(array $row): ?string
+    {
+        $parts = [];
+        foreach (['DOC_ETC', 'BOOK_ID', 'BOOK_REF_ID'] as $key) {
+            $value = trim((string) ($row[$key] ?? ''));
+            if ($value !== '' && !in_array($value, $parts, true)) {
+                $parts[] = $value;
+            }
+        }
+
+        return $parts ? implode(' / ', $parts) : null;
+    }
+
+    private function legacyHosOfficeCurrentPositionDetail(int $employeeId): ?EmployeeDetail
+    {
+        return EmployeeDetail::find()
+            ->where(['emp_id' => $employeeId, 'name' => 'position'])
+            ->andWhere(new \yii\db\Expression(
+                "JSON_UNQUOTE(JSON_EXTRACT(
+                    CASE WHEN JSON_VALID([[data_json]]) THEN [[data_json]] ELSE '{}' END,
+                    '$.statuslist'
+                )) IN (:legacyStatus, :currentStatus)",
+                [
+                    ':legacyStatus' => 'โอนข้อมูลจาก hos-office',
+                    ':currentStatus' => 'ตำแหน่งปัจจุบันจาก HOSOffice',
+                ]
+            ))
+            ->orderBy(['id' => SORT_ASC])
+            ->one();
+    }
+
+    /**
+     * @return array{0:?string,1:?string}
+     */
+    private function currentPositionDate(array $row): array
+    {
+        $startWorkDate = $this->normalizeHosOfficeDate($row['start_work_date'] ?? null);
+        $datePut = $this->normalizeHosOfficeDate($row['date_put'] ?? null);
+        if ($datePut !== null && ($startWorkDate === null || $datePut >= $startWorkDate)) {
+            return [$datePut, 'HR_DATE_PUT'];
+        }
+        if ($startWorkDate !== null) {
+            return [$startWorkDate, 'HR_STARTWORK_DATE'];
+        }
+
+        return [null, null];
+    }
+
+    private function normalizePositionTitle($value): string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        $value = preg_replace('/\s+/u', ' ', $value);
+        if (!is_string($value)) {
+            return '';
+        }
+
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    }
+
+    private function nullIfBlank($value, array $emptyValues = [])
+    {
+        if ($value === null) {
+            return null;
+        }
+        $value = trim((string) $value);
+        if ($value === '' || in_array($value, $emptyValues, true)) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    private function normalizeHosOfficeDate($value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '' || $value === '0000-00-00') {
+            return null;
+        }
+        $date = DateTime::createFromFormat('!Y-m-d', $value);
+
+        return $date && $date->format('Y-m-d') === $value ? $value : null;
+    }
+
+    private function normalizeHosOfficeDateTime($value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '' || str_starts_with($value, '0000-00-00')) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return array<string,array{code:string,title:string,sort:int}>
+     */
+    private function hosOfficeEmployeeTypeDefinitions(): array
+    {
+        return [
+            'ข้าราชการ' => ['code' => 'PT1', 'title' => 'ข้าราชการ', 'sort' => 1],
+            'พนักงานราชการ' => ['code' => 'PT2', 'title' => 'พนักงานราชการ', 'sort' => 2],
+            'พนักงานกระทรวงสาธารณสุข' => ['code' => 'PT3', 'title' => 'พนักงานกระทรวง (พกส.)', 'sort' => 3],
+            'ลูกจ้างชั่วคราว' => ['code' => 'PT4', 'title' => 'ลูกจ้างชั่วคราวรายเดือน', 'sort' => 4],
+            'ลูกจ้างรายวัน' => ['code' => 'PT5', 'title' => 'ลูกจ้างชั่วคราวรายวัน', 'sort' => 5],
+            'ลูกจ้างประจำ' => ['code' => 'PT6', 'title' => 'ลูกจ้างประจำ', 'sort' => 6],
+            'จ้างเหมาบริการ' => ['code' => 'PT7', 'title' => 'จ้างเหมาบริการ', 'sort' => 7],
+        ];
     }
 
 
