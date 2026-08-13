@@ -291,9 +291,29 @@ foreach ($grid as $byDay) {
                 </button>
             <?php endif; ?>
 
-            <?php if (in_array($period->status, [Period::STATUS_SUBMITTED, Period::STATUS_REVIEWED], true) && ($canReview || $canApprove)): ?>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-transition="<?= Period::STATUS_DRAFT ?>">
-                    <i class="bi bi-arrow-counterclockwise"></i> ส่งกลับแก้
+            <?php
+            // ดึงกลับมาแก้ — เงื่อนไขต้องตรงกับ transitionDenialReason() ฝั่งเซิร์ฟเวอร์เป๊ะ
+            // เดิมแสดงเฉพาะผู้ตรวจ/ผอ. ทั้งที่เซิร์ฟเวอร์ยอมให้หัวหน้าหน่วยดึงของตัวเองกลับได้
+            // หัวหน้าหน่วยที่ส่งผิดจึงแก้เองไม่ได้ ต้องรอคนอื่นกดให้
+            $pullBack = null;
+            if ($period->status === Period::STATUS_SUBMITTED) {
+                if ($canReview || $canApprove) {
+                    $pullBack = 'ส่งกลับแก้';
+                } elseif ($canManage) {
+                    // เจ้าของหน่วยดึงของตัวเองกลับ ไม่ใช่การ "ส่งกลับ" ให้ใคร
+                    $pullBack = 'ดึงกลับมาแก้';
+                }
+            } elseif ($period->status === Period::STATUS_REVIEWED && ($canReview || $canApprove)) {
+                $pullBack = 'ส่งกลับแก้';
+            }
+            ?>
+            <?php if ($pullBack !== null): ?>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-transition="<?= Period::STATUS_DRAFT ?>"
+                        data-confirm="<?= $pullBack === 'ดึงกลับมาแก้'
+                            ? 'ดึงตารางเวรนี้กลับมาแก้เอง? หัวหน้ากลุ่มงานจะยังไม่ได้ตรวจ และต้องส่งใหม่อีกครั้ง'
+                            : 'ส่งตารางเวรนี้กลับให้หัวหน้าหน่วยแก้ใหม่?' ?>">
+                    <i class="bi bi-arrow-counterclockwise"></i> <?= $pullBack ?>
                 </button>
             <?php endif; ?>
 
@@ -955,7 +975,8 @@ $js = <<<JS
             closed: 'ปิดรอบนี้? จะเปลี่ยนตัวเวรไม่ได้อีก',
             draft: 'ดึงกลับมาให้หัวหน้าหน่วยแก้ใหม่?'
         };
-        if (!window.confirm(labels[to] || 'ยืนยัน?')) { return; }
+        // ปุ่มเดียวกันมีความหมายต่างกันตามคนกด (ส่งกลับ vs ดึงกลับ) จึงให้ปุ่มพกข้อความมาเองได้
+        if (!window.confirm(jQuery(this).data('confirm') || labels[to] || 'ยืนยัน?')) { return; }
         jQuery.post('{$transitionUrl}&to=' + to, function (res) {
             if (res.status === 'success') { notify('ok', res.message); window.location.reload(); }
             else { notify('warn', res.message); }
