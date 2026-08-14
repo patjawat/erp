@@ -291,9 +291,29 @@ foreach ($grid as $byDay) {
                 </button>
             <?php endif; ?>
 
-            <?php if (in_array($period->status, [Period::STATUS_SUBMITTED, Period::STATUS_REVIEWED], true) && ($canReview || $canApprove)): ?>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-transition="<?= Period::STATUS_DRAFT ?>">
-                    <i class="bi bi-arrow-counterclockwise"></i> ส่งกลับแก้
+            <?php
+            // ดึงกลับมาแก้ — เงื่อนไขต้องตรงกับ transitionDenialReason() ฝั่งเซิร์ฟเวอร์เป๊ะ
+            // เดิมแสดงเฉพาะผู้ตรวจ/ผอ. ทั้งที่เซิร์ฟเวอร์ยอมให้หัวหน้าหน่วยดึงของตัวเองกลับได้
+            // หัวหน้าหน่วยที่ส่งผิดจึงแก้เองไม่ได้ ต้องรอคนอื่นกดให้
+            $pullBack = null;
+            if ($period->status === Period::STATUS_SUBMITTED) {
+                if ($canReview || $canApprove) {
+                    $pullBack = 'ส่งกลับแก้';
+                } elseif ($canManage) {
+                    // เจ้าของหน่วยดึงของตัวเองกลับ ไม่ใช่การ "ส่งกลับ" ให้ใคร
+                    $pullBack = 'ดึงกลับมาแก้';
+                }
+            } elseif ($period->status === Period::STATUS_REVIEWED && ($canReview || $canApprove)) {
+                $pullBack = 'ส่งกลับแก้';
+            }
+            ?>
+            <?php if ($pullBack !== null): ?>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-transition="<?= Period::STATUS_DRAFT ?>"
+                        data-confirm="<?= $pullBack === 'ดึงกลับมาแก้'
+                            ? 'ดึงตารางเวรนี้กลับมาแก้เอง? หัวหน้ากลุ่มงานจะยังไม่ได้ตรวจ และต้องส่งใหม่อีกครั้ง'
+                            : 'ส่งตารางเวรนี้กลับให้หัวหน้าหน่วยแก้ใหม่?' ?>">
+                    <i class="bi bi-arrow-counterclockwise"></i> <?= $pullBack ?>
                 </button>
             <?php endif; ?>
 
@@ -332,9 +352,7 @@ foreach ($grid as $byDay) {
             <table class="table table-bordered table-sm align-middle mb-0 roster-grid">
                 <thead class="bg-body-tertiary">
                     <tr>
-                        <th class="roster-sticky-col bg-body-tertiary">เจ้าหน้าที่</th>
-                        <!-- ค่าตอบแทนติดกับชื่อและตรึงไว้ ไม่งั้นต้องเลื่อนผ่าน 31 วันถึงจะเห็นเงิน -->
-                        <th class="roster-sticky-pay bg-body-tertiary text-end">ค่าตอบแทน</th>
+                        <th class="roster-sticky-col bg-body-tertiary" style="min-width:200px">เจ้าหน้าที่</th>
                         <?php for ($d = 1; $d <= $days; $d++): ?>
                             <?php
                             $ts = strtotime($period->dateOfDay($d));
@@ -352,6 +370,7 @@ foreach ($grid as $byDay) {
                         <th class="text-center bg-body-tertiary" style="min-width:56px">รวมเวร</th>
                         <th class="text-center bg-body-tertiary" style="min-width:48px">วันหยุด</th>
                         <th class="text-center bg-body-tertiary" style="min-width:48px">OT</th>
+                        <th class="text-end bg-body-tertiary" style="min-width:90px">ค่าตอบแทน</th>
                     </tr>
                 </thead>
 
@@ -379,9 +398,6 @@ foreach ($grid as $byDay) {
                                     <?= Html::encode($emp['position_name'] ?: 'ไม่ระบุตำแหน่ง') ?>
                                 </div>
                             </td>
-
-                            <td class="roster-sticky-pay bg-body text-end emp-pay <?= $tot['pay'] > 0 ? 'fw-semibold' : 'text-body-secondary' ?>"
-                                data-emp="<?= $empId ?>"><?= $tot['pay'] > 0 ? number_format($tot['pay'], 2) : '–' ?></td>
 
                             <?php for ($d = 1; $d <= $days; $d++): ?>
                                 <?php
@@ -451,6 +467,8 @@ foreach ($grid as $byDay) {
                             <td class="text-center emp-off text-body-secondary" data-emp="<?= $empId ?>"><?= $tot['off'] ?></td>
                             <td class="text-center emp-ot <?= $tot['ot'] ? 'text-warning-emphasis fw-semibold' : 'text-body-secondary' ?>"
                                 data-emp="<?= $empId ?>"><?= $tot['ot'] ?></td>
+                            <td class="text-end emp-pay small <?= $tot['pay'] > 0 ? 'fw-semibold' : 'text-body-secondary' ?>"
+                                data-emp="<?= $empId ?>"><?= $tot['pay'] > 0 ? number_format($tot['pay'], 2) : '–' ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -469,9 +487,6 @@ foreach ($grid as $byDay) {
                                         ? '· ต้องการ ' . Html::encode($unitShift->requiredLabel())
                                         : '· ไม่ระบุจำนวน' ?>
                                 </span>
-                            </td>
-                            <td class="roster-sticky-pay bg-body-tertiary text-end small text-body-secondary">
-                                <?= $unitShift->pay_rate ? Html::encode($unitShift->payLabel()) : '–' ?>
                             </td>
                             <?php for ($d = 1; $d <= $days; $d++): ?>
                                 <?php
@@ -496,8 +511,11 @@ foreach ($grid as $byDay) {
                                     <?= $need > 0 ? $have . '/' . $need : $have ?>
                                 </td>
                             <?php endfor; ?>
-                            <td colspan="3" class="small text-body-secondary text-truncate" style="max-width:150px">
+                            <td colspan="4" class="small text-body-secondary">
                                 <?= Html::encode($unitShift->positionName() ?: 'ทุกวิชาชีพ') ?>
+                                <?php if ($unitShift->pay_rate): ?>
+                                    · <?= Html::encode($unitShift->payLabel()) ?>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -526,21 +544,8 @@ $this->registerCss(<<<'CSS'
 .roster-scroll { max-height: 70vh; overflow: auto; }
 .roster-grid thead th { position: sticky; top: 0; z-index: 3; }
 
-/* สองคอลัมน์ซ้ายตรึงไว้: ชื่อเจ้าหน้าที่ แล้วต่อด้วยค่าตอบแทน
-   ต้องกำหนดความกว้างตายตัวทั้งคู่ เพราะคอลัมน์ที่สองต้องรู้ว่าจะไปเกาะที่ left เท่าไร */
-.roster-sticky-col {
-    position: sticky; left: 0; z-index: 2;
-    width: 200px; min-width: 200px; max-width: 200px;
-}
-.roster-sticky-pay {
-    position: sticky; left: 200px; z-index: 2;
-    width: 92px; min-width: 92px; max-width: 92px;
-    font-variant-numeric: tabular-nums;
-    /* border-collapse กินเส้นขอบของ sticky cell — ใช้เงาแทนเพื่อให้เห็นรอยต่อกับวันที่ */
-    box-shadow: 2px 0 0 -1px var(--bs-border-color);
-}
-.roster-grid thead th.roster-sticky-col,
-.roster-grid thead th.roster-sticky-pay { z-index: 4; }
+.roster-sticky-col { position: sticky; left: 0; z-index: 2; }
+.roster-grid thead th.roster-sticky-col { z-index: 4; }
 
 /* ช่องเวร — ขยายให้กดง่ายและอ่านตัวย่อออกจากระยะปกติ */
 .roster-cell { cursor: pointer; height: 48px; }
@@ -711,14 +716,6 @@ $js = <<<JS
 
     setPen(pen);
 
-    // คอลัมน์ค่าตอบแทนเกาะอยู่ทางขวาของคอลัมน์ชื่อ ซึ่งเบราว์เซอร์อาจไม่เคารพ max-width
-    // ในตาราง auto layout จึงวัดความกว้างจริงแล้วตั้ง left เอง ไม่ยึดค่าใน CSS
-    function alignStickyPay() {
-        var w = jQuery('.roster-grid thead th.roster-sticky-col').outerWidth();
-        if (w) { jQuery('.roster-sticky-pay').css('left', w + 'px'); }
-    }
-    alignStickyPay();
-    jQuery(window).on('resize', alignStickyPay);
 
     function repaintCell(\$cell, items) {
         var \$inner = \$cell.find('.roster-cell-inner');
@@ -810,6 +807,20 @@ $js = <<<JS
         }, function (res) {
             \$cell.removeClass('is-saving');
             if (res.status !== 'success') {
+                // ชนกับอีกแผ่น — ช่องตรงหน้าว่าง คำเตือนลอย ๆ จะงงมาก ต้องพาไปแผ่นนั้นได้เลย
+                if (res.conflictUrl) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'เวรนี้ถูกจัดไว้ในอีกแผ่นแล้ว',
+                        text: res.message,
+                        showCancelButton: true,
+                        confirmButtonText: 'ไปที่แผ่นนั้น',
+                        cancelButtonText: 'ปิด',
+                    }).then(function (r) {
+                        if (r.isConfirmed) { window.location.href = res.conflictUrl; }
+                    });
+                    return;
+                }
                 notify('warn', res.message || 'บันทึกไม่สำเร็จ');
                 return;
             }
@@ -964,7 +975,8 @@ $js = <<<JS
             closed: 'ปิดรอบนี้? จะเปลี่ยนตัวเวรไม่ได้อีก',
             draft: 'ดึงกลับมาให้หัวหน้าหน่วยแก้ใหม่?'
         };
-        if (!window.confirm(labels[to] || 'ยืนยัน?')) { return; }
+        // ปุ่มเดียวกันมีความหมายต่างกันตามคนกด (ส่งกลับ vs ดึงกลับ) จึงให้ปุ่มพกข้อความมาเองได้
+        if (!window.confirm(jQuery(this).data('confirm') || labels[to] || 'ยืนยัน?')) { return; }
         jQuery.post('{$transitionUrl}&to=' + to, function (res) {
             if (res.status === 'success') { notify('ok', res.message); window.location.reload(); }
             else { notify('warn', res.message); }

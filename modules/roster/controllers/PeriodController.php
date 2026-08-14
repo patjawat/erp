@@ -5,6 +5,7 @@ namespace app\modules\roster\controllers;
 use app\components\ApproveLevelResolver;
 use app\components\ModalHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\roster\helpers\RosterAccess;
 use app\modules\roster\helpers\RosterAutoScheduler;
 use app\modules\roster\helpers\RosterContext;
@@ -107,6 +108,12 @@ class PeriodController extends Controller
             // ขอบเขตเวรของแผ่นนี้ — ไม่เลือก = ครอบทุกเวรของหน่วย
             $picked = array_map('intval', (array) $this->request->post('unit_shift_ids', []));
             $model->setShiftIds($picked);
+
+            $clash = $this->overlappingSheet($model);
+            if ($clash !== null) {
+                return ['status' => 'error', 'message' => $clash];
+            }
+
             if ($model->save()) {
                 // ไม่ผูกคำขอหยุดเข้าแผ่นใดแผ่นหนึ่ง เพราะเดือนหนึ่งมีหลายแผ่น
                 // ทุกแผ่นอ่านคำขอจาก หน่วย+วันที่ ผ่าน Request::gridForUnit() อยู่แล้ว
@@ -131,6 +138,98 @@ class PeriodController extends Controller
             ]),
             'footer' => ModalHelper::modalFooterSaveClose(),
         ];
+    }
+
+    /**
+     * ชื่อผู้ลงนามท้ายตารางเวร — ผู้จัดทำ กับ ผู้อนุมัติ
+     *
+     * ยึดคนที่ "ทำจริง" ก่อน (submitted_by / approved_by ซึ่งเก็บเป็น user id)
+     * ถ้ายังไม่ถึงขั้นนั้น ค่อยถอยไปใช้ผู้ที่ "ควรจะเป็น" ตามผังองค์กรและค่าตั้งค่าเว็บ
+     * เพื่อให้พิมพ์ร่างไปเสนอได้โดยไม่ต้องเขียนชื่อด้วยมือ
+     *
+     * @return array{prepared:array{name:string,position:string}, approved:array{name:string,position:string}}
+     */
+    private function signatories(Period $period): array
+    {
+        $byUser = static function (?int $userId): ?Employees {
+            return $userId ? Employees::findOne(['user_id' => $userId]) : null;
+        };
+        $describe = static function (?Employees $emp, string $fallbackPosition = ''): array {
+            if (!$emp) {
+                return ['name' => '', 'position' => $fallbackPosition];
+            }
+            $position = $emp->employeePosition->title ?? ($emp->position_name ?: $fallbackPosition);
+            return [
+                'name' => trim(($emp->prefix ?? '') . $emp->fname . ' ' . $emp->lname),
+                'position' => (string) $position,
+            ];
+        };
+
+        // ผู้จัดทำ: คนที่กดส่งตรวจ ไม่งั้นใช้หัวหน้าหน่วยตามผังองค์กร
+        $preparer = $byUser($period->submitted_by ? (int) $period->submitted_by : null);
+        if (!$preparer) {
+            $unit = Organization::findOne((int) $period->unit_id);
+            $data = $unit ? (is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true)) : null;
+            $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+            $preparer = $leaderId ? Employees::findOne($leaderId) : null;
+        }
+
+        // ผู้อนุมัติ: ผอ. ที่กดอนุมัติ ไม่งั้นใช้ ผอ. ที่ตั้งไว้ในค่าตั้งค่าเว็บ
+        $approverUserId = $period->approved_by ?: $period->published_by;
+        $approver = $byUser($approverUserId ? (int) $approverUserId : null);
+        $directorPosition = (string) (RosterAccess::siteSetting('director_position') ?: 'ผู้อำนวยการ');
+        if (!$approver) {
+            $directorId = RosterAccess::directorEmpId();
+            $approver = $directorId ? Employees::findOne($directorId) : null;
+        }
+
+        return [
+            'prepared' => $describe($preparer),
+            'approved' => $describe($approver, $directorPosition),
+        ];
+    }
+
+    /**
+     * แผ่นใหม่ครอบเวรทับแผ่นเดิมของหน่วย+เดือนเดียวกันหรือไม่
+     *
+     * เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว (บังคับที่ unique index)
+     * ถ้าปล่อยให้สองแผ่นครอบเวรเดียวกัน กริดของแผ่นที่สองจะดูว่างแต่จัดเวรไม่ได้เลย
+     * เพราะกริดแสดงเฉพาะเวรของแผ่นตัวเอง — สับสนมากจนต้องกันตั้งแต่ตอนสร้าง
+     *
+     * @return string|null ข้อความอธิบาย ถ้าทับ · null ถ้าสร้างได้
+     */
+    private function overlappingSheet(Period $model): ?string
+    {
+        $siblings = Period::find()
+            ->where([
+                'unit_id' => $model->unit_id,
+                'month' => $model->month,
+                'year_ce' => $model->year_ce,
+                'deleted_at' => null,
+            ])
+            ->andFilterWhere(['<>', 'id', $model->id])
+            ->all();
+        if (empty($siblings)) {
+            return null;
+        }
+
+        $mine = $model->sheetShifts();
+        foreach ($siblings as $sibling) {
+            $shared = array_intersect_key($mine, $sibling->sheetShifts());
+            if (empty($shared)) {
+                continue;
+            }
+            $names = array_map(static fn($s) => $s->displayName(), $shared);
+            return sprintf(
+                'แผ่น “%s” ของเดือนนี้ครอบเวร %s อยู่แล้ว — เวรเดียวกันอยู่ได้แผ่นเดียว%s',
+                $sibling->title,
+                implode(' · ', $names),
+                count($mine) === count($shared) && empty($model->shiftIds())
+                    ? ' กรุณาเลือกเฉพาะเวรที่แผ่นนี้รับผิดชอบ'
+                    : ' กรุณาเลือกเวรอื่น'
+            );
+        }
+        return null;
     }
 
     /**
@@ -416,6 +515,27 @@ class PeriodController extends Controller
                 'counts' => $this->dayCounts($period, $day),
                 'summary' => $this->summary($period),
                 'empTotals' => $this->employeeTotals($period, $empId),
+            ];
+        }
+
+        // เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว แม้จะอยู่คนละแผ่น
+        // แต่กริดแสดงเฉพาะเวรของแผ่นตัวเอง ช่องจึงดูว่างทั้งที่ชนอยู่กับอีกแผ่น
+        // ถ้าปล่อยให้ unique rule เด้งเอง ผู้ใช้จะเห็นแค่ "จัดเวรไว้แล้ว" ทั้งที่ตรงหน้าไม่มีอะไร
+        $conflict = Item::find()
+            ->where(['emp_id' => $empId, 'work_date' => $workDate, 'unit_shift_id' => $unitShiftId])
+            ->andWhere(['<>', 'period_id', $period->id])
+            ->one();
+        if ($conflict) {
+            $other = $conflict->period;
+            return [
+                'status' => 'error',
+                'message' => sprintf(
+                    'คนนี้ถูกจัดเวร%s วันที่ %d ไว้แล้วในแผ่น “%s” — เวรเดียวกันจัดซ้ำสองแผ่นไม่ได้ ให้ไปแก้ที่แผ่นนั้น',
+                    $unitShift->displayName(),
+                    $day,
+                    $other ? $other->title : 'อื่น'
+                ),
+                'conflictUrl' => $other ? \yii\helpers\Url::to(['grid', 'id' => $other->id]) : null,
             ];
         }
 
@@ -732,7 +852,45 @@ class PeriodController extends Controller
             'holidays' => RosterContext::holidays($period->firstDate(), $period->lastDate()),
             'weekends' => RosterContext::weekends((int) $period->year_ce, (int) $period->month),
             'leaves' => RosterContext::leaves($empIds, $period->firstDate(), $period->lastDate()),
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'signatories' => $this->signatories($period),
         ]);
+    }
+
+    /**
+     * เอกสารแลกเวร 1 ใบ สำหรับพิมพ์เก็บเป็นหลักฐาน
+     *
+     * ใบนี้คือสิ่งที่ใช้อ้างอิงตอนคิดค่าตอบแทน เพราะเวรถูกเปลี่ยนมือหลังตารางประกาศแล้ว
+     * จึงต้องมีลายเซ็นครบสามฝ่าย: ผู้ขอ ผู้รับ และหัวหน้าที่อนุมัติ
+     */
+    public function actionSwapPrint($id)
+    {
+        $swap = Swap::findOne((int) $id);
+        if (!$swap) {
+            throw new NotFoundHttpException('ไม่พบใบเปลี่ยนตัวเวร');
+        }
+        // ตรวจสิทธิ์ผ่านรอบเวรของใบนี้ ใช้เกณฑ์เดียวกับการเปิดกริด
+        $period = $this->findPeriod((int) $swap->period_id);
+
+        $this->layout = '@app/views/layouts/print';
+        return $this->render('swap-print', [
+            'swap' => $swap,
+            'period' => $period,
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'approver' => $this->unitLeader((int) $period->unit_id),
+        ]);
+    }
+
+    /** หัวหน้าหน่วยตามผังองค์กร — ใช้เป็นผู้ลงนามอนุมัติในเอกสารแลกเวร */
+    private function unitLeader(int $unitId): ?Employees
+    {
+        $unit = Organization::findOne($unitId);
+        if (!$unit) {
+            return null;
+        }
+        $data = is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true);
+        $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+        return $leaderId ? Employees::findOne($leaderId) : null;
     }
 
     /** ส่งออก Excel แยกสีตามผลัด — ดู RosterExporter */
