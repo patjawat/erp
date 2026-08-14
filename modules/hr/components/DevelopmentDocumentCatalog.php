@@ -67,4 +67,15 @@ final class DevelopmentDocumentCatalog
                 return 'ไม่ทราบสถานะ';
         }
     }
+
+    public static function find(string $code): ?array
+    {
+        foreach (self::all() as $item) {
+            if ($item['code'] === $code) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
 }

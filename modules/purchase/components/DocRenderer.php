@@ -162,6 +162,7 @@ class DocRenderer
     {
         $fs = (int) $doc->font_size;
         $titleSize = $fs + 4;
+        $labelSize = $fs + 2;
         // ย่อหน้าหนังสือราชการย่อหน้าแรก 2.5 ซม. ตามระเบียบงานสารบรรณ
         $indent = '2.5cm';
         $fontStack = self::fontStack();
@@ -194,6 +195,39 @@ class DocRenderer
 .d-sheet .d-masthead-side { width:22%; vertical-align:top; }
 .d-sheet .d-masthead-title { width:56%; text-align:center; vertical-align:bottom; }
 .d-sheet .d-title { font-size: {$titleSize}pt; font-weight:bold; text-align:center; }
+.d-sheet .d-emblem { display:inline-block; text-align:center; }
+.d-sheet .d-memo-masthead, .d-sheet .d-memo-masthead td { border:none; }
+.d-sheet .d-memo-masthead { margin-bottom:4pt; }
+.d-sheet .d-memo-emblem { width:22%; text-align:left; vertical-align:bottom; }
+.d-sheet .d-memo-title { width:56%; text-align:center; vertical-align:bottom; font-size:{$titleSize}pt; font-weight:bold; }
+.d-sheet .d-memo-balance { width:22%; }
+.d-sheet .d-memo-fields td { border:none; padding:2pt 3pt; vertical-align:baseline; line-height:1.25; }
+.d-sheet .d-memo-label { width:18%; font-weight:bold; font-size:{$labelSize}pt; }
+.d-sheet .d-memo-value { border-bottom:0.5pt dotted #000; }
+.d-sheet .d-memo-ref { width:32%; }
+.d-sheet .d-memo-date-label { width:12%; text-align:right; }
+.d-sheet .d-memo-rule { border-bottom:1.5pt solid #000; margin-top:2pt; }
+.d-sheet .d-memo-line { margin-top:6pt; }
+.d-sheet .d-form-version { display:none; }
+.d-sheet .d-8708-form, .d-sheet .d-8708-form p, .d-sheet .d-8708-form td { line-height:1.15; }
+.d-sheet .d-8708-loan td { border:none; padding:1pt 3pt; vertical-align:top; }
+.d-sheet .d-8708-loan td:first-child { width:45%; }
+.d-sheet .d-8708-loan td:nth-child(2) { width:37%; }
+.d-sheet .d-8708-loan td:last-child { width:18%; }
+.d-sheet .d-8708-title { font-size:{$titleSize}pt; font-weight:bold; text-align:center; margin-top:8pt; }
+.d-sheet .d-8708-office td { border:none; padding:2pt 3pt; width:50%; }
+.d-sheet .d-8708-line { margin-top:3pt; }
+.d-sheet .d-8708-indent { text-indent:{$indent}; margin-top:4pt; }
+.d-sheet .d-8708-expense td { border:none; padding:1pt 3pt; }
+.d-sheet .d-8708-expense-name { width:48%; }
+.d-sheet .d-8708-expense-days { width:25%; }
+.d-sheet .d-8708-expense-total { width:27%; text-align:right; }
+.d-sheet .d-8708-form .d-sign { margin-top:7pt; }
+.d-sheet .d-8708-approval td { width:50%; border:0.5pt solid #000; padding:5pt 7pt; vertical-align:top; height:66mm; }
+.d-sheet .d-8708-received { text-align:center; margin-top:12pt; }
+.d-sheet .d-8708-signatures { margin-top:12pt; }
+.d-sheet .d-8708-signatures td { width:50%; border:none; padding:4pt 8pt; vertical-align:top; }
+.d-sheet .d-8708-notes { border-top:1.5pt solid #000; border-bottom:1.5pt solid #000; margin-top:10pt; padding:7pt 3pt; }
 
 .d-sheet .d-head { margin-top:4pt; }
 .d-sheet .d-head td { padding:3pt 4pt; }
@@ -221,6 +255,8 @@ class DocRenderer
 .d-sheet .d-c-price { width:18%; text-align:right; }
 .d-sheet .d-c-amount { width:18%; text-align:right; }
 .d-sheet .d-c-total { text-align:right; font-weight:bold; }
+.d-sheet .d-right { text-align:right; }
+.d-sheet .d-page-break { page-break-before:always; margin:0; }
 
 .d-sheet .d-sign { margin-top:14pt; }
 .d-sheet .d-sign td { border:none; }
@@ -293,6 +329,23 @@ CSS;
 /* ให้เห็นว่ากำลังแก้ช่องไหนอยู่ — contenteditable ไม่มีสัญญาณนี้ให้เอง */
 .d-sheet[contenteditable="true"]:focus { outline:none; }
 .d-sheet[contenteditable="true"] td:hover { background-color: rgba(13,110,253,.05); }
+.d-sheet:has(.d-doc-page) {
+    width:auto;
+    min-height:0;
+    padding:0;
+    background:transparent;
+    box-shadow:none;
+}
+.d-sheet .d-doc-page {
+    width:{$width}mm;
+    min-height:{$minHeight}mm;
+    padding:{$m['top']}mm {$m['right']}mm {$m['bottom']}mm {$m['left']}mm;
+    margin:0 auto 16px;
+    background:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.18);
+    box-sizing:border-box;
+}
+.d-sheet:has(.d-doc-page) .d-page-break { display:none; }
 CSS;
     }
 

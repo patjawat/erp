@@ -23,6 +23,7 @@ use yii\helpers\ArrayHelper;
 use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSummary;
+use app\modules\hr\models\DevelopmentDocument;
 use app\modules\approve\models\Approve;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -34,6 +35,9 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\helpers\PdfCoordinateHelper;
 use app\modules\hr\components\DevelopmentDocumentCatalog;
+use app\modules\hr\components\DevelopmentDocumentBuilder;
+use app\modules\purchase\components\DocRenderer;
+use app\modules\purchase\models\DocTemplate;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 
@@ -54,6 +58,8 @@ class DevelopmentController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'document-save' => ['POST'],
+                        'document-reset' => ['POST'],
                     ],
                 ],
             ]
@@ -155,9 +161,200 @@ class DevelopmentController extends Controller
      */
     public function actionDocument()
     {
+        $developments = Development::find()
+            ->where(['deleted_at' => null])
+            ->with(['createdByEmp', 'document'])
+            ->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC])
+            ->limit(200)
+            ->all();
+
+        $developmentOptions = [];
+        foreach ($developments as $development) {
+            $employee = $development->createdByEmp;
+            $name = $employee && method_exists($employee, 'fullname') ? $employee->fullname() : '';
+            $developmentOptions[(int) $development->id] = trim(
+                '#' . $development->id . ' · ' . $development->topic
+                . ($name !== '' ? ' · ' . $name : '')
+                . ($development->date_start ? ' · ' . $development->showDateRange() : '')
+            );
+        }
+
         return $this->render('document', [
             'documentTypes' => DevelopmentDocumentCatalog::all(),
+            'developmentOptions' => $developmentOptions,
+            'defaultDevelopmentId' => $developmentOptions !== [] ? array_key_first($developmentOptions) : null,
         ]);
+    }
+
+    /** สร้างหรือเปิด snapshot เอกสารของทะเบียนที่เลือก */
+    public function actionDocumentOpen($development_id, $code)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $type = DevelopmentDocumentCatalog::find((string) $code);
+        if ($type === null || $type['status'] !== DevelopmentDocumentCatalog::STATUS_SOURCE_READY) {
+            return ['status' => 'error', 'message' => 'เอกสารประเภทนี้ยังไม่มีแม่แบบพร้อมใช้งาน'];
+        }
+
+        $development = Development::find()
+            ->where(['id' => (int) $development_id, 'deleted_at' => null])
+            ->with(['createdByEmp', 'document'])
+            ->one();
+        if ($development === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบทะเบียนการเดินทางที่เลือก'];
+        }
+
+        $document = DevelopmentDocument::findOne([
+            'development_id' => $development->id,
+            'template_code' => (string) $code,
+            'deleted_at' => null,
+        ]);
+
+        if ($document === null) {
+            $document = new DevelopmentDocument([
+                'development_id' => (int) $development->id,
+                'template_code' => (string) $code,
+                'title' => (string) $type['name'] . ' · ' . $development->topic,
+                'ref_type' => 'none',
+                'ref_id' => null,
+                'thai_year' => (int) $development->thai_year,
+                'doc_date' => date('Y-m-d'),
+                'body_html' => DevelopmentDocumentBuilder::build((string) $code, $development),
+                'orientation' => $code === 'travel_expense_8708_part_2' ? 'landscape' : 'portrait',
+                'emblem' => $code === 'travel_expense_8708_part_1' ? DocTemplate::EMBLEM_NONE : DocTemplate::EMBLEM_SMALL,
+                'font_size' => 14,
+                'margin_json' => ['top' => 15, 'right' => 15, 'bottom' => 15, 'left' => 20],
+                'status' => DevelopmentDocument::STATUS_DRAFT,
+                'emp_id' => is_numeric($development->emp_id) ? (int) $development->emp_id : null,
+                'data_json' => ['source_updated_at' => $development->updated_at],
+            ]);
+            if (!$document->save()) {
+                return [
+                    'status' => 'error',
+                    'message' => 'สร้างเอกสารไม่สำเร็จ: ' . implode(' ', array_merge(...array_values($document->getErrors()))),
+                ];
+            }
+        } elseif ($this->upgradeTravelExpensePartOne($document, $development)) {
+            $document->save(false);
+        }
+
+        return $this->developmentDocumentEditorResponse($document);
+    }
+
+    /** บันทึกเนื้อหาจาก editor แบบ autosave */
+    public function actionDocumentSave($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $document = $this->findDevelopmentDocument($id);
+        if ($document->status === DevelopmentDocument::STATUS_FINAL) {
+            return ['status' => 'error', 'message' => 'เอกสารฉบับนี้ถูกล็อกแล้ว'];
+        }
+
+        $post = $this->request->post();
+        $document->body_html = array_key_exists('body_html', $post)
+            ? DocRenderer::normalize((string) $post['body_html'])
+            : $document->body_html;
+        if (array_key_exists('font_size', $post)) {
+            $document->font_size = (int) $post['font_size'];
+        }
+        if (array_key_exists('emblem', $post) && array_key_exists((string) $post['emblem'], DocTemplate::emblemList())) {
+            $document->emblem = (string) $post['emblem'];
+        }
+
+        if (!$document->save()) {
+            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
+        }
+
+        return ['status' => 'success', 'message' => 'บันทึกร่างแล้ว'];
+    }
+
+    /** ดึงข้อมูลทะเบียนล่าสุดกลับมาทับ snapshot หลังผู้ใช้ยืนยัน */
+    public function actionDocumentReset($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $document = $this->findDevelopmentDocument($id);
+        $development = Development::find()->where(['id' => $document->development_id])->with(['createdByEmp', 'document'])->one();
+        if ($development === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบทะเบียนต้นทาง'];
+        }
+
+        $document->body_html = DevelopmentDocumentBuilder::build($document->template_code, $development);
+        $document->data_json = ['source_updated_at' => $development->updated_at];
+        if (!$document->save()) {
+            return ['status' => 'error', 'message' => 'รีเซ็ตเอกสารไม่สำเร็จ'];
+        }
+
+        return [
+            'status' => 'success',
+            'message' => 'ดึงข้อมูลจากทะเบียนกลับมาแล้ว',
+            'body_html' => DocRenderer::body($document),
+        ];
+    }
+
+    /** ตัวอย่าง PDF จาก snapshot ล่าสุด */
+    public function actionDocumentPrint($id)
+    {
+        $document = $this->findDevelopmentDocument($id);
+        $document->markPrinted();
+
+        return Yii::$app->response->sendContentAsFile(
+            DocRenderer::pdf($document),
+            $document->safeFileName('pdf'),
+            ['mimeType' => 'application/pdf', 'inline' => true]
+        );
+    }
+
+    private function developmentDocumentEditorResponse(DevelopmentDocument $document): array
+    {
+        $routes = [
+            'save' => ['/hr/development/document-save', 'id' => $document->id],
+            'reset' => ['/hr/development/document-reset', 'id' => $document->id],
+            'print' => ['/hr/development/document-print', 'id' => $document->id],
+        ];
+
+        return [
+            'status' => 'success',
+            'title' => '<i class="bi bi-file-earmark-text me-1"></i>' . Html::encode($document->title)
+                . ' <span class="badge bg-warning-subtle text-warning-emphasis ms-1">แก้ไขได้</span>',
+            'content' => $this->renderAjax('@app/modules/purchase/views/doc/editor', [
+                'model' => $document,
+                'routes' => $routes,
+            ]),
+            'footer' => $this->renderAjax('@app/modules/purchase/views/doc/_editor_footer', [
+                'model' => $document,
+                'routes' => $routes,
+                'showWord' => false,
+            ]),
+            'initCallback' => 'erpDocEditorInit',
+        ];
+    }
+
+    private function findDevelopmentDocument($id): DevelopmentDocument
+    {
+        $document = DevelopmentDocument::findOne(['id' => (int) $id, 'deleted_at' => null]);
+        if ($document === null) {
+            throw new NotFoundHttpException('ไม่พบเอกสารที่ต้องการ');
+        }
+
+        return $document;
+    }
+
+    /** เปลี่ยน snapshot รุ่นทดลองให้เป็นแบบ 8708 ส่วนที่ 1 ฉบับสองหน้าตามต้นฉบับ */
+    private function upgradeTravelExpensePartOne(DevelopmentDocument $document, Development $development): bool
+    {
+        if ($document->template_code !== 'travel_expense_8708_part_1') {
+            return false;
+        }
+
+        if (
+            strpos((string) $document->body_html, 'd-8708-part1-v8') !== false
+            && strpos((string) $document->body_html, 'd-doc-page') !== false
+        ) {
+            return false;
+        }
+
+        $document->body_html = DevelopmentDocumentBuilder::build('travel_expense_8708_part_1', $development);
+        $document->emblem = DocTemplate::EMBLEM_NONE;
+        return true;
     }
 
     /**

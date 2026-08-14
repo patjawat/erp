@@ -6,6 +6,8 @@ use app\modules\purchase\models\Doc;
 
 /** @var yii\web\View $this */
 /** @var app\modules\purchase\models\Doc $model */
+/** @var array|null $routes ปลายทาง print/word ของโมดูลที่นำ editor ไปใช้ */
+/** @var bool|null $showWord */
 
 /**
  * ปุ่มท้ายหน้าแก้ไขเอกสาร (ถูกฉีดลง .modal-footer)
@@ -16,6 +18,11 @@ use app\modules\purchase\models\Doc;
  */
 
 $locked = $model->status === Doc::STATUS_FINAL;
+$routes = array_merge([
+    'print' => ['/purchase/doc/print', 'id' => $model->id],
+    'word' => ['/purchase/doc/word', 'id' => $model->id],
+], $routes ?? []);
+$showWord = $showWord ?? true;
 ?>
 
 <div class="d-flex w-100 flex-wrap align-items-center gap-2">
@@ -36,12 +43,14 @@ $locked = $model->status === Doc::STATUS_FINAL;
     <?php endif; ?>
 
     <button type="button" class="btn btn-primary" id="doc-print"
-        data-url="<?= Url::to(['/purchase/doc/print', 'id' => $model->id]) ?>">
+        data-url="<?= Url::to($routes['print']) ?>">
         <i class="bi bi-printer me-1"></i>พริ้นท์
     </button>
 
-    <button type="button" class="btn btn-warning" id="doc-word"
-        data-url="<?= Url::to(['/purchase/doc/word', 'id' => $model->id]) ?>">
-        <i class="bi bi-file-earmark-word me-1"></i>ส่งออก Word
-    </button>
+    <?php if ($showWord): ?>
+        <button type="button" class="btn btn-warning" id="doc-word"
+            data-url="<?= Url::to($routes['word']) ?>">
+            <i class="bi bi-file-earmark-word me-1"></i>ส่งออก Word
+        </button>
+    <?php endif; ?>
 </div>

@@ -8,6 +8,7 @@ use app\modules\purchase\components\DocRenderer;
 
 /** @var yii\web\View $this */
 /** @var app\modules\purchase\models\Doc $model */
+/** @var array|null $routes ปลายทาง save/reset ของโมดูลที่นำ editor ไปใช้ */
 
 /**
  * หน้าแก้ไขเอกสารบนกระดาษ A4 (เนื้อหาใน modal)
@@ -29,10 +30,14 @@ use app\modules\purchase\components\DocRenderer;
 
 $fontSizes = [12, 13, 14, 15, 16, 18, 20];
 $locked = $model->status === Doc::STATUS_FINAL;
+$routes = array_merge([
+    'save' => ['/purchase/doc/save', 'id' => $model->id],
+    'reset' => ['/purchase/doc/reset', 'id' => $model->id],
+], $routes ?? []);
 
 $cfg = [
-    'saveUrl' => Url::to(['/purchase/doc/save', 'id' => $model->id]),
-    'resetUrl' => Url::to(['/purchase/doc/reset', 'id' => $model->id]),
+    'saveUrl' => Url::to($routes['save']),
+    'resetUrl' => Url::to($routes['reset']),
     'emblemUrl' => Yii::getAlias('@web') . '/' . DocRenderer::EMBLEM_FILE,
     'emblem' => (string) $model->emblem,
     'fontSize' => (int) $model->font_size,
@@ -167,6 +172,31 @@ window.erpDocEditorInit = function () {
     var dirty = false;
     var saving = null;
     var timer = null;
+
+    /** แสดงเอกสารที่มีตัวแบ่งหน้าเป็นกระดาษคนละแผ่นบนจอ */
+    function layoutPages() {
+        if (sheet.querySelector('.d-doc-page')) { return; }
+        var pageBreak = sheet.querySelector('.d-page-break');
+        if (!pageBreak || !pageBreak.parentNode) { return; }
+
+        var container = pageBreak.parentNode;
+        var firstPage = document.createElement('section');
+        var secondPage = document.createElement('section');
+        firstPage.className = 'd-doc-page';
+        secondPage.className = 'd-doc-page';
+
+        while (container.firstChild && container.firstChild !== pageBreak) {
+            firstPage.appendChild(container.firstChild);
+        }
+        pageBreak.remove();
+        while (container.firstChild) {
+            secondPage.appendChild(container.firstChild);
+        }
+        container.appendChild(firstPage);
+        container.appendChild(secondPage);
+    }
+
+    layoutPages();
 
     function note(state) {
         $modal.find('.js-doc-dirty').toggleClass('d-none', state !== 'dirty');
@@ -351,6 +381,7 @@ window.erpDocEditorInit = function () {
                 jQuery.post(cfg.resetUrl, data).done(function (res) {
                     if (res && res.status === 'success') {
                         sheet.innerHTML = res.body_html;
+                        layoutPages();
                         dirty = false;
                         note('saved');
                     } else if (typeof warning === 'function') {
