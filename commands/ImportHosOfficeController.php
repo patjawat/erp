@@ -55,15 +55,24 @@ use app\components\AssetHelper;
 class ImportHosOfficeController extends Controller
 {
     /**
-     * This command echoes what you have entered as the message.
+     * นำเข้าข้อมูลจาก HosOffice ครบทุกหมวดโดยถามยืนยันก่อนเริ่มทำงาน
      *
-     * @return int Exit code
+     * เหมาะสำหรับการสั่งงานด้วยตนเอง เพราะผู้ใช้สามารถยกเลิกก่อนที่ importer
+     * จะเปลี่ยนแปลงข้อมูลได้ ลำดับและผลลัพธ์เหมือน actionSync ทุกประการ
+     * โดยจะหยุดทันทีหากขั้นตอนนำเข้าบุคลากรมีข้อผิดพลาด
+     *
+     * ลำดับ: บุคลากร -> ตำแหน่ง -> การลา -> การพัฒนา -> เงิน -> รถ -> Refer
+     * -> ห้องประชุม -> งานซ่อม -> คอมพิวเตอร์ -> ครุภัณฑ์ -> วัสดุ
+     *
+     * @return int รหัสจบการทำงาน
      */
-
     public function actionAll()
     {
         if (BaseConsole::confirm('ยืนยันการนำเข้าทั้งหมด?')) {
-            $this->actionEmployee();
+            if ($this->actionEmployee() !== ExitCode::OK) {
+                echo "หยุดการนำเข้า: ขั้นตอนบุคลากรมีข้อผิดพลาด\n";
+                return ExitCode::UNSPECIFIED_ERROR;
+            }
             $this->actionPosition();
             $this->actionLeaveAll();
             $this->actionDevelopment();
@@ -78,10 +87,28 @@ class ImportHosOfficeController extends Controller
         } else {
             echo "user typed no\n";
         }
+
+        return ExitCode::OK;
     }
+
+    /**
+     * ซิงก์ข้อมูลจาก HosOffice ครบทุกหมวดทันทีโดยไม่ถามยืนยัน
+     *
+     * เหมาะสำหรับ cron, scheduler หรือ automation ที่ไม่มีผู้ใช้ตอบคำถาม
+     * ลำดับและผลลัพธ์เหมือน actionAll ทุกประการ และจะหยุดทันทีหากขั้นตอน
+     * นำเข้าบุคลากรมีข้อผิดพลาด
+     *
+     * ลำดับ: บุคลากร -> ตำแหน่ง -> การลา -> การพัฒนา -> เงิน -> รถ -> Refer
+     * -> ห้องประชุม -> งานซ่อม -> คอมพิวเตอร์ -> ครุภัณฑ์ -> วัสดุ
+     *
+     * @return int รหัสจบการทำงาน
+     */
     public function actionSync()
     {
-        $this->actionEmployee();
+        if ($this->actionEmployee() !== ExitCode::OK) {
+            echo "หยุดการนำเข้า: ขั้นตอนบุคลากรมีข้อผิดพลาด\n";
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
         $this->actionPosition();
         $this->actionLeaveAll();
         $this->actionDevelopment();
@@ -93,6 +120,8 @@ class ImportHosOfficeController extends Controller
         $this->actionComputer();
         $this->actionAsset();
         $this->actionMaterial();
+
+        return ExitCode::OK;
     }
 
     /**
@@ -223,21 +252,8 @@ class ImportHosOfficeController extends Controller
                 if ($isNew) {
                     $model = new Employees();
                     $model->user_id = 0;
+                    $model->branch = 'MAIN';
                     $model->ref = substr(\Yii::$app->getSecurity()->generateRandomString(), 10);
-                    $this->CreateDir($model->ref);
-                }
-
-                if ($isNew && $person['image']) {
-                    $name = time() . '.jpg';
-                    file_put_contents(\Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $model->ref . '/' . $name, $person['image']);
-
-                    $upload = new Uploads();
-                    $upload->ref = $model->ref;
-                    $upload->name = 'avatar';
-                    $upload->file_name = $name;
-                    $upload->real_filename = $name;
-                    $upload->type = 'jpg';
-                    $upload->save(false);
                 }
 
                 $model->prefix = $person['prefix'];
@@ -279,6 +295,25 @@ class ImportHosOfficeController extends Controller
                 if ($model->save(false)) {
                     $existingBySourceId[$sourceId] = $model->id;
                     $isNew ? $created++ : $updated++;
+                    if ($isNew) {
+                        $this->CreateDir($model->ref);
+                        if ($person['image']) {
+                            try {
+                                $name = time() . '.jpg';
+                                file_put_contents(\Yii::getAlias('@app') . '/modules/filemanager/fileupload/' . $model->ref . '/' . $name, $person['image']);
+
+                                $upload = new Uploads();
+                                $upload->ref = $model->ref;
+                                $upload->name = 'avatar';
+                                $upload->file_name = $name;
+                                $upload->real_filename = $name;
+                                $upload->type = 'jpg';
+                                $upload->save(false);
+                            } catch (\Throwable $th) {
+                                echo "\nนำเข้ารูปบุคลากร CID {$person['cid']} ไม่สำเร็จ: {$th->getMessage()}\n";
+                            }
+                        }
+                    }
                     $this->Family($model->id, $model->cid);
                 } else {
                     $failed++;
