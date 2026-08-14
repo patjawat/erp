@@ -398,6 +398,137 @@ $listDocumentMe  = $emp->listDocumentMe();
             <strong><i class="bi bi-file-earmark-text me-2"></i>ข้อมูลเอกสาร</strong>
         </div>
         <div class="card-body">
+            <?php
+            $travelCalculation = is_array($model->data_json ?? null)
+                ? ($model->data_json['travel_calculation'] ?? [])
+                : [];
+            $hasTravelCalculation = !empty($travelCalculation);
+            $roomRate = (string)($travelCalculation['room_rate'] ?? '0');
+            $vehicleRate = (string)($travelCalculation['vehicle_rate'] ?? '0');
+            ?>
+            <?php ob_start(); ?>
+            <div class="border rounded-3 mb-4" id="travel-cost-calculator" data-has-saved="<?= $hasTravelCalculation ? '1' : '0' ?>">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 p-3 bg-body-tertiary rounded-top-3">
+                    <div>
+                        <div class="fw-semibold"><i class="bi bi-calculator me-2"></i>ตัวช่วยคำนวณค่าเดินทาง</div>
+                        <div class="small text-body-secondary">ดึงวันเวลา ระยะทาง และจำนวนผู้เดินทางจากข้อมูลด้านบน</div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary align-self-start align-self-sm-center"
+                            data-bs-toggle="collapse" data-bs-target="#travel-cost-calculator-body"
+                            aria-expanded="<?= $hasTravelCalculation ? 'true' : 'false' ?>"
+                            aria-controls="travel-cost-calculator-body">
+                        <i class="bi bi-sliders me-1"></i> ตั้งค่าการคำนวณ
+                    </button>
+                </div>
+
+                <div class="collapse<?= $hasTravelCalculation ? ' show' : '' ?>" id="travel-cost-calculator-body">
+                    <div class="p-3 border-top">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-participants" class="form-label">จำนวนผู้เดินทาง</label>
+                                <div class="input-group">
+                                    <input type="number" min="1" step="1" class="form-control travel-calc-input"
+                                           id="travel-calc-participants" name="Development[data_json][travel_calculation][participants]"
+                                           value="<?= Html::encode($travelCalculation['participants'] ?? 1) ?>">
+                                    <span class="input-group-text">คน</span>
+                                </div>
+                                <div class="form-text">ระบบนับผู้ขอรวมกับสมาชิกคณะเดินทาง</div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-meals" class="form-label">มื้ออาหารที่เจ้าภาพจัดให้</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="1" class="form-control travel-calc-input"
+                                           id="travel-calc-meals" name="Development[data_json][travel_calculation][deducted_meals]"
+                                           value="<?= Html::encode($travelCalculation['deducted_meals'] ?? 0) ?>">
+                                    <span class="input-group-text">มื้อ/คน</span>
+                                </div>
+                                <div class="form-text">หักมื้อละ 80 บาทต่อคน</div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-room-rate" class="form-label">อัตราค่าที่พัก</label>
+                                <select class="form-select travel-calc-input" id="travel-calc-room-rate"
+                                        name="Development[data_json][travel_calculation][room_rate]">
+                                    <?php foreach (['0' => 'ไม่เบิกค่าที่พัก', '1600' => 'ห้องพักคนเดียว 1,600 บาท/ห้อง', '1000' => 'ห้องพักคู่ 1,000 บาท/ห้อง'] as $value => $label): ?>
+                                        <option value="<?= $value ?>"<?= $roomRate === $value ? ' selected' : '' ?>><?= $label ?></option>
+                                    <?php endforeach; ?>
+                                    <option value="custom"<?= $roomRate === 'custom' ? ' selected' : '' ?>>ระบุอัตราเอง</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3<?= $roomRate === 'custom' ? '' : ' d-none' ?>" id="travel-calc-custom-room-wrap">
+                                <label for="travel-calc-custom-room" class="form-label">อัตราที่พักที่เบิกจริง</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="0.01" class="form-control travel-calc-input"
+                                           id="travel-calc-custom-room" name="Development[data_json][travel_calculation][custom_room_rate]"
+                                           value="<?= Html::encode($travelCalculation['custom_room_rate'] ?? 0) ?>">
+                                    <span class="input-group-text">บาท/คน/คืน</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-nights" class="form-label">จำนวนคืน</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="1" class="form-control travel-calc-input"
+                                           id="travel-calc-nights" name="Development[data_json][travel_calculation][nights]"
+                                           value="<?= Html::encode($travelCalculation['nights'] ?? 0) ?>">
+                                    <span class="input-group-text">คืน</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-vehicle-rate" class="form-label">อัตราพาหนะส่วนตัว</label>
+                                <select class="form-select travel-calc-input" id="travel-calc-vehicle-rate"
+                                        name="Development[data_json][travel_calculation][vehicle_rate]">
+                                    <option value="0"<?= $vehicleRate === '0' ? ' selected' : '' ?>>ไม่เบิกพาหนะส่วนตัว</option>
+                                    <option value="4"<?= $vehicleRate === '4' ? ' selected' : '' ?>>รถยนต์ 4 บาท/กม.</option>
+                                    <option value="2"<?= $vehicleRate === '2' ? ' selected' : '' ?>>รถจักรยานยนต์ 2 บาท/กม.</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-distance" class="form-label">ระยะทางรวม</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="0.01" class="form-control travel-calc-input"
+                                           id="travel-calc-distance" name="Development[data_json][travel_calculation][distance]"
+                                           value="<?= Html::encode($travelCalculation['distance'] ?? ($model->data_json['distance'] ?? 0)) ?>">
+                                    <span class="input-group-text">กม.</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label for="travel-calc-other" class="form-label">ค่าใช้จ่ายเพิ่มเติม</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="0.01" class="form-control travel-calc-input"
+                                           id="travel-calc-other" name="Development[data_json][travel_calculation][other_cost]"
+                                           value="<?= Html::encode($travelCalculation['other_cost'] ?? 0) ?>">
+                                    <span class="input-group-text">บาท</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="travel-calc-allowance-rate" name="Development[data_json][travel_calculation][allowance_rate]" value="240">
+                        <input type="hidden" id="travel-calc-meal-rate" name="Development[data_json][travel_calculation][meal_rate]" value="80">
+                        <input type="hidden" id="travel-calc-duration-hours" name="Development[data_json][travel_calculation][duration_hours]"
+                               value="<?= Html::encode($travelCalculation['duration_hours'] ?? 0) ?>">
+                        <input type="hidden" id="travel-calc-allowance-amount" name="Development[data_json][travel_calculation][allowance_amount]"
+                               value="<?= Html::encode($travelCalculation['allowance_amount'] ?? 0) ?>">
+                        <input type="hidden" id="travel-calc-accommodation-amount" name="Development[data_json][travel_calculation][accommodation_amount]"
+                               value="<?= Html::encode($travelCalculation['accommodation_amount'] ?? 0) ?>">
+                        <input type="hidden" id="travel-calc-room-count" name="Development[data_json][travel_calculation][room_count]"
+                               value="<?= Html::encode($travelCalculation['room_count'] ?? 0) ?>">
+                        <input type="hidden" id="travel-calc-vehicle-amount" name="Development[data_json][travel_calculation][vehicle_amount]"
+                               value="<?= Html::encode($travelCalculation['vehicle_amount'] ?? 0) ?>">
+                        <input type="hidden" id="travel-calc-total" name="Development[data_json][travel_calculation][calculated_total]"
+                               value="<?= Html::encode($travelCalculation['calculated_total'] ?? 0) ?>">
+
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 border-top mt-3 pt-3">
+                            <div id="travel-calc-summary" class="small text-body-secondary" aria-live="polite">
+                                ระบุวันเวลาเดินทางเพื่อคำนวณเบี้ยเลี้ยง
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btn-apply-travel-calculation">
+                                <i class="bi bi-calculator me-1"></i> คำนวณและเติมยอด
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php $travelCalculatorMarkup = ob_get_clean(); ?>
+
             <div class="row g-3">
                 <div class="col-12 col-md-3">
                     <?= $form->field($model, 'thai_year')->textInput(['class' => 'form-control']) ?>
@@ -806,6 +937,7 @@ $listDocumentMe  = $emp->listDocumentMe();
             <strong><i class="fa-solid fa-money-bill-1 me-2"></i> ประมาณค่าใช้จ่ายในการเข้ารับการอบรม/ประชุม/สัมมนา ครั้งนี้</strong>
         </div>
         <div class="card-body">
+            <?= $travelCalculatorMarkup ?>
             <div class="row g-3">
                 <div class="col-12 col-md-6 col-lg-4">
                     <?= $form->field($model, 'data_json[estimated_cost_registration]')->textInput([
@@ -1035,6 +1167,133 @@ function refreshLeadersPreview() {
 refreshLeadersPreview();
 
 // คำนวณรวมประมาณค่าใช้จ่าย
+var \$travelCalculator = \$('#travel-cost-calculator');
+
+function travelCalcNumber(selector) {
+    var value = parseFloat(\$(selector).val());
+    return isNaN(value) || value < 0 ? 0 : value;
+}
+
+function travelCalcMoney(value) {
+    return Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseTravelDate(value, timeValue) {
+    var parts = String(value || '').trim().split(/[\/\-]/);
+    if (parts.length !== 3) return null;
+    var day, month, year;
+    if (parts[0].length === 4) {
+        year = parseInt(parts[0], 10); month = parseInt(parts[1], 10); day = parseInt(parts[2], 10);
+    } else {
+        day = parseInt(parts[0], 10); month = parseInt(parts[1], 10); year = parseInt(parts[2], 10);
+    }
+    if (year > 2400) year -= 543;
+    var time = String(timeValue || '00:00').split(':');
+    var parsed = new Date(year, month - 1, day, parseInt(time[0], 10) || 0, parseInt(time[1], 10) || 0, 0, 0);
+    if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) return null;
+    return parsed;
+}
+
+function travelDateField(name) { return \$('[name="Development[' + name + ']"]'); }
+function travelJsonField(name) { return \$('[name="Development[data_json][' + name + ']"]'); }
+
+function travelCalcDuration() {
+    var start = parseTravelDate(travelDateField('vehicle_date_start').val(), travelJsonField('vehicle_time_start').val());
+    var end = parseTravelDate(travelDateField('vehicle_date_end').val(), travelJsonField('vehicle_time_end').val());
+    if (!start || !end || end <= start) return null;
+    return (end.getTime() - start.getTime()) / 3600000;
+}
+
+function syncTravelCalculatorDefaults() {
+    if (\$travelCalculator.attr('data-has-saved') === '1' || \$travelCalculator.attr('data-defaults-ready') === '1') return;
+    var memberIds = {};
+    \$('#travel-party-members-list input[name="member_emp_ids[]"]').each(function() {
+        if (\$(this).val()) memberIds[String(\$(this).val())] = true;
+    });
+    \$('#travel-calc-participants').val(Math.max(1, 1 + Object.keys(memberIds).length));
+    var sourceDistance = travelJsonField('distance').val();
+    if (sourceDistance !== '' && travelCalcNumber('#travel-calc-distance') === 0) \$('#travel-calc-distance').val(sourceDistance);
+    var start = parseTravelDate(travelDateField('vehicle_date_start').val(), '00:00');
+    var end = parseTravelDate(travelDateField('vehicle_date_end').val(), '00:00');
+    if (start && end && end >= start && travelCalcNumber('#travel-calc-nights') === 0) {
+        \$('#travel-calc-nights').val(Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000)));
+    }
+    \$travelCalculator.attr('data-defaults-ready', '1');
+}
+
+function calculateTravelCost(applyValues) {
+    syncTravelCalculatorDefaults();
+    var participants = Math.max(1, Math.floor(travelCalcNumber('#travel-calc-participants')));
+    var durationHours = travelCalcDuration();
+    var allowanceUnits = 0;
+    if (durationHours !== null) {
+        var fullDays = Math.floor(durationHours / 24);
+        var remainder = durationHours % 24;
+        allowanceUnits = fullDays + (remainder > 12 ? 1 : (remainder > 6 ? 0.5 : 0));
+    }
+    var allowanceGross = allowanceUnits * 240 * participants;
+    var mealDeduction = Math.min(allowanceGross, Math.floor(travelCalcNumber('#travel-calc-meals')) * 80 * participants);
+    var allowance = Math.max(0, allowanceGross - mealDeduction);
+    var selectedRoomRate = \$('#travel-calc-room-rate').val();
+    var roomRate = selectedRoomRate === 'custom' ? travelCalcNumber('#travel-calc-custom-room') : parseFloat(selectedRoomRate || 0);
+    var nights = Math.floor(travelCalcNumber('#travel-calc-nights'));
+    var roomCount = selectedRoomRate === '1000'
+        ? Math.ceil(participants / 2)
+        : (roomRate > 0 ? participants : 0);
+    var accommodation = roomRate * nights * roomCount;
+    var vehicle = travelCalcNumber('#travel-calc-vehicle-rate') * travelCalcNumber('#travel-calc-distance');
+    var other = travelCalcNumber('#travel-calc-other');
+    var registration = travelCalcNumber('[name="Development[data_json][estimated_cost_registration]"]');
+    var calculatedTotal = registration + allowance + accommodation + vehicle + other;
+
+    \$('#travel-calc-duration-hours').val(durationHours === null ? 0 : durationHours.toFixed(2));
+    \$('#travel-calc-allowance-amount').val(allowance.toFixed(2));
+    \$('#travel-calc-accommodation-amount').val(accommodation.toFixed(2));
+    \$('#travel-calc-room-count').val(roomCount);
+    \$('#travel-calc-vehicle-amount').val(vehicle.toFixed(2));
+    \$('#travel-calc-total').val(calculatedTotal.toFixed(2));
+    var durationText = durationHours === null ? 'วันเวลาเดินทางยังไม่ครบ' : durationHours.toLocaleString('th-TH', { maximumFractionDigits: 1 }) + ' ชั่วโมง';
+    \$('#travel-calc-summary').html(
+        '<span class="fw-semibold text-body">' + durationText + ' · ' + participants + ' คน</span><br>' +
+        'เบี้ยเลี้ยง ' + travelCalcMoney(allowance) + ' บาท · ที่พัก ' + travelCalcMoney(accommodation) +
+        ' บาท' + (roomCount > 0 ? ' (' + roomCount + ' ห้อง × ' + nights + ' คืน)' : '') +
+        ' · พาหนะ ' + travelCalcMoney(vehicle) + ' บาท · รวมประมาณการ ' + travelCalcMoney(calculatedTotal) + ' บาท'
+    );
+    if (applyValues) {
+        travelJsonField('estimated_cost_allowance').val(allowance.toFixed(2)).trigger('input');
+        travelJsonField('estimated_cost_accommodation').val(accommodation.toFixed(2)).trigger('input');
+        travelJsonField('estimated_cost_vehicle_fuel').val(vehicle.toFixed(2)).trigger('input');
+        travelJsonField('estimated_cost_other').val(other.toFixed(2)).trigger('input');
+    }
+}
+
+\$('#travel-calc-room-rate').on('change', function() {
+    \$('#travel-calc-custom-room-wrap').toggleClass('d-none', \$(this).val() !== 'custom');
+    calculateTravelCost(false);
+});
+\$('#travel-calc-participants').on('input', function() {
+    \$travelCalculator.attr('data-participants-edited', '1');
+});
+\$('#travel-cost-calculator').on('input change', '.travel-calc-input', function() { calculateTravelCost(false); });
+\$('#btn-apply-travel-calculation').on('click', function() { calculateTravelCost(true); });
+travelDateField('vehicle_date_start').add(travelDateField('vehicle_date_end'))
+    .add(travelJsonField('vehicle_time_start')).add(travelJsonField('vehicle_time_end'))
+    .add(travelJsonField('distance')).on('change', function() { syncTravelCalculatorDefaults(); calculateTravelCost(false); });
+syncTravelCalculatorDefaults();
+calculateTravelCost(false);
+var travelMembersList = document.getElementById('travel-party-members-list');
+if (travelMembersList && window.MutationObserver) {
+    new MutationObserver(function() {
+        if (\$travelCalculator.attr('data-has-saved') === '1' || \$travelCalculator.attr('data-participants-edited') === '1') return;
+        var memberIds = {};
+        \$('#travel-party-members-list input[name="member_emp_ids[]"]').each(function() {
+            if (\$(this).val()) memberIds[String(\$(this).val())] = true;
+        });
+        \$('#travel-calc-participants').val(Math.max(1, 1 + Object.keys(memberIds).length));
+        calculateTravelCost(false);
+    }).observe(travelMembersList, { childList: true });
+}
+
 function updateEstimatedCostTotal() {
     var total = 0;
     \$('#estimated-cost-card .estimated-cost-input').each(function() {
