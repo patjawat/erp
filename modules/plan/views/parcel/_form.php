@@ -358,6 +358,12 @@ $('#form').on('beforeSubmit', function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
+            // scope me: ส่งแบบปกติ ให้ controller redirect + แสดง flash เอง (ไม่ใช่ฟอร์มใน modal)
+            if ('$scope' === 'me') {
+                form.off('beforeSubmit');
+                form[0].submit();
+                return;
+            }
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',

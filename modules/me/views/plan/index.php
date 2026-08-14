@@ -95,7 +95,8 @@ $phase = PlanHelper::phase($thaiYear);
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><?= Html::a('<i class="fa-solid fa-box-open me-2"></i> แผนพัสดุ (ครุภัณฑ์/วัสดุ)', ['create-parcel'], ['class' => 'dropdown-item']) ?></li>
-                <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร', ['create'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร (ดึงรายชื่อทั้งหน่วยงาน)', ['create-personnel'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-user me-2"></i> แผนบุคลากร (รายคน)', ['create'], ['class' => 'dropdown-item']) ?></li>
                 <li><?= Html::a('<i class="fa-solid fa-file-invoice-dollar me-2"></i> แผนค่าใช้สอย', ['create'], ['class' => 'dropdown-item']) ?></li>
             </ul>
         </div>
