@@ -33,6 +33,7 @@ use app\modules\hr\models\DevelopmentSearch;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\hr\helpers\PdfCoordinateHelper;
+use app\modules\hr\components\DevelopmentDocumentCatalog;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 
@@ -144,6 +145,27 @@ class DevelopmentController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    /**
+     * ศูนย์รวมการสร้างและพิมพ์เอกสารค่าใช้จ่ายในการเดินทางไปราชการ
+     *
+     * หน้านี้เป็นจุดเชื่อมสำหรับระบบแม่แบบเอกสารที่จะพัฒนาต่อ โดยยังไม่ผูก
+     * business logic กับโมดูลพัสดุหรือสร้างข้อมูลเอกสารจนกว่าจะได้แม่แบบจริง
+     */
+    public function actionDocument()
+    {
+        return $this->render('document', [
+            'documentTypes' => DevelopmentDocumentCatalog::all(),
+        ]);
+    }
+
+    /**
+     * ศูนย์รวมรายงานการเดินทางไปราชการ
+     */
+    public function actionReport()
+    {
+        return $this->render('report');
     }
 
     /**
