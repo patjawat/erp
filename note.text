@@ -12,3 +12,4 @@ o.from_warehouse_id = w.id
 WHERE i.name = 'order_item'
 AND o.code IN (
 'REQ-691088','REQ-691089');
+x
