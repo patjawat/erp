@@ -152,6 +152,13 @@ class IssueController extends Controller
 
             try {
                 $processedCount = 0;
+                // เก็บรายการเดิมของใบเบิกไว้ก่อนเริ่มจ่าย เพื่อให้ลบรายการที่ผู้ใช้
+                // กดถังขยะออกจากหน้าจ่ายได้จริง รายการที่ถูกปิด input จะไม่อยู่ใน
+                // payload แต่หากปล่อย StockDetail เดิมไว้ เมื่อหัวเอกสารเป็น CONFIRMED
+                // รายงานที่รวม stock_detail.qty จะยังนับเป็นยอดจ่ายอยู่
+                $originalDetailIds = array_map('intval', ArrayHelper::getColumn($model->stockDetails, 'id'));
+                $processedOriginalDetailIds = [];
+
                 foreach ($data as $item) {
                     if (!is_array($item)) {
                         continue;
@@ -189,6 +196,7 @@ class IssueController extends Controller
                         if (!$detail) {
                             throw new \Exception('ไม่พบรายการวัสดุในใบเบิกนี้');
                         }
+                        $processedOriginalDetailIds[] = (int) $detail->id;
                     }
 
                     // 2. หักลบ remain_qty จาก source lot ต้นทาง
@@ -280,6 +288,16 @@ class IssueController extends Controller
 
                 if ($processedCount === 0) {
                     throw new \Exception('กรุณาระบุรายการที่ต้องการจ่ายอย่างน้อย 1 รายการ');
+                }
+
+                // ทำให้รายละเอียดของเอกสารตรงกับรายการที่จ่ายจริงก่อนยืนยันเอกสาร
+                // เพื่อให้ Stock Card, Dashboard และรายงานยอดจ่ายไม่รวมแถวที่ยกเลิก
+                $cancelledDetailIds = array_diff($originalDetailIds, $processedOriginalDetailIds);
+                if (!empty($cancelledDetailIds)) {
+                    StockDetail::deleteAll([
+                        'id' => array_values($cancelledDetailIds),
+                        'stock_order_id' => $model->id,
+                    ]);
                 }
 
                 // 4.5 ถ้ายังไม่มี "ผู้จ่ายพัสดุ" ให้เซ็ตจาก user ปัจจุบัน (ดึงตำแหน่งจากระบบพนักงาน)
