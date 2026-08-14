@@ -3,6 +3,7 @@
 use yii\web\View;
 use yii\helpers\Url;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\web\JsExpression;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
@@ -540,21 +541,55 @@ $listDocumentMe  = $emp->listDocumentMe();
                         $listDocumentData = ArrayHelper::map($listDocumentMe, 'id', function($model) {
                             return [
                                 'text' => $model['topic'] ?? null,
+                                'topic' => $model['topic'] ?? null,
                                 'doc_number' => $model['doc_number'] ?? null,
+                                'document_org_name' => $model['document_org_name'] ?? 'ไม่ระบุหน่วยงาน',
                             ];
                         });
+                        $listDocumentOptions = ArrayHelper::map($listDocumentMe, 'id', function($document) {
+                            $docNumber = trim((string)($document['doc_number'] ?? '')) ?: 'ไม่ระบุเลขที่';
+                            $topic = trim((string)($document['topic'] ?? '')) ?: 'ไม่ระบุเรื่อง';
+                            $organization = trim((string)($document['document_org_name'] ?? '')) ?: 'ไม่ระบุหน่วยงาน';
+
+                            return $docNumber . ' · ' . $topic . ' · ' . $organization;
+                        });
+                        $listDocumentJson = Json::htmlEncode($listDocumentData);
 
                             echo $form->field($model, 'document_id')->widget(Select2::classname(), [
-                                'data' => ArrayHelper::map($listDocumentMe, 'id', 'topic'),
-                                'options' => ['placeholder' => 'เลือกหนังสืออ้างอิง ...'],
+                                'data' => $listDocumentOptions,
+                                'options' => ['placeholder' => 'ค้นหาจากเลขที่ เรื่อง หรือหน่วยงาน ...'],
                                 'pluginOptions' => [
                                     'allowClear' => true,
+                                    'templateResult' => new JsExpression("function(data) {
+                                        if (!data.id) return data.text;
+                                        var documents = {$listDocumentJson};
+                                        var documentData = documents[String(data.id)] || {};
+                                        var resultNode = jQuery('<div class=\"py-1\"></div>');
+                                        jQuery('<div class=\"fw-semibold text-body\"></div>')
+                                            .text((documentData.doc_number || 'ไม่ระบุเลขที่') + ' · ' + (documentData.topic || 'ไม่ระบุเรื่อง'))
+                                            .appendTo(resultNode);
+                                        jQuery('<div class=\"small text-body-secondary\"></div>')
+                                            .text(documentData.document_org_name || 'ไม่ระบุหน่วยงาน')
+                                            .appendTo(resultNode);
+                                        return resultNode;
+                                    }"),
+                                    'templateSelection' => new JsExpression("function(data) {
+                                        if (!data.id) return data.text;
+                                        var documents = {$listDocumentJson};
+                                        var documentData = documents[String(data.id)] || {};
+                                        return (documentData.doc_number || 'ไม่ระบุเลขที่') + ' · ' + (documentData.topic || 'ไม่ระบุเรื่อง');
+                                    }"),
                                     // 'dropdownParent' => '#main-modal',
                                 ],
                                 'pluginEvents' => [
                                     'select2:select' =>  new JsExpression("function(e) {
-                                       var data = e.params.data;
-                                        $('#development-topic').val(data.text);
+                                        var documents = {$listDocumentJson};
+                                        var documentData = documents[String(e.params.data.id)] || {};
+                                        $('#development-topic').val(documentData.topic || '').trigger('change');
+                                        $('[name=\"Development[data_json][doc_number]\"]').val(documentData.doc_number || '').trigger('change');
+                                    }"),
+                                    'select2:clear' => new JsExpression("function() {
+                                        $('[name=\"Development[data_json][doc_number]\"]').val('').trigger('change');
                                     }"),
                                 ]
                             ])->label('หนังสืออ้างอิง');

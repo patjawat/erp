@@ -2116,17 +2116,26 @@ class Employees extends Yii\db\ActiveRecord
         $emp = $this->id;
         $department = $this->department;
 
-        $sql = "SELECT `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic 
+        $sql = "SELECT `documents`.id, thai_year, TRIM(doc_number) AS doc_number, topic,
+                COALESCE(NULLIF(TRIM(document_org.title), ''), 'ไม่ระบุหน่วยงาน') AS document_org_name
             FROM `documents_detail` 
             LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
-            WHERE (`to_id` = :department) AND (`name` = 'department')
+            LEFT JOIN `categorise` AS document_org
+                ON document_org.code = `documents`.document_org AND document_org.name = 'document_org'
+            WHERE (`documents_detail`.`to_id` = :department)
+                AND (`documents_detail`.`name` = 'department')
             
             UNION
             
-            SELECT  `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic  
+            SELECT `documents`.id, thai_year, TRIM(doc_number) AS doc_number, topic,
+                COALESCE(NULLIF(TRIM(document_org.title), ''), 'ไม่ระบุหน่วยงาน') AS document_org_name
             FROM `documents_detail` 
             LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
-            WHERE (`to_id` = :emp) AND (`name` = 'tags')";
+            LEFT JOIN `categorise` AS document_org
+                ON document_org.code = `documents`.document_org AND document_org.name = 'document_org'
+            WHERE (`documents_detail`.`to_id` = :emp)
+                AND (`documents_detail`.`name` = 'tags')
+            ORDER BY id DESC";
 
         $querys = Yii::$app->db->createCommand($sql)
             ->bindValue(':department', $department)
