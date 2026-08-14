@@ -351,7 +351,7 @@ class Employees extends Yii\db\ActiveRecord
             ->where(['legacy_code' => $legacyCode])
             ->scalar();
 
-        return $groupId !== null ? (int) $groupId : null;
+        return $groupId !== false && $groupId !== null ? (int) $groupId : null;
     }
 
     private function legacyEmployeePositionId($legacyValue)
@@ -366,7 +366,7 @@ class Employees extends Yii\db\ActiveRecord
             ->where(['legacy_code' => $legacyCode])
             ->scalar();
 
-        return $positionId !== null ? (int) $positionId : null;
+        return $positionId !== false && $positionId !== null ? (int) $positionId : null;
     }
 
     private function syncEmployeeMasterFields(): void
@@ -410,8 +410,12 @@ class Employees extends Yii\db\ActiveRecord
             $this->gender = 'หญิง';
         }
         $this->syncEmployeeMasterFields();
-        // ป้องกัน Array to string conversion: คอลัมน์ data_json รับ string (JSON) แต่ฟอร์มโหลดเป็น array
-        if (is_array($this->data_json)) {
+        // Yii จะแปลง array ให้คอลัมน์ JSON เอง; encode เฉพาะฐาน legacy ที่เป็น text
+        $dataJsonColumn = static::getTableSchema()->getColumn('data_json');
+        if (
+            is_array($this->data_json)
+            && (!$dataJsonColumn || $dataJsonColumn->type !== \yii\db\Schema::TYPE_JSON)
+        ) {
             $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
         }
 
