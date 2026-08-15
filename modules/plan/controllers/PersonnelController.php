@@ -9,6 +9,7 @@ use app\models\Categorise;
 use yii\filters\VerbFilter;
 use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\modules\plan\models\PlanItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderSearch;
@@ -101,6 +102,12 @@ class PersonnelController extends Controller
      */
     public function actionCreate()
     {
+        // ใช้หน้าจัดทำแผนบุคลากรแบบรวมรายชื่อของหน่วยงานเป็นจุดสร้างหลัก
+        // เพื่อให้เมนูเดิม /plan/personnel/create เปิด workflow ใหม่ทันที
+        // (เลือกประเภทค่าใช้จ่าย -> ดึงรายชื่อ -> เฉลี่ยงบทั้งปีรายเดือน)
+        return $this->redirect(['/me/plan/create-personnel']);
+
+        /* Legacy single-person form retained below temporarily for reference.
         $model = new PlanOrder([
             'thai_year' => \app\modules\plan\components\PlanHelper::currentPlanYear(),
             'plan_group_id' => 'personnel',
@@ -115,6 +122,7 @@ class PersonnelController extends Controller
         }
 
         return $this->render('create', ['model' => $model]);
+        */
     }
 
     /**
@@ -127,6 +135,9 @@ class PersonnelController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        if (!in_array($model->status, ['draft', 'reject'], true)) {
+            throw new ForbiddenHttpException('แผนที่ส่งขออนุมัติหรืออนุมัติแล้ว แก้ไขไม่ได้');
+        }
            $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
 
         if ($this->request->isPost && $model->load($this->request->post())) {
@@ -150,7 +161,11 @@ class PersonnelController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        if ($model->status !== 'draft') {
+            throw new ForbiddenHttpException('ลบได้เฉพาะแผนสถานะร่างเท่านั้น');
+        }
+        $model->delete();
 
         return $this->redirect(['index']);
     }

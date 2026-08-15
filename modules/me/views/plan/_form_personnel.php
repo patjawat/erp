@@ -3,6 +3,7 @@
 use yii\db\Query;
 use yii\helpers\Html;
 use yii\helpers\Json;
+use yii\helpers\Url;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
 use app\modules\me\controllers\PlanController;
@@ -12,202 +13,237 @@ use app\modules\me\controllers\PlanController;
 /** @var app\modules\plan\models\PlanOrderItem[] $items */
 /** @var int $lockDept */
 /** @var string $lockDeptName */
+/** @var array<int,string> $departmentOptions */
 
-// รายการค่าใช้จ่ายบุคลากร (plan_item ใต้หมวด PER_*) จัดกลุ่มตามหมวดเพื่อให้เลือกง่าย
-$itemRows = (new Query())
-    ->select(['item_code' => 'i.code', 'item' => 'i.title', 'cat' => 'c.title'])
-    ->from(['i' => 'categorise'])
-    ->innerJoin(['c' => 'categorise'], "c.code = i.category_id AND c.name = 'plan_category'")
-    ->where(['i.name' => 'plan_item'])
-    ->andWhere(['like', 'i.category_id', 'PER%', false])
-    ->orderBy(['i.category_id' => SORT_ASC, 'i.code' => SORT_ASC])
+$categories = (new Query())
+    ->select(['code', 'title'])
+    ->from('categorise')
+    ->where(['name' => 'plan_category', 'category_id' => 'PER'])
+    ->orderBy(['sort' => SORT_ASC, 'code' => SORT_ASC])
     ->all();
-$itemGroups = [];
-foreach ($itemRows as $r) {
-    $itemGroups[$r['cat']][$r['item_code']] = $r['item'];
+$categoryOptions = [];
+foreach ($categories as $category) {
+    $categoryOptions[$category['code']] = $category['title'];
 }
 
-// ประเภทการจ้าง (ใช้เป็นตัวกรองตอนดึงรายชื่อ เช่น ค่าตอบแทนวิชาชีพเอาเฉพาะข้าราชการ)
-$empTypes = (new Query())
-    ->select(['id', 'title'])->from('employee_type')
-    ->where(['active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
+$expenseRows = (new Query())
+    ->select(['code', 'category_id', 'title'])
+    ->from('categorise')
+    ->where(['name' => 'plan_item'])
+    ->andWhere(['category_id' => array_keys($categoryOptions)])
+    ->orderBy(['sort' => SORT_ASC, 'code' => SORT_ASC])
     ->all();
+$expensesByCategory = [];
+$expenseTypeIds = [];
+foreach ($expenseRows as $expense) {
+    $types = PlanController::employeeTypesForPlanItem((string) $expense['code']);
+    $expensesByCategory[$expense['category_id']][] = [
+        'id' => $expense['code'],
+        'text' => $expense['title'],
+        'type_ids' => $types,
+        'all_types' => PlanController::planItemAppliesToAllEmployees((string) $expense['code']),
+    ];
+    $expenseTypeIds[$expense['code']] = $types;
+}
 
-$suggested = PlanController::suggestedEmpTypes();
-$dailyTypes = PlanController::DAILY_EMP_TYPES;
-$defaultDays = PlanController::DEFAULT_WORK_DAYS;
+$selectedCategory = (string) $model->plan_category_id;
+$selectedExpenses = [];
+foreach ($expensesByCategory[$selectedCategory] ?? [] as $expense) {
+    $selectedExpenses[$expense['id']] = $expense['text'];
+}
+
+$employeeTypeNames = (new Query())
+    ->select(['title', 'id'])
+    ->from('employee_type')
+    ->where(['active' => 1])
+    ->indexBy('id')
+    ->column();
 
 $monthCols = [
     'month_10' => 'ต.ค.', 'month_11' => 'พ.ย.', 'month_12' => 'ธ.ค.',
-    'month_1'  => 'ม.ค.', 'month_2'  => 'ก.พ.', 'month_3'  => 'มี.ค.',
-    'month_4'  => 'เม.ย.', 'month_5'  => 'พ.ค.', 'month_6'  => 'มิ.ย.',
-    'month_7'  => 'ก.ค.', 'month_8'  => 'ส.ค.', 'month_9'  => 'ก.ย.',
+    'month_1' => 'ม.ค.', 'month_2' => 'ก.พ.', 'month_3' => 'มี.ค.',
+    'month_4' => 'เม.ย.', 'month_5' => 'พ.ค.', 'month_6' => 'มิ.ย.',
+    'month_7' => 'ก.ค.', 'month_8' => 'ส.ค.', 'month_9' => 'ก.ย.',
 ];
 
 $form = ActiveForm::begin(['id' => 'me-personnel-form']);
 ?>
 
-<div class="card">
-    <div class="card-body">
-
+<div class="card bg-body border shadow-sm">
+    <div class="card-body p-3 p-lg-4">
         <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
-        <?= $form->field($model, 'department_id')->hiddenInput(['id' => 'me-dept', 'value' => $lockDept])->label(false) ?>
 
-        <div class="row">
-            <div class="col-md-3">
+        <div class="row g-3 mb-2">
+            <div class="col-md-4">
                 <?= $form->field($model, 'thai_year')->input('number', ['readonly' => true])->label('ปีงบประมาณ')->hint('ตามรอบทำแผนที่เปิด') ?>
             </div>
-            <div class="col-md-9">
-                <label class="form-label">หน่วยงาน</label>
-                <div class="form-control-plaintext fw-semibold"><?= Html::encode($lockDeptName) ?></div>
+            <div class="col-md-8">
+                <?= $form->field($model, 'department_id')->dropDownList($departmentOptions, ['id' => 'me-dept'])->label('หน่วยงาน')->hint('แสดงเฉพาะหน่วยงานที่คุณเป็นหัวหน้า') ?>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <?= $form->field($model, 'plan_item_id')->widget(Select2::class, [
-                    'data' => $itemGroups,
-                    'options' => ['id' => 'me-plan-item', 'placeholder' => '— เลือกรายการค่าใช้จ่าย —'],
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <?= $form->field($model, 'plan_category_id')->widget(Select2::class, [
+                    'data' => $categoryOptions,
+                    'options' => ['id' => 'personnel-category', 'placeholder' => 'เลือกรายการคำขอบุคลากร'],
                     'pluginOptions' => ['allowClear' => true],
-                ])->label('รายการค่าใช้จ่าย <span class="text-danger">*</span>', ['encode' => false]) ?>
+                ])->label('รายการคำขอบุคลากร') ?>
             </div>
-            <div class="col-md-6">
+            <div class="col-lg-6">
+                <?= $form->field($model, 'plan_item_id')->widget(Select2::class, [
+                    'data' => $selectedExpenses,
+                    'options' => ['id' => 'personnel-expense-type', 'placeholder' => 'เลือกประเภทค่าใช้จ่าย'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('ประเภทค่าใช้จ่าย') ?>
+                <div class="form-text">ประเภทค่าใช้จ่ายเป็นเงื่อนไขกำหนดรายชื่อบุคลากร</div>
+            </div>
+            <div class="col-lg-6">
                 <?= $form->field($model, 'plan_budget_type_id')->widget(Select2::class, [
                     'data' => $model->listBudgetType(),
                     'options' => ['placeholder' => 'เลือกแหล่งของเงิน'],
                     'pluginOptions' => ['allowClear' => true],
                 ])->label('แหล่งของเงิน') ?>
             </div>
-            <div class="col-md-12">
+            <div class="col-lg-6">
                 <?= $form->field($model, 'description')->textInput(['maxlength' => 255])->label('วัตถุประสงค์ (ถ้ามี)') ?>
-                <?= $form->field($model, 'reference')->textarea(['rows' => 2, 'placeholder' => 'เอกสาร/หลักฐาน ประกอบการพิจารณา'])->label('เอกสาร/ข้อมูลอ้างอิง') ?>
+            </div>
+            <div class="col-12">
+                <?= $form->field($model, 'reference')->textarea(['rows' => 2, 'placeholder' => 'ระบุเอกสารหรือหลักฐานประกอบการพิจารณา'])->label('เอกสาร/ข้อมูลอ้างอิง') ?>
             </div>
         </div>
 
-        <!-- ดึงรายชื่อบุคลากร -->
-        <div class="card bg-light border-0 mb-3">
-            <div class="card-body py-3">
-                <div class="fw-semibold mb-2"><i class="fa-solid fa-users me-1"></i> ดึงรายชื่อบุคลากรของหน่วยงาน</div>
-                <div class="mb-2">
-                    <label class="form-label small mb-1">ประเภทการจ้างที่ต้องการ (ไม่เลือก = ทุกประเภท)</label>
-                    <div class="d-flex flex-wrap gap-3">
-                        <?php foreach ($empTypes as $t): ?>
-                            <div class="form-check">
-                                <input class="form-check-input emp-type" type="checkbox" value="<?= (int) $t['id'] ?>" id="emp-type-<?= (int) $t['id'] ?>">
-                                <label class="form-check-label small" for="emp-type-<?= (int) $t['id'] ?>"><?= Html::encode($t['title']) ?></label>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <div class="row g-2 align-items-end">
-                    <div class="col-auto">
-                        <label class="form-label small mb-1">วันทำงาน/เดือน (รายวัน-รายคาบ)</label>
-                        <input type="number" step="0.5" min="1" max="31" class="form-control form-control-sm" id="pull-days" value="<?= $defaultDays ?>" style="width:110px">
-                    </div>
-                    <div class="col-auto">
-                        <div class="form-check mb-1">
-                            <input class="form-check-input" type="checkbox" id="pull-include-children">
-                            <label class="form-check-label small" for="pull-include-children">รวมหน่วยงานย่อย</label>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-info text-white" id="btn-pull-emp">
-                            <i class="fa-solid fa-user-plus me-1"></i> ดึงรายชื่อ
-                        </button>
-                    </div>
-                    <div class="col">
-                        <small class="text-muted" id="pull-info">เลือกรายการค่าใช้จ่ายก่อน ระบบจะติ๊กประเภทการจ้างที่เกี่ยวข้องให้ แล้วปรับเพิ่ม/ลบรายชื่อได้เอง</small>
-                    </div>
+        <hr class="my-4">
+
+        <div class="row g-3 align-items-end mb-4">
+            <div class="col-lg-8">
+                <label class="form-label" for="employee-type-filter">ประเภทบุคลากรที่ต้องการดึง</label>
+                <?= Select2::widget([
+                    'name' => 'employee_type_ids',
+                    'data' => $employeeTypeNames,
+                    'options' => [
+                        'id' => 'employee-type-filter',
+                        'multiple' => true,
+                        'placeholder' => 'เลือกได้มากกว่า 1 ประเภท',
+                    ],
+                    'pluginOptions' => ['allowClear' => true, 'width' => '100%'],
+                ]) ?>
+                <div class="form-text">ระบบเลือกค่าแนะนำให้ตามประเภทค่าใช้จ่าย และสามารถปรับก่อนแสดงรายชื่อได้</div>
+            </div>
+            <div class="col-lg-4 pb-lg-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="all-employee-types">
+                    <label class="form-check-label" for="all-employee-types">บุคลากรทุกประเภทในหน่วยงาน</label>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-            <h6 class="mb-0">รายชื่อในแผน <span class="badge bg-secondary-subtle text-secondary-emphasis" id="row-count">0</span></h6>
-            <div class="d-flex gap-2 align-items-center">
-                <div class="input-group input-group-sm" style="width:200px">
-                    <span class="input-group-text">ปรับเพิ่ม %</span>
-                    <input type="number" step="0.1" class="form-control" id="raise-pct" placeholder="0">
-                    <button type="button" class="btn btn-outline-secondary" id="btn-raise">ปรับ</button>
+        <section aria-labelledby="personnel-list-heading">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+                <div>
+                    <h2 class="h6 mb-1" id="personnel-list-heading">รายชื่อบุคลากร</h2>
+                    <p class="text-body-secondary small mb-0" id="pull-info" aria-live="polite">เลือกประเภทค่าใช้จ่าย แล้วแสดงรายชื่อที่ตรงกับเงื่อนไข</p>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-danger" id="btn-clear-rows"><i class="fa-solid fa-eraser me-1"></i> ล้างรายชื่อ</button>
-                <button type="button" class="btn btn-sm btn-primary" id="add-row"><i class="fa-solid fa-circle-plus me-1"></i> เพิ่มแถวเอง</button>
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="form-check align-self-center me-2">
+                        <input class="form-check-input" type="checkbox" id="pull-include-children">
+                        <label class="form-check-label small" for="pull-include-children">รวมหน่วยงานย่อย</label>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" id="btn-pull-emp">
+                        <i class="fa-solid fa-users me-1" aria-hidden="true"></i> แสดงรายชื่อ
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="add-row">
+                        <i class="fa-solid fa-plus me-1" aria-hidden="true"></i> เพิ่มรายชื่อ
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm align-middle" id="emp-table">
-                <thead class="table-light">
-                    <tr>
-                        <th style="min-width:180px">ชื่อ-สกุล</th>
-                        <th style="min-width:150px">ตำแหน่ง</th>
-                        <th width="130">ประเภท</th>
-                        <th width="120">อัตรา (บาท)</th>
-                        <th width="90">วัน/เดือน</th>
-                        <th width="90">เดือน</th>
-                        <th width="130" class="text-end">รวม</th>
-                        <th width="45"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($items as $i => $item): ?>
-                        <?php
-                        $dj = is_array($item->data_json) ? $item->data_json : (json_decode((string) $item->data_json, true) ?: []);
-                        $rate  = (float) ($dj['rate'] ?? $item->unit_price);
-                        $days  = (float) ($dj['days'] ?? 1);
-                        $months = (int) $item->qty;
-                        $typeId = (string) ($dj['employee_type_id'] ?? '');
-                        $empId  = (string) ($dj['emp_id'] ?? $item->item_id);
-                        $pos    = (string) ($dj['position'] ?? $item->title);
-                        ?>
+            <div class="row g-2 mb-3" aria-live="polite">
+                <div class="col-12 col-md-4">
+                    <div class="bg-body-tertiary border rounded-3 p-3 h-100">
+                        <div class="small text-body-secondary">จำนวนบุคลากร</div>
+                        <div class="fw-semibold"><span id="row-count">0</span> คน</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="bg-body-tertiary border rounded-3 p-3 h-100">
+                        <div class="small text-body-secondary">วงเงินรวมทั้งปี</div>
+                        <div class="fw-semibold font-monospace"><span id="grand-total">0.00</span> บาท</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="bg-body-tertiary border rounded-3 p-3 h-100">
+                        <div class="small text-body-secondary">เฉลี่ยต่อเดือน</div>
+                        <div class="fw-semibold font-monospace"><span id="monthly-total">0.00</span> บาท</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="personnel-table-wrap border rounded-3">
+                <table class="table table-sm align-middle mb-0" id="emp-table">
+                    <thead class="bg-body-tertiary">
                         <tr>
-                            <td>
-                                <input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control form-control-sm">
-                                <input type="hidden" name="items[<?= $i ?>][emp_id]" value="<?= Html::encode($empId) ?>">
+                            <th scope="col">ชื่อ-สกุล</th>
+                            <th scope="col">ตำแหน่ง</th>
+                            <th scope="col">ประเภท</th>
+                            <th scope="col" class="text-end">วงเงินประมาณการทั้งปี</th>
+                            <th scope="col" class="text-end">เฉลี่ยต่อเดือน</th>
+                            <th scope="col" class="text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($items as $i => $item):
+                        $data = is_array($item->data_json) ? $item->data_json : (json_decode((string) $item->data_json, true) ?: []);
+                        $legacyAnnual = (float) $item->total_price;
+                        if ($legacyAnnual <= 0) {
+                            $legacyAnnual = (float) ($data['rate'] ?? 0) * (float) ($data['days'] ?? 1) * (int) ($item->qty ?: 12);
+                        }
+                        $annualBudget = (float) ($data['annual_budget'] ?? $legacyAnnual);
+                        $typeId = (string) ($data['employee_type_id'] ?? '');
+                        $typeName = (string) ($data['type_name'] ?? ($employeeTypeNames[$typeId] ?? ''));
+                    ?>
+                        <tr class="personnel-row">
+                            <td data-label="ชื่อ-สกุล">
+                                <input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control form-control-sm person-name" required>
+                                <input type="hidden" name="items[<?= $i ?>][emp_id]" value="<?= Html::encode((string) ($data['emp_id'] ?? $item->item_id)) ?>">
                                 <input type="hidden" name="items[<?= $i ?>][type_id]" value="<?= Html::encode($typeId) ?>">
+                                <input type="hidden" name="items[<?= $i ?>][type_name]" value="<?= Html::encode($typeName) ?>">
                             </td>
-                            <td><input type="text" name="items[<?= $i ?>][position]" value="<?= Html::encode($pos) ?>" class="form-control form-control-sm"></td>
-                            <td class="small text-body-secondary type-name"><?= Html::encode($dj['type_name'] ?? '') ?></td>
-                            <td><input type="number" step="0.01" name="items[<?= $i ?>][rate]" value="<?= $rate ?>" class="form-control form-control-sm rate"></td>
-                            <td><input type="number" step="0.5" name="items[<?= $i ?>][days]" value="<?= $days ?>" class="form-control form-control-sm days"></td>
-                            <td><input type="number" step="1" min="0" max="12" name="items[<?= $i ?>][qty]" value="<?= $months ?>" class="form-control form-control-sm months"></td>
-                            <td class="text-end line-total"><?= number_format($rate * $days * $months, 2) ?></td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="fa-solid fa-xmark"></i></button></td>
+                            <td data-label="ตำแหน่ง"><input type="text" name="items[<?= $i ?>][position]" value="<?= Html::encode((string) ($data['position'] ?? $item->title)) ?>" class="form-control form-control-sm"></td>
+                            <td data-label="ประเภท" class="type-name text-body-secondary"><?= Html::encode($typeName ?: 'กรอกเอง') ?></td>
+                            <td data-label="วงเงินทั้งปี"><input type="number" min="0" step="0.01" name="items[<?= $i ?>][annual_budget]" value="<?= $annualBudget ?>" class="form-control form-control-sm text-end annual-budget"></td>
+                            <td data-label="เฉลี่ยต่อเดือน" class="text-end font-monospace monthly-average"><?= number_format($annualBudget / 12, 2) ?></td>
+                            <td data-label="จัดการ" class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row" aria-label="ลบบุคลากรรายนี้"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></td>
                         </tr>
                     <?php endforeach; ?>
-                </tbody>
-                <tfoot>
-                    <tr class="table-light">
-                        <th colspan="6" class="text-end">รวมทั้งสิ้น</th>
-                        <th class="text-end" id="grand-total">0.00</th>
-                        <th></th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <hr>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0">แผนการใช้จ่ายรายเดือน</h6>
-            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-spread">
-                <i class="fa-solid fa-arrows-split-up-and-left me-1"></i> เฉลี่ยเท่ากัน 12 เดือน
-            </button>
-        </div>
-        <div class="row g-2">
-            <?php foreach ($monthCols as $attr => $label): ?>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <?= $form->field($model, $attr)->input('number', ['step' => '0.01', 'class' => 'form-control month-input'])->label($label) ?>
+                    </tbody>
+                </table>
+                <div class="text-center text-body-secondary p-4<?= $items ? ' d-none' : '' ?>" id="personnel-empty">
+                    ยังไม่มีรายชื่อ เลือกประเภทค่าใช้จ่ายแล้วกด “แสดงรายชื่อ” หรือเพิ่มรายชื่อเอง
                 </div>
-            <?php endforeach; ?>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4">
-                <?= $form->field($model, 'order_price')->input('number', ['step' => '0.01', 'readonly' => true])->label('รวมเป็นจำนวนเงินทั้งสิ้น (บาท)')->hint('คำนวณจากรายชื่อในแผน') ?>
             </div>
-        </div>
+        </section>
 
-        <div class="d-flex gap-2 mt-2">
-            <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-success']) ?>
-            <?= Html::a('ยกเลิก', ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-light']) ?>
+        <hr class="my-4">
+
+        <section aria-labelledby="monthly-heading">
+            <div class="mb-3">
+                <h2 class="h6 mb-1" id="monthly-heading">การจัดสรรงบประมาณรายเดือน</h2>
+                <p class="text-body-secondary small mb-0">ระบบเฉลี่ยวงเงินทั้งปีเป็น 12 เดือนอัตโนมัติ และปรับเศษทศนิยมในเดือนกันยายน</p>
+            </div>
+            <div class="row g-2">
+                <?php foreach ($monthCols as $attr => $label): ?>
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <?= $form->field($model, $attr)->input('number', ['step' => '0.01', 'readonly' => true, 'class' => 'form-control month-input text-end'])->label($label) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <?= $form->field($model, 'order_price')->hiddenInput()->label(false) ?>
+        </section>
+
+        <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+            <?= Html::a('ยกเลิก', ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i> บันทึกแผน', ['class' => 'btn btn-primary', 'id' => 'save-personnel-plan']) ?>
         </div>
     </div>
 </div>
@@ -215,123 +251,172 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
 <?php ActiveForm::end(); ?>
 
 <?php
-$pullUrl    = \yii\helpers\Url::to(['pull-employees']);
-$suggestJs  = Json::encode($suggested);
-$dailyJs    = Json::encode(array_map('strval', $dailyTypes));
+$this->registerCss(<<<CSS
+.personnel-table-wrap { overflow: hidden; }
+#emp-table th, #emp-table td { padding: .65rem .75rem; vertical-align: middle; }
+#emp-table th { font-size: .8rem; font-weight: 600; color: var(--bs-secondary-color); white-space: nowrap; }
+#emp-table .annual-budget { min-width: 9rem; font-variant-numeric: tabular-nums; }
+#emp-table .monthly-average, .font-monospace { font-variant-numeric: tabular-nums; }
+@media (max-width: 991.98px) {
+    .personnel-table-wrap { border: 0 !important; overflow: visible; }
+    #emp-table, #emp-table tbody, #emp-table tr, #emp-table td { display: block; width: 100%; }
+    #emp-table thead { display: none; }
+    #emp-table tr { border: var(--bs-border-width) solid var(--bs-border-color); border-radius: var(--bs-border-radius-lg); margin-bottom: .75rem; padding: .75rem; background: var(--bs-body-bg); }
+    #emp-table td { border: 0; padding: .35rem 0; display: grid; grid-template-columns: minmax(7rem, 35%) 1fr; gap: .75rem; align-items: center; text-align: left !important; }
+    #emp-table td::before { content: attr(data-label); color: var(--bs-secondary-color); font-size: .8rem; }
+    #emp-table td[data-label="จัดการ"] { display: flex; justify-content: flex-end; }
+    #emp-table td[data-label="จัดการ"]::before { display: none; }
+    #emp-table .remove-row { min-width: 44px; min-height: 44px; }
+}
+CSS);
+
+$pullUrl = Url::to(['pull-employees']);
+$expensesJson = Json::htmlEncode($expensesByCategory);
+$typeNamesJson = Json::htmlEncode($employeeTypeNames);
 $js = <<<JS
-(function(){
-    var suggested = $suggestJs;
-    var dailyTypes = $dailyJs;
+(function () {
+    var expensesByCategory = $expensesJson;
+    var employeeTypeNames = $typeNamesJson;
     var rowIndex = $('#emp-table tbody tr').length;
 
-    function fmt(n){ return (Math.round(n * 100) / 100).toFixed(2); }
+    function money(value) {
+        return (Math.round((Number(value) || 0) * 100) / 100).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
 
-    function recalc(){
+    function escapeAttribute(value) {
+        return $('<div>').text(value || '').html().replace(/"/g, '&quot;');
+    }
+
+    function selectedExpense() {
+        var category = $('#personnel-category').val();
+        var id = $('#personnel-expense-type').val();
+        var list = expensesByCategory[category] || [];
+        return list.find(function (item) { return String(item.id) === String(id); }) || null;
+    }
+
+    function allocate(total) {
+        var cents = Math.max(0, Math.round(total * 100));
+        var base = Math.floor(cents / 12);
+        var values = {};
+        for (var month = 1; month <= 12; month++) values[month] = base / 100;
+        values[9] = (cents - (base * 11)) / 100;
+        return values;
+    }
+
+    function recalc() {
         var total = 0;
-        $('#emp-table tbody tr').each(function(){
-            var tr = $(this);
-            var rate = parseFloat(tr.find('.rate').val()) || 0;
-            var days = parseFloat(tr.find('.days').val()) || 0;
-            var months = parseFloat(tr.find('.months').val()) || 0;
-            var line = rate * (days > 0 ? days : 1) * months;
-            tr.find('.line-total').text(fmt(line));
-            total += line;
+        $('#emp-table tbody tr').each(function () {
+            var annual = Math.max(0, parseFloat($(this).find('.annual-budget').val()) || 0);
+            $(this).find('.monthly-average').text(money(annual / 12));
+            total += annual;
         });
-        $('#grand-total').text(fmt(total));
+        total = Math.round(total * 100) / 100;
+        var months = allocate(total);
+        Object.keys(months).forEach(function (month) {
+            $('#planorder-month_' + month).val(months[month].toFixed(2));
+        });
+        $('#planorder-order_price').val(total.toFixed(2));
         $('#row-count').text($('#emp-table tbody tr').length);
-        $('#planorder-order_price').val(fmt(total));
-        return total;
+        $('#grand-total').text(money(total));
+        $('#monthly-total').text(money(total / 12));
+        $('#personnel-empty').toggleClass('d-none', $('#emp-table tbody tr').length > 0);
+        $('#save-personnel-plan').prop('disabled', $('#emp-table tbody tr').length === 0);
     }
 
-    function rowHtml(it){
-        var i = rowIndex++;
-        return '<tr>' +
-            '<td><input type="text" name="items[' + i + '][item_name]" class="form-control form-control-sm" value="' + $('<div>').text(it.name || '').html() + '">' +
-                '<input type="hidden" name="items[' + i + '][emp_id]" value="' + (it.emp_id || '') + '">' +
-                '<input type="hidden" name="items[' + i + '][type_id]" value="' + (it.type_id || '') + '"></td>' +
-            '<td><input type="text" name="items[' + i + '][position]" class="form-control form-control-sm" value="' + $('<div>').text(it.position || '').html() + '"></td>' +
-            '<td class="small text-body-secondary type-name">' + $('<div>').text(it.type_name || '').html() +
-                (it.note ? '<div class="text-warning-emphasis">' + $('<div>').text(it.note).html() + '</div>' : '') + '</td>' +
-            '<td><input type="number" step="0.01" name="items[' + i + '][rate]" class="form-control form-control-sm rate" value="' + (it.rate || 0) + '"></td>' +
-            '<td><input type="number" step="0.5" name="items[' + i + '][days]" class="form-control form-control-sm days" value="' + (it.days || 1) + '"></td>' +
-            '<td><input type="number" step="1" min="0" max="12" name="items[' + i + '][qty]" class="form-control form-control-sm months" value="' + (it.months === undefined ? 12 : it.months) + '"></td>' +
-            '<td class="text-end line-total">0.00</td>' +
-            '<td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="fa-solid fa-xmark"></i></button></td>' +
-        '</tr>';
+    function rowHtml(item) {
+        var index = rowIndex++;
+        var name = escapeAttribute(item.name);
+        var position = escapeAttribute(item.position);
+        var typeName = escapeAttribute(item.type_name || 'กรอกเอง');
+        var annual = Number(item.annual_budget) || 0;
+        return '<tr class="personnel-row">' +
+            '<td data-label="ชื่อ-สกุล"><input type="text" name="items[' + index + '][item_name]" value="' + name + '" class="form-control form-control-sm person-name" required>' +
+            '<input type="hidden" name="items[' + index + '][emp_id]" value="' + (item.emp_id || '') + '">' +
+            '<input type="hidden" name="items[' + index + '][type_id]" value="' + (item.type_id || '') + '">' +
+            '<input type="hidden" name="items[' + index + '][type_name]" value="' + typeName + '"></td>' +
+            '<td data-label="ตำแหน่ง"><input type="text" name="items[' + index + '][position]" value="' + position + '" class="form-control form-control-sm"></td>' +
+            '<td data-label="ประเภท" class="type-name text-body-secondary">' + typeName + '</td>' +
+            '<td data-label="วงเงินทั้งปี"><input type="number" min="0" step="0.01" name="items[' + index + '][annual_budget]" value="' + annual.toFixed(2) + '" class="form-control form-control-sm text-end annual-budget"></td>' +
+            '<td data-label="เฉลี่ยต่อเดือน" class="text-end font-monospace monthly-average">' + money(annual / 12) + '</td>' +
+            '<td data-label="จัดการ" class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row" aria-label="ลบบุคลากรรายนี้"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></td></tr>';
     }
 
-    // เลือกรายการค่าใช้จ่าย -> ติ๊กประเภทการจ้างที่เกี่ยวข้องให้อัตโนมัติ (ปรับเองต่อได้)
-    $('#me-plan-item').on('change', function(){
-        var types = suggested[$(this).val()] || [];
-        if (!types.length) return;
-        $('.emp-type').prop('checked', false);
-        types.forEach(function(t){ $('#emp-type-' + t).prop('checked', true); });
+    $('#personnel-category').on('change', function () {
+        var options = expensesByCategory[$(this).val()] || [];
+        var expense = $('#personnel-expense-type');
+        expense.empty().append(new Option('', '', false, false));
+        options.forEach(function (item) { expense.append(new Option(item.text, item.id, false, false)); });
+        expense.val(null).trigger('change');
+        $('#pull-info').text(options.length ? 'เลือกประเภทค่าใช้จ่ายเพื่อกำหนดรายชื่อบุคลากร' : 'รายการคำขอนี้ยังไม่มีประเภทค่าใช้จ่ายที่ผูกกับทะเบียนบุคลากร');
     });
 
-    $('#btn-pull-emp').on('click', function(){
-        var types = $('.emp-type:checked').map(function(){ return this.value; }).get();
-        var days  = parseFloat($('#pull-days').val()) || $defaultDays;
-        $('#pull-info').text('กำลังดึงข้อมูล...');
+    $('#personnel-expense-type').on('change', function () {
+        var expense = selectedExpense();
+        var allTypes = !!(expense && expense.all_types);
+        $('#all-employee-types').prop('checked', allTypes).trigger('change');
+        $('#employee-type-filter').val(expense && !allTypes ? expense.type_ids.map(String) : []).trigger('change');
+        $('#pull-info').text(expense ? 'พร้อมแสดงรายชื่อบุคลากรที่ตรงกับ “' + expense.text + '”' : 'เลือกประเภทค่าใช้จ่าย');
+    });
+
+    $('#all-employee-types').on('change', function () {
+        var allTypes = $(this).is(':checked');
+        $('#employee-type-filter').prop('disabled', allTypes);
+        if (allTypes) $('#employee-type-filter').val([]).trigger('change');
+    });
+
+    $('#btn-pull-emp').on('click', function () {
+        var expense = selectedExpense();
+        if (!expense) {
+            $('#pull-info').text('กรุณาเลือกประเภทค่าใช้จ่ายก่อนแสดงรายชื่อ');
+            return;
+        }
+        var button = $(this).prop('disabled', true);
+        $('#pull-info').text('กำลังค้นหารายชื่อบุคลากร...');
         $.post('$pullUrl', {
             department_id: $('#me-dept').val(),
-            thai_year: $('#planorder-thai_year').val(),
-            employee_type_ids: types,
-            include_children: $('#pull-include-children').is(':checked') ? 1 : 0,
-            days_per_month: days
-        }, function(res){
-            if (res.status !== 'success') { $('#pull-info').text(res.message || 'เกิดข้อผิดพลาด'); return; }
-            if (!res.items.length) { $('#pull-info').text('ไม่พบบุคลากรตามเงื่อนไขที่เลือก'); return; }
-            var exists = {};
-            $('#emp-table tbody input[name*="[emp_id]"]').each(function(){ if (this.value) exists[this.value] = true; });
-            var added = 0, skipped = 0;
-            res.items.forEach(function(it){
-                if (exists[String(it.emp_id)]) { skipped++; return; }
-                $('#emp-table tbody').append(rowHtml(it));
+            plan_item_id: expense.id,
+            employee_type_ids: $('#employee-type-filter').val() || [],
+            all_employee_types: $('#all-employee-types').is(':checked') ? 1 : 0,
+            include_children: $('#pull-include-children').is(':checked') ? 1 : 0
+        }, function (response) {
+            if (response.status !== 'success') {
+                $('#pull-info').text(response.message || 'ไม่สามารถแสดงรายชื่อได้');
+                return;
+            }
+            var existing = {};
+            $('#emp-table tbody input[name*="[emp_id]"]').each(function () {
+                if (this.value) existing[String(this.value)] = true;
+            });
+            var added = 0;
+            var skipped = 0;
+            response.items.forEach(function (item) {
+                if (existing[String(item.emp_id)]) {
+                    skipped++;
+                    return;
+                }
+                $('#emp-table tbody').append(rowHtml(item));
+                existing[String(item.emp_id)] = true;
                 added++;
             });
+            var scope = response.child_count > 0 ? ' รวมหน่วยงานย่อย ' + response.child_count + ' หน่วยงาน' : '';
+            var duplicateText = skipped ? ' ข้ามรายชื่อที่มีอยู่แล้ว ' + skipped + ' คน' : '';
+            $('#pull-info').text(response.items.length ? 'เพิ่มรายชื่อ ' + added + ' คน' + scope + duplicateText : 'ไม่พบบุคลากรที่ตรงกับประเภทค่าใช้จ่ายนี้');
             recalc();
-            var scopeTxt = res.child_count > 0 ? (' (รวม ' + res.child_count + ' หน่วยย่อย)') : '';
-            var skipTxt = skipped > 0 ? (' ข้ามที่มีอยู่แล้ว ' + skipped + ' คน') : '';
-            $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>เพิ่ม ' + added + ' คน' + scopeTxt + skipTxt + ' — แก้อัตรา/จำนวนเดือน หรือลบรายชื่อที่ไม่เกี่ยวข้องได้');
-        }, 'json').fail(function(){ $('#pull-info').text('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); });
+        }, 'json').fail(function () {
+            $('#pull-info').text('เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่');
+        }).always(function () { button.prop('disabled', false); });
     });
 
-    $('#add-row').on('click', function(){
-        $('#emp-table tbody').append(rowHtml({name: '', position: '', type_name: 'กรอกเอง', rate: 0, days: 1, months: 12}));
+    $('#add-row').on('click', function () {
+        var expense = selectedExpense();
+        var typeId = expense && expense.type_ids.length === 1 ? expense.type_ids[0] : '';
+        $('#emp-table tbody').append(rowHtml({type_id: typeId, type_name: employeeTypeNames[typeId] || 'กรอกเอง'}));
         recalc();
+        $('#emp-table tbody tr:last .person-name').trigger('focus');
     });
 
-    $('#btn-clear-rows').on('click', function(){
-        if (!$('#emp-table tbody tr').length) return;
-        $('#emp-table tbody').empty();
-        recalc();
-    });
-
-    $('#btn-raise').on('click', function(){
-        var pct = parseFloat($('#raise-pct').val()) || 0;
-        if (!pct) return;
-        $('#emp-table tbody .rate').each(function(){
-            var v = parseFloat(this.value) || 0;
-            this.value = fmt(v * (1 + pct / 100));
-        });
-        recalc();
-    });
-
-    $('#emp-table').on('input', '.rate, .days, .months', recalc);
-    $('#emp-table').on('click', '.remove-row', function(){ $(this).closest('tr').remove(); recalc(); });
-
-    $('#btn-spread').on('click', function(){
-        var total = parseFloat($('#planorder-order_price').val()) || recalc();
-        if (total <= 0) return;
-        var per = Math.floor((total / 12) * 100) / 100, acc = 0;
-        var order = [10,11,12,1,2,3,4,5,6,7,8,9];
-        order.forEach(function(m, idx){
-            var val = (idx < 11) ? per : (total - acc);
-            $('#planorder-month_' + m).val(fmt(val));
-            if (idx < 11) acc += per;
-        });
-    });
-
+    $('#emp-table').on('input', '.annual-budget', recalc);
+    $('#emp-table').on('click', '.remove-row', function () { $(this).closest('tr').remove(); recalc(); });
     recalc();
 })();
 JS;

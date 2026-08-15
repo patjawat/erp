@@ -5,6 +5,7 @@
 /** @var app\modules\plan\models\PlanOrderItem[] $items */
 /** @var int $lockDept */
 /** @var string $lockDeptName */
+/** @var array<int,string> $departmentOptions */
 
 $this->title = 'แก้ไขแผนบุคลากรของหน่วยงาน';
 $this->params['breadcrumbs'][] = ['label' => 'แผนหน่วยงาน', 'url' => ['index']];
@@ -24,4 +25,5 @@ $this->params['breadcrumbs'][] = 'แก้ไขแผนบุคลากร'
     'items'        => $items,
     'lockDept'     => $lockDept,
     'lockDeptName' => $lockDeptName,
+    'departmentOptions' => $departmentOptions,
 ]) ?>

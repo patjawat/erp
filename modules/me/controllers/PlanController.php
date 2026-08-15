@@ -13,6 +13,7 @@ use app\components\UserHelper;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\components\PlanHelper;
+use app\modules\plan\services\PersonnelBudgetCalculator;
 
 /**
  * PlanController — หัวหน้าหน่วยงานจัดทำ/ติดตามแผนของหน่วยงานตนเอง (/me/plan)
@@ -26,10 +27,7 @@ class PlanController extends Controller
     /** @var int[] id ของหน่วยงานที่ผู้ใช้ปัจจุบันเป็นหัวหน้า */
     private $ledOrgIds = [];
 
-    /** ประเภทการจ้างที่คิดค่าจ้างเป็นรายวัน/รายคาบ (employee_type.id) */
-    const DAILY_EMP_TYPES = [5];
-
-    /** วันทำงานต่อเดือนที่ใช้คำนวณค่าจ้างรายวันเป็นค่าเริ่มต้น */
+    /** จำนวนวันทำงานที่ใช้ตั้งต้นวงเงินทั้งปีของลูกจ้างรายวัน */
     const DEFAULT_WORK_DAYS = 22;
 
     public function behaviors()
@@ -40,6 +38,7 @@ class PlanController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                     'submit' => ['POST'],
+                    'pull-employees' => ['POST'],
                 ],
             ],
         ]);
@@ -377,10 +376,7 @@ class PlanController extends Controller
             $model->emp_id = (string) $this->me->id;
 
             $postItems = (array) $this->request->post('items', []);
-            if (empty($model->plan_item_id)) {
-                $model->addError('plan_item_id', 'กรุณาเลือกรายการค่าใช้จ่าย');
-            } elseif ($model->save(false)) {
-                $this->savePersonnelItems($model, $postItems);
+            if ($this->validatePersonnelPlan($model, $postItems) && $this->persistPersonnelPlan($model, $postItems)) {
                 Yii::$app->session->setFlash('success', 'บันทึกแผนบุคลากรเรียบร้อย');
                 return $this->redirect(['index', 'thai_year' => $model->thai_year]);
             }
@@ -393,6 +389,7 @@ class PlanController extends Controller
             'items'        => $items,
             'lockDept'     => $this->ledOrgIds[0],
             'lockDeptName' => $orgs ? reset($orgs)->name : '',
+            'departmentOptions' => $this->ledDepartmentOptions(),
         ]);
     }
 
@@ -408,12 +405,12 @@ class PlanController extends Controller
             }
             $model->plan_group_id = 'personnel';
 
-            if ($model->save(false)) {
-                $this->savePersonnelItems($model, (array) $this->request->post('items', []));
+            $postItems = (array) $this->request->post('items', []);
+            if ($this->validatePersonnelPlan($model, $postItems) && $this->persistPersonnelPlan($model, $postItems)) {
                 Yii::$app->session->setFlash('success', 'แก้ไขแผนบุคลากรเรียบร้อย');
                 return $this->redirect(['index', 'thai_year' => $model->thai_year]);
             }
-            $items = $model->getPlanItems()->orderBy(['id' => SORT_ASC])->all();
+            $items = $this->itemsFromPost($postItems);
         }
 
         return $this->render('update_personnel', [
@@ -421,27 +418,43 @@ class PlanController extends Controller
             'items'        => $items,
             'lockDept'     => (int) $model->department_id,
             'lockDeptName' => $this->deptName((int) $model->department_id),
+            'departmentOptions' => $this->ledDepartmentOptions(),
         ]);
     }
 
     /**
-     * ดึงรายชื่อบุคลากรของหน่วยงาน (กรองตามประเภทการจ้าง) สำหรับเติมตารางแผนบุคลากร
-     * อัตรารายวัน/รายคาบ: คิดเป็นต่อเดือนด้วยจำนวนวันทำงานที่ผู้ใช้กำหนด (ค่าเริ่มต้น 22 วัน)
+     * ดึงรายชื่อบุคลากรตามประเภทค่าใช้จ่ายที่เลือก
      */
     public function actionPullEmployees()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $dept  = (int) $this->request->post('department_id');
-        $year  = (int) $this->request->post('thai_year');
-        $types = array_values(array_filter(array_map('intval', (array) $this->request->post('employee_type_ids', []))));
+        $planItemId = trim((string) $this->request->post('plan_item_id'));
         $includeChildren = (int) $this->request->post('include_children');
-        $days = (float) $this->request->post('days_per_month', self::DEFAULT_WORK_DAYS);
-        if ($days <= 0) {
-            $days = self::DEFAULT_WORK_DAYS;
-        }
+        $allTypesInput = $this->request->post('all_employee_types', null);
+        $requestedTypes = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) $this->request->post('employee_type_ids', [])
+        ))));
 
         if (!in_array($dept, $this->ledOrgIds, true)) {
             return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์ในหน่วยงานนี้'];
+        }
+
+        $allEmployeeTypes = $allTypesInput === null
+            ? self::planItemAppliesToAllEmployees($planItemId)
+            : (bool) $allTypesInput;
+        $types = $requestedTypes ?: self::employeeTypesForPlanItem($planItemId);
+        if (!$allEmployeeTypes && !$types) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกประเภทบุคลากรอย่างน้อย 1 ประเภท หรือเลือกทุกประเภท'];
+        }
+        if (!$allEmployeeTypes) {
+            $activeTypes = (new \yii\db\Query())
+                ->select('id')->from('employee_type')->where(['active' => 1, 'id' => $types])->column();
+            $types = array_map('intval', $activeTypes);
+            if (!$types) {
+                return ['status' => 'error', 'message' => 'ไม่พบประเภทบุคลากรที่ใช้งานอยู่ตามเงื่อนไข'];
+            }
         }
 
         [$deptIds, $childCount] = $this->deptScope($dept, (bool) $includeChildren);
@@ -454,7 +467,6 @@ class PlanController extends Controller
                 'type_id'   => 'e.employee_type_id',
                 'type_name' => "COALESCE(t.title, '')",
                 'salary'    => 'e.salary',
-                'end_date'  => 'e.end_date',
             ])
             ->from(['e' => 'employees'])
             ->leftJoin(['p' => 'employee_position'], 'p.id = e.employee_position_id')
@@ -462,67 +474,52 @@ class PlanController extends Controller
             ->where(['e.department' => $deptIds])
             ->andWhere(['e.status' => '1'])
             ->orderBy(['e.employee_type_id' => SORT_ASC, 'e.fname' => SORT_ASC]);
-        if ($types) {
+        if (!$allEmployeeTypes) {
             $q->andWhere(['e.employee_type_id' => $types]);
         }
 
         $rows = [];
         foreach ($q->all() as $r) {
             $typeId = (int) $r['type_id'];
-            $isDaily = in_array($typeId, self::DAILY_EMP_TYPES, true);
-            $months = $this->monthsInPlanYear($year, $r['end_date']);
+            $monthlyRate = max(0, (float) $r['salary']);
+            $annualBudget = $typeId === 5
+                ? $monthlyRate * self::DEFAULT_WORK_DAYS * 12
+                : $monthlyRate * 12;
             $rows[] = [
                 'emp_id'    => (int) $r['id'],
                 'name'      => $r['name'],
                 'position'  => $r['position'],
                 'type_id'   => $typeId,
                 'type_name' => $r['type_name'],
-                'is_daily'  => $isDaily ? 1 : 0,
-                'rate'      => (float) $r['salary'],           // ต่อเดือน หรือ ต่อวัน (แล้วแต่ประเภท)
-                'days'      => $isDaily ? $days : 1,           // ตัวคูณวันทำงาน/เดือน
-                'months'    => $months,
-                'note'      => $months < 12 ? 'สัญญาสิ้นสุด ' . substr((string) $r['end_date'], 0, 10) : '',
+                'annual_budget' => round($annualBudget, 2),
+                'monthly_average' => round($annualBudget / 12, 2),
             ];
         }
 
         return ['status' => 'success', 'count' => count($rows), 'child_count' => $childCount, 'items' => $rows];
     }
 
-    /** จำนวนเดือนที่อยู่ในปีงบ (ลดให้อัตโนมัติถ้าสัญญาสิ้นสุดกลางปี) */
-    private function monthsInPlanYear($thaiYear, $endDate)
+    /** ประเภทบุคลากรที่ตรงกับประเภทค่าใช้จ่าย รองรับทั้งรหัส catalog ใหม่และรหัสเดิม */
+    public static function employeeTypesForPlanItem(string $planItemId): array
     {
-        if (!$thaiYear || empty($endDate) || $endDate === '0000-00-00') {
-            return 12;
-        }
-        $startTs = mktime(0, 0, 0, 10, 1, $thaiYear - 543 - 1);   // 1 ต.ค. ปีก่อนหน้า
-        $endTs   = mktime(0, 0, 0, 9, 30, $thaiYear - 543);       // 30 ก.ย. ปีงบ
-        $ts = strtotime((string) $endDate);
-        if (!$ts || $ts >= $endTs) {
-            return 12;
-        }
-        if ($ts < $startTs) {
-            return 0;
-        }
-        $months = ((int) date('Y', $ts) - (int) date('Y', $startTs)) * 12
-            + ((int) date('n', $ts) - (int) date('n', $startTs)) + 1;
-        return max(0, min(12, $months));
+        $map = [
+            'P1' => [3], 'PER_01_01' => [3],
+            'P2' => [4], 'PER_01_02' => [4],
+            'P3' => [5], 'PER_01_03' => [5],
+            'P8' => [1], 'PER_02_03' => [1],
+            'P10' => [1, 2], 'PER_02_05' => [1, 2],
+        ];
+        return $map[$planItemId] ?? [];
     }
 
-    /** ประเภทการจ้างที่แนะนำสำหรับแต่ละรายการค่าใช้จ่าย (ว่าง = ทุกประเภท) — หัวหน้าปรับเองได้ในหน้าจอ */
-    public static function suggestedEmpTypes()
+    /** ค่า ฉ.11 จ่ายให้บุคลากรทุกประเภทที่ยังปฏิบัติงานในหน่วยงาน */
+    public static function planItemAppliesToAllEmployees(string $planItemId): bool
     {
-        return [
-            'P1'  => [3],       // พกส.
-            'P2'  => [4],       // ลูกจ้างชั่วคราวรายเดือน
-            'P3'  => [5],       // ลูกจ้างรายวัน/รายคาบ
-            'P8'  => [1],       // ไม่ทำเวชปฏิบัติส่วนตัว — ข้าราชการ
-            'P9'  => [1, 2],    // ฉ.11
-            'P10' => [1, 2],    // พ.ต.ส.
-        ];
+        return in_array($planItemId, ['P9', 'PER_02_04'], true);
     }
 
     /** บันทึกรายชื่อบุคลากรของแผน (แทนที่ชุดเดิม) + ปรับยอดรวมตามรายการ */
-    private function savePersonnelItems(PlanOrder $model, array $postItems)
+    private function savePersonnelItems(PlanOrder $model, array $postItems): float
     {
         PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
         $total = 0.0;
@@ -530,35 +527,31 @@ class PlanController extends Controller
             if (trim((string) ($it['item_name'] ?? '')) === '') {
                 continue;
             }
-            $rate   = (float) ($it['rate'] ?? 0);
-            $days   = (float) ($it['days'] ?? 1);
-            $months = (int) ($it['qty'] ?? 0);
-            $perMonth = round($rate * ($days > 0 ? $days : 1), 2);
-            $line = round($perMonth * $months, 2);
-            $total += $line;
+            $annualBudget = max(0, round((float) ($it['annual_budget'] ?? 0), 2));
+            $allocation = PersonnelBudgetCalculator::allocate($annualBudget);
+            $total += $allocation['total'];
 
             $pi = new PlanOrderItem();
             $pi->plan_order_id = $model->id;
             $pi->title       = (string) ($it['position'] ?? '');
             $pi->item_id     = (string) ($it['emp_id'] ?? '');
             $pi->item_name   = $it['item_name'];
-            $pi->qty         = $months;
-            $pi->unit_price  = $perMonth;
-            $pi->total_price = $line;
+            $pi->qty         = 12;
+            $pi->unit_price  = $allocation['monthly_average'];
+            $pi->total_price = $allocation['total'];
             $pi->data_json   = [
                 'emp_id'          => $it['emp_id'] ?? null,
                 'position'        => $it['position'] ?? '',
                 'employee_type_id' => $it['type_id'] ?? null,
-                'rate'            => $rate,
-                'days'            => $days,
+                'type_name'       => (string) ($it['type_name'] ?? ''),
+                'annual_budget'   => $allocation['total'],
+                'monthly_average' => $allocation['monthly_average'],
             ];
-            $pi->save(false);
+            if (!$pi->save(false)) {
+                throw new \RuntimeException('บันทึกรายชื่อบุคลากรไม่สำเร็จ');
+            }
         }
-
-        if ($total > 0) {
-            $model->order_price = $total;
-            $model->save(false);
-        }
+        return round($total, 2);
     }
 
     /** แปลง items ที่ post กลับมาเป็น object ชั่วคราว (ใช้ตอน render ซ้ำเมื่อฟอร์มไม่ผ่าน) */
@@ -573,18 +566,112 @@ class PlanController extends Controller
             $pi->item_name  = $it['item_name'];
             $pi->title      = (string) ($it['position'] ?? '');
             $pi->item_id    = (string) ($it['emp_id'] ?? '');
-            $pi->qty        = (int) ($it['qty'] ?? 0);
-            $pi->unit_price = (float) ($it['rate'] ?? 0) * (float) ($it['days'] ?? 1);
+            $annualBudget = max(0, (float) ($it['annual_budget'] ?? 0));
+            $pi->qty        = 12;
+            $pi->unit_price = round($annualBudget / 12, 2);
+            $pi->total_price = round($annualBudget, 2);
             $pi->data_json  = [
                 'emp_id'          => $it['emp_id'] ?? null,
                 'position'        => $it['position'] ?? '',
                 'employee_type_id' => $it['type_id'] ?? null,
-                'rate'            => (float) ($it['rate'] ?? 0),
-                'days'            => (float) ($it['days'] ?? 1),
+                'type_name'       => (string) ($it['type_name'] ?? ''),
+                'annual_budget'   => round($annualBudget, 2),
+                'monthly_average' => round($annualBudget / 12, 2),
             ];
             $items[] = $pi;
         }
         return $items;
+    }
+
+    private function validatePersonnelPlan(PlanOrder $model, array $postItems): bool
+    {
+        if (empty($model->plan_category_id)) {
+            $model->addError('plan_category_id', 'กรุณาเลือกรายการคำขอบุคลากร');
+        }
+        if (empty($model->plan_item_id)) {
+            $model->addError('plan_item_id', 'กรุณาเลือกประเภทค่าใช้จ่าย');
+        }
+        if ($model->plan_category_id && $model->plan_item_id) {
+            $actualCategory = (new \yii\db\Query())
+                ->select('category_id')->from('categorise')
+                ->where(['name' => 'plan_item', 'code' => (string) $model->plan_item_id])
+                ->scalar();
+            if ((string) $actualCategory !== (string) $model->plan_category_id) {
+                $model->addError('plan_item_id', 'ประเภทค่าใช้จ่ายไม่ตรงกับรายการคำขอบุคลากร');
+            }
+        }
+
+        $validItems = [];
+        $employeeIds = [];
+        foreach ($postItems as $item) {
+            if (trim((string) ($item['item_name'] ?? '')) === '') {
+                continue;
+            }
+            if (!is_numeric($item['annual_budget'] ?? null) || (float) $item['annual_budget'] < 0) {
+                $model->addError('plan_item_id', 'วงเงินประมาณการทั้งปีต้องเป็นศูนย์หรือมากกว่า');
+                continue;
+            }
+            $employeeId = trim((string) ($item['emp_id'] ?? ''));
+            if ($employeeId !== '' && isset($employeeIds[$employeeId])) {
+                $model->addError('plan_item_id', 'พบรายชื่อบุคลากรซ้ำในแผน');
+                continue;
+            }
+            if ($employeeId !== '') {
+                $employeeIds[$employeeId] = true;
+            }
+            $validItems[] = $item;
+        }
+        if (!$validItems) {
+            $model->addError('plan_item_id', 'กรุณาเพิ่มบุคลากรอย่างน้อย 1 ราย');
+        }
+
+        $duplicateQuery = PlanOrder::find()
+            ->where([
+                'thai_year' => (int) $model->thai_year,
+                'department_id' => (int) $model->department_id,
+                'plan_group_id' => 'personnel',
+                'plan_item_id' => (string) $model->plan_item_id,
+                'deleted_at' => null,
+            ]);
+        if (!$model->isNewRecord && $model->id) {
+            $duplicateQuery->andWhere(['<>', 'id', $model->id]);
+        }
+        $duplicate = $duplicateQuery->exists();
+        if ($duplicate) {
+            $model->addError('plan_item_id', 'มีแผนของหน่วยงานและประเภทค่าใช้จ่ายนี้แล้ว กรุณาแก้ไขแผนเดิม');
+        }
+        return !$model->hasErrors();
+    }
+
+    private function persistPersonnelPlan(PlanOrder $model, array $postItems): bool
+    {
+        $wasNewRecord = $model->isNewRecord;
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if (!$model->save(false)) {
+                throw new \RuntimeException('บันทึกแผนไม่สำเร็จ');
+            }
+            $total = $this->savePersonnelItems($model, $postItems);
+            $allocation = PersonnelBudgetCalculator::allocate($total);
+            $model->order_price = $allocation['total'];
+            foreach ($allocation['months'] as $month => $amount) {
+                $model->{'month_' . $month} = $amount;
+            }
+            if (!$model->save(false)) {
+                throw new \RuntimeException('บันทึกยอดรายเดือนไม่สำเร็จ');
+            }
+            $transaction->commit();
+            return true;
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            if ($wasNewRecord) {
+                $model->setIsNewRecord(true);
+                $model->id = null;
+            }
+            Yii::error($e, __METHOD__);
+            $model->addError('plan_item_id', 'บันทึกแผนไม่สำเร็จ กรุณาลองใหม่');
+            return false;
+        }
     }
 
     /** ชื่อหน่วยงานจากรายการที่ตนเป็นหัวหน้า */
@@ -596,6 +683,15 @@ class PlanController extends Controller
             }
         }
         return '';
+    }
+
+    private function ledDepartmentOptions(): array
+    {
+        $options = [];
+        foreach ($this->me->ledOrganizations() as $organization) {
+            $options[(int) $organization->id] = (string) $organization->name;
+        }
+        return $options;
     }
 
     /** ขอบเขตหน่วยงาน (ตัวเอง + หน่วยย่อยในผัง ถ้าเลือก) => [deptIds, childCount] */
