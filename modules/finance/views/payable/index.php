@@ -5,7 +5,7 @@ use yii\helpers\Html;
 use app\modules\finance\models\FinancePayable;
 
 $this->title = 'ทะเบียนคุมเจ้าหนี้';
-$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title');
 echo Html::encode($this->title);
@@ -14,7 +14,7 @@ $this->beginBlock('sub-title');
 echo 'รายการเจ้าหนี้ที่สร้างจากเอกสารผ่านการตรวจสอบแล้ว';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'payable']);
+echo $this->render('@app/modules/accounting/menu', ['active' => 'payable']);
 $this->endBlock();
 ?>
 

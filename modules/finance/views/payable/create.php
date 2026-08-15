@@ -5,8 +5,8 @@ use yii\widgets\ActiveForm;
 
 $isUpdate = !$model->isNewRecord;
 $this->title = $isUpdate ? 'แก้ไขร่างทะเบียนเจ้าหนี้' : 'สร้างร่างทะเบียนเจ้าหนี้';
-$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
-$this->params['breadcrumbs'][] = ['label' => 'กล่องรับงานบัญชี', 'url' => ['/finance/inbox']];
+$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'กล่องรับงานบัญชี', 'url' => ['/accounting/inbox']];
 $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title');
 echo Html::encode($this->title);
@@ -15,7 +15,7 @@ $this->beginBlock('sub-title');
 echo Html::encode('เอกสารต้นทาง ' . ($inbox->source_document_no ?: $inbox->source_id));
 $this->endBlock();
 $this->beginBlock('page-action');
-echo Html::a('<i class="bi bi-arrow-left me-1" aria-hidden="true"></i>กลับรายการตรวจสอบ', ['/finance/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-outline-secondary']);
+echo Html::a('<i class="bi bi-arrow-left me-1" aria-hidden="true"></i>กลับรายการตรวจสอบ', ['/accounting/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-outline-secondary']);
 $this->endBlock();
 ?>
 
@@ -52,7 +52,7 @@ $this->endBlock();
                             : '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>สร้างร่างทะเบียนเจ้าหนี้',
                         ['class' => 'btn btn-primary']
                     ) ?>
-                    <?= Html::a('ยกเลิก', ['/finance/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-outline-secondary']) ?>
+                    <?= Html::a('ยกเลิก', ['/accounting/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-outline-secondary']) ?>
                 </div>
                 <?php ActiveForm::end(); ?>
             </div>

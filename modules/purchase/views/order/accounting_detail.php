@@ -31,7 +31,7 @@ $inbox = FinanceInbox::find()->where([
                 </div>
                 <?= Html::a(
                     '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายการที่ส่ง',
-                    ['/finance/inbox/view', 'id' => $inbox->id],
+                    ['/accounting/inbox/view', 'id' => $inbox->id],
                     ['class' => 'btn btn-outline-primary']
                 ) ?>
             </div>
@@ -45,7 +45,7 @@ $inbox = FinanceInbox::find()->where([
             </div>
             <?= Html::a(
                 '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งบัญชี',
-                ['/finance/inbox/receive-purchase', 'id' => $model->id],
+                ['/accounting/inbox/receive-purchase', 'id' => $model->id],
                 [
                     'class' => 'btn btn-primary',
                     'data-method' => 'post',

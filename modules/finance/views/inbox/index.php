@@ -6,7 +6,7 @@ use yii\helpers\Url;
 use app\modules\finance\models\FinanceInbox;
 
 $this->title = 'กล่องรับงานบัญชี';
-$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $this->beginBlock('page-title');
@@ -16,7 +16,7 @@ $this->beginBlock('sub-title');
 echo 'สำเนารายการจากระบบต้นทางสำหรับตรวจสอบก่อนตั้งเจ้าหนี้และลงบัญชี';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'inbox']);
+echo $this->render('@app/modules/accounting/menu', ['active' => 'inbox']);
 $this->endBlock();
 
 $total = array_sum(array_map(static fn($row) => (int) $row['count'], $counts));

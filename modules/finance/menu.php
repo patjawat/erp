@@ -7,8 +7,6 @@ use yii\helpers\Url;
 $active = $active ?? '';
 $items = [
     ['key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/finance/dashboard']],
-    ['key' => 'inbox', 'label' => 'กล่องรับงานบัญชี', 'icon' => 'bi-inbox', 'url' => ['/finance/inbox']],
-    ['key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['key' => 'budget', 'label' => 'งบประมาณ', 'icon' => 'bi-pie-chart', 'url' => ['/finance/dashboard', '#' => 'budget-overview']],
     ['key' => 'voucher', 'label' => 'เบิกจ่าย', 'icon' => 'bi-file-earmark-check', 'url' => ['/finance/voucher']],
     ['key' => 'loan', 'label' => 'เงินยืม', 'icon' => 'bi-person-vcard', 'url' => ['/finance/loan']],

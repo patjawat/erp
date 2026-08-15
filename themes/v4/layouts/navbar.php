@@ -88,6 +88,15 @@ $menuItems = [
     ],
     [
         // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
+        // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC accounting โดยเฉพาะ
+        'show' => !Yii::$app->user->isGuest,
+        'label' => 'บัญชี',
+        'url' => ['/accounting/dashboard'],
+        'active' => 'accounting',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path></svg>'
+    ],
+    [
+        // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
         // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC finance โดยเฉพาะ
         'show' => !Yii::$app->user->isGuest,
         'label' => 'การเงิน',

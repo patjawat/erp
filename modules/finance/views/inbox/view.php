@@ -5,7 +5,7 @@ use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinanceInboxReview;
 
 $this->title = $model->source_document_no ?: ('รายการ #' . $model->id);
-$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
 $this->params['breadcrumbs'][] = ['label' => 'กล่องรับงานบัญชี', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -150,14 +150,14 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                         <p class="text-body-secondary">สร้างร่างทะเบียนเจ้าหนี้จากรายการนี้แล้ว</p>
                         <?= Html::a(
                             '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดู ' . Html::encode($model->payable->payable_no),
-                            ['/finance/payable/view', 'id' => $model->payable->id],
+                            ['/accounting/payable/view', 'id' => $model->payable->id],
                             ['class' => 'btn btn-outline-primary']
                         ) ?>
                     <?php else: ?>
                         <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนสร้างร่าง</p>
                         <?= Html::a(
                             '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>สร้างร่างทะเบียนเจ้าหนี้',
-                            ['/finance/payable/create', 'inbox_id' => $model->id],
+                            ['/accounting/payable/create', 'inbox_id' => $model->id],
                             ['class' => 'btn btn-primary']
                         ) ?>
                     <?php endif; ?>

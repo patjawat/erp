@@ -5,7 +5,7 @@ use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
 
 $this->title = $model->payable_no;
-$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนคุมเจ้าหนี้', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title');
@@ -78,7 +78,7 @@ $this->endBlock();
                     <dt class="col-sm-4 text-body-secondary">วันที่รับวางบิล</dt><dd class="col-sm-8"><?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">วันเครดิต</dt><dd class="col-sm-8"><?= number_format($model->credit_days) ?> วัน</dd>
                     <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') ?></dd>
-                    <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/finance/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/accounting/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>
                 </dl>
             </div>
         </section>

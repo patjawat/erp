@@ -3,7 +3,7 @@
 namespace app\modules\finance;
 
 /**
- * accounting module definition class
+ * Finance module definition class.
  */
 class Module extends \yii\base\Module
 {
