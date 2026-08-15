@@ -13,6 +13,7 @@ use yii\web\ForbiddenHttpException;
 use app\modules\plan\models\PlanItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderSearch;
+use app\modules\plan\components\PlanHelper;
 
 /**
  * PersonnelController implements the CRUD actions for PlanOrder model.
@@ -135,7 +136,8 @@ class PersonnelController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        if (!in_array($model->status, ['draft', 'reject'], true)) {
+        $editableStatuses = PlanHelper::canAdjust($model->thai_year) ? ['draft', 'reject', 'renew'] : ['draft', 'reject'];
+        if (!in_array($model->status, $editableStatuses, true)) {
             throw new ForbiddenHttpException('แผนที่ส่งขออนุมัติหรืออนุมัติแล้ว แก้ไขไม่ได้');
         }
            $items = $model->getPlanItems()->all(); // โหลดรายการเดิม

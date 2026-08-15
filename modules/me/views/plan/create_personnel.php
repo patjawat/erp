@@ -26,4 +26,5 @@ $this->params['breadcrumbs'][] = 'จัดทำแผนบุคลากร'
     'lockDept'     => $lockDept,
     'lockDeptName' => $lockDeptName,
     'departmentOptions' => $departmentOptions,
+    'baselineRevision' => null,
 ]) ?>

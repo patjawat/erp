@@ -6,6 +6,7 @@
 /** @var int $lockDept */
 /** @var string $lockDeptName */
 /** @var array<int,string> $departmentOptions */
+/** @var app\modules\plan\models\PlanOrderRevision|null $baselineRevision */
 
 $this->title = 'แก้ไขแผนบุคลากรของหน่วยงาน';
 $this->params['breadcrumbs'][] = ['label' => 'แผนหน่วยงาน', 'url' => ['index']];
@@ -26,4 +27,5 @@ $this->params['breadcrumbs'][] = 'แก้ไขแผนบุคลากร'
     'lockDept'     => $lockDept,
     'lockDeptName' => $lockDeptName,
     'departmentOptions' => $departmentOptions,
+    'baselineRevision' => $baselineRevision,
 ]) ?>

@@ -14,6 +14,7 @@ use app\modules\me\controllers\PlanController;
 /** @var int $lockDept */
 /** @var string $lockDeptName */
 /** @var array<int,string> $departmentOptions */
+/** @var app\modules\plan\models\PlanOrderRevision|null $baselineRevision */
 
 $categories = (new Query())
     ->select(['code', 'title'])
@@ -71,6 +72,20 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
 
 <div class="card bg-body border shadow-sm">
     <div class="card-body p-3 p-lg-4">
+        <?php if ($baselineRevision): ?>
+            <div class="alert alert-info border mb-4" role="status">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                    <div>
+                        <div class="fw-semibold"><i class="fa-solid fa-clock-rotate-left me-2"></i>กำลังปรับแผนครึ่งปี รอบที่ <?= (int) $baselineRevision->cycle_no ?></div>
+                        <div class="small">ข้อมูลแผนก่อนปรับครบ 12 เดือนถูกเก็บไว้แล้ว</div>
+                    </div>
+                    <div class="d-flex gap-4 text-end">
+                        <div><div class="small">ยอดก่อนปรับ</div><strong><?= number_format((float) $baselineRevision->order_price, 2) ?></strong></div>
+                        <div><div class="small">ผลต่างปัจจุบัน</div><strong id="adjustment-difference">0.00</strong></div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
         <?= $form->field($model, 'plan_group_id')->hiddenInput()->label(false) ?>
 
         <div class="row g-3 mb-2">
@@ -273,11 +288,13 @@ CSS);
 $pullUrl = Url::to(['pull-employees']);
 $expensesJson = Json::htmlEncode($expensesByCategory);
 $typeNamesJson = Json::htmlEncode($employeeTypeNames);
+$baselineTotal = $baselineRevision ? (float) $baselineRevision->order_price : 'null';
 $js = <<<JS
 (function () {
     var expensesByCategory = $expensesJson;
     var employeeTypeNames = $typeNamesJson;
     var rowIndex = $('#emp-table tbody tr').length;
+    var baselineTotal = $baselineTotal;
 
     function money(value) {
         return (Math.round((Number(value) || 0) * 100) / 100).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -319,6 +336,10 @@ $js = <<<JS
         $('#row-count').text($('#emp-table tbody tr').length);
         $('#grand-total').text(money(total));
         $('#monthly-total').text(money(total / 12));
+        if (baselineTotal !== null) {
+            var difference = total - baselineTotal;
+            $('#adjustment-difference').text((difference > 0 ? '+' : '') + money(difference));
+        }
         $('#personnel-empty').toggleClass('d-none', $('#emp-table tbody tr').length > 0);
         $('#save-personnel-plan').prop('disabled', $('#emp-table tbody tr').length === 0);
     }

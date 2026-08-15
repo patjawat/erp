@@ -7,12 +7,24 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\Categorise;
 use app\modules\plan\components\PlanHelper;
+use yii\web\ForbiddenHttpException;
 
 /**
  * ตั้งค่ารอบการทำแผน (planning period) — ผู้ดูแลแผน (role plan / admin) เปิด/ปิด/เปลี่ยน phase
  */
 class PlanPeriodController extends Controller
 {
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+        if (!Yii::$app->user->can('plan') && !Yii::$app->user->can('admin')) {
+            throw new ForbiddenHttpException('เฉพาะเจ้าหน้าที่แผนหรือผู้ดูแลระบบเท่านั้นที่กำหนดรอบทำแผนได้');
+        }
+        return true;
+    }
+
     public function behaviors()
     {
         return array_merge(parent::behaviors(), [

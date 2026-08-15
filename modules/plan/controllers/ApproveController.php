@@ -9,6 +9,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\modules\plan\models\PlanOrder;
+use app\modules\plan\services\PlanRevisionService;
 
 /**
  * ApproveController — อนุมัติ/ไม่อนุมัติแผนของหน่วยงาน (Part D)
@@ -82,9 +83,24 @@ class ApproveController extends Controller
     {
         $model = $this->findModel($id);
         if ($model->status === 'submit') {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+            $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
             $model->status = 'approve';
             $this->stampDecision($model, null);
-            $model->save(false);
+            if (!$model->save(false)) {
+                throw new \RuntimeException('บันทึกผลอนุมัติไม่สำเร็จ');
+            }
+            $isAdjust = ($workflow['workflow_cycle'] ?? '') === 'adjust';
+            $cycle = $isAdjust ? (int) ($workflow['adjustment_cycle'] ?? 1) : 0;
+            PlanRevisionService::capture($model, $cycle, $isAdjust ? PlanRevisionService::ADJUSTED : PlanRevisionService::INITIAL);
+            $transaction->commit();
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                Yii::error($e, __METHOD__);
+                Yii::$app->session->setFlash('error', 'อนุมัติแผนไม่สำเร็จ กรุณาลองใหม่');
+                return $this->redirect(['index', 'thai_year' => $model->thai_year, 'status' => 'submit']);
+            }
             Yii::$app->session->setFlash('success', 'อนุมัติแผนเรียบร้อย');
         }
         return $this->redirect(['index', 'thai_year' => $model->thai_year, 'status' => 'submit']);

@@ -13,7 +13,7 @@ class PersonnelPlanStatusLockTest extends Unit
         $centralActions = file_get_contents(__DIR__ . '/../../../../modules/plan/views/personnel/action.php');
 
         $this->assertStringContainsString("in_array(\$model->status, ['draft', 'reject'], true)", $meController);
-        $this->assertStringContainsString("in_array(\$model->status, ['draft', 'reject'], true)", $centralController);
+        $this->assertStringContainsString("if (!in_array(\$model->status, \$editableStatuses, true))", $centralController);
         $this->assertStringContainsString("\$model->status !== 'draft'", $centralController);
         $this->assertStringContainsString("in_array(\$model->status, ['draft', 'reject'], true)", $centralActions);
     }

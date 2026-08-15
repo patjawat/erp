@@ -12,8 +12,10 @@ use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderItem;
+use app\modules\plan\models\PlanOrderRevision;
 use app\modules\plan\components\PlanHelper;
 use app\modules\plan\services\PersonnelBudgetCalculator;
+use app\modules\plan\services\PlanRevisionService;
 
 /**
  * PlanController — หัวหน้าหน่วยงานจัดทำ/ติดตามแผนของหน่วยงานตนเอง (/me/plan)
@@ -38,6 +40,7 @@ class PlanController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                     'submit' => ['POST'],
+                    'adjust' => ['POST'],
                     'pull-employees' => ['POST'],
                 ],
             ],
@@ -398,6 +401,14 @@ class PlanController extends Controller
     {
         $origDept = (int) $model->department_id;
         $items = $model->getPlanItems()->orderBy(['id' => SORT_ASC])->all();
+        $planJson = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+        $baselineRevision = !empty($planJson['adjustment_cycle'])
+            ? PlanOrderRevision::findOne([
+                'plan_order_id' => $model->id,
+                'cycle_no' => (int) $planJson['adjustment_cycle'],
+                'version_type' => PlanRevisionService::BEFORE_ADJUST,
+            ])
+            : null;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             if (!in_array((int) $model->department_id, $this->ledOrgIds, true)) {
@@ -419,6 +430,7 @@ class PlanController extends Controller
             'lockDept'     => (int) $model->department_id,
             'lockDeptName' => $this->deptName((int) $model->department_id),
             'departmentOptions' => $this->ledDepartmentOptions(),
+            'baselineRevision' => $baselineRevision,
         ]);
     }
 
@@ -769,10 +781,13 @@ class PlanController extends Controller
     {
         $model = $this->findModel($id);
 
-        if (!in_array($model->status, ['draft', 'reject'], true)) {
+        $editableStatuses = PlanHelper::canAdjust($model->thai_year) ? ['draft', 'reject', 'renew'] : ['draft', 'reject'];
+        if (!in_array($model->status, $editableStatuses, true)) {
             throw new ForbiddenHttpException('แผนที่ส่งขออนุมัติหรืออนุมัติแล้ว แก้ไขไม่ได้');
         }
-        if (!PlanHelper::canEdit($model->thai_year)) {
+        $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+        $canEditAdjustment = ($workflow['workflow_cycle'] ?? '') === 'adjust' && PlanHelper::canAdjust($model->thai_year);
+        if (!PlanHelper::canEdit($model->thai_year) && !$canEditAdjustment) {
             throw new ForbiddenHttpException('รอบทำแผนปิดการแก้ไขแล้ว (ติดต่อผู้ดูแลแผน)');
         }
 
@@ -803,12 +818,36 @@ class PlanController extends Controller
     public function actionSubmit($id)
     {
         $model = $this->findModel($id);
-        if (in_array($model->status, ['draft', 'reject'], true) && PlanHelper::canAdd($model->thai_year)) {
+        $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+        $normalSubmit = in_array($model->status, ['draft', 'reject'], true) && PlanHelper::canAdd($model->thai_year);
+        $adjustSubmit = in_array($model->status, ['renew', 'reject'], true)
+            && ($workflow['workflow_cycle'] ?? '') === 'adjust'
+            && PlanHelper::canAdjust($model->thai_year);
+        if ($normalSubmit || $adjustSubmit) {
             $model->status = 'submit';
             $model->save(false);
             Yii::$app->session->setFlash('success', 'ส่งขออนุมัติแล้ว');
         }
         return $this->redirect(['index', 'thai_year' => $model->thai_year]);
+    }
+
+    /** เปิดแผนอนุมัติเดิมให้แก้ไขในรอบปรับแผน พร้อมเก็บตัวเลขเดิมครบ 12 เดือน */
+    public function actionAdjust($id)
+    {
+        $model = $this->findModel($id);
+        if ($model->status !== 'approve' || !PlanHelper::canAdjust($model->thai_year)) {
+            throw new ForbiddenHttpException('ขณะนี้ไม่อยู่ในรอบปรับแผน หรือแผนยังไม่ได้อนุมัติ');
+        }
+        $cycle = PlanRevisionService::nextCycle($model);
+        PlanRevisionService::capture($model, $cycle, PlanRevisionService::BEFORE_ADJUST);
+        $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+        $json['adjustment_cycle'] = $cycle;
+        $json['workflow_cycle'] = 'adjust';
+        $model->data_json = $json;
+        $model->status = 'renew';
+        $model->save(false);
+        Yii::$app->session->setFlash('success', 'เปิดแผนสำหรับปรับตัวเลขครบ 12 เดือนแล้ว');
+        return $this->redirect(['update', 'id' => $model->id]);
     }
 
     /** ลบแผน (เฉพาะร่าง) */
