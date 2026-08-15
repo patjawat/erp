@@ -110,9 +110,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                                         class="badge bg-primary rounded-pill text-white">5</span> <?= $model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง' ?></a>
                                             </li>
                                         <?php endif ?>
-                                        <?php if ($model->status >= 7): ?>
+                                        <?php if ($model->status >= 5): ?>
                                             <li class="nav-item">
-                                                <a class="nav-link <?= $model->status == 7 ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
+                                                <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
                                                         class="badge bg-primary rounded-pill text-white">7</span> ส่งบัญชี</a>
                                             </li>
                                         <?php endif ?>

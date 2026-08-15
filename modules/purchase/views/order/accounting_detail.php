@@ -1,32 +1,56 @@
 <?php
+
 use yii\helpers\Html;
+use app\modules\finance\models\FinanceInbox;
+use app\modules\finance\services\PurchaseFinanceSnapshotBuilder;
+
+$sourceType = PurchaseFinanceSnapshotBuilder::classify((string) $model->category_id, (string) $model->group_id);
+$inbox = FinanceInbox::find()->where([
+    'source_system' => PurchaseFinanceSnapshotBuilder::SOURCE_SYSTEM,
+    'source_type' => $sourceType,
+    'source_id' => (string) $model->id,
+    'source_version' => 1,
+])->orderBy(['id' => SORT_DESC])->one();
 ?>
-<?php if($model->status > 5):?>
 
-    <!-- <div class="card border border-primary">
-    <div class="card-body">
-        <h6 class="text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m3 15 2 2 4-4"/></svg>
-        ดำเนินการสำเร็จ
-        </h6>
+<section class="card border shadow-sm mt-3" aria-labelledby="send-accounting-heading">
+    <div class="card-header bg-body">
+        <h5 class="mb-0" id="send-accounting-heading">ส่งเอกสารให้ฝ่ายบัญชีตรวจสอบ</h5>
     </div>
-</div> -->
-
-<?php else:?>
-<div class="card border border-primary text-center">
     <div class="card-body">
-        <h6 class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-hourglass">
-                <path d="M5 22h14" />
-                <path d="M5 2h14" />
-                <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
-                <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
-            </svg>
-            รอดำเนินการ
-        </h6>
-        <?=Html::a('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> ดำเนินการส่งบัญชี',['/purchase/order'],['class' => 'btn btn-warning border border-danger shadow mt-4'])?>
+        <?php if ($inbox): ?>
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-check-circle text-success" aria-hidden="true"></i>
+                        <strong>ส่งเข้ากล่องรับงานบัญชีแล้ว</strong>
+                    </div>
+                    <p class="text-body-secondary mb-0">
+                        ระบบเก็บสำเนาเอกสารไว้ตรวจสอบ โดยสถานะในระบบพัสดุยังไม่เปลี่ยนแปลง
+                    </p>
+                </div>
+                <?= Html::a(
+                    '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายการที่ส่ง',
+                    ['/finance/inbox/view', 'id' => $inbox->id],
+                    ['class' => 'btn btn-outline-primary']
+                ) ?>
+            </div>
+        <?php else: ?>
+            <p class="text-body-secondary">
+                ระบบจะตรวจใบสั่งซื้อ ใบตรวจรับ ผู้แทนจำหน่าย และหลักฐานรับเข้าคลังหรือทะเบียนสินทรัพย์ก่อนส่ง
+            </p>
+            <div class="alert alert-info d-flex gap-2 align-items-start">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                <span>ขั้นตอนนี้ยังไม่ตั้งเจ้าหนี้ ไม่ลงบัญชี และไม่เปลี่ยนสถานะเอกสารพัสดุ</span>
+            </div>
+            <?= Html::a(
+                '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งบัญชี',
+                ['/finance/inbox/receive-purchase', 'id' => $model->id],
+                [
+                    'class' => 'btn btn-primary',
+                    'data-method' => 'post',
+                ]
+            ) ?>
+        <?php endif; ?>
     </div>
-</div>
-<?php endif;?>
+</section>
