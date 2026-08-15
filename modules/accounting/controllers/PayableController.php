@@ -21,7 +21,11 @@ class PayableController extends Controller
     public function behaviors()
     {
         return array_merge(parent::behaviors(), [
-            'access' => ['class' => AccessControl::class, 'rules' => [['allow' => true, 'roles' => ['@']]]],
+            'access' => ['class' => AccessControl::class, 'rules' => [
+                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['accountingPrepare']],
+                ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingReview', 'accountingApprove']],
+            ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
             ]],
@@ -111,6 +115,10 @@ class PayableController extends Controller
     {
         $model = $this->findPayable($id);
         $decision = (string) Yii::$app->request->post('decision');
+        $requiredPermission = $decision === FinancePayableReview::DECISION_APPROVE ? 'accountingApprove' : 'accountingReview';
+        if (!Yii::$app->user->can($requiredPermission)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการตัดสินใจนี้');
+        }
         try {
             (new FinancePayableApprovalService())->decide($model, $decision, (string) Yii::$app->request->post('note'));
             Yii::$app->session->setFlash('success', $decision === FinancePayableReview::DECISION_APPROVE

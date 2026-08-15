@@ -13,6 +13,7 @@ $tasks = [
     ['type' => 'การจ่าย', 'no' => 'จ่าย.2569/0024', 'title' => 'ค่าบำรุงรักษาเครื่องปรับอากาศ', 'amount' => 86500, 'status' => 'รอยืนยันโอน', 'class' => 'bg-info-subtle text-info-emphasis'],
     ['type' => 'เช็ค', 'no' => 'CHQ-000124', 'title' => 'บริษัท ตัวอย่างเวชภัณฑ์ จำกัด', 'amount' => 175000, 'status' => 'รอลงนาม', 'class' => 'bg-secondary-subtle text-secondary-emphasis'],
 ];
+$canOperate = Yii::$app->user->can('financeOperate');
 
 $this->beginBlock('page-title');
 echo '<div class="d-flex align-items-center gap-2"><i class="bi bi-calculator fs-4" aria-hidden="true"></i><h4 class="mb-0">' . Html::encode($this->title) . '</h4><span class="badge bg-warning-subtle text-warning-emphasis">ต้นแบบ</span></div>';
@@ -32,9 +33,11 @@ $this->endBlock();
         <h5 class="mb-1">งานของฉัน</h5>
         <p class="text-body-secondary mb-0">เรียงตามรายการที่ควรดำเนินการก่อน</p>
     </div>
-    <a href="<?= Url::to(['/finance/voucher']) ?>" class="btn btn-success">
-        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> สร้างฎีกา
-    </a>
+    <?php if ($canOperate): ?>
+        <a href="<?= Url::to(['/finance/voucher']) ?>" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>สร้างฎีกา
+        </a>
+    <?php endif; ?>
 </div>
 
 <div class="row g-3 mb-4">
@@ -64,7 +67,8 @@ $this->endBlock();
             </div>
             <div class="list-group list-group-flush">
                 <?php foreach ($tasks as $task): ?>
-                    <a href="<?= Url::to($task['type'] === 'เงินยืม' ? ['/finance/loan'] : ($task['type'] === 'ฎีกา' ? ['/finance/voucher'] : ['/finance/payment'])) ?>" class="list-group-item list-group-item-action py-3">
+                    <?php $taskTag = $canOperate ? 'a' : 'div'; ?>
+                    <<?= $taskTag ?><?php if ($canOperate): ?> href="<?= Url::to($task['type'] === 'เงินยืม' ? ['/finance/loan'] : ($task['type'] === 'ฎีกา' ? ['/finance/voucher'] : ['/finance/payment'])) ?>"<?php endif; ?> class="list-group-item <?= $canOperate ? 'list-group-item-action' : '' ?> py-3">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div class="min-w-0">
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
@@ -76,7 +80,7 @@ $this->endBlock();
                             </div>
                             <strong class="text-nowrap"><?= number_format($task['amount'], 2) ?> บาท</strong>
                         </div>
-                    </a>
+                    </<?= $taskTag ?>>
                 <?php endforeach; ?>
             </div>
         </section>

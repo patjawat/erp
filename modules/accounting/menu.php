@@ -5,13 +5,14 @@ use yii\helpers\Url;
 
 $active = $active ?? '';
 $items = [
-    ['key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/accounting/dashboard']],
-    ['key' => 'inbox', 'label' => 'กล่องรับงาน', 'icon' => 'bi-inbox', 'url' => ['/accounting/inbox']],
-    ['key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/accounting/payable']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/accounting/dashboard']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'inbox', 'label' => 'กล่องรับงาน', 'icon' => 'bi-inbox', 'url' => ['/accounting/inbox']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/accounting/payable']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2" aria-label="เมนูระบบบัญชี">
     <?php foreach ($items as $item): ?>
+        <?php if (!$item['show']) continue; ?>
         <a href="<?= Url::to($item['url']) ?>" class="btn <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-primary' ?>">
             <i class="bi <?= Html::encode($item['icon']) ?> me-1" aria-hidden="true"></i><?= Html::encode($item['label']) ?>
         </a>

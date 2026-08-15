@@ -111,7 +111,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
         <section class="card border shadow-sm" aria-labelledby="review-decision-heading">
             <div class="card-header bg-body"><h5 class="mb-0" id="review-decision-heading">ผลการตรวจสอบ</h5></div>
             <div class="card-body">
-                <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW): ?>
+                <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('accountingPrepare')): ?>
                     <?= Html::beginForm(['review', 'id' => $model->id], 'post') ?>
                     <label class="form-label" for="finance-review-note">หมายเหตุหรือเหตุผล</label>
                     <textarea class="form-control" id="finance-review-note" name="note" rows="4"
@@ -131,13 +131,18 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                         </button>
                     </div>
                     <?= Html::endForm() ?>
-                <?php else: ?>
+                <?php elseif ($model->status !== FinanceInbox::STATUS_PENDING_REVIEW): ?>
                     <div class="d-flex gap-2 align-items-start">
                         <i class="bi bi-lock" aria-hidden="true"></i>
                         <div>
                             <strong>ดำเนินการแล้ว</strong>
                             <div class="text-body-secondary">หากต้องแก้ไข ให้ระบบต้นทางส่งเอกสารเป็นรุ่นใหม่</div>
                         </div>
+                    </div>
+                <?php else: ?>
+                    <div class="d-flex gap-2 align-items-start">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <div><strong>รอผู้จัดทำบัญชีตรวจสอบ</strong><div class="text-body-secondary">คุณมีสิทธิ์ดูข้อมูล แต่ไม่มีสิทธิ์บันทึกผลการตรวจสอบ</div></div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -153,13 +158,17 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                             ['/accounting/payable/view', 'id' => $model->payable->id],
                             ['class' => 'btn btn-outline-primary']
                         ) ?>
-                    <?php else: ?>
+                    <?php elseif (Yii::$app->user->can('accountingPrepare')): ?>
                         <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนสร้างร่าง</p>
                         <?= Html::a(
                             '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>สร้างร่างทะเบียนเจ้าหนี้',
                             ['/accounting/payable/create', 'inbox_id' => $model->id],
                             ['class' => 'btn btn-primary']
                         ) ?>
+                    <?php else: ?>
+                        <div class="d-flex gap-2 align-items-start text-body-secondary">
+                            <i class="bi bi-lock" aria-hidden="true"></i><span>รอผู้จัดทำบัญชีสร้างร่างทะเบียนเจ้าหนี้</span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </section>

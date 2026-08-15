@@ -19,7 +19,11 @@ class InboxController extends Controller
     public function behaviors()
     {
         return array_merge(parent::behaviors(), [
-            'access' => ['class' => AccessControl::class, 'rules' => [['allow' => true, 'roles' => ['@']]]],
+            'access' => ['class' => AccessControl::class, 'rules' => [
+                ['allow' => true, 'actions' => ['receive-purchase'], 'roles' => ['accountingInboxReceive']],
+                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingPrepare']],
+            ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => ['receive-purchase' => ['POST'], 'review' => ['POST']]],
         ]);
     }

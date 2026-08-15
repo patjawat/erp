@@ -318,6 +318,8 @@ $config = [
             'summary/*',
             'approve/*',
             'finance/*',
+            // Accounting and finance controllers enforce granular RBAC internally.
+            'accounting/*',
             // 'debug/*',
             'hr/leave/cal-days',
             'hr/leave/get-leader-approve',

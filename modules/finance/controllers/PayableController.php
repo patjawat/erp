@@ -12,7 +12,11 @@ class PayableController extends Controller
     public function behaviors()
     {
         return array_merge(parent::behaviors(), [
-            'access' => ['class' => AccessControl::class, 'rules' => [['allow' => true, 'roles' => ['@']]]],
+            'access' => ['class' => AccessControl::class, 'rules' => [
+                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['accountingPrepare']],
+                ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingReview', 'accountingApprove']],
+            ]],
         ]);
     }
 

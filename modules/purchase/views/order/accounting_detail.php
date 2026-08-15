@@ -43,14 +43,17 @@ $inbox = FinanceInbox::find()->where([
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
                 <span>ขั้นตอนนี้ยังไม่ตั้งเจ้าหนี้ ไม่ลงบัญชี และไม่เปลี่ยนสถานะเอกสารพัสดุ</span>
             </div>
-            <?= Html::a(
-                '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งบัญชี',
-                ['/accounting/inbox/receive-purchase', 'id' => $model->id],
-                [
-                    'class' => 'btn btn-primary',
-                    'data-method' => 'post',
-                ]
-            ) ?>
+            <?php if (Yii::$app->user->can('accountingInboxReceive')): ?>
+                <?= Html::a(
+                    '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งบัญชี',
+                    ['/accounting/inbox/receive-purchase', 'id' => $model->id],
+                    ['class' => 'btn btn-primary', 'data-method' => 'post']
+                ) ?>
+            <?php else: ?>
+                <div class="text-body-secondary d-flex gap-2 align-items-start">
+                    <i class="bi bi-lock" aria-hidden="true"></i><span>คุณไม่มีสิทธิ์ส่งเอกสารเข้ากล่องรับงานบัญชี</span>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </section>

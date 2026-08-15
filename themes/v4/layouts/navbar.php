@@ -89,7 +89,7 @@ $menuItems = [
     [
         // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
         // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC accounting โดยเฉพาะ
-        'show' => !Yii::$app->user->isGuest,
+        'show' => Yii::$app->user->can('accountingView'),
         'label' => 'บัญชี',
         'url' => ['/accounting/dashboard'],
         'active' => 'accounting',
@@ -98,7 +98,7 @@ $menuItems = [
     [
         // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
         // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC finance โดยเฉพาะ
-        'show' => !Yii::$app->user->isGuest,
+        'show' => Yii::$app->user->can('financeView'),
         'label' => 'การเงิน',
         'url' => ['/finance/dashboard'],
         'active' => 'finance',

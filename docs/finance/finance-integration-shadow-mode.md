@@ -99,3 +99,23 @@
 - ระยะเปลี่ยนผ่านยังใช้ model, service และตารางชื่อ `finance_*` เดิม เพื่อลดความเสี่ยงจากการย้ายข้อมูล
 - Route เดิมใต้ `/finance/inbox` และ `/finance/payable` ตอบกลับด้วย redirect โดย POST ใช้ HTTP 307 เพื่อรักษา method และข้อมูลแบบฟอร์ม
 - การเปลี่ยนชื่อตารางหรือย้าย namespace ของ domain model จะพิจารณาหลังเปิดใช้ workflow และตรวจ reconciliation แล้ว
+
+## RBAC และการแบ่งแยกหน้าที่
+
+| Role | ดูข้อมูล | จัดทำ | ส่งกลับ | อนุมัติ |
+|---|---:|---:|---:|---:|
+| `accountingViewer` | ✓ |  |  |  |
+| `accountingMaker` | ✓ | ✓ |  |  |
+| `accountingReviewer` | ✓ |  | ✓ |  |
+| `accountingApprover` | ✓ |  | ✓ | ✓ |
+| `accountingAdmin` | ✓ | ✓ | ✓ | ✓ |
+| `financeViewer` | ✓ |  |  |  |
+| `financeOfficer` | ✓ | ✓ |  |  |
+| `financeApprover` | ✓ |  |  | ✓ |
+| `financeAdmin` | ✓ | ✓ |  | ✓ |
+
+- `purchase` ได้เฉพาะ `accountingInboxReceive` เพื่อส่งเอกสารต้นทาง โดยไม่ได้สิทธิ์เข้าดูหรืออนุมัติงานบัญชี
+- `admin` ครอบ `accountingAdmin` และ `financeAdmin` เพื่อรักษาทางเข้าฉุกเฉินของผู้ดูแลระบบ
+- Migration ไม่ assign role ใหม่ให้ผู้ใช้รายบุคคล การกำหนดบุคลากรต้องทำภายหลังโดยผู้ดูแลระบบ
+- Controller ตรวจ permission ทุก action และ view ซ่อนปุ่มที่ผู้ใช้ไม่มีสิทธิ์
+- ผู้จัดทำไม่สามารถอนุมัติรายการที่ตนสร้าง แม้มีหลาย role หรือเป็นผู้ดูแลระบบ
