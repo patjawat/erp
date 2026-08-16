@@ -150,31 +150,21 @@ class DepreciationBindingController extends Controller
             return $this->redirect(['index', 'level' => $level]);
         }
 
-        // อ่านค่าเดิม (อาจ double-encoded) แล้วเขียนกลับเป็น JSON object จริงด้วย PHP
-        // (JSON_SET ใช้ไม่ได้กับแถวที่ data_json เป็น JSON string ซ้อน)
-        $current = (new Query())->select('data_json')->from('{{%categorise}}')->where(['id' => $id])->scalar();
-        $dj = DepreciationProfileResolver::decodeDataJson($current);
-
-        if ($profileId === '' || $profileId === null || (string) $profileId === '0') {
-            unset($dj['depreciation_profile_id']);
-            $msg = 'ล้างการผูกเกณฑ์เรียบร้อย';
-        } elseif (!DepreciationProfile::find()->where(['id' => (int) $profileId])->exists()) {
+        $clear = ($profileId === '' || $profileId === null || (string) $profileId === '0');
+        if (!$clear && !DepreciationProfile::find()->where(['id' => (int) $profileId])->exists()) {
             if ($req->isAjax) {
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
                 return ['status' => 'error', 'message' => 'ไม่พบเกณฑ์ที่เลือก'];
             }
             Yii::$app->session->setFlash('error', 'ไม่พบเกณฑ์ที่เลือก');
             return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
-        } else {
-            $dj['depreciation_profile_id'] = (int) $profileId;
-            $msg = 'ผูกเกณฑ์เรียบร้อย';
         }
 
-        Yii::$app->db->createCommand()
-            ->update('{{%categorise}}',
-                ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
-                ['id' => $id])
-            ->execute();
+        $n = $this->writeBinding([$id], $clear ? null : (int) $profileId);
+        $msg = $clear ? 'ล้างการผูกเกณฑ์เรียบร้อย' : 'ผูกเกณฑ์เรียบร้อย';
+        if ($n > 1) {
+            $msg .= " (รหัสนี้มี {$n} แถวในทะเบียน — ตั้งให้ตรงกันทุกแถว)";
+        }
 
         if ($req->isAjax) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -223,24 +213,9 @@ class DepreciationBindingController extends Controller
             return $this->redirect($backUrl);
         }
 
-        // อ่านค่าเดิมทีละแถว (data_json อาจ double-encoded — JSON_SET ใช้ไม่ได้) แล้วเขียนกลับ
-        $rows = (new Query())->select(['id', 'data_json'])->from('{{%categorise}}')
-            ->where(['id' => $ids])->all();
         $tx = Yii::$app->db->beginTransaction();
         try {
-            foreach ($rows as $row) {
-                $dj = DepreciationProfileResolver::decodeDataJson($row['data_json']);
-                if ($clear) {
-                    unset($dj['depreciation_profile_id']);
-                } else {
-                    $dj['depreciation_profile_id'] = $wantId;
-                }
-                Yii::$app->db->createCommand()
-                    ->update('{{%categorise}}',
-                        ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
-                        ['id' => $row['id']])
-                    ->execute();
-            }
+            $written = $this->writeBinding($ids, $clear ? null : $wantId);
             $tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();
@@ -252,14 +227,63 @@ class DepreciationBindingController extends Controller
             return $this->redirect($backUrl);
         }
 
-        $n = count($rows);
+        $n = count($ids);
         $msg = $clear ? "ล้างการผูกเกณฑ์ {$n} รายการเรียบร้อย" : "ผูกเกณฑ์ให้ {$n} รายการเรียบร้อย";
+        if ($written > $n) {
+            $msg .= ' (มีรหัสซ้ำในทะเบียน — ตั้งให้ตรงกันครบทุกแถว)';
+        }
         if ($req->isAjax) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return ['status' => 'success', 'message' => $msg, 'container' => '#dp-binding-container'];
         }
         Yii::$app->session->setFlash('success', $msg);
         return $this->redirect($backUrl);
+    }
+
+    /**
+     * เขียนการผูกเกณฑ์ลง categorise.data_json
+     *
+     * ผูกที่ระดับ "รหัส" ไม่ใช่ระดับแถว — ทะเบียนจริงเคยมีรหัสซ้ำหลายแถวจากการ import ซ้ำ
+     * ถ้าเขียนแค่แถวที่ผู้ใช้เห็น ตัวหาเกณฑ์อาจไปอ่านอีกแถวที่ยังไม่ได้ผูก แล้วค่าเสื่อมไม่ขึ้น
+     * (migration m260816_160000 รวมแถวซ้ำไปแล้ว — ที่นี่กันไว้เผื่อมี import ซ้ำอีก)
+     *
+     * @param int[] $ids id ของแถวที่ผู้ใช้เลือก
+     * @param int|null $profileId null = ล้างการผูก
+     * @return int จำนวนแถวที่เขียนจริง (อาจมากกว่าจำนวนที่เลือกเมื่อมีรหัสซ้ำ)
+     */
+    private function writeBinding(array $ids, ?int $profileId): int
+    {
+        $picked = (new Query())->select(['id', 'name', 'code'])->from('{{%categorise}}')
+            ->where(['id' => $ids])->all();
+        if (!$picked) {
+            return 0;
+        }
+
+        // ขยายจากแถวที่เลือก → ทุกแถวที่ name + code เดียวกัน
+        $conditions = ['or'];
+        foreach ($picked as $p) {
+            $conditions[] = ['name' => $p['name'], 'code' => $p['code']];
+        }
+        $rows = (new Query())->select(['id', 'data_json'])->from('{{%categorise}}')
+            ->where($conditions)->all();
+
+        foreach ($rows as $row) {
+            // อ่านค่าเดิม (อาจ double-encoded) แล้วเขียนกลับเป็น JSON object จริงด้วย PHP
+            // (JSON_SET ใช้ไม่ได้กับแถวที่ data_json เป็น JSON string ซ้อน)
+            $dj = DepreciationProfileResolver::decodeDataJson($row['data_json']);
+            if ($profileId === null) {
+                unset($dj['depreciation_profile_id']);
+            } else {
+                $dj['depreciation_profile_id'] = $profileId;
+            }
+            Yii::$app->db->createCommand()
+                ->update('{{%categorise}}',
+                    ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
+                    ['id' => $row['id']])
+                ->execute();
+        }
+
+        return count($rows);
     }
 
     private static function extractProfileId($dataJson): ?int

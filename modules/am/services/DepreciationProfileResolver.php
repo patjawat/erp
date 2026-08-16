@@ -190,11 +190,26 @@ class DepreciationProfileResolver
         }
         $key = $name . '::' . $code;
         if (!array_key_exists($key, self::$rowCache)) {
-            self::$rowCache[$key] = Categorise::find()
+            // ข้อมูลจริงเคยมีรหัสซ้ำหลายแถว (import ซ้ำ) — เรียงตาม id ให้ผลคงที่
+            // และเลือกแถวที่ "ผูกเกณฑ์ไว้" ก่อน กันกรณีผูกไปคนละแถวกับที่หยิบมา
+            $rows = Categorise::find()
                 ->select(['id', 'data_json'])
                 ->where(['code' => (string) $code, 'name' => $name])
+                ->orderBy(['id' => SORT_ASC])
                 ->asArray()
-                ->one() ?: null;
+                ->all();
+
+            $picked = null;
+            foreach ($rows as $row) {
+                if ($picked === null) {
+                    $picked = $row;
+                }
+                if (self::profileIdFromRow($row) !== null) {
+                    $picked = $row;
+                    break;
+                }
+            }
+            self::$rowCache[$key] = $picked;
         }
         return self::$rowCache[$key];
     }
