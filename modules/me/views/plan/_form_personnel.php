@@ -6,7 +6,7 @@ use yii\helpers\Json;
 use yii\helpers\Url;
 use kartik\widgets\Select2;
 use kartik\widgets\ActiveForm;
-use app\modules\me\controllers\PlanController;
+use app\modules\plan\components\PersonnelPlanTaxonomy;
 
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrder $model */
@@ -37,12 +37,12 @@ $expenseRows = (new Query())
 $expensesByCategory = [];
 $expenseTypeIds = [];
 foreach ($expenseRows as $expense) {
-    $types = PlanController::employeeTypesForPlanItem((string) $expense['code']);
+    $types = PersonnelPlanTaxonomy::employeeTypeIds((string) $expense['code']);
     $expensesByCategory[$expense['category_id']][] = [
         'id' => $expense['code'],
         'text' => $expense['title'],
         'type_ids' => $types,
-        'all_types' => PlanController::planItemAppliesToAllEmployees((string) $expense['code']),
+        'all_types' => PersonnelPlanTaxonomy::appliesToAllEmployees((string) $expense['code']),
     ];
     $expenseTypeIds[$expense['code']] = $types;
 }
@@ -60,6 +60,30 @@ $employeeTypeNames = (new Query())
     ->indexBy('id')
     ->column();
 
+// ตรวจว่าข้อมูลตั้งค่าที่หน้านี้ต้องใช้มีครบไหม (เครื่องที่ยังไม่ได้ตั้งค่าจะเห็น dropdown ว่างโดยไม่รู้สาเหตุ)
+$setupIssues = [];
+if (!$categoryOptions) {
+    $setupIssues[] = [
+        'text' => 'ยังไม่มี "รายการคำขอบุคลากร" (หมวดแผนใต้ประเภทรายจ่ายบุคลากร)',
+        'url'  => ['/plan/plan-category/index'],
+        'link' => 'ตั้งค่าหมวดแผน',
+    ];
+} elseif (!$expenseRows) {
+    $setupIssues[] = [
+        'text' => 'ยังไม่มี "ประเภทค่าใช้จ่าย" ใต้รายการคำขอบุคลากร',
+        'url'  => ['/plan/plan-item/index'],
+        'link' => 'ตั้งค่าประเภทค่าใช้จ่าย',
+    ];
+}
+if (!$employeeTypeNames) {
+    $setupIssues[] = [
+        'text' => 'ยังไม่มีประเภทบุคลากรที่เปิดใช้งาน (ทะเบียนประเภทบุคลากร)',
+        'url'  => null,
+        'link' => null,
+    ];
+}
+$canSetup = !Yii::$app->user->isGuest && (Yii::$app->user->can('plan') || Yii::$app->user->can('admin'));
+
 $monthCols = [
     'month_10' => 'ต.ค.', 'month_11' => 'พ.ย.', 'month_12' => 'ธ.ค.',
     'month_1' => 'ม.ค.', 'month_2' => 'ก.พ.', 'month_3' => 'มี.ค.',
@@ -72,6 +96,25 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
 
 <div class="card bg-body border shadow-sm">
     <div class="card-body p-3 p-lg-4">
+        <?php if ($setupIssues): ?>
+            <div class="alert alert-warning border mb-4" role="alert">
+                <div class="fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-2"></i>ระบบยังตั้งค่าข้อมูลพื้นฐานของแผนบุคลากรไม่ครบ</div>
+                <ul class="mb-2 ps-4 small">
+                    <?php foreach ($setupIssues as $issue): ?>
+                        <li>
+                            <?= Html::encode($issue['text']) ?>
+                            <?php if ($canSetup && $issue['url']): ?>
+                                — <?= Html::a(Html::encode($issue['link']), $issue['url'], ['target' => '_blank']) ?>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+                <div class="small mb-0">
+                    ตัวเลือกในฟอร์มด้านล่างจึงยังว่างอยู่ กรุณาแจ้งผู้ดูแลระบบแผนให้ตั้งค่าก่อน
+                    (ถ้าเพิ่งอัปเดตระบบ ให้รัน <code>php yii migrate</code> บนเครื่องแม่ข่ายด้วย)
+                </div>
+            </div>
+        <?php endif; ?>
         <?php if ($baselineRevision): ?>
             <div class="alert alert-info border mb-4" role="status">
                 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">

@@ -60,6 +60,34 @@ use app\modules\plan\models\PlanType;
     
     <?= $form->field($model, 'title')->textInput()->label('ชื่อของหมวดหมู่') ?>
 
+    <?php
+    // ใช้เฉพาะรายการในหมวดรายจ่ายบุคลากร — กำหนดว่าเวลาจัดทำแผนบุคลากรจะดึงพนักงานประเภทใดเข้ามา
+    $employeeTypes = (new \yii\db\Query())
+        ->select(['title', 'id'])
+        ->from('employee_type')
+        ->where(['active' => 1])
+        ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
+        ->indexBy('id')
+        ->column();
+    ?>
+    <div class="border rounded-3 p-3 mb-3 bg-body-tertiary">
+        <div class="fw-semibold small mb-2">การดึงรายชื่อบุคลากร (ใช้กับแผนบุคลากรเท่านั้น)</div>
+        <?= $form->field($model, 'employee_type_ids')->widget(Select2::classname(), [
+            'data' => $employeeTypes,
+            'options' => [
+                'id' => 'plan-item-employee-types',
+                'multiple' => true,
+                'placeholder' => 'เลือกได้มากกว่า 1 ประเภท (ไม่เลือก = ผู้ใช้เลือกเองตอนทำแผน)',
+            ],
+            'pluginOptions' => ['allowClear' => true],
+        ])->label('ประเภทบุคลากรที่ผูกกับรายการนี้') ?>
+
+        <?= $form->field($model, 'all_employee_types')->checkbox([
+            'id' => 'plan-item-all-employee-types',
+            'value' => 1,
+            'uncheck' => 0,
+        ])->label('ใช้กับบุคลากรทุกประเภทในหน่วยงาน (เช่น ค่าตอบแทน ฉ.11)') ?>
+    </div>
 
     <div class="d-flex justify-content-center align-items-center mt-3">
         <div class="d-flex gap-2">
@@ -78,6 +106,15 @@ $js = <<< JS
     handleFormSubmit('#form', null, async function(response) {
         await location.reload();
     });
+
+    // เลือก "ทุกประเภท" แล้วไม่ต้องเลือกรายประเภทอีก
+    function toggleEmployeeTypes() {
+        var all = $('#plan-item-all-employee-types').is(':checked');
+        $('#plan-item-employee-types').prop('disabled', all).trigger('change.select2');
+        if (all) { $('#plan-item-employee-types').val(null).trigger('change'); }
+    }
+    $('#plan-item-all-employee-types').on('change', toggleEmployeeTypes);
+    toggleEmployeeTypes();
 
 //     $('#category_id').on('change', function() {
 //     var categoryId = $(this).val();

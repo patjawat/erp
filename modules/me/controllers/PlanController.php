@@ -14,6 +14,7 @@ use app\modules\plan\models\PlanOrder;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrderRevision;
 use app\modules\plan\components\PlanHelper;
+use app\modules\plan\components\PersonnelPlanTaxonomy;
 use app\modules\plan\services\PersonnelBudgetCalculator;
 use app\modules\plan\services\PlanRevisionService;
 
@@ -29,8 +30,8 @@ class PlanController extends Controller
     /** @var int[] id ของหน่วยงานที่ผู้ใช้ปัจจุบันเป็นหัวหน้า */
     private $ledOrgIds = [];
 
-    /** จำนวนวันทำงานที่ใช้ตั้งต้นวงเงินทั้งปีของลูกจ้างรายวัน */
-    const DEFAULT_WORK_DAYS = 22;
+    /** จำนวนวันทำงานที่ใช้ตั้งต้นวงเงินทั้งปีของลูกจ้างรายวัน (ค่าเริ่มต้น ถ้า employee_type ไม่ได้ตั้งค่าไว้) */
+    const DEFAULT_WORK_DAYS = PersonnelPlanTaxonomy::DEFAULT_WORK_DAYS;
 
     public function behaviors()
     {
@@ -493,10 +494,7 @@ class PlanController extends Controller
         $rows = [];
         foreach ($q->all() as $r) {
             $typeId = (int) $r['type_id'];
-            $monthlyRate = max(0, (float) $r['salary']);
-            $annualBudget = $typeId === 5
-                ? $monthlyRate * self::DEFAULT_WORK_DAYS * 12
-                : $monthlyRate * 12;
+            $annualBudget = PersonnelPlanTaxonomy::annualBudget($typeId, (float) $r['salary']);
             $rows[] = [
                 'emp_id'    => (int) $r['id'],
                 'name'      => $r['name'],
@@ -511,23 +509,16 @@ class PlanController extends Controller
         return ['status' => 'success', 'count' => count($rows), 'child_count' => $childCount, 'items' => $rows];
     }
 
-    /** ประเภทบุคลากรที่ตรงกับประเภทค่าใช้จ่าย รองรับทั้งรหัส catalog ใหม่และรหัสเดิม */
+    /** ประเภทบุคลากรที่ตรงกับประเภทค่าใช้จ่าย — ตั้งค่าที่ /plan/plan-item (ไม่ได้ตั้ง = ใช้ค่าเดิมตามรหัส) */
     public static function employeeTypesForPlanItem(string $planItemId): array
     {
-        $map = [
-            'P1' => [3], 'PER_01_01' => [3],
-            'P2' => [4], 'PER_01_02' => [4],
-            'P3' => [5], 'PER_01_03' => [5],
-            'P8' => [1], 'PER_02_03' => [1],
-            'P10' => [1, 2], 'PER_02_05' => [1, 2],
-        ];
-        return $map[$planItemId] ?? [];
+        return PersonnelPlanTaxonomy::employeeTypeIds($planItemId);
     }
 
-    /** ค่า ฉ.11 จ่ายให้บุคลากรทุกประเภทที่ยังปฏิบัติงานในหน่วยงาน */
+    /** ประเภทค่าใช้จ่ายที่จ่ายให้บุคลากรทุกประเภทในหน่วยงาน (เช่น ฉ.11) */
     public static function planItemAppliesToAllEmployees(string $planItemId): bool
     {
-        return in_array($planItemId, ['P9', 'PER_02_04'], true);
+        return PersonnelPlanTaxonomy::appliesToAllEmployees($planItemId);
     }
 
     /** บันทึกรายชื่อบุคลากรของแผน (แทนที่ชุดเดิม) + ปรับยอดรวมตามรายการ */
