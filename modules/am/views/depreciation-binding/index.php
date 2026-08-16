@@ -38,10 +38,19 @@ $this->beginBlock('action'); ?>
         <?php endif; ?>
     <?php endforeach; ?>
 
-    <div class="alert alert-info small">
-        <i data-lucide="info"></i> ทรัพย์สินจะใช้เกณฑ์จากระดับที่เฉพาะเจาะจงที่สุด: <b>รายชิ้น → รายการ → หมวด → ประเภทหลัก</b> — ตั้งที่ระดับกลุ่มครั้งเดียว ครอบคลุมทุกชิ้นใต้กลุ่มนั้นอัตโนมัติ (ตั้งค่ารายชิ้นได้ที่เมนู "เปลี่ยนเกณฑ์ทรัพย์สิน")<br>
-        <i data-lucide="check-check"></i> <b>ติ๊กเลือกหลายรายการ</b> แล้วเลือกเกณฑ์ที่แถบด้านบน กด "กำหนดให้ที่เลือก" เพื่อผูกทีเดียวทั้งกลุ่ม
-    </div>
+    <?php if (empty($profiles)): ?>
+        <div class="alert alert-warning">
+            <div class="fw-semibold mb-1"><i data-lucide="alert-triangle"></i> ยังไม่มีเกณฑ์ค่าเสื่อมในระบบ จึงยังผูกอะไรไม่ได้</div>
+            <div class="small mb-2">ต้องสร้างเกณฑ์ (อายุการใช้งาน / มูลค่าซาก / วิธีคำนวณ) ก่อน แล้วจึงกลับมาผูกเข้ากับประเภททรัพย์สินในหน้านี้</div>
+            <?= Html::a('<i data-lucide="percent"></i> ไปหน้าเกณฑ์ค่าเสื่อม แล้วกด “นำเข้าข้อมูลตั้งต้น”', ['/am/depreciation-profile/index'], ['class' => 'btn btn-sm btn-warning']) ?>
+        </div>
+    <?php else: ?>
+        <div class="alert alert-info small">
+            <i data-lucide="info"></i> ทรัพย์สินจะใช้เกณฑ์จากระดับที่เฉพาะเจาะจงที่สุด: <b>รายชิ้น → รายการ → หมวด → ประเภทหลัก</b> — ตั้งที่ระดับกลุ่มครั้งเดียว ครอบคลุมทุกชิ้นใต้กลุ่มนั้นอัตโนมัติ (ตั้งค่ารายชิ้นได้ที่เมนู "เปลี่ยนเกณฑ์ทรัพย์สิน")<br>
+            <i data-lucide="mouse-pointer-click"></i> <b>ผูกทีละรายการ:</b> เลือกเกณฑ์จากช่องในคอลัมน์ "เกณฑ์ที่ผูก" ของแถวนั้น — บันทึกทันที<br>
+            <i data-lucide="check-check"></i> <b>ผูกทีเดียวหลายรายการ:</b> ติ๊กเลือกแถวที่ต้องการ เลือกเกณฑ์ที่แถบด้านบน แล้วกด "กำหนดให้ที่เลือก"
+        </div>
+    <?php endif; ?>
 
     <ul class="nav nav-pills mb-3">
         <?php foreach ($levels as $lv => $label): ?>
@@ -54,7 +63,7 @@ $this->beginBlock('action'); ?>
     <div class="card mb-3"><div class="card-body">
         <?= Html::beginForm(['index'], 'get', ['class' => 'row g-2 align-items-end']) ?>
             <?= Html::hiddenInput('level', $level) ?>
-            <?php if ($level === 'asset_category' && !empty($typeOptions)): ?>
+            <?php if ($level !== 'asset_type' && !empty($typeOptions)): ?>
             <div class="col-md-3">
                 <label class="form-label">ประเภทหลัก</label>
                 <select name="type" class="form-select" onchange="this.form.submit()">
@@ -75,7 +84,7 @@ $this->beginBlock('action'); ?>
     </div></div>
 
     <?php Pjax::begin(['id' => 'dp-binding-container', 'enablePushState' => false]); ?>
-    <?php $showParentType = ($level === 'asset_category'); ?>
+    <?php $showParentType = ($level !== 'asset_type'); ?>
     <?= Html::beginForm(['bulk-set'], 'post', [
         'id' => 'dp-bulk-form',
         'data-confirm-title' => 'ยืนยันกำหนดเกณฑ์กับรายการที่เลือก?',
@@ -109,6 +118,28 @@ $this->beginBlock('action'); ?>
         <?php if (empty($rows)): ?>
             <div class="text-center text-muted py-4">ไม่พบข้อมูล</div>
         <?php else: ?>
+            <?php
+            /**
+             * ช่องเลือกเกณฑ์ประจำแถว — บันทึกทันทีเมื่อเปลี่ยนค่า (โพสต์ไป action set ผ่าน ajax)
+             * ไม่ใส่ name เพื่อไม่ให้ถูกส่งไปพร้อมฟอร์ม bulk ที่ครอบตารางอยู่
+             */
+            $rowSelect = static function (array $r) use ($profiles): string {
+                $opts = '<option value="0">— ไม่ผูกเกณฑ์ —</option>';
+                foreach ($profiles as $p) {
+                    $sel = ((int) $r['bound_profile_id'] === (int) $p->id) ? ' selected' : '';
+                    $opts .= '<option value="' . (int) $p->id . '"' . $sel . '>'
+                        . Html::encode($p->code . ' — ' . $p->name) . '</option>';
+                }
+                $cls = $r['bound_profile_id'] ? 'border-success' : '';
+
+                return '<select class="form-select form-select-sm dp-row-profile ' . $cls . '"'
+                    . ' data-id="' . (int) $r['id'] . '"'
+                    . ' data-current="' . (int) $r['bound_profile_id'] . '"'
+                    . ' style="min-width:14rem;"'
+                    . ' aria-label="เกณฑ์ค่าเสื่อมของ ' . Html::encode($r['title']) . '">'
+                    . $opts . '</select>';
+            };
+            ?>
             <?php // ---------- Mobile ---------- ?>
             <ul class="list-group list-group-flush d-lg-none mb-3" role="list" aria-label="รายการผูกเกณฑ์ค่าเสื่อม">
                 <?php foreach ($rows as $r): ?>
@@ -131,6 +162,9 @@ $this->beginBlock('action'); ?>
                                         <?= $r['bound_profile_name'] ? Html::encode($r['bound_profile_name']) : 'ยังไม่ผูก' ?>
                                     </span>
                                 </span>
+                                <?php if (!empty($profiles)): ?>
+                                    <span class="d-block mt-2"><?= $rowSelect($r) ?></span>
+                                <?php endif; ?>
                             </span>
                         </label>
                     </li>
@@ -175,7 +209,9 @@ $this->beginBlock('action'); ?>
                                     </td>
                                 <?php endif; ?>
                                 <td>
-                                    <?php if ($r['bound_profile_id']): ?>
+                                    <?php if (!empty($profiles)): ?>
+                                        <?= $rowSelect($r) ?>
+                                    <?php elseif ($r['bound_profile_id']): ?>
                                         <span class="badge bg-success"><?= Html::encode($r['bound_profile_name']) ?></span>
                                     <?php else: ?>
                                         <span class="text-muted small">— ไม่ได้ผูก —</span>
@@ -194,9 +230,16 @@ $this->beginBlock('action'); ?>
 </div>
 
 <?php
+$cfg = \yii\helpers\Json::htmlEncode([
+    'setUrl' => Url::to(['set']),
+    'level' => $level,
+    'q' => (string) $q,
+    'type' => (string) ($type ?? ''),
+]);
 $js = <<<'JS'
 (function () {
     var CT = '#dp-binding-container';
+    var CFG = window.dpBindCfg || {};
     function boxes() { return Array.prototype.slice.call(document.querySelectorAll(CT + ' .dp-check')); }
     function recalc() {
         var all = boxes();
@@ -219,6 +262,43 @@ $js = <<<'JS'
         recalc();
     });
     $(document).on('pjax:end', recalc);
+
+    // ผูกทีละรายการ: เลือกเกณฑ์ในแถว → บันทึกทันที
+    // (select อยู่ใน label ของฝั่งมือถือ — กันไม่ให้คลิกไปโดนช่องติ๊กเลือก)
+    $(document).on('click', CT + ' .dp-row-profile', function (e) { e.stopPropagation(); });
+    $(document).on('change', CT + ' .dp-row-profile', function () {
+        var el = this;
+        var prev = el.getAttribute('data-current') || '0';
+        if (el.value === prev) { return; }
+        el.disabled = true;
+        $.post(CFG.setUrl, {
+            id: el.getAttribute('data-id'),
+            level: CFG.level,
+            q: CFG.q,
+            type: CFG.type,
+            profile_id: el.value,
+            _csrf: yii.getCsrfToken()
+        }).done(function (r) {
+            if (r && r.status === 'error') {
+                el.value = prev;
+                el.disabled = false;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', text: r.message, timer: 2500, showConfirmButton: false });
+                } else {
+                    alert(r.message);
+                }
+                return;
+            }
+            el.setAttribute('data-current', el.value);
+            if (typeof erpReloadPjax === 'function' && erpReloadPjax(CT)) { return; }
+            location.reload();
+        }).fail(function () {
+            el.value = prev;
+            el.disabled = false;
+            alert('บันทึกไม่สำเร็จ');
+        });
+    });
+
     // ปุ่ม "กำหนดให้ที่เลือก" → confirm → ajax POST → reload เฉพาะตารางผ่าน pjax
     handleFormSubmit('#dp-bulk-form', null, async function (r) {
         var c = r && r.container;
@@ -228,5 +308,6 @@ $js = <<<'JS'
     recalc();
 })();
 JS;
+$this->registerJs('window.dpBindCfg = ' . $cfg . ';');
 $this->registerJs($js);
 ?>

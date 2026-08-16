@@ -49,16 +49,23 @@ class DepreciationBindingController extends Controller
             $level = DepreciationProfileResolver::SOURCE_TYPE;
         }
 
+        // รหัสประเภทหลักที่คิดค่าเสื่อม — ใช้กรองระดับหมวด/รายการ ไม่ให้วัสดุ (MATER)
+        // และสินทรัพย์ไม่มีตัวตนหลุดเข้ามาในหน้าผูกเกณฑ์
+        $depreciableTypes = DepreciationProfileResolver::depreciableTypeCodes();
+
         $query = (new Query())
             ->from('{{%categorise}}')
             ->where(['name' => $level]);
-        // ประเภทหลัก: จำกัดเฉพาะกลุ่มที่คิดค่าเสื่อม (ครุภัณฑ์ + สิ่งปลูกสร้าง)
+        // ประเภทหลัก: จำกัดเฉพาะกลุ่มที่คิดค่าเสื่อม (อาคาร + ครุภัณฑ์ + สิ่งปลูกสร้าง)
         if ($level === DepreciationProfileResolver::SOURCE_TYPE) {
             $query->andWhere(['group_id' => self::DEPRECIABLE_TYPE_GROUPS]);
         }
-        // หมวด: กรองตามประเภทหลัก (category_id = asset_type.code)
-        if ($level === DepreciationProfileResolver::SOURCE_CATEGORY && $type !== null && $type !== '') {
-            $query->andWhere(['category_id' => $type]);
+        // หมวด/รายการ: ผูกกับประเภทหลักผ่าน category_id (= asset_type.code)
+        if ($level !== DepreciationProfileResolver::SOURCE_TYPE) {
+            $query->andWhere(['category_id' => $depreciableTypes]);
+            if ($type !== null && $type !== '') {
+                $query->andWhere(['category_id' => $type]);
+            }
         }
         if ($q !== null && $q !== '') {
             $query->andWhere(['or', ['like', 'title', $q], ['like', 'code', $q]]);
@@ -72,18 +79,17 @@ class DepreciationBindingController extends Controller
             ->offset($pages->offset)->limit($pages->limit)
             ->all();
 
-        // ระดับหมวด: ประเภทหลักที่เป็นแม่ของหมวด (ผูกผ่าน category_id = asset_type.code)
+        // ระดับหมวด/รายการ: ประเภทหลักที่เป็นแม่ (ผูกผ่าน category_id = asset_type.code)
         // ใช้ทั้งเป็นตัวเลือก filter และป้ายในตาราง
         $typeOptions = [];
-        if ($level === DepreciationProfileResolver::SOURCE_CATEGORY) {
+        if ($level !== DepreciationProfileResolver::SOURCE_TYPE) {
             $parentCodes = (new Query())
                 ->select('category_id')->distinct()
                 ->from('{{%categorise}}')
-                ->where(['name' => DepreciationProfileResolver::SOURCE_CATEGORY])
-                ->andWhere(['not', ['category_id' => null]])
-                ->andWhere(['<>', 'category_id', ''])
+                ->where(['name' => $level, 'category_id' => $depreciableTypes])
                 ->column();
             if ($parentCodes) {
+                // asset_type มีรหัสซ้ำหลายแถว — เก็บชื่อเดียวต่อรหัส
                 foreach ((new Query())
                     ->select(['code', 'title'])
                     ->from('{{%categorise}}')
@@ -136,6 +142,10 @@ class DepreciationBindingController extends Controller
         $profileId = $req->post('profile_id');
 
         if ($id <= 0) {
+            if ($req->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['status' => 'error', 'message' => 'ไม่พบรายการ'];
+            }
             Yii::$app->session->setFlash('error', 'ไม่พบรายการ');
             return $this->redirect(['index', 'level' => $level]);
         }
@@ -145,9 +155,16 @@ class DepreciationBindingController extends Controller
         $current = (new Query())->select('data_json')->from('{{%categorise}}')->where(['id' => $id])->scalar();
         $dj = DepreciationProfileResolver::decodeDataJson($current);
 
-        if ($profileId === '' || $profileId === null) {
+        if ($profileId === '' || $profileId === null || (string) $profileId === '0') {
             unset($dj['depreciation_profile_id']);
             $msg = 'ล้างการผูกเกณฑ์เรียบร้อย';
+        } elseif (!DepreciationProfile::find()->where(['id' => (int) $profileId])->exists()) {
+            if ($req->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return ['status' => 'error', 'message' => 'ไม่พบเกณฑ์ที่เลือก'];
+            }
+            Yii::$app->session->setFlash('error', 'ไม่พบเกณฑ์ที่เลือก');
+            return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
         } else {
             $dj['depreciation_profile_id'] = (int) $profileId;
             $msg = 'ผูกเกณฑ์เรียบร้อย';
@@ -158,6 +175,11 @@ class DepreciationBindingController extends Controller
                 ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
                 ['id' => $id])
             ->execute();
+
+        if ($req->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['status' => 'success', 'message' => $msg, 'container' => '#dp-binding-container'];
+        }
         Yii::$app->session->setFlash('success', $msg);
 
         return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
