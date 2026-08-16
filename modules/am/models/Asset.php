@@ -492,11 +492,32 @@ class Asset extends \yii\db\ActiveRecord
             $this->lifecycle_status = $insert ? self::LIFECYCLE_RECEIVED : self::LIFECYCLE_ACTIVE;
         }
 
+        $this->applyDepreciationSnapshot();
+
         if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
             $this->data_json = Json::encode($this->data_json);
         }
 
         return parent::beforeSave($insert);
+    }
+
+    /**
+     * ตรึงเกณฑ์ค่าเสื่อม (snapshot) จากเกณฑ์ที่ผูกไว้ที่ประเภท/หมวด/รายการ ลงบนทรัพย์สินชิ้นนี้
+     *
+     * ทำเฉพาะเมื่อยังไม่มี snapshot — ทรัพย์สินที่ตรึงเกณฑ์แล้วจะไม่ถูกเปลี่ยนตามการแก้เกณฑ์ภายหลัง
+     * (ต้องเปลี่ยนผ่านเมนู "เปลี่ยนเกณฑ์ทรัพย์สิน" ซึ่งบันทึกประวัติไว้)
+     * ทำงานแบบไม่ขวางการบันทึก: ถ้ามีข้อผิดพลาดใด ๆ ให้ข้ามไป
+     */
+    protected function applyDepreciationSnapshot(): void
+    {
+        try {
+            if (!empty($this->depreciation_profile_id) || empty($this->receive_date) || (float) $this->price <= 0) {
+                return;
+            }
+            (new \app\modules\am\services\DepreciationSnapshotService())->applyTo($this);
+        } catch (\Throwable $e) {
+            Yii::warning('ตรึงเกณฑ์ค่าเสื่อมไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+        }
     }
 
     /**

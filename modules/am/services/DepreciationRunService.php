@@ -28,28 +28,9 @@ class DepreciationRunService
      */
     public static function paramsForAsset(Asset $asset, ?DepreciationProfile $profile = null): array
     {
-        $cost = (float) $asset->price;
-
-        // อายุเป็นเดือน: ใช้ snapshot months ก่อน, ไม่มีก็แปลงจากปี
-        $lifeMonths = $asset->useful_life_months
-            ? (int) $asset->useful_life_months
-            : ((int) $asset->useful_life * 12);
-
-        // มูลค่าซาก: residual_value คือ snapshot ซาก (ไม่มี = 1 บาทตามมาตรฐาน)
-        $salvage = ($asset->residual_value !== null && $asset->residual_value !== '')
-            ? (float) $asset->residual_value
-            : self::DEFAULT_SALVAGE_BAHT;
-
-        // วันเริ่มคิด: ใช้ snapshot ที่ resolve แล้ว ไม่มีก็ใช้วันรับเข้า
-        $startDate = $asset->depreciation_start_date ?: $asset->receive_date;
-
-        $basis = $profile && $profile->calculation_basis
-            ? $profile->calculation_basis
-            : DepreciationProfile::BASIS_MONTHLY;
-
-        // อัตราหลายช่วงจากเกณฑ์ (ถ้ามี)
-        $tiers = [];
+        $profileValues = null;
         if ($profile) {
+            $tiers = [];
             foreach ($profile->rates as $r) {
                 $tiers[] = [
                     'start_month' => (int) $r->start_month,
@@ -57,24 +38,111 @@ class DepreciationRunService
                     'rate_percent' => (float) $r->rate_percent,
                 ];
             }
+            $profileValues = [
+                'useful_life_months' => $profile->useful_life_months,
+                'annual_rate' => $profile->annual_rate,
+                'salvage_value_type' => $profile->salvage_value_type,
+                'salvage_value' => $profile->salvage_value,
+                'calculation_basis' => $profile->calculation_basis,
+                'start_rule' => $profile->start_rule,
+                'rounding_scale' => $profile->rounding_scale,
+                'method' => $profile->method,
+                'rate_tiers' => $tiers,
+            ];
         }
 
-        // อัตราเดียว (annual_rate) เมื่อไม่มีช่วงและไม่มีอายุ
+        return self::mergeParams([
+            'price' => $asset->price,
+            'useful_life_months' => $asset->useful_life_months,
+            'useful_life' => $asset->useful_life,
+            'residual_value' => $asset->residual_value,
+            'depreciation_rate' => $asset->depreciation_rate,
+            'depreciation_method' => $asset->depreciation_method,
+            'depreciation_start_date' => $asset->depreciation_start_date,
+            'receive_date' => $asset->receive_date,
+        ], $profileValues);
+    }
+
+    /**
+     * รวมค่าจาก "snapshot บนทรัพย์สิน" กับ "เกณฑ์ที่ผูกไว้" เป็นพารามิเตอร์คำนวณ (pure — unit test ได้)
+     *
+     * ลำดับความสำคัญของแต่ละค่า:
+     *   อายุ (เดือน)   : snapshot useful_life_months → เกณฑ์ → useful_life (ปี) × 12
+     *                    (snapshot มาก่อนเสมอ = "ตรึงเกณฑ์ ณ วันขึ้นทะเบียน";
+     *                     เกณฑ์มาก่อนคอลัมน์ปีเดิม เพราะคอลัมน์ปีเป็นข้อมูลเก่าที่ไม่รู้ที่มา)
+     *   มูลค่าซาก      : snapshot residual_value → เกณฑ์ (แปลงตามชนิด) → 1 บาทตามมาตรฐานราชการ
+     *   วันเริ่มคิด    : snapshot depreciation_start_date → วันรับเข้า ปรับด้วย start_rule ของเกณฑ์
+     *   อัตรา/ฐาน/ปัดเศษ: เกณฑ์เป็นหลัก
+     *
+     * @param array $asset ค่าจากคอลัมน์ของ asset
+     * @param array|null $profile ค่าจากเกณฑ์ที่ resolve ได้ (null = ไม่ได้ผูกเกณฑ์)
+     */
+    public static function mergeParams(array $asset, ?array $profile = null): array
+    {
+        $cost = (float) ($asset['price'] ?? 0);
+        $p = $profile ?? [];
+
+        // ---- อายุการใช้งาน (เดือน) ----
+        $lifeMonths = 0;
+        foreach ([
+            $asset['useful_life_months'] ?? null,
+            $p['useful_life_months'] ?? null,
+            !empty($asset['useful_life']) ? ((int) $asset['useful_life'] * 12) : null,
+        ] as $candidate) {
+            if ($candidate !== null && $candidate !== '' && (int) $candidate > 0) {
+                $lifeMonths = (int) $candidate;
+                break;
+            }
+        }
+
+        // ---- มูลค่าซาก (เป็นจำนวนเงินเสมอ) ----
+        if (($asset['residual_value'] ?? null) !== null && $asset['residual_value'] !== '') {
+            $salvage = (float) $asset['residual_value'];
+        } elseif ($profile !== null) {
+            $salvage = DepreciationCalculator::resolveSalvage(
+                $cost,
+                (string) ($p['salvage_value_type'] ?? DepreciationProfile::SALVAGE_AMOUNT),
+                (float) ($p['salvage_value'] ?? 0)
+            );
+        } else {
+            $salvage = self::DEFAULT_SALVAGE_BAHT;
+        }
+
+        // ---- วันเริ่มคิดค่าเสื่อม ----
+        // มี snapshot แล้ว = resolve ตาม start_rule ไปแล้ว ห้ามปรับซ้ำ
+        $snapStart = $asset['depreciation_start_date'] ?? null;
+        if ($snapStart !== null && $snapStart !== '') {
+            $startDate = $snapStart;
+            $startRule = DepreciationProfile::START_READY_DATE;
+        } else {
+            $startDate = $asset['receive_date'] ?? null;
+            $startRule = (string) ($p['start_rule'] ?? DepreciationProfile::START_READY_DATE);
+        }
+
+        $tiers = is_array($p['rate_tiers'] ?? null) ? $p['rate_tiers'] : [];
+
+        // ---- อัตราต่อปี: ใช้เมื่อไม่มีช่วงอัตราและไม่มีอายุ ----
         $annualRate = null;
-        if (empty($tiers) && $lifeMonths <= 0 && $asset->depreciation_rate) {
-            $annualRate = (float) $asset->depreciation_rate;
+        if (empty($tiers) && $lifeMonths <= 0) {
+            foreach ([$asset['depreciation_rate'] ?? null, $p['annual_rate'] ?? null] as $candidate) {
+                if ($candidate !== null && $candidate !== '' && (float) $candidate > 0) {
+                    $annualRate = (float) $candidate;
+                    break;
+                }
+            }
         }
 
         return DepreciationCalculator::params([
             'cost' => $cost,
             'salvage_value' => $salvage,
-            'salvage_value_type' => DepreciationProfile::SALVAGE_AMOUNT,
-            'method' => $asset->depreciation_method ?: DepreciationProfile::METHOD_STRAIGHT_LINE,
+            'salvage_value_type' => DepreciationProfile::SALVAGE_AMOUNT, // แปลงเป็นจำนวนเงินแล้ว
+            'method' => ($asset['depreciation_method'] ?? null)
+                ?: ($p['method'] ?? DepreciationProfile::METHOD_STRAIGHT_LINE),
             'useful_life_months' => $lifeMonths,
             'annual_rate' => $annualRate,
-            'calculation_basis' => $basis,
-            'start_rule' => DepreciationProfile::START_READY_DATE, // start_date ถูก resolve แล้ว
-            'rounding_scale' => $profile ? (int) $profile->rounding_scale : 2,
+            'calculation_basis' => $p['calculation_basis'] ?? DepreciationProfile::BASIS_MONTHLY,
+            'start_rule' => $startRule,
+            'rounding_scale' => isset($p['rounding_scale']) ? (int) $p['rounding_scale'] : 2,
             'acquisition_date' => $startDate,
             'rate_tiers' => $tiers,
         ]);
@@ -95,32 +163,62 @@ class DepreciationRunService
     }
 
     /**
-     * ทรัพย์สินที่มีสิทธิ์คิดค่าเสื่อม
+     * query ทรัพย์สินที่มีสิทธิ์คิดค่าเสื่อม
      *
-     * @return Asset[]
+     * เกณฑ์:
+     *   - ยังไม่ถูกลบ · มีราคาทุน > 0 · มีวันรับเข้า
+     *   - ไม่ใช่ทรัพย์สินที่จำหน่ายแล้ว (lifecycle_status = disposed)
+     *   - อยู่ในกลุ่มประเภทที่คิดค่าเสื่อม (อาคาร/ครุภัณฑ์/สิ่งก่อสร้าง) — ตัดวัสดุและสินทรัพย์ไม่มีตัวตน
+     *     หรือถูกกำหนดเกณฑ์รายชิ้นไว้แล้ว (override ระดับ asset)
+     *
+     * หมายเหตุ: ไม่บังคับว่าต้องมีอายุการใช้งานบนตัวทรัพย์สิน — อายุมาจากเกณฑ์ที่ผูกไว้ได้
+     * (ชิ้นที่หาเกณฑ์ไม่เจอจริง ๆ จะถูกนับเป็น no_profile ตอนรัน)
      */
-    public function eligibleAssets(): array
+    public function eligibleQuery(): \yii\db\ActiveQuery
     {
+        $typeCodes = DepreciationProfileResolver::depreciableTypeCodes();
+
         return Asset::find()
             ->andWhere(['deleted_at' => null])
             ->andWhere(['>', 'price', 0])
-            ->andWhere(['or',
-                ['and', ['not', ['useful_life_months' => null]], ['>', 'useful_life_months', 0]],
-                ['and', ['not', ['useful_life' => null]], ['>', 'useful_life', 0]],
-            ])
             ->andWhere(['not', ['receive_date' => null]])
-            ->all();
+            ->andWhere(['or',
+                ['lifecycle_status' => null],
+                ['<>', 'lifecycle_status', Asset::LIFECYCLE_DISPOSED],
+            ])
+            ->andWhere(['or',
+                ['asset_type_id' => $typeCodes],
+                ['and', ['not', ['depreciation_profile_id' => null]], ['>', 'depreciation_profile_id', 0]],
+            ])
+            ->orderBy(['id' => SORT_ASC]);
+    }
+
+    /**
+     * ทรัพย์สินที่มีสิทธิ์คิดค่าเสื่อม — อ่านเป็นชุด (batch) กันหน่วยความจำบานเมื่อทะเบียนใหญ่
+     *
+     * @return iterable<Asset>
+     */
+    public function eligibleAssets(int $batchSize = 200): iterable
+    {
+        foreach ($this->eligibleQuery()->each($batchSize) as $asset) {
+            yield $asset;
+        }
     }
 
     /**
      * ประมวลผลค่าเสื่อมของงวด (เฉพาะงวดชนิด month)
      *
      * @param bool $save true=บันทึกลง DB, false=preview เท่านั้น
-     * @return array{success:bool, message:string, period:string, created:int, updated:int, skipped:int, rows:array}
+     * @return array{success:bool, message:string, period:string, created:int, updated:int, skipped:int, rows:array, excluded:array}
      */
     public function runForPeriod(AccountingPeriod $period, bool $save = true, ?int $userId = null): array
     {
-        $base = ['success' => false, 'message' => '', 'period' => $period->name, 'created' => 0, 'updated' => 0, 'skipped' => 0, 'rows' => []];
+        $base = [
+            'success' => false, 'message' => '', 'period' => $period->name,
+            'created' => 0, 'updated' => 0, 'skipped' => 0, 'rows' => [],
+            // เหตุผลที่ทรัพย์สินไม่เข้างวดนี้ — ให้หน้าตรวจผลอธิบายได้ว่าทำไมยอดน้อยกว่าที่คาด
+            'excluded' => ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0],
+        ];
 
         if ($period->period_type !== AccountingPeriod::TYPE_MONTH) {
             $base['message'] = 'คำนวณได้เฉพาะงวดรายเดือน (ไตรมาส/ปีให้รวมจากรายเดือน)';
@@ -139,15 +237,21 @@ class DepreciationRunService
         $updated = 0;
         $skipped = 0;
         $rows = [];
+        $excluded = ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0];
 
         $tx = $save ? Yii::$app->db->beginTransaction() : null;
         try {
             foreach ($this->eligibleAssets() as $asset) {
                 $resolved = $resolver->resolve($asset);
                 $profile = $resolved['profile'] ?? null;
+                if ($profile === null && empty($asset->useful_life_months) && empty($asset->useful_life)) {
+                    $excluded['no_profile']++;
+                    continue;
+                }
                 $params = self::paramsForAsset($asset, $profile);
                 $sch = DepreciationCalculator::buildMonthlySchedule($params);
                 if (!$sch['can_calculate']) {
+                    $excluded['cannot_calculate']++;
                     continue;
                 }
 
@@ -160,6 +264,7 @@ class DepreciationRunService
                     }
                 }
                 if ($row === null) {
+                    $excluded['out_of_period']++;
                     continue; // ทรัพย์สินยังไม่เริ่ม หรือหมดอายุค่าเสื่อมในงวดนี้
                 }
 
@@ -236,7 +341,11 @@ class DepreciationRunService
         $base['updated'] = $updated;
         $base['skipped'] = $skipped;
         $base['rows'] = $rows;
+        $base['excluded'] = $excluded;
         $base['message'] = ($save ? 'ประมวลผล' : 'ทดลองคำนวณ') . "งวด {$period->name}: สร้าง {$created} ปรับ {$updated} ข้าม {$skipped} รายการ";
+        if ($excluded['no_profile'] > 0) {
+            $base['message'] .= " · ยังไม่ได้ผูกเกณฑ์ {$excluded['no_profile']} รายการ";
+        }
         return $base;
     }
 }

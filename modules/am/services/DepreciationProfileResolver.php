@@ -37,6 +37,29 @@ class DepreciationProfileResolver
     ];
 
     /**
+     * กลุ่มประเภทหลัก (categorise.group_id ของ asset_type) ที่คิดค่าเสื่อม
+     * อาคาร (BLDG) + ครุภัณฑ์ (EQUIP) + สิ่งก่อสร้าง (STRUCT)
+     * — ตัดวัสดุ (MATER) / สินทรัพย์ไม่มีตัวตน (INTAN) / ที่ดิน ออก
+     */
+    public const DEPRECIABLE_TYPE_GROUPS = ['BLDG', 'EQUIP', 'STRUCT'];
+
+    /**
+     * code ของ asset_type ทุกแถวที่อยู่ในกลุ่มที่คิดค่าเสื่อม (distinct — ข้อมูลจริงมีรหัสซ้ำหลายแถว)
+     *
+     * @return string[]
+     */
+    public static function depreciableTypeCodes(): array
+    {
+        return array_values(array_unique(array_filter(
+            Categorise::find()
+                ->select('code')->distinct()
+                ->where(['name' => self::SOURCE_TYPE, 'group_id' => self::DEPRECIABLE_TYPE_GROUPS])
+                ->column(),
+            static fn($c) => $c !== null && $c !== ''
+        )));
+    }
+
+    /**
      * เลือกระดับที่เฉพาะเจาะจงที่สุดที่มี profile_id
      *
      * @param array<string,int|null> $candidates map source_type => profile_id|null
@@ -109,10 +132,17 @@ class DepreciationProfileResolver
      * สร้าง snapshot ของเกณฑ์เพื่อบันทึกลงทรัพย์สิน ณ วันขึ้นทะเบียน
      * (การแก้ profile ภายหลังจะไม่กระทบ snapshot นี้)
      *
+     * @param float|null $cost ราคาทุน — ใช้แปลงมูลค่าซากชนิด "ร้อยละ" ให้เป็นจำนวนเงิน
+     *                         (คอลัมน์ residual_value เก็บเป็นจำนวนเงินเสมอ)
      * @return array<string,mixed> คีย์ตรงกับคอลัมน์ snapshot ใน asset
      */
-    public static function buildSnapshot(DepreciationProfile $profile, string $sourceType, ?int $sourceId, ?string $acquisitionDate): array
-    {
+    public static function buildSnapshot(
+        DepreciationProfile $profile,
+        string $sourceType,
+        ?int $sourceId,
+        ?string $acquisitionDate,
+        ?float $cost = null
+    ): array {
         $startDate = DepreciationCalculator::resolveStartDate($acquisitionDate, $profile->start_rule);
         $endDate = null;
         if ($startDate && $profile->useful_life_months) {
@@ -121,12 +151,19 @@ class DepreciationProfileResolver
             $endDate = date('Y-m-d', strtotime('+' . (int) $profile->useful_life_months . ' month -1 day', $ts));
         }
 
+        // มูลค่าซาก: แปลงตามชนิดของเกณฑ์ (จำนวนเงิน / ร้อยละของทุน / 1 บาท) ให้เป็นจำนวนเงินเสมอ
+        $salvage = DepreciationCalculator::resolveSalvage(
+            (float) ($cost ?? 0),
+            (string) $profile->salvage_value_type,
+            (float) $profile->salvage_value
+        );
+
         return [
             'depreciation_profile_id' => $profile->id,
             'depreciation_method' => $profile->method,
             'useful_life_months' => $profile->useful_life_months,
             'depreciation_rate' => $profile->annual_rate,
-            'residual_value' => $profile->salvage_value, // salvage snapshot (reuse คอลัมน์เดิม)
+            'residual_value' => round($salvage, 2), // salvage snapshot เป็นจำนวนเงิน (reuse คอลัมน์เดิม)
             'depreciation_start_date' => $startDate,
             'depreciation_end_date' => $endDate,
             'depreciation_source_type' => $sourceType,

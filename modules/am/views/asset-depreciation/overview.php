@@ -67,6 +67,7 @@ $this->beginBlock('action'); ?>
                 <div class="dep-actions">
                     <?= Html::a('<i data-lucide="percent"></i> จัดการเกณฑ์', ['/am/depreciation-profile/index'], ['class' => 'btn btn-sm btn-primary']) ?>
                     <?= Html::a('<i data-lucide="link"></i> ผูกเกณฑ์เข้าลำดับชั้น', ['/am/depreciation-binding/index'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+                    <?= Html::a('<i data-lucide="anchor"></i> ตรึงเกณฑ์ให้ทะเบียนเดิม', ['/am/asset-depreciation/backfill'], ['class' => 'btn btn-sm ' . ($stage1Ready && $assetTotal > $assetSnapped ? 'btn-primary' : 'btn-outline-primary')]) ?>
                 </div>
             </div>
         </li>
@@ -138,7 +139,9 @@ $this->beginBlock('action'); ?>
         <div>
             ครุภัณฑ์ที่รับเกณฑ์เข้าระบบแล้ว <b><?= number_format($assetSnapped) ?></b> จาก <b><?= number_format($assetTotal) ?></b> รายการ
             <?php if ($assetTotal > $assetSnapped): ?>
-                <span class="dep-muted">— ที่เหลือจะรับเกณฑ์อัตโนมัติเมื่อบันทึกครุภัณฑ์ครั้งถัดไป (หากหมวดผูกเกณฑ์ไว้)</span>
+                <span class="dep-muted">— ครุภัณฑ์ที่บันทึกใหม่จะรับเกณฑ์อัตโนมัติ ส่วนทะเบียนเดิมต้องกด</span>
+                <?= Html::a('ตรึงเกณฑ์ให้ทะเบียนเดิม', ['/am/asset-depreciation/backfill']) ?>
+                <span class="dep-muted">หนึ่งครั้ง</span>
             <?php endif; ?>
         </div>
     </div>

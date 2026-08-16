@@ -24,11 +24,10 @@ class DepreciationBindingController extends Controller
     ];
 
     /**
-     * ระดับ "ประเภทหลัก" (asset_type) แสดงเฉพาะกลุ่มที่คิดค่าเสื่อม:
-     * อาคาร (BLDG) + ครุภัณฑ์ (EQUIP) + สิ่งก่อสร้าง (STRUCT) — ตัดวัสดุ (MATER)/ไม่มีตัวตน (INTAN)/ไม่ระบุ ออก
-     * (อาคารถาวรคิดค่าเสื่อม; ที่ดินไม่คิด — ไม่มีในกลุ่มนี้)
+     * ระดับ "ประเภทหลัก" (asset_type) แสดงเฉพาะกลุ่มที่คิดค่าเสื่อม
+     * (นิยามกลางอยู่ที่ DepreciationProfileResolver::DEPRECIABLE_TYPE_GROUPS เพื่อให้หน้าจอกับตัวคำนวณใช้ชุดเดียวกัน)
      */
-    private const DEPRECIABLE_TYPE_GROUPS = ['BLDG', 'EQUIP', 'STRUCT'];
+    private const DEPRECIABLE_TYPE_GROUPS = DepreciationProfileResolver::DEPRECIABLE_TYPE_GROUPS;
 
     public function behaviors()
     {
