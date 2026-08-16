@@ -4,6 +4,7 @@ namespace app\modules\am\services;
 
 use Yii;
 use app\modules\am\models\Asset;
+use app\modules\am\models\AssetDisposal;
 use app\modules\am\models\AccountingPeriod;
 use app\modules\am\models\AssetDepreciation;
 use app\modules\am\models\DepreciationProfile;
@@ -26,7 +27,7 @@ class DepreciationRunService
     /**
      * สร้างพารามิเตอร์คำนวณจาก snapshot ของทรัพย์สิน (+ เกณฑ์ที่ผูก ถ้ามี)
      */
-    public static function paramsForAsset(Asset $asset, ?DepreciationProfile $profile = null): array
+    public static function paramsForAsset(Asset $asset, ?DepreciationProfile $profile = null, ?string $disposalDate = null): array
     {
         $profileValues = null;
         if ($profile) {
@@ -60,6 +61,7 @@ class DepreciationRunService
             'depreciation_method' => $asset->depreciation_method,
             'depreciation_start_date' => $asset->depreciation_start_date,
             'receive_date' => $asset->receive_date,
+            'disposal_date' => $disposalDate,
         ], $profileValues);
     }
 
@@ -134,6 +136,7 @@ class DepreciationRunService
 
         return DepreciationCalculator::params([
             'cost' => $cost,
+            'disposal_date' => $asset['disposal_date'] ?? null,
             'salvage_value' => $salvage,
             'salvage_value_type' => DepreciationProfile::SALVAGE_AMOUNT, // แปลงเป็นจำนวนเงินแล้ว
             'method' => ($asset['depreciation_method'] ?? null)
@@ -155,7 +158,8 @@ class DepreciationRunService
     {
         $resolver = new DepreciationProfileResolver();
         $resolved = $resolver->resolve($asset);
-        $params = self::paramsForAsset($asset, $resolved['profile'] ?? null);
+        $disposalDate = $this->disposalDates()[(int) $asset->id] ?? null;
+        $params = self::paramsForAsset($asset, $resolved['profile'] ?? null, $disposalDate);
         $schedule = DepreciationCalculator::buildMonthlySchedule($params);
         $schedule['resolved'] = $resolved;
         $schedule['params'] = $params;
@@ -183,14 +187,64 @@ class DepreciationRunService
             ->andWhere(['>', 'price', 0])
             ->andWhere(['not', ['receive_date' => null]])
             ->andWhere(['or',
-                ['lifecycle_status' => null],
-                ['<>', 'lifecycle_status', Asset::LIFECYCLE_DISPOSED],
-            ])
-            ->andWhere(['or',
                 ['asset_type_id' => $typeCodes],
                 ['and', ['not', ['depreciation_profile_id' => null]], ['>', 'depreciation_profile_id', 0]],
             ])
             ->orderBy(['id' => SORT_ASC]);
+    }
+
+    /**
+     * วันจำหน่ายของทรัพย์สิน (จากใบจำหน่ายที่อนุมัติ/ดำเนินการแล้ว)
+     *
+     * ใช้หยุดคิดค่าเสื่อมหลังวันจำหน่าย — ทรัพย์สินที่จำหน่ายแล้วยังต้องคิดค่าเสื่อม
+     * ของเดือนสุดท้ายจนถึงวันจำหน่าย จึงตัดออกจาก eligibleQuery ไม่ได้
+     *
+     * @return array<int,string> asset_id => Y-m-d
+     */
+    public function disposalDates(): array
+    {
+        try {
+            if (Yii::$app->db->getTableSchema('{{%asset_disposal_items}}') === null) {
+                return [];
+            }
+            $rows = (new \yii\db\Query())
+                ->select(['i.asset_id', 'disposal_date' => 'MIN(d.disposal_date)'])
+                ->from(['i' => '{{%asset_disposal_items}}'])
+                ->innerJoin(['d' => '{{%asset_disposals}}'], 'd.id = i.disposal_id')
+                ->where(['d.status' => [AssetDisposal::STATUS_APPROVED, AssetDisposal::STATUS_DONE]])
+                ->andWhere(['not', ['i.asset_id' => null]])
+                ->andWhere(['not', ['d.disposal_date' => null]])
+                ->groupBy('i.asset_id')
+                ->all();
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['asset_id']] = (string) $r['disposal_date'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * งวดเดือนก่อนหน้าในปีงบเดียวกันที่ยังไม่ได้คำนวณ — ต้องเดินงวดตามลำดับ
+     * ไม่งั้นยอดสะสมในบัญชีจะข้ามเดือนโดยไม่มีใครสังเกต
+     *
+     * @return AccountingPeriod[]
+     */
+    public function pendingEarlierPeriods(AccountingPeriod $period): array
+    {
+        return AccountingPeriod::find()
+            ->where([
+                'period_type' => AccountingPeriod::TYPE_MONTH,
+                'fiscal_year' => $period->fiscal_year,
+                'status' => AccountingPeriod::STATUS_OPEN,
+            ])
+            ->andWhere(['<', 'start_date', $period->start_date])
+            ->orderBy(['start_date' => SORT_ASC])
+            ->all();
     }
 
     /**
@@ -217,7 +271,7 @@ class DepreciationRunService
             'success' => false, 'message' => '', 'period' => $period->name,
             'created' => 0, 'updated' => 0, 'skipped' => 0, 'rows' => [],
             // เหตุผลที่ทรัพย์สินไม่เข้างวดนี้ — ให้หน้าตรวจผลอธิบายได้ว่าทำไมยอดน้อยกว่าที่คาด
-            'excluded' => ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0],
+            'excluded' => ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0, 'disposed_no_date' => 0],
         ];
 
         if ($period->period_type !== AccountingPeriod::TYPE_MONTH) {
@@ -229,26 +283,46 @@ class DepreciationRunService
             return $base;
         }
 
+        // บันทึกจริงต้องเดินงวดตามลำดับ — กันคำนวณเดือน มี.ค. ทั้งที่ ม.ค.-ก.พ. ยังไม่ได้ทำ
+        if ($save) {
+            $pending = $this->pendingEarlierPeriods($period);
+            if ($pending) {
+                $names = implode(', ', array_map(static fn($p) => $p->name, array_slice($pending, 0, 3)));
+                $more = count($pending) > 3 ? ' และอีก ' . (count($pending) - 3) . ' งวด' : '';
+                $base['message'] = "ต้องคำนวณงวดก่อนหน้าให้เสร็จก่อน: {$names}{$more}";
+                return $base;
+            }
+        }
+
         $periodYear = (int) date('Y', strtotime($period->start_date));
         $periodMonth = (int) date('n', strtotime($period->start_date));
         $resolver = new DepreciationProfileResolver();
+        $disposals = $this->disposalDates();
 
         $created = 0;
         $updated = 0;
         $skipped = 0;
         $rows = [];
-        $excluded = ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0];
+        $excluded = ['no_profile' => 0, 'cannot_calculate' => 0, 'out_of_period' => 0, 'disposed_no_date' => 0];
 
         $tx = $save ? Yii::$app->db->beginTransaction() : null;
         try {
             foreach ($this->eligibleAssets() as $asset) {
+                $disposalDate = $disposals[(int) $asset->id] ?? null;
+                // ทำเครื่องหมายว่าจำหน่ายแล้วแต่ไม่มีใบจำหน่ายที่ระบุวันที่ — ไม่เดาวันให้
+                // (นับแยกไว้ให้เห็น ดีกว่าคิดค่าเสื่อมต่อไปเงียบ ๆ)
+                if ($disposalDate === null && $asset->lifecycle_status === Asset::LIFECYCLE_DISPOSED) {
+                    $excluded['disposed_no_date']++;
+                    continue;
+                }
+
                 $resolved = $resolver->resolve($asset);
                 $profile = $resolved['profile'] ?? null;
                 if ($profile === null && empty($asset->useful_life_months) && empty($asset->useful_life)) {
                     $excluded['no_profile']++;
                     continue;
                 }
-                $params = self::paramsForAsset($asset, $profile);
+                $params = self::paramsForAsset($asset, $profile, $disposalDate);
                 $sch = DepreciationCalculator::buildMonthlySchedule($params);
                 if (!$sch['can_calculate']) {
                     $excluded['cannot_calculate']++;
@@ -345,6 +419,9 @@ class DepreciationRunService
         $base['message'] = ($save ? 'ประมวลผล' : 'ทดลองคำนวณ') . "งวด {$period->name}: สร้าง {$created} ปรับ {$updated} ข้าม {$skipped} รายการ";
         if ($excluded['no_profile'] > 0) {
             $base['message'] .= " · ยังไม่ได้ผูกเกณฑ์ {$excluded['no_profile']} รายการ";
+        }
+        if ($excluded['disposed_no_date'] > 0) {
+            $base['message'] .= " · จำหน่ายแล้วแต่ไม่มีวันจำหน่าย {$excluded['disposed_no_date']} รายการ";
         }
         return $base;
     }

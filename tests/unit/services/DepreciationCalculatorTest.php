@@ -46,7 +46,12 @@ class DepreciationCalculatorTest extends Unit
         $this->assertEqualsWithDelta(119999.0, $this->sumDep($res['schedule']), 0.005);
     }
 
-    /** Case 6: เริ่มใช้งานกลางเดือน คิดตามจำนวนวัน (15 ม.ค. → 17 วัน) */
+    /**
+     * Case 6: เริ่มใช้งานกลางเดือน คิดตามจำนวนวัน (15 ม.ค. → 17 วัน จาก 31 วันของเดือนนั้น)
+     *
+     * คิดตามสัดส่วนวันจริงของเดือน ไม่ใช่ฐาน 30 วันตายตัว — ฐาน 30 วันทำให้เดือนที่มี
+     * 31 วันคิดเกินเดือนเต็มไป 3% (31/30) ซึ่งเป็นไปไม่ได้ในทางบัญชี
+     */
     public function testMidMonthDailyProration()
     {
         $res = C::buildMonthlySchedule([
@@ -61,10 +66,118 @@ class DepreciationCalculatorTest extends Unit
         $this->assertTrue($res['can_calculate']);
         $first = $res['schedule'][0];
         $this->assertSame(17, $first['days_used']); // 31 - 15 + 1
-        // (11999/12)/30*17 = 566.62
-        $this->assertEqualsWithDelta(566.62, $first['depreciation'], 0.005);
+        // (11999/12) × 17/31 = 548.34
+        $this->assertEqualsWithDelta(548.34, $first['depreciation'], 0.005);
+        // เดือนแรกต้องไม่เกินเดือนเต็มเด็ดขาด
+        $this->assertLessThan($res['schedule'][1]['depreciation'], $first['depreciation']);
         // เดือนถัดไปเป็นเดือนเต็ม
         $this->assertEqualsWithDelta(999.92, $res['schedule'][1]['depreciation'], 0.005);
+    }
+
+    /** เริ่มกลางเดือนต้องมีงวดท้ายเก็บส่วนที่เหลือ และยอดรวมต้องเท่าฐานพอดี */
+    public function testMidMonthAddsFinalPartialMonth()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 12000,
+            'salvage_value_type' => P::SALVAGE_ONE_BAHT,
+            'useful_life_months' => 12,
+            'calculation_basis' => P::BASIS_DAILY,
+            'start_rule' => P::START_READY_DATE,
+            'acquisition_date' => '2024-01-15',
+        ]);
+
+        // 12 เดือนตามอายุ + 1 งวดท้ายที่เก็บวันที่ 1-14
+        $this->assertCount(13, $res['schedule']);
+        $last = end($res['schedule']);
+        $this->assertSame(2025, $last['calendar_year']);
+        $this->assertSame(1, $last['calendar_month']);
+        $this->assertSame(14, $last['days_used']);
+        // ปิดพอดีที่มูลค่าซาก และผลรวม = ฐานค่าเสื่อม
+        $this->assertEqualsWithDelta(1.0, $last['remaining_value'], 0.005);
+        $this->assertEqualsWithDelta(11999.0, $this->sumDep($res['schedule']), 0.005);
+    }
+
+    /** เริ่มวันที่ 1 ไม่ต้องมีงวดท้ายเพิ่ม (เดือนเต็มทุกเดือน) */
+    public function testFirstDayOfMonthHasNoExtraPeriod()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 12000,
+            'salvage_value_type' => P::SALVAGE_ONE_BAHT,
+            'useful_life_months' => 12,
+            'calculation_basis' => P::BASIS_DAILY,
+            'start_rule' => P::START_READY_DATE,
+            'acquisition_date' => '2024-01-01',
+        ]);
+
+        $this->assertCount(12, $res['schedule']);
+        $this->assertSame(31, $res['schedule'][0]['days_used']);
+        $this->assertEqualsWithDelta(11999.0, $this->sumDep($res['schedule']), 0.005);
+    }
+
+    /** จำหน่ายกลางอายุ: หยุดคิดค่าเสื่อมหลังเดือนที่จำหน่าย */
+    public function testStopsAtDisposalMonth()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 120000,
+            'salvage_value_type' => P::SALVAGE_ONE_BAHT,
+            'useful_life_months' => 120,
+            'calculation_basis' => P::BASIS_MONTHLY,
+            'start_rule' => P::START_READY_MONTH,
+            'acquisition_date' => '2024-10-01',
+            'disposal_date' => '2025-03-20',
+        ]);
+
+        $this->assertTrue($res['can_calculate']);
+        $last = end($res['schedule']);
+        $this->assertSame(2025, $last['calendar_year']);
+        $this->assertSame(3, $last['calendar_month']);
+        // ต.ค.67 - มี.ค.68 = 6 งวด · ไม่ปิดที่มูลค่าซากเพราะยังไม่หมดอายุ
+        $this->assertCount(6, $res['schedule']);
+        $this->assertGreaterThan(1.0, $last['remaining_value']);
+    }
+
+    /** จำหน่ายกลางเดือนแบบคิดตามวัน: เดือนที่จำหน่ายคิดถึงวันที่จำหน่ายเท่านั้น */
+    public function testDisposalMonthProratedByDays()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 12000,
+            'salvage_value_type' => P::SALVAGE_ONE_BAHT,
+            'useful_life_months' => 12,
+            'calculation_basis' => P::BASIS_DAILY,
+            'start_rule' => P::START_READY_MONTH,
+            'acquisition_date' => '2024-01-01',
+            'disposal_date' => '2024-03-10',
+        ]);
+
+        $this->assertCount(3, $res['schedule']);
+        $last = end($res['schedule']);
+        $this->assertSame(10, $last['days_used']);
+        // (11999/12) × 10/31 = 322.55
+        $this->assertEqualsWithDelta(322.55, $last['depreciation'], 0.005);
+    }
+
+    /** ยอดรวมรายไตรมาส/ปี ต้องปัดเศษด้วย scale เดียวกับ schedule */
+    public function testAggregateUsesProfileScale()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 100000,
+            'salvage_value_type' => P::SALVAGE_ONE_BAHT,
+            'useful_life_months' => 36,
+            'rounding_scale' => 0,
+            'calculation_basis' => P::BASIS_MONTHLY,
+            'start_rule' => P::START_READY_MONTH,
+            'acquisition_date' => '2024-10-01',
+        ]);
+
+        $byYear = C::aggregateByFiscal($res['schedule'], 'fiscal_year', 0);
+        foreach ($byYear as $row) {
+            $this->assertSame(round($row['depreciation'], 0), $row['depreciation']);
+        }
+        $this->assertEqualsWithDelta(
+            $this->sumDep($res['schedule']),
+            array_sum(array_column($byYear, 'depreciation')),
+            0.005
+        );
     }
 
     /** Case 7: เริ่มคิดเดือนถัดไป */

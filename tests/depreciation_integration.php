@@ -1,13 +1,16 @@
 <?php
 /**
- * Integration test harness for the depreciation posting pipeline (cases 10-12 + end-to-end).
+ * Integration harness ของสายงานค่าเสื่อม (run → post → reverse → adjustment + กฎลำดับงวด)
  *
- * Codeception's vendor install is broken in the dev container (missing behat/gherkin i18n.php),
- * so this self-contained, self-cleaning CLI harness runs the DB-backed cases instead.
- * Pure calculation cases (1-9, 13-15) live in tests/unit/services/*Test.php (Codeception).
+ * Codeception ในคอนเทนเนอร์ dev ต่อ DB ทดสอบไม่ได้ (config/test_db.php ชี้ไป yii2basic_test
+ * ที่ localhost ซึ่งไม่มีในสภาพแวดล้อมนี้) จึงใช้ CLI harness ตัวนี้รันเคสที่ต้องใช้ DB จริง
+ * ส่วนเคสคำนวณล้วนอยู่ใน tests/unit/services/*Test.php (Codeception)
+ *
+ * ความปลอดภัย: ทุกอย่างทำในทรานแซกชันเดียวแล้ว ROLLBACK เสมอ — ไม่แตะข้อมูลจริงแม้แต่แถวเดียว
+ * (เวอร์ชันก่อนหน้าใช้ DELETE ทั้งตาราง accounting_periods / asset_depreciations ตอน cleanup
+ *  ซึ่งจะล้างงวดบัญชีจริงทิ้งทั้งหมดเมื่อระบบเริ่มใช้งานจริง)
  *
  * Run:  docker exec dansai php /app/tests/depreciation_integration.php
- * It creates temp data on the ACTIVE tenant, verifies, then restores/cleans everything.
  */
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
@@ -40,11 +43,11 @@ function check(string $label, bool $cond): void
     }
 }
 
-echo "DB = " . Yii::$app->db->dsn . "\n\n";
+echo "DB = " . Yii::$app->db->dsn . "\n";
+echo "(ทุกอย่างรันในทรานแซกชันแล้ว rollback — ข้อมูลจริงไม่ถูกแตะ)\n\n";
 
 $assetId = (int) (new yii\db\Query())->select('id')->from('asset')
     ->where(['deleted_at' => null])->andWhere(['>', 'price', 5000])
-    ->andWhere(['>', 'useful_life', 0])
     ->andWhere(['between', 'receive_date', '2022-01-01', '2024-06-01'])
     ->limit(1)->scalar();
 
@@ -55,25 +58,21 @@ if (!$assetId) {
 $asset = Asset::findOne($assetId);
 echo "asset $assetId code={$asset->code} price={$asset->price} recv={$asset->receive_date}\n\n";
 
-$origFields = ['depreciation_profile_id', 'useful_life_months', 'depreciation_start_date', 'depreciation_end_date',
-    'depreciation_source_type', 'depreciation_source_id', 'depreciation_status', 'residual_value', 'depreciation_rate', 'depreciation_method'];
-$orig = [];
-foreach ($origFields as $f) {
-    $orig[$f] = $asset->{$f};
-}
-
-$pA = $pB = null;
+$tx = Yii::$app->db->beginTransaction();
 try {
     $periodSvc = new AccountingPeriodService();
     $runSvc = new DepreciationRunService();
     $postSvc = new DepreciationPostingService();
     $reportSvc = new DepreciationReportService();
 
-    // ---- setup: periods + 2 profiles ----
+    // ---------- setup: งวดปีงบ 2568 + เกณฑ์ 2 ตัว ----------
     $periodSvc->generateFiscalYear(2568);
-    check('generate FY2568 = 17 periods', AccountingPeriod::find()->where(['fiscal_year' => 2568])->count() == 17);
-    $m1 = AccountingPeriod::findOne(['fiscal_year' => 2568, 'period_type' => 'month', 'period_no' => 4]);
-    $m2 = AccountingPeriod::findOne(['fiscal_year' => 2568, 'period_type' => 'month', 'period_no' => 5]);
+    check('generate FY2568 = 17 งวด', AccountingPeriod::find()->where(['fiscal_year' => 2568])->count() == 17);
+
+    $months = [];
+    for ($n = 1; $n <= 5; $n++) {
+        $months[$n] = AccountingPeriod::findOne(['fiscal_year' => 2568, 'period_type' => 'month', 'period_no' => $n]);
+    }
 
     $pA = new DepreciationProfile(['code' => '_IT_A', 'name' => '5y', 'method' => 'straight_line', 'useful_life_months' => 60, 'salvage_value_type' => 'one_baht', 'calculation_basis' => 'monthly', 'start_rule' => 'ready_month', 'status' => 'active']);
     $pA->save();
@@ -88,61 +87,87 @@ try {
     $asset->depreciation_source_type = 'asset';
     $asset->save(false);
 
-    // ---- pipeline: run + post month1 ----
-    $runSvc->runForPeriod($m1, true, 1);
-    $postSvc->postPeriod($m1, 1);
-    $m1->refresh();
-    check('period posted after post', $m1->status === AccountingPeriod::STATUS_POSTED);
+    // ---------- กฎลำดับงวด: ห้ามข้ามงวด ----------
+    $skip = $runSvc->runForPeriod($months[4], true, 1);
+    check('guard: คำนวณข้ามงวดถูกปฏิเสธ', !$skip['success'] && strpos($skip['message'], 'งวดก่อนหน้า') !== false);
+    check('guard: ทดลองคำนวณ (ไม่บันทึก) ยังทำได้', $runSvc->runForPeriod($months[4], false, 1)['success']);
+
+    // ---------- run ตามลำดับ ----------
+    for ($n = 1; $n <= 4; $n++) {
+        $runSvc->runForPeriod($months[$n], true, 1);
+    }
+    $m1 = $months[4];
     $row1 = AssetDepreciation::findOne(['asset_id' => $assetId, 'accounting_period_id' => $m1->id, 'transaction_type' => 'normal']);
-    $m1dep = (float) $row1->depreciation_amount;
+    check('run: สร้างรายการค่าเสื่อมของงวดแล้ว', $row1 !== null);
+    $m1dep = $row1 ? (float) $row1->depreciation_amount : 0.0;
 
-    // ---- case 11: posted period must refuse recalc ----
-    check('case11: posted period refuses recalc', !$runSvc->runForPeriod($m1, true, 1)['success']);
+    // ---------- post ----------
+    $badPost = $postSvc->postPeriod($m1, 1);
+    check('guard: บันทึกบัญชีข้ามงวดถูกปฏิเสธ', !$badPost['success'] && strpos($badPost['message'], 'งวดก่อนหน้า') !== false);
+    for ($n = 1; $n <= 3; $n++) {
+        $postSvc->postPeriod($months[$n], 1);
+    }
+    $okPost = $postSvc->postPeriod($m1, 1);
+    check('post: บันทึกบัญชีสำเร็จเมื่องวดก่อนหน้าปิดครบ', $okPost['success']);
+    $m1->refresh();
+    check('post: สถานะงวด = posted', $m1->status === AccountingPeriod::STATUS_POSTED);
+    check('post: งวดที่ปิดแล้วคำนวณทับไม่ได้', !$runSvc->runForPeriod($m1, true, 1)['success']);
 
-    // ---- case 10: change profile mid-year ----
+    // ---------- reverse ----------
+    $row1->refresh();
+    $rev = $postSvc->reverse($row1, 1, 'ทดสอบกลับรายการ');
+    check('reverse: กลับรายการสำเร็จ', $rev['success']);
+    $row1->refresh();
+    check('reverse: รายการเดิม = reversed', $row1->status === AssetDepreciation::STATUS_REVERSED);
+    $revRow = AssetDepreciation::findOne(['asset_id' => $assetId, 'accounting_period_id' => $m1->id, 'transaction_type' => 'reversal']);
+    check('reverse: ยอดกลับรายการเป็นลบเท่ายอดเดิม',
+        $revRow && abs((float) $revRow->depreciation_amount + $m1dep) < 0.001);
+    check('reverse: ยอดสุทธิของงวดเป็นศูนย์',
+        $revRow && abs($m1dep + (float) $revRow->depreciation_amount) < 0.001);
+    check('reverse: กลับรายการซ้ำไม่ได้', !$postSvc->reverse($row1, 1)['success']);
+
+    // ---------- เปลี่ยนเกณฑ์กลางปี ----------
     $chg = (new AssetDepreciationChangeService())->changeProfile($asset, $pB, '2025-02-01', 'unposted_periods', 'test', 'DOC1', null, 1);
-    check('case10: change recorded', $chg['success']);
+    check('change: บันทึกการเปลี่ยนเกณฑ์', $chg['success']);
     $asset->refresh();
-    check('case10: snapshot -> 120 months', (int) $asset->useful_life_months === 120);
-    $runSvc->runForPeriod($m2, true, 1);
-    $row2 = AssetDepreciation::findOne(['asset_id' => $assetId, 'accounting_period_id' => $m2->id, 'transaction_type' => 'normal']);
-    check('case10: month2 uses new smaller rate', (float) $row2->depreciation_amount < $m1dep);
+    check('change: snapshot เปลี่ยนเป็น 120 เดือน', (int) $asset->useful_life_months === 120);
+    $runSvc->runForPeriod($months[5], true, 1);
+    $row2 = AssetDepreciation::findOne(['asset_id' => $assetId, 'accounting_period_id' => $months[5]->id, 'transaction_type' => 'normal']);
+    check('change: งวดถัดไปใช้อัตราใหม่ที่ต่ำลง', $row2 && (float) $row2->depreciation_amount < $m1dep);
     $row1->refresh();
-    check('case10: closed month1 unchanged', abs((float) $row1->depreciation_amount - $m1dep) < 0.001 && $row1->status === 'posted');
+    check('change: งวดที่ปิดแล้วไม่ถูกคำนวณใหม่', abs((float) $row1->depreciation_amount - $m1dep) < 0.001);
 
-    // ---- case 12: adjustment on closed period ----
+    // ---------- adjustment บนงวดที่ปิดแล้ว ----------
     $adj = $postSvc->createAdjustment($assetId, $m1->id, -50.0, 'ปรับย้อนหลัง', 1);
-    check('case12: adjustment created', $adj['success']);
+    check('adjustment: สร้างรายการปรับปรุงได้', $adj['success']);
     $adjRow = AssetDepreciation::findOne(['asset_id' => $assetId, 'accounting_period_id' => $m1->id, 'transaction_type' => 'adjustment']);
-    check('case12: adjustment amount = -50', $adjRow && abs((float) $adjRow->adjustment_amount + 50.0) < 0.001);
+    check('adjustment: ยอด = -50', $adjRow && abs((float) $adjRow->adjustment_amount + 50.0) < 0.001);
+    check('adjustment: สร้างซ้ำไม่ได้', !$postSvc->createAdjustment($assetId, $m1->id, -10.0, 'ซ้ำ', 1)['success']);
     $row1->refresh();
-    check('case12: original row untouched', abs((float) $row1->depreciation_amount - $m1dep) < 0.001);
+    check('adjustment: รายการเดิมไม่ถูกแตะ', abs((float) $row1->depreciation_amount - $m1dep) < 0.001);
 
-    // ---- report reconcile: quarter == sum of its months (same monthly rows) ----
-    // Q2 = ม.ค.-มี.ค.; งวดที่มีข้อมูล = ม.ค.(post: normal+adjustment) + ก.พ.(calculated: normal)
-    $janTot = $reportSvc->totals($reportSvc->monthly($m1->id));
-    $febTot = $reportSvc->totals($reportSvc->monthly($m2->id));
-    $qTot = $reportSvc->totals($reportSvc->quarter(2568, 2));
-    check('report: quarter == sum of monthly (Jan+Feb)',
-        abs($qTot['depreciation'] - ($janTot['depreciation'] + $febTot['depreciation'])) < 0.02);
+    // ---------- lock ----------
+    $lock = $postSvc->lockPeriod($m1, 1);
+    check('lock: ล็อกงวดที่ post แล้วได้', $lock['success']);
+    $m1->refresh();
+    check('lock: สถานะงวด = locked', $m1->status === AccountingPeriod::STATUS_LOCKED);
 
+    // ---------- รายงานต้องกระทบยอดกับรายเดือน ----------
+    $sumMonths = 0.0;
+    foreach ([1, 2, 3, 4, 5] as $n) {
+        $sumMonths += $reportSvc->totals($reportSvc->monthly($months[$n]->id))['depreciation'];
+    }
+    $q1 = $reportSvc->totals($reportSvc->quarter(2568, 1))['depreciation'];
+    $q2 = $reportSvc->totals($reportSvc->quarter(2568, 2))['depreciation'];
+    check('report: ไตรมาส 1+2 = ผลรวมรายเดือน 1-5', abs(($q1 + $q2) - $sumMonths) < 0.02);
 } catch (\Throwable $e) {
-    echo "EXCEPTION: " . $e->getMessage() . "\n";
+    echo "EXCEPTION: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n";
     $fail++;
 } finally {
-    if ($asset) {
-        foreach ($orig as $f => $v) {
-            $asset->{$f} = $v;
-        }
-        $asset->save(false);
-    }
-    Yii::$app->db->createCommand()->delete('{{%asset_depreciations}}')->execute();
-    Yii::$app->db->createCommand()->delete('{{%asset_depreciation_changes}}')->execute();
-    Yii::$app->db->createCommand()->delete('{{%accounting_periods}}')->execute();
-    Yii::$app->db->createCommand()->delete('{{%depreciation_profiles}}', ['code' => ['_IT_A', '_IT_B']])->execute();
-    echo "\ncleanup: profiles=" . DepreciationProfile::find()->count()
-        . " periods=" . AccountingPeriod::find()->count()
-        . " deps=" . AssetDepreciation::find()->count() . "\n";
+    $tx->rollBack();
+    echo "\n[ROLLBACK] เกณฑ์=" . DepreciationProfile::find()->count()
+        . " งวด=" . AccountingPeriod::find()->count()
+        . " รายการค่าเสื่อม=" . AssetDepreciation::find()->count() . "\n";
     echo "==== $pass passed, $fail failed ====\n";
     exit($fail === 0 ? 0 : 1);
 }
