@@ -11,6 +11,8 @@ use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
+use app\modules\finance\models\FinanceVoucher;
+use app\modules\finance\services\FinanceVoucherDraftService;
 use Codeception\Test\Unit;
 
 class FinanceInboxTest extends Unit
@@ -105,6 +107,25 @@ class FinanceInboxTest extends Unit
         );
         $this->expectException(\DomainException::class);
         FinancePayableApprovalService::targetStatus(FinancePayable::STATUS_APPROVED, FinancePayableReview::DECISION_SUBMIT);
+    }
+
+    public function testVoucherDraftVocabularyIsStable(): void
+    {
+        $this->assertSame('เช็ค', FinanceVoucher::paymentMethodOptions()[FinanceVoucher::METHOD_CHEQUE]);
+        $this->assertSame('โอนเงิน', FinanceVoucher::paymentMethodOptions()[FinanceVoucher::METHOD_BANK_TRANSFER]);
+        $this->assertSame('draft', FinanceVoucher::STATUS_DRAFT);
+    }
+
+    public function testVoucherDraftRejectsUnapprovedPayable(): void
+    {
+        $this->expectException(\DomainException::class);
+        FinanceVoucherDraftService::assertEligible(FinancePayable::STATUS_PENDING_APPROVAL, false);
+    }
+
+    public function testVoucherDraftRejectsDuplicatePayable(): void
+    {
+        $this->expectException(\DomainException::class);
+        FinanceVoucherDraftService::assertEligible(FinancePayable::STATUS_APPROVED, true);
     }
 
 }

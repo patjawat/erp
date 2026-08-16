@@ -8,7 +8,7 @@ $active = $active ?? '';
 $items = [
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/finance/dashboard']],
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'budget', 'label' => 'งบประมาณ', 'icon' => 'bi-pie-chart', 'url' => ['/finance/dashboard', '#' => 'budget-overview']],
-    ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'voucher', 'label' => 'เบิกจ่าย', 'icon' => 'bi-file-earmark-check', 'url' => ['/finance/voucher']],
+    ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'voucher', 'label' => 'เบิกจ่ายและฎีกา', 'icon' => 'bi-file-earmark-check', 'url' => ['/finance/voucher']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'loan', 'label' => 'เงินยืม', 'icon' => 'bi-person-vcard', 'url' => ['/finance/loan']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'payment', 'label' => 'รับ–จ่ายเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/payment']],
 ];

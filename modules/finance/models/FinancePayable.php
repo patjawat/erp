@@ -119,4 +119,9 @@ class FinancePayable extends ActiveRecord
         return $this->hasMany(FinancePayableReview::class, ['finance_payable_id' => 'id'])
             ->orderBy(['created_at' => SORT_ASC, 'id' => SORT_ASC]);
     }
+
+    public function getVoucher()
+    {
+        return $this->hasOne(FinanceVoucher::class, ['finance_payable_id' => 'id']);
+    }
 }
