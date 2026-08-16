@@ -14,7 +14,16 @@ $this->registerCss('.dp-bulk-bar{position:sticky;top:.5rem;z-index:3;}');
 /** @var array $rows */
 /** @var yii\data\Pagination $pages */
 /** @var int $count */
+/** @var string|null $bind */
+/** @var bool $canEdit */
+/** @var array $recentLogs */
 /** @var app\modules\am\models\DepreciationProfile[] $profiles */
+
+$levelLabels = [
+    'asset_type' => 'ประเภทหลัก',
+    'asset_category' => 'หมวด',
+    'asset_item' => 'รายการ',
+];
 
 $this->title = 'ผูกเกณฑ์ค่าเสื่อมกับลำดับชั้นทรัพย์สิน';
 $this->params['breadcrumbs'][] = ['label' => 'ค่าเสื่อมราคา', 'url' => ['/am/asset-depreciation/overview']];
@@ -52,10 +61,16 @@ $this->beginBlock('action'); ?>
         </div>
     <?php endif; ?>
 
+    <?php if (!$canEdit): ?>
+        <div class="alert alert-secondary small">
+            <i data-lucide="eye"></i> คุณมีสิทธิ์<b>ดูอย่างเดียว</b> — การผูกเกณฑ์ต้องใช้สิทธิ์ <code>depreciationSetup</code> (พัสดุ / บัญชีผู้ดูแลระบบ)
+        </div>
+    <?php endif; ?>
+
     <ul class="nav nav-pills mb-3">
         <?php foreach ($levels as $lv => $label): ?>
             <li class="nav-item">
-                <?= Html::a($label, ['index', 'level' => $lv], ['class' => 'nav-link ' . ($level === $lv ? 'active' : '')]) ?>
+                <?= Html::a($label, ['index', 'level' => $lv, 'bind' => $bind], ['class' => 'nav-link ' . ($level === $lv ? 'active' : '')]) ?>
             </li>
         <?php endforeach; ?>
     </ul>
@@ -74,7 +89,15 @@ $this->beginBlock('action'); ?>
                 </select>
             </div>
             <?php endif; ?>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label">สถานะการผูก</label>
+                <select name="bind" class="form-select" onchange="this.form.submit()">
+                    <option value="">— ทั้งหมด —</option>
+                    <option value="no" <?= $bind === 'no' ? 'selected' : '' ?>>ยังไม่ผูก</option>
+                    <option value="yes" <?= $bind === 'yes' ? 'selected' : '' ?>>ผูกแล้ว</option>
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label">ค้นหา (ชื่อ/รหัส)</label>
                 <input type="text" name="q" class="form-control" value="<?= Html::encode($q) ?>">
             </div>
@@ -93,6 +116,7 @@ $this->beginBlock('action'); ?>
     <?= Html::hiddenInput('level', $level) ?>
     <?= Html::hiddenInput('q', $q) ?>
     <?= Html::hiddenInput('type', $type ?? '') ?>
+    <?= Html::hiddenInput('bind', $bind ?? '') ?>
 
     <?php // แถบกำหนดเกณฑ์เป็นกลุ่ม — sticky ด้านบนของตาราง ?>
     <div class="card mb-2 dp-bulk-bar">
@@ -107,7 +131,8 @@ $this->beginBlock('action'); ?>
                     <?php endforeach; ?>
                     <option value="0">— ล้างการผูก (ไม่ผูกเกณฑ์) —</option>
                 </select>
-                <button type="submit" id="dp-apply-btn" class="btn btn-sm btn-primary" disabled>
+                <span class="small text-muted" id="dp-sel-assets"></span>
+                <button type="submit" id="dp-apply-btn" class="btn btn-sm btn-primary" <?= $canEdit ? 'disabled' : 'disabled title="ไม่มีสิทธิ์แก้ไข"' ?>>
                     <i data-lucide="check-check"></i> กำหนดให้ที่เลือก
                 </button>
             </div>
@@ -123,21 +148,39 @@ $this->beginBlock('action'); ?>
              * ช่องเลือกเกณฑ์ประจำแถว — บันทึกทันทีเมื่อเปลี่ยนค่า (โพสต์ไป action set ผ่าน ajax)
              * ไม่ใส่ name เพื่อไม่ให้ถูกส่งไปพร้อมฟอร์ม bulk ที่ครอบตารางอยู่
              */
-            $rowSelect = static function (array $r) use ($profiles): string {
-                $opts = '<option value="0">— ไม่ผูกเกณฑ์ —</option>';
+            $rowSelect = static function (array $r) use ($profiles, $canEdit): string {
+                $inheritLabel = !empty($r['inherited_profile_name'])
+                    ? 'สืบทอด: ' . $r['inherited_profile_name']
+                    : 'ไม่ผูกเกณฑ์';
+                $opts = '<option value="0">— ' . Html::encode($inheritLabel) . ' —</option>';
                 foreach ($profiles as $p) {
                     $sel = ((int) $r['bound_profile_id'] === (int) $p->id) ? ' selected' : '';
                     $opts .= '<option value="' . (int) $p->id . '"' . $sel . '>'
                         . Html::encode($p->code . ' — ' . $p->name) . '</option>';
                 }
-                $cls = $r['bound_profile_id'] ? 'border-success' : '';
+                $cls = $r['bound_profile_id'] ? 'border-success' : (!empty($r['inherited_profile_id']) ? 'border-info' : '');
 
                 return '<select class="form-select form-select-sm dp-row-profile ' . $cls . '"'
                     . ' data-id="' . (int) $r['id'] . '"'
                     . ' data-current="' . (int) $r['bound_profile_id'] . '"'
+                    . ' data-assets="' . (int) $r['asset_count'] . '"'
                     . ' style="min-width:14rem;"'
+                    . ($canEdit ? '' : ' disabled')
                     . ' aria-label="เกณฑ์ค่าเสื่อมของ ' . Html::encode($r['title']) . '">'
                     . $opts . '</select>';
+            };
+
+            /** ป้ายบอกว่าเกณฑ์ที่ใช้จริงมาจากไหน — กันผูกซ้ำทั้งที่รับมาจากประเภทแม่อยู่แล้ว */
+            $effectiveBadge = static function (array $r): string {
+                if (!empty($r['bound_profile_id'])) {
+                    return '<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">ผูกที่ระดับนี้</span>';
+                }
+                if (!empty($r['inherited_profile_name'])) {
+                    return '<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" title="'
+                        . Html::encode($r['inherited_profile_name']) . '">สืบทอดจากประเภทหลัก</span>';
+                }
+
+                return '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">ยังไม่มีเกณฑ์</span>';
             };
             ?>
             <?php // ---------- Mobile ---------- ?>
@@ -158,8 +201,11 @@ $this->beginBlock('action'); ?>
                                             <span class="small text-muted d-block mt-1">ประเภทหลัก: <?= Html::encode($r['parent_type_code']) ?></span>
                                         <?php endif; ?>
                                     </span>
-                                    <span class="badge <?= $r['bound_profile_name'] ? 'bg-success' : 'bg-light text-dark border' ?> align-self-start">
-                                        <?= $r['bound_profile_name'] ? Html::encode($r['bound_profile_name']) : 'ยังไม่ผูก' ?>
+                                    <span class="text-end flex-shrink-0">
+                                        <?= $effectiveBadge($r) ?>
+                                        <span class="small text-muted d-block mt-1">
+                                            <?= $r['asset_count'] > 0 ? 'กระทบ ' . number_format($r['asset_count']) . ' ชิ้น' : 'ไม่มีทรัพย์สิน' ?>
+                                        </span>
                                     </span>
                                 </span>
                                 <?php if (!empty($profiles)): ?>
@@ -185,6 +231,8 @@ $this->beginBlock('action'); ?>
                             <?php if ($showParentType): ?>
                                 <th scope="col">ประเภทหลัก</th>
                             <?php endif; ?>
+                            <th scope="col" class="text-end" title="จำนวนทรัพย์สินที่จะได้รับผลจากการผูกแถวนี้">ทรัพย์สิน</th>
+                            <th scope="col">สถานะ</th>
                             <th scope="col">เกณฑ์ที่ผูก</th>
                         </tr>
                     </thead>
@@ -208,6 +256,14 @@ $this->beginBlock('action'); ?>
                                         <?php endif; ?>
                                     </td>
                                 <?php endif; ?>
+                                <td class="text-end">
+                                    <?php if ($r['asset_count'] > 0): ?>
+                                        <span class="fw-semibold"><?= number_format($r['asset_count']) ?></span>
+                                    <?php else: ?>
+                                        <span class="text-muted small">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $effectiveBadge($r) ?></td>
                                 <td>
                                     <?php if (!empty($profiles)): ?>
                                         <?= $rowSelect($r) ?>
@@ -227,6 +283,45 @@ $this->beginBlock('action'); ?>
     </div></div>
     <?= Html::endForm() ?>
     <?php Pjax::end(); ?>
+
+    <?php // ---------- ประวัติการผูก ---------- ?>
+    <?php if (!empty($recentLogs)): ?>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3"><i data-lucide="history"></i> ประวัติการผูกเกณฑ์ล่าสุด</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <caption class="visually-hidden">ประวัติการเปลี่ยนการผูกเกณฑ์ค่าเสื่อม</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">เมื่อ</th>
+                                <th scope="col">ระดับ</th>
+                                <th scope="col">รายการ</th>
+                                <th scope="col">จาก</th>
+                                <th scope="col">เป็น</th>
+                                <th scope="col">โดย</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recentLogs as $l): ?>
+                                <tr>
+                                    <td class="small text-muted text-nowrap"><?= Html::encode((string) $l['created_at']) ?></td>
+                                    <td class="small"><?= Html::encode($levelLabels[(string) $l['level']] ?? (string) $l['level']) ?></td>
+                                    <td>
+                                        <?= Html::encode((string) $l['title']) ?>
+                                        <span class="text-muted small">(<?= Html::encode((string) $l['code']) ?>)</span>
+                                    </td>
+                                    <td class="small"><?= $l['old_profile_name'] ? Html::encode($l['old_profile_name']) : '<span class="text-muted">— ไม่ผูก —</span>' ?></td>
+                                    <td class="small"><?= $l['new_profile_name'] ? Html::encode($l['new_profile_name']) : '<span class="text-muted">— ล้างการผูก —</span>' ?></td>
+                                    <td class="small text-muted"><?= $l['created_by_name'] ? Html::encode($l['created_by_name']) : '—' ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php
@@ -235,19 +330,32 @@ $cfg = \yii\helpers\Json::htmlEncode([
     'level' => $level,
     'q' => (string) $q,
     'type' => (string) ($type ?? ''),
+    'bind' => (string) ($bind ?? ''),
 ]);
 $js = <<<'JS'
 (function () {
     var CT = '#dp-binding-container';
     var CFG = window.dpBindCfg || {};
     function boxes() { return Array.prototype.slice.call(document.querySelectorAll(CT + ' .dp-check')); }
+    // จำนวนทรัพย์สินของแต่ละแถว อ่านจาก data-assets ของช่องเลือกเกณฑ์ในแถวเดียวกัน
+    function assetsOf(box) {
+        var row = box.closest('tr') || box.closest('li');
+        var sel = row ? row.querySelector('.dp-row-profile') : null;
+        return sel ? (parseInt(sel.getAttribute('data-assets'), 10) || 0) : 0;
+    }
     function recalc() {
         var all = boxes();
-        var checked = new Set(), total = new Set();
-        all.forEach(function (c) { total.add(c.value); if (c.checked) checked.add(c.value); });
+        var checked = new Set(), total = new Set(), assets = 0;
+        all.forEach(function (c) {
+            total.add(c.value);
+            if (c.checked && !checked.has(c.value)) { checked.add(c.value); assets += assetsOf(c); }
+        });
         var n = checked.size, t = total.size;
         var cnt = document.getElementById('dp-sel-count');
         if (cnt) cnt.textContent = n;
+        // บอกผลกระทบก่อนกด — ผูกกลุ่มเดียวอาจกระทบทรัพย์สินหลักพันชิ้น
+        var ac = document.getElementById('dp-sel-assets');
+        if (ac) { ac.textContent = n > 0 ? ('· กระทบทรัพย์สิน ' + assets.toLocaleString() + ' ชิ้น') : ''; }
         var sel = document.getElementById('dp-bulk-profile');
         var btn = document.getElementById('dp-apply-btn');
         if (btn) btn.disabled = !(n > 0 && sel && sel.value !== '');
@@ -276,6 +384,7 @@ $js = <<<'JS'
             level: CFG.level,
             q: CFG.q,
             type: CFG.type,
+            bind: CFG.bind,
             profile_id: el.value,
             _csrf: yii.getCsrfToken()
         }).done(function (r) {

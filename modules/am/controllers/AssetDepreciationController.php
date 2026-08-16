@@ -27,7 +27,12 @@ class AssetDepreciationController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'rules' => [
+                    ['allow' => true, 'actions' => ['overview', 'preview-asset', 'asset-search', 'run'], 'roles' => ['depreciationView']],
+                    // ตรึงเกณฑ์ให้ทะเบียน = งานตั้งค่า · คำนวณ/ปรับปรุง/กลับรายการ = งานบัญชี
+                    ['allow' => true, 'actions' => ['backfill', 'backfill-apply'], 'roles' => ['depreciationSetup']],
+                    ['allow' => true, 'actions' => ['save', 'adjustment', 'reverse'], 'roles' => ['depreciationRun']],
+                ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,

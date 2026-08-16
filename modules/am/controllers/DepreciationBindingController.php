@@ -9,6 +9,7 @@ use yii\data\Pagination;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use app\modules\am\models\DepreciationProfile;
+use app\modules\am\services\DepreciationRunService;
 use app\modules\am\services\DepreciationProfileResolver;
 
 /**
@@ -34,7 +35,10 @@ class DepreciationBindingController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'rules' => [
+                    ['allow' => true, 'actions' => ['index'], 'roles' => ['depreciationView']],
+                    ['allow' => true, 'actions' => ['set', 'bulk-set'], 'roles' => ['depreciationSetup']],
+                ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
@@ -43,10 +47,13 @@ class DepreciationBindingController extends Controller
         ]);
     }
 
-    public function actionIndex($level = DepreciationProfileResolver::SOURCE_TYPE, $q = null, $type = null)
+    public function actionIndex($level = DepreciationProfileResolver::SOURCE_TYPE, $q = null, $type = null, $bind = null)
     {
         if (!array_key_exists($level, self::LEVELS)) {
             $level = DepreciationProfileResolver::SOURCE_TYPE;
+        }
+        if (!in_array($bind, ['yes', 'no'], true)) {
+            $bind = null;
         }
 
         // รหัสประเภทหลักที่คิดค่าเสื่อม — ใช้กรองระดับหมวด/รายการ ไม่ให้วัสดุ (MATER)
@@ -69,6 +76,16 @@ class DepreciationBindingController extends Controller
         }
         if ($q !== null && $q !== '') {
             $query->andWhere(['or', ['like', 'title', $q], ['like', 'code', $q]]);
+        }
+        // กรองตามสถานะการผูก — งานหลักของหน้านี้คือไล่ปิดรายการที่ยังไม่ผูก
+        if ($bind === 'yes') {
+            $query->andWhere(['like', 'data_json', 'depreciation_profile_id']);
+        } elseif ($bind === 'no') {
+            // data_json เป็น NULL ได้ — NOT LIKE กับ NULL ให้ผล NULL จึงต้องรวมเงื่อนไข IS NULL ด้วย
+            $query->andWhere(['or',
+                ['data_json' => null],
+                ['not like', 'data_json', 'depreciation_profile_id'],
+            ]);
         }
 
         $count = (clone $query)->count('*', Yii::$app->db);
@@ -121,17 +138,147 @@ class DepreciationBindingController extends Controller
         }
         unset($r);
 
+        $assetCounts = $this->assetCountsFor($level, array_column($rows, 'code'));
+        $inherited = $this->inheritedBindings($level, $rows);
+
+        foreach ($rows as &$r) {
+            $r['asset_count'] = (int) ($assetCounts[(string) $r['code']] ?? 0);
+            // เกณฑ์ที่ "ใช้จริง" เมื่อแถวนี้ไม่ได้ผูกเอง — สืบทอดจากประเภทหลักที่เป็นแม่
+            $inh = $inherited[(string) ($r['parent_type_code'] ?? '')] ?? null;
+            $r['inherited_profile_id'] = ($r['bound_profile_id'] === null) ? $inh : null;
+            $r['inherited_profile_name'] = $r['inherited_profile_id']
+                ? ($profileNames[$r['inherited_profile_id']] ?? ('#' . $r['inherited_profile_id']))
+                : null;
+        }
+        unset($r);
+
         return $this->render('index', [
             'level' => $level,
             'levels' => self::LEVELS,
             'q' => $q,
             'type' => $type,
+            'bind' => $bind,
             'typeOptions' => $typeOptions,
             'rows' => $rows,
             'pages' => $pages,
             'count' => $count,
             'profiles' => $profiles,
+            'canEdit' => Yii::$app->user->can('depreciationSetup'),
+            'recentLogs' => $this->recentLogs($profileNames),
         ]);
+    }
+
+    /**
+     * จำนวนทรัพย์สินที่ผูกอยู่กับแต่ละรหัสในระดับนั้น (นับเฉพาะชุดที่คิดค่าเสื่อมจริง)
+     * ใช้บอกผู้ใช้ว่าการผูกแถวนี้กระทบกี่ชิ้น — เดิมผูกโดยไม่รู้ผลกระทบเลย
+     *
+     * @param string[] $codes
+     * @return array<string,int> code => จำนวนชิ้น
+     */
+    private function assetCountsFor(string $level, array $codes): array
+    {
+        $codes = array_values(array_filter(array_unique(array_map('strval', $codes)), static fn($c) => $c !== ''));
+        if (!$codes) {
+            return [];
+        }
+
+        $column = [
+            DepreciationProfileResolver::SOURCE_TYPE => 'asset_type_id',
+            DepreciationProfileResolver::SOURCE_CATEGORY => 'asset_category_id',
+            DepreciationProfileResolver::SOURCE_ITEM => 'asset_item_id',
+        ][$level] ?? null;
+        if ($column === null) {
+            return [];
+        }
+
+        $rows = (new DepreciationRunService())->eligibleQuery()
+            ->select([$column, 'n' => 'COUNT(*)'])
+            ->andWhere([$column => $codes])
+            ->groupBy($column)
+            ->orderBy([])
+            ->asArray()
+            ->all();
+
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(string) $r[$column]] = (int) $r['n'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * เกณฑ์ที่ผูกไว้ที่ระดับประเภทหลัก — ใช้แสดงว่าแถวที่ยังไม่ผูก "รับเกณฑ์อะไรมาอยู่แล้ว"
+     * กันผู้ใช้ผูกซ้ำโดยไม่จำเป็น
+     *
+     * @return array<string,int> asset_type code => profile_id
+     */
+    private function inheritedBindings(string $level, array $rows): array
+    {
+        if ($level === DepreciationProfileResolver::SOURCE_TYPE) {
+            return [];
+        }
+        $parentCodes = array_values(array_filter(array_unique(
+            array_map(static fn($r) => (string) ($r['parent_type_code'] ?? ''), $rows)
+        ), static fn($c) => $c !== ''));
+        if (!$parentCodes) {
+            return [];
+        }
+
+        $out = [];
+        foreach ((new Query())->select(['code', 'data_json'])->from('{{%categorise}}')
+            ->where(['name' => DepreciationProfileResolver::SOURCE_TYPE, 'code' => $parentCodes])
+            ->all() as $row) {
+            $pid = self::extractProfileId($row['data_json']);
+            if ($pid !== null) {
+                $out[(string) $row['code']] = $pid;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * ประวัติการผูกล่าสุด (แสดงท้ายหน้า) — ตารางอาจยังไม่ถูกสร้างถ้ายังไม่ได้รัน migration
+     *
+     * @param array<int,string> $profileNames
+     */
+    private function recentLogs(array $profileNames): array
+    {
+        try {
+            if (Yii::$app->db->getTableSchema('{{%depreciation_binding_logs}}') === null) {
+                return [];
+            }
+            $logs = (new Query())->from('{{%depreciation_binding_logs}}')
+                ->orderBy(['id' => SORT_DESC])->limit(15)->all();
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        // ชื่อผู้ทำรายการ — ไม่ให้ล้มถ้าโครงตาราง user ต่างไป
+        $userNames = [];
+        $userIds = array_values(array_filter(array_unique(array_column($logs, 'created_by'))));
+        if ($userIds) {
+            try {
+                foreach ((new Query())->select(['id', 'username'])->from('{{%user}}')
+                    ->where(['id' => $userIds])->all() as $u) {
+                    $userNames[(int) $u['id']] = $u['username'];
+                }
+            } catch (\Throwable $e) {
+                $userNames = [];
+            }
+        }
+
+        foreach ($logs as &$l) {
+            $l['old_profile_name'] = $l['old_profile_id'] ? ($profileNames[$l['old_profile_id']] ?? ('#' . $l['old_profile_id'])) : null;
+            $l['new_profile_name'] = $l['new_profile_id'] ? ($profileNames[$l['new_profile_id']] ?? ('#' . $l['new_profile_id'])) : null;
+            $l['created_by_name'] = $l['created_by']
+                ? ($userNames[(int) $l['created_by']] ?? ('#' . $l['created_by']))
+                : null;
+        }
+        unset($l);
+
+        return $logs;
     }
 
     public function actionSet()
@@ -157,7 +304,7 @@ class DepreciationBindingController extends Controller
                 return ['status' => 'error', 'message' => 'ไม่พบเกณฑ์ที่เลือก'];
             }
             Yii::$app->session->setFlash('error', 'ไม่พบเกณฑ์ที่เลือก');
-            return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
+            return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type'), 'bind' => $req->post('bind')]);
         }
 
         $n = $this->writeBinding([$id], $clear ? null : (int) $profileId);
@@ -172,7 +319,7 @@ class DepreciationBindingController extends Controller
         }
         Yii::$app->session->setFlash('success', $msg);
 
-        return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')]);
+        return $this->redirect(['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type'), 'bind' => $req->post('bind')]);
     }
 
     /**
@@ -193,7 +340,7 @@ class DepreciationBindingController extends Controller
         $clear = ($profileId === '0' || $profileId === 0);
         $wantId = (!$clear && $profileId !== '' && $profileId !== null) ? (int) $profileId : null;
 
-        $backUrl = ['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type')];
+        $backUrl = ['index', 'level' => $level, 'q' => $req->post('q'), 'type' => $req->post('type'), 'bind' => $req->post('bind')];
 
         // validate
         $error = null;
@@ -215,7 +362,7 @@ class DepreciationBindingController extends Controller
 
         $tx = Yii::$app->db->beginTransaction();
         try {
-            $written = $this->writeBinding($ids, $clear ? null : $wantId);
+            $written = $this->writeBinding($ids, $clear ? null : $wantId, 'bulk');
             $tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();
@@ -249,9 +396,10 @@ class DepreciationBindingController extends Controller
      *
      * @param int[] $ids id ของแถวที่ผู้ใช้เลือก
      * @param int|null $profileId null = ล้างการผูก
+     * @param string $source single|bulk — บันทึกลงประวัติเพื่อรู้ที่มาของการเปลี่ยน
      * @return int จำนวนแถวที่เขียนจริง (อาจมากกว่าจำนวนที่เลือกเมื่อมีรหัสซ้ำ)
      */
-    private function writeBinding(array $ids, ?int $profileId): int
+    private function writeBinding(array $ids, ?int $profileId, string $source = 'single'): int
     {
         $picked = (new Query())->select(['id', 'name', 'code'])->from('{{%categorise}}')
             ->where(['id' => $ids])->all();
@@ -264,13 +412,16 @@ class DepreciationBindingController extends Controller
         foreach ($picked as $p) {
             $conditions[] = ['name' => $p['name'], 'code' => $p['code']];
         }
-        $rows = (new Query())->select(['id', 'data_json'])->from('{{%categorise}}')
+        $rows = (new Query())->select(['id', 'name', 'code', 'title', 'data_json'])->from('{{%categorise}}')
             ->where($conditions)->all();
 
+        // รวมแถวตามรหัส — ประวัติบันทึกครั้งเดียวต่อรหัส (ผูกที่ระดับรหัส ไม่ใช่ระดับแถว)
+        $byCode = [];
         foreach ($rows as $row) {
             // อ่านค่าเดิม (อาจ double-encoded) แล้วเขียนกลับเป็น JSON object จริงด้วย PHP
             // (JSON_SET ใช้ไม่ได้กับแถวที่ data_json เป็น JSON string ซ้อน)
             $dj = DepreciationProfileResolver::decodeDataJson($row['data_json']);
+            $old = self::extractProfileId($row['data_json']);
             if ($profileId === null) {
                 unset($dj['depreciation_profile_id']);
             } else {
@@ -281,9 +432,54 @@ class DepreciationBindingController extends Controller
                     ['data_json' => empty($dj) ? null : json_encode($dj, JSON_UNESCAPED_UNICODE)],
                     ['id' => $row['id']])
                 ->execute();
+
+            $key = $row['name'] . '::' . $row['code'];
+            if (!isset($byCode[$key])) {
+                $byCode[$key] = [
+                    'level' => $row['name'],
+                    'code' => $row['code'],
+                    'title' => $row['title'],
+                    'old_profile_id' => $old,
+                    'rows_written' => 0,
+                ];
+            }
+            $byCode[$key]['rows_written']++;
+        }
+
+        foreach ($byCode as $entry) {
+            if ($entry['old_profile_id'] === $profileId) {
+                continue; // ไม่มีอะไรเปลี่ยน ไม่ต้องบันทึกประวัติ
+            }
+            self::writeLog($entry, $profileId, $source);
         }
 
         return count($rows);
+    }
+
+    /**
+     * บันทึกประวัติการผูก — ห้ามทำให้การบันทึกหลักล้มเหลว (ตารางอาจยังไม่ถูกสร้าง)
+     */
+    private static function writeLog(array $entry, ?int $newProfileId, string $source): void
+    {
+        try {
+            if (Yii::$app->db->getTableSchema('{{%depreciation_binding_logs}}') === null) {
+                return;
+            }
+            Yii::$app->db->createCommand()->insert('{{%depreciation_binding_logs}}', [
+                'level' => $entry['level'],
+                'code' => $entry['code'],
+                'title' => mb_substr((string) $entry['title'], 0, 255),
+                'old_profile_id' => $entry['old_profile_id'],
+                'new_profile_id' => $newProfileId,
+                'rows_written' => $entry['rows_written'],
+                'source' => $source,
+                // ไม่มี component user เมื่อเรียกจาก console (เช่น seed) — อย่าให้ล้ม
+                'created_by' => (Yii::$app->has('user') && !Yii::$app->user->isGuest) ? Yii::$app->user->id : null,
+                'created_at' => date('Y-m-d H:i:s'),
+            ])->execute();
+        } catch (\Throwable $e) {
+            Yii::warning('บันทึกประวัติการผูกเกณฑ์ไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+        }
     }
 
     private static function extractProfileId($dataJson): ?int
