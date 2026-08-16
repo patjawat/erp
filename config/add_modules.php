@@ -73,6 +73,7 @@ $modules['me'] = ['class' => 'app\modules\me\Module'];  // โปรไฟล์
 $modules['lm'] = ['class' => 'app\modules\lm\Module'];  // ระบบลา
 $modules['dms'] = ['class' => 'app\modules\dms\Module'];  // document mannger system ระบบสารบรรณ
 $modules['finance'] = ['class' => 'app\modules\finance\Module'];  // การเงิน
+$modules['executive'] = ['class' => 'app\modules\executive\Module'];  // Dashboard ผู้บริหาร
 $modules['accounting'] = ['class' => 'app\modules\accounting\Module'];  // บัญชี
 $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backoffice เดิม
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
