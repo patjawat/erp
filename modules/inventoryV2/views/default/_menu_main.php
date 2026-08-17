@@ -59,6 +59,8 @@ if ($issuePendingCount === null) {
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>"><i class="bi bi-journal-check me-2"></i>สรุปรายงานวัสดุคงคลัง</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/procurement-plan']) ?>"><i class="bi bi-clipboard2-data me-2"></i>การใช้งานวัสดุรายตัว</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/disbursement-by-month']) ?>"><i class="bi bi-calendar3-week me-2"></i>ประวัติจ่ายวัสดุ × เดือน</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item <?= $active === 'report-material-plan' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/material-plan/index']) ?>"><i class="bi bi-calendar2-check me-2"></i>จัดทำแผนวัสดุประจำปี</a></li>
             </ul>
         </div>
         <div class="dropdown">
