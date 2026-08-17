@@ -96,12 +96,14 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                         let color = $(this).val();
                                         let id = $(this).data('id');
                                         $.ajax({
-                                            url: '" . Url::to(['/hr/leave-type/update-color', 'id' => $item->id]) . "',
+                                            url: '" . Url::to(['/booking/meeting-status/update-color', 'id' => $item->id]) . "',
                                             type: 'POST',
                                             data: {id: id, color: color},
                                             success: function(res) {
-                                            console.log(res.data.data_json.color)
                                                 $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);
+                                            },
+                                            error: function() {
+                                                if (typeof warning === 'function') warning('บันทึกสีไม่สำเร็จ');
                                             }
                                         });
                                     }"
@@ -130,12 +132,14 @@ $palette =  ['#2196f3', '#4caf50', '#ffeb3b', '#ff9800', '#f44336', '#9c27b0', '
                                         let color = $(this).val();
                                         let id = $(this).data('id');
                                         $.ajax({
-                                            url: '" . Url::to(['/hr/leave-type/update-color', 'id' => $item->id]) . "',
+                                            url: '" . Url::to(['/booking/meeting-status/update-color', 'id' => $item->id]) . "',
                                             type: 'POST',
                                             data: {id: id, text_color: color},
                                             success: function(res) {
-                                            console.log(res.data.data_json.color)
-                                                $('body').find('.' + res.data.code).css('background-color', res.data.data_json.color);
+                                                $('body').find('.' + res.data.code).css('color', res.data.data_json.text_color);
+                                            },
+                                            error: function() {
+                                                if (typeof warning === 'function') warning('บันทึกสีไม่สำเร็จ');
                                             }
                                         });
                                     }"

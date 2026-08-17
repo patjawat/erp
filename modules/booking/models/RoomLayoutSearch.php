@@ -77,6 +77,14 @@ class RoomLayoutSearch extends RoomLayout
             ->andFilterWhere(['like', 'data_json', $this->data_json])
             ->andFilterWhere(['like', 'ma_items', $this->ma_items]);
 
+        // ช่องค้นหาในหน้าจอส่ง q มา แต่เดิมไม่มีใครเอาไปใช้ กดค้นหาแล้วผลลัพธ์ไม่เปลี่ยน
+        $query->andFilterWhere([
+            'or',
+            ['like', 'title', $this->q],
+            ['like', 'code', $this->q],
+            ['like', 'description', $this->q],
+        ]);
+
         return $dataProvider;
     }
 }

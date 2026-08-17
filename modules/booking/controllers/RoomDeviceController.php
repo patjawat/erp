@@ -149,16 +149,22 @@ class RoomDeviceController extends Controller
 
     /**
      * Deletes an existing RoomDevice model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * ตอบกลับเป็น JSON ให้ JS ปุ่มลบพาไปหน้า index เอง
      * @param int $id ID
-     * @return \yii\web\Response
+     * @return array
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+        // JS ปุ่มลบ (.delete-item) อ่านผลเป็น JSON — ถ้าตอบเป็น redirect หน้าเดิมจะไม่รีเฟรช
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'status' => 'success',
+            'url' => \yii\helpers\Url::to(['index']),
+        ];
     }
 
     /**
@@ -170,7 +176,8 @@ class RoomDeviceController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = RoomDevice::findOne(['id' => $id])) !== null) {
+        // ต้องล็อกด้วย name ด้วย เพราะตาราง categorise ใช้ร่วมกับชุดข้อมูลอื่น
+        if (($model = RoomDevice::findOne(['id' => $id, 'name' => 'room_device'])) !== null) {
             return $model;
         }
 
