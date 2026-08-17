@@ -394,6 +394,7 @@ class DocMergeEngine
         }
 
         $get = static fn (string $key): string => (string) ($d[$key] ?? '');
+        $money = self::orderMoney($order, $d, $budget);
 
         return [
             // ── เลขที่เอกสารในสายงานจัดซื้อ ──
@@ -409,6 +410,7 @@ class DocMergeEngine
             'warranty_date' => self::thaiDate($get('warranty_date') ?: null),
             'signing_date' => self::thaiDate($get('signing_date') ?: null),
             'credit_days' => $get('credit_days'),
+            'warranty_period' => self::warrantyPeriod($order, $d),
 
             // ── ชนิดพัสดุและแหล่งเงิน ──
             'order_type' => $get('order_type_name'),
@@ -416,6 +418,8 @@ class DocMergeEngine
             'budget_group' => $get('pq_budget_group_name'),
             'purchase_type' => $get('pq_purchase_type_name'),
             'method_get' => $get('pq_method_get_name'),
+            'project_id' => $get('pq_project_id'),
+            'egp_number' => $get('pq_egp_number'),
             'consideration' => $get('pq_consideration'),
             'condition_name' => $get('pq_condition_name'),
             'income_reason' => $get('pq_income_reason'),
@@ -436,9 +440,86 @@ class DocMergeEngine
             'vendor_contact_position' => $get('contact_position') ?: (string) ($vj['contact_position'] ?? ''),
 
             // ── ยอดเงิน ──
-            'total_price' => number_format((float) ($d['total_price'] ?? $budget), 2),
-            'total_price_text' => self::bahtText((float) ($d['total_price'] ?? $budget)),
+            'sub_total' => number_format($money['sub_total'], 2),
+            'vat' => self::amountOrDash($money['vat']),
+            'discount' => self::amountOrDash($money['discount']),
+            'total_price' => number_format($money['total'], 2),
+            'total_price_text' => self::bahtText($money['total']),
         ];
+    }
+
+    /**
+     * ยอดเงินสี่ตัวที่ท้ายตารางใบสั่งซื้อ — ก่อน VAT / VAT / ส่วนลด / รวมทั้งสิ้น
+     *
+     * ใช้ Order::calculateVAT() ตัวเดียวกับที่ระบบพิมพ์ชุดเดิม (.docx) ใช้อยู่
+     * ไม่ใช้ SumPo() ตรง ๆ เพราะ SumPo() คือผลคูณราคาคูณจำนวนล้วน ๆ ยังไม่หัก
+     * ส่วนลดและยังไม่รู้ว่าราคาที่กรอกรวม VAT มาแล้วหรือยัง (คอลัมน์ vat = IN/EX/NONE)
+     * ผลคือใบที่ตั้ง VAT แบบ EX จะพิมพ์ยอดรวมขาดไป ๗% เงียบ ๆ
+     *
+     * ของเดิมอ่านจาก data_json['total_price'] ซึ่งไม่มีใบไหนเขียนไว้เลย ทุกใบจึงตกไป
+     * ใช้ $budget (= SumPo) เสมอ ยอด "รวมเป็นเงินทั้งสิ้น" บนกระดาษกับยอดในระบบ
+     * จัดซื้อจึงไม่ตรงกันมาตลอด — คงลำดับ data_json['total_price'] ไว้เป็นทางถอย
+     * เผื่อมีใบที่เขียนค่าไว้จริง
+     *
+     * @return array{sub_total:float, vat:float, discount:float, total:float}
+     */
+    private static function orderMoney(Order $order, array $d, float $budget): array
+    {
+        try {
+            $calc = $order->calculateVAT();
+
+            return [
+                'sub_total' => (float) $calc['priceBeforeVAT'],
+                'vat' => (float) $calc['vatAmount'],
+                'discount' => (float) $order->discount_price,
+                'total' => (float) $calc['priceAfterVAT'],
+            ];
+        } catch (\Throwable $e) {
+            Yii::warning('DocMergeEngine: คำนวณยอดเงินของใบสั่งซื้อไม่สำเร็จ — ' . $e->getMessage(), __METHOD__);
+            $fallback = (float) ($d['total_price'] ?? $budget);
+
+            return ['sub_total' => $fallback, 'vat' => 0.0, 'discount' => 0.0, 'total' => $fallback];
+        }
+    }
+
+    /**
+     * ยอดที่เป็นศูนย์พิมพ์เป็นขีด ไม่ใช่ 0.00
+     *
+     * ใช้กับช่อง VAT และส่วนลดเท่านั้น — บนแบบฟอร์มใบสั่งซื้อ "0.00" อ่านได้ว่า
+     * คิดแล้วได้ศูนย์ ส่วนขีดอ่านได้ว่ารายการนี้ไม่มี ซึ่งตรงกับความจริงของใบที่
+     * ตั้ง VAT เป็น NONE หรือไม่ได้ให้ส่วนลด และตรงกับแบบฟอร์มที่งานพัสดุใช้
+     */
+    private static function amountOrDash(float $amount): string
+    {
+        return abs($amount) < 0.005 ? '-' : number_format($amount, 2);
+    }
+
+    /**
+     * ระยะเวลารับประกันเป็นข้อความ เช่น "1 ปี" หรือ "6 เดือน"
+     *
+     * Order::deliveryDay() คำนวณจากวันส่งมอบถึงวันสิ้นสุดรับประกันด้วย SQL
+     * ถ้าใบไหนยังไม่ได้กรอกวันใดวันหนึ่ง มันจะส่ง null เข้า TIMESTAMPDIFF แล้วได้
+     * ค่าเพี้ยน จึงตรวจก่อนเรียก ไม่ปล่อยให้ลงไปถึงฐานข้อมูล
+     *
+     * ใบที่กรอกวันสิ้นสุดรับประกันเท่ากับวันส่งมอบจะได้ "0 วัน" ซึ่งบนกระดาษอ่านได้ว่า
+     * รับประกันศูนย์วันจริง ๆ ทั้งที่ความจริงคือยังไม่ได้กำหนด จึงคืนค่าว่างให้กลายเป็น
+     * จุดไข่ปลารอกรอกด้วยปากกาแทน
+     *
+     * @param array $d data_json ของใบขอซื้อที่ถอดเป็น array แล้ว
+     */
+    private static function warrantyPeriod(Order $order, array $d): string
+    {
+        if (empty($d['delivery_date']) || empty($d['warranty_date'])) {
+            return '';
+        }
+
+        try {
+            $period = trim((string) $order->deliveryDay());
+        } catch (\Throwable $e) {
+            return '';
+        }
+
+        return preg_match('/^0\s/u', $period) ? '' : $period;
     }
 
     /**
@@ -709,6 +790,7 @@ class DocMergeEngine
                     'ref.warranty_date' => 'วันสิ้นสุดรับประกัน (ไทย)',
                     'ref.signing_date' => 'วันลงนาม (ไทย)',
                     'ref.credit_days' => 'จำนวนวันที่ให้ส่งมอบ',
+                    'ref.warranty_period' => 'ระยะเวลารับประกัน (เช่น 1 ปี)',
                 ];
                 $common['เรื่องต้นทาง (วิธีจัดซื้อ/แหล่งเงิน)'] = [
                     'ref.order_type' => 'ชนิดพัสดุ (เช่น วัสดุบริโภค)',
@@ -716,6 +798,8 @@ class DocMergeEngine
                     'ref.budget_group' => 'หมวดงบ',
                     'ref.purchase_type' => 'วิธีจัดซื้อ (เช่น เฉพาะเจาะจง)',
                     'ref.method_get' => 'ซื้อ/จ้าง',
+                    'ref.project_id' => 'เลขที่โครงการ',
+                    'ref.egp_number' => 'รหัสอ้างอิง e-GP',
                     'ref.consideration' => 'เกณฑ์การพิจารณา',
                     'ref.condition_name' => 'เงื่อนไขวงเงิน',
                     'ref.income_reason' => 'เหตุผลความจำเป็น',
@@ -732,8 +816,13 @@ class DocMergeEngine
                     'ref.vendor_bank' => 'ธนาคาร',
                     'ref.vendor_contact' => 'ผู้ติดต่อ',
                     'ref.vendor_contact_position' => 'ตำแหน่งผู้ติดต่อ',
-                    'ref.total_price' => 'ยอดรวมตามใบสั่งซื้อ (ตัวเลข)',
-                    'ref.total_price_text' => 'ยอดรวมตามใบสั่งซื้อ (ตัวหนังสือ)',
+                ];
+                $common['ยอดเงินท้ายใบสั่งซื้อ'] = [
+                    'ref.sub_total' => 'รวมเป็นเงิน (ก่อนภาษีมูลค่าเพิ่ม)',
+                    'ref.vat' => 'ภาษีมูลค่าเพิ่ม (ไม่มี = ขีด)',
+                    'ref.discount' => 'ส่วนลด (ไม่มี = ขีด)',
+                    'ref.total_price' => 'รวมเป็นเงินทั้งสิ้น (ตัวเลข)',
+                    'ref.total_price_text' => 'รวมเป็นเงินทั้งสิ้น (ตัวหนังสือ)',
                 ];
                 $common['ตารางรายการพัสดุ'] = [
                     '#items' => 'เปิดบล็อกวนซ้ำ — วางเป็น {{#items}} ก่อนแถวตาราง',

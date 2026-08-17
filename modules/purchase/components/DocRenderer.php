@@ -258,6 +258,28 @@ class DocRenderer
 .d-sheet .d-right { text-align:right; }
 .d-sheet .d-page-break { page-break-before:always; margin:0; }
 
+/* ใบสั่งซื้อ/สั่งจ้าง (แบบฟอร์มปี ๒๕๖๙) — คลาสเฉพาะฉบับ ตั้งชื่อขึ้นต้น d-po8-
+   ตามแบบเดียวกับ d-8708- เพราะรูปแบบพวกนี้ใช้กับเอกสารใบเดียว ถ้าเอาไปแก้คลาส
+   กลาง (.d-c-*, .d-list) เอกสารอีกสิบกว่าใบที่ใช้คลาสเดียวกันจะเปลี่ยนตามไปด้วย */
+.d-sheet .d-po8-head { margin-top:8pt; }
+.d-sheet .d-po8-head td { border:none; padding:1pt 2pt; vertical-align:top; width:50%; }
+/* ไม่ใช้ text-align:justify กับย่อหน้าของฟอร์มนี้ — ภาษาไทยไม่มีช่องว่างระหว่างคำ
+   mPDF จึงยืดช่องไฟที่ช่องว่างไม่กี่จุดที่มีจนเห็นเป็นรู เช่น "สงวนสิ ทธิ์ ค่ าปรั บ"
+   (เห็นจริงตอนเรนเดอร์ทดสอบ) ชิดซ้ายอ่านง่ายกว่าและตรงกับแบบฟอร์มต้นฉบับ */
+.d-sheet .d-po8-intro { text-indent:{$indent}; margin-top:10pt; }
+.d-sheet .d-po8-heading { font-weight:bold; margin-top:12pt; margin-bottom:2pt; }
+/* หัวข้อ "หมายเหตุ" ในแบบฟอร์มนี้มีเส้นใต้ ไม่ใช่แค่ตัวหนา */
+.d-sheet .d-po8-note-heading { font-weight:bold; text-decoration:underline; margin-top:12pt; margin-bottom:2pt; }
+/* เงื่อนไขการซื้อ/จ้างไม่ย่อหน้า — เลขข้อต้องเรียงตรงกันทุกข้อที่ขอบซ้าย
+   ถ้าใช้ .d-list ที่ย่อหน้า 2.5 ซม. เลขข้อจะถูกดันเข้าไปกลางหน้ากระดาษ */
+.d-sheet .d-po8-term { margin-top:2pt; }
+/* ช่องจำนวนเงินเป็นตัวหนังสือ กินพื้นที่ซ้ายของบล็อกยอดรวมทั้งสี่บรรทัด (rowspan)
+   ต้องเจาะจงถึง td ไม่งั้น vertical-align:top ของ .d-items td จะชนะเพราะเจาะจงกว่า */
+.d-sheet .d-items td.d-po8-words { text-align:center; vertical-align:middle; }
+.d-sheet .d-po8-sum-lbl { width:18%; }
+.d-sheet .d-po8-sum-amt { width:18%; text-align:right; }
+.d-sheet .d-po8-ref { margin-top:14pt; }
+
 .d-sheet .d-sign { margin-top:14pt; }
 .d-sheet .d-sign td { border:none; }
 .d-sheet .d-sign-cell { width:50%; text-align:center; }
