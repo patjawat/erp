@@ -132,6 +132,25 @@ class MaterialPlanForecastServiceTest extends Unit
         $this->assertSame(2570, Service::normalizeFiscalYear(2027));
     }
 
+    public function testDepartmentForecastAnnualizesThenAddsGrowth(): void
+    {
+        // เบิกจริง 10 อันใน 10 เดือน -> เต็มปี 12 -> บวกเผื่อ 5% -> 13
+        $this->assertSame(13, Service::departmentForecastQty(10.0, 10, 5.0));
+    }
+
+    public function testDepartmentForecastIgnoresStockOnHand(): void
+    {
+        // งบของหน่วยงานคิดจากปริมาณที่จะใช้ล้วน ๆ การหักคงคลังเป็นขั้นของพัสดุ (planQty)
+        $usage = 100.0;
+        $this->assertSame(105, Service::departmentForecastQty($usage, 12, 5.0));
+        $this->assertSame(5, Service::planQty(Service::forecastUsage($usage, 5.0), 100.0));
+    }
+
+    public function testDepartmentForecastLeavesACompleteYearAlone(): void
+    {
+        $this->assertSame(100, Service::departmentForecastQty(100.0, 12, 0.0));
+    }
+
     public function testGrowthPctFallsBackToTheFormDefault(): void
     {
         $this->assertSame(5.0, Service::normalizeGrowthPct(''));

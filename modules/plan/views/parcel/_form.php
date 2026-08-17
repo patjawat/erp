@@ -197,11 +197,11 @@ $form = ActiveForm::begin(array_merge(
                                     <label class="form-check-label small" for="pull-include-children">รวมหน่วยงานย่อย (กรณีกลุ่มงานแม่)</label>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-info text-white" id="btn-pull-consumption">
-                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ดึงจากการเบิกปีก่อน
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ดึงจากแผนคาดการณ์
                                 </button>
                             </div>
                             <div class="col">
-                                <small class="text-muted" id="pull-info">ระบบจะดึงรายการที่หน่วยงานเบิกใช้ปีก่อน แล้วเฉลี่ยเป็นรายเดือน (÷12) ให้อัตโนมัติ</small>
+                                <small class="text-muted" id="pull-info">ระบบจะคาดการณ์ปริมาณใช้ทั้งปีจากยอดเบิกจริงของหน่วยงาน แล้วเฉลี่ยเป็นรายเดือน (÷12) ให้อัตโนมัติ</small>
                             </div>
                         </div>
                     </div>
@@ -528,7 +528,7 @@ $('#btn-pull-consumption').on('click', function(){
     $('#pull-info').text('กำลังดึงข้อมูล...');
     $.post('$pullUrl', {department_id: dept, asset_type_id: atype, thai_year: year, include_children: incChild}, function(res){
         if(res.status !== 'success'){ $('#pull-info').text(res.message || 'เกิดข้อผิดพลาด'); return; }
-        if(!res.items.length){ $('#pull-info').text('ไม่พบการเบิกใช้ของหน่วยงานนี้ในปี ' + res.prev_year); return; }
+        if(!res.items.length){ $('#pull-info').text('ไม่พบการเบิกใช้ของหน่วยงานนี้ในปีงบ ' + res.prev_year); return; }
         var tbody = $('#item-table tbody'); tbody.empty();
         var total = 0, idx = 0;
         res.items.forEach(function(it){
@@ -554,8 +554,15 @@ $('#btn-pull-consumption').on('click', function(){
             if(m < 12) acc += per;
         }
         $('#planorder-order_price').val(total.toFixed(2));
-        var scopeTxt = (res.child_count > 0) ? (' (รวม ' + res.child_count + ' หน่วยย่อย)') : '';
-        $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>ดึง ' + res.count + ' รายการ จากการเบิกปี ' + res.prev_year + scopeTxt + ' — เฉลี่ย ÷12 แล้ว (แก้ไข/เพิ่มได้)');
+        var scopeTxt = (res.child_count > 0) ? (' รวม ' + res.child_count + ' หน่วยย่อย') : '';
+        // บอกที่มาของตัวเลขให้ครบ ผู้ตั้งงบจะได้รู้ว่าตัวเลขถูกปรับมาแล้วกี่ชั้น
+        var basisTxt = 'ยอดใช้จริงปีงบ ' + res.prev_year;
+        if (res.months_covered && res.months_covered < 12) {
+            basisTxt += ' (' + res.months_covered + ' เดือน ปรับเต็มปี ×' + res.annual_factor + ')';
+        }
+        if (res.growth_pct) { basisTxt += ' บวกเผื่อ ' + res.growth_pct + '%'; }
+        $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>ดึง ' + res.count + ' รายการ' + scopeTxt
+            + ' — คำนวณจาก' + basisTxt + ' เฉลี่ย ÷12 แล้ว (แก้ไข/เพิ่มได้)');
     }, 'json').fail(function(){ $('#pull-info').text('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); });
 });
 JS;

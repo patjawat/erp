@@ -151,6 +151,17 @@ class MaterialPlanForecastService
     }
 
     /**
+     * ปริมาณที่หน่วยงานควรตั้งงบ = ปรับยอดใช้จริงเป็นเต็มปี แล้วบวกเผื่อ
+     *
+     * ไม่หักยอดคงคลังของหน่วยงาน เพราะหน่วยงานตั้งงบตามปริมาณที่จะใช้
+     * การหักคงคลังเป็นขั้นของพัสดุตอนตัดสินใจซื้อจริง (ดู planQty) หักสองที่จะกดงบต่ำเกินจริง
+     */
+    public static function departmentForecastQty(float $actualUsage, int $monthsCovered, float $growthPct): int
+    {
+        return self::forecastUsage(self::annualizeUsage($actualUsage, $monthsCovered), $growthPct);
+    }
+
+    /**
      * ประมาณการใช้ปีที่จะจัดซื้อ = ใช้จริงปีฐาน + growth% ปัดเป็นจำนวนเต็มหน่วย
      */
     public static function forecastUsage(float $actualUsage, float $growthPct): int
@@ -303,6 +314,111 @@ class MaterialPlanForecastService
         unset($row);
 
         return $rows;
+    }
+
+    /**
+     * ประมาณการใช้วัสดุของหน่วยงานหนึ่ง สำหรับให้หน่วยงานดึงไปตั้งงบในโมดูลแผนงบประมาณ
+     *
+     * "หน่วยงาน" ยึดคลังปลายทางที่ของถูกจ่ายไปถึง (warehouses.department) ไม่ใช่แผนกของคนกดเบิก
+     * เพราะของไปถึงที่ไหนคือที่นั่นใช้จริง และข้อมูลครบกว่า
+     *
+     * ไม่หักยอดคงคลังของหน่วยงาน เพราะหน่วยงานตั้งงบตามปริมาณที่จะใช้
+     * ส่วนการหักคงคลังเป็นขั้นของพัสดุตอนตัดสินใจซื้อจริง หักสองที่จะกดงบต่ำเกินจริง
+     *
+     * @param int $organizationId รหัสหน่วยงานในผังองค์กร (ตาราง tree)
+     * @return array{
+     *     items: array<int, array>, months_covered: int, factor: float,
+     *     base_year: int, warehouse_ids: array<int, int>, unmapped: bool
+     * }
+     */
+    public function forecastForOrganization(
+        int $organizationId,
+        int $planFiscalYear,
+        float $growthPct = self::DEFAULT_GROWTH_PCT,
+        array $childOrganizationIds = [],
+        string $categoryId = ''
+    ): array {
+        $baseYear = self::baseFiscalYear($planFiscalYear);
+        $organizationIds = array_values(array_unique(array_merge([$organizationId], array_map('intval', $childOrganizationIds))));
+        $warehouseIds = self::warehouseIdsForOrganizations($organizationIds);
+
+        $empty = [
+            'items' => [],
+            'months_covered' => 12,
+            'factor' => 1.0,
+            'base_year' => $baseYear,
+            'warehouse_ids' => $warehouseIds,
+            'unmapped' => $warehouseIds === [],
+        ];
+        if ($warehouseIds === []) {
+            return $empty;
+        }
+
+        $usageMap = $this->usageMap($baseYear, null, $warehouseIds);
+        if ($usageMap === []) {
+            return $empty;
+        }
+
+        $items = $this->itemMap(array_keys($usageMap), $categoryId);
+        if ($items === []) {
+            return $empty;
+        }
+
+        $receiptMap = $this->receiptMap($baseYear, null, array_keys($items));
+        $fallbackPriceMap = $this->latestReceiptPriceMap(array_keys($items));
+        $coverage = $this->resolveCoverage($baseYear);
+
+        $rows = [];
+        foreach ($items as $code => $item) {
+            $actualUsage = (float) ($usageMap[$code] ?? 0);
+            $forecastQty = self::departmentForecastQty($actualUsage, $coverage['months'], $growthPct);
+            if ($forecastQty <= 0) {
+                continue;
+            }
+            [$unitPrice] = $this->resolveUnitPrice($code, $receiptMap, $fallbackPriceMap);
+
+            $rows[] = [
+                'code' => $code,
+                'name' => $item['item_name'],
+                'unit_name' => $item['unit_name'],
+                'category_title' => $item['category_title'],
+                'actual_qty' => round($actualUsage, 2),
+                'qty_year' => $forecastQty,
+                'last_price' => $unitPrice,
+                'per_month' => round($forecastQty / 12, 2),
+                'total_price' => round($forecastQty * $unitPrice, 2),
+            ];
+        }
+
+        usort($rows, static fn ($a, $b) => $b['total_price'] <=> $a['total_price']);
+
+        return [
+            'items' => $rows,
+            'months_covered' => $coverage['months'],
+            'factor' => $coverage['factor'],
+            'base_year' => $baseYear,
+            'warehouse_ids' => $warehouseIds,
+            'unmapped' => false,
+        ];
+    }
+
+    /**
+     * คลังของหน่วยงานตามผังองค์กร — คลังย่อยและ รพ.สต. ที่ผูก department ไว้กับหน่วยงานนั้น
+     *
+     * @return array<int, int>
+     */
+    public static function warehouseIdsForOrganizations(array $organizationIds): array
+    {
+        $organizationIds = array_values(array_filter(array_map('intval', $organizationIds)));
+        if ($organizationIds === []) {
+            return [];
+        }
+
+        return array_map('intval', Warehouse::find()
+            ->select('id')
+            ->where(['warehouse_type' => Warehouse::SUB_STOCK_TYPES])
+            ->andWhere(['department' => $organizationIds])
+            ->column());
     }
 
     /**
@@ -496,6 +612,7 @@ class MaterialPlanForecastService
      * อ่านจากบัญชีเดินสะพัด (stock_order + stock_detail) ไม่ใช่รายงานปิดเดือน
      * เพราะต้องกรองตามหน่วยงานปลายทางได้ และต้องใช้ได้แม้ยังไม่ปิดเดือน
      *
+     * @param int|array<int, int>|null $deptWarehouseId คลังปลายทาง หนึ่งคลังหรือหลายคลังของหน่วยงานเดียวกัน
      * @return array<string, float>
      */
     protected function usageMap(int $fiscalYear, $warehouseId = null, $deptWarehouseId = null): array
@@ -518,7 +635,12 @@ class MaterialPlanForecastService
         if ($warehouseId) {
             $query->andWhere(['so.main_warehouse_id' => (int) $warehouseId]);
         }
-        if ($deptWarehouseId) {
+        if (is_array($deptWarehouseId)) {
+            if ($deptWarehouseId === []) {
+                return [];
+            }
+            $query->andWhere(['so.sub_warehouse_id' => array_map('intval', $deptWarehouseId)]);
+        } elseif ($deptWarehouseId) {
             $query->andWhere(['so.sub_warehouse_id' => (int) $deptWarehouseId]);
         }
 
