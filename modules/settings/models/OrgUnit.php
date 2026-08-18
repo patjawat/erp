@@ -89,9 +89,11 @@ class OrgUnit extends ActiveRecord
         if (!parent::beforeSave($insert)) {
             return false;
         }
-        // json column: เก็บเป็น string, ใช้งานเป็น array
-        if (is_array($this->data_json)) {
-            $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
+        // คอลัมน์ชนิด json — Yii เข้ารหัสให้เองตอนบันทึก ถ้าเข้ารหัสซ้ำจะได้ค่าเป็น JSON string
+        // ทำให้ JSON_EXTRACT ใน SQL หาไม่เจอ จึงต้องส่งเป็น array เสมอ
+        if (is_string($this->data_json)) {
+            $decoded = json_decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : null;
         }
         $now = date('Y-m-d H:i:s');
         $uid = (!Yii::$app->has('user') || Yii::$app->user->isGuest) ? null : Yii::$app->user->id;
@@ -182,6 +184,94 @@ class OrgUnit extends ActiveRecord
         }
 
         return ['added' => $added, 'updated' => $updated];
+    }
+
+    /** คีย์เทียบซ้ำของหน่วยที่เพิ่มเอง — ผูก team_group เดิมถ้ามี ไม่มีก็เทียบด้วยชื่อ */
+    private function manualKey(): string
+    {
+        $tgId = is_array($this->data_json) ? (int) ($this->data_json['team_group_id'] ?? 0) : 0;
+        return $tgId > 0 ? 'tg:' . $tgId : 'name:' . trim((string) $this->name);
+    }
+
+    /**
+     * คัดลอกทะเบียนจากปีหนึ่งไปอีกปี — ใช้กับปีที่ยังไม่ได้จัดชุด (มีแต่ผลของ syncStructure)
+     *  - หน่วยในผัง : เติมอักษรย่อ/ประเภท ให้แถวปลายทางที่ยังว่าง (จับคู่ด้วย ref_id)
+     *  - หน่วยเพิ่มเอง : เพิ่มทีมประสาน/หน่วยนอกผังที่ปลายทางยังไม่มี
+     *
+     * ไม่ลบแถว ไม่แก้ชื่อ/สถานะเปิดใช้ และไม่แตะ id เดิม เพราะแผนและโครงการอ้าง org_unit.id ของปีนั้นอยู่
+     *
+     * @return array{filled:int, added:int, skipped:string[]}
+     */
+    public static function copyFromYear(int $fromYear, int $toYear): array
+    {
+        $filled = 0;
+        $added = 0;
+        $skipped = [];
+        if ($fromYear === $toYear) {
+            return ['filled' => 0, 'added' => 0, 'skipped' => []];
+        }
+
+        // 1) หน่วยในผัง — เติมเฉพาะช่องที่ยังว่าง ของเดิมที่กรอกไว้แล้วไม่ทับ
+        $targets = [];
+        foreach (static::find()->where(['thai_year' => $toYear, 'source' => self::SOURCE_STRUCTURE])->all() as $t) {
+            $targets[(int) $t->ref_id] = $t;
+        }
+        foreach (static::find()->where(['thai_year' => $fromYear, 'source' => self::SOURCE_STRUCTURE])->all() as $src) {
+            $target = $targets[(int) $src->ref_id] ?? null;
+            if ($target === null) {
+                continue; // ผังปีปลายทางไม่มีหน่วยนี้ — ปล่อยไว้ ให้ผู้ดูแลตัดสินใจเอง
+            }
+            $dirty = false;
+            if (($target->code === null || $target->code === '') && $src->code) {
+                if (static::codeTaken($toYear, (string) $src->code, (int) $target->id)) {
+                    $skipped[] = $target->name . ': อักษรย่อ ' . $src->code . ' ถูกใช้แล้วในปี ' . $toYear;
+                } else {
+                    $target->code = $src->code;
+                    $dirty = true;
+                }
+            }
+            if (($target->unit_type === null || $target->unit_type === '') && $src->unit_type) {
+                $target->unit_type = $src->unit_type;
+                $dirty = true;
+            }
+            if ($dirty) {
+                $target->save(false);
+                $filled++;
+            }
+        }
+
+        // 2) หน่วยที่เพิ่มเอง (ทีมประสาน/นอกผัง) — เพิ่มเฉพาะที่ปลายทางยังไม่มี
+        $existing = [];
+        foreach (static::find()->where(['thai_year' => $toYear, 'source' => self::SOURCE_MANUAL])->all() as $t) {
+            $existing[$t->manualKey()] = true;
+        }
+        foreach (static::find()->where(['thai_year' => $fromYear, 'source' => self::SOURCE_MANUAL])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $src) {
+            if (isset($existing[$src->manualKey()])) {
+                continue;
+            }
+            $code = (string) $src->code;
+            if ($code !== '' && static::codeTaken($toYear, $code, 0)) {
+                $skipped[] = $src->name . ': อักษรย่อ ' . $code . ' ถูกใช้แล้วในปี ' . $toYear;
+                $code = '';
+            }
+            $row = new static([
+                'thai_year' => $toYear,
+                'source' => self::SOURCE_MANUAL,
+                'ref_id' => null,
+                'unit_type' => $src->unit_type,
+                'code' => $code !== '' ? $code : null,
+                'name' => $src->name,
+                'leader_emp_id' => $src->leader_emp_id,
+                'active' => (int) $src->active,
+                'sort' => (int) $src->sort,
+                'data_json' => is_array($src->data_json) ? $src->data_json : null,
+            ]);
+            $row->save(false);
+            $existing[$row->manualKey()] = true;
+            $added++;
+        }
+
+        return ['filled' => $filled, 'added' => $added, 'skipped' => $skipped];
     }
 
     /**

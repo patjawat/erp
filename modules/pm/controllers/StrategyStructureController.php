@@ -9,6 +9,7 @@ use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\modules\pm\models\{StrategyPlan, StrategyMission, StrategyIssue, StrategyGoal, StrategyTactic, StrategyIndicator, Projects};
+use app\modules\plan\components\PlanHelper;
 
 /**
  * โครงกระดูกของแผนยุทธศาสตร์ — กรอกเฉพาะรหัสและชื่อ
@@ -79,7 +80,7 @@ class StrategyStructureController extends Controller
         }
         if ($type === 'project' || $type === 'activity') {
             $model->work_type = $type === 'activity' ? Projects::WORK_ACTIVITY : Projects::WORK_PROJECT;
-            $model->thai_year = (int) (date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
+            $model->thai_year = (int) PlanHelper::currentPlanYear(); // ปีเดียวกับระบบแผน = ปีที่ทะเบียนหน่วยงานจัดชุดไว้
             $model->status = Projects::STATUS_DRAFT;
             // โครงการต้องมีหน่วยงานเจ้าของเสมอ ตั้งต้นจากหน่วยงานของผู้สร้างไว้ก่อน
             if ($me = \app\components\UserHelper::GetEmployee()) {

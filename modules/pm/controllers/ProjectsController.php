@@ -9,6 +9,7 @@ use app\modules\pm\models\ProjectObjective;
 use app\modules\pm\models\ProjectIndicator;
 use app\modules\pm\models\ProjectResponsible;
 use app\components\UserHelper;
+use app\modules\plan\components\PlanHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -65,7 +66,8 @@ class ProjectsController extends Controller
     {
         $model = new Projects();
         $model->status = Projects::STATUS_DRAFT;
-        $model->thai_year = (int) (date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
+        // ยึดปีงบเดียวกับระบบแผน — ทะเบียนหน่วยงานจัดชุดไว้ตามปีนั้น ถ้าคำนวณเองจะไปได้ปีที่ยังไม่ได้จัดชุด
+        $model->thai_year = (int) PlanHelper::currentPlanYear();
 
         // ตั้งค่าเริ่มต้นจากผู้ใช้ปัจจุบัน — แปลงหน่วยงานในผังเป็นรายการในทะเบียนของปีนั้น
         $me = UserHelper::GetEmployee();
