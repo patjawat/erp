@@ -104,9 +104,11 @@ class ParcelController extends Controller
 
 
     /**
-     * ดึงรายการวัสดุจากการเบิกใช้ (OUT) ของหน่วยงาน ปีงบก่อนหน้า
-     * เฉลี่ยจำนวนเป็นรายเดือน (÷12) + ราคาต่อหน่วยล่าสุด
-     * ที่มา: stock_events (header name='order' OUT + line 'order_item'); หน่วยงาน = ผู้ทำรายการ (emp -> department)
+     * ดึงรายการวัสดุที่คาดว่าหน่วยงานจะใช้ในปีงบที่ขอ ไปเติมตารางรายการของแผนงบประมาณ
+     *
+     * ที่มา: คลังวัสดุ inventoryV2 ผ่าน MaterialPlanForecastService — ยอดจ่ายจริงปีก่อนหน้า
+     * ปรับเป็นอัตราเต็มปีเมื่อข้อมูลยังไม่ครบ 12 เดือน แล้วบวกเผื่อตามอัตรามาตรฐาน
+     * หน่วยงาน = คลังปลายทางที่ของถูกจ่ายไปถึง ไม่ใช่แผนกของผู้ทำรายการ
      */
     public function actionPullConsumption()
     {
@@ -204,14 +206,7 @@ class ParcelController extends Controller
                     if ($model->save(false)) {
                         $postItems = Yii::$app->request->post('items', []);
                         foreach ($postItems as $item) {
-                            if (!empty($item['item_name'])) {
-                                $pi = new PlanOrderItem();
-                                $pi->plan_order_id = $model->id;
-                                $pi->item_name = $item['item_name'];
-                                $pi->qty = (int)$item['qty'];
-                                $pi->unit_price = (float)$item['unit_price'];
-                                $pi->save(false);
-                            }
+                            PlanOrderItem::saveParcelRow($model->id, (array) $item);
                         }
                     }
                 } catch (\Throwable $th) {
@@ -245,14 +240,7 @@ class ParcelController extends Controller
             PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new PlanOrderItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save(false);
-                }
+                PlanOrderItem::saveParcelRow($model->id, (array) $item);
             }
 
             return $this->redirect(['view', 'id' => $model->id]);

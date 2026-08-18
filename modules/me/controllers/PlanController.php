@@ -341,16 +341,7 @@ class PlanController extends Controller
     {
         PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
         foreach ($postItems as $it) {
-            if (trim((string) ($it['item_name'] ?? '')) === '') {
-                continue;
-            }
-            $pi = new PlanOrderItem();
-            $pi->plan_order_id = $model->id;
-            $pi->item_name  = $it['item_name'];
-            $pi->qty        = (int) ($it['qty'] ?? 0);
-            $pi->unit_price = (float) ($it['unit_price'] ?? 0);
-            $pi->total_price = $pi->qty * $pi->unit_price;
-            $pi->save(false);
+            PlanOrderItem::saveParcelRow($model->id, (array) $it);
         }
     }
 

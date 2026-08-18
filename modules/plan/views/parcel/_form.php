@@ -231,7 +231,11 @@ $form = ActiveForm::begin(array_merge(
                         <?php if ($items): ?>
                             <?php foreach ($items as $i => $item): ?>
                                 <tr>
-                                    <td><input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control"></td>
+                                    <td>
+                                        <?php // รหัสวัสดุติดไปกับแถวเสมอ เพื่อให้บรรทัดในแผนโยงกลับทะเบียนวัสดุได้ ?>
+                                        <input type="hidden" name="items[<?= $i ?>][code]" value="<?= Html::encode($item->item_id) ?>">
+                                        <input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control">
+                                    </td>
                                     <td><input type="number" name="items[<?= $i ?>][qty]" value="<?= $item->qty ?>" class="form-control qty"></td>
                                     <td><input type="number" step="0.01" name="items[<?= $i ?>][unit_price]" value="<?= $item->unit_price ?>" class="form-control price"></td>
                                     <td class="total text-end"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
@@ -438,7 +442,10 @@ $('#btn-show-asset').click(function (e) {
 let rowIndex = $("#item-table tbody tr").length;
 $("#add-row").on("click", function(){
     let row = `<tr>
-        <td><input type="text" name="items[\${rowIndex}][item_name]" class="form-control"></td>
+        <td>
+            <input type="hidden" name="items[\${rowIndex}][code]" value="">
+            <input type="text" name="items[\${rowIndex}][item_name]" class="form-control">
+        </td>
         <td><input type="number" name="items[\${rowIndex}][qty]" class="form-control qty"></td>
         <td><input type="number" step="0.01" name="items[\${rowIndex}][unit_price]" class="form-control price"></td>
         <td class="total text-end">0.00</td>
@@ -537,8 +544,12 @@ $('#btn-pull-consumption').on('click', function(){
             var lineTotal = qty * price;
             total += lineTotal;
             var nameEsc = $('<div>').text(it.name).html();
+            var codeEsc = $('<div>').text(it.code || '').html();
             tbody.append('<tr>' +
-                '<td><input type="text" name="items[' + idx + '][item_name]" class="form-control" value="' + nameEsc + '"></td>' +
+                '<td>' +
+                    '<input type="hidden" name="items[' + idx + '][code]" value="' + codeEsc + '">' +
+                    '<input type="text" name="items[' + idx + '][item_name]" class="form-control" value="' + nameEsc + '">' +
+                '</td>' +
                 '<td><input type="number" name="items[' + idx + '][qty]" class="form-control qty" value="' + qty + '"></td>' +
                 '<td><input type="number" step="0.01" name="items[' + idx + '][unit_price]" class="form-control price" value="' + price + '"></td>' +
                 '<td class="total text-end">' + lineTotal.toFixed(2) + '</td>' +
