@@ -527,15 +527,21 @@ class PeriodController extends Controller
             ->one();
         if ($conflict) {
             $other = $conflict->period;
+            // แผ่นที่ถูกลบไปแล้วไม่ควรมีเวรค้าง แต่ถ้าเจอ ต้องไม่ชี้ไปยังหน้าที่เปิดไม่ได้
+            // ไม่งั้นผู้ใช้จะติดอยู่กับข้อความที่แก้เองไม่ได้เลย
+            $reachable = $other && $other->deleted_at === null;
             return [
                 'status' => 'error',
-                'message' => sprintf(
-                    'คนนี้ถูกจัดเวร%s วันที่ %d ไว้แล้วในแผ่น “%s” — เวรเดียวกันจัดซ้ำสองแผ่นไม่ได้ ให้ไปแก้ที่แผ่นนั้น',
-                    $unitShift->displayName(),
-                    $day,
-                    $other ? $other->title : 'อื่น'
-                ),
-                'conflictUrl' => $other ? \yii\helpers\Url::to(['grid', 'id' => $other->id]) : null,
+                'message' => $reachable
+                    ? sprintf(
+                        'คนนี้ถูกจัดเวร%s วันที่ %d ไว้แล้วในแผ่น “%s” — เวรเดียวกันจัดซ้ำสองแผ่นไม่ได้ ให้ไปแก้ที่แผ่นนั้น',
+                        $unitShift->displayName(), $day, $other->title
+                    )
+                    : sprintf(
+                        'คนนี้ถูกจัดเวร%s วันที่ %d ไว้ในแผ่นที่ถูกลบไปแล้ว จึงยังค้างอยู่ในระบบ — แจ้งผู้ดูแลให้ล้างข้อมูลค้างนี้',
+                        $unitShift->displayName(), $day
+                    ),
+                'conflictUrl' => $reachable ? \yii\helpers\Url::to(['grid', 'id' => $other->id]) : null,
             ];
         }
 
@@ -808,10 +814,28 @@ class PeriodController extends Controller
         if ($period->status !== Period::STATUS_DRAFT) {
             return ['status' => 'error', 'message' => 'ลบได้เฉพาะรอบที่ยังเป็นร่าง'];
         }
-        $period->deleted_at = date('Y-m-d H:i:s');
-        $period->deleted_by = Yii::$app->user->id;
-        $period->save(false);
-        return ['status' => 'success', 'container' => '#roster-period'];
+
+        // ต้องลบช่องเวรทิ้งด้วย ไม่ใช่แค่ซ่อนแผ่น
+        // เวรที่ค้างอยู่ยังกินคีย์ (emp_id, work_date, unit_shift_id) ตามเดิม
+        // ทำให้แผ่นอื่นจัดเวรคนเดิมวันเดิมไม่ได้ โดยชี้ไปยังแผ่นที่ผู้ใช้มองไม่เห็นแล้ว
+        // แผ่นร่างยังไม่ประกาศ จึงไม่มีใบเปลี่ยนตัวอ้างถึง ลบได้ปลอดภัย
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $removed = Item::deleteAll(['period_id' => $period->id]);
+            $period->deleted_at = date('Y-m-d H:i:s');
+            $period->deleted_by = Yii::$app->user->id;
+            $period->save(false);
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'ลบไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        return [
+            'status' => 'success',
+            'container' => '#roster-period',
+            'message' => $removed > 0 ? "ลบแผ่นและเวรที่จัดไว้ $removed ช่อง" : 'ลบแผ่นแล้ว',
+        ];
     }
 
     /** ตอบรับ/ปฏิเสธคำขอหยุด-ขออยู่ ระหว่างจัดเวร */
