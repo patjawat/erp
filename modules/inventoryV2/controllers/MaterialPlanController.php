@@ -12,6 +12,8 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Yii;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\Response;
 
@@ -21,6 +23,52 @@ use yii\web\Response;
  */
 class MaterialPlanController extends Controller
 {
+    /** สิทธิ์เปิด-ปิดค่าแผน แยกจากสิทธิ์เข้าดู/คำนวณ/บันทึกร่าง */
+    public const PERMISSION_LOCK = 'materialPlanLock';
+
+    public function behaviors()
+    {
+        return array_merge(parent::behaviors(), [
+            // ปิดค่า = ตรึงตัวเลขที่ส่ง สสจ. และกำหนดอัตราเผื่อกลาง จึงจำกัดสิทธิ์เฉพาะผู้ที่ได้รับมอบ
+            // กฎข้อที่สองต้องมี ไม่งั้นคนที่ไม่มีสิทธิ์จะตกไปเข้ากฎท้ายสุดแล้วผ่านได้
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'actions' => ['lock', 'unlock'],
+                        'allow' => true,
+                        'roles' => [self::PERMISSION_LOCK],
+                    ],
+                    [
+                        'actions' => ['lock', 'unlock'],
+                        'allow' => false,
+                    ],
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
+            // การกระทำที่เปลี่ยนสถานะเอกสารต้องมาทาง POST เท่านั้น
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'save' => ['post'],
+                    'lock' => ['post'],
+                    'unlock' => ['post'],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * ผู้ใช้ปัจจุบันเปิด-ปิดค่าแผนได้หรือไม่ (ใช้ตัดสินใจแสดงปุ่มบนหน้าจอ)
+     */
+    public function canLock(): bool
+    {
+        return Yii::$app->user->can(self::PERMISSION_LOCK);
+    }
+
     /**
      * หน้าคำนวณแผน พร้อมตัวกรองและตารางที่ปรับตัวเลขได้
      */
@@ -58,6 +106,7 @@ class MaterialPlanController extends Controller
             'baseYear' => MaterialPlanForecastService::baseFiscalYear($filter['fiscal_year']),
             'balanceSource' => $balanceSource,
             'coverage' => $coverage,
+            'canLock' => $this->canLock(),
         ]);
     }
 

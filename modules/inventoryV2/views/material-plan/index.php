@@ -15,6 +15,7 @@ use yii\helpers\Url;
 /** @var string $balanceSource */
 /** @var array $coverage */
 /** @var app\modules\inventoryV2\models\MaterialPlan|null $plan */
+/** @var bool $canLock ผู้ใช้มีสิทธิ์เปิด-ปิดค่าแผนหรือไม่ */
 
 $isLocked = $plan !== null && $plan->isLocked();
 
@@ -203,7 +204,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                                 <i class="bi bi-save me-1"></i>บันทึกแผน
                             </button>
                         <?php endif; ?>
-                        <?php if ($plan !== null): ?>
+                        <?php if ($plan !== null && $canLock): ?>
                             <button type="submit" class="btn btn-sm <?= $isLocked ? 'btn-outline-warning' : 'btn-outline-dark' ?>"
                                     formaction="<?= Url::to(['/inventory-v2/material-plan/' . ($isLocked ? 'unlock' : 'lock')]) ?>"
                                     data-plan-confirm="<?= $isLocked
