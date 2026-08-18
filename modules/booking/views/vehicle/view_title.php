@@ -5,7 +5,7 @@
 
  <div class="d-flex align-items-center gap-1">
      <?php if ($model->vehicle_type_id == 'official'): ?>
-         <?= Html::img('@web/images/logo-moph.png', ['class' => 'fc-vehicle-logo flex-shrink-0', 'alt' => 'รถยนต์ราชการ']) ?>
+         <?= Html::img('@web/images/Logo-moph.png', ['class' => 'fc-vehicle-logo flex-shrink-0', 'alt' => 'รถยนต์ราชการ']) ?>
      <?php endif ?>
      <?php if ($model->vehicle_type_id == 'ambulance'): ?>
          <?= Html::img('@web/images/ambulance_icon.png', ['class' => 'fc-vehicle-logo flex-shrink-0', 'alt' => 'รถพยาบาล']) ?>
