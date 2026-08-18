@@ -3,6 +3,8 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\components\SiteHelper;
+use app\modules\inventoryV2\models\MaterialPlan;
+use app\modules\inventoryV2\models\MaterialPlanItem;
 use app\modules\inventoryV2\services\MaterialPlanForecastService;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -26,9 +28,26 @@ class MaterialPlanController extends Controller
     {
         $filter = $this->resolveFilter();
         $service = new MaterialPlanForecastService();
-        $rows = $this->collectRows($service, $filter);
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        // แผนที่บันทึกแล้วต้องแสดงตัวเลขที่บันทึกไว้ ไม่ใช่คำนวณใหม่ ไม่งั้นการ "ปิดค่า" ไม่มีความหมาย
+        if ($plan !== null) {
+            $rows = $this->savedRows($plan, $filter);
+            $coverage = [
+                'months' => (int) $plan->months_covered,
+                'factor' => (float) $plan->annual_factor,
+                'last_date' => $plan->data_cutoff_date,
+            ];
+            $balanceSource = (string) $plan->balance_source;
+            $filter['growth_pct'] = (float) $plan->growth_pct;
+        } else {
+            $rows = $this->collectRows($service, $filter);
+            $coverage = $service->getCoverage();
+            $balanceSource = $service->getBalanceSource();
+        }
 
         return $this->render('index', [
+            'plan' => $plan,
             'filter' => $filter,
             'rows' => $rows,
             'summary' => $service->summarize($rows),
@@ -37,9 +56,41 @@ class MaterialPlanController extends Controller
             'categories' => MaterialPlanForecastService::categoryOptions(),
             'quarterLabels' => MaterialPlanForecastService::quarterLabels(),
             'baseYear' => MaterialPlanForecastService::baseFiscalYear($filter['fiscal_year']),
-            'balanceSource' => $service->getBalanceSource(),
-            'coverage' => $service->getCoverage(),
+            'balanceSource' => $balanceSource,
+            'coverage' => $coverage,
         ]);
+    }
+
+    /**
+     * แถวจากแผนที่บันทึกไว้ ใช้ตัวกรองหมวด/คำค้นกับชุดที่บันทึกแล้วเท่านั้น
+     *
+     * @return array<int, array>
+     */
+    protected function savedRows(MaterialPlan $plan, array $filter): array
+    {
+        $query = $plan->getItems()->orderBy(['category_title' => SORT_ASC, 'item_name' => SORT_ASC]);
+
+        if (($filter['category_id'] ?? '') !== '') {
+            $query->andWhere(['category_id' => $filter['category_id']]);
+        }
+        if (($filter['q'] ?? '') !== '') {
+            $query->andWhere([
+                'or',
+                ['like', 'item_code', $filter['q']],
+                ['like', 'item_name', $filter['q']],
+                ['like', 'category_title', $filter['q']],
+            ]);
+        }
+
+        $rows = [];
+        $seq = 1;
+        foreach ($query->all() as $item) {
+            $row = $item->toRow();
+            $row['seq'] = $seq++;
+            $rows[] = $row;
+        }
+
+        return $this->applyOverrides($rows, $this->readOverrides());
     }
 
     /**
@@ -50,9 +101,162 @@ class MaterialPlanController extends Controller
     {
         $filter = $this->resolveFilter();
         $service = new MaterialPlanForecastService();
-        $rows = $this->collectRows($service, $filter);
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
 
-        return $this->streamXlsx($rows, $service->summarize($rows), $filter, $service->getCoverage());
+        // ไฟล์ที่ส่งออกต้องตรงกับฉบับที่บันทึกไว้ ไม่ใช่คำนวณใหม่ตอนกดส่งออก
+        if ($plan !== null) {
+            $rows = $this->savedRows($plan, $filter);
+            $coverage = [
+                'months' => (int) $plan->months_covered,
+                'factor' => (float) $plan->annual_factor,
+                'last_date' => $plan->data_cutoff_date,
+            ];
+            $filter['growth_pct'] = (float) $plan->growth_pct;
+        } else {
+            $rows = $this->collectRows($service, $filter);
+            $coverage = $service->getCoverage();
+        }
+
+        return $this->streamXlsx($rows, $service->summarize($rows), $filter, $coverage);
+    }
+
+    /**
+     * บันทึกแผนที่คำนวณและปรับแล้วเป็นฉบับอ้างอิง
+     *
+     * บันทึกทั้งชุดเสมอ ไม่สนใจตัวกรองหมวด/คำค้นบนหน้าจอ เพราะเอกสารที่ส่งต้องครบ
+     */
+    public function actionSave()
+    {
+        $filter = $this->resolveFilter();
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        if ($plan !== null && $plan->isLocked()) {
+            Yii::$app->session->setFlash('error', 'แผนปีงบ ' . $filter['fiscal_year'] . ' ปิดค่าแล้ว ต้องปลดล็อกก่อนจึงจะบันทึกทับได้');
+
+            return $this->redirect($this->filterUrl($filter));
+        }
+
+        // ตัวกรองมุมมองไม่ควรตัดรายการออกจากเอกสาร บันทึกจากชุดเต็มเสมอ
+        $fullFilter = array_merge($filter, ['category_id' => '', 'q' => '']);
+        $service = new MaterialPlanForecastService();
+        $rows = $this->collectRows($service, $fullFilter);
+
+        if ($rows === []) {
+            Yii::$app->session->setFlash('error', 'ไม่มีรายการให้บันทึก');
+
+            return $this->redirect($this->filterUrl($filter));
+        }
+
+        $summary = $service->summarize($rows);
+        $coverage = $service->getCoverage();
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($plan === null) {
+                $plan = new MaterialPlan([
+                    'fiscal_year' => $filter['fiscal_year'],
+                    'warehouse_id' => $filter['warehouse_id'],
+                ]);
+            }
+            $plan->base_year = MaterialPlanForecastService::baseFiscalYear($filter['fiscal_year']);
+            $plan->growth_pct = $filter['growth_pct'];
+            $plan->months_covered = (int) $coverage['months'];
+            $plan->annual_factor = (float) $coverage['factor'];
+            $plan->data_cutoff_date = $coverage['last_date'];
+            $plan->balance_source = $service->getBalanceSource();
+            $plan->item_count = (int) $summary['item_count'];
+            $plan->plan_value = (float) $summary['plan_value'];
+            $plan->status = MaterialPlan::STATUS_DRAFT;
+            $plan->note = trim((string) Yii::$app->request->post('note', $plan->note));
+            if (!$plan->save()) {
+                throw new \RuntimeException('บันทึกหัวแผนไม่สำเร็จ');
+            }
+
+            MaterialPlanItem::deleteAll(['material_plan_id' => $plan->id]);
+            foreach ($rows as $row) {
+                $item = new MaterialPlanItem();
+                $item->setAttributes(MaterialPlanItem::attributesFromRow($plan->id, $row), false);
+                if (!$item->save(false)) {
+                    throw new \RuntimeException('บันทึกรายการ ' . $row['item_code'] . ' ไม่สำเร็จ');
+                }
+            }
+
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'บันทึกแผน ' . number_format($plan->item_count) . ' รายการ มูลค่า ' . number_format($plan->plan_value, 2) . ' บาท');
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . $e->getMessage());
+        }
+
+        return $this->redirect($this->filterUrl($filter));
+    }
+
+    /**
+     * ปิดค่าแผน — ตัวเลขหยุดนิ่ง ใช้เป็นฉบับที่ส่ง สสจ. และเป็นอัตราเผื่อกลางของทั้งระบบ
+     */
+    public function actionLock()
+    {
+        $filter = $this->resolveFilter();
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        if ($plan === null) {
+            Yii::$app->session->setFlash('error', 'ยังไม่มีแผนที่บันทึกไว้ ต้องบันทึกก่อนจึงปิดค่าได้');
+        } elseif ($plan->isLocked()) {
+            Yii::$app->session->setFlash('error', 'แผนนี้ปิดค่าไว้แล้ว');
+        } else {
+            $plan->status = MaterialPlan::STATUS_LOCKED;
+            $plan->locked_at = date('Y-m-d H:i:s');
+            $plan->locked_by = Yii::$app->user->id;
+            $plan->save(false);
+            Yii::$app->session->setFlash('success', 'ปิดค่าแผนปีงบ ' . $plan->fiscal_year . ' แล้ว ตัวเลขจะไม่เปลี่ยนอีก');
+        }
+
+        return $this->redirect($this->filterUrl($filter));
+    }
+
+    /**
+     * ปลดล็อกเพื่อแก้ไข — บันทึกไว้ว่าเคยปิดค่าเมื่อไรและใครปลด
+     */
+    public function actionUnlock()
+    {
+        $filter = $this->resolveFilter();
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        if ($plan === null || !$plan->isLocked()) {
+            Yii::$app->session->setFlash('error', 'ไม่มีแผนที่ปิดค่าไว้');
+        } else {
+            $history = (array) ($plan->data_json['unlock_history'] ?? []);
+            $history[] = [
+                'locked_at' => $plan->locked_at,
+                'locked_by' => $plan->locked_by,
+                'unlocked_at' => date('Y-m-d H:i:s'),
+                'unlocked_by' => Yii::$app->user->id,
+            ];
+            $plan->data_json = array_merge((array) $plan->data_json, ['unlock_history' => $history]);
+            $plan->status = MaterialPlan::STATUS_DRAFT;
+            $plan->locked_at = null;
+            $plan->locked_by = null;
+            $plan->save(false);
+            Yii::$app->session->setFlash('success', 'ปลดล็อกแล้ว แก้ไขและบันทึกทับได้');
+        }
+
+        return $this->redirect($this->filterUrl($filter));
+    }
+
+    /**
+     * URL กลับไปหน้าเดิมพร้อมตัวกรองเดิม
+     */
+    protected function filterUrl(array $filter): array
+    {
+        return [
+            '/inventory-v2/material-plan/index',
+            'fiscal_year' => $filter['fiscal_year'],
+            'growth_pct' => $filter['growth_pct'],
+            'warehouse_id' => $filter['warehouse_id'],
+            'dept_warehouse_id' => $filter['dept_warehouse_id'],
+            'category_id' => $filter['category_id'],
+            'q' => $filter['q'],
+        ];
     }
 
     /**

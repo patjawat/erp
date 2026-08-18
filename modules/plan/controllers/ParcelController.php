@@ -14,6 +14,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\am\models\AssetItemSearch;
+use app\modules\inventoryV2\models\MaterialPlan;
 use app\modules\inventoryV2\services\MaterialPlanForecastService;
 use app\modules\plan\models\PlanOrderSearch;
 
@@ -135,12 +136,16 @@ class ParcelController extends Controller
             }
         }
 
+        // อัตราเผื่อมาจากแผนที่งานพัสดุบันทึกไว้สำหรับปีงบนั้น เพื่อให้ทุกหน่วยงานใช้ค่าเดียวกัน
+        // ยังไม่มีแผนบันทึกไว้จึงถอยไปใช้ค่าตั้งต้น
+        $growthPct = MaterialPlan::growthPctForYear($year, MaterialPlanForecastService::DEFAULT_GROWTH_PCT);
+
         // ประมาณการจากคลังวัสดุ (inventoryV2) แทนการอ่านยอดดิบจาก stock_events ของระบบเดิม
         // ซึ่งหยุดรับข้อมูลแล้ว ทำให้หน่วยงานได้ตัวเลขขาดไปเรื่อย ๆ
         $forecast = (new MaterialPlanForecastService())->forecastForOrganization(
             $dept,
             $year,
-            MaterialPlanForecastService::DEFAULT_GROWTH_PCT,
+            $growthPct,
             $childIds,
             $atype
         );
@@ -160,7 +165,7 @@ class ParcelController extends Controller
             'items'          => $forecast['items'],
             'months_covered' => $forecast['months_covered'],
             'annual_factor'  => $forecast['factor'],
-            'growth_pct'     => MaterialPlanForecastService::DEFAULT_GROWTH_PCT,
+            'growth_pct'     => $growthPct,
         ];
     }
 

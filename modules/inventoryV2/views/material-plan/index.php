@@ -14,6 +14,9 @@ use yii\helpers\Url;
 /** @var int $baseYear */
 /** @var string $balanceSource */
 /** @var array $coverage */
+/** @var app\modules\inventoryV2\models\MaterialPlan|null $plan */
+
+$isLocked = $plan !== null && $plan->isLocked();
 
 $this->title = 'จัดทำแผนวัสดุประจำปี';
 $this->params['breadcrumbs'][] = ['label' => 'คลังวัสดุ', 'url' => ['/inventory-v2/default/index']];
@@ -157,6 +160,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
 
             <section class="card border shadow-sm overflow-hidden">
                 <div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
+                    <div>
                     <h2 class="mp-card-title mb-0">
                         แผนการจัดวัสดุ ปีงบประมาณ <?= Html::encode($filter['fiscal_year']) ?>
                         <?php if ($isPartialYear): ?>
@@ -166,25 +170,55 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                             </span>
                         <?php endif; ?>
                     </h2>
+                    <?php if ($plan !== null): ?>
+                        <p class="mp-caption mb-0">
+                            <?= $isLocked
+                                ? 'ปิดค่าเมื่อ ' . Html::encode($formatter->asDatetime($plan->locked_at, 'medium'))
+                                : 'บันทึกล่าสุด ' . Html::encode($formatter->asDatetime($plan->updated_at, 'medium')) ?>
+                            · อัตราเผื่อ <?= Html::encode($plan->growth_pct) ?>%
+                            · <?= $formatter->asInteger($plan->item_count) ?> รายการ
+                        </p>
+                    <?php endif; ?>
+                    </div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
+                        <?php if ($plan !== null): ?>
+                            <span class="badge <?= $plan->isLocked() ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' ?> fw-semibold">
+                                <i class="bi <?= $plan->isLocked() ? 'bi-lock-fill' : 'bi-pencil' ?> me-1"></i><?= Html::encode($plan->statusLabel()) ?>
+                            </span>
+                        <?php endif; ?>
                         <div class="btn-group btn-group-sm" role="group" aria-label="คอลัมน์ที่แสดง">
                             <input type="checkbox" class="btn-check" id="mp-toggle-history" autocomplete="off" data-plan-toggle="history">
                             <label class="btn btn-outline-secondary" for="mp-toggle-history">ย้อนหลัง 3 ปี</label>
                             <input type="checkbox" class="btn-check" id="mp-toggle-qvalue" autocomplete="off" data-plan-toggle="qvalue">
                             <label class="btn btn-outline-secondary" for="mp-toggle-qvalue">มูลค่ารายไตรมาส</label>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-plan-add-open>
-                            <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุ
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-plan-reset>
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>คืนค่า
-                        </button>
+                        <?php if (!$isLocked): ?>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-plan-add-open>
+                                <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุ
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-plan-reset>
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>คืนค่า
+                            </button>
+                            <button type="submit" class="btn btn-sm btn-primary" formaction="<?= Url::to(['/inventory-v2/material-plan/save']) ?>">
+                                <i class="bi bi-save me-1"></i>บันทึกแผน
+                            </button>
+                        <?php endif; ?>
+                        <?php if ($plan !== null): ?>
+                            <button type="submit" class="btn btn-sm <?= $isLocked ? 'btn-outline-warning' : 'btn-outline-dark' ?>"
+                                    formaction="<?= Url::to(['/inventory-v2/material-plan/' . ($isLocked ? 'unlock' : 'lock')]) ?>"
+                                    data-plan-confirm="<?= $isLocked
+                                        ? 'ปลดล็อกแล้วตัวเลขจะแก้ไขได้อีกครั้ง และจะไม่ตรงกับฉบับที่ส่งไปแล้ว ยืนยันหรือไม่'
+                                        : 'ปิดค่าแล้วตัวเลขจะหยุดนิ่ง ใช้เป็นฉบับส่ง สสจ. และเป็นอัตราเผื่อกลางของทั้งระบบ ยืนยันหรือไม่' ?>">
+                                <i class="bi <?= $isLocked ? 'bi-unlock' : 'bi-lock' ?> me-1"></i><?= $isLocked ? 'ปลดล็อก' : 'ปิดค่า' ?>
+                            </button>
+                        <?php endif; ?>
                         <button type="submit" class="btn btn-sm btn-success">
                             <i class="bi bi-file-earmark-excel me-1"></i>Excel
                         </button>
                     </div>
                 </div>
 
+                <?php if (!$isLocked): ?>
                 <div class="card-body border-bottom py-2 d-none" data-plan-add-panel>
                     <div class="row g-2 align-items-start">
                         <div class="col-12 col-md-6 col-xl-4">
@@ -203,6 +237,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <div class="mp-table-wrap">
                     <table class="table table-sm align-middle mb-0 mp-table is-hide-history is-hide-qvalue" data-plan-table>
@@ -266,6 +301,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                                             'step' => '1',
                                             'min' => 0,
                                             'data-plan-input' => 'forecast_qty',
+                                            'readonly' => $isLocked,
                                             'aria-label' => 'ประมาณการใช้ ' . $row['item_name'],
                                         ]) ?>
                                     </td>
@@ -276,6 +312,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                                             'step' => '1',
                                             'min' => 0,
                                             'data-plan-input' => 'plan_qty',
+                                            'readonly' => $isLocked,
                                             'aria-label' => 'ประมาณการจัดซื้อ ' . $row['item_name'],
                                         ]) ?>
                                     </td>
@@ -285,6 +322,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                                             'step' => '0.01',
                                             'min' => 0,
                                             'data-plan-input' => 'unit_price',
+                                            'readonly' => $isLocked,
                                             'title' => $priceSourceLabels[$row['price_source']] ?? '',
                                             'aria-label' => 'ราคาต่อหน่วย ' . $row['item_name'],
                                         ]) ?>
@@ -297,6 +335,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                                                 'step' => '1',
                                                 'min' => 0,
                                                 'data-plan-input' => 'q' . ($index + 1),
+                                                'readonly' => $isLocked,
                                                 'aria-label' => $label . ' ' . $row['item_name'],
                                             ]) ?>
                                         </td>
@@ -324,6 +363,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                 </div>
             </section>
 
+            <?php if (!$isLocked): ?>
             <?php ob_start(); ?>
             <tr data-plan-row data-item-code="{code}" data-opening-qty="{opening}" data-plan-manual>
                 <td class="mp-sticky mp-col-seq">+</td>
@@ -352,6 +392,7 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                     <th colspan="<?= $totalColumns ?>"><i class="bi bi-plus-square me-1"></i>รายการที่เพิ่มเอง</th>
                 </tr>
             </template>
+            <?php endif; ?>
         <?= Html::endForm() ?>
     <?php endif; ?>
 </div>
@@ -555,8 +596,36 @@ $this->registerJs(<<<JS
         });
     });
 
+    // ปิดค่า/ปลดล็อกเปลี่ยนสถานะเอกสารที่ส่งออกไปแล้ว ต้องยืนยันก่อน
+    form.querySelectorAll('[data-plan-confirm]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            if (button.dataset.confirmed === 'yes') { return; }
+            event.preventDefault();
+            if (!window.Swal) {
+                if (window.confirm(button.dataset.planConfirm)) {
+                    button.dataset.confirmed = 'yes';
+                    button.click();
+                }
+                return;
+            }
+            Swal.fire({
+                icon: 'question',
+                title: button.textContent.trim(),
+                text: button.dataset.planConfirm,
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: false
+            }).then(function (result) {
+                if (!result.isConfirmed) { return; }
+                button.dataset.confirmed = 'yes';
+                button.click();
+            });
+        });
+    });
+
     var resetButton = form.querySelector('[data-plan-reset]');
-    if (resetButton) {
+    if (resetButton) { // ไม่มีปุ่มนี้เมื่อแผนปิดค่าแล้ว
         resetButton.addEventListener('click', function () {
             overrides = {};
             added = [];
@@ -567,12 +636,16 @@ $this->registerJs(<<<JS
     }
 
     // ---- เพิ่มวัสดุที่ไม่มีความเคลื่อนไหวในปีฐาน ----
+    var openAdd = form.querySelector('[data-plan-add-open]');
     var panel = form.querySelector('[data-plan-add-panel]');
     var addInput = form.querySelector('[data-plan-add-input]');
     var results = form.querySelector('[data-plan-add-results]');
     var rowTemplate = form.querySelector('[data-plan-row-template]');
     var groupTemplate = form.querySelector('[data-plan-group-template]');
     var searchTimer = null;
+
+    // แผนที่ปิดค่าแล้วไม่มีปุ่มเพิ่มวัสดุ ข้ามส่วนนี้ไป
+    if (!openAdd || !panel || !rowTemplate) { return; }
 
     var existingCodes = function () {
         var set = {};
@@ -585,7 +658,7 @@ $this->registerJs(<<<JS
         results.innerHTML = '';
     };
 
-    form.querySelector('[data-plan-add-open]').addEventListener('click', function () {
+    openAdd.addEventListener('click', function () {
         panel.classList.remove('d-none');
         addInput.focus();
     });
