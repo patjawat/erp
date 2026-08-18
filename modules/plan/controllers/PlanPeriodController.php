@@ -14,6 +14,10 @@ use yii\web\ForbiddenHttpException;
  */
 class PlanPeriodController extends Controller
 {
+    /**
+     * ด่านที่สองถัดจาก AccessControl ระดับแอป ซึ่งกัน /plan/* ตาม route อยู่แล้ว
+     * กันไว้ที่คอนโทรลเลอร์ด้วยแบบเดียวกับ ApproveController เผื่อ route ถูกปลดใน allowActions ภายหลัง
+     */
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) {
