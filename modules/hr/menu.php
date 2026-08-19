@@ -25,6 +25,14 @@ use yii\helpers\Url;
         <span class="d-none d-sm-inline">ผังโครงสร้างองค์กร</span>
     </a>
 
+    <a href="<?= Url::to(['/hr/workforce-frame/index']) ?>"
+       aria-label="กรอบอัตรากำลัง"
+       class="btn <?= $active === 'workforce-frame' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+       data-pjax="0">
+        <i data-lucide="users-round" width="16" height="16" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">กรอบอัตรากำลัง</span>
+    </a>
+
     <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
     <a href="<?= Url::to(['/hr/workforce/index']) ?>"
        aria-label="งาน HRD"
