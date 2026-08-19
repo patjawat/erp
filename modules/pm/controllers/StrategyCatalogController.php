@@ -151,14 +151,29 @@ class StrategyCatalogController extends Controller
         return $this->saveForm($model, $type, $plan);
     }
 
-    public function actionDelete(string $type, int $id)
+    /**
+     * @param string|null $backTo ส่ง 'plan' มาเมื่อกดลบจากหน้าผังยุทธศาสตร์ เพื่อให้กลับไปหน้าเดิม
+     */
+    public function actionDelete(string $type, int $id, ?string $backTo = null)
     {
         $class = $this->classFor($type);
         $model = $class::findOne($id) ?: throw new NotFoundHttpException('ไม่พบรายการ');
         $plan = $this->planFromModel($model, $type);
-        $this->assertEditable($plan); $model->delete();
+        $this->assertEditable($plan);
+
+        // ตัวชี้วัดลบข้ามชั้นไม่ได้เหมือนกัน กันไว้ที่นี่ด้วยเพื่อไม่ให้เลี่ยงผ่านหน้าทะเบียน
+        if ($type === 'indicator' && ($remaining = count($model->children) + count($model->tactics))) {
+            Yii::$app->session->setFlash('error', sprintf(
+                'ลบ "%s" ไม่ได้ เพราะยังมีรายการย่อยอยู่ %d รายการ ต้องลบรายการย่อยให้หมดก่อน',
+                $model->name,
+                $remaining
+            ));
+            return $this->redirect($backTo === 'plan' ? ['/pm/strategy-plan/view', 'id' => $plan->id] : ['index', 'type' => $type, 'planId' => $plan->id]);
+        }
+
+        $model->delete();
         Yii::$app->session->setFlash('success', 'ลบรายการแล้ว');
-        return $this->redirect(['index', 'type' => $type, 'planId' => $plan->id]);
+        return $this->redirect($backTo === 'plan' ? ['/pm/strategy-plan/view', 'id' => $plan->id] : ['index', 'type' => $type, 'planId' => $plan->id]);
     }
 
     /** คัดลอกชุดตัวชี้วัดทั้งชุดจากปีหนึ่งไปยังอีกปีหนึ่ง */

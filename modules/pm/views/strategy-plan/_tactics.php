@@ -10,6 +10,7 @@ use app\components\RichText;
  * @var app\modules\pm\models\StrategyIndicator $owner ตัวชี้วัดหลักหรือตัวชี้วัดรอง
  * @var bool $editable
  * @var Closure $stRow
+ * @var Closure $stDelete
  */
 
 if (!$owner->tactics) {
@@ -39,7 +40,7 @@ if (!$owner->tactics) {
             'addTitle' => 'เพิ่มโครงการ/แผนงาน',
             'menu' => $editable ? [
                 ['label' => 'แก้ไข', 'url' => ['/pm/strategy-structure/update', 'type' => 'tactic', 'id' => $tactic->id]],
-                ['label' => 'ลบ', 'url' => ['/pm/strategy-structure/delete', 'type' => 'tactic', 'id' => $tactic->id], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ลบกลยุทธ์นี้? มาตรการ โครงการ และกิจกรรมที่ผูกอยู่จะไม่ถูกลบ แต่จะไม่สังกัดกลยุทธ์ใด']],
+                $stDelete(['/pm/strategy-structure/delete', 'type' => 'tactic', 'id' => $tactic->id], $leaves, 'กลยุทธ์', 'มาตรการ/โครงการ'),
             ] : [],
         ]) ?>
 
@@ -53,6 +54,10 @@ if (!$owner->tactics) {
                             'type' => 'มาตรการ',
                             'code' => 'ปี ' . (int) $measure->fiscal_year,
                             'name' => RichText::plain($measure->name, 200),
+                            'menu' => $editable ? [
+                                ['label' => 'แก้ไข', 'url' => ['/pm/strategy-catalog/update', 'type' => 'measure', 'id' => $measure->id]],
+                                ['label' => 'ลบ', 'url' => ['/pm/strategy-catalog/delete', 'type' => 'measure', 'id' => $measure->id, 'backTo' => 'plan'], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบมาตรการนี้?']],
+                            ] : [],
                         ]) ?>
                     </div>
                 <?php endforeach; ?>

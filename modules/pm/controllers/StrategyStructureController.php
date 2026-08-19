@@ -112,6 +112,23 @@ class StrategyStructureController extends Controller
         return $this->render('form', ['model' => $model, 'type' => $type, 'plan' => $plan]);
     }
 
+    /**
+     * จำนวนรายการย่อยที่ยังเหลืออยู่ — ใช้กันไม่ให้ลบข้ามชั้น
+     * ต้องเช็คที่นี่ ไม่ใช่แค่ซ่อนปุ่มในหน้าจอ เพราะ URL ลบเรียกตรงได้
+     */
+    private function childCount(string $type, $model): int
+    {
+        return match ($type) {
+            'mission' => count($model->issues),
+            'issue' => count($model->goals),
+            'goal' => count($model->indicators) + count($model->factors) + count($model->tactics),
+            'indicator' => count($model->children) + count($model->tactics),
+            'sub-indicator' => count($model->tactics),
+            'tactic' => count($model->measures) + count($model->works),
+            'project', 'activity' => 0,
+        };
+    }
+
     public function actionDelete(string $type, int $id)
     {
         [$class] = $this->type($type);
@@ -119,6 +136,15 @@ class StrategyStructureController extends Controller
         if (!$model) throw new NotFoundHttpException('ไม่พบรายการ');
         $plan = $this->planFromModel($type, $model);
         $this->assertEditable($plan);
+
+        if ($remaining = $this->childCount($type, $model)) {
+            Yii::$app->session->setFlash('error', sprintf(
+                'ลบ "%s" ไม่ได้ เพราะยังมีรายการย่อยอยู่ %d รายการ ต้องลบรายการย่อยให้หมดก่อน',
+                $model->name ?? $model->code ?? 'รายการนี้',
+                $remaining
+            ));
+            return $this->redirect(['/pm/strategy-plan/view', 'id' => $plan->id]);
+        }
         if ($type === 'project' || $type === 'activity') {
             // โครงการและกิจกรรมมีรายละเอียดกับประวัติของตัวเอง จึงลบแบบ soft ให้ตรงกับหน้าโครงการ
             $model->deleted_at = date('Y-m-d H:i:s');

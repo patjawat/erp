@@ -23,6 +23,25 @@ $years = range((int) $model->start_year, (int) $model->end_year);
  *
  * @param array $c level,icon,type,code,name,nameHtml,count,node,collapsible,add[],addTitle,menu[]
  */
+/**
+ * สร้างรายการ "ลบ" ในเมนู — ลบได้ต่อเมื่อไม่มีรายการย่อยเหลืออยู่แล้ว
+ * เงื่อนไขเดียวกันนี้ถูกบังคับซ้ำที่คอนโทรลเลอร์ ตรงนี้แค่บอกผู้ใช้ล่วงหน้า
+ */
+$stDelete = function (array $url, int $childCount, string $what, string $childLabel) {
+    if ($childCount > 0) {
+        return [
+            'label' => 'ลบ',
+            'disabled' => true,
+            'reason' => sprintf('ลบไม่ได้ ยังมี%s %d รายการ ต้องลบให้หมดก่อน', $childLabel, $childCount),
+        ];
+    }
+    return [
+        'label' => 'ลบ',
+        'url' => $url,
+        'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบ' . $what . 'นี้?'],
+    ];
+};
+
 $stRow = function (array $c): string {
     $node = $c['node'] ?? null;
     $out = '<div class="sh-row sh-row--' . $c['level'] . '">';
@@ -83,6 +102,12 @@ $stRow = function (array $c): string {
         if ($menu) {
             $items = '';
             foreach ($menu as $m) {
+                // รายการที่ยังลบไม่ได้ แสดงเป็นตัวจาง ๆ พร้อมเหตุผล ดีกว่าซ่อนแล้วผู้ใช้หาไม่เจอ
+                if (!empty($m['disabled'])) {
+                    $items .= '<li><span class="dropdown-item disabled" title="' . Html::encode($m['reason'] ?? '') . '">'
+                        . Html::encode($m['label']) . '</span></li>';
+                    continue;
+                }
                 $opts = $m['options'] ?? [];
                 $opts['class'] = trim('dropdown-item ' . ($opts['class'] ?? ''));
                 $items .= '<li>' . Html::a(Html::encode($m['label']), $m['url'], $opts) . '</li>';
@@ -109,6 +134,16 @@ $stRow = function (array $c): string {
 $this->beginBlock('page-title'); ?>แผนยุทธศาสตร์<?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'strategy']) ?><?php $this->endBlock();
 ?>
+
+<?php /* เลย์เอาต์ไม่ได้แสดง flash ให้ ต้องแสดงเอง ไม่งั้นกดลบไม่ผ่านแล้วจะเงียบสนิท */ ?>
+<?php foreach (['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $cls): ?>
+    <?php if (Yii::$app->session->hasFlash($key)): ?>
+        <div class="alert alert-<?= $cls ?> alert-dismissible fade show">
+            <?= Html::encode(Yii::$app->session->getFlash($key)) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+        </div>
+    <?php endif; ?>
+<?php endforeach; ?>
 
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
     <div>
@@ -197,6 +232,12 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                     <div class="d-flex gap-1 flex-shrink-0">
                         <?= Html::a('เพิ่มประเด็น', ['/pm/strategy-structure/create', 'type' => 'issue', 'parentId' => $mission->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                         <?= Html::a('แก้ไข', ['/pm/strategy-structure/update', 'type' => 'mission', 'id' => $mission->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                        <?php if ($mission->issues): ?>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                                title="ลบไม่ได้ ยังมีประเด็นยุทธศาสตร์ <?= count($mission->issues) ?> รายการ ต้องลบให้หมดก่อน">ลบ</button>
+                        <?php else: ?>
+                            <?= Html::a('ลบ', ['/pm/strategy-structure/delete', 'type' => 'mission', 'id' => $mission->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบพันธกิจนี้?']) ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -222,6 +263,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                             'addTitle' => 'เพิ่มเป้าประสงค์',
                             'menu' => $editable ? [
                                 ['label' => 'แก้ไข', 'url' => ['/pm/strategy-structure/update', 'type' => 'issue', 'id' => $issue->id]],
+                                $stDelete(['/pm/strategy-structure/delete', 'type' => 'issue', 'id' => $issue->id], count($issue->goals), 'ประเด็นยุทธศาสตร์', 'เป้าประสงค์'),
                             ] : [],
                         ]) ?>
 
@@ -250,6 +292,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                         'addTitle' => 'เพิ่มตัวชี้วัด',
                                         'menu' => $editable ? [
                                             ['label' => 'แก้ไข', 'url' => ['/pm/strategy-structure/update', 'type' => 'goal', 'id' => $goal->id]],
+                                            $stDelete(['/pm/strategy-structure/delete', 'type' => 'goal', 'id' => $goal->id], count($goal->indicators) + count($goal->factors) + count($goal->tactics), 'เป้าประสงค์', 'ตัวชี้วัด/ปัจจัย/กลยุทธ์'),
                                         ] : [],
                                     ]) ?>
 
@@ -278,13 +321,13 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                                     'addTitle' => 'เพิ่มตัวชี้วัดรอง หรือ กลยุทธ์',
                                                     'menu' => $editable ? [
                                                         ['label' => 'แก้ไข', 'url' => ['/pm/strategy-structure/update', 'type' => 'indicator', 'id' => $indicator->id]],
-                                                        ['label' => 'ลบ', 'url' => ['/pm/strategy-structure/delete', 'type' => 'indicator', 'id' => $indicator->id], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ลบตัวชี้วัดนี้? ตัวชี้วัดรอง กลยุทธ์ และข้อมูลรายปีจะถูกลบตามไปด้วย']],
+                                                        $stDelete(['/pm/strategy-structure/delete', 'type' => 'indicator', 'id' => $indicator->id], count($indicator->children) + count($indicator->tactics), 'ตัวชี้วัด', 'ตัวชี้วัดรอง/กลยุทธ์'),
                                                     ] : [],
                                                 ]) ?>
 
                                                 <?php if ($indHasKids): ?>
                                                 <div class="sh-kids" id="kids-<?= $indId ?>">
-                                                    <?= $this->render('_tactics', ['owner' => $indicator, 'editable' => $editable, 'stRow' => $stRow]) ?>
+                                                    <?= $this->render('_tactics', ['owner' => $indicator, 'editable' => $editable, 'stRow' => $stRow, 'stDelete' => $stDelete]) ?>
 
                                                     <?php foreach ($indicator->children as $child): ?>
                                                         <?php $childId = 'ind-' . $child->id; ?>
@@ -302,12 +345,12 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                                                 'addTitle' => 'เพิ่มกลยุทธ์',
                                                                 'menu' => $editable ? [
                                                                     ['label' => 'แก้ไข', 'url' => ['/pm/strategy-structure/update', 'type' => 'sub-indicator', 'id' => $child->id]],
-                                                                    ['label' => 'ลบ', 'url' => ['/pm/strategy-structure/delete', 'type' => 'sub-indicator', 'id' => $child->id], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ลบตัวชี้วัดรองนี้? กลยุทธ์ที่ผูกอยู่จะถูกลบตามไปด้วย']],
+                                                                    $stDelete(['/pm/strategy-structure/delete', 'type' => 'sub-indicator', 'id' => $child->id], count($child->tactics), 'ตัวชี้วัดรอง', 'กลยุทธ์'),
                                                                 ] : [],
                                                             ]) ?>
                                                             <?php if ($child->tactics): ?>
                                                                 <div class="sh-kids" id="kids-<?= $childId ?>">
-                                                                    <?= $this->render('_tactics', ['owner' => $child, 'editable' => $editable, 'stRow' => $stRow]) ?>
+                                                                    <?= $this->render('_tactics', ['owner' => $child, 'editable' => $editable, 'stRow' => $stRow, 'stDelete' => $stDelete]) ?>
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
@@ -328,6 +371,7 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                                                     'nameHtml' => '<span class="erp-richtext d-inline">' . RichText::render($factor->name) . '</span>',
                                                     'menu' => $editable ? [
                                                         ['label' => 'แก้ไข', 'url' => ['/pm/strategy-catalog/update', 'type' => 'factor', 'id' => $factor->id]],
+                                                        ['label' => 'ลบ', 'url' => ['/pm/strategy-catalog/delete', 'type' => 'factor', 'id' => $factor->id, 'backTo' => 'plan'], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบรายการนี้?']],
                                                     ] : [],
                                                 ]) ?>
                                             </div>
