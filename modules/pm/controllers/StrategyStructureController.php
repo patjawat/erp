@@ -95,6 +95,14 @@ class StrategyStructureController extends Controller
         [$class] = $this->type($type);
         $model = $class::findOne($id);
         if (!$model) throw new NotFoundHttpException('ไม่พบรายการ');
+
+        // โครงการ/กิจกรรมที่ยังไม่ผูกกลยุทธ์ไม่มีชุดแผนให้สืบกลับ ฟอร์มย่อในผังจึงใช้ไม่ได้
+        // ส่งไปแก้ที่หน้าโครงการซึ่งกรอกได้ครบทุกช่องรวมทั้งหน่วยงานเจ้าของ
+        if (in_array($type, ['project', 'activity'], true) && !$model->tactic) {
+            Yii::$app->session->setFlash('warning', 'โครงการนี้ยังไม่ได้ผูกกับกลยุทธ์ในแผนยุทธศาสตร์ จึงเปิดแก้ที่หน้าโครงการให้แทน');
+            return $this->redirect(['/pm/projects/update', 'id' => $model->id]);
+        }
+
         $plan = $this->planFromModel($type, $model);
         $this->assertEditable($plan);
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
@@ -139,16 +147,25 @@ class StrategyStructureController extends Controller
             'project', 'activity' => StrategyTactic::findOne($parentId)?->goal?->issue?->mission?->plan ?: throw new NotFoundHttpException('ไม่พบกลยุทธ์'),
         };
     }
+    /**
+     * สืบกลับจากรายการไปหาชุดแผนที่มันสังกัด
+     * ใช้ null-safe ทั้งสาย เพราะโครงการที่สร้างนอกผังยุทธศาสตร์จะไม่มี tactic_id
+     * ถ้าสืบไม่ถึงให้ตอบว่าไม่พบ ดีกว่าปล่อยให้ PHP warning ทำให้ทั้งหน้าพัง
+     */
     private function planFromModel(string $type, $model): StrategyPlan
     {
-        return match ($type) {
+        $plan = match ($type) {
             'mission' => $model->plan,
-            'issue' => $model->mission->plan,
-            'goal' => $model->issue->mission->plan,
+            'issue' => $model->mission?->plan,
+            'goal' => $model->issue?->mission?->plan,
             'indicator', 'sub-indicator' => $model->plan,
-            'tactic' => $model->goal->issue->mission->plan,
-            'project', 'activity' => $model->tactic->goal->issue->mission->plan,
+            'tactic' => $model->goal?->issue?->mission?->plan,
+            'project', 'activity' => $model->tactic?->goal?->issue?->mission?->plan,
         };
+        if (!$plan) {
+            throw new NotFoundHttpException('รายการนี้ไม่ได้สังกัดชุดแผนยุทธศาสตร์ใด');
+        }
+        return $plan;
     }
     private function assertEditable(StrategyPlan $plan): void
     {

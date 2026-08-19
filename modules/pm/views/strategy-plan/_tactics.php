@@ -72,6 +72,7 @@ if (!$owner->tactics) {
                                 . '</span>',
                             'menu' => $editable ? [
                                 ['label' => 'แก้ไขชื่อ', 'url' => ['/pm/strategy-structure/update', 'type' => $isActivity ? 'activity' : 'project', 'id' => $work->id]],
+                                ['label' => 'ลบ', 'url' => ['/pm/strategy-structure/delete', 'type' => $isActivity ? 'activity' : 'project', 'id' => $work->id], 'options' => ['class' => 'text-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบ' . $work->workTypeLabel() . 'นี้?']],
                             ] : [],
                         ]) ?>
                     </div>
