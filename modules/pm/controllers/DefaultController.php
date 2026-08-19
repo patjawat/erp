@@ -62,8 +62,10 @@ class DefaultController extends Controller
             ->asArray()
             ->all();
 
+        // ไม่กรองด้วยปี เพราะ id ของทะเบียนไม่ซ้ำข้ามปีอยู่แล้ว
+        // ถ้ากรอง โครงการที่อ้างหน่วยของปีอื่น (เช่นปีที่ยังไม่ได้ตั้งทะเบียน) จะกลายเป็น "ไม่ระบุหน่วยงาน"
         $unitNames = ArrayHelper::map(
-            OrgUnit::find()->select(['id', 'name'])->where(['thai_year' => $year])->asArray()->all(),
+            OrgUnit::find()->select(['id', 'name'])->asArray()->all(),
             'id',
             'name'
         );

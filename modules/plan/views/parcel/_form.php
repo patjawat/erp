@@ -72,7 +72,7 @@ $lockDeptName = $lockDeptName ?? '';
 // หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า (scope=plan)
 $ouGroups = [];
 if ($scope !== 'me') {
-    $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
+    $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year, $model->plan_unit_id ? (int) $model->plan_unit_id : null);
     // ให้ pull JS แปลง plan_unit_id -> tree.id (ref_id) ; null=หน่วยนอกผัง
     $this->registerJs('window.__ouRef = ' . \yii\helpers\Json::encode(\app\modules\settings\models\OrgUnit::refMap((int) $model->thai_year)) . ';', \yii\web\View::POS_HEAD);
 }

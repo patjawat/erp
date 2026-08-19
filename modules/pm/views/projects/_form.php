@@ -13,7 +13,12 @@ app\assets\FormGuardAsset::register($this);
 $rich = fn(string $label, int $rows = 3) => ['rows' => $rows, 'data-richtext' => '1', 'data-rte-label' => $label];
 
 // หน่วยงานจากทะเบียนกลางของปีนี้ — จัดกลุ่มตามประเภท (หน่วยงาน/ทีมประสาน) และเยื้องตามผัง
-$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
+// ส่งค่าที่เลือกไว้เดิมเข้าไปด้วย ของเก่าจะได้ไม่หายจากรายการแม้หน่วยนั้นถูกปิดใช้ไปแล้ว
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year, $model->org_unit_id ? (int) $model->org_unit_id : null);
+$ouYearUsed = \app\modules\settings\models\OrgUnit::yearWithData((int) $model->thai_year);
+$ouHint = $ouYearUsed !== (int) $model->thai_year
+    ? 'ยังไม่ได้ตั้งค่าทะเบียนหน่วยงานของปี ' . (int) $model->thai_year . ' จึงแสดงรายการของปี ' . $ouYearUsed . ' แทน'
+    : 'เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)';
 
 // กลยุทธ์ทั้งหมด จัดกลุ่มตามตัวชี้วัดที่สังกัด เพื่อให้เลือกถูกตัวเมื่อชื่อกลยุทธ์คล้ายกัน
 $tacticGroups = [];
@@ -57,7 +62,7 @@ $form = ActiveForm::begin(['id' => 'project-form']);
                 'data' => $ouGroups,
                 'options' => ['placeholder' => '-- เลือกหน่วยงาน --'],
                 'pluginOptions' => ['allowClear' => false],
-            ])->label('หน่วยงาน/ทีมเจ้าของโครงการ')->hint('เลือกจากทะเบียนหน่วยงาน (โครงสร้าง/ทีมประสาน/นอกผัง)') ?></div>
+            ])->label('หน่วยงาน/ทีมเจ้าของโครงการ')->hint($ouHint) ?></div>
             <div class="col-md-3"><?= $form->field($model, 'status')->dropDownList(Projects::statusList()) ?></div>
         </div>
         <div class="row">
