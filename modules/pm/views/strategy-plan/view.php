@@ -420,7 +420,6 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
  * สีทั้งหมดมาจากตัวแปรของ Bootstrap จึงเปลี่ยนตามธีมของระบบเอง
  */
 $this->registerCss(<<<'CSS'
-.st-plan{max-width:82rem}
 .st-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem}
 .st-toolbar__years{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem}
 .st-mission+.st-mission{margin-top:1rem}
@@ -493,7 +492,6 @@ $this->registerCss(<<<'CSS'
 
 @media print{
     .st-toolbar,.sh-act{display:none !important}
-    .st-plan{max-width:none}
     .sh-node.is-collapsed>.sh-kids{display:block !important}
     .sh-node.is-year-hidden{display:revert !important}
 }
