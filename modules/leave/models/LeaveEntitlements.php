@@ -50,6 +50,8 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
             'message' => 'ปีงบประมาณ {value} มีข้อมูลพนักงานคนนี้อยู่แล้ว'],
             [['emp_id', 'month_of_service', 'year_of_service', 'days', 'thai_year'], 'required'],
             [['emp_id', 'month_of_service', 'year_of_service', 'thai_year', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            // รวมสิทธิลาพักผ่อนเป็นทศนิยมได้ (คอลัมน์ days เป็น float)
+            [['days'], 'number', 'min' => 0],
             [['data_json', 'created_at', 'updated_at', 'deleted_at', 'q', 'q_department'], 'safe'],
             [['position_type_id', 'leave_type_id'], 'string', 'max' => 255],
         ];
@@ -143,20 +145,32 @@ class LeaveEntitlements extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         if (is_array($this->data_json)) {
+            $balance = null;
+            $leaveOnYear = null;
+
             if (array_key_exists('before_leave_balance', $this->data_json)) {
-                $this->balance = (float) $this->data_json['before_leave_balance'];
+                $balance = (float) $this->data_json['before_leave_balance'];
+                // บางฐานข้อมูลไม่มีคอลัมน์สรุป จึงเขียนเฉพาะเท่าที่มีจริง
+                if ($this->hasAttribute('balance')) {
+                    $this->balance = $balance;
+                }
             }
             if (array_key_exists('leave_days', $this->data_json)) {
-                $this->leave_on_year = (float) $this->data_json['leave_days'];
+                $leaveOnYear = (float) $this->data_json['leave_days'];
+                if ($this->hasAttribute('leave_on_year')) {
+                    $this->leave_on_year = $leaveOnYear;
+                }
             }
-            if (
-                array_key_exists('before_leave_balance', $this->data_json)
-                && array_key_exists('leave_days', $this->data_json)
-            ) {
-                $this->days = $this->balance + $this->leave_on_year;
+            // คำนวณยอดรวมให้เฉพาะตอนที่ไม่ได้ระบุมา ถ้าผู้ใช้กรอกเองให้ใช้ค่าที่กรอก (ทศนิยมได้)
+            if (($this->days === null || $this->days === '') && $balance !== null && $leaveOnYear !== null) {
+                $this->days = $balance + $leaveOnYear;
             }
 
             $this->data_json = Json::encode($this->data_json);
+        }
+
+        if ($this->days !== null && $this->days !== '') {
+            $this->days = (float) $this->days;
         }
 
         return parent::beforeSave($insert);
