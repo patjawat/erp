@@ -90,19 +90,16 @@ usort($alerts, function ($a, $b) use ($typeOrder) {
 });
 ?>
 
-<section class="card mb-3 expiring-insurance-card" aria-labelledby="<?= $headingId ?>">
+<section class="card border-0 shadow-sm expiring-insurance-card" aria-labelledby="<?= $headingId ?>">
+    <div class="card-header bg-primary-gradient text-white">
+        <h4 id="<?= $headingId ?>" class="h6 text-white mb-0">
+            <i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>พ.ร.บ./ประกัน ใกล้หมดอายุ
+            <span class="badge rounded-pill bg-white bg-opacity-25 text-white fw-medium ms-1 vd-num"
+                aria-label="<?= count($alerts) ?> รายการใกล้หมดอายุ"><?= count($alerts) ?></span>
+        </h4>
+        <p class="small text-white-50 mb-0">ภายใน <?= $thresholdDays ?> วันข้างหน้า</p>
+    </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 id="<?= $headingId ?>" class="h6 card-title mb-0 d-flex align-items-center gap-2">
-                <span class="text-warning" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                พ.ร.บ./ประกัน ใกล้หมดอายุ
-            </h2>
-            <span class="badge bg-danger rounded-circle d-inline-flex justify-content-center align-items-center expiring-count-badge"
-                aria-label="<?= count($alerts) ?> รายการใกล้หมดอายุ">
-                <span aria-hidden="true"><?= count($alerts) ?></span>
-            </span>
-        </div>
-
         <?php if (empty($alerts)): ?>
             <div class="text-muted text-center py-4 small">ไม่มีรายการที่ใกล้หมดอายุภายใน <?= $thresholdDays ?> วัน</div>
         <?php else: ?>

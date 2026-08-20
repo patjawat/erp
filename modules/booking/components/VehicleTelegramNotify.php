@@ -56,7 +56,7 @@ class VehicleTelegramNotify
         }
     }
 
-    public static function notifyEmployeeById(?string $employeeId, string $messageHtml): bool
+    public static function notifyEmployeeById(?string $employeeId, string $messageHtml, array $extraOptions = []): bool
     {
         $employeeId = trim((string) $employeeId);
         if ($employeeId === '') {
@@ -72,7 +72,7 @@ class VehicleTelegramNotify
                 return false;
             }
 
-            return (bool) Yii::$app->telegram->sendDirectMessage($cid, $messageHtml, self::OPT);
+            return (bool) Yii::$app->telegram->sendDirectMessage($cid, $messageHtml, array_merge(self::OPT, $extraOptions));
         } catch (\Throwable $e) {
             return false;
         }
@@ -175,5 +175,79 @@ class VehicleTelegramNotify
             }
         }
         self::notifyEmployeeById((string) $vehicle->emp_id, implode("\n", $lines));
+    }
+
+    /**
+     * ภารกิจเสร็จสิ้น → ส่งข้อความสรุป + ลิงก์แบบประเมินความพึงพอใจให้ผู้ขอ
+     * ใช้ token ใน vehicle_detail.data_json.survey_token จึงเปิดจาก Telegram ได้โดยไม่ต้องล็อกอิน
+     */
+    public static function notifyRequesterSurvey(Vehicle $vehicle, VehicleDetail $detail): bool
+    {
+        try {
+            if (!$detail->canSurvey()) {
+                return false;
+            }
+            $url = $detail->surveyUrl();
+            if ($url === '') {
+                return false;
+            }
+
+            try {
+                $dateLabel = Yii::$app->thaiFormatter->asDate($detail->date_start, 'medium');
+            } catch (\Throwable $e) {
+                $dateLabel = (string) $detail->date_start;
+            }
+            $driverName = '-';
+            if ($detail->driver_id && ($dr = Employees::findOne($detail->driver_id))) {
+                $driverName = (string) ($dr->fullname ?? '-');
+            }
+
+            $lines = [
+                '🏁 <b>เสร็จสิ้นภารกิจการใช้รถ</b>',
+                'คำขอ ' . self::esc($vehicle->code),
+                '📅 วันที่: ' . self::esc($dateLabel),
+                '📍 สถานที่: ' . self::esc($vehicle->locationOrg?->title ?? '-'),
+                '🚗 ทะเบียน: ' . self::esc($detail->license_plate ?? '-'),
+                '👨‍✈️ พขร.: ' . self::esc($driverName),
+                '',
+                'ขอความกรุณาประเมินความพึงพอใจในการใช้รถ เพื่อนำไปพัฒนาการให้บริการ',
+                '⭐ <a href="' . self::esc($url) . '">คลิกที่นี่เพื่อทำแบบประเมิน</a>',
+            ];
+
+            $options = [];
+            if (self::isPublicHttpsUrl($url)) {
+                $options['reply_markup'] = [
+                    'inline_keyboard' => [
+                        [['text' => '⭐ ประเมินความพึงพอใจ', 'url' => $url]],
+                    ],
+                ];
+            }
+
+            $sent = self::notifyEmployeeById((string) $vehicle->emp_id, implode("\n", $lines), $options);
+            if ($sent) {
+                $detail->markSurveySent();
+            }
+
+            return $sent;
+        } catch (\Throwable $e) {
+            Yii::error('notifyRequesterSurvey failed: ' . $e->getMessage(), __METHOD__);
+
+            return false;
+        }
+    }
+
+    /** Telegram ปฏิเสธ inline button ที่ไม่ใช่ URL สาธารณะ — ถ้าไม่เข้าเกณฑ์ให้ใช้ลิงก์ในข้อความแทน */
+    private static function isPublicHttpsUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if ($scheme !== 'https' || $host === '') {
+            return false;
+        }
+
+        return !in_array($host, ['localhost', '127.0.0.1', '::1'], true)
+            && !str_ends_with($host, '.localhost')
+            && !str_ends_with($host, '.local');
     }
 }

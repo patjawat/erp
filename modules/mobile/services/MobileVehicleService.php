@@ -7,6 +7,7 @@ use app\modules\am\models\Asset;
 use app\modules\am\models\AssetSearch;
 use app\modules\booking\models\Vehicle;
 use app\modules\booking\models\VehicleDetail;
+use app\modules\booking\components\VehicleTelegramNotify;
 use app\modules\hr\models\Employees;
 use Yii;
 
@@ -409,6 +410,7 @@ class MobileVehicleService
     public function prepareAndSaveDriverMission(VehicleDetail $detail): array
     {
         $this->ensureDriverMissionRef($detail);
+        $previousStatus = (string) $detail->getOldAttribute('status');
         $detail->date_start = $detail->date_start ? AppHelper::convertToGregorian($detail->date_start) : null;
         $detail->date_end   = $detail->date_end ? AppHelper::convertToGregorian($detail->date_end) : $detail->date_start;
         $detail->time_start = substr((string) $detail->time_start, 0, 5);
@@ -428,6 +430,11 @@ class MobileVehicleService
                 if ($detail->vehicle) {
                     $detail->vehicle->status = (string) $detail->status;
                     $detail->vehicle->save(false, ['status', 'updated_at', 'updated_by']);
+                    // เสร็จสิ้นภารกิจ → ส่งลิงก์แบบประเมินความพึงพอใจให้ผู้ขอทาง Telegram
+                    if ((string) $detail->status === VehicleDetail::STATUS_SUCCESS
+                        && $previousStatus !== VehicleDetail::STATUS_SUCCESS) {
+                        VehicleTelegramNotify::notifyRequesterSurvey($detail->vehicle, $detail);
+                    }
                 }
                 return ['ok' => true, 'errors' => [], 'exception' => null];
             }

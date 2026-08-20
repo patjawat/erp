@@ -313,6 +313,9 @@ $config = [
             'roster/*',
             'me/roster/*',
             'line/*',
+            // แบบประเมินความพึงพอใจการใช้รถ: ผู้ขอเปิดจากลิงก์ใน Telegram โดยไม่ต้องล็อกอิน
+            // สิทธิ์มาจาก survey_token ใน vehicle_detail.data_json ที่ controller ตรวจเอง
+            'booking/vehicle-survey/*',
             // 'me/*',
             // 'line-group/*',
             'summary/*',

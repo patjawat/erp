@@ -920,53 +920,20 @@ if (count($datas) >= 1) {
         return $arr;
     }
 
-    public function departmentSummary()
+    /** หน่วยงานที่ขอใช้รถมากที่สุด (มาก → น้อย) */
+    public function departmentSummary($limit = 8)
     {
         $query = Vehicle::find()
-            ->select(['d.name', 'COUNT(v.id) as total'])
+            ->select(['name' => 'd.name', 'total' => new Expression('COUNT(v.id)')])
             ->from(['v' => Vehicle::tableName()])
             ->leftJoin(['e' => Employees::tableName()], 'e.id = v.emp_id')
             ->leftJoin(['d' => Organization::tableName()], 'd.id = e.department')
-            ->where(['IN', 'v.status', ['Approve', 'Pass', 'Success']])
-            ->andFilterWhere(['thai_year' => $this->thai_year])
-            ->groupBy('d.id')
-            ->orderBy(['total' => SORT_ASC]);
-
-        $result = $query->asArray()->all();
-        return $result;
-    }
-
-    public function carSummary()
-    {
-        $vehicles = Vehicle::find()
-            ->select([
-                'license_plate',
-                new Expression('COUNT(id) AS total'),
-            ])
-            ->groupBy('license_plate')
-            ->where(['IN', 'status', ['Approve', 'Pass', 'Success']])
-            ->asArray()
-            ->all();
-
-        return $vehicles;
-    }
-
-    // สรุปปริมาณงานพนักงานขับรถ (เรียงจากมากไปน้อย)
-    public function driverSummary($limit = null)
-    {
-        $query = Vehicle::find()
-            ->select([
-                'v.driver_id',
-                new Expression("TRIM(CONCAT(COALESCE(e.prefix, ''), COALESCE(e.fname, ''), ' ', COALESCE(e.lname, ''))) AS fullname"),
-                new Expression('COUNT(v.id) AS total'),
-            ])
-            ->from(['v' => Vehicle::tableName()])
-            ->leftJoin(['e' => Employees::tableName()], 'e.id = v.driver_id')
-            ->where(['IN', 'v.status', ['Approve', 'Pass', 'Success']])
-            ->andWhere(['IS NOT', 'v.driver_id', null])
-            ->andWhere(['<>', 'v.driver_id', ''])
+            ->where(['IN', 'v.status', self::ACTIVE_STATUSES])
+            ->andWhere(['IS NOT', 'd.name', null])
+            ->andWhere(['<>', 'd.name', ''])
             ->andFilterWhere(['v.thai_year' => $this->thai_year])
-            ->groupBy(['v.driver_id', 'e.prefix', 'e.fname', 'e.lname'])
+            ->andFilterWhere(['v.vehicle_type_id' => $this->vehicle_type_id])
+            ->groupBy(['d.id', 'd.name'])
             ->orderBy(['total' => SORT_DESC]);
 
         if ($limit !== null) {
@@ -974,6 +941,393 @@ if (count($datas) >= 1) {
         }
 
         return $query->asArray()->all();
+    }
+
+    /** รถที่ถูกขอใช้บ่อยที่สุดในปีงบที่เลือก (มาก → น้อย) */
+    public function carSummary($limit = 8)
+    {
+        $query = Vehicle::find()
+            ->select([
+                'license_plate',
+                new Expression('COUNT(id) AS total'),
+            ])
+            ->where(['IN', 'status', self::ACTIVE_STATUSES])
+            ->andWhere(['IS NOT', 'license_plate', null])
+            ->andWhere(['<>', 'license_plate', ''])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
+            ->groupBy('license_plate')
+            ->orderBy(['total' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit((int) $limit);
+        }
+
+        return $query->asArray()->all();
+    }
+
+    /** คำขอ/การจัดสรรที่ถือว่ามีผล (ไม่ใช่รออนุมัติ ไม่ใช่ยกเลิก) */
+    public const ACTIVE_STATUSES = ['Approve', 'Pass', 'Success'];
+
+    /** สถานะรายวันที่นับเป็น "งาน" ของพนักงานขับรถ */
+    public const DRIVER_WORK_STATUSES = self::ACTIVE_STATUSES;
+
+    /**
+     * เพดานระยะทางต่อการจัดสรร 1 วันที่ถือว่าสมเหตุสมผล (กม.)
+     *
+     * ที่ต้องมีเพราะผู้ใช้บางรายกรอกเลขไมล์ลงช่องระยะทาง ทำให้ยอดรวมเพี้ยนหลักแสน
+     * รายการที่เกินเพดานจะไม่ถูกนำไปรวมยอด แต่จะถูกนับไว้ให้เจ้าหน้าที่ตามแก้
+     */
+    public const DISTANCE_SANITY_MAX = 2000;
+
+    /** ลำดับเดือนตามปีงบประมาณ ต.ค. → ก.ย. */
+    public const FISCAL_MONTHS = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    public const FISCAL_MONTH_LABELS = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+
+    /**
+     * สรุปปริมาณงานพนักงานขับรถ (เรียงจากมากไปน้อย)
+     *
+     * นับจาก vehicle_detail.driver_id (การจัดสรรรายวัน) ไม่ใช่ vehicle.driver_id
+     * เพราะการจัดสรร พขร. จริงเกิดที่ระดับรายวัน — vehicle.driver_id แทบไม่ถูกเซ็ต
+     * 1 แถวรายวัน = 1 งาน คำขอที่ค้างคืนหลายวันจึงนับตามจำนวนวันที่จัดสรร
+     */
+    public function driverSummary($limit = null)
+    {
+        $query = (new \yii\db\Query())
+            ->select([
+                'driver_id' => 'd.driver_id',
+                'fullname' => new Expression("TRIM(CONCAT(COALESCE(e.prefix, ''), COALESCE(e.fname, ''), ' ', COALESCE(e.lname, '')))"),
+                'total' => new Expression('COUNT(d.id)'),
+            ])
+            ->from(['d' => VehicleDetail::tableName()])
+            ->innerJoin(['v' => self::tableName()], 'v.id = d.vehicle_id')
+            ->leftJoin(['e' => Employees::tableName()], 'e.id = d.driver_id')
+            ->where(['d.deleted_at' => null])
+            ->andWhere(['IN', 'd.status', self::DRIVER_WORK_STATUSES])
+            ->andWhere(['IS NOT', 'd.driver_id', null])
+            ->andWhere(['<>', 'd.driver_id', ''])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year])
+            ->andFilterWhere(['v.vehicle_type_id' => $this->vehicle_type_id])
+            ->groupBy(['d.driver_id', 'e.prefix', 'e.fname', 'e.lname'])
+            ->orderBy(['total' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit((int) $limit);
+        }
+
+        return $query->all();
+    }
+
+    /* ------------------------------------------------------------------
+     * ข้อมูลสำหรับหน้า Dashboard ยานพาหนะ
+     * ------------------------------------------------------------------ */
+
+    /**
+     * ตัวเลขสรุปหัวหน้า Dashboard — สถานะคำขอ + ปริมาณการเดินทางที่บันทึกจริง
+     *
+     * @return array{pending:int, allocated:int, success:int, cancelled:int, total:int,
+     *               distance:float, oil_price:float, trips:int, logged:int, unlogged:int}
+     */
+    public function dashboardSummary(): array
+    {
+        $statusRows = (new \yii\db\Query())
+            ->select(['status', 'total' => new Expression('COUNT(*)')])
+            ->from(self::tableName())
+            ->where(['deleted_at' => null])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
+            ->groupBy('status')
+            ->all();
+
+        $byStatus = [];
+        foreach ($statusRows as $row) {
+            $byStatus[(string) $row['status']] = (int) $row['total'];
+        }
+
+        // ปริมาณจริงมาจากการจัดสรรรายวัน ไม่ใช่หัวคำขอ
+        $loggedExpr = '(COALESCE(d.distance_km, 0) > 0 OR COALESCE(d.oil_price, 0) > 0 OR COALESCE(d.oil_liter, 0) > 0)';
+        $sane = 'COALESCE(d.distance_km, 0) BETWEEN 0 AND ' . (int) self::DISTANCE_SANITY_MAX;
+        $trip = (new \yii\db\Query())
+            ->select([
+                'trips' => new Expression('COUNT(*)'),
+                'distance' => new Expression("COALESCE(SUM(CASE WHEN {$sane} THEN d.distance_km ELSE 0 END), 0)"),
+                'distance_anomalies' => new Expression("SUM(CASE WHEN {$sane} THEN 0 ELSE 1 END)"),
+                'oil_price' => new Expression('COALESCE(SUM(d.oil_price), 0)'),
+                'logged' => new Expression("SUM(CASE WHEN {$loggedExpr} THEN 1 ELSE 0 END)"),
+            ])
+            ->from(['d' => VehicleDetail::tableName()])
+            ->innerJoin(['v' => self::tableName()], 'v.id = d.vehicle_id')
+            ->where(['d.deleted_at' => null])
+            ->andWhere(['IN', 'd.status', self::ACTIVE_STATUSES])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year])
+            ->andFilterWhere(['v.vehicle_type_id' => $this->vehicle_type_id])
+            ->one();
+
+        $trips = (int) ($trip['trips'] ?? 0);
+        $logged = (int) ($trip['logged'] ?? 0);
+
+        return [
+            'pending' => (int) ($byStatus['Pending'] ?? 0),
+            'allocated' => (int) ($byStatus['Pass'] ?? 0) + (int) ($byStatus['Approve'] ?? 0),
+            'success' => (int) ($byStatus['Success'] ?? 0),
+            'cancelled' => (int) ($byStatus['Cancel'] ?? 0),
+            'total' => array_sum($byStatus),
+            'distance' => (float) ($trip['distance'] ?? 0),
+            'distance_anomalies' => (int) ($trip['distance_anomalies'] ?? 0),
+            'oil_price' => (float) ($trip['oil_price'] ?? 0),
+            'trips' => $trips,
+            'logged' => $logged,
+            'unlogged' => max(0, $trips - $logged),
+        ];
+    }
+
+    /** จัดผลลัพธ์ที่ group ตามเดือนปฏิทินให้เรียงตามปีงบ ต.ค. → ก.ย. */
+    private static function toFiscalSeries(array $rowsByMonth): array
+    {
+        $series = [];
+        foreach (self::FISCAL_MONTHS as $m) {
+            $series[] = (float) ($rowsByMonth[$m] ?? 0);
+        }
+
+        return $series;
+    }
+
+    /**
+     * จำนวนการใช้รถรายเดือน แยกตามประเภทรถ และแยกตามประเภทภารกิจของรถฉุกเฉิน
+     *
+     * นับจาก vehicle_detail (การจัดสรรรายวัน) ด้วยสถานะที่ใช้งานจริง
+     * ของเดิมกรอง d.status = 'Approve' อย่างเดียว ซึ่งเลิกใช้ไปแล้ว กราฟจึงเป็นศูนย์ทั้งปี
+     */
+    public function monthlyUsageSummary(): array
+    {
+        $base = fn() => (new \yii\db\Query())
+            ->from(['d' => VehicleDetail::tableName()])
+            ->innerJoin(['v' => self::tableName()], 'v.id = d.vehicle_id')
+            ->where(['d.deleted_at' => null])
+            ->andWhere(['IN', 'd.status', self::ACTIVE_STATUSES])
+            ->andWhere(['IS NOT', 'd.date_start', null])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year]);
+
+        $byType = [];
+        $rows = $base()
+            ->select([
+                'type' => 'v.vehicle_type_id',
+                'm' => new Expression('MONTH(d.date_start)'),
+                'total' => new Expression('COUNT(*)'),
+            ])
+            ->groupBy(['v.vehicle_type_id', new Expression('MONTH(d.date_start)')])
+            ->all();
+        foreach ($rows as $row) {
+            $byType[(string) $row['type']][(int) $row['m']] = (int) $row['total'];
+        }
+
+        $byRefer = [];
+        $referRows = $base()
+            ->select([
+                'refer' => new Expression('UPPER(v.refer_type)'),
+                'm' => new Expression('MONTH(d.date_start)'),
+                'total' => new Expression('COUNT(*)'),
+            ])
+            ->andWhere(['v.vehicle_type_id' => 'ambulance'])
+            ->groupBy([new Expression('UPPER(v.refer_type)'), new Expression('MONTH(d.date_start)')])
+            ->all();
+        foreach ($referRows as $row) {
+            $byRefer[(string) $row['refer']][(int) $row['m']] = (int) $row['total'];
+        }
+
+        $ambulance = self::toFiscalSeries($byType['ambulance'] ?? []);
+        $refer = self::toFiscalSeries($byRefer['REFER'] ?? []);
+        $ems = self::toFiscalSeries($byRefer['EMS'] ?? []);
+        $normal = self::toFiscalSeries($byRefer['NORMAL'] ?? []);
+
+        // บางคำขอไม่ได้ระบุ refer_type — กันไม่ให้ยอดกราฟแยกประเภทหายไปจากยอดรวม
+        $other = [];
+        foreach ($ambulance as $i => $total) {
+            $other[] = max(0, $total - ($refer[$i] + $ems[$i] + $normal[$i]));
+        }
+
+        return [
+            'labels' => self::FISCAL_MONTH_LABELS,
+            'official' => self::toFiscalSeries($byType['official'] ?? []),
+            'personal' => self::toFiscalSeries($byType['personal'] ?? []),
+            'ambulance' => $ambulance,
+            'refer' => $refer,
+            'ems' => $ems,
+            'normal' => $normal,
+            'other' => $other,
+        ];
+    }
+
+    /** ค่าน้ำมันและระยะทางรายเดือนตามปีงบ */
+    public function monthlyCostSummary(): array
+    {
+        $rows = (new \yii\db\Query())
+            ->select([
+                'm' => new Expression('MONTH(d.date_start)'),
+                'oil_price' => new Expression('COALESCE(SUM(d.oil_price), 0)'),
+                'distance' => new Expression(
+                    'COALESCE(SUM(CASE WHEN COALESCE(d.distance_km, 0) BETWEEN 0 AND '
+                    . (int) self::DISTANCE_SANITY_MAX . ' THEN d.distance_km ELSE 0 END), 0)'
+                ),
+            ])
+            ->from(['d' => VehicleDetail::tableName()])
+            ->innerJoin(['v' => self::tableName()], 'v.id = d.vehicle_id')
+            ->where(['d.deleted_at' => null])
+            ->andWhere(['IN', 'd.status', self::ACTIVE_STATUSES])
+            ->andWhere(['IS NOT', 'd.date_start', null])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year])
+            ->andFilterWhere(['v.vehicle_type_id' => $this->vehicle_type_id])
+            ->groupBy([new Expression('MONTH(d.date_start)')])
+            ->all();
+
+        $oil = [];
+        $distance = [];
+        foreach ($rows as $row) {
+            $oil[(int) $row['m']] = (float) $row['oil_price'];
+            $distance[(int) $row['m']] = (float) $row['distance'];
+        }
+
+        return [
+            'labels' => self::FISCAL_MONTH_LABELS,
+            'oil_price' => self::toFiscalSeries($oil),
+            'distance' => self::toFiscalSeries($distance),
+        ];
+    }
+
+    /** คำขอที่ยังรอจัดสรร เรียงตามวันเดินทางที่ใกล้ที่สุด */
+    public function pendingRequests($limit = 6)
+    {
+        return Vehicle::find()
+            ->where(['status' => 'Pending', 'deleted_at' => null])
+            ->andFilterWhere(['thai_year' => $this->thai_year])
+            ->andFilterWhere(['vehicle_type_id' => $this->vehicle_type_id])
+            ->with(['employee', 'locationOrg'])
+            ->orderBy(['date_start' => SORT_ASC, 'time_start' => SORT_ASC])
+            ->limit((int) $limit)
+            ->all();
+    }
+
+    /* ------------------------------------------------------------------
+     * ผลประเมินความพึงพอใจการใช้รถ
+     * คะแนนเก็บใน vehicle_detail.data_json.satisfaction.score (taxonomy 'rating' 1-5)
+     * ------------------------------------------------------------------ */
+
+    private const SATISFACTION_SCORE_SQL = "CAST(JSON_UNQUOTE(JSON_EXTRACT(d.data_json, '$.satisfaction.score')) AS UNSIGNED)";
+
+    /** ฐานคิวรีภารกิจที่เสร็จสิ้น กรองตามปีงบ/ประเภทรถที่เลือกอยู่ */
+    private function satisfactionBaseQuery(): \yii\db\Query
+    {
+        return (new \yii\db\Query())
+            ->from(['d' => VehicleDetail::tableName()])
+            ->innerJoin(['v' => self::tableName()], 'v.id = d.vehicle_id')
+            ->where(['d.deleted_at' => null])
+            ->andWhere(['d.status' => 'Success'])
+            ->andFilterWhere(['v.thai_year' => $this->thai_year])
+            ->andFilterWhere(['v.vehicle_type_id' => $this->vehicle_type_id]);
+    }
+
+    /** เฉพาะรายการที่ผู้ขอประเมินแล้ว */
+    private function satisfactionRatedQuery(): \yii\db\Query
+    {
+        return $this->satisfactionBaseQuery()
+            ->andWhere(new Expression(self::SATISFACTION_SCORE_SQL . ' BETWEEN 1 AND 5'));
+    }
+
+    /**
+     * สรุปภาพรวม: คะแนนเฉลี่ย จำนวนผู้ประเมิน อัตราการตอบกลับ และการกระจายรายระดับ
+     *
+     * @return array{avg:float, total:int, success:int, rate:int, items:array}
+     */
+    public function satisfactionSummary(): array
+    {
+        $scoreExp = new Expression(self::SATISFACTION_SCORE_SQL);
+
+        $success = (int) $this->satisfactionBaseQuery()->count();
+        $rows = $this->satisfactionRatedQuery()
+            ->select(['score' => $scoreExp, 'total' => new Expression('COUNT(*)')])
+            ->groupBy([$scoreExp])
+            ->all();
+
+        $counts = [];
+        $total = 0;
+        $sum = 0;
+        foreach ($rows as $row) {
+            $score = (int) $row['score'];
+            $count = (int) $row['total'];
+            $counts[$score] = $count;
+            $total += $count;
+            $sum += $score * $count;
+        }
+
+        $items = [];
+        foreach (VehicleDetail::listRating() as $code => $title) {
+            $code = (int) $code;
+            $count = $counts[$code] ?? 0;
+            $items[$code] = [
+                'code' => $code,
+                'title' => $title,
+                'count' => $count,
+                'p' => $total > 0 ? (int) round(($count / $total) * 100) : 0,
+            ];
+        }
+        krsort($items);
+
+        return [
+            'avg' => $total > 0 ? round($sum / $total, 2) : 0.0,
+            'total' => $total,
+            'success' => $success,
+            'rate' => $success > 0 ? (int) round(($total / $success) * 100) : 0,
+            'items' => array_values($items),
+        ];
+    }
+
+    /** คะแนนเฉลี่ยรายพนักงานขับรถ (เรียงจากคะแนนสูงสุด) */
+    public function satisfactionDriverSummary($limit = 10, $minCount = 1): array
+    {
+        $query = $this->satisfactionRatedQuery()
+            ->select([
+                'driver_id' => 'd.driver_id',
+                'fullname' => new Expression("TRIM(CONCAT(COALESCE(e.prefix, ''), COALESCE(e.fname, ''), ' ', COALESCE(e.lname, '')))"),
+                'total' => new Expression('COUNT(*)'),
+                'avg_score' => new Expression('AVG(' . self::SATISFACTION_SCORE_SQL . ')'),
+            ])
+            ->leftJoin(['e' => Employees::tableName()], 'e.id = d.driver_id')
+            ->andWhere(['IS NOT', 'd.driver_id', null])
+            ->andWhere(['<>', 'd.driver_id', ''])
+            ->groupBy(['d.driver_id', 'e.prefix', 'e.fname', 'e.lname'])
+            ->having(['>=', new Expression('COUNT(*)'), (int) $minCount])
+            ->orderBy(['avg_score' => SORT_DESC, 'total' => SORT_DESC]);
+
+        if ($limit !== null) {
+            $query->limit((int) $limit);
+        }
+
+        return $query->all();
+    }
+
+    /** ข้อเสนอแนะล่าสุดจากผู้ขอ */
+    public function satisfactionComments($limit = 5): array
+    {
+        $commentExp = "JSON_UNQUOTE(JSON_EXTRACT(d.data_json, '$.satisfaction.comment'))";
+        $atExp = "JSON_UNQUOTE(JSON_EXTRACT(d.data_json, '$.satisfaction.at'))";
+
+        return $this->satisfactionRatedQuery()
+            ->select([
+                'code' => 'v.code',
+                'reason' => 'v.reason',
+                'license_plate' => 'd.license_plate',
+                'score' => new Expression(self::SATISFACTION_SCORE_SQL),
+                'comment' => new Expression($commentExp),
+                'rated_at' => new Expression($atExp),
+                'driver_name' => new Expression("TRIM(CONCAT(COALESCE(e.prefix, ''), COALESCE(e.fname, ''), ' ', COALESCE(e.lname, '')))"),
+            ])
+            ->leftJoin(['e' => Employees::tableName()], 'e.id = d.driver_id')
+            ->andWhere(['<>', new Expression($commentExp), ''])
+            ->andWhere(['IS NOT', new Expression($commentExp), null])
+            ->orderBy(new Expression($atExp . ' DESC'))
+            ->limit((int) $limit)
+            ->all();
     }
 
     // รายงานค่าใช้จ่ายรถ
