@@ -779,7 +779,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             กระจายใน <strong><?= (int)($numWorkgroups ?? 0) ?></strong> กลุ่มงาน
             และ <strong><?= (int)($numPositionTypes ?? 0) ?></strong> ประเภทพนักงาน
             <?php if (isset($newHiresThisYear) || isset($leftThisYear)): ?>
-            · ปีนี้บรรจุใหม่ <strong><?= (int)($newHiresThisYear ?? 0) ?></strong> คน · ลาออก/สิ้นสุด <strong><?= (int)($leftThisYear ?? 0) ?></strong> คน
+            · ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?> บรรจุใหม่ <strong><?= (int)($newHiresThisYear ?? 0) ?></strong> คน · ลาออก/สิ้นสุด <strong><?= (int)($leftThisYear ?? 0) ?></strong> คน
             <?php endif; ?>
         </p>
     </div>
@@ -860,7 +860,9 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                     <div class="flex-grow-1 overflow-hidden">
                         <span class="hr-dashboard-kpi-label d-block">บรรจุใหม่ปีนี้</span>
                         <h2 class="mb-0 mt-1 fw-bold text-primary"><?= (int)($newHiresThisYear ?? 0) ?></h2>
-                        <span class="small text-muted">คน (join_date ปี <?= date('Y') ?>)</span>
+                        <span class="small text-muted" title="นับจากวันบรรจุ (วันที่บรรจุในทะเบียน หรือวันที่เริ่มของประวัติตำแหน่งแรก) ที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
+                            คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
+                        </span>
                     </div>
                     <div class="flex-shrink-0">
                         <span class="erp-icon-box-xl"><i class="bi bi-person-plus fs-1" aria-hidden="true"></i></span>
@@ -876,7 +878,16 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                     <div class="flex-grow-1 overflow-hidden">
                         <span class="hr-dashboard-kpi-label d-block">ลาออก/สิ้นสุดปีนี้</span>
                         <h2 class="mb-0 mt-1 fw-bold text-secondary"><?= (int)($leftThisYear ?? 0) ?></h2>
-                        <span class="small text-muted">คน (end_date ปี <?= date('Y') ?>)</span>
+                        <span class="small text-muted d-block" title="นับจากวันพ้นจากหน่วยงานที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
+                            คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
+                        </span>
+                        <?php if (!empty($leftThisYearBreakdown)): ?>
+                            <span class="small text-muted d-block mt-1">
+                                <?= Html::encode(implode(' · ', array_map(function ($r) {
+                                    return $r['reason'] . ' ' . $r['count'];
+                                }, $leftThisYearBreakdown))) ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="flex-shrink-0">
                         <span class="erp-icon-box-xl"><i class="bi bi-person-dash fs-1" aria-hidden="true"></i></span>

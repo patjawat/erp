@@ -9,6 +9,7 @@ use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\TeamGroup;
 use app\models\Categorise;
+use app\components\AppHelper;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -25,6 +26,27 @@ use app\modules\filemanager\components\FileManagerHelper;
  */
 class DefaultController extends Controller
 {
+    /**
+     * รหัสสถานะ (categorise name='emp_status') ที่ถือว่าพ้นจากหน่วยงานแล้ว
+     * ใช้กับการ์ด "ลาออก/สิ้นสุดปีนี้" บน dashboard
+     * ไม่รวมสถานะที่ยังเป็นบุคลากรอยู่ เช่น ไปราชการ ฝึกอบรม ลาศึกษา (11,12,14-18,20,21,32)
+     * และไม่รวม 19 = ยกเลิกคำสั่งบรรจุ
+     */
+    private const EXIT_STATUS_CODES = [
+        '2',  // ลาออก
+        '3', '4', '5', '6', // เกษียณอายุราชการ (ทุกแบบ)
+        '7', '8', // ถึงแก่กรรม
+        '9', '10', // ปลดออก
+        '13', // ย้าย
+        '22', '23', '34', // ลาออกรับบำนาญ/บำเหน็จ
+        '24', // เลิกจ้าง
+        '25', // ไล่ออก
+        '26', // หมดสัญญาจ้าง
+        '27', '28', '29', '30', // ให้ออก
+        '31', // ให้โอน
+        '33', '35', '36', '37', // บำนาญ/บำเหน็จถึงแก่กรรม
+    ];
+
     /**
      * Renders the index view for the module
      * @return string
@@ -461,20 +483,98 @@ class DefaultController extends Controller
                 ->count();
         }
 
-        // บรรจุใหม่ปีนี้ (status 1, join_date ในปีปัจจุบัน)
-        $currentYear = (string) date('Y');
-        $newHiresThisYear = (int) (clone $baseQuery())
-            ->andWhere(['not', ['join_date' => null]])
-            ->andWhere(['YEAR(join_date)' => $currentYear])
-            ->count();
+        // ---------------------------------------------------------------
+        // การเคลื่อนไหวกำลังคนในปีงบประมาณปัจจุบัน (บรรจุใหม่ / พ้นจากหน่วยงาน)
+        //
+        // employees.join_date และ employees.end_date เชื่อถือไม่ได้:
+        //  - คนบรรจุใหม่ถูกบันทึกผ่านประวัติตำแหน่ง (employee_detail name='position')
+        //    ทำให้ join_date ว่าง จึงนับ "บรรจุใหม่" ไม่ได้เลย
+        //  - end_date ไม่เคยถูกบันทึกใช้งานจริง (ว่างทั้งตาราง) การนับจาก end_date
+        //    จึงได้ 0 เสมอ ทั้งที่มีคนลาออก/เกษียณ/ย้ายจริงในระบบ
+        // จึงยึด "วันบรรจุ" = COALESCE(join_date, วันที่เริ่มของประวัติตำแหน่งแรก)
+        // และ "วันพ้นจากหน่วยงาน" = COALESCE(end_date, วันที่เริ่มของประวัติตำแหน่ง
+        // ล่าสุดที่สถานะตรงกับสถานะปัจจุบันของคนคนนั้น) โดยนับเฉพาะสถานะที่แปลว่า
+        // ออกจากหน่วยงานจริง (ดู self::EXIT_STATUS_CODES)
+        // ---------------------------------------------------------------
+        $budgetYear = (int) AppHelper::YearBudget();          // ปีงบประมาณไทย เช่น 2569
+        $budgetRange = AppHelper::BudgetYearRange($budgetYear); // ['start' => '2025-10-01', 'end' => '2026-09-30']
 
-        // ลาออก/สิ้นสุดปีนี้ (มี end_date และปีของ end_date = ปีปัจจุบัน)
-        $leftThisYear = (int) Employees::find()
-            ->andWhere(['branch' => 'MAIN'])
-            ->andWhere(['not', ['id' => 1]])
-            ->andWhere(['not', ['end_date' => null]])
-            ->andWhere(['YEAR(end_date)' => $currentYear])
-            ->count();
+        // ตัวกรองจากชาร์ต (ไม่รวม branch / status / id) เพื่อใช้ร่วมกับ query การเคลื่อนไหว
+        $movementFilterSql = function ($alias) use ($filterGender, $filterDepartment, $filterPositionType, $filterWorkgroup, $filterGen, $filterPositionName, $filterServiceBand, $genYearRanges) {
+            $p = $alias !== '' ? $alias . '.' : '';
+            $sql = '';
+            $params = [];
+            if ($filterGender !== null) { $sql .= " AND {$p}gender = :mv_gender"; $params[':mv_gender'] = $filterGender; }
+            if ($filterDepartment !== null && $filterDepartment !== '') { $sql .= " AND {$p}department = :mv_department"; $params[':mv_department'] = $filterDepartment; }
+            if ($filterPositionType !== null && $filterPositionType !== '') { $sql .= " AND {$p}employee_type_id = :mv_employee_type_id"; $params[':mv_employee_type_id'] = $filterPositionType; }
+            if ($filterPositionName !== null && $filterPositionName !== '') { $sql .= " AND {$p}employee_position_id = :mv_employee_position_id"; $params[':mv_employee_position_id'] = $filterPositionName; }
+            if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
+                $mvDepts = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
+                $sql .= !empty($mvDepts)
+                    ? " AND {$p}department IN (" . implode(',', array_map('intval', $mvDepts)) . ")"
+                    : ' AND 1 = 0';
+            }
+            if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
+                $yr = $genYearRanges[$filterGen];
+                $sql .= " AND {$p}birthday IS NOT NULL AND YEAR({$p}birthday) BETWEEN :mv_gen0 AND :mv_gen1";
+                $params[':mv_gen0'] = $yr[0]; $params[':mv_gen1'] = $yr[1];
+            }
+            if ($filterServiceBand !== null && $filterServiceBand !== '') {
+                $sql .= ' AND (' . self::serviceBandWhereSql($alias, $filterServiceBand) . ')';
+            }
+            return [$sql, $params];
+        };
+        [$mvWhere, $mvParams] = $movementFilterSql('e');
+        $mvParams[':mv_start'] = $budgetRange['start'];
+        $mvParams[':mv_end'] = $budgetRange['end'];
+
+        // บรรจุใหม่ปีนี้ – นับทุกคนที่วันบรรจุอยู่ในปีงบประมาณปัจจุบัน
+        // (รวมคนที่บรรจุปีนี้แล้วออกไปแล้ว เพราะเป็นการบรรจุที่เกิดขึ้นจริงในปีนี้
+        //  แต่ตัดคำสั่งที่ถูกยกเลิกออก)
+        $newHiresThisYear = (int) Yii::$app->db->createCommand(
+            "SELECT COUNT(*)
+             FROM employees e
+             LEFT JOIN (
+                SELECT emp_id, MIN(STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d')) AS first_start
+                FROM employee_detail WHERE name = 'position' GROUP BY emp_id
+             ) hp ON hp.emp_id = e.id
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND (e.status IS NULL OR e.status NOT IN ('CANCEL', '19'))
+               AND COALESCE(e.join_date, hp.first_start) BETWEEN :mv_start AND :mv_end
+               {$mvWhere}"
+        )->bindValues($mvParams)->queryScalar();
+
+        // ลาออก/สิ้นสุดปีนี้ – แยกตามเหตุผลเพื่อให้ตรวจสอบตัวเลขได้
+        $exitStatusIn = "'" . implode("','", self::EXIT_STATUS_CODES) . "'";
+        $leftThisYearRows = Yii::$app->db->createCommand(
+            "SELECT e.status AS status, COALESCE(cat.title, 'ไม่ระบุ') AS reason, COUNT(*) AS cnt
+             FROM employees e
+             LEFT JOIN (
+                SELECT emp_id, st, ds FROM (
+                    SELECT emp_id,
+                           JSON_UNQUOTE(data_json->'$.status') AS st,
+                           STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d') AS ds,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY emp_id
+                               ORDER BY STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d') DESC, id DESC
+                           ) AS rn
+                    FROM employee_detail WHERE name = 'position'
+                ) ranked WHERE rn = 1
+             ) lp ON lp.emp_id = e.id AND lp.st = e.status
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND e.status IN ({$exitStatusIn})
+               AND COALESCE(e.end_date, lp.ds) BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             GROUP BY e.status, cat.title
+             ORDER BY cnt DESC"
+        )->bindValues($mvParams)->queryAll();
+        $leftThisYear = 0;
+        $leftThisYearBreakdown = [];
+        foreach ($leftThisYearRows as $row) {
+            $leftThisYear += (int) $row['cnt'];
+            $leftThisYearBreakdown[] = ['reason' => $row['reason'], 'count' => (int) $row['cnt']];
+        }
 
         // แผนก (department) – จำนวนคนต่อแผนก; ชื่อแผนกจากตาราง tree (Organization)
         $departmentQuery = (new Query())
@@ -601,6 +701,11 @@ class DefaultController extends Controller
             'numPositionTypes' => count($positionTypeLabels),
             'newHiresThisYear' => $newHiresThisYear,
             'leftThisYear' => $leftThisYear,
+            'leftThisYearBreakdown' => $leftThisYearBreakdown,
+            'movementBudgetYear' => $budgetYear,
+            'movementRangeStart' => $budgetRange['start'],
+            'movementRangeEnd' => $budgetRange['end'],
+            'movementPeriodText' => \app\components\ThaiDateHelper::formatThaiDateRange($budgetRange['start'], $budgetRange['end']),
             'departmentLabels' => $departmentLabels,
             'departmentValues' => $departmentValues,
             'serviceBandLabels' => $serviceBandLabels,
