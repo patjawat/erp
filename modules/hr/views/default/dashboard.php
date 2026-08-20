@@ -715,7 +715,60 @@ CSS);
 <section class="hr-dashboard" aria-labelledby="hr-dashboard-title">
 
 <?php
-$hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepartment !== '') || (isset($filterPositionType) && $filterPositionType !== '') || (isset($filterWorkgroup) && $filterWorkgroup !== '') || !empty($filterGen) || (isset($filterPositionName) && $filterPositionName !== '') || (isset($filterServiceBand) && $filterServiceBand !== '');
+// แถบเลือกปีงบประมาณ – ทุกการ์ด/ชาร์ตบนหน้านี้อิงปีที่เลือก
+$budgetYear = (int) ($budgetYear ?? 0);
+$currentBudgetYear = (int) ($currentBudgetYear ?? 0);
+$budgetYearOptions = $budgetYearOptions ?? [];
+$isCurrentBudgetYear = (bool) ($isCurrentBudgetYear ?? true);
+$chartFilterParams = array_filter([
+    'gender' => $filterGender ?? null,
+    'department' => $filterDepartment ?? null,
+    'employee_type_id' => $filterPositionType ?? null,
+    'workgroup' => $filterWorkgroup ?? null,
+    'gen' => $filterGen ?? null,
+    'employee_position_id' => $filterPositionName ?? null,
+    'service_band' => $filterServiceBand ?? null,
+], function ($v) { return $v !== null && $v !== ''; });
+?>
+<div class="card hr-dashboard-period-card border-0 shadow-sm mb-3">
+    <div class="card-body py-2 px-3 d-flex flex-wrap align-items-center gap-2">
+        <span class="small fw-semibold text-body d-flex align-items-center gap-1">
+            <i class="bi bi-calendar3" aria-hidden="true"></i>ปีงบประมาณ
+        </span>
+        <form method="get" action="<?= Url::to(['/hr/default/dashboard']) ?>" class="d-flex align-items-center gap-2 mb-0">
+            <?php foreach ($chartFilterParams as $k => $v): ?>
+                <input type="hidden" name="<?= Html::encode($k) ?>" value="<?= Html::encode($v) ?>">
+            <?php endforeach; ?>
+            <select name="budget_year" class="form-select form-select-sm w-auto" onchange="this.form.submit()" aria-label="เลือกปีงบประมาณ">
+                <?php foreach ($budgetYearOptions as $optionYear): ?>
+                    <option value="<?= (int) $optionYear ?>"<?= (int) $optionYear === $budgetYear ? ' selected' : '' ?>>
+                        <?= (int) $optionYear ?><?= (int) $optionYear === $currentBudgetYear ? ' (ปีปัจจุบัน)' : '' ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <noscript><button type="submit" class="btn btn-sm btn-primary">ดู</button></noscript>
+        </form>
+        <span class="small text-muted">
+            <?= Html::encode($movementPeriodText ?? '') ?>
+        </span>
+        <span class="small text-muted ms-auto text-end">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            จำนวนคนและชาร์ตทั้งหมดคิด ณ <strong><?= Html::encode($asOfDateText ?? '') ?></strong><?= $isCurrentBudgetYear ? ' (วันนี้)' : ' (วันสิ้นปีงบประมาณ)' ?>
+            · บรรจุใหม่/ลาออก นับตลอดทั้งปีงบประมาณ
+        </span>
+    </div>
+    <?php if (!$isCurrentBudgetYear): ?>
+    <div class="card-footer py-1 px-3 bg-light border-0 small text-muted">
+        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+        ข้อมูลย้อนหลังคำนวณจากวันบรรจุและวันพ้นจากหน่วยงานในประวัติตำแหน่ง
+        คนที่พ้นจากหน่วยงานไปแล้วแต่ไม่เคยบันทึกประวัติไว้จะไม่ถูกนับในปีย้อนหลัง
+        และหน่วยงาน/ตำแหน่งใช้ค่าล่าสุดของแต่ละคน
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php
+$hasFilter =!empty($filterGender) || (isset($filterDepartment) && $filterDepartment !== '') || (isset($filterPositionType) && $filterPositionType !== '') || (isset($filterWorkgroup) && $filterWorkgroup !== '') || !empty($filterGen) || (isset($filterPositionName) && $filterPositionName !== '') || (isset($filterServiceBand) && $filterServiceBand !== '');
 ?>
 <?php if ($hasFilter): ?>
 <div class="card hr-dashboard-filter-card border-0 shadow-sm mb-3">
@@ -759,7 +812,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
         if (!empty($filterServiceBand)) $parts[] = 'ช่วงอายุงาน ' . Html::encode($filterServiceBand);
         echo implode(' · ', $parts);
         ?>
-        <a href="<?= Url::to(['/hr/default/dashboard']) ?>" class="btn btn-sm btn-outline-secondary ms-auto" title="แสดงข้อมูลทั้งหมด (ยกเลิกตัวกรองจากชาร์ต)" aria-label="ล้างตัวกรองและแสดงข้อมูลทั้งหมด">
+        <a href="<?= Url::to($isCurrentBudgetYear ? ['/hr/default/dashboard'] : ['/hr/default/dashboard', 'budget_year' => $budgetYear]) ?>" class="btn btn-sm btn-outline-secondary ms-auto" title="แสดงข้อมูลทั้งหมด (ยกเลิกตัวกรองจากชาร์ต)" aria-label="ล้างตัวกรองและแสดงข้อมูลทั้งหมด">
             <i class="bi bi-x-circle me-1" aria-hidden="true"></i>ล้างตัวกรอง
         </a>
     </div>
@@ -794,6 +847,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                     <div class="flex-grow-1 overflow-hidden">
                         <span class="hr-dashboard-kpi-label d-block">จำนวนบุคลากร (ปฏิบัติราชการ)</span>
                         <h2 class="mb-0 mt-1 fw-bold"><?= $totalCount ?></h2>
+                        <span class="small text-muted">ณ <?= Html::encode($asOfDateText ?? '') ?></span>
                     </div>
                     <div class="flex-shrink-0 text-primary">
                         <span class="erp-icon-box-xl"><i class="bi bi-people fs-1" aria-hidden="true"></i></span>
@@ -826,6 +880,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                             <span class="hr-dashboard-kpi-label d-block">ผังองค์กร / กลุ่มงาน</span>
                         </a>
                         <h2 class="mb-0 mt-1 fw-bold"><?= $organizationDiagramCount ?></h2>
+                        <span class="small text-muted">โครงสร้างปัจจุบัน (ไม่มีข้อมูลย้อนหลัง)</span>
                     </div>
                     <div class="flex-shrink-0 text-info opacity-75">
                         <span class="erp-icon-box-xl"><i class="bi bi-diagram-3 fs-1" aria-hidden="true"></i></span>
@@ -841,6 +896,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                     <div class="flex-grow-1 overflow-hidden">
                         <span class="hr-dashboard-kpi-label d-block">กลุ่ม / ทีมประสานงาน</span>
                         <h2 class="mb-0 mt-1 fw-bold"><?= $teamGroupCount ?></h2>
+                        <span class="small text-muted">ทะเบียนปัจจุบัน (ไม่มีข้อมูลย้อนหลัง)</span>
                     </div>
                     <div class="flex-shrink-0 text-warning opacity-75">
                         <span class="erp-icon-box-xl"><i class="bi bi-person-workspace fs-1" aria-hidden="true"></i></span>
@@ -858,7 +914,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">บรรจุใหม่ปีนี้</span>
+                        <span class="hr-dashboard-kpi-label d-block">บรรจุใหม่<?= $isCurrentBudgetYear ? 'ปีนี้' : '' ?></span>
                         <h2 class="mb-0 mt-1 fw-bold text-primary"><?= (int)($newHiresThisYear ?? 0) ?></h2>
                         <span class="small text-muted" title="นับจากวันบรรจุ (วันที่บรรจุในทะเบียน หรือวันที่เริ่มของประวัติตำแหน่งแรก) ที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
                             คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
@@ -876,7 +932,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">ลาออก/สิ้นสุดปีนี้</span>
+                        <span class="hr-dashboard-kpi-label d-block">ลาออก/สิ้นสุด<?= $isCurrentBudgetYear ? 'ปีนี้' : '' ?></span>
                         <h2 class="mb-0 mt-1 fw-bold text-secondary"><?= (int)($leftThisYear ?? 0) ?></h2>
                         <span class="small text-muted d-block" title="นับจากวันพ้นจากหน่วยงานที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
                             คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
@@ -886,6 +942,10 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                                 <?= Html::encode(implode(' · ', array_map(function ($r) {
                                     return $r['reason'] . ' ' . $r['count'];
                                 }, $leftThisYearBreakdown))) ?>
+                            </span>
+                        <?php elseif (!$isCurrentBudgetYear): ?>
+                            <span class="small text-warning-emphasis d-block mt-1">
+                                <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>ยังไม่มีการบันทึกประวัติการพ้นจากหน่วยงานในปีงบประมาณนี้
                             </span>
                         <?php endif; ?>
                     </div>
@@ -903,7 +963,7 @@ $hasFilter = !empty($filterGender) || (isset($filterDepartment) && $filterDepart
                     <div class="flex-grow-1 overflow-hidden">
                         <span class="hr-dashboard-kpi-label d-block">อายุงานเฉลี่ย</span>
                         <h2 class="mb-0 mt-1 fw-bold"><?= isset($avgYearsService) && $avgYearsService !== null ? $avgYearsService : '—' ?></h2>
-                        <span class="small text-muted">ปี</span>
+                        <span class="small text-muted">ปี (ณ <?= Html::encode($asOfDateText ?? '') ?>)</span>
                     </div>
                     <div class="flex-shrink-0">
                         <span class="erp-icon-box-xl"><i class="bi bi-clock-history fs-1" aria-hidden="true"></i></span>
@@ -1151,6 +1211,8 @@ $dashboardTooltipPeopleJson = Json::encode($dashboardTooltipPeople ?? []);
 <script>
 window.__hrDashboard = {
   baseUrl: <?= Json::encode($dashboardUrl) ?>,
+  budgetYear: <?= (int) ($budgetYear ?? 0) ?>,
+  currentBudgetYear: <?= (int) ($currentBudgetYear ?? 0) ?>,
   filter: {
     gender: <?= Json::encode($filterGender ?? '') ?>,
     department: <?= Json::encode($filterDepartment ?? '') ?>,
@@ -1578,6 +1640,7 @@ $js = <<<'JS'
 
   function applyFilter(key, value) {
     var params = {};
+    if (d.budgetYear && d.budgetYear !== d.currentBudgetYear) params.budget_year = d.budgetYear;
     if (d.filter.gender) params.gender = d.filter.gender;
     if (d.filter.department) params.department = d.filter.department;
     if (d.filter.employee_type_id) params.employee_type_id = d.filter.employee_type_id;
