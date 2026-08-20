@@ -20,6 +20,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php $this->endBlock(); ?>
 
 
+<?= $this->render('_driver_vehicles', [
+    'driverGroups' => $driverGroups,
+    'idleDrivers' => $idleDrivers,
+]) ?>
+
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <h6 class="text-white mt-2"><i class="fa-solid fa-magnifying-glass"></i> การค้นหา</h6>
