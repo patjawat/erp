@@ -83,111 +83,259 @@ $this->registerCss(<<<'CSS'
 .hr-dashboard-kpi-grid {
     --kpi-accent: var(--hr-blue);
     --kpi-tint: rgba(59, 130, 246, .10);
-    --kpi-border: rgba(59, 130, 246, .22);
 }
 
-.hr-dashboard-kpi-grid > [class*="col-"]:nth-child(2) {
+.hr-dashboard-kpi-grid > .col:nth-child(2) {
     --kpi-accent: var(--hr-teal);
     --kpi-tint: rgba(20, 184, 166, .11);
-    --kpi-border: rgba(20, 184, 166, .24);
 }
 
-.hr-dashboard-kpi-grid > [class*="col-"]:nth-child(3) {
+.hr-dashboard-kpi-grid > .col:nth-child(3) {
     --kpi-accent: var(--hr-violet);
     --kpi-tint: rgba(139, 92, 246, .11);
-    --kpi-border: rgba(139, 92, 246, .24);
 }
 
-.hr-dashboard-kpi-grid > [class*="col-"]:nth-child(4) {
+.hr-dashboard-kpi-grid > .col:nth-child(4) {
     --kpi-accent: var(--hr-amber);
     --kpi-tint: rgba(245, 158, 11, .12);
-    --kpi-border: rgba(245, 158, 11, .26);
 }
 
-.hr-dashboard-kpi-grid--secondary > [class*="col-"]:nth-child(1) {
+.hr-dashboard-kpi-grid > .col:nth-child(5) {
     --kpi-accent: var(--hr-sky);
     --kpi-tint: rgba(14, 165, 233, .10);
-    --kpi-border: rgba(14, 165, 233, .22);
 }
 
-.hr-dashboard-kpi-grid--secondary > [class*="col-"]:nth-child(2) {
+.hr-dashboard-kpi-grid > .col:nth-child(6) {
     --kpi-accent: var(--hr-rose);
     --kpi-tint: rgba(244, 63, 94, .10);
-    --kpi-border: rgba(244, 63, 94, .22);
 }
 
-.hr-dashboard-kpi-grid--secondary > [class*="col-"]:nth-child(3) {
+.hr-dashboard-kpi-grid > .col:nth-child(7) {
     --kpi-accent: var(--hr-success);
     --kpi-tint: rgba(21, 128, 61, .10);
-    --kpi-border: rgba(21, 128, 61, .22);
 }
 
-.hr-dashboard-kpi-grid .card {
+/* การ์ด KPI ทุกใบมีโครงเดียวกัน จึงสูงเท่ากันเสมอ และกดได้เพื่อเปิดรายการตรวจสอบ */
+.hr-dashboard-kpi-grid .hr-kpi {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 138px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: .85rem 1rem 1rem;
+    border: 1px solid var(--hr-line);
+    border-radius: 8px;
     background: var(--hr-surface);
-    border: 1px solid var(--hr-line) !important;
-    box-shadow: none !important;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--hr-t, 140ms) var(--hr-ease, cubic-bezier(.16, 1, .3, 1)),
+                box-shadow var(--hr-t, 140ms) var(--hr-ease, cubic-bezier(.16, 1, .3, 1)),
+                transform var(--hr-t, 140ms) var(--hr-ease, cubic-bezier(.16, 1, .3, 1));
 }
 
-.hr-dashboard-kpi-grid .card-body {
-    padding: .5rem 1rem;
+.hr-dashboard-kpi-grid .hr-kpi:hover {
+    border-color: var(--kpi-accent);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .07);
 }
 
-.hr-dashboard-kpi-grid .card-body > .d-flex {
+.hr-dashboard-kpi-grid .hr-kpi:focus-visible {
+    outline: 2px solid var(--kpi-accent);
+    outline-offset: 2px;
+}
+
+.hr-dashboard-kpi-grid .hr-kpi:active {
+    transform: translateY(1px);
+}
+
+.hr-dashboard-kpi-grid .hr-kpi[aria-expanded="true"] {
+    border-color: var(--kpi-accent);
+    box-shadow: inset 0 0 0 1px var(--kpi-accent);
+}
+
+.hr-kpi__top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: .5rem;
-    margin-bottom: .5rem;
+    margin-bottom: .6rem;
 }
 
-.hr-dashboard-kpi-grid .flex-grow-1 {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: .75rem;
-}
-
-.hr-dashboard-kpi-grid .flex-grow-1 > a {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: .75rem;
-    color: inherit;
-}
-
-.hr-dashboard-kpi-grid h2 {
-    order: 1;
-    margin: 0 !important;
-    color: var(--bs-body-color, #212529) !important;
-    font-size: 1.75rem;
-    line-height: 1.2;
-    letter-spacing: 0;
-}
-
-.hr-dashboard-kpi-grid .hr-dashboard-kpi-label {
-    order: 2;
-}
-
-.hr-dashboard-kpi-grid .small {
-    order: 3;
-    margin-top: -.4rem;
-    color: var(--hr-ink-3) !important;
-    font-size: .72rem;
-    line-height: 1.28;
-}
-
-.hr-dashboard-kpi-grid .erp-icon-box-xl {
+.hr-kpi__icon {
     display: inline-grid;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
     place-items: center;
-    border: 0;
     border-radius: 50rem;
     background: var(--kpi-tint);
     color: var(--kpi-accent);
+    font-size: 1.1rem;
 }
 
-.hr-dashboard-kpi-grid .erp-icon-box-xl .fs-1 {
-    font-size: 1.2rem !important;
+.hr-kpi__chevron {
+    color: var(--hr-ink-2);
+    font-size: .8rem;
+    transition: transform 140ms cubic-bezier(.16, 1, .3, 1), color 140ms linear;
+}
+
+.hr-kpi:hover .hr-kpi__chevron {
+    color: var(--kpi-accent);
+}
+
+.hr-kpi[aria-expanded="true"] .hr-kpi__chevron {
+    color: var(--kpi-accent);
+    transform: rotate(180deg);
+}
+
+.hr-kpi__value {
+    display: block;
+    margin-top: auto;
+    color: var(--bs-body-color, #212529);
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ป้ายชื่อการ์ดใช้สีข้อความปกติ ไม่ใช้สี accent เพราะ contrast ไม่ผ่านเกณฑ์อ่านง่าย
+   สี accent อยู่ที่ไอคอนและเส้นขอบตอน hover/เปิด ซึ่งเป็นองค์ประกอบที่ไม่ใช่ข้อความ */
+.hr-kpi__label {
+    display: block;
+    margin-top: .2rem;
+    color: var(--hr-ink-2);
+    font-size: .86rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+/* แผงตรวจสอบรายการเบื้องหลังตัวเลข */
+.hr-kpi-detail {
+    border: 1px solid var(--hr-line);
+    border-radius: 8px;
+    background: var(--hr-surface);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+    overflow: hidden;
+}
+
+.hr-kpi-detail[hidden] {
+    display: none;
+}
+
+.hr-kpi-detail.is-open {
+    animation: hrKpiDetailIn 180ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes hrKpiDetailIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.hr-kpi-detail__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem .75rem;
+    padding: .7rem 1rem;
+    border-bottom: 1px solid var(--hr-line);
+    background: var(--hr-surface-1);
+}
+
+.hr-kpi-detail__heading {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .5rem;
+}
+
+.hr-kpi-detail__title {
+    margin: 0;
+    color: var(--hr-ink-2);
+    font-size: .92rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.hr-kpi-detail__title:focus {
+    outline: none;
+}
+
+.hr-kpi-detail__count {
+    flex: 0 0 auto;
+    padding: .1rem .55rem;
+    border-radius: 50rem;
+    background: var(--hr-surface-2);
+    color: var(--hr-ink-2);
+    font-size: .75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.hr-kpi-detail__tools {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.hr-kpi-detail__search {
+    width: 15rem;
+    max-width: 45vw;
+}
+
+.hr-kpi-detail__body {
+    max-height: 26rem;
+    overflow: auto;
+}
+
+.hr-kpi-detail__table {
+    font-size: .84rem;
+}
+
+.hr-kpi-detail__table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--hr-line);
+    background: var(--hr-surface);
+    color: var(--hr-ink-2);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.hr-kpi-detail__table thead th:hover {
+    color: var(--bs-body-color, #212529);
+}
+
+.hr-kpi-detail__table thead th[aria-sort="ascending"]::after {
+    content: " \2191";
+}
+
+.hr-kpi-detail__table thead th[aria-sort="descending"]::after {
+    content: " \2193";
+}
+
+.hr-kpi-detail__table tbody td {
+    color: var(--bs-body-color, #212529);
+    vertical-align: middle;
+}
+
+.hr-kpi-detail__table tbody td.is-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.hr-kpi-detail__table tbody tr:hover td {
+    background: var(--hr-surface-1);
+}
+
+.hr-kpi-detail__empty {
+    padding: 1.5rem 1rem;
+    color: var(--hr-ink-3);
+    font-size: .86rem;
+    text-align: center;
 }
 
 .hr-dashboard-kpi-label,
@@ -638,21 +786,37 @@ $this->registerCss(<<<'CSS'
 }
 
 @media (max-width: 575.98px) {
-    .hr-dashboard-kpi-grid .card-body {
-        padding: .5rem .75rem;
+    .hr-dashboard-kpi-grid .hr-kpi {
+        min-height: 116px;
+        padding: .7rem .75rem .8rem;
     }
 
-    .hr-dashboard-kpi-grid h2 {
+    .hr-kpi__value {
         font-size: 1.38rem;
     }
 
-    .hr-dashboard-kpi-grid .erp-icon-box-xl {
-        width: 42px;
-        height: 42px;
+    .hr-kpi__icon {
+        width: 34px;
+        height: 34px;
+        font-size: .95rem;
     }
 
-    .hr-dashboard-kpi-grid .erp-icon-box-xl .fs-1 {
-        font-size: 1.05rem !important;
+    .hr-kpi__label {
+        font-size: .8rem;
+    }
+
+    .hr-kpi-detail__head {
+        align-items: stretch;
+    }
+
+    .hr-kpi-detail__tools {
+        width: 100%;
+    }
+
+    .hr-kpi-detail__search {
+        width: auto;
+        max-width: none;
+        flex: 1 1 auto;
     }
 
     .hr-dashboard .card-header {
@@ -748,21 +912,13 @@ $chartFilterParams = array_filter([
             </select>
             <noscript><button type="submit" class="btn btn-sm btn-primary">ดู</button></noscript>
         </form>
-        <span class="small text-muted">
-            <?= Html::encode($movementPeriodText ?? '') ?>
-        </span>
-        <span class="small text-muted ms-auto text-end">
-            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-            จำนวนคนและชาร์ตทั้งหมดคิด ณ <strong><?= Html::encode($asOfDateText ?? '') ?></strong><?= $isCurrentBudgetYear ? ' (วันนี้)' : ' (วันสิ้นปีงบประมาณ)' ?>
-            · บรรจุใหม่/ลาออก นับตลอดทั้งปีงบประมาณ
-        </span>
+        <span class="small text-muted"><?= Html::encode($movementPeriodText ?? '') ?></span>
+        <span class="small text-muted ms-auto">ข้อมูล ณ <?= Html::encode($asOfDateText ?? '') ?></span>
     </div>
     <?php if (!$isCurrentBudgetYear): ?>
-    <div class="card-footer py-1 px-3 bg-light border-0 small text-muted">
+    <div class="card-footer py-1 px-3 border-0 small text-body-secondary">
         <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
-        ข้อมูลย้อนหลังคำนวณจากวันบรรจุและวันพ้นจากหน่วยงานในประวัติตำแหน่ง
-        คนที่พ้นจากหน่วยงานไปแล้วแต่ไม่เคยบันทึกประวัติไว้จะไม่ถูกนับในปีย้อนหลัง
-        และหน่วยงาน/ตำแหน่งใช้ค่าล่าสุดของแต่ละคน
+        ปีย้อนหลังนับจากประวัติตำแหน่ง คนที่ออกไปก่อนเริ่มบันทึกประวัติจะไม่ถูกนับ
     </div>
     <?php endif; ?>
 </div>
@@ -839,140 +995,120 @@ $hasFilter =!empty($filterGender) || (isset($filterDepartment) && $filterDepartm
 </div>
 
 <!-- KPI Cards -->
-<div class="row g-4 mt-1 mb-4 hr-dashboard-kpi-grid">
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">จำนวนบุคลากร (ปฏิบัติราชการ)</span>
-                        <h2 class="mb-0 mt-1 fw-bold"><?= $totalCount ?></h2>
-                        <span class="small text-muted">ณ <?= Html::encode($asOfDateText ?? '') ?></span>
-                    </div>
-                    <div class="flex-shrink-0 text-primary">
-                        <span class="erp-icon-box-xl"><i class="bi bi-people fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+<?php
+$asOfLabel = Html::encode($asOfDateText ?? '');
+$periodLabel = Html::encode($movementPeriodText ?? '');
+$avgTenureText = isset($avgYearsService) && $avgYearsService !== null ? $avgYearsService : '—';
+$kpiCards = [
+    [
+        'key' => 'headcount',
+        'label' => 'บุคลากรปฏิบัติงาน',
+        'value' => number_format($totalCount),
+        'icon' => 'bi-people',
+        'source' => 'people',
+        'title' => 'บุคลากรที่ปฏิบัติงาน ณ ' . $asOfLabel,
+    ],
+    [
+        'key' => 'gender',
+        'label' => 'ชาย / หญิง',
+        'value' => $countMale . ' / ' . $countFemale,
+        'icon' => 'bi-gender-ambiguous',
+        'source' => 'people',
+        'sort' => [1, 'asc'],
+        'title' => 'บุคลากรแยกตามเพศ ณ ' . $asOfLabel,
+    ],
+    [
+        'key' => 'orgUnits',
+        'label' => 'หน่วยงานในผังองค์กร',
+        'value' => number_format($organizationDiagramCount),
+        'icon' => 'bi-diagram-3',
+        'source' => 'orgUnits',
+        'title' => 'หน่วยงานในผังองค์กร',
+        'link' => Url::to(['/hr/organization/diagram']),
+        'linkLabel' => 'เปิดผังองค์กร',
+    ],
+    [
+        'key' => 'teamGroups',
+        'label' => 'กลุ่ม / ทีมประสานงาน',
+        'value' => number_format($teamGroupCount),
+        'icon' => 'bi-person-workspace',
+        'source' => 'teamGroups',
+        'title' => 'กลุ่ม / ทีมประสานงาน',
+        'link' => Url::to(['/hr/team-group/index']),
+        'linkLabel' => 'เปิดทะเบียนทีม',
+    ],
+    [
+        'key' => 'newHires',
+        'label' => 'บรรจุใหม่',
+        'value' => number_format((int)($newHiresThisYear ?? 0)),
+        'icon' => 'bi-person-plus',
+        'source' => 'newHires',
+        'title' => 'บรรจุใหม่ ปีงบประมาณ ' . (int) $budgetYear . ' · ' . $periodLabel,
+    ],
+    [
+        'key' => 'exits',
+        'label' => 'ลาออก / สิ้นสุด',
+        'value' => number_format((int)($leftThisYear ?? 0)),
+        'icon' => 'bi-person-dash',
+        'source' => 'exits',
+        'title' => 'พ้นจากหน่วยงาน ปีงบประมาณ ' . (int) $budgetYear . ' · ' . $periodLabel,
+    ],
+    [
+        'key' => 'tenure',
+        'label' => 'อายุงานเฉลี่ย (ปี)',
+        'value' => $avgTenureText,
+        'icon' => 'bi-clock-history',
+        'source' => 'people',
+        'sort' => [6, 'desc'],
+        'title' => 'อายุงานรายบุคคล ณ ' . $asOfLabel . ' · เฉลี่ย ' . $avgTenureText . ' ปี',
+    ],
+];
+?>
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mt-1 mb-3 hr-dashboard-kpi-grid">
+    <?php foreach ($kpiCards as $card): ?>
+    <div class="col">
+        <button type="button"
+                class="hr-kpi"
+                data-kpi="<?= Html::encode($card['key']) ?>"
+                data-source="<?= Html::encode($card['source']) ?>"
+                data-title="<?= Html::encode($card['title']) ?>"
+                <?php if (!empty($card['sort'])): ?>data-sort-index="<?= (int) $card['sort'][0] ?>" data-sort-dir="<?= Html::encode($card['sort'][1]) ?>"<?php endif; ?>
+                <?php if (!empty($card['link'])): ?>data-link="<?= Html::encode($card['link']) ?>" data-link-label="<?= Html::encode($card['linkLabel']) ?>"<?php endif; ?>
+                aria-expanded="false"
+                aria-controls="hrKpiDetail"
+                title="กดเพื่อดูรายการที่อยู่เบื้องหลังตัวเลขนี้">
+            <span class="hr-kpi__top">
+                <span class="hr-kpi__icon"><i class="bi <?= Html::encode($card['icon']) ?>" aria-hidden="true"></i></span>
+                <i class="bi bi-chevron-down hr-kpi__chevron" aria-hidden="true"></i>
+            </span>
+            <span class="hr-kpi__value"><?= Html::encode($card['value']) ?></span>
+            <span class="hr-kpi__label"><?= Html::encode($card['label']) ?></span>
+        </button>
     </div>
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">ชาย / หญิง</span>
-                        <h2 class="mb-0 mt-1 fw-bold"><?= $countMale ?> / <?= $countFemale ?></h2>
-                    </div>
-                    <div class="flex-shrink-0 text-success opacity-75">
-                        <span class="erp-icon-box-xl"><i class="bi bi-gender-ambiguous fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <a href="<?= Url::to(['/hr/organization/diagram']) ?>" class="text-decoration-none">
-                            <span class="hr-dashboard-kpi-label d-block">ผังองค์กร / กลุ่มงาน</span>
-                        </a>
-                        <h2 class="mb-0 mt-1 fw-bold"><?= $organizationDiagramCount ?></h2>
-                        <span class="small text-muted">โครงสร้างปัจจุบัน (ไม่มีข้อมูลย้อนหลัง)</span>
-                    </div>
-                    <div class="flex-shrink-0 text-info opacity-75">
-                        <span class="erp-icon-box-xl"><i class="bi bi-diagram-3 fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">กลุ่ม / ทีมประสานงาน</span>
-                        <h2 class="mb-0 mt-1 fw-bold"><?= $teamGroupCount ?></h2>
-                        <span class="small text-muted">ทะเบียนปัจจุบัน (ไม่มีข้อมูลย้อนหลัง)</span>
-                    </div>
-                    <div class="flex-shrink-0 text-warning opacity-75">
-                        <span class="erp-icon-box-xl"><i class="bi bi-person-workspace fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
-<!-- บรรจุใหม่ / ลาออก ปีนี้ -->
-<div class="row g-4 mt-1 mb-4 hr-dashboard-kpi-grid hr-dashboard-kpi-grid--secondary">
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">บรรจุใหม่<?= $isCurrentBudgetYear ? 'ปีนี้' : '' ?></span>
-                        <h2 class="mb-0 mt-1 fw-bold text-primary"><?= (int)($newHiresThisYear ?? 0) ?></h2>
-                        <span class="small text-muted" title="นับจากวันบรรจุ (วันที่บรรจุในทะเบียน หรือวันที่เริ่มของประวัติตำแหน่งแรก) ที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
-                            คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
-                        </span>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <span class="erp-icon-box-xl"><i class="bi bi-person-plus fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
+<section class="hr-kpi-detail mb-4" id="hrKpiDetail" hidden>
+    <header class="hr-kpi-detail__head">
+        <div class="hr-kpi-detail__heading">
+            <h3 class="hr-kpi-detail__title" id="hrKpiDetailTitle" tabindex="-1"></h3>
+            <span class="hr-kpi-detail__count" id="hrKpiDetailCount"></span>
         </div>
-    </div>
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">ลาออก/สิ้นสุด<?= $isCurrentBudgetYear ? 'ปีนี้' : '' ?></span>
-                        <h2 class="mb-0 mt-1 fw-bold text-secondary"><?= (int)($leftThisYear ?? 0) ?></h2>
-                        <span class="small text-muted d-block" title="นับจากวันพ้นจากหน่วยงานที่อยู่ในช่วง <?= Html::encode($movementPeriodText ?? '') ?>">
-                            คน (ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?>)
-                        </span>
-                        <?php if (!empty($leftThisYearBreakdown)): ?>
-                            <span class="small text-muted d-block mt-1">
-                                <?= Html::encode(implode(' · ', array_map(function ($r) {
-                                    return $r['reason'] . ' ' . $r['count'];
-                                }, $leftThisYearBreakdown))) ?>
-                            </span>
-                        <?php elseif (!$isCurrentBudgetYear): ?>
-                            <span class="small text-warning-emphasis d-block mt-1">
-                                <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>ยังไม่มีการบันทึกประวัติการพ้นจากหน่วยงานในปีงบประมาณนี้
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <span class="erp-icon-box-xl"><i class="bi bi-person-dash fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
+        <div class="hr-kpi-detail__tools">
+            <a href="#" class="btn btn-sm btn-outline-secondary" id="hrKpiDetailLink" hidden></a>
+            <label class="visually-hidden" for="hrKpiDetailSearch">ค้นหาในรายการ</label>
+            <input type="search" id="hrKpiDetailSearch" class="form-control form-control-sm hr-kpi-detail__search" placeholder="ค้นหาในรายการ" autocomplete="off">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="hrKpiDetailClose">ปิดรายการ</button>
         </div>
+    </header>
+    <div class="hr-kpi-detail__body">
+        <table class="table table-sm align-middle mb-0 hr-kpi-detail__table" id="hrKpiDetailTable">
+            <thead><tr></tr></thead>
+            <tbody></tbody>
+        </table>
     </div>
-    <div class="col-6 col-md-4 col-lg">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <div class="flex-grow-1 overflow-hidden">
-                        <span class="hr-dashboard-kpi-label d-block">อายุงานเฉลี่ย</span>
-                        <h2 class="mb-0 mt-1 fw-bold"><?= isset($avgYearsService) && $avgYearsService !== null ? $avgYearsService : '—' ?></h2>
-                        <span class="small text-muted">ปี (ณ <?= Html::encode($asOfDateText ?? '') ?>)</span>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <span class="erp-icon-box-xl"><i class="bi bi-clock-history fs-1" aria-hidden="true"></i></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <p class="hr-kpi-detail__empty mb-0" id="hrKpiDetailEmpty" hidden>ไม่พบรายการที่ตรงกับคำค้น</p>
+</section>
 
 <div class="row mb-3">
     <div class="col-12">
@@ -1225,6 +1361,7 @@ window.__hrDashboard = {
   positionTypeCodes: <?= $positionTypeCodesJson ?>,
   departmentCodes: <?= $departmentCodesJson ?>,
   tooltipPeople: <?= $dashboardTooltipPeopleJson ?>,
+  kpiDetail: <?= Json::encode($kpiDetailSources ?? []) ?>,
   totalCount: <?= (int) $totalCount ?>,
   countMale: <?= (int) $countMale ?>,
   countFemale: <?= (int) $countFemale ?>,
@@ -1804,6 +1941,150 @@ $js = <<<'JS'
       legend: { show: false }
     })).render();
   }
+
+  // แผงตรวจสอบใต้การ์ด KPI: กดการ์ดเพื่อกางรายการที่อยู่เบื้องหลังตัวเลข
+  (function initKpiDetail() {
+    var panel = document.getElementById('hrKpiDetail');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.hr-kpi'));
+    if (!panel || !cards.length) return;
+
+    var sources = d.kpiDetail || {};
+    var titleEl = document.getElementById('hrKpiDetailTitle');
+    var countEl = document.getElementById('hrKpiDetailCount');
+    var linkEl = document.getElementById('hrKpiDetailLink');
+    var searchEl = document.getElementById('hrKpiDetailSearch');
+    var closeEl = document.getElementById('hrKpiDetailClose');
+    var tableEl = document.getElementById('hrKpiDetailTable');
+    var emptyEl = document.getElementById('hrKpiDetailEmpty');
+    var headRow = tableEl.querySelector('thead tr');
+    var bodyEl = tableEl.querySelector('tbody');
+    var state = { key: null, columns: [], rows: [], sortIndex: null, sortDir: 'asc' };
+
+    function cellText(cell) {
+      if (cell === null || cell === undefined) return '';
+      if (typeof cell === 'object') return String(cell.t === undefined ? '' : cell.t);
+      return String(cell);
+    }
+    function cellSortValue(cell) {
+      if (cell === null || cell === undefined) return '';
+      if (typeof cell === 'object') return cell.v === undefined ? '' : cell.v;
+      return cell;
+    }
+    function isNumeric(value) {
+      return typeof value === 'number' || (value !== '' && !isNaN(Number(value)));
+    }
+
+    function visibleRows() {
+      var term = (searchEl.value || '').trim().toLowerCase();
+      var rows = state.rows;
+      if (term) {
+        rows = rows.filter(function(row) {
+          return row.some(function(cell) { return cellText(cell).toLowerCase().indexOf(term) !== -1; });
+        });
+      }
+      if (state.sortIndex !== null) {
+        var i = state.sortIndex;
+        var dir = state.sortDir === 'desc' ? -1 : 1;
+        rows = rows.slice().sort(function(a, b) {
+          var av = cellSortValue(a[i]);
+          var bv = cellSortValue(b[i]);
+          if (isNumeric(av) && isNumeric(bv)) return (Number(av) - Number(bv)) * dir;
+          return String(av).localeCompare(String(bv), 'th') * dir;
+        });
+      }
+      return rows;
+    }
+
+    function renderRows() {
+      var rows = visibleRows();
+      var html = rows.map(function(row, index) {
+        var cells = row.map(function(cell, ci) {
+          var align = (state.columns[ci] && state.columns[ci].align) === 'end' ? ' class="text-end is-num"' : '';
+          var text = cellText(cell)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<td' + align + '>' + text + '</td>';
+        }).join('');
+        return '<tr><th scope="row" class="fw-normal text-body-secondary is-num">' + (index + 1) + '</th>' + cells + '</tr>';
+      }).join('');
+      bodyEl.innerHTML = html;
+      emptyEl.hidden = rows.length > 0;
+      countEl.textContent = rows.length === state.rows.length
+        ? state.rows.length + ' รายการ'
+        : rows.length + ' / ' + state.rows.length + ' รายการ';
+    }
+
+    function renderHead() {
+      var html = '<th scope="col" class="text-body-secondary" data-nosort>#</th>';
+      html += state.columns.map(function(col, i) {
+        var align = col.align === 'end' ? ' class="text-end"' : '';
+        var sorted = state.sortIndex === i ? (state.sortDir === 'desc' ? 'descending' : 'ascending') : 'none';
+        return '<th scope="col"' + align + ' data-col="' + i + '" aria-sort="' + sorted + '">' + col.label + '</th>';
+      }).join('');
+      headRow.innerHTML = html;
+    }
+
+    function open(card) {
+      var source = sources[card.dataset.source];
+      if (!source) return;
+      state.key = card.dataset.kpi;
+      state.columns = source.columns || [];
+      state.rows = source.rows || [];
+      var sortIndex = card.dataset.sortIndex;
+      state.sortIndex = sortIndex === undefined ? null : parseInt(sortIndex, 10);
+      state.sortDir = card.dataset.sortDir || 'asc';
+      titleEl.textContent = card.dataset.title || '';
+      searchEl.value = '';
+      if (card.dataset.link) {
+        linkEl.href = card.dataset.link;
+        linkEl.textContent = card.dataset.linkLabel || 'เปิดหน้าเต็ม';
+        linkEl.hidden = false;
+      } else {
+        linkEl.hidden = true;
+      }
+      cards.forEach(function(c) { c.setAttribute('aria-expanded', String(c === card)); });
+      renderHead();
+      renderRows();
+      panel.hidden = false;
+      panel.classList.remove('is-open');
+      void panel.offsetWidth;
+      panel.classList.add('is-open');
+      titleEl.focus();
+    }
+
+    function close() {
+      panel.hidden = true;
+      panel.classList.remove('is-open');
+      cards.forEach(function(c) { c.setAttribute('aria-expanded', 'false'); });
+      state.key = null;
+    }
+
+    cards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        if (state.key === card.dataset.kpi) { close(); return; }
+        open(card);
+      });
+    });
+
+    headRow.addEventListener('click', function(event) {
+      var th = event.target.closest('th[data-col]');
+      if (!th) return;
+      var index = parseInt(th.dataset.col, 10);
+      if (state.sortIndex === index) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortIndex = index;
+        state.sortDir = 'asc';
+      }
+      renderHead();
+      renderRows();
+    });
+
+    searchEl.addEventListener('input', renderRows);
+    closeEl.addEventListener('click', close);
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape' && !panel.hidden) { close(); }
+    });
+  })();
 })();
 JS;
 $this->registerJS($js, View::POS_END);

@@ -798,6 +798,16 @@ class DefaultController extends Controller
         )->bindValues($avgParams)->queryScalar();
         $avgYearsService = $avgYearsService !== null ? round((float) $avgYearsService, 1) : null;
         $organizationDiagramCount = (int) Organization::find()->where(['tb_name' => 'diagram'])->count('id');
+
+        // รายการเบื้องหลังตัวเลขบนการ์ด KPI สำหรับกดดูเพื่อตรวจสอบ
+        $kpiDetailSources = $this->buildDashboardKpiDetails(
+            $snapshotSql,
+            $mvWhere,
+            $mvParams,
+            $asOfDate,
+            $budgetRange,
+            $departmentWorkgroupMap
+        );
         $teamGroupCount = (int) TeamGroup::find()->count('id');
         $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories, $departmentLabelMap, $asOfDate);
 
@@ -826,6 +836,7 @@ class DefaultController extends Controller
             'movementRangeStart' => $budgetRange['start'],
             'movementRangeEnd' => $budgetRange['end'],
             'movementPeriodText' => \app\components\ThaiDateHelper::formatThaiDateRange($budgetRange['start'], $budgetRange['end']),
+            'kpiDetailSources' => $kpiDetailSources,
             'budgetYear' => $budgetYear,
             'currentBudgetYear' => $currentBudgetYear,
             'budgetYearOptions' => $budgetYearOptions,
@@ -849,6 +860,206 @@ class DefaultController extends Controller
             'filterServiceBand' => $filterServiceBand,
             'positionNameCodes' => $positionNameCodes ?? [],
         ]);
+    }
+
+    /**
+     * รายการเบื้องหลังตัวเลขของการ์ด KPI แต่ละใบ ใช้แสดงในแผงตรวจสอบใต้การ์ด
+     *
+     * เซลล์ในตารางเป็นค่าปกติ (string/int) หรือ ['t' => ข้อความที่แสดง, 'v' => ค่าที่ใช้เรียง]
+     * สำหรับคอลัมน์วันที่ ซึ่งแสดงเป็น พ.ศ. แต่ต้องเรียงตามค่า ISO
+     *
+     * @param string $snapshotSql  derived table จาก workforceSnapshotSql()
+     * @param string $mvWhere      เงื่อนไขตัวกรองจากชาร์ต (ขึ้นต้นด้วย " AND ")
+     * @param array  $mvParams     ค่าที่ผูกกับ $mvWhere รวม :mv_start / :mv_end / :as_of
+     */
+    private function buildDashboardKpiDetails(
+        string $snapshotSql,
+        string $mvWhere,
+        array $mvParams,
+        string $asOfDate,
+        array $budgetRange,
+        array $departmentWorkgroupMap
+    ): array {
+        $params = $mvParams;
+        $params[':as_of'] = $asOfDate;
+        $params[':mv_start'] = $budgetRange['start'];
+        $params[':mv_end'] = $budgetRange['end'];
+
+        // ผูกเฉพาะ placeholder ที่มีอยู่จริงใน SQL แต่ละก้อน
+        $run = static function (string $sql) use ($params) {
+            $bound = [];
+            foreach ($params as $name => $value) {
+                if (strpos($sql, $name) !== false) {
+                    $bound[$name] = $value;
+                }
+            }
+            return Yii::$app->db->createCommand($sql)->bindValues($bound)->queryAll();
+        };
+        $fullName = static function (array $row): string {
+            return trim(preg_replace('/\s+/u', ' ', ($row['prefix'] ?? '') . $row['fname'] . ' ' . $row['lname']));
+        };
+        $thaiDate = static function ($date) {
+            $date = trim((string) $date);
+            if ($date === '' || $date === '0000-00-00' || strpos($date, '1900-01-01') === 0) {
+                return ['t' => '—', 'v' => ''];
+            }
+            return ['t' => \app\components\ThaiDateHelper::formatThaiDate($date), 'v' => $date];
+        };
+
+        $personSelect = "e.prefix, e.fname, e.lname, e.gender,
+                         COALESCE(p.title, 'ไม่ระบุ') AS position_title,
+                         COALESCE(org.name, 'ไม่ระบุ') AS department_name,
+                         COALESCE(t.title, 'ไม่ระบุ') AS type_title";
+        $personJoins = "LEFT JOIN employee_position p ON p.id = e.employee_position_id
+                        LEFT JOIN employee_type t ON t.id = e.employee_type_id
+                        LEFT JOIN tree org ON org.id = e.department AND org.tb_name = 'diagram'";
+
+        // 1) บุคลากรที่ปฏิบัติงานอยู่ ณ วันที่อ้างอิง
+        $peopleRows = $run(
+            "SELECT {$personSelect}, e.hire_date,
+                    TIMESTAMPDIFF(YEAR, e.hire_date, :as_of) AS years_service
+             FROM {$snapshotSql} e
+             {$personJoins}
+             WHERE e.branch = 'MAIN' AND e.id <> 1 AND " . self::inServiceWhereSql('e') . "
+                   {$mvWhere}
+             ORDER BY e.fname, e.lname"
+        );
+
+        // 2) บรรจุใหม่ในปีงบประมาณ
+        $newHireRows = $run(
+            "SELECT {$personSelect}, e.hire_date, COALESCE(cat.title, 'ไม่ระบุ') AS status_title
+             FROM {$snapshotSql} e
+             {$personJoins}
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND (e.status IS NULL OR e.status NOT IN ('CANCEL', '19'))
+               AND e.hire_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             ORDER BY e.hire_date, e.fname"
+        );
+
+        // 3) พ้นจากหน่วยงานในปีงบประมาณ
+        $exitRows = $run(
+            "SELECT {$personSelect}, e.exit_date, COALESCE(cat.title, 'ไม่ระบุ') AS reason
+             FROM {$snapshotSql} e
+             {$personJoins}
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND e.exit_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             ORDER BY e.exit_date, e.fname"
+        );
+
+        // 4) หน่วยงานในผังองค์กร พร้อมจำนวนคน ณ วันที่อ้างอิง
+        $orgRows = $run(
+            "SELECT o.id, o.name, o.lvl,
+                    (SELECT COUNT(*) FROM {$snapshotSql} e
+                      WHERE e.department = o.id AND e.branch = 'MAIN' AND e.id <> 1
+                        AND " . self::inServiceWhereSql('e') . ") AS head_count
+             FROM tree o
+             WHERE o.tb_name = 'diagram'
+             ORDER BY o.root, o.lft"
+        );
+
+        // 5) กลุ่ม/ทีมประสานงาน พร้อมจำนวนสมาชิก
+        $teamRows = $run(
+            "SELECT g.title,
+                    (SELECT COUNT(DISTINCT d.emp_id) FROM team_group_detail d
+                      WHERE d.category_id = g.id AND d.emp_id IS NOT NULL) AS member_count
+             FROM team_group g
+             ORDER BY g.id"
+        );
+
+        $orgLevelLabels = [0 => 'กลุ่ม', 1 => 'กลุ่มงาน', 2 => 'งาน'];
+
+        return [
+            'people' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'เพศ'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ประเภท'],
+                    ['label' => 'วันบรรจุ'],
+                    ['label' => 'อายุงาน (ปี)', 'align' => 'end'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['gender'] ?: '—',
+                        $r['position_title'],
+                        $r['department_name'],
+                        $r['type_title'],
+                        $thaiDate($r['hire_date']),
+                        $r['years_service'] === null ? '—' : (int) $r['years_service'],
+                    ];
+                }, $peopleRows),
+            ],
+            'newHires' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ประเภท'],
+                    ['label' => 'วันบรรจุ'],
+                    ['label' => 'สถานะปัจจุบัน'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['position_title'],
+                        $r['department_name'],
+                        $r['type_title'],
+                        $thaiDate($r['hire_date']),
+                        $r['status_title'],
+                    ];
+                }, $newHireRows),
+            ],
+            'exits' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'วันที่พ้นจากหน่วยงาน'],
+                    ['label' => 'เหตุผล'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['position_title'],
+                        $r['department_name'],
+                        $thaiDate($r['exit_date']),
+                        $r['reason'],
+                    ];
+                }, $exitRows),
+            ],
+            'orgUnits' => [
+                'columns' => [
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ระดับ'],
+                    ['label' => 'กลุ่มงานที่สังกัด'],
+                    ['label' => 'จำนวนคน', 'align' => 'end'],
+                ],
+                'rows' => array_map(function ($r) use ($orgLevelLabels, $departmentWorkgroupMap) {
+                    $workgroup = $departmentWorkgroupMap[(string) $r['id']]['name'] ?? '—';
+                    return [
+                        $r['name'],
+                        $orgLevelLabels[(int) $r['lvl']] ?? ('ระดับ ' . (int) $r['lvl']),
+                        $workgroup,
+                        (int) $r['head_count'],
+                    ];
+                }, $orgRows),
+            ],
+            'teamGroups' => [
+                'columns' => [
+                    ['label' => 'กลุ่ม / ทีมประสานงาน'],
+                    ['label' => 'จำนวนสมาชิก', 'align' => 'end'],
+                ],
+                'rows' => array_map(static function ($r) {
+                    return [$r['title'], (int) $r['member_count']];
+                }, $teamRows),
+            ],
+        ];
     }
 
     private function normalizeDashboardEmployeeTypeFilter($value): ?int
