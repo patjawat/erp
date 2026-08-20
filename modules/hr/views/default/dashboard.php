@@ -1443,7 +1443,12 @@ $js = <<<'JS'
       verticalAlign: 'middle',
       style: { color: palette.muted, fontSize: '13px' }
     };
-    var inferredTooltipGroup = inferDashboardTooltipGroup(options);
+    // ชาร์ตที่ระบุกลุ่มมาเองไม่ต้องเดาจากรูปร่างข้อมูล
+    var explicitTooltipGroup = options.hrTooltipGroup;
+    if (explicitTooltipGroup) {
+      delete options.hrTooltipGroup;
+    }
+    var inferredTooltipGroup = explicitTooltipGroup || inferDashboardTooltipGroup(options);
     if (!options.tooltip && inferredTooltipGroup) {
       options.tooltip = dashboardTooltip(inferredTooltipGroup);
     }
@@ -1525,13 +1530,17 @@ $js = <<<'JS'
       label = d.positionTypeLabels[index] || '';
       key = d.positionTypeCodes[index] || label;
     } else if (group === 'workgroup') {
-      var workgroup = d.workgroupRows[seriesIndex] || {};
+      // ชาร์ตกลุ่มงานเป็นแท่งนอนแบบซ้อน: แถว (dataPointIndex) = กลุ่มงาน, series = ประเภทพนักงาน
+      var workgroup = d.workgroupRows[index] || {};
+      var wgTypeIndex = Array.isArray(d.workgroupTypeIndexes) && d.workgroupTypeIndexes.length
+        ? d.workgroupTypeIndexes[seriesIndex]
+        : seriesIndex;
       label = workgroup.name || '';
-      seriesLabel = d.positionTypeLabels[index] || '';
+      seriesLabel = d.positionTypeLabels[wgTypeIndex] || '';
       key = workgroup.code || label;
-      if (index >= 0 && d.positionTypeCodes[index]) {
+      if (wgTypeIndex >= 0 && d.positionTypeCodes[wgTypeIndex]) {
         bucketGroup = 'workgroupPositionType';
-        key = String(key) + '|' + String(d.positionTypeCodes[index]);
+        key = String(key) + '|' + String(d.positionTypeCodes[wgTypeIndex]);
       }
     } else if (group === 'age') {
       label = d.ageCategories[index] || '';
@@ -1793,24 +1802,71 @@ $js = <<<'JS'
 
   var el = document.querySelector("#dashboardWorkgroupChart");
   if (el && d.workgroupRows.length && d.positionTypeLabels.length) {
-    var wgSeries = d.workgroupRows.map(function(r) { return { name: r.name || '', data: Array.isArray(r.data) ? r.data : [] }; });
+    // แท่งนอนแบบซ้อน: 1 แถว = 1 กลุ่มงาน, สีในแถบ = ประเภทพนักงาน
+    // (เดิมทำเป็นแท่งตั้งโดยให้กลุ่มงานเป็น series ทำให้มี 16 สีซ้อนกันในทุกหมวด อ่านไม่ได้)
+    var wgLabels = d.workgroupRows.map(function(r) { return r.name || 'ไม่ระบุ'; });
     var wgCodes = d.workgroupRows.map(function(r) { return r.code || ''; });
+    var wgSeries = [];
+    // จำ index เดิมของประเภทพนักงานไว้ เพราะ series ที่ไม่มีคนเลยถูกตัดออกจาก legend
+    d.workgroupTypeIndexes = [];
+    d.positionTypeLabels.forEach(function(label, typeIndex) {
+      var data = d.workgroupRows.map(function(r) {
+        return Array.isArray(r.data) && r.data[typeIndex] ? r.data[typeIndex] : 0;
+      });
+      if (data.some(function(v) { return v > 0; })) {
+        wgSeries.push({ name: label, data: data });
+        d.workgroupTypeIndexes.push(typeIndex);
+      }
+    });
+    var wgNarrow = window.innerWidth < 576;
+    var wgRowHeight = wgNarrow ? 34 : 30;
+    var wgHeight = Math.max(300, 96 + wgLabels.length * wgRowHeight);
+    el.style.minHeight = wgHeight + 'px';
     new ApexCharts(el, withDashboardChartDefaults({
+      hrTooltipGroup: 'workgroup',
       series: wgSeries,
-      chart: { type: 'bar', height: 320, events: { dataPointSelection: function(e, chart, opts) {
-        var wcode = wgCodes[opts.seriesIndex];
-        if (wcode) requestFilter('workgroup', wcode, wgSeries[opts.seriesIndex] && wgSeries[opts.seriesIndex].name ? wgSeries[opts.seriesIndex].name : wcode);
-      } } },
+      chart: {
+        type: 'bar',
+        stacked: true,
+        height: wgHeight,
+        events: { dataPointSelection: function(e, chart, opts) {
+          var wcode = wgCodes[opts.dataPointIndex];
+          if (wcode) requestFilter('workgroup', wcode, wgLabels[opts.dataPointIndex] || wcode);
+        } }
+      },
       colors: chartPalette,
-      plotOptions: { bar: { horizontal: false, columnWidth: '54%', endingShape: 'rounded', borderRadius: 6 } },
-      dataLabels: { enabled: true, formatter: function(v) { return v > 0 ? v : ''; } },
-      stroke: { show: true, width: 3, colors: [palette.surface] },
-      xaxis: { categories: d.positionTypeLabels, labels: { maxWidth: 120, rotate: -45 } },
-      yaxis: { title: { text: 'จำนวนคน' }, tickAmount: 6 },
+      plotOptions: { bar: {
+        horizontal: true,
+        barHeight: '68%',
+        borderRadius: 4,
+        borderRadiusApplication: 'end',
+        dataLabels: {
+          total: {
+            enabled: true,
+            offsetX: 6,
+            // ยอดรวมท้ายแท่งต้องแสดงทุกแถว ไม่ใช้เกณฑ์ซ่อนเลขน้อยแบบชิ้นย่อย
+            formatter: function(v) { return v; },
+            style: { fontSize: '12px', fontWeight: 600, color: palette.ink }
+          }
+        }
+      } },
+      dataLabels: {
+        enabled: true,
+        // ตัวเลขในแถบจะอ่านออกเมื่อชิ้นกว้างพอเท่านั้น ชิ้นเล็กปล่อยว่างไว้ให้ tooltip บอกแทน
+        formatter: function(v) { return v >= 5 ? v : ''; },
+        style: { fontSize: '11px', fontWeight: 500 }
+      },
+      stroke: { show: true, width: 1, colors: [palette.surface] },
+      xaxis: {
+        categories: wgLabels,
+        title: { text: 'จำนวนคน' },
+        labels: { formatter: function(v) { return Math.round(v); } }
+      },
+      yaxis: { labels: { maxWidth: wgNarrow ? 118 : 260, style: { fontSize: wgNarrow ? '11px' : '12px' } } },
       fill: { opacity: 1 },
-      tooltip: { y: { formatter: function(v) { return v + ' คน'; } } },
-      legend: { position: 'top', horizontalAlign: 'left' },
-      grid: { padding: { left: 8, right: 8 } }
+      tooltip: { shared: true, intersect: false, y: { formatter: function(v) { return v + ' คน'; } } },
+      legend: { position: 'bottom', horizontalAlign: 'left', itemMargin: { horizontal: 8, vertical: 4 } },
+      grid: { padding: { left: 8, right: 24 } }
     })).render();
   }
 
