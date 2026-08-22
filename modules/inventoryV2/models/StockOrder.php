@@ -271,6 +271,25 @@ public function getToWarehouse()
         $this->data_json = $json;
     }
 
+    /** เวลาที่รายการนี้กระทบยอดสต๊อกจริง (ไม่ใช่วันที่เอกสาร) */
+    public function setStockPostedAt($timestamp = null)
+    {
+        $timestamp = $timestamp === null ? time() : (int) $timestamp;
+        $json = is_array($this->data_json)
+            ? $this->data_json
+            : (is_string($this->data_json) ? (json_decode($this->data_json, true) ?: []) : []);
+        $json['stock_posted_at'] = date('Y-m-d H:i:s', $timestamp);
+        $this->data_json = $json;
+    }
+
+    public function getStockPostedAt()
+    {
+        $json = is_array($this->data_json)
+            ? $this->data_json
+            : (is_string($this->data_json) ? (json_decode($this->data_json, true) ?: []) : []);
+        return !empty($json['stock_posted_at']) ? strtotime((string) $json['stock_posted_at']) : null;
+    }
+
     /**
      * เหตุผล/วัตถุประสงค์การเบิก (เก็บใน data_json['issue_reason'])
      * @return string

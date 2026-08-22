@@ -97,16 +97,10 @@ $placeholderImg = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
                         <li>ข้อมูลใน stock_detail กับ stock_balance ไม่ sync → <a href="#" id="hist-link-detail" target="_blank" rel="noopener">ตรวจรายละเอียดล็อต</a></li>
                     </ul> -->
                     <div class="bal-history-variance__actions">
-                        <a href="#" id="hist-link-adjust" class="bal-history-variance__primary">
-                            <i class="bi bi-wrench-adjustable" aria-hidden="true"></i>ปรับยอด stock
+                        <a href="#" id="hist-link-health" class="bal-history-variance__primary">
+                            <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>วิเคราะห์ความคลาดเคลื่อน
                         </a>
-                        <div class="bal-history-variance__copyhint">
-                            <span>ใช้เลขนี้ในช่อง "จำนวนที่ปรับ":</span>
-                            <button type="button" class="bal-history-variance__copybtn" id="hist-copy-qty" title="คัดลอกตัวเลข">
-                                <code id="hist-copy-val">0</code>
-                                <i class="bi bi-clipboard" aria-hidden="true"></i>
-                            </button>
-                        </div>
+                        <div class="small">อย่าสร้างเอกสาร ADJUST จากผลต่างนี้ เพราะประวัติและยอดระบบจะขยับพร้อมกัน ให้ตรวจเอกสารที่ซ้ำ/ขาดหรือยอดตรวจนับจริงก่อน</div>
                     </div>
                 </div>
 
@@ -968,29 +962,7 @@ $placeholderImg = Yii::getAlias('@web') . '/img/placeholder-img.jpg';
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
-/* ปุ่ม "จัดการ" (แก้จำนวนใบเบิก) ใช้ Bootstrap มาตรฐาน .btn .btn-sm .btn-warning
-   — hist-edit-btn เหลือไว้เป็น JS hook เท่านั้น ไม่มี custom style */
-.bal-history-table .hist-delete-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.8rem;
-    height: 1.8rem;
-    padding: 0;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-xs);
-    color: var(--ink-2);
-    background: var(--surface);
-}
-.bal-history-table .hist-delete-btn:hover {
-    color: var(--danger);
-    border-color: rgba(220,53,69,0.35);
-    background: var(--danger-soft);
-}
-.bal-history-table .hist-delete-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-}
+/* ปุ่มแก้จำนวนใบเบิกใช้ Bootstrap; hist-edit-btn เป็น JS hook */
 .bal-history-table td.is-negative {
     color: var(--danger);
     font-weight: 700;
@@ -2866,17 +2838,12 @@ $js = <<<JS
     if (editSaveBtn) editSaveBtn.onclick = saveRequisitionDetailQty;
     if (editCancelBtn) editCancelBtn.onclick = closeEditPanel;
     if (editCloseBtn) editCloseBtn.onclick = closeEditPanel;
+
     modalEl.addEventListener('click', function (event) {
         var editTrigger = event.target.closest ? event.target.closest('.hist-edit-btn') : null;
         if (editTrigger) {
             event.preventDefault();
             openEditPopover(editTrigger); // แถวจ่ายออก → popover ในตำแหน่งปุ่ม (panel ใหญ่สงวนไว้ให้รายการปรับยอด)
-            return;
-        }
-        var deleteTrigger = event.target.closest ? event.target.closest('.hist-delete-btn') : null;
-        if (deleteTrigger) {
-            event.preventDefault();
-            deleteDuplicateIssueMovement(deleteTrigger);
             return;
         }
         var adjustEditTrigger = event.target.closest ? event.target.closest('.hist-adjust-edit-btn') : null;
@@ -2891,17 +2858,13 @@ $js = <<<JS
             deleteAdjustMovement(adjustDeleteTrigger);
             return;
         }
-        var trigger = event.target.closest ? event.target.closest('#hist-link-adjust') : null;
-        if (!trigger) return;
-        event.preventDefault();
-        openStockAdjustModal();
     });
 
     function buildQuickLinks(itemCode, warehouseId, variance) {
         var ic = encodeURIComponent(itemCode);
         var wh = encodeURIComponent(warehouseId);
         return {
-            adjust: '#',
+            health: '/inventory-v2/stock-health/index?warehouse_id=' + wh + '&search=' + ic,
             // Dashboard รวมยอดติดลบทั้งระบบ
             negative: '/inventory-v2/stock-adjust/negative-balance',
             // หน้า receive (สำหรับ INITIAL ยอดตั้งต้น)
@@ -2939,17 +2902,15 @@ $js = <<<JS
             setText('hist-variance-truth', fmtUnit(truth, unit));
             // populate link
             var links = buildQuickLinks(ctx.item_code, ctx.warehouse_id, variance);
-            var lAdjust = document.getElementById('hist-link-adjust');
+            var lHealth = document.getElementById('hist-link-health');
             var lNegative = document.getElementById('hist-link-negative');
             var lInitial = document.getElementById('hist-link-initial');
             var lDetail = document.getElementById('hist-link-detail');
-            if (lAdjust) lAdjust.href = links.adjust;
+            if (lHealth) lHealth.href = links.health;
             if (lNegative) lNegative.href = links.negative;
             if (lInitial) lInitial.href = links.initial;
             if (lDetail) lDetail.href = links.detail;
             // copy-to-clipboard hint: ตัวเลขที่ user ต้องกรอกใน "จำนวนที่ปรับ" คือ variance
-            var copyVal = document.getElementById('hist-copy-val');
-            if (copyVal) copyVal.textContent = (variance > 0 ? '+' : '') + fmtUnit(variance, unit);
             // reveal กับ subtle enter
             variancePanel.hidden = false;
             variancePanel.classList.add('is-entering');
@@ -3022,21 +2983,27 @@ $js = <<<JS
                 var balSr = t.balance_qty < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
                 var balValSr = t.balance_value < 0 ? '<span class="visually-hidden">ยอดติดลบ </span>' : '';
                 var actionParts = [];
+                var diagnosticHtml = '';
+                if (t.diagnostic_level && t.diagnostic_level !== 'none') {
+                    var canRestoreExactly = t.diagnostic_evidence && t.diagnostic_evidence.revert_would_close_variance;
+                    var diagnosticLabel = t.diagnostic_level === 'priority'
+                        ? (canRestoreExactly ? 'รายการที่ควรคืนค่า (รอยืนยันเอกสาร)' : 'ควรตรวจอันดับแรก')
+                        : (t.diagnostic_level === 'review' ? 'อาจเกี่ยวข้อง' : 'ไม่ควรแก้รายการนี้');
+                    var diagnosticClass = t.diagnostic_level === 'priority' ? 'text-danger'
+                        : (t.diagnostic_level === 'review' ? 'text-warning' : 'text-secondary');
+                    diagnosticHtml = '<div class="small mt-1 ' + diagnosticClass + '">' +
+                        '<i class="bi bi-search me-1" aria-hidden="true"></i><strong>' + escHtml(diagnosticLabel) + '</strong>' +
+                        (t.diagnostic_reason ? ' — ' + escHtml(t.diagnostic_reason) : '') +
+                        (!canRestoreExactly && t.diagnostic_level === 'priority'
+                            ? ' <a class="ms-1 fw-semibold" href="/inventory-v2/stock-health/index?warehouse_id=' + encodeURIComponent(ctx.warehouse_id) + '&search=' + encodeURIComponent(ctx.item_code) + '">ไปยังจุดแก้ <i class="bi bi-arrow-right"></i></a>'
+                            : '') + '</div>';
+                }
                 if (t.can_edit_qty) {
                     actionParts.push('<button type="button" class="btn btn-sm btn-warning hist-edit-btn" data-bs-toggle="tooltip" data-bs-placement="top" title="แก้จำนวน/ราคาที่จ่ายออก — ปรับได้ตรงนี้ ระบบคำนวณ FIFO/ยอดคงเหลือใหม่ให้" aria-label="แก้จำนวนหรือราคาที่จ่ายออกในใบเบิก ระบบคำนวณผลกระทบ FIFO และยอดคงเหลือใหม่" ' +
                         'data-detail-id="' + escHtml(t.detail_id) + '" ' +
                         'data-order-no="' + escHtml(t.order_no) + '" ' +
                         'data-label="' + escHtml(t.source_label) + '">' +
                         '<i class="bi bi-pencil" aria-hidden="true"></i>' +
-                    '</button>');
-                }
-                if (t.can_delete_issue) {
-                    actionParts.push('<button type="button" class="btn btn-sm btn-outline-danger hist-delete-btn ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="ลบรายการใบเบิกซ้ำออกจากประวัติ ไม่เพิ่ม/ลด stock จริง" aria-label="ลบรายการใบเบิกซ้ำออกจากประวัติ ไม่เพิ่มหรือลด stock จริง" ' +
-                        'data-detail-id="' + escHtml(t.detail_id) + '" ' +
-                        'data-order-no="' + escHtml(t.order_no) + '" ' +
-                        'data-label="' + escHtml(t.source_label) + '" ' +
-                        'data-qty-text="' + escHtml(fmtUnit(t.qty, unit)) + '">' +
-                        '<i class="bi bi-trash" aria-hidden="true"></i>' +
                     '</button>');
                 }
                 if (t.can_edit_adjust) {
@@ -3058,10 +3025,12 @@ $js = <<<JS
                     ? actionParts.join('')
                     : '<span class="muted" title="ไม่มีรายการที่แก้ไขได้">—</span>';
 
-                html += '<tr class="hist-tx-row" data-detail-id="' + escHtml(t.detail_id) + '">' +
-                    '<td class="text-nowrap">' + escHtml(isoToThaiDate(t.date_iso) || t.date) + ' <span class="text-meta">' + escHtml(t.time) + '</span></td>' +
+                html += '<tr class="hist-tx-row hist-diagnostic-' + escHtml(t.diagnostic_level || 'none') + '" data-detail-id="' + escHtml(t.detail_id) + '">' +
+                    '<td class="text-nowrap">' + escHtml(isoToThaiDate(t.posted_date_iso) || t.date) + ' <span class="text-meta"' +
+                        (t.time_is_estimated ? ' title="ข้อมูลเดิมไม่มีเวลาตัดสต๊อกจริง เวลานี้เป็นค่าประมาณ">≈' : '>') +
+                        escHtml(t.time) + '</span></td>' +
                     '<td class="text-nowrap"><span class="doc-chip">' + escHtml(t.order_no) + '</span></td>' +
-                    '<td>' + escHtml(t.source_label) + '</td>' +
+                    '<td>' + escHtml(t.source_label) + diagnosticHtml + '</td>' +
                     '<td class="text-center">' +
                         '<span class="direction-pill direction-pill--' + pillCls + '" title="' + pillLabel + '" aria-label="' + pillLabel + '">' +
                             '<i class="bi bi-' + pillIcon + '" aria-hidden="true"></i>' +
@@ -3154,35 +3123,6 @@ $js = <<<JS
         exportBtn.addEventListener('click', exportExcel);
     }
 
-    // Copy ตัวเลข variance ไปวางในฟอร์มปรับยอด
-    var copyBtn = document.getElementById('hist-copy-qty');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            var val = document.getElementById('hist-copy-val');
-            if (!val) return;
-            var text = val.textContent.trim();
-            // strip leading + (input รับเลขปกติ ไม่ต้องมี +)
-            if (text.charAt(0) === '+') text = text.substring(1);
-            // strip thousand separator + เครื่องหมายภาษาไทย → จำนวนเต็ม/ทศนิยม
-            text = text.replace(/[^0-9.\-]/g, '');
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    copyBtn.classList.add('is-copied');
-                    setTimeout(function () { copyBtn.classList.remove('is-copied'); }, 1400);
-                });
-            } else {
-                // fallback
-                var ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                try { document.execCommand('copy'); } catch (e) {}
-                document.body.removeChild(ta);
-                copyBtn.classList.add('is-copied');
-                setTimeout(function () { copyBtn.classList.remove('is-copied'); }, 1400);
-            }
-        });
-    }
 })();
 JS;
 $this->registerJs($js, View::POS_END);

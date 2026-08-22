@@ -660,13 +660,31 @@ class ReportController extends Controller
             'so.order_type',
             'so.source_type',
             'so.order_date',
+            'so.disbursement_date',
             'so.main_warehouse_id',
             'so.sub_warehouse_id',
             'order_data_json' => 'so.data_json',
+            'detail_data_json' => 'sd.data_json',
             'sd.qty',
             'sd.unit_price',
             'sd.lot_number',
         ];
+
+        $postedMeta = static function (array $row): array {
+            $json = is_array($row['order_data_json'] ?? null)
+                ? $row['order_data_json']
+                : (json_decode((string) ($row['order_data_json'] ?? ''), true) ?: []);
+            if (!empty($json['stock_posted_at'])) {
+                $timestamp = strtotime((string) $json['stock_posted_at']);
+                if ($timestamp !== false) {
+                    return ['timestamp' => $timestamp, 'exact' => true];
+                }
+            }
+            if (($row['order_type'] ?? '') === StockOrder::ORDER_TYPE_OUT && !empty($row['disbursement_date'])) {
+                return ['timestamp' => (int) $row['disbursement_date'], 'exact' => false];
+            }
+            return ['timestamp' => strtotime((string) $row['order_date']) ?: 0, 'exact' => false];
+        };
 
         // ADJUST: qty เก็บแบบ signed (StockAdjustController รับ "บวก=เพิ่ม, ลบ=ลด")
         // TRANSFER: main = ต้นทาง (out), sub = ปลายทาง (in)
@@ -739,8 +757,29 @@ class ReportController extends Controller
             ->andWhere($warehouseHistoryCondition)
             ->andWhere(['between', 'so.order_date', $startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
-            ->orderBy(['so.order_date' => SORT_ASC, 'so.id' => SORT_ASC])
             ->all();
+
+        // รายการใหม่เรียงตามเวลาที่กระทบสต๊อกจริง ส่วนข้อมูลเก่าที่ไม่มีเวลาแน่นอน
+        // ให้รับเข้าก่อนจ่ายออกภายในวันเดียวกัน เพื่อไม่สร้างยอดติดลบเทียมใน Stock Card
+        usort($txRows, function ($a, $b) use ($postedMeta, $perspective) {
+            $aMeta = $postedMeta($a);
+            $bMeta = $postedMeta($b);
+            $aDay = date('Y-m-d', $aMeta['timestamp']);
+            $bDay = date('Y-m-d', $bMeta['timestamp']);
+            if ($aDay !== $bDay) {
+                return $aDay <=> $bDay;
+            }
+            if (!$aMeta['exact'] && !$bMeta['exact']) {
+                $directionOrder = ['in' => 0, 'out' => 1];
+                $cmp = $directionOrder[$perspective($a)] <=> $directionOrder[$perspective($b)];
+                if ($cmp !== 0) return $cmp;
+            }
+            if ($aMeta['timestamp'] !== $bMeta['timestamp']) {
+                return $aMeta['timestamp'] <=> $bMeta['timestamp'];
+            }
+            $orderCmp = ((int) $a['order_id']) <=> ((int) $b['order_id']);
+            return $orderCmp !== 0 ? $orderCmp : (((int) $a['detail_id']) <=> ((int) $b['detail_id']));
+        });
 
         $sourceLabel = [
             'PO' => 'รับเข้าจาก PO',
@@ -804,6 +843,7 @@ class ReportController extends Controller
         }
 
         foreach ($txRows as $r) {
+            $posted = $postedMeta($r);
             $q = abs((float) $r['qty']);   // ADJUST อาจมี qty < 0 — ใช้ค่าสัมบูรณ์
             $p = (float) $r['unit_price'];
             $direction = $perspective($r);
@@ -841,8 +881,10 @@ class ReportController extends Controller
             $transactions[] = [
                 'order_id' => (int) $r['order_id'],
                 'detail_id' => (int) $r['detail_id'],
-                'date' => date('d/m/Y', strtotime($r['order_date'])),
-                'time' => date('H:i', strtotime($r['order_date'])),
+                'date' => date('d/m/Y', $posted['timestamp']),
+                'time' => date('H:i', $posted['timestamp']),
+                'posted_date_iso' => date('Y-m-d', $posted['timestamp']),
+                'time_is_estimated' => !$posted['exact'],
                 'date_iso' => date('Y-m-d', strtotime($r['order_date'])), // สำหรับ prefill ช่องแก้วันที่ (ADJUST)
                 'order_no' => (string) $r['order_no'],
                 'order_type' => (string) $r['order_type'],
@@ -871,6 +913,88 @@ class ReportController extends Controller
             ->from(StockBalance::tableName())
             ->where(['item_code' => $item_code, 'warehouse_id' => $warehouseId])
             ->sum('balance_qty');
+
+        // วิเคราะห์รายการที่ควรตรวจแบบอ่านอย่างเดียว ห้ามสรุปว่า "ซ้ำ" จากเลขเอกสาร
+        // เดียวกันเพียงอย่างเดียว เพราะเอกสารหนึ่งอาจตัดหลาย lot ได้อย่างถูกต้อง
+        $historyVariance = $currentBalance - $runningQty;
+        $documentCounts = [];
+        $sourceRowsByDetail = [];
+        foreach ($txRows as $sourceRow) {
+            $sourceRowsByDetail[(int) $sourceRow['detail_id']] = $sourceRow;
+        }
+        foreach ($transactions as $transaction) {
+            $key = $transaction['order_no'] . '|' . $transaction['order_type'];
+            $documentCounts[$key] = ($documentCounts[$key] ?? 0) + 1;
+        }
+        foreach ($transactions as &$transaction) {
+            $key = $transaction['order_no'] . '|' . $transaction['order_type'];
+            $transaction['diagnostic_level'] = 'none';
+            $transaction['diagnostic_code'] = null;
+            $transaction['diagnostic_reason'] = null;
+
+            $sourceRow = $sourceRowsByDetail[(int) $transaction['detail_id']] ?? null;
+            $detailData = $sourceRow && !empty($sourceRow['detail_data_json'])
+                ? json_decode($sourceRow['detail_data_json'], true)
+                : [];
+            $hasHistoryOnlyEdit = is_array($detailData) && !empty($detailData['history_inline_qty_edits']);
+            $latestHistoryEdit = $hasHistoryOnlyEdit ? end($detailData['history_inline_qty_edits']) : null;
+            $transaction['diagnostic_evidence'] = null;
+
+            if ($hasHistoryOnlyEdit && abs($historyVariance) > 0.000001) {
+                $transaction['diagnostic_level'] = 'priority';
+                $transaction['diagnostic_code'] = 'history_only_edit';
+                $oldQty = (float) ($latestHistoryEdit['old_qty'] ?? 0);
+                $newQty = (float) ($latestHistoryEdit['new_qty'] ?? 0);
+                $returnStock = !empty($latestHistoryEdit['return_stock']);
+                $revertRunningDelta = $transaction['direction'] === 'out'
+                    ? ($newQty - $oldQty)
+                    : ($oldQty - $newQty);
+                $wouldCloseVariance = !$returnStock
+                    && abs($historyVariance - $revertRunningDelta) < 0.000001;
+                $transaction['diagnostic_evidence'] = [
+                    'edited_at' => (string) ($latestHistoryEdit['at'] ?? ''),
+                    'edited_by' => $latestHistoryEdit['by_user_id'] ?? null,
+                    'old_qty' => $oldQty,
+                    'new_qty' => $newQty,
+                    'return_stock' => $returnStock,
+                    'note' => (string) ($latestHistoryEdit['note'] ?? ''),
+                    'revert_would_close_variance' => $wouldCloseVariance,
+                ];
+                $transaction['diagnostic_reason'] = 'เคยแก้จำนวนจาก ' . $oldQty . ' เป็น ' . $newQty
+                    . ($returnStock ? ' โดยปรับสต๊อกด้วย' : ' เฉพาะประวัติ (ไม่ปรับสต๊อก)')
+                    . (!empty($latestHistoryEdit['at']) ? ' เมื่อ ' . $latestHistoryEdit['at'] : '')
+                    . (!empty($latestHistoryEdit['by_user_id']) ? ' โดยผู้ใช้ #' . $latestHistoryEdit['by_user_id'] : '')
+                    . ($wouldCloseVariance
+                        ? ' — หลักฐานเชิงตัวเลขตรงกัน: คืนค่าเป็น ' . $oldQty . ' แล้วผลต่างจะเป็นศูนย์'
+                        : ' — ห้ามแก้ซ้ำด้วยปุ่มดินสอ ให้ไปที่ ตรวจสุขภาพสต๊อก > รวมทุก Lot > Dry-run เพื่อเลือกวิธีซ่อมจากหลักฐานทั้งสามยอด');
+            } elseif ($transaction['order_type'] === StockOrder::ORDER_TYPE_ADJUST && abs($historyVariance) > 0.000001) {
+                $transaction['diagnostic_level'] = 'avoid';
+                $transaction['diagnostic_code'] = 'adjust_cannot_reconcile';
+                $transaction['diagnostic_reason'] = 'รายการปรับยอดเปลี่ยนทั้งยอดระบบและประวัติพร้อมกัน จึงไม่สามารถปิดผลต่างนี้ได้';
+            } elseif ($transaction['order_type'] === StockOrder::ORDER_TYPE_OUT && $historyVariance < -0.000001) {
+                $transaction['diagnostic_level'] = 'avoid';
+                $transaction['diagnostic_code'] = 'wrong_direction';
+                $transaction['diagnostic_reason'] = 'ห้ามลบหรือแก้แถวจ่ายออกนี้เพื่อไล่ผลต่าง เพราะจะทำให้ยอดประวัติสูงขึ้นและผลต่างมากกว่าเดิม';
+            } elseif (($documentCounts[$key] ?? 0) > 1) {
+                $transaction['diagnostic_level'] = 'review';
+                $transaction['diagnostic_code'] = 'split_document';
+                $transaction['diagnostic_reason'] = 'เอกสารนี้มีหลายแถว/หลาย Lot ต้องเทียบจำนวนจ่ายจริงทั้งเอกสารก่อน จึงยังไม่ถือว่าเป็นรายการซ้ำ';
+            }
+
+            // เปิดการลบประวัติใบเบิกเฉพาะเมื่อทิศทางช่วยปิดผลต่างและจำนวนตรงกัน
+            // เช่น ระบบมากกว่าประวัติ 1 จึงอาจลบ OUT ซ้ำ 1 ได้; กรณีกลับกันห้ามเสนอ
+            $transaction['can_delete_issue'] = $transaction['can_delete_issue']
+                && $historyVariance > 0.000001
+                && abs($transaction['qty'] - $historyVariance) < 0.000001
+                && ($documentCounts[$key] ?? 0) > 1;
+            if (abs($historyVariance) > 0.000001) {
+                // การแก้เอกสารปกติ/ADJUST ขยับ ledger และ stock พร้อมกัน จึงไม่เปลี่ยน variance
+                $transaction['can_edit_qty'] = false;
+                $transaction['can_edit_adjust'] = false;
+                $transaction['can_delete_adjust'] = false;
+            }
+        }
+        unset($transaction);
 
         // รายลอตสำหรับเครื่องมือแก้ยอดคงเหลือ: balance_qty (stock_balance) เทียบ remain_qty (FIFO source details)
         $lotRemainMap = [];
@@ -935,6 +1059,7 @@ class ReportController extends Controller
                 'current_qty' => $currentBalance,
                 'current_value' => $runningValue,
                 'tx_count' => count($transactions),
+                'history_variance' => $historyVariance,
             ],
             'transactions' => $transactions,
             'lots' => $lots,

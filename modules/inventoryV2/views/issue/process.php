@@ -192,6 +192,19 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                 // ไม่พอจ่าย: ดูจากใบเบิกเป็นหลัก → ตรวจที่คลังหลัก ถ้าไม่มีในคลัง หรือไม่มี Lot ให้จ่าย = ไม่พอจ่าย
                 $detailRows = [];
                 $insufficientCount = 0;
+                $inconsistentCount = 0;
+                $issueItemCodes = array_values(array_unique(array_map(static fn($d) => (string) $d->item_code, $model->stockDetails)));
+                $balanceByItem = [];
+                if (!empty($issueItemCodes)) {
+                    foreach ((new \yii\db\Query())
+                        ->select(['item_code', 'qty' => new \yii\db\Expression('SUM(balance_qty)')])
+                        ->from(\app\modules\inventoryV2\models\StockBalance::tableName())
+                        ->where(['warehouse_id' => $model->main_warehouse_id, 'item_code' => $issueItemCodes])
+                        ->groupBy('item_code')
+                        ->all() as $balanceRow) {
+                        $balanceByItem[(string) $balanceRow['item_code']] = (float) $balanceRow['qty'];
+                    }
+                }
                 foreach ($model->stockDetails as $index => $detail) {
                     $availableLots = \app\modules\inventoryV2\models\StockDetail::find()
                         ->joinWith('stockOrder')
@@ -209,20 +222,29 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                 ],
                             ],
                             ['and',
-                                ['stock_order.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_TRANSFER],
+                                ['stock_order.order_type' => [
+                                    \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_TRANSFER,
+                                    \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_OUT,
+                                ]],
                                 ['stock_order.sub_warehouse_id' => $model->main_warehouse_id],
                                 ['>', 'stock_detail.qty', 0],
                             ],
                         ])
                         ->andWhere(['>', 'stock_detail.remain_qty', 0])
+                        ->orderBy(['stock_order.order_date' => SORT_ASC, 'stock_detail.id' => SORT_ASC])
                         ->all();
                     $totalAvailable = 0;
                     foreach ($availableLots as $lotIn) {
                         $totalAvailable += (float) $lotIn->remain_qty;
                     }
                     $noLotInWarehouse = empty($availableLots);
+                    $balanceQty = (float) ($balanceByItem[(string) $detail->item_code] ?? 0);
+                    $isDataInconsistent = $balanceQty > 0.0001 && $totalAvailable <= 0.0001;
                     $notEnoughQty = !$noLotInWarehouse && $totalAvailable < (float) $detail->qty;
                     $isInsufficient = $noLotInWarehouse || $notEnoughQty;
+                    if ($isDataInconsistent) {
+                        $inconsistentCount++;
+                    }
                     if ($isInsufficient) {
                         $insufficientCount++;
                     }
@@ -233,6 +255,8 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                         'isInsufficient' => $isInsufficient,
                         'noLotInWarehouse' => $noLotInWarehouse,
                         'notEnoughQty' => $notEnoughQty,
+                        'balanceQty' => $balanceQty,
+                        'isDataInconsistent' => $isDataInconsistent,
                     ];
                 }
                 ?>
@@ -240,6 +264,9 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                     <h6 class="mb-0 fw-bold"><i class="bi bi-list-ul me-1"></i> รายการพัสดุ</h6>
                     <?php if ($insufficientCount > 0): ?>
                     <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>รายการที่ไม่พอจ่าย: <?= $insufficientCount ?> รายการ</span>
+                    <?php endif; ?>
+                    <?php if ($inconsistentCount > 0): ?>
+                    <span class="badge bg-danger-subtle text-danger-emphasis"><i class="bi bi-database-exclamation me-1"></i>ข้อมูลสต็อกไม่ตรงกัน: <?= $inconsistentCount ?> รายการ</span>
                     <?php endif; ?>
                     <?php if ($canProcess): ?>
                     <button type="button" class="btn btn-primary btn-sm" id="btnAddItem">
@@ -256,7 +283,7 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                 <th width="25%" class="text-start">รายการพัสดุ</th>
                                 <th width="10%">ขอเบิก</th>
                                 <th width="12%">จ่ายจริง</th>
-                                <th width="25%">ตัดจาก Lot (คลังหลัก)</th>
+                                <th width="25%">FIFO อัตโนมัติ (คลังหลัก)</th>
                                 <th width="12%">รวมมูลค่า</th>
                                 <th width="8%"></th>
                             </tr>
@@ -270,8 +297,33 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                     $isInsufficient = $row['isInsufficient'];
                                     $noLotInWarehouse = $row['noLotInWarehouse'];
                                     $notEnoughQty = $row['notEnoughQty'] ?? false;
+                                    $isDataInconsistent = $row['isDataInconsistent'] ?? false;
+                                    $balanceQty = $row['balanceQty'] ?? 0;
+                                    $fifoTotalQty = 0.0;
+                                    $fifoTotalValue = 0.0;
+                                    $fifoLotSummary = [];
+                                    $fifoLotValues = [];
+                                    foreach ($availableLots as $lotIn) {
+                                        $lotNo = (string) $lotIn->lot_number;
+                                        $lotQty = (float) $lotIn->remain_qty;
+                                        $fifoTotalQty += $lotQty;
+                                        $fifoTotalValue += $lotQty * (float) $lotIn->unit_price;
+                                        $fifoLotSummary[$lotNo] = ($fifoLotSummary[$lotNo] ?? 0) + $lotQty;
+                                        $fifoLotValues[$lotNo] = ($fifoLotValues[$lotNo] ?? 0) + ($lotQty * (float) $lotIn->unit_price);
+                                    }
+                                    $fifoAvgPrice = $fifoTotalQty > 0 ? $fifoTotalValue / $fifoTotalQty : 0;
+                                    $fifoPlan = [];
+                                    foreach ($fifoLotSummary as $lotNo => $lotQty) {
+                                        $fifoPlan[] = [
+                                            'lot_number' => $lotNo,
+                                            'remain_qty' => $lotQty,
+                                            'unit_price' => $lotQty > 0 ? $fifoLotValues[$lotNo] / $lotQty : 0,
+                                        ];
+                                    }
+                                    $firstLotQty = !empty($fifoPlan) ? (float) $fifoPlan[0]['remain_qty'] : 0.0;
+                                    $requiresMultiLot = !$isInsufficient && (float) $detail->qty > $firstLotQty + 0.000001;
                                 ?>
-                                <tr class="item-row <?= $isInsufficient ? 'table-warning insufficient-row' : '' ?>" data-index="<?= $index ?>" data-insufficient="<?= $isInsufficient ? '1' : '0' ?>">
+                                <tr class="item-row <?= $isInsufficient ? 'table-warning insufficient-row' : ($requiresMultiLot ? 'table-info multi-lot-row' : '') ?>" data-index="<?= $index ?>" data-insufficient="<?= $isInsufficient ? '1' : '0' ?>" data-inconsistent="<?= $isDataInconsistent ? '1' : '0' ?>" data-first-lot-stock="<?= $firstLotQty ?>" data-total-stock="<?= $fifoTotalQty ?>">
                                     <td class="text-center text-muted"><?= $index + 1 ?></td>
                                     <td>
                                         <div class="d-flex align-items-start gap-2">
@@ -300,25 +352,30 @@ $isConfirmed = ($model->status === \app\modules\inventoryV2\models\StockOrder::S
                                     <td>
                                         <input type="number" name="Issue[<?= $index ?>][qty_issued]" 
                                                class="form-control text-center fw-bold border-primary qty-issued" 
-                                               value="<?= $detail->qty ?>" min="0" max="<?= $detail->qty ?>" step="1" <?= $canProcess ? '' : 'readonly' ?>>
+                                               value="<?= $detail->qty ?>" min="0" step="1" <?= $canProcess ? '' : 'readonly' ?>>
                                     </td>
                                     <td>
-                                        <?php if ($isInsufficient): ?>
-                                        <span class="badge bg-warning text-dark me-1" title="ตรวจจากใบเบิก แล้วตรวจที่คลัง — <?= $noLotInWarehouse ? 'ไม่มีในคลัง / ไม่มี Lot ให้จ่าย' : 'ยอดในคลังไม่พอ' ?>">
-                                            <i class="bi bi-exclamation-triangle me-1"></i>ไม่พอจ่าย
-                                        </span>
+                                        <?php if ($isDataInconsistent): ?>
+                                        <a class="badge bg-danger-subtle text-danger-emphasis text-decoration-none me-1" href="<?= \yii\helpers\Url::to(['/inventory-v2/stock-health/index', 'warehouse_id' => $model->main_warehouse_id, 'search' => $detail->item_code]) ?>" target="_blank" title="ยอดสรุปมี <?= number_format($balanceQty, 2) ?> แต่ไม่พบ Lot ที่จ่ายได้ เปิดผลตรวจสุขภาพสต็อก">
+                                            <i class="bi bi-database-exclamation me-1"></i>ข้อมูลสต็อกไม่ตรงกัน
+                                        </a>
                                         <?php endif; ?>
-                                        <select name="Issue[<?= $index ?>][lot_number]" class="form-select <?= $isInsufficient ? 'border-danger' : 'border-warning' ?> lot-selector" <?= $canProcess ? '' : 'disabled' ?>>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis mb-1 insufficient-badge <?= $isInsufficient ? '' : 'd-none' ?>"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>ยอดรวมทุก Lot ไม่พอจ่าย</span>
+                                        <span class="badge bg-info-subtle text-info-emphasis mb-1 multi-lot-badge <?= $requiresMultiLot ? '' : 'd-none' ?>">
+                                            <i class="bi bi-layers me-1" aria-hidden="true"></i>Lot แรกไม่พอ · ตัดต่อ Lot ถัดไป
+                                        </span>
+                                        <select name="Issue[<?= $index ?>][lot_number]" class="form-select <?= $isInsufficient ? 'border-danger' : 'border-success' ?> lot-selector" <?= $canProcess ? '' : 'disabled' ?>>
                                             <?php if (empty($availableLots)): ?>
                                                 <option value="">— ไม่มีในคลังหลัก / ไม่มี Lot ให้จ่าย —</option>
                                             <?php else: ?>
-                                                <?php foreach ($availableLots as $lotIn): ?>
-                                                    <option value="<?= $lotIn->lot_number ?>" data-stock="<?= (float) $lotIn->remain_qty ?>" data-price="<?= (float) $lotIn->unit_price ?>">
-                                                        LOT: <?= $lotIn->lot_number ?> (เหลือ <?= number_format((float) $lotIn->remain_qty, 2) ?>) [@<?= number_format((float) $lotIn->unit_price, 2) ?>]
-                                                    </option>
-                                                <?php endforeach; ?>
+                                                <option value="AUTO_FIFO" data-stock="<?= $fifoTotalQty ?>" data-price="<?= $fifoAvgPrice ?>" data-fifo-plan="<?= Html::encode(json_encode($fifoPlan, JSON_UNESCAPED_UNICODE)) ?>">
+                                                    FIFO อัตโนมัติ · <?= count($fifoLotSummary) ?> Lot · รวม <?= number_format($fifoTotalQty, 2) ?>
+                                                </option>
                                             <?php endif; ?>
                                         </select>
+                                        <?php if ($fifoLotSummary): ?>
+                                            <small class="text-muted d-block mt-1"><?= Html::encode(implode(' → ', array_map(static fn($lot, $qty) => $lot . ' (' . number_format($qty, 2) . ')', array_keys($fifoLotSummary), $fifoLotSummary))) ?></small>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-end fw-bold text-primary"><span class="row-total">0.00</span></td>
                                     <td class="text-center">
@@ -425,11 +482,17 @@ $(document).ready(function() {
             success: function(data) {
                 lotSelect.empty();
                 if (data.length > 0) {
-                    data.forEach(lot => {
-                        lotSelect.append(`<option value="\${lot.lot_number}" data-stock="\${lot.remain_qty}" data-price="\${lot.unit_price}">
-                            LOT: \${lot.lot_number} (เหลือ \${lot.remain_qty}) [@\${lot.unit_price}]
-                        </option>`);
-                    });
+                    const total = data.reduce((sum, lot) => sum + Number(lot.remain_qty || 0), 0);
+                    const value = data.reduce((sum, lot) => sum + Number(lot.remain_qty || 0) * Number(lot.unit_price || 0), 0);
+                    const lots = new Set(data.map(lot => lot.lot_number)).size;
+                    const firstLotNumber = String(data[0].lot_number || '');
+                    const firstLotStock = data.filter(lot => String(lot.lot_number || '') === firstLotNumber)
+                        .reduce((sum, lot) => sum + Number(lot.remain_qty || 0), 0);
+                    lotSelect.closest('.item-row').attr('data-first-lot-stock', firstLotStock);
+                    lotSelect.closest('.item-row').attr('data-total-stock', total);
+                    const plan = JSON.stringify(data.map(lot => ({lot_number: lot.lot_number, remain_qty: Number(lot.remain_qty || 0), unit_price: Number(lot.unit_price || 0)})));
+                    lotSelect.append($('<option>', {value: 'AUTO_FIFO', text: `FIFO อัตโนมัติ · \${lots} Lot · รวม \${total}`})
+                        .attr({'data-stock': total, 'data-price': total > 0 ? value / total : 0, 'data-fifo-plan': plan}));
                     lotSelect.prop('disabled', false);
                 } else {
                     lotSelect.append('<option value="">ของหมดสต็อก</option>');
@@ -453,7 +516,9 @@ $(document).ready(function() {
                 <input type="number" name="Issue[\${itemIndex}][qty_issued]" class="form-control text-center fw-bold border-primary qty-issued" value="1" min="0" step="1">
             </td>
             <td>
-                <select id="lot-select-\${itemIndex}" name="Issue[\${itemIndex}][lot_number]" class="form-select border-warning lot-selector" required>
+                <span class="badge bg-warning-subtle text-warning-emphasis mb-1 insufficient-badge d-none"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>ยอดรวมทุก Lot ไม่พอจ่าย</span>
+                <span class="badge bg-info-subtle text-info-emphasis mb-1 multi-lot-badge d-none"><i class="bi bi-layers me-1" aria-hidden="true"></i>Lot แรกไม่พอ · ตัดต่อ Lot ถัดไป</span>
+                <select id="lot-select-\${itemIndex}" name="Issue[\${itemIndex}][lot_number]" class="form-select border-success lot-selector" required>
                     <option value="">-- เลือกพัสดุก่อน --</option>
                 </select>
             </td>
@@ -487,6 +552,20 @@ $(document).ready(function() {
                 let total = qty * price;
                 row.find('.row-total').text(total.toLocaleString(undefined, {minimumFractionDigits: 2}));
                 grandTotal += total;
+                if (row.attr('data-inconsistent') !== '1') {
+                    const firstLotStock = Number(row.attr('data-first-lot-stock') || 0);
+                    const totalStock = Number(row.attr('data-total-stock') || option.data('stock') || 0);
+                    const exceedsStock = qty > totalStock + 0.000001;
+                    const needsMultipleLots = !exceedsStock && qty > firstLotStock + 0.000001;
+                    row.removeClass('table-warning insufficient-row table-info multi-lot-row');
+                    row.toggleClass('table-warning insufficient-row', exceedsStock);
+                    row.toggleClass('table-info multi-lot-row', needsMultipleLots);
+                    row.find('.insufficient-badge').toggleClass('d-none', !exceedsStock);
+                    row.find('.multi-lot-badge').toggleClass('d-none', !needsMultipleLots);
+                    row.attr('data-invalid-issue', exceedsStock ? '1' : '0');
+                    row.find('.lot-selector').toggleClass('border-danger', exceedsStock)
+                        .toggleClass('border-success', !exceedsStock);
+                }
             } else {
                 row.find('.row-total').text('0.00');
             }
@@ -512,11 +591,17 @@ $(document).ready(function() {
             success: function(data) {
                 lotSelect.empty();
                 if (data.length > 0) {
-                    data.forEach(lot => {
-                        lotSelect.append(`<option value="\${lot.lot_number}" data-stock="\${lot.remain_qty}" data-price="\${lot.unit_price}">
-                            LOT: \${lot.lot_number} (เหลือ \${lot.remain_qty}) [@\${lot.unit_price}]
-                        </option>`);
-                    });
+                    const total = data.reduce((sum, lot) => sum + Number(lot.remain_qty || 0), 0);
+                    const value = data.reduce((sum, lot) => sum + Number(lot.remain_qty || 0) * Number(lot.unit_price || 0), 0);
+                    const lots = new Set(data.map(lot => lot.lot_number)).size;
+                    const firstLotNumber = String(data[0].lot_number || '');
+                    const firstLotStock = data.filter(lot => String(lot.lot_number || '') === firstLotNumber)
+                        .reduce((sum, lot) => sum + Number(lot.remain_qty || 0), 0);
+                    lotSelect.closest('.item-row').attr('data-first-lot-stock', firstLotStock);
+                    lotSelect.closest('.item-row').attr('data-total-stock', total);
+                    const plan = JSON.stringify(data.map(lot => ({lot_number: lot.lot_number, remain_qty: Number(lot.remain_qty || 0), unit_price: Number(lot.unit_price || 0)})));
+                    lotSelect.append($('<option>', {value: 'AUTO_FIFO', text: `FIFO อัตโนมัติ · \${lots} Lot · รวม \${total}`})
+                        .attr({'data-stock': total, 'data-price': total > 0 ? value / total : 0, 'data-fifo-plan': plan}));
                     lotSelect.prop('disabled', false);
                 } else {
                     lotSelect.append('<option value="">ของหมดสต็อก</option>').prop('disabled', true);
@@ -546,6 +631,53 @@ $(document).ready(function() {
         calculateTotal();
     });
 
+    function safeHtml(value) {
+        return $('<div>').text(value == null ? '' : String(value)).html();
+    }
+
+    function buildFifoPreview(rows) {
+        const previews = [];
+        rows.each(function() {
+            const row = $(this);
+            let remaining = Number(row.find('.qty-issued').val() || 0);
+            const option = row.find('.lot-selector option:selected');
+            let plan = [];
+            try { plan = JSON.parse(option.attr('data-fifo-plan') || '[]'); } catch (e) { plan = []; }
+            const grouped = [];
+            plan.forEach(function(source) {
+                const lot = String(source.lot_number || '-');
+                let target = grouped.find(entry => entry.lot_number === lot);
+                if (!target) {
+                    target = {lot_number: lot, remain_qty: 0};
+                    grouped.push(target);
+                }
+                target.remain_qty += Number(source.remain_qty || 0);
+            });
+            const slices = [];
+            grouped.forEach(function(source) {
+                if (remaining <= 0) return;
+                const take = Math.min(remaining, source.remain_qty);
+                if (take > 0) slices.push({lot_number: source.lot_number, qty: take});
+                remaining -= take;
+            });
+            const itemName = $.trim(row.find('td:nth-child(2) strong').first().text())
+                || $.trim(row.find('.ts-select option:selected').text()) || 'รายการพัสดุ';
+            previews.push({item_name: itemName, slices: slices, shortage: Math.max(0, remaining)});
+        });
+        return previews;
+    }
+
+    function fifoPreviewHtml(previews, confirmed) {
+        const rows = previews.map(function(item) {
+            const lots = (item.lots || item.slices || []).map(function(lot) {
+                return '<span class="badge bg-body-tertiary text-body border me-1">Lot ' + safeHtml(lot.lot_number) + ' = ' + safeHtml(Number(lot.qty).toLocaleString()) + '</span>';
+            }).join('');
+            const shortage = item.shortage > 0 ? '<div class="text-danger small mt-1">ขาดอีก ' + safeHtml(item.shortage) + '</div>' : '';
+            return '<div class="text-start border rounded p-2 mb-2"><strong>' + safeHtml(item.item_name || item.item_code) + '</strong><div class="mt-1">' + lots + '</div>' + shortage + '</div>';
+        }).join('');
+        return '<div class="small text-muted mb-2">' + (confirmed ? 'ผลการตัด Lot จริง' : 'แผนการตัด Lot ตาม FIFO') + '</div>' + rows;
+    }
+
     $('#btnSubmitIssue').click(function() {
         const activeRows = $('#issueTable .item-row').filter(function() {
             const qtyInput = $(this).find('.qty-issued');
@@ -554,6 +686,14 @@ $(document).ready(function() {
 
         if (!activeRows.length) {
             Swal.fire('แจ้งเตือน', 'กรุณาระบุรายการที่ต้องการจ่ายอย่างน้อย 1 รายการ', 'warning');
+            return;
+        }
+
+        calculateTotal();
+        const invalidRows = activeRows.filter(function() { return $(this).attr('data-invalid-issue') === '1'; });
+        if (invalidRows.length) {
+            Swal.fire('ยังบันทึกไม่ได้', 'มีรายการที่จำนวนจ่ายเกินยอดรวมทุก Lot กรุณาแก้แถวสีเหลืองก่อน', 'warning');
+            invalidRows.first().find('.qty-issued').trigger('focus');
             return;
         }
 
@@ -571,9 +711,13 @@ $(document).ready(function() {
             return;
         }
 
+        const fifoPreview = buildFifoPreview(activeRows);
+        const multiLotPreview = fifoPreview.filter(item => item.slices.length > 1);
         Swal.fire({
             title: 'ยืนยันการบันทึกการจ่าย?',
-            text: "ระบบจะตัดสต็อกและบันทึกรายการพัสดุตามหน้าจอนี้",
+            html: multiLotPreview.length
+                ? '<div class="alert alert-warning text-start py-2"><strong>พบรายการที่ต้องตัดมากกว่า 1 Lot</strong></div>' + fifoPreviewHtml(multiLotPreview, false) + '<div class="small text-muted">ระบบจะคำนวณใหม่ภายใน Transaction และ Rollback ทั้งใบหากยอดไม่พอ</div>'
+                : '<div>รายการทั้งหมดตัดจาก Lot เดียวต่อรายการ</div>',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ยืนยัน',
@@ -588,7 +732,19 @@ $(document).ready(function() {
                     dataType: 'json'
                 }).done(function(res) {
                     if (res && res.success) {
-                        Swal.fire('สำเร็จ', res.message || 'บันทึกการจ่ายเรียบร้อยแล้ว', 'success').then(() => {
+                        const multiLotResult = (res.fifo_allocations || []).filter(item => (item.lots || []).length > 1);
+                        const successOptions = multiLotResult.length ? {
+                            icon: 'success',
+                            title: 'บันทึกการจ่ายสำเร็จ',
+                            html: '<div class="alert alert-info text-start py-2"><strong>ผลการตัดข้าม Lot</strong></div>' + fifoPreviewHtml(multiLotResult, true),
+                            confirmButtonText: 'ตกลง'
+                        } : {
+                            icon: 'success',
+                            title: 'บันทึกการจ่ายสำเร็จ',
+                            text: res.message || 'บันทึกการจ่ายเรียบร้อยแล้ว',
+                            confirmButtonText: 'ตกลง'
+                        };
+                        Swal.fire(successOptions).then(() => {
                             window.location.href = issueIndexUrl;
                         });
                     } else {

@@ -6,6 +6,8 @@ use Yii;
 use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
+use app\modules\inventoryV2\models\StockItem;
+use yii\db\Query;
 
 class InventoryService
 {
@@ -43,6 +45,8 @@ class InventoryService
                 }
             }
 
+            self::assertBalanceMatchesFifo($itemId, $warehouseId);
+
             $transaction->commit();
             return true;
         } catch (\Exception $e) {
@@ -59,6 +63,7 @@ class InventoryService
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
+            self::lockStockPool($itemId, $warehouseId);
             // 1. ค้นหารายการ source lot ที่ยังมีของเหลือ (remain_qty > 0)
             // เรียงตามวันที่รับเข้าจากเก่าไปใหม่ (FIFO)
             $availableLots = StockDetail::find()
@@ -142,6 +147,8 @@ class InventoryService
                 }
             }
 
+            self::assertBalanceMatchesFifo($itemId, $warehouseId);
+
             $transaction->commit();
             return true;
         } catch (\Exception $e) {
@@ -155,39 +162,163 @@ class InventoryService
      */
     public static function updateBalance($itemId, $warehouseId, $qty, $type, $lotNumber = null)
     {
-        $lot = (!empty($lotNumber)) ? $lotNumber : '-';
+        $db = Yii::$app->db;
+        $ownsTransaction = $db->getTransaction() === null;
+        $transaction = $ownsTransaction ? $db->beginTransaction() : null;
+        $lot = (!empty($lotNumber)) ? trim((string) $lotNumber) : '-';
 
-        $balance = StockBalance::findOne([
-            'item_code' => $itemId,
-            'warehouse_id' => $warehouseId,
-            'lot_number' => $lot
-        ]);
+        try {
+            self::lockStockPool($itemId, $warehouseId, $lot);
+            $balances = StockBalance::find()->where([
+                'item_code' => $itemId,
+                'warehouse_id' => $warehouseId,
+                'lot_number' => $lot,
+            ])->orderBy(['id' => SORT_ASC])->all();
 
-        if (!$balance) {
-            // ถ้าเป็นรายการรับเข้าใหม่ที่ยังไม่มี Lot นี้ในคลัง
-            if ($type === 'IN') {
-                $balance = new StockBalance([
-                    'item_code' => $itemId,
-                    'warehouse_id' => $warehouseId,
-                    'lot_number' => $lot,
-                    'balance_qty' => 0
-                ]);
-            } else {
-                throw new \Exception("ไม่พบยอดคงเหลือของ Lot: {$lot} ในระบบ (ไม่สามารถหักออกได้)");
+            if (count($balances) > 1) {
+                throw new \Exception("พบยอดคงเหลือซ้ำสำหรับพัสดุ {$itemId} Lot {$lot} กรุณาตรวจสุขภาพสต็อกก่อนทำรายการ");
+            }
+            $balance = $balances[0] ?? null;
+            if (!$balance) {
+                if ($type === 'IN') {
+                    $balance = new StockBalance([
+                        'item_code' => $itemId,
+                        'warehouse_id' => $warehouseId,
+                        'lot_number' => $lot,
+                        'balance_qty' => 0,
+                    ]);
+                } else {
+                    throw new \Exception("ไม่พบยอดคงเหลือของ Lot: {$lot} ในระบบ (ไม่สามารถหักออกได้)");
+                }
+            }
+
+            $qtyChange = ($type === 'IN') ? (float) $qty : -(float) $qty;
+            $balance->balance_qty = (float) $balance->balance_qty + $qtyChange;
+            if ($balance->balance_qty < -0.000001) {
+                throw new \Exception("สต็อกติดลบ: พัสดุ {$itemId} ใน Lot {$lot} ไม่เพียงพอ");
+            }
+            if (abs((float) $balance->balance_qty) < 0.000001) {
+                $balance->balance_qty = 0;
+            }
+            if (!$balance->save()) {
+                throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));
+            }
+            if ($ownsTransaction) $transaction->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($ownsTransaction && $transaction && $transaction->isActive) $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Lock a stable item row plus affected balance/source rows.
+     * Must be called inside a transaction; the item row prevents a race when
+     * the stock_balance row does not exist yet.
+     */
+    public static function lockStockPool($itemId, $warehouseId, $lotNumber = null): void
+    {
+        $db = Yii::$app->db;
+        $tx = $db->getTransaction();
+        if ($tx === null || !$tx->isActive) {
+            throw new \LogicException('ต้องเปิด transaction ก่อน lock stock pool');
+        }
+        $itemQuery = (new Query())
+            ->select('code')
+            ->from(StockItem::tableName())
+            ->where(['code' => (string) $itemId, 'name' => 'asset_item', 'group_id' => 'MATER']);
+        $itemCode = $db->createCommand($itemQuery->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryScalar();
+        if ($itemCode === false) {
+            throw new \Exception("ไม่พบพัสดุรหัส {$itemId} ในทะเบียนวัสดุ");
+        }
+
+        $balanceCondition = ['item_code' => (string) $itemId, 'warehouse_id' => (int) $warehouseId];
+        if ($lotNumber !== null) $balanceCondition['lot_number'] = trim((string) $lotNumber) ?: '-';
+        $balanceQuery = (new Query())->select('id')->from(StockBalance::tableName())->where($balanceCondition);
+        $db->createCommand($balanceQuery->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryColumn();
+
+        $sourceQuery = (new Query())
+            ->select('sd.id')
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where(['sd.item_code' => (string) $itemId, 'so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and', ['so.main_warehouse_id' => (int) $warehouseId], ['or',
+                    ['so.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and', ['so.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'sd.qty', 0]],
+                ]],
+                ['and', ['so.sub_warehouse_id' => (int) $warehouseId], ['so.order_type' => [StockOrder::ORDER_TYPE_TRANSFER, StockOrder::ORDER_TYPE_OUT]], ['>', 'sd.qty', 0]],
+            ]);
+        if ($lotNumber !== null) $sourceQuery->andWhere(['sd.lot_number' => trim((string) $lotNumber) ?: '-']);
+        $db->createCommand($sourceQuery->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryColumn();
+    }
+
+    public static function lockOrder($orderId): array
+    {
+        $db = Yii::$app->db;
+        $tx = $db->getTransaction();
+        if ($tx === null || !$tx->isActive) {
+            throw new \LogicException('ต้องเปิด transaction ก่อน lock stock order');
+        }
+        $query = (new Query())->select(['id', 'status'])->from(StockOrder::tableName())->where(['id' => (int) $orderId]);
+        $row = $db->createCommand($query->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryOne();
+        if (!$row) throw new \Exception('ไม่พบเอกสารสต็อกที่ต้องการ');
+        return $row;
+    }
+
+    /**
+     * Fail closed before commit when the operational balance and FIFO sources diverge.
+     * Ledger is validated after the confirmed document has been fully saved by the caller.
+     */
+    public static function assertBalanceMatchesFifo($itemCode, $warehouseId): void
+    {
+        $balanceRows = (new Query())
+            ->select(['lot_number', 'qty' => new \yii\db\Expression('SUM(balance_qty)'), 'rows' => new \yii\db\Expression('COUNT(*)')])
+            ->from(StockBalance::tableName())
+            ->where(['item_code' => (string) $itemCode, 'warehouse_id' => (int) $warehouseId])
+            ->groupBy('lot_number')->all();
+        $fifoRows = (new Query())
+            ->select(['lot_number' => 'sd.lot_number', 'qty' => new \yii\db\Expression('SUM(sd.remain_qty)')])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where(['sd.item_code' => (string) $itemCode, 'so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['or',
+                ['and', ['so.main_warehouse_id' => (int) $warehouseId], ['or',
+                    ['so.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and', ['so.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'sd.qty', 0]],
+                ]],
+                ['and', ['so.sub_warehouse_id' => (int) $warehouseId], ['so.order_type' => [StockOrder::ORDER_TYPE_TRANSFER, StockOrder::ORDER_TYPE_OUT]], ['>', 'sd.qty', 0]],
+            ])->groupBy('sd.lot_number')->all();
+        $balance = [];
+        foreach ($balanceRows as $row) {
+            if ((int) $row['rows'] > 1) throw new \RuntimeException("พบ Balance ซ้ำ พัสดุ {$itemCode} Lot {$row['lot_number']}");
+            $balance[(string) $row['lot_number']] = (float) $row['qty'];
+        }
+        $fifo = [];
+        foreach ($fifoRows as $row) $fifo[(string) $row['lot_number']] = (float) $row['qty'];
+        foreach (array_unique(array_merge(array_keys($balance), array_keys($fifo))) as $lot) {
+            $balanceQty = (float) ($balance[$lot] ?? 0);
+            $fifoQty = (float) ($fifo[$lot] ?? 0);
+            if (abs($balanceQty - $fifoQty) > 0.0001) {
+                throw new \RuntimeException("ยกเลิกรายการเพื่อป้องกันสต๊อกคลาดเคลื่อน: {$itemCode} Lot {$lot} (Balance {$balanceQty}, FIFO {$fifoQty}) กรุณาตรวจสุขภาพสต๊อก");
             }
         }
+    }
 
-        $qtyChange = ($type === 'IN') ? (float)$qty : -(float)$qty;
-        $balance->balance_qty += $qtyChange;
-
-        // ป้องกันสต็อกติดลบในระดับ Balance
-        if ($balance->balance_qty < 0) {
-            throw new \Exception("สต็อกติดลบ: พัสดุ {$itemId} ใน Lot {$lot} ไม่เพียงพอ");
-        }
-
-        if (!$balance->save()) {
-            throw new \Exception("อัปเดตยอดคงเหลือไม่สำเร็จ: " . json_encode($balance->getErrors()));
-        }
+    /** จำนวนที่ใบเบิก APPROVED ซึ่งมาก่อนเอกสารปัจจุบันจองไว้ (ยังไม่ตัด stock จริง) */
+    public static function reservedAheadQty($itemCode, $warehouseId, $currentOrderId): float
+    {
+        return (float) (new Query())
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'sd.item_code' => (string) $itemCode,
+                'so.main_warehouse_id' => (int) $warehouseId,
+                'so.order_type' => StockOrder::ORDER_TYPE_OUT,
+                'so.status' => StockOrder::STATUS_APPROVED,
+            ])
+            ->andWhere(['<', 'so.id', (int) $currentOrderId])
+            ->sum('sd.qty');
     }
 
     /**
@@ -220,10 +351,13 @@ class InventoryService
             $take = min($remaining, $allocatedQty);
             $lotNumber = (string) ($allocations[$i]['lot_number'] ?? $outDetail->lot_number ?? 'ADJUST');
             $sourceDetailId = (int) ($allocations[$i]['source_detail_id'] ?? 0);
-            $sourceDetail = $sourceDetailId > 0 ? StockDetail::findOne($sourceDetailId) : null;
-            if ($sourceDetail) {
-                $sourceDetail->remain_qty = (float) $sourceDetail->remain_qty + $take;
-                $sourceDetail->save(false);
+            self::lockStockPool($outDetail->item_code, $warehouseId, $lotNumber);
+            if ($sourceDetailId > 0) {
+                $sourceDetail = self::findEligibleSource($sourceDetailId, $outDetail->item_code, $warehouseId, $lotNumber);
+                if (!$sourceDetail) {
+                    throw new \Exception("ไม่พบ Lot ต้นทางของ allocation (detail {$sourceDetailId}) จึงไม่คืน Balance เพื่อป้องกันยอดคลาดเคลื่อน");
+                }
+                self::restoreSourceCapacity($sourceDetail, $take);
             } else {
                 self::returnToLotSource($outDetail->item_code, $warehouseId, $lotNumber, $take);
             }
@@ -251,18 +385,25 @@ class InventoryService
 
     private static function returnToLotSource($itemCode, $warehouseId, $lotNumber, $qty)
     {
-        $sourceDetail = StockDetail::find()
+        self::lockStockPool($itemCode, $warehouseId, $lotNumber);
+        $sourceDetails = StockDetail::find()
             ->joinWith('stockOrder')
             ->where([
                 'stock_detail.item_code' => $itemCode,
                 'stock_detail.lot_number' => $lotNumber,
-                'stock_order.main_warehouse_id' => $warehouseId,
                 'stock_order.status' => StockOrder::STATUS_CONFIRMED,
             ])
             ->andWhere(['or',
-                ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
                 ['and',
-                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST],
+                    ['stock_order.main_warehouse_id' => $warehouseId],
+                    ['or',
+                        ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                        ['and', ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'stock_detail.qty', 0]],
+                    ],
+                ],
+                ['and',
+                    ['stock_order.sub_warehouse_id' => $warehouseId],
+                    ['stock_order.order_type' => [StockOrder::ORDER_TYPE_TRANSFER, StockOrder::ORDER_TYPE_OUT]],
                     ['>', 'stock_detail.qty', 0],
                 ],
             ])
@@ -270,11 +411,52 @@ class InventoryService
                 'stock_order.order_date' => SORT_DESC,
                 'stock_detail.id' => SORT_DESC,
             ])
-            ->one();
+            ->all();
 
-        if ($sourceDetail) {
-            $sourceDetail->remain_qty = (float) $sourceDetail->remain_qty + (float) $qty;
-            $sourceDetail->save(false);
+        $remaining = (float) $qty;
+        foreach ($sourceDetails as $sourceDetail) {
+            if ($remaining <= 0.000001) break;
+            $capacity = max(0.0, abs((float) $sourceDetail->qty) - (float) $sourceDetail->remain_qty);
+            if ($capacity <= 0.000001) continue;
+            $take = min($remaining, $capacity);
+            self::restoreSourceCapacity($sourceDetail, $take);
+            $remaining -= $take;
+        }
+        if ($remaining > 0.000001) {
+            throw new \Exception("ไม่พบความจุใน Lot ต้นทาง {$lotNumber} เพียงพอสำหรับคืน {$qty} หน่วย จึงไม่คืน Balance");
+        }
+        return true;
+    }
+
+    private static function findEligibleSource($sourceDetailId, $itemCode, $warehouseId, $lotNumber)
+    {
+        return StockDetail::find()
+            ->joinWith('stockOrder')
+            ->where([
+                'stock_detail.id' => (int) $sourceDetailId,
+                'stock_detail.item_code' => (string) $itemCode,
+                'stock_detail.lot_number' => (string) $lotNumber,
+                'stock_order.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['or',
+                ['and', ['stock_order.main_warehouse_id' => (int) $warehouseId], ['or',
+                    ['stock_order.order_type' => StockOrder::ORDER_TYPE_IN],
+                    ['and', ['stock_order.order_type' => StockOrder::ORDER_TYPE_ADJUST], ['>', 'stock_detail.qty', 0]],
+                ]],
+                ['and', ['stock_order.sub_warehouse_id' => (int) $warehouseId], ['stock_order.order_type' => [StockOrder::ORDER_TYPE_TRANSFER, StockOrder::ORDER_TYPE_OUT]], ['>', 'stock_detail.qty', 0]],
+            ])
+            ->one();
+    }
+
+    private static function restoreSourceCapacity(StockDetail $sourceDetail, $qty): void
+    {
+        $capacity = max(0.0, abs((float) $sourceDetail->qty) - (float) $sourceDetail->remain_qty);
+        if ((float) $qty > $capacity + 0.000001) {
+            throw new \Exception("ยอดคืนเกินจำนวนที่เคยตัดจาก Lot ต้นทาง (detail {$sourceDetail->id})");
+        }
+        $sourceDetail->remain_qty = (float) $sourceDetail->remain_qty + (float) $qty;
+        if (!$sourceDetail->save(false)) {
+            throw new \Exception("ไม่สามารถคืนยอด Lot ต้นทาง (detail {$sourceDetail->id})");
         }
     }
 
