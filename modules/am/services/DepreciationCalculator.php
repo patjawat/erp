@@ -45,6 +45,7 @@ class DepreciationCalculator
             'rounding_scale' => 2,
             'acquisition_date' => null,     // Y-m-d
             'rate_tiers' => [],             // [['start_month'=>1,'end_month'=>36,'rate_percent'=>5.0], ...]
+            'disposal_date' => null,        // Y-m-d วันจำหน่าย — หยุดคิดค่าเสื่อมหลังวันนี้
         ], $overrides);
     }
 
@@ -101,6 +102,30 @@ class DepreciationCalculator
         $day = (int) date('j', $ts);
         $lastDay = (int) date('t', $ts);
         return max(1, min($lastDay - $day + 1, $lastDay));
+    }
+
+    /**
+     * จำนวนวันใช้งานในเดือนสุดท้ายเมื่อเริ่มกลางเดือน (ส่วนที่เหลือให้ครบเดือน)
+     * เริ่มวันที่ 15 → เดือนสุดท้ายคิดวันที่ 1-14 = 14 วัน
+     */
+    public static function daysUsedInFinalMonth(string $startDate): int
+    {
+        $ts = strtotime($startDate);
+        if ($ts === false) {
+            return 0;
+        }
+        return max(0, (int) date('j', $ts) - 1);
+    }
+
+    /** ปี-เดือน (Ym) ของวันที่ — ใช้เทียบว่าอยู่เดือนเดียวกันหรือไม่ */
+    private static function ym(?string $date): ?int
+    {
+        if (empty($date)) {
+            return null;
+        }
+        $ts = strtotime($date);
+
+        return $ts === false ? null : (int) date('Ym', $ts);
     }
 
     /**
@@ -182,12 +207,29 @@ class DepreciationCalculator
         $walkTs = $startDate ? strtotime($startDate) : null;
 
         $accumulated = 0.0;
-        $useDailyFirst = ($basis === DepreciationProfile::BASIS_DAILY)
-            && !empty($p['acquisition_date'])
-            && (string) $p['start_rule'] === DepreciationProfile::START_READY_DATE;
+        // คิดตามจำนวนวันจริงเมื่อเริ่มกลางเดือน — ใช้ได้เฉพาะกฎ "เริ่มวันที่พร้อมใช้งาน"
+        // (กฎอื่น resolve เป็นวันที่ 1 อยู่แล้ว จึงเป็นเดือนเต็มทุกเดือน)
+        $prorate = ($basis === DepreciationProfile::BASIS_DAILY)
+            && $startDate !== null
+            && (string) $p['start_rule'] === DepreciationProfile::START_READY_DATE
+            && (int) date('j', (int) $walkTs) > 1;
+
+        // เริ่มกลางเดือน → เดือนแรกไม่เต็ม จึงต้องมีเดือนท้ายอีก 1 งวดเก็บส่วนที่เหลือ
+        $finalPartialDays = $prorate ? self::daysUsedInFinalMonth($startDate) : 0;
+        if ($prorate && $finalPartialDays > 0) {
+            $maxMonths++;
+        }
+
+        $disposalYm = self::ym($p['disposal_date'] ?? null);
 
         for ($i = 0; $i < $maxMonths; $i++) {
             $monthIndex = $i + 1;
+            $currentYm = $walkTs ? (int) date('Ym', $walkTs) : null;
+
+            // จำหน่ายแล้ว — หยุดก่อนเดือนถัดจากเดือนที่จำหน่าย
+            if ($disposalYm !== null && $currentYm !== null && $currentYm > $disposalYm) {
+                break;
+            }
 
             // อัตรา/ค่าเสื่อมเต็มเดือน
             if ($hasTiers) {
@@ -201,25 +243,38 @@ class DepreciationCalculator
                 $monthlyFull = $lifeMonths > 0 ? $base / $lifeMonths : 0.0;
             }
 
-            // การนับวัน / proration
+            // การนับวัน / proration — คิดตามสัดส่วนวันจริงของเดือนนั้น (ไม่ใช่ฐาน 30 วันตายตัว
+            // ซึ่งทำให้เดือน 31 วันคิดเกินเดือนเต็มไป 3%)
             $daysInMonth = $walkTs ? (int) date('t', $walkTs) : self::DAYS_PER_MONTH;
             $daysUsed = $daysInMonth;
             $dep = $monthlyFull;
 
-            if ($basis === DepreciationProfile::BASIS_FULL_PERIOD) {
-                $dep = $monthlyFull;
-                $daysUsed = $daysInMonth;
-            } elseif ($useDailyFirst && $i === 0) {
-                $daysUsed = self::daysUsedInFirstMonth($p['acquisition_date']);
-                $daily = $monthlyFull / self::DAYS_PER_MONTH;
-                $dep = $daily * $daysUsed;
+            if ($basis !== DepreciationProfile::BASIS_FULL_PERIOD && $prorate) {
+                if ($i === 0) {
+                    $daysUsed = self::daysUsedInFirstMonth($startDate);       // เดือนแรก: ตั้งแต่วันที่พร้อมใช้ถึงสิ้นเดือน
+                } elseif ($finalPartialDays > 0 && $monthIndex === $maxMonths) {
+                    $daysUsed = min($finalPartialDays, $daysInMonth);         // เดือนท้าย: ส่วนที่เหลือให้ครบเดือน
+                }
+                if ($daysUsed !== $daysInMonth) {
+                    $dep = $monthlyFull * ($daysUsed / $daysInMonth);
+                }
+            }
+
+            // เดือนที่จำหน่าย: คิดถึงวันที่จำหน่ายเท่านั้น (เฉพาะฐานคิดตามวัน)
+            if ($disposalYm !== null && $currentYm === $disposalYm
+                && $basis === DepreciationProfile::BASIS_DAILY) {
+                $disposalDay = (int) date('j', strtotime((string) $p['disposal_date']));
+                $daysUsed = max(0, min($daysUsed, $disposalDay));
+                $dep = $monthlyFull * ($daysUsed / $daysInMonth);
             }
 
             $dep = round($dep, $scale);
 
-            // งวดสุดท้ายตามอายุแบบเส้นตรงอัตราเดียว: บังคับให้ปิดพอดีที่มูลค่าซาก
-            $isLastLifeMonth = (!$hasTiers && $annualRate === null && $lifeMonths > 0 && $monthIndex === $lifeMonths);
-            if ($isLastLifeMonth) {
+            // งวดสุดท้ายแบบเส้นตรงอัตราเดียว: บังคับให้ปิดพอดีที่มูลค่าซาก
+            // (ต้องเป็นงวดสุดท้ายจริง ๆ ของ schedule ไม่ใช่แค่ครบจำนวนเดือนตามอายุ
+            //  เพราะเมื่อเริ่มกลางเดือนจะมีเดือนท้ายเพิ่มมาอีก 1 งวด)
+            $isFinalMonth = (!$hasTiers && $annualRate === null && $lifeMonths > 0 && $monthIndex === $maxMonths);
+            if ($isFinalMonth && $disposalYm === null) {
                 $dep = round($base - $accumulated, $scale);
             }
 
@@ -280,9 +335,11 @@ class DepreciationCalculator
      *
      * @param array $schedule schedule จาก buildMonthlySchedule()['schedule']
      * @param string $groupBy 'quarter' | 'fiscal_year'
+     * @param int $scale ทศนิยมของเกณฑ์ — ต้องใช้ค่าเดียวกับตอนสร้าง schedule
+     *                   ไม่งั้นยอดรวมรายไตรมาส/ปีจะไม่ตรงกับผลรวมรายเดือน
      * @return array<string,array> key = "{fiscal_year}" หรือ "{fiscal_year}-Q{n}"
      */
-    public static function aggregateByFiscal(array $schedule, string $groupBy): array
+    public static function aggregateByFiscal(array $schedule, string $groupBy, int $scale = 2): array
     {
         $out = [];
         foreach ($schedule as $row) {
@@ -301,7 +358,7 @@ class DepreciationCalculator
                     'months' => 0,
                 ];
             }
-            $out[$key]['depreciation'] = round($out[$key]['depreciation'] + $row['depreciation'], 4);
+            $out[$key]['depreciation'] = round($out[$key]['depreciation'] + $row['depreciation'], $scale);
             // ค่าปลายงวดใช้ค่าล่าสุดของกลุ่ม
             $out[$key]['accumulated_depreciation'] = $row['accumulated_depreciation'];
             $out[$key]['remaining_value'] = $row['remaining_value'];

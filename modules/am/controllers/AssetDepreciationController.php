@@ -15,6 +15,7 @@ use app\modules\am\models\AssetDepreciation;
 use app\modules\am\models\DepreciationProfile;
 use app\modules\am\services\DepreciationRunService;
 use app\modules\am\services\DepreciationPostingService;
+use app\modules\am\services\DepreciationSnapshotService;
 
 /**
  * ประมวลผล/ตรวจสอบ/ปรับปรุงค่าเสื่อมรายทรัพย์สิน (screens 4, 5, 8)
@@ -26,7 +27,12 @@ class AssetDepreciationController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'rules' => [
+                    ['allow' => true, 'actions' => ['overview', 'preview-asset', 'asset-search', 'run'], 'roles' => ['depreciationView']],
+                    // ตรึงเกณฑ์ให้ทะเบียน = งานตั้งค่า · คำนวณ/ปรับปรุง/กลับรายการ = งานบัญชี
+                    ['allow' => true, 'actions' => ['backfill', 'backfill-apply'], 'roles' => ['depreciationSetup']],
+                    ['allow' => true, 'actions' => ['save', 'adjustment', 'reverse'], 'roles' => ['depreciationRun']],
+                ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
@@ -34,6 +40,7 @@ class AssetDepreciationController extends Controller
                     'save' => ['POST'],
                     'adjustment' => ['POST'],
                     'reverse' => ['POST'],
+                    'backfill-apply' => ['POST'],
                 ],
             ],
         ]);
@@ -53,10 +60,10 @@ class AssetDepreciationController extends Controller
             ->andWhere(['like', 'data_json', 'depreciation_profile_id'])
             ->count();
 
-        $assetTotal = (int) Asset::find()
-            ->where(['asset_group_id' => 4, 'deleted_at' => null])->count();
-        $assetSnapped = (int) Asset::find()
-            ->where(['asset_group_id' => 4, 'deleted_at' => null])
+        // นับจากชุดเดียวกับที่ตัวคำนวณใช้จริง เพื่อให้ตัวเลขตรงกับหน้า "ตรึงเกณฑ์ให้ทะเบียนเดิม"
+        $run = new DepreciationRunService();
+        $assetTotal = (int) $run->eligibleQuery()->count();
+        $assetSnapped = (int) $run->eligibleQuery()
             ->andWhere(['not', ['depreciation_profile_id' => null]])->count();
 
         // งวดบัญชีปีงบล่าสุด + สรุปสถานะงวดรายเดือน
@@ -78,6 +85,61 @@ class AssetDepreciationController extends Controller
             'latestFy' => $latestFy,
             'monthCounts' => $monthCounts,
         ]);
+    }
+
+    /**
+     * ตรึงเกณฑ์ค่าเสื่อมย้อนหลังให้ทะเบียนเดิม — หน้าทดลอง (dry-run) แสดงผลก่อนบันทึกจริง
+     */
+    public function actionBackfill($force = 0)
+    {
+        $force = (bool) $force;
+        $result = (new DepreciationSnapshotService())->backfill(false, $force);
+
+        return $this->render('backfill', [
+            'result' => $result,
+            'force' => $force,
+            'profileNames' => $this->profileNameMap($result['by_profile']),
+        ]);
+    }
+
+    /**
+     * บันทึก snapshot จริง (ทำงานใน transaction เดียว)
+     */
+    public function actionBackfillApply()
+    {
+        $force = (bool) Yii::$app->request->post('force');
+        $result = (new DepreciationSnapshotService())->backfill(true, $force);
+
+        if ($result['error'] !== null) {
+            Yii::$app->session->setFlash('error', 'ตรึงเกณฑ์ไม่สำเร็จ: ' . $result['error']);
+        } else {
+            Yii::$app->session->setFlash('success', sprintf(
+                'ตรึงเกณฑ์ค่าเสื่อมให้ทรัพย์สิน %s รายการเรียบร้อย (ตรวจแล้ว %s รายการ)',
+                number_format($result['applied']),
+                number_format($result['total'])
+            ));
+        }
+
+        return $this->redirect(['backfill']);
+    }
+
+    /**
+     * map profile_id => "รหัส — ชื่อ" สำหรับแสดงผลสรุป
+     *
+     * @param array<string,int> $byProfile
+     * @return array<int,string>
+     */
+    private function profileNameMap(array $byProfile): array
+    {
+        $ids = array_map('intval', array_keys($byProfile));
+        if (!$ids) {
+            return [];
+        }
+        $names = [];
+        foreach (DepreciationProfile::find()->where(['id' => $ids])->all() as $p) {
+            $names[$p->id] = $p->code . ' — ' . $p->name;
+        }
+        return $names;
     }
 
     /**

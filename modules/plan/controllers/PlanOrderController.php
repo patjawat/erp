@@ -2,6 +2,9 @@
 
 namespace app\modules\plan\controllers;
 
+use app\modules\plan\services\PlanRevisionService;
+use app\modules\plan\components\PlanHelper;
+
 use Yii;
 use yii\helpers\Url;
 use yii\web\Response;
@@ -152,11 +155,18 @@ class PlanOrderController extends Controller
             $model = $this->findModel($id); // โหลดแผนหลัก
 
         if ($model->load(Yii::$app->request->post())) {
+            if ($model->status !== 'submit') {
+                return ['status' => 'error', 'message' => 'อนุมัติได้เฉพาะแผนที่รออนุมัติ'];
+            }
+            $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
             // $model->updated_at = time();
             $model->status = 'approve';
             $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
             $model->data_json = array_merge($json, PlanOrder::decisionStamp());
             if ($model->save(false)) {
+                $isAdjust = ($workflow['workflow_cycle'] ?? '') === 'adjust';
+                $cycle = $isAdjust ? (int) ($workflow['adjustment_cycle'] ?? 1) : 0;
+                PlanRevisionService::capture($model, $cycle, $isAdjust ? PlanRevisionService::ADJUSTED : PlanRevisionService::INITIAL);
                 return [
                     'status' => 'success',
                     'url' => Url::to(['/plan/'.$model->plan_group_id]),
@@ -180,6 +190,15 @@ class PlanOrderController extends Controller
              if ($this->request->post()) {
                  $id = $this->request->post('id');
                  $model = $this->findModel($id); // โหลดแผนหลัก
+                 if ($model->status !== 'approve' || !PlanHelper::canAdjust($model->thai_year)) {
+                     return ['status' => 'error', 'message' => 'ขณะนี้ไม่อยู่ในรอบปรับแผน หรือแผนยังไม่ได้อนุมัติ'];
+                 }
+                 $cycle = PlanRevisionService::nextCycle($model);
+                 PlanRevisionService::capture($model, $cycle, PlanRevisionService::BEFORE_ADJUST);
+                 $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+                 $json['adjustment_cycle'] = $cycle;
+                 $json['workflow_cycle'] = 'adjust';
+                 $model->data_json = $json;
                  $model->status = 'renew';
             if ($model->save(false)) {
                 return [
@@ -205,13 +224,42 @@ class PlanOrderController extends Controller
         }
         $model = $this->findModel($id);
         if ($model) {
+            $currentStatus = (string) $model->status;
+            $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+            if (in_array($status, ['approve', 'reject'], true) && $currentStatus !== 'submit') {
+                return ['status' => 'error', 'message' => 'ดำเนินการได้เฉพาะแผนที่รออนุมัติ'];
+            }
+            if ($status === 'submit') {
+                $normalSubmit = in_array($currentStatus, ['draft', 'reject'], true) && PlanHelper::canAdd($model->thai_year);
+                $adjustSubmit = in_array($currentStatus, ['renew', 'reject'], true)
+                    && ($workflow['workflow_cycle'] ?? '') === 'adjust'
+                    && PlanHelper::canAdjust($model->thai_year);
+                if (!$normalSubmit && !$adjustSubmit) {
+                    return ['status' => 'error', 'message' => 'ขณะนี้ไม่สามารถส่งแผนในสถานะนี้ได้'];
+                }
+            }
             $model->status = $status;
             if (in_array($status, ['approve', 'reject'], true)) {
                 $reason = trim((string) $this->request->post('reason', ''));
                 $json = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
                 $model->data_json = array_merge($json, PlanOrder::decisionStamp($reason !== '' ? $reason : null));
             }
-            $model->save(false);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                if (!$model->save(false)) {
+                    throw new \RuntimeException('บันทึกสถานะแผนไม่สำเร็จ');
+                }
+                if ($status === 'approve') {
+                    $isAdjust = ($workflow['workflow_cycle'] ?? '') === 'adjust';
+                    $cycle = $isAdjust ? (int) ($workflow['adjustment_cycle'] ?? 1) : 0;
+                    PlanRevisionService::capture($model, $cycle, $isAdjust ? PlanRevisionService::ADJUSTED : PlanRevisionService::INITIAL);
+                }
+                $transaction->commit();
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                Yii::error($e, __METHOD__);
+                return ['status' => 'error', 'message' => 'บันทึกสถานะแผนไม่สำเร็จ กรุณาลองใหม่'];
+            }
               return $this->redirect(['/plan/'.$model->plan_group_id.'/index']);
             return [
                 'status' => 'success',

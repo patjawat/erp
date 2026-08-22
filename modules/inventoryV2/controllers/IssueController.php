@@ -7,6 +7,7 @@ use app\modules\hr\models\Employees;
 use app\modules\inventoryV2\components\InventoryService;
 use app\modules\inventoryV2\components\InventoryTelegramNotify;
 use app\modules\inventoryV2\models\StockDetail;
+use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
 use app\modules\inventoryV2\models\Warehouse;
@@ -123,7 +124,7 @@ class IssueController extends Controller
     }
 
     /**
-     * หน้าจอสำหรับดำเนินการจ่าย (เลือก Lot/จำนวน) — ตัดสต็อกเมื่อกดยืนยันจ่าย
+     * หน้าจอสำหรับดำเนินการจ่าย — ระบบจัดสรรข้าม Lot ตาม FIFO เมื่อกดยืนยันจ่าย
      * เฉพาะใบที่ status = APPROVED เท่านั้นที่กดจ่ายได้
      */
     public function actionProcess($id)
@@ -151,7 +152,20 @@ class IssueController extends Controller
             $transaction = Yii::$app->db->beginTransaction();
 
             try {
+                $lockedOrder = InventoryService::lockOrder($model->id);
+                if ((string) $lockedOrder['status'] !== StockOrder::STATUS_APPROVED) {
+                    throw new \Exception('ใบนี้ถูกดำเนินการโดยผู้ใช้อื่นแล้ว กรุณาโหลดหน้าใหม่');
+                }
                 $processedCount = 0;
+                $affectedStockPools = [];
+                $issueAllocationSummary = [];
+                // เก็บรายการเดิมของใบเบิกไว้ก่อนเริ่มจ่าย เพื่อให้ลบรายการที่ผู้ใช้
+                // กดถังขยะออกจากหน้าจ่ายได้จริง รายการที่ถูกปิด input จะไม่อยู่ใน
+                // payload แต่หากปล่อย StockDetail เดิมไว้ เมื่อหัวเอกสารเป็น CONFIRMED
+                // รายงานที่รวม stock_detail.qty จะยังนับเป็นยอดจ่ายอยู่
+                $originalDetailIds = array_map('intval', ArrayHelper::getColumn($model->stockDetails, 'id'));
+                $processedOriginalDetailIds = [];
+
                 foreach ($data as $item) {
                     if (!is_array($item)) {
                         continue;
@@ -163,42 +177,47 @@ class IssueController extends Controller
 
                     $detailId = $item['detail_id'] ?? null;
                     $isNewRow = ($detailId === 'new' || $detailId === '' || $detailId === null);
-                    $selectedLot = trim((string)($item['lot_number'] ?? ''));
-
-                    if ($selectedLot === '') {
-                        throw new \Exception('กรุณาเลือก Lot สำหรับรายการที่ต้องการจ่ายให้ครบ');
-                    }
 
                     if ($isNewRow) {
-                        // รายการเพิ่มเติม (กดปุ่ม "เพิ่มวัสดุ" ในหน้า process) — สร้าง StockDetail ใหม่ผูกกับใบเบิกนี้
                         $itemCode = trim((string) ($item['item_code'] ?? ''));
-                        if ($itemCode === '' || $selectedLot === '') {
-                            throw new \Exception('รายการเพิ่มเติม: กรุณาเลือกวัสดุและ Lot ให้ครบ');
+                        if ($itemCode === '') {
+                            throw new \Exception('รายการเพิ่มเติม: กรุณาเลือกวัสดุ');
                         }
                         $detail = new StockDetail();
                         $detail->stock_order_id = $model->id;
                         $detail->item_code = $itemCode;
-                        $detail->lot_number = $selectedLot;
-                        $detail->qty = $qtyToProcess; // จะถูกเขียนทับด้วย qtyActuallyIssued ในขั้น 4
-                        if (!$detail->save(false)) {
-                            $errors = implode(', ', $detail->getFirstErrors());
-                            throw new \Exception("ไม่สามารถสร้างรายการเพิ่มเติม: {$errors}");
-                        }
                     } else {
                         $detail = StockDetail::findOne(['id' => $detailId, 'stock_order_id' => $model->id]);
                         if (!$detail) {
                             throw new \Exception('ไม่พบรายการวัสดุในใบเบิกนี้');
                         }
+                        $processedOriginalDetailIds[] = (int) $detail->id;
                     }
 
-                    // 2. หักลบ remain_qty จาก source lot ต้นทาง
-                    // เพื่อให้ยอดเหลือรายแถวในหน้า process.php อัปเดตถูกต้อง
+                    // ล็อก item + balance + source lot ก่อนอ่านยอด ป้องกันผู้ใช้อื่น
+                    // จ่าย/คืนวัสดุ pool เดียวกันระหว่าง transaction นี้
+                    InventoryService::lockStockPool(
+                        $detail->item_code,
+                        $model->main_warehouse_id
+                    );
+
+                    $reservedAhead = InventoryService::reservedAheadQty(
+                        $detail->item_code,
+                        $model->main_warehouse_id,
+                        $model->id
+                    );
+                    $actualItemBalance = (float) StockBalance::find()
+                        ->where(['item_code' => $detail->item_code, 'warehouse_id' => $model->main_warehouse_id])
+                        ->sum('balance_qty');
+                    $availableForThisOrder = max(0.0, $actualItemBalance - $reservedAhead);
+                    if ($qtyToProcess > $availableForThisOrder + 0.000001) {
+                        throw new \Exception("พัสดุรหัส {$detail->item_code} คงเหลือจริง {$actualItemBalance} แต่มีใบเบิกก่อนหน้าจองไว้ {$reservedAhead} จึงพร้อมจ่ายสำหรับใบนี้ {$availableForThisOrder}");
+                    }
+
+                    // 2. จัดสรรข้าม Lot อัตโนมัติตาม FIFO
                     $sourceLots = StockDetail::find()
                         ->joinWith('stockOrder')
-                        ->where([
-                            'stock_detail.item_code' => $detail->item_code,
-                            'stock_detail.lot_number' => $selectedLot,
-                        ])
+                        ->where(['stock_detail.item_code' => $detail->item_code])
                         ->andWhere(['stock_order.status' => StockOrder::STATUS_CONFIRMED])
                         ->andWhere(['or',
                             ['and',
@@ -221,11 +240,11 @@ class IssueController extends Controller
                             ],
                         ])
                         ->andWhere(['>', 'stock_detail.remain_qty', 0])
-                        ->orderBy(['stock_detail.id' => SORT_ASC]) // ตัดตัวที่เข้าก่อน (FIFO ภายใน Lot)
+                        ->orderBy(['stock_order.order_date' => SORT_ASC, 'stock_detail.id' => SORT_ASC])
                         ->all();
 
                     $tempQty = $qtyToProcess;
-                    $lastUnitPrice = 0;
+                    $lotGroups = [];
 
                     foreach ($sourceLots as $sourceIn) {
                         if ($tempQty <= 0) break;
@@ -233,53 +252,83 @@ class IssueController extends Controller
                         $take = min($tempQty, (float)$sourceIn->remain_qty);
                         $sourceIn->remain_qty -= $take;
                         if (!$sourceIn->save(false)) {
-                            throw new \Exception("ไม่สามารถปรับปรุงยอดคงเหลือของ Lot {$selectedLot}");
+                            throw new \Exception("ไม่สามารถปรับปรุงยอดคงเหลือของ Lot {$sourceIn->lot_number}");
                         }
 
-                        $lastUnitPrice = $sourceIn->unit_price; // เก็บราคาทุนไว้บันทึกกลับ
+                        $lot = (string) $sourceIn->lot_number;
+                        if (!isset($lotGroups[$lot])) {
+                            $lotGroups[$lot] = ['qty' => 0.0, 'value' => 0.0, 'allocations' => []];
+                        }
+                        $lotGroups[$lot]['qty'] += $take;
+                        $lotGroups[$lot]['value'] += $take * (float) $sourceIn->unit_price;
+                        $lotGroups[$lot]['allocations'][] = [
+                            'source_detail_id' => (int) $sourceIn->id,
+                            'source_order_id' => (int) $sourceIn->stock_order_id,
+                            'lot_number' => $lot,
+                            'qty' => (float) $take,
+                        ];
                         $tempQty -= $take;
                     }
 
                     if ($tempQty > 0) {
-                        throw new \Exception("พัสดุรหัส {$detail->item_code} ใน Lot {$selectedLot} มีไม่พอจ่าย (ขอจ่าย " . $qtyToProcess . " เหลือใน Lot ไม่เพียงพอ)");
+                        throw new \Exception("พัสดุรหัส {$detail->item_code} รวมทุก Lot มีไม่พอจ่าย (ขาดอีก {$tempQty})");
                     }
 
-                    $qtyActuallyIssued = $qtyToProcess - $tempQty;
+                    $firstLot = true;
+                    foreach ($lotGroups as $lot => $group) {
+                        InventoryService::updateBalance($detail->item_code, $model->main_warehouse_id, $group['qty'], 'OUT', $lot);
+                        if ($model->sub_warehouse_id) {
+                            InventoryService::updateBalance($detail->item_code, $model->sub_warehouse_id, $group['qty'], 'IN', $lot);
+                        }
 
-                    // 3. อัปเดตยอดรวมใน StockBalance (แยกตามคลังและ Lot) — หักเฉพาะจำนวนที่หักได้จริง
-                    InventoryService::updateBalance(
-                        $detail->item_code,
-                        $model->main_warehouse_id,
-                        $qtyActuallyIssued,
-                        'OUT',
-                        $selectedLot
-                    );
-
-                    // 3.1 โอนยอดเข้าคลังย่อย (ถ้ามี sub_warehouse_id) เพื่อให้คลังย่อยมีสต็อกสำหรับบันทึกการใช้งาน
+                        $issuedDetail = $firstLot ? $detail : new StockDetail();
+                        $issuedDetail->stock_order_id = $model->id;
+                        $issuedDetail->item_code = $detail->item_code;
+                        $issuedDetail->qty = $group['qty'];
+                        $issuedDetail->lot_number = $lot;
+                        $issuedDetail->unit_price = $group['qty'] > 0 ? $group['value'] / $group['qty'] : 0;
+                        $issuedDetail->remain_qty = $model->sub_warehouse_id ? $group['qty'] : 0;
+                        $issuedDetail->data_json = json_encode([
+                            'fifo_allocations' => $group['allocations'],
+                            'issued_qty' => (float) $group['qty'],
+                            'allocation_recorded_at' => date('Y-m-d H:i:s'),
+                            'automatic_multi_lot_fifo' => 1,
+                        ], JSON_UNESCAPED_UNICODE);
+                        if (!$issuedDetail->save(false)) {
+                            throw new \Exception("ไม่สามารถบันทึกรายการจ่าย Lot {$lot}");
+                        }
+                        $firstLot = false;
+                    }
+                    $issueAllocationSummary[] = [
+                        'item_code' => (string) $detail->item_code,
+                        'requested_qty' => (float) $qtyToProcess,
+                        'lots' => array_map(static function ($lot, $group) {
+                            return [
+                                'lot_number' => (string) $lot,
+                                'qty' => (float) $group['qty'],
+                                'unit_price' => $group['qty'] > 0 ? (float) ($group['value'] / $group['qty']) : 0.0,
+                            ];
+                        }, array_keys($lotGroups), $lotGroups),
+                    ];
+                    $affectedStockPools[$model->main_warehouse_id . '|' . $detail->item_code] = [(int) $model->main_warehouse_id, (string) $detail->item_code];
                     if ($model->sub_warehouse_id) {
-                        InventoryService::updateBalance(
-                            $detail->item_code,
-                            $model->sub_warehouse_id,
-                            $qtyActuallyIssued,
-                            'IN',
-                            $selectedLot
-                        );
-                    }
-
-                    // 4. บันทึกข้อมูลกลับลงใน StockDetail ของ "ใบเบิกใบนี้"
-                    $detail->qty = $qtyActuallyIssued;   // จำนวนที่จ่ายจริง
-                    $detail->lot_number = $selectedLot;    // ล็อตที่เลือกจ่าย
-                    $detail->unit_price = $lastUnitPrice;   // ราคาทุนที่ดึงมาจากต้นทาง
-                    $detail->remain_qty = $model->sub_warehouse_id ? $qtyActuallyIssued : 0;
-
-                    if (!$detail->save(false)) {
-                        throw new \Exception("ไม่สามารถบันทึกรายละเอียดพัสดุรหัส: " . $detail->item_code);
+                        $affectedStockPools[$model->sub_warehouse_id . '|' . $detail->item_code] = [(int) $model->sub_warehouse_id, (string) $detail->item_code];
                     }
                     $processedCount++;
                 }
 
                 if ($processedCount === 0) {
                     throw new \Exception('กรุณาระบุรายการที่ต้องการจ่ายอย่างน้อย 1 รายการ');
+                }
+
+                // ทำให้รายละเอียดของเอกสารตรงกับรายการที่จ่ายจริงก่อนยืนยันเอกสาร
+                // เพื่อให้ Stock Card, Dashboard และรายงานยอดจ่ายไม่รวมแถวที่ยกเลิก
+                $cancelledDetailIds = array_diff($originalDetailIds, $processedOriginalDetailIds);
+                if (!empty($cancelledDetailIds)) {
+                    StockDetail::deleteAll([
+                        'id' => array_values($cancelledDetailIds),
+                        'stock_order_id' => $model->id,
+                    ]);
                 }
 
                 // 4.5 ถ้ายังไม่มี "ผู้จ่ายพัสดุ" ให้เซ็ตจาก user ปัจจุบัน (ดึงตำแหน่งจากระบบพนักงาน)
@@ -313,9 +362,15 @@ class IssueController extends Controller
                     $ts = time();
                 }
                 $model->setDisbursementDate($ts);
+                // เก็บเวลาที่ตัดสต๊อกจริงแยกจากวันที่จ่ายทางเอกสาร
+                $model->setStockPostedAt(time());
                 $model->updated_at = date('Y-m-d H:i:s', $ts); // ใช้ filter วันที่จ่ายใน index ได้
                 if (!$model->save(false)) {
                     throw new \Exception("ไม่สามารถบันทึกสถานะใบเบิกได้");
+                }
+
+                foreach ($affectedStockPools as [$warehouseId, $itemCode]) {
+                    InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
                 }
 
                 $transaction->commit();
@@ -329,7 +384,11 @@ class IssueController extends Controller
                     );
                 }
 
-                return ['success' => true, 'message' => 'บันทึกการจ่ายเรียบร้อยแล้ว'];
+                return [
+                    'success' => true,
+                    'message' => 'บันทึกการจ่ายเรียบร้อยแล้ว',
+                    'fifo_allocations' => $issueAllocationSummary,
+                ];
             } catch (\Throwable $e) {
                 if ($transaction->isActive) {
                     $transaction->rollBack();
@@ -646,6 +705,7 @@ CSS;
                 ],
             ])
             ->andWhere(['>', 'stock_detail.remain_qty', 0])
+            ->orderBy(['stock_order.order_date' => SORT_ASC, 'stock_detail.id' => SORT_ASC])
             ->asArray()
             ->all();
     }

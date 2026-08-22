@@ -199,7 +199,7 @@ $js = <<<JS
                         },
                         dataType: "json",
                         success: function (res) {
-                            $("#main-modal").modal("show");
+                            erpShowModal("#main-modal");
                             $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");
                             $(".modal-dialog").addClass("modal-xl");
                             $("#main-modal-label").html(res.title);
@@ -240,7 +240,7 @@ $js = <<<JS
                                 url: url,
                                 dataType: "json",
                                 success: function (res) {
-                                      \$('#main-modal').modal('show')
+                                      erpShowModal('#main-modal');
                                         \$("#main-modal-label").html(res.title);
                                         \$(".modal-body").html(res.content);
                                         $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl");

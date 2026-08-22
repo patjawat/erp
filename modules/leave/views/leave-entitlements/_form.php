@@ -126,7 +126,7 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
             'class' => 'form-control cal-days',
             'type' => 'number',
             'min' => 0,
-            'step' => 0.5,
+            'step' => 'any',
         ])->label('ยอดยกมา') ?>
         <?= $form->field($model, 'data_json[accumulation]')->checkbox(['custom' => true, 'switch' => true])->label('สิทธิสะสมวันลา') ?>
     </div>
@@ -135,7 +135,7 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
             'class' => 'form-control cal-days',
             'type' => 'number',
             'min' => 0,
-            'step' => 1,
+            'step' => 'any',
         ])->label('สิทธิลาประจำปี') ?>
         <?= $form->field($model, 'data_json[leave_max_days]')->textInput()->label('สะสมวันลาได้สูงสุด') ?>
     </div>
@@ -143,7 +143,7 @@ echo $form->field($model, 'emp_id')->widget(Select2::classname(), [
 
 
 
-<?= $form->field($model, 'days')->textInput(['type' => 'number'])->label('รวมสิทธลาพักผ่อน') ?>
+<?= $form->field($model, 'days')->textInput(['type' => 'number', 'step' => 'any', 'min' => 0])->label('รวมสิทธลาพักผ่อน') ?>
 
 <?= $form->field($model, 'month_of_service')->hiddenInput(['value' => 0])->label(false) ?>
 <?= $form->field($model, 'position_type_id')->hiddenInput(['maxlength' => true])->label(false) ?>
@@ -165,7 +165,7 @@ $(document).on('input', '.cal-days', function () {
     let beforeLeaveBalance = parseFloat($('#leaveentitlements-data_json-before_leave_balance').val()) || 0;
     let beforeLeaveDays = parseFloat($('#leaveentitlements-data_json-leave_days').val()) || 0;
 
-    let total = beforeLeaveBalance + beforeLeaveDays;
+    let total = Math.round((beforeLeaveBalance + beforeLeaveDays) * 100) / 100;
 
     $('#leaveentitlements-days').val(total);
 });

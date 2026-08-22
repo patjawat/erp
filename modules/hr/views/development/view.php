@@ -12,15 +12,37 @@ $this->title = 'รายละเอียดการพัฒนาบุค�
 $this->params['breadcrumbs'][] = ['label' => 'การพัฒนาบุคลากร', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
+$requester = $model->createdByEmp;
+
 // ตัวอักษรย่อสำหรับ avatar fallback
 $requesterInitials = '?';
-if ($model->createdByEmp) {
-    $fname = trim((string) ($model->createdByEmp->fname ?? ''));
-    $lname = trim((string) ($model->createdByEmp->lname ?? ''));
+if ($requester) {
+    $fname = trim((string) ($requester->fname ?? ''));
+    $lname = trim((string) ($requester->lname ?? ''));
     if ($fname !== '' || $lname !== '') {
         $requesterInitials = mb_substr($fname !== '' ? $fname : $lname, 0, 1, 'UTF-8');
     }
 }
+
+// ค่าที่โมเดล Employees คืนเมื่อไม่มีข้อมูล ('-', 'ไม่ระบุ', false) ให้ถือว่าว่าง
+$clean = static function ($value): ?string {
+    if ($value === null || $value === false || $value === true) {
+        return null;
+    }
+    $value = trim((string) $value);
+    if ($value === '' || $value === '-' || $value === 'ไม่ระบุ') {
+        return null;
+    }
+    return $value;
+};
+
+// ตำแหน่ง/หน่วยงานของผู้ขอ — Employees ไม่มี relation position/department ต้องเรียกผ่านเมธอด
+$requesterPosition = $requester ? $clean($requester->positionName()) : null;
+$requesterDepartment = $requester ? $clean($requester->departmentName()) : null;
+
+// ประเภทการพัฒนา เก็บเป็นรหัสในคอลัมน์ development_type_id (ไม่ได้อยู่ใน data_json)
+$developmentTypeName = $clean($model->developmentType->title ?? null)
+    ?? $clean($model->data_json['development_type_name'] ?? null);
 
 // helper สำหรับแสดงค่า data_json พร้อม fallback "ไม่ระบุ" รูปแบบเดียวกันทั้งไฟล์
 $dv = function ($value, string $fallback = 'ไม่ระบุ') {
@@ -100,11 +122,11 @@ $statusColor = $model->getStatus($model->status)['color'] ?? 'secondary';
 
                     <div class="dv-hero__requester">
                         <div class="dv-avatar-wrap flex-shrink-0">
-                            <?php if ($model->createdByEmp): ?>
-                                <?= Html::img($model->createdByEmp->showAvatar(), [
+                            <?php if ($requester): ?>
+                                <?= Html::img($requester->showAvatar(), [
                                     'class' => 'dv-avatar lazyload',
-                                    'alt' => $model->createdByEmp->fullname ?? '',
-                                    'data' => ['sizes' => 'auto', 'src' => $model->createdByEmp->showAvatar()],
+                                    'alt' => $requester->fullname ?? '',
+                                    'data' => ['sizes' => 'auto', 'src' => $requester->showAvatar()],
                                 ]) ?>
                             <?php else: ?>
                                 <span class="dv-avatar dv-avatar--fallback" aria-label="ไม่มีรูปประจำตัว">
@@ -116,12 +138,12 @@ $statusColor = $model->getStatus($model->status)['color'] ?? 'secondary';
                         <div class="dv-hero__requester-info">
                             <p class="dv-name mb-1">
                                 <span class="text-body-tertiary small me-1">ผู้ขอ</span>
-                                <span class="fw-semibold text-body"><?= Html::encode($model->createdByEmp->fullname ?? 'ไม่ระบุ') ?></span>
+                                <span class="fw-semibold text-body"><?= Html::encode($requester->fullname ?? 'ไม่ระบุ') ?></span>
                             </p>
                             <p class="mb-0 small text-body-secondary">
-                                <?= Html::encode($model->createdByEmp->position->name ?? 'ไม่ระบุตำแหน่ง') ?>
+                                <?= $dv($requesterPosition, 'ไม่ระบุตำแหน่ง') ?>
                                 <span class="dv-dot" aria-hidden="true">·</span>
-                                <?= Html::encode($model->createdByEmp->department->name ?? 'ไม่ระบุแผนก') ?>
+                                <?= $dv($requesterDepartment, 'ไม่ระบุหน่วยงาน') ?>
                             </p>
                             <?php if ($model->viewCreated()['full'] ?? null): ?>
                                 <p class="mb-0 small text-body-tertiary mt-1">
@@ -151,7 +173,7 @@ $statusColor = $model->getStatus($model->status)['color'] ?? 'secondary';
                         </dd>
 
                         <dt>ประเภทการพัฒนา</dt>
-                        <dd><?= $dv($model->data_json['development_type_name'] ?? null) ?></dd>
+                        <dd><?= $dv($developmentTypeName) ?></dd>
 
                         <dt>ระดับการพัฒนา</dt>
                         <dd><?= $dv($model->data_json['development_level_name'] ?? null) ?></dd>

@@ -72,7 +72,7 @@ $lockDeptName = $lockDeptName ?? '';
 // หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า (scope=plan)
 $ouGroups = [];
 if ($scope !== 'me') {
-    $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
+    $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year, $model->plan_unit_id ? (int) $model->plan_unit_id : null);
     // ให้ pull JS แปลง plan_unit_id -> tree.id (ref_id) ; null=หน่วยนอกผัง
     $this->registerJs('window.__ouRef = ' . \yii\helpers\Json::encode(\app\modules\settings\models\OrgUnit::refMap((int) $model->thai_year)) . ';', \yii\web\View::POS_HEAD);
 }
@@ -197,11 +197,11 @@ $form = ActiveForm::begin(array_merge(
                                     <label class="form-check-label small" for="pull-include-children">รวมหน่วยงานย่อย (กรณีกลุ่มงานแม่)</label>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-info text-white" id="btn-pull-consumption">
-                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ดึงจากการเบิกปีก่อน
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> ดึงจากแผนคาดการณ์
                                 </button>
                             </div>
                             <div class="col">
-                                <small class="text-muted" id="pull-info">ระบบจะดึงรายการที่หน่วยงานเบิกใช้ปีก่อน แล้วเฉลี่ยเป็นรายเดือน (÷12) ให้อัตโนมัติ</small>
+                                <small class="text-muted" id="pull-info">ระบบจะคาดการณ์ปริมาณใช้ทั้งปีจากยอดเบิกจริงของหน่วยงาน แล้วเฉลี่ยเป็นรายเดือน (÷12) ให้อัตโนมัติ</small>
                             </div>
                         </div>
                     </div>
@@ -231,7 +231,11 @@ $form = ActiveForm::begin(array_merge(
                         <?php if ($items): ?>
                             <?php foreach ($items as $i => $item): ?>
                                 <tr>
-                                    <td><input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control"></td>
+                                    <td>
+                                        <?php // รหัสวัสดุติดไปกับแถวเสมอ เพื่อให้บรรทัดในแผนโยงกลับทะเบียนวัสดุได้ ?>
+                                        <input type="hidden" name="items[<?= $i ?>][code]" value="<?= Html::encode($item->item_id) ?>">
+                                        <input type="text" name="items[<?= $i ?>][item_name]" value="<?= Html::encode($item->item_name) ?>" class="form-control">
+                                    </td>
                                     <td><input type="number" name="items[<?= $i ?>][qty]" value="<?= $item->qty ?>" class="form-control qty"></td>
                                     <td><input type="number" step="0.01" name="items[<?= $i ?>][unit_price]" value="<?= $item->unit_price ?>" class="form-control price"></td>
                                     <td class="total text-end"><?= number_format($item->qty * $item->unit_price, 2) ?></td>
@@ -358,6 +362,12 @@ $('#form').on('beforeSubmit', function (e) {
         cancelButtonText: 'ยกเลิก'
     }).then((result) => {
         if (result.isConfirmed) {
+            // scope me: ส่งแบบปกติ ให้ controller redirect + แสดง flash เอง (ไม่ใช่ฟอร์มใน modal)
+            if ('$scope' === 'me') {
+                form.off('beforeSubmit');
+                form[0].submit();
+                return;
+            }
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
@@ -432,7 +442,10 @@ $('#btn-show-asset').click(function (e) {
 let rowIndex = $("#item-table tbody tr").length;
 $("#add-row").on("click", function(){
     let row = `<tr>
-        <td><input type="text" name="items[\${rowIndex}][item_name]" class="form-control"></td>
+        <td>
+            <input type="hidden" name="items[\${rowIndex}][code]" value="">
+            <input type="text" name="items[\${rowIndex}][item_name]" class="form-control">
+        </td>
         <td><input type="number" name="items[\${rowIndex}][qty]" class="form-control qty"></td>
         <td><input type="number" step="0.01" name="items[\${rowIndex}][unit_price]" class="form-control price"></td>
         <td class="total text-end">0.00</td>
@@ -522,7 +535,7 @@ $('#btn-pull-consumption').on('click', function(){
     $('#pull-info').text('กำลังดึงข้อมูล...');
     $.post('$pullUrl', {department_id: dept, asset_type_id: atype, thai_year: year, include_children: incChild}, function(res){
         if(res.status !== 'success'){ $('#pull-info').text(res.message || 'เกิดข้อผิดพลาด'); return; }
-        if(!res.items.length){ $('#pull-info').text('ไม่พบการเบิกใช้ของหน่วยงานนี้ในปี ' + res.prev_year); return; }
+        if(!res.items.length){ $('#pull-info').text('ไม่พบการเบิกใช้ของหน่วยงานนี้ในปีงบ ' + res.prev_year); return; }
         var tbody = $('#item-table tbody'); tbody.empty();
         var total = 0, idx = 0;
         res.items.forEach(function(it){
@@ -531,8 +544,12 @@ $('#btn-pull-consumption').on('click', function(){
             var lineTotal = qty * price;
             total += lineTotal;
             var nameEsc = $('<div>').text(it.name).html();
+            var codeEsc = $('<div>').text(it.code || '').html();
             tbody.append('<tr>' +
-                '<td><input type="text" name="items[' + idx + '][item_name]" class="form-control" value="' + nameEsc + '"></td>' +
+                '<td>' +
+                    '<input type="hidden" name="items[' + idx + '][code]" value="' + codeEsc + '">' +
+                    '<input type="text" name="items[' + idx + '][item_name]" class="form-control" value="' + nameEsc + '">' +
+                '</td>' +
                 '<td><input type="number" name="items[' + idx + '][qty]" class="form-control qty" value="' + qty + '"></td>' +
                 '<td><input type="number" step="0.01" name="items[' + idx + '][unit_price]" class="form-control price" value="' + price + '"></td>' +
                 '<td class="total text-end">' + lineTotal.toFixed(2) + '</td>' +
@@ -548,8 +565,15 @@ $('#btn-pull-consumption').on('click', function(){
             if(m < 12) acc += per;
         }
         $('#planorder-order_price').val(total.toFixed(2));
-        var scopeTxt = (res.child_count > 0) ? (' (รวม ' + res.child_count + ' หน่วยย่อย)') : '';
-        $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>ดึง ' + res.count + ' รายการ จากการเบิกปี ' + res.prev_year + scopeTxt + ' — เฉลี่ย ÷12 แล้ว (แก้ไข/เพิ่มได้)');
+        var scopeTxt = (res.child_count > 0) ? (' รวม ' + res.child_count + ' หน่วยย่อย') : '';
+        // บอกที่มาของตัวเลขให้ครบ ผู้ตั้งงบจะได้รู้ว่าตัวเลขถูกปรับมาแล้วกี่ชั้น
+        var basisTxt = 'ยอดใช้จริงปีงบ ' + res.prev_year;
+        if (res.months_covered && res.months_covered < 12) {
+            basisTxt += ' (' + res.months_covered + ' เดือน ปรับเต็มปี ×' + res.annual_factor + ')';
+        }
+        if (res.growth_pct) { basisTxt += ' บวกเผื่อ ' + res.growth_pct + '%'; }
+        $('#pull-info').html('<i class="fa-solid fa-check text-success me-1"></i>ดึง ' + res.count + ' รายการ' + scopeTxt
+            + ' — คำนวณจาก' + basisTxt + ' เฉลี่ย ÷12 แล้ว (แก้ไข/เพิ่มได้)');
     }, 'json').fail(function(){ $('#pull-info').text('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); });
 });
 JS;

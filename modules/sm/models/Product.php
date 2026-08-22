@@ -6,6 +6,7 @@ use Yii;
 use yii\helpers\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 
@@ -32,7 +33,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property int|null $depre_type ประเภทค่าเสื่อมราคา
  * @property int|null $budget_year งบประมาณ
  * @property string|null $asset_status สถานะทรัพย์สิน
- * @property string|null $data_json
+ * @property array|string|null $data_json
  * @property string|null $updated_at วันเวลาแก้ไข
  * @property string|null $created_at วันเวลาสร้าง
  * @property int|null $created_by ผู้สร้าง
@@ -75,7 +76,15 @@ class Product extends \yii\db\ActiveRecord
             [['data_json', 'q_category', 'unit_items', 'auto', 'q', 'unit_name','metter_type','unit','innovation_account','qty_min','qty_max'], 'safe'],
             [['active'], 'integer'],
             [['ref', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
-            [['code'], 'unique', 'message' => 'Code นี้มีอยู่แล้ว.'],
+            [['code'], 'unique',
+                'message' => 'รหัสวัสดุนี้มีอยู่แล้ว',
+                'filter' => function ($query) {
+                    $query->andWhere([
+                        'name' => 'asset_item',
+                        'group_id' => 'MATER',
+                    ]);
+                },
+            ],
             ['active', 'default', 'value' => 1],
 
         ];
@@ -103,13 +112,62 @@ class Product extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
-        try {
+        parent::afterFind();
+        $this->normalizeDataJson();
+        $this->unit_name = isset($this->data_json['unit']) ? $this->data_json['unit'] : '-';
+    }
 
-            $this->unit_name = isset($this->data_json['unit']) ? $this->data_json['unit'] : '-';
-        } catch (\Throwable $th) {
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
         }
 
-        parent::afterFind();
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     public function getProductItem()

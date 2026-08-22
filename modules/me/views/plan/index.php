@@ -95,7 +95,8 @@ $phase = PlanHelper::phase($thaiYear);
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><?= Html::a('<i class="fa-solid fa-box-open me-2"></i> แผนพัสดุ (ครุภัณฑ์/วัสดุ)', ['create-parcel'], ['class' => 'dropdown-item']) ?></li>
-                <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร', ['create'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-user-group me-2"></i> แผนบุคลากร (ดึงรายชื่อทั้งหน่วยงาน)', ['create-personnel'], ['class' => 'dropdown-item']) ?></li>
+                <li><?= Html::a('<i class="fa-solid fa-user me-2"></i> แผนบุคลากร (รายคน)', ['create'], ['class' => 'dropdown-item']) ?></li>
                 <li><?= Html::a('<i class="fa-solid fa-file-invoice-dollar me-2"></i> แผนค่าใช้สอย', ['create'], ['class' => 'dropdown-item']) ?></li>
             </ul>
         </div>
@@ -231,6 +232,11 @@ $typeCards = [
                     $dj = is_array($m->data_json) ? $m->data_json : (json_decode((string) $m->data_json, true) ?: []);
                     $rowCanEdit = PlanHelper::canEdit($m->thai_year);
                     $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
+                    $rowCanAdjust = PlanHelper::canAdjust($m->thai_year);
+                    $rowEditable = ($editable && $rowCanEdit)
+                        || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
+                    $rowSubmittable = ($editable && $rowCanAdd)
+                        || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
                     ?>
                     <tr>
                         <td>
@@ -250,10 +256,16 @@ $typeCards = [
                         </td>
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
-                                <?php if ($editable && $rowCanEdit): ?>
+                                <?php if ($rowEditable): ?>
                                     <?= Html::a('<i class="fa-solid fa-pen"></i>', ['update', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']) ?>
                                 <?php endif; ?>
-                                <?php if ($editable && $rowCanAdd): ?>
+                                <?php if ($m->status === 'approve' && $rowCanAdjust): ?>
+                                    <?= Html::a('<i class="fa-solid fa-rotate me-1"></i> ปรับแผน', ['adjust', 'id' => $m->id], [
+                                        'class' => 'btn btn-sm btn-outline-info',
+                                        'data' => ['method' => 'post', 'confirm' => 'เปิดแผนนี้เพื่อปรับตัวเลขครบทั้ง 12 เดือน?'],
+                                    ]) ?>
+                                <?php endif; ?>
+                                <?php if ($rowSubmittable): ?>
                                     <?= Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งขออนุมัติ', ['submit', 'id' => $m->id], [
                                         'class' => 'btn btn-sm btn-outline-primary',
                                         'data' => ['method' => 'post', 'confirm' => 'ส่งแผนนี้ขออนุมัติ?'],

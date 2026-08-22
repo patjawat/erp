@@ -14,6 +14,8 @@ use yii\web\NotFoundHttpException;
 use app\modules\plan\models\PlanOrderItem;
 use app\modules\plan\models\PlanOrder;
 use app\modules\am\models\AssetItemSearch;
+use app\modules\inventoryV2\models\MaterialPlan;
+use app\modules\inventoryV2\services\MaterialPlanForecastService;
 use app\modules\plan\models\PlanOrderSearch;
 
 /**
@@ -103,9 +105,11 @@ class ParcelController extends Controller
 
 
     /**
-     * ดึงรายการวัสดุจากการเบิกใช้ (OUT) ของหน่วยงาน ปีงบก่อนหน้า
-     * เฉลี่ยจำนวนเป็นรายเดือน (÷12) + ราคาต่อหน่วยล่าสุด
-     * ที่มา: stock_events (header name='order' OUT + line 'order_item'); หน่วยงาน = ผู้ทำรายการ (emp -> department)
+     * ดึงรายการวัสดุที่คาดว่าหน่วยงานจะใช้ในปีงบที่ขอ ไปเติมตารางรายการของแผนงบประมาณ
+     *
+     * ที่มา: คลังวัสดุ inventoryV2 ผ่าน MaterialPlanForecastService — ยอดจ่ายจริงปีก่อนหน้า
+     * ปรับเป็นอัตราเต็มปีเมื่อข้อมูลยังไม่ครบ 12 เดือน แล้วบวกเผื่อตามอัตรามาตรฐาน
+     * หน่วยงาน = คลังปลายทางที่ของถูกจ่ายไปถึง ไม่ใช่แผนกของผู้ทำรายการ
      */
     public function actionPullConsumption()
     {
@@ -119,51 +123,49 @@ class ParcelController extends Controller
         if (!$dept || $atype === '' || !$year) {
             return ['status' => 'error', 'message' => 'กรุณาเลือกหน่วยงาน ประเภทวัสดุ และปีงบประมาณ'];
         }
-        $prevYear = $year - 1;
-
         // ขอบเขตหน่วยงาน: หน่วยเดียว หรือ รวมหน่วยย่อยทั้งหมดใต้กลุ่มงาน (nested-set)
-        $deptIds = [$dept];
-        $childCount = 0;
+        $childIds = [];
         if ($includeChildren) {
             $node = (new \yii\db\Query())->select(['root', 'lft', 'rgt'])->from('tree')->where(['id' => $dept])->one();
             if ($node) {
-                $children = (new \yii\db\Query())->select('id')->from('tree')
+                $childIds = (new \yii\db\Query())->select('id')->from('tree')
                     ->where(['root' => $node['root']])
                     ->andWhere(['>', 'lft', (int) $node['lft']])
                     ->andWhere(['<', 'rgt', (int) $node['rgt']])
                     ->column();
-                $deptIds = array_merge($deptIds, $children);
-                $childCount = count($children);
             }
         }
-        $deptIds = array_values(array_unique(array_map('intval', $deptIds)));
-        $deptIn = implode(',', $deptIds);
 
-        $sql = "
-            SELECT it.asset_item AS code,
-                   COALESCE(ci.title, it.asset_item) AS name,
-                   SUM(it.qty) AS qty_year,
-                   ROUND(SUM(it.qty) / 12, 2) AS per_month,
-                   CAST(SUBSTRING_INDEX(GROUP_CONCAT(it.unit_price ORDER BY o.movement_date DESC), ',', 1) AS DECIMAL(15,2)) AS last_price
-            FROM stock_events o
-            JOIN stock_events it ON it.category_id = o.id AND it.name = 'order_item'
-            JOIN employees e ON e.id = o.emp_id
-            LEFT JOIN categorise ci ON ci.code = it.asset_item AND ci.name = 'asset_item'
-            WHERE o.name = 'order' AND o.transaction_type = 'OUT'
-              AND o.thai_year = :y AND o.asset_type_id = :a
-              AND e.department IN ($deptIn)
-            GROUP BY it.asset_item, name
-            HAVING qty_year > 0
-            ORDER BY qty_year DESC
-        ";
-        $rows = Yii::$app->db->createCommand($sql, [':y' => $prevYear, ':a' => $atype])->queryAll();
+        // อัตราเผื่อมาจากแผนที่งานพัสดุบันทึกไว้สำหรับปีงบนั้น เพื่อให้ทุกหน่วยงานใช้ค่าเดียวกัน
+        // ยังไม่มีแผนบันทึกไว้จึงถอยไปใช้ค่าตั้งต้น
+        $growthPct = MaterialPlan::growthPctForYear($year, MaterialPlanForecastService::DEFAULT_GROWTH_PCT);
+
+        // ประมาณการจากคลังวัสดุ (inventoryV2) แทนการอ่านยอดดิบจาก stock_events ของระบบเดิม
+        // ซึ่งหยุดรับข้อมูลแล้ว ทำให้หน่วยงานได้ตัวเลขขาดไปเรื่อย ๆ
+        $forecast = (new MaterialPlanForecastService())->forecastForOrganization(
+            $dept,
+            $year,
+            $growthPct,
+            $childIds,
+            $atype
+        );
+
+        if ($forecast['unmapped']) {
+            return [
+                'status' => 'error',
+                'message' => 'หน่วยงานนี้ยังไม่ได้ผูกกับคลังวัสดุ จึงคำนวณปริมาณการใช้ไม่ได้ — ตั้งค่าคลังของหน่วยงานก่อน',
+            ];
+        }
 
         return [
-            'status'      => 'success',
-            'prev_year'   => $prevYear,
-            'count'       => count($rows),
-            'child_count' => $childCount,
-            'items'       => $rows,
+            'status'         => 'success',
+            'prev_year'      => $forecast['base_year'],
+            'count'          => count($forecast['items']),
+            'child_count'    => count($childIds),
+            'items'          => $forecast['items'],
+            'months_covered' => $forecast['months_covered'],
+            'annual_factor'  => $forecast['factor'],
+            'growth_pct'     => $growthPct,
         ];
     }
 
@@ -209,14 +211,7 @@ class ParcelController extends Controller
                     if ($model->save(false)) {
                         $postItems = Yii::$app->request->post('items', []);
                         foreach ($postItems as $item) {
-                            if (!empty($item['item_name'])) {
-                                $pi = new PlanOrderItem();
-                                $pi->plan_order_id = $model->id;
-                                $pi->item_name = $item['item_name'];
-                                $pi->qty = (int)$item['qty'];
-                                $pi->unit_price = (float)$item['unit_price'];
-                                $pi->save(false);
-                            }
+                            PlanOrderItem::saveParcelRow($model->id, (array) $item);
                         }
                     }
                 } catch (\Throwable $th) {
@@ -250,14 +245,7 @@ class ParcelController extends Controller
             PlanOrderItem::deleteAll(['plan_order_id' => $model->id]);
             $postItems = Yii::$app->request->post('items', []);
             foreach ($postItems as $item) {
-                if (!empty($item['item_name'])) {
-                    $pi = new PlanOrderItem();
-                    $pi->plan_order_id = $model->id;
-                    $pi->item_name = $item['item_name'];
-                    $pi->qty = (int)$item['qty'];
-                    $pi->unit_price = (float)$item['unit_price'];
-                    $pi->save(false);
-                }
+                PlanOrderItem::saveParcelRow($model->id, (array) $item);
             }
 
             return $this->redirect(['view', 'id' => $model->id]);

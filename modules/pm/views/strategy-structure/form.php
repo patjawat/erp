@@ -23,10 +23,14 @@ $this->title = ($model->isNewRecord ? 'เพิ่ม' : 'แก้ไข') . $
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'strategy']) ?><?php $this->endBlock();
 // หน่วยงานเจ้าของโครงการ — ต้องมีเสมอ ตั้งต้นจากหน่วยงานของผู้สร้างไว้แล้ว
+// ส่งค่าที่เลือกไว้เดิมเข้าไปด้วย ของเก่าจะได้ไม่หายจากรายการแม้หน่วยนั้นถูกปิดใช้ไปแล้ว
 $ouItems = [];
+$ouHint = null;
 if ($isWork) {
-    foreach (\app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year) as $group => $units) {
-        $ouItems[$group] = $units;
+    $ouItems = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year, $model->org_unit_id ? (int) $model->org_unit_id : null);
+    $ouYearUsed = \app\modules\settings\models\OrgUnit::yearWithData((int) $model->thai_year);
+    if ($ouYearUsed !== (int) $model->thai_year) {
+        $ouHint = 'ยังไม่ได้ตั้งค่าทะเบียนหน่วยงานของปี ' . (int) $model->thai_year . ' จึงแสดงรายการของปี ' . $ouYearUsed . ' แทน';
     }
 }
 // ตัวชี้วัดในชุดแผนนี้ จัดกลุ่มตามเป้าประสงค์ และเยื้องตัวชี้วัดรองให้เห็นลำดับชั้น
@@ -56,7 +60,7 @@ $form = ActiveForm::begin();
 <?php if ($isWork): ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true, 'placeholder' => 'เว้นว่าง = ออกอัตโนมัติ']) ?></div>
     <div class="col-12 col-md-3"><?= $form->field($model, 'thai_year')->input('number', ['min' => 2500, 'max' => 2600]) ?></div>
-    <div class="col-12 col-md-5"><?= $form->field($model, 'org_unit_id')->dropDownList($ouItems, ['prompt' => '-- เลือกหน่วยงาน --'])->label('หน่วยงานเจ้าของ') ?></div>
+    <div class="col-12 col-md-5"><?= $form->field($model, 'org_unit_id')->dropDownList($ouItems, ['prompt' => '-- เลือกหน่วยงาน --'])->label('หน่วยงานเจ้าของ')->hint($ouHint) ?></div>
     <div class="col-12"><?= $form->field($model, 'name')->textInput(['maxlength' => true])->label('ชื่อ' . $labels[$type]) ?></div>
 <?php else: ?>
     <div class="col-12 col-md-4"><?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?></div>

@@ -8,6 +8,7 @@ use yii\bootstrap5\Html;
 use app\models\Categorise;
 use app\components\LineMsg;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
 use app\modules\hr\models\Employees;
@@ -34,7 +35,7 @@ use app\modules\filemanager\components\FileManagerHelper;
  * @property string|null $doc_expire วันหมดอายุ
  * @property string|null $doc_date ลงวันรับเข้า
  * @property string|null $doc_time เวลารับ
- * @property string|null $data_json
+ * @property array|string|null $data_json
  */
 class Documents extends \yii\db\ActiveRecord
 {
@@ -90,6 +91,8 @@ class Documents extends \yii\db\ActiveRecord
 
     public function beforeValidate()
     {
+        $this->normalizeDataJson();
+
         if (parent::beforeValidate()) {
             if ($this->document_group === 'send' && $this->document_type === 'DT2') {
                 if (empty($this->document_org)) {
@@ -105,6 +108,26 @@ class Documents extends \yii\db\ActiveRecord
             return true;
         }
         return false;
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
     }
 
 
@@ -150,12 +173,40 @@ class Documents extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
+        parent::afterFind();
+        $this->normalizeDataJson();
+
         try {
             // $this->reading = $this->viewCount()['reading'];
         } catch (\Throwable $th) {
         }
+    }
 
-        parent::afterFind();
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     public function beforeDelete()

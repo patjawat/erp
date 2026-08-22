@@ -13,6 +13,7 @@ use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
+use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\am\controllers\EquipController as Equip;
 
@@ -114,13 +115,114 @@ class AssetController extends Equip
             ],
         ]);
 
+        $driverBoard = $this->buildDriverVehicleBoard();
+
         return $this->render('index', [
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'listAssetType' => $listAssetType,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'driverGroups' => $driverBoard['groups'],
+            'idleDrivers' => $driverBoard['idleDrivers'],
         ]);
-        
+
+    }
+
+    /**
+     * จัดกลุ่มรถยนต์ตามพนักงานผู้รับผิดชอบ (asset.owner เก็บค่าเป็น employees.id)
+     *
+     * @return array ['groups' => รายชื่อผู้รับผิดชอบพร้อมรถ, 'idleDrivers' => คนขับที่ยังไม่มีรถ]
+     */
+    protected function buildDriverVehicleBoard()
+    {
+        // รถยนต์ที่ยังใช้งานอยู่ทั้งหมด (เกณฑ์เดียวกับทะเบียนด้านล่าง)
+        $vehicles = Asset::find()
+            ->where(['asset_group_id' => 4])
+            ->andWhere(['asset_type_id' => 'VEH'])
+            ->andWhere(['<>', 'asset_status', 'disposed'])
+            ->andWhere(['IS', 'deleted_at', null])
+            ->andWhere(['IS NOT', 'license_plate', null])
+            ->orderBy(['license_plate' => SORT_ASC])
+            ->all();
+
+        $vehiclesByOwner = [];
+        foreach ($vehicles as $vehicle) {
+            $plate = trim((string) $vehicle->license_plate);
+            if ($plate === '' || $plate === '-') {
+                continue;
+            }
+            $vehiclesByOwner[(int) $vehicle->owner][] = $vehicle;
+        }
+
+        // พนักงานขับรถ = ผู้ใช้ที่ได้รับสิทธิ driver
+        $drivers = Employees::find()
+            ->alias('e')
+            ->innerJoin('auth_assignment a', 'a.user_id = e.user_id')
+            ->where(['a.item_name' => 'driver'])
+            ->andWhere(['e.status' => 1])
+            ->all();
+
+        $groups = [];
+        $idleDrivers = [];
+        $driverIds = [];
+
+        foreach ($drivers as $driver) {
+            $driverIds[] = (int) $driver->id;
+            $ownVehicles = isset($vehiclesByOwner[(int) $driver->id]) ? $vehiclesByOwner[(int) $driver->id] : [];
+            if (empty($ownVehicles)) {
+                $idleDrivers[] = $driver;
+                continue;
+            }
+            $groups[] = [
+                'employee' => $driver,
+                'isDriver' => true,
+                'vehicles' => $ownVehicles,
+            ];
+        }
+
+        // ผู้รับผิดชอบที่ไม่ได้อยู่ในสิทธิ driver และรถที่ยังไม่ระบุผู้รับผิดชอบ
+        $orphanVehicles = [];
+        foreach ($vehiclesByOwner as $ownerId => $ownVehicles) {
+            if (in_array((int) $ownerId, $driverIds, true)) {
+                continue;
+            }
+            $employee = $ownerId > 0 ? Employees::findOne((int) $ownerId) : null;
+            if ($employee === null) {
+                $orphanVehicles = array_merge($orphanVehicles, $ownVehicles);
+                continue;
+            }
+            $groups[] = [
+                'employee' => $employee,
+                'isDriver' => false,
+                'vehicles' => $ownVehicles,
+            ];
+        }
+
+        // เรียงจากผู้ที่รับผิดชอบรถมากที่สุด
+        usort($groups, function ($a, $b) {
+            $diff = count($b['vehicles']) - count($a['vehicles']);
+            if ($diff !== 0) {
+                return $diff;
+            }
+            return strcmp((string) $a['employee']->fullname, (string) $b['employee']->fullname);
+        });
+
+        if (!empty($orphanVehicles)) {
+            $groups[] = [
+                'employee' => null,
+                'isDriver' => false,
+                'vehicles' => $orphanVehicles,
+            ];
+        }
+
+        usort($idleDrivers, function ($a, $b) {
+            return strcmp((string) $a->fullname, (string) $b->fullname);
+        });
+
+        return [
+            'groups' => $groups,
+            'idleDrivers' => $idleDrivers,
+        ];
     }
 
     // ตรวจสอบความถูกต้อง

@@ -157,7 +157,8 @@ CSS
                                 <?= Html::img('@web/banner/banner1.png', ['class' => 'rounded object-fit-contain', 'alt' => 'Rama Foundation', 'width' => '70', 'height' => '70']) ?>
                                 <?= Html::img('@web/banner/banner3.png', ['class' => 'rounded object-fit-contain', 'alt' => 'MOPH', 'width' => '52', 'height' => '52']) ?>
                             </div>
-                            <p class="small text-muted mb-0">© 2026 HOSPITAL ERP SYSTEM | DAN SAI</p>
+                            <p class="small text-muted mb-1">© 2026 HOSPITAL ERP SYSTEM | DAN SAI</p>
+                            <p class="small text-muted mb-0">Version <?= Html::encode(Yii::$app->version) ?></p>
                         </div>
                     </div>
                 </div>

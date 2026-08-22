@@ -313,11 +313,16 @@ $config = [
             'roster/*',
             'me/roster/*',
             'line/*',
+            // แบบประเมินความพึงพอใจการใช้รถ: ผู้ขอเปิดจากลิงก์ใน Telegram โดยไม่ต้องล็อกอิน
+            // สิทธิ์มาจาก survey_token ใน vehicle_detail.data_json ที่ controller ตรวจเอง
+            'booking/vehicle-survey/*',
             // 'me/*',
             // 'line-group/*',
             'summary/*',
             'approve/*',
             'finance/*',
+            // Accounting and finance controllers enforce granular RBAC internally.
+            'accounting/*',
             // 'debug/*',
             'hr/leave/cal-days',
             'hr/leave/get-leader-approve',
@@ -333,6 +338,10 @@ $config = [
             // งานหลักประกัน + ตั้งค่าเกณฑ์หลักประกันตามวงเงิน — controller กันสิทธิ์เองเช่นเดียวกัน
             'purchase/bond/*',
             'purchase/bond-policy/*',
+            // งานพิมพ์เอกสาร (สร้างจากแม่แบบ แก้บนจอ แล้วพิมพ์) + หน้าจัดการแม่แบบ
+            // controller กันสิทธิ์เองเช่นเดียวกัน — ระบบพิมพ์เดิม /ms-word/* ไม่ได้ถูกแตะ
+            'purchase/doc/*',
+            'purchase/doc-template/*',
             'purchase/order/add-item/*',
             'purchase/order/product-list/*',
             'purchase/pr-order/checkervalidator',

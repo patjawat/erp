@@ -5,7 +5,7 @@ use yii\helpers\Html;
 
 /**
  * เมนูหลัก — อบรม/ประชุม/ดูงาน (ขอไปราชการ)
- * @var string $active 'dashboard' | 'index' | 'setting-template'
+ * @var string $active 'dashboard' | 'index' | 'document' | 'report' | 'setting-template'
  */
 $active = $active ?? '';
 $isSettingActive = ($active === 'setting-template');
@@ -19,6 +19,14 @@ $isSettingActive = ($active === 'setting-template');
     <a href="<?= Url::to(['/hr/development/index', 'status' => 'Checking']) ?>" class="btn <?= $active === 'index' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-2">
         <i class="bi bi-journal-check"></i>
         <span class="d-none d-sm-inline">ทะเบียนประวัติ</span>
+    </a>
+    <a href="<?= Url::to(['/hr/development/document']) ?>" class="btn <?= $active === 'document' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-2">
+        <i class="bi bi-printer"></i>
+        <span class="d-none d-sm-inline">พิมพ์เอกสาร</span>
+    </a>
+    <a href="<?= Url::to(['/hr/development/report']) ?>" class="btn <?= $active === 'report' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-2">
+        <i class="bi bi-bar-chart-line"></i>
+        <span class="d-none d-sm-inline">รายงาน</span>
     </a>
     <div class="dropdown">
         <button class="btn <?= $isSettingActive ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle rounded-2" type="button" id="hrDevelopmentSettingMenu" data-bs-toggle="dropdown" aria-expanded="false">

@@ -4,7 +4,8 @@ namespace app\modules\pm\controllers;
 
 use Yii;
 use app\modules\pm\models\Projects;
-use app\modules\hr\models\Organization;
+use app\modules\settings\models\OrgUnit;
+use app\modules\plan\components\PlanHelper;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\filters\AccessControl;
@@ -28,7 +29,7 @@ class DefaultController extends Controller
 
     public function actionIndex()
     {
-        $year = (int) Yii::$app->request->get('thai_year', date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
+        $year = (int) Yii::$app->request->get('thai_year', PlanHelper::currentPlanYear());
 
         $base = Projects::find()->where(['deleted_at' => null]);
 
@@ -47,27 +48,31 @@ class DefaultController extends Controller
         }
 
         // งบประมาณ + จำนวนโครงการ แยกตามหน่วยงาน
+        // สรุปตามทะเบียนหน่วยงาน (org_unit) ไม่ใช่ผังบุคลากร มิฉะนั้นโครงการของทีมประสาน
+        // ซึ่งไม่มีตัวตนในผัง จะไปกองรวมกันที่ "ไม่ระบุหน่วยงาน" ทั้งหมด
         $deptRows = (clone $base)
             ->select([
-                'department_id',
+                'org_unit_id',
                 'cnt' => 'COUNT(*)',
                 'budget' => 'COALESCE(SUM(budget_total),0)',
             ])
             ->andWhere(['thai_year' => $year])
-            ->groupBy('department_id')
+            ->groupBy('org_unit_id')
             ->orderBy(['budget' => SORT_DESC])
             ->asArray()
             ->all();
 
-        $orgNames = ArrayHelper::map(
-            Organization::find()->select(['id', 'name'])->asArray()->all(),
+        // ไม่กรองด้วยปี เพราะ id ของทะเบียนไม่ซ้ำข้ามปีอยู่แล้ว
+        // ถ้ากรอง โครงการที่อ้างหน่วยของปีอื่น (เช่นปีที่ยังไม่ได้ตั้งทะเบียน) จะกลายเป็น "ไม่ระบุหน่วยงาน"
+        $unitNames = ArrayHelper::map(
+            OrgUnit::find()->select(['id', 'name'])->asArray()->all(),
             'id',
             'name'
         );
         $byDept = [];
         foreach ($deptRows as $r) {
             $byDept[] = [
-                'name' => $orgNames[$r['department_id']] ?? 'ไม่ระบุหน่วยงาน',
+                'name' => $unitNames[$r['org_unit_id']] ?? 'ไม่ระบุหน่วยงาน',
                 'count' => (int) $r['cnt'],
                 'budget' => (float) $r['budget'],
             ];

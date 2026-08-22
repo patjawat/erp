@@ -140,10 +140,52 @@ pipeline {
 
         success {
             echo "✅ Deploy Success"
+
+            withCredentials([
+                string(
+                    credentialsId: 'telegram-bot-token',
+                    variable: 'TELEGRAM_BOT_TOKEN'
+                ),
+                string(
+                    credentialsId: 'telegram-chat-id',
+                    variable: 'TELEGRAM_CHAT_ID'
+                )
+            ]) {
+                sh '''
+                    TELEGRAM_MESSAGE="$(printf '✅ Build #%s สำเร็จ\nJob: %s\n%s' \
+                        "${BUILD_NUMBER}" "${JOB_NAME}" "${BUILD_URL}")"
+
+                    curl -s -X POST \
+                        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                        -d chat_id="${TELEGRAM_CHAT_ID}" \
+                        --data-urlencode text="${TELEGRAM_MESSAGE}"
+                '''
+            }
         }
 
         failure {
             echo "❌ Deploy Failed"
+
+            withCredentials([
+                string(
+                    credentialsId: 'telegram-bot-token',
+                    variable: 'TELEGRAM_BOT_TOKEN'
+                ),
+                string(
+                    credentialsId: 'telegram-chat-id',
+                    variable: 'TELEGRAM_CHAT_ID'
+                )
+            ]) {
+                sh '''
+                    TELEGRAM_MESSAGE="$(printf '❌ Build #%s ล้มเหลว\nJob: %s\n%s' \
+                        "${BUILD_NUMBER}" "${JOB_NAME}" "${BUILD_URL}")"
+
+                    curl -s -X POST \
+                        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                        -d chat_id="${TELEGRAM_CHAT_ID}" \
+                        --data-urlencode text="${TELEGRAM_MESSAGE}"
+                '''
+            }
         }
 
         always {

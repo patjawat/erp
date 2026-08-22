@@ -465,17 +465,7 @@ class StockItemController extends Controller
             Yii::$app->response->format = Response::FORMAT_JSON;
             
             if ($model->load($this->request->post())) {
-                // จัดการ data_json
                 $postData = $this->request->post()['StockItem'] ?? [];
-                if (isset($postData['data_json']) && is_array($postData['data_json'])) {
-                    $dataJson = [];
-                    if (isset($postData['data_json']['unit_name']) && !empty($postData['data_json']['unit_name'])) {
-                        $dataJson['unit_name'] = $postData['data_json']['unit_name'];
-                    }
-                    if (!empty($dataJson)) {
-                        $model->data_json = json_encode($dataJson);
-                    }
-                }
                 
                 // ตรวจสอบข้อมูลที่จำเป็น (backstop ฝั่ง server กันกรณี JS ถูกข้าม)
                 if (empty($model->category_id)) {

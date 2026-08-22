@@ -56,6 +56,7 @@ class VehicleController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'send-survey' => ['POST'],
                     ],
                 ],
             ]
@@ -253,11 +254,15 @@ class VehicleController extends Controller
     {
         $thaiYear = $this->request->get('thai_year');
 
-        $query = Vehicle::find()
-            ->where(['driver_id' => $driver_id])
-            ->andWhere(['IN', 'status', ['Approve', 'Pass', 'Success']])
-            ->andFilterWhere(['thai_year' => $thaiYear])
-            ->orderBy(['date_start' => SORT_DESC, 'time_start' => SORT_DESC]);
+        // นับจากการจัดสรรรายวัน (vehicle_detail) ให้ตรงกับตัวเลขบนการ์ดปริมาณงาน
+        $query = VehicleDetail::find()
+            ->alias('d')
+            ->innerJoinWith(['vehicle v'])
+            ->where(['d.driver_id' => $driver_id, 'd.deleted_at' => null])
+            ->andWhere(['IN', 'd.status', Vehicle::DRIVER_WORK_STATUSES])
+            ->andFilterWhere(['v.thai_year' => $thaiYear])
+            ->with(['vehicle.locationOrg', 'vehicleDetailStatus'])
+            ->orderBy(['d.date_start' => SORT_DESC, 'd.time_start' => SORT_DESC]);
 
         $trips = $query->all();
         $driver = !empty($trips) ? $trips[0]->driver : null;
@@ -707,6 +712,7 @@ class VehicleController extends Controller
     {
         $model = VehicleDetail::findOne($id);
         $previousDetailDriverId = $model->driver_id;
+        $previousDetailStatus = (string) $model->status;
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end = AppHelper::convertToThai($model->date_end);
         if (!$model->ref) {
@@ -726,6 +732,11 @@ class VehicleController extends Controller
                 $model->vehicle->save();
                 if ($model->vehicle) {
                     VehicleTelegramNotify::notifyVehicleDetailDriverChanged($model->vehicle, $model, $previousDetailDriverId);
+                    // เสร็จสิ้นภารกิจ → ส่งลิงก์แบบประเมินความพึงพอใจให้ผู้ขอ (ส่งครั้งเดียวตอนเปลี่ยนสถานะ)
+                    if ((string) $model->status === VehicleDetail::STATUS_SUCCESS
+                        && $previousDetailStatus !== VehicleDetail::STATUS_SUCCESS) {
+                        VehicleTelegramNotify::notifyRequesterSurvey($model->vehicle, $model);
+                    }
                 }
                 return ['status' => 'success',];
             } else {
@@ -749,6 +760,27 @@ class VehicleController extends Controller
         }
     }
 
+
+    /** ส่งลิงก์แบบประเมินความพึงพอใจให้ผู้ขออีกครั้ง (กรณีส่งอัตโนมัติไม่สำเร็จ) */
+    public function actionSendSurvey($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = VehicleDetail::findOne($id);
+        if (!$model || !$model->vehicle) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการจัดสรรนี้'];
+        }
+        if ((string) $model->status !== VehicleDetail::STATUS_SUCCESS) {
+            return ['status' => 'error', 'message' => 'ต้องบันทึกสถานะ "เสร็จสิ้นภาระกิจ" ก่อนจึงจะส่งแบบประเมินได้'];
+        }
+        if ($model->isSurveyed()) {
+            return ['status' => 'error', 'message' => 'ผู้ขอประเมินรายการนี้ไปแล้ว'];
+        }
+        if (!VehicleTelegramNotify::notifyRequesterSurvey($model->vehicle, $model)) {
+            return ['status' => 'error', 'message' => 'ส่งไม่สำเร็จ — ผู้ขออาจยังไม่ได้ผูกบัญชี Telegram กับระบบ'];
+        }
+
+        return ['status' => 'success', 'message' => 'ส่งลิงก์แบบประเมินให้ผู้ขอทาง Telegram แล้ว'];
+    }
 
     //แสดงการจองรถวันนี้
     public function actionListEventTodays()

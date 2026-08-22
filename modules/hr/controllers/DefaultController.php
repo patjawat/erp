@@ -9,6 +9,7 @@ use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use app\modules\hr\models\TeamGroup;
 use app\models\Categorise;
+use app\components\AppHelper;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -25,6 +26,27 @@ use app\modules\filemanager\components\FileManagerHelper;
  */
 class DefaultController extends Controller
 {
+    /**
+     * รหัสสถานะ (categorise name='emp_status') ที่ถือว่าพ้นจากหน่วยงานแล้ว
+     * ใช้กับการ์ด "ลาออก/สิ้นสุดปีนี้" บน dashboard
+     * ไม่รวมสถานะที่ยังเป็นบุคลากรอยู่ เช่น ไปราชการ ฝึกอบรม ลาศึกษา (11,12,14-18,20,21,32)
+     * และไม่รวม 19 = ยกเลิกคำสั่งบรรจุ
+     */
+    private const EXIT_STATUS_CODES = [
+        '2',  // ลาออก
+        '3', '4', '5', '6', // เกษียณอายุราชการ (ทุกแบบ)
+        '7', '8', // ถึงแก่กรรม
+        '9', '10', // ปลดออก
+        '13', // ย้าย
+        '22', '23', '34', // ลาออกรับบำนาญ/บำเหน็จ
+        '24', // เลิกจ้าง
+        '25', // ไล่ออก
+        '26', // หมดสัญญาจ้าง
+        '27', '28', '29', '30', // ให้ออก
+        '31', // ให้โอน
+        '33', '35', '36', '37', // บำนาญ/บำเหน็จถึงแก่กรรม
+    ];
+
     /**
      * Renders the index view for the module
      * @return string
@@ -263,8 +285,103 @@ class DefaultController extends Controller
     }
 
     /**
+     * จำนวนปีงบประมาณย้อนหลังที่ให้เลือกดูบน dashboard
+     */
+    private const DASHBOARD_BUDGET_YEARS_BACK = 4;
+
+    /**
+     * ตาราง derived ของบุคลากร ที่คำนวณ "วันบรรจุ" และ "วันพ้นจากหน่วยงาน" ไว้แล้ว
+     * ใช้แทนตาราง employees ทุกจุดบน dashboard เพื่อให้ดูข้อมูล ณ วันใดก็ได้
+     *
+     * hire_date = COALESCE(join_date, วันที่เริ่มของประวัติตำแหน่งแรก)
+     * exit_date = วันพ้นจากหน่วยงาน เฉพาะคนที่สถานะปัจจุบันแปลว่าออกแล้ว
+     *             = COALESCE(end_date, วันที่เริ่มของประวัติตำแหน่งล่าสุดที่สถานะตรงกัน)
+     *             ถ้าออกแล้วแต่ไม่มีวันที่ในระบบ ใช้ '1900-01-01' เพื่อให้ไม่ถูกนับเป็น
+     *             ผู้ปฏิบัติงาน ณ วันใด ๆ (ข้อมูลเก่าที่ไม่เคยบันทึกประวัติไว้)
+     */
+    private static function workforceSnapshotSql(): string
+    {
+        $exitIn = "'" . implode("','", self::EXIT_STATUS_CODES) . "'";
+
+        return "(SELECT emp.*,
+                        COALESCE(emp.join_date, hp.first_start) AS hire_date,
+                        CASE WHEN emp.status IN ({$exitIn})
+                             THEN COALESCE(emp.end_date, lp.ds, '1900-01-01')
+                        END AS exit_date
+                 FROM employees emp
+                 LEFT JOIN (
+                    SELECT emp_id, MIN(STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d')) AS first_start
+                    FROM employee_detail WHERE name = 'position' GROUP BY emp_id
+                 ) hp ON hp.emp_id = emp.id
+                 LEFT JOIN (
+                    SELECT emp_id, st, ds FROM (
+                        SELECT emp_id,
+                               JSON_UNQUOTE(data_json->'$.status') AS st,
+                               STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d') AS ds,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY emp_id
+                                   ORDER BY STR_TO_DATE(JSON_UNQUOTE(data_json->'$.date_start'), '%Y-%m-%d') DESC, id DESC
+                               ) AS rn
+                        FROM employee_detail WHERE name = 'position'
+                    ) ranked WHERE rn = 1
+                 ) lp ON lp.emp_id = emp.id AND lp.st = emp.status)";
+    }
+
+    /**
+     * แผนที่ "แผนก/หน่วยงาน -> กลุ่มงาน" จากผังองค์กร (tree, tb_name = 'diagram')
+     *
+     * employees.department ชี้ไปที่ node ของผังองค์กรได้ทุกระดับ
+     * (lvl 0 = กลุ่ม, lvl 1 = กลุ่มงาน, lvl 2 = งาน) จึงไต่ nested set ขึ้นไปหา
+     * node ระดับกลุ่มงาน ถ้าไม่มีก็ใช้ node ตัวเองเป็นกลุ่มงาน
+     *
+     * เดิม dashboard ใช้ตาราง categorise (name = 'workgroup'/'department')
+     * ซึ่งไม่มีข้อมูลแล้ว ทำให้ชาร์ตกลุ่มงานว่างและตัวกรองกลุ่มงานใช้ไม่ได้
+     *
+     * @return array [deptId => ['id' => wgId, 'name' => wgName, 'sort' => lft]]
+     */
+    private static function dashboardWorkgroupMap(): array
+    {
+        $rows = Yii::$app->db->createCommand(
+            "SELECT d.id AS dept_id,
+                    COALESCE(wg.id, d.id) AS wg_id,
+                    COALESCE(wg.name, d.name) AS wg_name,
+                    COALESCE(wg.root, d.root) AS wg_root,
+                    COALESCE(wg.lft, d.lft) AS wg_lft
+             FROM tree d
+             LEFT JOIN tree wg
+                    ON wg.tb_name = 'diagram' AND wg.root = d.root AND wg.lvl = 1
+                   AND wg.lft <= d.lft AND wg.rgt >= d.rgt
+             WHERE d.tb_name = 'diagram'"
+        )->queryAll();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(string) $row['dept_id']] = [
+                'id' => (string) $row['wg_id'],
+                'name' => (string) ($row['wg_name'] !== '' ? $row['wg_name'] : 'ไม่ระบุ'),
+                'sort' => (int) $row['wg_root'] * 1000 + (int) $row['wg_lft'],
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * เงื่อนไข "เป็นบุคลากรที่ปฏิบัติงานอยู่ ณ วันที่ :as_of"
+     * ใช้แทนเงื่อนไข status = '1' เดิม เพื่อให้ย้อนดูปีงบประมาณก่อนหน้าได้
+     */
+    private static function inServiceWhereSql(string $alias = 'e'): string
+    {
+        $p = $alias !== '' ? $alias . '.' : '';
+
+        return "({$p}hire_date IS NULL OR {$p}hire_date <= :as_of)"
+            . " AND ({$p}exit_date IS NULL OR {$p}exit_date > :as_of)";
+    }
+
+    /**
      * Dashboard มุมมองผู้บริหาร
-     * ใช้เฉพาะ branch = 'MAIN' และ status = '1' (ปฏิบัติราชการ)
+     * ดูข้อมูลได้ตามปีงบประมาณที่เลือก (budget_year) โดยยึด "ณ วันสิ้นปีงบประมาณ"
+     * สำหรับปีที่ผ่านมาแล้ว และ "ณ วันนี้" สำหรับปีงบประมาณปัจจุบัน
      * รองรับการกรองจากคลิก Chart: gender, department, employee_type_id, employee_position_id, workgroup, gen
      */
     public function actionDashboard()
@@ -284,10 +401,55 @@ class DefaultController extends Controller
             'Gen Z' => [2001, 2024],
         ];
 
-        $baseQuery = function () use ($filterGender, $filterDepartment, $filterPositionType, $filterWorkgroup, $filterGen, $filterPositionName, $filterServiceBand, $genYearRanges) {
+        // ---------------------------------------------------------------
+        // ปีงบประมาณที่กำลังดู และ "วันที่อ้างอิง" (as of) ของทุกการ์ด/ชาร์ต
+        //  - ปีงบประมาณปัจจุบัน  => ดูสถานะ ณ วันนี้
+        //  - ปีงบประมาณที่ผ่านมา => ดูสถานะ ณ วันสิ้นปีงบประมาณนั้น (30 ก.ย.)
+        // ตัวเลข "บรรจุใหม่/ลาออก" ใช้ทั้งช่วงปีงบประมาณ ไม่ใช่ ณ วันเดียว
+        // ---------------------------------------------------------------
+        $currentBudgetYear = (int) AppHelper::YearBudget();
+        $budgetYearOptions = range($currentBudgetYear, $currentBudgetYear - self::DASHBOARD_BUDGET_YEARS_BACK);
+        $budgetYear = isset($req['budget_year']) && ctype_digit((string) $req['budget_year'])
+            ? (int) $req['budget_year']
+            : $currentBudgetYear;
+        if (!in_array($budgetYear, $budgetYearOptions, true)) {
+            $budgetYear = $currentBudgetYear;
+        }
+        $budgetRange = AppHelper::BudgetYearRange($budgetYear);
+        $isCurrentBudgetYear = $budgetYear === $currentBudgetYear;
+        $asOfDate = $isCurrentBudgetYear ? date('Y-m-d') : $budgetRange['end'];
+        if ($asOfDate > $budgetRange['end']) {
+            $asOfDate = $budgetRange['end'];
+        }
+        $snapshotSql = self::workforceSnapshotSql();
+        $snapshotFrom = new \yii\db\Expression($snapshotSql);
+
+        // แผนที่แผนก -> กลุ่มงาน จากผังองค์กร ใช้ทั้งชาร์ตกลุ่มงานและตัวกรองกลุ่มงาน
+        $departmentWorkgroupMap = self::dashboardWorkgroupMap();
+        $workgroupDepartmentIds = function ($workgroupCode) use ($departmentWorkgroupMap) {
+            $ids = [];
+            foreach ($departmentWorkgroupMap as $deptId => $workgroup) {
+                if ((string) $workgroup['id'] === (string) $workgroupCode) {
+                    $ids[] = (int) $deptId;
+                }
+            }
+            return $ids;
+        };
+        // เงื่อนไข SQL "อยู่ในกลุ่มงานที่เลือก" (ถ้าไม่พบกลุ่มงาน = ไม่มีใครเข้าเงื่อนไข)
+        $workgroupDeptWhereSql = function ($alias) use ($filterWorkgroup, $workgroupDepartmentIds) {
+            $p = $alias !== '' ? $alias . '.' : '';
+            $ids = $workgroupDepartmentIds($filterWorkgroup);
+            return empty($ids)
+                ? '1 = 0'
+                : $p . 'department IN (' . implode(',', $ids) . ')';
+        };
+
+        $baseQuery = function () use ($filterGender, $filterDepartment, $filterPositionType, $filterWorkgroup, $filterGen, $filterPositionName, $filterServiceBand, $genYearRanges, $snapshotFrom, $asOfDate, $workgroupDepartmentIds) {
             $q = Employees::find()
+                ->from(['e' => $snapshotFrom])
                 ->andWhere(['branch' => 'MAIN'])
-                ->andWhere(['status' => '1'])
+                ->andWhere(new \yii\db\Expression(self::inServiceWhereSql('e')))
+                ->addParams([':as_of' => $asOfDate])
                 ->andWhere(['not', ['id' => 1]]);
             if ($filterGender !== null) {
                 $q->andWhere(['gender' => $filterGender]);
@@ -302,13 +464,7 @@ class DefaultController extends Controller
                 $q->andWhere(['employee_position_id' => $filterPositionName]);
             }
             if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-                $deptCodes = Categorise::find()
-                    ->select('code')
-                    ->where(['category_id' => $filterWorkgroup, 'name' => 'department'])
-                    ->column();
-                if (!empty($deptCodes)) {
-                    $q->andWhere(['in', 'department', $deptCodes]);
-                }
+                $q->andWhere(['in', 'department', $workgroupDepartmentIds($filterWorkgroup)]);
             }
             if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
                 $years = $genYearRanges[$filterGen];
@@ -346,9 +502,11 @@ class DefaultController extends Controller
         // ตำแหน่ง
         $positionNameQuery = (new Query())
             ->select(['p.id as id', 'p.title as title', 'COUNT(e.id) as cnt'])
-            ->from(['e' => 'employees'])
+            ->from(['e' => $snapshotFrom])
             ->leftJoin(['p' => EmployeePosition::tableName()], 'p.id = e.employee_position_id')
-            ->where(['e.branch' => 'MAIN', 'e.status' => '1'])
+            ->where(['e.branch' => 'MAIN'])
+            ->andWhere(new \yii\db\Expression(self::inServiceWhereSql('e')))
+            ->addParams([':as_of' => $asOfDate])
             ->andWhere(['not', ['e.id' => 1]])
             ->andWhere(['not', ['e.employee_position_id' => null]]);
         if ($filterGender !== null) $positionNameQuery->andWhere(['e.gender' => $filterGender]);
@@ -356,8 +514,7 @@ class DefaultController extends Controller
         if ($filterPositionType !== null && $filterPositionType !== '') $positionNameQuery->andWhere(['e.employee_type_id' => $filterPositionType]);
         if ($filterPositionName !== null && $filterPositionName !== '') $positionNameQuery->andWhere(['e.employee_position_id' => $filterPositionName]);
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $wgDeptCodes = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($wgDeptCodes)) $positionNameQuery->andWhere(['in', 'e.department', $wgDeptCodes]);
+            $positionNameQuery->andWhere(new \yii\db\Expression($workgroupDeptWhereSql('e')));
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -383,16 +540,13 @@ class DefaultController extends Controller
 
         // กลุ่มงาน × ประเภทพนักงาน
         $workgroupRows = [];
-        $wgWhere = "e.branch = 'MAIN' AND e.status = '1' AND e.id <> 1";
-        $wgParams = [];
+        $wgWhere = "e.branch = 'MAIN' AND e.id <> 1 AND " . self::inServiceWhereSql('e');
+        $wgParams = [':as_of' => $asOfDate];
         if ($filterGender !== null) { $wgWhere .= " AND e.gender = :gender"; $wgParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $wgWhere .= " AND e.department = :department"; $wgParams[':department'] = $filterDepartment; }
         if ($filterPositionType !== null && $filterPositionType !== '') { $wgWhere .= " AND e.employee_type_id = :employee_type_id"; $wgParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $wgDeptCodes = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($wgDeptCodes)) {
-                $wgWhere .= " AND e.department IN (" . implode(',', array_map('intval', $wgDeptCodes)) . ")";
-            }
+            $wgWhere .= ' AND ' . $workgroupDeptWhereSql('e');
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -401,36 +555,47 @@ class DefaultController extends Controller
         }
         if ($filterPositionName !== null && $filterPositionName !== '') { $wgWhere .= " AND e.employee_position_id = :employee_position_id"; $wgParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $wgWhere .= " AND (" . self::serviceBandWhereSql('e', $filterServiceBand) . ")"; }
+        // นับรายแผนกก่อน แล้วยุบขึ้นเป็นกลุ่มงานตามผังองค์กรใน PHP
         $wgCounts = Yii::$app->db->createCommand(
-            "SELECT w.code AS wcode, w.title AS wtitle, e.employee_type_id AS pt_id, COUNT(e.id) AS cnt
-             FROM employees e
-             INNER JOIN categorise c ON c.code = e.department
-             INNER JOIN categorise w ON w.code = c.category_id AND w.name = 'workgroup'
+            "SELECT e.department AS dept_id, e.employee_type_id AS pt_id, COUNT(e.id) AS cnt
+             FROM {$snapshotSql} e
              WHERE {$wgWhere}
-             GROUP BY w.code, w.title, e.employee_type_id"
+             GROUP BY e.department, e.employee_type_id"
         )->bindValues($wgParams)->queryAll();
         $byWg = [];
         foreach ($wgCounts as $r) {
-            $k = $r['wcode'];
+            $workgroup = $departmentWorkgroupMap[(string) $r['dept_id']] ?? null;
+            if ($workgroup === null) {
+                continue; // แผนกที่ไม่มีใน ผังองค์กร (ข้อมูลค้าง) ไม่นำมาแสดงในชาร์ตกลุ่มงาน
+            }
+            $k = $workgroup['id'];
             if (!isset($byWg[$k])) {
-                $byWg[$k] = ['name' => $r['wtitle'] ?: 'ไม่ระบุ', 'code' => $r['wcode'], 'data' => array_fill(0, count($positionTypeCodes), 0)];
+                $byWg[$k] = [
+                    'name' => $workgroup['name'],
+                    'code' => $workgroup['id'],
+                    'sort' => $workgroup['sort'],
+                    'data' => array_fill(0, count($positionTypeCodes), 0),
+                ];
             }
             $idx = array_search((int) $r['pt_id'], $positionTypeCodes, true);
             if ($idx !== false) {
-                $byWg[$k]['data'][$idx] = (int) $r['cnt'];
+                $byWg[$k]['data'][$idx] += (int) $r['cnt'];
             }
         }
+        uasort($byWg, function ($a, $b) {
+            return array_sum($b['data']) <=> array_sum($a['data']) ?: ($a['sort'] <=> $b['sort']);
+        });
         $workgroupRows = array_values($byWg);
 
         // ประชากรตามช่วงอายุ (ชาย/หญิง) สำหรับกราฟ
-        $ageWhere = "branch = 'MAIN' AND status = '1' AND id <> 1 AND birthday IS NOT NULL AND FLOOR((YEAR(NOW()) - YEAR(birthday))) < 60";
-        $ageParams = [];
+        $ageWhere = "branch = 'MAIN' AND id <> 1 AND " . self::inServiceWhereSql('')
+            . " AND birthday IS NOT NULL AND FLOOR((YEAR(:as_of) - YEAR(birthday))) < 60";
+        $ageParams = [':as_of' => $asOfDate];
         if ($filterGender !== null) { $ageWhere .= " AND gender = :gender"; $ageParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $ageWhere .= " AND department = :department"; $ageParams[':department'] = $filterDepartment; }
         if ($filterPositionType !== null && $filterPositionType !== '') { $ageWhere .= " AND employee_type_id = :employee_type_id"; $ageParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $ageWgDepts = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($ageWgDepts)) { $ageWhere .= " AND department IN (" . implode(',', array_map('intval', $ageWgDepts)) . ")"; }
+            $ageWhere .= ' AND ' . $workgroupDeptWhereSql('');
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -440,10 +605,10 @@ class DefaultController extends Controller
         if ($filterPositionName !== null && $filterPositionName !== '') { $ageWhere .= " AND employee_position_id = :employee_position_id"; $ageParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $ageWhere .= " AND (" . self::serviceBandWhereSql('', $filterServiceBand) . ")"; }
         $ageRows = Yii::$app->db->createCommand(
-            "SELECT CONCAT(5 * FLOOR((YEAR(NOW()) - YEAR(birthday))/5), ' - ', 5 * FLOOR((YEAR(NOW()) - YEAR(birthday))/5) + 4) AS age_band,
+            "SELECT CONCAT(5 * FLOOR((YEAR(:as_of) - YEAR(birthday))/5), ' - ', 5 * FLOOR((YEAR(:as_of) - YEAR(birthday))/5) + 4) AS age_band,
                     SUM(IF(gender = 'ชาย', 1, 0) * -1) AS _male,
                     SUM(IF(gender = 'หญิง', 1, 0)) AS _female
-             FROM employees
+             FROM {$snapshotSql} snap
              WHERE {$ageWhere}
              GROUP BY 1
              ORDER BY 1 DESC"
@@ -461,34 +626,91 @@ class DefaultController extends Controller
                 ->count();
         }
 
-        // บรรจุใหม่ปีนี้ (status 1, join_date ในปีปัจจุบัน)
-        $currentYear = (string) date('Y');
-        $newHiresThisYear = (int) (clone $baseQuery())
-            ->andWhere(['not', ['join_date' => null]])
-            ->andWhere(['YEAR(join_date)' => $currentYear])
-            ->count();
+        // ---------------------------------------------------------------
+        // การเคลื่อนไหวกำลังคนตลอดปีงบประมาณที่เลือก (บรรจุใหม่ / พ้นจากหน่วยงาน)
+        //
+        // employees.join_date และ employees.end_date เชื่อถือไม่ได้:
+        //  - คนบรรจุใหม่ถูกบันทึกผ่านประวัติตำแหน่ง (employee_detail name='position')
+        //    ทำให้ join_date ว่าง จึงนับ "บรรจุใหม่" ไม่ได้เลย
+        //  - end_date ไม่เคยถูกบันทึกใช้งานจริง (ว่างทั้งตาราง) การนับจาก end_date
+        //    จึงได้ 0 เสมอ ทั้งที่มีคนลาออก/เกษียณ/ย้ายจริงในระบบ
+        // จึงใช้ hire_date / exit_date ที่คำนวณไว้ใน self::workforceSnapshotSql()
+        // ---------------------------------------------------------------
 
-        // ลาออก/สิ้นสุดปีนี้ (มี end_date และปีของ end_date = ปีปัจจุบัน)
-        $leftThisYear = (int) Employees::find()
-            ->andWhere(['branch' => 'MAIN'])
-            ->andWhere(['not', ['id' => 1]])
-            ->andWhere(['not', ['end_date' => null]])
-            ->andWhere(['YEAR(end_date)' => $currentYear])
-            ->count();
+        // ตัวกรองจากชาร์ต (ไม่รวม branch / id / เงื่อนไขวันที่) เพื่อใช้ร่วมกับ query การเคลื่อนไหว
+        $movementFilterSql = function ($alias) use ($filterGender, $filterDepartment, $filterPositionType, $filterWorkgroup, $filterGen, $filterPositionName, $filterServiceBand, $genYearRanges, $workgroupDeptWhereSql) {
+            $p = $alias !== '' ? $alias . '.' : '';
+            $sql = '';
+            $params = [];
+            if ($filterGender !== null) { $sql .= " AND {$p}gender = :mv_gender"; $params[':mv_gender'] = $filterGender; }
+            if ($filterDepartment !== null && $filterDepartment !== '') { $sql .= " AND {$p}department = :mv_department"; $params[':mv_department'] = $filterDepartment; }
+            if ($filterPositionType !== null && $filterPositionType !== '') { $sql .= " AND {$p}employee_type_id = :mv_employee_type_id"; $params[':mv_employee_type_id'] = $filterPositionType; }
+            if ($filterPositionName !== null && $filterPositionName !== '') { $sql .= " AND {$p}employee_position_id = :mv_employee_position_id"; $params[':mv_employee_position_id'] = $filterPositionName; }
+            if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
+                $sql .= ' AND ' . $workgroupDeptWhereSql($alias);
+            }
+            if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
+                $yr = $genYearRanges[$filterGen];
+                $sql .= " AND {$p}birthday IS NOT NULL AND YEAR({$p}birthday) BETWEEN :mv_gen0 AND :mv_gen1";
+                $params[':mv_gen0'] = $yr[0]; $params[':mv_gen1'] = $yr[1];
+            }
+            if ($filterServiceBand !== null && $filterServiceBand !== '') {
+                $sql .= ' AND (' . self::serviceBandWhereSql($alias, $filterServiceBand) . ')';
+            }
+            return [$sql, $params];
+        };
+        [$mvWhere, $mvParams] = $movementFilterSql('e');
+        $mvParams[':mv_start'] = $budgetRange['start'];
+        $mvParams[':mv_end'] = $budgetRange['end'];
+        // ผูก :as_of เฉพาะเมื่อมีตัวกรองช่วงอายุงาน (SQL จะมี token นี้ก็ต่อเมื่อกรอง)
+        if (strpos($mvWhere, ':as_of') !== false) {
+            $mvParams[':as_of'] = $asOfDate;
+        }
+
+        // บรรจุใหม่ – นับทุกคนที่วันบรรจุอยู่ในปีงบประมาณที่เลือก
+        // (รวมคนที่บรรจุปีนี้แล้วออกไปแล้ว เพราะเป็นการบรรจุที่เกิดขึ้นจริงในปีนั้น
+        //  แต่ตัดคำสั่งที่ถูกยกเลิกออก)
+        $newHiresThisYear = (int) Yii::$app->db->createCommand(
+            "SELECT COUNT(*)
+             FROM {$snapshotSql} e
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND (e.status IS NULL OR e.status NOT IN ('CANCEL', '19'))
+               AND e.hire_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}"
+        )->bindValues($mvParams)->queryScalar();
+
+        // ลาออก/สิ้นสุด – แยกตามเหตุผลเพื่อให้ตรวจสอบตัวเลขได้
+        $leftThisYearRows = Yii::$app->db->createCommand(
+            "SELECT e.status AS status, COALESCE(cat.title, 'ไม่ระบุ') AS reason, COUNT(*) AS cnt
+             FROM {$snapshotSql} e
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND e.exit_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             GROUP BY e.status, cat.title
+             ORDER BY cnt DESC"
+        )->bindValues($mvParams)->queryAll();
+        $leftThisYear = 0;
+        $leftThisYearBreakdown = [];
+        foreach ($leftThisYearRows as $row) {
+            $leftThisYear += (int) $row['cnt'];
+            $leftThisYearBreakdown[] = ['reason' => $row['reason'], 'count' => (int) $row['cnt']];
+        }
 
         // แผนก (department) – จำนวนคนต่อแผนก; ชื่อแผนกจากตาราง tree (Organization)
         $departmentQuery = (new Query())
             ->select(['org.id as code', 'org.name as title', 'COUNT(e.id) as cnt'])
-            ->from(['e' => 'employees'])
+            ->from(['e' => $snapshotFrom])
             ->leftJoin(['org' => Organization::tableName()], 'org.id = e.department')
-            ->where(['e.branch' => 'MAIN', 'e.status' => '1'])
+            ->where(['e.branch' => 'MAIN'])
+            ->andWhere(new \yii\db\Expression(self::inServiceWhereSql('e')))
+            ->addParams([':as_of' => $asOfDate])
             ->andWhere(['not', ['e.id' => 1]]);
         if ($filterGender !== null) $departmentQuery->andWhere(['e.gender' => $filterGender]);
         if ($filterDepartment !== null && $filterDepartment !== '') $departmentQuery->andWhere(['e.department' => $filterDepartment]);
         if ($filterPositionType !== null && $filterPositionType !== '') $departmentQuery->andWhere(['e.employee_type_id' => $filterPositionType]);
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $dwg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($dwg)) $departmentQuery->andWhere(['in', 'e.department', $dwg]);
+            $departmentQuery->andWhere(new \yii\db\Expression($workgroupDeptWhereSql('e')));
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -505,14 +727,13 @@ class DefaultController extends Controller
         $departmentValues = array_map('intval', array_column($departmentRows, 'cnt'));
 
         // อายุงาน (ปี) – ช่วงอายุงาน
-        $sbWhere = "branch = 'MAIN' AND status = '1' AND id <> 1";
-        $sbParams = [];
+        $sbWhere = "branch = 'MAIN' AND id <> 1 AND " . self::inServiceWhereSql('');
+        $sbParams = [':as_of' => $asOfDate];
         if ($filterGender !== null) { $sbWhere .= " AND gender = :gender"; $sbParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $sbWhere .= " AND department = :department"; $sbParams[':department'] = $filterDepartment; }
         if ($filterPositionType !== null && $filterPositionType !== '') { $sbWhere .= " AND employee_type_id = :employee_type_id"; $sbParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $sbWg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($sbWg)) { $sbWhere .= " AND department IN (" . implode(',', array_map('intval', $sbWg)) . ")"; }
+            $sbWhere .= ' AND ' . $workgroupDeptWhereSql('');
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -524,15 +745,15 @@ class DefaultController extends Controller
         $serviceBandRows = Yii::$app->db->createCommand(
             "SELECT
                 CASE
-                    WHEN join_date IS NULL THEN 'ไม่ระบุ'
-                    WHEN TIMESTAMPDIFF(YEAR, join_date, CURDATE()) < 1 THEN 'น้อยกว่า 1 ปี'
-                    WHEN TIMESTAMPDIFF(YEAR, join_date, CURDATE()) < 5 THEN '1 - 5 ปี'
-                    WHEN TIMESTAMPDIFF(YEAR, join_date, CURDATE()) < 10 THEN '5 - 10 ปี'
-                    WHEN TIMESTAMPDIFF(YEAR, join_date, CURDATE()) < 20 THEN '10 - 20 ปี'
+                    WHEN hire_date IS NULL THEN 'ไม่ระบุ'
+                    WHEN TIMESTAMPDIFF(YEAR, hire_date, :as_of) < 1 THEN 'น้อยกว่า 1 ปี'
+                    WHEN TIMESTAMPDIFF(YEAR, hire_date, :as_of) < 5 THEN '1 - 5 ปี'
+                    WHEN TIMESTAMPDIFF(YEAR, hire_date, :as_of) < 10 THEN '5 - 10 ปี'
+                    WHEN TIMESTAMPDIFF(YEAR, hire_date, :as_of) < 20 THEN '10 - 20 ปี'
                     ELSE '20 ปีขึ้นไป'
                 END AS band,
                 COUNT(id) AS cnt
-             FROM employees
+             FROM {$snapshotSql} snap
              WHERE {$sbWhere}
              GROUP BY 1"
         )->bindValues($sbParams)->queryAll();
@@ -556,15 +777,14 @@ class DefaultController extends Controller
             }
         }
 
-        // อายุงานเฉลี่ย (ปี) – เฉพาะคนที่มี join_date
-        $avgWhere = "branch = 'MAIN' AND status = '1' AND id <> 1 AND join_date IS NOT NULL";
-        $avgParams = [];
+        // อายุงานเฉลี่ย (ปี) – เฉพาะคนที่ทราบวันบรรจุ
+        $avgWhere = "branch = 'MAIN' AND id <> 1 AND " . self::inServiceWhereSql('') . " AND hire_date IS NOT NULL";
+        $avgParams = [':as_of' => $asOfDate];
         if ($filterGender !== null) { $avgWhere .= " AND gender = :gender"; $avgParams[':gender'] = $filterGender; }
         if ($filterDepartment !== null && $filterDepartment !== '') { $avgWhere .= " AND department = :department"; $avgParams[':department'] = $filterDepartment; }
         if ($filterPositionType !== null && $filterPositionType !== '') { $avgWhere .= " AND employee_type_id = :employee_type_id"; $avgParams[':employee_type_id'] = $filterPositionType; }
         if ($filterWorkgroup !== null && $filterWorkgroup !== '') {
-            $avgWg = Categorise::find()->select('code')->where(['category_id' => $filterWorkgroup, 'name' => 'department'])->column();
-            if (!empty($avgWg)) { $avgWhere .= " AND department IN (" . implode(',', array_map('intval', $avgWg)) . ")"; }
+            $avgWhere .= ' AND ' . $workgroupDeptWhereSql('');
         }
         if ($filterGen !== null && isset($genYearRanges[$filterGen])) {
             $yr = $genYearRanges[$filterGen];
@@ -574,12 +794,22 @@ class DefaultController extends Controller
         if ($filterPositionName !== null && $filterPositionName !== '') { $avgWhere .= " AND employee_position_id = :employee_position_id"; $avgParams[':employee_position_id'] = $filterPositionName; }
         if ($filterServiceBand !== null && $filterServiceBand !== '') { $avgWhere .= " AND (" . self::serviceBandWhereSql('', $filterServiceBand) . ")"; }
         $avgYearsService = Yii::$app->db->createCommand(
-            "SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, join_date, CURDATE())), 1) AS avg_years FROM employees WHERE {$avgWhere}"
+            "SELECT ROUND(AVG(TIMESTAMPDIFF(YEAR, hire_date, :as_of)), 1) AS avg_years FROM {$snapshotSql} snap WHERE {$avgWhere}"
         )->bindValues($avgParams)->queryScalar();
         $avgYearsService = $avgYearsService !== null ? round((float) $avgYearsService, 1) : null;
         $organizationDiagramCount = (int) Organization::find()->where(['tb_name' => 'diagram'])->count('id');
+
+        // รายการเบื้องหลังตัวเลขบนการ์ด KPI สำหรับกดดูเพื่อตรวจสอบ
+        $kpiDetailSources = $this->buildDashboardKpiDetails(
+            $snapshotSql,
+            $mvWhere,
+            $mvParams,
+            $asOfDate,
+            $budgetRange,
+            $departmentWorkgroupMap
+        );
         $teamGroupCount = (int) TeamGroup::find()->count('id');
-        $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories, $departmentLabelMap);
+        $dashboardTooltipPeople = self::buildDashboardTooltipPeople($baseQuery(), $genYearRanges, $serviceBandLabels, $ageCategories, $departmentLabelMap, $asOfDate);
 
         return $this->render('dashboard', [
             'totalCount' => $totalCount,
@@ -601,6 +831,18 @@ class DefaultController extends Controller
             'numPositionTypes' => count($positionTypeLabels),
             'newHiresThisYear' => $newHiresThisYear,
             'leftThisYear' => $leftThisYear,
+            'leftThisYearBreakdown' => $leftThisYearBreakdown,
+            'movementBudgetYear' => $budgetYear,
+            'movementRangeStart' => $budgetRange['start'],
+            'movementRangeEnd' => $budgetRange['end'],
+            'movementPeriodText' => \app\components\ThaiDateHelper::formatThaiDateRange($budgetRange['start'], $budgetRange['end']),
+            'kpiDetailSources' => $kpiDetailSources,
+            'budgetYear' => $budgetYear,
+            'currentBudgetYear' => $currentBudgetYear,
+            'budgetYearOptions' => $budgetYearOptions,
+            'isCurrentBudgetYear' => $isCurrentBudgetYear,
+            'asOfDate' => $asOfDate,
+            'asOfDateText' => \app\components\ThaiDateHelper::formatThaiDate($asOfDate),
             'departmentLabels' => $departmentLabels,
             'departmentValues' => $departmentValues,
             'serviceBandLabels' => $serviceBandLabels,
@@ -618,6 +860,206 @@ class DefaultController extends Controller
             'filterServiceBand' => $filterServiceBand,
             'positionNameCodes' => $positionNameCodes ?? [],
         ]);
+    }
+
+    /**
+     * รายการเบื้องหลังตัวเลขของการ์ด KPI แต่ละใบ ใช้แสดงในแผงตรวจสอบใต้การ์ด
+     *
+     * เซลล์ในตารางเป็นค่าปกติ (string/int) หรือ ['t' => ข้อความที่แสดง, 'v' => ค่าที่ใช้เรียง]
+     * สำหรับคอลัมน์วันที่ ซึ่งแสดงเป็น พ.ศ. แต่ต้องเรียงตามค่า ISO
+     *
+     * @param string $snapshotSql  derived table จาก workforceSnapshotSql()
+     * @param string $mvWhere      เงื่อนไขตัวกรองจากชาร์ต (ขึ้นต้นด้วย " AND ")
+     * @param array  $mvParams     ค่าที่ผูกกับ $mvWhere รวม :mv_start / :mv_end / :as_of
+     */
+    private function buildDashboardKpiDetails(
+        string $snapshotSql,
+        string $mvWhere,
+        array $mvParams,
+        string $asOfDate,
+        array $budgetRange,
+        array $departmentWorkgroupMap
+    ): array {
+        $params = $mvParams;
+        $params[':as_of'] = $asOfDate;
+        $params[':mv_start'] = $budgetRange['start'];
+        $params[':mv_end'] = $budgetRange['end'];
+
+        // ผูกเฉพาะ placeholder ที่มีอยู่จริงใน SQL แต่ละก้อน
+        $run = static function (string $sql) use ($params) {
+            $bound = [];
+            foreach ($params as $name => $value) {
+                if (strpos($sql, $name) !== false) {
+                    $bound[$name] = $value;
+                }
+            }
+            return Yii::$app->db->createCommand($sql)->bindValues($bound)->queryAll();
+        };
+        $fullName = static function (array $row): string {
+            return trim(preg_replace('/\s+/u', ' ', ($row['prefix'] ?? '') . $row['fname'] . ' ' . $row['lname']));
+        };
+        $thaiDate = static function ($date) {
+            $date = trim((string) $date);
+            if ($date === '' || $date === '0000-00-00' || strpos($date, '1900-01-01') === 0) {
+                return ['t' => '—', 'v' => ''];
+            }
+            return ['t' => \app\components\ThaiDateHelper::formatThaiDate($date), 'v' => $date];
+        };
+
+        $personSelect = "e.prefix, e.fname, e.lname, e.gender,
+                         COALESCE(p.title, 'ไม่ระบุ') AS position_title,
+                         COALESCE(org.name, 'ไม่ระบุ') AS department_name,
+                         COALESCE(t.title, 'ไม่ระบุ') AS type_title";
+        $personJoins = "LEFT JOIN employee_position p ON p.id = e.employee_position_id
+                        LEFT JOIN employee_type t ON t.id = e.employee_type_id
+                        LEFT JOIN tree org ON org.id = e.department AND org.tb_name = 'diagram'";
+
+        // 1) บุคลากรที่ปฏิบัติงานอยู่ ณ วันที่อ้างอิง
+        $peopleRows = $run(
+            "SELECT {$personSelect}, e.hire_date,
+                    TIMESTAMPDIFF(YEAR, e.hire_date, :as_of) AS years_service
+             FROM {$snapshotSql} e
+             {$personJoins}
+             WHERE e.branch = 'MAIN' AND e.id <> 1 AND " . self::inServiceWhereSql('e') . "
+                   {$mvWhere}
+             ORDER BY e.fname, e.lname"
+        );
+
+        // 2) บรรจุใหม่ในปีงบประมาณ
+        $newHireRows = $run(
+            "SELECT {$personSelect}, e.hire_date, COALESCE(cat.title, 'ไม่ระบุ') AS status_title
+             FROM {$snapshotSql} e
+             {$personJoins}
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND (e.status IS NULL OR e.status NOT IN ('CANCEL', '19'))
+               AND e.hire_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             ORDER BY e.hire_date, e.fname"
+        );
+
+        // 3) พ้นจากหน่วยงานในปีงบประมาณ
+        $exitRows = $run(
+            "SELECT {$personSelect}, e.exit_date, COALESCE(cat.title, 'ไม่ระบุ') AS reason
+             FROM {$snapshotSql} e
+             {$personJoins}
+             LEFT JOIN categorise cat ON cat.name = 'emp_status' AND cat.code = e.status
+             WHERE e.branch = 'MAIN' AND e.id <> 1
+               AND e.exit_date BETWEEN :mv_start AND :mv_end
+               {$mvWhere}
+             ORDER BY e.exit_date, e.fname"
+        );
+
+        // 4) หน่วยงานในผังองค์กร พร้อมจำนวนคน ณ วันที่อ้างอิง
+        $orgRows = $run(
+            "SELECT o.id, o.name, o.lvl,
+                    (SELECT COUNT(*) FROM {$snapshotSql} e
+                      WHERE e.department = o.id AND e.branch = 'MAIN' AND e.id <> 1
+                        AND " . self::inServiceWhereSql('e') . ") AS head_count
+             FROM tree o
+             WHERE o.tb_name = 'diagram'
+             ORDER BY o.root, o.lft"
+        );
+
+        // 5) กลุ่ม/ทีมประสานงาน พร้อมจำนวนสมาชิก
+        $teamRows = $run(
+            "SELECT g.title,
+                    (SELECT COUNT(DISTINCT d.emp_id) FROM team_group_detail d
+                      WHERE d.category_id = g.id AND d.emp_id IS NOT NULL) AS member_count
+             FROM team_group g
+             ORDER BY g.id"
+        );
+
+        $orgLevelLabels = [0 => 'กลุ่ม', 1 => 'กลุ่มงาน', 2 => 'งาน'];
+
+        return [
+            'people' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'เพศ'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ประเภท'],
+                    ['label' => 'วันบรรจุ'],
+                    ['label' => 'อายุงาน (ปี)', 'align' => 'end'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['gender'] ?: '—',
+                        $r['position_title'],
+                        $r['department_name'],
+                        $r['type_title'],
+                        $thaiDate($r['hire_date']),
+                        $r['years_service'] === null ? '—' : (int) $r['years_service'],
+                    ];
+                }, $peopleRows),
+            ],
+            'newHires' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ประเภท'],
+                    ['label' => 'วันบรรจุ'],
+                    ['label' => 'สถานะปัจจุบัน'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['position_title'],
+                        $r['department_name'],
+                        $r['type_title'],
+                        $thaiDate($r['hire_date']),
+                        $r['status_title'],
+                    ];
+                }, $newHireRows),
+            ],
+            'exits' => [
+                'columns' => [
+                    ['label' => 'ชื่อ-สกุล'],
+                    ['label' => 'ตำแหน่ง'],
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'วันที่พ้นจากหน่วยงาน'],
+                    ['label' => 'เหตุผล'],
+                ],
+                'rows' => array_map(function ($r) use ($fullName, $thaiDate) {
+                    return [
+                        $fullName($r),
+                        $r['position_title'],
+                        $r['department_name'],
+                        $thaiDate($r['exit_date']),
+                        $r['reason'],
+                    ];
+                }, $exitRows),
+            ],
+            'orgUnits' => [
+                'columns' => [
+                    ['label' => 'หน่วยงาน'],
+                    ['label' => 'ระดับ'],
+                    ['label' => 'กลุ่มงานที่สังกัด'],
+                    ['label' => 'จำนวนคน', 'align' => 'end'],
+                ],
+                'rows' => array_map(function ($r) use ($orgLevelLabels, $departmentWorkgroupMap) {
+                    $workgroup = $departmentWorkgroupMap[(string) $r['id']]['name'] ?? '—';
+                    return [
+                        $r['name'],
+                        $orgLevelLabels[(int) $r['lvl']] ?? ('ระดับ ' . (int) $r['lvl']),
+                        $workgroup,
+                        (int) $r['head_count'],
+                    ];
+                }, $orgRows),
+            ],
+            'teamGroups' => [
+                'columns' => [
+                    ['label' => 'กลุ่ม / ทีมประสานงาน'],
+                    ['label' => 'จำนวนสมาชิก', 'align' => 'end'],
+                ],
+                'rows' => array_map(static function ($r) {
+                    return [$r['title'], (int) $r['member_count']];
+                }, $teamRows),
+            ],
+        ];
     }
 
     private function normalizeDashboardEmployeeTypeFilter($value): ?int
@@ -692,20 +1134,20 @@ class DefaultController extends Controller
      */
     private static function serviceBandCondition($label)
     {
-        $expr = new \yii\db\Expression('TIMESTAMPDIFF(YEAR, join_date, CURDATE())');
+        $expr = new \yii\db\Expression('TIMESTAMPDIFF(YEAR, hire_date, :as_of)');
         switch ($label) {
             case 'ไม่ระบุ':
-                return ['join_date' => null];
+                return ['hire_date' => null];
             case 'น้อยกว่า 1 ปี':
-                return ['and', ['not', ['join_date' => null]], ['<', $expr, 1]];
+                return ['and', ['not', ['hire_date' => null]], ['<', $expr, 1]];
             case '1 - 5 ปี':
-                return ['and', ['not', ['join_date' => null]], ['>=', $expr, 1], ['<', $expr, 5]];
+                return ['and', ['not', ['hire_date' => null]], ['>=', $expr, 1], ['<', $expr, 5]];
             case '5 - 10 ปี':
-                return ['and', ['not', ['join_date' => null]], ['>=', $expr, 5], ['<', $expr, 10]];
+                return ['and', ['not', ['hire_date' => null]], ['>=', $expr, 5], ['<', $expr, 10]];
             case '10 - 20 ปี':
-                return ['and', ['not', ['join_date' => null]], ['>=', $expr, 10], ['<', $expr, 20]];
+                return ['and', ['not', ['hire_date' => null]], ['>=', $expr, 10], ['<', $expr, 20]];
             case '20 ปีขึ้นไป':
-                return ['and', ['not', ['join_date' => null]], ['>=', $expr, 20]];
+                return ['and', ['not', ['hire_date' => null]], ['>=', $expr, 20]];
             default:
                 return [];
         }
@@ -715,7 +1157,7 @@ class DefaultController extends Controller
      * เงื่อนไข SQL สำหรับ filter ช่วงอายุงาน (ใช้กับ raw SQL หรือ Query + Expression)
      * @param string $alias alias ตาราง employees เช่น 'e' หรือ '' สำหรับไม่มี alias
      */
-    private static function buildDashboardTooltipPeople($query, array $genYearRanges, array $serviceBandLabels, array $ageCategories, array $departmentLabelMap = []): array
+    private static function buildDashboardTooltipPeople($query, array $genYearRanges, array $serviceBandLabels, array $ageCategories, array $departmentLabelMap = [], ?string $asOfDate = null): array
     {
         $maxPeoplePerBucket = 300;
         $fallbackAvatar = Url::to('@web/img/profiles/avatar-01.jpg');
@@ -733,9 +1175,9 @@ class DefaultController extends Controller
         ];
 
         $departmentToWorkgroups = [];
-        foreach (Categorise::find()->select(['category_id', 'code'])->where(['name' => 'department'])->asArray()->all() as $row) {
-            $departmentCode = (string)($row['code'] ?? '');
-            $workgroupCode = (string)($row['category_id'] ?? '');
+        foreach (self::dashboardWorkgroupMap() as $departmentCode => $workgroup) {
+            $departmentCode = (string) $departmentCode;
+            $workgroupCode = (string) $workgroup['id'];
             if ($departmentCode !== '' && $workgroupCode !== '') {
                 $departmentToWorkgroups[$departmentCode][] = $workgroupCode;
             }
@@ -754,16 +1196,16 @@ class DefaultController extends Controller
                 'age_bucket' => new \yii\db\Expression("
                     CASE
                         WHEN birthday IS NULL THEN NULL
-                        WHEN YEAR(CURDATE()) - YEAR(birthday) < 20 THEN '20+'
-                        WHEN YEAR(CURDATE()) - YEAR(birthday) >= 60 THEN '60+'
+                        WHEN YEAR(:as_of) - YEAR(birthday) < 20 THEN '20+'
+                        WHEN YEAR(:as_of) - YEAR(birthday) >= 60 THEN '60+'
                         ELSE CONCAT(
-                            5 * FLOOR((YEAR(CURDATE()) - YEAR(birthday)) / 5),
+                            5 * FLOOR((YEAR(:as_of) - YEAR(birthday)) / 5),
                             ' - ',
-                            5 * FLOOR((YEAR(CURDATE()) - YEAR(birthday)) / 5) + 4
+                            5 * FLOOR((YEAR(:as_of) - YEAR(birthday)) / 5) + 4
                         )
                     END
                 "),
-                'join_date',
+                'join_date' => 'hire_date',
                 'department',
                 'employee_type_id',
                 'employee_position_id',
@@ -867,9 +1309,9 @@ class DefaultController extends Controller
             $generation = self::dashboardGenerationBucket($row['birthday'] ?? null, $genYearRanges);
             $age = trim((string)($row['age_bucket'] ?? ''));
             if ($age === '') {
-                $age = self::dashboardAgeBucket($row['birthday'] ?? null, $ageCategories);
+                $age = self::dashboardAgeBucket($row['birthday'] ?? null, $ageCategories, $asOfDate);
             }
-            $serviceBand = self::dashboardServiceBandBucket($row['join_date'] ?? null, $serviceBandLabels);
+            $serviceBand = self::dashboardServiceBandBucket($row['join_date'] ?? null, $serviceBandLabels, $asOfDate);
 
             $pushPerson('gender', $gender, $person);
             $pushPerson('generation', $generation, $person);
@@ -903,22 +1345,38 @@ class DefaultController extends Controller
         return null;
     }
 
-    private static function dashboardAgeBucket($birthday, array $ageCategories): ?string
+    private static function dashboardAgeBucket($birthday, array $ageCategories, ?string $asOfDate = null): ?string
     {
-        $age = self::dashboardYearDiff($birthday);
+        $age = self::dashboardYearDiff($birthday, $asOfDate);
         if ($age === null) {
             return null;
         }
         return self::dashboardNumericBucketLabel($age, $ageCategories, $age >= 60 ? '60+' : null);
     }
 
-    private static function dashboardServiceBandBucket($joinDate, array $serviceBandLabels): ?string
+    /**
+     * ช่วงอายุงาน – ต้องใช้เกณฑ์เดียวกับ SQL ที่สร้างชาร์ต ไม่งั้น tooltip รายชื่อ
+     * จะไม่ตรงกับแท่งในชาร์ต (เดิมเดาจากตัวเลขในป้ายกำกับ ทำให้ช่วงแรกและช่วงสุดท้ายหลุด)
+     */
+    private static function dashboardServiceBandBucket($joinDate, array $serviceBandLabels, ?string $asOfDate = null): ?string
     {
-        $years = self::dashboardYearDiff($joinDate);
+        $years = self::dashboardYearDiff($joinDate, $asOfDate);
         if ($years === null) {
-            return null;
+            return 'ไม่ระบุ';
         }
-        return self::dashboardNumericBucketLabel($years, $serviceBandLabels, $years >= 20 ? '20+' : null, false);
+        if ($years < 1) {
+            return 'น้อยกว่า 1 ปี';
+        }
+        if ($years < 5) {
+            return '1 - 5 ปี';
+        }
+        if ($years < 10) {
+            return '5 - 10 ปี';
+        }
+        if ($years < 20) {
+            return '10 - 20 ปี';
+        }
+        return '20 ปีขึ้นไป';
     }
 
     private static function dashboardNumericBucketLabel(int $value, array $labels, ?string $fallback = null, bool $upperInclusive = true): ?string
@@ -959,14 +1417,15 @@ class DefaultController extends Controller
         return (int)substr($date, 0, 4) ?: null;
     }
 
-    private static function dashboardYearDiff($date): ?int
+    private static function dashboardYearDiff($date, ?string $asOfDate = null): ?int
     {
         $date = trim((string)$date);
         if ($date === '' || $date === '0000-00-00') {
             return null;
         }
         try {
-            return (int)(new \DateTimeImmutable($date))->diff(new \DateTimeImmutable('today'))->y;
+            $asOf = new \DateTimeImmutable($asOfDate !== null && $asOfDate !== '' ? $asOfDate : 'today');
+            return (int)(new \DateTimeImmutable($date))->diff($asOf)->y;
         } catch (\Exception $e) {
             return null;
         }
@@ -975,19 +1434,20 @@ class DefaultController extends Controller
     private static function serviceBandWhereSql($alias, $label)
     {
         $p = $alias !== '' ? $alias . '.' : '';
+        $years = 'TIMESTAMPDIFF(YEAR, ' . $p . 'hire_date, :as_of)';
         switch ($label) {
             case 'ไม่ระบุ':
-                return $p . 'join_date IS NULL';
+                return $p . 'hire_date IS NULL';
             case 'น้อยกว่า 1 ปี':
-                return $p . 'join_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) < 1';
+                return $p . 'hire_date IS NOT NULL AND ' . $years . ' < 1';
             case '1 - 5 ปี':
-                return $p . 'join_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) >= 1 AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) < 5';
+                return $p . 'hire_date IS NOT NULL AND ' . $years . ' >= 1 AND ' . $years . ' < 5';
             case '5 - 10 ปี':
-                return $p . 'join_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) >= 5 AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) < 10';
+                return $p . 'hire_date IS NOT NULL AND ' . $years . ' >= 5 AND ' . $years . ' < 10';
             case '10 - 20 ปี':
-                return $p . 'join_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) >= 10 AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) < 20';
+                return $p . 'hire_date IS NOT NULL AND ' . $years . ' >= 10 AND ' . $years . ' < 20';
             case '20 ปีขึ้นไป':
-                return $p . 'join_date IS NOT NULL AND TIMESTAMPDIFF(YEAR, ' . $p . 'join_date, CURDATE()) >= 20';
+                return $p . 'hire_date IS NOT NULL AND ' . $years . ' >= 20';
             default:
                 return '1=1';
         }

@@ -9,6 +9,9 @@ use app\components\ThaiDateHelper;
 
 $me = UserHelper::GetEmployee();
 $notify = ApproveHelper::Info();
+$canViewExecutiveDashboard = Yii::$app->user->can('executiveDashboardView')
+    || Yii::$app->user->can('financeView')
+    || Yii::$app->user->can('admin');
 
 $this->registerCss(<<<'CSS'
 .appreciation-action {
@@ -126,6 +129,16 @@ $this->registerCss(<<<'CSS'
     font-size: 1rem !important;
     line-height: 1.35;
     text-align: center;
+}
+.erp-profile-panel {
+    gap: 1.5rem;
+}
+.executive-entry {
+    border-top: var(--bs-border-width) solid var(--bs-border-color-translucent);
+}
+.executive-entry__icon {
+    width: 44px;
+    height: 44px;
 }
 @media (min-width: 1200px) {
     .erp-dashboard-primary-row {
@@ -247,7 +260,7 @@ if (!empty($upcomingHealth)): ?>
 
 <div class="row g-3 erp-dashboard-primary-row">
     <div class="col-12 col-xl-6">
-        <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-center rounded-4"
+        <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-between rounded-3 erp-profile-panel"
             style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
             <div class="position-absolute bottom-0 start-0 bg-info opacity-25 rounded-circle"
                 style="width: 200px; height: 200px; filter: blur(50px); transform: translate(-30%, 30%);"></div>
@@ -347,6 +360,25 @@ if (!empty($upcomingHealth)): ?>
                     <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-2 d-block">ประวัติ</a>
                 </div>
             </div>
+
+            <?php if ($canViewExecutiveDashboard): ?>
+                <section class="executive-entry position-relative z-1 pt-4" aria-labelledby="executive-entry-heading">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <span class="executive-entry__icon rounded-3 bg-white bg-opacity-10 d-inline-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="bi bi-bar-chart-line fs-5" aria-hidden="true"></i>
+                            </span>
+                            <div>
+                                <h3 id="executive-entry-heading" class="h6 text-white mb-1">ศูนย์ข้อมูลผู้บริหาร</h3>
+                                <p class="small text-white text-opacity-75 mb-0">ภาพรวมการเงิน ลูกหนี้ เจ้าหนี้ และวัสดุคงคลัง</p>
+                            </div>
+                        </div>
+                        <a href="<?= Url::to(['/executive/dashboard']) ?>" class="btn btn-outline-light fw-semibold flex-shrink-0">
+                            เปิด Dashboard ผู้บริหาร <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </section>
+            <?php endif; ?>
         </div>
 
         <style>

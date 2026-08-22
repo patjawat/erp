@@ -70,9 +70,11 @@ class RoomLayoutController extends Controller
    public function actionCreate()
     {
         $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+        // ต้องเป็น room_layout ไม่ใช่ meeting_room ไม่งั้นรูปแบบที่สร้างใหม่จะไม่ขึ้นในหน้านี้
+        // (RoomLayoutSearch กรอง name = room_layout) แต่ไปโผล่ในทะเบียนห้องประชุมแทน
         $model = new RoomLayout([
             'ref' => $ref,
-            'name' => 'meeting_room'
+            'name' => 'room_layout'
         ]);
 
         if ($this->request->isPost) {
@@ -149,16 +151,22 @@ class RoomLayoutController extends Controller
 
     /**
      * Deletes an existing RoomLayout model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * ตอบกลับเป็น JSON ให้ JS ปุ่มลบพาไปหน้า index เอง
      * @param int $id ID
-     * @return \yii\web\Response
+     * @return array
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+        // JS ปุ่มลบ (.delete-item) อ่านผลเป็น JSON — ถ้าตอบเป็น redirect หน้าเดิมจะไม่รีเฟรช
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'status' => 'success',
+            'url' => \yii\helpers\Url::to(['index']),
+        ];
     }
 
     /**
@@ -170,7 +178,8 @@ class RoomLayoutController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = RoomLayout::findOne(['id' => $id])) !== null) {
+        // ต้องล็อกด้วย name ด้วย เพราะตาราง categorise ใช้ร่วมกับชุดข้อมูลอื่น
+        if (($model = RoomLayout::findOne(['id' => $id, 'name' => 'room_layout'])) !== null) {
             return $model;
         }
 

@@ -21,7 +21,10 @@ class AccountingPeriodController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'rules' => [
+                    ['allow' => true, 'actions' => ['index'], 'roles' => ['depreciationView']],
+                    ['allow' => true, 'roles' => ['depreciationRun']],
+                ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,

@@ -111,6 +111,13 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="small text-muted">
                                             ไมล์หลัง: <?= Html::encode((string) ($item->mileage_end ?? '-')) ?>
                                         </div>
+                                        <?php if ($item->isSurveyed()): ?>
+                                            <div class="small mt-1">ความพึงพอใจ: <?= $item->viewSatisfaction() ?></div>
+                                        <?php elseif ($item->status === \app\modules\booking\models\VehicleDetail::STATUS_SUCCESS): ?>
+                                            <div class="small text-muted mt-1">
+                                                <i class="bi bi-hourglass-split me-1"></i>รอผู้ขอประเมินความพึงพอใจ
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
 
                                     <div class="col-12 col-lg-2">
@@ -119,6 +126,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 ดำเนินการ
                                             </div>
                                             <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                                <?php if ($item->canSurvey()): ?>
+                                                    <?= Html::a('<i class="bi bi-star me-1"></i>ส่งลิงก์ประเมิน', ['/booking/vehicle/send-survey', 'id' => $item->id], ['class' => 'btn btn-sm btn-outline-warning send-survey']) ?>
+                                                <?php endif; ?>
                                                 <?= Html::a('<i class="fa-regular fa-pen-to-square me-1"></i>บันทึก', $workUpdateUrl, ['class' => 'btn btn-sm btn-outline-secondary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                                 <?= Html::a('<i class="fa-solid fa-eye me-1"></i>แสดง', $viewUrl, ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                                 <?= Html::a('<i class="fa-regular fa-circle-xmark me-1"></i>ยกเลิก', $cancelUrl, ['class' => 'btn btn-sm btn-outline-danger cancel-order', 'data' => ['size' => 'modal-lg']]) ?>
@@ -148,6 +158,26 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
 $js = <<< JS
+
+$(document).on('click', '.send-survey', function(e) {
+    e.preventDefault();
+    let url = $(this).attr('href');
+    $.ajax({
+        url: url,
+        type: 'POST',
+        dataType: 'json',
+        success: function(response) {
+            Swal.fire({
+                icon: response.status === 'success' ? 'success' : 'warning',
+                title: response.status === 'success' ? 'ส่งลิงก์แล้ว' : 'ส่งไม่สำเร็จ',
+                text: response.message || ''
+            });
+        },
+        error: function() {
+            Swal.fire('เกิดข้อผิดพลาด!', 'ไม่สามารถส่งลิงก์แบบประเมินได้', 'error');
+        }
+    });
+});
 
 $(document).on('click', '.cancel-order', function(e) {
     e.preventDefault();

@@ -6,6 +6,7 @@ use Yii;
 use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\db\Expression;
+use app\models\Categorise;
 
 /**
  * ทะเบียนหน่วยงานกลาง (org_unit) — เวอร์ชันตามปีงบประมาณ
@@ -89,9 +90,11 @@ class OrgUnit extends ActiveRecord
         if (!parent::beforeSave($insert)) {
             return false;
         }
-        // json column: เก็บเป็น string, ใช้งานเป็น array
-        if (is_array($this->data_json)) {
-            $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
+        // คอลัมน์ชนิด json — Yii เข้ารหัสให้เองตอนบันทึก ถ้าเข้ารหัสซ้ำจะได้ค่าเป็น JSON string
+        // ทำให้ JSON_EXTRACT ใน SQL หาไม่เจอ จึงต้องส่งเป็น array เสมอ
+        if (is_string($this->data_json)) {
+            $decoded = json_decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : null;
         }
         $now = date('Y-m-d H:i:s');
         $uid = (!Yii::$app->has('user') || Yii::$app->user->isGuest) ? null : Yii::$app->user->id;
@@ -182,6 +185,94 @@ class OrgUnit extends ActiveRecord
         }
 
         return ['added' => $added, 'updated' => $updated];
+    }
+
+    /** คีย์เทียบซ้ำของหน่วยที่เพิ่มเอง — ผูก team_group เดิมถ้ามี ไม่มีก็เทียบด้วยชื่อ */
+    private function manualKey(): string
+    {
+        $tgId = is_array($this->data_json) ? (int) ($this->data_json['team_group_id'] ?? 0) : 0;
+        return $tgId > 0 ? 'tg:' . $tgId : 'name:' . trim((string) $this->name);
+    }
+
+    /**
+     * คัดลอกทะเบียนจากปีหนึ่งไปอีกปี — ใช้กับปีที่ยังไม่ได้จัดชุด (มีแต่ผลของ syncStructure)
+     *  - หน่วยในผัง : เติมอักษรย่อ/ประเภท ให้แถวปลายทางที่ยังว่าง (จับคู่ด้วย ref_id)
+     *  - หน่วยเพิ่มเอง : เพิ่มทีมประสาน/หน่วยนอกผังที่ปลายทางยังไม่มี
+     *
+     * ไม่ลบแถว ไม่แก้ชื่อ/สถานะเปิดใช้ และไม่แตะ id เดิม เพราะแผนและโครงการอ้าง org_unit.id ของปีนั้นอยู่
+     *
+     * @return array{filled:int, added:int, skipped:string[]}
+     */
+    public static function copyFromYear(int $fromYear, int $toYear): array
+    {
+        $filled = 0;
+        $added = 0;
+        $skipped = [];
+        if ($fromYear === $toYear) {
+            return ['filled' => 0, 'added' => 0, 'skipped' => []];
+        }
+
+        // 1) หน่วยในผัง — เติมเฉพาะช่องที่ยังว่าง ของเดิมที่กรอกไว้แล้วไม่ทับ
+        $targets = [];
+        foreach (static::find()->where(['thai_year' => $toYear, 'source' => self::SOURCE_STRUCTURE])->all() as $t) {
+            $targets[(int) $t->ref_id] = $t;
+        }
+        foreach (static::find()->where(['thai_year' => $fromYear, 'source' => self::SOURCE_STRUCTURE])->all() as $src) {
+            $target = $targets[(int) $src->ref_id] ?? null;
+            if ($target === null) {
+                continue; // ผังปีปลายทางไม่มีหน่วยนี้ — ปล่อยไว้ ให้ผู้ดูแลตัดสินใจเอง
+            }
+            $dirty = false;
+            if (($target->code === null || $target->code === '') && $src->code) {
+                if (static::codeTaken($toYear, (string) $src->code, (int) $target->id)) {
+                    $skipped[] = $target->name . ': อักษรย่อ ' . $src->code . ' ถูกใช้แล้วในปี ' . $toYear;
+                } else {
+                    $target->code = $src->code;
+                    $dirty = true;
+                }
+            }
+            if (($target->unit_type === null || $target->unit_type === '') && $src->unit_type) {
+                $target->unit_type = $src->unit_type;
+                $dirty = true;
+            }
+            if ($dirty) {
+                $target->save(false);
+                $filled++;
+            }
+        }
+
+        // 2) หน่วยที่เพิ่มเอง (ทีมประสาน/นอกผัง) — เพิ่มเฉพาะที่ปลายทางยังไม่มี
+        $existing = [];
+        foreach (static::find()->where(['thai_year' => $toYear, 'source' => self::SOURCE_MANUAL])->all() as $t) {
+            $existing[$t->manualKey()] = true;
+        }
+        foreach (static::find()->where(['thai_year' => $fromYear, 'source' => self::SOURCE_MANUAL])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all() as $src) {
+            if (isset($existing[$src->manualKey()])) {
+                continue;
+            }
+            $code = (string) $src->code;
+            if ($code !== '' && static::codeTaken($toYear, $code, 0)) {
+                $skipped[] = $src->name . ': อักษรย่อ ' . $code . ' ถูกใช้แล้วในปี ' . $toYear;
+                $code = '';
+            }
+            $row = new static([
+                'thai_year' => $toYear,
+                'source' => self::SOURCE_MANUAL,
+                'ref_id' => null,
+                'unit_type' => $src->unit_type,
+                'code' => $code !== '' ? $code : null,
+                'name' => $src->name,
+                'leader_emp_id' => $src->leader_emp_id,
+                'active' => (int) $src->active,
+                'sort' => (int) $src->sort,
+                'data_json' => is_array($src->data_json) ? $src->data_json : null,
+            ]);
+            $row->save(false);
+            $existing[$row->manualKey()] = true;
+            $added++;
+        }
+
+        return ['filled' => $filled, 'added' => $added, 'skipped' => $skipped];
     }
 
     /**
@@ -289,28 +380,70 @@ class OrgUnit extends ActiveRecord
     }
 
     /**
+     * ปีที่มีข้อมูลทะเบียนให้เลือกจริง
+     * ถ้าปีที่ขอยังไม่ได้ตั้งค่าไว้ ให้ถอยไปใช้ปีที่ใกล้ที่สุดที่มีข้อมูล (เท่ากันเลือกปีที่ใหม่กว่า)
+     * เพื่อไม่ให้ฟอร์มขึ้นตัวเลือกว่างเปล่าจนบันทึกไม่ได้
+     */
+    public static function yearWithData(int $thaiYear): int
+    {
+        if (static::find()->where(['thai_year' => $thaiYear, 'active' => 1])->exists()) {
+            return $thaiYear;
+        }
+        $years = array_map('intval', static::find()->select('thai_year')->distinct()->where(['active' => 1])->column());
+        if (!$years) {
+            return $thaiYear;
+        }
+        usort($years, fn ($a, $b) => (abs($a - $thaiYear) <=> abs($b - $thaiYear)) ?: ($b <=> $a));
+        return $years[0];
+    }
+
+    /**
      * ข้อมูลสำหรับ Select2 ของแผน — จัดกลุ่มตามประเภท + เยื้องตามลำดับชั้นผัง (เหมือนหน้าตั้งค่า)
      * คืน: [ชื่อประเภท => [org_unit_id => ชื่อ(เยื้อง)]]
+     *
+     * @param int      $thaiYear ปีงบของเอกสาร
+     * @param int|null $keepId   ค่าที่เอกสารเลือกไว้อยู่ ให้คงอยู่ในรายการเสมอแม้จะถูกปิดใช้หรือเป็นของปีอื่น
+     *                           มิฉะนั้นเปิดฟอร์มแก้ข้อมูลเก่าแล้วค่าเดิมจะหายไปเงียบ ๆ
      */
-    public static function groupedForSelect(int $thaiYear): array
+    public static function groupedForSelect(int $thaiYear, ?int $keepId = null): array
     {
+        $year = static::yearWithData($thaiYear);
+
         $rows = (new Query())
             ->select(['o.id', 'o.name', 'o.source', 'type_title' => 'c.title', 'lvl' => 't.lvl'])
             ->from(['o' => 'org_unit'])
             ->leftJoin(['c' => 'categorise'], "c.name='org_unit_type' AND c.code=o.unit_type")
             ->leftJoin(['t' => 'tree'], 't.id = o.ref_id')
-            ->where(['o.thai_year' => $thaiYear, 'o.active' => 1])
+            ->where(['o.thai_year' => $year, 'o.active' => 1])
             ->orderBy(['o.source' => SORT_DESC, 'o.sort' => SORT_ASC, 'o.name' => SORT_ASC])
             ->all();
 
         $groups = [];
+        $seen = [];
         foreach ($rows as $r) {
             $indent = '';
             if ($r['source'] === self::SOURCE_STRUCTURE && (int) $r['lvl'] > 1) {
                 $indent = str_repeat("\u{00A0}\u{00A0}\u{00A0}", (int) $r['lvl'] - 1);
             }
             $groups[$r['type_title'] ?: 'อื่น ๆ'][$r['id']] = $indent . $r['name'];
+            $seen[(int) $r['id']] = true;
         }
+
+        // ค่าที่เลือกไว้เดิมต้องเลือกค้างได้เสมอ พร้อมบอกเหตุผลว่าทำไมไม่อยู่ในรายการปกติ
+        if ($keepId && empty($seen[$keepId]) && ($kept = static::findOne($keepId))) {
+            $notes = [];
+            if (!$kept->active) {
+                $notes[] = 'ปิดใช้แล้ว';
+            }
+            if ((int) $kept->thai_year !== $year) {
+                $notes[] = 'ปี ' . (int) $kept->thai_year;
+            }
+            $label = $kept->name . ($notes ? ' (' . implode(' · ', $notes) . ')' : '');
+            $typeTitle = (string) Categorise::find()->select('title')
+                ->where(['name' => 'org_unit_type', 'code' => $kept->unit_type])->scalar();
+            $groups[$typeTitle ?: 'อื่น ๆ'][$kept->id] = $label;
+        }
+
         return $groups;
     }
 

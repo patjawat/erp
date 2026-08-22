@@ -27,6 +27,14 @@ class DepreciationPostingService
         if (in_array($period->status, [AccountingPeriod::STATUS_POSTED, AccountingPeriod::STATUS_LOCKED], true)) {
             return ['success' => false, 'message' => 'งวดนี้ถูกบันทึกบัญชี/ล็อกแล้ว', 'posted' => 0];
         }
+        $blocker = $this->unpostedEarlierPeriod($period);
+        if ($blocker !== null) {
+            return [
+                'success' => false,
+                'message' => "ต้องบันทึกบัญชีงวดก่อนหน้าให้เสร็จก่อน: {$blocker->name}",
+                'posted' => 0,
+            ];
+        }
 
         $tx = Yii::$app->db->beginTransaction();
         try {
@@ -37,6 +45,23 @@ class DepreciationPostingService
             $tx->rollBack();
             return ['success' => false, 'message' => 'บันทึกบัญชีไม่สำเร็จ: ' . $e->getMessage(), 'posted' => 0];
         }
+    }
+
+    /**
+     * งวดเดือนก่อนหน้าในปีงบเดียวกันที่ยังไม่ได้บันทึกบัญชี — บัญชีต้องปิดตามลำดับ
+     * ไม่งั้นยอดค่าเสื่อมสะสมในสมุดบัญชีจะข้ามเดือน
+     */
+    public function unpostedEarlierPeriod(AccountingPeriod $period): ?AccountingPeriod
+    {
+        return AccountingPeriod::find()
+            ->where([
+                'period_type' => AccountingPeriod::TYPE_MONTH,
+                'fiscal_year' => $period->fiscal_year,
+            ])
+            ->andWhere(['not in', 'status', [AccountingPeriod::STATUS_POSTED, AccountingPeriod::STATUS_LOCKED]])
+            ->andWhere(['<', 'start_date', $period->start_date])
+            ->orderBy(['start_date' => SORT_ASC])
+            ->one();
     }
 
     private function postPeriodInternal(AccountingPeriod $period, ?int $userId): int

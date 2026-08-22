@@ -596,6 +596,9 @@ class ReceiveController extends Controller
                     $json['po_order_id'] = $poOrderId;
                 }
                 $model->data_json = $json;
+                if (!$isDraft) {
+                    $model->setStockPostedAt(time());
+                }
 
                 $details = $this->request->post('StockDetail', []);
                 if (!is_array($details)) {
@@ -779,6 +782,29 @@ class ReceiveController extends Controller
         $transaction = \Yii::$app->db->beginTransaction();
 
         try {
+            $lockedOrder = InventoryService::lockOrder($model->id);
+            if (!in_array($lockedOrder['status'], [StockOrder::STATUS_DRAFT, StockOrder::STATUS_CONFIRMED], true)) {
+                throw new \Exception('เอกสารนี้ถูกเปลี่ยนสถานะโดยผู้ใช้อื่นแล้ว กรุณาโหลดหน้าใหม่');
+            }
+
+            foreach ($oldItems as $oldItem) {
+                InventoryService::lockStockPool($oldItem->item_code, $oldWarehouseId, $oldItem->lot_number);
+            }
+            $oldItems = StockDetail::find()
+                ->where(['stock_order_id' => $model->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+            $wasDraft = ($lockedOrder['status'] === StockOrder::STATUS_DRAFT);
+            if (!$wasDraft) {
+                foreach ($oldItems as $oldItem) {
+                    if ((float) $oldItem->remain_qty + 0.000001 < abs((float) $oldItem->qty)) {
+                        throw new \Exception(
+                            "ไม่สามารถแก้ไขใบรับเข้าได้ เพราะวัสดุ {$oldItem->item_code} Lot {$oldItem->lot_number} ถูกนำไปจ่ายแล้ว"
+                        );
+                    }
+                }
+            }
+
             $isDraft = (bool) $this->request->post('save_as_draft', false);
             if (!$wasDraft && $isDraft) {
                 $isDraft = false; // เอกสารรับเข้าคลังแล้ว ไม่ให้เปลี่ยนกลับเป็นร่าง
@@ -810,6 +836,9 @@ class ReceiveController extends Controller
                 $model->status = 'DRAFT';
             } else {
                 $model->status = 'CONFIRMED';
+                if ($wasDraft || !$model->getStockPostedAt()) {
+                    $model->setStockPostedAt(time());
+                }
             }
             // เลขที่ใบรับเข้าเว้นว่างได้เสมอ (รวมถึงรับจาก PO) — ถ้าว่างระบบออกเลข RCV- ให้อัตโนมัติ
             if (trim((string) $model->order_no) === '') {
@@ -994,20 +1023,45 @@ class ReceiveController extends Controller
 
         $transaction = \Yii::$app->db->beginTransaction();
         try {
-            // 1. คืนสต็อก (Reverse Stock)
-            // เนื่องจากเป็นใบ RECEIVE (IN) เมื่อยกเลิกต้องจ่ายออก (OUT) เพื่อหักยอด
-            foreach ($model->stockDetails as $detail) {
-                $success = InventoryService::moveStock(
-                    $detail->item_code,
-                    $model->main_warehouse_id,
-                    $detail->qty,
-                    'OUT', // หักออกเพราะยกเลิกการรับเข้า
-                    $model->id,
-                    $detail->id
-                );
+            $lockedOrder = InventoryService::lockOrder($model->id);
+            if ($lockedOrder['status'] === StockOrder::STATUS_CANCELLED) {
+                throw new \Exception('เอกสารนี้ถูกยกเลิกโดยผู้ใช้อื่นแล้ว');
+            }
+            if (!in_array($lockedOrder['status'], [StockOrder::STATUS_DRAFT, StockOrder::STATUS_CONFIRMED], true)) {
+                throw new \Exception('สถานะเอกสารไม่อนุญาตให้ยกเลิก กรุณาโหลดหน้าใหม่');
+            }
 
-                if (!$success) {
-                    throw new \Exception("ไม่สามารถหักยอดสต็อกคืนได้ สำหรับรหัส: " . $detail->item_code);
+            $details = StockDetail::find()
+                ->where(['stock_order_id' => $model->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+            foreach ($details as $detail) {
+                InventoryService::lockStockPool($detail->item_code, $model->main_warehouse_id, $detail->lot_number);
+            }
+            $details = StockDetail::find()
+                ->where(['stock_order_id' => $model->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+
+            // ใบร่างยังไม่เคยเพิ่ม Balance; ใบยืนยันหักคืนได้เฉพาะต้นทางที่ยังไม่ถูกนำไปจ่าย
+            if ($lockedOrder['status'] === StockOrder::STATUS_CONFIRMED) {
+                foreach ($details as $detail) {
+                    if ((float) $detail->remain_qty + 0.000001 < abs((float) $detail->qty)) {
+                        throw new \Exception(
+                            "ไม่สามารถยกเลิกใบรับเข้าได้ เพราะวัสดุ {$detail->item_code} Lot {$detail->lot_number} ถูกนำไปจ่ายแล้ว"
+                        );
+                    }
+                    InventoryService::updateBalance(
+                        $detail->item_code,
+                        $model->main_warehouse_id,
+                        abs((float) $detail->qty),
+                        'OUT',
+                        $detail->lot_number
+                    );
+                    $detail->remain_qty = 0;
+                    if (!$detail->save(false, ['remain_qty'])) {
+                        throw new \Exception("ไม่สามารถปิดยอด Lot ต้นทาง สำหรับรหัส: {$detail->item_code}");
+                    }
                 }
             }
 

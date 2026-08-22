@@ -1,4 +1,4 @@
-### query แก้ คลังจ่าย รพสต. ไม่มียอด
+### query แก้ คลังจ่าย รพสต. ไม่มียอด v1
 UPDATE stock_events i
 JOIN stock_events o ON o.id = i.category_id
 JOIN employees e ON e.user_id = o.created_by

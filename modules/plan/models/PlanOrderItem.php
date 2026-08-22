@@ -10,7 +10,8 @@ use Yii;
  * @property int $id
  * @property int $plan_order_id รหัสแผน
  * @property string $title ชื่อวัสดุ/บุคลากร/ค่าใช้สอย
- * @property string $item_id รหัสที่ใช้เชื่อมกัน
+ * @property string|null $asset_code รหัสครุภัณฑ์
+ * @property string $item_id รหัสที่ใช้เชื่อมกัน (วัสดุ = รหัสวัสดุ, บุคลากร = รหัสพนักงาน)
  * @property string $item_name ชื่อการเชื่อมต่อ
  * @property int|null $qty จำนวน
  * @property float|null $unit_price ราคาต่อหน่วย
@@ -50,6 +51,55 @@ class PlanOrderItem extends \yii\db\ActiveRecord
             [['data_json', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
             [['title', 'item_id', 'item_name'], 'string', 'max' => 255],
         ];
+    }
+
+    /**
+     * สร้างรายการวัสดุของแผนจากแถวที่ส่งมาจากฟอร์ม
+     *
+     * รวมไว้ที่เดียวเพราะมี 3 ทางที่บันทึกรายการวัสดุ (plan/parcel สร้าง, plan/parcel แก้ไข,
+     * me/plan ของหัวหน้าหน่วยงาน) ซึ่งเคยเขียนแยกกันแล้วตกหล่นไม่เหมือนกัน
+     *
+     * item_id เก็บรหัสวัสดุไว้โยงกลับไปทะเบียนวัสดุ ให้สอดคล้องกับแผนบุคลากรที่เก็บ emp_id ไว้ช่องเดียวกัน
+     * แถวที่ผู้ใช้พิมพ์ชื่อเองจะไม่มีรหัส เก็บเป็นค่าว่างได้
+     *
+     * @param array $row คีย์ที่รับ: item_name, qty, unit_price, code
+     * @return array|null null เมื่อแถวไม่มีชื่อรายการ (แถวว่างจากฟอร์ม)
+     */
+    public static function parcelRowAttributes(int $planOrderId, array $row): ?array
+    {
+        $itemName = trim((string) ($row['item_name'] ?? ''));
+        if ($itemName === '') {
+            return null;
+        }
+
+        $qty = (int) ($row['qty'] ?? 0);
+        $unitPrice = (float) ($row['unit_price'] ?? 0);
+
+        return [
+            'plan_order_id' => $planOrderId,
+            'title' => $itemName,
+            'item_name' => $itemName,
+            'item_id' => trim((string) ($row['code'] ?? '')),
+            'qty' => $qty,
+            'unit_price' => $unitPrice,
+            'total_price' => round($qty * $unitPrice, 2),
+        ];
+    }
+
+    /**
+     * บันทึกรายการวัสดุหนึ่งแถวจากฟอร์ม คืน false เมื่อเป็นแถวว่างที่ข้ามไป
+     */
+    public static function saveParcelRow(int $planOrderId, array $row): bool
+    {
+        $attributes = self::parcelRowAttributes($planOrderId, $row);
+        if ($attributes === null) {
+            return false;
+        }
+
+        $item = new self();
+        $item->setAttributes($attributes, false);
+
+        return $item->save(false);
     }
 
     /**

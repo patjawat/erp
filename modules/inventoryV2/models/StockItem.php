@@ -8,6 +8,7 @@ use app\modules\filemanager\components\FileManagerHelper;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 
 /**
  * StockItem — Phase 2 ของแผน "ยุบ stock_item ไปรวมกับ categorise(asset_item, MATER)"
@@ -130,6 +131,8 @@ class StockItem extends \yii\db\ActiveRecord
         if (!parent::beforeSave($insert)) {
             return false;
         }
+
+        $this->normalizeDataJson();
         $this->name = 'asset_item';
         if (empty($this->group_id)) {
             $this->group_id = 'MATER';
@@ -140,7 +143,30 @@ class StockItem extends \yii\db\ActiveRecord
             $j['unit_name'] = $this->unit_name;
             $this->data_json = $j;
         }
+
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
         return true;
+    }
+
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        $this->normalizeDataJson();
     }
 
     public function rules()
@@ -233,6 +259,19 @@ class StockItem extends \yii\db\ActiveRecord
             return is_array($d) ? $d : [];
         }
         return [];
+    }
+
+    private function normalizeDataJson(): void
+    {
+        $this->data_json = $this->parseDataJson();
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     // ===================== Relations =====================

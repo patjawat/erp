@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
-/** @var app\modules\booking\models\Vehicle[] $trips */
+/** @var app\modules\booking\models\VehicleDetail[] $trips */
 /** @var string $driverName */
 
 $totalTrips = count($trips);
@@ -32,6 +32,7 @@ $totalTrips = count($trips);
                         <th style="width:180px;">วันที่</th>
                         <th>สถานที่ที่ไป</th>
                         <th>วัตถุประสงค์</th>
+                        <th style="width:120px;">ทะเบียนรถ</th>
                         <th style="width:100px;" class="text-center">สถานะ</th>
                         <th style="width:60px;"></th>
                     </tr>
@@ -39,11 +40,12 @@ $totalTrips = count($trips);
                 <tbody>
                     <?php foreach ($trips as $i => $trip): ?>
                         <?php
-                        $dateRange = $trip->showDateRange();
-                        $location = $trip->locationOrg?->title ?: ($trip->location ?: '-');
-                        $reason = trim((string) $trip->reason) ?: '-';
+                        $vehicle = $trip->vehicle;
+                        $dateRange = $trip->showDate();
+                        $location = $vehicle?->locationOrg?->title ?: ($vehicle?->location ?: '-');
+                        $reason = trim((string) ($vehicle?->reason ?? '')) ?: '-';
 
-                        $statusLabel = $trip->vehicleStatus?->title ?? $trip->status;
+                        $statusLabel = $trip->vehicleDetailStatus?->title ?? $trip->status;
                         $statusClass = match ($trip->status) {
                             'Approve' => 'bg-primary-subtle text-primary',
                             'Pass'    => 'bg-info-subtle text-info',
@@ -53,7 +55,7 @@ $totalTrips = count($trips);
 
                         $viewUrl = Url::to([
                             '/booking/vehicle/view',
-                            'id' => $trip->id,
+                            'id' => $trip->vehicle_id,
                             'title' => '<i class="fa-solid fa-car"></i> รายละเอียดการใช้ยานพาหนะ',
                         ]);
                         ?>
@@ -64,6 +66,7 @@ $totalTrips = count($trips);
                                 <div class="text-muted small">
                                     <?= Html::encode(trim(($trip->time_start ?: '') . ' - ' . ($trip->time_end ?: ''), ' -')) ?: '-' ?>
                                 </div>
+                                <div class="text-muted small"><?= Html::encode((string) ($vehicle?->code ?? '')) ?></div>
                             </td>
                             <td>
                                 <div class="text-truncate" style="max-width:280px;" title="<?= Html::encode($location) ?>">
@@ -74,6 +77,9 @@ $totalTrips = count($trips);
                                 <div class="text-truncate" style="max-width:320px;" title="<?= Html::encode($reason) ?>">
                                     <?= Html::encode($reason) ?>
                                 </div>
+                            </td>
+                            <td>
+                                <span class="text-nowrap"><?= Html::encode((string) ($trip->license_plate ?: '-')) ?></span>
                             </td>
                             <td class="text-center">
                                 <span class="badge rounded-pill <?= $statusClass ?>">

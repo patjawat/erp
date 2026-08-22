@@ -116,7 +116,6 @@ class DevelopmentController extends Controller
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $me = UserHelper::GetEmployee();
-                Yii::$app->response->format = Response::FORMAT_JSON;
                 $model->emp_id = $me->id;
                 $model->status = 'Pending';
                 try {
@@ -125,25 +124,72 @@ class DevelopmentController extends Controller
                     $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToGregorian($model->vehicle_date_start) : null;
                     $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
-                    
                 }
-                if ($model->save(false)) {
-                    AppHelper::checkLocation($model->data_json['location']);
-                    AppHelper::checkLocation($model->data_json['location_org']);
+
+                $memberEmpIds = $this->request->post('member_emp_ids', []);
+                if (!is_array($memberEmpIds)) {
+                    $memberEmpIds = [];
+                }
+                $allMemberEmpIds = array_merge([$me->id], $memberEmpIds);
+                $transaction = Yii::$app->db->beginTransaction();
+                $pendingApprove = null;
+
+                try {
+                    if (!$model->save(false)) {
+                        throw new \RuntimeException('ไม่สามารถบันทึกคำขอพัฒนาบุคลากรได้');
+                    }
+
+                    foreach (['location', 'location_org'] as $locationKey) {
+                        $locationName = trim((string) ($model->data_json[$locationKey] ?? ''));
+                        if ($locationName !== '') {
+                            AppHelper::checkLocation($locationName);
+                        }
+                    }
                     $addMember = new DevelopmentDetail();
                     $addMember->development_id = $model->id;
                     $addMember->name = 'member';
                     $addMember->emp_id = $me->id;
-                    $addMember->save(false);
-                    $allMemberEmpIds = array_merge([$me->id], $this->request->post('member_emp_ids', []));
-                    $this->syncTravelPartyMembers($model, $allMemberEmpIds);
-                    $model->createApprove();
-                    // แจ้งเตือนหัวหน้าของสมาชิกคณะเดินทางทุกคน (ยกเว้น leader_id ที่ createApprove แจ้งแล้ว)
-                    try {
-                        $model->notifyMembersLeaders($allMemberEmpIds, $model->leader_id);
-                    } catch (\Throwable $th) {
-                        Yii::error('notifyMembersLeaders failed: ' . $th->getMessage(), __METHOD__);
+                    if (!$addMember->save(false)) {
+                        throw new \RuntimeException('ไม่สามารถบันทึกผู้ขอในคณะเดินทางได้');
                     }
+
+                    $this->syncTravelPartyMembers($model, $allMemberEmpIds);
+                    $pendingApprove = $model->createApprove();
+                    $transaction->commit();
+                } catch (\Throwable $th) {
+                    if ($transaction->isActive) {
+                        $transaction->rollBack();
+                    }
+                    Yii::error('create development failed: ' . $th->getMessage(), __METHOD__);
+
+                    if ($this->request->isAjax) {
+                        Yii::$app->response->format = Response::FORMAT_JSON;
+                        return [
+                            'status' => 'error',
+                            'message' => 'บันทึกคำขอไม่สำเร็จ ระบบไม่ได้สร้างรายการ กรุณาลองใหม่อีกครั้ง',
+                        ];
+                    }
+
+                    throw $th;
+                }
+
+                if ($pendingApprove) {
+                    $model->notifyPendingApprove($pendingApprove);
+                }
+                // แจ้งเตือนหัวหน้าของสมาชิกคณะเดินทางทุกคน (ยกเว้น leader_id ที่แจ้งแล้ว)
+                try {
+                    $model->notifyMembersLeaders($allMemberEmpIds, $model->leader_id);
+                } catch (\Throwable $th) {
+                    Yii::error('notifyMembersLeaders failed: ' . $th->getMessage(), __METHOD__);
+                }
+
+                if ($this->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'message' => 'บันทึกคำขอพัฒนาบุคลากรเรียบร้อยแล้ว',
+                        'redirect_url' => Url::to(['view', 'id' => $model->id]),
+                    ];
                 }
 
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -256,7 +302,9 @@ class DevelopmentController extends Controller
 
         foreach ($existing as $detail) {
             if (!in_array($detail->emp_id, $memberEmpIds, true)) {
-                $detail->delete();
+                if ($detail->delete() === false) {
+                    throw new \RuntimeException('ไม่สามารถลบสมาชิกคณะเดินทางเดิมได้');
+                }
             }
         }
 
@@ -268,7 +316,9 @@ class DevelopmentController extends Controller
             $detail->development_id = (int) $model->id;
             $detail->name = 'member';
             $detail->emp_id = $empId;
-            $detail->save(false);
+            if (!$detail->save(false)) {
+                throw new \RuntimeException('ไม่สามารถบันทึกสมาชิกคณะเดินทางได้');
+            }
         }
     }
 

@@ -3,6 +3,9 @@
 namespace app\modules\booking\models;
 
 use Yii;
+use yii\helpers\Url;
+use yii\db\Expression;
+use yii\bootstrap5\Html;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
@@ -221,5 +224,154 @@ class VehicleDetail extends \yii\db\ActiveRecord
             'view' => $data['view'],
             'icon' => $data['icon']
         ];
+    }
+
+    /* ------------------------------------------------------------------
+     * แบบประเมินความพึงพอใจการใช้รถ (ใช้ taxonomy categorise name = 'rating'
+     * ชุดเดียวกับงานซ่อม 1=ควรปรับปรุง ... 5=ดีมาก)
+     * เก็บใน data_json:
+     *   survey_token   = คีย์สำหรับลิงก์ประเมิน (ส่งทาง Telegram)
+     *   survey_sent_at = เวลาที่ส่งลิงก์
+     *   satisfaction   = ['score','comment','at','by']
+     * ------------------------------------------------------------------ */
+
+    public const STATUS_SUCCESS = 'Success';
+
+    /** ค่า data_json ที่ปลอดภัยเสมอเป็น array */
+    public function dataJson(): array
+    {
+        if (is_array($this->data_json)) {
+            return $this->data_json;
+        }
+        if (is_string($this->data_json) && $this->data_json !== '') {
+            return json_decode($this->data_json, true) ?: [];
+        }
+        return [];
+    }
+
+    /** คีย์ลิงก์ประเมิน — สร้างและบันทึกให้อัตโนมัติถ้ายังไม่มี */
+    public function ensureSurveyToken(): string
+    {
+        $data = $this->dataJson();
+        $token = trim((string) ($data['survey_token'] ?? ''));
+        if ($token !== '') {
+            return $token;
+        }
+        $token = Yii::$app->security->generateRandomString(32);
+        $data['survey_token'] = $token;
+        $this->data_json = $data;
+        $this->save(false, ['data_json']);
+
+        return $token;
+    }
+
+    public function surveyToken(): string
+    {
+        return trim((string) ($this->dataJson()['survey_token'] ?? ''));
+    }
+
+    /** ลิงก์แบบประเมิน (absolute) สำหรับส่งให้ผู้ขอ */
+    public function surveyUrl(): string
+    {
+        return Url::to(['/booking/vehicle-survey/index', 'token' => $this->ensureSurveyToken()], true);
+    }
+
+    /** ผลการประเมินที่บันทึกไว้ */
+    public function satisfaction(): array
+    {
+        $row = $this->dataJson()['satisfaction'] ?? [];
+        return is_array($row) ? $row : [];
+    }
+
+    public function satisfactionScore(): int
+    {
+        return (int) ($this->satisfaction()['score'] ?? 0);
+    }
+
+    public function isSurveyed(): bool
+    {
+        return $this->satisfactionScore() > 0;
+    }
+
+    /** ประเมินได้เมื่อภารกิจเสร็จสิ้นแล้วและยังไม่เคยประเมิน */
+    public function canSurvey(): bool
+    {
+        return (string) $this->status === self::STATUS_SUCCESS && !$this->isSurveyed();
+    }
+
+    public function saveSatisfaction(int $score, string $comment, $byEmpId = null): bool
+    {
+        if ($score < 1 || $score > 5) {
+            return false;
+        }
+        $data = $this->dataJson();
+        $data['satisfaction'] = [
+            'score' => $score,
+            'comment' => $comment,
+            'at' => date('Y-m-d H:i:s'),
+            'by' => $byEmpId !== null && $byEmpId !== '' ? (string) $byEmpId : null,
+        ];
+        $this->data_json = $data;
+
+        return (bool) $this->save(false, ['data_json']);
+    }
+
+    public function markSurveySent(): void
+    {
+        $data = $this->dataJson();
+        $data['survey_sent_at'] = date('Y-m-d H:i:s');
+        $this->data_json = $data;
+        $this->save(false, ['data_json']);
+    }
+
+    /** คำอธิบายคะแนนตาม taxonomy 'rating' */
+    public static function ratingTitle(int $score): string
+    {
+        if ($score < 1) {
+            return '';
+        }
+        $cat = Categorise::findOne(['name' => 'rating', 'code' => (string) $score]);
+
+        return (string) ($cat->title ?? '');
+    }
+
+    public static function listRating(): array
+    {
+        $rows = Categorise::find()
+            ->where(['name' => 'rating'])
+            ->orderBy(['code' => SORT_ASC])
+            ->asArray()
+            ->all();
+
+        return ArrayHelper::map($rows, 'code', 'title');
+    }
+
+    /** แสดงดาว + คำอธิบาย (ใช้ในตารางฝั่งเจ้าหน้าที่) */
+    public function viewSatisfaction(): string
+    {
+        $score = $this->satisfactionScore();
+        if ($score < 1) {
+            return '';
+        }
+        $stars = '';
+        for ($i = 1; $i <= 5; $i++) {
+            $stars .= '<i class="bi bi-star' . ($i <= $score ? '-fill' : '') . '"></i>';
+        }
+
+        return '<span class="text-warning">' . $stars . '</span> <span class="text-muted">'
+            . Html::encode(self::ratingTitle($score)) . '</span>';
+    }
+
+    public static function findBySurveyToken(string $token): ?self
+    {
+        $token = trim($token);
+        if ($token === '' || strlen($token) < 16) {
+            return null;
+        }
+
+        return self::find()
+            ->where(new Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.survey_token')) = :token", [':token' => $token]))
+            ->andWhere(['deleted_at' => null])
+            ->one();
     }
 }

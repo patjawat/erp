@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /**
  * เมนูหลักงานพัสดุ (ใช้ร่วมกันระหว่างโมดูล sm และ purchase)
  *
- * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'setting'
+ * @var string $active 'dashboard' | 'order' | 'tor' | 'contract' | 'guarantee' | 'doc' | 'setting'
  *
  * รูปทรงปุ่มยึดตามแถบเมนูของโมดูลอื่น คือ btn-outline-primary เมื่อไม่ได้เลือก
  * และ btn-primary เมื่อเลือกอยู่ ขนาดปกติ ไม่ใส่ rounded-pill
@@ -43,6 +43,10 @@ $btn = function (string $key) use ($active): string {
 
     <a href="<?= Url::to(['/purchase/bond']) ?>" class="<?= $btn('guarantee') ?>">
         <i class="bi bi-shield-check me-1"></i>หลักประกัน
+    </a>
+
+    <a href="<?= Url::to(['/purchase/doc']) ?>" class="<?= $btn('doc') ?>">
+        <i class="bi bi-printer me-1"></i>พิมพ์เอกสาร
     </a>
 
     <div class="dropdown">

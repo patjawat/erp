@@ -4,6 +4,7 @@ namespace app\modules\hr\models;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\db\Expression;
 use app\models\Categorise;
 use app\components\LineMsg;
@@ -41,7 +42,7 @@ use app\modules\hr\models\DevelopmentSummary;
  * @property string $leader_id หัวหน้าฝ่าย
  * @property int $assigned_to มอบหมายงานให้
  * @property string $emp_id ผู้ขอ
- * @property string|null $data_json JSON
+ * @property array|string|null $data_json JSON
  * @property string|null $created_at วันที่สร้าง
  * @property string|null $updated_at วันที่แก้ไข
  * @property int|null $created_by ผู้สร้าง
@@ -128,6 +129,65 @@ class Development extends \yii\db\ActiveRecord
                 'value' => new Expression('NOW()'),
             ],
         ];
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        $this->normalizeDataJson();
+    }
+
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     public function getDevelopmentType()
@@ -548,102 +608,78 @@ class Development extends \yii\db\ActiveRecord
         return $model ? $model->title : '-';
     }
 
-    // สร้างการอนุมัติ
+    /**
+     * สร้างลำดับการอนุมัติให้ครบทุกระดับ
+     *
+     * @return Approve|null ขั้นแรกที่สร้างใหม่ เพื่อส่งการแจ้งเตือนหลัง transaction commit
+     */
     public function createApprove()
     {
-        // หัวหน้างาน
-        $developmentStep1Check = Approve::findOne(['from_id' => $this->id, 'level' => 1, 'name' => 'development']);
-        try {
-            if (!$developmentStep1Check) {
-                $developmentStep1 = $developmentStep1Check ? $developmentStep1Check : new Approve();
-                $developmentStep1->from_id = $this->id;
-                $developmentStep1->name = 'development';
-                $developmentStep1->emp_id = $this->leader_id;
-                $developmentStep1->title = 'เห็นชอบ';
-                $developmentStep1->data_json = ['label' => 'เห็นชอบ'];
-                $developmentStep1->level = 1;
-                $developmentStep1->status = 'Pending';
-                $developmentStep1->save(false);
-                // try {
-                // ส่ง msg ให้ Approve
-                $toUserId = trim((string) ($developmentStep1->employee?->user?->line_id ?? ''));
-                $msg = 'ขออนุมัติ';
-                $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
-                $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
-                $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
-                $msg .= "\n" . 'ผู้ขอ : ' . ($this->createdByEmp?->fullname ?? '-');
-                if ($toUserId !== '') {
-                    try {
-                        LineMsg::sendMsg($toUserId, $msg);
-                    } catch (\Throwable $th) {
-                        Yii::error('development approve line notify fail: ' . $th->getMessage(), __METHOD__);
-                    }
-                }
-
-                try {
-                    (new DevelopmentTelegramService())->notifyPendingApprove($this, $developmentStep1);
-                } catch (\Throwable $th) {
-                    Yii::error('development approve telegram notify fail: ' . $th->getMessage(), __METHOD__);
-                }
-                // } catch (\Throwable $th) {
-
-                // }
-            }
-        } catch (\Throwable $th) {
-        }
-
-        try {
-            // หัวหน้ากลุ่มงานเห็นชอบ
-            $developmentStep2Check = Approve::findOne(['from_id' => $this->id, 'level' => 2, 'name' => 'development']);
-            if (!$developmentStep2Check) {
-                $developmentStep2 = $developmentStep2Check ? $developmentStep2Check : new Approve();
-                $developmentStep2->from_id = $this->id;
-                $developmentStep2->name = 'development';
-                $developmentStep2->emp_id = $this->leader_group_id;
-                $developmentStep2->title = 'เห็นชอบ';
-                $developmentStep2->data_json = ['label' => 'เห็นชอบ'];
-                $developmentStep2->level = 2;
-                $developmentStep2->status = 'None';
-                $developmentStep2->save(false);
-            }
-        } catch (\Throwable $th) {
-        }
-
-        try {
-            // ผู้ตรวจสอบ
-            $developmentStep3Check = Approve::findOne(['from_id' => $this->id, 'level' => 3, 'name' => 'development']);
-            if (!$developmentStep3Check) {
-                $developmentStep3 = $developmentStep3Check ? $developmentStep3Check : new Approve();
-                $developmentStep3->from_id = $this->id;
-                $developmentStep3->name = 'development';
-                $developmentStep3->title = 'ตรวจสอบ';
-                // $developmentStep3->emp_id = $this->data_json['approve_3'];
-                $developmentStep3->data_json = ['label' => 'ผ่าน'];
-                $developmentStep3->level = 3;
-                $developmentStep3->status = 'None';
-                $developmentStep3->save(false);
-            }
-        } catch (\Throwable $th) {
-        }
-
-        // ผู้อำนวยการอนุมัติ
         $director = SiteHelper::viewDirector();
-        $developmentStep4Check = Approve::findOne(['from_id' => $this->id, 'level' => 4, 'name' => 'development']);
-        // try {
-        if (!$developmentStep4Check) {
-            $developmentStep4 = $developmentStep4Check ? $developmentStep4Check : new Approve();
-            $developmentStep4->from_id = $this->id;
-            $developmentStep4->name = 'development';
-            $developmentStep4->emp_id = $director['id'];
-            $developmentStep4->title = 'อนุมัติ';
-            $developmentStep4->data_json = ['label' => 'อนุมัติ'];
-            $developmentStep4->level = 4;
-            $developmentStep4->status = 'None';
-            $developmentStep4->save(false);
+        $steps = [
+            1 => ['emp_id' => $this->leader_id, 'title' => 'เห็นชอบ', 'label' => 'เห็นชอบ', 'status' => 'Pending'],
+            2 => ['emp_id' => $this->leader_group_id, 'title' => 'เห็นชอบ', 'label' => 'เห็นชอบ', 'status' => 'None'],
+            3 => ['emp_id' => null, 'title' => 'ตรวจสอบ', 'label' => 'ผ่าน', 'status' => 'None'],
+            4 => ['emp_id' => $director['id'] ?? null, 'title' => 'อนุมัติ', 'label' => 'อนุมัติ', 'status' => 'None'],
+        ];
+
+        $newPendingApprove = null;
+        foreach ($steps as $level => $step) {
+            $existing = Approve::findOne([
+                'from_id' => $this->id,
+                'level' => $level,
+                'name' => 'development',
+            ]);
+            if ($existing) {
+                continue;
+            }
+
+            $approve = new Approve([
+                'from_id' => $this->id,
+                'name' => 'development',
+                'emp_id' => $step['emp_id'],
+                'title' => $step['title'],
+                'data_json' => ['label' => $step['label']],
+                'level' => $level,
+                'status' => $step['status'],
+            ]);
+            if (!$approve->save(false)) {
+                throw new \RuntimeException('ไม่สามารถสร้างลำดับการอนุมัติระดับ ' . $level);
+            }
+
+            if ($level === 1) {
+                $newPendingApprove = $approve;
+            }
         }
-        // code...
-        // } catch (\Throwable $th) {
-        // }
+
+        if (!$newPendingApprove) {
+            return null;
+        }
+
+        return $newPendingApprove;
+    }
+
+    public function notifyPendingApprove(Approve $pendingApprove): void
+    {
+        $toUserId = trim((string) ($pendingApprove->employee?->user?->line_id ?? ''));
+        $msg = 'ขออนุมัติ';
+        $msg .= "\n" . 'หัวข้อ : ' . $this->topic;
+        $msg .= "\n" . 'วันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_start, 'long', 'short');
+        $msg .= "\n" . 'ถึงวันที่ : ' . ThaiDateHelper::formatThaiDate($this->date_end, 'long', 'short');
+        $msg .= "\n" . 'ผู้ขอ : ' . ($this->createdByEmp?->fullname ?? '-');
+        if ($toUserId !== '') {
+            try {
+                LineMsg::sendMsg($toUserId, $msg);
+            } catch (\Throwable $th) {
+                Yii::error('development approve line notify fail: ' . $th->getMessage(), __METHOD__);
+            }
+        }
+
+        try {
+            (new DevelopmentTelegramService())->notifyPendingApprove($this, $pendingApprove);
+        } catch (\Throwable $th) {
+            Yii::error('development approve telegram notify fail: ' . $th->getMessage(), __METHOD__);
+        }
     }
 
     /**

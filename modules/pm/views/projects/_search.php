@@ -10,7 +10,7 @@ use app\modules\pm\models\Projects;
 /** @var app\modules\pm\models\ProjectsSearch $model */
 
 // ค้นหาข้ามปีได้ จึงรวมหน่วยงานของทุกปีในทะเบียน ไม่ผูกกับปีใดปีหนึ่ง
-$ouYear = (int) ($model->thai_year ?: date('Y') + 543 + (date('n') >= 10 ? 1 : 0));
+$ouYear = (int) ($model->thai_year ?: \app\modules\plan\components\PlanHelper::currentPlanYear());
 $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 ?>
 <div class="card mb-3">

@@ -22,7 +22,14 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>'
     ],
     [
-        
+        'show' => Yii::$app->user->can('executiveDashboardView'),
+        'label' => 'Dashboard ผู้บริหาร',
+        'url' => ['/executive/dashboard/index'],
+        'active' => 'executive',
+        'icon' => '<i class="bi bi-graph-up-arrow"></i>'
+    ],
+    [
+
         'show' => Yii::$app->user->can('user') ? true : false,
         'label' => 'Dashboard (User)', 
         'url' => ['/me/default/index'], 
@@ -85,6 +92,24 @@ $menuItems = [
         'url' => ['/plan/dashboard'],
         'active' => 'plan',
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20"></path><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path><path d="m7 21 5-5 5 5"></path></svg>'
+    ],
+    [
+        // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
+        // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC accounting โดยเฉพาะ
+        'show' => Yii::$app->user->can('accountingView'),
+        'label' => 'บัญชี',
+        'url' => ['/accounting/dashboard'],
+        'active' => 'accounting',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path></svg>'
+    ],
+    [
+        // ระยะต้นแบบเปิดทางเข้าให้ผู้ใช้ที่เข้าสู่ระบบเห็นก่อน
+        // ก่อนใช้งานจริงต้องเปลี่ยนเป็น RBAC finance โดยเฉพาะ
+        'show' => Yii::$app->user->can('financeView'),
+        'label' => 'การเงิน',
+        'url' => ['/finance/dashboard'],
+        'active' => 'finance',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line><path d="M6 15h2"></path><path d="M14 15h4"></path></svg>'
     ],
     [
         'show' => Yii::$app->user->can('pm'),

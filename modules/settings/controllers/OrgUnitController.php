@@ -28,6 +28,7 @@ class OrgUnitController extends Controller
                     'save' => ['post'],
                     'add' => ['post'],
                     'sync' => ['post'],
+                    'copy-year' => ['post'],
                     'delete' => ['post'],
                     'type-add' => ['post'],
                     'type-save' => ['post'],
@@ -205,6 +206,36 @@ class OrgUnitController extends Controller
         $r = OrgUnit::syncStructure($year);
         OrgUnit::syncToMedsop($year);
         Yii::$app->session->setFlash('success', "ซิงก์จากผังโครงสร้างแล้ว — เพิ่ม {$r['added']}, อัปเดต {$r['updated']} หน่วย");
+        return $this->redirect(['index', 'thai_year' => $year]);
+    }
+
+    /**
+     * คัดลอกทะเบียนจากปีอื่นเข้าปีที่เลือก — เติมอักษรย่อที่ยังว่าง + เพิ่มทีมประสานที่ยังไม่มี
+     * ใช้กับปีที่มีแต่ผลของการซิงก์ผัง ซึ่งยังไม่มีทีมประสานให้เลือกในฟอร์มแผน/โครงการ
+     */
+    public function actionCopyYear()
+    {
+        $year = (int) ($this->request->post('thai_year') ?: PlanHelper::currentPlanYear());
+        $from = (int) $this->request->post('from_year');
+
+        if ($from <= 0 || $from === $year) {
+            Yii::$app->session->setFlash('error', 'เลือกปีต้นทางที่ไม่ใช่ปีเดียวกับปลายทาง');
+            return $this->redirect(['index', 'thai_year' => $year]);
+        }
+        if (!OrgUnit::find()->where(['thai_year' => $from])->exists()) {
+            Yii::$app->session->setFlash('error', "ไม่มีข้อมูลทะเบียนของปี {$from}");
+            return $this->redirect(['index', 'thai_year' => $year]);
+        }
+
+        $r = OrgUnit::copyFromYear($from, $year);
+        OrgUnit::syncToMedsop($year);
+
+        $msg = "คัดลอกจากปี {$from} แล้ว — เติมอักษรย่อ/ประเภท {$r['filled']} หน่วย, เพิ่มหน่วยที่ยังไม่มี {$r['added']} รายการ";
+        if ($r['skipped']) {
+            Yii::$app->session->setFlash('warning', $msg . ' · ข้ามบางรายการ: ' . implode(' | ', $r['skipped']));
+        } else {
+            Yii::$app->session->setFlash('success', $msg);
+        }
         return $this->redirect(['index', 'thai_year' => $year]);
     }
 

@@ -96,6 +96,24 @@ $renderSettingCard = static function (array $item): string {
             </div>
             <div class="col-12 col-md-6 col-xl-4">
                 <?= $renderSettingCard([
+                    'url' => Url::to(['/settings/workforce-profile']),
+                    'title' => 'โปรไฟล์โรงพยาบาล',
+                    'subtitle' => 'ระดับ เตียง ประชากร และตัวเลขที่สูตรกรอบอัตรากำลังใช้',
+                    'icon' => 'fa-solid fa-hospital',
+                    'color' => 'warning',
+                ]) ?>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <?= $renderSettingCard([
+                    'url' => Url::to(['/settings/workforce-standard']),
+                    'title' => 'เกณฑ์กรอบอัตรากำลัง',
+                    'subtitle' => 'เกณฑ์ สป.สธ. และการจับคู่กับตำแหน่งของโรงพยาบาล',
+                    'icon' => 'fa-solid fa-ruler-combined',
+                    'color' => 'danger',
+                ]) ?>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <?= $renderSettingCard([
                     'url' => Url::to(['/setting']),
                     'title' => 'ตั้งค่าสี',
                     'subtitle' => 'ปรับโทนสีและภาพรวมธีมระบบ',

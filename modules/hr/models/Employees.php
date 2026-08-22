@@ -351,7 +351,7 @@ class Employees extends Yii\db\ActiveRecord
             ->where(['legacy_code' => $legacyCode])
             ->scalar();
 
-        return $groupId !== null ? (int) $groupId : null;
+        return $groupId !== false && $groupId !== null ? (int) $groupId : null;
     }
 
     private function legacyEmployeePositionId($legacyValue)
@@ -366,7 +366,7 @@ class Employees extends Yii\db\ActiveRecord
             ->where(['legacy_code' => $legacyCode])
             ->scalar();
 
-        return $positionId !== null ? (int) $positionId : null;
+        return $positionId !== false && $positionId !== null ? (int) $positionId : null;
     }
 
     private function syncEmployeeMasterFields(): void
@@ -410,8 +410,12 @@ class Employees extends Yii\db\ActiveRecord
             $this->gender = 'หญิง';
         }
         $this->syncEmployeeMasterFields();
-        // ป้องกัน Array to string conversion: คอลัมน์ data_json รับ string (JSON) แต่ฟอร์มโหลดเป็น array
-        if (is_array($this->data_json)) {
+        // Yii จะแปลง array ให้คอลัมน์ JSON เอง; encode เฉพาะฐาน legacy ที่เป็น text
+        $dataJsonColumn = static::getTableSchema()->getColumn('data_json');
+        if (
+            is_array($this->data_json)
+            && (!$dataJsonColumn || $dataJsonColumn->type !== \yii\db\Schema::TYPE_JSON)
+        ) {
             $this->data_json = json_encode($this->data_json, JSON_UNESCAPED_UNICODE);
         }
 
@@ -2112,17 +2116,26 @@ class Employees extends Yii\db\ActiveRecord
         $emp = $this->id;
         $department = $this->department;
 
-        $sql = "SELECT `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic 
+        $sql = "SELECT `documents`.id, thai_year, TRIM(doc_number) AS doc_number, topic,
+                COALESCE(NULLIF(TRIM(document_org.title), ''), 'ไม่ระบุหน่วยงาน') AS document_org_name
             FROM `documents_detail` 
             LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
-            WHERE (`to_id` = :department) AND (`name` = 'department')
+            LEFT JOIN `categorise` AS document_org
+                ON document_org.code = `documents`.document_org AND document_org.name = 'document_org'
+            WHERE (`documents_detail`.`to_id` = :department)
+                AND (`documents_detail`.`name` = 'department')
             
             UNION
             
-            SELECT  `documents`.id,thai_year, TRIM(doc_number) AS doc_number,topic  
+            SELECT `documents`.id, thai_year, TRIM(doc_number) AS doc_number, topic,
+                COALESCE(NULLIF(TRIM(document_org.title), ''), 'ไม่ระบุหน่วยงาน') AS document_org_name
             FROM `documents_detail` 
             LEFT JOIN `documents` ON `documents_detail`.`document_id` = `documents`.`id` 
-            WHERE (`to_id` = :emp) AND (`name` = 'tags')";
+            LEFT JOIN `categorise` AS document_org
+                ON document_org.code = `documents`.document_org AND document_org.name = 'document_org'
+            WHERE (`documents_detail`.`to_id` = :emp)
+                AND (`documents_detail`.`name` = 'tags')
+            ORDER BY id DESC";
 
         $querys = Yii::$app->db->createCommand($sql)
             ->bindValue(':department', $department)

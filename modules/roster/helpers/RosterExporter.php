@@ -40,7 +40,10 @@ class RosterExporter
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('ตารางเวร');
 
-        $lastCol = Coordinate::stringFromColumnIndex(3 + $days); // A ลำดับ, B ชื่อ, วัน 1..n, รวม
+        // A ลำดับ, B ชื่อ, C ตำแหน่ง, วัน 1..n, แล้วสรุป 4 คอลัมน์: รวมเวร/วันหยุด/OT/ค่าตอบแทน
+        $dayStart = 4; // คอลัมน์แรกของวันที่ 1
+        $sumStart = $dayStart + $days;
+        $lastCol = Coordinate::stringFromColumnIndex($sumStart + 3);
 
         $sheet->mergeCells("A1:{$lastCol}1");
         $sheet->setCellValue('A1', $period->title . ' — ' . $period->unitName() . ' — ' . $period->monthLabel());
@@ -49,8 +52,9 @@ class RosterExporter
 
         $sheet->setCellValue('A2', 'ลำดับ');
         $sheet->setCellValue('B2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('C2', 'ตำแหน่ง');
         for ($d = 1; $d <= $days; $d++) {
-            $col = Coordinate::stringFromColumnIndex(2 + $d);
+            $col = Coordinate::stringFromColumnIndex($dayStart - 1 + $d);
             $ts = strtotime($period->dateOfDay($d));
             $sheet->setCellValue($col . '2', $d . "\n" . self::DOW[(int) date('w', $ts)]);
             if (isset($holidays[$d])) {
@@ -61,7 +65,9 @@ class RosterExporter
                     ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2E3E5');
             }
         }
-        $sheet->setCellValue($lastCol . '2', 'รวม');
+        foreach (['รวมเวร', 'วันหยุด', 'OT', 'ค่าตอบแทน'] as $i => $label) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($sumStart + $i) . '2', $label);
+        }
         $sheet->getStyle("A2:{$lastCol}2")->getFont()->setBold(true);
         $sheet->getStyle("A2:{$lastCol}2")->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)
@@ -73,20 +79,33 @@ class RosterExporter
             $empId = (int) $emp['id'];
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname']));
+            $sheet->setCellValue('C' . $row, (string) ($emp['position_name'] ?? ''));
             $total = 0;
+            $offDays = 0;
+            $otShifts = 0;
+            $pay = 0.0;
             for ($d = 1; $d <= $days; $d++) {
                 $items = $grid[$empId][$d] ?? [];
                 if (empty($items)) {
                     continue;
                 }
-                $col = Coordinate::stringFromColumnIndex(2 + $d);
+                $col = Coordinate::stringFromColumnIndex($dayStart - 1 + $d);
                 $labels = [];
                 $fill = null;
                 foreach ($items as $item) {
                     $labels[] = $item->shiftShort();
                     $fill = $fill ?: ($item->unitShift ? $item->unitShift->excelFill()
                         : ($item->shiftType ? $item->shiftType->excelFill() : null));
+                    // วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+                    if ($item->isOff()) {
+                        $offDays++;
+                        continue;
+                    }
                     $total++;
+                    if ($item->isOt()) {
+                        $otShifts++;
+                    }
+                    $pay += $item->payAmount();
                 }
                 $sheet->setCellValue($col . $row, implode('/', $labels));
                 if ($fill) {
@@ -94,17 +113,25 @@ class RosterExporter
                         ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($fill);
                 }
             }
-            $sheet->setCellValue($lastCol . $row, $total);
+            foreach ([$total, $offDays, $otShifts, $pay > 0 ? round($pay, 2) : null] as $i => $value) {
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($sumStart + $i) . $row, $value);
+            }
             $row++;
         }
 
         // แถวสรุปจำนวนคนต่อเวรต่อวัน — ตัวเดียวกับที่กริดบนเว็บแสดง
         foreach ($unitShifts as $shiftId => $unitShift) {
-            $need = (int) $unitShift->required_staff;
-            $sheet->setCellValue('B' . $row, $unitShift->displayName() . ($need > 0 ? " (ต้องการ $need)" : ''));
+            $label = $unitShift->requiredLabel();
+            $sheet->setCellValue('B' . $row, $unitShift->displayName() . ($label !== '' ? " (ต้องการ $label)" : ''));
+            $sheet->setCellValue('C' . $row, $unitShift->positionName());
             $sheet->getStyle('B' . $row)->getFont()->setBold(true);
             for ($d = 1; $d <= $days; $d++) {
-                $col = Coordinate::stringFromColumnIndex(2 + $d);
+                $col = Coordinate::stringFromColumnIndex($dayStart - 1 + $d);
+                // อัตรากำลังต่างกันตามประเภทวัน
+                $need = $unitShift->requiredFor(
+                    isset($holidays[$d]),
+                    (int) date('w', strtotime($period->dateOfDay($d)))
+                );
                 $have = $counts[$d][(int) $shiftId] ?? 0;
                 $sheet->setCellValue($col . $row, $need > 0 ? "$have/$need" : $have);
                 if ($need > 0 && $have < $need) {
@@ -117,15 +144,18 @@ class RosterExporter
         $sheet->getStyle("A2:{$lastCol}" . ($row - 1))->applyFromArray([
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
-        $sheet->getStyle("C3:{$lastCol}" . ($row - 1))->getAlignment()
+        $sheet->getStyle("D3:{$lastCol}" . ($row - 1))->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getColumnDimension('A')->setWidth(7);
-        $sheet->getColumnDimension('B')->setWidth(28);
+        $sheet->getColumnDimension('B')->setWidth(26);
+        $sheet->getColumnDimension('C')->setWidth(20);
         for ($d = 1; $d <= $days; $d++) {
-            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex(2 + $d))->setWidth(5);
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($dayStart - 1 + $d))->setWidth(5);
         }
-        $sheet->getColumnDimension($lastCol)->setWidth(7);
-        $sheet->freezePane('C3');
+        foreach ([8, 8, 6, 13] as $i => $width) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($sumStart + $i))->setWidth($width);
+        }
+        $sheet->freezePane('D3');
         $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
 
         return $spreadsheet;

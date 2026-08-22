@@ -25,6 +25,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\Url;
 
 /**
@@ -34,7 +35,7 @@ use yii\helpers\Url;
  * @property string|null $leave_type_id ประเภทการขอลา
  * @property float|null $leave_time_type ประเภทการลา
  * @property float|null $total_days จำนวนวัน
- * @property string|null $data_json
+ * @property array|string|null $data_json
  * @property string|null $date_start วันที่ลา
  * @property string|null $date_end ถึงวันที่
  * @property string|null $status สถานะ
@@ -176,6 +177,32 @@ class Leave extends \yii\db\ActiveRecord
         ];
     }
 
+    public function beforeValidate()
+    {
+        $this->normalizeDataJson();
+        return parent::beforeValidate();
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        $this->normalizeDataJson();
+        if (is_array($this->data_json) && !$this->isNativeJsonColumn()) {
+            $this->data_json = Json::encode($this->data_json);
+        }
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        $this->normalizeDataJson();
+    }
+
     public static function find()
     {
         return new LeaveQuery(get_called_class());
@@ -183,15 +210,40 @@ class Leave extends \yii\db\ActiveRecord
 
     public function afterFind()
     {
-        try {
-            $this->reason = isset($this->data_json['reason']) ? $this->data_json['reason'] : '';
-        } catch (\Throwable $th) {
-        }
+        parent::afterFind();
+        $this->normalizeDataJson();
+
+        $this->reason = isset($this->data_json['reason']) ? $this->data_json['reason'] : '';
         $this->work_shift_name = isset($this->data_json['work_shift']) ? ($this->data_json['work_shift'] == 'normal' ? 'เวรเช้า' : 'เวร 8') : '';
 
         // $this->asset_name = isset($this->data_json['name']) ? $this->data_json['name'] : '-';
+    }
 
-        parent::afterFind();
+    private function normalizeDataJson(): void
+    {
+        if (is_array($this->data_json)) {
+            return;
+        }
+
+        if (!is_string($this->data_json) || trim($this->data_json) === '') {
+            $this->data_json = [];
+            return;
+        }
+
+        try {
+            $decoded = Json::decode($this->data_json, true);
+            $this->data_json = is_array($decoded) ? $decoded : [];
+        } catch (\InvalidArgumentException $e) {
+            $this->data_json = [];
+        }
+    }
+
+    private function isNativeJsonColumn(): bool
+    {
+        $column = static::getTableSchema()->getColumn('data_json');
+
+        return $column !== null
+            && ($column->type === 'json' || stripos((string) $column->dbType, 'json') !== false);
     }
 
     //ส่ง Msg เมื่อไม่ผ่านการอนุมัติ

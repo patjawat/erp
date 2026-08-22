@@ -29,6 +29,7 @@ class RoomController extends Controller
                     'class' => VerbFilter::className(),
                     'actions' => [
                         'delete' => ['POST'],
+                        'update-color' => ['POST'],
                     ],
                 ],
             ]
@@ -138,17 +139,27 @@ class RoomController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        // เก็บ data_json เดิมไว้ก่อน load() เพราะฟอร์มส่งกลับมาไม่ครบทุกคีย์
+        $currentJson = is_array($model->data_json) ? $model->data_json : [];
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            // return $this->redirect(['view', 'id' => $model->id]);
-            $this->CheckRoomAccessory($model);
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            // return $model->data_json;
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            // ฟอร์มแก้ไขห้องประชุมมีเฉพาะ location/seat_capacity/advance_booking/owner/room_status/color
+            // ถ้าปล่อยให้ load() ทับ data_json ทั้งก้อน คีย์อื่น (เช่น room_accessory ที่ฟอร์ม LINE ใช้)
+            // จะถูกลบทิ้งทุกครั้งที่กดบันทึก จึง merge ทับของเดิมแทน
+            $model->data_json = array_merge(
+                $currentJson,
+                is_array($model->data_json) ? $model->data_json : []
+            );
 
-            return [
-                'status' => 'success',
-                'container' => '#booking',
-            ];
+            if ($model->save()) {
+                $this->CheckRoomAccessory($model);
+                \Yii::$app->response->format = Response::FORMAT_JSON;
+
+                return [
+                    'status' => 'success',
+                    'container' => '#booking',
+                ];
+            }
         }
 
         if ($this->request->isAJax) {
@@ -171,19 +182,22 @@ class RoomController extends Controller
     protected function CheckRoomAccessory($model)
     {
         try {
-            $data = $model->data_json['room_accessory'];
+            $data = $model->data_json['room_accessory'] ?? [];
 
             foreach ($data as $item) {
-                if (!Categorise::findOne(['category_id' => $model->code,'name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
+                if (!Categorise::findOne(['category_id' => $model->code, 'name' => 'room_accessory', 'title' => $item])) {  // เช็คว่ามีข้อมูลหรือยัง
                     $maxCode = Categorise::find()
-                        ->select(['code' => new \yii\db\Expression('MAX(CAST(code AS UNSIGNED))')])
-                        ->where(['like', 'name', 'room_accessory'])
+                        ->select(['code' => new Expression('MAX(CAST(code AS UNSIGNED))')])
+                        ->where(['name' => 'room_accessory'])
                         ->scalar();
-                    $model = new Categorise();
-                    $model->name = 'room_accessory';
-                    $model->code = ($maxCode + 1);
-                    $model->title = $item;
-                    $model->save(false);
+                    // เดิมเขียนทับตัวแปร $model ทำให้ห้องประชุมที่ส่งเข้ามาหายไปกลางลูป
+                    // และไม่ได้ใส่ category_id ทำให้เงื่อนไขค้นหาด้านบนไม่มีวันเจอ → สร้างซ้ำทุกครั้ง
+                    $accessory = new Categorise();
+                    $accessory->name = 'room_accessory';
+                    $accessory->category_id = $model->code;
+                    $accessory->code = ($maxCode + 1);
+                    $accessory->title = $item;
+                    $accessory->save(false);
                 }
             }
         } catch (\Throwable $th) {
@@ -191,17 +205,55 @@ class RoomController extends Controller
     }
 
     /**
-     * Deletes an existing Room model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * บันทึกสีพื้นหลัง/สีตัวหนังสือของห้องประชุมจากหน้าทะเบียน
+     * (เดิมหน้า index ยิงไปที่ /hr/leave-type/update-color ซึ่งถูกลบไปแล้ว จึงได้ 404 และสีไม่ถูกบันทึก)
      * @param int $id ID
-     * @return \yii\web\Response
+     * @return array
+     */
+    public function actionUpdateColor($id)
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $model = $this->findModel($id);
+        $data = is_array($model->data_json) ? $model->data_json : [];
+
+        foreach (['color', 'text_color'] as $key) {
+            $value = $this->request->post($key);
+            if ($value !== null && $value !== '') {
+                $data[$key] = $value;
+            }
+        }
+
+        $model->data_json = $data;
+        $model->save(false);
+
+        return [
+            'status' => 'success',
+            'data' => [
+                'code' => $model->code,
+                'data_json' => $model->data_json,
+            ],
+        ];
+    }
+
+    /**
+     * Deletes an existing Room model.
+     * ตอบกลับเป็น JSON ให้ JS ปุ่มลบพาไปหน้า index เอง
+     * @param int $id ID
+     * @return array
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
 
-        return $this->redirect(['index']);
+        // JS ปุ่มลบ (.delete-item) อ่านผลเป็น JSON — ถ้าตอบเป็น redirect หน้าเดิมจะไม่รีเฟรช
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'status' => 'success',
+            'url' => \yii\helpers\Url::to(['index']),
+        ];
     }
 
     /**
@@ -213,7 +265,9 @@ class RoomController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Room::findOne(['id' => $id])) !== null) {
+        // ต้องล็อกด้วย name ด้วย เพราะตาราง categorise ใช้ร่วมกับชุดข้อมูลอื่น
+        // ถ้าไม่ล็อก id ของชุดข้อมูลอื่นจะถูกแก้ทับกลายเป็นห้องประชุมได้
+        if (($model = Room::findOne(['id' => $id, 'name' => 'meeting_room'])) !== null) {
             return $model;
         }
 

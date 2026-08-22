@@ -2,63 +2,316 @@
  * Scoped styles for modules/booking/views/vehicle/dashboard.php and its partials.
  */
 
-/* === Driver workload === */
+/* ============================================================
+ * Dashboard shell
+ * ============================================================ */
 
-.driver-workload-list .driver-workload-item {
-    background: var(--bs-body-bg);
-    min-height: 44px;
-    transition: background-color .15s ease-in-out, transform .2s cubic-bezier(.22, 1, .36, 1);
+.vd-page {
+    --vd-ease: cubic-bezier(.16, 1, .3, 1);
+    --vd-gap: 1rem;
 }
 
-.driver-workload-list a.driver-workload-item:hover,
-.driver-workload-list a.driver-workload-item:focus-visible {
+.vd-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--bs-body-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-block: .625rem;
+    margin-bottom: var(--vd-gap);
+}
+
+.vd-card {
+    height: 100%;
+}
+
+/* หัวการ์ดใช้รูปแบบเดียวกับหน้าอื่นในโมดูล: card-header bg-primary-gradient + h6.text-white
+   คำอธิบายใต้หัวข้อใช้ .small.text-white-50 ของ Bootstrap ไม่ต้องมี CSS เพิ่ม */
+
+.vd-num {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+ * KPI cards (สถานะคำขอ) — โครงมาจาก kpi_summary ของโมดูลอื่น
+ * เพิ่มเฉพาะ state ของการ์ดที่กดได้
+ * ============================================================ */
+
+a.vd-kpi {
+    transition: box-shadow .12s ease-in-out, transform .18s var(--vd-ease, ease-out);
+}
+
+a.vd-kpi:hover,
+a.vd-kpi:focus-visible {
+    border-color: var(--bs-primary) !important;
+    outline: none;
+}
+
+a.vd-kpi:focus-visible {
+    box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .25);
+}
+
+a.vd-kpi:active {
+    transform: translateY(1px);
+}
+
+.vd-kpi__icon {
+    line-height: 1;
+    font-size: 1.25rem;
+}
+
+/* ============================================================
+ * Ranked list (หน่วยงาน / รถ / พนักงานขับรถ)
+ * ============================================================ */
+
+.vd-rank {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: vd-rank;
+}
+
+.vd-rank__item {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    min-height: 44px;
+    padding: .3rem .5rem;
+    border-radius: .5rem;
+    color: inherit;
+    text-decoration: none;
+    background: transparent;
+    transition: background-color .12s ease-in-out, transform .18s var(--vd-ease, ease-out);
+}
+
+a.vd-rank__item:hover,
+a.vd-rank__item:focus-visible {
     background: var(--bs-tertiary-bg);
     outline: none;
 }
 
-.driver-workload-list a.driver-workload-item:focus-visible {
+a.vd-rank__item:focus-visible {
     box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .25);
 }
 
-.driver-workload-list a.driver-workload-item:hover .driver-workload-chevron,
-.driver-workload-list a.driver-workload-item:focus-visible .driver-workload-chevron {
-    color: var(--bs-primary) !important;
-    transform: translateX(3px);
-}
-
-.driver-workload-list .driver-workload-chevron {
-    transition: transform .2s cubic-bezier(.22, 1, .36, 1), color .15s ease-in-out;
-}
-
-.driver-workload-list .driver-rank-badge {
-    width: 28px;
-    height: 28px;
-    font-size: .75rem;
+.vd-rank__no {
+    flex: none;
+    width: 1.5rem;
+    text-align: right;
+    font-size: .78rem;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
-.driver-workload-list .driver-workload-body {
+.vd-rank__body {
+    flex: 1 1 auto;
     min-width: 0;
 }
 
-.driver-workload-list .driver-progress {
-    height: 6px;
+.vd-rank__line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .25rem;
+}
+
+.vd-rank__name {
+    font-size: .875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vd-rank__value {
+    flex: none;
+    font-size: .82rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.vd-rank__track {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--bs-tertiary-bg);
+    overflow: hidden;
+}
+
+.vd-rank__bar {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--bs-primary);
+}
+
+.vd-rank__chevron {
+    flex: none;
+    transition: transform .18s var(--vd-ease, ease-out), color .12s ease-in-out;
+}
+
+a.vd-rank__item:hover .vd-rank__chevron,
+a.vd-rank__item:focus-visible .vd-rank__chevron {
+    color: var(--bs-primary);
+    transform: translateX(3px);
+}
+
+/* ============================================================
+ * Action rows (คำขอรอจัดสรร / งานค้างบันทึก)
+ * ============================================================ */
+
+.vd-task {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-height: 44px;
+    padding: .5rem;
+    border-radius: .5rem;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color .12s ease-in-out;
+}
+
+a.vd-task:hover,
+a.vd-task:focus-visible {
+    background: var(--bs-tertiary-bg);
+    outline: none;
+}
+
+a.vd-task:focus-visible {
+    box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .25);
+}
+
+.vd-task__date {
+    flex: none;
+    width: 3.25rem;
+    text-align: center;
+    line-height: 1.15;
+}
+
+.vd-task__day {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.vd-task__month {
+    display: block;
+    font-size: .7rem;
+}
+
+.vd-task__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.vd-task__title,
+.vd-task__meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vd-task__title {
+    font-size: .875rem;
+    font-weight: 500;
+}
+
+.vd-task__meta {
+    font-size: .78rem;
+}
+
+/* ============================================================
+ * Charts
+ * ============================================================ */
+
+/* กัน layout shift ระหว่างรอ ApexCharts วาดครั้งแรก */
+.vd-chart__canvas {
+    min-height: 200px;
+}
+
+.vd-chart__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    min-height: 200px;
+    text-align: center;
+}
+
+.vd-metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem 0;
+}
+
+.vd-metric + .vd-metric {
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.vd-metric__value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+ * Rating
+ * ============================================================ */
+
+.vd-stars {
+    color: var(--bs-warning);
+    letter-spacing: .05em;
+}
+
+.vd-rating__score {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.vd-rating__row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr 2.25rem;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+}
+
+.vd-quote {
+    padding: .5rem .625rem;
+    border-radius: .5rem;
+    background: var(--bs-tertiary-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {
 
-    .driver-workload-list .driver-workload-item,
-    .driver-workload-list .driver-workload-chevron {
+    a.vd-kpi,
+    .vd-rank__item,
+    .vd-rank__chevron,
+    .vd-task {
         transition: none;
     }
 
-    .driver-workload-list a.driver-workload-item:hover .driver-workload-chevron,
-    .driver-workload-list a.driver-workload-item:focus-visible .driver-workload-chevron {
+    a.vd-rank__item:hover .vd-rank__chevron,
+    a.vd-rank__item:focus-visible .vd-rank__chevron {
         transform: none;
     }
 }
 
 /* === Expiring insurance alert === */
+
+/* รายการอาจยาวมาก — จำกัดความสูงให้การ์ดคู่กันในแถวเดียวไม่สูงต่างกันเกินไป */
+.expiring-insurance-card .expiring-list {
+    max-height: 20rem;
+    overflow-y: auto;
+}
 
 .expiring-insurance-card .expiring-count-badge {
     width: 26px;

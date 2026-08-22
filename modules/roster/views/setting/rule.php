@@ -82,7 +82,10 @@ $pairLabel = function (UnitRule $rule) use ($typeMap): string {
             <i class="bi bi-shield-plus fs-1 text-body-secondary"></i>
             <h6 class="mt-3 mb-1">หน่วยงานนี้ยังไม่ได้ตั้งกฎการจัดเวร</h6>
             <p class="text-body-secondary small mb-3">
-                เริ่มจากชุดแนะนำตามแนวปฏิบัติการจัดเวรพยาบาล แล้วค่อยปรับทีหลังได้
+                ระหว่างนี้ระบบใช้ <strong>กฎชุดแนะนำ</strong> เตือนให้อยู่แล้ว
+                (พักระหว่างเวร 8 ชม. · ทำงานติดกันไม่เกิน 6 วัน · ไม่เกิน 48 ชม./สัปดาห์
+                · ห้ามดึกติดเช้า)<br>
+                กดปุ่มด้านล่างเพื่อบันทึกเป็นกฎของหน่วยงาน แล้วปรับตัวเลขเองได้
             </p>
             <button type="button" class="btn btn-primary" id="seed-rules">
                 <i class="bi bi-magic"></i> ใช้กฎชุดแนะนำ

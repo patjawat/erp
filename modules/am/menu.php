@@ -62,6 +62,7 @@ use yii\helpers\Url;
             <li class="dropdown-header small text-muted">1 · ตั้งค่าเกณฑ์</li>
             <li><?= Html::a('<i data-lucide="percent" class="me-2" style="width:1rem;height:1rem;"></i> เกณฑ์ค่าเสื่อม', ['/am/depreciation-profile/index'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="link" class="me-2" style="width:1rem;height:1rem;"></i> ผูกเกณฑ์เข้าลำดับชั้น', ['/am/depreciation-binding/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="anchor" class="me-2" style="width:1rem;height:1rem;"></i> ตรึงเกณฑ์ให้ทะเบียนเดิม', ['/am/asset-depreciation/backfill'], ['class' => 'dropdown-item']) ?></li>
             <li><hr class="dropdown-divider"></li>
             <li class="dropdown-header small text-muted">2 · เปิดงวดบัญชี</li>
             <li><?= Html::a('<i data-lucide="calendar-range" class="me-2" style="width:1rem;height:1rem;"></i> สร้าง / เปิดงวดบัญชี', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>

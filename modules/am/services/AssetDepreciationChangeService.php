@@ -48,7 +48,8 @@ class AssetDepreciationChangeService
                 $newProfile,
                 DepreciationProfileResolver::SOURCE_ASSET,
                 (int) $asset->id,
-                $acq
+                $acq,
+                (float) $asset->price
             );
             foreach ($snap as $attr => $val) {
                 if ($asset->hasAttribute($attr)) {

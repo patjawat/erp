@@ -5,7 +5,9 @@ namespace app\modules\roster\controllers;
 use app\components\ApproveLevelResolver;
 use app\components\ModalHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\roster\helpers\RosterAccess;
+use app\modules\roster\helpers\RosterAutoScheduler;
 use app\modules\roster\helpers\RosterContext;
 use app\modules\roster\helpers\RosterCopier;
 use app\modules\roster\helpers\RosterExporter;
@@ -106,6 +108,12 @@ class PeriodController extends Controller
             // ขอบเขตเวรของแผ่นนี้ — ไม่เลือก = ครอบทุกเวรของหน่วย
             $picked = array_map('intval', (array) $this->request->post('unit_shift_ids', []));
             $model->setShiftIds($picked);
+
+            $clash = $this->overlappingSheet($model);
+            if ($clash !== null) {
+                return ['status' => 'error', 'message' => $clash];
+            }
+
             if ($model->save()) {
                 // ไม่ผูกคำขอหยุดเข้าแผ่นใดแผ่นหนึ่ง เพราะเดือนหนึ่งมีหลายแผ่น
                 // ทุกแผ่นอ่านคำขอจาก หน่วย+วันที่ ผ่าน Request::gridForUnit() อยู่แล้ว
@@ -130,6 +138,98 @@ class PeriodController extends Controller
             ]),
             'footer' => ModalHelper::modalFooterSaveClose(),
         ];
+    }
+
+    /**
+     * ชื่อผู้ลงนามท้ายตารางเวร — ผู้จัดทำ กับ ผู้อนุมัติ
+     *
+     * ยึดคนที่ "ทำจริง" ก่อน (submitted_by / approved_by ซึ่งเก็บเป็น user id)
+     * ถ้ายังไม่ถึงขั้นนั้น ค่อยถอยไปใช้ผู้ที่ "ควรจะเป็น" ตามผังองค์กรและค่าตั้งค่าเว็บ
+     * เพื่อให้พิมพ์ร่างไปเสนอได้โดยไม่ต้องเขียนชื่อด้วยมือ
+     *
+     * @return array{prepared:array{name:string,position:string}, approved:array{name:string,position:string}}
+     */
+    private function signatories(Period $period): array
+    {
+        $byUser = static function (?int $userId): ?Employees {
+            return $userId ? Employees::findOne(['user_id' => $userId]) : null;
+        };
+        $describe = static function (?Employees $emp, string $fallbackPosition = ''): array {
+            if (!$emp) {
+                return ['name' => '', 'position' => $fallbackPosition];
+            }
+            $position = $emp->employeePosition->title ?? ($emp->position_name ?: $fallbackPosition);
+            return [
+                'name' => trim(($emp->prefix ?? '') . $emp->fname . ' ' . $emp->lname),
+                'position' => (string) $position,
+            ];
+        };
+
+        // ผู้จัดทำ: คนที่กดส่งตรวจ ไม่งั้นใช้หัวหน้าหน่วยตามผังองค์กร
+        $preparer = $byUser($period->submitted_by ? (int) $period->submitted_by : null);
+        if (!$preparer) {
+            $unit = Organization::findOne((int) $period->unit_id);
+            $data = $unit ? (is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true)) : null;
+            $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+            $preparer = $leaderId ? Employees::findOne($leaderId) : null;
+        }
+
+        // ผู้อนุมัติ: ผอ. ที่กดอนุมัติ ไม่งั้นใช้ ผอ. ที่ตั้งไว้ในค่าตั้งค่าเว็บ
+        $approverUserId = $period->approved_by ?: $period->published_by;
+        $approver = $byUser($approverUserId ? (int) $approverUserId : null);
+        $directorPosition = (string) (RosterAccess::siteSetting('director_position') ?: 'ผู้อำนวยการ');
+        if (!$approver) {
+            $directorId = RosterAccess::directorEmpId();
+            $approver = $directorId ? Employees::findOne($directorId) : null;
+        }
+
+        return [
+            'prepared' => $describe($preparer),
+            'approved' => $describe($approver, $directorPosition),
+        ];
+    }
+
+    /**
+     * แผ่นใหม่ครอบเวรทับแผ่นเดิมของหน่วย+เดือนเดียวกันหรือไม่
+     *
+     * เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว (บังคับที่ unique index)
+     * ถ้าปล่อยให้สองแผ่นครอบเวรเดียวกัน กริดของแผ่นที่สองจะดูว่างแต่จัดเวรไม่ได้เลย
+     * เพราะกริดแสดงเฉพาะเวรของแผ่นตัวเอง — สับสนมากจนต้องกันตั้งแต่ตอนสร้าง
+     *
+     * @return string|null ข้อความอธิบาย ถ้าทับ · null ถ้าสร้างได้
+     */
+    private function overlappingSheet(Period $model): ?string
+    {
+        $siblings = Period::find()
+            ->where([
+                'unit_id' => $model->unit_id,
+                'month' => $model->month,
+                'year_ce' => $model->year_ce,
+                'deleted_at' => null,
+            ])
+            ->andFilterWhere(['<>', 'id', $model->id])
+            ->all();
+        if (empty($siblings)) {
+            return null;
+        }
+
+        $mine = $model->sheetShifts();
+        foreach ($siblings as $sibling) {
+            $shared = array_intersect_key($mine, $sibling->sheetShifts());
+            if (empty($shared)) {
+                continue;
+            }
+            $names = array_map(static fn($s) => $s->displayName(), $shared);
+            return sprintf(
+                'แผ่น “%s” ของเดือนนี้ครอบเวร %s อยู่แล้ว — เวรเดียวกันอยู่ได้แผ่นเดียว%s',
+                $sibling->title,
+                implode(' · ', $names),
+                count($mine) === count($shared) && empty($model->shiftIds())
+                    ? ' กรุณาเลือกเฉพาะเวรที่แผ่นนี้รับผิดชอบ'
+                    : ' กรุณาเลือกเวรอื่น'
+            );
+        }
+        return null;
     }
 
     /**
@@ -414,6 +514,34 @@ class PeriodController extends Controller
                 'action' => 'removed',
                 'counts' => $this->dayCounts($period, $day),
                 'summary' => $this->summary($period),
+                'empTotals' => $this->employeeTotals($period, $empId),
+            ];
+        }
+
+        // เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว แม้จะอยู่คนละแผ่น
+        // แต่กริดแสดงเฉพาะเวรของแผ่นตัวเอง ช่องจึงดูว่างทั้งที่ชนอยู่กับอีกแผ่น
+        // ถ้าปล่อยให้ unique rule เด้งเอง ผู้ใช้จะเห็นแค่ "จัดเวรไว้แล้ว" ทั้งที่ตรงหน้าไม่มีอะไร
+        $conflict = Item::find()
+            ->where(['emp_id' => $empId, 'work_date' => $workDate, 'unit_shift_id' => $unitShiftId])
+            ->andWhere(['<>', 'period_id', $period->id])
+            ->one();
+        if ($conflict) {
+            $other = $conflict->period;
+            // แผ่นที่ถูกลบไปแล้วไม่ควรมีเวรค้าง แต่ถ้าเจอ ต้องไม่ชี้ไปยังหน้าที่เปิดไม่ได้
+            // ไม่งั้นผู้ใช้จะติดอยู่กับข้อความที่แก้เองไม่ได้เลย
+            $reachable = $other && $other->deleted_at === null;
+            return [
+                'status' => 'error',
+                'message' => $reachable
+                    ? sprintf(
+                        'คนนี้ถูกจัดเวร%s วันที่ %d ไว้แล้วในแผ่น “%s” — เวรเดียวกันจัดซ้ำสองแผ่นไม่ได้ ให้ไปแก้ที่แผ่นนั้น',
+                        $unitShift->displayName(), $day, $other->title
+                    )
+                    : sprintf(
+                        'คนนี้ถูกจัดเวร%s วันที่ %d ไว้ในแผ่นที่ถูกลบไปแล้ว จึงยังค้างอยู่ในระบบ — แจ้งผู้ดูแลให้ล้างข้อมูลค้างนี้',
+                        $unitShift->displayName(), $day
+                    ),
+                'conflictUrl' => $reachable ? \yii\helpers\Url::to(['grid', 'id' => $other->id]) : null,
             ];
         }
 
@@ -433,6 +561,10 @@ class PeriodController extends Controller
         $checker = new RuleChecker((int) $period->unit_id);
         $shifts = RuleChecker::shiftsOfEmployee($empId, $period->firstDate(), $period->lastDate(), $item->id);
         $warnings = $checker->checkAssignment($workDate, $unitShiftId, $shifts);
+        $positionWarning = $checker->checkPosition($unitShiftId, $empId);
+        if ($positionWarning !== null) {
+            array_unshift($warnings, $positionWarning);
+        }
 
         return [
             'status' => 'success',
@@ -441,7 +573,37 @@ class PeriodController extends Controller
             'warnings' => $warnings,
             'counts' => $this->dayCounts($period, $day),
             'summary' => $this->summary($period),
+            'empTotals' => $this->employeeTotals($period, $empId),
         ];
+    }
+
+    /**
+     * สรุปท้ายแถวของคนหนึ่ง — เวรทำงาน / วันหยุด / เวรนอกเวลา / ค่าตอบแทน
+     * วันหยุดไม่นับเป็นเวรทำงานและไม่คิดเงิน
+     */
+    private function employeeTotals(Period $period, int $empId): array
+    {
+        $items = Item::find()
+            ->with('unitShift')
+            ->where(['period_id' => $period->id, 'emp_id' => $empId])
+            ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
+            ->all();
+        $work = 0;
+        $off = 0;
+        $ot = 0;
+        $pay = 0.0;
+        foreach ($items as $item) {
+            if ($item->isOff()) {
+                $off++;
+                continue;
+            }
+            $work++;
+            if ($item->isOt()) {
+                $ot++;
+            }
+            $pay += $item->payAmount();
+        }
+        return ['work' => $work, 'off' => $off, 'ot' => $ot, 'pay' => $pay];
     }
 
     /** คัดลอกเวรจากเดือนก่อน — จับคู่ตามวันในสัปดาห์ ดู RosterCopier */
@@ -470,6 +632,72 @@ class PeriodController extends Controller
         }
         $message .= ' และยังไม่ได้ตรวจวันลา ควรไล่ดูอีกครั้ง';
         return ['status' => 'success', 'message' => $message];
+    }
+
+    /**
+     * จัดเวรอัตโนมัติ — เติมช่องที่ยังขาดให้ครบตามอัตรากำลัง
+     * ไม่ลบเวรที่จัดมือไว้ ถ้าต้องการเริ่มใหม่ให้กด "ล้างทั้งเดือน" ก่อน
+     */
+    public function actionAutoFill($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้แก้ไขไม่ได้'];
+        }
+
+        // หัวหน้าเลือกเองว่าจะให้เติมจนครบแม้ผิดกฎ หรือหยุดที่กฎแล้วเว้นช่องไว้
+        $allowRelax = (string) $this->request->post('relax', '1') === '1';
+
+        try {
+            $result = (new RosterAutoScheduler($period))->run($allowRelax);
+        } catch (\RuntimeException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+
+        if ($result['placed'] === 0 && empty($result['shortages'])) {
+            return ['status' => 'error', 'message' => 'ไม่มีช่องที่ต้องเติม — ตารางครบตามอัตรากำลังแล้ว'];
+        }
+
+        return [
+            'status' => 'success',
+            'placed' => $result['placed'],
+            'relaxed' => $result['relaxed'],
+            'warnings' => array_slice($result['warnings'], 0, 40),
+            'warningTotal' => count($result['warnings']),
+            'shortages' => array_slice($result['shortages'], 0, 40),
+            'shortageTotal' => count($result['shortages']),
+        ];
+    }
+
+    /**
+     * เปลี่ยนชื่อแผ่นตารางเวร
+     *
+     * ชื่อคือสิ่งที่แยกแผ่นในเดือนเดียวกันออกจากกัน (บ่ายดึก / Refer / On call)
+     * จึงเปลี่ยนได้เฉพาะตอนยังเป็นร่าง — ประกาศแล้วเปลี่ยนชื่อคือเปลี่ยนเอกสารที่แจกไปแล้ว
+     */
+    public function actionRename($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!$period->isEditable() || !RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'เปลี่ยนชื่อได้เฉพาะตอนยังเป็นร่าง'];
+        }
+
+        $title = trim((string) $this->request->post('title', ''));
+        if ($title === '') {
+            return ['status' => 'error', 'message' => 'กรุณาระบุชื่อตารางเวร'];
+        }
+        if ($title === $period->title) {
+            return ['status' => 'success', 'title' => $title, 'message' => 'ชื่อเดิม ไม่มีอะไรเปลี่ยน'];
+        }
+
+        $period->title = $title;
+        if (!$period->save()) {
+            $errors = array_merge(...array_values($period->getErrors()));
+            return ['status' => 'error', 'message' => implode(' ', $errors)];
+        }
+        return ['status' => 'success', 'title' => $period->title, 'message' => 'เปลี่ยนชื่อแล้ว'];
     }
 
     /** ล้างเวรทั้งรอบ — ใช้ตอนคัดลอกผิดเดือนแล้วอยากเริ่มใหม่ */
@@ -586,10 +814,28 @@ class PeriodController extends Controller
         if ($period->status !== Period::STATUS_DRAFT) {
             return ['status' => 'error', 'message' => 'ลบได้เฉพาะรอบที่ยังเป็นร่าง'];
         }
-        $period->deleted_at = date('Y-m-d H:i:s');
-        $period->deleted_by = Yii::$app->user->id;
-        $period->save(false);
-        return ['status' => 'success', 'container' => '#roster-period'];
+
+        // ต้องลบช่องเวรทิ้งด้วย ไม่ใช่แค่ซ่อนแผ่น
+        // เวรที่ค้างอยู่ยังกินคีย์ (emp_id, work_date, unit_shift_id) ตามเดิม
+        // ทำให้แผ่นอื่นจัดเวรคนเดิมวันเดิมไม่ได้ โดยชี้ไปยังแผ่นที่ผู้ใช้มองไม่เห็นแล้ว
+        // แผ่นร่างยังไม่ประกาศ จึงไม่มีใบเปลี่ยนตัวอ้างถึง ลบได้ปลอดภัย
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $removed = Item::deleteAll(['period_id' => $period->id]);
+            $period->deleted_at = date('Y-m-d H:i:s');
+            $period->deleted_by = Yii::$app->user->id;
+            $period->save(false);
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'ลบไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        return [
+            'status' => 'success',
+            'container' => '#roster-period',
+            'message' => $removed > 0 ? "ลบแผ่นและเวรที่จัดไว้ $removed ช่อง" : 'ลบแผ่นแล้ว',
+        ];
     }
 
     /** ตอบรับ/ปฏิเสธคำขอหยุด-ขออยู่ ระหว่างจัดเวร */
@@ -630,7 +876,45 @@ class PeriodController extends Controller
             'holidays' => RosterContext::holidays($period->firstDate(), $period->lastDate()),
             'weekends' => RosterContext::weekends((int) $period->year_ce, (int) $period->month),
             'leaves' => RosterContext::leaves($empIds, $period->firstDate(), $period->lastDate()),
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'signatories' => $this->signatories($period),
         ]);
+    }
+
+    /**
+     * เอกสารแลกเวร 1 ใบ สำหรับพิมพ์เก็บเป็นหลักฐาน
+     *
+     * ใบนี้คือสิ่งที่ใช้อ้างอิงตอนคิดค่าตอบแทน เพราะเวรถูกเปลี่ยนมือหลังตารางประกาศแล้ว
+     * จึงต้องมีลายเซ็นครบสามฝ่าย: ผู้ขอ ผู้รับ และหัวหน้าที่อนุมัติ
+     */
+    public function actionSwapPrint($id)
+    {
+        $swap = Swap::findOne((int) $id);
+        if (!$swap) {
+            throw new NotFoundHttpException('ไม่พบใบเปลี่ยนตัวเวร');
+        }
+        // ตรวจสิทธิ์ผ่านรอบเวรของใบนี้ ใช้เกณฑ์เดียวกับการเปิดกริด
+        $period = $this->findPeriod((int) $swap->period_id);
+
+        $this->layout = '@app/views/layouts/print';
+        return $this->render('swap-print', [
+            'swap' => $swap,
+            'period' => $period,
+            'orgName' => RosterAccess::siteSetting('company_name'),
+            'approver' => $this->unitLeader((int) $period->unit_id),
+        ]);
+    }
+
+    /** หัวหน้าหน่วยตามผังองค์กร — ใช้เป็นผู้ลงนามอนุมัติในเอกสารแลกเวร */
+    private function unitLeader(int $unitId): ?Employees
+    {
+        $unit = Organization::findOne($unitId);
+        if (!$unit) {
+            return null;
+        }
+        $data = is_array($unit->data_json) ? $unit->data_json : json_decode((string) $unit->data_json, true);
+        $leaderId = is_array($data) ? (int) ($data['leader1'] ?? 0) : 0;
+        return $leaderId ? Employees::findOne($leaderId) : null;
     }
 
     /** ส่งออก Excel แยกสีตามผลัด — ดู RosterExporter */
@@ -660,11 +944,22 @@ class PeriodController extends Controller
      */
     private function employeesOfUnit(int $unitId): array
     {
-        return Employees::find()
-            ->select(['id', 'prefix', 'fname', 'lname', 'work_shift', 'employee_position_id'])
-            ->where(['department' => $unitId, 'status' => 1])
-            ->orderBy([new \yii\db\Expression("FIELD(work_shift,'shift') DESC"), 'fname' => SORT_ASC])
-            ->asArray()
+        return (new \yii\db\Query())
+            ->select([
+                'e.id', 'e.prefix', 'e.fname', 'e.lname', 'e.work_shift', 'e.employee_position_id',
+                'position_name' => 'ep.title',
+            ])
+            ->from(['e' => Employees::tableName()])
+            ->leftJoin(['ep' => 'employee_position'], 'ep.id = e.employee_position_id')
+            ->where(['e.department' => $unitId, 'e.status' => 1])
+            // เรียงคนขึ้นเวรก่อน แล้วจัดกลุ่มตามวิชาชีพ เพื่อให้หัวหน้าเห็นว่าใครเป็นพยาบาล
+            // ใครเป็นผู้ช่วย โดยไม่ต้องจำ — หน่วยหนึ่งมีถึง 4 วิชาชีพและ 25 คน
+            ->orderBy([
+                new \yii\db\Expression("FIELD(e.work_shift,'shift') DESC"),
+                'ep.sort' => SORT_ASC,
+                'ep.title' => SORT_ASC,
+                'e.fname' => SORT_ASC,
+            ])
             ->all();
     }
 
@@ -692,11 +987,18 @@ class PeriodController extends Controller
             ->where(['period_id' => $period->id])
             ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
             ->count();
+        // นับเฉพาะเวรของแผ่นนี้ และคิดอัตรากำลังตามประเภทวัน
+        // ถ้าใช้ required_staff คูณจำนวนวันตรง ๆ หน่วยที่ลดคนวันหยุดจะขึ้นว่าจัดไม่ครบตลอด
+        $holidays = RosterContext::holidays($period->firstDate(), $period->lastDate());
         $needed = 0;
-        foreach (UnitShift::mapForUnit((int) $period->unit_id) as $unitShift) {
-            $needed += (int) $unitShift->required_staff;
+        foreach ($period->sheetShifts() as $unitShift) {
+            for ($d = 1, $days = $period->daysInMonth(); $d <= $days; $d++) {
+                $needed += $unitShift->requiredFor(
+                    isset($holidays[$d]),
+                    (int) date('w', strtotime($period->dateOfDay($d)))
+                );
+            }
         }
-        $needed *= $period->daysInMonth();
         return ['assigned' => $assigned, 'needed' => $needed];
     }
 

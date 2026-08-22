@@ -35,6 +35,63 @@ class RosterSwapService
     }
 
     /**
+     * คนคนหนึ่งถือเวรนี้ (วันเดียวกัน เวรเดียวกัน) อยู่แล้วหรือยัง
+     *
+     * ฐานข้อมูลมี unique index (emp_id, work_date, unit_shift_id) กันไว้อยู่แล้ว
+     * แต่ถ้าปล่อยให้ไปชนตอน UPDATE ผู้ใช้จะเห็นข้อความ SQL ดิบ ๆ ที่อ่านไม่รู้เรื่อง
+     *
+     * @param int|null $ignoreItemId เวรที่กำลังจะย้ายออกไป จึงไม่ถือว่าชน
+     */
+    private static function heldBy(Item $item, int $empId, ?int $ignoreItemId = null): ?Item
+    {
+        $query = Item::find()
+            ->where([
+                'emp_id' => $empId,
+                'work_date' => $item->work_date,
+                'unit_shift_id' => $item->unit_shift_id,
+            ])
+            ->andWhere(['<>', 'id', $item->id]);
+        if ($ignoreItemId) {
+            $query->andWhere(['<>', 'id', $ignoreItemId]);
+        }
+        return $query->one();
+    }
+
+    /**
+     * เหตุผลที่เปลี่ยนตัวไม่ได้เลย (คนละเรื่องกับคำเตือนจากกฎ ซึ่งแค่เตือนแล้วไปต่อได้)
+     * @return string|null null = ทำได้
+     */
+    private static function blockingReason(Item $item, int $toEmpId, ?Item $counterItem): ?string
+    {
+        $nameOf = static function (int $empId): string {
+            $emp = \app\modules\hr\models\Employees::findOne($empId);
+            return $emp ? trim(($emp->prefix ?? '') . $emp->fname . ' ' . $emp->lname) : 'เจ้าหน้าที่';
+        };
+        $when = static fn(Item $i): string => date('j/n', strtotime($i->work_date));
+
+        // แลกเวรชนิดเดียวกันในวันเดียวกัน = ตารางเหมือนเดิมทุกประการ ไม่มีประโยชน์
+        if ($counterItem
+            && $counterItem->work_date === $item->work_date
+            && (int) $counterItem->unit_shift_id === (int) $item->unit_shift_id) {
+            return sprintf('ทั้งสองคนอยู่%sวันที่ %s เหมือนกันอยู่แล้ว แลกแล้วตารางไม่เปลี่ยน',
+                $item->shiftName(), $when($item));
+        }
+
+        if (static::heldBy($item, $toEmpId, $counterItem ? (int) $counterItem->id : null)) {
+            return sprintf('%s อยู่%sวันที่ %s อยู่แล้ว รับเพิ่มอีกเวรเดียวกันไม่ได้',
+                $nameOf($toEmpId), $item->shiftName(), $when($item));
+        }
+
+        if ($counterItem
+            && static::heldBy($counterItem, (int) $item->emp_id, (int) $item->id)) {
+            return sprintf('%s อยู่%sวันที่ %s อยู่แล้ว รับเพิ่มอีกเวรเดียวกันไม่ได้',
+                $nameOf((int) $item->emp_id), $counterItem->shiftName(), $when($counterItem));
+        }
+
+        return null;
+    }
+
+    /**
      * ยื่นใบขอแลก/ยกเวรให้ (เจ้าหน้าที่เป็นผู้ยื่น)
      * @throws \RuntimeException
      */
@@ -63,6 +120,11 @@ class RosterSwapService
             if ((int) $counterItem->period_id !== (int) $period->id) {
                 throw new \RuntimeException('แลกข้ามรอบเวรไม่ได้');
             }
+        }
+
+        $blocked = static::blockingReason($item, $toEmpId, $counterItem);
+        if ($blocked !== null) {
+            throw new \RuntimeException($blocked);
         }
 
         $swap = new Swap([
@@ -160,9 +222,16 @@ class RosterSwapService
             throw new \RuntimeException('รอบเวรนี้ปิดแล้ว เปลี่ยนตัวไม่ได้');
         }
 
+        $counterItem = $swap->counter_item_id ? $swap->counterItem : null;
+
+        // ตรวจซ้ำก่อนเขียนจริง — ระหว่างรออนุมัติ ตารางอาจเปลี่ยนไปจนชนกันได้
+        $blocked = static::blockingReason($item, (int) $swap->to_emp_id, $counterItem);
+        if ($blocked !== null) {
+            throw new \RuntimeException($blocked);
+        }
+
         // เก็บผลตรวจกฎไว้เป็นหลักฐานว่าอนุมัติทั้งที่รู้ว่าผิดกฎอะไร
         $warnings = static::previewWarnings($item, (int) $swap->to_emp_id);
-        $counterItem = $swap->counter_item_id ? $swap->counterItem : null;
         if ($counterItem) {
             foreach (static::previewWarnings($counterItem, (int) $swap->from_emp_id) as $warning) {
                 $warnings[] = $warning;

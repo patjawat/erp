@@ -51,7 +51,7 @@ if ($issuePendingCount === null) {
             <?php endif; ?>
         </a>
         <div class="dropdown">
-            <button type="button" class="btn btn-sm <?= ($active === 'report' || strpos((string)$active, 'report') === 0) ? 'btn-info' : 'btn-outline-info' ?> rounded-pill px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn btn-sm <?= ($active === 'stock-health' || $active === 'report' || strpos((string)$active, 'report') === 0) ? 'btn-info' : 'btn-outline-info' ?> rounded-pill px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-journal-text me-1"></i>รายงาน
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -59,6 +59,10 @@ if ($issuePendingCount === null) {
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/material-summary']) ?>"><i class="bi bi-journal-check me-2"></i>สรุปรายงานวัสดุคงคลัง</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/procurement-plan']) ?>"><i class="bi bi-clipboard2-data me-2"></i>การใช้งานวัสดุรายตัว</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/report/disbursement-by-month']) ?>"><i class="bi bi-calendar3-week me-2"></i>ประวัติจ่ายวัสดุ × เดือน</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item <?= $active === 'stock-health' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/stock-health/index']) ?>"><i class="bi bi-clipboard2-pulse me-2"></i>ตรวจสุขภาพสต็อก</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item <?= $active === 'report-material-plan' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/material-plan/index']) ?>"><i class="bi bi-calendar2-check me-2"></i>จัดทำแผนวัสดุประจำปี</a></li>
             </ul>
         </div>
         <div class="dropdown">

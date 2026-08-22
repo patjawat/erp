@@ -79,6 +79,18 @@ $totalYear = array_sum($srcCounts);
                     <?= Html::hiddenInput('thai_year', $year) ?>
                     <?= Html::submitButton('<i class="fa-solid fa-arrows-rotate me-1"></i> ซิงก์จากผัง', ['class' => 'btn btn-sm btn-outline-primary']) ?>
                 <?= Html::endForm() ?>
+                <?php $otherYears = array_values(array_diff($years, [$year])); ?>
+                <?php if ($otherYears): ?>
+                    <?= Html::beginForm(['copy-year'], 'post', ['class' => 'd-flex gap-1', 'onsubmit' => 'return confirm("คัดลอกทะเบียนจากปีที่เลือก เข้าปี ' . $year . '?\nจะเติมอักษรย่อเฉพาะช่องที่ยังว่าง และเพิ่มทีมประสาน/หน่วยนอกผังที่ยังไม่มี (ไม่ลบและไม่แก้ของเดิม)")']) ?>
+                        <?= Html::hiddenInput('thai_year', $year) ?>
+                        <select name="from_year" class="form-select form-select-sm" style="width:auto">
+                            <?php foreach ($otherYears as $y): ?>
+                                <option value="<?= (int) $y ?>">จากปี <?= (int) $y ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?= Html::submitButton('<i class="fa-solid fa-copy me-1"></i> คัดลอก', ['class' => 'btn btn-sm btn-outline-primary']) ?>
+                    <?= Html::endForm() ?>
+                <?php endif; ?>
                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#type-modal"><i class="fa-solid fa-tags me-1"></i> ประเภท</button>
                 <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#add-manual"><i class="fa-solid fa-plus me-1"></i> เพิ่มหน่วยงานภายใน</button>
             </div>

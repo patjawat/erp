@@ -24,7 +24,10 @@ class DepreciationProfileController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => [
                 'class' => AccessControl::class,
-                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'rules' => [
+                    ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['depreciationView']],
+                    ['allow' => true, 'roles' => ['depreciationSetup']],
+                ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,

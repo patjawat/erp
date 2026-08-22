@@ -13,7 +13,7 @@ use app\modules\am\components\AssetHelper;
 /** @var $items app\modules\plan\models\PlanItem[] */
 
 // หน่วยงานจากทะเบียนกลาง (org_unit) ของปีนี้ — จัดกลุ่ม+เยื้องเหมือนหน้าตั้งค่า
-$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year);
+$ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect((int) $model->thai_year, $model->plan_unit_id ? (int) $model->plan_unit_id : null);
 
 $form = ActiveForm::begin([
     'id' => 'form',

@@ -352,7 +352,7 @@ class Projects extends ActiveRecord
      */
     public static function generateCode(?int $orgUnitId, ?int $thaiYear, string $workType = self::WORK_PROJECT): string
     {
-        $thaiYear = $thaiYear ?: (int) (date('Y') + 543);
+        $thaiYear = $thaiYear ?: (int) \app\modules\plan\components\PlanHelper::currentPlanYear();
         $pattern = $workType === self::WORK_ACTIVITY
             ? PmSetting::value(PmSetting::ACTIVITY_CODE_PATTERN, 'A-{org}-{yy}{sequence}')
             : PmSetting::value(PmSetting::CODE_PATTERN, 'P-{org}-{yy}{sequence}');

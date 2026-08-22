@@ -121,6 +121,11 @@ $waiting = array_filter($swaps, static fn(Swap $s) => $s->status === Swap::STATU
                                     <?php elseif ($swap->status === Swap::STATUS_PENDING): ?>
                                         <span class="text-body-secondary small">รอ<?= Html::encode($swap->toEmployee ? $swap->toEmployee->fname : 'คู่กรณี') ?>ตอบรับ</span>
                                     <?php endif; ?>
+
+                                    <?php // พิมพ์ได้ตั้งแต่ยังไม่อนุมัติ เพราะบางหน่วยให้เซ็นบนกระดาษก่อนแล้วค่อยกดในระบบ ?>
+                                    <?= Html::a('<i class="bi bi-printer"></i> พิมพ์ใบ',
+                                        ['swap-print', 'id' => $swap->id],
+                                        ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']) ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

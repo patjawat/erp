@@ -283,6 +283,7 @@ class StockAdjustController extends Controller
                 'reverse_detail_id' => $reverseDetailId ?: null,
                 'reverse_order_no' => $reverseOrderNo ?: null,
                 'created_from' => Yii::$app->request->referrer,
+                'stock_posted_at' => $now,
             ];
             $order->created_at = $now;
             $order->updated_at = $now;
@@ -328,6 +329,7 @@ class StockAdjustController extends Controller
                 } else {
                     InventoryService::processFIFO($itemCode, $warehouseId, abs($adjustmentQty), $order->id, $detail->id);
                 }
+                InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
             }
 
             $transaction->commit();
@@ -368,6 +370,9 @@ class StockAdjustController extends Controller
         // return_stock: 1 (default) = ปรับ FIFO/ยอดคงเหลือตามส่วนต่าง; 0 = แก้เฉพาะตัวเลข/มูลค่าบนบรรทัด ไม่แตะ stock
         $returnStockRaw = (string) Yii::$app->request->post('return_stock', '1');
         $returnStock = !in_array($returnStockRaw, ['0', 'false', 'no', ''], true);
+        if (!$returnStock) {
+            return ['success' => false, 'message' => 'ปิดการแก้เฉพาะประวัติแล้ว กรุณาใช้เมนูตรวจสุขภาพสต๊อกและ Controlled Repair'];
+        }
 
         if ($detailId <= 0) {
             return ['success' => false, 'message' => 'ไม่พบรายการใบเบิกที่ต้องการแก้ไข'];
@@ -500,6 +505,7 @@ class StockAdjustController extends Controller
                 ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
                 ->sum('balance_qty');
 
+            InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
             $transaction->commit();
             return [
                 'success' => true,
@@ -528,6 +534,9 @@ class StockAdjustController extends Controller
     public function actionDeleteRequisitionDetail()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        return ['success' => false, 'message' => 'ปิดการลบประวัติใบเบิกโดยตรงแล้ว หากเอกสารผิดให้ใช้การกลับรายการหรือเมนูตรวจสุขภาพสต๊อก'];
+
+        /* Legacy implementation retained temporarily for forensic reference; unreachable by design. */
 
         if (!Yii::$app->request->isPost) {
             return ['success' => false, 'message' => 'Invalid method'];
@@ -599,6 +608,7 @@ class StockAdjustController extends Controller
                 ->where(['warehouse_id' => $warehouseId, 'item_code' => $itemCode])
                 ->sum('balance_qty');
 
+            InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
             $transaction->commit();
             return [
                 'success' => true,

@@ -1,0 +1,11 @@
+<?php
+use yii\helpers\Html;
+use app\modules\finance\models\FinanceVoucher;
+$this->title = $model->voucher_no;
+$this->params['breadcrumbs'][] = ['label' => 'เบิกจ่ายและฎีกา', 'url' => ['index']];
+$this->params['breadcrumbs'][] = $this->title;
+$this->beginBlock('page-title'); echo Html::encode($this->title); $this->endBlock();
+$this->beginBlock('sub-title'); ?>รายละเอียดร่างฎีกาที่ยังไม่ผ่านการอนุมัติ<?php $this->endBlock();
+?>
+<div class="alert alert-warning d-flex gap-2"><i class="bi bi-pencil-square"></i><div><strong>สถานะร่าง</strong><div>เอกสารนี้ยังใช้อนุมัติ จ่ายเงิน หรือพิมพ์เช็คไม่ได้</div></div></div>
+<section class="card border shadow-sm"><div class="card-header bg-body d-flex justify-content-between"><h5 class="mb-0">รายละเอียด</h5><span class="badge bg-secondary-subtle text-secondary-emphasis">ร่างฎีกา</span></div><div class="card-body"><dl class="row mb-0"><dt class="col-sm-4 text-body-secondary">ทะเบียนเจ้าหนี้</dt><dd class="col-sm-8"><?= Html::encode($model->payable_no_snapshot) ?></dd><dt class="col-sm-4 text-body-secondary">ผู้รับเงิน</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_name_snapshot) ?></dd><dt class="col-sm-4 text-body-secondary">ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Html::encode($model->invoice_no_snapshot) ?></dd><dt class="col-sm-4 text-body-secondary">แหล่งเงิน</dt><dd class="col-sm-8"><?= Html::encode($model->funding_source) ?></dd><dt class="col-sm-4 text-body-secondary">วันที่ขอจ่าย</dt><dd class="col-sm-8"><?= Yii::$app->formatter->asDate($model->requested_payment_date, 'php:d/m/Y') ?></dd><dt class="col-sm-4 text-body-secondary">วิธีจ่าย</dt><dd class="col-sm-8"><?= Html::encode(FinanceVoucher::paymentMethodOptions()[$model->payment_method]) ?></dd><dt class="col-sm-4 text-body-secondary">ยอดก่อนหัก</dt><dd class="col-sm-8"><?= number_format($model->gross_amount, 2) ?></dd><dt class="col-sm-4 text-body-secondary">ภาษีหัก ณ ที่จ่าย</dt><dd class="col-sm-8"><?= number_format($model->withholding_tax_amount, 2) ?></dd><dt class="col-sm-4 text-body-secondary">ยอดสุทธิ</dt><dd class="col-sm-8 fs-5 fw-semibold"><?= number_format($model->net_amount, 2) ?> บาท</dd></dl></div><div class="card-footer bg-body"><?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับรายการเบิกจ่าย', ['index'], ['class' => 'btn btn-outline-secondary']) ?></div></section>
