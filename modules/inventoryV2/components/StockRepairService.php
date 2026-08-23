@@ -135,7 +135,15 @@ class StockRepairService
         $db = Yii::$app->db;
         $tx = $db->beginTransaction();
         try {
-            InventoryService::lockStockPool($itemCode, $warehouseId, $scope === 'lot' ? self::lot($lotNumber) : null);
+            // Health repair must also support legacy history whose material
+            // master has already been removed. Normal stock mutations remain
+            // fail-closed when the registry row is missing.
+            InventoryService::lockStockPool(
+                $itemCode,
+                $warehouseId,
+                $scope === 'lot' ? self::lot($lotNumber) : null,
+                true
+            );
             $fresh = self::plan($warehouseId, $itemCode, $scope, $lotNumber, $physicalQty);
             if (!$fresh['allowed']) throw new \RuntimeException($fresh['message']);
             if (!hash_equals((string) $fresh['plan']['fingerprint'], $fingerprint)) {

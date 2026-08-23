@@ -14,6 +14,40 @@ use yii\db\Query;
 
 class StockRepairIntegrationTest extends Unit
 {
+    public function testRepairLockSupportsLegacyItemMissingFromRegistry(): void
+    {
+        $warehouseId = (int) Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])->scalar();
+        $this->assertGreaterThan(0, $warehouseId);
+        $missingCode = 'TEST-MISSING-' . bin2hex(random_bytes(6));
+        $outer = Yii::$app->db->beginTransaction();
+        try {
+            \app\modules\inventoryV2\components\InventoryService::lockStockPool(
+                $missingCode,
+                $warehouseId,
+                null,
+                true
+            );
+            $this->addToAssertionCount(1);
+        } finally {
+            if ($outer->isActive) $outer->rollBack();
+        }
+    }
+
+    public function testNormalStockLockStillRejectsItemMissingFromRegistry(): void
+    {
+        $warehouseId = (int) Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])->scalar();
+        $this->assertGreaterThan(0, $warehouseId);
+        $missingCode = 'TEST-MISSING-' . bin2hex(random_bytes(6));
+        $outer = Yii::$app->db->beginTransaction();
+        try {
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('ไม่พบพัสดุรหัส');
+            \app\modules\inventoryV2\components\InventoryService::lockStockPool($missingCode, $warehouseId);
+        } finally {
+            if ($outer->isActive) $outer->rollBack();
+        }
+    }
+
     public function testRepairableCaseWritesAuditAndVerifiesThenOuterTransactionRollsBack(): void
     {
         $beforeAudit = $this->auditCount();
