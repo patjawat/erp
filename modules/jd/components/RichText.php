@@ -11,8 +11,8 @@ use yii\helpers\HtmlPurifier;
  */
 class RichText
 {
-    public const ALLOWED_TAGS = 'p,br,ul,ol,li,strong,em,b,i,u';
-    private const HTML_PROBE = '/<(?:p|br|ul|ol|li|strong|em|b|i|u)\b[^>]*>/i';
+    public const ALLOWED_TAGS = 'p,br,ul,ol,li,strong,em,b,i,u,table[class],caption,thead,tbody,tfoot,tr,th[colspan|rowspan|scope],td[colspan|rowspan]';
+    private const HTML_PROBE = '/<(?:p|br|ul|ol|li|strong|em|b|i|u|table|caption|thead|tbody|tfoot|tr|th|td)\b[^>]*>/i';
 
     public static function sanitize(?string $html): string
     {

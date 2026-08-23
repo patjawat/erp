@@ -293,6 +293,8 @@ $config = [
             'jd/employee-jd/cancel-review',
             'jd/employee-jd/resolve-review',
             'jd/employee-jd/review-inbox',
+            // Service Profile: controller ตรวจ RBAC และขอบเขตหน่วยงานภายในทุก action
+            'service-profile/*',
             // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
