@@ -1399,7 +1399,33 @@ class ServiceController extends \yii\web\Controller
             $sendRepairDate = substr((string) $model->created_at, 0, 10);
         }
 
-        $data = [
+        $expenseData = [];
+        $expenseTotal = 0.0;
+        $expenseRows = HelpdeskDetail::find()
+            ->where([
+                'helpdesk_id' => $model->id,
+                'name' => 'expense_record',
+            ])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+        foreach ($expenseRows as $index => $expenseRow) {
+            $rowNumber = $index + 1;
+            $detail = is_array($expenseRow->data_json) ? $expenseRow->data_json : [];
+            $qty = (float) ($detail['qty'] ?? 0);
+            $unitPrice = (float) ($detail['unit_price'] ?? 0);
+            $rowTotal = (float) ($detail['total'] ?? ($qty * $unitPrice));
+            $expenseTotal += $rowTotal;
+            if ($rowNumber > 5) {
+                continue;
+            }
+            $expenseData['expense_' . $rowNumber . '_title'] = (string) ($expenseRow->title ?? '');
+            $expenseData['expense_' . $rowNumber . '_qty'] = $this->formatPdfExpenseNumber($qty, 2);
+            $expenseData['expense_' . $rowNumber . '_unit_price'] = number_format($unitPrice, 2);
+            $expenseData['expense_' . $rowNumber . '_total'] = number_format($rowTotal, 2);
+        }
+        $expenseData['expense_total'] = number_format($expenseTotal, 2);
+
+        $data = array_merge([
             'repair_number' => (string) ($model->repair_number ?? ''),
             'title' => (string) ($model->title ?? ''),
             'device_type_name' => (string) ($model->deviceType?->title ?? ''),
@@ -1433,7 +1459,7 @@ class ServiceController extends \yii\web\Controller
             'solution_detail' => is_array($model->data_json) ? (string) ($model->data_json['solution_detail'] ?? '') : '',
             // keep legacy key: map remark => note
             'remark' => is_array($model->data_json) ? (string) ($model->data_json['note'] ?? '') : '',
-        ];
+        ], $expenseData);
 
         $service = new PdfTemplateService();
         $pdfBinary = $service->generatePdfWithData((int) $template->id, $data);
@@ -1444,6 +1470,14 @@ class ServiceController extends \yii\web\Controller
         Yii::$app->response->headers->set('Content-Disposition', 'inline; filename="' . $filename . '"');
         Yii::$app->response->content = $pdfBinary;
         return Yii::$app->response;
+    }
+
+    /**
+     * แสดงจำนวนโดยคงทศนิยมเท่าที่จำเป็น สูงสุดตามที่ฟอร์มค่าใช้จ่ายรองรับ.
+     */
+    private function formatPdfExpenseNumber(float $value, int $decimals = 2): string
+    {
+        return rtrim(rtrim(number_format($value, $decimals, '.', ','), '0'), '.');
     }
 
 

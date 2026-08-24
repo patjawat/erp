@@ -81,6 +81,29 @@ class HelpdeskDataSource implements DataSourceInterface
             ['source' => 'problem_detail', 'label' => 'รายละเอียดปัญหา'],
             ['source' => 'solution_detail', 'label' => 'รายละเอียดการแก้ไข'],
             ['source' => 'remark', 'label' => 'หมายเหตุ'],
+
+            // รายการค่าใช้จ่ายสำหรับตารางในใบส่งซ่อม (รองรับ 5 แถวตามแบบฟอร์มมาตรฐาน)
+            ['source' => 'expense_1_title', 'label' => 'ค่าใช้จ่ายแถว 1: รายการ'],
+            ['source' => 'expense_1_qty', 'label' => 'ค่าใช้จ่ายแถว 1: จำนวน'],
+            ['source' => 'expense_1_unit_price', 'label' => 'ค่าใช้จ่ายแถว 1: ราคาต่อหน่วย'],
+            ['source' => 'expense_1_total', 'label' => 'ค่าใช้จ่ายแถว 1: รวมเงิน'],
+            ['source' => 'expense_2_title', 'label' => 'ค่าใช้จ่ายแถว 2: รายการ'],
+            ['source' => 'expense_2_qty', 'label' => 'ค่าใช้จ่ายแถว 2: จำนวน'],
+            ['source' => 'expense_2_unit_price', 'label' => 'ค่าใช้จ่ายแถว 2: ราคาต่อหน่วย'],
+            ['source' => 'expense_2_total', 'label' => 'ค่าใช้จ่ายแถว 2: รวมเงิน'],
+            ['source' => 'expense_3_title', 'label' => 'ค่าใช้จ่ายแถว 3: รายการ'],
+            ['source' => 'expense_3_qty', 'label' => 'ค่าใช้จ่ายแถว 3: จำนวน'],
+            ['source' => 'expense_3_unit_price', 'label' => 'ค่าใช้จ่ายแถว 3: ราคาต่อหน่วย'],
+            ['source' => 'expense_3_total', 'label' => 'ค่าใช้จ่ายแถว 3: รวมเงิน'],
+            ['source' => 'expense_4_title', 'label' => 'ค่าใช้จ่ายแถว 4: รายการ'],
+            ['source' => 'expense_4_qty', 'label' => 'ค่าใช้จ่ายแถว 4: จำนวน'],
+            ['source' => 'expense_4_unit_price', 'label' => 'ค่าใช้จ่ายแถว 4: ราคาต่อหน่วย'],
+            ['source' => 'expense_4_total', 'label' => 'ค่าใช้จ่ายแถว 4: รวมเงิน'],
+            ['source' => 'expense_5_title', 'label' => 'ค่าใช้จ่ายแถว 5: รายการ'],
+            ['source' => 'expense_5_qty', 'label' => 'ค่าใช้จ่ายแถว 5: จำนวน'],
+            ['source' => 'expense_5_unit_price', 'label' => 'ค่าใช้จ่ายแถว 5: ราคาต่อหน่วย'],
+            ['source' => 'expense_5_total', 'label' => 'ค่าใช้จ่ายแถว 5: รวมเงิน'],
+            ['source' => 'expense_total', 'label' => 'ค่าใช้จ่ายรวมทั้งหมด'],
         ];
     }
 }
