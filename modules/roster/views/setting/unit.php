@@ -1,6 +1,7 @@
 <?php
 
 use app\modules\roster\models\UnitShift;
+use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
@@ -55,13 +56,20 @@ foreach ($shifts as $shift) {
             </div>
             <input type="hidden" id="unit-picker" value="<?= $unitId ?>">
         <?php else: ?>
-            <select class="form-select" id="unit-picker">
-                <?php foreach ($units as $id => $name): ?>
-                    <option value="<?= (int) $id ?>" <?= $unitId === (int) $id ? 'selected' : '' ?>>
-                        <?= Html::encode($name) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <?= Select2::widget([
+                'name' => 'unit_id',
+                'value' => $unitId,
+                'data' => $units,
+                'options' => [
+                    'id' => 'unit-picker',
+                    'placeholder' => 'ค้นหาชื่อหน่วยงาน...',
+                    'aria-label' => 'ค้นหาและเลือกหน่วยงาน',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => false,
+                    'width' => '100%',
+                ],
+            ]) ?>
         <?php endif; ?>
     </div>
 </div>
@@ -70,7 +78,7 @@ foreach ($shifts as $shift) {
 <div class="card border shadow-sm">
     <div class="card-header bg-body-tertiary d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
         <h6 class="mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-clock-history"></i> เวรที่หน่วยงานนี้ใช้
+            <i class="bi bi-clock-history"></i> เวรของหน่วยงานนี้
             <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">
                 ต้องการรวม <?= (int) $totalNeeded ?> คน/วัน
             </span>

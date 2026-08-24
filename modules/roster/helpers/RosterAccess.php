@@ -344,7 +344,9 @@ class RosterAccess
     /** @param int[]|null $allowed */
     private static function optionsFor(?array $allowed): array
     {
-        $query = Organization::find()->where(['active' => 1])->orderBy(['lvl' => SORT_ASC, 'name' => SORT_ASC]);
+        // ใช้ลำดับ nested set เดียวกับหน้าจัดการโครงสร้างองค์กร
+        // เพื่อให้หน่วยแม่และหน่วยลูกอยู่ติดกัน ไม่กระจายตามตัวอักษร/ระดับ
+        $query = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC]);
         if ($allowed !== null) {
             if (empty($allowed)) {
                 return [];

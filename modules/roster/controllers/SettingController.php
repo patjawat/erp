@@ -97,7 +97,8 @@ class SettingController extends Controller
             'units' => $units,
             'unitId' => $unitId,
             'types' => ShiftType::activeList(),
-            'shifts' => $unitId ? UnitShift::listForUnit($unitId) : [],
+            // หน้าตั้งค่าต้องเห็นเวรที่ปิดใช้ด้วย เพื่อแก้ไขหรือเปิดใช้งานใหม่
+            'shifts' => $unitId ? UnitShift::listForUnit($unitId, false) : [],
         ]);
     }
 
