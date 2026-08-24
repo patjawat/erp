@@ -49,8 +49,11 @@ class ApproverController extends Controller
         $searchModel = new LeaveSearch();
         
         $params = $this->request->queryParams;
+        $status = $params['LeaveSearch']['status'] ?? null;
+        $searchParams = $this->withoutLeaveStatus($params);
 
-        $dataProvider = $searchModel->search($params);
+        $dataProvider = $searchModel->search($searchParams);
+        $searchModel->status = $status;
         $query = $dataProvider->query;
         $query->joinWith([
             'employee.employeeType',
@@ -67,6 +70,8 @@ class ApproverController extends Controller
         $end = AppHelper::convertToGregorian($searchModel->date_end);
         $query->andFilterWhere(['>=', 'leave.date_start', $start])
             ->andFilterWhere(['<=', 'leave.date_end', $end]);
+
+        $this->applyLeaveStatusFilter($query, $status);
 
         if (!empty($searchModel->leave_type_id)) {
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
@@ -695,6 +700,54 @@ class ApproverController extends Controller
     }
 
     /**
+     * ตัด status ออกจาก params เพื่อไม่ให้ LeaveSearch กรองเฉพาะสถานะล่าสุด
+     * ก่อนนำไปกรองแบบคำนึงถึงประวัติ workflow ใน applyLeaveStatusFilter().
+     */
+    private function withoutLeaveStatus(array $params): array
+    {
+        unset($params['LeaveSearch']['status']);
+
+        return $params;
+    }
+
+    /**
+     * สถานะที่ผ่านแล้วเป็น milestone ของ workflow จึงต้องยังค้นพบได้แม้ใบลา
+     * จะเดินหน้าไปยังขั้นถัดไปและ leave.status ถูกเปลี่ยนเป็นสถานะล่าสุดแล้ว.
+     */
+    private function applyLeaveStatusFilter($query, $status): void
+    {
+        if ($status === null || $status === '') {
+            return;
+        }
+
+        $approvalLevels = [
+            'Checking1_pass' => 1,
+            'Checking2_pass' => 2,
+            'Checkup_pass' => 3,
+        ];
+
+        if (!isset($approvalLevels[$status])) {
+            $query->andWhere(['leave.status' => $status]);
+            return;
+        }
+
+        $passedApproval = Approve::find()
+            ->select('approve.id')
+            ->where([
+                'approve.name' => 'leave',
+                'approve.level' => $approvalLevels[$status],
+                'approve.status' => 'Pass',
+            ])
+            ->andWhere('approve.from_id = leave.id');
+
+        $query->andWhere([
+            'or',
+            ['leave.status' => $status],
+            ['exists', $passedApproval],
+        ]);
+    }
+
+    /**
      * ส่งออก Excel ทะเบียนวันลา (ใช้ตัวกรองเดียวกับ actionIndex)
      */
     public function actionExport()
@@ -709,9 +762,11 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
-        $status = $this->request->get('status');
         $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $params = $this->request->queryParams;
+        $status = $params['LeaveSearch']['status'] ?? null;
+        $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
+        $searchModel->status = $status;
         $query = $dataProvider->query;
         $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
         $dataProvider->pagination = false;
@@ -721,11 +776,10 @@ class ApproverController extends Controller
         $query->andFilterWhere(['>=', 'leave.date_start', $start])
             ->andFilterWhere(['<=', 'leave.date_end', $end]);
 
+        $this->applyLeaveStatusFilter($query, $status);
+
         if (!empty($searchModel->leave_type_id)) {
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
-        }
-        if ($status) {
-            $query->andFilterWhere(['leave.status' => $searchModel->status]);
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
@@ -765,7 +819,10 @@ class ApproverController extends Controller
         }
 
         $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $params = $this->request->queryParams;
+        $status = $params['LeaveSearch']['status'] ?? null;
+        $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
+        $searchModel->status = $status;
         $query = $dataProvider->query;
         $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
         $dataProvider->pagination = false;
@@ -775,12 +832,10 @@ class ApproverController extends Controller
         $query->andFilterWhere(['>=', 'leave.date_start', $start])
             ->andFilterWhere(['<=', 'leave.date_end', $end]);
 
+        $this->applyLeaveStatusFilter($query, $status);
+
         if (!empty($searchModel->leave_type_id)) {
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
-        }
-        $status = $this->request->get('status');
-        if ($status) {
-            $query->andFilterWhere(['leave.status' => $searchModel->status]);
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
