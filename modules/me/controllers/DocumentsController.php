@@ -4,6 +4,7 @@ namespace app\modules\me\controllers;
 
 use app\components\AppHelper;
 use app\components\DateFilterHelper;
+use app\components\DocumentAccessPolicy;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\models\Categorise;
@@ -13,8 +14,8 @@ use app\modules\dms\models\DocumentsDetail;
 use app\modules\dms\models\DocumentsDetailSearch;
 use app\modules\dms\models\DocumentSearch;
 use app\modules\filemanager\components\FileManagerHelper;
-use app\modules\hr\models\Organization;
 use Yii;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -25,6 +26,7 @@ class DocumentsController extends \yii\web\Controller
      * ถ้ามี name ใหม่เพิ่มเข้ามา ให้แก้ list ตรงนี้ก่อนเสมอ
      */
     private const INDEX_EMPLOYEE_DETAIL_NAMES = [
+        'comment_emp',
         'tags',
         'employee_tag',
         'employee',
@@ -32,6 +34,7 @@ class DocumentsController extends \yii\web\Controller
     ];
 
     private const INDEX_DEPARTMENT_DETAIL_NAMES = [
+        'comment_dept',
         'department',
     ];
 
@@ -44,39 +47,6 @@ class DocumentsController extends \yii\web\Controller
         'employee',
         'req_approve',
     ];
-
-    private function isDeptHeadOrDeputy(int $departmentId, int $empId): bool
-    {
-        if ($departmentId <= 0 || $empId <= 0) {
-            return false;
-        }
-
-        $org = Organization::findOne($departmentId);
-        if (!$org) {
-            return false;
-        }
-
-        $dataJson = $org->data_json;
-        if (is_string($dataJson)) {
-            $decoded = json_decode($dataJson, true);
-            $dataJson = is_array($decoded) ? $decoded : [];
-        }
-        if (!is_array($dataJson)) {
-            $dataJson = [];
-        }
-
-        $leader1 = $dataJson['leader1'] ?? null;
-        $leader2 = $dataJson['leader2'] ?? null;
-
-        $allowed = [];
-        foreach ([$leader1, $leader2] as $v) {
-            if (is_numeric($v) && (int) $v > 0) {
-                $allowed[] = (int) $v;
-            }
-        }
-
-        return in_array($empId, $allowed, true);
-    }
 
     /**
      * แปลงชื่อ detail เป็น SQL `IN (...)` แบบปลอดภัย
@@ -118,19 +88,25 @@ class DocumentsController extends \yii\web\Controller
         $employeeDetailNames = $this->quotedDetailNames($employeeDetailNames);
         $departmentDetailNames = $this->quotedDetailNames($departmentDetailNames);
 
+        // ห้ามใช้ 0 เป็น sentinel เพราะข้อมูล legacy อาจมี documents_detail.to_id = 0
+        // และจะทำให้ผู้ใช้ที่ยังไม่ได้ผูกพนักงาน/หน่วยงานเห็นหนังสือผิดสิทธิ
+        $employeeRouteId = $empId > 0 ? $empId : -1;
+
         $query->leftJoin(
             ['te' => 'documents_detail'],
             "te.document_id = documents.id AND te.name IN ({$employeeDetailNames}) AND te.to_id = :empId",
             [
-                ':empId' => (string) $empId,
+                ':empId' => (string) $employeeRouteId,
             ]
         );
+
+        $departmentRouteId = DocumentAccessPolicy::canUseDepartmentRoute($depId, $empId) ? $depId : -1;
 
         $query->leftJoin(
             ['td' => 'documents_detail'],
             "td.document_id = documents.id AND td.name IN ({$departmentDetailNames}) AND td.to_id = :depId",
             [
-                ':depId' => (string) $depId,
+                ':depId' => (string) $departmentRouteId,
             ]
         );
 
@@ -139,7 +115,7 @@ class DocumentsController extends \yii\web\Controller
             'tr.document_id = documents.id AND tr.name = :readName AND tr.to_id = :empId',
             [
                 ':readName' => 'read',
-                ':empId' => (string) $empId,
+                ':empId' => (string) $employeeRouteId,
             ]
         );
 
@@ -335,16 +311,12 @@ class DocumentsController extends \yii\web\Controller
         $this->applyDocumentsIndexBaseQuery(
             $query,
             (int) $empId,
-            (int) $depId,
-            self::HOME_DETAIL_NAMES,
-            self::HOME_DETAIL_NAMES
+            (int) $depId
         );
         $summaryBaseQuery = $this->applyDocumentsIndexBaseQuery(
             Documents::find(),
             (int) $empId,
-            (int) $depId,
-            self::HOME_DETAIL_NAMES,
-            self::HOME_DETAIL_NAMES
+            (int) $depId
         );
 
         $query
@@ -469,13 +441,16 @@ class DocumentsController extends \yii\web\Controller
 
         $emp = UserHelper::GetEmployee();
         $detail = DocumentsDetail::findOne($id);
-        // เงื่อนไขเดิม เมื่อส่งถึงหน่วยงาน
-        // if ($detail && $detail->name === 'department') {
-        //     $deptId = (int) $detail->to_id;
-        //     if (!$this->isDeptHeadOrDeputy($deptId, (int) $emp->id)) {
-        //         throw new ForbiddenHttpException('ไม่อนุญาตให้เข้าถึงเอกสารของหน่วยงานนี้');
-        //     }
-        // }
+        if (!$detail) {
+            throw new NotFoundHttpException('ไม่พบเส้นทางการส่งหนังสือ');
+        }
+        if (!DocumentAccessPolicy::canRead(
+            (int) $detail->document_id,
+            (int) ($emp->department ?? 0),
+            (int) ($emp->id ?? 0)
+        )) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
+        }
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
 
@@ -558,9 +533,7 @@ class DocumentsController extends \yii\web\Controller
             $unreadQuery = $this->applyDocumentsIndexBaseQuery(
                 Documents::find(),
                 (int) $emp->id,
-                (int) ($emp->department ?? 0),
-                self::HOME_DETAIL_NAMES,
-                self::HOME_DETAIL_NAMES
+                (int) ($emp->department ?? 0)
             );
             $ids = $unreadQuery
                 ->andWhere(['tr.id' => null])
@@ -904,6 +877,19 @@ class DocumentsController extends \yii\web\Controller
     {
         // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
+            $document = Documents::findOne(['ref' => $ref]);
+            $employee = UserHelper::GetEmployee();
+            if (!$document || !$employee) {
+                throw new NotFoundHttpException('ไม่พบหนังสือ');
+            }
+            if (!DocumentAccessPolicy::canRead(
+                (int) $document->id,
+                (int) ($employee->department ?? 0),
+                (int) ($employee->id ?? 0)
+            )) {
+                throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
+            }
+
             $id = Yii::$app->request->get('id');
             $download = Yii::$app->request->get('download');
             $fileUpload = Uploads::findOne(['ref' => $ref]);

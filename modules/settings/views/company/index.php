@@ -18,6 +18,10 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 $this->title = 'ตั้งค่าองค์กร';
 
+if (empty($model->data_json['document_department_access_mode'])) {
+    $model->data_json['document_department_access_mode'] = 'heads_only';
+}
+
 $formatJs = <<< 'JS'
     var formatRepo = function (repo) {
         if (repo.loading) {
@@ -154,6 +158,18 @@ JS;
                             <?= $form->field($model, 'data_json[doc_number]')->textInput()->label('เลขที่หนังสือ') ?>
                         </div>
                     </div>
+                    <fieldset class="border rounded p-3 mb-3">
+                        <legend class="float-none w-auto px-1 fs-6 fw-semibold mb-1">สิทธิอ่านหนังสือที่ส่งถึงหน่วยงาน</legend>
+                        <?= $form->field($model, 'data_json[document_department_access_mode]', [
+                            'options' => ['class' => 'mb-1'],
+                        ])->radioList([
+                            'all_members' => 'หัวหน้าและบุคลากรทุกคนในหน่วยงาน',
+                            'heads_only' => 'เฉพาะหัวหน้าและรองหัวหน้าหน่วยงาน',
+                        ], [
+                            'itemOptions' => ['class' => 'form-check-input'],
+                        ])->label(false) ?>
+                        <div class="form-text">ผู้ที่ได้รับการส่งต่อถึงบุคคลโดยตรงยังอ่านได้เสมอ</div>
+                    </fieldset>
                     <?= $form->field($model, 'data_json[phone]')->textInput()->label('โทรศัพท์') ?>
                     <?= $form->field($model, 'data_json[website]')->textInput()->label('เว็บไซต์') ?>
                     <?php //  $form->field($model, 'data_json[director_name]')->textInput()->label('ผู้อำนวยการ')
