@@ -1,0 +1,8 @@
+<?php
+use kartik\select2\Select2;
+use yii\helpers\Html;
+$this->title='กำหนดคณะผู้จัดทำ';
+?>
+<?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?><?= Html::encode($model->owner_name_snapshot.' · ปีงบประมาณ '.$model->fiscal_year) ?><?php $this->endBlock(); ?>
+<div class="row justify-content-center"><div class="col-12 col-xl-8"><form method="post" class="card bg-body border shadow-sm"><input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>"><div class="card-body p-3 p-md-4"><div class="mb-3"><label class="form-label fw-semibold">คณะผู้จัดทำ</label><?= Select2::widget(['name'=>'author_ids','value'=>$selected,'data'=>$employeeOptions,'options'=>['multiple'=>true,'placeholder'=>'ค้นหาและเลือกผู้จัดทำ...'],'pluginOptions'=>['allowClear'=>true,'closeOnSelect'=>false]]) ?><div class="form-text">เลือกได้หลายคน และสามารถค้นหาบุคลากรต่างหน่วยงานได้</div></div><div><label class="form-label fw-semibold">ผู้ประสานหลัก</label><?= Select2::widget(['name'=>'coordinator_id','value'=>$coordinator,'data'=>$employeeOptions,'options'=>['placeholder'=>'ค้นหาและเลือกผู้ประสานหลัก...'],'pluginOptions'=>['allowClear'=>true]]) ?><div class="form-text">ผู้ประสานหลักต้องอยู่ในคณะผู้จัดทำ และเป็นผู้ส่งเอกสารเข้าสู่กระบวนการพิจารณา</div></div><div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top"><?= Html::a('ยกเลิก',['view','id'=>$model->id],['class'=>'btn btn-outline-secondary']) ?><?= Html::submitButton('บันทึกคณะผู้จัดทำ',['class'=>'btn btn-primary']) ?></div></div></form></div></div>

@@ -17,6 +17,8 @@ use app\modules\hr\models\ProbationEvaluation;
 use app\modules\hr\models\ProbationRound;
 use app\modules\leave\models\Leave;
 use app\modules\leave\models\LeaveSearch;
+use app\modules\serviceProfile\models\ServiceProfile;
+use app\modules\serviceProfile\services\InboxService;
 use app\modules\usermanager\models\User;
 use Yii;
 use yii\web\Controller;
@@ -62,6 +64,9 @@ class DefaultController extends Controller
         $unreadDocumentCount = 0;
         $probationCaseCount = 0;
         $probationTaskCount = 0;
+        $serviceProfileCurrent = null;
+        $serviceProfileDraft = null;
+        $serviceProfileActionCount = 0;
         try {
             $empId = (int) $model->id;
             $depId = (int) ($model->department ?? 0);
@@ -98,6 +103,19 @@ class DefaultController extends Controller
             $unreadDocumentCount = 0;
         }
         if ($model && $model->id) {
+            try {
+                $serviceProfileCurrent = ServiceProfile::findCurrent('department', (int) $model->department);
+                $serviceProfileDraft = ServiceProfile::find()
+                    ->where(['owner_type' => 'department', 'owner_id' => (int) $model->department])
+                    ->andWhere(['status' => [ServiceProfile::STATUS_DRAFT, ServiceProfile::STATUS_RETURNED, ServiceProfile::STATUS_REVIEW_PENDING, ServiceProfile::STATUS_APPROVAL_PENDING, ServiceProfile::STATUS_ACKNOWLEDGEMENT_PENDING]])
+                    ->orderBy(['fiscal_year' => SORT_DESC, 'revision_no' => SORT_DESC])
+                    ->one();
+                $serviceProfileActionCount = (new InboxService())->count($model);
+            } catch (\Throwable $e) {
+                $serviceProfileCurrent = null;
+                $serviceProfileDraft = null;
+                $serviceProfileActionCount = 0;
+            }
             try {
                 $probationCaseCount = (int) ProbationCase::find()->where(['or',
                     ['employee_id' => $model->id],
@@ -155,6 +173,9 @@ class DefaultController extends Controller
             'unreadDocumentCount' => $unreadDocumentCount,
             'probationCaseCount' => $probationCaseCount,
             'probationTaskCount' => $probationTaskCount,
+            'serviceProfileCurrent' => $serviceProfileCurrent,
+            'serviceProfileDraft' => $serviceProfileDraft,
+            'serviceProfileActionCount' => $serviceProfileActionCount,
         ]);
     }
 

@@ -133,13 +133,6 @@ $this->registerCss(<<<'CSS'
 .erp-profile-panel {
     gap: 1.5rem;
 }
-.executive-entry {
-    border-top: var(--bs-border-width) solid var(--bs-border-color-translucent);
-}
-.executive-entry__icon {
-    width: 44px;
-    height: 44px;
-}
 @media (min-width: 1200px) {
     .erp-dashboard-primary-row {
         min-height: 470px;
@@ -260,10 +253,7 @@ if (!empty($upcomingHealth)): ?>
 
 <div class="row g-3 erp-dashboard-primary-row">
     <div class="col-12 col-xl-6">
-        <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column justify-content-between rounded-3 erp-profile-panel"
-            style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
-            <div class="position-absolute bottom-0 start-0 bg-info opacity-25 rounded-circle"
-                style="width: 200px; height: 200px; filter: blur(50px); transform: translate(-30%, 30%);"></div>
+        <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column rounded-3 erp-profile-panel">
 
             <div class="d-flex flex-column flex-md-row align-items-center gap-4 position-relative z-1">
 
@@ -322,9 +312,10 @@ if (!empty($upcomingHealth)): ?>
                             </svg>
                         </div>
                     </div>
-                    <p class="text-white text-opacity-75 text-sm fw-medium mb-4"><?= $me->positionName() ?> • <span
-                            class="text-white fw-bold">ระดับ: <?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></span>
-                    </p>
+                    <div class="mb-4">
+                        <p class="text-white text-opacity-75 text-sm fw-medium mb-1"><?= $me->positionName() ?></p>
+                        <p class="text-white fw-bold text-sm mb-0">ระดับ: <?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></p>
+                    </div>
                     <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
                         <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" class="lucide lucide-map-pin">
@@ -361,24 +352,46 @@ if (!empty($upcomingHealth)): ?>
                 </div>
             </div>
 
-            <?php if ($canViewExecutiveDashboard): ?>
-                <section class="executive-entry position-relative z-1 pt-4" aria-labelledby="executive-entry-heading">
-                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                        <div class="d-flex align-items-start gap-3">
-                            <span class="executive-entry__icon rounded-3 bg-white bg-opacity-10 d-inline-flex align-items-center justify-content-center flex-shrink-0">
-                                <i class="bi bi-bar-chart-line fs-5" aria-hidden="true"></i>
-                            </span>
-                            <div>
-                                <h3 id="executive-entry-heading" class="h6 text-white mb-1">ศูนย์ข้อมูลผู้บริหาร</h3>
-                                <p class="small text-white text-opacity-75 mb-0">ภาพรวมการเงิน ลูกหนี้ เจ้าหนี้ และวัสดุคงคลัง</p>
-                            </div>
-                        </div>
-                        <a href="<?= Url::to(['/executive/dashboard']) ?>" class="btn btn-outline-light fw-semibold flex-shrink-0">
-                            เปิด Dashboard ผู้บริหาร <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+            <div class="erp-profile-tools position-relative z-1">
+            <?php
+            $serviceProfileTarget = $serviceProfileCurrent ?? $serviceProfileDraft ?? null;
+            $serviceProfileUrl = ($serviceProfileActionCount ?? 0) > 0
+                ? ['/service-profile/default/index', 'scope' => 'action']
+                : ($serviceProfileTarget
+                ? ['/service-profile/default/view', 'id' => $serviceProfileTarget->id]
+                : ['/service-profile/default/index']);
+            ?>
+            <nav class="department-management-entry" aria-label="การบริหารหน่วยงาน">
+                <div class="department-management-entry__panel">
+                    <div class="department-management-entry__actions">
+                        <?php if ($canViewExecutiveDashboard): ?>
+                        <a href="<?= Url::to(['/executive/dashboard']) ?>" class="department-management-action department-management-action--executive" title="Dashboard ข้อมูลผู้บริหาร">
+                            <span class="department-management-action__icon"><i class="bi bi-bar-chart-line" aria-hidden="true"></i></span>
+                            <span>ผู้บริหาร</span>
                         </a>
+                        <?php endif; ?>
+                        <a href="<?= Url::to($serviceProfileUrl) ?>" class="department-management-action department-management-action--profile">
+                            <span class="department-management-action__icon"><i class="bi bi-journal-text" aria-hidden="true"></i></span>
+                            <span>Service Profile</span>
+                            <?php if (($serviceProfileActionCount ?? 0) > 0): ?>
+                                <span class="badge text-bg-danger"><?= (int)$serviceProfileActionCount ?></span>
+                            <?php endif; ?>
+                            <?php if ($serviceProfileDraft && !$serviceProfileCurrent): ?>
+                                <span class="badge bg-warning-subtle text-warning-emphasis">กำลังจัดทำ</span>
+                            <?php endif; ?>
+                        </a>
+                        <button type="button" class="department-management-action department-management-action--plan" disabled aria-disabled="true">
+                            <span class="department-management-action__icon"><i class="bi bi-list-check" aria-hidden="true"></i></span>
+                            <span>Action Plan</span>
+                        </button>
+                        <button type="button" class="department-management-action department-management-action--risk" disabled aria-disabled="true" title="Risk Management">
+                            <span class="department-management-action__icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+                            <span>Risk</span>
+                        </button>
                     </div>
-                </section>
-            <?php endif; ?>
+                </div>
+            </nav>
+            </div>
         </div>
 
         <style>
@@ -388,6 +401,133 @@ if (!empty($upcomingHealth)): ?>
 
             .hover-opacity-100:hover {
                 opacity: 1 !important;
+            }
+
+            .erp-profile-panel {
+                background:
+                    radial-gradient(circle at 85% 12%, rgb(255 255 255 / 14%), transparent 28%),
+                    linear-gradient(145deg, #2149b7 0%, #2f70dc 100%);
+            }
+
+            .erp-profile-tools {
+                margin-top: auto;
+                overflow: hidden;
+                border: 1px solid rgb(255 255 255 / 24%);
+                border-radius: 1rem;
+                background: rgb(96 165 250 / 22%);
+                box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+            }
+
+            .department-management-entry__panel {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: .75rem 1rem;
+            }
+
+            .department-management-entry__actions {
+                display: grid;
+                flex: 1 1 auto;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: .5rem;
+            }
+
+            .department-management-action {
+                min-width: 0;
+                min-height: 5rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: .375rem;
+                padding: .625rem .5rem;
+                border: 1px solid transparent;
+                border-radius: .75rem;
+                font-weight: 700;
+                line-height: 1.2;
+                text-align: center;
+                text-decoration: none;
+                box-shadow: none;
+                transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+            }
+
+            .department-management-action--profile {
+                color: #1246a0;
+                background: #fff;
+                border-color: #fff;
+            }
+
+            .department-management-action--executive {
+                color: #123d7a;
+                background: #cfe2ff;
+                border-color: #b9d5ff;
+            }
+
+            .department-management-action--plan {
+                color: #17458d;
+                background: #e5efff;
+                border-color: #d5e5ff;
+            }
+
+            .department-management-action--risk {
+                color: #17458d;
+                background: #dbeafe;
+                border-color: #c6dcff;
+            }
+
+            .department-management-action__icon {
+                width: 2.25rem;
+                height: 2.25rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 auto;
+                border-radius: 50%;
+                background: transparent;
+                font-size: 1.5rem;
+            }
+
+            .department-management-action__icon i {
+                color: currentColor;
+            }
+
+            a.department-management-action:hover,
+            a.department-management-action:focus-visible {
+                color: #0d3b8b;
+                transform: translateY(-2px);
+                box-shadow: 0 .5rem 1rem rgb(4 25 70 / 24%);
+            }
+
+            .department-management-action:focus-visible {
+                outline: 3px solid #fff;
+                outline-offset: 3px;
+            }
+
+            .department-management-action:disabled {
+                opacity: 1;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
+
+            @media (max-width: 767.98px) {
+                .department-management-entry__panel {
+                    align-items: stretch;
+                    flex-direction: column;
+                }
+
+                .department-management-entry__actions {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .department-management-action {
+                    width: 100%;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .department-management-action {
+                    transition: none;
+                }
             }
 
             .group:hover #avatar-preview {

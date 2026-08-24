@@ -7,6 +7,7 @@ use app\modules\inventoryV2\models\StockBalance;
 use app\modules\inventoryV2\models\StockDetail;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockItem;
+use app\modules\inventoryV2\models\Warehouse;
 use yii\db\Query;
 
 class InventoryService
@@ -216,7 +217,7 @@ class InventoryService
      * Must be called inside a transaction; the item row prevents a race when
      * the stock_balance row does not exist yet.
      */
-    public static function lockStockPool($itemId, $warehouseId, $lotNumber = null): void
+    public static function lockStockPool($itemId, $warehouseId, $lotNumber = null, bool $allowMissingRegistry = false): void
     {
         $db = Yii::$app->db;
         $tx = $db->getTransaction();
@@ -229,7 +230,20 @@ class InventoryService
             ->where(['code' => (string) $itemId, 'name' => 'asset_item', 'group_id' => 'MATER']);
         $itemCode = $db->createCommand($itemQuery->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryScalar();
         if ($itemCode === false) {
-            throw new \Exception("ไม่พบพัสดุรหัส {$itemId} ในทะเบียนวัสดุ");
+            if (!$allowMissingRegistry) {
+                throw new \Exception("ไม่พบพัสดุรหัส {$itemId} ในทะเบียนวัสดุ");
+            }
+            // Legacy hospitals can retain confirmed stock history after the
+            // material master was removed.  Repairs still need a stable lock;
+            // serialize only this exceptional path on the warehouse row.
+            $warehouseQuery = (new Query())
+                ->select('id')
+                ->from(Warehouse::tableName())
+                ->where(['id' => (int) $warehouseId]);
+            $lockedWarehouse = $db->createCommand($warehouseQuery->createCommand($db)->getRawSql() . ' FOR UPDATE')->queryScalar();
+            if ($lockedWarehouse === false) {
+                throw new \Exception("ไม่พบคลังรหัส {$warehouseId}");
+            }
         }
 
         $balanceCondition = ['item_code' => (string) $itemId, 'warehouse_id' => (int) $warehouseId];

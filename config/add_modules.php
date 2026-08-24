@@ -101,4 +101,5 @@ $modules['am-survey'] = ['class' => 'app\modules\amSurvey\Module'];
 $modules['ai'] = ['class' => 'app\modules\ai\Module'];
 $modules['housing'] = ['class' => 'app\modules\housing\Module'];  // บ้านพัก
 $modules['roster'] = ['class' => 'app\modules\roster\Module'];  // ตารางเวร (จัดเวรรายเดือนต่อหน่วยงาน)
+$modules['service-profile'] = ['class' => 'app\modules\serviceProfile\Module'];  // Service Profile ประจำปีของหน่วยงาน
 return $modules;
