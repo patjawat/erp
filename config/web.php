@@ -295,6 +295,8 @@ $config = [
             'jd/employee-jd/review-inbox',
             // Service Profile: controller ตรวจ RBAC และขอบเขตหน่วยงานภายในทุก action
             'service-profile/*',
+            // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
+            'iac-risk/*',
             // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)

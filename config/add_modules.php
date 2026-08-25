@@ -102,4 +102,5 @@ $modules['ai'] = ['class' => 'app\modules\ai\Module'];
 $modules['housing'] = ['class' => 'app\modules\housing\Module'];  // บ้านพัก
 $modules['roster'] = ['class' => 'app\modules\roster\Module'];  // ตารางเวร (จัดเวรรายเดือนต่อหน่วยงาน)
 $modules['service-profile'] = ['class' => 'app\modules\serviceProfile\Module'];  // Service Profile ประจำปีของหน่วยงาน
+$modules['iac-risk'] = ['class' => 'app\modules\iacRisk\Module'];  // การควบคุมภายในและการบริหารความเสี่ยง
 return $modules;

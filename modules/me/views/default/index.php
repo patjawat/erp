@@ -384,10 +384,10 @@ if (!empty($upcomingHealth)): ?>
                             <span class="department-management-action__icon"><i class="bi bi-list-check" aria-hidden="true"></i></span>
                             <span>Action Plan</span>
                         </button>
-                        <button type="button" class="department-management-action department-management-action--risk" disabled aria-disabled="true" title="Risk Management">
+                        <a href="<?= Url::to(['/iac-risk/default/index']) ?>" class="department-management-action department-management-action--risk" title="การควบคุมภายในและการบริหารความเสี่ยง">
                             <span class="department-management-action__icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
-                            <span>Risk</span>
-                        </button>
+                            <span>IAC&amp;Risk</span>
+                        </a>
                     </div>
                 </div>
             </nav>
