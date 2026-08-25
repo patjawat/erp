@@ -207,11 +207,17 @@ class DefaultController extends Controller
                     if (!is_array($item)) continue;
                     $clean = [];
                     foreach ($allowedColumns as $key) $clean[$key] = RichText::sanitize((string) ($item[$key] ?? ''));
+                    if (preg_match('/^[A-Za-z0-9_-]{12,64}$/', (string) ($item['_process_ref'] ?? ''))) {
+                        $clean['_process_ref'] = (string) $item['_process_ref'];
+                    }
                     if (array_filter($clean, static fn($value) => trim(strip_tags((string) $value)) !== '')) $items[] = $clean;
                 }
                 $section->setData(['items' => $items]);
             }
             if ($section->save()) {
+                if ($section->section_code === 'key_processes' || $section->block_type === 'key_process_table') {
+                    (new \app\modules\iacRisk\services\ProcessSyncService())->syncSection($section);
+                }
                 (new ProfileService())->log($section->profile, 'section_updated', $section->profile->status, $section->profile->status, 'แก้ไขหัวข้อ ' . $section->title, $section->id);
                 Yii::$app->session->setFlash('success', 'บันทึกหัวข้อแล้ว');
                 return $this->redirect(['view', 'id' => $section->service_profile_id, '#' => 'section-' . $section->id]);

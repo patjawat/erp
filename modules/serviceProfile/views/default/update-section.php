@@ -54,6 +54,7 @@ if ($columns && !$items) $items = [[]];
 <div id="sp-rows" class="d-flex flex-column gap-3">
 <?php foreach ($items as $index => $item): ?>
 <div class="border rounded-3 p-3 sp-data-row">
+    <input type="hidden" data-process-ref value="<?= Html::encode((string) ($item['_process_ref'] ?? '')) ?>">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <strong class="small sp-row-number">รายการที่ <?= $index + 1 ?></strong>
         <button type="button" class="btn btn-sm btn-outline-danger sp-remove-row" aria-label="ลบรายการที่ <?= $index + 1 ?>"><i class="bi bi-trash me-1"></i> ลบ</button>
@@ -87,7 +88,7 @@ $this->registerJs(<<<JS
 var columns={$columnsJson},rows=document.getElementById('sp-rows'),form=document.getElementById('sp-section-editor'),activeCell=null;
 function esc(v){var n=document.createElement('div');n.textContent=v==null?'':String(v);return n.innerHTML;}
 function renumber(){if(!rows)return;rows.querySelectorAll('.sp-data-row').forEach(function(row,i){row.querySelector('.sp-row-number').textContent='รายการที่ '+(i+1);row.querySelector('.sp-remove-row').setAttribute('aria-label','ลบรายการที่ '+(i+1));});}
-function addRow(){if(!rows)return;var fields='';Object.keys(columns).forEach(function(k){fields+='<div class="col-12 '+(Object.keys(columns).length>2?'col-lg-6':'')+'"><label class="form-label small fw-semibold">'+esc(columns[k])+'</label><textarea class="form-control" rows="3" data-key="'+esc(k)+'"></textarea></div>';});rows.insertAdjacentHTML('beforeend','<div class="border rounded-3 p-3 sp-data-row"><div class="d-flex justify-content-between align-items-center mb-3"><strong class="small sp-row-number"></strong><button type="button" class="btn btn-sm btn-outline-danger sp-remove-row"><i class="bi bi-trash me-1"></i> ลบ</button></div><div class="row g-3">'+fields+'</div></div>');renumber();rows.lastElementChild.querySelector('textarea')?.focus();}
+function addRow(){if(!rows)return;var fields='';Object.keys(columns).forEach(function(k){fields+='<div class="col-12 '+(Object.keys(columns).length>2?'col-lg-6':'')+'"><label class="form-label small fw-semibold">'+esc(columns[k])+'</label><textarea class="form-control" rows="3" data-key="'+esc(k)+'"></textarea></div>';});rows.insertAdjacentHTML('beforeend','<div class="border rounded-3 p-3 sp-data-row"><input type="hidden" data-process-ref value=""><div class="d-flex justify-content-between align-items-center mb-3"><strong class="small sp-row-number"></strong><button type="button" class="btn btn-sm btn-outline-danger sp-remove-row"><i class="bi bi-trash me-1"></i> ลบ</button></div><div class="row g-3">'+fields+'</div></div>');renumber();rows.lastElementChild.querySelector('textarea')?.focus();}
 document.getElementById('sp-add-row')?.addEventListener('click',addRow);
 rows?.addEventListener('click',function(e){var b=e.target.closest('.sp-remove-row');if(!b)return;b.closest('.sp-data-row').remove();renumber();});
 function tableButtons(enabled){document.querySelectorAll('[data-table-action]').forEach(function(button){button.disabled=!enabled;});}
@@ -99,7 +100,7 @@ if(action==='remove-row'){if(table.rows.length<=1){table.remove();activeCell=nul
 if(action==='add-column'){Array.prototype.forEach.call(table.rows,function(currentRow){var tag=currentRow.parentElement.tagName==='THEAD'?'th':'td';var cell=document.createElement(tag);cell.innerHTML='<br>';var reference=currentRow.cells[index+1]||null;currentRow.insertBefore(cell,reference);});selectCell(row.cells[index+1]);}
 if(action==='remove-column'){var maxCells=0;Array.prototype.forEach.call(table.rows,function(currentRow){maxCells=Math.max(maxCells,currentRow.cells.length);});if(maxCells<=1){table.remove();activeCell=null;tableButtons(false);document.getElementById('sp-table-status').textContent='ลบตารางแล้ว';}else{Array.prototype.forEach.call(table.rows,function(currentRow){if(currentRow.cells[index])currentRow.deleteCell(index);});var target=row.cells[Math.max(0,index-1)];if(target)selectCell(target);}}
 });
-form.addEventListener('submit',function(){var items=[];rows?.querySelectorAll('.sp-data-row').forEach(function(row){var item={};row.querySelectorAll('[data-key]').forEach(function(input){item[input.dataset.key]=input.value.trim();});items.push(item);});document.getElementById('sp-section-payload').value=JSON.stringify({items:items});document.getElementById('sp-save-section').disabled=true;});
+form.addEventListener('submit',function(){var items=[];rows?.querySelectorAll('.sp-data-row').forEach(function(row){var item={};row.querySelectorAll('[data-key]').forEach(function(input){item[input.dataset.key]=input.value.trim();});var ref=row.querySelector('[data-process-ref]')?.value||'';if(ref)item._process_ref=ref;items.push(item);});document.getElementById('sp-section-payload').value=JSON.stringify({items:items});document.getElementById('sp-save-section').disabled=true;});
 renumber();
 })();
 JS);

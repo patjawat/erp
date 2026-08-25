@@ -47,7 +47,7 @@ $badges = [
                     </tr>
                 <?php endforeach; ?>
                 <?php if ($dataProvider->getCount() === 0): ?>
-                    <tr><td colspan="6" class="text-center py-5"><div class="fw-semibold">ไม่พบ Service Profile ในขอบเขตที่เลือก</div><div class="small text-body-secondary mt-1">ตรวจปีงบประมาณและหน่วยงาน หรือจัดทำข้อมูลในระบบ Service Profile ก่อน</div></td></tr>
+                    <tr><td colspan="6" class="text-center py-5"><div class="fw-semibold">ไม่พบ Service Profile ในขอบเขตที่เลือก</div><div class="small text-body-secondary mt-1 mb-3">หน่วยงานนี้อาจยังไม่ได้จัดทำ หรือเลือกตัวกรองไม่ตรงกับเจ้าของเอกสาร</div><?php if ($context['canScopeAllUnits'] ?? false): ?><?= Html::a('แสดงทุกหน่วยงาน', ['/iac-risk/default/service-profile', 'hospital_id' => $context['hospitalId'], 'fiscal_year_id' => $context['fiscalYearId'], 'period_id' => $context['periodId']], ['class' => 'btn btn-outline-primary']) ?><?php endif; ?></td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>
@@ -61,7 +61,7 @@ $badges = [
                 </div>
             </li>
         <?php endforeach; ?>
-        <?php if ($dataProvider->getCount() === 0): ?><li class="list-group-item bg-body text-center py-5 text-body-secondary">ไม่พบ Service Profile ในขอบเขตที่เลือก</li><?php endif; ?>
+        <?php if ($dataProvider->getCount() === 0): ?><li class="list-group-item bg-body text-center py-5"><div class="text-body-secondary mb-3">ไม่พบ Service Profile ในขอบเขตที่เลือก</div><?php if ($context['canScopeAllUnits'] ?? false): ?><?= Html::a('แสดงทุกหน่วยงาน', ['/iac-risk/default/service-profile', 'hospital_id' => $context['hospitalId'], 'fiscal_year_id' => $context['fiscalYearId'], 'period_id' => $context['periodId']], ['class' => 'btn btn-outline-primary']) ?><?php endif; ?></li><?php endif; ?>
         </ul>
     </div>
     <div class="card-footer bg-body border-top py-3 px-3 px-md-4"><?= DataSummaryWidget::widget(['dataProvider' => $dataProvider]) ?></div>

@@ -51,6 +51,9 @@ class ProfileService
                     'is_required' => $templateSection->is_required, 'sort_order' => $templateSection->sort_order,
                 ]);
                 if (!$section->save()) throw new \RuntimeException(implode(' ', $section->getFirstErrors()));
+                if (($section->section_code === 'key_processes' || $section->block_type === 'key_process_table') && $old) {
+                    (new \app\modules\iacRisk\services\ProcessSyncService())->syncSection($section);
+                }
             }
             $ids = array_values(array_unique(array_map('intval', array_merge((array) $form->author_ids, [(int) $form->coordinator_id]))));
             $validIds = Employees::find()->select('id')->where(['id' => $ids, 'status' => Employees::STATUS_WORKING])->column();

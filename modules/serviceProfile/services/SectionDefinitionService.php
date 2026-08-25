@@ -14,7 +14,7 @@ class SectionDefinitionService
             'quality_dimension_table' => ['organization' => 'ด้านองค์กร', 'customer' => 'ด้านผู้รับบริการ', 'provider' => 'ด้านผู้ให้บริการ'],
             'challenge_risk_table' => ['challenge' => 'ความท้าทาย', 'risk' => 'ความเสี่ยงสำคัญ', 'focus' => 'จุดเน้นในการพัฒนา'],
             'staffing_table' => ['staff_type' => 'ประเภทบุคลากร', 'required' => 'จำเป็น', 'actual' => 'มีจริง', 'gap' => 'ส่วนขาด', 'management' => 'การบริหารจัดการ'],
-            'key_process_table' => ['process' => 'กระบวนการสำคัญ', 'expectation' => 'สิ่งที่คาดหวัง', 'risk' => 'ความเสี่ยงสำคัญ', 'kpi' => 'ตัวชี้วัด'],
+            'key_process_table' => ['process' => 'ชื่อกระบวนงาน', 'objective' => 'วัตถุประสงค์'],
             'cqi_review_table' => ['activity' => 'กิจกรรมทบทวน', 'event' => 'เหตุการณ์/เรื่องสำคัญ', 'result' => 'ผลลัพธ์ที่เกิดขึ้น'],
             'kpi_table' => ['indicator' => 'ตัวชี้วัด', 'operator' => 'เกณฑ์', 'target' => 'เป้าหมาย', 'unit' => 'หน่วย', 'values' => 'ผลรายปี', 'note' => 'แนวโน้ม/หมายเหตุ'],
             'pppp_process' => ['name' => 'ชื่อกระบวนงาน', 'purpose' => 'Purpose', 'problem' => 'Problem', 'process' => 'Process', 'performance' => 'Performance'],

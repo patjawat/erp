@@ -23,7 +23,7 @@ $periodOptions = ArrayHelper::map($context['periods'], 'id', 'name');
             </div>
             <div class="col-12 col-md-6 col-xl-3">
                 <label class="form-label fw-semibold" for="iac-unit">หน่วยงาน/ทีมประสาน</label>
-                <?= Html::dropDownList('org_unit_id', $context['orgUnitId'], $context['units'], ['id' => 'iac-unit', 'class' => 'form-select', 'prompt' => 'ไม่พบหน่วยงาน']) ?>
+                <?= Html::dropDownList('org_unit_id', $context['orgUnitId'], $context['units'], ['id' => 'iac-unit', 'class' => 'form-select', 'prompt' => ($context['canScopeAllUnits'] ?? false) ? 'ทุกหน่วยงาน' : 'ไม่พบหน่วยงาน']) ?>
             </div>
             <div class="col-12 col-xl-2 d-grid">
                 <?= Html::submitButton('<i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i> แสดงข้อมูล', ['class' => 'btn btn-primary']) ?>

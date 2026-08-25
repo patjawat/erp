@@ -44,7 +44,7 @@ class ContextService
                 $valid = [];
                 foreach ($units as $group) foreach ($group as $id => $label) $valid[(int) $id] = $label;
                 $requestedUnit = (int) $request->get('org_unit_id');
-                $orgUnitId = isset($valid[$requestedUnit]) ? $requestedUnit : (int) array_key_first($valid);
+                $orgUnitId = isset($valid[$requestedUnit]) ? $requestedUnit : 0;
             } else {
                 $employee = $access->employee();
                 $unit = $directory->orgUnitForDepartment($employee?->department ? (int) $employee->department : null, (int) $fiscalYear->fiscal_year);
@@ -55,7 +55,8 @@ class ContextService
             }
         }
 
-        return compact('hospitals', 'hospitalId', 'years', 'fiscalYearId', 'fiscalYear', 'periods', 'periodId', 'units', 'orgUnitId');
+        $canScopeAllUnits = $access->canScopeAllUnits();
+        return compact('hospitals', 'hospitalId', 'years', 'fiscalYearId', 'fiscalYear', 'periods', 'periodId', 'units', 'orgUnitId', 'canScopeAllUnits');
     }
 
     public static function query(array $context): array
