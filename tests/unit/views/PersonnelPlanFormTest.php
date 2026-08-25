@@ -36,4 +36,17 @@ class PersonnelPlanFormTest extends Unit
         $this->assertStringContainsString('id="all-employee-types"', $view);
         $this->assertStringContainsString('all_employee_types:', $view);
     }
+
+    public function testPersonnelCreateAndUpdateUseTheSameRosterWorkflow(): void
+    {
+        $personnelController = file_get_contents(__DIR__ . '/../../../modules/plan/controllers/PersonnelController.php');
+        $meController = file_get_contents(__DIR__ . '/../../../modules/me/controllers/PlanController.php');
+
+        $this->assertNotFalse($personnelController);
+        $this->assertNotFalse($meController);
+        $this->assertStringContainsString("return \$this->redirect(['/me/plan/create-personnel']);", $personnelController);
+        $this->assertStringContainsString("return \$this->redirect(['/me/plan/update', 'id' => \$model->id]);", $personnelController);
+        $this->assertStringContainsString("if (\$model->plan_group_id === 'personnel')", $meController);
+        $this->assertStringNotContainsString("\$model->plan_group_id === 'personnel' && \$model->getPlanItems()->count() > 0", $meController);
+    }
 }

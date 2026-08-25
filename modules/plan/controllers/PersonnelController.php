@@ -140,18 +140,9 @@ class PersonnelController extends Controller
         if (!in_array($model->status, $editableStatuses, true)) {
             throw new ForbiddenHttpException('แผนที่ส่งขออนุมัติหรืออนุมัติแล้ว แก้ไขไม่ได้');
         }
-           $items = $model->getPlanItems()->all(); // โหลดรายการเดิม
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-             Yii::$app->response->format = Response::FORMAT_JSON;
-             $model->save(false);
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-            'items' => $items
-        ]);
+        // ใช้ workflow รายชื่อเดียวกับหน้าสร้าง เพื่อให้โหลด/แก้ไขบุคลากรและคำนวณงบได้ครบ
+        return $this->redirect(['/me/plan/update', 'id' => $model->id]);
     }
 
     /**

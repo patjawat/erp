@@ -777,8 +777,9 @@ class PlanController extends Controller
         if ($model->plan_group_id === 'parcel' || $this->groupForItem($model->plan_item_id) === 'parcel') {
             return $this->updateParcel($model);
         }
-        // แผนบุคลากรที่ลงเป็นรายชื่อ (มี plan_order_item) ใช้ฟอร์มรายชื่อ — ของเดิมที่ลงทีละคนยังใช้ฟอร์มเดิม
-        if ($model->plan_group_id === 'personnel' && $model->getPlanItems()->count() > 0) {
+        // แผนบุคลากรทุกรายใช้ฟอร์มรายชื่อเดียวกับหน้าสร้าง
+        // รวมถึงแผนเก่าที่ยังไม่มี plan_order_item เพื่อให้ดึงรายชื่อมาเติมได้
+        if ($model->plan_group_id === 'personnel') {
             return $this->updatePersonnel($model);
         }
 
