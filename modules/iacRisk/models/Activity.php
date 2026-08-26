@@ -26,7 +26,7 @@ class Activity extends ActiveRecord
     {
         if (!parent::beforeSave($insert)) return false;
         $now = date('Y-m-d H:i:s');
-        $uid = Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
+        $uid = !Yii::$app->has('user') || Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
         if ($insert) {
             $this->ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
             $this->created_at = $this->created_at ?: $now;
