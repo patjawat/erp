@@ -9,6 +9,7 @@ $this->title = 'แก้ไขหัวข้อ';
 $columns = SectionDefinitionService::columns($model->block_type);
 $items = (array) ($model->getData()['items'] ?? []);
 if ($columns && !$items) $items = [[]];
+$singleLineKeys = ['process', 'indicator', 'operator', 'target', 'unit', 'values', 'data_source', 'responsible', 'period', 'document_code', 'document_name', 'role', 'responsible_person', 'team_role', 'recipient_group', 'level'];
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?><?= Html::encode($model->title) ?><?php $this->endBlock(); ?>
@@ -18,6 +19,7 @@ if ($columns && !$items) $items = [[]];
 
 <div class="card bg-body border shadow-sm">
 <div class="card-body p-3 p-md-4">
+<?php if ($model->hasErrors('data_json')): ?><div class="alert alert-danger" role="alert"><?= Html::encode($model->getFirstError('data_json')) ?></div><?php endif; ?>
 <?php $form = ActiveForm::begin(['id' => 'sp-section-editor']); ?>
 <?= $form->field($model, 'content')->widget(Summernote::class, [
     'useKrajeePresets' => false,
@@ -48,9 +50,10 @@ if ($columns && !$items) $items = [[]];
 
 <?php if ($columns): ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <div><h2 class="h6 fw-semibold mb-1">รายการข้อมูล</h2><p class="small text-body-secondary mb-0">เพิ่ม แก้ไข หรือลบรายการ แล้วกดบันทึกหัวข้อ</p></div>
-    <button type="button" class="btn btn-sm btn-outline-primary" id="sp-add-row"><i class="bi bi-plus-lg me-1"></i> เพิ่มรายการ</button>
+    <div><h2 class="h6 fw-semibold mb-1"><?= $model->block_type === 'key_process_table' ? 'กระบวนการสำคัญ' : 'รายการข้อมูล' ?></h2><p class="small text-body-secondary mb-0"><?= $model->block_type === 'key_process_table' ? 'บันทึกแยกเป็นข้อ โดยระบุชื่อและวัตถุประสงค์ให้ครบ เพื่อใช้วิเคราะห์ CSA' : 'เพิ่ม แก้ไข หรือลบรายการ แล้วกดบันทึกหัวข้อ' ?></p></div>
+    <button type="button" class="btn btn-sm btn-outline-primary" id="sp-add-row"><i class="bi bi-plus-lg me-1"></i> <?= $model->block_type === 'key_process_table' ? 'เพิ่มกระบวนการ' : 'เพิ่มรายการ' ?></button>
 </div>
+<div id="sp-row-error" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
 <div id="sp-rows" class="d-flex flex-column gap-3">
 <?php foreach ($items as $index => $item): ?>
 <div class="border rounded-3 p-3 sp-data-row">
@@ -63,7 +66,11 @@ if ($columns && !$items) $items = [[]];
     <?php foreach ($columns as $key => $label): ?>
         <div class="col-12 <?= count($columns) > 2 ? 'col-lg-6' : '' ?>">
             <label class="form-label small fw-semibold"><?= Html::encode($label) ?></label>
-            <textarea class="form-control" rows="3" data-key="<?= Html::encode($key) ?>"><?= Html::encode(strip_tags((string) ($item[$key] ?? ''))) ?></textarea>
+            <?php if (in_array($key, $singleLineKeys, true)): ?>
+                <input type="text" class="form-control" maxlength="500" data-key="<?= Html::encode($key) ?>" value="<?= Html::encode(strip_tags((string) ($item[$key] ?? ''))) ?>"<?= $model->block_type === 'key_process_table' && $key === 'process' ? ' placeholder="เช่น การดูแลผู้ป่วยฉุกเฉิน"' : '' ?>>
+            <?php else: ?>
+                <textarea class="form-control" rows="3" data-key="<?= Html::encode($key) ?>"<?= $model->block_type === 'key_process_table' && $key === 'objective' ? ' placeholder="ระบุผลลัพธ์ที่กระบวนการต้องการให้เกิดขึ้น"' : '' ?>><?= Html::encode(strip_tags((string) ($item[$key] ?? ''))) ?></textarea>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
     </div>
@@ -83,12 +90,14 @@ if ($columns && !$items) $items = [[]];
 
 <?php
 $columnsJson = Json::htmlEncode($columns);
+$singleLineKeysJson = Json::htmlEncode(array_values($singleLineKeys));
+$isKeyProcess = $model->block_type === 'key_process_table' ? 'true' : 'false';
 $this->registerJs(<<<JS
 (function(){
-var columns={$columnsJson},rows=document.getElementById('sp-rows'),form=document.getElementById('sp-section-editor'),activeCell=null;
+var columns={$columnsJson},singleLineKeys={$singleLineKeysJson},isKeyProcess={$isKeyProcess},rows=document.getElementById('sp-rows'),form=document.getElementById('sp-section-editor'),activeCell=null;
 function esc(v){var n=document.createElement('div');n.textContent=v==null?'':String(v);return n.innerHTML;}
 function renumber(){if(!rows)return;rows.querySelectorAll('.sp-data-row').forEach(function(row,i){row.querySelector('.sp-row-number').textContent='รายการที่ '+(i+1);row.querySelector('.sp-remove-row').setAttribute('aria-label','ลบรายการที่ '+(i+1));});}
-function addRow(){if(!rows)return;var fields='';Object.keys(columns).forEach(function(k){fields+='<div class="col-12 '+(Object.keys(columns).length>2?'col-lg-6':'')+'"><label class="form-label small fw-semibold">'+esc(columns[k])+'</label><textarea class="form-control" rows="3" data-key="'+esc(k)+'"></textarea></div>';});rows.insertAdjacentHTML('beforeend','<div class="border rounded-3 p-3 sp-data-row"><input type="hidden" data-process-ref value=""><div class="d-flex justify-content-between align-items-center mb-3"><strong class="small sp-row-number"></strong><button type="button" class="btn btn-sm btn-outline-danger sp-remove-row"><i class="bi bi-trash me-1"></i> ลบ</button></div><div class="row g-3">'+fields+'</div></div>');renumber();rows.lastElementChild.querySelector('textarea')?.focus();}
+function addRow(){if(!rows)return;var fields='';Object.keys(columns).forEach(function(k){var control=singleLineKeys.includes(k)?'<input type="text" class="form-control" maxlength="500" data-key="'+esc(k)+'"'+(isKeyProcess&&k==='process'?' placeholder="เช่น การดูแลผู้ป่วยฉุกเฉิน"':'')+'>':'<textarea class="form-control" rows="3" data-key="'+esc(k)+'"'+(isKeyProcess&&k==='objective'?' placeholder="ระบุผลลัพธ์ที่กระบวนการต้องการให้เกิดขึ้น"':'')+'></textarea>';fields+='<div class="col-12 '+(Object.keys(columns).length>2?'col-lg-6':'')+'"><label class="form-label small fw-semibold">'+esc(columns[k])+'</label>'+control+'</div>';});rows.insertAdjacentHTML('beforeend','<div class="border rounded-3 p-3 sp-data-row"><input type="hidden" data-process-ref value=""><div class="d-flex justify-content-between align-items-center mb-3"><strong class="small sp-row-number"></strong><button type="button" class="btn btn-sm btn-outline-danger sp-remove-row"><i class="bi bi-trash me-1"></i> ลบ</button></div><div class="row g-3">'+fields+'</div></div>');renumber();rows.lastElementChild.querySelector('[data-key]')?.focus();}
 document.getElementById('sp-add-row')?.addEventListener('click',addRow);
 rows?.addEventListener('click',function(e){var b=e.target.closest('.sp-remove-row');if(!b)return;b.closest('.sp-data-row').remove();renumber();});
 function tableButtons(enabled){document.querySelectorAll('[data-table-action]').forEach(function(button){button.disabled=!enabled;});}
@@ -100,7 +109,7 @@ if(action==='remove-row'){if(table.rows.length<=1){table.remove();activeCell=nul
 if(action==='add-column'){Array.prototype.forEach.call(table.rows,function(currentRow){var tag=currentRow.parentElement.tagName==='THEAD'?'th':'td';var cell=document.createElement(tag);cell.innerHTML='<br>';var reference=currentRow.cells[index+1]||null;currentRow.insertBefore(cell,reference);});selectCell(row.cells[index+1]);}
 if(action==='remove-column'){var maxCells=0;Array.prototype.forEach.call(table.rows,function(currentRow){maxCells=Math.max(maxCells,currentRow.cells.length);});if(maxCells<=1){table.remove();activeCell=null;tableButtons(false);document.getElementById('sp-table-status').textContent='ลบตารางแล้ว';}else{Array.prototype.forEach.call(table.rows,function(currentRow){if(currentRow.cells[index])currentRow.deleteCell(index);});var target=row.cells[Math.max(0,index-1)];if(target)selectCell(target);}}
 });
-form.addEventListener('submit',function(){var items=[];rows?.querySelectorAll('.sp-data-row').forEach(function(row){var item={};row.querySelectorAll('[data-key]').forEach(function(input){item[input.dataset.key]=input.value.trim();});var ref=row.querySelector('[data-process-ref]')?.value||'';if(ref)item._process_ref=ref;items.push(item);});document.getElementById('sp-section-payload').value=JSON.stringify({items:items});document.getElementById('sp-save-section').disabled=true;});
+form.addEventListener('submit',function(e){var items=[],invalidRow=null;rows?.querySelectorAll('.sp-data-row').forEach(function(row){var item={};row.querySelectorAll('[data-key]').forEach(function(input){item[input.dataset.key]=input.value.trim();input.classList.remove('is-invalid');});if(isKeyProcess&&((item.process==='')!==(item.objective===''))){invalidRow=invalidRow||row;row.querySelectorAll('[data-key]').forEach(function(input){input.classList.add('is-invalid');});}var ref=row.querySelector('[data-process-ref]')?.value||'';if(ref)item._process_ref=ref;items.push(item);});var error=document.getElementById('sp-row-error');if(invalidRow){e.preventDefault();error.textContent='กรุณาระบุทั้งชื่อกระบวนงานและวัตถุประสงค์ให้ครบในแต่ละข้อ';error.classList.remove('d-none');invalidRow.querySelector('[data-key]')?.focus();return;}error?.classList.add('d-none');document.getElementById('sp-section-payload').value=JSON.stringify({items:items});document.getElementById('sp-save-section').disabled=true;});
 renumber();
 })();
 JS);

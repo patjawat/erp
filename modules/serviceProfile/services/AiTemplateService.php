@@ -24,7 +24,7 @@ class AiTemplateService
             $provider = (new AiProviderFactory())->create('openrouter');
             $response = $provider->chat([[
                 'role' => 'system',
-                'content' => 'คุณเป็นผู้เชี่ยวชาญด้าน Hospital Accreditation (HA) และการออกแบบ Service Profile ของโรงพยาบาลไทย สร้างโครง Template ที่กระชับ ไม่ซ้ำกัน ใช้ภาษาไทย และเรียก tool เท่านั้น ห้ามใส่ข้อมูลผู้ป่วยหรือข้อมูลส่วนบุคคล',
+                'content' => 'คุณเป็นผู้เชี่ยวชาญด้าน Hospital Accreditation (HA) และการออกแบบ Service Profile ของโรงพยาบาลไทย สร้างโครง Template ที่กระชับ ไม่ซ้ำกัน ใช้ภาษาไทย และเรียก tool เท่านั้น ห้ามใส่ข้อมูลผู้ป่วยหรือข้อมูลส่วนบุคคล เลือก block type แบบตารางสำหรับข้อมูลที่ต้องบันทึกซ้ำเป็นรายข้อ โดยใช้ key_process_table สำหรับกระบวนการสำคัญ, kpi_table สำหรับตัวชี้วัด, risk_profile_table สำหรับ Risk Profile, competency_table สำหรับสมรรถนะ, development_plan_table สำหรับแผนพัฒนา และ document_reference_table สำหรับ WI หรือแบบฟอร์ม',
             ], [
                 'role' => 'user',
                 'content' => "หน่วยงาน: {$owner->name}\nชื่อ Template: {$form->name}\nภารกิจและบริการหลัก: {$form->mission}\nจุดเน้น/มาตรฐาน: " . ($form->focus ?: '-') . "\nต้องการประมาณ {$form->section_count} หัวข้อ จัดลำดับจากบริบท กระบวนการ ผลลัพธ์ ความเสี่ยง และแผนพัฒนา",

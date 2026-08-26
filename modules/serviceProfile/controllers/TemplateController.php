@@ -4,6 +4,7 @@ namespace app\modules\serviceProfile\controllers;
 
 use app\components\AppHelper;
 use app\modules\serviceProfile\forms\AiTemplateForm;
+use app\modules\serviceProfile\models\ServiceProfile;
 use app\modules\serviceProfile\models\ServiceProfileTemplate;
 use app\modules\serviceProfile\models\ServiceProfileTemplateSection;
 use app\modules\serviceProfile\services\TemplateService;
@@ -28,7 +29,7 @@ class TemplateController extends Controller
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['delete-section' => ['POST'], 'publish' => ['POST'], 'clone' => ['POST']],
+                'actions' => ['delete' => ['POST'], 'delete-section' => ['POST'], 'publish' => ['POST'], 'clone' => ['POST']],
             ],
         ]);
     }
@@ -105,6 +106,22 @@ class TemplateController extends Controller
             return $this->success('บันทึกข้อมูล Template แล้ว');
         }
         return $this->formResponse('_form', ['model' => $model, 'ownerOptions' => (new OwnerDirectoryService())->ownerOptions((int) $model->effective_fiscal_year, (int) $model->org_unit_id)], 'แก้ไข Template');
+    }
+
+    public function actionDelete($id)
+    {
+        $model = $this->findTemplate($id);
+        $this->assertDraft($model);
+        if (ServiceProfile::find()->where(['template_id' => $model->id])->exists()) {
+            Yii::$app->session->setFlash('error', 'ลบไม่ได้ เนื่องจากมี Service Profile ใช้ Template นี้แล้ว');
+            return $this->redirect(['index']);
+        }
+        if (!$model->delete()) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบ Template ได้');
+            return $this->redirect(['index']);
+        }
+        Yii::$app->session->setFlash('success', 'ลบ Template ฉบับร่างแล้ว');
+        return $this->redirect(['index']);
     }
 
     public function actionStructure($id)

@@ -207,10 +207,17 @@ class DefaultController extends Controller
             if (is_array($payload) && array_key_exists('items', $payload)) {
                 $allowedColumns = array_keys(\app\modules\serviceProfile\services\SectionDefinitionService::columns($section->block_type));
                 $items = [];
-                foreach ((array) $payload['items'] as $item) {
+                foreach ((array) $payload['items'] as $index => $item) {
                     if (!is_array($item)) continue;
                     $clean = [];
                     foreach ($allowedColumns as $key) $clean[$key] = RichText::sanitize((string) ($item[$key] ?? ''));
+                    if ($section->block_type === 'key_process_table') {
+                        $process = trim(strip_tags((string) ($clean['process'] ?? '')));
+                        $objective = trim(strip_tags((string) ($clean['objective'] ?? '')));
+                        if (($process === '') !== ($objective === '')) {
+                            $section->addError('data_json', 'กระบวนการสำคัญรายการที่ ' . ($index + 1) . ' ต้องระบุทั้งชื่อกระบวนงานและวัตถุประสงค์');
+                        }
+                    }
                     if (preg_match('/^[A-Za-z0-9_-]{12,64}$/', (string) ($item['_process_ref'] ?? ''))) {
                         $clean['_process_ref'] = (string) $item['_process_ref'];
                     }
@@ -218,7 +225,7 @@ class DefaultController extends Controller
                 }
                 $section->setData(['items' => $items]);
             }
-            if ($section->save()) {
+            if (!$section->hasErrors() && $section->save()) {
                 if ($section->section_code === 'key_processes' || $section->block_type === 'key_process_table') {
                     (new \app\modules\iacRisk\services\ProcessSyncService())->syncSection($section);
                 }

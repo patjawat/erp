@@ -12,19 +12,19 @@ class TemplateService
     {
         return [
             ['introduction_objectives', '1. บทนำและวัตถุประสงค์', 'rich_text', true],
-            ['context_scope', '2. บริบทและขอบเขตบริการ', 'rich_text', true],
-            ['service_recipients', '3. กลุ่มผู้รับบริการและความต้องการสำคัญ', 'rich_text', true],
-            ['team_structure', '4. โครงสร้างทีมและหน้าที่รับผิดชอบ', 'rich_text', true],
-            ['key_processes', '5. กระบวนการหลักของหน่วยงาน', 'rich_text', true],
-            ['service_guidelines', '6. แนวทางบริการตามกลุ่มผู้รับบริการและสถานการณ์สำคัญ', 'rich_text', true],
-            ['safety_risk_control', '7. มาตรฐานความปลอดภัยและการควบคุมความเสี่ยง', 'rich_text', true],
-            ['risk_profile', '8. Risk Profile และมาตรการป้องกัน', 'rich_text', true],
-            ['quality_kpi', '9. ตัวชี้วัดคุณภาพและ KPI Dashboard', 'rich_text', true],
-            ['staff_competency', '10. สมรรถนะบุคลากร', 'rich_text', true],
-            ['work_instructions', '11. WI และแนวทางปฏิบัติงานที่สำคัญ', 'rich_text', true],
-            ['forms_appendices', '12. แบบฟอร์มและภาคผนวก', 'rich_text', false],
-            ['quality_development', '13. แผนพัฒนาคุณภาพและการทบทวนผลลัพธ์', 'rich_text', true],
-            ['references', '14. เอกสารอ้างอิง', 'rich_text', false],
+            ['context_scope', '2. บริบทและขอบเขตบริการ', 'service_scope_table', true],
+            ['service_recipients', '3. กลุ่มผู้รับบริการและความต้องการสำคัญ', 'stakeholder_table', true],
+            ['team_structure', '4. โครงสร้างทีมและหน้าที่รับผิดชอบ', 'team_responsibility_table', true],
+            ['key_processes', '5. กระบวนการสำคัญของหน่วยงาน', 'key_process_table', true],
+            ['service_guidelines', '6. แนวทางบริการตามกลุ่มผู้รับบริการและสถานการณ์สำคัญ', 'service_guideline_table', true],
+            ['safety_risk_control', '7. มาตรฐานความปลอดภัยและการควบคุมความเสี่ยง', 'risk_control_table', true],
+            ['risk_profile', '8. Risk Profile และมาตรการป้องกัน', 'risk_profile_table', true],
+            ['quality_kpi', '9. ตัวชี้วัดคุณภาพและ KPI Dashboard', 'kpi_table', true],
+            ['staff_competency', '10. สมรรถนะบุคลากร', 'competency_table', true],
+            ['work_instructions', '11. WI และแนวทางปฏิบัติงานที่สำคัญ', 'document_reference_table', true],
+            ['forms_appendices', '12. แบบฟอร์มและภาคผนวก', 'document_reference_table', false],
+            ['quality_development', '13. แผนพัฒนาคุณภาพและการทบทวนผลลัพธ์', 'development_plan_table', true],
+            ['references', '14. เอกสารอ้างอิง', 'reference_table', false],
         ];
     }
 
