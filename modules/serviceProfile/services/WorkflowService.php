@@ -62,6 +62,7 @@ class WorkflowService
 
     public function endorse(ServiceProfile $profile, Employees $reviewer, string $comment = ''): void
     {
+        $this->assertNoOpenSectionComments($profile);
         $tx = Yii::$app->db->beginTransaction();
         try {
             $this->saveReview($profile, $reviewer, ServiceProfileReview::DECISION_ENDORSED, $comment);
@@ -81,6 +82,7 @@ class WorkflowService
     public function approve(ServiceProfile $profile, Employees $director, string $comment = ''): void
     {
         if ($profile->status !== ServiceProfile::STATUS_APPROVAL_PENDING) throw new \DomainException('เอกสารไม่ได้รอผู้อำนวยการอนุมัติ');
+        $this->assertNoOpenSectionComments($profile);
         $tx = Yii::$app->db->beginTransaction();
         try {
             // Repair pending documents created before the configured director
@@ -114,6 +116,7 @@ class WorkflowService
     public function acknowledge(ServiceProfile $profile, Employees $head, string $comment = ''): void
     {
         if ($profile->status !== ServiceProfile::STATUS_ACKNOWLEDGEMENT_PENDING) throw new \DomainException('เอกสารไม่ได้รอหัวหน้าหน่วยงานรับทราบ');
+        $this->assertNoOpenSectionComments($profile);
         $tx = Yii::$app->db->beginTransaction();
         try {
             $this->passStage($this->pendingStage($profile, ServiceProfileApproval::STAGE_HEAD, $head), $comment);
@@ -209,6 +212,16 @@ class WorkflowService
     private function activateStage(ServiceProfile $profile, string $stage): void
     {
         ServiceProfileApproval::updateAll(['status' => ServiceProfileApproval::STATUS_PENDING, 'updated_at' => date('Y-m-d H:i:s')], ['service_profile_id' => $profile->id, 'stage' => $stage, 'status' => ServiceProfileApproval::STATUS_WAITING]);
+    }
+
+    private function assertNoOpenSectionComments(ServiceProfile $profile): void
+    {
+        if (ServiceProfileSectionComment::find()->where([
+            'service_profile_id' => $profile->id,
+            'status' => ServiceProfileSectionComment::STATUS_OPEN,
+        ])->exists()) {
+            throw new \DomainException('ยังมีความคิดเห็นรายหัวข้อที่รอแก้ไข กรุณาส่งกลับให้ผู้จัดทำแก้ไขและปิดรายการก่อนดำเนินการต่อ');
+        }
     }
 
     private function authorEmployees(ServiceProfile $profile): array

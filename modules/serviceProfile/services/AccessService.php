@@ -38,14 +38,24 @@ class AccessService
 
     public function canEdit(ServiceProfile $profile): bool
     {
+        if ($this->canOverrideEdit($profile)) return true;
         if (!in_array($profile->status, [ServiceProfile::STATUS_DRAFT, ServiceProfile::STATUS_RETURNED], true)) return false;
-        if (Yii::$app->user->can('serviceProfileAdmin')) return true;
         $employee = $this->employee();
         return $employee && ServiceProfileAuthor::find()->where(['service_profile_id' => $profile->id, 'employee_id' => $employee->id])->exists();
     }
 
+    public function canOverrideEdit(ServiceProfile $profile): bool
+    {
+        // Module administrators are the final authority and may correct any
+        // Service Profile, including active, retired, and cancelled records.
+        if (Yii::$app->user->can('serviceProfileAdmin')) return true;
+        if (in_array($profile->status, [ServiceProfile::STATUS_RETIRED, ServiceProfile::STATUS_CANCELLED], true)) return false;
+        return Yii::$app->user->can('serviceProfileEditApproved');
+    }
+
     public function canSubmit(ServiceProfile $profile): bool
     {
+        if (!in_array($profile->status, [ServiceProfile::STATUS_DRAFT, ServiceProfile::STATUS_RETURNED], true)) return false;
         if (Yii::$app->user->can('serviceProfileAdmin')) return true;
         $employee = $this->employee();
         return $employee && ServiceProfileAuthor::find()->where([
