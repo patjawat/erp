@@ -51,7 +51,29 @@ class AssetCategory extends \yii\db\ActiveRecord
             [['depreciation_rate'], 'number', 'min' => 0],
             [['data_json', 'ma_items','q'], 'safe'],
             [['ref', 'group_id', 'category_id', 'code', 'emp_id', 'name', 'title', 'description'], 'string', 'max' => 255],
+            [['code'], 'validateRegistrationCategoryCode'],
         ];
+    }
+
+    public function validateRegistrationCategoryCode($attribute): void
+    {
+        $code = trim((string) $this->$attribute);
+        if ($code === '') {
+            return;
+        }
+        if (strcasecmp($code, 'BLDG') === 0) {
+            $this->addError($attribute, 'BLDG เป็นรหัสกลุ่มภายใน กรุณาระบุรหัสหมวดทะเบียนจริง');
+            return;
+        }
+
+        $duplicate = static::find()
+            ->where(['name' => 'asset_category', 'code' => $code]);
+        if (!$this->isNewRecord) {
+            $duplicate->andWhere(['<>', 'id', $this->id]);
+        }
+        if ($duplicate->exists()) {
+            $this->addError($attribute, 'รหัสหมวดนี้มีอยู่แล้ว');
+        }
     }
 
     /**

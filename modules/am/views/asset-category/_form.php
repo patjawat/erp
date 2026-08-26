@@ -11,6 +11,7 @@ use unclead\multipleinput\MultipleInput;
 
 /** @var string $group */
 $group = $group ?? 'EQUIP';
+$isBuilding = $group === 'BLDG';
 ?>
 
 <?php $form = ActiveForm::begin([
@@ -25,10 +26,12 @@ $group = $group ?? 'EQUIP';
 
 <div class="row">
 <div class="col-5">
-          <?=$form->field($model, 'code')->textInput(['placeholder'=>'เว้นว่างได้ (ร่าง)'])->label("FSN")->hint('รหัส FSN ของหมวดนี้ · เว้นว่างเพื่อบันทึกเป็นร่างก่อนได้ — แต่ต้องกำหนดรหัส + เปิดใช้งานจึงจะนำไปเพิ่มทะเบียนครุภัณฑ์ได้')?>
+          <?=$form->field($model, 'code')->textInput(['placeholder'=>'เว้นว่างได้ (ร่าง)'])->label($isBuilding ? 'รหัสหมวดอาคาร' : 'FSN')->hint($isBuilding
+              ? 'ระบุรหัสจริงที่ใช้ขึ้นต้นหมายเลขทะเบียนอาคาร เช่น 0920-004-0001 ห้ามใช้ BLDG'
+              : 'รหัส FSN ของหมวดนี้ · เว้นว่างเพื่อบันทึกเป็นร่างก่อนได้ แต่ต้องกำหนดรหัสและเปิดใช้งานจึงจะนำไปเพิ่มทะเบียนครุภัณฑ์ได้')?>
         </div>
         <div class="col-7">
-    <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อของใหวดหมู่...'])->label("ชื่อหมวดหมู่") ?>
+    <?= $form->field($model, 'title')->textInput(['maxlength' => true,'placeholder'=>'ระบุชื่อหมวดหมู่...'])->label($isBuilding ? 'ชื่อหมวดอาคาร' : 'ชื่อหมวดหมู่') ?>
 </div>
 </div>
 <div class="row">
@@ -74,7 +77,7 @@ $group = $group ?? 'EQUIP';
                 'value' => '1',
             ]) ?>
             <label class="form-check-label" for="<?= Html::getInputId($model, 'active') ?>">
-                เปิดใช้งาน <span class="text-muted small">(ปิด = ร่าง/ตัวอย่าง ยังไม่นำไปใช้กับครุภัณฑ์)</span>
+                เปิดใช้งาน <span class="text-muted small">(ปิด = ร่าง/ตัวอย่าง ยังไม่นำไปใช้กับ<?= $isBuilding ? 'ทะเบียนอาคาร' : 'ครุภัณฑ์' ?>)</span>
             </label>
         </div>
     </div>

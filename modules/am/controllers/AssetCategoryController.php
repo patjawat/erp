@@ -293,15 +293,24 @@ class AssetCategoryController extends Controller
         'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         'name' => 'asset_category',
         'group_id' => $group,
+        'useful_life' => $group === 'BLDG' ? 40 : null,
+        'depreciation_rate' => $group === 'BLDG' ? 2.50 : null,
      ]);
 
         if ($this->request->isPost && $model->load($this->request->post()) )
             {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                $model->save();
+                if (!$model->save()) {
+                    return [
+                        'status' => 'error',
+                        'errors' => $model->getErrors(),
+                    ];
+                }
                 return [
                     'status' => 'success',
                     'container' => '#sm-container',
+                    'code' => $model->code,
+                    'category_id' => $model->category_id,
                 ];
         } else {
             $model->loadDefaultValues();
@@ -341,7 +350,13 @@ class AssetCategoryController extends Controller
         $model = $this->findModel($id);
         // $model->data_json =  ['asset_type' => '2','asset_type_text' => 'ครุภัณฑ์'];
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if (!$model->save()) {
+                return [
+                    'status' => 'error',
+                    'errors' => $model->getErrors(),
+                ];
+            }
             // return $model->save();
             return [
                 'status' => 'success',

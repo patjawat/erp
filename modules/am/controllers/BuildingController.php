@@ -58,9 +58,9 @@ class BuildingController extends \yii\web\Controller
 
         $dataProvider->setSort([
             'defaultOrder' => [
-                'code' => 'SORT_DESC',
-                'receive_date' => 'SORT_DESC',
-                // 'service_start_time' => SORT_DESC
+                // Show the most recently created building first. Sorting by code or
+                // receive date can place a newly saved record deep in the list.
+                'id' => SORT_DESC,
             ],
         ]);
 
@@ -220,8 +220,14 @@ class BuildingController extends \yii\web\Controller
                     'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]);
                 $model->asset_group_id = 2;
-                $model->useful_life = 50; // ค่าเริ่มต้นสำหรับอาคาร/สิ่งปลูกสร้าง (ปี)
+                $model->asset_type_id = '1';
+                // Legacy imports may contain a complete registration number but no
+                // trustworthy category prefix. Never substitute the internal BLDG
+                // group marker as a registration category.
+                $model->asset_category_id = null;
+                $model->asset_condition = 'good';
                 $model->code = $code;
+                $model->fsn_number = $code;
                 $model->asset_name = $name;
                 $model->price = (float) ($data[7] ?? 0);
                 $model->on_year = trim((string) ($data[9] ?? ''));
@@ -572,23 +578,56 @@ class BuildingController extends \yii\web\Controller
     public function actionCreate()
     {
         $model = new Asset([
-             'asset_group_id' => 2,
+            'asset_group_id' => 2,
+            'asset_type_id' => '1',
+            'asset_category_id' => null,
+            // Asset requires a condition, but the building form does not expose
+            // that equipment-specific field. Existing buildings use "good".
+            'asset_condition' => 'good',
             'ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10),
         ]);
-$old_data_json = $model->data_json;
+        $old_data_json = is_array($model->data_json) ? $model->data_json : [];
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 $model->receive_date = AppHelper::DateToDb($model->receive_date);
 
                 $convert_date = [
-                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
-                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                    'expire_date' => AppHelper::DateToDb($model->data_json['expire_date'] ?? null),
+                    'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date'] ?? null),
                 ];
 
                 $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
 
-$model->save();
-                return $this->redirect(['view', 'id' => $model->id]);
+                $model->validate();
+                $this->validateBuildingRegistration($model);
+                if (!$model->hasErrors() && $model->save(false)) {
+                    // The form is submitted through AJAX and expects JSON. Redirecting to
+                    // actionView here makes the AJAX client follow a route for which the
+                    // user may not have permission, masking a successful save as a 404.
+                    if ($this->request->isAjax) {
+                        Yii::$app->response->format = Response::FORMAT_JSON;
+                        return [
+                            'status' => 'success',
+                            'id' => $model->id,
+                            'url' => Url::to(['/am/building/index']),
+                        ];
+                    }
+
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+
+                if ($this->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    $firstErrors = array_values($model->getFirstErrors());
+                    return [
+                        'status' => 'error',
+                        'message' => $firstErrors
+                            ? implode("\n", $firstErrors)
+                            : 'ไม่สามารถบันทึกข้อมูลอาคารได้',
+                        'errors' => $model->getErrors(),
+                    ];
+                }
             }
         } else {
             $model->loadDefaultValues();
@@ -627,18 +666,29 @@ $model->save();
 
 
             $convert_date = [
-                'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
-                'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                'expire_date' => AppHelper::DateToDb($model->data_json['expire_date'] ?? null),
+                'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date'] ?? null),
             ];
 
 
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
-            if ($model->save()) {
-
-                return $this->redirect(['view', 'id' => $model->id]);
+            $model->validate();
+            $this->validateBuildingRegistration($model);
+            if (!$model->hasErrors() && $model->save(false)) {
+                return [
+                    'status' => 'success',
+                    'id' => $model->id,
+                    'url' => Url::to(['/am/building/index']),
+                ];
             } else {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return $model->getErrors();
+                $firstErrors = array_values($model->getFirstErrors());
+                return [
+                    'status' => 'error',
+                    'message' => $firstErrors
+                        ? implode("\n", $firstErrors)
+                        : 'ไม่สามารถแก้ไขข้อมูลอาคารได้',
+                    'errors' => $model->getErrors(),
+                ];
             }
         }
 
@@ -664,6 +714,38 @@ $model->save();
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * A building category must contain the organisation's real registration/FSN
+     * prefix. BLDG is reserved for grouping and must never become an asset number.
+     */
+    private function validateBuildingRegistration(Asset $model): void
+    {
+        $category = trim((string) $model->asset_category_id);
+        $number = trim((string) $model->fsn_number);
+
+        if ($category === '' || strcasecmp($category, 'BLDG') === 0) {
+            $model->addError('asset_category_id', 'กรุณาเลือกหมวดอาคารที่กำหนดรหัสทะเบียนจริง ไม่ใช่ BLDG');
+        }
+        if ($number === '' || stripos($number, 'BLDG') === 0) {
+            $model->addError('fsn_number', 'กรุณาระบุหรือสร้างหมายเลขทะเบียนอาคารจากรหัสหมวดจริง');
+            return;
+        }
+
+        $duplicate = Asset::find()
+            ->where(['or', ['code' => $number], ['fsn_number' => $number]])
+            ->andWhere(['deleted_at' => null]);
+        if (!$model->isNewRecord) {
+            $duplicate->andWhere(['<>', 'id', $model->id]);
+        }
+        if ($duplicate->exists()) {
+            $model->addError('fsn_number', 'หมายเลขทะเบียนอาคารนี้มีอยู่แล้ว');
+            return;
+        }
+
+        // Make the unique model validation effective before beforeSave mirrors it.
+        $model->code = $number;
     }
     
 }

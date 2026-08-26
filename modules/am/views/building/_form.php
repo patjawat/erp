@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\web\JsExpression;
 use kartik\form\ActiveForm;
 use kartik\select2\Select2;
+use kartik\depdrop\DepDrop;
 use yii\widgets\MaskedInput;
 use app\modules\hr\models\Employees;
 use kartik\editors\Summernote;
@@ -26,6 +27,7 @@ use kartik\editors\Summernote;
 ]); ?>
 
 <?= $form->field($model, 'asset_item_id')->hiddenInput()->label(false); ?>
+<?= $form->field($model, 'code')->hiddenInput()->label(false); ?>
 <div class="row">
 <div class="col-4">
         <div class="card">
@@ -199,21 +201,15 @@ use kartik\editors\Summernote;
             </div>
             <div class="card-body">
                 <div class="form-section mb-0">
-                    <p class="text-muted small mb-3">ใช้สำหรับคำนวณค่าเสื่อมราคาในอนาคต</p>
+                    <p class="text-body-secondary small mb-3">กำหนดจากหมวดอาคาร เพื่อให้การคำนวณรายตัวและภาพรวมใช้เกณฑ์เดียวกัน</p>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'useful_life')->textInput(['type' => 'number', 'min' => 1, 'placeholder' => 'เช่น 5'])->label('อายุการใช้งาน (ปี)'); ?>
+                        <div class="col-6">
+                            <label class="form-label text-body-secondary small mb-1">อายุการใช้งาน (ปี)</label>
+                            <div class="fw-semibold fs-5" id="building-useful-life"><?= $model->useful_life !== null && $model->useful_life !== '' ? Html::encode($model->useful_life) : '—' ?></div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <?= $form->field($model, 'depreciation_rate', [
-                                'template' => '{label}<div class="input-group">{input}<span class="input-group-text">%</span></div>{hint}{error}',
-                            ])->textInput([
-                                'type' => 'number',
-                                'step' => '0.01',
-                                'min' => '0',
-                                'placeholder' => 'เช่น 20.00',
-                                'class' => 'form-control',
-                            ])->label('อัตราค่าเสื่อม')->hint('ระบุทศนิยมได้ 2 ตำแหน่ง (ถ้ามี)'); ?>
+                        <div class="col-6">
+                            <label class="form-label text-body-secondary small mb-1">อัตราค่าเสื่อมต่อปี</label>
+                            <div class="fw-semibold fs-5"><span id="building-depreciation-rate"><?= $model->depreciation_rate !== null && $model->depreciation_rate !== '' ? Html::encode($model->depreciation_rate) : '—' ?></span> %</div>
                         </div>
 
                     </div>
@@ -234,33 +230,90 @@ use kartik\editors\Summernote;
                 <!-- ข้อมูลทั่วไป -->
                 <div class="form-section">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <?php
-                            echo $form->field($model, 'asset_name', [
-                                'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-magnifying-glass"></i>', ['/am/asset-item/list-item', 'title' => '<i class="bi bi-ui-checks"></i> แสดงทะเบียนรหัสทรัพย์สิน'], ['class' => 'btn btn-secondary open-modal', 'data' => ['size' => 'modal-xl']]), 'asButton' => true]
-                                ]
-                            ])->textInput([
+                            echo $form->field($model, 'asset_name')->textInput([
                                 'maxlength' => true,
                                 'placeholder' => 'ระบุชื่ออาคาร',
-                                'readonly' => false,  // Make field readonly
-                                'class' => 'form-control'  // Add background color
+                                'class' => 'form-control',
                             ])->label('ชื่ออาคาร');
                             ?>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <?php
-                            echo $form->field($model, 'code', [
+                            echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                                'data' => $model->listAssetType('BLDG'),
+                                'options' => [
+                                    'placeholder' => 'เลือกประเภทอาคาร...',
+                                    'id' => 'asset_type_id',
+                                ],
+                                'pluginOptions' => ['allowClear' => false],
+                            ])->label('ประเภทอาคาร');
+                            ?>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <?php
+                            echo $form->field($model, 'asset_category_id', [
                                 'addon' => [
-                                    'append' => ['content' => Html::a('<i class="fa-solid fa-bars-progress"></i>', ['/am/asset/next-code'], ['class' => 'btn btn-info next-code']), 'asButton' => true]
+                                    'append' => [
+                                        'content' => Html::a(
+                                            '<i class="fa-solid fa-gear"></i>',
+                                            ['/am/asset-category/create', 'group' => 'BLDG', 'title' => 'เพิ่มหมวดอาคาร'],
+                                            [
+                                                'class' => 'btn btn-outline-secondary open-modal',
+                                                'title' => 'เพิ่มและตั้งค่ารหัสหมวดอาคาร',
+                                                'aria-label' => 'เพิ่มและตั้งค่ารหัสหมวดอาคาร',
+                                                'data-size' => 'modal-lg',
+                                            ]
+                                        ),
+                                        'asButton' => true,
+                                    ],
+                                ],
+                            ])->widget(DepDrop::class, [
+                                'options' => [
+                                    'id' => 'asset_category_id',
+                                    'placeholder' => 'เลือกหมวดอาคาร...',
+                                ],
+                                'type' => DepDrop::TYPE_SELECT2,
+                                'select2Options' => [
+                                    'pluginOptions' => ['allowClear' => false],
+                                ],
+                                'pluginOptions' => [
+                                    'depends' => ['asset_type_id'],
+                                    'url' => Url::to(['/am/asset-item/get-asset-category']),
+                                    'loadingText' => 'กำลังโหลด...',
+                                    'initialize' => true,
+                                ],
+                            ])->label('หมวดอาคาร / รหัสทะเบียน')->hint(
+                                'เลือกรหัสจริงของหน่วยงาน เช่น 0920-004-0001 หากยังไม่มีให้กดปุ่มตั้งค่าด้านขวา',
+                                ['class' => 'form-text text-muted small']
+                            );
+                            ?>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <?php
+                            echo $form->field($model, 'fsn_number', [
+                                'addon' => [
+                                    'append' => [
+                                        'content' => Html::a(
+                                            '<i class="fa-solid fa-wand-magic-sparkles me-1"></i> สร้างหมายเลข',
+                                            '#',
+                                            [
+                                                'class' => 'btn btn-outline-primary next-code',
+                                                'title' => 'สร้างหมายเลขทะเบียนอาคารจากรหัสหมวด',
+                                            ]
+                                        ),
+                                        'asButton' => true,
+                                    ],
                                 ]
                             ])->textInput([
                                 'maxlength' => true,
-                                'placeholder' => 'ค้นหาเลข FSN',
-                                'readonly' => false,  // Make field readonly
-                                // 'class' => 'form-control bg-primary text-white'  // Add background color
-                                'class' => 'form-control'  // Add background color
-                            ])->label('หมายเลขครุภัณฑ์'); ?>
+                                'placeholder' => 'เลือกหมวด + ปีงบ แล้วกดสร้างหมายเลข',
+                                'class' => 'form-control',
+                            ])->label('หมายเลขทะเบียนอาคาร')->hint(
+                                'ระบบสร้างจากรหัสหมวดและปีงบประมาณ สามารถแก้ไขได้',
+                                ['class' => 'form-text text-muted small']
+                            ); ?>
                         </div>
                         <div class="col-md-6">
                             <?= $form->field($model, 'gfmis')->textInput(['maxlength' => true, 'placeholder' => 'รหัสโครงสร้างงบประมาณ (GFMIS)'])->label('รหัสโครงสร้างงบประมาณ(GFMIS)') ?>
@@ -394,6 +447,8 @@ use kartik\editors\Summernote;
 <?php
 $ref = Json::encode($model->ref); // ปลอดภัยแม้มีอักขระพิเศษ
 $urlUpload = Url::to('/filemanager/uploads/single');
+$nextAssetNumberUrl = Url::to(['/am/equip/next-asset-number']);
+$categoryDefaultsUrl = Url::to(['/am/asset-item/category-defaults']);
 
 $js = <<< JS
 
@@ -403,52 +458,85 @@ $js = <<< JS
 
  isFile()
 
- $('.next-code').on('click', function (e) { 
-    e.preventDefault();
-    $.ajax({
-        type: "post",
-        url: "/am/asset/next-code",
-        data: $('#form-asset').serialize(),
-        dataType: "json",
-        success: function (response) {
-            // ลบ class invalid เดิมทั้งหมดก่อน
-            $('#form-asset .is-invalid').removeClass('is-invalid');
+ function loadBuildingCategoryDefaults(categoryCode) {
+    if (!categoryCode) {
+        $('#building-useful-life, #building-depreciation-rate').text('—');
+        return;
+    }
+    $.get('$categoryDefaultsUrl', { code: categoryCode }, function (response) {
+        if (!response || response.status !== 'success') { return; }
+        var defaults = response.defaults || {};
+        $('#building-useful-life').text(defaults.useful_life || '—');
+        $('#building-depreciation-rate').text(defaults.depreciation_rate || '—');
+    }, 'json');
+ }
 
-            if(response.status == 'error') {
-                for (let inputId in response.data) {
-                    let input = $('#' + inputId);
+ function fetchNextBuildingNumber() {
+    var prefix = ($('#asset_category_id').val() || '').toString().trim();
+    var onYear = ($('#asset-on_year').val() || '').toString().trim();
+    $('#form-asset .is-invalid').removeClass('is-invalid');
 
-                    // เพิ่ม class invalid ให้ input
-                    input.addClass('is-invalid');
+    if (!prefix) {
+        $('#asset_category_id').addClass('is-invalid').trigger('focus');
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาเลือกหมวดอาคารก่อน', showConfirmButton: false, timer: 3000 });
+        return;
+    }
+    if (!onYear) {
+        $('#asset-on_year').addClass('is-invalid').trigger('focus');
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'กรุณาระบุปีงบประมาณก่อน', showConfirmButton: false, timer: 3000 });
+        return;
+    }
 
-                    // แสดง toast แค่แจ้งเตือน ไม่แสดงใต้ input
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'ต้องระบุ FSN ก่อน',
-                        showConfirmButton: false,
-                        timer: 3000
-                    });
-                }
-            }
-
-            if(response.status == 'success') {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'ค้นหาหมายเลขครุภัณฑ์สำเร็จ',
-                    showConfirmButton: false,
-                    timer: 3000
-                });
-
-                // อัพเดตค่าใน input fsn_number
-                $('#asset-code').val(response.data);
-            }
+    $.get('$nextAssetNumberUrl', { category_id: prefix, on_year: onYear }, function (response) {
+        if (response.error) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: response.error, showConfirmButton: false, timer: 3000 });
+            return;
         }
+        if (!response.asset_number) { return; }
+
+        Swal.fire({
+            title: 'หมายเลขที่จะได้',
+            html: '<p class="mb-0">ระบบเสนอหมายเลขทะเบียนอาคาร</p><p class="fs-4 fw-bold text-primary mb-0 mt-2">' + response.asset_number + '</p><p class="text-muted small mt-2">ใช้หมายเลขนี้หรือไม่?</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ใช้หมายเลขนี้',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                $('#asset-fsn_number').val(response.asset_number).removeClass('is-invalid');
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'กำหนดหมายเลขแล้ว', showConfirmButton: false, timer: 2000 });
+            }
+        });
+    }, 'json');
+ }
+
+ $('#asset_category_id').on('change', function () {
+    var categoryCode = ($(this).val() || '').toString().trim();
+    loadBuildingCategoryDefaults(categoryCode);
+    if (categoryCode && ($('#asset-on_year').val() || '').toString().trim() && !($('#asset-fsn_number').val() || '').toString().trim()) {
+        fetchNextBuildingNumber();
+    }
+ });
+ $('#asset-on_year').on('blur', function () {
+    if (($('#asset_category_id').val() || '').toString().trim() && !($('#asset-fsn_number').val() || '').toString().trim()) {
+        fetchNextBuildingNumber();
+    }
+ });
+ loadBuildingCategoryDefaults(($('#asset_category_id').val() || '').toString().trim());
+ $('.next-code').on('click', function (e) {
+    e.preventDefault();
+    fetchNextBuildingNumber();
+ });
+
+ $(document).off('assetCategory:saved.building').on('assetCategory:saved.building', function (event, response) {
+    if (!response || !response.code || !response.category_id) { return; }
+    if (response.category_id.toString() !== ($('#asset_type_id').val() || '').toString()) { return; }
+
+    $('#asset_category_id').one('depdrop:afterChange', function () {
+        $(this).val(response.code).trigger('change');
     });
-});
+    $('#asset_type_id').trigger('change');
+ });
 
 
 \$('#form-asset').on('beforeSubmit', function (e) {
@@ -474,12 +562,26 @@ $js = <<< JS
                         console.log(response);
                         
                         if(response.status == 'success') {
-                            
-                            closeModal()
-                            success()
-                             window.location.reload(true);
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                            closeModal();
+                            success();
+                            window.location.href = response.url || '/am/building';
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'บันทึกไม่สำเร็จ',
+                                text: response.message || 'กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง'
+                            });
                         }
+                    },
+                    error: function (xhr) {
+                        var message = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
+                            : 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองอีกครั้ง';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'บันทึกไม่สำเร็จ',
+                            text: message
+                        });
                     }
                 });
 
