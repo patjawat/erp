@@ -24,7 +24,13 @@ class AccessService
     }
 
     public function canManageSettings(): bool { return Yii::$app->user->can('iacRiskAdmin'); }
-    public function canScopeAllUnits(): bool { return Yii::$app->user->can('iacRiskAdmin') || Yii::$app->user->can('iacRiskCoordinate'); }
+    public function canScopeAllUnits(): bool { return $this->canManageAllUnits() || Yii::$app->user->can('iacRiskCommittee') || Yii::$app->user->can('iacRiskDirector'); }
+    public function canManageAllUnits(): bool { return Yii::$app->user->can('iacRiskAdmin') || Yii::$app->user->can('iacRiskCoordinate'); }
+    public function canAuthor(): bool { return Yii::$app->user->can('iacRiskAuthor') || Yii::$app->user->can('iacRiskUnitApprove') || $this->canManageAllUnits(); }
+    public function canViewOrganizationDocuments(): bool { return $this->canManageAllUnits() || Yii::$app->user->can('iacRiskCommittee') || Yii::$app->user->can('iacRiskDirector'); }
+    public function canEditOrganizationDocuments(): bool { return $this->canManageAllUnits(); }
+    public function canExportOrganizationReports(): bool { return $this->canManageAllUnits() || Yii::$app->user->can('iacRiskDirector'); }
+    public function canUseReportSubmission(): bool { return $this->canAuthor() || $this->canScopeAllUnits(); }
     public function canScopeAllHospitals(): bool { return Yii::$app->user->can('iacRiskAdmin'); }
     public function employee() { return UserHelper::GetEmployee(); }
 }

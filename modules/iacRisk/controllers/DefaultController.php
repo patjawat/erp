@@ -112,8 +112,7 @@ class DefaultController extends Controller
         $profileAccess = new \app\modules\serviceProfile\services\AccessService();
         $canEditByProfile = [];
         foreach ($profiles as $item) {
-            $canEditByProfile[(int) $item->id] = $profileAccess->canEdit($item)
-                || Yii::$app->user->can('iacRiskCoordinate') || Yii::$app->user->can('iacRiskAdmin');
+            $canEditByProfile[(int) $item->id] = $profileAccess->canEdit($item) || $this->canManageProfile($item,$fiscalYear);
         }
         $canEdit = $profile ? ($canEditByProfile[(int) $profile->id] ?? false) : false;
         return $this->render('processes', compact('context', 'fiscalYear', 'profile', 'profiles', 'versions', 'canEdit', 'canEditByProfile'));
@@ -123,8 +122,7 @@ class DefaultController extends Controller
     {
         $version = ServiceProcessVersion::find()->with('profile')->where(['id' => $id])->one();
         if (!$version || !$version->profile) throw new \yii\web\NotFoundHttpException('ไม่พบกระบวนงาน');
-        $canEdit = (new \app\modules\serviceProfile\services\AccessService())->canEdit($version->profile)
-            || Yii::$app->user->can('iacRiskCoordinate') || Yii::$app->user->can('iacRiskAdmin');
+        $canEdit = (new \app\modules\serviceProfile\services\AccessService())->canEdit($version->profile) || $this->canManageProfile($version->profile,(int)$version->fiscal_year);
         if (!$canEdit) throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ทบทวนกระบวนงานนี้');
         $status = trim((string) Yii::$app->request->post('review_status'));
         if (!array_key_exists($status, ServiceProcessVersion::reviewLabels())) throw new \yii\web\BadRequestHttpException('สถานะทบทวนไม่ถูกต้อง');
@@ -202,7 +200,7 @@ class DefaultController extends Controller
     {
         $version=ServiceProcessVersion::find()->with('profile')->where(['id'=>$process_version_id])->one();
         if(!$version||!$version->profile)throw new \yii\web\NotFoundHttpException('ไม่พบกระบวนงาน');
-        $canEdit=(new \app\modules\serviceProfile\services\AccessService())->canEdit($version->profile)||Yii::$app->user->can('iacRiskCoordinate')||Yii::$app->user->can('iacRiskAdmin');
+        $canEdit=(new \app\modules\serviceProfile\services\AccessService())->canEdit($version->profile)||$this->canManageProfile($version->profile,(int)$version->fiscal_year);
         if(!$canEdit)throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เริ่ม CSA ของกระบวนงานนี้');
         try{$csa=(new \app\modules\iacRisk\services\CsaService())->create($version);Yii::$app->session->setFlash('success','สร้าง CSA ฉบับร่างและบันทึก snapshot แล้ว');return $this->redirect(['csa-view','id'=>$csa->id]);}
         catch(\Throwable $e){Yii::$app->session->setFlash('error',$e->getMessage());return $this->redirect(array_merge(['csa'],ContextService::query((new ContextService())->resolve())));}
@@ -351,22 +349,27 @@ class DefaultController extends Controller
     }
     public function actionPk1()
     {
-        $context=(new ContextService())->resolve();$model=Pk1::find()->with(['hospital','signer'])->where(['hospital_id'=>(int)$context['hospitalId'],'fiscal_year_id'=>(int)$context['fiscalYearId']])->one();$canEdit=(bool)($context['canScopeAllUnits']??false);return $this->render('pk1',compact('context','model','canEdit'));
+        if(!$this->access->canViewOrganizationDocuments())throw new ForbiddenHttpException('ไม่มีสิทธิ์ดู ปค.1 ระดับองค์กร');
+        $context=(new ContextService())->resolve();$model=Pk1::find()->with(['hospital','signer'])->where(['hospital_id'=>(int)$context['hospitalId'],'fiscal_year_id'=>(int)$context['fiscalYearId']])->one();$canEdit=$this->access->canEditOrganizationDocuments();return $this->render('pk1',compact('context','model','canEdit'));
     }
     public function actionCreatePk1()
     {
+        if(!$this->access->canEditOrganizationDocuments())throw new ForbiddenHttpException('เฉพาะทีมประสานหรือผู้ดูแลระบบเท่านั้นที่เริ่มจัดทำ ปค.1 ได้');
         $context=(new ContextService())->resolve();if(!($context['canScopeAllUnits']??false))throw new ForbiddenHttpException('เฉพาะทีมประสานหรือผู้ดูแลระบบเท่านั้นที่เริ่มจัดทำ ปค.1 ได้');$year=(int)($context['fiscalYear']?->fiscal_year?:0);if(!(int)$context['hospitalId']||!(int)$context['fiscalYearId']||!$year)throw new \yii\web\BadRequestHttpException('กรุณาเลือกโรงพยาบาลและปีงบประมาณ');(new \app\modules\iacRisk\services\Pk1Service())->create((int)$context['hospitalId'],(int)$context['fiscalYearId'],$year);Yii::$app->session->setFlash('success','เริ่มแบบ ปค.1 แล้ว');return $this->redirect(array_merge(['pk1'],ContextService::query($context)));
     }
     public function actionSavePk1(int $id)
     {
+        if(!$this->access->canEditOrganizationDocuments())throw new ForbiddenHttpException('ไม่มีสิทธิ์แก้ไข ปค.1');
         $context=(new ContextService())->resolve();if(!($context['canScopeAllUnits']??false))throw new ForbiddenHttpException('ไม่มีสิทธิ์แก้ไข ปค.1');$model=Pk1::findOne(['id'=>$id,'hospital_id'=>(int)$context['hospitalId']]);if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.1');$type=(string)Yii::$app->request->post('signature_type','system');$type=in_array($type,['canvas','system'],true)?$type:'system';$data=trim((string)Yii::$app->request->post('signature_data',''));if($type==='canvas'&&$data!==''&&!preg_match('#^data:image/(png|jpeg);base64,[A-Za-z0-9+/=]+$#',$data))throw new \yii\web\BadRequestHttpException('ข้อมูลลายเซ็นไม่ถูกต้อง');if(strlen($data)>3000000)throw new \yii\web\BadRequestHttpException('ภาพลายเซ็นมีขนาดใหญ่เกินไป');$model->recipient=trim((string)Yii::$app->request->post('recipient'));$model->assessment_text=trim((string)Yii::$app->request->post('assessment_text'));$model->conclusion_text=trim((string)Yii::$app->request->post('conclusion_text'));$model->weakness_text=trim((string)Yii::$app->request->post('weakness_text'))?:null;$model->signer_name=trim((string)Yii::$app->request->post('signer_name'))?:null;$model->signer_position=trim((string)Yii::$app->request->post('signer_position'))?:null;$model->signature_type=$type;$model->signature_data=$type==='canvas'?($data?:null):null;$this->touch($model);if(!$model->save())Yii::$app->session->setFlash('error',implode(' ',$model->getFirstErrors()));else Yii::$app->session->setFlash('success','บันทึก ปค.1 แล้ว');return $this->redirect(array_merge(['pk1'],ContextService::query($context)));
     }
     public function actionPk1Docx(int $id)
     {
+        if(!$this->access->canViewOrganizationDocuments())throw new ForbiddenHttpException('ไม่มีสิทธิ์ส่งออก ปค.1');
         $context=(new ContextService())->resolve();$model=Pk1::find()->with(['hospital','signer'])->where(['id'=>$id,'hospital_id'=>(int)$context['hospitalId']])->one();if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.1');$word=new \PhpOffice\PhpWord\PhpWord();$word->setDefaultFontName('TH Sarabun New');$word->setDefaultFontSize(16);$section=$word->addSection(['paperSize'=>'A4','marginTop'=>900,'marginRight'=>1000,'marginBottom'=>900,'marginLeft'=>1000]);$center=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];$right=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT];$justify=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::BOTH,'indentation'=>['firstLine'=>850],'spaceAfter'=>150];$section->addText('หนังสือรับรองการประเมินผลการควบคุมภายใน',['bold'=>true,'size'=>18],$center);$section->addText('(แบบ ปค.1)',['bold'=>true,'size'=>18],$center);$section->addTextBreak();$section->addText('เรียน  '.$model->recipient,['bold'=>true]);$section->addTextBreak();$section->addText($model->assessment_text,null,$justify);$section->addText($model->conclusion_text,null,$justify);if($model->weakness_text)$section->addText($model->weakness_text,null,$justify);$section->addTextBreak();$source=$this->signatureSourceForWord($model);if($source)$section->addImage($source,['width'=>120,'height'=>45,'alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT]);else $section->addText('ลงชื่อ ..............................................................',null,$right);$section->addText('('.($model->signer_name?:'ผู้อำนวยการโรงพยาบาล').')',null,$right);$section->addText($model->signer_position?:'ผู้อำนวยการโรงพยาบาล',null,$right);$tmp=Yii::getAlias('@runtime/pk1_'.$model->id.'_'.uniqid().'.docx');\PhpOffice\PhpWord\IOFactory::createWriter($word,'Word2007')->save($tmp);$content=file_get_contents($tmp);@unlink($tmp);return Yii::$app->response->sendContentAsFile($content,'PK1_'.$model->fiscal_year.'.docx',['mimeType'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
     }
     public function actionPk1Pdf(int $id)
     {
+        if(!$this->access->canViewOrganizationDocuments())throw new ForbiddenHttpException('ไม่มีสิทธิ์ส่งออก ปค.1');
         $context=(new ContextService())->resolve();$model=Pk1::find()->with(['hospital','signer'])->where(['id'=>$id,'hospital_id'=>(int)$context['hospitalId']])->one();if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.1');$fontPath=Yii::getAlias('@webroot/fonts/THSarabunNew');$dc=(new \Mpdf\Config\ConfigVariables())->getDefaults();$df=(new \Mpdf\Config\FontVariables())->getDefaults();$mpdf=new \Mpdf\Mpdf(['mode'=>'utf-8','format'=>'A4','margin_left'=>18,'margin_right'=>18,'margin_top'=>18,'margin_bottom'=>18,'fontDir'=>array_merge($dc['fontDir'],[$fontPath]),'fontdata'=>$df['fontdata']+['thsarabunnew'=>['R'=>'THSarabunNew.ttf','B'=>'THSarabunNew-Bold.ttf','I'=>'THSarabunNew-Italic.ttf','BI'=>'THSarabunNew BoldItalic.ttf']],'default_font'=>'thsarabunnew','tempDir'=>Yii::getAlias('@runtime/mpdf')]);$mpdf->SetTitle('ปค.1 '.$model->fiscal_year);$mpdf->WriteHTML($this->renderPartial('_pk1_pdf',['model'=>$model,'signatureDataUri'=>$this->signatureDataUri($model)]));return $mpdf->Output('PK1_'.$model->fiscal_year.'.pdf',\Mpdf\Output\Destination::INLINE);
     }
     public function actionPk4()
@@ -388,6 +391,7 @@ class DefaultController extends Controller
     {
         $model=Pk4::find()->with(['items','orgUnit','signer'])->where(['id'=>$id])->one();
         if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.4');
+        if(!$this->canViewRiskUnit((int)$model->org_unit_id,(int)$model->fiscal_year))throw new ForbiddenHttpException('ไม่มีสิทธิ์ส่งออก ปค.4 ของหน่วยงานนี้');
         $phpWord=new \PhpOffice\PhpWord\PhpWord();$phpWord->setDefaultFontName('TH Sarabun New');$phpWord->setDefaultFontSize(16);
         $section=$phpWord->addSection(['paperSize'=>'A4','marginTop'=>850,'marginRight'=>850,'marginBottom'=>850,'marginLeft'=>850]);$center=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];$right=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT];
         $section->addText($model->orgUnit?->name?:'หน่วยงาน',['bold'=>true,'size'=>18],$center);$section->addText('รายงานผลการประเมินองค์ประกอบของการควบคุมภายใน (แบบ ปค.4)',['bold'=>true,'size'=>18],$center);$section->addText('สำหรับปีสิ้นสุดวันที่ 30 กันยายน '.$model->fiscal_year,null,$center);$section->addTextBreak();
@@ -398,6 +402,7 @@ class DefaultController extends Controller
     }
     public function actionPk4Pdf(int $id)
     {
+        $scopeModel=Pk4::findOne($id);if($scopeModel&&!$this->canViewRiskUnit((int)$scopeModel->org_unit_id,(int)$scopeModel->fiscal_year))throw new ForbiddenHttpException('ไม่มีสิทธิ์ส่งออก ปค.4 ของหน่วยงานนี้');
         $model=Pk4::find()->with(['items','orgUnit','signer'])->where(['id'=>$id])->one();if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.4');
         $fontPath=Yii::getAlias('@webroot/fonts/THSarabunNew');$defaultConfig=(new \Mpdf\Config\ConfigVariables())->getDefaults();$defaultFontConfig=(new \Mpdf\Config\FontVariables())->getDefaults();$mpdf=new \Mpdf\Mpdf(['mode'=>'utf-8','format'=>'A4','orientation'=>'P','margin_left'=>12,'margin_right'=>12,'margin_top'=>12,'margin_bottom'=>15,'fontDir'=>array_merge($defaultConfig['fontDir'],[$fontPath]),'fontdata'=>$defaultFontConfig['fontdata']+['thsarabunnew'=>['R'=>'THSarabunNew.ttf','B'=>'THSarabunNew-Bold.ttf','I'=>'THSarabunNew-Italic.ttf','BI'=>'THSarabunNew BoldItalic.ttf']],'default_font'=>'thsarabunnew','tempDir'=>Yii::getAlias('@runtime/mpdf')]);
         $signatureDataUri=$this->signatureDataUri($model);
@@ -427,6 +432,7 @@ class DefaultController extends Controller
     }
     public function actionTrackingPdf()
     {
+        if(!$this->access->canExportOrganizationReports())throw new ForbiddenHttpException('ไม่มีสิทธิ์ส่งออกรายงานรวม');
         $context=(new ContextService())->resolve();if(!($context['canScopeAllUnits']??false))throw new ForbiddenHttpException('เฉพาะผู้ดูแลภาพรวมองค์กรเท่านั้นที่ส่งออกรายงานรวมได้');$items=RiskFollowup::find()->with(['orgUnit','period'])->where(['hospital_id'=>(int)$context['hospitalId'],'fiscal_year_id'=>(int)$context['fiscalYearId'],'reporting_period_id'=>(int)$context['periodId']])->orderBy(['org_unit_id'=>SORT_ASC,'sequence'=>SORT_ASC])->all();if(!$items)throw new \yii\web\BadRequestHttpException('ยังไม่มีข้อมูลติดตามของรอบนี้');$hospital=\app\modules\iacRisk\models\Hospital::findOne((int)$context['hospitalId']);$director=SiteHelper::viewDirector();$signature=null;$employee=!empty($director['id'])?\app\modules\hr\models\Employees::findOne((int)$director['id']):null;$path=$employee?->signature();if($path&&is_file($path)){$mime=(new \finfo(FILEINFO_MIME_TYPE))->file($path)?:'image/png';$signature='data:'.$mime.';base64,'.base64_encode(file_get_contents($path));}$period=$items[0]->period;$fontPath=Yii::getAlias('@webroot/fonts/THSarabunNew');$dc=(new \Mpdf\Config\ConfigVariables())->getDefaults();$df=(new \Mpdf\Config\FontVariables())->getDefaults();$mpdf=new \Mpdf\Mpdf(['mode'=>'utf-8','format'=>'A4-L','orientation'=>'L','margin_left'=>7,'margin_right'=>7,'margin_top'=>8,'margin_bottom'=>10,'fontDir'=>array_merge($dc['fontDir'],[$fontPath]),'fontdata'=>$df['fontdata']+['thsarabunnew'=>['R'=>'THSarabunNew.ttf','B'=>'THSarabunNew-Bold.ttf','I'=>'THSarabunNew-Italic.ttf','BI'=>'THSarabunNew BoldItalic.ttf']],'default_font'=>'thsarabunnew','tempDir'=>Yii::getAlias('@runtime/mpdf')]);$mpdf->SetTitle('แบบติดตาม ปค.5');$mpdf->SetHTMLFooter('<div style="text-align:right;font-size:9pt">หน้า {PAGENO} จาก {nbpg}</div>');$mpdf->WriteHTML($this->renderPartial('_tracking_pdf',['items'=>$items,'hospitalName'=>$hospital?->name?:'โรงพยาบาล','period'=>$period,'director'=>$director,'signature'=>$signature]));return $mpdf->Output('PK5_followup_period_'.$period->id.'_organization.pdf',\Mpdf\Output\Destination::INLINE);
     }
     public function actionReports()
@@ -475,7 +481,7 @@ class DefaultController extends Controller
         $model=Csa::find()->with('processVersion.profile')->where(['id'=>$id])->one();if(!$model||!($model->processVersion?->profile))throw new \yii\web\NotFoundHttpException('ไม่พบ CSA');
         if(!in_array($model->status,[Csa::STATUS_DRAFT,Csa::STATUS_RETURNED],true))throw new ForbiddenHttpException('CSA สถานะนี้ถูกล็อกการแก้ไข');
         $profile=$model->processVersion->profile;$access=new \app\modules\serviceProfile\services\AccessService();
-        if(!$access->canEdit($profile)&&!Yii::$app->user->can('iacRiskCoordinate')&&!Yii::$app->user->can('iacRiskAdmin'))throw new ForbiddenHttpException('คุณไม่มีสิทธิ์แก้ CSA นี้');
+        if(!$access->canEdit($profile)&&!$this->canManageProfile($profile,(int)$model->fiscal_year))throw new ForbiddenHttpException('คุณไม่มีสิทธิ์แก้ CSA นี้');
         return [$model,$profile];
     }
 
@@ -513,6 +519,21 @@ class DefaultController extends Controller
 
     private function canManageRiskUnit(int $orgUnitId,int $fiscalYear): bool
     {
-        if($this->access->canScopeAllUnits())return true;$employee=$this->access->employee();if(!$employee||!$fiscalYear)return false;$unit=(new OwnerDirectoryService())->orgUnitForDepartment($employee->department?(int)$employee->department:null,$fiscalYear);return $unit&&(int)$unit->id===$orgUnitId;
+        return $this->access->canManageAllUnits()||($this->access->canAuthor()&&$this->isSameRiskUnit($orgUnitId,$fiscalYear));
+    }
+
+    private function canViewRiskUnit(int $orgUnitId,int $fiscalYear): bool
+    {
+        return $this->access->canScopeAllUnits()||$this->isSameRiskUnit($orgUnitId,$fiscalYear);
+    }
+
+    private function isSameRiskUnit(int $orgUnitId,int $fiscalYear): bool
+    {
+        $employee=$this->access->employee();if(!$employee||!$fiscalYear)return false;$unit=(new OwnerDirectoryService())->orgUnitForDepartment($employee->department?(int)$employee->department:null,$fiscalYear);return $unit&&(int)$unit->id===$orgUnitId;
+    }
+
+    private function canManageProfile(ServiceProfile $profile,int $fiscalYear): bool
+    {
+        if($this->access->canManageAllUnits())return true;if(!$this->access->canAuthor())return false;$employee=$this->access->employee();if(!$employee||!$fiscalYear)return false;$unit=(new OwnerDirectoryService())->orgUnitForDepartment($employee->department?(int)$employee->department:null,$fiscalYear);if(!$unit)return false;try{$owner=(new OwnerDirectoryService())->resolveOwner((int)$unit->id,$fiscalYear);}catch(\Throwable $e){return false;}return $profile->owner_type===$owner['owner_type']&&(int)$profile->owner_id===(int)$owner['owner_id'];
     }
 }

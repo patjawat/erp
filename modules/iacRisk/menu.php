@@ -1,8 +1,10 @@
 <?php
 use app\modules\iacRisk\services\ContextService;
+use app\modules\iacRisk\services\AccessService;
 use yii\helpers\Html;
 
 $query = ContextService::query($context ?? []);
+$access = new AccessService();
 $items = [
     'overview' => ['ภาพรวม', '/iac-risk/default/index'],
     'service-profile' => ['Service Profile', '/iac-risk/default/service-profile'],
@@ -16,6 +18,8 @@ $items = [
     'tracking' => ['ติดตามผล', '/iac-risk/default/tracking'],
     'history' => ['ประวัติ', '/iac-risk/default/history'],
 ];
+if(!$access->canViewOrganizationDocuments())unset($items['pk1']);
+if(!$access->canUseReportSubmission())unset($items['reports']);
 ?>
 <nav class="d-flex flex-wrap gap-2" aria-label="เมนู IAC&Risk">
 <?php foreach ($items as $key => [$label, $route]): ?>

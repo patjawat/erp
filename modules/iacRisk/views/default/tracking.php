@@ -1,7 +1,9 @@
 <?php
 use app\modules\iacRisk\models\RiskFollowup;
 use app\modules\iacRisk\services\ContextService;
+use app\modules\iacRisk\services\AccessService;
 use yii\helpers\Html;
+$canExport=$canExport&&(new AccessService())->canExportOrganizationReports();
 $this->title='ติดตามผล';$firstItem=$items[0]??null;$groups=[];foreach($items as $item){$id=(int)$item->org_unit_id;if(!isset($groups[$id]))$groups[$id]=['name'=>$item->orgUnit?->name?:'หน่วยงาน #'.$id,'items'=>[]];$groups[$id]['items'][]=$item;}
 ?>
 <?php $this->beginBlock('page-title'); ?>ติดตามผล<?php $this->endBlock(); ?><?php $this->beginBlock('sub-title'); ?>ติดตามแผนปรับปรุงการควบคุมภายในจาก ปค.5<?php $this->endBlock(); ?>
