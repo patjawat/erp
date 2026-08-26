@@ -22,9 +22,18 @@ class AccessService
         $employee = $this->employee();
         if (!$employee) return false;
         if ($profile->owner_type === 'department' && (int) $employee->department === (int) $profile->owner_id) return true;
-        return ServiceProfileAuthor::find()->where(['service_profile_id' => $profile->id, 'employee_id' => $employee->id])->exists()
+        $canView = ServiceProfileAuthor::find()->where(['service_profile_id' => $profile->id, 'employee_id' => $employee->id])->exists()
             || ServiceProfileQualityReviewer::find()->where(['owner_type' => $profile->owner_type, 'owner_id' => $profile->owner_id, 'employee_id' => $employee->id, 'active' => 1])->exists()
             || ServiceProfileApproval::find()->where(['service_profile_id' => $profile->id, 'employee_id' => $employee->id])->exists();
+        if ($canView) return true;
+
+        return $profile->status === ServiceProfile::STATUS_APPROVAL_PENDING
+            && (new DirectorResolver())->isConfiguredDirector($employee)
+            && ServiceProfileApproval::find()->where([
+                'service_profile_id' => $profile->id,
+                'stage' => ServiceProfileApproval::STAGE_DIRECTOR,
+                'status' => ServiceProfileApproval::STATUS_PENDING,
+            ])->exists();
     }
 
     public function canEdit(ServiceProfile $profile): bool
@@ -67,9 +76,22 @@ class AccessService
     public function canActStage(ServiceProfile $profile, string $stage): bool
     {
         $employee = $this->employee();
-        return $employee && ServiceProfileApproval::find()->where([
+        if (!$employee) return false;
+        $assigned = ServiceProfileApproval::find()->where([
             'service_profile_id' => $profile->id, 'stage' => $stage,
             'employee_id' => $employee->id, 'status' => ServiceProfileApproval::STATUS_PENDING,
         ])->exists();
+        if ($assigned) return true;
+
+        // Existing pending rows may point at an admin because the old resolver
+        // selected the first account inheriting the approval permission.
+        return $stage === ServiceProfileApproval::STAGE_DIRECTOR
+            && $profile->status === ServiceProfile::STATUS_APPROVAL_PENDING
+            && (new DirectorResolver())->isConfiguredDirector($employee)
+            && ServiceProfileApproval::find()->where([
+                'service_profile_id' => $profile->id,
+                'stage' => $stage,
+                'status' => ServiceProfileApproval::STATUS_PENDING,
+            ])->exists();
     }
 }

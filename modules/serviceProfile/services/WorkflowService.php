@@ -24,8 +24,8 @@ class WorkflowService
             'owner_type' => $profile->owner_type, 'owner_id' => $profile->owner_id, 'active' => 1, 'is_lead' => 1,
         ])->one();
         if (!$lead || !$lead->employee || !$lead->employee->user_id) throw new \DomainException('ยังไม่ได้กำหนดผู้แทนคุณภาพหลักของหน่วยงาน');
-        $director = $this->findEmployeeWithPermission('serviceProfileDirectorApprove');
-        if (!$director) throw new \DomainException('ยังไม่ได้กำหนดผู้มีสิทธิอนุมัติ Service Profile');
+        $director = (new DirectorResolver())->resolve();
+        if (!$director) throw new \DomainException('ยังไม่ได้กำหนดผู้อำนวยการ หรือผู้อำนวยการยังไม่มีบัญชีผู้ใช้');
         $head = (new OwnerDirectoryService())->headEmployee($profile->owner_type, (int) $profile->owner_id, (int) $profile->fiscal_year);
         if (!$head || !$head->user_id) throw new \DomainException('ยังไม่ได้กำหนดหัวหน้าหน่วยงานหรือหัวหน้ายังไม่มีบัญชีผู้ใช้');
 
@@ -83,6 +83,22 @@ class WorkflowService
         if ($profile->status !== ServiceProfile::STATUS_APPROVAL_PENDING) throw new \DomainException('เอกสารไม่ได้รอผู้อำนวยการอนุมัติ');
         $tx = Yii::$app->db->beginTransaction();
         try {
+            // Repair pending documents created before the configured director
+            // became the canonical approver. This also makes the current queue
+            // actionable without requiring the document to be resubmitted.
+            $directorStage = ServiceProfileApproval::findOne([
+                'service_profile_id' => $profile->id,
+                'stage' => ServiceProfileApproval::STAGE_DIRECTOR,
+                'status' => ServiceProfileApproval::STATUS_PENDING,
+            ]);
+            if ($directorStage
+                && (int) $directorStage->employee_id !== (int) $director->id
+                && (new DirectorResolver())->isConfiguredDirector($director)) {
+                $directorStage->employee_id = $director->id;
+                $directorStage->employee_name_snapshot = $director->fullname();
+                $directorStage->updated_at = date('Y-m-d H:i:s');
+                $directorStage->save(false);
+            }
             $this->passStage($this->pendingStage($profile, ServiceProfileApproval::STAGE_DIRECTOR, $director), $comment);
             $this->activateStage($profile, ServiceProfileApproval::STAGE_HEAD);
             $from = $profile->status;
@@ -193,14 +209,6 @@ class WorkflowService
     private function activateStage(ServiceProfile $profile, string $stage): void
     {
         ServiceProfileApproval::updateAll(['status' => ServiceProfileApproval::STATUS_PENDING, 'updated_at' => date('Y-m-d H:i:s')], ['service_profile_id' => $profile->id, 'stage' => $stage, 'status' => ServiceProfileApproval::STATUS_WAITING]);
-    }
-
-    private function findEmployeeWithPermission(string $permission): ?Employees
-    {
-        foreach (Employees::find()->andWhere(['not', ['user_id' => null]])->all() as $employee) {
-            if (Yii::$app->authManager->checkAccess((int) $employee->user_id, $permission)) return $employee;
-        }
-        return null;
     }
 
     private function authorEmployees(ServiceProfile $profile): array

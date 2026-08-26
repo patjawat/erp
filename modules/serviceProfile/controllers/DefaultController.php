@@ -22,6 +22,7 @@ use app\modules\serviceProfile\services\InboxService;
 use app\modules\serviceProfile\services\ReadinessService;
 use app\modules\serviceProfile\services\RevisionComparisonService;
 use app\modules\serviceProfile\services\OwnerDirectoryService;
+use app\modules\serviceProfile\services\DirectorResolver;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
@@ -63,6 +64,7 @@ class DefaultController extends Controller
             else {
                 $profileIds = ServiceProfileAuthor::find()->select('service_profile_id')->where(['employee_id' => $employee->id])->column();
                 $profileIds = array_merge($profileIds, \app\modules\serviceProfile\models\ServiceProfileApproval::find()->select('service_profile_id')->where(['employee_id' => $employee->id])->column());
+                $profileIds = array_merge($profileIds, $actionProfileIds);
                 $reviewOwnerIds = \app\modules\serviceProfile\models\ServiceProfileQualityReviewer::find()->select('owner_id')->where([
                     'owner_type' => 'department', 'employee_id' => $employee->id, 'active' => 1,
                 ])->column();
@@ -128,11 +130,13 @@ class DefaultController extends Controller
     {
         $model = $this->findModel($id);
         $this->assertView($model);
+        $currentEmployee = UserHelper::GetEmployee();
         $readiness = in_array($model->status, [ServiceProfile::STATUS_DRAFT, ServiceProfile::STATUS_RETURNED], true)
             ? (new ReadinessService())->inspect($model) : null;
         return $this->render('view', [
             'model' => $model, 'access' => $this->access,
-            'currentEmployee' => UserHelper::GetEmployee(),
+            'currentEmployee' => $currentEmployee,
+            'actionCount' => $currentEmployee ? (new InboxService())->count($currentEmployee) : 0,
             'readiness' => $readiness,
         ]);
     }
@@ -382,13 +386,7 @@ class DefaultController extends Controller
             'owner_type' => $model->owner_type, 'owner_id' => $model->owner_id,
             'active' => 1, 'is_lead' => 1,
         ])->one()?->employee?->fullname();
-        $directorUserIds = (array) Yii::$app->db->createCommand(
-            'SELECT user_id FROM {{%auth_assignment}} WHERE item_name=:permission',
-            [':permission' => 'serviceProfileDirectorApprove']
-        )->queryColumn();
-        $director = $directorUserIds
-            ? Employees::find()->where(['user_id' => $directorUserIds, 'status' => 1])->orderBy(['id' => SORT_ASC])->one()?->fullname()
-            : null;
+        $director = (new DirectorResolver())->resolve()?->fullname();
         $intro = $model->sections[0]->content ?? '';
         $intro = preg_replace('/\s+/u', ' ', trim(strip_tags((string) $intro)));
         if (mb_strlen($intro) > 430) $intro = mb_substr($intro, 0, 427) . '...';

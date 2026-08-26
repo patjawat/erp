@@ -15,6 +15,17 @@ class InboxService
         $ids = ServiceProfileApproval::find()->select('service_profile_id')->where([
             'employee_id'=>$employee->id,'status'=>ServiceProfileApproval::STATUS_PENDING,
         ])->column();
+        if ((new DirectorResolver())->isConfiguredDirector($employee)) {
+            $legacyDirectorIds = ServiceProfileApproval::find()->alias('approval')
+                ->select('approval.service_profile_id')
+                ->innerJoin(['profile' => ServiceProfile::tableName()], 'profile.id = approval.service_profile_id')
+                ->where([
+                    'approval.stage' => ServiceProfileApproval::STAGE_DIRECTOR,
+                    'approval.status' => ServiceProfileApproval::STATUS_PENDING,
+                    'profile.status' => ServiceProfile::STATUS_APPROVAL_PENDING,
+                ])->column();
+            $ids = array_merge($ids, $legacyDirectorIds);
+        }
         $ownerIds = ServiceProfileQualityReviewer::find()->select('owner_id')->where([
             'owner_type'=>'department','employee_id'=>$employee->id,'active'=>1,
         ])->column();
