@@ -9,10 +9,14 @@ use app\modules\iacRisk\models\CsaRisk;
 use app\modules\iacRisk\models\RiskControl;
 use app\modules\iacRisk\models\ControlAssessment;
 use app\modules\iacRisk\models\ImprovementPlan;
+use app\modules\iacRisk\models\RiskRegister;
+use app\modules\iacRisk\models\Pk4;
+use app\modules\iacRisk\models\Pk4Item;
 use app\modules\iacRisk\models\ServiceProcessVersion;
 use app\modules\iacRisk\services\AccessService;
 use app\modules\iacRisk\services\ActivityService;
 use app\modules\iacRisk\services\ContextService;
+use app\modules\iacRisk\services\RiskRegisterService;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\modules\serviceProfile\models\ServiceProfile;
@@ -42,6 +46,8 @@ class DefaultController extends Controller
                 'review-process'=>['POST'],'create-csa'=>['POST'],'save-csa-snapshot'=>['POST'],
                 'save-step'=>['POST'],'delete-step'=>['POST'],'save-risk'=>['POST'],'delete-risk'=>['POST'],
                 'confirm-csa'=>['POST'],'send-csa-head'=>['POST'],'approve-csa'=>['POST'],'return-csa'=>['POST'],
+                'save-manual-risk'=>['POST'],'delete-manual-risk'=>['POST'],
+                'create-pk4'=>['POST'],'save-pk4'=>['POST'],
             ]],
         ]);
     }
@@ -300,7 +306,7 @@ class DefaultController extends Controller
     public function actionApproveCsa(int $id)
     {
         $model=$this->workflowCsa($id);if(!(new \app\modules\iacRisk\services\CsaAccessService())->canHeadAct($model))throw new ForbiddenHttpException('ไม่มีสิทธิ์รับรอง CSA');$from=$model->status;$model->head_approved_at=date('Y-m-d H:i:s');$model->head_approved_by=Yii::$app->user->id;$model->return_note=null;
-        $this->saveCsaTransition($model,Csa::STATUS_HEAD_APPROVED,'head_approved',$from);
+        $this->saveCsaTransition($model,Csa::STATUS_HEAD_APPROVED,'head_approved',$from,null,static function(Csa $csa): void {(new RiskRegisterService())->syncApprovedCsa($csa);});
         Yii::$app->session->setFlash('success','หัวหน้าหน่วยงานรับรอง CSA แล้ว');return $this->redirect(['csa-view','id'=>$model->id]);
     }
 
@@ -310,8 +316,63 @@ class DefaultController extends Controller
         $this->saveCsaTransition($model,Csa::STATUS_RETURNED,'returned',$from,$note);
         Yii::$app->session->setFlash('success','ส่งกลับให้ผู้จัดทำแก้ไขแล้ว');return $this->redirect(['csa-view','id'=>$model->id]);
     }
-    public function actionRisks() { return $this->placeholder('บัญชีความเสี่ยง', 'risks'); }
-    public function actionPk4() { return $this->placeholder('ปค.4', 'pk4'); }
+    public function actionRisks()
+    {
+        $context=(new ContextService())->resolve();$hospitalId=(int)$context['hospitalId'];$fiscalYearId=(int)$context['fiscalYearId'];$orgUnitId=(int)$context['orgUnitId'];
+        $query=RiskRegister::find()->with(['csa','csaRisk','orgUnit'])->where(['hospital_id'=>$hospitalId ?: 0,'fiscal_year_id'=>$fiscalYearId ?: 0]);
+        if($orgUnitId)$query->andWhere(['org_unit_id'=>$orgUnitId]);elseif(!($context['canScopeAllUnits']??false))$query->andWhere('0=1');
+        $riskLevel=trim((string)Yii::$app->request->get('risk_level'));$levelRanges=['low'=>[1,3],'moderate'=>[4,9],'high'=>[10,16],'very_high'=>[17,25]];if(isset($levelRanges[$riskLevel]))$query->andWhere(['between',new \yii\db\Expression('likelihood_score * impact_score'),$levelRanges[$riskLevel][0],$levelRanges[$riskLevel][1]]);else $riskLevel='';
+        $models=$query->orderBy(['org_unit_id'=>SORT_ASC,'source_type'=>SORT_ASC,'id'=>SORT_ASC])->all();$canEdit=$orgUnitId>0&&$this->canManageRiskUnit($orgUnitId,(int)($context['fiscalYear']?->fiscal_year?:0));
+        return $this->render('risks',compact('context','models','canEdit','riskLevel'));
+    }
+
+    public function actionSaveManualRisk(?int $id=null)
+    {
+        $context=(new ContextService())->resolve();$model=$id?RiskRegister::findOne(['id'=>$id,'source_type'=>RiskRegister::SOURCE_MANUAL]):null;if($id&&!$model)throw new \yii\web\NotFoundHttpException('ไม่พบความเสี่ยงที่เพิ่มเอง');$orgUnitId=$model?(int)$model->org_unit_id:(int)$context['orgUnitId'];$fiscalYear=$model?(int)$model->fiscal_year:(int)($context['fiscalYear']?->fiscal_year?:0);
+        if(!$orgUnitId||!$this->canManageRiskUnit($orgUnitId,$fiscalYear))throw new ForbiddenHttpException('ไม่มีสิทธิ์แก้ไขบัญชีความเสี่ยงของหน่วยงานนี้');
+        $model=$model?:new RiskRegister(['ref'=>Yii::$app->security->generateRandomString(24),'source_type'=>RiskRegister::SOURCE_MANUAL,'hospital_id'=>$context['hospitalId'],'fiscal_year_id'=>$context['fiscalYearId'],'fiscal_year'=>$fiscalYear,'org_unit_id'=>$orgUnitId,'status'=>RiskRegister::STATUS_ACTIVE]);
+        $model->risk_name=trim((string)Yii::$app->request->post('risk_name'));$model->cause=trim((string)Yii::$app->request->post('cause'))?:null;$model->impact=trim((string)Yii::$app->request->post('impact'))?:null;$model->likelihood_score=$this->score(Yii::$app->request->post('likelihood_score'));$model->impact_score=$this->score(Yii::$app->request->post('impact_score'));$model->adequacy=trim((string)Yii::$app->request->post('adequacy'))?:null;$model->residual_risk=trim((string)Yii::$app->request->post('residual_risk'))?:null;$this->touch($model);
+        if(!$model->save())Yii::$app->session->setFlash('error',implode(' ',$model->getFirstErrors()));else Yii::$app->session->setFlash('success','บันทึกความเสี่ยงนอกกระบวนงานแล้ว');return $this->redirect(array_merge(['risks'],ContextService::query($context)));
+    }
+
+    public function actionDeleteManualRisk(int $id)
+    {
+        $model=RiskRegister::findOne(['id'=>$id,'source_type'=>RiskRegister::SOURCE_MANUAL]);if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบความเสี่ยงที่เพิ่มเอง');if(!$this->canManageRiskUnit((int)$model->org_unit_id,(int)$model->fiscal_year))throw new ForbiddenHttpException('ไม่มีสิทธิ์ลบรายการนี้');$model->delete();Yii::$app->session->setFlash('success','ลบความเสี่ยงนอกกระบวนงานแล้ว');return $this->redirect(array_merge(['risks'],ContextService::query((new ContextService())->resolve())));
+    }
+    public function actionPk4()
+    {
+        $context=(new ContextService())->resolve();$query=Pk4::find()->with(['items','orgUnit'])->where(['hospital_id'=>(int)$context['hospitalId'],'fiscal_year_id'=>(int)$context['fiscalYearId']]);if($context['orgUnitId'])$query->andWhere(['org_unit_id'=>(int)$context['orgUnitId']]);elseif(!($context['canScopeAllUnits']??false))$query->andWhere('0=1');$models=$query->orderBy(['org_unit_id'=>SORT_ASC])->all();$selected=count($models)===1?$models[0]:null;$canEdit=(int)$context['orgUnitId']>0&&$this->canManageRiskUnit((int)$context['orgUnitId'],(int)($context['fiscalYear']?->fiscal_year?:0));return $this->render('pk4',compact('context','models','selected','canEdit'));
+    }
+    public function actionCreatePk4()
+    {
+        $context=(new ContextService())->resolve();$org=(int)$context['orgUnitId'];$year=(int)($context['fiscalYear']?->fiscal_year?:0);if(!$org||!$this->canManageRiskUnit($org,$year))throw new ForbiddenHttpException('ไม่มีสิทธิ์เริ่ม ปค.4');(new \app\modules\iacRisk\services\Pk4Service())->create((int)$context['hospitalId'],(int)$context['fiscalYearId'],$year,$org);Yii::$app->session->setFlash('success','เริ่มแบบ ปค.4 แล้ว');return $this->redirect(array_merge(['pk4'],ContextService::query($context)));
+    }
+    public function actionSavePk4(int $id)
+    {
+        $model=Pk4::find()->with('items')->where(['id'=>$id])->one();if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.4');if(!$this->canManageRiskUnit((int)$model->org_unit_id,(int)$model->fiscal_year))throw new ForbiddenHttpException('ไม่มีสิทธิ์แก้ไข ปค.4');
+        $values=(array)Yii::$app->request->post('items',[]);$signatureType=(string)Yii::$app->request->post('signature_type','system');$signatureType=in_array($signatureType,['canvas','system'],true)?$signatureType:'system';$signatureData=trim((string)Yii::$app->request->post('signature_data',''));
+        if($signatureType==='canvas'&&$signatureData!==''&&!preg_match('#^data:image/(png|jpeg);base64,[A-Za-z0-9+/=]+$#',$signatureData))throw new \yii\web\BadRequestHttpException('ข้อมูลลายเซ็นไม่ถูกต้อง');if(strlen($signatureData)>3000000)throw new \yii\web\BadRequestHttpException('ภาพลายเซ็นมีขนาดใหญ่เกินไป');
+        $tx=Yii::$app->db->beginTransaction();try{foreach($model->items as $item){$item->evaluation_summary=trim((string)($values[$item->component_code]??''))?:null;$this->touch($item);$item->save(false);}$model->summary=trim((string)Yii::$app->request->post('summary'))?:null;$model->signer_name=trim((string)Yii::$app->request->post('signer_name'))?:null;$model->signer_position=trim((string)Yii::$app->request->post('signer_position'))?:null;$model->signature_type=$signatureType;$model->signature_data=$signatureType==='canvas'?($signatureData?:null):null;$this->touch($model);$model->save(false);$tx->commit();Yii::$app->session->setFlash('success','บันทึก ปค.4 แล้ว');}catch(\Throwable $e){$tx->rollBack();throw $e;}return $this->redirect(array_merge(['pk4'],ContextService::query((new ContextService())->resolve())));
+    }
+    public function actionPk4Docx(int $id)
+    {
+        $model=Pk4::find()->with(['items','orgUnit','signer'])->where(['id'=>$id])->one();
+        if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.4');
+        $phpWord=new \PhpOffice\PhpWord\PhpWord();$phpWord->setDefaultFontName('TH Sarabun New');$phpWord->setDefaultFontSize(16);
+        $section=$phpWord->addSection(['paperSize'=>'A4','marginTop'=>850,'marginRight'=>850,'marginBottom'=>850,'marginLeft'=>850]);$center=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::CENTER,'spaceAfter'=>0];$right=['alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT];
+        $section->addText($model->orgUnit?->name?:'หน่วยงาน',['bold'=>true,'size'=>18],$center);$section->addText('รายงานผลการประเมินองค์ประกอบของการควบคุมภายใน (แบบ ปค.4)',['bold'=>true,'size'=>18],$center);$section->addText('สำหรับปีสิ้นสุดวันที่ 30 กันยายน '.$model->fiscal_year,null,$center);$section->addTextBreak();
+        $table=$section->addTable(['borderSize'=>6,'borderColor'=>'000000','cellMargin'=>100,'layout'=>\PhpOffice\PhpWord\Style\Table::LAYOUT_FIXED]);$table->addRow();$table->addCell(3600)->addText('องค์ประกอบการควบคุมภายใน (1)',['bold'=>true],$center);$table->addCell(6500)->addText('ผลการประเมิน / ข้อสรุป (2)',['bold'=>true],$center);foreach($model->items as $item){$table->addRow();$table->addCell(3600)->addText($item->component_name,['bold'=>true]);$table->addCell(6500)->addText($item->evaluation_summary?:'');}
+        $section->addTextBreak();$section->addText('สรุปผลการประเมิน',['bold'=>true]);$section->addText($model->summary?:'');$section->addTextBreak();
+        $signatureSource=null;if($model->signature_type==='canvas'&&$model->signature_data){$signatureSource=$model->signature_data;}elseif($model->signature_type==='system'){$signaturePath=$model->signer?->signature();if($signaturePath&&is_file($signaturePath))$signatureSource=$signaturePath;}if($signatureSource){$section->addImage($signatureSource,['width'=>120,'height'=>45,'alignment'=>\PhpOffice\PhpWord\SimpleType\Jc::RIGHT]);}else{$section->addText('ลงชื่อ ..............................................................',null,$right);}$section->addText('('.($model->signer_name?:'หัวหน้าหน่วยงาน').')',null,$right);$section->addText($model->signer_position?:'หัวหน้าหน่วยงาน',null,$right);
+        $tmp=Yii::getAlias('@runtime/pk4_'.$model->id.'_'.uniqid().'.docx');\PhpOffice\PhpWord\IOFactory::createWriter($phpWord,'Word2007')->save($tmp);$content=file_get_contents($tmp);@unlink($tmp);return Yii::$app->response->sendContentAsFile($content,'PK4_'.$model->fiscal_year.'_unit_'.$model->org_unit_id.'.docx',['mimeType'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
+    }
+    public function actionPk4Pdf(int $id)
+    {
+        $model=Pk4::find()->with(['items','orgUnit','signer'])->where(['id'=>$id])->one();if(!$model)throw new \yii\web\NotFoundHttpException('ไม่พบ ปค.4');
+        $fontPath=Yii::getAlias('@webroot/fonts/THSarabunNew');$defaultConfig=(new \Mpdf\Config\ConfigVariables())->getDefaults();$defaultFontConfig=(new \Mpdf\Config\FontVariables())->getDefaults();$mpdf=new \Mpdf\Mpdf(['mode'=>'utf-8','format'=>'A4','orientation'=>'P','margin_left'=>12,'margin_right'=>12,'margin_top'=>12,'margin_bottom'=>15,'fontDir'=>array_merge($defaultConfig['fontDir'],[$fontPath]),'fontdata'=>$defaultFontConfig['fontdata']+['thsarabunnew'=>['R'=>'THSarabunNew.ttf','B'=>'THSarabunNew-Bold.ttf','I'=>'THSarabunNew-Italic.ttf','BI'=>'THSarabunNew BoldItalic.ttf']],'default_font'=>'thsarabunnew','tempDir'=>Yii::getAlias('@runtime/mpdf')]);
+        $signatureDataUri=null;if($model->signature_type==='canvas'&&$model->signature_data){$signatureDataUri=$model->signature_data;}elseif($model->signature_type==='system'){$signaturePath=$model->signer?->signature();if($signaturePath&&is_file($signaturePath)){$mime=(new \finfo(FILEINFO_MIME_TYPE))->file($signaturePath)?:'image/png';$signatureDataUri='data:'.$mime.';base64,'.base64_encode(file_get_contents($signaturePath));}}
+        $mpdf->SetTitle('ปค.4 '.$model->fiscal_year);$mpdf->SetHTMLFooter('<div style="border-top:.2mm solid #777;text-align:right;font-size:10pt;color:#555">หน้า {PAGENO} จาก {nbpg}</div>');$mpdf->WriteHTML($this->renderPartial('_pk4_pdf',['model'=>$model,'signatureDataUri'=>$signatureDataUri]));return $mpdf->Output('PK4_'.$model->fiscal_year.'_unit_'.$model->org_unit_id.'.pdf',\Mpdf\Output\Destination::INLINE);
+    }
     public function actionPk5() { return $this->placeholder('ปค.5', 'pk5'); }
     public function actionTracking() { return $this->placeholder('ติดตามผล', 'tracking'); }
     public function actionHistory() { return $this->placeholder('ประวัติ', 'history'); }
@@ -352,13 +413,18 @@ class DefaultController extends Controller
         (new ActivityService())->log(['hospital_id'=>$model->hospital_id,'fiscal_year_id'=>$model->fiscal_year_id,'org_unit_id'=>$model->org_unit_id,'entity_type'=>'csa','entity_id'=>$model->id,'action'=>$action,'from_status'=>$from,'to_status'=>$model->status,'message'=>$message]);
     }
 
-    private function saveCsaTransition(Csa $model,string $status,string $action,string $from,?string $message=null): void
+    private function saveCsaTransition(Csa $model,string $status,string $action,string $from,?string $message=null,?callable $afterSave=null): void
     {
         $tx=Yii::$app->db->beginTransaction();
         try {
-            $model->status=$status;$this->touch($model);$model->save(false);$this->logCsaState($model,$action,$from,$message);$tx->commit();
+            $model->status=$status;$this->touch($model);$model->save(false);if($afterSave)$afterSave($model);$this->logCsaState($model,$action,$from,$message);$tx->commit();
         } catch (\Throwable $e) {
             $tx->rollBack();throw $e;
         }
+    }
+
+    private function canManageRiskUnit(int $orgUnitId,int $fiscalYear): bool
+    {
+        if($this->access->canScopeAllUnits())return true;$employee=$this->access->employee();if(!$employee||!$fiscalYear)return false;$unit=(new OwnerDirectoryService())->orgUnitForDepartment($employee->department?(int)$employee->department:null,$fiscalYear);return $unit&&(int)$unit->id===$orgUnitId;
     }
 }
