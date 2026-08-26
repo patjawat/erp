@@ -17,7 +17,7 @@ class RiskRegister extends ActiveRecord
         return [
             [['hospital_id','fiscal_year_id','fiscal_year','org_unit_id','source_type','risk_name','status'],'required'],
             [['hospital_id','fiscal_year_id','fiscal_year','org_unit_id','csa_id','csa_risk_id','likelihood_score','impact_score','created_by','updated_by'],'integer'],
-            [['cause','impact','residual_risk'],'string'],
+            [['cause','impact','residual_risk','mission_objective','existing_control','improvement_plan','responsible_person'],'string'],
             [['created_at','updated_at'],'safe'],
             [['risk_name'],'string','max'=>500],
             [['source_type'],'in','range'=>[self::SOURCE_CSA,self::SOURCE_MANUAL]],

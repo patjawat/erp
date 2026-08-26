@@ -9,6 +9,7 @@ $level=RiskMatrixService::evaluate($model?->likelihood_score,$model?->impact_sco
 ?>
 <?= Html::beginForm($action,'post',['class'=>'row g-3']) ?>
 <div class="col-12"><label class="form-label fw-semibold">ชื่อความเสี่ยง</label><?= Html::textInput('risk_name',$model?->risk_name,['class'=>'form-control','maxlength'=>500,'required'=>true]) ?></div>
+<div class="col-12"><label class="form-label">ภารกิจ / วัตถุประสงค์ที่เกี่ยวข้อง</label><?= Html::textarea('mission_objective',$model?->mission_objective,['class'=>'form-control','rows'=>2]) ?></div>
 <div class="col-md-6"><label class="form-label">สาเหตุ</label><?= Html::textarea('cause',$model?->cause,['class'=>'form-control','rows'=>2]) ?></div>
 <div class="col-md-6"><label class="form-label">ผลกระทบ</label><?= Html::textarea('impact',$model?->impact,['class'=>'form-control','rows'=>2]) ?></div>
 <div class="col-md-3"><label class="form-label">โอกาสเกิด (1–5)</label><?= Html::dropDownList('likelihood_score',$model?->likelihood_score,array_combine(range(1,5),range(1,5)),['class'=>'form-select js-risk-likelihood','prompt'=>'ยังไม่ประเมิน']) ?></div>
@@ -16,6 +17,9 @@ $level=RiskMatrixService::evaluate($model?->likelihood_score,$model?->impact_sco
 <div class="col-md-6"><label class="form-label">ผลการควบคุม</label><?= Html::dropDownList('adequacy',$model?->adequacy,CsaRisk::adequacyLabels(),['class'=>'form-select','prompt'=>'ยังไม่ระบุ']) ?></div>
 <div class="col-12"><div class="alert <?= $level?'alert-light border':'alert-secondary' ?> mb-0 js-risk-result" role="status"><?php if($level): ?>คะแนนรวม <strong><?= (int)$level['score'] ?></strong> · ระดับความเสี่ยง <span class="badge <?= $level['badge'] ?>"><?= Html::encode($level['label']) ?></span><?php else: ?>เลือกโอกาสเกิดและผลกระทบเพื่อคำนวณระดับความเสี่ยง<?php endif; ?></div></div>
 <div class="col-12"><label class="form-label">ความเสี่ยงที่ยังเหลืออยู่</label><?= Html::textarea('residual_risk',$model?->residual_risk,['class'=>'form-control','rows'=>2]) ?></div>
+<div class="col-12"><label class="form-label">การควบคุมภายในที่มีอยู่</label><?= Html::textarea('existing_control',$model?->existing_control,['class'=>'form-control','rows'=>2]) ?></div>
+<div class="col-md-8"><label class="form-label">วิธีการปรับปรุง / แก้ไข</label><?= Html::textarea('improvement_plan',$model?->improvement_plan,['class'=>'form-control','rows'=>2]) ?><div class="form-text">จำเป็นเมื่อผลการควบคุมเป็น “ไม่เพียงพอ/ต้องปรับปรุง”</div></div>
+<div class="col-md-4"><label class="form-label">ผู้รับผิดชอบ / กำหนดเสร็จ</label><?= Html::textarea('responsible_person',$model?->responsible_person,['class'=>'form-control','rows'=>2]) ?></div>
 <div class="col-12 d-flex justify-content-end"><?= Html::submitButton($isEdit?'บันทึกการแก้ไข':'เพิ่มเข้าบัญชีความเสี่ยง',['class'=>'btn btn-primary']) ?></div>
 <?= Html::endForm() ?>
 <?php

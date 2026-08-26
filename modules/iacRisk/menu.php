@@ -9,8 +9,10 @@ $items = [
     'processes' => ['กระบวนงาน', '/iac-risk/default/processes'],
     'csa' => ['CSA', '/iac-risk/default/csa'],
     'risks' => ['บัญชีความเสี่ยง', '/iac-risk/default/risks'],
+    'pk1' => ['ปค.1', '/iac-risk/default/pk1'],
     'pk4' => ['ปค.4', '/iac-risk/default/pk4'],
     'pk5' => ['ปค.5', '/iac-risk/default/pk5'],
+    'reports' => ['ส่งรายงาน', '/iac-risk/default/reports'],
     'tracking' => ['ติดตามผล', '/iac-risk/default/tracking'],
     'history' => ['ประวัติ', '/iac-risk/default/history'],
 ];
