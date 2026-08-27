@@ -37,6 +37,7 @@ class DepreciationCalculator
             'cost' => 0.0,
             'salvage_value' => 0.0,
             'salvage_value_type' => DepreciationProfile::SALVAGE_AMOUNT,
+            'minimum_book_value' => null,    // null = ใช้มูลค่าซาก; ใช้แยกกรณีราชการที่คิดจากราคาทุนแต่คงมูลค่า 1 บาท
             'method' => DepreciationProfile::METHOD_STRAIGHT_LINE,
             'useful_life_months' => 0,
             'annual_rate' => null,          // อัตราต่อปี (%) กรณีคิดด้วยอัตราเดียว
@@ -84,6 +85,10 @@ class DepreciationCalculator
                 return date('Y-m-01', $ts);
             case DepreciationProfile::START_NEXT_MONTH:
                 return date('Y-m-01', strtotime('first day of next month', $ts));
+            case DepreciationProfile::START_DAY_15_CUTOFF:
+                return (int) date('j', $ts) <= 15
+                    ? date('Y-m-01', $ts)
+                    : date('Y-m-01', strtotime('first day of next month', $ts));
             case DepreciationProfile::START_READY_DATE:
             default:
                 return date('Y-m-d', $ts);
@@ -163,6 +168,9 @@ class DepreciationCalculator
         $scale = (int) $p['rounding_scale'];
         $cost = (float) $p['cost'];
         $salvage = self::resolveSalvage($cost, (string) $p['salvage_value_type'], (float) $p['salvage_value']);
+        $minimumBookValue = $p['minimum_book_value'] === null
+            ? $salvage
+            : max(0.0, (float) $p['minimum_book_value']);
         $base = round($cost - $salvage, $scale);
         $lifeMonths = (int) $p['useful_life_months'];
         $basis = (string) $p['calculation_basis'];
@@ -286,13 +294,15 @@ class DepreciationCalculator
                 $dep = 0.0;
             }
 
+            $openingAccumulated = $accumulated;
             $beginningNbv = round($cost - $accumulated, $scale);
             $accumulated = round($accumulated + $dep, $scale);
             $closingNbv = round($cost - $accumulated, $scale);
             // มูลค่าสุทธิไม่ต่ำกว่ามูลค่าซาก
-            if ($closingNbv < round($salvage, $scale)) {
-                $closingNbv = round($salvage, $scale);
+            if ($closingNbv < round($minimumBookValue, $scale)) {
+                $closingNbv = round($minimumBookValue, $scale);
                 $accumulated = round($cost - $closingNbv, $scale);
+                $dep = round($accumulated - $openingAccumulated, $scale);
             }
 
             $calYear = $walkTs ? (int) date('Y', $walkTs) : 0;

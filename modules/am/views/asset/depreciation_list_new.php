@@ -1,301 +1,131 @@
 <?php
-
 use yii\helpers\Html;
-    $year = $model->useful_life ?? 0;
-    $depre = $model->depreciation_rate ?? 0;
-    $price = $model->price ?? 0;
+
+/** @var app\modules\am\models\Asset $model */
+/** @var array $schedule */
+/** @var string $calculationMethod */
+/** @var array $calculationMethods */
+
+$year = (int) ($model->useful_life ?? 0);
+$rate = (float) ($model->depreciation_rate ?? 0);
+$price = (float) ($model->price ?? 0);
+$rows = $schedule['rows'] ?? [];
+$selectedMethod = $calculationMethods[$calculationMethod];
+$currentRow = null;
+foreach ($rows as $row) {
+    if (!empty($row['end_date']) && $row['end_date'] <= date('Y-m-d')) {
+        $currentRow = $row;
+    }
+}
+$currentNet = $currentRow ? (float) $currentRow['total'] : $price;
 ?>
 
-<?php if (!empty($model->useful_life)): ?>
-<?php
-
-$sql = "
-SELECT x3.*,
-ROUND(IF(x3.days = 0,0,(x3.year_price/12)),2) as price_month,
-IF((x3.price - total_price) < 1,1,ROUND((x3.price - total_price),2)) as total
-FROM(
-    SELECT x2.*,
-    IF(x2.count_days > 15, x2.count_days,0) as days,
-    (x2.price / x2.service_life) as year_price,
-    IF(x2.count_days > 15,
-        ROUND(x2.date_number * ((x2.price / x2.service_life)/12),2),
-        0
-    ) as total_price
-FROM(
-    SELECT x1.*,
-    IF(x1.date_number = 1,
-        DATEDIFF(x1.end_date,x1.receive_date),
-        x1.days_of_month
-    ) as count_days
-FROM(
-
-SELECT 
-(TIMESTAMPDIFF(MONTH,a.receive_date,LAST_DAY(m1))+1) as date_number,
-a.receive_date,
-DATE_FORMAT(m1,'%Y-%m-%d') as start_date,
-LAST_DAY(m1) as end_date,
-DAYOFMONTH(LAST_DAY(m1)) as days_of_month,
-
-IF(DATE_FORMAT(LAST_DAY(m1),'%Y-%m') = DATE_FORMAT(NOW(),'%Y-%m'),'Y','N') as active,
-
-DATEDIFF(
-DATE_FORMAT(m1 + INTERVAL a.useful_life YEAR,'%Y-%m-%d'),
-DATE_FORMAT(m1,'%Y-%m-%d')
-) as all_days,
-
-DATE_FORMAT(
-DATE_FORMAT(a.receive_date + INTERVAL a.useful_life YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,
-'%Y-%m-%d'
-) as begin_date,
-
-a.price,
-a.useful_life as service_life
-
-FROM asset a
-
-JOIN (
-
-SELECT 
-((:receive_date - INTERVAL DAYOFMONTH(:receive_date)-1 DAY) + INTERVAL m MONTH) as m1
-FROM
-(
-SELECT @rownum:=@rownum+1 as m FROM
-(select 1 union select 2 union select 3 union select 4) t1,
-(select 1 union select 2 union select 3 union select 4) t2,
-(select 1 union select 2 union select 3 union select 4) t3,
-(select 1 union select 2 union select 3 union select 4) t4,
-(select @rownum:=-1) t0
-) d1
-
-) d2
-
-WHERE a.id = :id
-
-AND m1 <= DATE_FORMAT(
-DATE_FORMAT(a.receive_date + INTERVAL a.useful_life YEAR,'%Y-%m-%d') + INTERVAL -1 MONTH,
-'%Y-%m-%d'
-)
-
-ORDER BY m1
-
-) as x1
-) as x2
-) as x3
-";
-
-$querys = Yii::$app->db->createCommand($sql)
-    ->bindValue(':id', $model->id)
-    ->bindValue(':receive_date', $model->receive_date)
-    ->queryAll();
-?>
-
-<div class="alert alert-success">
-
-<div class="row">
-
-<div class="col-6">
-
-<ul class="list-inline">
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">หมายเลขครุภัณฑ์ </span>
-<span class="text-danger"><?= $model->code ?></span>
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">วันเดือนปีทีซื้อ</span> :
-<?= Yii::$app->thaiFormatter->asDate($model->receive_date,'medium') ?>
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">อัตราค่าเสื่อม</span> :
-<?= $depre ?> %
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">อายุการใช้งาน</span> :
-<?= $year ?> ปี
-</li>
-
-</ul>
-
-</div>
-
-<div class="col-6">
-
-<ul class="list-inline">
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">ราคาซื้อ</span> :
-
-<span class="text-white bg-primary badge rounded-pill fs-6">
-<?= number_format($price,2) ?>
-</span> บาท
-
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">จำนวนวัน</span> :
-<?= $querys[0]['all_days'] ?? '-' ?> วัน
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">ค่าเสื่อมราคาประจำปี</span> :
-<?= number_format($price/$year,2) ?> บาท
-</li>
-
-<li>
-<i class="bi bi-check2-circle text-primary fs-5"></i>
-<span class="fw-semibold">ค่าเสื่อมราคาประจำเดือน</span> :
-<?= number_format(($price/$year)/12,2) ?> บาท
-</li>
-
-</ul>
-
-</div>
-
-</div>
-
-<hr>
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<h4 class="alert-heading">
-
-มูลค่าสุทธิ
-
-<span class="text-white bg-danger badge rounded-pill fs-6">
-
-<?php
-
-if (!empty($querys) && $querys[0]['begin_date'] <= date('Y-m-d')) {
-
-echo "1";
-
-} elseif (!empty($querys)) {
-
-foreach ($querys as $row) {
-
-if ($row['active'] == 'Y') {
-
-echo number_format($row['total'],2);
-
-}
-
-}
-
-} else {
-
-echo "-";
-
-}
-
-?>
-
-</span> บาท
-
-</h4>
-
-</div>
-
-<div>
-
-<code>**</code> ถ้าวันที่รับถึงสิ้นเดือน เกิน 15 วัน คิดค่าเสื่อม
-
-</div>
-
-</div>
-
-</div>
-
-
-<table class="table table-hover table-striped">
-
-<thead class="table-dark">
-
-<tr>
-
-<th class="text-center">#</th>
-<th class="text-center">เดือน</th>
-<th class="text-center">วัน</th>
-<th class="text-end">ค่าเสื่อมราคาสะสม</th>
-<th class="text-end">มูลค่าสุทธิ</th>
-<th class="text-center">พิมพ์</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<?php $i=0; foreach($querys as $data): $i++; ?>
-
-<tr class="<?= $data['active']=='Y' ? 'bg-primary-subtle':'' ?>">
-
-<td class="text-center"><?= $data['date_number'] ?></td>
-
-<td class="text-center">
-
-<?= Yii::$app->thaiFormatter->asDate($data['end_date'],'medium') ?>
-
-</td>
-
-<td class="text-center">
-
-<?= $data['count_days'] ?>
-
-</td>
-
-<td class="text-end">
-
-<?= number_format($data['total_price'],2) ?>
-
-</td>
-
-<td class="text-end">
-
-<span class="<?= $data['active']=='Y'
-? 'text-white bg-primary badge rounded-pill fs-6 shadow border border-white'
-: 'fw-semibold' ?>">
-
-<?= number_format($data['total'],2) ?>
-
-</span>
-
-</td>
-
-<td class="text-center">
-
-<div class="d-inline-flex align-items-center gap-2">
-    <?php Html::a(
-        '<i class="fa-solid fa-print"></i>',
-        ['/ms-word/asset','id'=>$model->id,'number'=>$data['date_number'],'date'=>$data['end_date']],
-        ['class'=>'open-modal','data'=>['size'=>'modal-xl'],'title'=>'พิมพ์เอกสาร Word']
-    ) ?>
-    <?= Html::a(
-        '<i class="fa-solid fa-file-pdf text-danger"></i>',
-        ['/am/asset/depreciation-pdf','id'=>$model->id,'number'=>$data['date_number'],'date'=>$data['end_date']],
-        ['target'=>'_blank','rel'=>'noopener noreferrer','data-pjax'=>0,'title'=>'พิมพ์ PDF']
-    ) ?>
-</div>
-
-</td>
-
-</tr>
-
-<?php endforeach ?>
-
-</tbody>
-
-</table>
-
+<?php if ($year <= 0 || empty($model->receive_date) || $price <= 0): ?>
+    <div class="alert alert-warning mb-0" role="alert">
+        <div class="fw-semibold">ยังคำนวณค่าเสื่อมไม่ได้</div>
+        <div>กรุณาตรวจสอบราคาทุน วันที่ตรวจรับ และอายุการใช้งานของครุภัณฑ์ให้ครบถ้วน</div>
+    </div>
+<?php else: ?>
+    <section class="border rounded-3 bg-body-tertiary p-3 mb-3" aria-labelledby="depreciation-method-heading">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+            <div>
+                <h6 id="depreciation-method-heading" class="fw-semibold mb-1">เลือกวิธีคำนวณสำหรับการแสดงผลและพิมพ์</h6>
+                <p class="text-body-secondary mb-0">การเลือกนี้ใช้เฉพาะหน้ารายงาน ไม่แก้ไขเกณฑ์ถาวรหรือข้อมูลบัญชีที่บันทึกแล้ว</p>
+            </div>
+            <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill">กำลังใช้: <?= Html::encode($selectedMethod['label']) ?></span>
+        </div>
+        <div class="row g-2" role="list" aria-label="วิธีคำนวณค่าเสื่อมราคา">
+            <?php foreach ($calculationMethods as $key => $method): ?>
+                <div class="col-sm-6" role="listitem">
+                    <?= Html::a(
+                        '<span class="d-block fw-semibold mb-1">' . Html::encode($method['label']) . '</span>'
+                        . '<span class="d-block small ' . ($key === $calculationMethod ? '' : 'text-body-secondary') . '">' . Html::encode($method['description']) . '</span>',
+                        ['/am/asset/depreciation', 'id' => $model->id, 'calculation_method' => $key],
+                        [
+                            'class' => 'js-depreciation-method btn text-start w-100 h-100 p-3 ' . ($key === $calculationMethod ? 'btn-primary' : 'btn-outline-secondary'),
+                            'aria-current' => $key === $calculationMethod ? 'true' : null,
+                            'data' => ['size' => 'modal-lg'],
+                        ]
+                    ) ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="alert alert-success mb-3" aria-label="สรุปค่าเสื่อมราคา">
+        <div class="row g-3">
+            <div class="col-md-6"><dl class="row mb-0">
+                <dt class="col-6">หมายเลขครุภัณฑ์</dt><dd class="col-6 text-end text-danger"><?= Html::encode($model->code) ?></dd>
+                <dt class="col-6">วันที่ตรวจรับ</dt><dd class="col-6 text-end"><?= Yii::$app->thaiFormatter->asDate($model->receive_date, 'medium') ?></dd>
+                <dt class="col-6">อัตราค่าเสื่อม</dt><dd class="col-6 text-end"><?= number_format($rate, 2) ?>%</dd>
+                <dt class="col-6">อายุการใช้งาน</dt><dd class="col-6 text-end"><?= number_format($year) ?> ปี</dd>
+            </dl></div>
+            <div class="col-md-6"><dl class="row mb-0">
+                <dt class="col-6">ราคาทุน</dt><dd class="col-6 text-end"><?= number_format($price, 2) ?> บาท</dd>
+                <dt class="col-6">ค่าเสื่อมต่อปี</dt><dd class="col-6 text-end"><?= number_format((float) $schedule['annual_amount'], 2) ?> บาท</dd>
+                <dt class="col-6">ค่าเสื่อมเต็มเดือน</dt><dd class="col-6 text-end"><?= number_format((float) $schedule['monthly_amount'], 2) ?> บาท</dd>
+                <dt class="col-6">มูลค่าสุทธิปัจจุบัน</dt><dd class="col-6 text-end fw-semibold"><?= number_format($currentNet, 2) ?> บาท</dd>
+            </dl></div>
+        </div>
+        <hr>
+        <div class="d-flex align-items-start gap-2">
+            <i class="fa-solid fa-circle-info mt-1" aria-hidden="true"></i>
+            <div><span class="fw-semibold"><?= Html::encode($selectedMethod['label']) ?>:</span> <?= Html::encode($selectedMethod['description']) ?></div>
+        </div>
+    </section>
+
+    <?php if (!$schedule['can_calculate']): ?>
+        <div class="alert alert-warning" role="alert"><?= Html::encode($schedule['message']) ?></div>
+    <?php else: ?>
+        <div class="table-responsive border rounded-3">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark"><tr>
+                    <th class="text-center" scope="col">งวดที่</th><th class="text-center" scope="col">เดือน</th>
+                    <th class="text-end" scope="col">จำนวนวัน</th><th class="text-end" scope="col">ค่าเสื่อมงวดนี้</th>
+                    <th class="text-end" scope="col">ค่าเสื่อมสะสม</th><th class="text-end" scope="col">มูลค่าสุทธิ</th>
+                    <th class="text-center" scope="col">พิมพ์</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($rows as $data): ?>
+                    <tr class="<?= $data['active'] === 'Y' ? 'table-primary' : '' ?>">
+                        <td class="text-center"><?= number_format((int) $data['date_number']) ?></td>
+                        <td class="text-center"><?= Yii::$app->thaiFormatter->asDate($data['end_date'], 'medium') ?></td>
+                        <td class="text-end"><?= number_format((int) $data['count_days']) ?></td>
+                        <td class="text-end"><?= number_format((float) $data['price_month'], 2) ?></td>
+                        <td class="text-end"><?= number_format((float) $data['total_price'], 2) ?></td>
+                        <td class="text-end fw-semibold"><?= number_format((float) $data['total'], 2) ?></td>
+                        <td class="text-center"><?= Html::a(
+                            '<i class="fa-solid fa-file-pdf" aria-hidden="true"></i><span class="visually-hidden">พิมพ์ PDF งวดที่ ' . (int) $data['date_number'] . '</span>',
+                            ['/am/asset/depreciation-pdf', 'id' => $model->id, 'number' => $data['date_number'], 'date' => $data['end_date'], 'calculation_method' => $calculationMethod],
+                            ['class' => 'btn btn-sm btn-outline-danger', 'target' => '_blank', 'rel' => 'noopener noreferrer', 'data-pjax' => 0]
+                        ) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
 <?php endif; ?>
+
+<?php
+$this->registerJs(<<<'JS'
+if (!window.erpDepreciationMethodHandlerBound) {
+    window.erpDepreciationMethodHandlerBound = true;
+    document.addEventListener('click', function (event) {
+        var link = event.target.closest('.js-depreciation-method');
+        if (!link) return;
+        var modal = link.closest('.modal');
+        if (!modal) return;
+        event.preventDefault();
+        fetch(link.href, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(function (response) { return response.json(); })
+            .then(function (payload) {
+                var title = modal.querySelector('.modal-title');
+                var body = modal.querySelector('.modal-body');
+                if (title && payload.title) title.innerHTML = payload.title;
+                if (body && payload.content) body.innerHTML = payload.content;
+            });
+    });
+}
+JS);
+?>

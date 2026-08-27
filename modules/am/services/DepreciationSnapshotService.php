@@ -29,6 +29,8 @@ class DepreciationSnapshotService
         'residual_value',
         'depreciation_start_date',
         'depreciation_end_date',
+        'depreciation_calculation_basis',
+        'depreciation_start_rule',
         'depreciation_source_type',
         'depreciation_source_id',
     ];
@@ -70,7 +72,8 @@ class DepreciationSnapshotService
             return $none + ['reason' => empty($resolved['profile_id']) ? 'no_binding' : 'profile_inactive'];
         }
 
-        $acquisition = $asset->depreciation_start_date ?: $asset->receive_date;
+        // ใช้วันตรวจรับต้นทางเสมอ ป้องกัน start_rule ถูกนำไปปรับซ้ำเมื่อ force snapshot
+        $acquisition = $asset->receive_date ?: $asset->depreciation_start_date;
         if (empty($acquisition)) {
             return $none + ['reason' => 'no_acquisition_date'];
         }

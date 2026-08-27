@@ -153,6 +153,7 @@ class AssetDepreciationController extends Controller
         return $this->render('run', [
             'period' => $period,
             'result' => $result,
+            'canRun' => Yii::$app->user->can('depreciationRun'),
         ]);
     }
 

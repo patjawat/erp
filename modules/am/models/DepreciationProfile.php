@@ -51,6 +51,7 @@ class DepreciationProfile extends ActiveRecord
     const START_READY_DATE = 'ready_date';   // เริ่มวันที่พร้อมใช้งาน
     const START_READY_MONTH = 'ready_month';  // เริ่มเดือนที่พร้อมใช้งาน
     const START_NEXT_MONTH = 'next_month';   // เริ่มเดือนถัดไป
+    const START_DAY_15_CUTOFF = 'day_15_cutoff'; // วันที่ 1-15 เริ่มเดือนนั้น, วันที่ 16 เป็นต้นไปเริ่มเดือนถัดไป
 
     /* status */
     const STATUS_ACTIVE = 'active';
@@ -98,6 +99,7 @@ class DepreciationProfile extends ActiveRecord
             [['calculation_basis'], 'default', 'value' => self::BASIS_MONTHLY],
             [['start_rule'], 'in', 'range' => array_keys(self::startRuleOptions())],
             [['start_rule'], 'default', 'value' => self::START_READY_DATE],
+            [['start_rule'], 'validateCalculationRule'],
             [['rounding_scale'], 'default', 'value' => 2],
             [['rounding_scale'], 'integer', 'min' => 0, 'max' => 6],
             [['effective_from', 'effective_to'], 'date', 'format' => 'php:Y-m-d'],
@@ -115,6 +117,14 @@ class DepreciationProfile extends ActiveRecord
         if (!empty($this->effective_from) && !empty($this->effective_to)
             && strtotime($this->effective_to) < strtotime($this->effective_from)) {
             $this->addError($attribute, 'วันสิ้นสุดต้องไม่ก่อนวันเริ่มมีผลบังคับใช้');
+        }
+    }
+
+    public function validateCalculationRule($attribute): void
+    {
+        if ($this->start_rule === self::START_DAY_15_CUTOFF
+            && $this->calculation_basis !== self::BASIS_MONTHLY) {
+            $this->addError($attribute, 'กฎตัดรอบวันที่ 15 ใช้ได้กับฐานคำนวณรายเดือนเท่านั้น');
         }
     }
 
@@ -177,6 +187,7 @@ class DepreciationProfile extends ActiveRecord
             self::START_READY_DATE => 'เริ่มวันที่พร้อมใช้งาน',
             self::START_READY_MONTH => 'เริ่มเดือนที่พร้อมใช้งาน',
             self::START_NEXT_MONTH => 'เริ่มเดือนถัดไป',
+            self::START_DAY_15_CUTOFF => 'รายเดือน ตัดรอบวันที่ 15',
         ];
     }
 

@@ -166,6 +166,8 @@ class DepreciationProfileResolver
             'residual_value' => round($salvage, 2), // salvage snapshot เป็นจำนวนเงิน (reuse คอลัมน์เดิม)
             'depreciation_start_date' => $startDate,
             'depreciation_end_date' => $endDate,
+            'depreciation_calculation_basis' => $profile->calculation_basis,
+            'depreciation_start_rule' => $profile->start_rule,
             'depreciation_source_type' => $sourceType,
             'depreciation_source_id' => $sourceId,
         ];

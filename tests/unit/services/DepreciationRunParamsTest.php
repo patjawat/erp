@@ -40,6 +40,8 @@ class DepreciationRunParamsTest extends Unit
             'residual_value' => null,
             'depreciation_rate' => null,
             'depreciation_method' => null,
+            'depreciation_calculation_basis' => null,
+            'depreciation_start_rule' => null,
             'depreciation_start_date' => null,
             'receive_date' => '2024-10-15',
         ], $overrides);
@@ -150,5 +152,23 @@ class DepreciationRunParamsTest extends Unit
 
         $this->assertSame(P::BASIS_DAILY, $p['calculation_basis']);
         $this->assertSame(4, $p['rounding_scale']);
+    }
+
+    /** ฐานและกติกาที่ snapshot ไว้ต้องไม่เปลี่ยนตามการแก้ profile ภายหลัง */
+    public function testSnapshotBasisAndStartRuleWinOverProfile()
+    {
+        $p = R::mergeParams(
+            $this->bareAsset([
+                'depreciation_calculation_basis' => P::BASIS_MONTHLY,
+                'depreciation_start_rule' => P::START_DAY_15_CUTOFF,
+            ]),
+            $this->stdProfile([
+                'calculation_basis' => P::BASIS_DAILY,
+                'start_rule' => P::START_READY_DATE,
+            ])
+        );
+
+        $this->assertSame(P::BASIS_MONTHLY, $p['calculation_basis']);
+        $this->assertSame(P::START_DAY_15_CUTOFF, $p['start_rule']);
     }
 }

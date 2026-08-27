@@ -55,7 +55,8 @@ $formId = 'dp-form';
     <div class="col-12"><?= $form->field($model, 'start_rule')->radioList(
         DepreciationProfile::startRuleOptions(),
         ['class' => 'dp-segmented', 'role' => 'radiogroup', 'aria-labelledby' => 'dp-start-rule-label']
-    )->label(null, ['id' => 'dp-start-rule-label']) ?></div>
+    )->hint('แนะนำสำหรับหน่วยงานภาครัฐ: “รายเดือน ตัดรอบวันที่ 15” — วันที่ 1–15 คิดเดือนนั้น วันที่ 16 เป็นต้นไปเริ่มเดือนถัดไป')
+      ->label(null, ['id' => 'dp-start-rule-label']) ?></div>
     <div class="col-12"><?= $form->field($model, 'status')->radioList(
         DepreciationProfile::statusOptions(),
         ['class' => 'dp-segmented', 'role' => 'radiogroup', 'aria-labelledby' => 'dp-status-label']
@@ -114,7 +115,7 @@ $this->registerCss(<<<'CSS'
 }
 .dp-segmented {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     overflow: clip;
     padding: 0;
     border: 1px solid var(--bs-border-color);
