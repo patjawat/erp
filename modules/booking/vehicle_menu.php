@@ -2,100 +2,118 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+
+/** @var string $active */
+$active = $active ?? '';
+$officialActive = $active === 'official';
+$ambulanceActive = $active === 'ambulance';
+$moreActive = in_array($active, ['asset', 'setting'], true);
 ?>
-<div class="d-flex gap-2">
-    <!-- <a href="<?= Url::to(['/hr/default/index']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-<i data-lucide="layout-grid"></i>  
-        ภาพรวม
-    </a> -->
-
-
-
-
-    <a href="<?= Url::to(['/booking/vehicle/dashboard']) ?>" class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i data-lucide="layout-grid"></i>
+<nav class="d-flex flex-wrap align-items-center gap-2" aria-label="เมนูระบบยานพาหนะ">
+    <a href="<?= Url::to(['/booking/vehicle/dashboard']) ?>"
+       class="btn text-nowrap <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-primary' ?>">
+        <i class="bi bi-grid" aria-hidden="true"></i>
         ภาพรวม
     </a>
-        <a href="<?= Url::to(['/booking/vehicle/schedule']) ?>" class="btn <?= $active !== 'schedule' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i data-lucide="clipboard-clock"></i>
-        ตารางการใช้รถยนต์
-    </a>
-    <div class="btn-group">
-    <a href="<?= Url::to(['/booking/vehicle/calendar']) ?>" class="btn <?= $active !== 'official' ? 'btn-outline-primary' : 'btn-primary' ?>">
-       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-car-icon lucide-car"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
-        รถยนต์ทั่วไป
-    </a>
-        <button type="button" class="btn <?= $active !== 'official' ? 'btn-primary' : 'btn-secondary' ?> dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <ul class="dropdown-menu">
-              <li>
-                <a class="dropdown-item" href="<?= Url::to(['/booking/vehicle/index']) ?>">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                ทะเบียนการจอง
-                </a>
-            </li>
-              <li>
-                <a class="dropdown-item" href="<?= Url::to(['/booking/vehicle/work-official']) ?>">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                ทะเบียนการจัดสรร
-                </a>
-            </li>
-        </ul>
-    </div>
 
-
-    <div class="btn-group">
-        <a href="<?= Url::to(['/booking/vehicle/calendar-ambulance']) ?>" class="btn <?= $active !== 'ambulance' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ambulance-icon lucide-ambulance">
-            <path d="M10 10H6" />
-            <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
-            <path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14" />
-            <path d="M8 8v4" />
-            <path d="M9 18h6" />
-            <circle cx="17" cy="18" r="2" />
-            <circle cx="7" cy="18" r="2" />
-        </svg>
-        รถฉุกเฉิน
-    </a>
-        <button type="button" class="btn <?= $active !== 'ambulance' ? 'btn-primary' : 'btn-secondary' ?> dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <ul class="dropdown-menu">
-            <li>
-                <a class="dropdown-item" href="<?= Url::to(['/booking/vehicle/ambulance']) ?>">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                    ทะเบียนการจอง
-                </a>
-            </li>
-              <li>
-                <a class="dropdown-item" href="<?= Url::to(['/booking/vehicle/work-ambulance']) ?>">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                    ทะเบียนการจัดสรร
-                </a>
-            </li>
-
-        </ul>
-    </div>
-
-    <a href="<?= Url::to(['/booking/asset']) ?>" class="btn <?= $active !== 'asset' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h4"></path><path d="M10 8h4"></path><path d="M14 21v-3a2 2 0 0 0-4 0v3"></path><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path></svg>
-        ทรัพย์สิน
+    <a href="<?= Url::to(['/booking/vehicle/schedule']) ?>"
+       class="btn text-nowrap <?= $active === 'schedule' ? 'btn-primary' : 'btn-outline-primary' ?>">
+        <i class="bi bi-calendar2-week" aria-hidden="true"></i>
+        ตารางการใช้รถ
     </a>
 
     <div class="dropdown">
-        <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings">
-                <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                <circle cx="12" cy="12" r="3" />
-            </svg>
-            <span class="d-none d-sm-inline">ตั้งค่า</span>
+        <button type="button"
+                class="btn text-nowrap dropdown-toggle <?= $officialActive ? 'btn-primary' : 'btn-outline-primary' ?>"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-car-front" aria-hidden="true"></i>
+            รถยนต์ทั่วไป
         </button>
-
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu dropdown-menu-end">
             <li>
-                <?= Html::a('<i class="fa-solid fa-angle-right me-1"></i> สถานะการจอง', ['/booking/vehicle-status'], ['class' => 'dropdown-item']) ?>
+                <?= Html::a(
+                    '<i class="bi bi-calendar3 me-2" aria-hidden="true"></i>ปฏิทินการใช้รถ',
+                    ['/booking/vehicle/calendar'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-journal-text me-2" aria-hidden="true"></i>ทะเบียนการจอง',
+                    ['/booking/vehicle/index'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-person-check me-2" aria-hidden="true"></i>ทะเบียนการจัดสรร',
+                    ['/booking/vehicle/work-official'],
+                    ['class' => 'dropdown-item']
+                ) ?>
             </li>
         </ul>
     </div>
-</div>
+
+    <div class="dropdown">
+        <button type="button"
+                class="btn text-nowrap dropdown-toggle <?= $ambulanceActive ? 'btn-primary' : 'btn-outline-primary' ?>"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-truck-front" aria-hidden="true"></i>
+            รถฉุกเฉิน
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-calendar3 me-2" aria-hidden="true"></i>ปฏิทินการใช้รถ',
+                    ['/booking/vehicle/calendar-ambulance'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-journal-text me-2" aria-hidden="true"></i>ทะเบียนการจอง',
+                    ['/booking/vehicle/ambulance'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-person-check me-2" aria-hidden="true"></i>ทะเบียนการจัดสรร',
+                    ['/booking/vehicle/work-ambulance'],
+                    ['class' => 'dropdown-item']
+                ) ?>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dropdown">
+        <button type="button"
+                class="btn text-nowrap dropdown-toggle <?= $moreActive ? 'btn-primary' : 'btn-outline-secondary' ?>"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-three-dots" aria-hidden="true"></i>
+            เพิ่มเติม
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-building me-2" aria-hidden="true"></i>ทรัพย์สิน',
+                    ['/booking/asset'],
+                    ['class' => 'dropdown-item' . ($active === 'asset' ? ' active' : '')]
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <?= Html::a(
+                    '<i class="bi bi-gear me-2" aria-hidden="true"></i>ตั้งค่าสถานะการจอง',
+                    ['/booking/vehicle-status'],
+                    ['class' => 'dropdown-item' . ($active === 'setting' ? ' active' : '')]
+                ) ?>
+            </li>
+        </ul>
+    </div>
+</nav>

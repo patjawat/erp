@@ -58,7 +58,15 @@ class PlanController extends Controller
         $orgs = $this->me ? $this->me->ledOrganizations() : [];
         $this->ledOrgIds = array_map(static fn($o) => (int) $o->id, $orgs);
 
-        if (empty($this->ledOrgIds)) {
+        // ผู้ดูแลแผนและ admin ต้องเปิดแก้ไขแผนจากทะเบียนส่วนกลางได้ทุกหน่วยงาน
+        if (PlanHelper::isPlanAdmin()) {
+            $this->ledOrgIds = array_map('intval', (new \yii\db\Query())
+                ->select('id')
+                ->from('tree')
+                ->column());
+        }
+
+        if (empty($this->ledOrgIds) && !PlanHelper::isPlanAdmin()) {
             throw new ForbiddenHttpException('เฉพาะหัวหน้าหน่วยงานเท่านั้นที่จัดทำแผนของหน่วยงานได้');
         }
 
@@ -668,22 +676,32 @@ class PlanController extends Controller
         }
     }
 
-    /** ชื่อหน่วยงานจากรายการที่ตนเป็นหัวหน้า */
+    /** ชื่อหน่วยงานที่อยู่ในขอบเขตสิทธิ์ */
     private function deptName($deptId)
     {
-        foreach ($this->me->ledOrganizations() as $o) {
+        foreach ($this->me ? $this->me->ledOrganizations() : [] as $o) {
             if ((int) $o->id === (int) $deptId) {
                 return $o->name;
             }
         }
-        return '';
+        return (string) ((new \yii\db\Query())
+            ->select('name')
+            ->from('tree')
+            ->where(['id' => (int) $deptId])
+            ->scalar() ?: '');
     }
 
     private function ledDepartmentOptions(): array
     {
         $options = [];
-        foreach ($this->me->ledOrganizations() as $organization) {
-            $options[(int) $organization->id] = (string) $organization->name;
+        $rows = (new \yii\db\Query())
+            ->select(['id', 'name'])
+            ->from('tree')
+            ->where(['id' => $this->ledOrgIds])
+            ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+            ->all();
+        foreach ($rows as $organization) {
+            $options[(int) $organization['id']] = (string) $organization['name'];
         }
         return $options;
     }
@@ -890,16 +908,23 @@ class PlanController extends Controller
         return $years;
     }
 
-    /** โหลดแผน โดยจำกัดเฉพาะหน่วยงานที่ตนเป็นหัวหน้า */
+    /** โหลดแผนในขอบเขตหน่วยงานของหัวหน้า หรือทุกหน่วยงานสำหรับผู้ดูแลแผน */
     protected function findModel($id)
     {
-        $model = PlanOrder::find()
-            ->where(['id' => $id])
-            ->andWhere(['department_id' => $this->ledOrgIds])
-            ->one();
+        $query = PlanOrder::find()->where(['id' => $id]);
+        if (!PlanHelper::isPlanAdmin()) {
+            $query->andWhere(['department_id' => $this->ledOrgIds]);
+        }
+        $model = $query->one();
 
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบแผนที่ต้องการ หรือไม่มีสิทธิ์เข้าถึง');
+        }
+
+        // ป้องกันกรณีโครงสร้างหน่วยงานของแผนไม่อยู่ใน tree แล้ว แต่ผู้ดูแลยังต้องเปิดแผนเก่าได้
+        $departmentId = (int) $model->department_id;
+        if (PlanHelper::isPlanAdmin() && !in_array($departmentId, $this->ledOrgIds, true)) {
+            $this->ledOrgIds[] = $departmentId;
         }
         return $model;
     }
