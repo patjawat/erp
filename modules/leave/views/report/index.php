@@ -73,19 +73,23 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $item->employee ? $item->employee->departmentName() : '-' ?></td>
                         <td><?= $item->employee ? $item->employee->positionTypeName() : '-' ?></td>
                         <td class="text-center fw-bolder">
-                            <?= Html::a($item->sum_lt1 ?? 0, ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a(((float)($item->sum_lt1 ?? 0)) . ' วัน / ' . ((int)($item->count_lt1 ?? 0)) . ' ครั้ง', ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT1'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </td>
                         <td class="text-center fw-bolder">
-                            <?= Html::a($item->sum_lt3 ?? 0, ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT3'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a(((float)($item->sum_lt3 ?? 0)) . ' วัน / ' . ((int)($item->count_lt3 ?? 0)) . ' ครั้ง', ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT3'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </td>
                         <td class="text-center fw-bolder">
-                            <?= Html::a($item->sum_lt2 ?? 0, ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT2'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a(((float)($item->sum_lt2 ?? 0)) . ' วัน / ' . ((int)($item->count_lt2 ?? 0)) . ' ครั้ง', ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT2'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </td>
                         <td class="text-center fw-bolder">
-                            <?= Html::a($item->sum_lt4 ?? 0, ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT4'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                            <?= Html::a(((float)($item->sum_lt4 ?? 0)) . ' วัน / ' . ((int)($item->count_lt4 ?? 0)) . ' ครั้ง', ['/leave/report/leave-history', 'emp_id' => $item->emp_id, 'thai_year' => $searchModel->thai_year, 'date_start' => $dateStart, 'date_end' => $dateEnd, 'status' => $searchModel->status, 'leave_type_id' => 'LT4'], ['class' => 'open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                         </td>
                         <td class="text-center fw-bolder">
-                            <?= ($item->sum_lt1 ?? 0) + ($item->sum_lt2 ?? 0) + ($item->sum_lt3 ?? 0) + ($item->sum_lt4 ?? 0) ?>
+                            <?php
+                            $totalDays = ($item->sum_lt1 ?? 0) + ($item->sum_lt2 ?? 0) + ($item->sum_lt3 ?? 0) + ($item->sum_lt4 ?? 0);
+                            $totalCount = ($item->count_lt1 ?? 0) + ($item->count_lt2 ?? 0) + ($item->count_lt3 ?? 0) + ($item->count_lt4 ?? 0);
+                            echo ((float)$totalDays) . ' วัน / ' . ((int)$totalCount) . ' ครั้ง';
+                            ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -65,6 +65,10 @@ class Leave extends \yii\db\ActiveRecord
     public $sum_lt2;
     public $sum_lt3;
     public $sum_lt4;
+    public $count_lt1;
+    public $count_lt2;
+    public $count_lt3;
+    public $count_lt4;
     public $work_shift_name;
     public $position_type_id;
 
