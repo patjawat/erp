@@ -68,7 +68,7 @@ services:
       # - ./my.cnf:/etc/mysql/conf.d/my.cnf
       # - ./docker/mysql5.7/db/init.sql:/docker-entrypoint-initdb.d/init.sql
   phpmyadmin_mysql:
-    image: phpmyadmin
+    image: phpmyadmin:5.2.2-apache
     container_name: ${CONTAINER_NAME}_pma
     restart: always
     links:
