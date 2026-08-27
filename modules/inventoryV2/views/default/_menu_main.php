@@ -38,20 +38,20 @@ if ($issuePendingCount === null) {
 ?>
 <nav class="inventory-nav inventory-nav-main" aria-label="เมนูคลังหลัก">
     <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
-        <a href="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" class="btn btn-sm <?= $active === 'dashboard' ? 'btn-secondary' : 'btn-outline-secondary' ?> rounded-pill px-3">
+        <a href="<?= Url::to(['/inventory-v2/main-stock/dashboard']) ?>" class="btn <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-primary' ?>">
             <i class="bi bi-speedometer2 me-1"></i>ภาพรวม
         </a>
-        <a href="<?= Url::to(['/inventory-v2/receive/index']) ?>" class="btn btn-sm <?= $active === 'receive' ? 'btn-primary' : 'btn-outline-primary' ?> rounded-pill px-3">
+        <a href="<?= Url::to(['/inventory-v2/receive/index']) ?>" class="btn <?= $active === 'receive' ? 'btn-primary' : 'btn-outline-primary' ?>">
             <i class="bi bi-box-arrow-in-down me-1"></i>รับเข้าคลัง
         </a>
-        <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn btn-sm <?= $active === 'issue' ? 'btn-danger' : 'btn-outline-danger' ?> rounded-pill px-3" data-issue-nav-link>
+        <a href="<?= Url::to(['/inventory-v2/issue/index']) ?>" class="btn <?= $active === 'issue' ? 'btn-primary' : 'btn-outline-primary' ?>" data-issue-nav-link>
             <i class="bi bi-box-arrow-right me-1"></i>จ่ายวัสดุ
             <?php if ($issuePendingCount > 0): ?>
                 <span class="badge text-bg-danger ms-1" data-issue-pending-badge title="รออนุมัติ/รอจ่าย"><?= $issuePendingCount ?></span>
             <?php endif; ?>
         </a>
         <div class="dropdown">
-            <button type="button" class="btn btn-sm <?= ($active === 'stock-health' || $active === 'report' || strpos((string)$active, 'report') === 0) ? 'btn-info' : 'btn-outline-info' ?> rounded-pill px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn <?= ($active === 'stock-health' || $active === 'report' || strpos((string)$active, 'report') === 0) ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-journal-text me-1"></i>รายงาน
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -66,7 +66,7 @@ if ($issuePendingCount === null) {
             </ul>
         </div>
         <div class="dropdown">
-            <button type="button" class="btn btn-sm <?= ($active === 'setting' || $active === 'stock-item' || $active === 'stock-adjust') ? 'btn-dark' : 'btn-outline-dark' ?> rounded-pill px-3 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <button type="button" class="btn <?= ($active === 'setting' || $active === 'stock-item' || $active === 'stock-adjust') ? 'btn-primary' : 'btn-outline-secondary' ?> dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-gear me-1"></i>ตั้งค่า
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
