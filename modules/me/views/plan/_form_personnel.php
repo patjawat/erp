@@ -15,6 +15,9 @@ use app\modules\plan\components\PersonnelPlanTaxonomy;
 /** @var string $lockDeptName */
 /** @var array<int,string> $departmentOptions */
 /** @var app\modules\plan\models\PlanOrderRevision|null $baselineRevision */
+/** @var string|null $returnUrl */
+
+$returnUrl = $returnUrl ?? null;
 
 $categories = (new Query())
     ->select(['code', 'title'])
@@ -269,7 +272,7 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
                             </td>
                             <td data-label="ตำแหน่ง"><input type="text" name="items[<?= $i ?>][position]" value="<?= Html::encode((string) ($data['position'] ?? $item->title)) ?>" class="form-control form-control-sm"></td>
                             <td data-label="ประเภท" class="type-name text-body-secondary"><?= Html::encode($typeName ?: 'กรอกเอง') ?></td>
-                            <td data-label="วงเงินทั้งปี"><input type="number" min="0" step="0.01" name="items[<?= $i ?>][annual_budget]" value="<?= $annualBudget ?>" class="form-control form-control-sm text-end annual-budget"></td>
+                            <td data-label="วงเงินทั้งปี"><input type="text" inputmode="decimal" name="items[<?= $i ?>][annual_budget]" value="<?= number_format($annualBudget, 2) ?>" class="form-control form-control-sm text-end annual-budget"></td>
                             <td data-label="เฉลี่ยต่อเดือน" class="text-end font-monospace monthly-average"><?= number_format($annualBudget / 12, 2) ?></td>
                             <td data-label="จัดการ" class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row" aria-label="ลบบุคลากรรายนี้"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></td>
                         </tr>
@@ -292,7 +295,14 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
             <div class="row g-2">
                 <?php foreach ($monthCols as $attr => $label): ?>
                     <div class="col-6 col-md-3 col-xl-2">
-                        <?= $form->field($model, $attr)->input('number', ['step' => '0.01', 'readonly' => true, 'class' => 'form-control month-input text-end'])->label($label) ?>
+                        <label class="form-label" for="<?= Html::getInputId($model, $attr) ?>-display"><?= Html::encode($label) ?></label>
+                        <?= Html::activeHiddenInput($model, $attr) ?>
+                        <?= Html::textInput(null, number_format((float) $model->$attr, 2), [
+                            'id' => Html::getInputId($model, $attr) . '-display',
+                            'class' => 'form-control month-input text-end',
+                            'readonly' => true,
+                            'aria-label' => $label . ' จำนวนเงิน',
+                        ]) ?>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -300,7 +310,7 @@ $form = ActiveForm::begin(['id' => 'me-personnel-form']);
         </section>
 
         <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
-            <?= Html::a('ยกเลิก', ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::a('ยกเลิก', $returnUrl ?: ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-outline-secondary']) ?>
             <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i> บันทึกแผน', ['class' => 'btn btn-primary', 'id' => 'save-personnel-plan']) ?>
         </div>
     </div>
@@ -343,6 +353,10 @@ $js = <<<JS
         return (Math.round((Number(value) || 0) * 100) / 100).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
+    function numericValue(value) {
+        return Number(String(value == null ? '' : value).replace(/,/g, '')) || 0;
+    }
+
     function escapeAttribute(value) {
         return $('<div>').text(value || '').html().replace(/"/g, '&quot;');
     }
@@ -366,7 +380,7 @@ $js = <<<JS
     function recalc() {
         var total = 0;
         $('#emp-table tbody tr').each(function () {
-            var annual = Math.max(0, parseFloat($(this).find('.annual-budget').val()) || 0);
+            var annual = Math.max(0, numericValue($(this).find('.annual-budget').val()));
             $(this).find('.monthly-average').text(money(annual / 12));
             total += annual;
         });
@@ -374,6 +388,7 @@ $js = <<<JS
         var months = allocate(total);
         Object.keys(months).forEach(function (month) {
             $('#planorder-month_' + month).val(months[month].toFixed(2));
+            $('#planorder-month_' + month + '-display').val(money(months[month]));
         });
         $('#planorder-order_price').val(total.toFixed(2));
         $('#row-count').text($('#emp-table tbody tr').length);
@@ -400,7 +415,7 @@ $js = <<<JS
             '<input type="hidden" name="items[' + index + '][type_name]" value="' + typeName + '"></td>' +
             '<td data-label="ตำแหน่ง"><input type="text" name="items[' + index + '][position]" value="' + position + '" class="form-control form-control-sm"></td>' +
             '<td data-label="ประเภท" class="type-name text-body-secondary">' + typeName + '</td>' +
-            '<td data-label="วงเงินทั้งปี"><input type="number" min="0" step="0.01" name="items[' + index + '][annual_budget]" value="' + annual.toFixed(2) + '" class="form-control form-control-sm text-end annual-budget"></td>' +
+            '<td data-label="วงเงินทั้งปี"><input type="text" inputmode="decimal" name="items[' + index + '][annual_budget]" value="' + money(annual) + '" class="form-control form-control-sm text-end annual-budget"></td>' +
             '<td data-label="เฉลี่ยต่อเดือน" class="text-end font-monospace monthly-average">' + money(annual / 12) + '</td>' +
             '<td data-label="จัดการ" class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row" aria-label="ลบบุคลากรรายนี้"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></td></tr>';
     }
@@ -480,7 +495,19 @@ $js = <<<JS
     });
 
     $('#emp-table').on('input', '.annual-budget', recalc);
+    $('#emp-table').on('focus', '.annual-budget', function () {
+        $(this).val(String($(this).val()).replace(/,/g, ''));
+    });
+    $('#emp-table').on('blur', '.annual-budget', function () {
+        $(this).val(money(Math.max(0, numericValue($(this).val()))));
+        recalc();
+    });
     $('#emp-table').on('click', '.remove-row', function () { $(this).closest('tr').remove(); recalc(); });
+    $('#me-personnel-form').on('submit', function () {
+        $(this).find('.annual-budget').each(function () {
+            $(this).val(Math.max(0, numericValue($(this).val())).toFixed(2));
+        });
+    });
     recalc();
 })();
 JS;

@@ -72,9 +72,9 @@ $form = ActiveForm::begin();
 
 <button type="button" class="btn btn-secondary mb-3" id="add-row">+ เพิ่มรายการ</button>
 
-<div class="form-group">
-    <?= Html::submitButton('บันทึก', ['class'=>'btn btn-success']) ?>
-    <?= Html::a('ยกเลิก',['index'],['class'=>'btn btn-light']) ?>
+<div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

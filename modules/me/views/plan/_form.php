@@ -146,14 +146,16 @@ $form = ActiveForm::begin(['id' => 'me-plan-form']);
             </div>
         </div>
 
-        <div class="d-flex gap-2 mt-2">
-            <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-success']) ?>
-            <?= Html::a('ยกเลิก', ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-light']) ?>
+        <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+            <?= Html::a('ยกเลิก', ['index', 'thai_year' => $model->thai_year], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
         </div>
     </div>
 </div>
 
 <?php ActiveForm::end(); ?>
+
+<?= $this->render('@app/modules/plan/views/_money_inputs') ?>
 
 <?php
 $catsByTypeJs = Json::encode($catsByType);
@@ -209,15 +211,21 @@ $js = <<<JS
 
 function recalcTotal(){
     var total = 0;
-    document.querySelectorAll('.month-input').forEach(function(el){ total += parseFloat(el.value) || 0; });
+    document.querySelectorAll('.month-input').forEach(function(el){
+        total += window.planMoneyValue ? window.planMoneyValue(el.value) : (parseFloat(el.value) || 0);
+    });
     var t = document.getElementById('planorder-order_price');
-    if (t) t.value = total.toFixed(2);
+    if (t) {
+        t.value = total.toFixed(2);
+        if (window.planFormatMoneyInputs) window.planFormatMoneyInputs(document);
+    }
 }
 document.addEventListener('input', function(e){
     if (e.target.classList.contains('month-input')) recalcTotal();
 });
 document.getElementById('btn-spread').addEventListener('click', function(){
-    var t = parseFloat(document.getElementById('planorder-order_price').value) || 0;
+    var totalInput = document.getElementById('planorder-order_price');
+    var t = window.planMoneyValue ? window.planMoneyValue(totalInput.value) : (parseFloat(totalInput.value) || 0);
     if (t <= 0) {
         var v = prompt('ระบุยอดรวมที่ต้องการเฉลี่ย 12 เดือน (บาท)');
         t = parseFloat(v) || 0;

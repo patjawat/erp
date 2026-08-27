@@ -1,9 +1,7 @@
 <?php
 
-use yii\helpers\Url;
 use yii\helpers\Html;
 use app\models\Categorise;
-use kartik\depdrop\DepDrop;
 use kartik\widgets\Select2;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -36,22 +34,22 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             'data-pjax' => 1
         ],
     ]); ?>
-    <div class="row">
-        <div class="col-lg-2">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3 col-xl-2">
             <?= $form->field($model, 'thai_year')->widget(Select2::class, [
                 'data' => $planYears,
                 'options' => ['placeholder' => 'ปีงบประมาณ (ทุกปี)'],
                 'pluginOptions' => ['allowClear' => true],
             ])->label(false) ?>
         </div>
-                       <div class="col-lg-7">
+                       <div class="col-12 col-md-9 col-xl-6">
                         <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
                             'data' => $ouGroups,
                             'options' => ['placeholder' => 'ทุกหน่วยงาน (จากทะเบียน)'],
                             'pluginOptions' => ['allowClear' => true],
                         ])->label(false); ?>
                     </div>
-        <div class="col-lg-2">
+        <div class="col-12 col-md-8 col-xl-3">
             <?php
 
             echo $form->field($model, 'status')->widget(Select2::classname(), [
@@ -60,7 +58,8 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
                     'draft' => 'ฉบับร่าง',
                     'submit' => 'ส่งคำขอ',
                     'approve' => 'อนุมัติ',
-                    'renew' => 'ปรับแผน'
+                    'renew' => 'ปรับแผน',
+                    'reject' => 'ไม่อนุมัติ'
                 ],
                 'options' => [
                     'placeholder' => 'สถานะทั้งหมด',
@@ -73,12 +72,12 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             ?>
 
         </div>
-            <div class="col-1">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            <div class="col-12 col-md-4 col-xl-1">
+        <div class="d-flex justify-content-md-end gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i><span class="d-xl-none">ค้นหา</span>', ['class' => 'btn btn-primary', 'aria-label' => 'ค้นหา']) ?>
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
                 aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
+                <i class="fa-solid fa-filter me-1"></i><span class="d-xl-none">ตัวกรองเพิ่ม</span>
             </button>
         </div>
     </div>
@@ -87,15 +86,22 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 
 
     <div class="collapse mt-3" id="collapseFilter">
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-12">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-6 col-xl">
                 <?= $form->field($model, 'unit_type')->widget(Select2::class, [
                     'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'org_unit_type', 'active' => 1])->orderBy('sort')->all(), 'code', 'title'),
                     'options' => ['placeholder' => 'ทุกประเภทหน่วยงาน', 'id' => 'unit_type_expenses'],
                     'pluginOptions' => ['allowClear' => true],
                 ])->label('ประเภทหน่วยงาน') ?>
             </div>
-            <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="col-12 col-md-6 col-xl">
+                        <?= $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type', 'code' => 'OPS'])->all(), 'code', 'title'),
+                            'options' => ['placeholder' => 'ทุกประเภท'],
+                            'pluginOptions' => ['allowClear' => true],
+                        ])->label('ประเภท') ?>
+                    </div>
+            <div class="col-12 col-md-6 col-xl">
                         <?php
                         // กรองเฉพาะหมวดค่าใช้สอย (plan_category ใต้ OPS) — ไม่แสดงตัวเลือกของพัสดุ/บุคลากร
                         echo $form->field($model, 'plan_category_id')->widget(Select2::classname(), [
@@ -106,24 +112,28 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
-                        ])->label(false);
+                        ])->label('หมวดค่าใช้สอย');
                         ?>
                     </div>
-                    <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="col-12 col-md-6 col-xl">
                         <?php
-                        echo $form->field($model, 'wage_type_id')->widget(Select2::classname(), [
-                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_wage_type'])->all(), 'code', 'title'),
+                        echo $form->field($model, 'plan_item_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_item', 'category_id' => ArrayHelper::getColumn(Categorise::find()->where(['name' => 'plan_category', 'category_id' => 'OPS'])->andWhere(['not', ['code' => 'OPS_03']])->all(), 'code')])->orderBy('sort')->all(), 'code', 'title'),
                             'options' => [
-                                'placeholder' => 'เลือกค่าจ้าง',
+                                'placeholder' => 'ทุกรายการค่าใช้สอย',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
-                            'pluginEvents' => [
-                                "select2:select" => "function() {}",
-                            ],
-                        ])->label(false); ?>
+                        ])->label('รายการค่าใช้สอย'); ?>
 
+                    </div>
+                    <div class="col-12 col-md-6 col-xl">
+                        <?= $form->field($model, 'plan_budget_type_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->orderBy('sort')->all(), 'code', 'title'),
+                            'options' => ['placeholder' => 'ทุกแหล่งงบประมาณ'],
+                            'pluginOptions' => ['allowClear' => true],
+                        ])->label('แหล่งงบประมาณ') ?>
                     </div>
     </div>
 

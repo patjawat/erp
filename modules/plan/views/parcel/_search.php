@@ -1,9 +1,7 @@
 <?php
 
-use yii\helpers\Url;
 use yii\helpers\Html;
 use app\models\Categorise;
-use kartik\depdrop\DepDrop;
 use kartik\widgets\Select2;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -36,22 +34,22 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             'data-pjax' => 1
         ],
     ]); ?>
-    <div class="row">
-        <div class="col-lg-2">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3 col-xl-2">
             <?= $form->field($model, 'thai_year')->widget(Select2::class, [
                 'data' => $planYears,
                 'options' => ['placeholder' => 'ปีงบประมาณ (ทุกปี)'],
                 'pluginOptions' => ['allowClear' => true],
             ])->label(false) ?>
         </div>
-                       <div class="col-lg-7">
+        <div class="col-12 col-md-9 col-xl-6">
                         <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
                             'data' => $ouGroups,
                             'options' => ['placeholder' => 'ทุกหน่วยงาน (จากทะเบียน)'],
                             'pluginOptions' => ['allowClear' => true],
                         ])->label(false); ?>
                     </div>
-        <div class="col-lg-2">
+        <div class="col-12 col-md-8 col-xl-3">
             <?php
 
             echo $form->field($model, 'status')->widget(Select2::classname(), [
@@ -61,6 +59,7 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
                     'submit' => 'ส่งคำขอ',
                     'approve' => 'อนุมัติ',
                     'renew' => 'ปรับแผน'
+                    ,'reject' => 'ไม่อนุมัติ'
                 ],
                 'options' => [
                     'placeholder' => 'สถานะทั้งหมด',
@@ -73,12 +72,12 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
             ?>
 
         </div>
-            <div class="col-1">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+            <div class="col-12 col-md-4 col-xl-1">
+        <div class="d-flex justify-content-md-end gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass me-1"></i><span class="d-xl-none">ค้นหา</span>', ['class' => 'btn btn-primary', 'aria-label' => 'ค้นหา']) ?>
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
                 aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
+                <i class="fa-solid fa-filter me-1"></i><span class="d-xl-none">ตัวกรองเพิ่ม</span>
             </button>
         </div>
     </div>
@@ -87,88 +86,48 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
 
 
     <div class="collapse mt-3" id="collapseFilter">
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-12">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-6 col-xl">
                 <?= $form->field($model, 'unit_type')->widget(Select2::class, [
                     'data' => ArrayHelper::map(categorise::find()->where(['name' => 'org_unit_type', 'active' => 1])->orderBy('sort')->all(), 'code', 'title'),
                     'options' => ['placeholder' => 'ทุกประเภทหน่วยงาน', 'id' => 'unit_type_parcel'],
                     'pluginOptions' => ['allowClear' => true],
                 ])->label('ประเภทหน่วยงาน') ?>
             </div>
-            <div class="col-lg-3 col-md-3 col-sm-12">
+            <div class="col-12 col-md-6 col-xl">
                 <?php
-
                 echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
-                    'data' => ArrayHelper::map(categorise::find()->where(['name' => 'plan_type', 'category_id' => 'CE'])->all(), 'code', 'title'),
+                    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'plan_type', 'code' => ['INV', 'OPS']])->orderBy('sort')->all(), 'code', 'title'),
                     'options' => [
-                        'placeholder' => 'เลือกหมวดพัสดุ',
-                        'id' => 'plan_type_id'
+                        'placeholder' => 'ทุกประเภท',
                     ],
                     'pluginOptions' => [
                         'allowClear' => true,
                     ],
-                    'pluginEvents' => [
-                        "select2:select" => "function() { 
-                                console.log($(this).val());
-                            // $(this).submit(); 
-                            }",
-                    ],
-                ])->label(false);
+                ])->label('ประเภท');
                 ?>
             </div>
 
-            <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="col-12 col-md-6 col-xl">
                 <?php
-
-                echo $form->field($model, 'asset_type_id')->widget(DepDrop::classname(), [
+                echo $form->field($model, 'asset_type_id')->widget(Select2::classname(), [
+                    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'asset_type'])->orderBy('title')->all(), 'code', 'title'),
                     'options' => [
-                        'id' => 'asset_type_id',
-                        'placeholder' => 'ทุกประเภท',
+                        'placeholder' => 'ทุกหมวดพัสดุ',
                     ],
-                    'type' => DepDrop::TYPE_SELECT2,
-                    'select2Options' => ['pluginOptions' => ['allowClear' => true]],
                     'pluginOptions' => [
-                        'depends' => ['plan_type_id'],
-                        'url' => Url::to(['/plan/parcel/get-asset-type']),
-                        'loadingText' => 'กำลังโหลด ...',
-                        'initialize' => true,
-                        'initDepends' => ['plan_type_id'], // ✅ ต้องเป็น parent field
-                        'params' => ['depdrop_all_params' => 'plan_type_id'],
+                        'allowClear' => true,
                     ],
-                    'data' => $model->asset_type_id
-                        ? [$model->asset_type_id => Categorise::findOne(['code' => $model->asset_type_id, 'name' => 'asset_type'])->title]
-                        : [],
-                ])->label(false);
-
+                ])->label('หมวดพัสดุ');
                 ?>
+
             </div>
-            <div class="col-lg-5 col-md-5 col-sm-12">
-                <?php
-
-                echo $form->field($model, 'asset_category_id')->widget(DepDrop::classname(), [
-                    'options' => [
-                        'placeholder' => 'ทุกหมวดหมู่',
-                        'id' => 'asset_category_id'
-                    ],
-                    'type' => DepDrop::TYPE_SELECT2,
-                    'select2Options' => ['pluginOptions' => ['allowClear' => true]],
-                    'pluginOptions' => [
-                        'depends' => ['asset_type_id'],
-                        'url' => Url::to(['/am/asset-item/get-asset-category']),
-                        'loadingText' => 'กำลังโหลด ...',
-                        'params' => ['depdrop_all_params' => 'asset_category_id'],
-                        'initDepends' => ['asset_type_id'],
-                        'initialize' => true,
-                    ],
-                    'pluginEvents' => [
-                        "select2:select" => "function() { 
-                            console.log('Asset category selected:', $(this).val());
-                        }",
-                    ],
-
-                ])->label(false);
-                ?>
-
+            <div class="col-12 col-md-6 col-xl">
+                <?= $form->field($model, 'plan_budget_type_id')->widget(Select2::class, [
+                    'data' => ArrayHelper::map(Categorise::find()->where(['name' => 'budget_type'])->orderBy('sort')->all(), 'code', 'title'),
+                    'options' => ['placeholder' => 'ทุกแหล่งงบประมาณ'],
+                    'pluginOptions' => ['allowClear' => true],
+                ])->label('แหล่งงบประมาณ') ?>
             </div>
         </div>
 
