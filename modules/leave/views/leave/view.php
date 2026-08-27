@@ -34,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $js = <<<JS
-    $("body").on("click", ".req-cancel-btn", function (e) {
+    $("body").off("click", ".req-cancel-btn").on("click", ".req-cancel-btn", function (e) {
         e.preventDefault();
         var title = $(this).data('title');
         var btn = $(this);
@@ -49,7 +49,9 @@ $js = <<<JS
             cancelButtonText: 'ยกเลิก'
         }).then((result) => {
             if (result.isConfirmed) {
-                erpHideModal("#main-modal");
+                if (typeof window.erpHideModal === 'function') window.erpHideModal("#main-modal");
+                else if (typeof erpHideModal === 'function') erpHideModal("#main-modal");
+                else $("#main-modal").modal("hide");
                 Swal.fire({
                     title: 'กำลังดำเนินการ...',
                     allowOutsideClick: false,
@@ -84,7 +86,7 @@ $js = <<<JS
         });
     });
 
-    $("body").on("click", ".download-leave", function (e) {
+    $("body").off("click", ".download-leave").on("click", ".download-leave", function (e) {
         e.preventDefault();
         var filename = $(this).data('filename');
         $.ajax({
@@ -92,7 +94,9 @@ $js = <<<JS
             method: 'GET',
             xhrFields: { responseType: 'blob' },
             beforeSend: function() {
-                erpShowModal("#main-modal");
+                if (typeof window.erpShowModal === 'function') window.erpShowModal("#main-modal");
+                else if (typeof erpShowModal === 'function') erpShowModal("#main-modal");
+                else $("#main-modal").modal("show");
                 $("#main-modal-label").html("กำลังโหลด");
                 $(".modal-dialog").removeClass("modal-sm modal-md modal-lg modal-xl").addClass("modal-sm");
                 $("#modal-dialog").removeClass("fade");
@@ -108,7 +112,9 @@ $js = <<<JS
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
-                erpHideModal("#main-modal");
+                if (typeof window.erpHideModal === 'function') window.erpHideModal("#main-modal");
+                else if (typeof erpHideModal === 'function') erpHideModal("#main-modal");
+                else $("#main-modal").modal("hide");
             },
             error: function() { alert('ไม่สามารถดาวน์โหลดไฟล์ได้'); }
         });

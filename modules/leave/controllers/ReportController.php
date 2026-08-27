@@ -40,6 +40,10 @@ class ReportController extends Controller
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT2" THEN total_days ELSE 0 END), 0) AS sum_lt2',
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN total_days ELSE 0 END), 0) AS sum_lt3',
             'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN total_days ELSE 0 END), 0) AS sum_lt4',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT1" THEN 1 ELSE 0 END), 0) AS count_lt1',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT2" THEN 1 ELSE 0 END), 0) AS count_lt2',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT3" THEN 1 ELSE 0 END), 0) AS count_lt3',
+            'IFNULL(SUM(CASE WHEN leave_type_id = "LT4" THEN 1 ELSE 0 END), 0) AS count_lt4',
         ]);
         $dataProvider->query->andFilterWhere(['leave.status' => 'Approve']);
         $dataProvider->query->andFilterWhere(['NOT', ['e.id' => 1]]);
@@ -105,9 +109,8 @@ class ReportController extends Controller
         $sheet->mergeCells('C2:C3');
         $sheet->mergeCells('D2:D3');
         $sheet->mergeCells('E2:E3');
-        $sheet->mergeCells('F2:F3');
-        $sheet->mergeCells('G2:J2');
-        $sheet->mergeCells('K2:K3');
+        $sheet->mergeCells('F2:I2');
+        $sheet->mergeCells('J2:J3');
 
         $departmentName = $searchModel->q_department ? '(' . Organization::findOne($searchModel->q_department)->name . ')' : '(ทุกหน่วยงาน)';
         $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
@@ -123,12 +126,12 @@ class ReportController extends Controller
             'C2' => ['label' => 'ตำแหน่ง', 'width' => 30],
             'D2' => ['label' => 'เลขบัตรประชาชน', 'width' => 30],
             'E2' => ['label' => 'ฝ่าย/แผนก', 'width' => 40],
-            'F3' => ['label' => 'ลาป่วย', 'width' => 15],
-            'G3' => ['label' => 'ลากิจ', 'width' => 15],
-            'H3' => ['label' => 'ลาคลอดบุตร', 'width' => 15],
-            'I3' => ['label' => 'ลาพักผ่อน', 'width' => 15],
-            'J2' => ['label' => 'ประเภทการลา'],
-            'K2' => ['label' => 'รวมได้ลาแล้ว', 'width' => 20],
+            'F2' => ['label' => 'ประเภทการลา'],
+            'F3' => ['label' => 'ลาป่วย', 'width' => 20],
+            'G3' => ['label' => 'ลากิจ', 'width' => 20],
+            'H3' => ['label' => 'ลาคลอดบุตร', 'width' => 20],
+            'I3' => ['label' => 'ลาพักผ่อน', 'width' => 20],
+            'J2' => ['label' => 'รวมได้ลาแล้ว', 'width' => 25],
         ];
         foreach ($headers as $cell => $props) {
             $sheet->setCellValue($cell, $props['label']);
@@ -152,12 +155,15 @@ class ReportController extends Controller
             $sheet->setCellValue("D$row", $employee ? $employee->cid : '');
             $sheet->setCellValueExplicit("D$row", $employee ? $employee->cid : '', DataType::TYPE_STRING);
             $sheet->setCellValue("E$row", $employee ? $employee->departmentName() : '');
-            $sheet->setCellValue("F$row", $item->sum_lt1 ?? 0);
-            $sheet->setCellValue("G$row", $item->sum_lt3 ?? 0);
-            $sheet->setCellValue("H$row", $item->sum_lt2 ?? 0);
-            $sheet->setCellValue("I$row", $item->sum_lt4 ?? 0);
-            $sheet->setCellValue("K$row", ($item->sum_lt1 ?? 0) + ($item->sum_lt2 ?? 0) + ($item->sum_lt3 ?? 0) + ($item->sum_lt4 ?? 0));
-            foreach (range('A', 'K') as $col) {
+            $sheet->setCellValue("F$row", ((float)($item->sum_lt1 ?? 0)) . ' วัน / ' . ((int)($item->count_lt1 ?? 0)) . ' ครั้ง');
+            $sheet->setCellValue("G$row", ((float)($item->sum_lt3 ?? 0)) . ' วัน / ' . ((int)($item->count_lt3 ?? 0)) . ' ครั้ง');
+            $sheet->setCellValue("H$row", ((float)($item->sum_lt2 ?? 0)) . ' วัน / ' . ((int)($item->count_lt2 ?? 0)) . ' ครั้ง');
+            $sheet->setCellValue("I$row", ((float)($item->sum_lt4 ?? 0)) . ' วัน / ' . ((int)($item->count_lt4 ?? 0)) . ' ครั้ง');
+            
+            $totalDays = ($item->sum_lt1 ?? 0) + ($item->sum_lt2 ?? 0) + ($item->sum_lt3 ?? 0) + ($item->sum_lt4 ?? 0);
+            $totalCount = ($item->count_lt1 ?? 0) + ($item->count_lt2 ?? 0) + ($item->count_lt3 ?? 0) + ($item->count_lt4 ?? 0);
+            $sheet->setCellValue("J$row", ((float)$totalDays) . ' วัน / ' . ((int)$totalCount) . ' ครั้ง');
+            foreach (range('A', 'J') as $col) {
                 $cell = "$col$row";
                 $sheet->getStyle($cell)->getFont()->setName('TH Sarabun New')->setSize(16);
                 $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -168,7 +174,11 @@ class ReportController extends Controller
         }
 
         $writer = new Xlsx($spreadsheet);
-        $filePath = Yii::getAlias('@webroot') . '/downloads/report-leave.xlsx';
+        $directory = Yii::getAlias('@webroot') . '/downloads';
+        if (!is_dir($directory)) {
+            @mkdir($directory, 0777, true);
+        }
+        $filePath = $directory . '/report-leave.xlsx';
         $writer->save($filePath);
         if (file_exists($filePath)) {
             return Yii::$app->response->sendFile($filePath, 'รายงานวันลา.xlsx');

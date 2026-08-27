@@ -18,6 +18,14 @@ class m260820_090000_leave_entitlements_decimal_days extends Migration
         }
 
         if (isset($table->columns['leave_on_year'])) {
+            // Some imported databases have drifted from the original NOT NULL
+            // definition. Normalize legacy NULL values before enforcing it again.
+            $this->update(
+                '{{%leave_entitlements}}',
+                ['leave_on_year' => 0],
+                ['leave_on_year' => null]
+            );
+
             $this->alterColumn(
                 '{{%leave_entitlements}}',
                 'leave_on_year',
@@ -26,6 +34,12 @@ class m260820_090000_leave_entitlements_decimal_days extends Migration
         }
 
         if (isset($table->columns['days'])) {
+            $this->update(
+                '{{%leave_entitlements}}',
+                ['days' => 0],
+                ['days' => null]
+            );
+
             $this->alterColumn(
                 '{{%leave_entitlements}}',
                 'days',
