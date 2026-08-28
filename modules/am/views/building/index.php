@@ -9,9 +9,9 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
-<div class="d-flex align-items-center gap-2 mb-1">
-    <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0 text-primary-gradient">
-<i data-lucide="building-2"></i>  
+<div class="d-flex align-items-center gap-2">
+    <h4 class="fw-semibold text-body d-flex align-items-center gap-2 mb-0">
+        <i data-lucide="building-2"></i>
         ทะเบียน<?= $this->title ?>
     </h4>
 </div>
@@ -33,21 +33,21 @@ $this->params['breadcrumbs'][] = $this->title;
         position: sticky;
         top: 0;
         z-index: 2;
-        background-color: var(--bs-body-bg);
+        background-color: var(--bs-tertiary-bg);
         color: var(--bs-secondary-color);
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
         font-weight: 600;
-        padding: 0.9rem 1rem;
+        padding: 0.7rem 0.75rem;
         border-bottom: 1px solid var(--bs-border-color);
         white-space: nowrap;
         vertical-align: middle;
     }
 
     .building-register-table tbody td {
-        padding: 1rem 1rem;
+        padding: 0.7rem 0.75rem;
         border-bottom: 1px solid var(--bs-border-color);
         vertical-align: middle;
-        font-size: 0.9375rem;
+        font-size: 0.95rem;
         color: var(--bs-body-color);
     }
 
@@ -60,7 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 
     .building-list-scroll {
-        max-height: min(68vh, 760px);
+        max-height: min(72vh, 800px);
         overflow: auto;
     }
 
@@ -71,17 +71,31 @@ $this->params['breadcrumbs'][] = $this->title;
 
     .building-register-table .building-actions-inner .btn {
         flex-shrink: 0;
-        min-width: 2.375rem;
-        min-height: 2.375rem;
+        min-width: 2.25rem;
+        min-height: 2.25rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
     }
+
+    .building-register-table .building-thumbnail {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+    }
+
+    .building-register-table .building-name {
+        max-width: 260px;
+    }
+
+    .building-register-table .building-location {
+        max-width: 180px;
+    }
 </style>
 
-<div class="card border-0 shadow-sm rounded-2 mb-4">
-    <div class="card-header border-bottom bg-white d-flex justify-content-between align-items-center">
-        <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2">
+<div class="card border shadow-sm rounded-2 mb-3">
+    <div class="card-header bg-body d-flex justify-content-between align-items-center py-3">
+        <h6 class="m-0 fw-semibold text-body d-flex align-items-center gap-2">
             <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
                 <i data-lucide="search"></i>
             </div>
@@ -106,10 +120,10 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-2 mb-4">
-    <div class="card-header border-bottom bg-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2 flex-wrap">
+<div class="card border shadow-sm rounded-2 mb-4">
+    <div class="card-header bg-body py-3">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <h6 class="m-0 fw-semibold text-body d-flex align-items-center gap-2 flex-wrap">
                 <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
                     <i data-lucide="list-checks"></i>
                 </div>
@@ -117,17 +131,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
                     <?= $dataProvider->getTotalCount() ?>
                 </span>
-                <span class="text-muted fw-normal text-uppercase">รายการ</span>
-                <span class="text-muted fw-normal">|</span>
-                <span class="text-muted fw-normal">มูลค่ารวม</span>
-                <span class="fw-semibold text-dark">
+                <span class="text-body-secondary fw-normal">รายการ</span>
+                <span class="text-body-secondary fw-normal">|</span>
+                <span class="text-body-secondary fw-normal">มูลค่ารวม</span>
+                <span class="fw-semibold text-body">
                     <?= number_format($totalValue ?? 0, 2) ?>
                 </span>
-                <span class="text-muted fw-normal">บาท</span>
+                <span class="text-body-secondary fw-normal">บาท</span>
             </h6>
             <div class="d-flex gap-2">
                 <div class="dropdown">
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-success']) ?>
                 </div>
             </div>
         </div>
@@ -136,17 +150,17 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="building-list-scroll">
             <div class="table-responsive">
                 <table class="table building-register-table mb-0">
-                    <thead style="background-color: white;">
-                        <tr style="border-bottom: 1px solid rgb(226, 232, 240);">
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 50px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">#</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 80px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">รูปภาพ</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">รหัสพัสดุ / ชื่ออาคาร</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="width: 160px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ประเภท</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold" style="font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ที่ตั้ง / ปีสร้าง</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-end" style="width: 144px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">ราคาแรกรับ (฿)</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สภาพ</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 112px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">สถานะ</th>
-                            <th class="px-4 py-3 border-0 text-uppercase fw-bold text-center" style="width: 200px; font-size: 11px; color: rgb(148, 163, 184); letter-spacing: 0.05em;">การจัดการ</th>
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th style="width: 72px;">รูปภาพ</th>
+                            <th>รหัสพัสดุ / ชื่ออาคาร</th>
+                            <th style="width: 150px;">ประเภท</th>
+                            <th>ที่ตั้ง / ปีสร้าง</th>
+                            <th class="text-end" style="width: 144px;">ราคาแรกรับ (฿)</th>
+                            <th class="text-center" style="width: 112px;">สภาพ</th>
+                            <th class="text-center" style="width: 112px;">สถานะ</th>
+                            <th class="text-center building-actions-th">การจัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -162,15 +176,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                 $location = $item->departmentName();
                             }
                             ?>
-                            <tr style="border-bottom: 1px solid rgb(241, 245, 249);">
-                                <td class="px-4 py-3 border-0 text-center fw-medium" style="color: rgb(100, 116, 139);"><?= (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                                <td class="px-4 py-3 border-0" style="width:70px;">
+                            <tr>
+                                <td class="text-center text-body-secondary fw-medium"><?= (($dataProvider->pagination->offset + 1) + $key) ?></td>
+                                <td>
                                     <?= Html::a(
                                         Html::img(
                                             $item->showImg()['image'],
                                             [
-                                                'class' => 'rounded border flex-shrink-0',
-                                                'style' => 'width:56px;height:56px;object-fit:cover;',
+                                                'class' => 'building-thumbnail rounded border flex-shrink-0',
                                                 'alt' => $titleName
                                             ]
                                         ),
@@ -178,34 +191,34 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ['class' => '']
                                     ) ?>
                                 </td>
-                                <td class="px-4 py-3 border-0">
-                                    <div class="fw-bold d-block text-truncate" style="color: rgb(30, 41, 59); cursor: pointer; max-width: 260px;"><?= Html::encode($titleName) ?></div>
-                                    <div class="d-flex align-items-center mt-1 font-monospace" style="font-size: 11px; color: rgb(148, 163, 184);">
+                                <td>
+                                    <div class="building-name fw-semibold d-block text-body text-truncate"><?= Html::encode($titleName) ?></div>
+                                    <div class="d-flex align-items-center mt-1 font-monospace small text-body-secondary">
                                         <span><?= Html::encode($item->code) ?></span>
                                     </div>
-                                    <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: rgb(100, 116, 139);">
+                                    <div class="d-flex align-items-center mt-1 small text-body-secondary">
                                         <span>GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 border-0">
-                                    <span class="badge rounded-2 fw-medium border" style="background-color: rgb(241, 245, 249); color: rgb(71, 85, 105); border-color: rgb(226, 232, 240); font-size: 11px; padding: 4px 10px;"><?= Html::encode($item->data_json['building_type_name'] ?? '-') ?></span>
+                                <td>
+                                    <span class="badge bg-body-tertiary text-body-secondary rounded-2 fw-medium border px-2 py-1"><?= Html::encode($item->data_json['building_type_name'] ?? '-') ?></span>
                                 </td>
-                                <td class="px-4 py-3 border-0">
+                                <td>
                                     <div class="d-flex flex-column gap-1">
-                                        <div class="d-flex align-items-center gap-2" style="color: rgb(30, 41, 59);">
+                                        <div class="d-flex align-items-center gap-2 text-body">
                                             <i class="fa-solid fa-location-dot text-secondary flex-shrink-0"></i>
-                                            <span class="fw-semibold text-truncate" style="font-size: 14px; max-width: 180px;"><?= Html::encode($location ?: 'ไม่ระบุ') ?></span>
+                                            <span class="building-location fw-semibold text-truncate"><?= Html::encode($location ?: 'ไม่ระบุ') ?></span>
                                         </div>
-                                        <div class="d-flex align-items-center gap-2" style="color: rgb(100, 116, 139);">
+                                        <div class="d-flex align-items-center gap-2 small text-body-secondary">
                                             <i class="fa-regular fa-calendar text-secondary flex-shrink-0"></i>
-                                            <span class="text-truncate" style="font-size: 12px; max-width: 180px;"><?= Html::encode($item->on_year ?: '-') ?></span>
+                                            <span class="building-location text-truncate"><?= Html::encode($item->on_year ?: '-') ?></span>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 border-0 text-end fw-bold font-monospace" style="color: rgb(30, 41, 59);"><?= number_format($price, 2) ?></td>
-                                <td class="px-4 py-3 border-0 text-center"><?= $item->getConditionBadge() ?></td>
-                                <td class="px-4 py-3 border-0 text-center"><?= $item->getStatusBadge() ?></td>
-                                <td class="text-center align-middle building-actions-cell px-2 px-md-3 border-0">
+                                <td class="text-end fw-semibold font-monospace text-body"><?= number_format($price, 2) ?></td>
+                                <td class="text-center"><?= $item->getConditionBadge() ?></td>
+                                <td class="text-center"><?= $item->getStatusBadge() ?></td>
+                                <td class="text-center align-middle building-actions-cell">
                                     <div class="building-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
                                         <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
                                             'class' => 'btn btn-sm btn-primary',
@@ -220,7 +233,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             ]) ?>
                                         <?php endif; ?>
                                         <?= Html::a('<i class="bi bi-qr-code-scan"></i>', ['/am/asset/view-qr-pdf', 'id' => $item->id], [
-                                            'class' => 'btn btn-sm btn-light',
+                                            'class' => 'btn btn-sm btn-outline-secondary',
                                             'title' => 'พิมพ์',
                                             'data-pjax' => 0,
                                             'target' => '_blank',

@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+$canSetup = Yii::$app->user->can('depreciationSetup');
 ?>
 <div class="am-action-menu d-flex flex-wrap gap-2">
     <a href="<?= Url::to(['/am']) ?>" class="btn <?= $active === 'dashboard' ? 'btn-primary' : 'btn-outline-primary' ?>">
@@ -60,17 +61,22 @@ use yii\helpers\Url;
             <li class="dropdown-header small text-muted">1 · ตั้งค่าเกณฑ์</li>
             <li><?= Html::a('<i data-lucide="percent" class="me-2" style="width:1rem;height:1rem;"></i> เกณฑ์ค่าเสื่อม', ['/am/depreciation-profile/index'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="link" class="me-2" style="width:1rem;height:1rem;"></i> ผูกเกณฑ์เข้าลำดับชั้น', ['/am/depreciation-binding/index'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="anchor" class="me-2" style="width:1rem;height:1rem;"></i> ตรึงเกณฑ์ให้ทะเบียนเดิม', ['/am/asset-depreciation/backfill'], ['class' => 'dropdown-item']) ?></li>
+            <?php if ($canSetup): ?>
+                <li><?= Html::a('<i data-lucide="anchor" class="me-2" style="width:1rem;height:1rem;"></i> ตรึงเกณฑ์ให้ทะเบียนเดิม', ['/am/asset-depreciation/backfill'], ['class' => 'dropdown-item']) ?></li>
+            <?php endif; ?>
             <li><hr class="dropdown-divider"></li>
-            <li class="dropdown-header small text-muted">2 · เปิดงวดบัญชี</li>
-            <li><?= Html::a('<i data-lucide="calendar-range" class="me-2" style="width:1rem;height:1rem;"></i> สร้าง / เปิดงวดบัญชี', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li class="dropdown-header small text-muted">2 · จัดการงวดบัญชี</li>
+            <li><?= Html::a('<i data-lucide="calendar-range" class="me-2" style="width:1rem;height:1rem;"></i> ดู / จัดการงวดบัญชี', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
             <li><hr class="dropdown-divider"></li>
             <li class="dropdown-header small text-muted">3 · ประมวลผลรายเดือน</li>
-            <li><?= Html::a('<i data-lucide="calculator" class="me-2" style="width:1rem;height:1rem;"></i> คำนวณค่าเสื่อมงวด', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i data-lucide="calculator" class="me-2" style="width:1rem;height:1rem;"></i> คำนวณงวดรายเดือน', ['/am/accounting-period/index'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i data-lucide="flask-conical" class="me-2" style="width:1rem;height:1rem;"></i> ทดลองคำนวณรายชิ้น', ['/am/asset-depreciation/preview-asset'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i data-lucide="replace" class="me-2" style="width:1rem;height:1rem;"></i> เปลี่ยนเกณฑ์ทรัพย์สิน', ['/am/asset-depreciation-change/form'], ['class' => 'dropdown-item']) ?></li>
+            <?php if ($canSetup): ?>
+                <li><?= Html::a('<i data-lucide="replace" class="me-2" style="width:1rem;height:1rem;"></i> เปลี่ยนเกณฑ์ทรัพย์สิน', ['/am/asset-depreciation-change/form'], ['class' => 'dropdown-item']) ?></li>
+            <?php endif; ?>
             <li><?= Html::a('<i data-lucide="history" class="me-2" style="width:1rem;height:1rem;"></i> ประวัติการเปลี่ยนเกณฑ์', ['/am/asset-depreciation-change/history'], ['class' => 'dropdown-item']) ?></li>
             <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header small text-muted">4 · ตรวจสอบและรายงาน</li>
             <li><?= Html::a('<i data-lucide="file-bar-chart" class="me-2" style="width:1rem;height:1rem;"></i> รายงาน (เดือน/ไตรมาส/ปีงบ)', ['/am/depreciation-report/index'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>

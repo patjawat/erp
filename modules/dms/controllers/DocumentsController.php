@@ -19,6 +19,7 @@ use app\components\ThaiDateHelper;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use app\components\DateFilterHelper;
+use app\components\DocumentPdfResolver;
 use app\modules\dms\models\Documents;
 use app\modules\hr\models\Organization;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -1374,29 +1375,59 @@ class DocumentsController extends Controller
 
     public function actionShow($ref)
     {
-        // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
-            $id = Yii::$app->request->get('id');
             $file_name = Yii::$app->request->get('file_name');
             $download = Yii::$app->request->get('download');
-            $fileUpload = Uploads::findOne(['ref' => $ref]);
-            $type = 'pdf';
 
             if ($file_name) {
-                $filepath = Yii::getAlias('@runtime/webhooks/files/') . $file_name;
-            } else if (!$fileUpload) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
+                $safeFilename = basename((string) $file_name);
+                $filepath = Yii::getAlias('@runtime/webhooks/files/') . $safeFilename;
+                if (
+                    $safeFilename !== (string) $file_name
+                    || strtolower((string) pathinfo($safeFilename, PATHINFO_EXTENSION)) !== 'pdf'
+                    || !is_file($filepath)
+                    || !is_readable($filepath)
+                ) {
+                    Yii::warning([
+                        'message' => 'ไม่พบไฟล์ PDF จาก webhook หรือชื่อไฟล์ไม่ปลอดภัย',
+                        'ref' => $ref,
+                        'fileName' => $safeFilename,
+                    ], __METHOD__);
+                    throw new NotFoundHttpException(
+                        'ไม่พบไฟล์เอกสาร PDF กรุณาติดต่อผู้ดูแลระบบเพื่อกู้คืนหรืออัปโหลดไฟล์ใหม่'
+                    );
+                }
+                $downloadName = $safeFilename;
             } else {
-                $filename = $fileUpload->real_filename;
-                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
-            }
+                $uploads = Uploads::find()
+                    ->where(['ref' => $ref])
+                    ->orderBy(['id' => SORT_DESC])
+                    ->all();
+                $resolvedPdf = DocumentPdfResolver::resolve($uploads, FileManagerHelper::getUploadPath());
 
+                if ($resolvedPdf === null) {
+                    Yii::warning([
+                        'message' => 'ไม่พบไฟล์ PDF ที่อ่านได้สำหรับหนังสือ',
+                        'ref' => $ref,
+                        'uploadIds' => array_map(
+                            static fn (Uploads $upload): int => (int) $upload->id,
+                            $uploads
+                        ),
+                    ], __METHOD__);
+                    throw new NotFoundHttpException(
+                        'ไม่พบไฟล์เอกสาร PDF กรุณาติดต่อผู้ดูแลระบบเพื่อกู้คืนหรืออัปโหลดไฟล์ใหม่'
+                    );
+                }
+
+                $filepath = $resolvedPdf['path'];
+                $downloadName = $resolvedPdf['downloadName'];
+            }
 
             if ((string) $download === '1') {
-                return Yii::$app->response->sendFile($filepath, basename($filepath));
+                return Yii::$app->response->sendFile($filepath, $downloadName);
             }
 
-            return Yii::$app->response->sendFile($filepath, basename($filepath), ['inline' => true]);
+            return Yii::$app->response->sendFile($filepath, $downloadName, ['inline' => true]);
         } else {
             return false;
         }

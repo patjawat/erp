@@ -357,8 +357,10 @@ class PlanController extends Controller
      * จัดทำแผนบุคลากรทั้งหน่วยงานในครั้งเดียว (ดึงรายชื่อ -> กำหนดเงินรายคน -> 1 หน่วยงาน 1 แผน)
      * รายชื่อแต่ละคนเก็บเป็น plan_order_item ของแผนใบเดียว
      */
-    public function actionCreatePersonnel()
+    public function actionCreatePersonnel($returnUrl = null)
     {
+        $returnUrl = $this->safePlanReturnUrl($returnUrl)
+            ?: \yii\helpers\Url::to(['/plan/personnel/index']);
         if (!PlanHelper::canAdd()) {
             throw new ForbiddenHttpException('รอบทำแผนปิดรับข้อมูลแล้ว');
         }
@@ -381,7 +383,7 @@ class PlanController extends Controller
             $postItems = (array) $this->request->post('items', []);
             if ($this->validatePersonnelPlan($model, $postItems) && $this->persistPersonnelPlan($model, $postItems)) {
                 Yii::$app->session->setFlash('success', 'บันทึกแผนบุคลากรเรียบร้อย');
-                return $this->redirect(['index', 'thai_year' => $model->thai_year]);
+                return $this->redirect($returnUrl);
             }
             $items = $this->itemsFromPost($postItems);
         }
@@ -393,11 +395,12 @@ class PlanController extends Controller
             'lockDept'     => $this->ledOrgIds[0],
             'lockDeptName' => $orgs ? reset($orgs)->name : '',
             'departmentOptions' => $this->ledDepartmentOptions(),
+            'returnUrl' => $returnUrl,
         ]);
     }
 
     /** แก้ไขแผนบุคลากรแบบรายชื่อ (แผนที่มี plan_order_item) */
-    private function updatePersonnel(PlanOrder $model)
+    private function updatePersonnel(PlanOrder $model, ?string $returnUrl = null)
     {
         $origDept = (int) $model->department_id;
         $items = $model->getPlanItems()->orderBy(['id' => SORT_ASC])->all();
@@ -419,7 +422,9 @@ class PlanController extends Controller
             $postItems = (array) $this->request->post('items', []);
             if ($this->validatePersonnelPlan($model, $postItems) && $this->persistPersonnelPlan($model, $postItems)) {
                 Yii::$app->session->setFlash('success', 'แก้ไขแผนบุคลากรเรียบร้อย');
-                return $this->redirect(['index', 'thai_year' => $model->thai_year]);
+                return $returnUrl
+                    ? $this->redirect($returnUrl)
+                    : $this->redirect(['index', 'thai_year' => $model->thai_year]);
             }
             $items = $this->itemsFromPost($postItems);
         }
@@ -431,6 +436,7 @@ class PlanController extends Controller
             'lockDeptName' => $this->deptName((int) $model->department_id),
             'departmentOptions' => $this->ledDepartmentOptions(),
             'baselineRevision' => $baselineRevision,
+            'returnUrl' => $returnUrl,
         ]);
     }
 
@@ -777,9 +783,16 @@ class PlanController extends Controller
     }
 
     /** แก้ไขแผน (เฉพาะสถานะร่าง/ไม่อนุมัติ) */
-    public function actionUpdate($id)
+    public function actionUpdate($id, $returnUrl = null)
     {
         $model = $this->findModel($id);
+        $returnUrl = $this->safePlanReturnUrl($returnUrl);
+        if ($model->plan_group_id === 'personnel' && $returnUrl === null) {
+            $returnUrl = \yii\helpers\Url::to([
+                '/plan/personnel/index',
+                'PlanOrderSearch' => ['thai_year' => $model->thai_year],
+            ]);
+        }
 
         $editableStatuses = PlanHelper::canAdjust($model->thai_year) ? ['draft', 'reject', 'renew'] : ['draft', 'reject'];
         if (!in_array($model->status, $editableStatuses, true)) {
@@ -798,7 +811,7 @@ class PlanController extends Controller
         // แผนบุคลากรทุกรายใช้ฟอร์มรายชื่อเดียวกับหน้าสร้าง
         // รวมถึงแผนเก่าที่ยังไม่มี plan_order_item เพื่อให้ดึงรายชื่อมาเติมได้
         if ($model->plan_group_id === 'personnel') {
-            return $this->updatePersonnel($model);
+            return $this->updatePersonnel($model, $returnUrl);
         }
 
         if ($model->load($this->request->post())) {
@@ -890,6 +903,16 @@ class PlanController extends Controller
         }
 
         return $model->save(false);
+    }
+
+    /** รับเฉพาะ URL ภายในหน้าแผนบุคลากรรวม ป้องกันการส่งต่อไปเว็บไซต์ภายนอก */
+    private function safePlanReturnUrl($returnUrl): ?string
+    {
+        if (!is_string($returnUrl) || $returnUrl === '' || strpos($returnUrl, '//') === 0) {
+            return null;
+        }
+        $path = parse_url($returnUrl, PHP_URL_PATH);
+        return is_string($path) && strpos($path, '/plan/personnel') === 0 ? $returnUrl : null;
     }
 
     /** ตัวเลือกปีงบ (ปีถัดไป + ปีที่มีข้อมูลแล้ว) */

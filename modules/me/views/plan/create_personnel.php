@@ -6,9 +6,10 @@
 /** @var int $lockDept */
 /** @var string $lockDeptName */
 /** @var array<int,string> $departmentOptions */
+/** @var string|null $returnUrl */
 
 $this->title = 'จัดทำแผนบุคลากรของหน่วยงาน';
-$this->params['breadcrumbs'][] = ['label' => 'แผนหน่วยงาน', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'แผนบุคลากรรวม', 'url' => $returnUrl];
 $this->params['breadcrumbs'][] = 'จัดทำแผนบุคลากร';
 ?>
 
@@ -17,7 +18,7 @@ $this->params['breadcrumbs'][] = 'จัดทำแผนบุคลากร'
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/me/menu', ['active' => 'plan']) ?>
+<?= $this->render('@app/modules/plan/menu', ['active' => 'personnel']) ?>
 <?php $this->endBlock(); ?>
 
 <?= $this->render('_form_personnel', [
@@ -27,4 +28,5 @@ $this->params['breadcrumbs'][] = 'จัดทำแผนบุคลากร'
     'lockDeptName' => $lockDeptName,
     'departmentOptions' => $departmentOptions,
     'baselineRevision' => null,
+    'returnUrl' => $returnUrl,
 ]) ?>

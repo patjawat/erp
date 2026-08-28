@@ -14,6 +14,43 @@ use app\modules\am\services\DepreciationCalculator as C;
  */
 class DepreciationCalculatorTest extends Unit
 {
+    public function testDay15CutoffStartsInCorrectMonth()
+    {
+        $base = [
+            'cost' => 2300000,
+            'salvage_value' => 0,
+            'minimum_book_value' => 1,
+            'useful_life_months' => 60,
+            'calculation_basis' => P::BASIS_MONTHLY,
+            'start_rule' => P::START_DAY_15_CUTOFF,
+        ];
+
+        $onCutoff = C::buildMonthlySchedule($base + ['acquisition_date' => '2026-08-15']);
+        $afterCutoff = C::buildMonthlySchedule($base + ['acquisition_date' => '2026-08-16']);
+
+        $this->assertSame('2026-08-01', $onCutoff['schedule'][0]['period_date']);
+        $this->assertSame('2026-09-01', $afterCutoff['schedule'][0]['period_date']);
+        $this->assertEqualsWithDelta(38333.33, $afterCutoff['schedule'][0]['depreciation'], 0.005);
+        $this->assertEqualsWithDelta(2261666.67, $afterCutoff['schedule'][0]['remaining_value'], 0.005);
+    }
+
+    public function testSeparateMinimumBookValueKeepsOneBaht()
+    {
+        $res = C::buildMonthlySchedule([
+            'cost' => 12000,
+            'salvage_value' => 0,
+            'minimum_book_value' => 1,
+            'useful_life_months' => 12,
+            'calculation_basis' => P::BASIS_MONTHLY,
+            'start_rule' => P::START_READY_MONTH,
+            'acquisition_date' => '2026-01-01',
+        ]);
+
+        $last = end($res['schedule']);
+        $this->assertEqualsWithDelta(1.0, $last['remaining_value'], 0.005);
+        $this->assertEqualsWithDelta(11999.0, $this->sumDep($res['schedule']), 0.005);
+    }
+
     private function sumDep(array $schedule): float
     {
         $s = 0.0;

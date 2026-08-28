@@ -40,8 +40,9 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'deleted_by')->textInput() ?>
 
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

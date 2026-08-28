@@ -568,28 +568,30 @@ $js = <<< JS
             text: "บันทึกข้อมูล!",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
             cancelButtonText: "ยกเลิก!",
             confirmButtonText: "ใช่, ยืนยัน!"
             }).then((result) => {
             if (result.isConfirmed) {
+                const \$submit = \$('#summit');
+                \$submit.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>กำลังบันทึก');
                  uploadImage('asset',$ref);
                 \$.ajax({
                     url: form.attr('action'),
                     type: 'post',
                     data: form.serialize(),
                     dataType: 'json',
-                    success: async function (response) {
-                        console.log(response);
-                        
+                    success: function (response) {
                         if(response.status == 'success') {
-                            
-                            closeModal()
-                            success()
-                             window.location.reload(true);
-                            // await  \$.pjax.reload({ container:response.container, history:false,replace: false,timeout: false});                               
+                            success();
+                            window.location.href = response.url || '/am/structure/index';
+                            return;
                         }
+                        \$submit.prop('disabled', false).html('<i class="bi bi-check2-circle"></i> บันทึก');
+                        Swal.fire('บันทึกไม่สำเร็จ', response.message || 'กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง', 'error');
+                    },
+                    error: function () {
+                        \$submit.prop('disabled', false).html('<i class="bi bi-check2-circle"></i> บันทึก');
+                        Swal.fire('บันทึกไม่สำเร็จ', 'ไม่สามารถเชื่อมต่อกับระบบได้ กรุณาลองอีกครั้ง', 'error');
                     }
                 });
 

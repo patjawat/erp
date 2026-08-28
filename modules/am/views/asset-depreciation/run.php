@@ -9,6 +9,7 @@ use app\modules\am\models\AccountingPeriod;
 /** @var yii\web\View $this */
 /** @var AccountingPeriod $period */
 /** @var array $result */
+/** @var bool $canRun */
 
 $this->title = 'ตรวจสอบผลค่าเสื่อม: ' . $period->name;
 
@@ -47,15 +48,17 @@ $this->beginBlock('action'); ?>
             <i data-lucide="info"></i> <?= Html::encode($result['message']) ?>
             <span class="badge bg-secondary ms-2">สถานะงวด: <?= AccountingPeriod::statusOptions()[$period->status] ?? $period->status ?></span>
         </div>
-        <?php if (!$period->isClosed()): ?>
+        <?php if ($canRun && !$period->isClosed()): ?>
             <?= Html::beginForm(['save', 'period_id' => $period->id], 'post') ?>
                 <?= Html::submitButton('<i data-lucide="save"></i> บันทึกผลคำนวณ', [
                     'class' => 'btn btn-primary',
                     'data' => ['confirm' => 'บันทึกผลคำนวณลงงวดนี้?'],
                 ]) ?>
             <?= Html::endForm() ?>
-        <?php else: ?>
+        <?php elseif ($period->isClosed()): ?>
             <span class="text-muted">งวดปิดแล้ว — แก้ไขด้วยการปรับปรุง/กลับรายการ</span>
+        <?php else: ?>
+            <span class="text-muted">สิทธิ์ดูผลเท่านั้น</span>
         <?php endif; ?>
     </div>
 
@@ -100,7 +103,7 @@ $this->beginBlock('action'); ?>
         </div>
     </div>
 
-    <?php if ($period->isClosed()): ?>
+    <?php if ($canRun && $period->isClosed()): ?>
         <div class="card mt-3">
             <div class="card-header fw-semibold"><i data-lucide="wrench"></i> สร้างรายการปรับปรุง (งวดปิดแล้ว)</div>
             <div class="card-body">

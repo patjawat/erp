@@ -271,11 +271,9 @@ $form = ActiveForm::begin(array_merge(
                 </div>
 
 
-                <div class="d-flex justify-content-center align-items-center">
-                    <div class="d-flex gap-2">
-                        <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
-                        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
-                    </div>
+                <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+                    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+                    <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
                 </div>
             </div>
         </div>
@@ -287,6 +285,8 @@ $form = ActiveForm::begin(array_merge(
 </div>
 
 <?php ActiveForm::end(); ?>
+
+<?= $this->render('@app/modules/plan/views/_money_inputs') ?>
 
 <?php
 $js = <<<JS
@@ -459,8 +459,8 @@ $(document).on("click",".remove-row", function(){ $(this).closest("tr").remove()
 $(document).on("input",".qty, .price", function(){
     let tr = $(this).closest("tr");
     let qty = parseFloat(tr.find(".qty").val())||0;
-    let price = parseFloat(tr.find(".price").val())||0;
-    tr.find(".total").text((qty*price).toFixed(2));
+    let price = window.planMoneyValue ? window.planMoneyValue(tr.find(".price").val()) : (parseFloat(tr.find(".price").val()) || 0);
+    tr.find(".total").text(window.planMoneyText ? window.planMoneyText(qty * price) : (qty * price).toFixed(2));
 });
 
 
@@ -469,10 +469,11 @@ $(document).ready(function() {
         let total = 0;
         // loop input ทุกช่องที่เป็น month_1 .. month_12
         $("input[id^='planorder-month_']").each(function() {
-            let val = parseFloat($(this).val()) || 0;
+            let val = window.planMoneyValue ? window.planMoneyValue($(this).val()) : (parseFloat($(this).val()) || 0);
             total += val;
         });
         $("#planorder-order_price").val(total.toFixed(2)); // ใส่ค่าผลรวมลงไป
+        if (window.planFormatMoneyInputs) window.planFormatMoneyInputs(document);
     }
 
     // ฟัง event เวลา keyup หรือเปลี่ยนค่า
@@ -552,7 +553,7 @@ $('#btn-pull-consumption').on('click', function(){
                 '</td>' +
                 '<td><input type="number" name="items[' + idx + '][qty]" class="form-control qty" value="' + qty + '"></td>' +
                 '<td><input type="number" step="0.01" name="items[' + idx + '][unit_price]" class="form-control price" value="' + price + '"></td>' +
-                '<td class="total text-end">' + lineTotal.toFixed(2) + '</td>' +
+                '<td class="total text-end">' + (window.planMoneyText ? window.planMoneyText(lineTotal) : lineTotal.toFixed(2)) + '</td>' +
                 '<td><button type="button" class="btn btn-danger btn-sm remove-row">ลบ</button></td>' +
                 '</tr>');
             idx++;
@@ -565,6 +566,7 @@ $('#btn-pull-consumption').on('click', function(){
             if(m < 12) acc += per;
         }
         $('#planorder-order_price').val(total.toFixed(2));
+        if (window.planFormatMoneyInputs) window.planFormatMoneyInputs(document);
         var scopeTxt = (res.child_count > 0) ? (' รวม ' + res.child_count + ' หน่วยย่อย') : '';
         // บอกที่มาของตัวเลขให้ครบ ผู้ตั้งงบจะได้รู้ว่าตัวเลขถูกปรับมาแล้วกี่ชั้น
         var basisTxt = 'ยอดใช้จริงปีงบ ' + res.prev_year;

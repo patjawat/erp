@@ -48,8 +48,8 @@ class ApproverController extends Controller
 
         $searchModel = new LeaveSearch();
         
-        $params = $this->request->queryParams;
-        $status = $params['LeaveSearch']['status'] ?? null;
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
+        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
         $searchParams = $this->withoutLeaveStatus($params);
 
         $dataProvider = $searchModel->search($searchParams);
@@ -705,6 +705,7 @@ class ApproverController extends Controller
      */
     private function withoutLeaveStatus(array $params): array
     {
+        unset($params['status']);
         unset($params['LeaveSearch']['status']);
 
         return $params;
@@ -762,9 +763,9 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
+        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
         $searchModel = new LeaveSearch();
-        $params = $this->request->queryParams;
-        $status = $params['LeaveSearch']['status'] ?? null;
         $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
         $searchModel->status = $status;
         $query = $dataProvider->query;
@@ -818,9 +819,9 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
+        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
         $searchModel = new LeaveSearch();
-        $params = $this->request->queryParams;
-        $status = $params['LeaveSearch']['status'] ?? null;
         $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
         $searchModel->status = $status;
         $query = $dataProvider->query;
