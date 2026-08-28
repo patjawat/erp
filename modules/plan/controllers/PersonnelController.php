@@ -51,10 +51,12 @@ class PersonnelController extends Controller
         }
         $dataProvider = $searchModel->search($this->request->queryParams);
          $dataProvider->query->andFilterWhere(['plan_group_id' => 'personnel']);
+        $totalAmount = (float) (clone $dataProvider->query)->sum('order_price');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'totalAmount' => $totalAmount,
         ]);
     }
 
@@ -101,12 +103,15 @@ class PersonnelController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
+    public function actionCreate($returnUrl = null)
     {
         // ใช้หน้าจัดทำแผนบุคลากรแบบรวมรายชื่อของหน่วยงานเป็นจุดสร้างหลัก
         // เพื่อให้เมนูเดิม /plan/personnel/create เปิด workflow ใหม่ทันที
         // (เลือกประเภทค่าใช้จ่าย -> ดึงรายชื่อ -> เฉลี่ยงบทั้งปีรายเดือน)
-        return $this->redirect(['/me/plan/create-personnel']);
+        return $this->redirect([
+            '/me/plan/create-personnel',
+            'returnUrl' => $returnUrl ?: \yii\helpers\Url::to(['/plan/personnel/index']),
+        ]);
 
         /* Legacy single-person form retained below temporarily for reference.
         $model = new PlanOrder([
@@ -133,7 +138,7 @@ class PersonnelController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($id)
+    public function actionUpdate($id, $returnUrl = null)
     {
         $model = $this->findModel($id);
         $editableStatuses = PlanHelper::canAdjust($model->thai_year) ? ['draft', 'reject', 'renew'] : ['draft', 'reject'];
@@ -142,7 +147,7 @@ class PersonnelController extends Controller
         }
 
         // ใช้ workflow รายชื่อเดียวกับหน้าสร้าง เพื่อให้โหลด/แก้ไขบุคลากรและคำนวณงบได้ครบ
-        return $this->redirect(['/me/plan/update', 'id' => $model->id]);
+        return $this->redirect(['/me/plan/update', 'id' => $model->id, 'returnUrl' => $returnUrl]);
     }
 
     /**

@@ -135,11 +135,9 @@ $form = ActiveForm::begin([
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-center align-items-center">
-                    <div class="d-flex gap-2">
-                        <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
-                        <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
-                    </div>
+                <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+                    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+                    <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
                 </div>
             </div>
         </div>
@@ -151,6 +149,8 @@ $form = ActiveForm::begin([
 </div>
 
 <?php ActiveForm::end(); ?>
+
+<?= $this->render('@app/modules/plan/views/_money_inputs') ?>
 
 <?php
 $js = <<<JS
@@ -316,8 +316,8 @@ $(document).on("click",".remove-row", function(){ $(this).closest("tr").remove()
 $(document).on("input",".qty, .price", function(){
     let tr = $(this).closest("tr");
     let qty = parseFloat(tr.find(".qty").val())||0;
-    let price = parseFloat(tr.find(".price").val())||0;
-    tr.find(".total").text((qty*price).toFixed(2));
+    let price = window.planMoneyValue ? window.planMoneyValue(tr.find(".price").val()) : (parseFloat(tr.find(".price").val()) || 0);
+    tr.find(".total").text(window.planMoneyText ? window.planMoneyText(qty * price) : (qty * price).toFixed(2));
 });
 
 
@@ -328,10 +328,11 @@ $(document).ready(function() {
         let total = 0;
         // loop input ทุกช่องที่เป็น month_1 .. month_12
         $("input[id^='planorder-month_']").each(function() {
-            let val = parseFloat($(this).val()) || 0;
+            let val = window.planMoneyValue ? window.planMoneyValue($(this).val()) : (parseFloat($(this).val()) || 0);
             total += val;
         });
         $("#planorder-order_price").val(total.toFixed(2)); // ใส่ค่าผลรวมลงไป
+        if (window.planFormatMoneyInputs) window.planFormatMoneyInputs(document);
     }
 
     // ฟัง event เวลา keyup หรือเปลี่ยนค่า

@@ -6,6 +6,7 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\modules\plan\models\PlanOrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var float $totalAmount */
 
 $this->title = 'แผนคำขอบุคลากร';
 $this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
@@ -45,10 +46,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card">
     <div class="card-header bg-primary-gradient text-white">
         <div class="d-flex justify-content-between align-items-center">
-            <h6 class="text-white mt-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?> <span class="badge text-bg-light">
-                    <?= $dataProvider->getTotalCount() ?></span> รายการ</h6>
+            <h6 class="text-white my-1 d-flex flex-wrap align-items-center gap-2"><i class="bi bi-ui-checks"></i> ทะเบียน<?= $this->title ?>
+                <span class="badge bg-body text-body"><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
+                <span class="badge bg-body text-body">รวม <?= number_format($totalAmount, 2) ?> บาท</span>
+            </h6>
             <div>
-                <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light']) ?>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', [
+                    'create',
+                    'returnUrl' => Yii::$app->request->url,
+                ], ['class' => 'btn btn-success']) ?>
             </div>
 
         </div>

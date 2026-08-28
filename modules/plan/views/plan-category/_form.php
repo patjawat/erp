@@ -35,14 +35,12 @@ use app\modules\plan\models\PlanType;
     <?= $form->field($model, 'title')->textInput()->label('ชื่อของหมวดหมู่') ?>
 
 
-    <div class="d-flex justify-content-center align-items-center mt-3">
-        <div class="d-flex gap-2">
-            <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
+    <div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
             <?= Html::button('ปิด', [
-                'class' => 'btn btn-secondary',
+                'class' => 'btn btn-outline-secondary',
                 'data-bs-dismiss' => 'modal'
             ]) ?>
-        </div>
+            <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
     </div>
     <?php ActiveForm::end(); ?>
 </div>

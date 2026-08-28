@@ -56,6 +56,7 @@ class AccountingPeriodController extends Controller
             'fyBE' => $fyBE,
             'periods' => $periods,
             'years' => $years,
+            'canRun' => Yii::$app->user->can('depreciationRun'),
         ]);
     }
 

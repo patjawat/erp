@@ -116,7 +116,7 @@ class DepreciationProfileController extends Controller
                 $p->salvage_value_type = DepreciationProfile::SALVAGE_ONE_BAHT;
                 $p->salvage_value = 1;
                 $p->calculation_basis = DepreciationProfile::BASIS_MONTHLY;
-                $p->start_rule = DepreciationProfile::START_READY_DATE;
+                $p->start_rule = DepreciationProfile::START_DAY_15_CUTOFF;
                 $p->rounding_scale = 2;
                 $p->status = DepreciationProfile::STATUS_ACTIVE;
                 if (!$p->save()) {

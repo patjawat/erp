@@ -7,6 +7,7 @@ use app\modules\am\models\AccountingPeriod;
 /** @var int $fyBE */
 /** @var AccountingPeriod[] $periods */
 /** @var int[] $years */
+/** @var bool $canRun */
 
 $this->title = 'งวดบัญชีค่าเสื่อม';
 
@@ -58,10 +59,12 @@ $this->beginBlock('action'); ?>
                 </select>
             <?= Html::endForm() ?>
 
-            <?= Html::beginForm(['generate'], 'post', ['class' => 'd-flex gap-2']) ?>
-                <input type="number" name="fiscal_year" class="form-control" style="width:120px" placeholder="พ.ศ." value="<?= $fyBE ?>">
-                <?= Html::submitButton('<i data-lucide="plus"></i> สร้างงวดปีงบ', ['class' => 'btn btn-primary']) ?>
-            <?= Html::endForm() ?>
+            <?php if ($canRun): ?>
+                <?= Html::beginForm(['generate'], 'post', ['class' => 'd-flex gap-2']) ?>
+                    <input type="number" name="fiscal_year" class="form-control" style="width:120px" placeholder="พ.ศ." value="<?= $fyBE ?>">
+                    <?= Html::submitButton('<i data-lucide="plus"></i> สร้างงวดปีงบ', ['class' => 'btn btn-primary']) ?>
+                <?= Html::endForm() ?>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -90,7 +93,7 @@ $this->beginBlock('action'); ?>
     </div>
 
     <?php if (empty($periods)): ?>
-        <div class="alert alert-warning">ยังไม่มีงวดสำหรับปีงบ <?= $fyBE ?> — กด "สร้างงวดปีงบ" เพื่อสร้าง 12 เดือน + 4 ไตรมาส + 1 ปีงบ</div>
+        <div class="alert alert-warning">ยังไม่มีงวดสำหรับปีงบ <?= $fyBE ?><?= $canRun ? ' — กด "สร้างงวดปีงบ" เพื่อสร้าง 12 เดือน + 4 ไตรมาส + 1 ปีงบ' : ' — กรุณาติดต่อผู้มีสิทธิ์ประมวลผลค่าเสื่อม' ?></div>
     <?php endif; ?>
 
     <?php foreach ($typeGroups as $type => $groupLabel): ?>
@@ -112,13 +115,13 @@ $this->beginBlock('action'); ?>
                                     <?php if ($p->period_type === AccountingPeriod::TYPE_MONTH && !$p->isClosed()): ?>
                                         <?= Html::a('<i data-lucide="calculator"></i> คำนวณ/ตรวจ', ['/am/asset-depreciation/run', 'period_id' => $p->id], ['class' => 'btn btn-sm btn-outline-info']) ?>
                                     <?php endif; ?>
-                                    <?php if ($p->status === AccountingPeriod::STATUS_CALCULATED || ($p->period_type !== AccountingPeriod::TYPE_MONTH && $p->status === AccountingPeriod::STATUS_OPEN)): ?>
+                                    <?php if ($canRun && ($p->status === AccountingPeriod::STATUS_CALCULATED || ($p->period_type !== AccountingPeriod::TYPE_MONTH && $p->status === AccountingPeriod::STATUS_OPEN))): ?>
                                         <?= Html::a('<i data-lucide="check"></i> บันทึกบัญชี', ['post', 'id' => $p->id], [
                                             'class' => 'btn btn-sm btn-primary',
                                             'data' => ['method' => 'post', 'confirm' => "บันทึกบัญชีงวด {$p->name}? หลังบันทึกจะแก้ไขไม่ได้ (ต้องใช้ปรับปรุง/กลับรายการ)"],
                                         ]) ?>
                                     <?php endif; ?>
-                                    <?php if ($p->status === AccountingPeriod::STATUS_POSTED): ?>
+                                    <?php if ($canRun && $p->status === AccountingPeriod::STATUS_POSTED): ?>
                                         <?= Html::a('<i data-lucide="lock"></i> ล็อก', ['lock', 'id' => $p->id], [
                                             'class' => 'btn btn-sm btn-outline-dark',
                                             'data' => ['method' => 'post', 'confirm' => "ล็อกงวด {$p->name}? ล็อกแล้วแก้ไม่ได้อีก"],

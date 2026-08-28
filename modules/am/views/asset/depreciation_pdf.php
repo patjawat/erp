@@ -12,6 +12,7 @@ use yii\helpers\Html;
 /** @var array $vendor */
 /** @var string $budgetType */
 /** @var string $purchaseMethod */
+/** @var string $calculationMethodLabel */
 /** @var string $docNo */
 /** @var string $unit */
 /** @var array $rows */
@@ -28,6 +29,7 @@ $vendorAddress = trim((string) ($vendor['address'] ?? '')) ?: '-';
 $vendorPhone = trim((string) ($vendor['phone'] ?? '')) ?: '-';
 $budgetType = trim((string) ($budgetType ?? '')) ?: '-';
 $purchaseMethod = trim((string) ($purchaseMethod ?? '')) ?: '-';
+$calculationMethodLabel = trim((string) ($calculationMethodLabel ?? '')) ?: '-';
 $docNo = trim((string) ($docNo ?? '')) ?: '-';
 $unit = trim((string) ($unit ?? '')) ?: 'เครื่อง';
 $rows = is_array($rows ?? null) ? $rows : [];
@@ -247,6 +249,9 @@ $itemText = static function ($value): string {
                     </tr>
                     <tr>
                         <td><span style="font-size: 18px;font-weight: bold;">แบบรุ่น</span> <?= Html::encode($assetName) ?></td>
+                    </tr>
+                    <tr>
+                        <td><span style="font-size: 18px;font-weight: bold;">วิธีคำนวณ</span> <?= Html::encode($calculationMethodLabel) ?></td>
                     </tr>
                 </table>
             </td>

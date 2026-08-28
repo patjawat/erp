@@ -48,10 +48,12 @@ class ExpensesController extends Controller
         }
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'expenses']);
+        $totalAmount = (float) (clone $dataProvider->query)->sum('order_price');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'totalAmount' => $totalAmount,
         ]);
     }
 

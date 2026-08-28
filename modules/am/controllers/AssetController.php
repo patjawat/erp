@@ -3,6 +3,7 @@
 namespace app\modules\am\controllers;
 
 use yii;
+use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\helpers\Json;
 use yii\web\Response;
@@ -16,10 +17,11 @@ use yii\helpers\ArrayHelper;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\components\AssetHelper;
-use app\modules\am\components\AssetHelper as AmAssetHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
 use app\modules\am\models\AssetSearch;
+use app\modules\am\models\DepreciationProfile;
+use app\modules\am\services\DepreciationCalculator;
 use app\modules\hr\models\Organization;
 
 /**
@@ -201,30 +203,40 @@ class AssetController extends Controller
         ]);
     }
 
-    public function actionDepreciation($id)
+    public function actionDepreciation($id, $calculation_method = null)
     {
         $model = $this->findModel($id);
-        $asset_name = isset($model->data_json['asset_name']) ? 'ค่าเสื่อมราคา' . $model->data_json['asset_name'] : '-';
-        $title = $this->request->get('title') . isset($model->data_json['asset_name']) ? $model->data_json['asset_name'] : '-';
+        $calculationMethods = $this->depreciationCalculationMethods();
+        $calculation_method = $this->resolveRegisterCalculationMethod($model, $calculation_method);
+        $schedule = $this->buildRegisterDepreciationSchedule($model, $calculation_method);
+        $assetName = trim((string) ($model->data_json['asset_name'] ?? $model->asset_name ?? ''));
+        $modalTitle = $assetName !== '' ? 'ค่าเสื่อมราคา — ' . $assetName : 'ค่าเสื่อมราคา';
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
-                'title' => '<i class="fa-solid fa-chart-line"></i> ' . $asset_name,
+                'title' => '<i class="fa-solid fa-chart-line"></i> ' . Html::encode($modalTitle),
                 'content' => $this->renderAjax('depreciation_list_new', [
                     'model' => $model,
+                    'schedule' => $schedule,
+                    'calculationMethod' => $calculation_method,
+                    'calculationMethods' => $calculationMethods,
                 ]),
             ];
         } else {
             return $this->render('depreciation_list_new', [
                 'model' => $model,
+                'schedule' => $schedule,
+                'calculationMethod' => $calculation_method,
+                'calculationMethods' => $calculationMethods,
             ]);
         }
     }
 
-    public function actionDepreciationPdf($id, $number = null, $date = null)
+    public function actionDepreciationPdf($id, $number = null, $date = null, $calculation_method = null)
     {
         $model = $this->findModel($id);
-        $report = $this->buildDepreciationPdfData($model, $number, $date);
+        $calculation_method = $this->resolveRegisterCalculationMethod($model, $calculation_method);
+        $report = $this->buildDepreciationPdfData($model, $number, $date, $calculation_method);
         $html = $this->renderPartial('depreciation_pdf', $report);
         $stylesheet = '';
         if (preg_match('/<style\b[^>]*>(.*?)<\/style>/is', $html, $matches)) {
@@ -291,8 +303,10 @@ class AssetController extends Controller
     }
 
 
-    private function buildDepreciationPdfData(Asset $model, $number = null, $date = null): array
+    private function buildDepreciationPdfData(Asset $model, $number = null, $date = null, string $calculationMethod = 'day_15_cutoff'): array
     {
+        $calculationMethods = $this->depreciationCalculationMethods();
+        $calculationMethodConfig = $calculationMethods[$calculationMethod] ?? $calculationMethods['day_15_cutoff'];
         $siteInfo = SiteHelper::getInfo();
         $dataJsonRaw = $model->data_json;
         if (is_string($dataJsonRaw)) {
@@ -323,7 +337,7 @@ class AssetController extends Controller
         $rate = $this->normalizeDecimal($model->depreciation_rate ?? ($dataJson['depreciation'] ?? null));
         $annualDep = $usefulLife > 0 ? round($price / $usefulLife, 2) : 0.0;
 
-        $scheduleRows = $this->getDepreciationScheduleRows($model, $number);
+        $scheduleRows = $this->getDepreciationScheduleRows($model, $number, $calculationMethod);
         $rows = [
             [
                 'type' => 'data',
@@ -378,6 +392,7 @@ class AssetController extends Controller
             'vendor' => $vendor,
             'budgetType' => $budgetType,
             'purchaseMethod' => $purchaseMethod,
+            'calculationMethodLabel' => $calculationMethodConfig['label'],
             'docNo' => $docNo,
             'unit' => $unit,
             'receiveDate' => $receiveDate,
@@ -389,13 +404,113 @@ class AssetController extends Controller
         ];
     }
 
-    private function getDepreciationScheduleRows(Asset $model, $number = null): array
+    private function getDepreciationScheduleRows(Asset $model, $number = null, string $calculationMethod = 'day_15_cutoff'): array
     {
         if (empty($model->useful_life) || empty($model->receive_date)) {
             return [];
         }
         $limit = $number !== null && (int) $number > 0 ? (int) $number : 9999;
-        return AmAssetHelper::Depreciation($model->id, $limit);
+        return array_slice($this->buildRegisterDepreciationSchedule($model, $calculationMethod)['rows'], 0, $limit);
+    }
+
+    private function depreciationCalculationMethods(): array
+    {
+        return [
+            'day_15_cutoff' => [
+                'label' => 'รายเดือน ตัดรอบวันที่ 15',
+                'description' => 'รับวันที่ 1–15 คิดเต็มเดือนนั้น; วันที่ 16 เป็นต้นไปเริ่มเดือนถัดไป',
+                'basis' => DepreciationProfile::BASIS_MONTHLY,
+                'start_rule' => DepreciationProfile::START_DAY_15_CUTOFF,
+            ],
+            'daily_actual' => [
+                'label' => 'คิดตามวันจริง',
+                'description' => 'เดือนแรกคิดตั้งแต่วันที่ตรวจรับถึงวันสิ้นเดือน ตามจำนวนวันจริงของเดือน',
+                'basis' => DepreciationProfile::BASIS_DAILY,
+                'start_rule' => DepreciationProfile::START_READY_DATE,
+            ],
+            'ready_month' => [
+                'label' => 'เต็มเดือนที่รับ',
+                'description' => 'คิดค่าเสื่อมเต็มเดือนที่ตรวจรับ โดยไม่พิจารณาวันที่ภายในเดือน',
+                'basis' => DepreciationProfile::BASIS_MONTHLY,
+                'start_rule' => DepreciationProfile::START_READY_MONTH,
+            ],
+            'next_month' => [
+                'label' => 'เริ่มเดือนถัดไป',
+                'description' => 'ไม่คิดเดือนที่ตรวจรับ และเริ่มคิดเต็มเดือนถัดไปทุกกรณี',
+                'basis' => DepreciationProfile::BASIS_MONTHLY,
+                'start_rule' => DepreciationProfile::START_NEXT_MONTH,
+            ],
+        ];
+    }
+
+    private function resolveRegisterCalculationMethod(Asset $model, $requested): string
+    {
+        $methods = $this->depreciationCalculationMethods();
+        if (is_string($requested) && isset($methods[$requested])) {
+            return $requested;
+        }
+
+        $basis = $model->hasAttribute('depreciation_calculation_basis')
+            ? $model->depreciation_calculation_basis : null;
+        $startRule = $model->hasAttribute('depreciation_start_rule')
+            ? $model->depreciation_start_rule : null;
+        if (!$basis || !$startRule) {
+            $resolved = (new \app\modules\am\services\DepreciationProfileResolver())->resolve($model);
+            $profile = $resolved['profile'] ?? null;
+            $basis = $basis ?: ($profile->calculation_basis ?? null);
+            $startRule = $startRule ?: ($profile->start_rule ?? null);
+        }
+
+        if ($basis === DepreciationProfile::BASIS_DAILY
+            && $startRule === DepreciationProfile::START_READY_DATE) {
+            return 'daily_actual';
+        }
+        return [
+            DepreciationProfile::START_DAY_15_CUTOFF => 'day_15_cutoff',
+            DepreciationProfile::START_READY_MONTH => 'ready_month',
+            DepreciationProfile::START_NEXT_MONTH => 'next_month',
+        ][$startRule] ?? 'day_15_cutoff';
+    }
+
+    private function buildRegisterDepreciationSchedule(Asset $model, string $calculationMethod): array
+    {
+        $methods = $this->depreciationCalculationMethods();
+        $method = $methods[$calculationMethod] ?? $methods['day_15_cutoff'];
+        $lifeMonths = max(0, (int) $model->useful_life * 12);
+        $result = DepreciationCalculator::buildMonthlySchedule([
+            'cost' => (float) $model->price,
+            'salvage_value' => 0,
+            'salvage_value_type' => DepreciationProfile::SALVAGE_AMOUNT,
+            'minimum_book_value' => 1,
+            'useful_life_months' => $lifeMonths,
+            'calculation_basis' => $method['basis'],
+            'start_rule' => $method['start_rule'],
+            'acquisition_date' => $model->receive_date,
+            'rounding_scale' => 2,
+        ]);
+
+        $rows = [];
+        foreach ($result['schedule'] as $row) {
+            $periodTs = strtotime((string) $row['period_date']);
+            $endDate = $periodTs ? date('Y-m-t', $periodTs) : null;
+            $rows[] = [
+                'date_number' => $row['month_index'],
+                'end_date' => $endDate,
+                'count_days' => $row['days_used'],
+                'price_month' => $row['depreciation'],
+                'total_price' => $row['accumulated_depreciation'],
+                'total' => $row['remaining_value'],
+                'active' => $endDate && date('Y-m', strtotime($endDate)) === date('Y-m') ? 'Y' : 'N',
+            ];
+        }
+
+        return [
+            'can_calculate' => $result['can_calculate'],
+            'message' => $result['message'],
+            'annual_amount' => (float) $model->useful_life > 0 ? round((float) $model->price / (int) $model->useful_life, 2) : null,
+            'monthly_amount' => $lifeMonths > 0 ? round((float) $model->price / $lifeMonths, 2) : null,
+            'rows' => $rows,
+        ];
     }
 
     private function resolveVendorDetails(Asset $model, array $dataJson = []): array

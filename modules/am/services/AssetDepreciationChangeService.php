@@ -43,7 +43,8 @@ class AssetDepreciationChangeService
             ];
 
             // สร้าง snapshot ใหม่จากเกณฑ์ (source = asset)
-            $acq = $asset->depreciation_start_date ?: $asset->receive_date;
+            // เปลี่ยนเกณฑ์จากวันตรวจรับเดิม ไม่ใช้วันเริ่มที่เคย resolve แล้ว (กันเลื่อนเดือนซ้ำ)
+            $acq = $asset->receive_date ?: $asset->depreciation_start_date;
             $snap = DepreciationProfileResolver::buildSnapshot(
                 $newProfile,
                 DepreciationProfileResolver::SOURCE_ASSET,

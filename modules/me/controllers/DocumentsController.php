@@ -5,6 +5,7 @@ namespace app\modules\me\controllers;
 use app\components\AppHelper;
 use app\components\DateFilterHelper;
 use app\components\DocumentAccessPolicy;
+use app\components\DocumentPdfResolver;
 use app\components\SiteHelper;
 use app\components\UserHelper;
 use app\models\Categorise;
@@ -890,25 +891,36 @@ class DocumentsController extends \yii\web\Controller
                 throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
             }
 
-            $id = Yii::$app->request->get('id');
             $download = Yii::$app->request->get('download');
-            $fileUpload = Uploads::findOne(['ref' => $ref]);
-            $type = 'pdf';
-            if (!$fileUpload) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            } else {
-                $filename = $fileUpload->real_filename;
-                $filepath = FileManagerHelper::getUploadPath() . $fileUpload->ref . '/' . $filename;
+            $uploads = Uploads::find()
+                ->where(['ref' => $ref])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
+            $resolvedPdf = DocumentPdfResolver::resolve($uploads, FileManagerHelper::getUploadPath());
+
+            if ($resolvedPdf === null) {
+                Yii::warning([
+                    'message' => 'ไม่พบไฟล์ PDF ที่อ่านได้สำหรับหนังสือ',
+                    'documentId' => (int) $document->id,
+                    'ref' => $ref,
+                    'uploadIds' => array_map(
+                        static fn (Uploads $upload): int => (int) $upload->id,
+                        $uploads
+                    ),
+                ], __METHOD__);
+                throw new NotFoundHttpException(
+                    'ไม่พบไฟล์เอกสาร PDF กรุณาติดต่อผู้ดูแลระบบเพื่อกู้คืนหรืออัปโหลดไฟล์ใหม่'
+                );
             }
-            if (!$fileUpload && !file_exists($filepath)) {
-                $filepath = Yii::getAlias('@webroot') . '/images/pdf-placeholder.pdf';
-            }
+
+            $filepath = $resolvedPdf['path'];
+            $downloadName = $resolvedPdf['downloadName'];
 
             if ((string) $download === '1') {
-                return Yii::$app->response->sendFile($filepath, basename($filepath));
+                return Yii::$app->response->sendFile($filepath, $downloadName);
             }
 
-            return Yii::$app->response->sendFile($filepath, basename($filepath), ['inline' => true]);
+            return Yii::$app->response->sendFile($filepath, $downloadName, ['inline' => true]);
         } else {
             return false;
         }

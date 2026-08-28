@@ -612,12 +612,17 @@ class DevelopmentController extends Controller
                     $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToGregorian($model->vehicle_date_end) : null;
                 } catch (\Throwable $th) {
                 }
-                $model->save();
-                $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
-            }
+                if ($model->save()) {
+                    $this->syncTravelPartyMembers($model, $this->request->post('member_emp_ids', []));
+                    Yii::$app->session->setFlash('success', 'บันทึกข้อมูลการเดินทางเรียบร้อยแล้ว');
+                    return $this->redirect('index');
+                }
 
-            if ($loaded) {
-                return $this->redirect('index');
+                // คืนรูปแบบวันที่สำหรับแสดงค่าที่ผู้ใช้กรอก เมื่อ validation ไม่ผ่าน
+                $model->date_start = $model->date_start ? AppHelper::convertToThai($model->date_start) : null;
+                $model->date_end = $model->date_end ? AppHelper::convertToThai($model->date_end) : null;
+                $model->vehicle_date_start = $model->vehicle_date_start ? AppHelper::convertToThai($model->vehicle_date_start) : null;
+                $model->vehicle_date_end = $model->vehicle_date_end ? AppHelper::convertToThai($model->vehicle_date_end) : null;
             }
         }
 

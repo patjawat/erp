@@ -13,6 +13,29 @@ use yii\helpers\Html;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 }
+.equip-grid-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+}
+.equip-grid-title {
+    display: -webkit-box;
+    min-height: 2.7em;
+    overflow: hidden;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+.equip-grid-meta,
+.equip-grid-category {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.equip-grid-status {
+    flex-shrink: 0;
+}
 </style>
 <div class="bg-body">
     <div class="equip-grid-scroll">
@@ -26,23 +49,19 @@ use yii\helpers\Html;
         <div class="col-12 col-sm-6 col-xl-4">
             <div class="card h-100 border shadow-sm">
                 <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between mb-3">
-
-                  
-                    <div class="d-flex gap-3 mb-2">
+                    <div class="d-flex align-items-start gap-3 mb-3">
                         <?= Html::img(
                             $item->ShowImg()['image'],
                             [
-                                'class' => 'rounded border flex-shrink-0',
-                                'style' => 'width:72px;height:72px;object-fit:cover;',
+                                'class' => 'equip-grid-thumb rounded border flex-shrink-0',
                                 'alt' => $titleName,
                             ]
                         ) ?>
 
                         <div class="min-w-0 flex-grow-1">
-                            <div class="small text-body-secondary mb-0"><?= Html::encode($item->code ?: '-') ?></div>
-                            <div class="small text-body-secondary mb-0">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
-                            <div class="fw-semibold text-truncate"><?= Html::encode($titleName) ?></div>
+                            <div class="equip-grid-meta small text-body-secondary" title="<?= Html::encode($item->code ?: '-') ?>"><?= Html::encode($item->code ?: '-') ?></div>
+                            <div class="equip-grid-meta small text-body-secondary" title="GFMIS: <?= Html::encode($item->gfmis ?: '-') ?>">GFMIS: <?= Html::encode($item->gfmis ?: '-') ?></div>
+                            <div class="equip-grid-title fw-semibold" title="<?= Html::encode($titleName) ?>"><?= Html::encode($titleName) ?></div>
                             <div class="mt-1 d-flex align-items-center flex-wrap gap-1">
                                 <span class="text-body-secondary small">สภาพ :</span>
                                 <?= $item->getConditionBadge() ?>
@@ -52,13 +71,10 @@ use yii\helpers\Html;
                                 <?= $item->getRiskLevelBadge() ?>
                             </div>
                         </div>
+                        <div class="equip-grid-status mt-1"><?= $item->getStatusBadge() ?></div>
                     </div>
-                    <div class="mt-1"><?= $item->getStatusBadge() ?></div>
 
-                      </div>
-
-
-                    <div class="small text-body-secondary mb-2"><?= Html::encode($catTitle) ?></div>
+                    <div class="equip-grid-category small text-body-secondary mb-2" title="<?= Html::encode($catTitle) ?>"><?= Html::encode($catTitle) ?></div>
                     <div class="mt-auto d-flex justify-content-between align-items-end">
                         <div>
                             <div class="small text-body-secondary">ราคาแรกรับ</div>

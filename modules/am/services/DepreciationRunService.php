@@ -60,6 +60,10 @@ class DepreciationRunService
             'depreciation_rate' => $asset->depreciation_rate,
             'depreciation_method' => $asset->depreciation_method,
             'depreciation_start_date' => $asset->depreciation_start_date,
+            'depreciation_calculation_basis' => $asset->hasAttribute('depreciation_calculation_basis')
+                ? $asset->depreciation_calculation_basis : null,
+            'depreciation_start_rule' => $asset->hasAttribute('depreciation_start_rule')
+                ? $asset->depreciation_start_rule : null,
             'receive_date' => $asset->receive_date,
             'disposal_date' => $disposalDate,
         ], $profileValues);
@@ -118,7 +122,8 @@ class DepreciationRunService
             $startRule = DepreciationProfile::START_READY_DATE;
         } else {
             $startDate = $asset['receive_date'] ?? null;
-            $startRule = (string) ($p['start_rule'] ?? DepreciationProfile::START_READY_DATE);
+            $startRule = (string) (($asset['depreciation_start_rule'] ?? null)
+                ?: ($p['start_rule'] ?? DepreciationProfile::START_READY_DATE));
         }
 
         $tiers = is_array($p['rate_tiers'] ?? null) ? $p['rate_tiers'] : [];
@@ -143,7 +148,8 @@ class DepreciationRunService
                 ?: ($p['method'] ?? DepreciationProfile::METHOD_STRAIGHT_LINE),
             'useful_life_months' => $lifeMonths,
             'annual_rate' => $annualRate,
-            'calculation_basis' => $p['calculation_basis'] ?? DepreciationProfile::BASIS_MONTHLY,
+            'calculation_basis' => ($asset['depreciation_calculation_basis'] ?? null)
+                ?: ($p['calculation_basis'] ?? DepreciationProfile::BASIS_MONTHLY),
             'start_rule' => $startRule,
             'rounding_scale' => isset($p['rounding_scale']) ? (int) $p['rounding_scale'] : 2,
             'acquisition_date' => $startDate,

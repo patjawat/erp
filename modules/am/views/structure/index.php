@@ -3,10 +3,16 @@ use app\components\widgets\DataSummaryWidget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\helpers\Json;
+use app\components\SiteHelper;
 
 $this->title = 'สิ่งปลูกสร้าง';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบบริหารทรัพย์สิน', 'url' => ['/am']];
 $this->params['breadcrumbs'][] = $this->title;
+
+$viewQuery = Yii::$app->request->queryParams;
+$viewListUrl = Url::to(array_merge(['/am/structure/index'], $viewQuery, ['view' => 'list']));
+$viewGridUrl = Url::to(array_merge(['/am/structure/index'], $viewQuery, ['view' => 'grid']));
+$isTableView = SiteHelper::getDisplay() !== 'grid';
 ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -80,9 +86,9 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 </style>
 
-<div class="card border-0 shadow-sm rounded-2 mb-4">
-    <div class="card-header border-bottom bg-white d-flex justify-content-between align-items-center">
-        <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2">
+<div class="card border shadow-sm mb-4">
+    <div class="card-header border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+        <h6 class="m-0 text-body-secondary d-flex align-items-center gap-2">
             <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
                 <i data-lucide="search"></i>
             </div>
@@ -107,10 +113,10 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-2 mb-4">
-    <div class="card-header border-bottom bg-white">
-        <div class="d-flex justify-content-between">
-            <h6 class="m-0 text-uppercase text-secondary d-flex align-items-center gap-2 flex-wrap">
+<div class="card border shadow-sm mb-4">
+    <div class="card-header bg-body-tertiary px-4 py-3">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <h5 class="m-0 fw-bold d-flex align-items-center gap-2 flex-wrap">
                 <div class="erp-icon-box bg-primary bg-opacity-10 text-primary">
                     <i data-lucide="list-checks"></i>
                 </div>
@@ -118,22 +124,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill fw-medium px-2 py-1">
                     <?= $dataProvider->getTotalCount() ?>
                 </span>
-                <span class="text-muted fw-normal text-uppercase">รายการ</span>
+                <span class="text-body-secondary fw-normal">รายการ</span>
                 <span class="text-muted fw-normal">|</span>
                 <span class="text-muted fw-normal">มูลค่ารวม</span>
                 <span class="fw-semibold text-dark">
                     <?= number_format($totalValue ?? 0, 2) ?>
                 </span>
                 <span class="text-muted fw-normal">บาท</span>
-            </h6>
-            <div class="d-flex gap-2">
-                <div class="dropdown">
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-light shadow']) ?>
+            </h5>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="d-flex gap-2 p-1 rounded-3 border bg-body">
+                    <?= Html::a('<i class="fa-solid fa-table me-1"></i> ตาราง', $viewListUrl, ['class' => 'btn ' . ($isTableView ? 'btn-primary' : 'btn-outline-primary'), 'data-pjax' => 0]) ?>
+                    <?= Html::a('<i class="fa-solid fa-grip me-1"></i> การ์ด', $viewGridUrl, ['class' => 'btn ' . (!$isTableView ? 'btn-primary' : 'btn-outline-primary'), 'data-pjax' => 0]) ?>
                 </div>
+                <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-primary fw-semibold', 'data-pjax' => 0]) ?>
             </div>
         </div>
     </div>
     <div class="card-body p-0">
+        <?php if ($isTableView): ?>
         <div class="structure-list-scroll">
             <div class="table-responsive">
                 <table class="table structure-register-table mb-0">
@@ -253,6 +262,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 </table>
             </div>
         </div>
+        <?php else: ?>
+            <?= $this->render('_grid', ['dataProvider' => $dataProvider]) ?>
+        <?php endif; ?>
     </div>
         <div class="card-footer bg-body border-top py-3 px-4">
     <?php

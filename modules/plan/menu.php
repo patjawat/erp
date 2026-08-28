@@ -4,7 +4,7 @@ use yii\helpers\Url;
 use yii\helpers\Html;
 ?>
 
-<div class="d-flex gap-2">
+<nav class="d-flex flex-wrap justify-content-end gap-2" aria-label="เมนูแผนงาน">
     <a href="<?= Url::to(['/plan/dashboard']) ?>"
         class="btn <?= $active !== 'dashboard' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -91,4 +91,4 @@ use yii\helpers\Html;
 
         </ul>
     </div>
-</div>
+</nav>

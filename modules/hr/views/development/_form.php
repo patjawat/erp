@@ -406,23 +406,28 @@ $listDocumentMe  = $emp->listDocumentMe();
             $hasTravelCalculation = !empty($travelCalculation);
             $roomRate = (string)($travelCalculation['room_rate'] ?? '0');
             $vehicleRate = (string)($travelCalculation['vehicle_rate'] ?? '0');
+            $additionalItems = isset($travelCalculation['additional_items']) && is_array($travelCalculation['additional_items'])
+                ? array_values($travelCalculation['additional_items'])
+                : [];
+            if (!$additionalItems && (float)($travelCalculation['other_cost'] ?? 0) > 0) {
+                $additionalItems[] = ['type' => 'other', 'description' => '', 'amount' => $travelCalculation['other_cost']];
+            }
+            $additionalTypeOptions = [
+                'public_transport' => 'รถประจำทาง / ขนส่งสาธารณะ',
+                'parking' => 'ค่าจอดรถ / ค่าผ่านทาง',
+                'other' => 'ค่าใช้จ่ายอื่น',
+            ];
             ?>
             <?php ob_start(); ?>
             <div class="border rounded-3 mb-4" id="travel-cost-calculator" data-has-saved="<?= $hasTravelCalculation ? '1' : '0' ?>">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 p-3 bg-body-tertiary rounded-top-3">
+                <div class="p-3 bg-body-tertiary rounded-top-3">
                     <div>
-                        <div class="fw-semibold"><i class="bi bi-calculator me-2"></i>ตัวช่วยคำนวณค่าเดินทาง</div>
-                        <div class="small text-body-secondary">ดึงวันเวลา ระยะทาง และจำนวนผู้เดินทางจากข้อมูลด้านบน</div>
+                        <div class="fw-semibold fs-5"><i class="bi bi-calculator me-2 text-primary"></i>คำนวณค่าใช้จ่ายเดินทางไปราชการ</div>
+                        <div class="small text-body-secondary mt-1">ใช้วันเวลา ระยะทาง และรายชื่อคณะเดินทางจากข้อมูลในคำขอนี้</div>
                     </div>
-                    <button type="button" class="btn btn-outline-primary align-self-start align-self-sm-center"
-                            data-bs-toggle="collapse" data-bs-target="#travel-cost-calculator-body"
-                            aria-expanded="<?= $hasTravelCalculation ? 'true' : 'false' ?>"
-                            aria-controls="travel-cost-calculator-body">
-                        <i class="bi bi-sliders me-1"></i> ตั้งค่าการคำนวณ
-                    </button>
                 </div>
 
-                <div class="collapse<?= $hasTravelCalculation ? ' show' : '' ?>" id="travel-cost-calculator-body">
+                <div id="travel-cost-calculator-body">
                     <div class="p-3 border-top">
                         <div class="row g-3">
                             <div class="col-12 col-md-6 col-lg-3">
@@ -436,7 +441,7 @@ $listDocumentMe  = $emp->listDocumentMe();
                                 <div class="form-text">ระบบนับผู้ขอรวมกับสมาชิกคณะเดินทาง</div>
                             </div>
                             <div class="col-12 col-md-6 col-lg-3">
-                                <label for="travel-calc-meals" class="form-label">มื้ออาหารที่เจ้าภาพจัดให้</label>
+                                <label for="travel-calc-meals" class="form-label">มื้ออาหารที่เจ้าภาพจัดให้ต่อคน</label>
                                 <div class="input-group">
                                     <input type="number" min="0" step="1" class="form-control travel-calc-input"
                                            id="travel-calc-meals" name="Development[data_json][travel_calculation][deducted_meals]"
@@ -491,14 +496,43 @@ $listDocumentMe  = $emp->listDocumentMe();
                                     <span class="input-group-text">กม.</span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label for="travel-calc-other" class="form-label">ค่าใช้จ่ายเพิ่มเติม</label>
-                                <div class="input-group">
-                                    <input type="number" min="0" step="0.01" class="form-control travel-calc-input"
-                                           id="travel-calc-other" name="Development[data_json][travel_calculation][other_cost]"
-                                           value="<?= Html::encode($travelCalculation['other_cost'] ?? 0) ?>">
-                                    <span class="input-group-text">บาท</span>
-                                </div>
+                        </div>
+
+                        <div class="border rounded-3 p-3 mt-3">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 border-bottom pb-2 mb-3">
+                                <div class="fw-semibold text-primary"><i class="bi bi-ticket-perforated me-2"></i>ค่าพาหนะอื่น / ค่าใช้จ่ายเพิ่มเติม</div>
+                                <button type="button" class="btn btn-sm btn-success" id="btn-add-travel-expense">
+                                    <i class="bi bi-plus-lg me-1"></i>เพิ่มรายการ
+                                </button>
+                            </div>
+                            <div id="travel-additional-items" data-next-index="<?= count($additionalItems) ?>">
+                                <?php foreach ($additionalItems as $index => $item): ?>
+                                    <div class="row g-2 align-items-end mb-2 travel-additional-row">
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small">ประเภทค่าใช้จ่าย</label>
+                                            <select class="form-select travel-additional-type" name="Development[data_json][travel_calculation][additional_items][<?= $index ?>][type]">
+                                                <?php foreach ($additionalTypeOptions as $value => $label): ?>
+                                                    <option value="<?= $value ?>"<?= ($item['type'] ?? 'other') === $value ? ' selected' : '' ?>><?= $label ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label class="form-label small">รายละเอียด</label>
+                                            <input type="text" maxlength="255" class="form-control" name="Development[data_json][travel_calculation][additional_items][<?= $index ?>][description]" value="<?= Html::encode($item['description'] ?? '') ?>" placeholder="รายละเอียด (ถ้ามี)">
+                                        </div>
+                                        <div class="col-10 col-md-3">
+                                            <label class="form-label small">จำนวนเงิน</label>
+                                            <div class="input-group">
+                                                <input type="number" min="0" step="0.01" class="form-control travel-calc-input travel-additional-amount" name="Development[data_json][travel_calculation][additional_items][<?= $index ?>][amount]" value="<?= Html::encode($item['amount'] ?? 0) ?>">
+                                                <span class="input-group-text">บาท</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-2 col-md-1">
+                                            <button type="button" class="btn btn-outline-danger w-100 btn-remove-travel-expense" aria-label="ลบรายการค่าใช้จ่าย"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                                <div class="text-center text-body-secondary small py-2<?= $additionalItems ? ' d-none' : '' ?>" id="travel-additional-empty">ยังไม่มีรายการเพิ่มเติม</div>
                             </div>
                         </div>
 
@@ -517,13 +551,23 @@ $listDocumentMe  = $emp->listDocumentMe();
                         <input type="hidden" id="travel-calc-total" name="Development[data_json][travel_calculation][calculated_total]"
                                value="<?= Html::encode($travelCalculation['calculated_total'] ?? 0) ?>">
 
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 border-top mt-3 pt-3">
-                            <div id="travel-calc-summary" class="small text-body-secondary" aria-live="polite">
-                                ระบุวันเวลาเดินทางเพื่อคำนวณเบี้ยเลี้ยง
+                        <div class="bg-success-subtle text-success-emphasis border border-success-subtle rounded-3 p-3 mt-3" aria-live="polite">
+                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold fs-5 mb-2">สรุปงบประมาณที่เบิกได้</div>
+                                    <div id="travel-calc-summary" class="small">ระบุวันเวลาเดินทางเพื่อคำนวณเบี้ยเลี้ยง</div>
+                                </div>
+                                <div class="text-lg-end">
+                                    <div class="small">รวมเงินทั้งสิ้น</div>
+                                    <div class="fs-3 fw-bold"><span id="travel-calc-grand-total">0.00</span> บาท</div>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-primary" id="btn-apply-travel-calculation">
-                                <i class="bi bi-calculator me-1"></i> คำนวณและเติมยอด
-                            </button>
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 border-top border-success-subtle mt-3 pt-3">
+                                <div class="small" id="travel-calc-sync-status">ยอดที่แสดงยังไม่ถูกนำไปใช้</div>
+                                <button type="button" class="btn btn-primary" id="btn-apply-travel-calculation">
+                                    <i class="bi bi-calculator me-1"></i> นำยอดคำนวณไปใช้
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1048,6 +1092,7 @@ $listDocumentMe  = $emp->listDocumentMe();
 
 <?php
 
+$additionalTypeOptionsJson = Json::htmlEncode($additionalTypeOptions);
 $js = <<<JS
 
 \$memberSelectUrl = \$('#travel-party-members-list').data('emp-search-url') || '';
@@ -1203,6 +1248,8 @@ refreshLeadersPreview();
 
 // คำนวณรวมประมาณค่าใช้จ่าย
 var \$travelCalculator = \$('#travel-cost-calculator');
+var travelAdditionalTypes = {$additionalTypeOptionsJson};
+var travelCalculationDirty = false;
 
 function travelCalcNumber(selector) {
     var value = parseFloat(\$(selector).val());
@@ -1211,6 +1258,53 @@ function travelCalcNumber(selector) {
 
 function travelCalcMoney(value) {
     return Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function travelAdditionalTotal() {
+    var total = 0;
+    \$('#travel-additional-items .travel-additional-amount').each(function() {
+        var amount = parseFloat(\$(this).val());
+        if (!isNaN(amount) && amount > 0) total += amount;
+    });
+    return total;
+}
+
+function refreshTravelAdditionalEmpty() {
+    \$('#travel-additional-empty').toggleClass('d-none', \$('.travel-additional-row').length > 0);
+}
+
+function markTravelCalculationDirty() {
+    travelCalculationDirty = true;
+    \$('#travel-calc-sync-status')
+        .removeClass('text-success-emphasis')
+        .addClass('text-warning-emphasis fw-semibold')
+        .text('ข้อมูลเปลี่ยนแล้ว กรุณานำยอดคำนวณไปใช้ก่อนบันทึก');
+    \$('#btn-apply-travel-calculation').prop('disabled', false);
+}
+
+function addTravelAdditionalRow() {
+    var \$list = \$('#travel-additional-items');
+    var index = parseInt(\$list.attr('data-next-index'), 10) || 0;
+    \$list.attr('data-next-index', index + 1);
+    var options = '';
+    Object.keys(travelAdditionalTypes).forEach(function(value) {
+        options += '<option value="' + value + '">' + travelAdditionalTypes[value] + '</option>';
+    });
+    var base = 'Development[data_json][travel_calculation][additional_items][' + index + ']';
+    var html = '<div class="row g-2 align-items-end mb-2 travel-additional-row">'
+        + '<div class="col-12 col-md-4"><label class="form-label small">ประเภทค่าใช้จ่าย</label>'
+        + '<select class="form-select travel-additional-type" name="' + base + '[type]">' + options + '</select></div>'
+        + '<div class="col-12 col-md-4"><label class="form-label small">รายละเอียด</label>'
+        + '<input type="text" maxlength="255" class="form-control" name="' + base + '[description]" placeholder="รายละเอียด (ถ้ามี)"></div>'
+        + '<div class="col-10 col-md-3"><label class="form-label small">จำนวนเงิน</label><div class="input-group">'
+        + '<input type="number" min="0" step="0.01" class="form-control travel-calc-input travel-additional-amount" name="' + base + '[amount]" value="0">'
+        + '<span class="input-group-text">บาท</span></div></div>'
+        + '<div class="col-2 col-md-1"><button type="button" class="btn btn-outline-danger w-100 btn-remove-travel-expense" aria-label="ลบรายการค่าใช้จ่าย"><i class="bi bi-trash"></i></button></div>'
+        + '</div>';
+    \$('#travel-additional-empty').before(html);
+    refreshTravelAdditionalEmpty();
+    markTravelCalculationDirty();
+    calculateTravelCost(false);
 }
 
 function parseTravelDate(value, timeValue) {
@@ -1277,7 +1371,7 @@ function calculateTravelCost(applyValues) {
         : (roomRate > 0 ? participants : 0);
     var accommodation = roomRate * nights * roomCount;
     var vehicle = travelCalcNumber('#travel-calc-vehicle-rate') * travelCalcNumber('#travel-calc-distance');
-    var other = travelCalcNumber('#travel-calc-other');
+    var other = travelAdditionalTotal();
     var registration = travelCalcNumber('[name="Development[data_json][estimated_cost_registration]"]');
     var calculatedTotal = registration + allowance + accommodation + vehicle + other;
 
@@ -1287,18 +1381,31 @@ function calculateTravelCost(applyValues) {
     \$('#travel-calc-room-count').val(roomCount);
     \$('#travel-calc-vehicle-amount').val(vehicle.toFixed(2));
     \$('#travel-calc-total').val(calculatedTotal.toFixed(2));
-    var durationText = durationHours === null ? 'วันเวลาเดินทางยังไม่ครบ' : durationHours.toLocaleString('th-TH', { maximumFractionDigits: 1 }) + ' ชั่วโมง';
+    var durationText = durationHours === null
+        ? 'วันเวลาเดินทางยังไม่ครบ'
+        : Math.floor(durationHours / 24) + ' วัน ' + Math.round(durationHours % 24) + ' ชั่วโมง';
+    var allowanceFormula = travelCalcMoney(allowanceGross) + (mealDeduction > 0 ? ' − ค่าอาหาร ' + travelCalcMoney(mealDeduction) : '');
     \$('#travel-calc-summary').html(
-        '<span class="fw-semibold text-body">' + durationText + ' · ' + participants + ' คน</span><br>' +
-        'เบี้ยเลี้ยง ' + travelCalcMoney(allowance) + ' บาท · ที่พัก ' + travelCalcMoney(accommodation) +
-        ' บาท' + (roomCount > 0 ? ' (' + roomCount + ' ห้อง × ' + nights + ' คืน)' : '') +
-        ' · พาหนะ ' + travelCalcMoney(vehicle) + ' บาท · รวมประมาณการ ' + travelCalcMoney(calculatedTotal) + ' บาท'
+        '<div class="mb-2"><span class="fw-semibold">ระยะเวลาเดินทาง:</span> ' + durationText + ' · ' + participants + ' คน · สิทธิเบี้ยเลี้ยง ' + allowanceUnits + ' วัน/คน</div>' +
+        '<div>• เบี้ยเลี้ยง: ' + allowanceFormula + ' = <strong>' + travelCalcMoney(allowance) + ' บาท</strong></div>' +
+        '<div>• ค่าที่พัก: ' + travelCalcMoney(accommodation) + ' บาท' + (roomCount > 0 ? ' (' + roomCount + ' ห้อง × ' + nights + ' คืน)' : '') + '</div>' +
+        '<div>• พาหนะส่วนตัว: ' + travelCalcMoney(vehicle) + ' บาท</div>' +
+        '<div>• ค่าใช้จ่ายเพิ่มเติม: ' + travelCalcMoney(other) + ' บาท</div>' +
+        (registration > 0 ? '<div>• ค่าลงทะเบียน: ' + travelCalcMoney(registration) + ' บาท</div>' : '')
     );
+    \$('#travel-calc-grand-total').text(travelCalcMoney(calculatedTotal));
     if (applyValues) {
         travelJsonField('estimated_cost_allowance').val(allowance.toFixed(2)).trigger('input');
         travelJsonField('estimated_cost_accommodation').val(accommodation.toFixed(2)).trigger('input');
         travelJsonField('estimated_cost_vehicle_fuel').val(vehicle.toFixed(2)).trigger('input');
         travelJsonField('estimated_cost_other').val(other.toFixed(2)).trigger('input');
+        travelCalculationDirty = false;
+        \$travelCalculator.attr('data-has-saved', '1');
+        \$('#travel-calc-sync-status')
+            .removeClass('text-warning-emphasis fw-semibold')
+            .addClass('text-success-emphasis')
+            .text('นำยอดคำนวณไปใช้ในช่องประมาณค่าใช้จ่ายแล้ว');
+        \$('#btn-apply-travel-calculation').prop('disabled', true);
     }
 }
 
@@ -1309,22 +1416,50 @@ function calculateTravelCost(applyValues) {
 \$('#travel-calc-participants').on('input', function() {
     \$travelCalculator.attr('data-participants-edited', '1');
 });
-\$('#travel-cost-calculator').on('input change', '.travel-calc-input', function() { calculateTravelCost(false); });
+\$('#travel-cost-calculator').on('input change', '.travel-calc-input', function() {
+    markTravelCalculationDirty();
+    calculateTravelCost(false);
+});
+\$('#btn-add-travel-expense').on('click', addTravelAdditionalRow);
+\$('#travel-additional-items').on('click', '.btn-remove-travel-expense', function() {
+    \$(this).closest('.travel-additional-row').remove();
+    refreshTravelAdditionalEmpty();
+    markTravelCalculationDirty();
+    calculateTravelCost(false);
+});
 \$('#btn-apply-travel-calculation').on('click', function() { calculateTravelCost(true); });
 travelDateField('vehicle_date_start').add(travelDateField('vehicle_date_end'))
-    .add(travelJsonField('vehicle_time_start')).add(travelJsonField('vehicle_time_end'))
-    .add(travelJsonField('distance')).on('change', function() { syncTravelCalculatorDefaults(); calculateTravelCost(false); });
+    .add(travelJsonField('vehicle_time_start')).add(travelJsonField('vehicle_time_end')).on('change', function() {
+        syncTravelCalculatorDefaults();
+        markTravelCalculationDirty();
+        calculateTravelCost(false);
+    });
+\$('#travel-calc-distance').on('input', function() {
+    travelJsonField('distance').val(\$(this).val());
+});
+travelJsonField('distance').on('input change', function() {
+    \$('#travel-calc-distance').val(\$(this).val());
+    markTravelCalculationDirty();
+    calculateTravelCost(false);
+});
 syncTravelCalculatorDefaults();
 calculateTravelCost(false);
+refreshTravelAdditionalEmpty();
+if (\$travelCalculator.attr('data-has-saved') === '1') {
+    \$('#travel-calc-sync-status').text('กำลังแสดงยอดคำนวณที่บันทึกไว้ แก้ข้อมูลแล้วให้นำยอดใหม่ไปใช้');
+} else {
+    \$('#travel-calc-sync-status').text('ตรวจสอบรายละเอียด แล้วกด “นำยอดคำนวณไปใช้”');
+}
 var travelMembersList = document.getElementById('travel-party-members-list');
 if (travelMembersList && window.MutationObserver) {
     new MutationObserver(function() {
-        if (\$travelCalculator.attr('data-has-saved') === '1' || \$travelCalculator.attr('data-participants-edited') === '1') return;
+        if (\$travelCalculator.attr('data-participants-edited') === '1') return;
         var memberIds = {};
         \$('#travel-party-members-list input[name="member_emp_ids[]"]').each(function() {
             if (\$(this).val()) memberIds[String(\$(this).val())] = true;
         });
         \$('#travel-calc-participants').val(Math.max(1, 1 + Object.keys(memberIds).length));
+        markTravelCalculationDirty();
         calculateTravelCost(false);
     }).observe(travelMembersList, { childList: true });
 }
@@ -1338,7 +1473,20 @@ function updateEstimatedCostTotal() {
     \$('#estimated-cost-total').text(total.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','));
 }
 \$('#estimated-cost-card').on('input change', '.estimated-cost-input', updateEstimatedCostTotal);
+travelJsonField('estimated_cost_registration').on('input change', function() {
+    markTravelCalculationDirty();
+    calculateTravelCost(false);
+});
 updateEstimatedCostTotal();
+
+\$('#form-development').on('beforeSubmit.travelCalculation', function() {
+    if (!travelCalculationDirty) return true;
+    \$('#travel-calc-sync-status')
+        .addClass('text-danger-emphasis fw-semibold')
+        .text('ยังบันทึกไม่ได้: กรุณากด “นำยอดคำนวณไปใช้” ก่อน');
+    document.getElementById('travel-cost-calculator').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+});
 
     thaiDatepicker('#development-date_start,#development-date_end,#development-vehicle_date_start,#development-vehicle_date_end');
 

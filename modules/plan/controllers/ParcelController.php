@@ -55,10 +55,12 @@ class ParcelController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'parcel']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        $totalAmount = (float) (clone $dataProvider->query)->sum('order_price');
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'totalAmount' => $totalAmount,
         ]);
     }
 
@@ -83,10 +85,12 @@ class ParcelController extends Controller
         if (isset($_POST['depdrop_parents'])) {
             $parents = $_POST['depdrop_parents'];
             if ($parents != null) {
-                $assetGroupId = $parents[0];
-                $assetGroupMapId = Categorise::find()->where(['name' => 'plan_type', 'code' => $assetGroupId])->one();
-                if (isset($assetGroupMapId->data_json['asset_group_id'])) {
-                    $groupId = $assetGroupMapId->data_json['asset_group_id'];
+                $groupId = (string) $parents[0];
+                $assetGroupMapId = Categorise::find()->where(['name' => 'plan_type', 'code' => $groupId])->one();
+                if ($assetGroupMapId && isset($assetGroupMapId->data_json['asset_group_id'])) {
+                    $groupId = (string) $assetGroupMapId->data_json['asset_group_id'];
+                }
+                if (isset(PlanOrder::ASSET_GROUP_TO_CATEGORY[$groupId])) {
 
                     $out = Categorise::find()
                         ->where(['group_id' => $groupId, 'name' => 'asset_type'])

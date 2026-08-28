@@ -27,9 +27,9 @@ echo $form->field($model, 'plan_budget_type_id')->widget(Select2::classname(), [
 ?>
 
 
-<div class="form-group mt-3">
-    <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success']) ?>
-    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-light']) ?>
+<div class="d-grid d-sm-flex justify-content-sm-end gap-2 mt-4">
+    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-primary']) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

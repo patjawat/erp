@@ -25,16 +25,16 @@ $listAssetGroup = ArrayHelper::map(Categorise::find()
     'fieldConfig' => ['options' => ['class' => 'form-group mb-0 mr-2 me-2']] // spacing form field groups
 ]); ?>
 
-<div class="row">
-    <div class="col-lg-11 col-md-11 col-sm-12">
+<div class="row g-2 align-items-start">
+    <div class="col">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ค้นหา...', 'width' => '100'])->label(false)->label(false) ?>
     </div>
-    <div class="col-1">
-        <div class="d-flex flex-row align-items-center gap-2">
-            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i>', ['class' => 'btn btm-sm btn-primary']) ?>
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
+    <div class="col-auto">
+        <div class="d-flex align-items-center gap-2">
+            <?php echo Html::submitButton('<i class="fa-solid fa-magnifying-glass"></i><span class="visually-hidden">ค้นหา</span>', ['class' => 'btn btn-primary', 'title' => 'ค้นหา']) ?>
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilter"
                 aria-expanded="false" aria-controls="collapseFilter">
-                <i class="fa-solid fa-filter"></i>
+                <i class="fa-solid fa-filter"></i><span class="visually-hidden">ตัวกรองเพิ่มเติม</span>
             </button>
         </div>
     </div>
