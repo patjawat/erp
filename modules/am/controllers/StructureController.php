@@ -213,7 +213,7 @@ class StructureController extends \yii\web\Controller
                     continue;
                 }
                 $code = trim((string) ($data[0] ?? ''));
-                if ($code !== '' && Asset::find()->where(['asset_group_id' => 7, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
+                if ($code !== '' && Asset::find()->where(['asset_group_id' => 3, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
                     $duplicates[] = $data;
                 }
             }
@@ -232,7 +232,7 @@ class StructureController extends \yii\web\Controller
     }
 
     /**
-     * POST: นำเข้าข้อมูลจริง (บันทึกเข้า asset_group_id = 7)
+     * POST: นำเข้าข้อมูลจริง (บันทึกเข้า asset_group_id = 3)
      */
     public function actionImportCsv()
     {
@@ -266,7 +266,7 @@ class StructureController extends \yii\web\Controller
                     $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => $errs];
                     continue;
                 }
-                if (Asset::find()->where(['asset_group_id' => 7, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
+                if (Asset::find()->where(['asset_group_id' => 3, 'code' => $code])->andWhere('deleted_at IS NULL')->exists()) {
                     $errorRows[] = ['row' => $rowNumber, 'code' => $code, 'errors' => ['code' => ['รหัสซ้ำในระบบ']]];
                     continue;
                 }
@@ -275,7 +275,7 @@ class StructureController extends \yii\web\Controller
                 $model = new Asset([
                     'ref' => substr(\Yii::$app->getSecurity()->generateRandomString(), 10),
                 ]);
-                $model->asset_group_id = 7;
+                $model->asset_group_id = 3;
                 $model->useful_life = 50;
                 $model->code = $code;
                 $model->asset_name = $name;
@@ -638,9 +638,30 @@ class StructureController extends \yii\web\Controller
         ]);
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            $loaded = $model->load($this->request->post());
+            if ($loaded) {
+                $model->asset_group_id = 3;
+                $model->receive_date = AppHelper::DateToDb($model->receive_date);
+            }
 
+            if ($loaded && $model->save()) {
+                if ($this->request->isAjax) {
+                    Yii::$app->response->format = Response::FORMAT_JSON;
+                    return [
+                        'status' => 'success',
+                        'url' => Url::to(['view', 'id' => $model->id]),
+                    ];
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
+            }
+
+            if ($this->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'error',
+                    'message' => 'กรุณาตรวจสอบข้อมูลที่จำเป็นให้ครบถ้วน',
+                    'errors' => $model->getErrors(),
+                ];
             }
         } else {
             $model->loadDefaultValues();
@@ -678,19 +699,25 @@ class StructureController extends \yii\web\Controller
             $model->receive_date = AppHelper::DateToDb($model->receive_date);
 
 
+            $postedData = is_array($model->data_json) ? $model->data_json : [];
             $convert_date = [
-                'expire_date' => AppHelper::DateToDb($model->data_json['expire_date']),
-                'inspection_date' => AppHelper::DateToDb($model->data_json['inspection_date']),
+                'expire_date' => AppHelper::DateToDb($postedData['expire_date'] ?? null),
+                'inspection_date' => AppHelper::DateToDb($postedData['inspection_date'] ?? null),
             ];
 
 
             $model->data_json = ArrayHelper::merge($old_data_json, $model->data_json, $convert_date);
             if ($model->save()) {
-
-                return $this->redirect(['view', 'id' => $model->id]);
+                return [
+                    'status' => 'success',
+                    'url' => Url::to(['view', 'id' => $model->id]),
+                ];
             } else {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return $model->getErrors();
+                return [
+                    'status' => 'error',
+                    'message' => 'กรุณาตรวจสอบข้อมูลที่จำเป็นให้ครบถ้วน',
+                    'errors' => $model->getErrors(),
+                ];
             }
         }
 
