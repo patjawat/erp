@@ -396,6 +396,38 @@ if (!empty($upcomingHealth)): ?>
                     </div>
                 </a>
             </div>
+            <div class="col-6">
+                <a href="<?= Url::to(['/hr/elearning/index']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-primary-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
+                            <i data-lucide="book-open"></i>
+                        </div>
+                        <div><span class="text-xs text-muted fw-bold d-block">ห้องเรียน E-Learning</span></div>
+                    </div>
+                </a>
+            </div>
+            <?php
+            $isAdminOrHR = Yii::$app->user->can('admin') || Yii::$app->user->can('hr');
+            $isLeader = false;
+            if (!$isAdminOrHR && $me && $me->id) {
+                $isLeader = \app\modules\hr\models\Organization::find()
+                    ->where(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1')) = :empId", [':empId' => (string)$me->id]))
+                    ->orWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2')) = :empId", [':empId' => (string)$me->id]))
+                    ->exists();
+            }
+            if ($isAdminOrHR || $isLeader):
+            ?>
+            <div class="col-6">
+                <a href="<?= Url::to(['/hr/elearning-admin/index']) ?>" class="text-decoration-none text-body d-block h-100">
+                    <div class="hover bg-body rounded-4 p-3 h-100 d-flex flex-column justify-content-between cursor-pointer border border-transparent shadow-hover">
+                        <div class="bg-danger-subtle rounded-3 d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 42px; height: 42px;">
+                            <i data-lucide="sliders"></i>
+                        </div>
+                        <div><span class="text-xs text-muted fw-bold d-block">จัดการ E-Learning</span></div>
+                    </div>
+                </a>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

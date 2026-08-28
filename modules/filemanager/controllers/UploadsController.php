@@ -21,6 +21,9 @@ class UploadsController extends \yii\web\Controller
     {
         $id = Yii::$app->request->get('id');
         $model = Uploads::findOne($id);
+        if (!$model) {
+            throw new \yii\web\NotFoundHttpException('File not found in database.');
+        }
         $filename = $model->real_filename;
         $filepathCheck = FileManagerHelper::getUploadPath() . $model->ref . '/thumbnail/' . $filename;
         if (!file_exists($filepathCheck)) {
@@ -28,17 +31,12 @@ class UploadsController extends \yii\web\Controller
         } else {
             $filepath = $filepathCheck;
         }
+        if (!file_exists($filepath)) {
+            throw new \yii\web\NotFoundHttpException('File not found on server.');
+        }
         $this->setHttpHeaders($model->type);
         \Yii::$app->response->data = file_get_contents($filepath);
         return \Yii::$app->response;
-        if ($model->name == 'logo') {
-            return \Yii::$app->response;
-        }
-        if (!Yii::$app->user->isGuest) {
-            return \Yii::$app->response;
-        } else {
-            return false;
-        }
     }
 
 

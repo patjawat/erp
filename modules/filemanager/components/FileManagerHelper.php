@@ -127,15 +127,18 @@ class FileManagerHelper extends Component
     public static function UploadsSingle($isAjax = false)
     {
         if (Yii::$app->request->isPost) {
-            // return $name = Yii::$app->request->post('name');
             $name = Yii::$app->request->post('name');
             $file = UploadedFile::getInstanceByName($name);
 
-            // if ($images) {
+            if (!$file) {
+                return [
+                    'success' => 'false',
+                    'error' => 'No file uploaded or file key mismatched.'
+                ];
+            }
+
             if ($isAjax === true) {
-                // return 'file component';
                 $ref = Yii::$app->request->post('ref');
-                // return Yii::$app->request->post();
             } else {
                 $Uploads = Yii::$app->request->post();
                 $ref = $Uploads['ref'];
@@ -143,43 +146,60 @@ class FileManagerHelper extends Component
             }
             self::CreateDir($ref);
 
-            // foreach ($images as $file) {
             $fileName = $file->baseName . '.' . $file->extension;
             $realFileName = md5($file->baseName . time()) . '.' . $file->extension;
             $savePath = self::getUploadPath() . $ref . '/' . $realFileName;
             if ($file->saveAs($savePath)) {
 
                 if (self::isImage($savePath)) {
-                    self::createThumbnail($ref, $realFileName);
+                    try {
+                        self::createThumbnail($ref, $realFileName);
+                    } catch (\Throwable $e) {
+                        Yii::error("Failed to create thumbnail: " . $e->getMessage());
+                    }
                 }
-                $checkOld = Uploads::find()->where(['ref' => $ref, 'name' => $name])->one();
-                if ($checkOld) {
-                    self::Deletefile($checkOld->id);
+                
+                try {
+                    $checkOld = Uploads::find()->where(['ref' => $ref, 'name' => $name])->one();
+                    if ($checkOld) {
+                        self::Deletefile($checkOld->id);
+                    }
+
+                    $model = new Uploads;
+                    $model->ref = $ref;
+                    $model->name = $name;
+                    $model->file_name = $fileName;
+                    $model->real_filename = $realFileName;
+                    $model->type = self::checkFileType($file->extension);
+                    if (!$model->save(false)) {
+                        return [
+                            'success' => 'false',
+                            'error' => 'Failed to save to database. Errors: ' . json_encode($model->getErrors())
+                        ];
+                    }
+
+                    return [
+                        'success' => 'true',
+                        'data' => $model,
+                        'img' => self::getImg($model->id),
+                    ];
+                } catch (\Throwable $e) {
+                    return [
+                        'success' => 'false',
+                        'error' => 'Database error: ' . $e->getMessage()
+                    ];
                 }
-
-                $model = new Uploads;
-                $model->ref = $ref;
-                $model->name = $name;
-                $model->file_name = $fileName;
-                $model->real_filename = $realFileName;
-                $model->type = self::checkFileType($file->extension);
-                $model->save(false);
-
+            } else {
                 return [
-                    'success' => 'true',
-                    'data' => $model,
-                    'img' => self::getImg($model->id),
+                    'success' => 'false',
+                    'error' => 'Failed to write file to disk. Please check directory permissions.'
                 ];
             }
-            //     } else {
-            //         if ($isAjax === true) {
-            //             return ['success' => 'false', 'eror' => $file->error];
-            //         }
-            //     }
-
-            // }
-            // }
         }
+        return [
+            'success' => 'false',
+            'error' => 'Invalid request method.'
+        ];
     }
 
     /**
@@ -285,7 +305,17 @@ class FileManagerHelper extends Component
 
     public static function isImage($file_path)
     {
-        return file_exists($file_path) ? exif_imagetype($file_path) : false;
+        if (!file_exists($file_path)) {
+            return false;
+        }
+        if (function_exists('exif_imagetype')) {
+            $type = @exif_imagetype($file_path);
+            if ($type !== false) {
+                return $type;
+            }
+        }
+        $info = @getimagesize($file_path);
+        return $info ? $info[2] : false;
     }
 
     public static function createThumbnail($folderName, $fileName, $width = 10)

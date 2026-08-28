@@ -3,6 +3,8 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\GridView;
+use app\modules\hr\models\Employees;
+use app\modules\hr\models\ElearningAttempt;
 
 /** @var yii\web\View $this */
 /** @var app\modules\hr\models\ElearningCourse $model */

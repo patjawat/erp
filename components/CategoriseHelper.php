@@ -237,18 +237,23 @@ class CategoriseHelper extends Component
     // แผนก
     public static function Department()
     {
-        $model = Organization::find()->where(['lvl' => 2])->all();
-        return ArrayHelper::map($model, 'id', 'name');
+        $model = Organization::find()
+            ->where(['in', 'lvl', [1, 2]])
+            ->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])
+            ->all();
+
+        $list = [];
+        foreach ($model as $item) {
+            $prefix = $item->lvl == 2 ? '— ' : '';
+            $list[$item->id] = $prefix . $item->name;
+        }
+        return $list;
     }
     //ชื่อแผนก
     public static function DepartmentName($id)
     {
-        $model = Organization::find()->where(['lvl' => 2,'id' => $id])->one();
-        if($model){
-            return $model->name;
-        }else{
-            return null;
-        }
+        $model = Organization::findOne($id);
+        return $model ? $model->name : null;
     }
 
     //รายการ สัมมนา ฝึกอบรม ดูงาน ศึกษาต่อ และข้อมูลรายงาน

@@ -390,6 +390,12 @@ class Employees extends Yii\db\ActiveRecord
 
     public function beforeSave($insert)
     {
+        if (empty($this->ref)) {
+            do {
+                $ref = substr(Yii::$app->getSecurity()->generateRandomString(), 10);
+            } while (self::find()->where(['ref' => $ref])->andWhere(['<>', 'id', (int) $this->id])->exists());
+            $this->ref = $ref;
+        }
         $this->birthday = AppHelper::DateToDb($this->birthday);
         try {
             $this->cid = AppHelper::SaveCid($this->cid);
@@ -1664,7 +1670,10 @@ class Employees extends Yii\db\ActiveRecord
     {
         try {
             $model = Uploads::find()->where(['ref' => $this->ref, 'name' => $class ? $class : 'avatar'])->one();
-            return Url::to(['/filemanager/uploads/get-image', 'id' => $model->id]);
+            if ($model) {
+                return Url::to(['/filemanager/uploads/get-image', 'id' => $model->id]);
+            }
+            return \Yii::getAlias('@web') . '/img/placeholder_cid.png';
         } catch (\Throwable $th) {
             return \Yii::getAlias('@web') . '/img/placeholder_cid.png';
         }

@@ -39,11 +39,24 @@ class ElearningAdminController extends Controller
     public function beforeAction($action)
     {
         if (parent::beforeAction($action)) {
-            // เช็คสิทธิ์การเข้าใช้งานเฉพาะ HR และ Admin
-            if (!Yii::$app->user->can('hr') && !Yii::$app->user->can('admin')) {
-                throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าใช้งานระบบจัดการ E-learning');
+            // เช็คสิทธิ์การเข้าใช้งานเฉพาะ HR, Admin หรือหัวหน้ากลุ่มงาน/หัวหน้างาน
+            $isAdminOrHR = Yii::$app->user->can('hr') || Yii::$app->user->can('admin');
+            if ($isAdminOrHR) {
+                return true;
             }
-            return true;
+
+            $employee = Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+            if ($employee) {
+                $isLeader = \app\modules\hr\models\Organization::find()
+                    ->where(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader1')) = :empId", [':empId' => (string)$employee->id]))
+                    ->orWhere(new \yii\db\Expression("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.leader2')) = :empId", [':empId' => (string)$employee->id]))
+                    ->exists();
+                if ($isLeader) {
+                    return true;
+                }
+            }
+
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าใช้งานระบบจัดการ E-learning');
         }
         return false;
     }

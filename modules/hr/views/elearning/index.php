@@ -29,10 +29,10 @@ $myDepName = $allDeps[$employee->department] ?? 'ทั่วไป';
         <div class="card-body p-4">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <h4 class="fw-bold mb-1">สวัสดีครับ คุณ<?= Html::encode($employee->fname . ' ' . $employee->lname) ?></h4>
-                    <p class="mb-0 opacity-85 fs-7"><i class="fa-solid fa-hospital-user me-1"></i> สังกัดแผนก: <strong><?= Html::encode($myDepName) ?></strong> | เพิ่มทักษะและความรู้ในการทำงานของคุณที่นี่</p>
+                    <h4 class="fw-bold mb-1" style="color: #ffffff !important;">สวัสดีครับ คุณ<?= Html::encode($employee->fname . ' ' . $employee->lname) ?></h4>
+                    <p class="mb-0 opacity-85 fs-7" style="color: #ffffff !important;"><i class="fa-solid fa-hospital-user me-1"></i> สังกัดแผนก: <strong><?= Html::encode($myDepName) ?></strong> | เพิ่มทักษะและความรู้ในการทำงานของคุณที่นี่</p>
                 </div>
-                <div class="fs-1 opacity-25 d-none d-md-block"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="fs-1 opacity-25 d-none d-md-block" style="color: #ffffff !important;"><i class="fa-solid fa-graduation-cap"></i></div>
             </div>
         </div>
     </div>

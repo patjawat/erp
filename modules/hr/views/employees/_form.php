@@ -240,6 +240,16 @@ use iamsaint\datetimepicker\Datetimepicker;
                 <div class="col-6">
                     <?= $form->field($model, 'work_shift')->radioList(['normal' => 'ปกติ', 'shift' => 'เวร 8 ชั่วโมง'], ['inline' => true])->label('ประเภทเวร') ?>
                 </div>
+                <div class="col-12">
+                    <?= $form->field($model, 'department')->widget(Select2::classname(), [
+                        'data' => $model->ListDepartment(),
+                        'options' => ['placeholder' => 'เลือกแผนก/ฝ่าย...'],
+                        'pluginOptions' => [
+                            'dropdownParent' => '#main-modal',
+                            'allowClear' => true,
+                        ],
+                    ])->label('แผนก/ฝ่าย') ?>
+                </div>
                 <div class="alert alert-primary mt-3" role="alert">
                     <span class="address2"><?= isset($model->data_json['address2']) ? $model->data_json['address2'] : '-' ?></span>
                 </div>
@@ -306,22 +316,6 @@ use iamsaint\datetimepicker\Datetimepicker;
             </div>
 
             <div class="col-12">
-                <?php
-                
-                //  $form->field($model, 'department')->widget(Select2::classname(), [
-                //     'data' => $model->ListDepartment(),
-                //     'options' => ['placeholder' => 'เลือก ...'],
-                //     'pluginOptions' => [
-                //         'dropdownParent' => '#main-modal',
-                //         'tags' => true,
-                //         'maximumInputLength' => 10,
-                //     ],
-                // ])->label('แผนก')
-                ?>
-
-            </div>
-
-            <div class="col-12">
                 <?=
                 $form->field($model, 'join_date')->widget(Datetimepicker::className(), [
                     'options' => [
@@ -369,25 +363,10 @@ use iamsaint\datetimepicker\Datetimepicker;
 <?php
 $ref = $model->ref;
 $urlUpload = Url::to('/filemanager/uploads/single');
-$getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
+// $getAvatar = Url::to(['/filemanager/uploads/show', 'id' => 1]);
 // $thaidFillUrl = Url::to(['/auth/thaid/fill-form?debug=1']);
 $thaidFillUrl = Url::to(['/auth/thaid/fill-form']);
 $js = <<<JS
-        getAvatar()
-
-        function getAvatar(){
-            console.log('get Avatar');
-            \$.ajax({
-                type: "get",
-                url: "$getAvatar",
-                dataType: "json",
-                success: function (res) {
-                console.log('get Avatar success');
-                console.log(res);
-            }
-        });
-
-        }
 
 
 
