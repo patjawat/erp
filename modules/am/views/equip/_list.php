@@ -83,7 +83,8 @@ $qedit = static function (string $field, string $type, $value, string $title) us
 
 <style>
 .equip-register-table {
-    min-width: 1420px;
+    width: 100%;
+    min-width: 1350px;
     color: var(--bs-body-color);
 }
 .equip-register-table > thead {
@@ -95,19 +96,40 @@ $qedit = static function (string $field, string $type, $value, string $title) us
 }
 .equip-register-table .equip-table-heading {
     color: var(--bs-secondary-color);
-    font-size: 0.6875rem;
-    letter-spacing: 0.05em;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .equip-col-select { width: 44px; }
-.equip-col-asset { min-width: 220px; }
-.equip-col-gfmis { width: 140px; }
-.equip-col-category { width: 160px; }
-.equip-col-assignment { width: 224px; }
-.equip-col-date { width: 155px; }
-.equip-col-price { width: 144px; }
-.equip-col-risk { width: 140px; }
-.equip-col-status { width: 112px; }
-.equip-col-actions { width: 200px; }
+.equip-col-asset { width: 340px; min-width: 340px; }
+.equip-col-category { width: 190px; }
+.equip-col-assignment { width: 300px; }
+.equip-col-date { width: 175px; }
+.equip-col-price { width: 160px; }
+.equip-col-risk { width: 145px; }
+.equip-col-status { width: 120px; }
+.equip-col-actions { width: 56px; min-width: 56px; }
+.equip-register-table .equip-col-actions,
+.equip-register-table .equip-actions-cell {
+    position: sticky;
+    right: 0;
+    z-index: 3;
+    background-color: var(--bs-body-bg);
+    border-left: 1px solid var(--bs-border-color) !important;
+}
+.equip-register-table thead .equip-col-actions {
+    z-index: 4;
+    background-color: var(--bs-tertiary-bg);
+}
+.equip-register-table tbody > tr:not(.equip-group-row):hover .equip-actions-cell {
+    background-color: var(--bs-tertiary-bg);
+}
+.equip-register-table .equip-actions-cell:has(.dropdown-menu.show) {
+    z-index: 10;
+}
+.equip-register-table .equip-actions-cell .dropdown-menu {
+    z-index: 11;
+}
 .equip-register-table .equip-group-row > td {
     background-color: var(--bs-secondary-bg);
     border-top: 1px solid var(--bs-border-color);
@@ -115,13 +137,16 @@ $qedit = static function (string $field, string $type, $value, string $title) us
 }
 .equip-group-title {
     color: var(--bs-emphasis-color);
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
+    font-size: 0.875rem;
 }
-.equip-group-count,
+.equip-group-count {
+    color: var(--bs-secondary-color);
+    font-size: 0.75rem;
+}
 .equip-meta-xs {
     color: var(--bs-secondary-color);
-    font-size: 0.6875rem;
+    font-size: 0.8125rem;
+    line-height: 1.35;
 }
 .equip-thumb-shell {
     width: 56px;
@@ -135,12 +160,23 @@ $qedit = static function (string $field, string $type, $value, string $title) us
     object-fit: cover;
 }
 .equip-asset-title {
-    max-width: 200px;
+    max-width: 250px;
     color: var(--bs-emphasis-color);
     cursor: pointer;
 }
-.equip-assignment-value { max-width: 180px; }
+.equip-assignment-value { max-width: 250px; }
 .equip-risk-stack { min-width: 92px; }
+.equip-receive-date,
+.equip-receive-age { white-space: nowrap; }
+.equip-actions-inner { flex-wrap: nowrap !important; }
+
+@media (min-width: 1800px) {
+    .equip-register-table { min-width: 100%; }
+    .equip-col-asset { width: 360px; }
+    .equip-col-assignment { width: 320px; }
+    .equip-asset-title { max-width: 275px; }
+    .equip-assignment-value { max-width: 275px; }
+}
 </style>
 
 <div class="equip-list-scroll">
@@ -153,15 +189,16 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                             <input type="checkbox" class="form-check-input equip-bulk-all" aria-label="เลือกทั้งหมด">
                         </th>
                     <?php endif; ?>
-                    <th class="equip-table-heading equip-col-asset px-4 py-3 border-0 text-uppercase fw-bold">ข้อมูลครุภัณฑ์</th>
-                    <th class="equip-table-heading equip-col-gfmis px-4 py-3 border-0 text-uppercase fw-bold">GFMIS</th>
-                    <th class="equip-table-heading equip-col-category px-4 py-3 border-0 text-uppercase fw-bold">หมวดหมู่</th>
-                    <th class="equip-table-heading equip-col-assignment px-4 py-3 border-0 text-uppercase fw-bold">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
-                    <th class="equip-table-heading equip-col-date px-4 py-3 border-0 text-uppercase fw-bold text-center">วันที่รับ</th>
-                    <th class="equip-table-heading equip-col-price px-4 py-3 border-0 text-uppercase fw-bold text-end">ราคาแรกรับ (฿)</th>
-                    <th class="equip-table-heading equip-col-risk px-3 py-3 border-0 text-uppercase fw-bold text-center">สภาพ · ความเสี่ยง</th>
-                    <th class="equip-table-heading equip-col-status px-4 py-3 border-0 text-uppercase fw-bold text-center">สถานะ</th>
-                    <th class="equip-table-heading equip-col-actions px-4 py-3 border-0 text-uppercase fw-bold text-center">การจัดการ</th>
+                    <th class="equip-table-heading equip-col-asset px-3 py-3 border-0">ข้อมูลครุภัณฑ์</th>
+                    <th class="equip-table-heading equip-col-category px-3 py-3 border-0">หมวดหมู่</th>
+                    <th class="equip-table-heading equip-col-assignment px-3 py-3 border-0">สถานที่ตั้ง / ผู้รับผิดชอบ</th>
+                    <th class="equip-table-heading equip-col-date px-3 py-3 border-0 text-center">วันที่รับ</th>
+                    <th class="equip-table-heading equip-col-price px-3 py-3 border-0 text-end">ราคาแรกรับ (฿)</th>
+                    <th class="equip-table-heading equip-col-risk px-3 py-3 border-0 text-center">สภาพ · ความเสี่ยง</th>
+                    <th class="equip-table-heading equip-col-status px-3 py-3 border-0 text-center">สถานะ</th>
+                    <th class="equip-table-heading equip-col-actions px-2 py-3 border-0 text-center">
+                        <span class="visually-hidden">การจัดการ</span>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -175,8 +212,8 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                 ?>
                 <?php foreach ($groups as $groupTitle => $groupItems): ?>
                     <tr class="equip-group-row">
-                        <td colspan="<?= $canEdit ? 10 : 9 ?>" class="px-4 py-2">
-                            <span class="equip-group-title fw-bold text-uppercase"><?= Html::encode((string) $groupTitle) ?></span>
+                        <td colspan="<?= $canEdit ? 9 : 8 ?>" class="px-4 py-2">
+                            <span class="equip-group-title fw-semibold"><?= Html::encode((string) $groupTitle) ?></span>
                             <span class="equip-group-count ms-2">(<?= count($groupItems) ?>)</span>
                         </td>
                     </tr>
@@ -211,7 +248,7 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                                 <input type="checkbox" class="form-check-input equip-bulk-check" value="<?= (int) $item->id ?>" aria-label="เลือกรายการ">
                             </td>
                         <?php endif; ?>
-                        <td class="px-4 py-3 border-0">
+                        <td class="px-3 py-3 border-0">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="equip-thumb-shell rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 border">
                                     <?= Html::img(
@@ -230,10 +267,7 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                                 </div>
                             </div>
                         </td>
-                        <td class="px-4 py-3 border-0">
-                            <span class="font-monospace small text-body-secondary"><?= Html::encode($item->gfmis ?: '-') ?></span>
-                        </td>
-                        <td class="px-4 py-3 border-0">
+                        <td class="px-3 py-3 border-0">
                             <?php if ($catUnset): ?>
                                 <?php $catBadge = '<span class="badge rounded-2 fw-medium bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">' . Html::encode($catTitle) . '</span>'; ?>
                             <?php else: ?>
@@ -244,8 +278,12 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                             <?php else: ?>
                                 <?= $catBadge ?>
                             <?php endif; ?>
+                            <div class="equip-meta-xs mt-2">
+                                <span class="me-1">GFMIS:</span>
+                                <span class="font-monospace"><?= Html::encode($item->gfmis ?: '-') ?></span>
+                            </div>
                         </td>
-                        <td class="px-4 py-3 border-0">
+                        <td class="px-3 py-3 border-0">
                             <?php
                             $assignBlock = '<div class="d-flex flex-column gap-1">'
                                 . '<div class="d-flex align-items-center gap-2 text-body"><i class="bi bi-geo-alt text-body-secondary flex-shrink-0" aria-hidden="true"></i><span class="equip-assignment-value fw-semibold text-truncate">' . Html::encode($item->departmentName() ?: 'ไม่ระบุ') . '</span></div>'
@@ -258,75 +296,59 @@ $qedit = static function (string $field, string $type, $value, string $title) us
                                 <?= $assignBlock ?>
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-3 border-0 text-center fw-medium small text-body-secondary">
+                        <td class="px-3 py-3 border-0 text-center fw-medium small text-body-secondary">
                             <span<?= $qedit('receive_date', 'date', $item->receive_date ? \app\components\AppHelper::DateFormDb(substr((string) $item->receive_date, 0, 10)) : '', 'วันที่รับเข้า') ?>>
                             <?php if ($item->receive_date): ?>
-                                <div><?= Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) ?></div>
-                                <div class="small text-primary mt-1"><?= Html::encode($receiveAgeText($item->receive_date)) ?></div>
+                                <div class="equip-receive-date"><?= Html::encode(Yii::$app->thaiFormatter->asDate($item->receive_date, 'medium')) ?></div>
+                                <div class="equip-receive-age small text-primary mt-1"><?= Html::encode($receiveAgeText($item->receive_date)) ?></div>
                             <?php else: ?>
                                 <span class="text-body-tertiary">ไม่ระบุ</span>
                             <?php endif; ?>
                             </span>
                         </td>
-                        <td class="px-4 py-3 border-0 text-end fw-bold font-monospace text-body-emphasis"><span<?= $qedit('price', 'number', $price, 'ราคาแรกรับ (บาท)') ?>><?= number_format($price, 2) ?></span></td>
+                        <td class="px-3 py-3 border-0 text-end fw-bold font-monospace text-body-emphasis"><span<?= $qedit('price', 'number', $price, 'ราคาแรกรับ (บาท)') ?>><?= number_format($price, 2) ?></span></td>
                         <td class="px-3 py-3 border-0 text-center">
                             <div class="equip-risk-stack d-inline-flex flex-column align-items-stretch gap-1">
                                 <span<?= $qedit('asset_condition', 'enum', $item->asset_condition, 'สภาพครุภัณฑ์') ?>><?= $item->getConditionBadge() ?></span>
                                 <span<?= $qedit('risk_level', 'enum', $item->risk_level, 'ระดับความเสี่ยง') ?>><?= $item->getRiskLevelBadge() ?></span>
                             </div>
                         </td>
-                        <td class="px-4 py-3 border-0 text-center"><span<?= $qedit('asset_status', 'enum', $item->asset_status, 'สถานะ') ?>><?= $item->getStatusBadge() ?></span></td>
-                        <td class="text-center align-middle equip-actions-cell px-2 px-md-3  border-0">
-                            <div class="equip-actions-inner d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
-                                <?= Html::a('<i class="fa-regular fa-eye"></i>', ['view', 'id' => $item->id], [
-                                    'class' => 'btn btn-sm btn-primary',
-                                    'title' => 'บำรุงรักษา',
-                                    'data-pjax' => 0,
-                                ]) ?>
-                                <?php if (Yii::$app->user->can('asset')): ?>
-                                    <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['update', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-warning',
-                                        'title' => 'แก้ไข',
-                                        'data-pjax' => 0,
-                                    ]) ?>
-                                <?php endif; ?>
-                              
-                                <div class="dropdown flex-grow-1 flex-sm-grow-0">
-                                    <button class="btn btn-sm btn-secondary dropdown-toggle w-100 w-sm-auto" type="button"
-                                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa-solid fa-angle-down"></i>
+                        <td class="px-3 py-3 border-0 text-center"><span<?= $qedit('asset_status', 'enum', $item->asset_status, 'สถานะ') ?>><?= $item->getStatusBadge() ?></span></td>
+                        <td class="text-center align-middle equip-actions-cell px-2 border-0">
+                            <div class="equip-actions-inner d-flex justify-content-center align-items-center">
+                                <?php $actionMenuId = 'equip-action-menu-' . (int) $item->id; ?>
+                                <div class="dropdown">
+                                    <button class="btn p-0 dropdown-toggle hide-arrow" type="button"
+                                        id="<?= $actionMenuId ?>" data-bs-toggle="dropdown" aria-expanded="false"
+                                        aria-label="จัดการ <?= Html::encode($titleName) ?>" title="จัดการ">
+                                        <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="<?= $actionMenuId ?>">
                                         <li>
-                                              <?= Html::a('<i class="bi bi-qr-code-scan me-2"></i>พิมพ์สติกเกอร์', ['/am/asset/view-qr', 'id' => $item->id], [
-                                    'class' => 'dropdown-item',
-                                    'title' => 'พิมพ์',
-                                    'data-pjax' => 0,
-                                    'target' => '_blank',
-                                ]) ?>
+                                            <?= Html::a('<i class="fa-regular fa-eye me-2"></i> ดูรายละเอียด', ['view', 'id' => $item->id], [
+                                                'class' => 'dropdown-item',
+                                                'data-pjax' => 0,
+                                            ]) ?>
                                         </li>
+                                        <li><hr class="dropdown-divider"></li>
                                         <li>
-                                        <?= Html::a('<i class="fa-solid fa-print me-2"></i> พิมพ์ค่าเสื่อม', ['/am/asset/depreciation', 'id' => $item->id], ['class' => 'open-modal w-100 dropdown-item', 'data' => ['size' => 'modal-lg']]) ?>
+                                            <?= Html::a('<i class="fa-solid fa-print me-2"></i> พิมพ์ค่าเสื่อม', ['/am/asset/depreciation', 'id' => $item->id], ['class' => 'open-modal w-100 dropdown-item', 'data' => ['size' => 'modal-lg']]) ?>
                                         </li>
                                         <li>
                                             <?= Html::a('<i class="fa-solid fa-triangle-exclamation me-2"></i> ส่งซ่อม / แจ้งปัญหา', ['/me/repair-v2/create', 'asset_number' => $item->code, 'send_type' => 'asset', 'container' => 'ma-container', 'title' => '<i class="fa-solid fa-circle-info fs-3"></i>  ส่งซ่อม'], ['class' => 'open-modal dropdown-item', 'data' => ['size' => 'modal-lg']]) ?>
                                         </li>
-                                        
                                         <?php if (Yii::$app->user->can('admin')): ?>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <?= Html::a('<i class="fa-regular fa-trash-can me-2"></i> ลบข้อมูล', ['delete', 'id' => $item->id], [
-                                                    'class' => 'dropdown-item delete-asset',
+                                                    'class' => 'dropdown-item text-danger delete-asset',
                                                     'title' => 'ลบ',
                                                     'data-pjax' => 0,
                                                 ]) ?>
-                                        </li>
-                                            <?php endif; ?>
+                                            </li>
+                                        <?php endif; ?>
                                     </ul>
                                 </div>
-
                             </div>
                         </td>
                     </tr>
