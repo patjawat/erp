@@ -53,6 +53,9 @@ class LeaveSearch extends Leave
         ]);
 
         $this->load($params);
+        if (empty($this->status) && isset($params['status'])) {
+            $this->status = $params['status'];
+        }
 
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails

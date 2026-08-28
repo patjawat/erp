@@ -48,7 +48,7 @@ class ApproverController extends Controller
 
         $searchModel = new LeaveSearch();
         
-        $params = $this->request->queryParams;
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
 
         $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
@@ -709,9 +709,10 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
-        $status = $this->request->get('status');
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
+        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
         $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
         $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
         $dataProvider->pagination = false;
@@ -725,7 +726,7 @@ class ApproverController extends Controller
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
         }
         if ($status) {
-            $query->andFilterWhere(['leave.status' => $searchModel->status]);
+            $query->andFilterWhere(['leave.status' => $status]);
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
@@ -764,8 +765,10 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
+        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
+        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
         $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search($params);
         $query = $dataProvider->query;
         $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
         $dataProvider->pagination = false;
@@ -778,9 +781,8 @@ class ApproverController extends Controller
         if (!empty($searchModel->leave_type_id)) {
             $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
         }
-        $status = $this->request->get('status');
         if ($status) {
-            $query->andFilterWhere(['leave.status' => $searchModel->status]);
+            $query->andFilterWhere(['leave.status' => $status]);
         }
         $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
         if ($position_type_id) {
