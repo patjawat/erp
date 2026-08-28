@@ -2,25 +2,27 @@
 
 namespace tests\unit\components;
 
+require_once __DIR__ . '/../../../components/DocumentPdfResolver.php';
+
 use app\components\DocumentPdfResolver;
-use Codeception\Test\Unit;
+use PHPUnit\Framework\TestCase;
 use yii\helpers\BaseFileHelper;
 
-final class DocumentPdfResolverTest extends Unit
+final class DocumentPdfResolverTest extends TestCase
 {
     private string $uploadRoot;
 
-    protected function _before(): void
+    protected function setUp(): void
     {
-        parent::_before();
+        parent::setUp();
         $this->uploadRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'document-pdf-resolver-' . bin2hex(random_bytes(6));
         BaseFileHelper::createDirectory($this->uploadRoot);
     }
 
-    protected function _after(): void
+    protected function tearDown(): void
     {
         BaseFileHelper::removeDirectory($this->uploadRoot);
-        parent::_after();
+        parent::tearDown();
     }
 
     public function testSkipsStaleMetadataAndReturnsNextReadablePdf(): void

@@ -72,6 +72,27 @@ class DocumentsController extends \yii\web\Controller
     }
 
     /**
+     * เจ้าหน้าที่สารบรรณต้องอ่านเอกสารจากทะเบียนกลางได้ทุกฉบับ ส่วนผู้ใช้ทั่วไป
+     * ยังคงต้องเป็นผู้รับโดยตรงหรือผ่านหน่วยงานตาม DocumentAccessPolicy.
+     */
+    private function canCurrentUserReadDocument(int $documentId, $employee): bool
+    {
+        if (Yii::$app->user->can('document')) {
+            return true;
+        }
+
+        if (!$employee) {
+            return false;
+        }
+
+        return DocumentAccessPolicy::canRead(
+            $documentId,
+            (int) ($employee->department ?? 0),
+            (int) ($employee->id ?? 0)
+        );
+    }
+
+    /**
      * ฐาน query ของหน้า index สำหรับใช้ทั้งรายการและ KPI
      * หมายเหตุ: ไม่ใส่เงื่อนไขค้นหาเข้ามาในตัว helper นี้
      */
@@ -445,17 +466,15 @@ class DocumentsController extends \yii\web\Controller
         if (!$detail) {
             throw new NotFoundHttpException('ไม่พบเส้นทางการส่งหนังสือ');
         }
-        if (!DocumentAccessPolicy::canRead(
-            (int) $detail->document_id,
-            (int) ($emp->department ?? 0),
-            (int) ($emp->id ?? 0)
-        )) {
+        if (!$this->canCurrentUserReadDocument((int) $detail->document_id, $emp)) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
         }
         $callback = $this->request->get('callback');
         $model = $this->findModel($detail->document_id);
 
-        $this->markDetailAsRead($detail, (int) $emp->id);
+        if ($emp && !empty($emp->id)) {
+            $this->markDetailAsRead($detail, (int) $emp->id);
+        }
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -880,14 +899,10 @@ class DocumentsController extends \yii\web\Controller
         if (!Yii::$app->user->isGuest) {
             $document = Documents::findOne(['ref' => $ref]);
             $employee = UserHelper::GetEmployee();
-            if (!$document || !$employee) {
+            if (!$document) {
                 throw new NotFoundHttpException('ไม่พบหนังสือ');
             }
-            if (!DocumentAccessPolicy::canRead(
-                (int) $document->id,
-                (int) ($employee->department ?? 0),
-                (int) ($employee->id ?? 0)
-            )) {
+            if (!$this->canCurrentUserReadDocument((int) $document->id, $employee)) {
                 throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
             }
 
