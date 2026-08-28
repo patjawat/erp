@@ -11,6 +11,9 @@ use kartik\widgets\ActiveForm;
 use app\modules\hr\models\Organization;
 use app\modules\dms\models\DocumentTags;;
 $this->title = $model->document->topic;
+
+// ตั้งค่าเริ่มต้น "ส่งต่อถึง" เป็นผู้อำนวยการ จะได้ไม่ต้องเลือกเองทุกครั้ง
+$model->applyDefaultForward();
 // use iamsaint\datetimepicker\DateTimePickerAsset::register($this);
 
 /** @var yii\web\View $this */

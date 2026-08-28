@@ -15,6 +15,10 @@ $avatarUrl = $me ? $me->showAvatar() : '';
 $myName = $me ? $me->fullname : 'ฉัน';
 $isEdit = !$model->isNewRecord;
 
+// ตั้งค่าเริ่มต้น "ส่งต่อถึง" เป็นผู้อำนวยการ จะได้ไม่ต้องเลือกเองทุกครั้ง
+$model->applyDefaultForward();
+$hasForwardTo = !empty($model->tags_employee);
+
 // dept ที่ยังไม่ได้ส่ง (กันส่งซ้ำ)
 $departmentList = $model->listAvailableDepartments();
 
@@ -46,7 +50,7 @@ $canTestNotification = \Yii::$app->user->can('admin');
                 'style' => 'resize:none; min-height:40px;',
             ])->label(false) ?>
 
-            <div class="collapse mt-2" id="composer-tag-people">
+            <div class="collapse mt-2<?= $hasForwardTo ? ' show' : '' ?>" id="composer-tag-people">
                 <div class="px-2 pb-2">
                     <div class="small text-muted mb-1"><i class="fa-solid fa-user-tag me-1"></i>ส่งต่อถึงบุคคล</div>
                     <?= $form->field($model, 'tags_employee', ['options' => ['class' => 'mb-0']])->widget(Select2::classname(), [
@@ -54,6 +58,15 @@ $canTestNotification = \Yii::$app->user->can('admin');
                         'options' => ['placeholder' => 'พิมพ์ค้นหาบุคคล...', 'multiple' => true],
                         'pluginOptions' => ['allowClear' => true, 'multiple' => true],
                     ])->label(false) ?>
+                    <?php if (!$isEdit && $hasForwardTo): ?>
+                        <div class="form-text small text-muted mt-1">
+                            <i class="fa-solid fa-circle-info me-1"></i>ตั้งค่าเริ่มต้นไว้ให้แล้ว ถ้าไม่ต้องการส่งต่อ กดกากบาทที่ชื่อเพื่อเอาออกได้
+                        </div>
+                    <?php elseif (!$isEdit && $model->directorForwardedByOthers): ?>
+                        <div class="form-text small text-muted mt-1">
+                            <i class="fa-solid fa-circle-check me-1 text-success"></i>เอกสารนี้ส่งถึงผู้อำนวยการไปแล้ว จึงไม่ได้ใส่ชื่อซ้ำให้ ถ้าต้องการส่งอีกครั้งเลือกเองได้
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 

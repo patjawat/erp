@@ -67,6 +67,10 @@ class DocumentsDetail extends \yii\db\ActiveRecord
     public $tags_employee;
     public $tags_department;
     public $tag_id;
+    /** @var bool ไม่ได้เติมชื่อ ผอ. ให้ เพราะมีคนส่งถึง ผอ. ในเอกสารนี้ไปแล้ว */
+    public $directorForwardedByOthers = false;
+    /** @var int|null|false รหัส ผอ. ที่จำไว้ทั้ง request (false = ยังไม่ได้อ่าน) */
+    private static $_directorId = false;
     public static function tableName()
     {
         return 'documents_detail';
@@ -231,6 +235,105 @@ class DocumentsDetail extends \yii\db\ActiveRecord
         return ArrayHelper::map($query->all(), 'id', 'name');
     }
 
+    /**
+     * รหัสพนักงานของผู้อำนวยการ ตามที่ตั้งไว้ในตั้งค่าองค์กร (settings/company)
+     * คืน null ถ้ายังไม่ได้ตั้งค่าไว้
+     */
+    public static function directorEmployeeId()
+    {
+        // จำค่าไว้ทั้ง request — ฟอร์มเกษียนเรียกหลายจุด ไม่ควรยิง DB ซ้ำ
+        if (self::$_directorId !== false) {
+            return self::$_directorId;
+        }
+
+        self::$_directorId = null;
+        try {
+            // อ่านค่าเดียวที่ต้องใช้ตรงๆ ไม่เรียก SiteHelper::getInfo()
+            // เพราะ getInfo() ดึงข้อมูลองค์กรทั้งก้อน (ลายเซ็น/avatar/หัวหน้า) ~54 query
+            $site = Categorise::findOne(['name' => 'site']);
+            $json = $site ? $site->data_json : null;
+            if (is_string($json)) {
+                $json = json_decode($json, true);
+            }
+            $id = (int) (is_array($json) ? ($json['director_name'] ?? 0) : 0);
+            self::$_directorId = $id > 0 ? $id : null;
+        } catch (\Throwable $th) {
+        }
+
+        return self::$_directorId;
+    }
+
+    /**
+     * เอกสารฉบับนี้ส่งถึงผู้อำนวยการไปแล้วหรือยัง
+     * นับทั้งการเกษียนส่งต่อของคนก่อนหน้า (comment_emp),
+     * การเสนอผู้อำนวยการ (req_approve) และการ tag ระดับเอกสาร (employee)
+     */
+    public function directorAlreadyForwarded($directorId = null)
+    {
+        $directorId = $directorId ?: self::directorEmployeeId();
+        if (!$directorId || empty($this->document_id)) {
+            return false;
+        }
+
+        try {
+            return $this->queryDirectorForwarded($directorId);
+        } catch (\Throwable $th) {
+            // อ่านไม่ได้ก็ถือว่ายังไม่เคยส่ง — ฟอร์มต้องไม่พังเพราะเช็คตัวนี้
+            return false;
+        }
+    }
+
+    private function queryDirectorForwarded($directorId)
+    {
+        return self::find()
+            ->where([
+                'document_id' => $this->document_id,
+                'to_id' => (string) $directorId,
+            ])
+            ->andWhere(['in', 'name', ['comment_emp', 'req_approve', 'employee']])
+            ->exists();
+    }
+
+    /**
+     * ตั้งค่าเริ่มต้นของช่อง "ส่งต่อถึง" ให้เป็นผู้อำนวยการ
+     * เพื่อไม่ต้องเลือกชื่อเองทุกครั้งที่เกษียนหนังสือ
+     *
+     * ไม่ตั้งค่าให้ในกรณี
+     *  - กำลังแก้ไขความเห็นเดิม (ต้องคงค่าที่เคยเลือกไว้)
+     *  - ผู้ใช้เลือกชื่อไว้แล้ว
+     *  - ยังไม่ได้ตั้งค่าผู้อำนวยการในตั้งค่าองค์กร
+     *  - ผู้อำนวยการเป็นคนเกษียนเอง (ไม่ต้องส่งต่อถึงตัวเอง)
+     *  - เอกสารนี้ส่งถึงผู้อำนวยการไปแล้ว (กันแจ้งเตือนซ้ำ) — ยังเลือกเองได้อยู่
+     */
+    public function applyDefaultForward()
+    {
+        $this->directorForwardedByOthers = false;
+
+        if (!$this->isNewRecord || !empty($this->tags_employee)) {
+            return;
+        }
+
+        $directorId = self::directorEmployeeId();
+        if (!$directorId) {
+            return;
+        }
+
+        try {
+            $me = UserHelper::GetEmployee();
+            if ($me && (int) $me->id === $directorId) {
+                return;
+            }
+        } catch (\Throwable $th) {
+        }
+
+        if ($this->directorAlreadyForwarded($directorId)) {
+            $this->directorForwardedByOthers = true;
+            return;
+        }
+
+        $this->tags_employee = [$directorId];
+    }
+
     // ดึงค่าไปแสดงตอนที่เรา update
     public function listEmployeeSelectTag()
     {
@@ -242,6 +345,17 @@ class DocumentsDetail extends \yii\db\ActiveRecord
                 ->andWhere(['<>', 'to_id', $this->created_by])
                 ->All();
             $allTag = ArrayHelper::getColumn($tags, 'to_id');
+
+            // คนที่ถูกเลือกไว้แล้ว + ผู้อำนวยการ ต้องมีในรายการเสมอ
+            // ไม่งั้น Select2 จะแสดงเป็นช่องว่างทั้งที่มีค่าอยู่
+            $keep = array_filter(array_map('intval', (array) $this->tags_employee));
+            if ($directorId = self::directorEmployeeId()) {
+                $keep[] = $directorId;
+            }
+            if ($keep) {
+                $allTag = array_diff(array_map('intval', $allTag), $keep);
+            }
+
             // หาบุคคลที่ยังไม่ได้ tag ไป  และ ไม่ใช่ admin
             $employees = Employees::find()
                 ->select(['id', 'concat(fname, " ", lname) as fullname'])
