@@ -1,0 +1,2 @@
+<?php use yii\helpers\Html; $this->title = 'ไม่สามารถเปิดแบบสัมภาษณ์'; ?>
+<main class="min-vh-100 bg-body-tertiary d-flex align-items-center py-5"><div class="container"><section class="card bg-body border shadow-sm mx-auto text-center"><div class="card-body p-5"><h1 class="h3">ไม่สามารถเปิดแบบสัมภาษณ์</h1><p class="text-body-secondary mb-0"><?= Html::encode($message) ?></p><p class="small text-body-secondary mt-3 mb-0">กรุณาติดต่อฝ่ายทรัพยากรบุคคลเพื่อขอลิงก์ใหม่</p></div></section></div></main>

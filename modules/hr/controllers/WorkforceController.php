@@ -46,6 +46,9 @@ class WorkforceController extends Controller
         if ($section === 'health') {
             return $this->redirect(['/health/default/index']);
         }
+        if ($section === 'exit') {
+            return $this->redirect(['/hr/exit-interview/index']);
+        }
 
         $allowedSections = ['overview', 'jd', 'kpi', 'appraisal', 'exit'];
         if (!in_array($section, $allowedSections, true)) {
