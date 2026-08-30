@@ -13,7 +13,7 @@ $items = [
     'appraisal' => ['ประเมินผล', 'chart-no-axes-combined', ['/hr/workforce/index', 'section' => 'appraisal']],
     'talent' => ['9 Box', 'grid-3x3', ['/hr/talent-grid/index']],
     'health' => ['Health', 'heart-pulse', ['/health/default/index']],
-    'exit' => ['Exit Int', 'log-out', ['/hr/workforce/index', 'section' => 'exit']],
+    'exit' => ['Exit Int', 'log-out', ['/hr/exit-interview/index']],
 ];
 $titles = [
     'core' => 'สมรรถนะหลัก (Core Competency)',

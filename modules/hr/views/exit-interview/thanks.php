@@ -1,0 +1,2 @@
+<?php $this->title = 'ส่งแบบสัมภาษณ์เรียบร้อย'; ?>
+<main class="min-vh-100 bg-body-tertiary d-flex align-items-center py-5"><div class="container"><section class="card bg-body border shadow-sm mx-auto text-center"><div class="card-body p-5"><div class="text-success mb-3"><i data-lucide="circle-check" aria-hidden="true"></i></div><h1 class="h3">ส่งแบบสัมภาษณ์เรียบร้อย</h1><p class="text-body-secondary mb-0">ขอบคุณสำหรับความคิดเห็น ข้อมูลจะนำไปใช้เพื่อพัฒนาองค์กรในภาพรวม</p></div></section></div></main>
