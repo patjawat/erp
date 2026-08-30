@@ -329,6 +329,20 @@ $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $b
                 <div class="document-work-scroll p-4">
                     <div class="d-flex flex-column gap-4">
 
+                        <?php // สร้างงานจากหนังสือฉบับนี้ — ผู้ใช้ตัดสินใจว่าต้องมีคนทำตอนที่กำลังอ่านเนื้อหาอยู่ ?>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="text-body-secondary small">
+                                <i class="bi bi-list-check me-1" aria-hidden="true"></i>
+                                เรื่องนี้ต้องมีคนทำต่อหรือไม่
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasCreateTask"
+                                    aria-controls="offcanvasCreateTask"
+                                    data-task-form-url="<?= Url::to(['/task/document/form', 'id' => $model->id]) ?>">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>สร้างงาน
+                            </button>
+                        </div>
+
                         <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
                             <div class="px-4 py-3 border-bottom border-light-subtle">
                                 <div class="d-flex align-items-center gap-2">
@@ -410,6 +424,96 @@ $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $b
         <?= $this->render('_attachment_list', ['model' => $model]) ?>
     </div>
 </div>
+
+<?php // สร้างงานจากหนังสือ — เนื้อหาฟอร์มโหลดจากโมดูล task ตอนเปิดครั้งแรก ?>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCreateTask" aria-labelledby="offcanvasCreateTaskLabel" style="--bs-offcanvas-width: 480px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="offcanvasCreateTaskLabel">
+            <i class="bi bi-list-check text-primary me-2"></i>สร้างงานจากหนังสือ
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body p-3" id="createTaskBody">
+        <div class="d-flex align-items-center gap-2 text-body-secondary">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            กำลังเตรียมฟอร์ม...
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var panel = document.getElementById('offcanvasCreateTask');
+    var body = document.getElementById('createTaskBody');
+    if (!panel || !body || panel.dataset.bound === '1') { return; }
+    panel.dataset.bound = '1';
+
+    var loaded = false;
+
+    // ผูก event หลัง inject HTML เพราะ script ที่มากับ innerHTML จะไม่ทำงานเอง
+    function bindForm() {
+        var form = document.getElementById('task-from-doc-form');
+        if (!form) { return; }
+
+        form.querySelectorAll('.task-quick-date').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById('task-due-date');
+                if (input) { input.value = btn.dataset.date || ''; }
+                form.querySelectorAll('.task-quick-date').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+            });
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var msg = document.getElementById('task-form-message');
+            var submit = form.querySelector('button[type="submit"]');
+            submit.disabled = true;
+            msg.className = 'small text-body-secondary';
+            msg.textContent = 'กำลังสร้างงาน...';
+
+            fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.status === 'success') {
+                        msg.className = 'small text-success-emphasis';
+                        msg.textContent = data.message;
+                        submit.classList.remove('btn-primary');
+                        submit.classList.add('btn-success');
+                        submit.innerHTML = '<i class="bi bi-check-lg me-1"></i>มอบหมายแล้ว';
+                    } else {
+                        msg.className = 'small text-danger-emphasis';
+                        msg.textContent = data.message || 'สร้างงานไม่สำเร็จ';
+                        submit.disabled = false;
+                    }
+                })
+                .catch(function () {
+                    msg.className = 'small text-danger-emphasis';
+                    msg.textContent = 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่';
+                    submit.disabled = false;
+                });
+        });
+    }
+
+    panel.addEventListener('show.bs.offcanvas', function (event) {
+        if (loaded) { return; }
+        var trigger = event.relatedTarget;
+        var url = trigger ? trigger.getAttribute('data-task-form-url') : null;
+        if (!url) { return; }
+
+        fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+                body.innerHTML = html;
+                loaded = true;
+                bindForm();
+            })
+            .catch(function () {
+                body.innerHTML = '<div class="alert alert-danger mb-0">โหลดฟอร์มไม่สำเร็จ กรุณาปิดแล้วลองใหม่</div>';
+            });
+    });
+})();
+</script>
 
 <?php
 $getCommentUrl = Url::to(['/me/documents/comment', 'id' => $model->id]);

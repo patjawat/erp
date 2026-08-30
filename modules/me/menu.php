@@ -29,6 +29,28 @@ $menus = [
         <i data-lucide="layout-grid"></i>
         ภาพรวม
     </a>
+    <?php
+    // งานมอบหมาย — ป้องกันหน้าพังในเครื่องที่ยังไม่ได้รัน migration ของโมดูล task
+    $myTaskCount = 0;
+    try {
+        $meEmpForTask = \app\components\UserHelper::GetEmployee();
+        if ($meEmpForTask && Yii::$app->db->getTableSchema('{{%task}}') !== null) {
+            $myTaskCount = (int) \app\modules\task\models\Task::find()
+                ->where(['assignee_emp_id' => $meEmpForTask->id])
+                ->andWhere(['status' => \app\modules\task\models\Task::OPEN_STATUSES])
+                ->count();
+        }
+    } catch (\Throwable $e) {
+        $myTaskCount = 0;
+    }
+    ?>
+    <a href="<?= Url::to(['/task']) ?>" class="btn <?= ($active ?? '') !== 'task' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i data-lucide="list-checks"></i>
+        งานของฉัน
+        <?php if ($myTaskCount > 0): ?>
+            <span class="badge rounded-pill badge-soft-primary text-primary ms-1"><?= $myTaskCount ?></span>
+        <?php endif; ?>
+    </a>
     <?php if (!Yii::$app->user->can('branch')): ?>
         <a href="<?= Url::to(['/approve-v2']) ?>" class="btn <?= $active !== 'approve' ? 'btn-outline-primary' : 'btn-primary' ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check">

@@ -79,6 +79,7 @@ $modules['backoffice'] = ['class' => 'app\modules\backoffice\Module'];  // backo
 $modules['treemanager'] = ['class' => '\kartik\tree\Module'];  // Tree Module
 $modules['roundSwitch'] = ['class' => 'nickdenry\grid\toggle\Module'];  // Tree Module
 $modules['booking'] = ['class' => 'app\modules\booking\Module'];  // module การจอง
+$modules['task'] = ['class' => 'app\modules\task\Module'];  // งานมอบหมาย (To Do)
 $modules['approve'] = ['class' => 'app\modules\approve\Module'];  // module การจอง
 $modules['approve-v2'] = ['class' => 'app\modules\approveV2\Module'];  // module การจอง
 $modules['approve-v3'] = ['class' => 'app\modules\approveV3\Module'];  // module อนุมัติ V3 (ตาราง approve เดิม)
