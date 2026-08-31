@@ -9,6 +9,11 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\HttpException;
 
+// กันหน้า error พังซ้ำเมื่อถูก render จากที่อื่นที่ไม่ได้ส่งตัวแปรมาครบ
+$exception = $exception ?? null;
+$message = $message ?? '';
+$name = $name ?? 'เกิดข้อผิดพลาด';
+
 $statusCode = $exception instanceof HttpException ? (int) $exception->statusCode : 500;
 $isClientError = $statusCode >= 400 && $statusCode < 500;
 

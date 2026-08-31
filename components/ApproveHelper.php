@@ -37,7 +37,9 @@ class ApproveHelper extends Component
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total']),
+            // เบิกวัสดุรุ่นเก่า (StockApprove) ไม่ถูกนับรวมแล้วตั้งแต่ 2026-08-31
+            // เพราะเลิกใช้ไปแล้ว ใช้ RequisitionV2 แทน — คงเมธอดกับคีย์ไว้เผื่อโค้ดเก่าเรียกใช้
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
@@ -60,13 +62,14 @@ class ApproveHelper extends Component
         $default = ['title' => 'ลงนามรับรองบ้านพัก', 'total' => 0, 'datas' => []];
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) {
                 return $default;
             }
 
             $rows = Handover::find()
                 ->where([
-                    'received_by_emp_id' => (int) $me->id,
+                    'received_by_emp_id' => $empId,
                     'status' => Handover::STATUS_DRAFT,
                     'received_signed_at' => null,
                 ])
@@ -90,6 +93,7 @@ class ApproveHelper extends Component
         $default = ['title' => 'ประเมินทดลองงาน', 'total' => 0, 'datas' => []];
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) return $default;
 
             $items = [];
@@ -97,7 +101,7 @@ class ApproveHelper extends Component
                 ->alias('evaluation')
                 ->joinWith(['round.case.employee'])
                 ->where([
-                    'evaluation.evaluator_employee_id' => (int) $me->id,
+                    'evaluation.evaluator_employee_id' => $empId,
                     'evaluation.role' => 'group_head',
                     'evaluation.status' => 'open',
                 ])
@@ -115,8 +119,8 @@ class ApproveHelper extends Component
 
             $decisionCases = ProbationCase::find()
                 ->with('employee')
-                ->where(['final_recommender_employee_id' => (int) $me->id, 'status' => 'waiting_decision'])
-                ->andWhere(['<>', 'supervisor_employee_id', (int) $me->id])
+                ->where(['final_recommender_employee_id' => $empId, 'status' => 'waiting_decision'])
+                ->andWhere(['<>', 'supervisor_employee_id', $empId])
                 ->orderBy(['updated_at' => SORT_ASC])
                 ->all();
             foreach ($decisionCases as $case) {
@@ -133,7 +137,7 @@ class ApproveHelper extends Component
                 ->joinWith(['case.employee'])
                 ->where([
                     'round.status' => 'waiting_acknowledgement',
-                    'probation_case.director_employee_id' => (int) $me->id,
+                    'probation_case.director_employee_id' => $empId,
                 ])
                 ->orderBy(['round.id' => SORT_ASC])
                 ->all();
@@ -182,6 +186,7 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) {
                 return ['title' => 'JD รอลงนาม', 'total' => 0, 'datas' => []];
             }
@@ -189,7 +194,7 @@ class ApproveHelper extends Component
             $rows = Approve::find()
                 ->where([
                     'name' => \app\modules\jd\services\JdApprovalService::APPROVE_NAME,
-                    'emp_id' => (int) $me->id,
+                    'emp_id' => $empId,
                     'status' => 'Pending',
                 ])
                 ->orderBy(['id' => SORT_DESC])
@@ -219,11 +224,12 @@ class ApproveHelper extends Component
         $default = ['title' => 'IDP รอดำเนินการ', 'total' => 0, 'datas' => [], 'url' => ['/profile', 'name' => 'idp']];
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) return $default;
             // หัวหน้า: แผนรอเห็นชอบ
-            $reviewPlans = IdpPlan::find()->where(['supervisor_emp_id' => $me->id, 'status' => 'submitted'])->orderBy(['submitted_at' => SORT_ASC])->all();
+            $reviewPlans = IdpPlan::find()->where(['supervisor_emp_id' => $empId, 'status' => 'submitted'])->orderBy(['submitted_at' => SORT_ASC])->all();
             // เจ้าหน้าที่: แผนที่ถูกส่งกลับให้ปรับปรุง
-            $revisionPlans = IdpPlan::find()->where(['emp_id' => $me->id, 'status' => 'revision'])->orderBy(['reviewed_at' => SORT_DESC])->all();
+            $revisionPlans = IdpPlan::find()->where(['emp_id' => $empId, 'status' => 'revision'])->orderBy(['reviewed_at' => SORT_DESC])->all();
             // HR/admin: แผนรอเปิดบันทึก (approved) + รอปิดรอบ (assessment)
             $hrPlans = [];
             if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')) {
@@ -250,11 +256,12 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) {
                 return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
             }
 
-            $jd = JdEmployee::findCurrent((int) $me->id);
+            $jd = JdEmployee::findCurrent($empId);
             if (!$jd) {
                 return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
             }
@@ -266,7 +273,7 @@ class ApproveHelper extends Component
 
             // กำลังมีฉบับร่าง/รอลงนามที่ revision สูงกว่า (HR รับคำขอแล้วกำลังทำฉบับใหม่) → ไม่ต้องเด้งให้รับทราบฉบับเดิม
             if (JdEmployee::find()
-                ->where(['emp_id' => (int) $me->id, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
+                ->where(['emp_id' => $empId, 'status' => [JdEmployee::STATUS_DRAFT, JdEmployee::STATUS_PENDING]])
                 ->andWhere(['>', 'revision_no', (int) $jd->revision_no])
                 ->exists()) {
                 return ['title' => 'JD รอลงนามรับทราบ', 'total' => 0, 'datas' => []];
@@ -275,7 +282,7 @@ class ApproveHelper extends Component
             $acknowledged = JdEmployeeAcknowledgement::find()
                 ->where([
                     'jd_employee_id' => (int) $jd->id,
-                    'emp_id' => (int) $me->id,
+                    'emp_id' => $empId,
                 ])
                 ->exists();
 
@@ -360,7 +367,8 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $datas = Approve::find()->where(['name' => 'driver_service', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->limit(10)->all();
+            $empId = $me ? (int) $me->id : 0;
+            $datas = Approve::find()->where(['name' => 'driver_service', 'status' => 'Pending', 'emp_id' => $empId])->orderBy(['id' => SORT_DESC])->limit(10)->all();
 
             return [
                 'title' => 'ขออนุญาตใช้รถ',
@@ -381,12 +389,13 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             $approveQuery = Approve::find()
                 ->alias('approve')
                 ->leftJoin('`leave`', "approve.from_id = `leave`.id")
                 ->where([
                     'approve.name' => 'leave',
-                    'approve.emp_id' => $me->id,
+                    'approve.emp_id' => $empId,
                     'approve.status' => 'Pending'
                 ])
                 ->andWhere(['NOT IN', 'leave.status', ['ReqCancel', 'cancel']])
@@ -418,13 +427,14 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $datas = Approve::find()->where(['name' => 'purchase', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+            $empId = $me ? (int) $me->id : 0;
+            $datas = Approve::find()->where(['name' => 'purchase', 'status' => 'Pending', 'emp_id' => $empId])->orderBy(['id' => SORT_DESC])->all();
 
             return [
                 'title' => 'อนุมัติขอซื้อขอจ้าง',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
-                'emp_id' => $me->id
+                'emp_id' => $empId
             ];
         } catch (\Throwable $th) {
             return [
@@ -440,13 +450,14 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-            $datas = Approve::find()->where(['name' => 'main_stock', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+            $empId = $me ? (int) $me->id : 0;
+            $datas = Approve::find()->where(['name' => 'main_stock', 'status' => 'Pending', 'emp_id' => $empId])->orderBy(['id' => SORT_DESC])->all();
 
             return [
                 'title' => 'อนุมัติขอเบิกวัสดุ',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
-                'emp_id' => $me->id
+                'emp_id' => $empId
             ];
         } catch (\Throwable $th) {
             return [
@@ -462,6 +473,7 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) {
                 return ['title' => 'ขออนุมัติเบิกวัสดุ', 'total' => 0, 'datas' => []];
             }
@@ -471,7 +483,7 @@ class ApproveHelper extends Component
                 ->innerJoin('stock_order so', 'so.id = a.from_id')
                 ->where([
                     'a.name' => 'requisition_v2',
-                    'a.emp_id' => (int) $me->id,
+                    'a.emp_id' => $empId,
                     'a.status' => 'Pending',
                     'so.order_type' => \app\modules\inventoryV2\models\StockOrder::ORDER_TYPE_OUT,
                     'so.source_type' => 'REQUEST',
@@ -483,7 +495,7 @@ class ApproveHelper extends Component
                 'title' => 'ขออนุมัติเบิกวัสดุ',
                 'total' => $count,
                 'datas' => [],
-                'emp_id' => $me->id,
+                'emp_id' => $empId,
             ];
         } catch (\Throwable $th) {
             return [
@@ -499,13 +511,14 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
 
             $approveQuery = Approve::find()
                 ->alias('approve')
                 ->leftJoin('`development`', "approve.from_id = `development`.id")
                 ->where([
                     'approve.name' => 'development',
-                    'approve.emp_id' => $me->id,
+                    'approve.emp_id' => $empId,
                     'approve.status' => 'Pending'
                 ])
                 ->andWhere(['NOT IN', 'development.status', ['ReqCancel', 'Cancel']])
@@ -519,7 +532,7 @@ class ApproveHelper extends Component
                 'title' => 'อนุมัติอบรม/ประชุม/ดูงาน',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
-                'emp_id' => $me->id,
+                'emp_id' => $empId,
                 'sql' => $sql
             ];
         } catch (\Throwable $th) {
@@ -536,11 +549,12 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
+            $empId = $me ? (int) $me->id : 0;
             if (!$me) {
                 return ['title' => 'อนุมัติลงเวลา', 'total' => 0, 'datas' => []];
             }
             $datas = Approve::find()
-                ->where(['name' => 'checkin', 'status' => 'Pending', 'emp_id' => $me->id])
+                ->where(['name' => 'checkin', 'status' => 'Pending', 'emp_id' => $empId])
                 ->orderBy(['id' => SORT_DESC])
                 ->all();
             return [
@@ -558,13 +572,14 @@ class ApproveHelper extends Component
     {
         try {
             $me = UserHelper::GetEmployee();
-             $datas = Approve::find()->where(['name' => 'asset_move', 'status' => 'Pending', 'emp_id' => $me->id])->orderBy(['id' => SORT_DESC])->all();
+            $empId = $me ? (int) $me->id : 0;
+             $datas = Approve::find()->where(['name' => 'asset_move', 'status' => 'Pending', 'emp_id' => $empId])->orderBy(['id' => SORT_DESC])->all();
 
             return [
                 'title' => 'อนุมัติเคลื่อนย้ายครุภัณฑ์',
                 'total' => isset($datas) ? count($datas) : 0,
                 'datas' => $datas,
-                'emp_id' => $me->id,
+                'emp_id' => $empId,
             ];
         } catch (\Throwable $th) {
             return [

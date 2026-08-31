@@ -51,17 +51,35 @@ class SiteController extends Controller
         ];
     }
 
+    /**
+     * หน้าแสดงข้อผิดพลาด
+     *
+     * ต้องส่ง exception เข้าไปให้ view ด้วย ไม่งั้นทุก error จะแสดงเป็น 500 หมด
+     * ทั้งที่จริงอาจเป็น 404 หรือ 403 และจะมี PHP Warning ขึ้น log ทุกครั้ง
+     * (ส่งพารามิเตอร์ชุดเดียวกับ yii\web\ErrorAction ของ Yii เอง)
+     */
     public function actionError()
     {
         // $this->layout = 'error_404';
+        $exception = Yii::$app->errorHandler->exception;
+        if ($exception === null) {
+            $exception = new \yii\web\NotFoundHttpException('ไม่พบหน้าที่ต้องการ');
+        }
+
+        $params = [
+            'exception' => $exception,
+            'name' => $exception instanceof \yii\base\Exception ? $exception->getName() : 'เกิดข้อผิดพลาด',
+            'message' => $exception->getMessage(),
+        ];
+
         if ($this->request->isAJax) {
             \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'content' => $this->renderAjax('error'),
+                'content' => $this->renderAjax('error', $params),
             ];
         } else {
-            return $this->render('error');
+            return $this->render('error', $params);
         }
     }
 
