@@ -287,12 +287,12 @@ $initEmployeePosition = $employeePositionId ? [
     </div>
 
 
-    <div class="col-6">
+    <div class="col-4">
         <?php echo $form->field($model, 'data_json[position_number]')->textInput()->label('เลขประจำตำแหน่ง') ?>
 
     </div>
 
-    <div class="col-6">
+    <div class="col-4">
         <?=$form->field($model, 'data_json[position_level]')->widget(Select2::classname(), [
     'data' => $model->employee->ListPositionLevel(),
     'options' => ['placeholder' => 'เลือก ...'],
@@ -304,7 +304,7 @@ $initEmployeePosition = $employeePositionId ? [
         "select2:select" => "function() {
             var data = $(this).select2('data')
              $('#employeedetail-data_json-position_level_text').val(data[0].text)
-            
+
          }",
 
     ],
@@ -315,7 +315,19 @@ $initEmployeePosition = $employeePositionId ? [
         'disabled' => ($employeeTypeText === 'ข้าราชการ') ? false : true
 
     ],
-])->label('ระดับความเชี่ยวชาญ')?>
+])->label('ระดับตำแหน่ง')?>
+    </div>
+
+    <div class="col-4">
+        <?=$form->field($model, 'data_json[expertise]')->widget(Select2::classname(), [
+    'data' => $model->employee->ListExpertise(),
+    'options' => ['placeholder' => 'เลือก ...'],
+    'pluginOptions' => [
+        'dropdownParent' => '#main-modal',
+        'tags' => false,
+        'allowClear' => true,
+    ],
+])->label('ความเชี่ยวชาญ')?>
     </div>
 
     <div class="col-12">
