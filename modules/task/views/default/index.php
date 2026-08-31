@@ -109,6 +109,30 @@ $csrfToken = Yii::$app->request->csrfToken;
 
 <div class="container-fluid px-0" id="task-page">
 
+    <?php
+    // ชวนผูก Telegram — ขึ้นเฉพาะคนที่ยังไม่ผูก และหายไปเองเมื่อผูกแล้ว
+    // จึงไม่เพิ่มเมนูถาวรให้หน้าจอรก
+    $tgLinked = true;
+    $tgReady = false;
+    try {
+        $tgUser = Yii::$app->user->identity;
+        $tgLinked = $tgUser && trim((string) ($tgUser->telegram_id ?? '')) !== '';
+        $tgReady = \app\modules\telegrambot\services\TelegramLinkService::botUsername() !== null;
+    } catch (\Throwable $e) {
+        $tgLinked = true;
+    }
+    ?>
+    <?php if (!$tgLinked && $tgReady): ?>
+        <div class="alert alert-primary d-flex flex-wrap align-items-center gap-2 py-2" role="status">
+            <i class="bi bi-telegram" aria-hidden="true"></i>
+            <span class="small flex-grow-1">รับแจ้งเตือนงานที่มอบหมายถึงคุณผ่าน Telegram — เชื่อมครั้งเดียว ใช้ได้ตลอด</span>
+            <?= Html::a('เชื่อมต่อ', ['/profile/telegram-connect'], [
+                'class' => 'btn btn-sm btn-primary',
+                'data-pjax' => '0',
+            ]) ?>
+        </div>
+    <?php endif ?>
+
     <?php foreach (['success' => 'success', 'error' => 'danger'] as $flash => $variant): ?>
         <?php if (Yii::$app->session->hasFlash($flash)): ?>
             <div class="alert alert-<?= $variant ?> alert-dismissible fade show" role="alert">

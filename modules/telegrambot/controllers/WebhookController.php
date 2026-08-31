@@ -4,6 +4,7 @@ namespace app\modules\telegrambot\controllers;
 
 use app\models\Categorise;
 use app\modules\telegrambot\components\TelegramBot;
+use app\modules\telegrambot\services\TelegramLinkService;
 use app\modules\usermanager\models\User;
 use Yii;
 use yii\web\Controller;
@@ -44,6 +45,28 @@ class WebhookController extends Controller
         }
 
         $telegram = new TelegramBot($botToken);
+
+        // /start <token> = ผู้ใช้กดลิงก์เชิญจากหน้าเชื่อมต่อในระบบ ผูกบัญชีให้เลย
+        $payload = trim((string) substr($text, strlen('/start')));
+        if ($payload !== '') {
+            $userId = TelegramLinkService::consumeToken($payload);
+            if ($userId === null) {
+                $telegram->sendMessage($chatId, 'ลิงก์เชื่อมต่อหมดอายุหรือถูกใช้ไปแล้ว กรุณากดสร้างลิงก์ใหม่จากหน้าเชื่อมต่อในระบบ');
+                return ['ok' => true];
+            }
+
+            $result = TelegramLinkService::bind($userId, $chatId);
+            $bound = User::findOne($userId);
+            $telegram->sendMessage(
+                $chatId,
+                $result['status'] === 'success'
+                    ? 'เชื่อมต่อสำเร็จ' . ($bound && $bound->name ? ' — ' . $bound->name : '') . PHP_EOL
+                        . 'ต่อจากนี้ระบบจะแจ้งเตือนงานของคุณมาที่นี่'
+                    : $result['message']
+            );
+            return ['ok' => true];
+        }
+
         $user = User::findOne(['telegram_id' => $chatId]);
         $lines = [
             'ยินดีต้อนรับสู่ ERP Mobile',

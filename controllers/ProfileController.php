@@ -62,6 +62,63 @@ class ProfileController extends \yii\web\Controller
     
         }
         
+    /**
+     * เชื่อมบัญชี Telegram เพื่อรับแจ้งเตือนงาน
+     *
+     * เดิมผูกได้ทางเดียวคือเปิด Mini App จากในแอป Telegram ซึ่งคนส่วนใหญ่ไม่รู้วิธี
+     * หน้านี้ให้ลิงก์เชิญกดจากมือถือได้เลย หรือสแกน QR ถ้านั่งอยู่หน้าคอม
+     */
+    public function actionTelegramConnect()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['/auth/login']);
+        }
+
+        $user = User::findOne((int) Yii::$app->user->id);
+        $token = \app\modules\telegrambot\services\TelegramLinkService::issueToken((int) Yii::$app->user->id);
+
+        $params = [
+            'user' => $user,
+            'linked' => $user && trim((string) $user->telegram_id) !== '',
+            'deepLink' => $token ? \app\modules\telegrambot\services\TelegramLinkService::deepLink($token) : null,
+            'botUsername' => \app\modules\telegrambot\services\TelegramLinkService::botUsername(),
+            'ttlMinutes' => (int) ceil(\app\modules\telegrambot\services\TelegramLinkService::TOKEN_TTL / 60),
+        ];
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => 'เชื่อมต่อ Telegram',
+                'content' => $this->renderAjax('telegram_connect', $params),
+            ];
+        }
+        return $this->render('telegram_connect', $params);
+    }
+
+    /** ให้หน้าเชื่อมต่อถามสถานะเป็นระยะ จะได้รู้ทันทีที่ผูกสำเร็จโดยไม่ต้องรีเฟรช */
+    public function actionTelegramStatus()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (Yii::$app->user->isGuest) {
+            return ['linked' => false];
+        }
+        $user = User::findOne((int) Yii::$app->user->id);
+        return ['linked' => $user && trim((string) $user->telegram_id) !== ''];
+    }
+
+    public function actionTelegramUnlink()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        if (Yii::$app->user->isGuest || !$this->request->isPost) {
+            return ['status' => 'error', 'message' => 'ไม่สามารถดำเนินการได้'];
+        }
+        $ok = \app\modules\telegrambot\services\TelegramLinkService::unbind((int) Yii::$app->user->id);
+        return [
+            'status' => $ok ? 'success' : 'error',
+            'message' => $ok ? 'ยกเลิกการเชื่อมต่อแล้ว' : 'ยกเลิกไม่สำเร็จ',
+        ];
+    }
+
     public function actionIndex()
     {
         $name = $this->request->get('name');
