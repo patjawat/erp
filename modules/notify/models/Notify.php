@@ -36,6 +36,7 @@ class Notify extends \yii\db\ActiveRecord
     const TYPE_DEVELOPMENT_SUMMARY_ACK = 'development_summary_ack';
     const TYPE_APPRECIATION_THANK = 'appreciation_thank';
     const TYPE_CHALLENGE_WINNER = 'challenge_winner';
+    const TYPE_TASK_ASSIGNED = 'task_assigned';
 
     const REF_TYPE_TEST = 'test';
 
@@ -54,6 +55,7 @@ class Notify extends \yii\db\ActiveRecord
             self::TYPE_DEVELOPMENT_SUMMARY_ACK => 'รับทราบสรุปผลประชุม/อบรมแล้ว',
             self::TYPE_APPRECIATION_THANK => 'มีคำขอบคุณส่งถึงคุณ',
             self::TYPE_CHALLENGE_WINNER => 'ทำ Challenge ครบเป้า',
+            self::TYPE_TASK_ASSIGNED => 'มีงานมอบหมายถึงคุณ',
         ];
     }
 
@@ -74,6 +76,32 @@ class Notify extends \yii\db\ActiveRecord
             (string) $appreciationModel->id,
             $message,
             ['from_emp_id' => $appreciationModel->from_emp_id]
+        );
+    }
+
+    /**
+     * แจ้งเตือนเมื่อมีงานมอบหมายถึงผู้ใช้ (เรียกจากโมดูล task)
+     *
+     * ไม่แจ้งเมื่อผู้ใช้มอบหมายงานให้ตัวเอง เพราะเพิ่งกดสร้างเองไปเมื่อครู่
+     */
+    public static function createForTaskAssigned($task, ?int $actorEmpId = null)
+    {
+        if (!$task || !$task->assignee_emp_id) {
+            return null;
+        }
+        if ($actorEmpId !== null && (int) $actorEmpId === (int) $task->assignee_emp_id) {
+            return null;
+        }
+
+        $due = $task->due_date ? ' · กำหนดส่ง ' . $task->due_date : '';
+        return self::createFromApprove(
+            self::TYPE_TASK_ASSIGNED,
+            $task->title,
+            (int) $task->assignee_emp_id,
+            'task',
+            (string) $task->id,
+            trim(($task->detail ? mb_substr((string) $task->detail, 0, 200) : '') . $due) ?: null,
+            ['task_id' => (int) $task->id, 'priority' => $task->priority]
         );
     }
 

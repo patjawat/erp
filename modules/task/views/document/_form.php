@@ -60,9 +60,11 @@ $quickDates = [
         </div>
         <input type="date" class="form-control" id="task-due-date" name="due_date"
                value="<?= Html::encode((string) $dueDate) ?>">
-        <?php if ($dueDate): ?>
-            <div class="form-text">เติมจากวันหมดอายุของหนังสือ</div>
-        <?php endif ?>
+        <div class="form-text">
+            <?= $priority === Task::PRIORITY_URGENT
+                ? 'เสนอเป็นพรุ่งนี้ เพราะหนังสือชั้นความเร็วด่วน แก้ได้'
+                : 'เสนอเป็นอีก 7 วัน แก้ได้' ?>
+        </div>
     </div>
 
     <div>

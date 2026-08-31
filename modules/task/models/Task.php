@@ -148,6 +148,45 @@ class Task extends TaskActiveRecord
         return self::statusLabels()[$this->status] ?? $this->status;
     }
 
+    /** เลยกำหนดแล้วกี่วัน (0 = ยังไม่เลย หรือไม่ได้กำหนดวัน) */
+    public function overdueDays(): int
+    {
+        if (!$this->due_date || !$this->isOpen()) {
+            return 0;
+        }
+        $diff = (strtotime(date('Y-m-d')) - strtotime($this->due_date)) / 86400;
+        return $diff > 0 ? (int) $diff : 0;
+    }
+
+    /**
+     * ข้อความอายุงานแบบที่คนอ่านเข้าใจทันที เช่น "7 สัปดาห์ที่ผ่านมา"
+     * คืน null เมื่อยังไม่ถึงกำหนด เพื่อให้หน้าจอไม่ต้องแสดงอะไรเลย
+     */
+    public function ageText(): ?string
+    {
+        if (!$this->due_date || !$this->isOpen()) {
+            return null;
+        }
+
+        $days = $this->overdueDays();
+        if ($days === 0) {
+            return $this->due_date === date('Y-m-d') ? 'ครบกำหนดวันนี้' : null;
+        }
+        if ($days === 1) {
+            return 'เมื่อวาน';
+        }
+        if ($days < 7) {
+            return $days . ' วันที่ผ่านมา';
+        }
+        if ($days < 30) {
+            return intdiv($days, 7) . ' สัปดาห์ที่ผ่านมา';
+        }
+        if ($days < 365) {
+            return intdiv($days, 30) . ' เดือนที่ผ่านมา';
+        }
+        return intdiv($days, 365) . ' ปีที่ผ่านมา';
+    }
+
     public function priorityLabel(): string
     {
         return self::priorityLabels()[$this->priority] ?? $this->priority;

@@ -210,17 +210,20 @@ class DocumentController extends Controller
     }
 
     /**
-     * doc_expire มีข้อมูลแค่ 11% ของหนังสือรับ จึงใช้เป็นตัวช่วยเติมเท่านั้น
-     * กรณีทั่วไปผู้ใช้กดปุ่มลัดในฟอร์มแทน
+     * เสนอกำหนดเสร็จจากชั้นความเร็วของหนังสือ
+     *
+     * เคยใช้ doc_expire แต่ตรวจข้อมูลจริงแล้วพบว่าไม่ใช่กำหนดส่งงาน
+     * แต่เป็นวันสิ้นอายุการเก็บเอกสาร — 4,529 จาก 4,981 ฉบับ (91%)
+     * เป็นวันที่ 1 มกราคมของปีถัดไป เอามาเป็นกำหนดเสร็จไม่ได้
+     *
+     * จึงเดาจากชั้นความเร็วแทน ซึ่งเป็นข้อมูลที่สะท้อนความเร่งด่วนจริง
+     * ผู้ใช้แก้ได้ด้วยปุ่มลัดในฟอร์ม
      */
     private function guessDueDate(Documents $document): ?string
     {
-        $expire = trim((string) $document->doc_expire);
-        if ($expire === '') {
-            return null;
-        }
-        $ts = strtotime($expire);
-        return $ts ? date('Y-m-d', $ts) : null;
+        return $this->guessPriority($document) === Task::PRIORITY_URGENT
+            ? date('Y-m-d', strtotime('+1 day'))
+            : date('Y-m-d', strtotime('+7 days'));
     }
 
     private function findDocument($id): Documents

@@ -3,6 +3,7 @@
 namespace app\modules\task\services;
 
 use app\modules\hr\models\Organization;
+use app\modules\notify\models\Notify;
 use app\modules\task\models\Task;
 use app\modules\task\models\TaskActivity;
 use Yii;
@@ -67,6 +68,7 @@ class TaskService
             self::log($task, TaskActivity::ACTION_CREATE, $note, $actorEmpId, false);
 
             $transaction->commit();
+            self::notifyAssignee($task, $actorEmpId);
             return $task;
         } catch (\Throwable $e) {
             $transaction->rollBack();
@@ -115,14 +117,40 @@ class TaskService
             $note,
             $actorEmpId
         );
+        self::notifyAssignee($task, $actorEmpId);
         return true;
     }
 
     /**
+     * แจ้งผู้รับผิดชอบผ่านกระดิ่งแจ้งเตือนของระบบ
+     *
+     * ใช้ช่องทางเดิมที่มีอยู่แล้ว ไม่สร้างจุดเตือนใหม่บนหน้าจอ
+     * และไม่ให้การแจ้งเตือนล้มเหลวไปทำให้การบันทึกงานพัง
+     */
+    private static function notifyAssignee(Task $task, ?int $actorEmpId): void
+    {
+        if (!$task->assignee_emp_id) {
+            return;
+        }
+        try {
+            Notify::createForTaskAssigned($task, $actorEmpId);
+        } catch (\Throwable $e) {
+            Yii::warning('แจ้งเตือนงานไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+        }
+    }
+
+    /**
      * ปิดงาน — ออกแบบให้เรียกได้จากปุ่มเดียว บันทึกเป็นตัวเลือก ไม่บังคับกรอก
+     *
+     * กดซ้ำแล้วไม่บันทึกซ้ำ เพราะผู้ใช้กดรัวได้ง่ายบนมือถือ
+     * และประวัติที่มีรายการ "ปิดงาน" ซ้ำ ๆ ทำให้อ่านไม่รู้เรื่อง
      */
     public static function complete(Task $task, ?int $actorEmpId = null, ?string $note = null): bool
     {
+        if ($task->status === Task::STATUS_DONE) {
+            return true;
+        }
+
         $task->status = Task::STATUS_DONE;
         $task->is_waiting = false;
         $task->completed_at = date('Y-m-d H:i:s');
