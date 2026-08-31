@@ -746,6 +746,12 @@ class ApproverController extends Controller
             ['leave.status' => $status],
             ['exists', $passedApproval],
         ]);
+
+        // ใบที่ยังค้างอยู่จริงที่ขั้นนี้ต้องขึ้นก่อน ไม่ให้จมอยู่ใต้ใบเก่าที่ผ่านขั้นนี้ไปนานแล้ว
+        $query->orderBy(new Expression(
+            'CASE WHEN leave.status = :priorityStatus THEN 0 ELSE 1 END ASC, leave.date_start DESC',
+            [':priorityStatus' => $status]
+        ));
     }
 
     /**
@@ -799,7 +805,7 @@ class ApproverController extends Controller
             ]);
         }
 
-        $query->orderBy(['leave.date_start' => SORT_DESC]);
+        $query->addOrderBy(['leave.date_start' => SORT_DESC]);
 
         return $this->exportToExcelLeave($dataProvider);
     }
@@ -855,7 +861,7 @@ class ApproverController extends Controller
             ]);
         }
 
-        $query->orderBy(['leave.date_start' => SORT_DESC]);
+        $query->addOrderBy(['leave.date_start' => SORT_DESC]);
         $models = $dataProvider->getModels();
 
         $html = $this->renderPartial('print-pdf', [
