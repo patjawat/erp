@@ -183,6 +183,126 @@ class TaskTelegramService
         return $chatId !== '' ? $chatId : null;
     }
 
+    /** จำนวนงานที่ยกมาแสดงในสรุป ที่เหลือบอกเป็นตัวเลขรวม */
+    private const DIGEST_LIST_LIMIT = 5;
+
+    /**
+     * สรุปงานประจำวันของพนักงานคนหนึ่ง
+     *
+     * คืน null เมื่อไม่มีอะไรต้องบอก จะได้ไม่ส่งข้อความเปล่า ๆ ไปกวนคน
+     *
+     * @return array{text: string, total: int, attention: int}|null
+     */
+    public static function dailyDigestFor(int $empId): ?array
+    {
+        $today = date('Y-m-d');
+
+        $tasks = Task::find()
+            ->where(['assignee_emp_id' => $empId])
+            ->andWhere(['status' => Task::OPEN_STATUSES])
+            ->orderBy(['due_date' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        if (!$tasks) {
+            return null;
+        }
+
+        $attention = [];
+        $rest = [];
+        foreach ($tasks as $task) {
+            $isDue = $task->due_date !== null && $task->due_date <= $today;
+            if ($task->is_waiting) {
+                $rest[] = $task;             // ติดรอคนอื่นอยู่ ไม่ใช่ของที่ถูกลืม
+            } elseif ($isDue || $task->priority === Task::PRIORITY_URGENT) {
+                $attention[] = $task;
+            } else {
+                $rest[] = $task;
+            }
+        }
+
+        $lines = [
+            '☀️ <b>สรุปงานประจำวัน</b>',
+            ThaiDate::toThaiDate($today, false),
+            '',
+        ];
+
+        if ($attention) {
+            $lines[] = '🔴 <b>ต้องสนใจ (' . count($attention) . ')</b>';
+            foreach (array_slice($attention, 0, self::DIGEST_LIST_LIMIT) as $task) {
+                $lines[] = self::digestLine($task, $today);
+            }
+            if (count($attention) > self::DIGEST_LIST_LIMIT) {
+                $lines[] = '  และอีก ' . (count($attention) - self::DIGEST_LIST_LIMIT) . ' รายการ';
+            }
+            $lines[] = '';
+        }
+
+        if ($rest) {
+            $lines[] = '📋 <b>งานอื่นที่ยังค้าง (' . count($rest) . ')</b>';
+            foreach (array_slice($rest, 0, self::DIGEST_LIST_LIMIT) as $task) {
+                $lines[] = self::digestLine($task, $today);
+            }
+            if (count($rest) > self::DIGEST_LIST_LIMIT) {
+                $lines[] = '  และอีก ' . (count($rest) - self::DIGEST_LIST_LIMIT) . ' รายการ';
+            }
+        }
+
+        return [
+            'text' => rtrim(implode(PHP_EOL, $lines)),
+            'total' => count($tasks),
+            'attention' => count($attention),
+        ];
+    }
+
+    private static function digestLine(Task $task, string $today): string
+    {
+        $line = '• ' . Html::encode($task->title);
+
+        if ($task->overdueDays() > 0) {
+            $line .= ' — <b>' . $task->ageText() . '</b>';
+        } elseif ($task->due_date === $today) {
+            $line .= ' — <b>ครบกำหนดวันนี้</b>';
+        } elseif ($task->due_date) {
+            $line .= ' — ' . ThaiDate::toThaiDate($task->due_date, false, true);
+        }
+
+        if ($task->is_waiting) {
+            $line .= ' (รอผู้อื่น)';
+        }
+
+        return $line;
+    }
+
+    /**
+     * ส่งสรุปประจำวันให้พนักงานคนหนึ่ง
+     *
+     * @return string ผลลัพธ์: sent | skipped_no_task | skipped_leave | skipped_no_chat | failed
+     */
+    public static function sendDailyDigest(int $empId, bool $dryRun = false): string
+    {
+        if (self::isOnLeave($empId)) {
+            return 'skipped_leave';
+        }
+
+        $employee = \app\modules\hr\models\Employees::findOne($empId);
+        $chatId = trim((string) ($employee->user->telegram_id ?? ''));
+        if ($chatId === '') {
+            return 'skipped_no_chat';
+        }
+
+        $digest = self::dailyDigestFor($empId);
+        if ($digest === null) {
+            return 'skipped_no_task';
+        }
+
+        if ($dryRun) {
+            return 'sent';
+        }
+
+        $ok = Yii::$app->telegram->sendDirectMessage($chatId, $digest['text'], self::buildOptions());
+        return $ok ? 'sent' : 'failed';
+    }
+
     private static function buildMessage(Task $task): string
     {
         $overdueDays = $task->overdueDays();
