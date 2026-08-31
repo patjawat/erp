@@ -455,6 +455,11 @@ $bookmarkUrl = $bookmarkDetailId ? Url::to(['/me/documents/bookmark', 'id' => $b
         var form = document.getElementById('task-from-doc-form');
         if (!form) { return; }
 
+        // widget DatepickerThai ใช้ registerJs ซึ่งไม่ทำงานกับเนื้อหาที่ใส่ผ่าน innerHTML
+        if (typeof thaiDatepicker === 'function') {
+            try { thaiDatepicker('#task-due-date'); } catch (e) {}
+        }
+
         form.querySelectorAll('.task-quick-date').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var input = document.getElementById('task-due-date');

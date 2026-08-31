@@ -1,6 +1,8 @@
 <?php
 
+use app\components\AppHelper;
 use app\modules\task\models\Task;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -18,11 +20,12 @@ use yii\helpers\Url;
  * @var string|null $dueDate
  * @var int $existing จำนวนงานที่เคยสร้างจากหนังสือฉบับนี้
  */
+// ปุ่มลัดต้องใส่ค่าเป็น วว/ดด/พ.ศ. ให้ตรงกับรูปแบบที่ DatepickerThai ใช้
 $quickDates = [
-    'พรุ่งนี้' => date('Y-m-d', strtotime('+1 day')),
-    'อีก 3 วัน' => date('Y-m-d', strtotime('+3 days')),
-    'สัปดาห์หน้า' => date('Y-m-d', strtotime('+7 days')),
-    'สิ้นเดือน' => date('Y-m-t'),
+    'พรุ่งนี้' => AppHelper::convertToThai(date('Y-m-d', strtotime('+1 day'))),
+    'อีก 3 วัน' => AppHelper::convertToThai(date('Y-m-d', strtotime('+3 days'))),
+    'สัปดาห์หน้า' => AppHelper::convertToThai(date('Y-m-d', strtotime('+7 days'))),
+    'สิ้นเดือน' => AppHelper::convertToThai(date('Y-m-t')),
 ];
 ?>
 <form id="task-from-doc-form" method="post"
@@ -58,8 +61,16 @@ $quickDates = [
                         data-date="<?= $value ?>"><?= Html::encode($label) ?></button>
             <?php endforeach ?>
         </div>
-        <input type="date" class="form-control" id="task-due-date" name="due_date"
-               value="<?= Html::encode((string) $dueDate) ?>">
+        <?= DatepickerThai::widget([
+            'name' => 'due_date',
+            'value' => (string) $dueDate,
+            'options' => [
+                'id' => 'task-due-date',
+                'class' => 'form-control',
+                'autocomplete' => 'off',
+                'placeholder' => 'วว/ดด/พ.ศ.',
+            ],
+        ]) ?>
         <div class="form-text">
             <?= $priority === Task::PRIORITY_URGENT
                 ? 'เสนอเป็นพรุ่งนี้ เพราะหนังสือชั้นความเร็วด่วน แก้ได้'

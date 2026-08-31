@@ -17,6 +17,15 @@
 $carried = $carried ?? 0;
 ?>
 <div class="task-day-popup" data-date="<?= $date ?>">
+
+    <?php // ใช้ task-open-edit ไม่ใช่ open-modal เพราะอยู่ใน modal อยู่แล้ว ต้องสลับเนื้อหาไม่ใช่เปิดซ้อน ?>
+    <div class="mb-3">
+        <a href="<?= yii\helpers\Url::to(['/task/default/create', 'date' => $date]) ?>"
+           class="task-open-edit btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มงานวันนี้
+        </a>
+    </div>
+
     <?php if (!$tasks): ?>
         <p class="text-body-secondary mb-0">ไม่มีงานค้างในวันนี้</p>
     <?php else: ?>

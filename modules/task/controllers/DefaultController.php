@@ -4,6 +4,7 @@ namespace app\modules\task\controllers;
 
 use app\components\UserHelper;
 use app\modules\hr\models\Employees;
+use app\modules\hr\models\Organization;
 use app\modules\task\models\Task;
 use app\modules\task\models\TaskActivity;
 use app\modules\task\services\TaskService;
@@ -286,6 +287,174 @@ class DefaultController extends Controller
     }
 
     /**
+     * เพิ่มงานเองจากหน้าปฏิทิน — งานส่วนใหญ่มาจากหนังสือ แต่บางเรื่องก็เกิดจากที่ประชุมหรือโทรศัพท์
+     *
+     * หน่วยงานเจ้าของไม่ต้องเลือก ระบบใช้หน่วยของผู้รับผิดชอบให้เอง
+     * ถ้ายังไม่ระบุผู้รับผิดชอบก็ใช้หน่วยของคนสร้าง เพื่อให้กรอกน้อยที่สุด
+     */
+    public function actionCreate()
+    {
+        $me = $this->currentEmployee();
+
+        if (Yii::$app->request->isPost) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return $this->saveNew($me);
+        }
+
+        if (!Yii::$app->request->isAjax) {
+            return $this->redirect(['index']);
+        }
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'title' => 'เพิ่มงาน',
+            'content' => $this->renderAjax('_form_create', [
+                'me' => $me,
+                'groups' => $this->targetGroups($me),
+                'canCrossUnit' => Yii::$app->user->can(TaskService::PERMISSION_CROSS_UNIT),
+                'date' => substr((string) Yii::$app->request->get('date'), 0, 10) ?: null,
+            ]),
+        ];
+    }
+
+    /**
+     * รายชื่อปลายทางทั้งโรงพยาบาล จัดกลุ่มตามหน่วยงาน แบบเดียวกับที่สารบรรณส่งหนังสือ
+     *
+     * หน่วยของตัวเองอยู่บนสุด เพราะเป็นปลายทางที่ใช้บ่อยที่สุด
+     *
+     * @return array<int, array{unit: Organization, people: Employees[], inScope: bool}>
+     */
+    private function targetGroups(Employees $me): array
+    {
+        $myScope = TaskService::unitScopeIds($me->department ? (int) $me->department : null);
+
+        $units = Organization::find()
+            ->where(['active' => 1])
+            ->orderBy(['lft' => SORT_ASC])
+            ->all();
+
+        $peopleByUnit = [];
+        foreach (Employees::find()->where(['not', ['department' => null]])->orderBy(['fname' => SORT_ASC])->all() as $person) {
+            $peopleByUnit[(int) $person->department][] = $person;
+        }
+
+        $groups = [];
+        foreach ($units as $unit) {
+            $id = (int) $unit->id;
+            $groups[] = [
+                'unit' => $unit,
+                'people' => $peopleByUnit[$id] ?? [],
+                'inScope' => in_array($id, $myScope, true),
+            ];
+        }
+
+        // หน่วยของตัวเองขึ้นก่อน แล้วตามด้วยหน่วยในสายเดียวกัน
+        usort($groups, function ($a, $b) use ($me) {
+            $rank = function ($g) use ($me) {
+                if ((int) $g['unit']->id === (int) $me->department) { return 0; }
+                return $g['inScope'] ? 1 : 2;
+            };
+            $ra = $rank($a);
+            $rb = $rank($b);
+            return $ra === $rb ? 0 : ($ra <=> $rb);
+        });
+
+        return $groups;
+    }
+
+    private function saveNew(Employees $me): array
+    {
+        $request = Yii::$app->request;
+
+        $title = trim((string) $request->post('title'));
+        if ($title === '') {
+            return ['status' => 'error', 'message' => 'กรุณาระบุชื่องาน'];
+        }
+
+        // ปลายทางส่งมาเป็น emp:<id> หรือ unit:<id> แบบเดียวกับการ tag หนังสือ
+        // เลือกได้หลายปลายทาง แต่ละอันกลายเป็นงานหนึ่งชิ้นตามกติกา 1 งาน = 1 ผู้รับผิดชอบ
+        $targets = (array) $request->post('targets', []);
+        if (!$targets) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกผู้รับผิดชอบอย่างน้อยหนึ่งราย'];
+        }
+
+        // ช่องวันที่กรอกเป็น วว/ดด/พ.ศ. ต้องแปลงกลับเป็น ค.ศ. ก่อนเก็บลงฐานข้อมูลเสมอ
+        $dueDate = TaskService::parseDueDate($request->post('due_date'));
+
+        $rows = [];
+        $seen = [];
+        foreach ($targets as $target) {
+            $target = trim((string) $target);
+            if ($target === '' || isset($seen[$target])) {
+                continue;
+            }
+            $seen[$target] = true;
+
+            $assignee = null;
+            $ownerUnitId = 0;
+
+            if (strpos($target, 'emp:') === 0) {
+                $assignee = Employees::findOne((int) substr($target, 4));
+                if (!$assignee) {
+                    return ['status' => 'error', 'message' => 'ไม่พบผู้รับผิดชอบที่เลือก'];
+                }
+                $ownerUnitId = (int) $assignee->department;
+
+                // ระบุตัวคนข้ามสายหน่วยงานต้องมีสิทธิ์ ตามกติกาที่ตกลงไว้
+                // ส่วนการส่งถึงหน่วยงานเฉย ๆ ไม่ต้องใช้สิทธิ์
+                if (!TaskService::canAssignToUnit((int) $me->department, (int) $me->id, $ownerUnitId)) {
+                    return [
+                        'status' => 'error',
+                        'message' => 'คุณไม่มีสิทธิ์ระบุตัวผู้รับผิดชอบข้ามหน่วยงาน — เลือก "ส่งถึงหน่วยงาน" แทน แล้วให้หัวหน้าหน่วยนั้นจ่ายงานเอง',
+                    ];
+                }
+            } elseif (strpos($target, 'unit:') === 0) {
+                $ownerUnitId = (int) substr($target, 5);
+                if (!Organization::findOne($ownerUnitId)) {
+                    return ['status' => 'error', 'message' => 'ไม่พบหน่วยงานที่เลือก'];
+                }
+            } else {
+                continue;
+            }
+
+            if (!$ownerUnitId) {
+                return ['status' => 'error', 'message' => 'ผู้รับผิดชอบที่เลือกยังไม่ได้ผูกกับหน่วยงาน'];
+            }
+
+            $rows[] = [
+                'title' => $title,
+                'detail' => trim((string) $request->post('detail')) ?: null,
+                'owner_unit_id' => $ownerUnitId,
+                'assignee_emp_id' => $assignee ? (int) $assignee->id : null,
+                'due_date' => $dueDate,
+                'priority' => $request->post('priority') === Task::PRIORITY_URGENT
+                    ? Task::PRIORITY_URGENT : Task::PRIORITY_NORMAL,
+            ];
+        }
+
+        if (!$rows) {
+            return ['status' => 'error', 'message' => 'กรุณาเลือกผู้รับผิดชอบอย่างน้อยหนึ่งราย'];
+        }
+
+        $created = 0;
+        foreach ($rows as $row) {
+            if (TaskService::create($row, (int) $me->id) !== null) {
+                $created++;
+            }
+        }
+
+        if ($created === 0) {
+            return ['status' => 'error', 'message' => 'สร้างงานไม่สำเร็จ'];
+        }
+
+        return [
+            'status' => 'success',
+            'message' => $created === 1 ? 'เพิ่มงานเรียบร้อย' : sprintf('เพิ่มงานแล้ว %d รายการ', $created),
+            'count' => $created,
+        ];
+    }
+
+    /**
      * แก้ไขงานใน popup — งานมีข้อมูลไม่มาก ไม่คุ้มที่จะเปลี่ยนหน้า
      *
      * เปิดผ่าน modal กลางของโปรเจกต์ (.open-modal + #main-modal ใน erp.js)
@@ -343,7 +512,8 @@ class DefaultController extends Controller
 
         $task->title = $title;
         $task->detail = trim((string) $request->post('detail')) ?: null;
-        $task->due_date = trim((string) $request->post('due_date')) ?: null;
+        // ช่องวันที่กรอกเป็น วว/ดด/พ.ศ. ต้องแปลงกลับเป็น ค.ศ. ก่อนเก็บลงฐานข้อมูลเสมอ
+        $task->due_date = TaskService::parseDueDate($request->post('due_date'));
         $task->priority = $request->post('priority') === Task::PRIORITY_URGENT
             ? Task::PRIORITY_URGENT : Task::PRIORITY_NORMAL;
         $task->is_waiting = (bool) $request->post('is_waiting');

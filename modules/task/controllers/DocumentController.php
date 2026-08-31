@@ -82,7 +82,8 @@ class DocumentController extends Controller
         $request = Yii::$app->request;
         $title = trim((string) $request->post('title'));
         $detail = trim((string) $request->post('detail'));
-        $dueDate = trim((string) $request->post('due_date'));
+        // ช่องวันที่กรอกเป็น วว/ดด/พ.ศ. ต้องแปลงกลับเป็น ค.ศ. ก่อนเก็บลงฐานข้อมูลเสมอ
+        $dueDate = (string) TaskService::parseDueDate($request->post('due_date'));
         $priority = $request->post('priority') === Task::PRIORITY_URGENT ? Task::PRIORITY_URGENT : Task::PRIORITY_NORMAL;
         $units = (array) $request->post('units', []);
         $assignees = (array) $request->post('assignees', []);
@@ -221,9 +222,12 @@ class DocumentController extends Controller
      */
     private function guessDueDate(Documents $document): ?string
     {
-        return $this->guessPriority($document) === Task::PRIORITY_URGENT
+        $date = $this->guessPriority($document) === Task::PRIORITY_URGENT
             ? date('Y-m-d', strtotime('+1 day'))
             : date('Y-m-d', strtotime('+7 days'));
+
+        // ส่งเป็น วว/ดด/พ.ศ. เพราะช่องกรอกใช้ DatepickerThai
+        return \app\components\AppHelper::convertToThai($date);
     }
 
     private function findDocument($id): Documents

@@ -119,6 +119,10 @@ $csrfToken = Yii::$app->request->csrfToken;
     <?php endforeach ?>
 
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <a href="<?= Url::to(['/task/default/create']) ?>" class="open-modal btn btn-sm btn-primary"
+           data-size="modal-lg" data-pjax="0">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มงาน
+        </a>
         <button type="button" class="btn btn-sm btn-outline-secondary" id="cal-today">วันนี้</button>
         <div class="btn-group btn-group-sm" role="group" aria-label="เลื่อนเดือน">
             <button type="button" class="btn btn-outline-secondary" id="cal-prev" aria-label="เดือนก่อนหน้า">
@@ -274,13 +278,17 @@ $js = <<<JS
             return;
         }
 
-        // ปุ่มลัดกำหนดเสร็จในฟอร์มแก้ไข
+        // ปุ่มลัดกำหนดเสร็จ ใช้ได้ทั้งฟอร์มเพิ่มงานและฟอร์มแก้ไข
+        // ค่าที่ใส่เป็น วว/ดด/พ.ศ. ให้ตรงกับ DatepickerThai
         var quick = e.target.closest ? e.target.closest('.task-quick-date') : null;
         if (quick) {
             e.preventDefault();
-            var due = document.getElementById('task-f-due');
+            var qForm = quick.closest('form');
+            var due = qForm ? qForm.querySelector('input[name="due_date"]') : null;
             if (due) { due.value = quick.dataset.date || ''; }
-            document.querySelectorAll('.task-quick-date').forEach(function (b) { b.classList.remove('active'); });
+            if (qForm) {
+                qForm.querySelectorAll('.task-quick-date').forEach(function (b) { b.classList.remove('active'); });
+            }
             quick.classList.add('active');
         }
     });
@@ -317,8 +325,15 @@ $js = <<<JS
                 body.appendChild(back);
 
                 var wrap = document.createElement('div');
-                wrap.innerHTML = data.content;
                 body.appendChild(wrap);
+
+                // ใช้ jQuery ใส่เนื้อหา เพราะ script ที่ Select2 ฝากมากับ renderAjax
+                // จะไม่ทำงานถ้าใส่ด้วย innerHTML เฉย ๆ
+                if (window.jQuery) {
+                    jQuery(wrap).html(data.content);
+                } else {
+                    wrap.innerHTML = data.content;
+                }
             })
             .catch(function () {
                 body.innerHTML = '<div class="alert alert-danger mb-0">เปิดฟอร์มไม่สำเร็จ</div>';
@@ -333,10 +348,11 @@ $js = <<<JS
         }
     }
 
-    // บันทึกฟอร์มแก้ไขงานที่อยู่ใน modal — ใช้ delegation เพราะฟอร์มถูกใส่เข้ามาทีหลัง
+    // บันทึกฟอร์มงานที่อยู่ใน modal (ทั้งเพิ่มใหม่และแก้ไข)
+    // ใช้ delegation เพราะฟอร์มถูกใส่เข้ามาทีหลัง
     document.addEventListener('submit', function (e) {
         var form = e.target;
-        if (!form || form.id !== 'task-edit-form') { return; }
+        if (!form || !form.classList || !form.classList.contains('task-form')) { return; }
         e.preventDefault();
 
         var submit = form.querySelector('button[type="submit"]');

@@ -1,7 +1,9 @@
 <?php
 
+use app\components\AppHelper;
 use app\components\ThaiDate;
 use app\modules\task\models\Task;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -21,14 +23,15 @@ use yii\helpers\Url;
 $age = $task->ageText();
 $overdue = $task->overdueDays() > 0;
 
+// ปุ่มลัดต้องใส่ค่าเป็น วว/ดด/พ.ศ. ให้ตรงกับรูปแบบที่ DatepickerThai ใช้
 $quickDates = [
-    'วันนี้' => date('Y-m-d'),
-    'พรุ่งนี้' => date('Y-m-d', strtotime('+1 day')),
-    'อีก 3 วัน' => date('Y-m-d', strtotime('+3 days')),
-    'สัปดาห์หน้า' => date('Y-m-d', strtotime('+7 days')),
+    'วันนี้' => AppHelper::convertToThai(date('Y-m-d')),
+    'พรุ่งนี้' => AppHelper::convertToThai(date('Y-m-d', strtotime('+1 day'))),
+    'อีก 3 วัน' => AppHelper::convertToThai(date('Y-m-d', strtotime('+3 days'))),
+    'สัปดาห์หน้า' => AppHelper::convertToThai(date('Y-m-d', strtotime('+7 days'))),
 ];
 ?>
-<form id="task-edit-form" method="post"
+<form id="task-edit-form" class="task-form" method="post"
       action="<?= Url::to(['/task/default/update', 'id' => $task->id]) ?>"
       data-task-id="<?= (int) $task->id ?>">
     <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>">
@@ -75,8 +78,16 @@ $quickDates = [
                     <?php endforeach ?>
                 </div>
             <?php endif ?>
-            <input type="date" class="form-control" id="task-f-due" name="due_date"
-                   value="<?= Html::encode((string) $task->due_date) ?>" <?= $canEdit ? '' : 'disabled' ?>>
+            <?= DatepickerThai::widget([
+                'name' => 'due_date',
+                'value' => $task->due_date ? AppHelper::convertToThai($task->due_date) : '',
+                'options' => array_merge([
+                    'id' => 'task-f-due',
+                    'class' => 'form-control',
+                    'autocomplete' => 'off',
+                    'placeholder' => 'วว/ดด/พ.ศ.',
+                ], $canEdit ? [] : ['disabled' => true]),
+            ]) ?>
         </div>
 
         <div class="col-12 col-sm-6">
@@ -204,3 +215,12 @@ $quickDates = [
         <?php endif ?>
     </div>
 </form>
+
+<script>
+// widget DatepickerThai ใช้ registerJs ซึ่งไม่ทำงานตอน inject ผ่าน AJAX จึงต้อง init เอง
+(function () {
+    if (typeof thaiDatepicker === 'function') {
+        try { thaiDatepicker('#task-f-due'); } catch (e) {}
+    }
+})();
+</script>

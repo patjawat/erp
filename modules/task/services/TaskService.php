@@ -2,6 +2,7 @@
 
 namespace app\modules\task\services;
 
+use app\components\AppHelper;
 use app\modules\hr\models\Organization;
 use app\modules\notify\models\Notify;
 use app\modules\task\models\Task;
@@ -210,6 +211,33 @@ class TaskService
         }
 
         return $activity;
+    }
+
+    /**
+     * แปลงวันที่จากฟอร์มเป็น ค.ศ. รูปแบบ Y-m-d
+     *
+     * ปกติช่องกรอกใช้ DatepickerThai จึงได้ วว/ดด/พ.ศ. มา
+     * แต่รับ Y-m-d ไว้ด้วย เผื่อค่ามาจากหน้าที่ค้างใน cache หรือผู้เรียกอื่น
+     * ถ้าไม่รับไว้ AppHelper::convertToGregorian จะคืน null แล้วกำหนดเสร็จถูกล้างทิ้งเงียบ ๆ
+     */
+    public static function parseDueDate(?string $input): ?string
+    {
+        $input = trim((string) $input);
+        if ($input === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{1,2}-\d{1,2}$/', $input)) {
+            $ts = strtotime($input);
+            return $ts ? date('Y-m-d', $ts) : null;
+        }
+
+        $converted = AppHelper::convertToGregorian($input);
+        if (!$converted) {
+            return null;
+        }
+        $ts = strtotime($converted);
+        return $ts ? date('Y-m-d', $ts) : null;
     }
 
     // ------------------------------------------------------------------
