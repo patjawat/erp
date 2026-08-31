@@ -44,8 +44,11 @@ class TaskService
 
     /**
      * สร้างงานหนึ่งชิ้น พร้อมบันทึกความเคลื่อนไหวแรก
+     *
+     * @param bool $deferTelegram ให้ผู้เรียกส่ง Telegram เองทีหลัง
+     *                            ใช้ตอนสร้างหลายงานพร้อมกัน จะได้รวมเป็นข้อความเดียว
      */
-    public static function create(array $data, ?int $actorEmpId = null): ?Task
+    public static function create(array $data, ?int $actorEmpId = null, bool $deferTelegram = false): ?Task
     {
         $task = new Task();
         $task->source_module = $data['source_module'] ?? Task::SOURCE_MANUAL;
@@ -69,7 +72,7 @@ class TaskService
             self::log($task, TaskActivity::ACTION_CREATE, $note, $actorEmpId, false);
 
             $transaction->commit();
-            self::notifyAssignee($task, $actorEmpId);
+            self::notifyAssignee($task, $actorEmpId, $deferTelegram);
             return $task;
         } catch (\Throwable $e) {
             $transaction->rollBack();
@@ -91,11 +94,16 @@ class TaskService
     {
         $created = [];
         foreach ($rows as $row) {
-            $task = self::createFromSource($sourceModule, $sourceId, $row, $actorEmpId);
+            $row['source_module'] = $sourceModule;
+            $row['source_id'] = $sourceId === null ? null : (string) $sourceId;
+            // พัก Telegram ไว้ก่อน แล้วส่งรวมทีเดียวตอนท้าย
+            $task = self::create($row, $actorEmpId, true);
             if ($task !== null) {
                 $created[] = $task;
             }
         }
+
+        TaskTelegramService::notifyBatch($created, $actorEmpId);
         return $created;
     }
 
@@ -123,20 +131,26 @@ class TaskService
     }
 
     /**
-     * แจ้งผู้รับผิดชอบผ่านกระดิ่งแจ้งเตือนของระบบ
+     * แจ้งผู้รับผิดชอบ
      *
-     * ใช้ช่องทางเดิมที่มีอยู่แล้ว ไม่สร้างจุดเตือนใหม่บนหน้าจอ
+     * กระดิ่งในระบบได้ทุกงาน ส่วน Telegram เด้งเฉพาะงานที่ต้องรู้เดี๋ยวนี้
+     * เพราะคำสัญญาของระบบนี้คือทำให้ถูกรบกวนน้อยลง ไม่ใช่มากขึ้น
      * และไม่ให้การแจ้งเตือนล้มเหลวไปทำให้การบันทึกงานพัง
      */
-    private static function notifyAssignee(Task $task, ?int $actorEmpId): void
+    private static function notifyAssignee(Task $task, ?int $actorEmpId, bool $deferTelegram = false): void
     {
         if (!$task->assignee_emp_id) {
             return;
         }
         try {
+            // กระดิ่งได้ทุกงาน หนึ่งงานหนึ่งรายการ ไม่รวมกัน
             Notify::createForTaskAssigned($task, $actorEmpId);
         } catch (\Throwable $e) {
             Yii::warning('แจ้งเตือนงานไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+        }
+
+        if (!$deferTelegram) {
+            TaskTelegramService::notifyAssigned($task, $actorEmpId);
         }
     }
 

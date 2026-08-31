@@ -436,12 +436,16 @@ class DefaultController extends Controller
             return ['status' => 'error', 'message' => 'กรุณาเลือกผู้รับผิดชอบอย่างน้อยหนึ่งราย'];
         }
 
-        $created = 0;
+        // พัก Telegram ไว้ก่อน แล้วส่งรวมทีเดียว คนเดียวจะได้ไม่โดนเด้งเท่าจำนวนงาน
+        $createdTasks = [];
         foreach ($rows as $row) {
-            if (TaskService::create($row, (int) $me->id) !== null) {
-                $created++;
+            $task = TaskService::create($row, (int) $me->id, true);
+            if ($task !== null) {
+                $createdTasks[] = $task;
             }
         }
+        \app\modules\task\services\TaskTelegramService::notifyBatch($createdTasks, (int) $me->id);
+        $created = count($createdTasks);
 
         if ($created === 0) {
             return ['status' => 'error', 'message' => 'สร้างงานไม่สำเร็จ'];
