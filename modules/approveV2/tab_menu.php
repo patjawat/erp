@@ -11,16 +11,39 @@ $me = UserHelper::GetEmployee();
     $totalLeave = $notify['leave']['total'];
     $totalBookingCar = $notify['booking_car']['total'];
     $totalPurchase = $notify['purchase']['total'];
-    $totalStock = $notify['stock']['total'];
     $totalDevelopment = $notify['development']['total'];
     $totalAssetMove = $notify['assetMove']['total'];
     $totalCheckin = $notify['checkin']['total'];
     $totalRequisitionV2 = $notify['requisitionV2']['total'] ?? 0;
+
+    // งานมอบหมายที่ยังไม่ปิด — ป้องกันแถบเมนูพังในเครื่องที่ยังไม่ได้รัน migration ของโมดูล task
+    $totalTask = 0;
+    try {
+        if ($me && Yii::$app->db->getTableSchema('{{%task}}') !== null) {
+            $totalTask = (int) \app\modules\task\models\Task::find()
+                ->where(['assignee_emp_id' => $me->id])
+                ->andWhere(['status' => \app\modules\task\models\Task::OPEN_STATUSES])
+                ->count();
+        }
+    } catch (\Throwable $e) {
+        $totalTask = 0;
+    }
     ?>
 
 <?php //  $this->render('@app/modules/approveV2/views/default/card_summary') ?>
 
  <div class="approve-v2-tabs d-flex flex-row flex-wrap gap-2 gap-md-3 p-2 mb-3">
+        <?php // ทางเข้าปฏิทินงาน — วางไว้ที่นี่เพราะเป็นจุดเดียวที่เข้าถึงงานได้เมื่อปิด popup ไปแล้ว ?>
+        <a href="<?= Url::to(['/task']) ?>" class="btn d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= ($menu ?? '') === 'task' ? 'bg-white shadow-sm' : '' ?>">
+            <i data-lucide="list-checks"></i>
+            To do list
+            <?php if ($totalTask > 0): ?>
+                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
+                    <?= $totalTask ?>
+                </span>
+            <?php endif; ?>
+        </a>
+
         <a href="<?= Url::to(['/approve-v2/leave']) ?>" class="btn d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'leave'  ? 'bg-white shadow-sm' : '' ?>">
             <i data-lucide="calendar"></i>
             วันลา
@@ -49,15 +72,7 @@ $me = UserHelper::GetEmployee();
             <?php endif;?>
      </a>
 
-     <a href="<?= Url::to(['/approve-v2/main-stock']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'main-stock'   ? 'bg-white shadow-sm' : '' ?>">
-         <i data-lucide="shopping-basket"></i>
-         เบิกวัสดุ
-           <?php if($totalStock > 0):?>
-                <span class="badge bg-danger-subtle text-primary border-0 ms-1 fw-normal">
-                    <?=$totalStock?>
-                  </span>
-            <?php endif;?>
-     </a>
+     <?php // เมนูเบิกวัสดุรุ่นเก่าถูกถอดออก 2026-08-31 — ใช้ "เบิกวัสดุv2" (ระบบคลัง v2) แทนแล้ว ?>
 
      <a href="<?= Url::to(['/approve-v2/main-stock/requisition-v2']) ?>" class="btn btn-sm d-flex align-items-center gap-2 px-3 rounded-3 tab-btn <?= $menu === 'main-stock-requisition-v2' ? 'bg-white shadow-sm' : '' ?>">
          <i data-lucide="clipboard-list"></i>

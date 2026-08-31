@@ -143,7 +143,27 @@ $this->registerCss(<<<'CSS'
 }
 CSS);
 
+// งานมอบหมายที่ยังไม่ปิด — ป้องกันหน้าพังในเครื่องที่ยังไม่ได้รัน migration ของโมดูล task
+$myOpenTaskCount = 0;
+try {
+    if (Yii::$app->db->getTableSchema('{{%task}}') !== null) {
+        $myOpenTaskCount = (int) \app\modules\task\models\Task::find()
+            ->where(['assignee_emp_id' => $me->id])
+            ->andWhere(['status' => \app\modules\task\models\Task::OPEN_STATUSES])
+            ->count();
+    }
+} catch (\Throwable $e) {
+    $myOpenTaskCount = 0;
+}
+
 $pendingApproveItems = [
+    [
+        'key' => 'task',
+        'label' => 'งานมอบหมาย',
+        'url' => ['/task'],
+        'icon' => 'fa-list-check',
+        'count' => $myOpenTaskCount,
+    ],
     [
         'key' => 'leave',
         'label' => 'การลา',
@@ -171,13 +191,6 @@ $pendingApproveItems = [
         'url' => ['/approve-v2/development'],
         'icon' => 'fa-graduation-cap',
         'count' => (int) ($notify['development']['total'] ?? 0),
-    ],
-    [
-        'key' => 'stock',
-        'label' => 'เบิกวัสดุ',
-        'url' => ['/approve-v2/main-stock'],
-        'icon' => 'fa-boxes-stacked',
-        'count' => (int) ($notify['stock']['total'] ?? 0),
     ],
     [
         'key' => 'requisitionV2',
