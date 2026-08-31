@@ -519,8 +519,8 @@ class PdfTemplateService
             define('FPDF_FONTPATH', $this->getWebRootPath() . '/fonts/');
         }
         $pdf = new Fpdi();
-        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
         $pathToUnlink = null;
         $signatureTempPaths = [];
         try {

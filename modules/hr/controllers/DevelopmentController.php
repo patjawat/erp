@@ -1581,8 +1581,8 @@ class DevelopmentController extends Controller
         }
         $pdf = new Fpdi();
         // ตั้งค่าฟอนต์ไทย (ไฟล์ .php อยู่ที่ web/fonts/)
-        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
 
         // โหลดเทมเพลตหน้าแรก
         $pdf->setSourceFile($templateFile);

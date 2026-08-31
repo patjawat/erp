@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d6407fc421bf8d8042f7bb5b904843d",
+    "content-hash": "cb18fec7c76675dc823103cd5a7cea5a",
     "packages": [
         {
             "name": "2amigos/yii2-qrcode-helper",
@@ -5817,7 +5817,7 @@
         },
         {
             "name": "setasign/fpdf",
-            "version": "dev-master",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Setasign/FPDF.git",
@@ -5833,7 +5833,6 @@
                 "ext-gd": "*",
                 "ext-zlib": "*"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "classmap": [
@@ -5858,7 +5857,7 @@
                 "pdf"
             ],
             "support": {
-                "source": "https://github.com/Setasign/FPDF/tree/master"
+                "source": "https://github.com/Setasign/FPDF/tree/1.9.0"
             },
             "time": "2026-05-31T14:25:29+00:00"
         },
@@ -13473,7 +13472,6 @@
         "phpoffice/phpspreadsheet": 20,
         "phpoffice/phpword": 20,
         "ruskid/yii2-csv-importer": 20,
-        "setasign/fpdf": 20,
         "softark/yii2-dual-listbox": 20,
         "tecnickcom/tcpdf": 20,
         "warrence/yii2-kartikgii": 20,

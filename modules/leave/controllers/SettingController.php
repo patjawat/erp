@@ -354,8 +354,8 @@ class SettingController extends Controller
         $pdf->AddPage();
         $pdf->useTemplate($tplIdx, 0, 0, 210);
 
-        $pdf->AddFont('THSarabunNew', '',  'THSarabunNew.php');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $pdf->AddFont('THSarabunNew', '',  'THSarabunNew.json');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
         $pdf->SetTextColor(0, 0, 0);
 
         $ptToMm = 25.4 / 72;

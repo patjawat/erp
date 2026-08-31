@@ -59,7 +59,7 @@
         "asyou99/yii2-cart": "@dev",
         "kartik-v/yii2-sortable": "dev-master",
         "phpoffice/phpspreadsheet": "dev-master",
-        "setasign/fpdf": "dev-master",
+        "setasign/fpdf": "^1.9.0",
         "tecnickcom/tcpdf": "dev-main",
         "mpdf/mpdf": "^8.2",
         "setasign/fpdi": "^2.6",

@@ -47,8 +47,8 @@ class PdfHelper extends Component
         $pageCount = $pdf->setSourceFile($filePath);
 
         // โหลดฟอนต์ THSarabun
-        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
 
         // ใช้ขนาดมาตรฐานตราประทับหนังสือราชการ (วงกลม เส้นผ่านศูนย์กลาง 3.5 ซม.)
         // แต่กล่องข้อความจะใช้ขนาดใกล้เคียงเพื่อให้ข้อความอยู่ในกรอบ

@@ -65,8 +65,8 @@ class PdfStampController extends Controller
     $pdf->useTemplate($tplIdx, 0, 0, 210);  // A4 กว้าง 210mm
 
     // โหลดฟอนต์ไทย
-    $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-    $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+    $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+    $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
     $pdf->SetFont('THSarabunNew', '', 18);
 
 

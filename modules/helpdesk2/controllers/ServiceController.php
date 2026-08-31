@@ -1099,8 +1099,8 @@ class ServiceController extends \yii\web\Controller
 
             $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
             // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
-            $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-            $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+            $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+            $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
 
             // 2️⃣ เลือกหน้าที่ต้องการ
             $tplIdx = $pdf->importPage(1);
@@ -1257,8 +1257,8 @@ class ServiceController extends \yii\web\Controller
 
             $pdf->setSourceFile($templateFile); // ต้องเรียกก่อน importPage()
             // สร้างออบเจกต์ PDF และโหลดไฟล์ต้นฉบับ
-            $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
-            $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
+            $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+            $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
 
             // 2️⃣ เลือกหน้าที่ต้องการ
             $tplIdx = $pdf->importPage(1);
