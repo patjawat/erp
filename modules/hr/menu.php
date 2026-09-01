@@ -74,6 +74,16 @@ use yii\helpers\Url;
             </li> -->
             <li>
                 <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="layers-3" width="15" height="15" class="text-body-secondary" aria-hidden="true"></i> ระดับตำแหน่ง</span>',
+                    ['/hr/categorise', 'name' => 'position_level', 'title' => 'ระดับตำแหน่ง'],
+                    [
+                        'class' => 'dropdown-item open-modal',
+                        'data' => ['size' => 'modal-lg'],
+                    ]
+                ) ?>
+            </li>
+            <li>
+                <?= Html::a(
                     '<span class="d-flex align-items-center gap-2"><i data-lucide="badge-check" width="15" height="15" class="text-body-secondary" aria-hidden="true"></i> ความเชี่ยวชาญ</span>',
                     ['/hr/categorise', 'name' => 'expertise', 'title' => 'ความเชี่ยวชาญ'],
                     [
