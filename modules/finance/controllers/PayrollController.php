@@ -4,6 +4,7 @@ namespace app\modules\finance\controllers;
 
 use app\modules\finance\services\PayrollReadinessService;
 use app\modules\finance\services\PayrollPeriodService;
+use app\modules\finance\services\PayrollRunService;
 use DateTimeImmutable;
 use Yii;
 use yii\data\ArrayDataProvider;
@@ -14,6 +15,16 @@ use yii\web\BadRequestHttpException;
 use yii\web\UploadedFile;
 use yii\db\Query;
 use app\modules\hr\models\Employees;
+use app\components\AppHelper;
+use app\components\SiteHelper;
+use app\modules\usermanager\models\User;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use yii\helpers\FileHelper;
 
 class PayrollController extends Controller
 {
@@ -21,8 +32,8 @@ class PayrollController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index'], 'roles' => ['payrollView']],
-                ['allow' => true, 'actions' => ['open-period', 'add-employee', 'exclude', 'restore'], 'roles' => ['payrollPrepare']],
+                ['allow' => true, 'actions' => ['index', 'payroll-runs', 'payslip', 'export-payroll-run'], 'roles' => ['payrollView']],
+                ['allow' => true, 'actions' => ['open-period', 'add-employee', 'exclude', 'restore', 'create-payroll-run'], 'roles' => ['payrollPrepare']],
                 ['allow' => true, 'actions' => ['settings', 'save-bank-account', 'download-bank-template', 'import-bank-csv', 'add-item-type', 'save-item-type', 'create-item-type', 'update-item-type', 'create-contribution-rule'], 'roles' => ['payrollBankManage']],
                 ['allow' => true, 'actions' => ['employee-items', 'add-item-employees', 'save-item-employees', 'create-employee-item', 'create-employee-items-bulk', 'update-employee-item', 'save-item-amounts', 'toggle-item-type', 'remove-employee-item', 'reorder-employee-items'], 'roles' => ['payrollBankManage']],
             ]],
@@ -260,6 +271,118 @@ class PayrollController extends Controller
             Yii::$app->session->setFlash('success', 'เปิดรอบเงินเดือนและบันทึกรายชื่อเรียบร้อยแล้ว');
         } catch (\Throwable $e) { Yii::error($e); Yii::$app->session->setFlash('error', 'เปิดรอบไม่สำเร็จ: ' . $e->getMessage()); }
         return $this->redirect(['index', 'month' => $month]);
+    }
+
+    public function actionPayrollRuns()
+    {
+        $periods = (new Query())->select(['p.*', 'employee_count' => 'COUNT(pe.id)', 'gross_total' => 'COALESCE(SUM(pe.gross_amount), 0)', 'deduction_total' => 'COALESCE(SUM(pe.deduction_amount), 0)', 'net_total' => 'COALESCE(SUM(pe.net_amount), 0)'])
+            ->from(['p' => '{{%payroll_period}}'])->leftJoin(['pe' => '{{%payroll_period_employee}}'], 'pe.payroll_period_id = p.id')
+            ->where(['p.status' => 'calculated'])->groupBy('p.id')->orderBy(['p.period_code' => SORT_DESC, 'p.period_type' => SORT_ASC])->all();
+        $periodId = (int) Yii::$app->request->get('period_id', 0);
+        $period = $periodId ? (new Query())->from('{{%payroll_period}}')->where(['id' => $periodId])->one() : null;
+        $rows = $period ? (new Query())->from('{{%payroll_period_employee}}')->where(['payroll_period_id' => $periodId])->orderBy(['employee_id' => SORT_ASC])->all() : [];
+        foreach ($rows as &$row) {
+            $row['employee_snapshot'] = PayrollPeriodService::decodeSnapshot($row['employee_snapshot']);
+            $row['calculation_snapshot'] = PayrollPeriodService::decodeSnapshot($row['calculation_snapshot']);
+        }
+        unset($row);
+        $query = trim((string) Yii::$app->request->get('q'));
+        if ($query !== '') {
+            $needle = mb_strtolower($query);
+            $rows = array_values(array_filter($rows, static function (array $row) use ($needle): bool {
+                $employee = $row['employee_snapshot'];
+                return str_contains(mb_strtolower((string) ($employee['full_name'] ?? '')), $needle)
+                    || str_contains((string) ($employee['cid'] ?? ''), $needle);
+            }));
+        }
+        return $this->render('payroll-runs', ['periods' => $periods, 'period' => $period, 'rows' => $rows, 'types' => PayrollRunService::TYPES, 'query' => $query]);
+    }
+
+    public function actionExportPayrollRun($period_id)
+    {
+        $periodId = (int) $period_id;
+        $period = (new Query())->from('{{%payroll_period}}')->where(['id' => $periodId, 'status' => 'calculated'])->one();
+        if (!$period) throw new \yii\web\NotFoundHttpException('ไม่พบรอบที่ต้องการส่งออก');
+        $rows = (new Query())->from('{{%payroll_period_employee}}')->where(['payroll_period_id' => $periodId])->orderBy(['employee_id' => SORT_ASC])->all();
+        $book = new Spreadsheet();
+        $sheet = $book->getActiveSheet();
+        $sheet->setTitle('รายการเงินเดือน');
+        $organizationName = trim((string) (SiteHelper::getInfo()['company_name'] ?? '')) ?: 'หน่วยงาน';
+        $typeLabel = PayrollRunService::TYPES[$period['period_type']] ?? $period['period_type'];
+        $sheet->mergeCells('A1:G1')->setCellValue('A1', $organizationName);
+        $sheet->mergeCells('A2:G2')->setCellValue('A2', $typeLabel . ' ประจำเดือน ' . $period['period_code']);
+        $headers = ['ลำดับ', 'ชื่อ–นามสกุล', 'เลขประชาชน', 'รายรับ', 'รายจ่าย', 'คงเหลือ', 'สถานะ'];
+        foreach ($headers as $index => $header) $sheet->setCellValue([$index + 1, 4], $header);
+        $excelRow = 5;
+        foreach ($rows as $index => $row) {
+            $employee = PayrollPeriodService::decodeSnapshot($row['employee_snapshot']);
+            $sheet->setCellValue('A' . $excelRow, $index + 1);
+            $sheet->setCellValue('B' . $excelRow, (string) ($employee['full_name'] ?? ''));
+            $sheet->setCellValueExplicit('C' . $excelRow, (string) ($employee['cid'] ?? ''), DataType::TYPE_STRING);
+            $sheet->setCellValue('D' . $excelRow, (float) $row['gross_amount']);
+            $sheet->setCellValue('E' . $excelRow, (float) $row['deduction_amount']);
+            $sheet->setCellValue('F' . $excelRow, (float) $row['net_amount']);
+            $sheet->setCellValue('G' . $excelRow, (string) $row['status']);
+            $excelRow++;
+        }
+        $sheet->setCellValue('B' . $excelRow, 'รวม');
+        foreach (['D', 'E', 'F'] as $column) $sheet->setCellValue($column . $excelRow, '=SUM(' . $column . '5:' . $column . ($excelRow - 1) . ')');
+        $sheet->getStyle('A1:G2')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A4:G4')->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle('A4:G4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF2764AE');
+        $sheet->getStyle('D5:F' . $excelRow)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2);
+        $sheet->getStyle('B' . $excelRow . ':F' . $excelRow)->getFont()->setBold(true);
+        foreach (['A' => 9, 'B' => 34, 'C' => 18, 'D' => 16, 'E' => 16, 'F' => 16, 'G' => 14] as $column => $width) $sheet->getColumnDimension($column)->setWidth($width);
+        $sheet->freezePane('A5')->setAutoFilter('A4:G' . max(4, $excelRow - 1));
+        $directory = Yii::getAlias('@runtime/export');
+        FileHelper::createDirectory($directory, 0775, true);
+        $fileName = 'payroll-' . $period['period_type'] . '-' . $period['period_code'] . '.xlsx';
+        $filePath = $directory . DIRECTORY_SEPARATOR . $fileName;
+        (new Xlsx($book))->save($filePath);
+        return Yii::$app->response->sendFile($filePath, $fileName)->on(\yii\web\Response::EVENT_AFTER_SEND, static function () use ($filePath): void { if (is_file($filePath)) unlink($filePath); });
+    }
+
+    public function actionCreatePayrollRun()
+    {
+        try {
+            $monthNumber = (int) Yii::$app->request->post('month_number');
+            $buddhistYear = (int) Yii::$app->request->post('buddhist_year');
+            $gregorianYear = $buddhistYear - 543;
+            if ($monthNumber < 1 || $monthNumber > 12 || $gregorianYear < 2000 || $gregorianYear > 2200) throw new \RuntimeException('เดือนหรือปี พ.ศ. ไม่ถูกต้อง');
+            $month = sprintf('%04d-%02d', $gregorianYear, $monthNumber);
+            $payDateInput = trim((string) Yii::$app->request->post('pay_date'));
+            $payDate = $payDateInput === '' ? null : AppHelper::normalizeDateToDb($payDateInput);
+            if ($payDateInput !== '' && $payDate === null) throw new \RuntimeException('วันที่จ่ายไม่ถูกต้อง กรุณาระบุเป็นวัน/เดือน/ปี พ.ศ.');
+            $periodId = (new PayrollRunService())->create($month, (string) Yii::$app->request->post('period_type'), $payDate);
+            Yii::$app->session->setFlash('success', 'สร้างและคำนวณรอบเรียบร้อยแล้ว');
+            return $this->redirect(['payroll-runs', 'period_id' => $periodId]);
+        } catch (\Throwable $e) {
+            Yii::error($e); Yii::$app->session->setFlash('error', $e->getMessage());
+            return $this->redirect(['payroll-runs']);
+        }
+    }
+
+    public function actionPayslip($id)
+    {
+        $row = (new Query())->select(['pe.*', 'p.period_code', 'p.period_type', 'p.date_start', 'p.date_end', 'p.pay_date', 'p.created_at AS period_created_at', 'p.created_by AS period_created_by'])
+            ->from(['pe' => '{{%payroll_period_employee}}'])->innerJoin(['p' => '{{%payroll_period}}'], 'p.id = pe.payroll_period_id')
+            ->where(['pe.id' => (int) $id])->one();
+        if (!$row) throw new \yii\web\NotFoundHttpException('ไม่พบสลิปเงินเดือน');
+        $row['employee_snapshot'] = PayrollPeriodService::decodeSnapshot($row['employee_snapshot']);
+        $row['calculation_snapshot'] = PayrollPeriodService::decodeSnapshot($row['calculation_snapshot']);
+        $issuer = $row['period_created_by'] ? User::findOne((int) $row['period_created_by']) : null;
+        $issuerName = trim((string) ($issuer?->employee?->fullname ?? $issuer?->username ?? ''));
+        $params = [
+            'row' => $row,
+            'types' => PayrollRunService::TYPES,
+            'organization' => SiteHelper::getInfo(),
+            'issuerName' => $issuerName,
+        ];
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('_payslip_content', $params);
+        }
+        return $this->render('payslip', $params);
     }
 
     public function actionAddEmployee()
@@ -693,9 +816,9 @@ class PayrollController extends Controller
         try {
             Yii::$app->db->createCommand()->update('{{%payroll_item_type}}', ['status' => $status, 'updated_at' => $now, 'updated_by' => Yii::$app->user->id], ['id' => $id])->execute();
             Yii::$app->db->createCommand()->insert('{{%payroll_audit_log}}', ['ref' => substr(Yii::$app->getSecurity()->generateRandomString(), 10), 'entity_type' => 'payroll_item_type', 'entity_id' => $id,
-                'action' => 'toggle_status', 'reason' => $status === 'active' ? 'เปิดใช้งานรายการ' : 'ปิดใช้งานรายการ', 'before_json' => $before, 'after_json' => ['status' => $status],
+                'action' => 'toggle_status', 'reason' => $status === 'active' ? 'เปิดการประมวลผลรายการ' : 'ปิดการประมวลผลรายการ', 'before_json' => $before, 'after_json' => ['status' => $status],
                 'ip_address' => mb_substr((string) $request->userIP, 0, 45), 'created_at' => $now, 'created_by' => Yii::$app->user->id])->execute();
-            Yii::$app->session->setFlash('success', ($status === 'active' ? 'เปิด' : 'ปิด') . 'ใช้งานรายการเรียบร้อยแล้ว');
+            Yii::$app->session->setFlash('success', ($status === 'active' ? 'เปิด' : 'ปิด') . 'การประมวลผลรายการเรียบร้อยแล้ว');
         } catch (\Throwable $e) { Yii::error($e); Yii::$app->session->setFlash('error', 'เปลี่ยนสถานะรายการไม่สำเร็จ'); }
         return $this->redirect(['employee-items', 'group' => $group]);
     }

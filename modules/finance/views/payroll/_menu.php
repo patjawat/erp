@@ -9,7 +9,7 @@ $compensationActive = in_array($active, ['compensation-income', 'compensation-ex
 ?>
 <nav class="nav nav-pills flex-wrap gap-2 mb-4" aria-label="เมนูเงินเดือน">
     <a class="nav-link <?= $active === 'overview' ? 'active' : '' ?>" href="<?= Url::to(['/finance/payroll']) ?>">
-        <i class="bi bi-people me-1" aria-hidden="true"></i>ทะเบียนบุคลากรเงินเดือน
+        <i class="bi bi-people me-1" aria-hidden="true"></i>ทะเบียนเงินเดือน
     </a>
 
     <div class="dropdown">
@@ -35,8 +35,8 @@ $compensationActive = in_array($active, ['compensation-income', 'compensation-ex
     <a class="nav-link <?= $active === 'ot' ? 'active' : '' ?>" href="<?= Url::to(['/finance/payroll', 'section' => 'ot']) ?>">
         <i class="bi bi-clock-history me-1" aria-hidden="true"></i>ข้อมูลเบิก OT
     </a>
-    <a class="nav-link <?= $active === 'reports' ? 'active' : '' ?>" href="<?= Url::to(['/finance/payroll', 'section' => 'reports']) ?>">
-        <i class="bi bi-file-earmark-bar-graph me-1" aria-hidden="true"></i>รายงานเงินเดือน
+    <a class="nav-link <?= $active === 'reports' ? 'active' : '' ?>" href="<?= Url::to(['/finance/payroll/payroll-runs']) ?>">
+        <i class="bi bi-file-earmark-bar-graph me-1" aria-hidden="true"></i>รายการเงินเดือน
     </a>
     <a class="nav-link <?= $active === 'certificate' ? 'active' : '' ?>" href="<?= Url::to(['/finance/payroll', 'section' => 'certificate']) ?>">
         <i class="bi bi-file-earmark-check me-1" aria-hidden="true"></i>ใบรับรองเงินเดือน

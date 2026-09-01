@@ -22,7 +22,7 @@ class PayrollPeriodService
 
     public function findByCode(string $periodCode): ?array
     {
-        $row = (new Query())->from('{{%payroll_period}}')->where(['period_code' => $periodCode])->one();
+        $row = (new Query())->from('{{%payroll_period}}')->where(['period_code' => $periodCode, 'period_type' => 'preparation'])->one();
         return $row ?: null;
     }
 
@@ -36,7 +36,7 @@ class PayrollPeriodService
         $transaction = Yii::$app->db->beginTransaction();
         try {
             Yii::$app->db->createCommand()->insert('{{%payroll_period}}', [
-                'ref' => $this->ref(), 'period_code' => $periodCode,
+                'ref' => $this->ref(), 'period_code' => $periodCode, 'period_type' => 'preparation',
                 'date_start' => $start->format('Y-m-d'), 'date_end' => $start->modify('last day of this month')->format('Y-m-d'),
                 'status' => 'draft', 'created_at' => $now, 'updated_at' => $now,
                 'created_by' => $userId, 'updated_by' => $userId,
