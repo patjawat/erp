@@ -319,6 +319,9 @@ $config = [
             // ทุก action มี guard ภายในเอง — RosterAccess::canEnter/canManageUnit/canReviewUnit/canApprove
             'roster/*',
             'me/roster/*',
+            // To do list: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดรายการงานของตนเองได้
+            // controller จำกัดการดู/แก้ไขตามผู้รับผิดชอบ ผู้มอบหมาย และสายหน่วยงานอีกชั้น
+            'task/*',
             'line/*',
             // แบบประเมินความพึงพอใจการใช้รถ: ผู้ขอเปิดจากลิงก์ใน Telegram โดยไม่ต้องล็อกอิน
             // สิทธิ์มาจาก survey_token ใน vehicle_detail.data_json ที่ controller ตรวจเอง

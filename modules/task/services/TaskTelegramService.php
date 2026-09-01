@@ -3,6 +3,7 @@
 namespace app\modules\task\services;
 
 use app\components\ThaiDate;
+use app\modules\hr\models\Employees;
 use app\modules\task\models\Task;
 use app\modules\telegrambot\services\TelegramLinkService;
 use Yii;
@@ -45,6 +46,34 @@ class TaskTelegramService
         } catch (\Throwable $e) {
             // แจ้งเตือนล้มเหลวต้องไม่ทำให้การบันทึกงานพัง
             Yii::warning('ส่งแจ้งเตือนงานเข้า Telegram ไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /** แจ้งผู้มอบหมายเมื่องานเสร็จ โดยไม่สร้างรายการแจ้งเตือนที่กระดิ่ง */
+    public static function notifyCompleted(Task $task, ?int $actorEmpId = null): bool
+    {
+        try {
+            if (!TelegramLinkService::isEnabled() || !$task->assigner_emp_id) {
+                return false;
+            }
+            if ($actorEmpId !== null && (int) $actorEmpId === (int) $task->assigner_emp_id) {
+                return false;   // ผู้มอบหมายปิดงานเอง ไม่ต้องส่งกลับหาตัวเอง
+            }
+
+            $chatId = self::employeeChatId($task->assigner);
+            if ($chatId === null) {
+                return false;   // ผู้มอบหมายยังไม่ได้ผูกบัญชี Telegram
+            }
+
+            return (bool) Yii::$app->telegram->sendDirectMessage(
+                $chatId,
+                self::buildCompletedMessage($task, $actorEmpId),
+                self::buildOptions()
+            );
+        } catch (\Throwable $e) {
+            // Telegram ล้มเหลวต้องไม่ย้อนสถานะงานที่บันทึกสำเร็จแล้ว
+            Yii::warning('ส่งผลปิดงานทาง Telegram ไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
             return false;
         }
     }
@@ -178,7 +207,11 @@ class TaskTelegramService
 
     private static function chatIdOf(Task $task): ?string
     {
-        $employee = $task->assignee;
+        return self::employeeChatId($task->assignee);
+    }
+
+    private static function employeeChatId(?Employees $employee): ?string
+    {
         $chatId = trim((string) ($employee->user->telegram_id ?? ''));
         return $chatId !== '' ? $chatId : null;
     }
@@ -338,6 +371,32 @@ class TaskTelegramService
 
         if ($task->assigner) {
             $lines[] = '👤 มอบหมายโดย ' . Html::encode(trim($task->assigner->fname . ' ' . $task->assigner->lname));
+        }
+
+        return implode(PHP_EOL, $lines);
+    }
+
+    private static function buildCompletedMessage(Task $task, ?int $actorEmpId): string
+    {
+        $lines = [
+            '✅ <b>งานเสร็จแล้ว</b>',
+            '',
+            '<b>' . Html::encode((string) $task->title) . '</b>',
+        ];
+
+        $completedBy = $actorEmpId ? Employees::findOne($actorEmpId) : $task->assignee;
+        if ($completedBy) {
+            $name = trim((string) $completedBy->fname . ' ' . (string) $completedBy->lname);
+            if ($name !== '') {
+                $lines[] = '👤 ปิดงานโดย ' . Html::encode($name);
+            }
+        }
+
+        if ($task->completed_at) {
+            $lines[] = '🕒 เมื่อ ' . ThaiDate::toThaiDate($task->completed_at, true, true);
+        }
+        if ($task->ownerUnit) {
+            $lines[] = '🏢 ' . Html::encode((string) $task->ownerUnit->name);
         }
 
         return implode(PHP_EOL, $lines);

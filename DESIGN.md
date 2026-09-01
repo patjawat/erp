@@ -546,3 +546,79 @@ Reference implementation: [`modules/inventoryV2/views/requisition/index.php`](mo
 - ใช้ `beginBlock('page-action')` สำหรับเมนูหลัก ปุ่ม action หรือ partial เช่น `_menu_main`
 - partial เมนู/action ไม่ควรครอบด้วย `.page-action` เอง ให้ layout เป็นผู้จัดตำแหน่ง
 - หลีกเลี่ยงการสร้าง `<h1>` หรือ action bar ซ้ำใน content body เมื่อ layout มี block เหล่านี้อยู่แล้ว
+
+## Task work cockpit (`modules/task`)
+
+Reference implementation: `modules/task/views/default/index.php` และ partial ใน `modules/task/views/default/` — surface นี้เป็น **Operate mode** สำหรับเห็นภาระงาน เลือกคนหรือวัน แล้วลงมือจัดการโดยไม่ออกจากบริบทปฏิทิน
+
+> **Finish review:** ตรวจจาก source หลังการแก้ไขรอบสุดท้าย เนื่องจากไม่มี screenshot/runtime preview ให้ตรวจในรอบนี้ ข้อกำหนดด้านล่างจึงบันทึกเฉพาะโครงสร้าง state และ responsive behavior ที่ยืนยันได้จาก implementation
+
+### Direction contract
+
+- ใช้ mental model แบบ Google work cockpit แต่คงบุคลิก Bootstrap-native ของ ERP โรงพยาบาล: สุขุม กระชับ และให้ข้อมูลนำ decoration
+- ปฏิทินเป็น primary canvas; แผงบุคลากรด้านซ้ายเป็น active-person filter; rail ด้านขวาเป็น actionable queue ไม่ใช่ summary dashboard
+- Desktop ใช้สัดส่วน `2 / 7 / 3` คอลัมน์ที่ breakpoint `lg`; เมื่อซ่อน rail ให้ปฏิทินขยายจาก 7 เป็น 10 คอลัมน์และคำนวณขนาดใหม่
+- Toolbar รวม action ที่เกี่ยวข้องโดยตรงเท่านั้น: เพิ่มงาน, วันนี้, เลื่อนเดือน, ชื่อเดือน พ.ศ. และ toggle rail
+
+**The Calendar-First Rule.** ใน work surface ที่วันครบกำหนดเป็นแกนหลัก ให้ปฏิทินครองพื้นที่มากที่สุด และให้ filter/queue เป็นเครื่องมือประกอบที่ยุบได้ ไม่แย่ง hierarchy จาก canvas
+
+### Calendar and triage behavior
+
+- หนึ่งวันแสดงหนึ่ง event chip เป็นจำนวนงาน เช่น “3 งาน” แทนการยัดชื่องานทุกชิ้นลง cell; คลิก chip แล้วเปิดรายการของวันนั้น
+- งานเปิดที่เลยกำหนดทบมาอยู่บน “วันนี้” แทนการปล่อยจมในวันอดีต; popup ของวันนี้ต้องอธิบายจำนวนที่ทบมาอย่างชัดเจน
+- ใช้ semantic state เท่านั้น: primary-subtle สำหรับวันปัจจุบัน/งานปกติ, danger-subtle เมื่องานด่วนหรือมีงานค้างทบมา, success-subtle สำหรับเสร็จ และ secondary-subtle สำหรับยกเลิก
+- วันที่ผู้ใช้เลือกต้องมี state แยกจาก “วันนี้” ด้วย inset primary outline; การเปลี่ยนเดือนต้องอัปเดตชื่อเดือนภาษาไทยและปี พ.ศ.
+- Rail เรียงงานเกินกำหนด → ด่วน → ครบกำหนดวันนี้ → งานอื่น; งานเสร็จพับไว้และจำกัดประวัติที่แสดง 30 วัน
+
+**The Count-Before-Detail Rule.** Canvas ที่หนาแน่นต้องบอก “วันไหนมีงานเท่าไร” ก่อน แล้วค่อยเปิด task detail ในชั้นถัดไป; ห้ามทำ calendar cell เป็น text wall
+
+### Active-person filter
+
+- แสดงเฉพาะบุคลากรที่ยังปฏิบัติงานในสายหน่วยงานที่ผู้ใช้มีสิทธิ์เห็น; ผู้ใช้ปัจจุบันอยู่บนสุดและถูกเลือกเป็นค่าเริ่มต้น
+- แถวคนประกอบด้วย checkbox, avatar อักษรย่อ, ชื่อ และ badge “ฉัน” เฉพาะตัวผู้ใช้; selected row ใช้ primary-subtle เป็น state ไม่ใช่ decoration
+- มี search แบบกรองทันที, empty message “ไม่พบชื่อที่ค้นหา” และ action “เฉพาะฉัน”; ต้องเหลือผู้ถูกเลือกอย่างน้อยหนึ่งคนเสมอ
+- เมื่อ filter เปลี่ยน ให้ล้างวันที่ที่เลือกและ refresh ทั้ง calendar กับ rail เพื่อไม่ให้สองบริบทแสดงข้อมูลคนละชุด
+
+### Task row (shared)
+
+ใช้ `_task_item.php` เป็น row เดียวกันทั้ง actionable rail และ day popup:
+
+- ซ้ายเป็นวงกลมปิดงานที่กดได้; งานเสร็จเปลี่ยนเป็น check icon และลด emphasis ของชื่อ
+- กลางเรียง title → detail สูงสุด 2 บรรทัด → ownership metadata → status chips
+- ownership ต้องเขียนความสัมพันธ์ชัดเจนเป็น **ผู้มอบหมาย → ผู้รับผิดชอบ** เสมอ แม้ fallback เป็น “สร้างด้วยตนเอง” หรือ “รอผู้รับผิดชอบ”; ห้ามแสดง avatar/ชื่อสองคนโดยไม่มี role
+- chips แสดงเฉพาะข้อมูลที่เปลี่ยนการตัดสินใจ: อายุ/กำหนดเสร็จ, ด่วน, รอผู้อื่น, กำลังทำ และต้นทางหนังสือ ใช้ soft semantic backgrounds และ pill radius
+- hover ใช้ tertiary surface; focus-within ใช้ primary ring; complete action เปลี่ยนเป็น success emphasis เมื่อ hover/focus
+
+**The Directional Ownership Rule.** งานที่ส่งต่อระหว่างคนต้องเผย assigner → assignee ในจุด scan หลักทุกครั้ง เพราะลูกศรบอกทั้งความรับผิดชอบและทิศทางการส่งงาน
+
+### Popup hierarchy
+
+รายละเอียดงานใน modal ต้องเรียง hierarchy ดังนี้:
+
+1. **Summary:** status, อายุ/กำหนดเสร็จ, ความด่วน, waiting/postpone state แล้วแสดงผู้มอบหมาย, ผู้รับผิดชอบ และหน่วยงานเจ้าของอย่างละหนึ่งครั้ง
+2. **Editable work:** เฉพาะชื่องาน, รายละเอียด, กำหนดเสร็จ, สถานะ, ความสำคัญ และ action บันทึก/ปิดงาน; ไม่มี quick-date buttons
+3. **Activity history:** ความเคลื่อนไหวอยู่ท้าย popup และ collapsed เป็น progressive disclosure
+
+- ใช้ tonal hero บน `--bs-tertiary-bg` เฉพาะ summary; ฟอร์มวางต่อทันทีโดยไม่ห่อ card ซ้อนใน modal
+- ถ้าผู้ใช้ดูได้แต่แก้ไม่ได้ ให้คงข้อมูลทั้งหมดและแสดง secondary alert อธิบายสิทธิ์ พร้อม disabled controls ที่ยังอ่านค่าได้
+- ห้ามทำซ้ำผู้รับผิดชอบเป็น selector, waiting เป็น checkbox หรือเพิ่ม source metadata block ใน edit popup; การตัด field เหล่านี้ออกเป็นการลด density เท่านั้น โดย controller ต้องรักษา `assignee_emp_id` และ `is_waiting` เดิมเมื่อ POST ไม่มี key และ popup นี้ไม่ต้อง query สมาชิกหน่วยงาน
+- ตั้งแต่ breakpoint `md` ให้กำหนดเสร็จ, สถานะ และความสำคัญอยู่ใน Bootstrap row เดียวกันและ align ด้านล่าง ด้วยสัดส่วน `4 / 5 / 3`: วันที่ใช้พื้นที่น้อยกว่าเพราะค่าอ่านสั้น, สถานะได้พื้นที่มากที่สุดสำหรับ 4 segments และความสำคัญได้พื้นที่พอสำหรับ 2 segments; ต่ำกว่า `md` ให้ stack ตามลำดับอ่านเดิมคือ วันที่ → สถานะ → ความสำคัญ
+- Day-list popup เปิดเป็น modal ขนาดกลาง (`modal-md`) สูงตามเนื้อหา โดยใช้ tertiary background ที่เปลี่ยนตาม theme ต่อเนื่องทั้ง shell, header และ body; shell โค้ง 14px ใช้ semantic translucent border กับ Bootstrap large shadow และตัดเส้นคั่นใต้ header ออก
+- Heading block เดียวรวมชื่อ section, จำนวนงาน และจำนวนงานทบ; ห้ามเพิ่ม alert หรือ help copy ที่ซ้ำกับข้อมูลนี้ และ task row บน tertiary ground ต้องเปลี่ยนเป็น secondary background เมื่อ hover เพื่อให้ state ยังเห็นชัด
+- เมื่อคลิกเพิ่มหรือแก้ไขจาก day-list ให้ **สลับเนื้อหาใน modal เดิม** แทนการซ้อน modal/backdrop: ใช้ `task-modal-editing` ตั้งแต่ loading แล้วส่งต่อ geometry ให้ state `task-form` หลังโหลด เพื่อคง max-width 680px เมื่อ viewport กว้างอย่างน้อย 576px และ shell radius 12px โดยไม่มี width flash; เมื่อกดกลับหรือ request ล้มเหลว ต้องคืน title, list content และขนาด `modal-md` เดิมพร้อมกัน
+- การ submit และ complete ใช้ AJAX, disable action ระหว่างบันทึก, แสดงข้อความสถานะ inline, refresh calendar + rail เมื่อสำเร็จ และคง modal ไว้พร้อม retry/error เมื่อไม่สำเร็จ
+
+**The Summary-to-Work Rule.** Popup งานต้องตอบ “งานนี้คืออะไรและอยู่กับใคร” เพียงครั้งเดียว แล้วเปิดทางให้แก้เฉพาะข้อมูลที่เปลี่ยนเป็นประจำ; ประวัติยังเข้าถึงได้แต่ต้องไม่ขึ้นแข่งกับ action หลัก
+
+### Theme, state, and responsive contract
+
+- ใช้ Bootstrap 5.3 component/utility และ semantic CSS variables เท่านั้น (`--bs-body-*`, `--bs-*-bg-subtle`, `--bs-*-text-emphasis`, `--bs-border-color*`); surface นี้ห้ามมี color literal และต้องทำงานใน light/dark mode เดียวกัน
+- radius ที่ surface นี้ยืนยันคือ container 10px, control/row 8px และ pill 999px; card ใช้ Bootstrap small shadow และ 1px semantic border
+- transition ใช้เฉพาะ background, focus depth และ chevron state ช่วงประมาณ 120–150ms; ปิด transition ภายใต้ `prefers-reduced-motion: reduce`
+- async rail ต้องใช้ `aria-busy` และ polite live status; icon-only action ต้องมีชื่อที่สื่อ task; error state ต้องมีปุ่ม “ลองอีกครั้ง” ในบริบทเดิม
+- ต่ำกว่า `lg` ให้เรียง person filter → calendar → task rail เป็นคอลัมน์เดียว, ยกเลิก sticky/max-height ของ rail, จำกัดรายชื่อคนไว้ราว 13rem และขยาย touch targets เป็นอย่างน้อย 44px
+- ใน popup ให้ summary people แตกเป็นคอลัมน์เดียวต่ำกว่า `sm`; แถววันที่/สถานะ/ความสำคัญแตกเป็นคอลัมน์เดียวต่ำกว่า `md`; timeline เปลี่ยนจาก row เป็น stack และ timestamp ยังอ่านแยกได้
+
+### Reuse boundary
+
+นำกลับใช้ได้กับ scheduling/work-allocation surface ที่มี canvas หลัก + scope filter + actionable queue, task row ที่เผย ownership, และ modal hierarchy summary → focused work → collapsed history เท่านั้น ส่วนกติกาทบ overdue มาวันนี้, สัดส่วน `2 / 7 / 3`, FullCalendar event count และช่วงประวัติ 30 วันเป็น behavior เฉพาะ `modules/task` ไม่ใช่ค่าเริ่มต้นของ list page ทั่วระบบ

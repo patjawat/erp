@@ -177,6 +177,7 @@ class TaskService
         }
 
         self::log($task, TaskActivity::ACTION_COMPLETE, $note, $actorEmpId);
+        TaskTelegramService::notifyCompleted($task, $actorEmpId);
         return true;
     }
 

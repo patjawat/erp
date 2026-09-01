@@ -41,9 +41,202 @@ $csrfToken = Yii::$app->request->csrfToken;
         overflow: hidden;
     }
 
-    .task-people-list { max-height: 26rem; }
+    #task-page {
+        --task-radius: 10px;
+        --task-control-radius: 8px;
+    }
 
-    .task-panel-scroll { max-height: 34rem; overflow-y: auto; }
+    .task-workspace-card {
+        border-radius: var(--task-radius);
+        box-shadow: var(--bs-box-shadow-sm);
+    }
+
+    .task-toolbar { min-height: 2.5rem; }
+
+    .task-toolbar .btn { min-height: 2.25rem; }
+
+    .task-people-list { max-height: 31rem; }
+
+    .task-person {
+        border-radius: var(--task-control-radius);
+        padding: .45rem .5rem !important;
+        transition: background-color 120ms ease-out;
+    }
+
+    .task-person:hover { background: var(--bs-tertiary-bg); }
+
+    .task-person:has(.task-person-check:checked) { background: var(--bs-primary-bg-subtle); }
+
+    .task-person .form-check-label { min-width: 0; cursor: pointer; }
+
+    .task-person-avatar {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .task-panel-scroll { max-height: 39rem; overflow-y: auto; scrollbar-width: thin; }
+
+    .task-item {
+        position: relative;
+        padding: .75rem .6rem;
+        border-bottom: 1px solid var(--bs-border-color-translucent);
+        border-radius: var(--task-control-radius);
+        transition: background-color 120ms ease-out, box-shadow 120ms ease-out;
+    }
+
+    .task-item:last-child { border-bottom-color: transparent; }
+
+    .task-item:hover { background: var(--bs-tertiary-bg); }
+
+    .task-item:focus-within {
+        box-shadow: 0 0 0 .2rem var(--bs-primary-border-subtle);
+    }
+
+    .task-check {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        flex: 0 0 2rem;
+        border-radius: 50%;
+        font-size: 1.05rem;
+    }
+
+    .task-complete-btn:hover,
+    .task-complete-btn:focus-visible {
+        color: var(--bs-success-text-emphasis) !important;
+        background: var(--bs-success-bg-subtle);
+    }
+
+    .task-item-title { font-weight: 600; line-height: 1.35; }
+
+    .task-item-detail { margin-top: .2rem; font-size: .78rem; line-height: 1.45; }
+
+    .task-item-people {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: .35rem;
+        font-size: .74rem;
+        line-height: 1.35;
+    }
+
+    .task-status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: .2rem .45rem;
+        border-radius: 999px;
+        font-size: .7rem;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .task-detail-hero {
+        padding: 1rem;
+        border-radius: var(--task-radius);
+        background: var(--bs-tertiary-bg);
+    }
+
+    .task-detail-person {
+        display: flex;
+        align-items: flex-start;
+        gap: .65rem;
+        min-width: 0;
+    }
+
+    .task-detail-person-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        flex: 0 0 2.25rem;
+        border-radius: 50%;
+        background: var(--bs-secondary-bg);
+        color: var(--bs-secondary-color);
+    }
+
+    .task-detail-section {
+        padding: 1rem 0;
+        border-top: 1px solid var(--bs-border-color-translucent);
+    }
+
+    .task-activity-line { position: relative; padding-left: 1.5rem; }
+
+    .task-activity-line::before {
+        content: '';
+        position: absolute;
+        left: .36rem;
+        top: .4rem;
+        bottom: -.65rem;
+        width: 1px;
+        background: var(--bs-border-color);
+    }
+
+    .task-activity-line:last-child::before { display: none; }
+
+    .task-activity-line::after {
+        content: '';
+        position: absolute;
+        left: .15rem;
+        top: .35rem;
+        width: .45rem;
+        height: .45rem;
+        border-radius: 50%;
+        background: var(--bs-secondary-color);
+    }
+
+    .task-day-popup { padding: .15rem 0; }
+
+    .task-day-popup .task-item {
+        padding: .85rem .5rem;
+        border-radius: 0;
+    }
+
+    #main-modal:has(.task-day-popup) .task-item:hover { background: var(--bs-secondary-bg); }
+
+    #main-modal:has(.task-day-popup) .modal-content {
+        background: var(--bs-tertiary-bg);
+        border-color: var(--bs-border-color-translucent);
+        border-radius: 14px;
+        box-shadow: var(--bs-box-shadow-lg);
+        overflow: hidden;
+    }
+
+    #main-modal:has(.task-day-popup) .modal-header {
+        padding: 1rem 1.25rem .5rem;
+        color: var(--bs-body-color);
+        background: var(--bs-tertiary-bg) !important;
+        border-bottom: 0;
+    }
+
+    #main-modal:has(.task-day-popup) .modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    #main-modal:has(.task-day-popup) .modal-body {
+        padding: .5rem 1.25rem 1.25rem;
+        background: var(--bs-tertiary-bg);
+    }
+
+    #main-modal:has(.task-day-popup) .task-day-list {
+        border-color: var(--bs-border-color-translucent) !important;
+    }
+
+    #main-modal.task-modal-editing .modal-content,
+    #main-modal:has(.task-form) .modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    @media (min-width: 576px) {
+        #main-modal.task-modal-editing .modal-dialog,
+        #main-modal:has(.task-form) .modal-dialog { max-width: 680px; }
+    }
 
     .task-chevron { transition: transform .15s ease-in-out; }
 
@@ -53,6 +246,10 @@ $csrfToken = Yii::$app->request->csrfToken;
 
     #task-calendar .fc .fc-daygrid-day.fc-day-today {
         background-color: var(--bs-primary-bg-subtle);
+    }
+
+    #task-calendar .fc .fc-daygrid-day.task-day-selected {
+        box-shadow: inset 0 0 0 2px var(--bs-primary);
     }
 
     #task-calendar .fc .fc-col-header-cell-cushion,
@@ -102,6 +299,29 @@ $csrfToken = Yii::$app->request->csrfToken;
         color: var(--bs-secondary-color);
     }
 
+    @media (min-width: 992px) {
+        #task-people-col .task-workspace-card,
+        #task-panel-col .task-workspace-card { position: sticky; top: 1rem; }
+    }
+
+    @media (max-width: 991.98px) {
+        .task-people-list { max-height: 13rem; }
+        .task-panel-scroll { max-height: none; }
+        .task-toolbar #cal-title { order: -1; width: 100%; margin-left: 0 !important; }
+        .task-toolbar .btn,
+        .task-check,
+        .task-person-check,
+        .task-person .form-check-label { min-height: 2.75rem; }
+        .task-check { width: 2.75rem; flex-basis: 2.75rem; }
+        .task-person .form-check-label { align-items: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .task-item,
+        .task-person,
+        .task-chevron { transition: none; }
+    }
+
 </style>
 
 <?php // ใช้แถบเมนูเดียวกับหน้ารออนุมัติ ให้เข้าออกระหว่างสองหน้าได้จากที่เดียวกัน ?>
@@ -142,7 +362,7 @@ $csrfToken = Yii::$app->request->csrfToken;
         <?php endif ?>
     <?php endforeach ?>
 
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="task-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
         <a href="<?= Url::to(['/task/default/create']) ?>" class="open-modal btn btn-sm btn-primary"
            data-size="modal-lg" data-pjax="0">
             <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มงาน
@@ -167,7 +387,7 @@ $csrfToken = Yii::$app->request->csrfToken;
     <div class="row g-3" id="task-layout">
 
         <div class="col-12 col-lg-2" id="task-people-col">
-            <section class="card bg-body border shadow-sm">
+            <section class="card bg-body border task-workspace-card">
                 <div class="card-body p-2">
                     <?= $this->render('_panel_people', ['me' => $me, 'people' => $people, 'selected' => $selected]) ?>
                 </div>
@@ -175,7 +395,7 @@ $csrfToken = Yii::$app->request->csrfToken;
         </div>
 
         <div class="col-12 col-lg-7" id="task-calendar-col">
-            <section class="card bg-body border shadow-sm">
+            <section class="card bg-body border task-workspace-card">
                 <div class="card-body p-2 p-md-3">
                     <div id="task-calendar"></div>
                 </div>
@@ -183,12 +403,16 @@ $csrfToken = Yii::$app->request->csrfToken;
         </div>
 
         <div class="col-12 col-lg-3" id="task-panel-col">
-            <section class="card bg-body border shadow-sm">
-                <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center">
-                    <h2 class="h6 mb-0">สิ่งที่ต้องทำ</h2>
+            <section class="card bg-body border task-workspace-card">
+                <div class="card-header bg-body d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h2 class="h6 mb-0">สิ่งที่ต้องทำ</h2>
+                        <span class="text-body-secondary small">เรียงงานเร่งด่วนและเกินกำหนดก่อน</span>
+                    </div>
                     <span class="badge bg-secondary-subtle text-secondary-emphasis" id="task-open-count">
                         <?= count($lists['open']) ?>
                     </span>
+                    <span class="visually-hidden" id="task-list-status" role="status" aria-live="polite"></span>
                 </div>
                 <div class="card-body p-2 task-panel-scroll" id="task-list-body">
                     <?= $this->render('_panel_list', ['lists' => $lists, 'date' => null]) ?>
@@ -223,11 +447,15 @@ $js = <<<JS
     function reloadList() {
         var body = document.getElementById('task-list-body');
         if (!body) { return; }
+        var status = document.getElementById('task-list-status');
         var params = new URLSearchParams();
         selectedEmpIds().forEach(function (id) { params.append('emp[]', id); });
         if (activeDate) { params.set('date', activeDate); }
 
-        fetch(LIST_URL + '?' + params.toString(), {
+        body.setAttribute('aria-busy', 'true');
+        if (status) { status.textContent = 'กำลังโหลดรายการงาน'; }
+
+        return fetch(LIST_URL + '?' + params.toString(), {
             credentials: 'same-origin',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
@@ -237,7 +465,21 @@ $js = <<<JS
                 var count = body.querySelectorAll('.task-open-list .task-item').length;
                 var badge = document.getElementById('task-open-count');
                 if (badge) { badge.textContent = count; }
+                if (status) {
+                    status.textContent = activeDate
+                        ? 'แสดงงานวันที่เลือก ' + count + ' รายการ'
+                        : 'แสดงงานค้าง ' + count + ' รายการ';
+                }
                 bindList();
+                return true;
+            })
+            .catch(function () {
+                body.innerHTML = '<div class="alert alert-danger small mb-0" role="alert">โหลดรายการงานไม่สำเร็จ <button type="button" class="btn btn-sm btn-outline-danger ms-1" id="task-list-retry">ลองอีกครั้ง</button></div>';
+                if (status) { status.textContent = 'โหลดรายการงานไม่สำเร็จ'; }
+                return false;
+            })
+            .finally(function () {
+                body.removeAttribute('aria-busy');
             });
     }
 
@@ -249,6 +491,8 @@ $js = <<<JS
     // ส่งคำสั่งเปลี่ยนสถานะงาน ใช้ร่วมกันทั้งปุ่มวงกลมและปุ่มใน popup
     function postAction(btn, url) {
         btn.disabled = true;
+        var msg = document.getElementById('task-form-msg');
+        if (msg) { msg.className = 'small align-self-center text-body-secondary'; msg.textContent = 'กำลังบันทึก...'; }
         var body = new FormData();
         body.append(CSRF_PARAM, CSRF_TOKEN);
         return fetch(url, {
@@ -261,11 +505,24 @@ $js = <<<JS
             .then(function (data) {
                 if (data.status === 'success') {
                     afterChange();
+                    return true;
                 } else {
                     btn.disabled = false;
+                    if (msg) { msg.className = 'small align-self-center text-danger-emphasis'; msg.textContent = data.message || 'ดำเนินการไม่สำเร็จ'; }
+                    return false;
                 }
             })
-            .catch(function () { btn.disabled = false; });
+            .catch(function () {
+                btn.disabled = false;
+                if (msg) { msg.className = 'small align-self-center text-danger-emphasis'; msg.textContent = 'เชื่อมต่อไม่สำเร็จ กรุณาลองอีกครั้ง'; }
+                return false;
+            });
+    }
+
+    function syncSelectedDay() {
+        document.querySelectorAll('#task-calendar .fc-daygrid-day').forEach(function (cell) {
+            cell.classList.toggle('task-day-selected', !!activeDate && cell.dataset.date === activeDate);
+        });
     }
 
     // ใช้ delegation เพราะเนื้อหาถูกใส่เข้ามาทีหลังทั้งในแผงขวา popup และ modal กลาง
@@ -275,6 +532,7 @@ $js = <<<JS
             clearBtn.dataset.bound = '1';
             clearBtn.addEventListener('click', function () {
                 activeDate = null;
+                syncSelectedDay();
                 reloadList();
             });
         }
@@ -290,7 +548,16 @@ $js = <<<JS
         var action = e.target.closest ? e.target.closest('.task-action-btn') : null;
         if (action) {
             e.preventDefault();
-            postAction(action, action.dataset.url).then(closeMainModal);
+            postAction(action, action.dataset.url).then(function (success) {
+                if (success) { closeMainModal(); }
+            });
+            return;
+        }
+
+        var retry = e.target.closest ? e.target.closest('#task-list-retry') : null;
+        if (retry) {
+            e.preventDefault();
+            reloadList();
             return;
         }
 
@@ -326,10 +593,27 @@ $js = <<<JS
         if (!modal) { return; }
         var body = modal.querySelector('.modal-body');
         var label = modal.querySelector('#main-modal-label');
+        var dialog = modal.querySelector('.modal-dialog');
         if (!body) { return; }
 
         var prevHtml = body.innerHTML;
         var prevTitle = label ? label.innerHTML : '';
+        var sizeClasses = ['modal-sm', 'modal-md', 'modal-lg', 'modal-xl', 'modal-xxl'];
+        var prevSize = dialog ? sizeClasses.find(function (name) { return dialog.classList.contains(name); }) : null;
+        function restorePrevious() {
+            modal.classList.remove('task-modal-editing');
+            body.innerHTML = prevHtml;
+            if (label) { label.innerHTML = prevTitle; }
+            if (dialog) {
+                sizeClasses.forEach(function (name) { dialog.classList.remove(name); });
+                dialog.classList.add(prevSize || 'modal-md');
+            }
+        }
+        if (dialog) {
+            sizeClasses.forEach(function (name) { dialog.classList.remove(name); });
+            dialog.classList.add('modal-lg');
+        }
+        modal.classList.add('task-modal-editing');
         body.innerHTML = '<div class="text-body-secondary py-3">กำลังโหลด...</div>';
 
         fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -343,8 +627,7 @@ $js = <<<JS
                 back.className = 'btn btn-sm btn-link text-decoration-none p-0 mb-2';
                 back.innerHTML = '<i class="bi bi-arrow-left me-1"></i>กลับไปรายการ';
                 back.addEventListener('click', function () {
-                    body.innerHTML = prevHtml;
-                    if (label) { label.innerHTML = prevTitle; }
+                    restorePrevious();
                 });
                 body.appendChild(back);
 
@@ -358,9 +641,11 @@ $js = <<<JS
                 } else {
                     wrap.innerHTML = data.content;
                 }
+                modal.classList.remove('task-modal-editing');
             })
             .catch(function () {
-                body.innerHTML = '<div class="alert alert-danger mb-0">เปิดฟอร์มไม่สำเร็จ</div>';
+                restorePrevious();
+                body.insertAdjacentHTML('afterbegin', '<div class="alert alert-danger py-2 small" role="alert">เปิดฟอร์มไม่สำเร็จ รายการเดิมยังอยู่ กรุณาลองอีกครั้ง</div>');
             });
     }
 
@@ -416,7 +701,7 @@ $js = <<<JS
             a = document.createElement('a');
             a.id = 'task-detail-proxy';
             a.className = 'open-modal d-none';
-            a.setAttribute('data-size', 'modal-lg');
+            a.setAttribute('data-size', 'modal-md');
             document.body.appendChild(a);
         }
         a.setAttribute('href', url);
@@ -447,9 +732,11 @@ $js = <<<JS
                 var d = info.view.currentStart;
                 document.getElementById('cal-title').textContent =
                     MONTHS[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+                syncSelectedDay();
             },
             dateClick: function (info) {
                 activeDate = info.dateStr.substring(0, 10);
+                syncSelectedDay();
                 reloadList();
             },
             // คลิกงานแล้วเปิด popup ผ่าน modal กลางของโปรเจกต์ ไม่เปลี่ยนหน้า
@@ -459,6 +746,7 @@ $js = <<<JS
                 var props = info.event.extendedProps;
                 if (props.dayUrl) {
                     activeDate = props.date;
+                    syncSelectedDay();
                     reloadList();
                     openDetail(props.dayUrl);
                 }

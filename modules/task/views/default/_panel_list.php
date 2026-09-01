@@ -25,9 +25,13 @@ $done = $lists['done'];
 
 <div class="task-open-list">
     <?php if (!$open): ?>
-        <p class="text-body-secondary small mb-0 px-1 py-3">
-            <?= $date !== null ? 'ไม่มีงานในวันนี้' : 'ไม่มีงานค้าง' ?>
-        </p>
+        <div class="text-center px-3 py-5">
+            <span class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success-emphasis rounded-circle mb-3 task-check">
+                <i class="bi bi-check2" aria-hidden="true"></i>
+            </span>
+            <p class="fw-semibold mb-1"><?= $date !== null ? 'วันนี้ไม่มีงานค้าง' : 'จัดการงานครบแล้ว' ?></p>
+            <p class="text-body-secondary small mb-0"><?= $date !== null ? 'ลองเลือกวันอื่นหรือล้างตัวกรอง' : 'งานใหม่ที่ได้รับจะปรากฏตรงนี้' ?></p>
+        </div>
     <?php endif ?>
 
     <?php foreach ($open as $task): ?>
@@ -36,7 +40,7 @@ $done = $lists['done'];
 </div>
 
 <?php if ($done): ?>
-    <div class="border-top mt-2 pt-2">
+    <div class="border-top mt-3 pt-3 px-1">
         <button class="btn btn-sm btn-link text-decoration-none p-0 d-flex align-items-center gap-1 collapsed"
                 type="button" data-bs-toggle="collapse" data-bs-target="#taskDoneList"
                 aria-expanded="false" aria-controls="taskDoneList">
@@ -49,7 +53,7 @@ $done = $lists['done'];
                     <?= $this->render('_task_item', ['task' => $task, 'done' => true]) ?>
                 <?php endforeach ?>
             </div>
-            <p class="text-body-tertiary small mb-0 mt-1">แสดงงานที่ปิดในช่วง 30 วันที่ผ่านมา</p>
+            <p class="text-body-secondary small mb-0 mt-2">แสดงงานที่ปิดในช่วง 30 วันที่ผ่านมา</p>
         </div>
     </div>
 <?php endif ?>

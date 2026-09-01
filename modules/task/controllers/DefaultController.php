@@ -8,6 +8,7 @@ use app\modules\hr\models\Organization;
 use app\modules\task\models\Task;
 use app\modules\task\models\TaskActivity;
 use app\modules\task\services\TaskService;
+use app\modules\task\services\TaskTelegramService;
 use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -81,6 +82,7 @@ class DefaultController extends Controller
         $today = date('Y-m-d');
 
         $query = Task::find()
+            ->with(['assignee', 'assigner', 'ownerUnit'])
             ->where(['assignee_emp_id' => $selected])
             ->andWhere(['status' => Task::OPEN_STATUSES])
             ->andWhere(['not', ['due_date' => null]]);
@@ -144,6 +146,7 @@ class DefaultController extends Controller
         $today = date('Y-m-d');
 
         $query = Task::find()
+            ->with(['assignee', 'assigner', 'ownerUnit'])
             ->where(['assignee_emp_id' => $selected])
             ->andWhere(['status' => Task::OPEN_STATUSES]);
 
@@ -198,10 +201,12 @@ class DefaultController extends Controller
     private function buildLists(array $empIds, ?string $date): array
     {
         $open = Task::find()
+            ->with(['assignee', 'assigner', 'ownerUnit'])
             ->where(['assignee_emp_id' => $empIds])
             ->andWhere(['status' => Task::OPEN_STATUSES]);
 
         $done = Task::find()
+            ->with(['assignee', 'assigner', 'ownerUnit'])
             ->where(['assignee_emp_id' => $empIds])
             ->andWhere(['status' => Task::STATUS_DONE])
             ->andWhere(['>=', 'completed_at', date('Y-m-d 00:00:00', strtotime('-' . self::DONE_WINDOW_DAYS . ' days'))]);
@@ -234,12 +239,17 @@ class DefaultController extends Controller
     }
 
     /**
-     * คนที่ผู้ใช้มีสิทธิ์เห็นงาน = คนในสายหน่วยงานตัวเอง
+     * คนที่ผู้ใช้มีสิทธิ์เห็นงาน = บุคลากรที่ยังปฏิบัติงานในสายหน่วยงานตัวเอง
+     * ผู้ที่ย้าย ลาออก เกษียณ หรือพ้นสภาพแล้วไม่แสดงในตัวกรองรายชื่อ
      *
      * @return Employees[]
      */
     private function visiblePeople(Employees $me): array
     {
+        if ((string) $me->status !== Employees::STATUS_WORKING) {
+            return [];
+        }
+
         $unitIds = TaskService::unitScopeIds($me->department ? (int) $me->department : null);
         if (!$unitIds) {
             return [$me];
@@ -247,6 +257,7 @@ class DefaultController extends Controller
 
         $people = Employees::find()
             ->where(['department' => $unitIds])
+            ->andWhere(['status' => Employees::STATUS_WORKING])
             ->andWhere(['not', ['id' => (int) $me->id]])
             ->orderBy(['fname' => SORT_ASC])
             ->all();
@@ -261,18 +272,22 @@ class DefaultController extends Controller
      */
     private function selectedEmpIds(Employees $me): array
     {
-        $requested = Yii::$app->request->get('emp');
-        if ($requested === null || $requested === '') {
-            return [(int) $me->id];
-        }
-
-        $ids = array_map('intval', is_array($requested) ? $requested : explode(',', (string) $requested));
         $allowed = array_map(function (Employees $e) {
             return (int) $e->id;
         }, $this->visiblePeople($me));
 
+        $requested = Yii::$app->request->get('emp');
+        if ($requested === null || $requested === '') {
+            return in_array((int) $me->id, $allowed, true) ? [(int) $me->id] : [];
+        }
+
+        $ids = array_map('intval', is_array($requested) ? $requested : explode(',', (string) $requested));
         $ids = array_values(array_intersect($ids, $allowed));
-        return $ids ?: [(int) $me->id];
+        if ($ids) {
+            return $ids;
+        }
+
+        return in_array((int) $me->id, $allowed, true) ? [(int) $me->id] : [];
     }
 
     public function actionView($id)
@@ -489,8 +504,6 @@ class DefaultController extends Controller
                 'task' => $task,
                 'activities' => $task->activities,
                 'canEdit' => $canEdit,
-                'members' => $this->unitMembers($task),
-                'canPickPerson' => $this->canPickPerson($task),
             ]),
         ];
     }
@@ -520,15 +533,18 @@ class DefaultController extends Controller
         $task->due_date = TaskService::parseDueDate($request->post('due_date'));
         $task->priority = $request->post('priority') === Task::PRIORITY_URGENT
             ? Task::PRIORITY_URGENT : Task::PRIORITY_NORMAL;
-        $task->is_waiting = (bool) $request->post('is_waiting');
+        $postData = $request->post();
+        if (array_key_exists('is_waiting', $postData)) {
+            $task->is_waiting = (bool) $postData['is_waiting'];
+        }
 
         $status = (string) $request->post('status');
         if (array_key_exists($status, Task::statusLabels())) {
             $task->status = $status;
         }
 
-        if ($this->canPickPerson($task)) {
-            $newAssignee = (int) $request->post('assignee_emp_id');
+        if ($this->canPickPerson($task) && array_key_exists('assignee_emp_id', $postData)) {
+            $newAssignee = (int) $postData['assignee_emp_id'];
             $task->assignee_emp_id = $newAssignee > 0 ? $newAssignee : null;
         }
 
@@ -557,20 +573,12 @@ class DefaultController extends Controller
         }
         if ($task->status === Task::STATUS_DONE && $wasOpen) {
             TaskService::log($task, TaskActivity::ACTION_COMPLETE, trim((string) $request->post('note')) ?: null, $actorId);
+            TaskTelegramService::notifyCompleted($task, $actorId);
         } elseif (!$postponed && (int) $task->assignee_emp_id === $oldAssignee) {
             TaskService::log($task, TaskActivity::ACTION_NOTE, 'แก้ไขข้อมูลงาน', $actorId);
         }
 
         return ['status' => 'success', 'message' => 'บันทึกเรียบร้อย'];
-    }
-
-    /** @return \app\modules\hr\models\Employees[] */
-    private function unitMembers(Task $task): array
-    {
-        return Employees::find()
-            ->where(['department' => (int) $task->owner_unit_id])
-            ->orderBy(['fname' => SORT_ASC])
-            ->all();
     }
 
     /** เลือกตัวผู้รับผิดชอบได้เมื่อหน่วยงานเจ้าของอยู่ในสายตัวเอง หรือมีสิทธิ์ข้ามหน่วย */

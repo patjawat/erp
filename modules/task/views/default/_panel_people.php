@@ -22,8 +22,8 @@ use yii\helpers\Html;
         <input type="search" class="form-control" id="task-people-search" placeholder="ค้นหาชื่อ" autocomplete="off">
     </div>
 
-    <div class="d-flex justify-content-between align-items-center px-1">
-        <span class="small fw-semibold text-body-secondary">ทีมงาน</span>
+    <div class="d-flex justify-content-between align-items-center px-1 pt-1">
+        <span class="small fw-semibold">บุคลากร <span class="text-body-secondary fw-normal"><?= count($people) ?> คน</span></span>
         <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none small" id="task-people-only-me">
             เฉพาะฉัน
         </button>
@@ -36,13 +36,16 @@ use yii\helpers\Html;
             $name = trim($person->fname . ' ' . $person->lname);
             $isMe = $id === (int) $me->id;
             ?>
-            <div class="form-check py-1 task-person" data-name="<?= Html::encode(mb_strtolower($name)) ?>">
+            <div class="form-check task-person" data-name="<?= Html::encode(mb_strtolower($name)) ?>">
                 <input class="form-check-input task-person-check" type="checkbox"
                        value="<?= $id ?>" id="person-<?= $id ?>"
                     <?= in_array($id, $selected, true) ? 'checked' : '' ?>>
                 <label class="form-check-label d-flex align-items-center gap-2 <?= $isMe ? 'fw-semibold' : '' ?>"
                        for="person-<?= $id ?>">
-                    <span class="text-truncate"><?= Html::encode($name) ?></span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-body-tertiary text-body-secondary flex-shrink-0 task-person-avatar" aria-hidden="true">
+                        <?= Html::encode(mb_substr($person->fname, 0, 1)) ?>
+                    </span>
+                    <span class="text-truncate flex-grow-1"><?= Html::encode($name) ?></span>
                     <?php if ($isMe): ?>
                         <span class="badge bg-primary-subtle text-primary-emphasis">ฉัน</span>
                     <?php endif ?>
