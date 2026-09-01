@@ -226,6 +226,8 @@ if (!$isSelfProfile && !$isManagedProfile):
             'employee' => $model,
             'plans' => $trainingPlans ?? $model->trainingPlans,
         ]) ?>
+        <?php elseif($name === 'payroll'):?>
+        <?= $this->render('_self_payroll', ['rows' => $payrollRows ?? [], 'types' => \app\modules\finance\services\PayrollRunService::TYPES]) ?>
         <?php elseif($name === 'idp'):?>
         <?= $this->render('@app/modules/hr/views/idp/_employee_panel', [
             'employee' => $model,

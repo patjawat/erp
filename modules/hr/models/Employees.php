@@ -972,7 +972,14 @@ class Employees extends Yii\db\ActiveRecord
                 'icon' => '<i data-lucide="clipboard-check" class="lucide-icon text-primary"></i>',
                 'count' => 0,
             ],
-            'payroll' => $comingSoon('payroll', 'เงินเดือนและค่าตอบแทน', 'สลิป การปรับขั้น ค่าเวร และ OT', 'receipt-text'),
+            'payroll' => [
+                'name' => 'payroll',
+                'title' => 'เงินเดือนและค่าตอบแทน',
+                'subtitle' => 'สลิป การรับเงิน ค่าตอบแทน และ OT',
+                'icon' => '<i data-lucide="receipt-text" class="lucide-icon text-primary"></i>',
+                'count' => 0,
+                'url' => ['/profile', 'name' => 'payroll'],
+            ],
             'tax_documents' => $comingSoon('tax_documents', 'ภาษีและหนังสือรับรอง', 'เอกสารรายได้และภาษีประจำปี', 'file-check-2'),
             'housing' => [
                 'name' => 'housing',

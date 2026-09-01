@@ -24,6 +24,11 @@ use app\modules\housing\models\Building;
 use app\modules\housing\models\Unit;
 use app\modules\housing\models\Handover;
 use app\modules\housing\models\Occupancy;
+use app\modules\finance\services\PayrollPeriodService;
+use app\modules\finance\services\PayrollRunService;
+use app\components\SiteHelper;
+use yii\db\Query;
+use yii\web\ForbiddenHttpException;
 
 class ProfileController extends \yii\web\Controller
 
@@ -137,6 +142,7 @@ class ProfileController extends \yii\web\Controller
         $dataProvider = null;
         $housingContext = null;
         $housingVacancies = [];
+        $payrollRows = [];
         $housingActionCount = $model ? (int)Handover::find()
             ->joinWith('occupancy')
             ->where([
@@ -146,7 +152,17 @@ class ProfileController extends \yii\web\Controller
             ->andWhere(['is not', 'housing_handover.handed_over_signed_at', null])
             ->andWhere(['housing_handover.received_signed_at' => null])
             ->count() : 0;
-        if ($model && $name === 'training_roadmap') {
+        if ($model && $name === 'payroll') {
+            $payrollRows = (new Query())->select(['pe.*', 'p.period_code', 'p.period_type', 'p.date_start', 'p.date_end', 'p.pay_date'])
+                ->from(['pe' => '{{%payroll_period_employee}}'])
+                ->innerJoin(['p' => '{{%payroll_period}}'], 'p.id = pe.payroll_period_id')
+                ->where(['pe.employee_id' => (int) $model->id, 'p.status' => 'calculated'])
+                ->orderBy(['p.period_code' => SORT_DESC, 'p.period_type' => SORT_ASC])->all();
+            foreach ($payrollRows as &$payrollRow) {
+                $payrollRow['employee_snapshot'] = PayrollPeriodService::decodeSnapshot($payrollRow['employee_snapshot']);
+            }
+            unset($payrollRow);
+        } elseif ($model && $name === 'training_roadmap') {
             $trainingPlans = EmployeeTrainingPlan::find()
                 ->where(['emp_id' => $model->id])
                 ->with(['roadmap.phases.activities', 'results'])
@@ -234,10 +250,28 @@ class ProfileController extends \yii\web\Controller
             'housingContext' => $housingContext,
             'housingVacancies' => $housingVacancies,
             'housingActionCount' => $housingActionCount,
+            'payrollRows' => $payrollRows,
         ]);
         // }else{
         //     return $this->renderContent('<h1 class="text-center">ไม่พบข้อมูลพนักงาน</h1>');
         // }
+    }
+
+    public function actionPayrollSlip($id)
+    {
+        if (Yii::$app->user->isGuest) throw new ForbiddenHttpException('กรุณาเข้าสู่ระบบ');
+        $employee = Employees::find()->where(['user_id' => (int) Yii::$app->user->id])->one();
+        if (!$employee) throw new ForbiddenHttpException('ไม่พบบุคลากรที่เชื่อมกับบัญชีผู้ใช้');
+        $row = (new Query())->select(['pe.*', 'p.period_code', 'p.period_type', 'p.date_start', 'p.date_end', 'p.pay_date', 'p.created_at AS period_created_at', 'p.created_by AS period_created_by'])
+            ->from(['pe' => '{{%payroll_period_employee}}'])->innerJoin(['p' => '{{%payroll_period}}'], 'p.id = pe.payroll_period_id')
+            ->where(['pe.id' => (int) $id, 'pe.employee_id' => (int) $employee->id, 'p.status' => 'calculated'])->one();
+        if (!$row) throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูสลิปนี้');
+        $row['employee_snapshot'] = PayrollPeriodService::decodeSnapshot($row['employee_snapshot']);
+        $row['calculation_snapshot'] = PayrollPeriodService::decodeSnapshot($row['calculation_snapshot']);
+        $issuer = $row['period_created_by'] ? User::findOne((int) $row['period_created_by']) : null;
+        $params = ['row' => $row, 'types' => PayrollRunService::TYPES, 'organization' => SiteHelper::getInfo(), 'issuerName' => trim((string) ($issuer?->employee?->fullname ?? $issuer?->username ?? ''))];
+        if (Yii::$app->request->isAjax) return $this->renderAjax('@app/modules/finance/views/payroll/_payslip_content', $params);
+        return $this->render('payroll-slip', $params);
     }
     public function actionIndex2()
     {
