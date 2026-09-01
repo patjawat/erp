@@ -11,6 +11,7 @@ $items = [
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'voucher', 'label' => 'เบิกจ่ายและฎีกา', 'icon' => 'bi-file-earmark-check', 'url' => ['/finance/voucher']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'loan', 'label' => 'เงินยืม', 'icon' => 'bi-person-vcard', 'url' => ['/finance/loan']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'payment', 'label' => 'รับ–จ่ายเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/payment']],
+    ['show' => Yii::$app->user->can('payrollView'), 'key' => 'payroll', 'label' => 'เงินเดือน', 'icon' => 'bi-cash-stack', 'url' => ['/finance/payroll']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2" aria-label="เมนูระบบการเงิน">
@@ -28,7 +29,6 @@ $items = [
             <i class="bi bi-three-dots me-1" aria-hidden="true"></i> เพิ่มเติม
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-            <li><button class="dropdown-item" type="button" disabled><i class="bi bi-cash-stack me-2"></i>เงินเดือน</button></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-bar-chart-line me-2"></i>รายงาน</button></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-gear me-2"></i>ตั้งค่าระบบ</button></li>
