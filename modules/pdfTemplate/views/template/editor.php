@@ -43,7 +43,7 @@ $this->registerCss(<<<CSS
 .pdf-editor-canvas-wrap { aspect-ratio: 210/297; max-width: 100%; position: relative; background: #eee; }
 .pdf-editor-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
 .pdf-editor-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-.pdf-editor-overlay .field-box { position: absolute; pointer-events: auto; cursor: move; border: 1px dashed #0d6efd; background: rgba(13,110,253,0.08); padding: 2px 6px; font-size: 12px; box-sizing: border-box; overflow: visible; }
+.pdf-editor-overlay .field-box { position: absolute; pointer-events: auto; cursor: move; border: 1px dashed #0d6efd; background: rgba(13,110,253,0.08); padding: 2px 6px; box-sizing: border-box; overflow: visible; }
 .pdf-editor-overlay .field-box.selected { border-color: #0d6efd; background: rgba(13,110,253,0.15); }
 .pdf-editor-overlay { overflow: visible; }
 .pdf-editor-canvas-wrap { overflow: visible; }
@@ -370,6 +370,13 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
     var A4_PT_W = 595.28;
     var A4_PT_H = 841.89;
 
+    function fontSizeToCanvasPx(fontSizePt, canvasWidth) {
+        var pt = parseInt(fontSizePt, 10);
+        if (!Number.isFinite(pt)) pt = 14;
+        pt = Math.max(6, Math.min(24, pt));
+        return Math.max(6, pt * canvasWidth / A4_PT_W);
+    }
+
     function loadPdf() {
         pdfjsLib.getDocument(serveUrl).promise.then(function(pdf) {
             state.pdfDoc = pdf;
@@ -603,6 +610,9 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
             div.style.top = top + 'px';
             div.style.width = width + 'px';
             div.style.height = height + 'px';
+            div.style.fontSize = fontSizeToCanvasPx(item.font_size, s.w) + 'px';
+            div.style.lineHeight = '1.2';
+            div.style.textAlign = item.alignment === 'C' ? 'center' : (item.alignment === 'R' ? 'right' : 'left');
             var lookupKey = LABEL_TO_KEY[path] || path;
             var level = (item.approval_level != null && item.approval_level >= 1 && item.approval_level <= 4) ? parseInt(item.approval_level, 10) : 1;
             var isApprovalStatus = lookupKey === 'approval_status';
@@ -611,8 +621,6 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
             if (isList && members.length > 0) {
                 text = members.map(function(m) { return (m.fullname || '') + ' | ' + (m.position || ''); }).join('\n');
                 div.style.whiteSpace = 'pre-line';
-                div.style.fontSize = '11px';
-                div.style.lineHeight = '1.2';
             } else if (isCompVert && members.length > 0) {
                 var compNumbered = (LABEL_TO_KEY[path] || path) === 'companion_names_numbered';
                 var compShowPos = !!item.companion_show_position;
@@ -622,8 +630,6 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
                     return line;
                 }).join('\n');
                 div.style.whiteSpace = 'pre-line';
-                div.style.fontSize = '11px';
-                div.style.lineHeight = '1.2';
             } else if (isApprovalStatus && state.realData) {
                 var status = state.realData['approver_' + level + '_status'] || '';
                 var showWhen = item.approval_show_when || '';
@@ -861,10 +867,22 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
         renderOverlay();
     });
 
-    document.getElementById('sel-font-size').addEventListener('change', function() {
+    function updateSelectedFontSize(input, normalize) {
         var id = document.getElementById('sel-field-id').value;
         var item = state.layout.find(function(x) { return String(x.id) === id; });
-        if (item) item.font_size = parseInt(this.value, 10) || 14;
+        var value = parseInt(input.value, 10);
+        if (!item || !Number.isFinite(value)) return;
+        value = Math.max(6, Math.min(24, value));
+        item.font_size = value;
+        if (normalize) input.value = value;
+        renderOverlay();
+    }
+    var selFontSize = document.getElementById('sel-font-size');
+    selFontSize.addEventListener('input', function() {
+        updateSelectedFontSize(this, false);
+    });
+    selFontSize.addEventListener('change', function() {
+        updateSelectedFontSize(this, true);
     });
     var selFontBold = document.getElementById('sel-font-bold');
     if (selFontBold) selFontBold.addEventListener('change', function() {
@@ -877,6 +895,7 @@ $this->registerJsFile('@web/libs/pdf/pdf.min.js', ['position' => \yii\web\View::
         var id = document.getElementById('sel-field-id').value;
         var item = state.layout.find(function(x) { return String(x.id) === id; });
         if (item) item.alignment = this.value;
+        renderOverlay();
     });
     document.getElementById('sel-page').addEventListener('change', function() {
         var id = document.getElementById('sel-field-id').value;
