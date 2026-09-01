@@ -47,7 +47,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th>ชื่อเวร</th>
                         <th style="width:90px">รหัส</th>
                         <th class="text-center" style="width:110px">เวรดึก</th>
-                        <th class="text-center" style="width:150px">นอกเวลาราชการ</th>
                         <th class="text-center" style="width:110px">เวรเสริม</th>
                         <th class="text-center" style="width:100px">สถานะ</th>
                         <th class="text-end" style="width:110px"></th>
@@ -67,11 +66,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?= $type->is_night
                                     ? '<i class="bi bi-moon-stars text-primary" title="เวรดึก"></i>'
                                     : '<span class="text-body-secondary">–</span>' ?>
-                            </td>
-                            <td class="text-center">
-                                <?= $type->is_ot
-                                    ? '<span class="badge bg-warning-subtle text-warning-emphasis">คิดค่าตอบแทน</span>'
-                                    : '<span class="text-body-secondary">ในเวลา</span>' ?>
                             </td>
                             <td class="text-center">
                                 <?= $type->is_extra
@@ -107,8 +101,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="card-footer bg-body-tertiary text-body-secondary small">
         <i class="bi bi-info-circle"></i>
-        ช่อง <strong>นอกเวลาราชการ</strong> ใช้คิดค่าตอบแทนเวรในภายหลัง — ตั้งให้ถูกตั้งแต่ตอนนี้
-        จะได้ไม่ต้องกลับมาไล่แก้ตารางเวรย้อนหลัง
+        การนับ <strong>OT</strong> กำหนดแยกในหน้า “เวรของหน่วยงาน” เพื่อไม่ให้ทุกเวรในหมวดเดียวกันถูกนับ OT อัตโนมัติ
     </div>
 </div>
 <?php Pjax::end(); ?>

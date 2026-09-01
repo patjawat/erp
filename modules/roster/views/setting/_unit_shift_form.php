@@ -146,6 +146,17 @@ $positionOptions = ArrayHelper::map(
 
 <hr class="my-3">
 
+<div class="form-check form-switch mb-3">
+    <?= Html::activeCheckbox($model, 'is_ot', [
+        'class' => 'form-check-input',
+        'label' => 'เป็นเวร OT',
+        'labelOptions' => ['class' => 'form-check-label fw-semibold'],
+    ]) ?>
+    <div class="text-body-secondary small ms-4">
+        ติ๊กเฉพาะเวรที่ต้องนับในคอลัมน์ OT ไม่เกี่ยวกับวันทำการ วันหยุด หรือช่วงเวลาของเวร
+    </div>
+</div>
+
 <div class="form-check form-switch">
     <?= Html::activeCheckbox($model, 'is_standby', [
         'class' => 'form-check-input',

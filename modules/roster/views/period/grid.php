@@ -163,6 +163,12 @@ foreach ($grid as $byDay) {
 <?php if (empty($employees)): ?>
     <div class="alert alert-info border-0">
         <i class="bi bi-info-circle"></i> ไม่พบเจ้าหน้าที่ในหน่วยงานนี้
+        <?php if ($canEdit): ?>
+            <?= Html::a('<i class="bi bi-person-plus"></i> เพิ่มบุคลากรจากหน่วยงานอื่น', ['add-employee', 'id' => $period->id], [
+                'class' => 'btn btn-sm btn-primary open-modal ms-2',
+                'data' => ['size' => 'modal-lg'],
+            ]) ?>
+        <?php endif; ?>
     </div>
     <?php return; ?>
 <?php endif; ?>
@@ -261,6 +267,10 @@ foreach ($grid as $byDay) {
 
         <div class="d-flex flex-wrap gap-2">
             <?php if ($canEdit): ?>
+                <?= Html::a('<i class="bi bi-person-plus"></i> เพิ่มบุคลากรต่างหน่วย', ['add-employee', 'id' => $period->id], [
+                    'class' => 'btn btn-sm btn-outline-primary open-modal',
+                    'data' => ['size' => 'modal-lg'],
+                ]) ?>
                 <button type="button" class="btn btn-sm btn-success" id="btn-auto-fill">
                     <i class="bi bi-magic"></i> จัดเวรอัตโนมัติ
                 </button>
@@ -390,12 +400,26 @@ foreach ($grid as $byDay) {
                                     <span class="text-truncate" style="max-width:150px">
                                         <?= Html::encode(trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname'])) ?>
                                     </span>
+                                    <?php if (!empty($emp['is_external'])): ?>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis" title="บุคลากรจากหน่วยงานอื่น">ต่างหน่วย</span>
+                                        <?php if ($canEdit): ?>
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-0 remove-external-employee"
+                                                    data-emp="<?= $empId ?>"
+                                                    aria-label="นำ <?= Html::encode(trim(($emp['prefix'] ?? '') . $emp['fname'] . ' ' . $emp['lname'])) ?> ออกจากแผ่นเวร"
+                                                    title="นำออกจากแผ่นเวร">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                     <?php if (($emp['work_shift'] ?? '') === 'shift'): ?>
                                         <span class="badge bg-info-subtle text-info-emphasis" title="ขึ้นเวร 8">8</span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="small text-body-secondary text-truncate" style="max-width:190px">
                                     <?= Html::encode($emp['position_name'] ?: 'ไม่ระบุตำแหน่ง') ?>
+                                    <?php if (!empty($emp['is_external']) && !empty($emp['department_name'])): ?>
+                                        · <?= Html::encode($emp['department_name']) ?>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 
@@ -607,6 +631,7 @@ $replaceFormUrl = Url::to(['replace-form']);
 $reviewApproveUrl = Url::to(['review-and-approve', 'id' => $period->id]);
 $autoFillUrl = Url::to(['auto-fill', 'id' => $period->id]);
 $renameUrl = Url::to(['rename', 'id' => $period->id]);
+$removeEmployeeUrl = Url::to(['remove-employee']);
 
 $shiftMeta = [];
 foreach ($unitShiftList as $unitShift) {
@@ -847,6 +872,26 @@ $js = <<<JS
             \$cell.removeClass('is-saving');
             notify('warn', 'เชื่อมต่อไม่สำเร็จ');
         });
+    });
+
+    jQuery('body').on('click', '.remove-external-employee', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var \$button = jQuery(this);
+        \$button.prop('disabled', true);
+        jQuery.post('{$removeEmployeeUrl}', {
+            period_id: periodId,
+            emp_id: \$button.data('emp')
+        }).done(function (res) {
+            if (res.status === 'success') {
+                if (typeof success === 'function') { success(res.message); }
+                \$button.closest('tr').remove();
+            } else {
+                notify('warn', res.message || 'นำบุคลากรออกไม่สำเร็จ');
+            }
+        }).fail(function () {
+            notify('warn', 'เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่');
+        }).always(function () { \$button.prop('disabled', false); });
     });
 
     jQuery('#btn-rename').on('click', function () {

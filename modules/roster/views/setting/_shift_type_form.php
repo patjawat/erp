@@ -62,16 +62,6 @@ foreach (ShiftType::colorLabels() as $value => $label) {
     </div>
     <div class="col-12 col-md-4">
         <div class="form-check form-switch">
-            <?= Html::activeCheckbox($model, 'is_ot', [
-                'class' => 'form-check-input',
-                'label' => 'นอกเวลาราชการ',
-                'labelOptions' => ['class' => 'form-check-label fw-semibold'],
-            ]) ?>
-        </div>
-        <div class="text-body-secondary small ms-4">ใช้คิดค่าตอบแทนเวร — ตั้งให้ถูกตั้งแต่แรก</div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="form-check form-switch">
             <?= Html::activeCheckbox($model, 'is_extra', [
                 'class' => 'form-check-input',
                 'label' => 'เป็นเวรเสริม/ควบ',

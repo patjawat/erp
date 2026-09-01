@@ -132,6 +132,9 @@ foreach ($shifts as $shift) {
                                             <i class="bi bi-telephone"></i> รอเรียก/นอกหน่วย
                                         </span>
                                     <?php endif; ?>
+                                    <?php if ($shift->isOt()): ?>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis">OT</span>
+                                    <?php endif; ?>
                                     <?php if (!$shift->active): ?>
                                         <span class="badge bg-secondary-subtle text-secondary-emphasis">ปิดใช้</span>
                                     <?php endif; ?>
@@ -191,6 +194,7 @@ foreach ($shifts as $shift) {
     <div class="card-footer bg-body-tertiary text-body-secondary small">
         <i class="bi bi-info-circle"></i>
         <strong>จำนวนที่ต้องการ</strong> ใช้เตือนในกริดว่าจัดครบหรือยัง (เช่น 1/2 = ขาด 1 คน) ทุกชนิดเวรรวมถึง On call ·
+        <strong>OT</strong> นับเฉพาะเวรที่ติ๊ก “เป็นเวร OT” ไม่ขึ้นกับวันทำการหรือวันหยุด ·
         <strong>รอเรียก/นอกหน่วย</strong> จะถูกยกเว้นจากกฎเวลาพักและวันทำงานติดกัน แต่ยังนับจำนวนคนตามปกติ
     </div>
 </div>

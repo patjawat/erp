@@ -264,7 +264,7 @@ class PeriodController extends Controller
         $period = $this->findPeriod((int) $id);
         $unitId = (int) $period->unit_id;
 
-        $employees = $this->employeesOfUnit($unitId);
+        $employees = $this->employeesForPeriod($period);
         $empIds = array_map(static fn($e) => (int) $e['id'], $employees);
 
         return $this->render('grid', [
@@ -345,7 +345,7 @@ class PeriodController extends Controller
         }
 
         $candidates = [];
-        foreach ($this->employeesOfUnit((int) $period->unit_id) as $emp) {
+        foreach ($this->employeesForPeriod($period) as $emp) {
             if ((int) $emp['id'] === (int) $item->emp_id) {
                 continue;
             }
@@ -487,6 +487,9 @@ class PeriodController extends Controller
         $unitShiftId = (int) $this->request->post('unit_shift_id');
         if (!$empId || !$day || !$unitShiftId) {
             return ['status' => 'error', 'message' => 'ข้อมูลไม่ครบ'];
+        }
+        if (!$this->isEmployeeOnPeriod($period, $empId)) {
+            return ['status' => 'error', 'message' => 'บุคคลนี้ไม่ได้อยู่ในรายชื่อของแผ่นเวร กรุณาเพิ่มบุคคลจากหน่วยงานอื่นก่อน'];
         }
         if ($day < 1 || $day > $period->daysInMonth()) {
             return ['status' => 'error', 'message' => 'วันที่อยู่นอกรอบเวรนี้'];
@@ -862,7 +865,7 @@ class PeriodController extends Controller
     {
         $period = $this->findPeriod((int) $id);
         $unitId = (int) $period->unit_id;
-        $employees = $this->employeesOfUnit($unitId);
+        $employees = $this->employeesForPeriod($period);
         $empIds = array_map(static fn($e) => (int) $e['id'], $employees);
 
         $this->layout = '@app/views/layouts/print';
@@ -921,7 +924,7 @@ class PeriodController extends Controller
     public function actionExport($id)
     {
         $period = $this->findPeriod((int) $id);
-        $spreadsheet = RosterExporter::build($period, $this->employeesOfUnit((int) $period->unit_id));
+        $spreadsheet = RosterExporter::build($period, $this->employeesForPeriod($period));
 
         $dir = Yii::getAlias('@webroot/downloads');
         if (!is_dir($dir)) {
@@ -961,6 +964,119 @@ class PeriodController extends Controller
                 'e.fname' => SORT_ASC,
             ])
             ->all();
+    }
+
+    /** เจ้าหน้าที่ประจำหน่วย รวมผู้ที่เพิ่มมาช่วยจากหน่วยอื่น */
+    private function employeesForPeriod(Period $period): array
+    {
+        $externalIds = $period->externalEmployeeIds();
+
+        // เก็บคนที่มีเวรอยู่แล้วไว้เสมอ แม้ข้อมูลสมาชิกใน data_json จะเก่าหรือถูกแก้จากภายนอก
+        $assignedIds = Item::find()
+            ->select('emp_id')
+            ->where(['period_id' => $period->id])
+            ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])
+            ->column();
+        $externalIds = array_values(array_unique(array_merge($externalIds, array_map('intval', $assignedIds))));
+
+        $query = (new \yii\db\Query())
+            ->select([
+                'e.id', 'e.prefix', 'e.fname', 'e.lname', 'e.work_shift', 'e.employee_position_id',
+                'e.department', 'position_name' => 'ep.title', 'department_name' => 'o.name',
+                'is_external' => new \yii\db\Expression('CASE WHEN e.department = :unitId THEN 0 ELSE 1 END'),
+            ])
+            ->from(['e' => Employees::tableName()])
+            ->leftJoin(['ep' => 'employee_position'], 'ep.id = e.employee_position_id')
+            ->leftJoin(['o' => Organization::tableName()], 'o.id = e.department')
+            ->where(['e.status' => 1])
+            ->andWhere(['or', ['e.department' => (int) $period->unit_id], ['e.id' => $externalIds]])
+            ->addParams([':unitId' => (int) $period->unit_id])
+            ->orderBy([
+                'is_external' => SORT_ASC,
+                new \yii\db\Expression("FIELD(e.work_shift,'shift') DESC"),
+                'ep.sort' => SORT_ASC,
+                'ep.title' => SORT_ASC,
+                'e.fname' => SORT_ASC,
+            ]);
+
+        return $query->all();
+    }
+
+    private function isEmployeeOnPeriod(Period $period, int $empId): bool
+    {
+        return Employees::find()->where(['id' => $empId, 'status' => 1])
+            ->andWhere(['or',
+                ['department' => (int) $period->unit_id],
+                ['id' => $period->externalEmployeeIds()],
+            ])->exists();
+    }
+
+    /** เพิ่มบุคคลต่างหน่วยเข้ารายชื่อของแผ่นเวร */
+    public function actionAddEmployee($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $id);
+        if (!RosterAccess::canManageUnit((int) $period->unit_id) || !$period->isEditable()) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้แก้ไขรายชื่อไม่ได้'];
+        }
+
+        if ($this->request->isPost) {
+            $empId = (int) $this->request->post('emp_id');
+            $employee = Employees::findOne(['id' => $empId, 'status' => 1]);
+            if (!$employee) {
+                return ['status' => 'error', 'message' => 'ไม่พบบุคลากรที่เลือก'];
+            }
+            if ((int) $employee->department === (int) $period->unit_id) {
+                return ['status' => 'error', 'message' => 'บุคลากรคนนี้อยู่ในหน่วยงานและมีในตารางแล้ว'];
+            }
+            $ids = $period->externalEmployeeIds();
+            $ids[] = $empId;
+            $period->setExternalEmployeeIds($ids);
+            if (!$period->save()) {
+                return ['status' => 'error', 'message' => 'เพิ่มบุคลากรไม่สำเร็จ'];
+            }
+            return ['status' => 'success', 'message' => 'เพิ่มบุคลากรจากหน่วยงานอื่นแล้ว', 'reload' => true];
+        }
+
+        $employees = (new \yii\db\Query())
+            ->select(['e.id', 'e.prefix', 'e.fname', 'e.lname', 'department_name' => 'o.name'])
+            ->from(['e' => Employees::tableName()])
+            ->leftJoin(['o' => Organization::tableName()], 'o.id = e.department')
+            ->where(['e.status' => 1])
+            ->andWhere(['<>', 'e.department', (int) $period->unit_id])
+            ->andWhere(['not in', 'e.id', $period->externalEmployeeIds() ?: [0]])
+            ->orderBy(['o.name' => SORT_ASC, 'e.fname' => SORT_ASC, 'e.lname' => SORT_ASC])
+            ->all();
+
+        return [
+            'title' => 'เพิ่มบุคลากรจากหน่วยงานอื่น',
+            'content' => $this->renderAjax('_add_employee_form', ['period' => $period, 'employees' => $employees]),
+            'footer' => ModalHelper::modalFooterSaveClose(),
+        ];
+    }
+
+    /** นำบุคคลต่างหน่วยที่ยังไม่มีเวรออกจากแผ่น */
+    public function actionRemoveEmployee()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $period = $this->findPeriod((int) $this->request->post('period_id'));
+        $empId = (int) $this->request->post('emp_id');
+        if (!RosterAccess::canManageUnit((int) $period->unit_id) || !$period->isEditable()) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้แก้ไขรายชื่อไม่ได้'];
+        }
+        if (!in_array($empId, $period->externalEmployeeIds(), true)) {
+            return ['status' => 'error', 'message' => 'บุคลากรคนนี้ไม่ได้อยู่ในรายชื่อต่างหน่วยของแผ่นเวร'];
+        }
+        if (Item::find()->where(['period_id' => $period->id, 'emp_id' => $empId])
+            ->andWhere(['<>', 'status', Item::STATUS_CANCELLED])->exists()) {
+            return ['status' => 'error', 'message' => 'บุคคลนี้มีเวรอยู่ กรุณาลบเวรออกให้หมดก่อนนำออกจากรายชื่อ'];
+        }
+        $ids = array_values(array_diff($period->externalEmployeeIds(), [$empId]));
+        $period->setExternalEmployeeIds($ids);
+        if (!$period->save()) {
+            return ['status' => 'error', 'message' => 'นำบุคลากรออกไม่สำเร็จ'];
+        }
+        return ['status' => 'success', 'message' => 'นำบุคลากรออกจากแผ่นเวรแล้ว'];
     }
 
     /** จำนวนคนที่จัดแล้วของวันนั้น แยกตามผลัด — ใช้อัปเดตตัวนับหลังคลิก */

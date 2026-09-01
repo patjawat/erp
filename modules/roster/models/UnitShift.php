@@ -24,6 +24,7 @@ namespace app\modules\roster\models;
  * @property int         $cross_midnight
  * @property int         $required_staff จำนวนคนที่ต้องการต่อเวร
  * @property int         $is_standby     1 = รอเรียก/ออกนอกหน่วย ยกเว้นจากกฎ
+ * @property int         $is_ot          1 = เวรนี้ถูกกำหนดให้นับเป็น OT
  * @property float|null  $pay_rate
  * @property string      $pay_unit       shift | hour
  * @property int         $sort_order
@@ -45,7 +46,7 @@ class UnitShift extends RosterActiveRecord
     {
         return [
             [['unit_id', 'shift_type_id', 'name'], 'required'],
-            [['unit_id', 'shift_type_id', 'position_id', 'cross_midnight', 'required_staff', 'is_standby',
+            [['unit_id', 'shift_type_id', 'position_id', 'cross_midnight', 'required_staff', 'is_standby', 'is_ot',
                 'sort_order', 'active', 'created_by', 'updated_by'], 'integer'],
             [['required_staff', 'required_sat', 'required_sun', 'required_holiday'], 'integer', 'min' => 0, 'max' => 99],
             // ปล่อยว่าง = ใช้ค่าวันธรรมดา จึงต้องเก็บเป็น NULL ไม่ใช่ 0
@@ -70,7 +71,7 @@ class UnitShift extends RosterActiveRecord
             [['pay_unit'], 'in', 'range' => [self::PAY_PER_SHIFT, self::PAY_PER_HOUR]],
             [['pay_unit'], 'default', 'value' => self::PAY_PER_SHIFT],
             [['active'], 'default', 'value' => 1],
-            [['required_staff', 'cross_midnight', 'is_standby', 'sort_order'], 'default', 'value' => 0],
+            [['required_staff', 'cross_midnight', 'is_standby', 'is_ot', 'sort_order'], 'default', 'value' => 0],
             [['name'], 'unique', 'targetAttribute' => ['unit_id', 'name'],
                 'message' => 'หน่วยงานนี้มีเวรชื่อนี้อยู่แล้ว'],
         ];
@@ -93,6 +94,7 @@ class UnitShift extends RosterActiveRecord
             'required_sun' => 'วันอาทิตย์',
             'required_holiday' => 'วันหยุดนักขัตฤกษ์',
             'is_standby' => 'เวรรอเรียก/นอกหน่วย',
+            'is_ot' => 'เป็นเวร OT',
             'pay_rate' => 'ค่าตอบแทน (บาท)',
             'pay_unit' => 'หน่วยค่าตอบแทน',
             'sort_order' => 'ลำดับ',
@@ -234,10 +236,10 @@ class UnitShift extends RosterActiveRecord
         return $this->shiftType ? (int) $this->shiftType->is_off === 1 : false;
     }
 
-    /** เวรนี้อยู่นอกเวลาราชการ (ใช้นับ OT) */
+    /** นับ OT เฉพาะเมื่อเวรของหน่วยงานนี้ถูกกำหนดเป็น OT โดยตรง */
     public function isOt(): bool
     {
-        return $this->shiftType ? (int) $this->shiftType->is_ot === 1 : false;
+        return (int) $this->is_ot === 1;
     }
 
     /**

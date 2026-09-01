@@ -126,10 +126,9 @@ class Item extends RosterActiveRecord
 
     public function isOt(): bool
     {
-        if ($this->unitShift) {
-            return $this->unitShift->isOt();
-        }
-        return $this->shiftType ? (int) $this->shiftType->is_ot === 1 : false;
+        // ต้องมีนิยามเวรของหน่วยงานและถูกติ๊ก OT โดยตรงเท่านั้น
+        // ห้ามถอยไปอนุมานจากหมวดบ่าย/ดึกหรือประเภทวัน
+        return $this->unitShift ? $this->unitShift->isOt() : false;
     }
 
     /** ค่าตอบแทนของช่องนี้ตามอัตราที่ตั้งไว้ในนิยามเวร (วันหยุดไม่คิดเงิน) */

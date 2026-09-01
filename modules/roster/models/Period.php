@@ -222,6 +222,29 @@ class Period extends RosterActiveRecord
         $this->data_json = $json;
     }
 
+    /** @return int[] เจ้าหน้าที่ต่างหน่วยที่เพิ่มมาช่วยขึ้นเวรในแผ่นนี้ */
+    public function externalEmployeeIds(): array
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true);
+        }
+        $ids = is_array($json) ? ($json['external_employee_ids'] ?? []) : [];
+        return array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
+    }
+
+    /** @param int[] $ids */
+    public function setExternalEmployeeIds(array $ids): void
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true);
+        }
+        $json = is_array($json) ? $json : [];
+        $json['external_employee_ids'] = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        $this->data_json = $json;
+    }
+
     /**
      * เวรที่แผ่นนี้ใช้ index ด้วย id — ถ้าไม่ได้ระบุขอบเขต ใช้ทุกเวรของหน่วย
      * @return UnitShift[]
