@@ -48,10 +48,24 @@ $this->params['breadcrumbs'][] = $this->title;
                             return $model->item_code;
                         },
                     ],
-                      [
+                    [
                         'label' => 'หน่วยนับ',
                         'value' => function ($model) {
-                            return isset($model->data_json['unit']) ? $model->data_json['unit'] : '-';
+                            return $model->unitName ?: '—';
+                        },
+                    ],
+                    [
+                        'label' => 'หน่วยบรรจุ',
+                        'value' => function ($model) {
+                            return $model->packageUnitName ?: '—';
+                        },
+                    ],
+                    [
+                        'label' => 'จำนวนต่อบรรจุ',
+                        'value' => function ($model) {
+                            return $model->packageSize !== null
+                                ? number_format($model->packageSize, 2) . ' ' . ($model->unitName ?: '')
+                                : '—';
                         },
                     ],
                     [

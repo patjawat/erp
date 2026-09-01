@@ -12,6 +12,7 @@ use app\modules\inventoryV2\models\StockItemWarehouseSetting;
 use app\modules\inventoryV2\models\StockItemSearch;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\Warehouse;
+use app\modules\purchase\models\Order as PurchaseOrder;
 use yii\db\Query;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -164,6 +165,8 @@ class StockItemController extends Controller
             'หมวดวัสดุ',
             'ประเภทวัสดุ',
             'หน่วยนับ',
+            'หน่วยบรรจุ',
+            'จำนวนต่อบรรจุ',
             'จำนวนคงเหลือ' . ($warehouseId ? ' (คลังที่เลือก)' : ''),
             'บัญชีนวัตกรรม',
             'จำนวนสูงสุด',
@@ -206,16 +209,18 @@ class StockItemController extends Controller
             $sheet->setCellValue('C' . $rowNum, $categoryTitle);
             $sheet->setCellValue('D' . $rowNum, $metterType);
             $sheet->setCellValue('E' . $rowNum, $unitName);
-            $sheet->setCellValue('F' . $rowNum, $bal !== null ? $bal : '—');
-            $sheet->setCellValue('G' . $rowNum, $item->is_innovation == 1 ? 'ใช่' : 'ไม่');
-            $sheet->setCellValue('H' . $rowNum, $item->max_qty !== null && $item->max_qty !== '' ? (float) $item->max_qty : '');
-            $sheet->setCellValue('I' . $rowNum, $item->min_qty !== null && $item->min_qty !== '' ? (float) $item->min_qty : '');
-            $sheet->setCellValue('J' . $rowNum, $item->is_active == 1 ? 'เปิด' : 'ปิด');
+            $sheet->setCellValue('F' . $rowNum, $item->packageUnitName ?: '');
+            $sheet->setCellValue('G' . $rowNum, $item->packageSize !== null ? $item->packageSize : '');
+            $sheet->setCellValue('H' . $rowNum, $bal !== null ? $bal : '—');
+            $sheet->setCellValue('I' . $rowNum, $item->is_innovation == 1 ? 'ใช่' : 'ไม่');
+            $sheet->setCellValue('J' . $rowNum, $item->max_qty !== null && $item->max_qty !== '' ? (float) $item->max_qty : '');
+            $sheet->setCellValue('K' . $rowNum, $item->min_qty !== null && $item->min_qty !== '' ? (float) $item->min_qty : '');
+            $sheet->setCellValue('L' . $rowNum, $item->is_active == 1 ? 'เปิด' : 'ปิด');
             $rowNum++;
         }
 
-        $sheet->getStyle('F2:F' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle('H2:I' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('G2:H' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('J2:K' . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0.00');
         foreach (range('A', $lastCol) as $c) {
             $sheet->getColumnDimension($c)->setAutoSize(true);
         }
@@ -448,6 +453,7 @@ class StockItemController extends Controller
     public function actionCreate()
     {
         $model = new StockItem();
+        $model->ref = $this->generateStockItemRef();
         
         // ถ้ามี category_id จาก query string ให้ตั้งค่าไว้
         $categoryId = $this->request->get('category_id');
@@ -471,8 +477,12 @@ class StockItemController extends Controller
                 if (empty($model->category_id)) {
                     return ['status' => 'error', 'message' => 'กรุณาเลือกหมวดหมู่วัสดุ'];
                 }
-                if (trim((string) ($postData['data_json']['unit'] ?? '')) === '') {
+                if (trim((string) ($postData['data_json']['unit_name'] ?? $postData['data_json']['unit'] ?? '')) === '') {
                     return ['status' => 'error', 'message' => 'กรุณาระบุหน่วยนับ'];
+                }
+                $packagingError = $this->normalizePackagingMetadata($model);
+                if ($packagingError !== null) {
+                    return ['status' => 'error', 'message' => $packagingError];
                 }
 
                 // จัดการ auto code (ต้องมี category_id ก่อน จึงจะออกรหัสได้)
@@ -547,6 +557,7 @@ class StockItemController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $purchaseHistory = $this->getPurchaseHistory($model->item_code);
 
         if ($this->request->isPost) {
             // เก็บ data_json เดิมไว้ก่อน load() เพราะฟอร์มแก้ไขส่งมาแค่บาง key
@@ -567,8 +578,12 @@ class StockItemController extends Controller
                 if (empty($model->category_id)) {
                     return ['status' => 'error', 'message' => 'กรุณาเลือกหมวดหมู่วัสดุ'];
                 }
-                if (trim((string) ($newDataJson['unit'] ?? '')) === '') {
+                if (trim((string) ($newDataJson['unit_name'] ?? $newDataJson['unit'] ?? '')) === '') {
                     return ['status' => 'error', 'message' => 'กรุณาระบุหน่วยนับ'];
+                }
+                $packagingError = $this->normalizePackagingMetadata($model);
+                if ($packagingError !== null) {
+                    return ['status' => 'error', 'message' => $packagingError];
                 }
 
                 if ($model->save()) {
@@ -591,6 +606,7 @@ class StockItemController extends Controller
                 'title' => $this->request->get('title'),
                 'content' => $this->renderAjax('update', [
                     'model' => $model,
+                    'purchaseHistory' => $purchaseHistory,
                 ]),
                 'footer' => '', // ปุ่มบันทึก/ปิด อยู่ใน _form.php แล้ว — กัน footer ค้างจาก modal ก่อนหน้า
                 'status' => 'success',
@@ -599,8 +615,116 @@ class StockItemController extends Controller
         } else {
             return $this->render('update', [
                 'model' => $model,
+                'purchaseHistory' => $purchaseHistory,
             ]);
         }
+    }
+
+    /**
+     * ตรวจและจัดรูป metadata การบรรจุ โดยไม่แตะจำนวน ราคา หรือยอดคงเหลือ
+     */
+    private function normalizePackagingMetadata(StockItem $model)
+    {
+        $json = is_array($model->data_json)
+            ? $model->data_json
+            : (json_decode((string) $model->data_json, true) ?: []);
+        // ระบบเดิมบางส่วนยังอ่าน data_json.unit จึงต้องคงสอง key ให้ตรงกัน
+        // เพื่อไม่ให้หน่วยนับหายหรือค้างเป็นค่าเก่าเมื่อแก้ไขจากแบบฟอร์มนี้
+        $unitName = trim((string) ($json['unit_name'] ?? $json['unit'] ?? ''));
+        if ($unitName !== '') {
+            $json['unit_name'] = $unitName;
+            $json['unit'] = $unitName;
+        }
+        $packageUnit = trim((string) ($json['package_unit_name'] ?? ''));
+        $packageSizeRaw = trim((string) ($json['package_size'] ?? ''));
+
+        if ($packageUnit === '' && $packageSizeRaw === '') {
+            unset($json['package_unit_name'], $json['package_size']);
+            $model->data_json = $json;
+            return null;
+        }
+        if ($packageUnit === '') {
+            return 'กรุณาระบุหน่วยบรรจุ หรือเว้นข้อมูลบรรจุทั้งสองช่อง';
+        }
+        if ($packageSizeRaw === '') {
+            return 'กรุณาระบุจำนวนต่อบรรจุ หรือเว้นข้อมูลบรรจุทั้งสองช่อง';
+        }
+        if (!is_numeric($packageSizeRaw) || (float) $packageSizeRaw <= 0) {
+            return 'จำนวนต่อบรรจุต้องเป็นตัวเลขมากกว่า 0';
+        }
+
+        $json['package_unit_name'] = $packageUnit;
+        $json['package_size'] = (float) $packageSizeRaw;
+        $model->data_json = $json;
+        return null;
+    }
+
+    /**
+     * ประวัติซื้อจากใบรับเข้าคลังที่ยืนยันแล้วเท่านั้น (อ่านอย่างเดียว)
+     */
+    private function getPurchaseHistory($itemCode)
+    {
+        $rows = (new Query())
+            ->select([
+                'detail_id' => 'sd.id',
+                'receive_id' => 'so.id',
+                'receive_no' => 'so.order_no',
+                'receive_date' => 'so.order_date',
+                'po_reference' => 'so.ref',
+                'order_data_json' => 'so.data_json',
+                'qty' => 'sd.qty',
+                'unit_price' => 'sd.unit_price',
+                'vendor_title' => 'vendor.title',
+            ])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->leftJoin(['vendor' => 'categorise'], "vendor.id = so.contact_id AND vendor.name = 'vendor'")
+            ->where([
+                'sd.item_code' => (string) $itemCode,
+                'so.order_type' => 'IN',
+                'so.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->orderBy(['so.order_date' => SORT_DESC, 'sd.id' => SORT_DESC])
+            ->limit(50)
+            ->all();
+
+        $poIds = [];
+        foreach ($rows as $row) {
+            $json = is_array($row['order_data_json'])
+                ? $row['order_data_json']
+                : (json_decode((string) $row['order_data_json'], true) ?: []);
+            if (!empty($json['po_order_id'])) {
+                $poIds[] = (int) $json['po_order_id'];
+            }
+        }
+
+        $purchaseOrders = [];
+        if ($poIds) {
+            $purchaseOrders = PurchaseOrder::find()
+                ->with('vendor')
+                ->where(['id' => array_values(array_unique($poIds)), 'name' => 'order'])
+                ->indexBy('id')
+                ->all();
+        }
+
+        foreach ($rows as &$row) {
+            $json = is_array($row['order_data_json'])
+                ? $row['order_data_json']
+                : (json_decode((string) $row['order_data_json'], true) ?: []);
+            $poId = !empty($json['po_order_id']) ? (int) $json['po_order_id'] : null;
+            $po = $poId && isset($purchaseOrders[$poId]) ? $purchaseOrders[$poId] : null;
+            $poVendor = $po ? ($po->vendor->title ?? $po->vendor_name ?? null) : null;
+            $row['po_order_id'] = $poId;
+            $row['po_number'] = $po && $po->po_number ? $po->po_number : ($row['po_reference'] ?: '—');
+            $row['vendor_title'] = $row['vendor_title'] ?: ($poVendor ?: '—');
+            $row['qty'] = (float) $row['qty'];
+            $row['unit_price'] = (float) ($row['unit_price'] ?? 0);
+            $row['total'] = $row['qty'] * $row['unit_price'];
+            unset($row['order_data_json']);
+        }
+        unset($row);
+
+        return $rows;
     }
 
     /**

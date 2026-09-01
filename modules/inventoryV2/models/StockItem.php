@@ -26,6 +26,8 @@ use yii\helpers\Json;
  *   is_asset       <-> data_json.is_asset
  *   is_innovation  <-> data_json.is_innovation
  *   unit_name      <-> data_json.unit_name
+ *   package_unit_name <-> data_json.package_unit_name (ข้อมูลแสดงผลเท่านั้น)
+ *   package_size      <-> data_json.package_size (ข้อมูลแสดงผลเท่านั้น)
  *
  * Note สำคัญ — surrogate `id`:
  *   ID ที่เก็บใน DB ตอนนี้คือ categorise.id (ไม่ใช่ stock_item.id เดิม)
@@ -304,6 +306,22 @@ class StockItem extends \yii\db\ActiveRecord
 
         $unit = trim((string) ($j['unit'] ?? ''));
         return $unit !== '' ? $unit : null;
+    }
+
+    /** หน่วยบรรจุสำหรับแสดงผลเท่านั้น — ไม่ใช้คำนวณสต็อก */
+    public function getPackageUnitName()
+    {
+        $j = $this->parseDataJson();
+        $value = trim((string) ($j['package_unit_name'] ?? ''));
+        return $value !== '' ? $value : null;
+    }
+
+    /** จำนวนต่อบรรจุสำหรับแสดงผลเท่านั้น — ไม่ใช้คำนวณสต็อก */
+    public function getPackageSize()
+    {
+        $j = $this->parseDataJson();
+        $value = $j['package_size'] ?? null;
+        return is_numeric($value) && (float) $value > 0 ? (float) $value : null;
     }
 
     public function getStockBalance($warehouse_id)

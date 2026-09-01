@@ -90,7 +90,7 @@ AND group_id = 'MATER';
                         <i class="bi bi-ui-checks"></i> รายการ<?= $this->title ?>
                         <?= number_format($dataProvider->getTotalCount()) ?> รายการ
                     </h6>
-                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                    <?= Html::a('<i class="fa-solid fa-circle-plus"></i> สร้างใหม่', ['/inventory-v2/stock-item/create', 'title' => '<i class="fa-solid fa-circle-plus text-primary"></i> เพิ่มวัสดุใหม่'], ['class' => 'btn btn-light open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                 </div>
 
                 <div class="card-body">
@@ -129,7 +129,14 @@ AND group_id = 'MATER';
                                                 <small class="text-muted">หมวดหมู่: <?= $item->categoryType->title ?? '-' ?></small>
                                             </td>
                                             <td class="text-center"><?= $item->data_json['metter_type'] ?? '-' ?></td>
-                                            <td><?= $item->data_json['unit_name'] ?? $item->getUnitName() ?: '-' ?></td>
+                                            <td>
+                                                <div><?= Html::encode($item->unitName ?: '—') ?></div>
+                                                <?php if ($item->packageUnitName && $item->packageSize !== null): ?>
+                                                    <small class="text-body-secondary">
+                                                        <?= Html::encode($item->packageUnitName) ?>ละ <?= number_format($item->packageSize, 2) ?> <?= Html::encode($item->unitName ?: '') ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex justify-content-center">
                                                     <input class="form-check-input set-active" type="checkbox" data-id="<?= $item->id ?>"
@@ -153,7 +160,7 @@ AND group_id = 'MATER';
                                                 <?= Html::a('<i class="fa-regular fa-pen-to-square"></i>', ['//inventory-v2/stock-item/update', 'id' => $item->id, 'title' => '<i class="fa-regular fa-pen-to-square me-1"></i> แก้ไขวัสดุ'], [
                                                     'class' => 'btn btn-sm btn-warning open-modal',
                                                     'title' => 'แก้ไข',
-                                                    'data' => ['size' => 'modal-lg'],
+                                                    'data' => ['size' => 'modal-xl'],
                                                 ]) ?>
                                                 <?= Html::a('<i class="fa-solid fa-trash"></i>', ['//inventory-v2/stock-item/delete', 'id' => $item->id], [
                                                     'class' => 'btn btn-sm btn-danger delete-item',

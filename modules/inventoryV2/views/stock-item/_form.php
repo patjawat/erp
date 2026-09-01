@@ -1,337 +1,325 @@
 <?php
 
-use yii\helpers\Url;
-use yii\helpers\Html;
+use app\components\ThaiDateHelper;
 use kartik\select2\Select2;
 use kartik\widgets\ActiveForm;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
-/** @var app\modules\sm\models\AssetType $model */
-/** @var yii\widgets\ActiveForm $form */
-$id = isset($model->id) ? intval($model->id) : 0;
-$ref = isset($ref) ? Html::encode($ref) : '';
+/** @var app\modules\inventoryV2\models\StockItem $model */
+/** @var array $purchaseHistory */
+
+$purchaseHistory = $purchaseHistory ?? [];
+$dataJson = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+if (empty($dataJson['unit_name']) && !empty($dataJson['unit'])) {
+    $dataJson['unit_name'] = $dataJson['unit'];
+}
+$model->data_json = $dataJson;
+$isNewRecord = $model->isNewRecord;
+$autoSelected = $isNewRecord && (string) $model->auto === '1';
+$uploadUrl = Url::to(['/filemanager/uploads/single']);
+$listUrl = Url::to(['/inventory-v2/stock-item/index']);
 ?>
+
 <style>
-/* กรอบแดงสำหรับ Select2 ที่ยังไม่ได้กรอก (validation) */
-#form-product .select2-selection.is-invalid { border-color: #dc3545 !important; }
+#form-product .select2-selection.is-invalid { border-color: var(--bs-danger) !important; }
+.stock-item-section + .stock-item-section { border-top: 1px solid var(--bs-border-color); }
+.stock-item-image-panel { max-width: 160px; }
+.stock-item-image { display: block; width: 100%; height: 88px; object-fit: contain; }
+.stock-item-code-option:has(input:checked) { border-color: var(--bs-primary) !important; background: var(--bs-tertiary-bg); }
+.stock-item-history td, .stock-item-history th { white-space: nowrap; }
 </style>
-
-
 
 <?php $form = ActiveForm::begin([
     'id' => 'form-product',
     'enableAjaxValidation' => true,
     'validationUrl' => ['/sm/product/createvalidator'],
+    'options' => ['data-list-url' => $listUrl],
 ]); ?>
 
 <?= $form->field($model, 'ref')->hiddenInput()->label(false) ?>
 
-<div class="row">
-    <div class="col-6">
-        <?= $form->field($model, 'item_name')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อสินค้า/บริการ'])->label('ชื่อวัสดุ') ?>
-    </div>
-    <div class="col-6">
-        <?php
-        echo $form->field($model, 'data_json[unit]')->widget(Select2::classname(), [
-            'data' => $model->listUnit(),
-            'options' => ['placeholder' => 'เช่น ชิ้น, กล่อง, แพ็ค'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => "function(result) { 
-                                            var data = \$(this).select2('data')[0].text;
-                                            console.log(data)
-                                        }",
-            ]
-        ])->label('หน่วย')
-        ?>
-    </div>
-    <div class="col-6">
-        <?php if ($model->isNewRecord): ?>
-            <?= $form->field($model, 'item_code')->textInput(['maxlength' => true, 'placeholder' => 'ระบุรหัสวัสดุ / Barcode'])->label('รหัสวัสดุ') ?>
-        <?php else: ?>
-            <div class="mb-3 highlight-addon field-stock-tem-item-item_code">
-                <label class="form-label has-star" for="stock-tem-item_code">รหัสวัสดุ</label>
-                <input type="text" class="form-control" name="StockItem[item_code]" value="<?= Html::encode($model->item_code) ?>"
-                    disabled>
+<section class="stock-item-section px-3 px-lg-4 pt-2 pb-3" aria-labelledby="stock-item-main-heading">
+    <h2 id="stock-item-main-heading" class="h6 fw-semibold text-primary mb-3">1. ข้อมูลวัสดุ</h2>
+    <div class="row g-2">
+        <div class="col-12 col-lg-9">
+            <div class="row g-2">
+                <div class="col-12 col-md-6">
+                    <?= $form->field($model, 'item_name')->textInput(['maxlength' => true, 'placeholder' => 'ระบุชื่อวัสดุ'])->label('ชื่อวัสดุ') ?>
+                </div>
+                <div class="col-12 col-md-6">
+                    <?= $form->field($model, 'category_id')->widget(Select2::class, [
+                        'data' => $model->listAssetType(),
+                        'options' => ['placeholder' => 'เลือกหมวดหมู่'],
+                        'pluginOptions' => ['tags' => true, 'allowClear' => true, 'dropdownParent' => '#main-modal'],
+                    ])->label('หมวดหมู่') ?>
+                </div>
+                <div class="col-12 col-md-6">
+                    <?= $form->field($model, 'data_json[metter_type]')->widget(Select2::class, [
+                        'data' => $model->listMatterType(),
+                        'options' => ['placeholder' => 'เลือกประเภทวัสดุ'],
+                        'pluginOptions' => ['allowClear' => true, 'tags' => true, 'dropdownParent' => '#main-modal'],
+                    ])->label('ประเภทวัสดุ') ?>
+                </div>
+                <div class="col-12 col-md-6">
+                    <?= $form->field($model, 'data_json[purchase_type]')->widget(Select2::class, [
+                        'data' => $model->listPurchaseType(),
+                        'options' => ['placeholder' => 'เลือกวิธีการจัดซื้อ'],
+                        'pluginOptions' => ['allowClear' => true, 'tags' => true, 'dropdownParent' => '#main-modal'],
+                    ])->label('การจัดซื้อ') ?>
+                </div>
+                <div class="col-12 d-flex flex-column flex-sm-row align-items-sm-center gap-2">
+                    <?= $form->field($model, 'is_innovation', ['options' => ['class' => 'mb-0']])
+                        ->checkbox(['class' => 'form-check-input', 'switch' => true])->label('บัญชีนวัตกรรม') ?>
+                    <small class="text-body-secondary">
+                        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>จุดสั่งซื้อกำหนดแยกตามคลัง
+                    </small>
+                </div>
             </div>
-        <?php endif ?>
-
-    </div>
-
-    <div class="col-6">
-        <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
-            'data' => $model->listAssetType(),
-            'options' => ['placeholder' => 'ประเภทของวัสดุ'],
-            'pluginOptions' => [
-                'tags' => true, // เปิดให้เพิ่มค่าใหม่ได้
-                'allowClear' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-            'pluginEvents' => [
-                'select2:select' => 'function(result) {}',
-                'select2:unselecting' => 'function() {}',
-            ],
-
-        ])->label('หมวดหมู่') ?>
-
-    </div>
-
-    <div class="col-6">
-        <?php
-        echo $form->field($model, 'data_json[metter_type]')->widget(Select2::classname(), [
-            'data' => $model->listMatterType(),
-            'options' => ['placeholder' => 'ระบุประเภทวัสดุ...'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-        ])->label('ประเภทวัสดุ')
-        ?>
-    </div>
-    <div class="col-6">
-        <div class="alert alert-info py-2 px-3 small mb-3" role="alert">
-            <i class="bi bi-info-circle me-1"></i>
-            จำนวนสูงสุด/ต่ำสุดสำหรับสั่งซื้อ ให้ตั้งค่าแยกตามคลังที่หน้า
-            <strong>ตั้งค่าคลัง → กำหนดจุดสั่งซื้อต่อคลัง</strong>
+        </div>
+        <div class="stock-item-image-panel col-12 col-sm-6 col-lg-3 mx-auto">
+            <label for="product_file" class="form-label">รูปภาพวัสดุ</label>
+            <?= Html::img($model->ShowImg(), [
+                'class' => 'stock-item-image img-thumbnail bg-body-tertiary rounded-3 mb-1',
+                'alt' => 'รูปภาพวัสดุ ' . $model->item_name,
+                'id' => 'product-preview',
+            ]) ?>
+            <?= Html::button('<i class="bi bi-image me-1" aria-hidden="true"></i>เปลี่ยนรูป', [
+                'type' => 'button', 'class' => 'btn btn-sm btn-outline-secondary w-100', 'id' => 'select-product-photo',
+            ]) ?>
+            <input type="file" class="visually-hidden" id="product_file" accept="image/*">
         </div>
     </div>
+</section>
 
-    <div class="col-6">
-        <?php
-        echo $form->field($model, 'data_json[purchase_type]')->widget(Select2::classname(), [
-            'data' => $model->listPurchaseType(),
-            'options' => ['placeholder' => 'ระบุการจัดซื้อ...'],
-            'pluginOptions' => [
-                'allowClear' => true,
-                'tags' => true,
-                'dropdownParent' => '#main-modal',
-            ],
-        ])->label('การจัดซื้อ')
-        ?>
-    </div>
-
-    <div class="col-3">
-        <div class="mt-4">
-            <?= $form->field($model, 'auto')->checkbox(['custom' => true, 'switch' => true, 'checked' => false])->label('รหัสวัสดุอัตโนมัติ'); ?>
+<div class="row g-0">
+    <section class="stock-item-section col-12 col-lg-6 px-3 px-lg-4 py-3 border-end" aria-labelledby="stock-item-code-heading">
+        <h2 id="stock-item-code-heading" class="h6 fw-semibold text-primary mb-3">2. รหัสวัสดุ</h2>
+        <fieldset <?= $isNewRecord ? '' : 'disabled' ?>>
+            <legend class="form-label fs-6">วิธีสร้างรหัส <span class="text-danger">*</span></legend>
+            <div class="row g-2 mb-3" role="radiogroup" aria-label="วิธีสร้างรหัสวัสดุ">
+                <div class="col-6">
+                    <label class="stock-item-code-option border rounded-3 p-3 d-flex gap-2 h-100" for="stock-item-code-auto">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="StockItem[auto]" id="stock-item-code-auto" value="1" <?= $autoSelected ? 'checked' : '' ?>>
+                        <span><span class="d-block fw-semibold">อัตโนมัติ</span><span class="small text-body-secondary">ระบบสร้างรหัสตามหมวดหมู่เมื่อบันทึก</span></span>
+                    </label>
+                </div>
+                <div class="col-6">
+                    <label class="stock-item-code-option border rounded-3 p-3 d-flex gap-2 h-100" for="stock-item-code-manual">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="StockItem[auto]" id="stock-item-code-manual" value="0" <?= !$autoSelected ? 'checked' : '' ?>>
+                        <span><span class="d-block fw-semibold">กำหนดเอง</span><span class="small text-body-secondary">กรอกรหัสวัสดุด้วยตนเอง</span></span>
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+        <?= $form->field($model, 'item_code')->textInput([
+            'maxlength' => true,
+            'placeholder' => 'ระบุรหัสวัสดุ / Barcode',
+            'readonly' => !$isNewRecord,
+            'aria-describedby' => 'stock-item-code-help',
+        ])->label('รหัสวัสดุ') ?>
+        <div id="stock-item-code-help" class="form-text">
+            <?= $isNewRecord ? 'เลือกอัตโนมัติเพื่อให้ระบบสร้างรหัสจากหมวดหมู่' : 'รหัสวัสดุเดิมไม่สามารถเปลี่ยนได้' ?>
         </div>
-    </div>
-    <div class="col-3">
-        <div class="mt-4">
-            <?= $form->field($model, 'is_innovation')->checkbox([
-                'custom' => true,
-                'switch' => true,
-                // ไม่ต้องใส่ 'checked' เอง ถ้าค่าใน Database เป็น 1 หรือ true มันจะจัดการให้ครับ
-            ])->label('บัญชีนวัตกรรม'); ?>
+    </section>
+
+    <section class="stock-item-section col-12 col-lg-6 px-3 px-lg-4 py-3" aria-labelledby="stock-item-package-heading">
+        <h2 id="stock-item-package-heading" class="h6 fw-semibold text-primary mb-3">3. หน่วยและข้อมูลบรรจุ</h2>
+        <?= $form->field($model, 'data_json[unit_name]')->widget(Select2::class, [
+            'data' => $model->listUnit(),
+            'options' => ['placeholder' => 'เลือกหรือระบุหน่วยนับสต็อก'],
+            'pluginOptions' => ['allowClear' => true, 'tags' => true, 'dropdownParent' => '#main-modal'],
+        ])->label('หน่วยนับสต็อก')->hint('หน่วยหลักที่ใช้กับยอดคงเหลือและราคา') ?>
+        <div class="row g-3">
+            <div class="col-12 col-sm-6">
+                <?= $form->field($model, 'data_json[package_unit_name]')->widget(Select2::class, [
+                    'data' => $model->listUnit(),
+                    'options' => ['placeholder' => 'เช่น ลัง, กล่อง, แพ็ค'],
+                    'pluginOptions' => ['allowClear' => true, 'tags' => true, 'dropdownParent' => '#main-modal'],
+                ])->label('หน่วยบรรจุ (ไม่บังคับ)') ?>
+            </div>
+            <div class="col-12 col-sm-6">
+                <?= $form->field($model, 'data_json[package_size]')->input('number', [
+                    'min' => '0.01', 'step' => '0.01', 'placeholder' => 'เช่น 24', 'inputmode' => 'decimal',
+                ])->label('จำนวนต่อบรรจุ (ไม่บังคับ)') ?>
+            </div>
         </div>
-    </div>
-
-
-    <div class="col-12">
-        <label for="productImage" class="form-label">รูปภาพวัสดุ</label>
-        <input type="file" class="form-control" id="product_file" />
-    </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 bg-body-tertiary border rounded-3 py-2 px-3 small text-body-secondary">
+            <span id="package-preview" aria-live="polite">
+            ยังไม่ได้ระบุข้อมูลบรรจุ
+            </span>
+            <span><i class="bi bi-eye me-1" aria-hidden="true"></i>แสดงผลเท่านั้น ไม่ใช้คำนวณสต็อก</span>
+        </div>
+    </section>
 </div>
 
-<div class="row">
-
-    <div class="col-6">
-        <a href="#" class="select-photo">
-            <?= Html::img($model->ShowImg(), ['class' => 'product-img object-fit-cover rounded mt-3', 'style' => 'max-width:100%;height: 219px;']) ?>
-        </a>
+<?php if (!$isNewRecord): ?>
+<section class="stock-item-section px-3 px-lg-4 py-3" aria-labelledby="stock-item-history-heading">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h2 id="stock-item-history-heading" class="h6 fw-semibold text-primary mb-0">
+            4. ประวัติการซื้อ
+            <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= number_format(count($purchaseHistory)) ?> รายการล่าสุด</span>
+        </h2>
+        <span class="small text-body-secondary">แสดงสูงสุด 50 รายการ</span>
     </div>
-    <div class="form-group mt-3 d-flex justify-content-center gap-3">
-        <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary shadow me-2', 'id' => 'summit']) ?>
-        <?= Html::button('ปิด', ['class' => 'btn btn-secondary', 'data-bs-dismiss' => 'modal']) ?>
-    </div>
+    <?php if ($purchaseHistory): ?>
+        <div class="d-none d-lg-block table-responsive border rounded-3">
+            <table class="stock-item-history table table-sm table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>วันที่รับ</th><th>ผู้ขาย/บริษัท</th><th>เลขที่ PO / ใบรับ</th>
+                        <th class="text-end">จำนวน</th><th>หน่วย</th><th class="text-end">ราคา/หน่วย</th>
+                        <th class="text-end">รวม</th><th class="text-center">เอกสาร</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($purchaseHistory as $row): ?>
+                        <tr>
+                            <td><?= Html::encode(ThaiDateHelper::formatThaiDate($row['receive_date'])) ?></td>
+                            <td><?= Html::encode($row['vendor_title']) ?></td>
+                            <td><?= Html::encode($row['po_number'] . ' / ' . $row['receive_no']) ?></td>
+                            <td class="text-end"><?= number_format($row['qty'], 2) ?></td>
+                            <td><?= Html::encode($model->unitName ?: '—') ?></td>
+                            <td class="text-end"><?= number_format($row['unit_price'], 2) ?></td>
+                            <td class="text-end fw-semibold"><?= number_format($row['total'], 2) ?></td>
+                            <td class="text-center"><?= Html::a('ดูใบรับ', ['/inventory-v2/receive/view', 'id' => $row['receive_id']], [
+                                'class' => 'btn btn-sm btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener',
+                            ]) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <ul class="list-group d-lg-none" role="list">
+            <?php foreach ($purchaseHistory as $row): ?>
+                <li class="list-group-item px-0 py-3">
+                    <div class="d-flex justify-content-between gap-3 mb-1">
+                        <span class="fw-semibold"><?= Html::encode($row['vendor_title']) ?></span>
+                        <span class="text-body-secondary text-nowrap"><?= Html::encode(ThaiDateHelper::formatThaiDate($row['receive_date'])) ?></span>
+                    </div>
+                    <div class="small text-body-secondary mb-2"><?= Html::encode($row['po_number'] . ' / ' . $row['receive_no']) ?></div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <span><?= number_format($row['qty'], 2) ?> <?= Html::encode($model->unitName ?: '—') ?> · <?= number_format($row['unit_price'], 2) ?> บาท/หน่วย · รวม <?= number_format($row['total'], 2) ?> บาท</span>
+                        <?= Html::a('ดูใบรับ', ['/inventory-v2/receive/view', 'id' => $row['receive_id']], [
+                            'class' => 'btn btn-sm btn-outline-primary', 'target' => '_blank', 'rel' => 'noopener',
+                        ]) ?>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php else: ?>
+        <div class="text-center text-body-secondary border rounded-3 py-4 px-3">ยังไม่พบประวัติการซื้อจากใบรับเข้าคลังที่ยืนยันแล้ว</div>
+    <?php endif; ?>
+    <p class="small text-body-secondary mt-2 mb-0"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>แสดงจากใบรับเข้าคลังที่ยืนยันแล้วเท่านั้น</p>
+</section>
+<?php endif; ?>
 
-    <?php ActiveForm::end(); ?>
+<div class="position-sticky bottom-0 bg-body border-top px-3 px-lg-4 py-3 d-flex justify-content-end gap-2">
+    <?= Html::button('ปิด', ['class' => 'btn btn-outline-secondary', 'data-bs-dismiss' => 'modal']) ?>
+    <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>บันทึก', ['class' => 'btn btn-primary', 'id' => 'submit-product']) ?>
+</div>
 
-    <?php
-    $urlUpload = Url::to('/filemanager/uploads/single');
-    $ref = $model->ref;
-    $isNew = $model->isNewRecord ? 'true' : 'false';
-    $js = <<< JS
-    // ---- สวิตช์ "รหัสวัสดุอัตโนมัติ": ปิดช่องรหัสเมื่อเปิด (ระบบออกรหัสให้ตอนบันทึก) ----
-    var isNewRecord = $isNew;
-    var autoCb = $('#form-product [name="StockItem[auto]"]');
-    var codeInput = $('#form-product [name="StockItem[item_code]"]');
-    function applyAutoState() {
-        if (!isNewRecord) return; // หน้าแก้ไข: รหัสวัสดุถูกล็อกไว้ ไม่ยุ่งกับสวิตช์ auto
-        var isAuto = autoCb.is(':checked');
+<?php ActiveForm::end(); ?>
+
+<?php
+$ref = Html::encode((string) $model->ref);
+$isNewJs = $isNewRecord ? 'true' : 'false';
+$js = <<<JS
+(function () {
+    var form = $('#form-product');
+    var isNewRecord = {$isNewJs};
+    var codeInput = form.find('[name="StockItem[item_code]"]');
+    var submitButton = $('#submit-product');
+
+    function applyCodeMode() {
+        if (!isNewRecord) return;
+        var isAuto = form.find('[name="StockItem[auto]"]:checked').val() === '1';
+        codeInput.prop('readonly', isAuto);
         if (isAuto) {
-            codeInput.prop('disabled', true).val('').attr('placeholder', 'ระบบจะออกรหัสให้อัตโนมัติ').removeClass('is-invalid');
+            codeInput.val('').attr('placeholder', 'ระบบจะสร้างรหัสตามหมวดหมู่เมื่อบันทึก').removeClass('is-invalid');
         } else {
-            codeInput.prop('disabled', false).attr('placeholder', 'ระบุรหัสวัสดุ / Barcode');
+            codeInput.attr('placeholder', 'ระบุรหัสวัสดุ / Barcode');
         }
     }
-    autoCb.on('change', applyAutoState);
-    applyAutoState();
 
-    // ล้างสถานะ error เมื่อผู้ใช้เริ่มแก้ไข
-    $('#form-product').on('input change', '[name="StockItem[item_name]"], [name="StockItem[item_code]"]', function () {
-        $(this).removeClass('is-invalid');
-    });
-    $('#form-product').on('change', '[name="StockItem[data_json][unit]"], [name="StockItem[category_id]"]', function () {
-        $(this).removeClass('is-invalid').next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+    function updatePackagePreview() {
+        var packageUnit = $.trim((form.find('[name="StockItem[data_json][package_unit_name]"]').val() || '') + '');
+        var packageSize = $.trim((form.find('[name="StockItem[data_json][package_size]"]').val() || '') + '');
+        var stockUnit = $.trim((form.find('[name="StockItem[data_json][unit_name]"]').val() || '') + '');
+        $('#package-preview').text(packageUnit && packageSize && stockUnit
+            ? 'ตัวอย่าง: 1 ' + packageUnit + ' บรรจุ ' + packageSize + ' ' + stockUnit
+            : 'ยังไม่ได้ระบุข้อมูลบรรจุ');
+    }
+
+    function validateRequiredFields() {
+        var missing = [];
+        function requireField(selector, label) {
+            var field = form.find(selector);
+            var valid = $.trim((field.val() || '') + '') !== '';
+            field.toggleClass('is-invalid', !valid);
+            field.next('.select2-container').find('.select2-selection').toggleClass('is-invalid', !valid);
+            if (!valid) missing.push(label);
+        }
+        requireField('[name="StockItem[item_name]"]', 'ชื่อวัสดุ');
+        requireField('[name="StockItem[category_id]"]', 'หมวดหมู่');
+        requireField('[name="StockItem[data_json][unit_name]"]', 'หน่วยนับสต็อก');
+        if (isNewRecord && form.find('[name="StockItem[auto]"]:checked').val() !== '1') requireField('[name="StockItem[item_code]"]', 'รหัสวัสดุ');
+        var packageUnit = $.trim((form.find('[name="StockItem[data_json][package_unit_name]"]').val() || '') + '');
+        var packageSize = $.trim((form.find('[name="StockItem[data_json][package_size]"]').val() || '') + '');
+        if ((packageUnit && !packageSize) || (!packageUnit && packageSize)) missing.push(packageUnit ? 'จำนวนต่อบรรจุ' : 'หน่วยบรรจุ');
+        if (packageSize && (isNaN(Number(packageSize)) || Number(packageSize) <= 0)) missing.push('จำนวนต่อบรรจุต้องมากกว่า 0');
+        return missing;
+    }
+
+    function uploadSelectedFile() {
+        var input = document.getElementById('product_file');
+        if (!input || !input.files || !input.files.length) return $.Deferred().resolve().promise();
+        var data = new FormData();
+        data.append('product_item', input.files[0]); data.append('id', 1); data.append('ref', '{$ref}'); data.append('name', 'product_item');
+        return $.ajax({ url: '{$uploadUrl}', type: 'POST', data: data, processData: false, contentType: false });
+    }
+
+    form.on('change', '[name="StockItem[auto]"]', applyCodeMode);
+    form.on('input change', 'input, select', function () { $(this).removeClass('is-invalid').next('.select2-container').find('.select2-selection').removeClass('is-invalid'); });
+    form.on('input change', '[name="StockItem[data_json][package_unit_name]"], [name="StockItem[data_json][package_size]"], [name="StockItem[data_json][unit_name]"]', updatePackagePreview);
+    $('#select-product-photo').on('click', function () { $('#product_file').trigger('click'); });
+    $('#product_file').on('change', function () {
+        var file = this.files && this.files[0]; if (!file) return;
+        var reader = new FileReader(); reader.onload = function (event) { $('#product-preview').attr('src', event.target.result); }; reader.readAsDataURL(file);
     });
 
-    
-function getIMG() {
-    if ($id > 0) {
-        $.ajax({
-            type: "GET",
-            url: "/filemanager/uploads/show?id=$id",
-            dataType: "json",
-            success: function (res) {
-                console.log('get Avatar success', res);
+    form.on('beforeSubmit', function (event) {
+        event.preventDefault();
+        var missing = validateRequiredFields();
+        if (missing.length) {
+            Swal.fire({ icon: 'warning', title: 'กรอกข้อมูลไม่ครบ', html: 'กรุณาตรวจสอบ: <strong>' + missing.join(', ') + '</strong>', confirmButtonText: 'ตกลง' });
+            return false;
+        }
+        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>กำลังบันทึก');
+        uploadSelectedFile().then(function () {
+            return $.ajax({ url: form.attr('action'), type: 'POST', data: form.serialize(), dataType: 'json' });
+        }).done(function (response) {
+            if (response.status !== 'success') {
+                Swal.fire('บันทึกไม่สำเร็จ', response.message || response.msg || 'กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง', 'error'); return;
             }
-        });
-    }
-}
-getIMG();
-
-$(".select-photo").click(function() {
-    $("#product_file").click();
-});
-
-$("#product_file").on("change", function() {
-    var fileInput = $(this)[0];
-    if (fileInput.files && fileInput.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            $(".product-img").attr("src", e.target.result);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-});
-
-$('#form-product').on('beforeSubmit', function (e) {
-    e.preventDefault();
-    let form = $(this);
-
-    // ---------- ตรวจสอบข้อมูลที่จำเป็นก่อนบันทึก ----------
-    var missing = [];
-    function checkField(sel, label) {
-        var el = form.find(sel);
-        var ok = $.trim((el.val() || '') + '') !== '';
-        el.toggleClass('is-invalid', !ok);
-        el.next('.select2-container').find('.select2-selection').toggleClass('is-invalid', !ok);
-        if (!ok) missing.push(label);
-        return ok;
-    }
-    checkField('[name="StockItem[item_name]"]', 'ชื่อวัสดุ');
-    checkField('[name="StockItem[data_json][unit]"]', 'หน่วย');
-    checkField('[name="StockItem[category_id]"]', 'หมวดหมู่');
-    // รหัสวัสดุ: บังคับเฉพาะกรณีไม่ได้เลือกรหัสอัตโนมัติ
-    var codeEl = form.find('[name="StockItem[item_code]"]');
-    if (codeEl.length && !codeEl.prop('disabled') && !autoCb.is(':checked')) {
-        checkField('[name="StockItem[item_code]"]', 'รหัสวัสดุ');
-    }
-    if (missing.length) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'กรอกข้อมูลไม่ครบ',
-            html: 'กรุณากรอก: <strong>' + missing.join(', ') + '</strong>',
-            confirmButtonText: 'ตกลง'
+            closeModal();
+            Swal.fire({ icon: 'success', title: 'บันทึกข้อมูลแล้ว', timer: 1000, showConfirmButton: false });
+            if (response.container && $(response.container).length) {
+                $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
+            } else {
+                window.location.href = form.data('list-url');
+            }
+        }).fail(function () {
+            Swal.fire('บันทึกไม่สำเร็จ', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'error');
+        }).always(function () {
+            submitButton.prop('disabled', false).html('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>บันทึก');
         });
         return false;
-    }
-
-    Swal.fire({
-        title: 'ยืนยันการบันทึก?',
-        text: "คุณต้องการบันทึกข้อมูลหรือไม่?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'ใช่, บันทึกเลย!',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                dataType: 'json',
-                beforeSend: async function () {
-                    await uploadFile();
-                },
-                success: async function (response) {
-                    console.log();
-                    
-                    if (response.status === 'success') {
-                        closeModal();
-                        await Swal.fire({
-                            title: 'บันทึกสำเร็จ!',
-                            text: 'ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว',
-                            icon: 'success',
-                            timer: 1000, // ปิดอัตโนมัติใน 3 วินาที
-                            confirmButtonText: 'ตกลง'
-                        });
-                        await $.pjax.reload({ container: response.container, history: false, replace: false, timeout: false });
-                    }
-
-                    if (response.status === 'error') 
-                    {
-                        Swal.fire({
-                        title: 'เกิดข้อผิดพลาด!',
-                        text: response.message || response.msg || 'ไม่สามารถบันทึกข้อมูลได้',
-                        icon: 'error',
-                        confirmButtonText: 'ตกลง'
-                    });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'เกิดข้อผิดพลาด!',
-                        text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-                        icon: 'error',
-                        confirmButtonText: 'ตกลง'
-                    });
-                }
-            });
-        }
     });
 
-    return false;
-});
-
-
-    function uploadFile(){
-        formdata = new FormData();
-        var checkFile = $("input[id='product_file']").prop('files').length;
-        console.log(checkFile);
-        
-        
-        if($("input[id='product_file']").prop('files').length > 0)
-        {
-            file = $("input[id='product_file']").prop('files')[0];
-            formdata.append("product_item", file);
-            formdata.append("id", 1);
-            formdata.append("ref", '$ref');
-            formdata.append("name", 'product_item');
-            
-
-            console.log(file);
-            $.ajax({
-                url: '/filemanager/uploads/single',
-                type: "POST",
-                data: formdata,
-                processData: false,
-                contentType: false,
-                success: function (res) {
-                    return true;
-                }
-            });
-        }
-    }
-
-
+    applyCodeMode(); updatePackagePreview();
+})();
 JS;
-    $this->registerJS($js);
-    ?>
+$this->registerJs($js);
+?>
