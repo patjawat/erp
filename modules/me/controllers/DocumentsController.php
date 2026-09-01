@@ -874,20 +874,30 @@ class DocumentsController extends \yii\web\Controller
         }
     }
 
-    public function actionShow($ref)
+    public function actionShow($ref, $document_id = null)
     {
         // $model = $this->findModel($id);
         if (!Yii::$app->user->isGuest) {
-            $document = Documents::findOne(['ref' => $ref]);
+            $documentCondition = ['ref' => $ref];
+            if ($document_id !== null) {
+                $documentCondition['id'] = (int) $document_id;
+            }
+
+            $document = Documents::findOne($documentCondition);
             $employee = UserHelper::GetEmployee();
             if (!$document || !$employee) {
                 throw new NotFoundHttpException('ไม่พบหนังสือ');
             }
-            if (!DocumentAccessPolicy::canRead(
+
+            $isDocumentManager = Yii::$app->user->can('document');
+            $isDocumentCreator = (int) $document->created_by === (int) Yii::$app->user->id;
+            $isRecipient = DocumentAccessPolicy::canRead(
                 (int) $document->id,
                 (int) ($employee->department ?? 0),
                 (int) ($employee->id ?? 0)
-            )) {
+            );
+
+            if (!$isDocumentManager && !$isDocumentCreator && !$isRecipient) {
                 throw new ForbiddenHttpException('คุณไม่มีสิทธิอ่านหนังสือฉบับนี้');
             }
 

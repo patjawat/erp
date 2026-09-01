@@ -186,8 +186,8 @@ if ($emp && (int) ($emp->department ?? 0) > 0) {
     }
 }
 $canManageDepartmentExtra = Yii::$app->user->can('document') || $isDeptHeadOrDeputy;
-$pdfUrl = Url::to(['/me/documents/show', 'ref' => $model->ref]);
-$pdfDownloadUrl = Url::to(['/me/documents/show', 'ref' => $model->ref, 'download' => 1]);
+$pdfUrl = Url::to(['/me/documents/show', 'ref' => $model->ref, 'document_id' => $model->id]);
+$pdfDownloadUrl = Url::to(['/me/documents/show', 'ref' => $model->ref, 'document_id' => $model->id, 'download' => 1]);
 $pdfUrlJs = json_encode($pdfUrl, JSON_UNESCAPED_SLASHES);
 $pdfWorkerUrlJs = json_encode(Url::to('/libs/pdf/pdf.worker.js'), JSON_UNESCAPED_SLASHES);
 
