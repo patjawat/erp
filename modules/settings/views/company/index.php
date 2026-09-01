@@ -18,8 +18,10 @@ use app\modules\filemanager\components\FileManagerHelper;
 
 $this->title = 'ตั้งค่าองค์กร';
 
-if (empty($model->data_json['document_department_access_mode'])) {
-    $model->data_json['document_department_access_mode'] = 'heads_only';
+$companyData = $model->data_json;
+if (empty($companyData['document_department_access_mode'])) {
+    $companyData['document_department_access_mode'] = 'heads_only';
+    $model->data_json = $companyData;
 }
 
 $formatJs = <<< 'JS'
