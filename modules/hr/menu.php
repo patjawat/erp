@@ -74,6 +74,17 @@ use yii\helpers\Url;
             </li> -->
             <li>
                 <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="badge-check" width="15" height="15" class="text-body-secondary" aria-hidden="true"></i> ความเชี่ยวชาญ</span>',
+                    ['/hr/categorise', 'name' => 'expertise', 'title' => 'ความเชี่ยวชาญ'],
+                    [
+                        'class' => 'dropdown-item open-modal',
+                        'data' => ['size' => 'modal-lg'],
+                    ]
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <li>
+                <?= Html::a(
                     '<span class="d-flex align-items-center gap-2"><i data-lucide="sliders-horizontal" style="width:15px;height:15px" class="text-muted"></i> ข้อมูลหลักพนักงาน</span>',
                     ['/hr/employee-master', 'title' => 'ตั้งค่าข้อมูลหลักพนักงาน'],
                     ['class' => 'dropdown-item', 'data' => ['pjax' => false]]
