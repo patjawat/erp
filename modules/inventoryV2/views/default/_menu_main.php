@@ -72,7 +72,7 @@ if ($issuePendingCount === null) {
             <ul class="dropdown-menu dropdown-menu-end">
                 <!-- <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/default/setting']) ?>"><i class="bi bi-gear me-2"></i>ตั้งค่าคลังสินค้า</a></li> -->
                 <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/warehouse']) ?>"><i class="bi bi-gear me-2"></i>ตั้งค่าคลังสินค้า</a></li>
-                <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>"><i class="bi bi-box-seam me-2"></i>จัดการวัสดุ</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/inventory-v2/stock-item/index']) ?>"><i class="bi bi-box-seam me-2"></i>จัดการพัสดุ</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item <?= $active === 'stock-adjust' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/stock-adjust/index']) ?>"><i class="bi bi-wrench-adjustable me-2"></i>ปรับยอด stock</a></li>
             </ul>

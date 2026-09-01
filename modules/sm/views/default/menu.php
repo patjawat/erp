@@ -56,7 +56,7 @@ $btn = function (string $key) use ($active): string {
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
             <li><?= Html::a('<i class="bi bi-shop me-2"></i>ผู้แทนจำหน่าย', ['/sm/vendor'], ['class' => 'dropdown-item']) ?></li>
-            <li><?= Html::a('<i class="bi bi-box-seam me-2"></i>วัสดุ', ['/sm/product', 'title' => 'ตั้งค่าวัสดุ'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-box-seam me-2"></i>จัดการพัสดุ', ['/inventory-v2/stock-item/index'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="bi bi-pc-display me-2"></i>ครุภัณฑ์', ['/sm/asset-item', 'title' => 'ตั้งค่าครุภัณฑ์'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="bi bi-tags me-2"></i>ประเภทวัสดุ', ['/sm/product-type', 'title' => 'ตั้งค่าประเภทวัสดุ'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="bi bi-rulers me-2"></i>หน่วยนับ', ['/sm/product-unit', 'title' => 'หน่วยนับ'], ['id' => 'unit', 'class' => 'dropdown-item']) ?></li>
