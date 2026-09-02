@@ -193,11 +193,13 @@ class LeaveController extends Controller
                 }
                 Yii::$app->session->setFlash('error', $annualError);
             } elseif ($model->save(false)) {
+                // กลับไปหน้าเดิมพร้อมตัวกรองที่ผู้ใช้ตั้งไว้ ไม่ให้ผลค้นหาถูกล้างหลังบันทึก
+                $backUrl = $this->safeReturnUrl(Url::to(['/leave/approver/index']));
                 if (Yii::$app->request->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
-                    return ['status' => 'success', 'redirect' => Url::to(['/leave/approver/index'])];
+                    return ['status' => 'success', 'redirect' => $backUrl];
                 }
-                return $this->redirect(['/leave/approver/index']);
+                return $this->redirect($backUrl);
             } elseif (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
@@ -226,6 +228,32 @@ class LeaveController extends Controller
             'stats' => $stats,
             'roundLabel' => $roundLabel,
         ]);
+    }
+
+    /**
+     * คืน URL หน้าที่ผู้ใช้มา (พร้อม query string ของตัวกรอง) ถ้าเป็น URL ภายในระบบเท่านั้น
+     * มิฉะนั้นคืน $fallback — กัน open redirect
+     */
+    protected function safeReturnUrl(string $fallback): string
+    {
+        $referrer = (string) Yii::$app->request->referrer;
+        if ($referrer === '') {
+            return $fallback;
+        }
+
+        $path = (string) parse_url($referrer, PHP_URL_PATH);
+        if ($path === '') {
+            return $fallback;
+        }
+
+        $host = parse_url($referrer, PHP_URL_HOST);
+        if ($host !== null && $host !== Yii::$app->request->hostName) {
+            return $fallback;
+        }
+
+        $query = parse_url($referrer, PHP_URL_QUERY);
+
+        return $path . ($query !== null && $query !== '' ? '?' . $query : '');
     }
 
     /**

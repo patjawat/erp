@@ -39,8 +39,18 @@ class LeaveController extends \yii\web\Controller
             ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
         ]);
         $dataProvider->query->groupBy(['approve.from_id']);
-        $dataProvider->query->andFilterWhere(['>=', 'leave.date_start', AppHelper::convertToGregorian($searchModel->date_start)])->andFilterWhere(['<=', 'leave.date_end', AppHelper::convertToGregorian($searchModel->date_end)]);
-        
+
+        // ช่วงวันที่แบบ "คาบเกี่ยว" — ใบลาที่คร่อมต้น/ปลายช่วงที่กรองต้องไม่หายไป
+        // (เดิมใช้ date_start>=ต้นช่วง AND date_end<=ปลายช่วง ทำให้ใบลาคร่อมเดือนไม่ขึ้นให้หัวหน้าเห็นชอบ)
+        $rangeStart = AppHelper::normalizeDateToDb($searchModel->date_start);
+        $rangeEnd   = AppHelper::normalizeDateToDb($searchModel->date_end);
+        if ($rangeStart !== null) {
+            $dataProvider->query->andWhere(['>=', 'leave.date_end', $rangeStart]);
+        }
+        if ($rangeEnd !== null) {
+            $dataProvider->query->andWhere(['<=', 'leave.date_start', $rangeEnd]);
+        }
+
         $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
 
         return $this->render('index', [

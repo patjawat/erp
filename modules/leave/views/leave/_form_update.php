@@ -102,7 +102,7 @@ $form = ActiveForm::begin([
                 ],
             ])->label('มอบหมายงานให้') ?>
         </div>
-        <?= $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
+        <?= $this->render('@app/modules/leave/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
         <div class="mb-3">
             <?= $form->field($model, 'data_json[reason]')->textarea(['rows' => 3, 'class' => 'form-control'])->label('เหตุผล/เนื่องจาก') ?>
         </div>

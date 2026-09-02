@@ -361,7 +361,7 @@ $resultsJs = <<< JS
                     ],
                 ])->label('มอบหมายงานให้')
                 ?>
-                <?php echo $this->render('@app/modules/hr/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
+                <?php echo $this->render('@app/modules/leave/views/leave/approve', ['form' => $form, 'model' => $model]) ?>
             </div>
         </div>
     </div>

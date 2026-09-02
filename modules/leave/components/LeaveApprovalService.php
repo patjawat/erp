@@ -8,6 +8,17 @@ use app\modules\approveV2\models\Approve;
 
 class LeaveApprovalService
 {
+    /**
+     * แมประดับผู้อนุมัติ → สถานะของใบลา (leave.status)
+     * ใช้ร่วมกับ ApproverController::syncLeaveStatus() เพื่อให้สถานะตรงกันเสมอ
+     */
+    public const LEVEL_STATUS_MAP = [
+        1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
+        2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
+        3 => ['Pass' => 'Checkup_pass',   'Reject' => 'Checkup_reject'],
+        4 => ['Pass' => 'Approve',        'Reject' => 'Reject'],
+    ];
+
     public function process(Approve $approve, string $status, ?int $actorEmpId = null, bool $forceStampActorEmpId = false): array
     {
         if (!in_array($status, ['Pass', 'Reject'], true)) {
@@ -60,15 +71,8 @@ class LeaveApprovalService
             return ['ok' => true, 'leave' => $leave];
         }
 
-        $statusMap = [
-            1 => ['Pass' => 'Checking1_pass', 'Reject' => 'Checking1_reject'],
-            2 => ['Pass' => 'Checking2_pass', 'Reject' => 'Checking2_reject'],
-            3 => ['Pass' => 'Checkup_pass', 'Reject' => 'Checkup_reject'],
-            4 => ['Pass' => 'Approve', 'Reject' => 'Reject'],
-        ];
-
-        if (isset($statusMap[$approve->level][$status])) {
-            $leave->status = $statusMap[$approve->level][$status];
+        if (isset(self::LEVEL_STATUS_MAP[$approve->level][$status])) {
+            $leave->status = self::LEVEL_STATUS_MAP[$approve->level][$status];
             $leave->save(false);
         }
 

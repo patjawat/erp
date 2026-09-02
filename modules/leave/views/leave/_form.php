@@ -93,24 +93,68 @@ $phone = $employee->phone ?? '';
 ?>
 
 <style>
-    .workflow-step .step-dot {
-        width: 2rem;
-        height: 2rem;
+    .leave-flow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: .5rem;
+    }
+
+    .leave-flow__step {
+        display: flex;
+        align-items: center;
+        gap: .625rem;
+        min-width: 0;
+        padding: .5rem .75rem;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: .75rem;
+        background: var(--bs-body-bg, #fff);
+    }
+
+    .leave-flow__avatar {
+        flex: 0 0 auto;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: 50%;
-        background: #dee2e6;
-        color: #6c757d;
-        font-size: 0.75rem;
-        font-weight: 600;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
-        z-index: 1;
+        background: var(--bs-secondary-bg, #e9ecef);
+        color: var(--bs-secondary-color, #6c757d);
     }
 
-    .workflow-step.done .step-dot {
-        background: #5D5FEF;
-        color: #fff;
+    .leave-flow__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .leave-flow__text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.25;
+    }
+
+    .leave-flow__title {
+        font-size: .8125rem;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .leave-flow__name {
+        font-size: .75rem;
+        color: var(--bs-secondary-color, #6c757d);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .leave-flow__step .badge {
+        margin-left: auto;
+        flex: 0 0 auto;
     }
 </style>
 <?php $this->beginBlock('page-title'); ?>
@@ -330,26 +374,44 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
             ])->label('มอบหมายงานให้')
             ?>
             <?= $form->field($model, $attrLeaveName)->hiddenInput(['id' => 'leave-work_send_name'])->label(false) ?>
-            <?php foreach ($model->listApprove() as $i => $step): ?>
-                <?php
-                $approveEmployee = Employees::findOne(['id' => $step['emp_id']]);
-                ?>
-                <div class="col-3 workflow-step ">
+        </div>
 
-                    <div class="step-dot">
+        <?php $approveSteps = $isUpdate ? $model->listApprove() : []; ?>
+        <?php if (!empty($approveSteps)): ?>
+            <div class="mb-3">
+                <label class="form-label">ลำดับผู้อนุมัติ</label>
+                <div class="leave-flow">
+                    <?php foreach ($approveSteps as $step): ?>
                         <?php
-                        if ($approveEmployee) {
-                            echo Html::img($approveEmployee->showAvatar(), ['class' => 'rounded-circle', 'width' => 35, 'height' => 35, 'style' => 'min-width: 35px; min-height: 35px;', 'alt' => $approveEmployee->fullname]);
+                        $approveEmployee = $step->emp_id ? Employees::findOne(['id' => $step->emp_id]) : null;
+                        $stepTitle = trim((string) $step->title);
+                        if ($stepTitle === '') {
+                            $stepTitle = $step->getApproveLabel();
                         }
                         ?>
-                    </div>
-                    <span class="step-label d-block text-truncate">
-                        <?= Html::encode($step['title'] ?? $step['label']) ?>
-                    </span>
-
+                        <div class="leave-flow__step">
+                            <span class="leave-flow__avatar">
+                                <?php if ($approveEmployee): ?>
+                                    <?= Html::img($approveEmployee->ShowAvatar(), [
+                                        'alt' => '',
+                                        'loading' => 'lazy',
+                                    ]) ?>
+                                <?php else: ?>
+                                    <i class="bi bi-person" aria-hidden="true"></i>
+                                <?php endif; ?>
+                            </span>
+                            <span class="leave-flow__text">
+                                <span class="leave-flow__title"><?= Html::encode($stepTitle) ?></span>
+                                <span class="leave-flow__name">
+                                    <?= Html::encode($approveEmployee ? $approveEmployee->fullname : 'ยังไม่ระบุผู้อนุมัติ') ?>
+                                </span>
+                            </span>
+                            <?= $step->viewApproveStatus() ?>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
-        </div>
+            </div>
+        <?php endif; ?>
 
         <div class="mb-3">
             <?= $form->field($model, $attrReason)->textarea([

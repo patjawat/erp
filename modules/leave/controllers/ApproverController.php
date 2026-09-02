@@ -46,64 +46,18 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/default/index']);
         }
 
-        $searchModel = new LeaveSearch();
-        
-        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
-        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
-        $searchParams = $this->withoutLeaveStatus($params);
-
-        $dataProvider = $searchModel->search($searchParams);
-        $searchModel->status = $status;
-        $query = $dataProvider->query;
-        $query->joinWith([
-            'employee.employeeType',
-            'leaveType',
-            'leaveStatus',
-        ]);
+        [$searchModel, $dataProvider] = $this->buildFilteredSearch();
 
         $dataProvider->pagination = [
             'pageSize' => 20,
             'pageParam' => 'approver-page',
         ];
 
-        $start = AppHelper::convertToGregorian($searchModel->date_start);
-        $end = AppHelper::convertToGregorian($searchModel->date_end);
-        $query->andFilterWhere(['>=', 'leave.date_start', $start])
-            ->andFilterWhere(['<=', 'leave.date_end', $end]);
-
-        $this->applyLeaveStatusFilter($query, $status);
-
-        if (!empty($searchModel->leave_type_id)) {
-            $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
-        }
-
-        $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
-        if ($position_type_id) {
-            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
-        }
-
-        if ($searchModel->q_department) {
-            $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
-            if ($empIds !== null) {
-                $query->andWhere(['in', 'leave.emp_id', $empIds]);
-            }
-        }
-
-        if (!empty($searchModel->q)) {
-            $query->andFilterWhere([
-                'or',
-                ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
-            ]);
-        }
-
-        $query->with([
+        $dataProvider->query->with([
             'approves' => function ($q) {
                 $q->andWhere(['!=', 'approve.status', 'None'])->orderBy(['level' => SORT_ASC]);
             },
         ]);
-        $dataProvider->setSort(['defaultOrder' => [
-            'date_start' => SORT_DESC,
-        ]]);
 
         $leaveTypes = LeaveType::find()
             ->where(['name' => 'leave_type', 'active' => 1])
@@ -626,33 +580,50 @@ class ApproverController extends Controller
     }
 
     /**
-     * คำนวณและอัพเดต leave.status ตามสถานะของผู้อนุมัติทั้งหมด
-     * Reject ใด ๆ → Reject | ทั้งหมด Pass → Approve | มี Pending → Pending
+     * คำนวณและอัพเดต leave.status ให้ตรงกับขั้นที่ workflow เดินไปถึงจริง
+     *
+     * เดิมใช้เพียง "มี Pending ที่ไหนก็ได้ → Pending" ทำให้ใบลาที่ผ่าน หน.งาน /
+     * หน.กลุ่มงาน / จนท.ตรวจสอบ ไปแล้วถูกดีดกลับเป็น 'รอ หน.เห็นชอบ'
+     * แล้วค้างอยู่ ไม่ไปถึงผู้ตรวจสอบและ ผอ. — จึงต้องแมปตามระดับสูงสุดที่ผ่าน
      */
     protected function syncLeaveStatus(Leave $leave): string
     {
-        $activeApproves = Approve::find()
+        $approves = Approve::find()
             ->where(['name' => 'leave', 'from_id' => (string) $leave->id])
-            ->andWhere(['!=', 'status', 'None'])
+            ->orderBy(['level' => SORT_ASC])
             ->all();
 
-        if (empty($activeApproves)) {
+        if (empty($approves)) {
             return $leave->status;
         }
 
-        $hasReject  = false;
-        $hasPending = false;
-        foreach ($activeApproves as $ap) {
-            if ($ap->status === 'Reject')  { $hasReject  = true; break; }
-            if ($ap->status === 'Pending') { $hasPending = true; }
+        $maxLevel      = 0;
+        $passedLevel   = 0;
+        $rejectedLevel = null;
+
+        foreach ($approves as $ap) {
+            $level    = (int) $ap->level;
+            $maxLevel = max($maxLevel, $level);
+
+            // สถานะที่ไม่อยู่ใน 4 ค่ามาตรฐาน (ข้อมูลเก่าที่เพี้ยน) ถือว่ายังไม่ตัดสิน
+            if ($ap->status === 'Reject') {
+                if ($rejectedLevel === null || $level < $rejectedLevel) {
+                    $rejectedLevel = $level;
+                }
+            } elseif ($ap->status === 'Pass') {
+                $passedLevel = max($passedLevel, $level);
+            }
         }
 
-        if ($hasReject) {
+        if ($rejectedLevel !== null) {
+            // ตรงกับ LeaveApprovalService::process() ที่ตั้ง 'Reject' เสมอไม่ว่าถูกปฏิเสธที่ชั้นใด
             $newStatus = 'Reject';
-        } elseif ($hasPending) {
-            $newStatus = 'Pending';
-        } else {
+        } elseif ($passedLevel > 0 && $passedLevel >= $maxLevel) {
             $newStatus = 'Approve';
+        } elseif ($passedLevel > 0) {
+            $newStatus = LeaveApprovalService::LEVEL_STATUS_MAP[$passedLevel]['Pass'] ?? 'Pending';
+        } else {
+            $newStatus = 'Pending';
         }
 
         if ($leave->status !== $newStatus) {
@@ -700,58 +671,91 @@ class ApproverController extends Controller
     }
 
     /**
-     * ตัด status ออกจาก params เพื่อไม่ให้ LeaveSearch กรองเฉพาะสถานะล่าสุด
-     * ก่อนนำไปกรองแบบคำนึงถึงประวัติ workflow ใน applyLeaveStatusFilter().
+     * สร้าง searchModel + dataProvider ที่ผ่านตัวกรองครบชุดเดียวกัน
+     * ใช้ร่วมกันทั้ง index / export / print เพื่อให้ผลลัพธ์ตรงกันเสมอ
+     *
+     * @return array{0: LeaveSearch, 1: \yii\data\ActiveDataProvider}
      */
-    private function withoutLeaveStatus(array $params): array
+    private function buildFilteredSearch(): array
     {
-        unset($params['status']);
-        unset($params['LeaveSearch']['status']);
+        $params = array_merge((array) Yii::$app->request->queryParams, (array) Yii::$app->request->bodyParams);
 
-        return $params;
+        $searchModel = new LeaveSearch();
+        // LeaveSearch::search() กรอง leave.status แบบตรงตัวให้แล้ว — สถานะที่เลือกคือสถานะปัจจุบันของใบลาเท่านั้น
+        $dataProvider = $searchModel->search($params);
+        $this->applyDefaultDateRange($searchModel, $params);
+
+        $query = $dataProvider->query;
+        $query->joinWith([
+            'employee.employeeType',
+            'leaveType',
+            'leaveStatus',
+        ]);
+
+        $this->applyLeaveFilters($query, $searchModel);
+
+        $dataProvider->setSort(['defaultOrder' => [
+            'date_start' => SORT_DESC,
+        ]]);
+
+        return [$searchModel, $dataProvider];
     }
 
     /**
-     * สถานะที่ผ่านแล้วเป็น milestone ของ workflow จึงต้องยังค้นพบได้แม้ใบลา
-     * จะเดินหน้าไปยังขั้นถัดไปและ leave.status ถูกเปลี่ยนเป็นสถานะล่าสุดแล้ว.
+     * ค่าเริ่มต้นของช่วงวันที่ = เดือนปัจจุบัน (ใช้เมื่อผู้ใช้ยังไม่เคยส่งค่าตัวกรองวันที่มา)
+     * ถ้าผู้ใช้กดค้นหาโดยล้างช่องวันที่เอง จะมี key ส่งมาแต่ค่าว่าง — เคารพค่านั้น ไม่ยัด default ทับ
      */
-    private function applyLeaveStatusFilter($query, $status): void
+    private function applyDefaultDateRange(LeaveSearch $searchModel, array $params): void
     {
-        if ($status === null || $status === '') {
-            return;
+        $scoped = (array) ($params['LeaveSearch'] ?? []);
+        $dateKeys = ['date_start', 'date_end', 'date_filter', 'thai_year'];
+
+        foreach ($dateKeys as $key) {
+            if (array_key_exists($key, $scoped) || array_key_exists($key, $params)) {
+                return;
+            }
         }
 
-        $approvalLevels = [
-            'Checking1_pass' => 1,
-            'Checking2_pass' => 2,
-            'Checkup_pass' => 3,
-        ];
+        $searchModel->date_start = AppHelper::convertToThai(date('Y-m-01'));
+        $searchModel->date_end   = AppHelper::convertToThai(date('Y-m-t'));
+    }
 
-        if (!isset($approvalLevels[$status])) {
-            $query->andWhere(['leave.status' => $status]);
-            return;
+    /**
+     * ตัวกรองทั้งหมดของทะเบียนวันลา (นอกเหนือจากที่ LeaveSearch::search() ทำให้แล้ว)
+     */
+    private function applyLeaveFilters($query, LeaveSearch $searchModel): void
+    {
+        // ช่วงวันที่แบบ "คาบเกี่ยว" — ใบลาที่คร่อมต้นเดือน/ปลายเดือนต้องไม่หายไปจากผลค้นหา
+        $start = AppHelper::normalizeDateToDb($searchModel->date_start);
+        $end   = AppHelper::normalizeDateToDb($searchModel->date_end);
+        if ($start !== null) {
+            $query->andWhere(['>=', 'leave.date_end', $start]);
+        }
+        if ($end !== null) {
+            $query->andWhere(['<=', 'leave.date_start', $end]);
         }
 
-        $passedApproval = Approve::find()
-            ->select('approve.id')
-            ->where([
-                'approve.name' => 'leave',
-                'approve.level' => $approvalLevels[$status],
-                'approve.status' => 'Pass',
-            ])
-            ->andWhere('approve.from_id = leave.id');
+        if (!empty($searchModel->leave_type_id)) {
+            $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
+        }
 
-        $query->andWhere([
-            'or',
-            ['leave.status' => $status],
-            ['exists', $passedApproval],
-        ]);
+        if (!empty($searchModel->position_type_id)) {
+            $query->andFilterWhere(['employees.employee_type_id' => $searchModel->position_type_id]);
+        }
 
-        // ใบที่ยังค้างอยู่จริงที่ขั้นนี้ต้องขึ้นก่อน ไม่ให้จมอยู่ใต้ใบเก่าที่ผ่านขั้นนี้ไปนานแล้ว
-        $query->orderBy(new Expression(
-            'CASE WHEN leave.status = :priorityStatus THEN 0 ELSE 1 END ASC, leave.date_start DESC',
-            [':priorityStatus' => $status]
-        ));
+        if ($searchModel->q_department) {
+            $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
+            if ($empIds !== null) {
+                $query->andWhere(['in', 'leave.emp_id', $empIds]);
+            }
+        }
+
+        if (!empty($searchModel->q)) {
+            $query->andFilterWhere([
+                'or',
+                ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
+            ]);
+        }
     }
 
     /**
@@ -769,43 +773,8 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
-        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
-        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
-        $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
-        $searchModel->status = $status;
-        $query = $dataProvider->query;
-        $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
+        [, $dataProvider] = $this->buildFilteredSearch();
         $dataProvider->pagination = false;
-
-        $start = AppHelper::convertToGregorian($searchModel->date_start);
-        $end = AppHelper::convertToGregorian($searchModel->date_end);
-        $query->andFilterWhere(['>=', 'leave.date_start', $start])
-            ->andFilterWhere(['<=', 'leave.date_end', $end]);
-
-        $this->applyLeaveStatusFilter($query, $status);
-
-        if (!empty($searchModel->leave_type_id)) {
-            $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
-        }
-        $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
-        if ($position_type_id) {
-            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
-        }
-        if ($searchModel->q_department) {
-            $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
-            if ($empIds !== null) {
-                $query->andWhere(['in', 'leave.emp_id', $empIds]);
-            }
-        }
-        if (!empty($searchModel->q)) {
-            $query->andFilterWhere([
-                'or',
-                ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
-            ]);
-        }
-
-        $query->addOrderBy(['leave.date_start' => SORT_DESC]);
 
         return $this->exportToExcelLeave($dataProvider);
     }
@@ -825,43 +794,8 @@ class ApproverController extends Controller
             return $this->redirect(['/leave/approver/index']);
         }
 
-        $params = array_merge((array)Yii::$app->request->queryParams, (array)Yii::$app->request->bodyParams);
-        $status = $params['status'] ?? ($params['LeaveSearch']['status'] ?? null);
-        $searchModel = new LeaveSearch();
-        $dataProvider = $searchModel->search($this->withoutLeaveStatus($params));
-        $searchModel->status = $status;
-        $query = $dataProvider->query;
-        $query->joinWith(['employee', 'leaveType', 'leaveStatus']);
+        [$searchModel, $dataProvider] = $this->buildFilteredSearch();
         $dataProvider->pagination = false;
-
-        $start = AppHelper::convertToGregorian($searchModel->date_start);
-        $end = AppHelper::convertToGregorian($searchModel->date_end);
-        $query->andFilterWhere(['>=', 'leave.date_start', $start])
-            ->andFilterWhere(['<=', 'leave.date_end', $end]);
-
-        $this->applyLeaveStatusFilter($query, $status);
-
-        if (!empty($searchModel->leave_type_id)) {
-            $query->andFilterWhere(['in', 'leave.leave_type_id', $searchModel->leave_type_id]);
-        }
-        $position_type_id = $this->request->get('LeaveSearch')['position_type_id'] ?? null;
-        if ($position_type_id) {
-            $query->andFilterWhere(['employees.employee_type_id' => $position_type_id]);
-        }
-        if ($searchModel->q_department) {
-            $empIds = $this->getEmpIdsByDepartment($searchModel->q_department);
-            if ($empIds !== null) {
-                $query->andWhere(['in', 'leave.emp_id', $empIds]);
-            }
-        }
-        if (!empty($searchModel->q)) {
-            $query->andFilterWhere([
-                'or',
-                ['like', new Expression("JSON_EXTRACT(leave.data_json, '$.reason')"), $searchModel->q],
-            ]);
-        }
-
-        $query->addOrderBy(['leave.date_start' => SORT_DESC]);
         $models = $dataProvider->getModels();
 
         $html = $this->renderPartial('print-pdf', [
