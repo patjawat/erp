@@ -7,6 +7,7 @@ $db = require __DIR__ . '/test_db.php';
  */
 return [
     'id' => 'basic-tests',
+    'version' => require __DIR__ . '/version.php',
     'basePath' => dirname(__DIR__),
     'aliases' => [
         '@bower' => '@vendor/bower-asset',

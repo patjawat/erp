@@ -251,6 +251,8 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                // Public application version for external update checkers.
+                'GET,HEAD,OPTIONS api/version' => 'api/version',
                 // 'am/asset/bulk-create' => 'am/asset-bulk/bulk-create',
                 // 'am/asset/transfer' => 'am/asset-lifecycle/transfer',
                 // 'am/asset/repair' => 'am/asset-lifecycle/repair',
