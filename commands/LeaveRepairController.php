@@ -70,13 +70,22 @@ class LeaveRepairController extends Controller
     /**
      * ซ่อม approve.status ของขั้น ผอ. ที่ถูกเขียนทับด้วย emp_id
      *
-     * ตีความค่าที่เพี้ยนเป็น 'Pass' เฉพาะเมื่อใบลานั้นถูกอนุมัติจนจบแล้ว
-     * (leave.status = 'Approve') มิฉะนั้นถือว่ายังไม่ตัดสิน → 'None'
+     * ตีความค่าที่เพี้ยนจากตำแหน่งของใบลาใน workflow:
+     *   - ใบลาอนุมัติจบแล้ว (leave.status='Approve')            → 'Pass'
+     *   - ใบลายกเลิก/ไม่อนุมัติ (Cancel/Reject/ReqCancel)        → 'None'
+     *   - ทุกชั้นก่อนหน้าผ่านหมดแล้ว = ชั้นนี้คือชั้นที่กำลังรอ   → 'Pending'
+     *   - นอกนั้น (ยังมีชั้นก่อนหน้าที่ยังไม่ผ่าน)               → 'None'
+     *
+     * เงื่อนไข 'Pending' สำคัญมาก — ถ้าเหมารวมเป็น 'None' ใบลาที่ค้างอยู่ที่ชั้น ผอ.
+     * จะหายไปจากกล่องรออนุมัติของ ผอ. และไม่มีใครเห็นอีกเลย
      */
     public function actionApproveStatus()
     {
         $rows = Yii::$app->db->createCommand(
-            "SELECT a.id, a.from_id, a.level, a.status, l.status AS leave_status
+            "SELECT a.id, a.from_id, a.level, a.status, l.status AS leave_status,
+                    (SELECT COUNT(*) FROM approve p
+                      WHERE p.name = 'leave' AND p.from_id = a.from_id
+                        AND p.level < a.level AND p.status <> 'Pass') AS prev_not_passed
              FROM approve a
              JOIN `leave` l ON l.id = a.from_id
              WHERE a.name = 'leave' AND a.status NOT IN ('Pass', 'Pending', 'Reject', 'None')
@@ -90,11 +99,26 @@ class LeaveRepairController extends Controller
 
         $plan = [];
         foreach ($rows as $r) {
-            $plan[$r['leave_status'] === 'Approve' ? 'Pass' : 'None'][] = (int) $r['id'];
+            if ($r['leave_status'] === 'Approve') {
+                $newStatus = 'Pass';
+            } elseif ($r['leave_status'] === 'Reject' && (int) $r['prev_not_passed'] === 0) {
+                // ใบถูกปฏิเสธและทุกชั้นก่อนหน้าผ่านหมด → ชั้นนี้คือชั้นที่ปฏิเสธ
+                $newStatus = 'Reject';
+            } elseif (in_array($r['leave_status'], ['Cancel', 'Reject', 'ReqCancel'], true)) {
+                $newStatus = 'None';
+            } elseif ((int) $r['prev_not_passed'] === 0) {
+                $newStatus = 'Pending';
+            } else {
+                $newStatus = 'None';
+            }
+            $plan[$newStatus][] = (int) $r['id'];
         }
 
         foreach ($plan as $newStatus => $ids) {
             $this->stdout('approve.status → ' . $newStatus . ': ' . count($ids) . " แถว\n");
+            if ($newStatus === 'Pending') {
+                $this->stdout('    approve.id: ' . implode(', ', array_slice($ids, 0, 20)) . "\n");
+            }
         }
 
         if (!$this->apply) {
@@ -160,6 +184,66 @@ class LeaveRepairController extends Controller
     }
 
     /**
+     * คืนร่องรอยการปฏิเสธที่หายไป
+     *
+     * ใบลาที่ถูกปฏิเสธและทุกชั้นก่อนหน้าผ่านหมด แต่ชั้นสุดท้ายเป็น 'None'
+     * แปลว่าแถวที่เคยบันทึก 'Reject' ถูกเขียนทับไปแล้ว ต้องประทับกลับเป็น 'Reject'
+     * ไม่งั้นไทม์ไลน์จะแสดงชั้น ผอ. ว่า "รออนุมัติ" ทั้งที่ใบถูกปฏิเสธไปแล้ว
+     */
+    public function actionRejectStamp()
+    {
+        $rows = Yii::$app->db->createCommand(
+            "SELECT a.id, a.from_id, a.level
+             FROM approve a
+             JOIN `leave` l ON l.id = a.from_id
+             WHERE a.name = 'leave'
+               AND a.status = 'None'
+               AND l.status = 'Reject'
+               AND a.level = (SELECT MAX(m.level) FROM approve m
+                               WHERE m.name = 'leave' AND m.from_id = a.from_id)
+               AND NOT EXISTS (SELECT 1 FROM approve p
+                                WHERE p.name = 'leave' AND p.from_id = a.from_id
+                                  AND p.level < a.level AND p.status <> 'Pass')
+               AND NOT EXISTS (SELECT 1 FROM approve r
+                                WHERE r.name = 'leave' AND r.from_id = a.from_id
+                                  AND r.status = 'Reject')
+             ORDER BY a.id"
+        )->queryAll();
+
+        if (empty($rows)) {
+            $this->stdout("ไม่พบแถวที่ต้องประทับ Reject\n", Console::FG_GREEN);
+            return ExitCode::OK;
+        }
+
+        $this->stdout('approve.status → Reject: ' . count($rows) . " แถว\n");
+        foreach ($rows as $r) {
+            $this->stdout("    approve #{$r['id']} (ใบลา #{$r['from_id']} ชั้น {$r['level']})\n");
+        }
+
+        if (!$this->apply) {
+            $this->stdout("\n(dry-run — ใส่ --apply=1 เพื่อเขียนจริง)\n", Console::FG_YELLOW);
+            return ExitCode::OK;
+        }
+
+        $ids = array_map(static fn ($r) => (int) $r['id'], $rows);
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            Yii::$app->db->createCommand()
+                ->update('approve', ['status' => 'Reject'], ['id' => $ids])
+                ->execute();
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            $this->stderr('ล้มเหลว: ' . $e->getMessage() . "\n", Console::FG_RED);
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        $this->stdout("ประทับเรียบร้อย\n", Console::FG_GREEN);
+        return ExitCode::OK;
+    }
+
+    /**
      * แสดงรายการที่ไม่ตรง โดยจำกัดจำนวนบรรทัด ไม่ให้ท่วมหน้าจอ
      *
      * @param array<int, array{id:int, current:string, expected:string}> $mismatch
@@ -185,7 +269,8 @@ class LeaveRepairController extends Controller
 
     /**
      * หาใบลาที่ leave.status ไม่ตรงกับระดับที่ผ่านจริง
-     * ข้ามใบที่ผู้ใช้จัดการเอง (Cancel / ReqCancel)
+     * ข้ามใบที่ถูกตัดสินไปแล้ว (Cancel / ReqCancel / Reject) — คำตัดสินบนใบลาถือเป็นหลัก
+     * แถว approve จะย้อนคำตัดสินนั้นไม่ได้
      * และข้ามใบที่ยังมี approve.status เพี้ยนอยู่ — ต้องรัน approve-status ก่อน
      * มิฉะนั้นจะคำนวณระดับที่ผ่านต่ำกว่าความจริง
      *
@@ -201,7 +286,7 @@ class LeaveRepairController extends Controller
                     SUM(a.status NOT IN ('Pass', 'Pending', 'Reject', 'None')) AS bad_rows
              FROM `leave` l
              JOIN approve a ON a.from_id = l.id AND a.name = 'leave'
-             WHERE l.status NOT IN ('Cancel', 'ReqCancel')
+             WHERE l.status NOT IN ('Cancel', 'ReqCancel', 'Reject')
              GROUP BY l.id, l.status
              HAVING bad_rows = 0"
         )->queryAll();
