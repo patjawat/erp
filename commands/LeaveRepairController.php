@@ -279,7 +279,7 @@ class LeaveRepairController extends Controller
     private function findMismatchedLeaves(): array
     {
         $rows = Yii::$app->db->createCommand(
-            "SELECT l.id, l.status AS current,
+            "SELECT l.id, l.status AS `current`,
                     MAX(a.level) AS max_level,
                     MAX(CASE WHEN a.status = 'Pass'   THEN a.level END) AS passed_level,
                     MIN(CASE WHEN a.status = 'Reject' THEN a.level END) AS rejected_level,
