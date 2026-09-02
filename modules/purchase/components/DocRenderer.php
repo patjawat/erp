@@ -163,6 +163,9 @@ class DocRenderer
         $fs = (int) $doc->font_size;
         $titleSize = $fs + 4;
         $labelSize = $fs + 2;
+        // ตารางแนวนอนที่มีหลายคอลัมน์ (แบบ 8707) ใช้ตัวเล็กกว่าเนื้อความหนึ่งระดับ ตามต้นฉบับของงานการเงิน
+        $tableSize = max(9, $fs - 2);
+        $headSize = max(8, $fs - 3);
         // ย่อหน้าหนังสือราชการย่อหน้าแรก 2.5 ซม. ตามระเบียบงานสารบรรณ
         $indent = '2.5cm';
         $fontStack = self::fontStack();
@@ -215,19 +218,89 @@ class DocRenderer
 .d-sheet .d-8708-loan td:nth-child(2) { width:37%; }
 .d-sheet .d-8708-loan td:last-child { width:18%; }
 .d-sheet .d-8708-title { font-size:{$titleSize}pt; font-weight:bold; text-align:center; margin-top:8pt; }
-.d-sheet .d-8708-office td { border:none; padding:2pt 3pt; width:50%; }
+.d-sheet .d-8708-office td { border:none; padding:2pt 3pt; }
+.d-sheet .d-8708-office td:first-child { width:38%; }
 .d-sheet .d-8708-line { margin-top:3pt; }
 .d-sheet .d-8708-indent { text-indent:{$indent}; margin-top:4pt; }
 .d-sheet .d-8708-expense td { border:none; padding:1pt 3pt; }
-.d-sheet .d-8708-expense-name { width:48%; }
-.d-sheet .d-8708-expense-days { width:25%; }
-.d-sheet .d-8708-expense-total { width:27%; text-align:right; }
+.d-sheet .d-8708-expense-name { width:44%; }
+.d-sheet .d-8708-expense-days { width:24%; }
+.d-sheet .d-8708-expense-total { width:32%; text-align:right; }
 .d-sheet .d-8708-form .d-sign { margin-top:7pt; }
 .d-sheet .d-8708-approval td { width:50%; border:0.5pt solid #000; padding:5pt 7pt; vertical-align:top; height:66mm; }
 .d-sheet .d-8708-received { text-align:center; margin-top:12pt; }
 .d-sheet .d-8708-signatures { margin-top:12pt; }
 .d-sheet .d-8708-signatures td { width:50%; border:none; padding:4pt 8pt; vertical-align:top; }
 .d-sheet .d-8708-notes { border-top:1.5pt solid #000; border-bottom:1.5pt solid #000; margin-top:10pt; padding:7pt 3pt; }
+/* ช่องติ๊ก [ ] และบรรทัดที่ต้องมีข้อความชิดขวาของแบบ 8708 ส่วนที่ 1 */
+.d-sheet .d-8708-box { letter-spacing:0.5pt; }
+.d-sheet .d-8708-split td { border:none; padding:1pt 3pt; }
+.d-sheet .d-8708-split td:first-child { width:72%; }
+.d-sheet .d-8708-clarify { margin-top:10pt; }
+.d-sheet .d-8708-clarify td { border:none; padding:0 3pt; vertical-align:top; }
+.d-sheet .d-8708-clarify-label { width:12%; font-weight:bold; }
+
+/* หลักฐานการจ่ายเงินเป็นหมู่คณะ (แบบ 8707 ส่วนที่ 2) พิมพ์แนวนอน ตารางกว้างเต็มหน้า
+   ความกว้างคอลัมน์ยึดตามไฟล์ Excel ต้นฉบับของงานการเงิน */
+.d-sheet .d-8707-head td { border:none; padding:0; vertical-align:top; }
+.d-sheet .d-8707-head-form { width:14%; text-align:right; }
+.d-sheet .d-8707-org { text-align:center; }
+.d-sheet .d-8707-ref { margin-top:4pt; }
+.d-sheet .d-8707-items { margin-top:4pt; table-layout:fixed; }
+.d-sheet .d-8707-items td { border:0.5pt solid #000; padding:2pt 3pt; vertical-align:top; font-size:{$tableSize}pt; }
+/* หัวตารางเล็กกว่าข้อมูลอีกหนึ่งระดับ เพื่อให้ชื่อคอลัมน์อยู่ในบรรทัดเดียวตามต้นฉบับ */
+.d-sheet .d-8707-items .d-items-head td { font-size:{$headSize}pt; }
+.d-sheet .d-8707-c-no { width:4.5%; text-align:center; }
+.d-sheet .d-8707-c-name { width:16%; }
+.d-sheet .d-8707-c-position { width:18%; }
+.d-sheet .d-8707-c-expense { width:34%; }
+.d-sheet .d-8707-c-money { width:9%; text-align:center; }
+.d-sheet .d-8707-c-sum { width:7.5%; text-align:center; }
+.d-sheet .d-8707-c-sign { width:6%; text-align:center; }
+.d-sheet .d-8707-c-date { width:8%; text-align:center; }
+.d-sheet .d-8707-c-note { width:6%; text-align:center; }
+.d-sheet .d-8707-row td { height:7mm; }
+.d-sheet .d-8707-total td { font-weight:bold; }
+.d-sheet .d-8707-words { margin-top:4pt; }
+.d-sheet .d-8707-clarify { margin-top:4pt; }
+.d-sheet .d-8707-foot td { border:none; padding:6pt 3pt 0; vertical-align:top; }
+.d-sheet .d-8707-foot-sign { width:32%; text-align:center; }
+
+/* ใบรับรองแทนใบเสร็จรับเงิน (บก.111) และใบหน้างบสำคัญ ใช้ตารางเดียวกัน */
+.d-sheet .d-bill-org { margin-top:4pt; }
+.d-sheet .d-bill-items { margin-top:8pt; table-layout:fixed; }
+.d-sheet .d-bill-items td { border:0.5pt solid #000; padding:3pt 5pt; vertical-align:top; }
+.d-sheet .d-bill-c-date { width:18%; }
+.d-sheet .d-bill-c-detail { width:50%; }
+.d-sheet .d-bill-c-amount { width:16%; text-align:center; }
+.d-sheet .d-bill-c-note { width:16%; text-align:center; }
+.d-sheet .d-bill-blank td { height:8mm; }
+.d-sheet .d-bill-sub { display:inline-block; padding-left:24pt; }
+.d-sheet .d-bill-words { text-align:center; margin-top:8pt; }
+.d-sheet .d-bill-certify { text-indent:{$indent}; margin-top:8pt; }
+/* ---- เอกสารชุดเดินทางไปราชการ (โมดูล hr) ใช้คำนำหน้า d-tvm- ของตัวเอง
+   ไม่ปนกับชุด d-memo- ที่แม่แบบบันทึกข้อความของงานพัสดุใช้อยู่ ---- */
+/* ป้ายอยู่ในช่องเดียวกับเนื้อความ ระยะห่างมาจากเว้นวรรคสองตัวจริง ไม่ใช่ความกว้าง
+   คอลัมน์ ระยะจึงคงที่ทั้งบนกระดาษและในหน้าจอแก้ไขที่กรอบกว้างกว่ากระดาษ */
+.d-sheet .d-tvm-head { margin-top:3pt; }
+.d-sheet .d-tvm-head td { border:none; padding:1pt 0; vertical-align:bottom; }
+.d-sheet .d-tvm-lbl { font-weight:bold; }
+.d-sheet .d-tvm-lbl-plain { font-weight:normal; }
+.d-sheet .d-tvm-rule { border-bottom:0.5pt solid #000; }
+.d-sheet .d-tvm-ref { width:55%; }
+.d-sheet .d-tvm-space { width:4%; }
+.d-sheet .d-tvm-line { margin-top:2pt; }
+.d-sheet .d-tvm-amounts { margin-top:4pt; }
+.d-sheet .d-tvm-amounts td { border:none; padding:1pt 3pt; vertical-align:top; }
+.d-sheet .d-tvm-amount { width:34%; text-align:right; }
+.d-sheet .d-tvm-sign { margin-top:10pt; }
+.d-sheet .d-tvm-sign td { border:none; padding:0 6pt; width:50%; text-align:center; vertical-align:top; }
+.d-sheet .d-tvm-decision { margin-top:10pt; }
+.d-sheet .d-tvm-decision td { border:0.5pt solid #000; padding:5pt 7pt; width:50%; vertical-align:top; }
+/* ท้ายบันทึก: ความเห็นหัวหน้าฝ่ายบริหาร (ซ้าย) คู่กับช่องอนุมัติ (ขวา) */
+.d-sheet .d-tvm-approve { margin-top:10pt; }
+.d-sheet .d-tvm-approve td { border:none; padding:0 6pt; vertical-align:top; width:50%; }
+.d-sheet .d-tvm-approve-right { text-align:center; }
 
 .d-sheet .d-head { margin-top:4pt; }
 .d-sheet .d-head td { padding:3pt 4pt; }

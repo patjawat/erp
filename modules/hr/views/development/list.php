@@ -170,16 +170,6 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                                     </li>
                                     <li>
                                         <?= Html::a(
-                                            '<i class="fa-solid fa-clipboard-check fa-fw me-2 text-' . $summaryState['color'] . '" aria-hidden="true"></i> สรุปผลประชุม/อบรม',
-                                            ['/hr/development/summary', 'id' => $item->id, 'title' => '<i class="bi bi-journal-check"></i> สรุปผลประชุม/อบรม'],
-                                            [
-                                                'class' => 'dropdown-item dev-actions-menu__item open-modal',
-                                                'data' => ['size' => 'modal-lg'],
-                                            ]
-                                        ) ?>
-                                    </li>
-                                    <li>
-                                        <?= Html::a(
                                             '<i class="fa-solid fa-car fa-fw me-2 text-primary" aria-hidden="true"></i> ขอใช้รถ',
                                             ['/booking/vehicle/create', 'development_id' => $item->id, 'vehicle_type' => 'official', 'title' => '<i class="bi bi-car-front"></i> ขอใช้รถยนต์ทางราชการ'],
                                             [
@@ -200,40 +190,14 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
                                     <?php endif; ?>
 
                                     <li><hr class="dropdown-divider dev-actions-menu__divider"></li>
-                                    <li class="dev-actions-menu__group-label">เอกสารพิมพ์</li>
                                     <li>
                                         <?= Html::a(
-                                            '<i class="fa-solid fa-file-pdf fa-fw me-2 text-danger" aria-hidden="true"></i> พิมพ์ใบขอไปราชการ (PDF)',
-                                            ['/hr/development/print', 'id' => $item->id],
+                                            '<i class="fa-solid fa-print fa-fw me-2 text-danger" aria-hidden="true"></i> พิมพ์เอกสาร',
+                                            ['/hr/development/document', 'development_id' => $item->id],
                                             [
                                                 'class' => 'dropdown-item dev-actions-menu__item',
-                                                'target' => '_blank',
+                                                'title' => 'เปิดหน้าพิมพ์เอกสาร พร้อมเลือกทะเบียนนี้ไว้ให้แล้ว',
                                             ]
-                                        ) ?>
-                                    </li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-car-side fa-fw me-2 text-primary" aria-hidden="true"></i> พิมพ์ใบขอใช้รถยนต์ส่วนตัว',
-                                            ['/hr/development/print-personal-vehicle', 'id' => $item->id],
-                                            [
-                                                'class' => 'dropdown-item dev-actions-menu__item',
-                                                'target' => '_blank',
-                                                'title' => 'ใช้เทมเพลตที่ตั้งค่าไว้สำหรับ «ขอใช้รถยนต์ส่วนตัวเดินทางไปราชการ»',
-                                            ]
-                                        ) ?>
-                                    </li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-file-lines fa-fw me-2 text-body-secondary" aria-hidden="true"></i> พิมพ์ใบขออนุญาต',
-                                            ['/me/development/permit-request', 'id' => $item->id],
-                                            ['class' => 'dropdown-item dev-actions-menu__item open-modal', 'data' => ['size' => 'modal-xl']]
-                                        ) ?>
-                                    </li>
-                                    <li>
-                                        <?= Html::a(
-                                            '<i class="fa-solid fa-chalkboard-user fa-fw me-2 text-body-secondary" aria-hidden="true"></i> พิมพ์ใบตอบรับเป็นวิทยากร',
-                                            ['/me/development/form-academic', 'id' => $item->id],
-                                            ['class' => 'dropdown-item dev-actions-menu__item open-modal', 'data' => ['size' => 'modal-xl']]
                                         ) ?>
                                     </li>
 

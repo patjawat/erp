@@ -40,6 +40,7 @@ use app\modules\purchase\components\DocRenderer;
 use app\modules\purchase\models\DocTemplate;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
+use app\modules\hr\services\DevelopmentWordPrinter;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -159,7 +160,7 @@ class DevelopmentController extends Controller
      * หน้านี้เป็นจุดเชื่อมสำหรับระบบแม่แบบเอกสารที่จะพัฒนาต่อ โดยยังไม่ผูก
      * business logic กับโมดูลพัสดุหรือสร้างข้อมูลเอกสารจนกว่าจะได้แม่แบบจริง
      */
-    public function actionDocument()
+    public function actionDocument($development_id = null)
     {
         $developments = Development::find()
             ->where(['deleted_at' => null])
@@ -168,21 +169,49 @@ class DevelopmentController extends Controller
             ->limit(200)
             ->all();
 
-        $developmentOptions = [];
-        foreach ($developments as $development) {
+        $label = static function (Development $development): string {
             $employee = $development->createdByEmp;
             $name = $employee && method_exists($employee, 'fullname') ? $employee->fullname() : '';
-            $developmentOptions[(int) $development->id] = trim(
+
+            return trim(
                 '#' . $development->id . ' · ' . $development->topic
                 . ($name !== '' ? ' · ' . $name : '')
                 . ($development->date_start ? ' · ' . $development->showDateRange() : '')
             );
+        };
+
+        $developmentOptions = [];
+        foreach ($developments as $development) {
+            $developmentOptions[(int) $development->id] = $label($development);
+        }
+
+        // เปิดจากเมนู "พิมพ์เอกสาร" ในทะเบียน จะส่ง development_id มาเพื่อเลือกให้เลย
+        // รายการที่เปิดมาอาจเก่ากว่า 200 รายการล่าสุดที่โหลดไว้ จึงเติมเข้าไปเองก่อน
+        $selectedId = null;
+        if ($development_id !== null) {
+            $selectedId = (int) $development_id;
+            if (!isset($developmentOptions[$selectedId])) {
+                $selected = Development::find()
+                    ->where(['id' => $selectedId, 'deleted_at' => null])
+                    ->with(['createdByEmp', 'document'])
+                    ->one();
+                if ($selected === null) {
+                    $selectedId = null;
+                } else {
+                    $developmentOptions = [$selectedId => $label($selected)] + $developmentOptions;
+                }
+            }
+        }
+
+        if ($selectedId === null) {
+            $selectedId = $developmentOptions !== [] ? array_key_first($developmentOptions) : null;
         }
 
         return $this->render('document', [
             'documentTypes' => DevelopmentDocumentCatalog::all(),
+            'legacyPrints' => DevelopmentDocumentCatalog::legacyPrints(),
             'developmentOptions' => $developmentOptions,
-            'defaultDevelopmentId' => $developmentOptions !== [] ? array_key_first($developmentOptions) : null,
+            'defaultDevelopmentId' => $selectedId,
         ]);
     }
 
@@ -233,7 +262,7 @@ class DevelopmentController extends Controller
                     'message' => 'สร้างเอกสารไม่สำเร็จ: ' . implode(' ', array_merge(...array_values($document->getErrors()))),
                 ];
             }
-        } elseif ($this->upgradeTravelExpensePartOne($document, $development)) {
+        } elseif ($this->upgradeDevelopmentDocument($document, $development)) {
             $document->save(false);
         }
 
@@ -339,22 +368,72 @@ class DevelopmentController extends Controller
     }
 
     /** เปลี่ยน snapshot รุ่นทดลองให้เป็นแบบ 8708 ส่วนที่ 1 ฉบับสองหน้าตามต้นฉบับ */
-    private function upgradeTravelExpensePartOne(DevelopmentDocument $document, Development $development): bool
+    /**
+     * สร้างเนื้อหาใหม่ให้เอกสารที่ยังเป็นแม่แบบรุ่นเก่า
+     *
+     * เทียบเครื่องหมายรุ่นที่ builder ฝังไว้ในเนื้อหา ถ้าไม่ตรงแปลว่า snapshot นี้
+     * สร้างจากแม่แบบรุ่นก่อน จึงดึงข้อมูลจากทะเบียนมาสร้างใหม่ให้ตรงแบบฟอร์มปัจจุบัน
+     */
+    private function upgradeDevelopmentDocument(DevelopmentDocument $document, Development $development): bool
     {
-        if ($document->template_code !== 'travel_expense_8708_part_1') {
+        $code = (string) $document->template_code;
+        if (DevelopmentDocumentCatalog::find($code) === null) {
             return false;
         }
 
-        if (
-            strpos((string) $document->body_html, 'd-8708-part1-v8') !== false
-            && strpos((string) $document->body_html, 'd-doc-page') !== false
-        ) {
+        if (strpos((string) $document->body_html, DevelopmentDocumentBuilder::versionMarker($code)) !== false) {
             return false;
         }
 
-        $document->body_html = DevelopmentDocumentBuilder::build('travel_expense_8708_part_1', $development);
-        $document->emblem = DocTemplate::EMBLEM_NONE;
+        $document->body_html = DevelopmentDocumentBuilder::build($code, $development);
+        if ($code === 'travel_expense_8708_part_1') {
+            $document->emblem = DocTemplate::EMBLEM_NONE;
+        }
+
         return true;
+    }
+
+    /**
+     * พิมพ์ใบขออนุญาต (Word) ให้ผู้ขอคนใดก็ได้
+     *
+     * เดิมมีเฉพาะในโมดูล me ซึ่งเป็นหน้าของเจ้าตัว ผู้ดูแลงานอบรม/ดูงานจึงพิมพ์
+     * แทนผู้ขอไม่ได้ ตัวสร้างไฟล์อยู่ที่ DevelopmentWordPrinter ใช้ร่วมกันทั้งสองทาง
+     */
+    public function actionPrintPermitRequest($id)
+    {
+        return $this->wordDocumentResponse(
+            DevelopmentWordPrinter::permitRequest($this->findModel($id))
+        );
+    }
+
+    /** พิมพ์ใบตอบรับเป็นวิทยากร (Word) ให้ผู้ขอคนใดก็ได้ */
+    public function actionPrintAcademicForm($id)
+    {
+        return $this->wordDocumentResponse(
+            DevelopmentWordPrinter::academicForm($this->findModel($id))
+        );
+    }
+
+    /** ตอบกลับเป็นลิงก์ดาวน์โหลดพร้อมตัวอ่านไฟล์ ใช้หน้าจอเดียวกับโมดูล me */
+    private function wordDocumentResponse(string $filename)
+    {
+        $url = Url::to(Yii::getAlias('@web') . DevelopmentWordPrinter::DIR_RESULT . $filename);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+
+            return [
+                'status' => 'success',
+                'title' => Html::a(
+                    '<i class="fa-solid fa-cloud-arrow-down"></i> ดาวน์โหลดเอกสาร',
+                    $url,
+                    ['class' => 'btn btn-primary text-center mb-3', 'target' => '_blank', 'onclick' => 'return closeModal()']
+                ),
+                'content' => $this->renderAjax('@app/modules/me/views/development/show', ['filename' => $filename]),
+            ];
+        }
+
+        return $this->redirect($url);
     }
 
     /**
