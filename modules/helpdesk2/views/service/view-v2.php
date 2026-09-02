@@ -316,7 +316,8 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                         <div class="progress-bar <?= $isClosed ? 'bg-success' : '' ?>" style="width: <?= $requiredProgress ?>%"></div>
                     </div>
 
-                    <?php $partsLegacyUrl = Url::to(['/helpdesk/repair-parts/create-legacy', 'helpdesk_id' => $model->id, 'title' => 'เบิกอะไหล่จากคลัง (เดิม) #' . $model->repair_number]); ?>
+                    <?php // ยกเลิกช่องทางเบิกอะไหล่จากคลังเดิม (inventory v1) — ให้เบิกผ่าน inventoryV2 (POS) ที่เดียว
+                          // รายการเก่า (part_record_legacy) ยังนับ/แสดงในไทม์ไลน์เหมือนเดิม ?>
                     <ol class="repair-stepper list-unstyled mb-0">
                         <?php $st = $stepState(1); ?>
                         <li class="repair-step is-<?= $st ?>"<?= $st === 'current' ? ' aria-current="step"' : '' ?>>
@@ -438,7 +439,6 @@ $stepState = static function (int $n) use ($activeStep, $stepDone, $isFinished):
                                             <i class="fa-solid fa-ellipsis me-1" aria-hidden="true"></i> เพิ่มเติม<?php if ($externalBillCount > 0): ?> <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= number_format($externalBillCount) ?></span><?php endif; ?>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><?= Html::a('<i class="fa-solid fa-boxes-stacked me-2" aria-hidden="true"></i> เบิกอะไหล่จากคลัง (เดิม)', $partsLegacyUrl, ['class' => 'dropdown-item btn-open-part-legacy']) ?></li>
                                             <li><?= Html::a('<i class="fa-solid fa-file-arrow-up me-2" aria-hidden="true"></i> อัปโหลดบิลค่าใช้จ่าย (' . number_format($externalBillCount) . ')', $billUploadUrl, ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?></li>
                                         </ul>
                                     </div>
