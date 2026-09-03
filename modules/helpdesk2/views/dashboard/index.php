@@ -136,6 +136,7 @@ JS;
 $this->registerJs($receiveJs);
 ?>
 
+<?php if (empty($hideKpiRow)): ?>
 <div class="row g-3 mb-3">
     <div class="col-12 col-md-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
@@ -194,6 +195,7 @@ $this->registerJs($receiveJs);
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <div class="row g-3">
     <div class="col-12 col-xl-4">

@@ -94,14 +94,47 @@ class ComputerController extends \yii\web\Controller
 
     /**
      * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มคอมพิวเตอร์) — /helpdesk/computer/dashboard-v2
+     * เปิดโหมด HAIT เฉพาะศูนย์คอมพิวเตอร์
      */
     public function actionDashboardV2()
     {
-        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+        $filters = $this->request->queryParams;
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-hait', [
             'title' => 'ศูนย์คอมพิวเตอร์',
             'icon' => '<i class="fa-solid fa-computer fs-2"></i>',
             'active' => 'dashboard-v2',
-            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(2),
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(2, $filters, true),
+        ]);
+    }
+
+    /**
+     * รายการงานย่อยสำหรับ offcanvas เมื่อคลิก KPI/กราฟ/แถวบนแดชบอร์ด HAIT
+     * คืน HTML partial ผ่าน AJAX — /helpdesk/computer/drilldown
+     */
+    public function actionDrilldown()
+    {
+        $params = $this->request->queryParams;
+        $scope = (string) ($params['scope'] ?? 'all');
+
+        [$tickets, $meta] = RepairDashboardV2Helper::drilldownTickets(2, $params, $scope);
+
+        return $this->renderAjax('@app/modules/helpdesk2/views/service/_drilldown_list', [
+            'tickets' => $tickets,
+            'meta' => $meta,
+        ]);
+    }
+
+    /**
+     * รายงาน HAIT 3 ฉบับ สำหรับพิมพ์ (SLA / อุบัติการณ์ / กิจกรรมฝ่าย IT)
+     * หน้าพิมพ์แบบ self-contained — /helpdesk/computer/report
+     */
+    public function actionReport()
+    {
+        $filters = $this->request->queryParams;
+        $this->layout = false;
+        return $this->renderPartial('@app/modules/helpdesk2/views/service/hait-report', [
+            'title' => 'ศูนย์คอมพิวเตอร์',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(2, $filters, true),
         ]);
     }
 

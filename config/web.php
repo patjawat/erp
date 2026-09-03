@@ -376,6 +376,9 @@ $config = [
             'inventory-v2/main-stock/export-critical-items-excel',
             'helpdesk/repair/create-validator',
             'helpdesk/repair/technician-list',
+            // แดชบอร์ด HAIT ศูนย์คอมพิวเตอร์: endpoint AJAX สำหรับ offcanvas drill-down + หน้าพิมพ์รายงาน (อ่านอย่างเดียว)
+            'helpdesk/computer/drilldown',
+            'helpdesk/computer/report',
             'filemanager/*',
             // 'usermanager/*',
             'site/login',
