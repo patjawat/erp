@@ -9,7 +9,10 @@ $items = [
     ['index', 'คลังเอกสาร', 'bi-journals', ['/medsop/document/index']],
     ['report', 'รายงาน', 'bi-bar-chart-line', ['/medsop/document/report']],
 ];
-if ($access->isAdmin()) {
+if ($access->canGrantAccess()) {
+    $items[] = ['access', 'สิทธิ์เข้าถึง', 'bi-shield-lock', ['/medsop/document/access']];
+}
+if ($access->canManageSetting()) {
     $items[] = ['setting', 'ตั้งค่า', 'bi-gear', ['/medsop/document/setting']];
 }
 ?>

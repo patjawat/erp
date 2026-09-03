@@ -39,9 +39,10 @@ class Document extends ActiveRecord
     {
         return [
             [['document_no', 'title', 'document_type', 'organization_id', 'category', 'keywords', 'announcement_status', 'objective'], 'required'],
-            [['organization_id', 'current_revision', 'created_emp_id', 'created_by', 'updated_by', 'published_by', 'deleted_by'], 'integer'],
+            [['organization_id', 'current_revision', 'created_emp_id', 'created_by', 'updated_by', 'published_by', 'submitted_by', 'deleted_by'], 'integer'],
             [['objective', 'scope', 'keywords', 'related_links'], 'string'],
-            [['published_at', 'review_date', 'deleted_at', 'created_at', 'updated_at'], 'safe'],
+            [['review_note'], 'string', 'max' => 500],
+            [['published_at', 'submitted_at', 'review_date', 'deleted_at', 'created_at', 'updated_at'], 'safe'],
             [['document_no'], 'string', 'max' => 50],
             [['title'], 'string', 'max' => 255],
             [['category'], 'string', 'max' => 100],
