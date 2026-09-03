@@ -356,6 +356,31 @@ class DocRenderer
 .d-sheet .d-sign { margin-top:14pt; }
 .d-sheet .d-sign td { border:none; }
 .d-sheet .d-sign-cell { width:50%; text-align:center; }
+
+/* ---- เอกสารชุดเงินยืม (โมดูล finance) ใช้คำนำหน้า d-loan- ของตัวเอง
+   แยกจาก d-tvm- และ d-memo- เพื่อไม่ให้ปรับระยะของชุดหนึ่งแล้วไปขยับอีกชุด */
+.d-sheet .d-loan-form { text-align:right; font-size:{$headSize}pt; }
+.d-sheet .d-loan-title { text-align:center; font-size:{$titleSize}pt; font-weight:bold; margin-bottom:6pt; }
+.d-sheet .d-loan-sub { text-align:center; margin-bottom:8pt; }
+.d-sheet .d-loan-line { margin-top:3pt; }
+.d-sheet .d-loan-fields td { border:none; padding:1pt 3pt; vertical-align:baseline; line-height:1.35; }
+.d-sheet .d-loan-lbl { white-space:nowrap; font-weight:normal; }
+.d-sheet .d-loan-fill { border-bottom:0.5pt dotted #000; }
+/* ตารางประมาณการและตารางส่งใช้ ใช้เส้นเต็มตามแบบฟอร์มจริง */
+.d-sheet .d-loan-grid { margin-top:6pt; }
+.d-sheet .d-loan-grid th, .d-sheet .d-loan-grid td { border:0.5pt solid #000; padding:3pt 4pt; font-size:{$tableSize}pt; }
+.d-sheet .d-loan-grid th { text-align:center; font-weight:bold; }
+.d-sheet .d-loan-c-no { width:8%; text-align:center; }
+.d-sheet .d-loan-c-money { width:18%; text-align:right; }
+.d-sheet .d-loan-c-date { width:16%; text-align:center; }
+.d-sheet .d-loan-c-sign { width:20%; }
+.d-sheet .d-loan-total td { font-weight:bold; }
+/* บรรทัดช่องติ๊กในบันทึกข้อความ ให้กล่องกับข้อความอยู่ระดับเดียวกัน */
+.d-sheet .d-loan-checks td { border:none; padding:1pt 3pt; vertical-align:baseline; }
+.d-sheet .d-loan-box { width:5%; white-space:nowrap; }
+.d-sheet .d-loan-note { margin-top:8pt; font-size:{$headSize}pt; }
+.d-sheet .d-loan-review { margin-top:10pt; }
+.d-sheet .d-loan-review td { border:0.5pt solid #000; padding:5pt 7pt; width:50%; vertical-align:top; }
 CSS;
     }
 
