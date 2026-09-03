@@ -254,7 +254,10 @@ class DevelopmentController extends Controller
                 'margin_json' => ['top' => 15, 'right' => 15, 'bottom' => 15, 'left' => 20],
                 'status' => DevelopmentDocument::STATUS_DRAFT,
                 'emp_id' => is_numeric($development->emp_id) ? (int) $development->emp_id : null,
-                'data_json' => ['source_updated_at' => $development->updated_at],
+                'data_json' => [
+                    'source_updated_at' => $development->updated_at,
+                    'template_version' => DevelopmentDocumentBuilder::version((string) $code),
+                ],
             ]);
             if (!$document->save()) {
                 return [
@@ -307,7 +310,10 @@ class DevelopmentController extends Controller
         }
 
         $document->body_html = DevelopmentDocumentBuilder::build($document->template_code, $development);
-        $document->data_json = ['source_updated_at' => $development->updated_at];
+        $document->data_json = array_merge((array) $document->data_json, [
+            'source_updated_at' => $development->updated_at,
+            'template_version' => DevelopmentDocumentBuilder::version((string) $document->template_code),
+        ]);
         if (!$document->save()) {
             return ['status' => 'error', 'message' => 'รีเซ็ตเอกสารไม่สำเร็จ'];
         }
@@ -367,12 +373,17 @@ class DevelopmentController extends Controller
         return $document;
     }
 
-    /** เปลี่ยน snapshot รุ่นทดลองให้เป็นแบบ 8708 ส่วนที่ 1 ฉบับสองหน้าตามต้นฉบับ */
     /**
-     * สร้างเนื้อหาใหม่ให้เอกสารที่ยังเป็นแม่แบบรุ่นเก่า
+     * สร้างเนื้อหาใหม่ให้เอกสารที่บันทึกไว้ด้วยแม่แบบรุ่นเก่ากว่าปัจจุบัน
      *
-     * เทียบเครื่องหมายรุ่นที่ builder ฝังไว้ในเนื้อหา ถ้าไม่ตรงแปลว่า snapshot นี้
-     * สร้างจากแม่แบบรุ่นก่อน จึงดึงข้อมูลจากทะเบียนมาสร้างใหม่ให้ตรงแบบฟอร์มปัจจุบัน
+     * เทียบเลขรุ่นจาก data_json ไม่ใช่จากเครื่องหมายในเนื้อหา เพราะ Doc::beforeSave
+     * กรอง body_html ผ่าน HtmlPurifier ทุกครั้ง ซึ่งลบแท็กที่ไม่อยู่ใน ALLOWED_HTML
+     * (รวมทั้ง div ที่เคยใช้เป็นเครื่องหมายรุ่น) เครื่องหมายจึงหายตั้งแต่บันทึกครั้งแรก
+     * แล้วการเปิดครั้งถัดไปจะเข้าใจผิดว่าเป็นรุ่นเก่า และสร้างใหม่ทับงานที่ผู้ใช้แก้ไว้ทุกครั้ง
+     *
+     * เอกสารที่สร้างไว้ก่อนการแก้นี้ยังไม่มี template_version — ให้ประทับเลขรุ่นปัจจุบัน
+     * ลงไปเฉย ๆ โดยไม่สร้างใหม่ เพราะของเดิมถูกสร้างใหม่ทุกครั้งที่เปิดอยู่แล้ว เนื้อหา
+     * จึงตรงแม่แบบปัจจุบันอยู่ และการไม่สร้างทับช่วยรักษาข้อความที่ผู้ใช้เพิ่งแก้ค้างไว้
      */
     private function upgradeDevelopmentDocument(DevelopmentDocument $document, Development $development): bool
     {
@@ -381,11 +392,24 @@ class DevelopmentController extends Controller
             return false;
         }
 
-        if (strpos((string) $document->body_html, DevelopmentDocumentBuilder::versionMarker($code)) !== false) {
+        $data = is_array($document->data_json) ? $document->data_json : [];
+        $current = DevelopmentDocumentBuilder::version($code);
+        $stored = $data['template_version'] ?? null;
+
+        if ((int) $stored === $current) {
             return false;
         }
 
+        if ($stored === null) {
+            $document->data_json = array_merge($data, ['template_version' => $current]);
+            return true;
+        }
+
         $document->body_html = DevelopmentDocumentBuilder::build($code, $development);
+        $document->data_json = array_merge($data, [
+            'source_updated_at' => $development->updated_at,
+            'template_version' => $current,
+        ]);
         if ($code === 'travel_expense_8708_part_1') {
             $document->emblem = DocTemplate::EMBLEM_NONE;
         }

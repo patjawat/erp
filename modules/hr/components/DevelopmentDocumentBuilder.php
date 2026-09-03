@@ -22,8 +22,8 @@ use app\modules\hr\models\Organization;
 final class DevelopmentDocumentBuilder
 {
     /**
-     * รุ่นของแม่แบบแต่ละฉบับ เพิ่มเลขทุกครั้งที่แก้เนื้อหาแม่แบบ เอกสารเก่าที่ยัง
-     * ไม่มีเครื่องหมายรุ่นนี้จะถูกสร้างใหม่จากทะเบียนให้อัตโนมัติตอนเปิด
+     * รุ่นของแม่แบบแต่ละฉบับ เพิ่มเลขทุกครั้งที่แก้เนื้อหาแม่แบบ
+     * เอกสารที่บันทึกไว้ด้วยรุ่นเก่ากว่านี้จะถูกสร้างใหม่จากทะเบียนให้อัตโนมัติตอนเปิด
      */
     private const VERSIONS = [
         'travel_expense_8708_part_1' => 10,
@@ -35,32 +35,38 @@ final class DevelopmentDocumentBuilder
         'travel_registration_memo' => 2,
     ];
 
-    /** เครื่องหมายรุ่นที่ฝังไว้ในเนื้อหา ใช้ตรวจว่า snapshot เก่าหรือใหม่ */
-    public static function versionMarker(string $code): string
+    /**
+     * เลขรุ่นของแม่แบบ เก็บไว้ใน data_json ของเอกสาร ไม่ฝังไว้ในเนื้อหา
+     *
+     * เดิมฝังเป็น <div class="d-form-version ..."> ไว้หัวเนื้อหา แต่ Doc::beforeSave
+     * กรอง body_html ผ่าน HtmlPurifier ทุกครั้ง และ div ไม่ได้อยู่ใน DocTemplate::ALLOWED_HTML
+     * เครื่องหมายจึงถูกลบทิ้งตั้งแต่บันทึกครั้งแรก การเปิดเอกสารครั้งถัดไปเลยเข้าใจว่า
+     * เป็นแม่แบบรุ่นเก่าและสร้างใหม่ทับ — ข้อความที่ผู้ใช้แก้ไว้บนจอหายทุกครั้งที่เปิดซ้ำ
+     */
+    public static function version(string $code): int
     {
-        return 'd-form-' . str_replace('_', '-', $code) . '-v' . (self::VERSIONS[$code] ?? 1);
+        return self::VERSIONS[$code] ?? 1;
     }
 
     public static function build(string $code, Development $model): string
     {
         $data = self::payload($model);
-        $marker = '<div class="d-form-version ' . self::versionMarker($code) . '"></div>';
 
         switch ($code) {
             case 'travel_expense_8708_part_1':
-                return $marker . self::partOne($data);
+                return self::partOne($data);
             case 'travel_expense_8708_part_2':
-                return $marker . self::partTwo($data);
+                return self::partTwo($data);
             case 'travel_expense_bk_111':
-                return $marker . self::bk111($data);
+                return self::bk111($data);
             case 'travel_expense_cover_sheet':
-                return $marker . self::coverSheet($data);
+                return self::coverSheet($data);
             case 'travel_expense_payment_approval':
-                return $marker . self::paymentApproval($data);
+                return self::paymentApproval($data);
             case 'travel_permission_memo':
-                return $marker . self::permissionMemo($data);
+                return self::permissionMemo($data);
             case 'travel_registration_memo':
-                return $marker . self::registrationMemo($data);
+                return self::registrationMemo($data);
             default:
                 throw new \InvalidArgumentException('ไม่พบแม่แบบเอกสารที่เลือก');
         }
