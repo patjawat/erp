@@ -50,6 +50,34 @@ class RepairDashboardV2Helper
         'other'      => 'CAL-12',
     ];
 
+    /**
+     * ระบบงานหลัก (canonical device_type) ของแต่ละศูนย์/กลุ่มงานซ่อม
+     * ใช้โฟกัสตาราง SLA ให้ตรงภารกิจศูนย์ — null = ไม่จำกัด (แสดงทุกระบบงาน)
+     * ศูนย์เครื่องมือแพทย์ (3) = CAL-01 เท่านั้น; ศูนย์ซ่อมบำรุง (1) ดูแลหลายระบบจึงไม่จำกัด
+     * (แก้รายชื่อระบบของศูนย์ได้ที่นี่)
+     */
+    private const HOME_SYSTEMS = [3 => ['CAL-01']];
+
+    /** ระบบงานหลักของศูนย์ (canonical) — null ถ้าไม่จำกัด */
+    public static function homeSystems(?int $repairGroup): ?array
+    {
+        return self::HOME_SYSTEMS[(int) $repairGroup] ?? null;
+    }
+
+    /** รหัส device_type ทั้งหมด (canonical + alias เก่า) ที่ถือเป็น "ระบบงานของศูนย์" */
+    public static function homeSystemCodes(?int $repairGroup): ?array
+    {
+        $home = self::homeSystems($repairGroup);
+        if ($home === null) {
+            return null;
+        }
+        $codes = [];
+        foreach ($home as $c) {
+            $codes = array_merge($codes, self::deviceTypeAliasCodes((string) $c));
+        }
+        return array_values(array_unique($codes));
+    }
+
     /** แปลงรหัส device_type เป็นรหัส canonical (รหัสเก่า→CAL-*, ที่เหลือคงเดิม) */
     public static function canonicalDeviceType(?string $code): string
     {
@@ -504,6 +532,16 @@ class RepairDashboardV2Helper
             $q->andWhere(['helpdesk.device_type_id' => self::deviceTypeAliasCodes($code)]);
             $map = self::deviceTypeTitleMap();
             $title = 'ระบบงาน: ' . ($map[$code] ?? $code);
+        } elseif ($scope === 'off_system') {
+            // งานที่ระบบงาน (device_type) ไม่ใช่ระบบหลักของศูนย์
+            $home = self::homeSystemCodes($repairGroup);
+            if (!empty($home)) {
+                $q->andWhere(['or',
+                    ['helpdesk.device_type_id' => null],
+                    ['not in', 'helpdesk.device_type_id', $home],
+                ]);
+            }
+            $title = 'งานนอกระบบงานของศูนย์';
         } elseif (str_starts_with($scope, 'asset_prefix:')) {
             // ชนิดครุภัณฑ์ตามรหัส GSN คำนำหน้า (ส่วนหน้าเครื่องหมาย "/")
             $prefix = substr($scope, 13);

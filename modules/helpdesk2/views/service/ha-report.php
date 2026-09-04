@@ -99,8 +99,29 @@ $stdTitle = $isMedical
 <div class="note-box"></div>
 
 <!-- ฉบับที่ 2: SLA ตามระบบงาน -->
-<?php $slaRows = $p['slaBySystem'] ?? []; ?>
-<h2>รายงานฉบับที่ 2: ผลการดำเนินการตาม SLA (ตามระบบงาน)</h2>
+<?php
+$slaRows = $p['slaBySystem'] ?? [];
+$homeCodes = \app\modules\helpdesk2\helpers\RepairDashboardV2Helper::homeSystemCodes($p['repairGroup'] ?? null);
+$homeRows = $slaRows;
+$offAgg = null;
+if ($homeCodes !== null) {
+    $homeRows = [];
+    $off = ['count' => 0, 'met' => 0, 'breached' => 0];
+    foreach ($slaRows as $s) {
+        if (in_array($s['code'], $homeCodes, true)) {
+            $homeRows[] = $s;
+        } else {
+            $off['count'] += (int) $s['count'];
+            $off['met'] += (int) $s['met'];
+        }
+    }
+    if ($off['count'] > 0) {
+        $off['pct'] = round($off['met'] / $off['count'] * 100, 1);
+        $offAgg = $off;
+    }
+}
+?>
+<h2>รายงานฉบับที่ 2: ผลการดำเนินการตาม SLA (ตามระบบงาน<?= $homeCodes !== null ? ' — เฉพาะระบบงานของศูนย์' : '' ?>)</h2>
 <table>
     <thead>
         <tr>
@@ -114,7 +135,7 @@ $stdTitle = $isMedical
         </tr>
     </thead>
     <tbody>
-        <?php foreach ($slaRows as $s): ?>
+        <?php foreach ($homeRows as $s): ?>
             <tr>
                 <td><?= Html::encode($s['title']) ?></td>
                 <td class="num"><?= $nf($s['count']) ?></td>
@@ -125,7 +146,18 @@ $stdTitle = $isMedical
                 <td class="num"><?= $fmtDuration($s['avg_secs']) ?></td>
             </tr>
         <?php endforeach; ?>
-        <?php if (empty($slaRows)): ?>
+        <?php if ($offAgg !== null): ?>
+            <tr>
+                <td style="color:#666;">งานนอกระบบงานของศูนย์ (ระบบงานอื่น)</td>
+                <td class="num"><?= $nf($offAgg['count']) ?></td>
+                <td class="num"><?= $nf($offAgg['met']) ?></td>
+                <td class="num"><?= $offAgg['pct'] ?>%</td>
+                <td class="num">—</td>
+                <td class="num">—</td>
+                <td class="num">—</td>
+            </tr>
+        <?php endif; ?>
+        <?php if (empty($homeRows) && $offAgg === null): ?>
             <tr><td colspan="7" style="text-align:center;color:#777;">ไม่มีข้อมูล</td></tr>
         <?php endif; ?>
     </tbody>

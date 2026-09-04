@@ -316,11 +316,34 @@ $rd = $ha['readiness'] ?? null;
 <!-- ===== SLA รายบริการ (ผู้บริหาร/คุณภาพ) ===== -->
 <div class="ha-sec v-exec v-quality">
 <div class="card border-0 shadow-sm mb-3">
-    <?php $slaRows = $p['slaBySystem'] ?? []; ?>
+    <?php
+    $slaRows = $p['slaBySystem'] ?? [];
+    // โฟกัสเฉพาะระบบงานของศูนย์ (เช่น แพทย์ = CAL-01) — งานนอกระบบยุบเป็นแถวหมายเหตุคลิกได้
+    $homeCodes = \app\modules\helpdesk2\helpers\RepairDashboardV2Helper::homeSystemCodes($p['repairGroup'] ?? null);
+    $homeRows = $slaRows;
+    $offAgg = null;
+    if ($homeCodes !== null) {
+        $homeRows = [];
+        $off = ['count' => 0, 'met' => 0, 'breached' => 0];
+        foreach ($slaRows as $s) {
+            if (in_array($s['code'], $homeCodes, true)) {
+                $homeRows[] = $s;
+            } else {
+                $off['count'] += (int) $s['count'];
+                $off['met'] += (int) $s['met'];
+                $off['breached'] += (int) $s['breached'];
+            }
+        }
+        if ($off['count'] > 0) {
+            $off['pct'] = round($off['met'] / $off['count'] * 100, 1);
+            $offAgg = $off;
+        }
+    }
+    ?>
     <div class="card-header border-bottom d-flex align-items-center gap-2">
         <div class="erp-icon-box bg-primary bg-opacity-10"><i class="bi bi-clipboard-check"></i></div>
         <div>
-            <h6 class="text-uppercase text-secondary m-0">ผล SLA ตามระบบงาน</h6>
+            <h6 class="text-uppercase text-secondary m-0">ผล SLA ตามระบบงาน<?= $homeCodes !== null ? ' <span class="small text-muted fw-normal">(เฉพาะระบบงานของศูนย์)</span>' : '' ?></h6>
             <p class="small text-muted mb-0 d-none d-md-block">เป้าหมายความสำเร็จ ≥ <?= $slaTarget ?>% — คลิกแถวเพื่อดูงานของระบบงานนั้น</p>
         </div>
     </div>
@@ -342,7 +365,7 @@ $rd = $ha['readiness'] ?? null;
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        <?php foreach ($slaRows as $s): ?>
+                        <?php foreach ($homeRows as $s): ?>
                             <?php $pct = $s['pct']; $ok = $pct !== null && $pct >= $slaTarget; $sysClickable = ($s['code'] ?? '') !== ''; ?>
                             <tr <?= $sysClickable ? 'role="button" data-drill="device_type:' . Html::encode($s['code']) . '" data-drill-title="ระบบงาน: ' . Html::encode($s['title']) . '" style="cursor:pointer;"' : '' ?>>
                                 <td class="text-break"><?= Html::encode($s['title']) ?></td>
@@ -358,6 +381,19 @@ $rd = $ha['readiness'] ?? null;
                                 <td class="text-end small text-nowrap"><?= $fmtDuration($s['avg_secs']) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <?php if ($offAgg !== null): ?>
+                            <tr class="table-light" role="button" data-drill="off_system" data-drill-title="งานนอกระบบงานของศูนย์" style="cursor:pointer;">
+                                <td class="text-break text-muted"><i class="bi bi-three-dots me-1"></i>งานนอกระบบงานของศูนย์ <span class="small">(ระบบงานอื่นที่หลุดเข้ามา — คลิกดู/ตรวจ tag)</span></td>
+                                <td class="text-end text-muted"><?= $nf($offAgg['count']) ?></td>
+                                <td class="text-end text-muted"><?= $nf($offAgg['met']) ?></td>
+                                <td class="text-end">
+                                    <span class="badge rounded-pill px-2 py-1 bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle fw-medium"><?= $offAgg['pct'] ?>%</span>
+                                </td>
+                                <td class="text-end small text-muted">—</td>
+                                <td class="text-end small text-muted">—</td>
+                                <td class="text-end small text-muted">—</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
