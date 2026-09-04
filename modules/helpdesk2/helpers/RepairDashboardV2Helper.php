@@ -24,13 +24,25 @@ class RepairDashboardV2Helper
     private const OPEN_STATUSES = ['pending', 'receive', 'in_progress'];
 
     /**
+     * ===== ค่าเป้าหมายตัวชี้วัด HA ฉบับ 6 (แก้ตรงนี้ได้ทันที) =====
+     * ผู้ใช้ยืนยันตัวเลขจริงได้ภายหลัง — ค่าเริ่มต้นตั้งแบบระมัดระวัง
+     */
+    public const HA_TARGET_READY = 95;        // % เครื่องมือพร้อมใช้
+    public const HA_TARGET_CALIBRATION = 100; // % สอบเทียบตามแผน
+    public const HA_TARGET_PM = 90;           // % บำรุงรักษาเชิงป้องกันตามแผน
+    public const HA_TARGET_SLA = 90;          // % ทำได้ตาม SLA
+
+    /** map กลุ่มงานซ่อม → ชนิดครุภัณฑ์ที่ใช้คิดความพร้อมใช้ (2=คอม, 3=เครื่องมือแพทย์) */
+    private const HA_ASSET_TYPE_MAP = [2 => ['COM'], 3 => ['MED', 'SCI']];
+
+    /**
      * @param int|null $repairGroup 1=ทั่วไป, 2=คอม, 3=แพทย์ — null = ทุกกลุ่ม
      * @param array $filters ตัวกรองจาก query params: year, date_start, date_end,
      *                        device_type_id, urgency, technician, department
      * @param bool $haitMode เปิดการคำนวณตัวชี้วัด HAIT
      * @return array<string, mixed>
      */
-    public static function prepareViewParams(?int $repairGroup = null, array $filters = [], bool $haitMode = false): array
+    public static function prepareViewParams(?int $repairGroup = null, array $filters = [], bool $haitMode = false, bool $haMode = false): array
     {
         $filters = self::normalizeFilters($filters);
         $range = self::resolveDateRange($filters);
@@ -144,7 +156,139 @@ class RepairDashboardV2Helper
             $result['assetCapacity'] = self::assetCapacity('COM', $repairGroup);
         }
 
+        // ---- HA ฉบับ 6: ความพร้อมใช้เครื่องมือ / สอบเทียบ / บำรุงรักษาเชิงป้องกัน ----
+        if ($haMode) {
+            $result['haMetrics'] = self::haMetrics($repairGroup, $range);
+        }
+
         return $result;
+    }
+
+    /**
+     * ตัวชี้วัดคุณภาพตามมาตรฐาน HA ฉบับ 6 หมวด II-3
+     * (ความพร้อมใช้เครื่องมือ · การสอบเทียบ · การบำรุงรักษาเชิงป้องกัน)
+     *
+     * อ่านจากตาราง asset / asset_detail ที่มีอยู่แล้ว — ไม่แก้โครงสร้างฐานข้อมูล
+     * ห่อ try/catch ทั้งก้อน หากข้อมูลไม่ครบจะคืน null ให้การ์ดแสดง "—" แทนที่จะทำทั้งแดชบอร์ดพัง
+     *
+     * @param array{start:?string,end:?string} $range ช่วงวันที่ (ค.ศ. Y-m-d)
+     * @return array<string,mixed>
+     */
+    public static function haMetrics(?int $repairGroup, array $range): array
+    {
+        $out = [
+            'readiness' => null,
+            'calibration' => null,
+            'pm' => null,
+            'asset_types' => null,
+            'targets' => [
+                'ready' => self::HA_TARGET_READY,
+                'calibration' => self::HA_TARGET_CALIBRATION,
+                'pm' => self::HA_TARGET_PM,
+                'sla' => self::HA_TARGET_SLA,
+            ],
+        ];
+
+        try {
+            $assetTypes = self::HA_ASSET_TYPE_MAP[$repairGroup] ?? null;
+            $out['asset_types'] = $assetTypes;
+
+            // ----- ความพร้อมใช้เครื่องมือ (เฉพาะกลุ่มที่มีขอบเขตครุภัณฑ์ชัดเจน) -----
+            if ($assetTypes !== null) {
+                $aq = static fn() => (new Query())
+                    ->from('{{%asset}} a')
+                    ->where(['a.deleted_at' => null, 'a.asset_type_id' => $assetTypes]);
+                $total = (int) $aq()->count();
+                // พร้อมใช้ = สภาพดี และไม่ได้อยู่ระหว่างส่งซ่อม/รอจำหน่าย (NULL status ถือว่าพร้อม)
+                $ready = (int) $aq()
+                    ->andWhere(['a.asset_condition' => 'good'])
+                    ->andWhere(['or', ['a.asset_status' => null], ['not in', 'a.asset_status', ['repair', 'wait_dispose']]])
+                    ->count();
+                $repairing = (int) $aq()->andWhere(['a.asset_status' => 'repair'])->count();
+                $waitDispose = (int) $aq()->andWhere(['a.asset_status' => 'wait_dispose'])->count();
+                $damaged = (int) $aq()->andWhere(['a.asset_condition' => ['damaged', 'worn']])->count();
+                $out['readiness'] = [
+                    'total' => $total,
+                    'ready' => $ready,
+                    'repairing' => $repairing,
+                    'wait_dispose' => $waitDispose,
+                    'damaged' => $damaged,
+                    'ready_pct' => $total > 0 ? round($ready / $total * 100, 1) : null,
+                ];
+            }
+
+            // ----- การสอบเทียบ / บำรุงรักษาเชิงป้องกัน ตามแผนในช่วงเวลา -----
+            $out['calibration'] = self::detailCompliance('calibration', $assetTypes, $range, true);
+            $out['pm'] = self::detailCompliance('maintenance', $assetTypes, $range, false);
+        } catch (\Throwable $e) {
+            Yii::warning('haMetrics failed: ' . $e->getMessage(), __METHOD__);
+        }
+
+        return $out;
+    }
+
+    /**
+     * ความสอดคล้องของงานสอบเทียบ/บำรุงรักษา (asset_detail: date_start=วันตามแผน, date_end=วันทำจริง)
+     * นับ "ตามแผนในช่วง" จาก date_start ที่อยู่ในช่วงปีงบ; ทำแล้ว = มี date_end; เกินกำหนด = ยังไม่ทำและเลยวันแผน
+     *
+     * @return array<string,mixed>|null
+     */
+    private static function detailCompliance(string $name, ?array $assetTypes, array $range, bool $withResult): ?array
+    {
+        try {
+            // ขอบเขตพื้นฐาน (ยังไม่กรองวันที่) — เรียกใหม่ทุกครั้งได้ query สด
+            $base = static function () use ($name, $assetTypes) {
+                $q = (new Query())->from('{{%asset_detail}} ad')->where(['ad.name' => $name]);
+                if ($assetTypes !== null) {
+                    $q->innerJoin('{{%asset}} a', 'a.code = ad.code')
+                        ->andWhere(['a.deleted_at' => null, 'a.asset_type_id' => $assetTypes]);
+                }
+                return $q;
+            };
+            $hasRange = !empty($range['start']) && !empty($range['end']);
+
+            // ตามแผนในช่วง (date_start อยู่ในช่วงปีงบ) + ที่ทำเสร็จของแผนนั้น
+            $plannedQ = $base();
+            if ($hasRange) {
+                $plannedQ->andWhere(['between', 'ad.date_start', $range['start'], $range['end']]);
+            } else {
+                $plannedQ->andWhere(['is not', 'ad.date_start', null]);
+            }
+            $planned = (int) (clone $plannedQ)->count();
+            $done = (int) (clone $plannedQ)->andWhere(['not', ['ad.date_end' => null]])->count();
+
+            // เกินกำหนด = มีแผน เลยวันแผนแล้ว แต่ยังไม่ได้ทำ
+            $overdue = (int) (clone $plannedQ)
+                ->andWhere(['ad.date_end' => null])
+                ->andWhere(['<', 'ad.date_start', new Expression('CURDATE()')])
+                ->count();
+
+            // ทำจริงในช่วง (date_end อยู่ในช่วง) — ตัวเลขกิจกรรมจริง แม้ยังไม่ได้ตั้งแผน
+            $performedQ = $base();
+            if ($hasRange) {
+                $performedQ->andWhere(['between', 'ad.date_end', $range['start'], $range['end']]);
+            } else {
+                $performedQ->andWhere(['not', ['ad.date_end' => null]]);
+            }
+            $performed = (int) (clone $performedQ)->count();
+
+            $result = [
+                'planned' => $planned,
+                'done' => $done,
+                'overdue' => $overdue,
+                'performed' => $performed,
+                'compliance_pct' => $planned > 0 ? round($done / $planned * 100, 1) : null,
+            ];
+            if ($withResult) {
+                // ผล pass/fail ของงานที่ทำจริงในช่วง
+                $result['pass'] = (int) (clone $performedQ)->andWhere(['ad.cal_result' => 'pass'])->count();
+                $result['fail'] = (int) (clone $performedQ)->andWhere(['ad.cal_result' => 'fail'])->count();
+            }
+            return $result;
+        } catch (\Throwable $e) {
+            Yii::warning('detailCompliance failed: ' . $e->getMessage(), __METHOD__);
+            return null;
+        }
     }
 
     /**

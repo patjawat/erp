@@ -93,14 +93,48 @@ class MedicalController extends \yii\web\Controller
 
     /**
      * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มเครื่องมือแพทย์) — /helpdesk/medical/dashboard-v2
+     * โหมด HA ฉบับ 6 หมวด II-3: ความพร้อมใช้ / สอบเทียบ / บำรุงรักษาเชิงป้องกัน
      */
     public function actionDashboardV2()
     {
-        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+        $filters = $this->request->queryParams;
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-ha', [
             'title' => 'ศูนย์เครื่องมือแพทย์',
             'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
             'active' => 'dashboard-v2',
-            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(3),
+            'haContext' => 'medical',
+            'drillRoute' => '/helpdesk/medical/drilldown',
+            'reportRoute' => 'report',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(3, $filters, false, true),
+        ]);
+    }
+
+    /**
+     * รายการงานย่อยสำหรับ offcanvas drill-down (AJAX) — /helpdesk/medical/drilldown
+     */
+    public function actionDrilldown()
+    {
+        $params = $this->request->queryParams;
+        $scope = (string) ($params['scope'] ?? 'all');
+        [$tickets, $meta] = RepairDashboardV2Helper::drilldownTickets(3, $params, $scope);
+
+        return $this->renderAjax('@app/modules/helpdesk2/views/service/_drilldown_list', [
+            'tickets' => $tickets,
+            'meta' => $meta,
+        ]);
+    }
+
+    /**
+     * รายงานคุณภาพ HA สำหรับพิมพ์ — /helpdesk/medical/report
+     */
+    public function actionReport()
+    {
+        $filters = $this->request->queryParams;
+        $this->layout = false;
+        return $this->renderPartial('@app/modules/helpdesk2/views/service/ha-report', [
+            'title' => 'ศูนย์เครื่องมือแพทย์',
+            'haContext' => 'medical',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(3, $filters, false, true),
         ]);
     }
 
