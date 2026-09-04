@@ -47,8 +47,11 @@ $historyPreviewUrl = Url::to(['/inventory-v2/warehouse/history-min-max-preview',
 $historyApplyUrl = Url::to(['/inventory-v2/warehouse/history-min-max-apply', 'id' => $warehouse->id]);
 $candidateItemsUrl = Url::to(['/inventory-v2/warehouse/candidate-items', 'id' => $warehouse->id]);
 $addItemsUrl = Url::to(['/inventory-v2/warehouse/add-items']);
+$applyDefaultUrl = Url::to(['/inventory-v2/warehouse/apply-default']);
 $deleteBatchUrl = Url::to(['/inventory-v2/warehouse/delete-settings-batch']);
 $csrf = Yii::$app->request->csrfToken;
+$qJson = json_encode($q, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+$categoryJson = json_encode($categoryId, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>
 
 <?php
@@ -213,6 +216,9 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                         </div>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-add-items-modal" title="เลือกหมวด → ติ๊กรายการที่ต้องการ → เพิ่มเข้าตาราง (Min/Max เริ่มต้น 0 — ค่อยกรอกในตาราง)">
                             <i class="bi bi-plus-lg me-1"></i>เพิ่มวัสดุเข้าตาราง
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-default-modal" title="ตั้งค่า Min/Max เริ่มต้นให้ทุกรายการทีเดียว">
+                            <i class="bi bi-magic me-1"></i>ตั้งค่าเริ่มต้นทั้งหมด
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smm-history-modal" title="โหลดวัสดุจากประวัติการเบิกและคำนวณ Min/Max ตั้งต้น">
                             <i class="bi bi-magic me-1"></i>คำนวณจากประวัติเบิก
@@ -497,6 +503,86 @@ foreach ($groups as $g) { if (!empty($g)) { $hasSwitcher = true; break; } }
                 </div>
                 <button type="button" class="btn btn-primary btn-sm fw-semibold smm-batch-only" id="smm-bulk-save">
                     <i class="bi bi-check2-circle me-1"></i>บันทึก (<span class="js-count">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Set default Min/Max for all items modal -->
+<div class="modal fade" id="smm-default-modal" tabindex="-1" aria-labelledby="smm-default-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold" id="smm-default-title">
+                    <i class="bi bi-magic text-primary me-1"></i>
+                    ตั้งค่า Min/Max เริ่มต้นทั้งหมด
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">
+                    กำหนดค่า Min/Max เริ่มต้นให้วัสดุของคลังนี้ทีเดียว ไม่ต้องกรอกทีละรายการ
+                    — ค่อยแก้เฉพาะรายการที่ต่างในตารางภายหลังได้
+                </p>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label for="smm-default-min" class="form-label small fw-semibold">Min เริ่มต้น</label>
+                        <input type="number" inputmode="numeric" step="1" min="0" id="smm-default-min"
+                            class="form-control text-end" value="1" placeholder="เช่น 1">
+                    </div>
+                    <div class="col-6">
+                        <label for="smm-default-max" class="form-label small fw-semibold">Max เริ่มต้น</label>
+                        <input type="number" inputmode="numeric" step="1" min="0" id="smm-default-max"
+                            class="form-control text-end" value="5" placeholder="เช่น 5">
+                    </div>
+                </div>
+
+                <fieldset class="mb-2">
+                    <legend class="form-label small fw-semibold">ขอบเขต</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="smm-default-scope" id="smm-default-scope-unconfigured" value="unconfigured" checked>
+                        <label class="form-check-label small" for="smm-default-scope-unconfigured">
+                            เฉพาะรายการที่ยังไม่ตั้ง <span class="text-muted">(แนะนำ — ไม่ทับค่าที่ตั้งไว้แล้ว)</span>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="smm-default-scope" id="smm-default-scope-all" value="all">
+                        <label class="form-check-label small" for="smm-default-scope-all">
+                            ทุกรายการ <span class="text-warning">ทับค่าเดิมทั้งหมด</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <?php if ($q !== '' || $categoryId !== ''): ?>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="smm-default-apply-filter" checked>
+                    <label class="form-check-label small" for="smm-default-apply-filter">
+                        เฉพาะรายการที่กรองอยู่บนหน้าจอ
+                    </label>
+                </div>
+                <?php endif; ?>
+
+                <div id="smm-default-preview" class="alert alert-light border small mb-0 d-none">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">รายการที่คลังนี้รับผิดชอบ:</span>
+                        <strong id="smm-default-cnt-total">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">จะเพิ่มใหม่:</span>
+                        <strong id="smm-default-cnt-insert" class="text-success">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">จะทับค่าเดิม:</span>
+                        <strong id="smm-default-cnt-update" class="text-warning">0</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="smm-default-confirm">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    ตั้งค่าเริ่มต้น (<span class="js-default-count">0</span>)
                 </button>
             </div>
         </div>
@@ -970,9 +1056,12 @@ $js = <<<JS
     const HISTORY_APPLY_URL = '{$historyApplyUrl}';
     const CANDIDATE_ITEMS_URL = '{$candidateItemsUrl}';
     const ADD_ITEMS_URL    = '{$addItemsUrl}';
+    const APPLY_DEFAULT_URL = '{$applyDefaultUrl}';
     const DELETE_BATCH_URL = '{$deleteBatchUrl}';
     const CSRF             = '{$csrf}';
     const WAREHOUSE_ID     = {$warehouse->id};
+    const CURRENT_Q        = {$qJson};
+    const CURRENT_CATEGORY = {$categoryJson};
     const MODE_PREF_KEY    = 'inv2:smm:mode';
 
     function showToast(message, type) {
@@ -1954,6 +2043,114 @@ $js = <<<JS
                 });
         });
     }
+
+    // ===== ตั้งค่า Min/Max เริ่มต้นทั้งหมด =====
+    (function () {
+        const modalEl   = document.getElementById('smm-default-modal');
+        if (!modalEl) return;
+        const minEl     = document.getElementById('smm-default-min');
+        const maxEl     = document.getElementById('smm-default-max');
+        const filterEl  = document.getElementById('smm-default-apply-filter'); // อาจไม่มี (ไม่มีตัวกรอง active)
+        const previewEl = document.getElementById('smm-default-preview');
+        const cntTotal  = document.getElementById('smm-default-cnt-total');
+        const cntInsert = document.getElementById('smm-default-cnt-insert');
+        const cntUpdate = document.getElementById('smm-default-cnt-update');
+        const confirmBtn = document.getElementById('smm-default-confirm');
+        const countLabel = confirmBtn ? confirmBtn.querySelector('.js-default-count') : null;
+
+        function currentScope() {
+            const el = modalEl.querySelector('input[name="smm-default-scope"]:checked');
+            return el ? el.value : 'unconfigured';
+        }
+
+        function baseParams() {
+            const form = new FormData();
+            form.append('warehouse_id', String(WAREHOUSE_ID));
+            form.append('scope', currentScope());
+            form.append('_csrf', CSRF);
+            if (filterEl && filterEl.checked) {
+                form.append('apply_filter', '1');
+                form.append('q', CURRENT_Q || '');
+                form.append('category_id', CURRENT_CATEGORY || '');
+            }
+            return form;
+        }
+
+        let affected = 0;
+        function setAffected(n) {
+            affected = n;
+            if (countLabel) countLabel.textContent = String(n);
+            if (confirmBtn) confirmBtn.disabled = (n <= 0);
+        }
+
+        function refreshPreview() {
+            const form = baseParams();
+            form.append('preview', '1');
+            if (previewEl) previewEl.classList.add('d-none');
+            setAffected(0);
+            fetch(APPLY_DEFAULT_URL, {
+                method: 'POST', body: form, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(r => r.json())
+                .then(function (data) {
+                    if (!data || data.status !== 'success') return;
+                    if (cntTotal)  cntTotal.textContent  = (data.total || 0).toLocaleString();
+                    if (cntInsert) cntInsert.textContent = (data.will_insert || 0).toLocaleString();
+                    if (cntUpdate) cntUpdate.textContent = (data.will_update || 0).toLocaleString();
+                    if (previewEl) previewEl.classList.remove('d-none');
+                    setAffected(data.affected || 0);
+                })
+                .catch(function () { /* เงียบไว้ — กด "ตั้งค่า" จะได้ error message เอง */ });
+        }
+
+        modalEl.addEventListener('shown.bs.modal', refreshPreview);
+        modalEl.querySelectorAll('input[name="smm-default-scope"]').forEach(function (r) {
+            r.addEventListener('change', refreshPreview);
+        });
+        if (filterEl) filterEl.addEventListener('change', refreshPreview);
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                const minVal = (minEl.value || '').trim();
+                const maxVal = (maxEl.value || '').trim();
+                if (minVal === '' || maxVal === '') { showToast('กรุณาระบุ Min และ Max', 'error'); return; }
+                if (Number(minVal) < 0 || Number(maxVal) < 0) { showToast('ค่าต้องไม่ติดลบ', 'error'); return; }
+                if (Number(maxVal) < Number(minVal)) { showToast('Max ต้องไม่น้อยกว่า Min', 'error'); return; }
+
+                const form = baseParams();
+                form.append('min_qty', minVal);
+                form.append('max_qty', maxVal);
+
+                confirmBtn.disabled = true;
+                const orig = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>กำลังบันทึก';
+                fetch(APPLY_DEFAULT_URL, {
+                    method: 'POST', body: form, credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(r => r.json())
+                    .then(function (data) {
+                        if (!data || data.status !== 'success') {
+                            showToast((data && data.message) || 'บันทึกไม่สำเร็จ', 'error');
+                            confirmBtn.disabled = false;
+                            confirmBtn.innerHTML = orig;
+                            return;
+                        }
+                        const parts = [];
+                        if (data.inserted) parts.push('เพิ่มใหม่ ' + data.inserted);
+                        if (data.updated)  parts.push('ทับค่าเดิม ' + data.updated);
+                        showToast('ตั้งค่าเริ่มต้นสำเร็จ' + (parts.length ? ' (' + parts.join(', ') + ')' : ''));
+                        setTimeout(function () { window.location.reload(); }, 700);
+                    })
+                    .catch(function () {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = orig;
+                        showToast('เชื่อมต่อไม่ได้', 'error');
+                    });
+            });
+        }
+    })();
 })();
 JS;
 $this->registerJs($js, View::POS_END);
