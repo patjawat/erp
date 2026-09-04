@@ -157,6 +157,15 @@ class DocWordExporter
             'd-c-amount' => $border . 'text-align:right;width:18%;',
             'd-c-total' => $border . 'text-align:right;font-weight:bold;',
             'd-sign-cell' => 'text-align:center;width:50%;',
+            // สัญญายืมเงิน แบบ 8500 — ตารางกรอบเดียว เส้นขอบมาจาก d-loan-cell
+            'd-loan-form' => 'text-align:right;',
+            'd-loan-cell' => $border . 'vertical-align:top;',
+            'd-loan-ct-title' => 'text-align:center;vertical-align:middle;font-weight:bold;font-size:' . ($fontSize + 4) . 'pt;',
+            'd-loan-ct-head' => 'width:32%;',
+            'd-loan-ct-money' => 'width:32%;text-align:right;vertical-align:bottom;',
+            'd-loan-ct-right' => 'text-align:right;',
+            'd-loan-ct-center' => 'text-align:center;',
+            'd-loan-fill' => 'border-bottom:1px solid #000000;',
         ];
 
         $dom = new \DOMDocument('1.0', 'UTF-8');

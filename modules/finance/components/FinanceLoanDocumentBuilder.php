@@ -28,11 +28,11 @@ final class FinanceLoanDocumentBuilder
      */
     private const VERSIONS = [
         FinanceLoanDocumentCatalog::ESTIMATE => 1,
-        FinanceLoanDocumentCatalog::CONTRACT => 1,
+        FinanceLoanDocumentCatalog::CONTRACT => 2,
         FinanceLoanDocumentCatalog::SETTLEMENT_SHEET => 1,
-        FinanceLoanDocumentCatalog::EVIDENCE_MEMO => 1,
-        FinanceLoanDocumentCatalog::PAYMENT_MEMO => 1,
-        FinanceLoanDocumentCatalog::FOLLOWUP_MEMO => 1,
+        FinanceLoanDocumentCatalog::EVIDENCE_MEMO => 2,
+        FinanceLoanDocumentCatalog::PAYMENT_MEMO => 2,
+        FinanceLoanDocumentCatalog::FOLLOWUP_MEMO => 2,
     ];
 
     /**
@@ -187,67 +187,113 @@ final class FinanceLoanDocumentBuilder
     private static function contract(array $d): string
     {
         $e = fn($v) => self::escape($v);
+        $amount = number_format($d['total'], 2);
+
+        // แต่ละบรรทัดของรายการค่าใช้จ่าย พิมพ์ต่อกันในช่องซ้าย ส่วนยอดรวมอยู่ช่องเงินด้านขวา
         $details = [];
         foreach ($d['items'] as $item) {
             $calculation = $item->calculationText();
-            $details[] = $item->displayName() . ($calculation !== '' ? ' ' . $calculation : '')
-                . ' เป็นเงิน ' . number_format($item->amount, 2) . ' บาท';
+            $details[] = $e($item->displayName() . ($calculation !== '' ? '  ' . $calculation : '')
+                . '  เป็นเงิน ' . number_format($item->amount, 2) . ' บาท');
         }
-        $detailText = $details ? implode(' · ', $details) : '';
+        $detailBody = $details ? implode('<br>', $details) : self::dots(70) . '<br>' . self::dots(70);
 
+        $indent = str_repeat('&nbsp;', 8);
+
+        // ทั้งฉบับเป็นตารางกรอบเดียวตามแบบ 8500 — คอลัมน์ขวาเป็นช่องจำนวนเงิน
+        // เส้นขอบทุกช่องมาจาก class d-loan-cell (style ถูก HtmlPurifier ตัดทิ้ง จึงใช้ class อย่างเดียว)
         return '<p class="d-loan-form">แบบ 8500</p>'
-            . '<p class="d-loan-title">สัญญายืมเงิน</p>'
+            . '<table class="d-loan-contract"><tbody>'
+            // แถวหัวเรื่อง: ชื่อสัญญา | เลขที่/วันครบกำหนด
+            . '<tr><td class="d-loan-cell d-loan-ct-title">สัญญายืมเงิน</td>'
+            . '<td class="d-loan-cell d-loan-ct-head">'
             . '<table class="d-loan-fields"><tbody>'
-            . '<tr><td class="d-loan-lbl">เลขที่</td><td class="d-loan-fill">' . self::valueOrDots($d['contract_no'], 22) . '</td>'
-            . '<td class="d-loan-lbl">วันครบกำหนด</td><td class="d-loan-fill">' . self::valueOrDots($d['due_at'], 22) . '</td></tr>'
-            . '<tr><td class="d-loan-lbl">ข้าพเจ้า</td><td class="d-loan-fill">' . self::valueOrDots($d['borrower'], 40) . '</td>'
-            . '<td class="d-loan-lbl">ตำแหน่ง</td><td class="d-loan-fill">' . self::valueOrDots($d['position'], 30) . '</td></tr>'
-            . '<tr><td class="d-loan-lbl">สังกัด</td><td class="d-loan-fill">' . self::valueOrDots($d['organization'], 40) . '</td>'
-            . '<td class="d-loan-lbl">จังหวัด</td><td class="d-loan-fill">' . self::valueOrDots($d['province'], 20) . '</td></tr>'
+            . '<tr><td class="d-loan-lbl">เลขที่</td><td>' . self::valueOrDots($d['contract_no'], 16) . '</td></tr>'
+            . '<tr><td class="d-loan-lbl">วันครบกำหนด</td><td>' . self::valueOrDots($d['due_at'], 16) . '</td></tr>'
+            . '</tbody></table></td></tr>'
+            // แถวข้อมูลผู้ยืม (เต็มความกว้าง)
+            . '<tr><td class="d-loan-cell" colspan="2">'
+            . '<table class="d-loan-fields"><tbody>'
+            . '<tr><td class="d-loan-lbl">ข้าพเจ้า</td><td class="d-loan-fill">' . self::valueOrDots($d['borrower'], 34) . '</td>'
+            . '<td class="d-loan-lbl">ตำแหน่ง</td><td class="d-loan-fill">' . self::valueOrDots($d['position'], 26) . '</td></tr>'
+            . '<tr><td class="d-loan-lbl">สังกัด</td><td class="d-loan-fill">' . self::valueOrDots($d['organization'], 34) . '</td>'
+            . '<td class="d-loan-lbl">จังหวัด</td><td class="d-loan-fill">' . self::valueOrDots($d['province'], 18) . '</td></tr>'
             . '</tbody></table>'
-            . '<p class="d-loan-line">มีความประสงค์ขอยืมเงินจาก ' . self::valueOrDots($d['account'] ?: $d['organization'], 56) . '</p>'
-            . '<p class="d-loan-line">เพื่อใช้เป็นค่าใช้จ่ายใน ' . self::valueOrDots($d['purpose'], 60) . '</p>'
-            . '<p class="d-loan-line">' . ($detailText !== '' ? $e($detailText) : self::dots(96)) . '</p>'
-            . '<p class="d-loan-line">จำนวนเงิน ' . number_format($d['total'], 2) . ' บาท ( ' . $e(self::bahtText($d['total'])) . ' )</p>'
-            . '<p class="d-loan-line">ข้าพเจ้าสัญญาว่าจะปฏิบัติตามระเบียบของทางราชการทุกประการ และจะนำใบสำคัญคู่จ่ายที่ถูกต้อง '
-            . 'พร้อมทั้งเงินเหลือจ่าย (ถ้ามี) ส่งใช้ภายในกำหนดไว้ในระเบียบการเบิกจ่ายเงินจากคลัง คือภายในวันที่ '
-            . self::valueOrDots($d['due_at'], 20) . ' ถ้าข้าพเจ้าไม่ส่งตามกำหนด ข้าพเจ้ายินยอมให้หักเงินเดือน ค่าจ้าง เบี้ยหวัด '
-            . 'บำเหน็จ บำนาญ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากทางราชการ ชดใช้จำนวนเงินที่ยืมไปจนครบถ้วนได้ทันที</p>'
-            . '<table class="d-sign"><tbody><tr>'
-            . '<td class="d-sign-cell">&nbsp;</td>'
-            . '<td class="d-sign-cell">ลงชื่อ ' . self::dots(26) . ' ผู้ยืม<br>' . self::nameLine($d['borrower'], 30)
-            . '<br>วันที่ ' . self::valueOrDots($d['borrowed_at'], 20) . '</td>'
-            . '</tr></tbody></table>'
-            . self::approvalBlock($d);
+            . '<p class="d-loan-line">มีความประสงค์ ขอยืมเงินจาก ' . self::valueOrDots($d['organization'], 50) . '</p>'
+            . '<p class="d-loan-line">เพื่อใช้เป็นค่าใช้จ่ายใน ' . self::valueOrDots($d['purpose'], 52) . ' ดังรายละเอียดต่อไปนี้</p>'
+            . '</td></tr>'
+            // แถวรายการค่าใช้จ่าย + ช่องเงิน แล้วตามด้วยแถวยอดรวม
+            . '<tr><td class="d-loan-cell">' . $detailBody . '</td>'
+            . '<td class="d-loan-cell d-loan-ct-money">' . $amount . '</td></tr>'
+            . '<tr><td class="d-loan-cell">&nbsp;</td>'
+            . '<td class="d-loan-cell d-loan-ct-money">' . $amount . '</td></tr>'
+            // แถวคำสัญญา + ลายมือชื่อผู้ยืม
+            . '<tr><td class="d-loan-cell" colspan="2">'
+            . '<p class="d-loan-line">' . $indent . 'ข้าพเจ้าสัญญาว่าจะปฏิบัติตามระเบียบของทางราชการทุกประการ และจะนำใบสำคัญคู่จ่ายที่ถูกต้อง '
+            . 'พร้อมทั้งเงินเหลือจ่าย (ถ้ามี) ส่งใช้ภายในกำหนดไว้ในระเบียบการเบิกจ่ายเงินจากคลังภายใน 30 วัน</p>'
+            . '<p class="d-loan-line">' . $indent . 'ถ้าข้าพเจ้าไม่ส่งตามกำหนด ข้าพเจ้ายินยอมให้หักเงินเดือน ค่าจ้าง เบี้ยหวัด '
+            . 'บำเหน็จ บำนาญ หรือเงินอื่นใดที่ข้าพเจ้าพึงได้รับจากทางราชการ ชดใช้เงินจำนวนเงินที่ยืมไปจนครบถ้วนได้ทันที</p>'
+            . self::signPair('ลายมือชื่อ ' . self::dots(24) . ' ผู้ยืม', 'วันที่ ' . self::valueOrDots($d['borrowed_at'], 18), self::nameLine($d['borrower'], 28))
+            . '</td></tr>'
+            . self::approvalBlock($d)
+            . '</tbody></table>';
     }
 
-    /** สามช่องท้ายสัญญา — ผู้ตรวจสอบ ผู้อนุมัติ และใบรับเงิน */
+    /**
+     * บรรทัดจัดกึ่งกลางในกรอบ — mPDF ไม่จัดกึ่งกลาง <p> ที่อยู่ในช่องตาราง (บล็อกลูก
+     * รับ text-align ของ td มาเป็นชิดซ้ายแทน) จึงห่อด้วยตารางช่องเดียวที่จัดกึ่งกลางที่ td
+     */
+    private static function centerLine(string $html): string
+    {
+        return '<table class="d-loan-fields"><tbody><tr><td class="d-loan-ct-center">' . $html . '</td></tr></tbody></table>';
+    }
+
+    /** สองบรรทัดลายเซ็นในกรอบ — บรรทัดบน (ลงชื่อ + ช่องขวา) และบรรทัดล่าง (ชื่อในวงเล็บ) */
+    private static function signPair(string $left, string $right, string $name): string
+    {
+        $ind = str_repeat('&nbsp;', 6);
+        $indName = str_repeat('&nbsp;', 12);
+        return '<table class="d-loan-fields d-loan-sig"><tbody>'
+            . '<tr><td>' . $ind . $left . '</td><td class="d-loan-ct-right">' . $right . '</td></tr>'
+            . '<tr><td>' . $indName . $name . '</td><td>&nbsp;</td></tr>'
+            . '</tbody></table>';
+    }
+
+    /** สามช่องท้ายสัญญา — ผู้ตรวจสอบ ผู้อนุมัติ และใบรับเงิน (คืนค่าเป็นแถวของตารางกรอบเดียวกัน) */
     private static function approvalBlock(array $d): string
     {
         $words = self::escape(self::bahtText($d['total']));
         $amount = number_format($d['total'], 2);
+        $ind = str_repeat('&nbsp;', 6);
 
-        return '<p class="d-loan-line"><strong>เสนอ</strong> ผู้อำนวยการ' . self::escape($d['organization']) . '</p>'
-            . '<p class="d-loan-line">ได้ตรวจสอบแล้ว เห็นสมควรให้ยืมตามใบยืมฉบับนี้ได้ จำนวน ' . $amount . ' บาท ( ' . $words . ' )</p>'
-            . '<table class="d-sign"><tbody><tr>'
-            . '<td class="d-sign-cell">&nbsp;</td>'
-            . '<td class="d-sign-cell">ลงชื่อ ' . self::dots(26) . ' ผู้ตรวจสอบ<br>' . self::nameLine($d['admin_head']['name'], 30)
-            . '<br>วันที่ ' . self::dots(20) . '</td>'
-            . '</tr></tbody></table>'
-            . '<p class="d-loan-line"><strong>คำอนุมัติ</strong></p>'
-            . '<p class="d-loan-line">อนุมัติให้ยืมตามเงื่อนไขข้างต้นได้ เป็นเงิน ' . $amount . ' บาท ( ' . $words . ' )</p>'
-            . '<table class="d-sign"><tbody><tr>'
-            . '<td class="d-sign-cell">&nbsp;</td>'
-            . '<td class="d-sign-cell">ลงชื่อ ' . self::dots(26) . ' ผู้อนุมัติ<br>' . self::nameLine($d['director']['name'], 30)
-            . '<br>ตำแหน่ง ผู้อำนวยการ' . self::escape($d['organization']) . '<br>วันที่ ' . self::dots(20) . '</td>'
-            . '</tr></tbody></table>'
-            . '<p class="d-loan-line"><strong>ใบรับเงิน</strong></p>'
-            . '<p class="d-loan-line">ได้รับเงินยืมจำนวน ' . $amount . ' บาท ( ' . $words . ' ) ไปเป็นการถูกต้องแล้ว</p>'
-            . '<table class="d-sign"><tbody><tr>'
-            . '<td class="d-sign-cell">&nbsp;</td>'
-            . '<td class="d-sign-cell">ลงชื่อ ' . self::dots(26) . ' ผู้รับเงิน<br>' . self::nameLine($d['borrower'], 30)
-            . '<br>วันที่ ' . self::valueOrDots($d['received_at'], 20) . '</td>'
-            . '</tr></tbody></table>';
+        return
+            // เสนอ ผู้อำนวยการ → ตรวจสอบ
+            '<tr><td class="d-loan-cell" colspan="2">'
+            . '<p class="d-loan-line"><strong>เสนอ</strong> ผู้อำนวยการ' . self::escape($d['organization']) . '</p>'
+            . '<table class="d-loan-fields d-loan-sig"><tbody><tr>'
+            . '<td>' . $ind . 'ได้ตรวจสอบแล้ว เห็นสมควรให้ยืมตามใบยืมฉบับนี้ได้ จำนวน</td>'
+            . '<td class="d-loan-ct-right">' . $amount . ' บาท</td></tr></tbody></table>'
+            . self::centerLine('( ' . $words . ' )')
+            . self::signPair('ลงชื่อ ' . self::dots(24) . ' ผู้ตรวจสอบ', 'วันที่ ' . self::dots(18), self::nameLine($d['admin_head']['name'], 28))
+            . '</td></tr>'
+            // คำขออนุมัติ → อนุมัติ
+            . '<tr><td class="d-loan-cell" colspan="2">'
+            . self::centerLine('<strong>คำขออนุมัติ</strong>')
+            . '<table class="d-loan-fields d-loan-sig"><tbody><tr>'
+            . '<td>' . $ind . 'อนุมัติให้ยืมตามเงื่อนไขข้างต้นได้ เป็นเงิน</td>'
+            . '<td class="d-loan-ct-right">' . $amount . ' บาท</td></tr></tbody></table>'
+            . self::centerLine('( ' . $words . ' )')
+            . self::signPair('ลงชื่อ ' . self::dots(24) . ' ผู้อนุมัติ', 'วันที่ ' . self::dots(18), self::nameLine($d['director']['name'], 28))
+            . '</td></tr>'
+            // ใบรับเงิน → ผู้รับเงิน
+            . '<tr><td class="d-loan-cell" colspan="2">'
+            . self::centerLine('<strong>ใบรับเงิน</strong>')
+            . '<table class="d-loan-fields d-loan-sig"><tbody><tr>'
+            . '<td>' . $ind . 'ได้รับเงินยืมจำนวน</td>'
+            . '<td class="d-loan-ct-right">' . $amount . ' บาท ( ' . $words . ' )</td></tr></tbody></table>'
+            . '<p class="d-loan-line">' . $ind . 'ไปเป็นการถูกต้องแล้ว</p>'
+            . self::signPair('ลงชื่อ ' . self::dots(24) . ' ผู้รับเงิน', 'วันที่ ' . self::valueOrDots($d['received_at'], 18), self::nameLine($d['borrower'], 28))
+            . '</td></tr>';
     }
 
     // ── 3) รายการส่งใช้เงินยืม หน้า 2 ─────────────────────────────
@@ -435,17 +481,36 @@ final class FinanceLoanDocumentBuilder
 
     // ── ส่วนหัวบันทึกข้อความ ที่ใช้ร่วมกันสองฉบับ ────────────────
 
+    /**
+     * หัวบันทึกข้อความมาตรฐาน (ครุฑ + ส่วนราชการ/ที่/วันที่/เรื่อง + เรียน)
+     *
+     * ใช้โครงเดียวกับบันทึกข้อความของโมดูลพัฒนาบุคลากร (เดินทางไปราชการ) เพื่อให้
+     * ตราครุฑและระยะป้ายกับเนื้อความเหมือนกันทั้งระบบ ป้ายกับค่าอยู่ช่องเดียวกัน
+     * คั่นด้วยเว้นวรรคสองเคาะจริง ไม่พึ่งความกว้างคอลัมน์ (บนจอที่กว้างกว่ากระดาษจริง
+     * ป้ายจะได้ไม่ลอยห่างจากเนื้อความ) ส่วนเส้นเป็นเส้นใต้ของช่องจึงลากถึงขอบขวา
+     */
     private static function memoHead(array $d, string $subject, string $docNo = '', string $docDate = ''): string
     {
-        return '<p class="d-title">บันทึกข้อความ</p>'
-            . '<table class="d-memo-fields"><tbody>'
-            . '<tr><td class="d-memo-label">ส่วนราชการ</td><td class="d-memo-value" colspan="3">'
-            . self::valueOrDots(trim($d['organization'] . ' ' . ($d['province'] !== '' ? 'จ.' . $d['province'] : '')), 60) . '</td></tr>'
-            . '<tr><td class="d-memo-label">ที่</td><td class="d-memo-value">' . self::valueOrDots($docNo ?: $d['doc_number'], 24) . '</td>'
-            . '<td class="d-memo-label d-memo-date-label">วันที่</td><td class="d-memo-value">' . self::valueOrDots($docDate, 24) . '</td></tr>'
-            . '<tr><td class="d-memo-label">เรื่อง</td><td class="d-memo-value" colspan="3">' . self::escape($subject) . '</td></tr>'
-            . '</tbody></table>'
-            . '<p class="d-to"><strong>เรียน</strong> ผู้อำนวยการ' . self::escape($d['organization']) . '</p>';
+        $orgLine = trim($d['organization'] . ' ' . ($d['province'] !== '' ? 'จ.' . $d['province'] : ''));
+        return '<table class="d-masthead"><tr><td class="d-masthead-side">{{emblem}}</td>'
+            . '<td class="d-masthead-title"><p class="d-title">บันทึกข้อความ</p></td>'
+            . '<td class="d-masthead-side"></td></tr></table>'
+            . '<table class="d-tvm-head"><tr><td class="d-tvm-rule">' . self::memoLabel('ส่วนราชการ')
+            . self::valueOrDots($orgLine, 60) . '</td></tr></table>'
+            // "ที่" กว้างแค่พอให้ "วันที่" มาอยู่ใต้คำว่า "บันทึก" ของหัวเรื่องพอดี
+            . '<table class="d-tvm-head"><tr><td class="d-tvm-rule d-loanmemo-ref">' . self::memoLabel('ที่')
+            . self::valueOrDots($docNo ?: $d['doc_number'], 20) . '</td><td class="d-loanmemo-space"></td>'
+            . '<td class="d-tvm-rule">' . self::memoLabel('วันที่') . self::valueOrDots($docDate, 18) . '</td></tr></table>'
+            . '<table class="d-tvm-head"><tr><td class="d-tvm-rule">' . self::memoLabel('เรื่อง')
+            . self::escape($subject) . '</td></tr></table>'
+            . '<p class="d-to">' . self::memoLabel('เรียน', false) . 'ผู้อำนวยการ' . self::escape($d['organization']) . '</p>';
+    }
+
+    /** ป้ายหัวบันทึกข้อความพร้อมเว้นวรรคสองเคาะก่อนเนื้อความ */
+    private static function memoLabel(string $text, bool $bold = true): string
+    {
+        return '<span class="d-tvm-lbl' . ($bold ? '' : ' d-tvm-lbl-plain') . '">' . self::escape($text)
+            . '</span>&nbsp;&nbsp;';
     }
 
     // ── ตัวช่วย ──────────────────────────────────────────────────
