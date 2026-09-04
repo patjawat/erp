@@ -1,9 +1,23 @@
 <?php
 
+use app\components\AppHelper;
 use app\modules\finance\models\FinanceLoan;
 use app\modules\finance\models\FinanceLoanSettlement;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+
+/** ช่องวันที่มาตรฐาน ERP — datepicker ไทย (พ.ศ. วว/ดด/พ.ศ.) */
+$thaiDate = static function ($model, string $attr): string {
+    $id = Html::getInputId($model, $attr);
+    return '<label class="form-label" for="' . $id . '">' . Html::encode($model->getAttributeLabel($attr)) . '</label>'
+        . DatepickerThai::widget([
+            'name' => Html::getInputName($model, $attr),
+            'value' => $model->$attr ? AppHelper::convertToThai($model->$attr) : '',
+            'options' => ['id' => $id, 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+        ])
+        . Html::error($model, $attr, ['class' => 'invalid-feedback d-block']);
+};
 
 /** @var yii\web\View $this */
 /** @var FinanceLoan $loan */
@@ -42,7 +56,7 @@ $before = round(max(0, $before), 2);
         <span class="text-body-secondary small">คงค้างก่อนรายการนี้ <span class="font-monospace"><?= number_format($before, 2) ?></span> บาท</span>
     </div>
     <div class="card-body"><div class="row g-3">
-        <div class="col-md-4"><?= $form->field($settlement, 'settled_at')->input('date') ?></div>
+        <div class="col-md-4"><?= $thaiDate($settlement, 'settled_at') ?></div>
         <div class="col-md-4">
             <?= $form->field($settlement, 'voucher_amount')->textInput(['type' => 'number', 'step' => '0.01', 'min' => 0, 'class' => 'form-control text-end', 'id' => 'settle-voucher']) ?>
             <div class="form-text">ยอดตามใบสำคัญที่นำมาชดใช้</div>
@@ -68,7 +82,7 @@ $before = round(max(0, $before), 2);
             <div class="form-text">บร. สำหรับเงินสด · บค. สำหรับใบสำคัญ</div>
         </div>
         <div class="col-md-4"><?= $form->field($settlement, 'document_no')->textInput(['maxlength' => true]) ?></div>
-        <div class="col-md-4"><?= $form->field($settlement, 'evidence_sent_at')->input('date') ?></div>
+        <div class="col-md-4"><?= $thaiDate($settlement, 'evidence_sent_at') ?></div>
         <div class="col-md-3"><?= $form->field($settlement, 'receipt_book_no')->textInput(['maxlength' => true]) ?></div>
         <div class="col-md-3"><?= $form->field($settlement, 'receipt_number')->textInput(['maxlength' => true]) ?></div>
         <div class="col-md-6">

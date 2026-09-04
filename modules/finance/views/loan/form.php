@@ -4,7 +4,9 @@ use app\modules\finance\models\FinanceLoan;
 use app\modules\finance\models\FinanceLoanAccount;
 use app\modules\finance\models\FinanceLoanExpenseType;
 use app\modules\finance\models\FinanceLoanItemKind;
+use app\components\AppHelper;
 use app\modules\hr\models\Employees;
+use app\widgets\datepicker\DatepickerThai;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
@@ -48,6 +50,20 @@ foreach ($employeeQuery->all() as $emp) {
 asort($employees);
 
 $rows = $items ?: [];
+
+// ช่องวันที่มาตรฐาน ERP — datepicker ไทย (แสดง/กรอกเป็น พ.ศ. วว/ดด/พ.ศ.)
+// ใช้ widget แบบ name-based พร้อมแปลงค่าจาก ค.ศ. ในฐานข้อมูลเป็น พ.ศ. ตอนแสดง
+// ฝั่งบันทึก LoanController แปลงกลับเป็น ค.ศ. ก่อน validate
+$thaiDate = static function ($model, string $attr, ?string $id = null): string {
+    $id = $id ?: Html::getInputId($model, $attr);
+    return '<label class="form-label" for="' . $id . '">' . Html::encode($model->getAttributeLabel($attr)) . '</label>'
+        . DatepickerThai::widget([
+            'name' => Html::getInputName($model, $attr),
+            'value' => $model->$attr ? AppHelper::convertToThai($model->$attr) : '',
+            'options' => ['id' => $id, 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+        ])
+        . Html::error($model, $attr, ['class' => 'invalid-feedback d-block']);
+};
 ?>
 
 <?php $form = ActiveForm::begin(['id' => 'loan-form', 'options' => ['class' => 'needs-validation']]); ?>
@@ -81,7 +97,7 @@ $rows = $items ?: [];
         </div>
         <div class="col-md-5"><?= $form->field($model, 'account_id')->dropDownList(FinanceLoanAccount::options(), ['prompt' => '== กรุณาเลือก ==']) ?></div>
         <div class="col-md-4"><?= $form->field($model, 'request_document_no')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ลย 0033.301/1557']) ?></div>
-        <div class="col-md-3"><?= $form->field($model, 'request_document_date')->input('date') ?></div>
+        <div class="col-md-3"><?= $thaiDate($model, 'request_document_date') ?></div>
     </div></div>
 </section>
 
@@ -105,15 +121,15 @@ $rows = $items ?: [];
 <section class="card border mb-3" aria-labelledby="schedule-heading">
     <div class="card-header bg-body"><h5 class="mb-0" id="schedule-heading">กำหนดเวลา</h5></div>
     <div class="card-body"><div class="row g-3">
-        <div class="col-md-3"><?= $form->field($model, 'borrowed_at')->input('date') ?></div>
-        <div class="col-md-3"><?= $form->field($model, 'received_at')->input('date', ['id' => 'loan-received-at']) ?></div>
-        <div class="col-md-3"><?= $form->field($model, 'activity_start_at')->input('date') ?></div>
+        <div class="col-md-3"><?= $thaiDate($model, 'borrowed_at') ?></div>
+        <div class="col-md-3"><?= $thaiDate($model, 'received_at', 'loan-received-at') ?></div>
+        <div class="col-md-3"><?= $thaiDate($model, 'activity_start_at') ?></div>
         <div class="col-md-3">
-            <?= $form->field($model, 'activity_end_at')->input('date', ['id' => 'loan-activity-end']) ?>
+            <?= $thaiDate($model, 'activity_end_at', 'loan-activity-end') ?>
             <div class="form-text">ใช้เป็นจุดตั้งต้นนับวันครบกำหนด</div>
         </div>
         <div class="col-md-4">
-            <?= $form->field($model, 'due_at')->input('date', ['id' => 'loan-due-at']) ?>
+            <?= $thaiDate($model, 'due_at', 'loan-due-at') ?>
         </div>
         <div class="col-md-8 d-flex flex-column justify-content-center">
             <?= $form->field($model, 'due_is_manual')->checkbox(['id' => 'loan-due-manual'])->label('กำหนดวันคืนเอง ไม่ให้ระบบคำนวณทับ') ?>
@@ -312,18 +328,24 @@ $this->registerJs(<<<JS
     body.querySelectorAll('.loan-item-row').forEach(applyHint);
     recalcTotal();
 
-    // เติมชื่อและตำแหน่งให้เมื่อเลือกบุคลากร แต่ยังพิมพ์ทับได้
-    // เพราะบางใบยืมผู้ยืมเป็นคนนอกทะเบียน หรือชื่อในสัญญาต่างจากในทะเบียน
-    var empSelect = document.getElementById('loan-borrower-emp');
-    if (empSelect) {
-        empSelect.addEventListener('change', function () {
-            var meta = employees[this.value];
-            if (!meta) { return; }
-            var nameField = document.getElementById('loan-borrower-name');
-            var positionField = document.getElementById('loan-borrower-position');
-            if (nameField && !nameField.value.trim()) { nameField.value = meta.name; }
-            if (positionField && !positionField.value.trim()) { positionField.value = meta.position; }
-        });
+    // เติมชื่อและตำแหน่งให้เมื่อเลือกบุคลากร แล้วยังพิมพ์ทับได้ทีหลัง
+    // (บางใบยืมผู้ยืมเป็นคนนอกทะเบียน หรือชื่อในสัญญาต่างจากในทะเบียน)
+    //
+    // ต้องผูกด้วย jQuery ไม่ใช่ addEventListener — Select2 ยิง change ผ่าน
+    // jQuery.trigger ซึ่งไม่ปลุก native event listener การเลือกคนจึงเคยไม่เติมค่า
+    var fillBorrower = function (id) {
+        var meta = employees[id];
+        if (!meta) { return; }
+        var nameField = document.getElementById('loan-borrower-name');
+        var positionField = document.getElementById('loan-borrower-position');
+        if (nameField) { nameField.value = meta.name; }
+        if (positionField) { positionField.value = meta.position; }
+    };
+    if (window.jQuery) {
+        window.jQuery('#loan-borrower-emp').on('change', function () { fillBorrower(this.value); });
+    } else {
+        var empSelect = document.getElementById('loan-borrower-emp');
+        if (empSelect) { empSelect.addEventListener('change', function () { fillBorrower(this.value); }); }
     }
 
     // แสดงกติกาวันครบกำหนดและคำนวณให้ดูล่วงหน้า ฝั่งเซิร์ฟเวอร์คำนวณซ้ำตอนบันทึกอยู่ดี
@@ -332,6 +354,20 @@ $this->registerJs(<<<JS
     var dueField = document.getElementById('loan-due-at');
     var manualBox = document.getElementById('loan-due-manual');
     var anchors = { activity_end: 'loan-activity-end', received: 'loan-received-at' };
+
+    // ช่องวันที่เป็น datepicker ไทย ค่าจึงเป็น พ.ศ. รูปแบบ วว/ดด/พ.ศ.
+    var parseThaiDate = function (s) {
+        var p = String(s || '').split('/');
+        if (p.length !== 3) { return null; }
+        var d = parseInt(p[0], 10), m = parseInt(p[1], 10), y = parseInt(p[2], 10) - 543;
+        if (!d || !m || !y) { return null; }
+        var dt = new Date(y, m - 1, d);
+        return isNaN(dt.getTime()) ? null : dt;
+    };
+    var formatThaiDate = function (dt) {
+        var d = ('0' + dt.getDate()).slice(-2), m = ('0' + (dt.getMonth() + 1)).slice(-2);
+        return d + '/' + m + '/' + (dt.getFullYear() + 543);
+    };
 
     var previewDue = function () {
         if (!typeSelect || !dueField) { return; }
@@ -342,23 +378,27 @@ $this->registerJs(<<<JS
         }
         if (manualBox && manualBox.checked) {
             hint.textContent = rule.text + ' (กำหนดเอง ระบบไม่คำนวณทับ)';
-            dueField.readOnly = false;
             return;
         }
         var anchorField = document.getElementById(anchors[rule.basis] || '');
-        var anchor = anchorField ? anchorField.value : '';
+        var anchor = anchorField ? parseThaiDate(anchorField.value) : null;
         if (!anchor) {
             hint.textContent = rule.text + ' — ยังไม่ได้กรอกวันดังกล่าว จึงยังไม่มีวันครบกำหนด';
             dueField.value = '';
             return;
         }
-        var date = new Date(anchor + 'T00:00:00');
-        date.setDate(date.getDate() + rule.days);
-        dueField.value = date.toISOString().slice(0, 10);
+        anchor.setDate(anchor.getDate() + rule.days);
+        dueField.value = formatThaiDate(anchor);
         hint.textContent = rule.text;
     };
 
-    [typeSelect, manualBox, document.getElementById('loan-activity-end'), document.getElementById('loan-received-at')]
-        .forEach(function (el) { if (el) { el.addEventListener('change', previewDue); } });
+    // ผูกด้วย jQuery — datepicker ไทยยิง change ผ่าน jQuery ซึ่ง addEventListener จับไม่ได้
+    if (window.jQuery) {
+        window.jQuery('#loan-expense-type, #loan-due-manual, #loan-activity-end, #loan-received-at')
+            .on('change', previewDue);
+    } else {
+        [typeSelect, manualBox, document.getElementById('loan-activity-end'), document.getElementById('loan-received-at')]
+            .forEach(function (el) { if (el) { el.addEventListener('change', previewDue); } });
+    }
 })();
 JS);

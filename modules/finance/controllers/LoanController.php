@@ -2,6 +2,7 @@
 
 namespace app\modules\finance\controllers;
 
+use app\components\AppHelper;
 use app\modules\finance\models\FinanceLoan;
 use app\modules\finance\models\FinanceLoanFollowup;
 use app\modules\finance\models\FinanceLoanImportForm;
@@ -296,7 +297,11 @@ class LoanController extends Controller
             'new_due_at' => date('Y-m-d', strtotime('+15 day')),
         ]);
 
-        if ($letter->load(Yii::$app->request->post()) && (new FinanceLoanFollowupService())->issueLetter($loan, $letter)) {
+        $letterLoaded = $letter->load(Yii::$app->request->post());
+        if ($letterLoaded) {
+            $this->datesToGregorian($letter, ['letter_date', 'new_due_at']);
+        }
+        if ($letterLoaded && (new FinanceLoanFollowupService())->issueLetter($loan, $letter)) {
             Yii::$app->session->setFlash('success', 'ออกหนังสือติดตามครั้งที่ ' . (int) $letter->letter_seq . ' แล้ว — กด “พิมพ์หนังสือ” ในรายการติดตามเพื่อตรวจแก้ก่อนพิมพ์');
             return $this->redirect(['view', 'id' => $loan->id]);
         }
@@ -320,6 +325,7 @@ class LoanController extends Controller
     {
         if ($settlement->load(Yii::$app->request->post())) {
             $settlement->loan_id = $loan->id;
+            $this->datesToGregorian($settlement, ['settled_at', 'evidence_sent_at']);
             if ((new FinanceLoanSettlementService())->save($settlement)) {
                 $loan->refresh();
                 $message = 'บันทึกการส่งใช้ครั้งที่ ' . (int) $settlement->seq . ' เรียบร้อย';
@@ -349,6 +355,17 @@ class LoanController extends Controller
      * แล้วอันใดอันหนึ่งล้ม จะเหลือใบยืมที่ยอดไม่ตรงกับรายการ ซึ่งเป็นข้อมูลที่ผิดแบบ
      * มองด้วยตาไม่เห็น จึงต้องอยู่ในธุรกรรมเดียวกันเสมอ
      */
+    /**
+     * แปลงช่องวันที่ที่ส่งมาจากฟอร์ม (พ.ศ. รูปแบบ วว/ดด/พ.ศ.) กลับเป็น ค.ศ. Y-m-d
+     * ก่อนตรวจสอบและบันทึก ช่องว่างจะได้ค่า null ตามที่ convertToGregorian คืนมา
+     */
+    private function datesToGregorian($model, array $attrs): void
+    {
+        foreach ($attrs as $attr) {
+            $model->$attr = AppHelper::convertToGregorian($model->$attr);
+        }
+    }
+
     private function saveForm(FinanceLoan $model, string $title)
     {
         $items = $model->isNewRecord ? [] : $model->items;
@@ -362,6 +379,13 @@ class LoanController extends Controller
             if ($lockedStatus !== null) {
                 $model->status = $lockedStatus;
             }
+            // ช่องวันที่จากฟอร์มเป็น พ.ศ. (วว/ดด/พ.ศ.) แปลงกลับเป็น ค.ศ. ก่อนตรวจ
+            // ต้องแปลงก่อน validate() เพราะ beforeValidate()->applyDueRule() คำนวณ
+            // วันครบกำหนดจาก anchor ด้วย strtotime ซึ่งอ่านได้เฉพาะรูปแบบ ค.ศ.
+            $this->datesToGregorian($model, [
+                'request_document_date', 'borrowed_at', 'received_at',
+                'activity_start_at', 'activity_end_at', 'due_at',
+            ]);
             if ($loaded && $model->validate() && !$posted['errors']) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
