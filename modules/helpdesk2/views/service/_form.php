@@ -199,7 +199,8 @@ CSS, [], 'helpdesk-asset-picker');
             ])->label('รหัสครุภัณฑ์'); ?>
             <div class="form-text small text-muted mt-1">
                 <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                ค้นหาจากชื่อหรือรหัส ดูรูปและรายละเอียดก่อนเลือก
+                แนะนำให้ระบุครุภัณฑ์ เพื่อติดตามประวัติซ่อม/สอบเทียบและตัวชี้วัดชนิดเครื่องมือ
+                <span class="text-secondary">(หากยังไม่ทราบ ช่างระบุภายหลังได้)</span>
             </div>
     </div>
 

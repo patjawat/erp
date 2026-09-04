@@ -240,13 +240,22 @@ class HelpdeskSlaHelper
     }
 
     /**
-     * เวลาแก้ไขที่รับประกันแบบมีผล (นาที) = resolve_min ของบริการ × ตัวคูณความเร่งด่วน
+     * เวลาแก้ไขที่รับประกันแบบมีผล (นาที) = เวลาแก้ไขฐาน × ตัวคูณความเร่งด่วน
+     *
+     * เวลาแก้ไขฐาน: ถ้ากลุ่มงานซ่อมมีค่ากำหนดไว้ (แพทย์/ซ่อมบำรุง) ใช้ค่าของกลุ่ม
+     * ถ้าไม่มี (คอมพิวเตอร์/ไม่ระบุกลุ่ม) ใช้ resolve_min ของรายการบริการตาม device_type เดิม
      */
-    public static function effectiveResolveMinutesFor(?string $deviceType, $urgency): float
+    public static function effectiveResolveMinutesFor(?string $deviceType, $urgency, ?int $repairGroup = null): float
     {
-        $service = self::resolveServiceByType($deviceType);
-        $base = (float) ($service['resolve_min'] ?? 1440);
-        $mult = self::settingRecord()->getUrgencyMultiplier();
+        $record = self::settingRecord();
+        $groupBase = $record->groupResolveMin($repairGroup);
+        if ($groupBase !== null) {
+            $base = $groupBase;
+        } else {
+            $service = self::resolveServiceByType($deviceType);
+            $base = (float) ($service['resolve_min'] ?? 1440);
+        }
+        $mult = $record->getUrgencyMultiplier();
         $u = self::normalizeUrgencyValue($urgency);
         $factor = isset($mult[$u]) ? (float) $mult[$u] : 1.0;
         return max(1.0, $base * $factor);
@@ -260,12 +269,12 @@ class HelpdeskSlaHelper
      * @param array<string,?string> $timeline ผลจาก HelpdeskTimelineHelper
      * @return array{service_code:string,service_title:string,resolve_minutes:float,actual_minutes:?float,deadline:?string,status:string}
      */
-    public static function slaResultFromData(array $t, array $timeline): array
+    public static function slaResultFromData(array $t, array $timeline, ?int $repairGroup = null): array
     {
         $deviceType = $t['device_type_id'] ?? null;
         $urgency = $t['data_json']['urgency'] ?? null;
         $service = self::resolveServiceByType($deviceType);
-        $resolveMinutes = self::effectiveResolveMinutesFor($deviceType, $urgency);
+        $resolveMinutes = self::effectiveResolveMinutesFor($deviceType, $urgency, $repairGroup);
 
         $reported = $timeline['reported_at'] ?? ($t['created_at'] ?? null);
         $resolved = $timeline['resolved_at'] ?? null;
@@ -279,12 +288,13 @@ class HelpdeskSlaHelper
      * @param array<string,?string> $timeline ผลจาก HelpdeskTimelineHelper::withFallback()
      * @return array{service_code:string,service_title:string,resolve_minutes:float,actual_minutes:?float,deadline:?string,status:string}
      */
-    public static function slaResult(Helpdesk $ticket, array $timeline): array
+    public static function slaResult(Helpdesk $ticket, array $timeline, ?int $repairGroup = null): array
     {
         $service = self::resolveServiceByType($ticket->device_type_id);
         $resolveMinutes = self::effectiveResolveMinutesFor(
             $ticket->device_type_id,
-            $ticket->data_json['urgency'] ?? null
+            $ticket->data_json['urgency'] ?? null,
+            $repairGroup ?? $ticket->repair_group
         );
 
         $reported = $timeline['reported_at'] ?? ($ticket->created_at ?: null);

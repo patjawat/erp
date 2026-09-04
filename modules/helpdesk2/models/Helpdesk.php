@@ -624,24 +624,39 @@ class Helpdesk extends \yii\db\ActiveRecord
         return ArrayHelper::map($list, 'code', 'code');
     }
 
+    /** map กลุ่มงานซ่อม → ชนิดครุภัณฑ์ (asset_type_id) สำหรับกรอง picker (2=คอม, 3=เครื่องมือแพทย์) */
+    public const ASSET_TYPE_BY_GROUP = [2 => ['COM'], 3 => ['MED', 'SCI']];
+
+    /** ชนิดครุภัณฑ์ที่ควรกรองสำหรับกลุ่มงานซ่อมนี้ (null = ไม่จำกัดชนิด) */
+    public static function assetTypesForGroup($repairGroup): ?array
+    {
+        return self::ASSET_TYPE_BY_GROUP[(int) $repairGroup] ?? null;
+    }
+
     /**
      * รายการครุภัณฑ์สำหรับ Select2 picker (รูป + ชื่อ + รหัส + ประเภท)
      * คืนค่า ['items' => [code => label], 'options' => [code => ['data-*' => ...]]]
      *
+     * @param array|null $assetTypes กรองเฉพาะ asset_type_id เหล่านี้ (เช่น ['MED','SCI'] ตอนปิดงานแพทย์)
      * เลี่ยง N+1: ดึง Asset + Uploads ครั้งละชุด แล้ว cache 5 นาที
      */
-    public function listAssetForPicker()
+    public function listAssetForPicker(?array $assetTypes = null)
     {
-        $cacheKey = 'helpdesk2:asset_picker:group:4:v1';
+        $typeKey  = $assetTypes ? implode('-', $assetTypes) : 'all';
+        $cacheKey = 'helpdesk2:asset_picker:group:4:type:' . $typeKey . ':v1';
         $cache    = Yii::$app->has('cache') ? Yii::$app->cache : null;
         if ($cache && ($hit = $cache->get($cacheKey)) !== false) {
             return $hit;
         }
 
         // 1) โหลด asset เฉพาะคอลัมน์ที่ใช้ (asArray = เร็วกว่า hydrate AR)
-        $assets = Asset::find()
+        $assetQuery = Asset::find()
             ->select(['id', 'code', 'ref', 'data_json'])
-            ->where(['asset_group_id' => 4])
+            ->where(['asset_group_id' => 4]);
+        if ($assetTypes) {
+            $assetQuery->andWhere(['asset_type_id' => $assetTypes]);
+        }
+        $assets = $assetQuery
             ->asArray()
             ->all();
 

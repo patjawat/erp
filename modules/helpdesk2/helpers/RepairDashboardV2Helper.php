@@ -36,6 +36,45 @@ class RepairDashboardV2Helper
     private const HA_ASSET_TYPE_MAP = [2 => ['COM'], 3 => ['MED', 'SCI']];
 
     /**
+     * map รหัส device_type รุ่นเก่า (อังกฤษดิบ) → ชุด "ระบบงาน" CAL-* ตาม HA II-3
+     * ใช้แบบ "รวมตอนแสดงผล" (Task 2 วิธี A) — ไม่แตะข้อมูลใน DB
+     * ตัวที่ไม่มีใน map (เช่น NULL/รหัสว่าง) คงไว้เป็น "ไม่ระบุ"
+     */
+    private const DEVICE_TYPE_ALIAS = [
+        'electrical' => 'CAL-05',
+        'plumbing'   => 'CAL-06',
+        'ac'         => 'CAL-04',
+        'network'    => 'CAL-07',
+        'computer'   => 'CAL-11',
+        'furniture'  => 'CAL-02',
+        'other'      => 'CAL-12',
+    ];
+
+    /** แปลงรหัส device_type เป็นรหัส canonical (รหัสเก่า→CAL-*, ที่เหลือคงเดิม) */
+    public static function canonicalDeviceType(?string $code): string
+    {
+        $code = (string) $code;
+        return self::DEVICE_TYPE_ALIAS[$code] ?? $code;
+    }
+
+    /**
+     * คืนรหัส device_type ทุกตัว (canonical + alias เก่า) ที่ต้องถูกกรอง
+     * เมื่อผู้ใช้เลือกรหัส canonical — เพื่อให้ filter/drill-down ครอบคลุมข้อมูลเก่าด้วย
+     *
+     * @return string[]
+     */
+    public static function deviceTypeAliasCodes(string $canonical): array
+    {
+        $codes = [$canonical];
+        foreach (self::DEVICE_TYPE_ALIAS as $old => $new) {
+            if ($new === $canonical) {
+                $codes[] = $old;
+            }
+        }
+        return $codes;
+    }
+
+    /**
      * @param int|null $repairGroup 1=ทั่วไป, 2=คอม, 3=แพทย์ — null = ทุกกลุ่ม
      * @param array $filters ตัวกรองจาก query params: year, date_start, date_end,
      *                        device_type_id, urgency, technician, department
@@ -78,17 +117,21 @@ class RepairDashboardV2Helper
         $topCategoriesRaw = $base()
             ->select(['device_type_id' => 'helpdesk.device_type_id', 'cnt' => 'COUNT(*)'])
             ->groupBy(['helpdesk.device_type_id'])
-            ->orderBy(['cnt' => SORT_DESC])
-            ->limit(5)
             ->asArray()
             ->all();
-        $topCategories = [];
+        // รวมรหัสเก่า→CAL-* (Task 2 วิธี A) แล้วค่อยตัด top 5
+        $merged = [];
         foreach ($topCategoriesRaw as $row) {
-            $code = (string) ($row['device_type_id'] ?? '');
+            $code = self::canonicalDeviceType((string) ($row['device_type_id'] ?? ''));
+            $merged[$code] = ($merged[$code] ?? 0) + (int) $row['cnt'];
+        }
+        arsort($merged);
+        $topCategories = [];
+        foreach (array_slice($merged, 0, 5, true) as $code => $cnt) {
             $topCategories[] = [
                 'device_type_id' => $code,
                 'title' => $deviceTypeMap[$code] ?? ($code !== '' ? $code : 'ไม่ระบุ'),
-                'cnt' => (int) $row['cnt'],
+                'cnt' => (int) $cnt,
             ];
         }
 
@@ -96,7 +139,7 @@ class RepairDashboardV2Helper
         $staffWorkload = self::staffWorkload($repairGroup, $range, $filters);
 
         // ---- ตัวชี้วัดจาก timeline (SLA / MTTA / MTTR / ความพึงพอใจ) ----
-        $metrics = self::computeMetrics($base());
+        $metrics = self::computeMetrics($base(), $repairGroup);
 
         // ---- legacy keys (คงไว้ให้ view เดิมของศูนย์อื่นทำงานได้) ----
         $result = [
@@ -143,6 +186,7 @@ class RepairDashboardV2Helper
 
         // ---- รายงาน HAIT (ฉบับ 1: SLA ต่อบริการ, ฉบับ 2: Pareto) ----
         $result['slaByService'] = $metrics['sla_by_service'];
+        $result['slaBySystem'] = $metrics['sla_by_system'];
         $result['paretoDevice'] = $metrics['pareto_device'];
         $result['paretoDepartment'] = $metrics['pareto_department'];
 
@@ -220,11 +264,99 @@ class RepairDashboardV2Helper
             // ----- การสอบเทียบ / บำรุงรักษาเชิงป้องกัน ตามแผนในช่วงเวลา -----
             $out['calibration'] = self::detailCompliance('calibration', $assetTypes, $range, true);
             $out['pm'] = self::detailCompliance('maintenance', $assetTypes, $range, false);
+
+            // ----- งานซ่อมแยกตามชนิดครุภัณฑ์ (จากครุภัณฑ์ที่ผูกใบงาน) -----
+            $out['assetTypePareto'] = self::assetTypePareto($repairGroup, $range);
         } catch (\Throwable $e) {
             Yii::warning('haMetrics failed: ' . $e->getMessage(), __METHOD__);
         }
 
         return $out;
+    }
+
+    /**
+     * งานซ่อมแยกตาม "ชนิดครุภัณฑ์" จากครุภัณฑ์ที่ผูกใบงาน (helpdesk.asset_number = asset.code)
+     * ใช้รหัส GSN คำนำหน้า (ส่วนหน้าเครื่องหมาย "/" เช่น 6515-031-0202) เป็นตัวจัดกลุ่มมาตรฐาน
+     * และเลือกชื่อไทยที่พบบ่อยสุดของแต่ละกลุ่มเป็นป้ายแสดงผล
+     *
+     * @param array{start:?string,end:?string} $range
+     * @return array{rows:array<int,array{prefix:string,title:string,cnt:int}>, total:int, linked:int, unlinked:int}
+     */
+    private static function assetTypePareto(?int $repairGroup, array $range, int $limit = 10): array
+    {
+        $empty = ['rows' => [], 'total' => 0, 'linked' => 0, 'unlinked' => 0];
+        try {
+            $q = (new Query())
+                ->select([
+                    'prefix'  => new Expression("SUBSTRING_INDEX(h.asset_number,'/',1)"),
+                    'name'    => new Expression("JSON_UNQUOTE(JSON_EXTRACT(a.data_json,'$.asset_name'))"),
+                ])
+                ->from('{{%helpdesk}} h')
+                ->innerJoin('{{%asset}} a', 'a.code = h.asset_number')
+                ->where(['h.name' => 'repair'])
+                ->andWhere(['not', ['h.asset_number' => null]])
+                ->andWhere(['<>', 'h.asset_number', '']);
+            if ($repairGroup !== null) {
+                $q->andWhere(['h.repair_group' => $repairGroup]);
+            }
+            if (!empty($range['start']) && !empty($range['end'])) {
+                $q->andWhere(['between', new Expression('DATE(h.created_at)'), $range['start'], $range['end']]);
+            }
+            $rows = $q->all();
+
+            // นับต่อ prefix + หาชื่อไทยที่พบบ่อยสุด
+            $counts = [];   // prefix => cnt
+            $names  = [];   // prefix => [name => freq]
+            foreach ($rows as $r) {
+                $prefix = (string) ($r['prefix'] ?? '');
+                if ($prefix === '') {
+                    continue;
+                }
+                $counts[$prefix] = ($counts[$prefix] ?? 0) + 1;
+                $name = trim((string) ($r['name'] ?? ''));
+                if ($name !== '') {
+                    $names[$prefix][$name] = ($names[$prefix][$name] ?? 0) + 1;
+                }
+            }
+            arsort($counts);
+
+            $out = [];
+            foreach (array_slice($counts, 0, $limit, true) as $prefix => $cnt) {
+                $title = $prefix;
+                if (!empty($names[$prefix])) {
+                    arsort($names[$prefix]);
+                    $title = (string) array_key_first($names[$prefix]);
+                }
+                $out[] = ['prefix' => $prefix, 'title' => $title, 'cnt' => (int) $cnt];
+            }
+
+            // ความครอบคลุมการผูกครุภัณฑ์ (สำหรับป้ายบอกคุณภาพข้อมูล) — ขอบเขตเดียวกับ pareto
+            $cov = static function () use ($repairGroup, $range) {
+                $c = (new Query())->from('{{%helpdesk}} h')->where(['h.name' => 'repair']);
+                if ($repairGroup !== null) {
+                    $c->andWhere(['h.repair_group' => $repairGroup]);
+                }
+                if (!empty($range['start']) && !empty($range['end'])) {
+                    $c->andWhere(['between', new Expression('DATE(h.created_at)'), $range['start'], $range['end']]);
+                }
+                return $c;
+            };
+            $total = (int) $cov()->count();
+            $linked = (int) $cov()
+                ->andWhere(['not', ['h.asset_number' => null]])
+                ->andWhere(['<>', 'h.asset_number', ''])
+                ->count();
+
+            return [
+                'rows' => $out,
+                'total' => $total,
+                'linked' => $linked,
+                'unlinked' => max(0, $total - $linked),
+            ];
+        } catch (\Throwable $e) {
+            Yii::warning('assetTypePareto failed: ' . $e->getMessage(), __METHOD__);
+            return $empty;
+        }
     }
 
     /**
@@ -310,7 +442,7 @@ class RepairDashboardV2Helper
             $q->andWhere(['between', new Expression('DATE(helpdesk.created_at)'), $range['start'], $range['end']]);
         }
         if (!empty($filters['device_type_id'])) {
-            $q->andWhere(['helpdesk.device_type_id' => $filters['device_type_id']]);
+            $q->andWhere(['helpdesk.device_type_id' => self::deviceTypeAliasCodes((string) $filters['device_type_id'])]);
         }
         if ($filters['urgency'] !== null && $filters['urgency'] !== '') {
             $q->andWhere(['=', new Expression("JSON_UNQUOTE(JSON_EXTRACT(helpdesk.data_json, '$.urgency'))"), (string) $filters['urgency']]);
@@ -369,9 +501,14 @@ class RepairDashboardV2Helper
             $title = 'สถานะ: ' . Helpdesk::repairStatusLabel($code);
         } elseif (str_starts_with($scope, 'device_type:')) {
             $code = substr($scope, 12);
-            $q->andWhere(['helpdesk.device_type_id' => $code]);
+            $q->andWhere(['helpdesk.device_type_id' => self::deviceTypeAliasCodes($code)]);
             $map = self::deviceTypeTitleMap();
-            $title = 'ประเภทอุปกรณ์: ' . ($map[$code] ?? $code);
+            $title = 'ระบบงาน: ' . ($map[$code] ?? $code);
+        } elseif (str_starts_with($scope, 'asset_prefix:')) {
+            // ชนิดครุภัณฑ์ตามรหัส GSN คำนำหน้า (ส่วนหน้าเครื่องหมาย "/")
+            $prefix = substr($scope, 13);
+            $q->andWhere(['=', new Expression("SUBSTRING_INDEX(helpdesk.asset_number,'/',1)"), $prefix]);
+            $title = 'ชนิดครุภัณฑ์: ' . $prefix;
         } elseif (str_starts_with($scope, 'month:')) {
             $month = substr($scope, 6); // YYYY-MM
             $q->andWhere(['=', new Expression("DATE_FORMAT(helpdesk.created_at,'%Y-%m')"), $month]);
@@ -467,7 +604,7 @@ class RepairDashboardV2Helper
         foreach ($rows as $r) {
             $r['data_json'] = self::decodeJson($r['data_json']);
             $tl = HelpdeskTimelineHelper::withFallbackArray($timelines[(int) $r['id']] ?? [], $r);
-            $sla = HelpdeskSlaHelper::slaResultFromData($r, $tl);
+            $sla = HelpdeskSlaHelper::slaResultFromData($r, $tl, $repairGroup);
 
             if ($needsSlaFilter && $sla['status'] !== $slaWant) {
                 continue;
@@ -525,7 +662,7 @@ class RepairDashboardV2Helper
      * @param \yii\db\ActiveQuery $scopeQuery
      * @return array<string,mixed>
      */
-    private static function computeMetrics($scopeQuery): array
+    private static function computeMetrics($scopeQuery, ?int $repairGroup = null): array
     {
         $rows = $scopeQuery
             ->select([
@@ -551,6 +688,7 @@ class RepairDashboardV2Helper
 
         // ---- buckets สำหรับรายงาน HAIT ----
         $svcBuckets = [];      // service_code => ['title','count','met','breached','resolve_secs'=>[]]
+        $sysBuckets = [];      // canonical device_type => ['title','count','met','breached','resolve_secs'=>[]] (SLA ตามระบบงาน)
         $paretoDevice = [];    // device_type_id => count
         $paretoDept = [];      // dept_id => ['name','cnt']
         $monthly = [];         // 'YYYY-MM' => ['count','met','breached','mttr'=>[]]
@@ -595,7 +733,7 @@ class RepairDashboardV2Helper
             }
 
             // SLA
-            $sla = HelpdeskSlaHelper::slaResultFromData($r, $tl);
+            $sla = HelpdeskSlaHelper::slaResultFromData($r, $tl, $repairGroup);
             switch ($sla['status']) {
                 case 'met':
                     $slaMet++;
@@ -638,10 +776,30 @@ class RepairDashboardV2Helper
                 }
             }
 
-            // ---- Pareto ----
-            $dtCode = (string) ($r['device_type_id'] ?? '');
+            // ---- Pareto (รวมรหัสเก่า→CAL-* ตอนแสดงผล) ----
+            $dtCode = self::canonicalDeviceType((string) ($r['device_type_id'] ?? ''));
             $dtKey = $dtCode !== '' ? $dtCode : '__none__';
             $paretoDevice[$dtKey] = ($paretoDevice[$dtKey] ?? 0) + 1;
+
+            // ---- bucket ผล SLA ตามระบบงาน (ใช้แทนตารางบริการศูนย์คอมบนหน้าแพทย์/ซ่อมบำรุง) ----
+            if (!isset($sysBuckets[$dtKey])) {
+                $sysBuckets[$dtKey] = [
+                    'code' => $dtCode,
+                    'title' => $dtCode !== '' ? ($deviceMap[$dtCode] ?? $dtCode) : 'ไม่ระบุ',
+                    'count' => 0, 'met' => 0, 'breached' => 0, 'resolve_secs' => [],
+                ];
+            }
+            if (in_array($sla['status'], ['met', 'breached'], true)) {
+                $sysBuckets[$dtKey]['count']++;
+                if ($sla['status'] === 'met') {
+                    $sysBuckets[$dtKey]['met']++;
+                } else {
+                    $sysBuckets[$dtKey]['breached']++;
+                }
+                if ($resSec !== null) {
+                    $sysBuckets[$dtKey]['resolve_secs'][] = $resSec;
+                }
+            }
 
             // ---- แนวโน้มรายเดือน (ตามเดือนที่แจ้ง) ----
             $month = substr((string) ($r['created_at'] ?? ''), 0, 7);
@@ -694,6 +852,24 @@ class RepairDashboardV2Helper
         }
         usort($slaByService, static fn($a, $b) => $b['count'] <=> $a['count']);
 
+        // ---- สรุป bucket ผล SLA ตามระบบงาน ----
+        $slaBySystem = [];
+        foreach ($sysBuckets as $b) {
+            $secs = $b['resolve_secs'];
+            $slaBySystem[] = [
+                'code' => $b['code'],
+                'title' => $b['title'],
+                'count' => $b['count'],
+                'met' => $b['met'],
+                'breached' => $b['breached'],
+                'pct' => $b['count'] > 0 ? round(($b['met'] / $b['count']) * 100, 1) : null,
+                'max_secs' => !empty($secs) ? max($secs) : null,
+                'min_secs' => !empty($secs) ? min($secs) : null,
+                'avg_secs' => !empty($secs) ? (int) round(array_sum($secs) / count($secs)) : null,
+            ];
+        }
+        usort($slaBySystem, static fn($a, $b) => $b['count'] <=> $a['count']);
+
         // ---- สรุป Pareto (เรียงมาก→น้อย) ----
         arsort($paretoDevice);
         $paretoDeviceOut = [];
@@ -744,6 +920,7 @@ class RepairDashboardV2Helper
             'rating_count' => $ratingCount,
             'closed_total' => $closedTotal,
             'sla_by_service' => $slaByService,
+            'sla_by_system' => $slaBySystem,
             'pareto_device' => $paretoDeviceOut,
             'pareto_department' => $paretoDeptOut,
             'monthly_trend' => $monthlyOut,
@@ -875,6 +1052,12 @@ class RepairDashboardV2Helper
         foreach ($rows as $r) {
             $map[(string) $r['code']] = (string) $r['title'];
         }
+        // ให้รหัสเก่ามีชื่อไทยด้วย (เผื่อหลุดมาแสดงตรงไหน) — ชี้ไปชื่อของ CAL-* ปลายทาง
+        foreach (self::DEVICE_TYPE_ALIAS as $old => $new) {
+            if (!isset($map[$old]) && isset($map[$new])) {
+                $map[$old] = $map[$new];
+            }
+        }
         return $map;
     }
 
@@ -909,7 +1092,7 @@ class RepairDashboardV2Helper
             ->column();
         $deviceTypes = [];
         foreach ($usedTypes as $code) {
-            $code = (string) $code;
+            $code = self::canonicalDeviceType((string) $code);
             if ($code === '') {
                 continue;
             }

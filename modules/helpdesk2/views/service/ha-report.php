@@ -98,12 +98,13 @@ $stdTitle = $isMedical
 <p class="muted" style="margin-top:6px;">สรุปผล / ข้อเสนอแนะเชิงคุณภาพ:</p>
 <div class="note-box"></div>
 
-<!-- ฉบับที่ 2: SLA รายบริการ -->
-<h2>รายงานฉบับที่ 2: ผลการดำเนินการตามข้อตกลงระดับบริการ (SLA)</h2>
+<!-- ฉบับที่ 2: SLA ตามระบบงาน -->
+<?php $slaRows = $p['slaBySystem'] ?? []; ?>
+<h2>รายงานฉบับที่ 2: ผลการดำเนินการตาม SLA (ตามระบบงาน)</h2>
 <table>
     <thead>
         <tr>
-            <th>รายการบริการ</th>
+            <th>ระบบงาน</th>
             <th class="num">จำนวน</th>
             <th class="num">ทำได้ตามเวลา</th>
             <th class="num">% สำเร็จ</th>
@@ -113,7 +114,7 @@ $stdTitle = $isMedical
         </tr>
     </thead>
     <tbody>
-        <?php foreach ($p['slaByService'] as $s): ?>
+        <?php foreach ($slaRows as $s): ?>
             <tr>
                 <td><?= Html::encode($s['title']) ?></td>
                 <td class="num"><?= $nf($s['count']) ?></td>
@@ -124,7 +125,7 @@ $stdTitle = $isMedical
                 <td class="num"><?= $fmtDuration($s['avg_secs']) ?></td>
             </tr>
         <?php endforeach; ?>
-        <?php if (empty($p['slaByService'])): ?>
+        <?php if (empty($slaRows)): ?>
             <tr><td colspan="7" style="text-align:center;color:#777;">ไม่มีข้อมูล</td></tr>
         <?php endif; ?>
     </tbody>
@@ -133,12 +134,21 @@ $stdTitle = $isMedical
 <!-- ฉบับที่ 3: งานซ่อม/อุบัติการณ์ -->
 <h2>รายงานฉบับที่ 3: งานซ่อมและอุบัติการณ์</h2>
 <div style="display:flex; gap:16px; flex-wrap:wrap;">
+    <?php
+    $atp = $ha['assetTypePareto'] ?? null;
+    $useGsn = $isMedical && $atp && !empty($atp['rows']);
+    $devHead = $useGsn ? 'ตามชนิดเครื่องมือ (จากทะเบียนครุภัณฑ์)' : ($isMedical ? 'ตามระบบงาน' : 'ตามประเภทงาน/ระบบ');
+    $devRows = $useGsn ? array_slice($atp['rows'], 0, 10) : array_slice($p['paretoDevice'], 0, 10);
+    ?>
     <div style="flex:1; min-width:280px;">
-        <strong style="font-size:13px;"><?= $isMedical ? 'ตามประเภทเครื่องมือ' : 'ตามประเภทงาน/ระบบ' ?></strong>
+        <strong style="font-size:13px;"><?= $devHead ?></strong>
+        <?php if ($useGsn): ?>
+            <div class="muted" style="font-size:11px;">ผูกครุภัณฑ์ <?= $nf($atp['linked']) ?>/<?= $nf($atp['total']) ?> ใบ<?= $atp['total'] > 0 ? ' (' . round($atp['linked'] / $atp['total'] * 100) . '%)' : '' ?> · นับเฉพาะใบที่ผูกครุภัณฑ์</div>
+        <?php endif; ?>
         <table>
             <thead><tr><th>ประเภท</th><th class="num">จำนวน</th></tr></thead>
             <tbody>
-                <?php foreach (array_slice($p['paretoDevice'], 0, 10) as $d): ?>
+                <?php foreach ($devRows as $d): ?>
                     <tr><td><?= Html::encode($d['title']) ?></td><td class="num"><?= $nf($d['cnt']) ?></td></tr>
                 <?php endforeach; ?>
             </tbody>

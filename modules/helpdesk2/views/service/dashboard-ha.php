@@ -316,22 +316,23 @@ $rd = $ha['readiness'] ?? null;
 <!-- ===== SLA รายบริการ (ผู้บริหาร/คุณภาพ) ===== -->
 <div class="ha-sec v-exec v-quality">
 <div class="card border-0 shadow-sm mb-3">
+    <?php $slaRows = $p['slaBySystem'] ?? []; ?>
     <div class="card-header border-bottom d-flex align-items-center gap-2">
         <div class="erp-icon-box bg-primary bg-opacity-10"><i class="bi bi-clipboard-check"></i></div>
         <div>
-            <h6 class="text-uppercase text-secondary m-0">ผลการดำเนินการตามข้อตกลงระดับบริการ (SLA)</h6>
-            <p class="small text-muted mb-0 d-none d-md-block">เป้าหมายความสำเร็จ ≥ <?= $slaTarget ?>% — คลิกแถวเพื่อดูงานของบริการนั้น</p>
+            <h6 class="text-uppercase text-secondary m-0">ผล SLA ตามระบบงาน</h6>
+            <p class="small text-muted mb-0 d-none d-md-block">เป้าหมายความสำเร็จ ≥ <?= $slaTarget ?>% — คลิกแถวเพื่อดูงานของระบบงานนั้น</p>
         </div>
     </div>
     <div class="card-body">
-        <?php if (empty($p['slaByService'])): ?>
+        <?php if (empty($slaRows)): ?>
             <p class="text-muted mb-0">ยังไม่มีข้อมูลที่ประเมิน SLA ได้</p>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>รายการบริการ</th>
+                            <th>ระบบงาน</th>
                             <th class="text-end">จำนวน</th>
                             <th class="text-end">ทำได้ตามเวลา</th>
                             <th class="text-end">% สำเร็จ</th>
@@ -341,9 +342,9 @@ $rd = $ha['readiness'] ?? null;
                         </tr>
                     </thead>
                     <tbody class="table-group-divider">
-                        <?php foreach ($p['slaByService'] as $s): ?>
-                            <?php $pct = $s['pct']; $ok = $pct !== null && $pct >= $slaTarget; ?>
-                            <tr role="button" data-drill="service:<?= Html::encode($s['code']) ?>" data-drill-title="บริการ: <?= Html::encode($s['title']) ?>" style="cursor:pointer;">
+                        <?php foreach ($slaRows as $s): ?>
+                            <?php $pct = $s['pct']; $ok = $pct !== null && $pct >= $slaTarget; $sysClickable = ($s['code'] ?? '') !== ''; ?>
+                            <tr <?= $sysClickable ? 'role="button" data-drill="device_type:' . Html::encode($s['code']) . '" data-drill-title="ระบบงาน: ' . Html::encode($s['title']) . '" style="cursor:pointer;"' : '' ?>>
                                 <td class="text-break"><?= Html::encode($s['title']) ?></td>
                                 <td class="text-end"><?= $nf($s['count']) ?></td>
                                 <td class="text-end"><?= $nf($s['met']) ?></td>
@@ -365,12 +366,31 @@ $rd = $ha['readiness'] ?? null;
 </div>
 
 <!-- ===== Pareto 2 มุม ===== -->
+<?php
+// แกนที่ 1: เครื่องมือแพทย์ = "ชนิดครุภัณฑ์" จากทะเบียนครุภัณฑ์ (รหัส GSN) / กลุ่มอื่น = "ตามระบบงาน"
+$atp = $ha['assetTypePareto'] ?? null;
+if ($isMedical && $atp && !empty($atp['rows'])) {
+    $covCap = 'ผูกครุภัณฑ์ ' . $nf($atp['linked']) . '/' . $nf($atp['total']) . ' ใบ'
+        . ($atp['total'] > 0 ? ' (' . round($atp['linked'] / $atp['total'] * 100) . '%)' : '')
+        . ' · แสดงเฉพาะใบที่ผูกครุภัณฑ์';
+    $firstBlock = [
+        'title' => 'งานซ่อมตามชนิดเครื่องมือ', 'icon' => 'bi-hospital',
+        'rows' => array_slice($atp['rows'], 0, 8), 'scopePrefix' => 'asset_prefix', 'idKey' => 'prefix',
+        'caption' => $covCap,
+    ];
+} else {
+    $firstBlock = [
+        'title' => $isMedical ? 'งานซ่อมตามระบบงาน' : 'งานซ่อมตามประเภทงาน/ระบบ', 'icon' => 'bi-tags',
+        'rows' => array_slice($p['paretoDevice'], 0, 8), 'scopePrefix' => 'device_type', 'idKey' => 'code',
+        'caption' => null,
+    ];
+}
+?>
 <div class="row g-3 mb-3">
     <?php
-    $devTitle = $isMedical ? 'งานซ่อมตามประเภทเครื่องมือ' : 'งานซ่อมตามประเภทงาน/ระบบ';
     $paretoBlocks = [
-        ['title' => $devTitle, 'icon' => 'bi-tags', 'rows' => array_slice($p['paretoDevice'], 0, 8), 'scopePrefix' => 'device_type', 'idKey' => 'code'],
-        ['title' => 'งานซ่อมตามหน่วยงาน/สถานที่', 'icon' => 'bi-diagram-3', 'rows' => array_slice($p['paretoDepartment'], 0, 8), 'scopePrefix' => 'department', 'idKey' => 'id'],
+        $firstBlock,
+        ['title' => 'งานซ่อมตามหน่วยงาน/สถานที่', 'icon' => 'bi-diagram-3', 'rows' => array_slice($p['paretoDepartment'], 0, 8), 'scopePrefix' => 'department', 'idKey' => 'id', 'caption' => null],
     ];
     foreach ($paretoBlocks as $blk):
         $maxCnt = 1;
@@ -380,7 +400,12 @@ $rd = $ha['readiness'] ?? null;
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header border-bottom d-flex align-items-center gap-2">
                     <div class="erp-icon-box bg-secondary bg-opacity-10"><i class="bi <?= $blk['icon'] ?>"></i></div>
-                    <h6 class="text-uppercase text-secondary m-0"><?= $blk['title'] ?></h6>
+                    <div>
+                        <h6 class="text-uppercase text-secondary m-0"><?= $blk['title'] ?></h6>
+                        <?php if (!empty($blk['caption'])): ?>
+                            <p class="small text-muted mb-0 d-none d-md-block"><i class="bi bi-link-45deg me-1"></i><?= Html::encode($blk['caption']) ?></p>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="card-body">
                     <?php if (empty($blk['rows'])): ?>
