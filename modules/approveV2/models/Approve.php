@@ -348,10 +348,16 @@ class Approve extends \yii\db\ActiveRecord
                 $color = 'danger';
                 $icon = '<i class="fa-regular fa-circle-xmark me-1"></i>';
                 break;
-            default:
+            case 'Pass':
                 $color = 'success';
                 $status = '';
                 $icon = '<i class="fa-regular fa-circle-check me-1"></i>';
+                break;
+            default:
+                // ค่าที่ไม่รู้จัก (ข้อมูลเก่าที่เพี้ยน) ต้องไม่แสดงเป็น "ผ่านแล้ว"
+                $status = 'รอ';
+                $color = 'warning';
+                $icon = '<i class="fa-solid fa-hourglass-end me-1"></i>';
                 break;
         }
         $label = Html::encode($this->getApproveLabel());
@@ -376,8 +382,9 @@ class Approve extends \yii\db\ActiveRecord
     public function maxLevel()
     {
         try {
+            // ต้องกรอง name ด้วย เพราะ from_id ใช้ร่วมกันข้ามระบบ (leave/purchase/vehicle/...)
             $maxLevel  = Approve::find()
-                ->where(['from_id' => $this->from_id])
+                ->where(['from_id' => $this->from_id, 'name' => $this->name])
                 ->max('level') ?? 0; // คืนค่า 0 ถ้าไม่มีข้อมูล
             if ($maxLevel == $this->level) {
                 return true;

@@ -141,12 +141,15 @@ class GrOrderController extends Controller
                 if($model->data_json['order_item_checker'] == 'ถูกต้องครบถ้วน'){
 
                     //ถ้าเป็นจ้างเหมา ไม่ต้องส่งคลัง
-                    if($model->category_id == 'M25'){
-                        $model->status = 6;
-                    }else{
-                        $model->status = 5;
+                    $targetStatus = ($model->category_id == 'M25') ? 6 : 5;
+
+                    // เดินหน้าอย่างเดียว ห้ามย้อนสถานะ
+                    // เช่น แก้ไข "วันที่ตรวจรับ" ของใบที่รับเข้าคลังไปแล้ว (status 6) หรือถูกยกเลิก (status 7)
+                    // ต้องไม่ดึงกลับมาเป็น 5 (รอรับเข้าคลัง) เพราะจะไปโผล่ซ้ำในรายการรอรับเข้าคลังของระบบคลัง
+                    if ((int) $model->status < $targetStatus) {
+                        $model->status = $targetStatus;
                     }
-                  
+
                 }else{
                     // $model->status = 3;
                 }

@@ -7,6 +7,7 @@ use DateTime;
 use Yii;
 use yii\helpers\Html;
 use app\modules\helpdesk2\models\Helpdesk;
+use app\modules\helpdesk2\models\HelpdeskSlaSetting;
 
 class HelpdeskSlaHelper
 {
@@ -187,6 +188,168 @@ class HelpdeskSlaHelper
             '<i class="' . $icon . ' me-1"></i>' . $label,
             ['class' => $class]
         );
+    }
+
+    // ============================================================
+    // SLA แบบ Service Catalog + Timeline (HAIT หมวด 4 ระดับ 2)
+    // ============================================================
+
+    /**
+     * ระดับความเร่งด่วนแบบ normalize จากค่า urgency ดิบ (ค่าว่าง → medium)
+     */
+    public static function normalizeUrgencyValue($urgency): string
+    {
+        $key = strtolower(trim((string) $urgency));
+        $map = ['1' => 'low', '2' => 'medium', '3' => 'high', '4' => 'critical'];
+        if (isset($map[$key])) {
+            return $map[$key];
+        }
+        if (in_array($key, ['low', 'medium', 'high', 'critical'], true)) {
+            return $key;
+        }
+        return 'medium';
+    }
+
+    /**
+     * หาว่างานตกอยู่ในรายการบริการใดของแคตตาล็อก (จับด้วย device_type_id)
+     * งานที่จับไม่ได้ → รายการ 'other' (หรือรายการสุดท้ายเป็น fallback)
+     *
+     * @return array<string,mixed> catalog entry
+     */
+    public static function resolveServiceByType(?string $deviceType): array
+    {
+        $catalog = self::settingRecord()->getServiceCatalog();
+        $deviceType = (string) ($deviceType ?? '');
+
+        $fallback = null;
+        foreach ($catalog as $entry) {
+            if (($entry['code'] ?? '') === 'other') {
+                $fallback = $entry;
+            }
+            $types = $entry['device_types'] ?? [];
+            if (is_array($types) && $deviceType !== '' && in_array($deviceType, $types, true)) {
+                return $entry;
+            }
+        }
+        return $fallback ?? (end($catalog) ?: [
+            'code' => 'other',
+            'title' => 'อื่นๆ/ไม่ระบุประเภท',
+            'response_min' => 30,
+            'resolve_min' => 1440,
+        ]);
+    }
+
+    /**
+     * เวลาแก้ไขที่รับประกันแบบมีผล (นาที) = resolve_min ของบริการ × ตัวคูณความเร่งด่วน
+     */
+    public static function effectiveResolveMinutesFor(?string $deviceType, $urgency): float
+    {
+        $service = self::resolveServiceByType($deviceType);
+        $base = (float) ($service['resolve_min'] ?? 1440);
+        $mult = self::settingRecord()->getUrgencyMultiplier();
+        $u = self::normalizeUrgencyValue($urgency);
+        $factor = isset($mult[$u]) ? (float) $mult[$u] : 1.0;
+        return max(1.0, $base * $factor);
+    }
+
+    /**
+     * ประเมินผล SLA จากข้อมูลดิบ (array) เพื่อใช้แบบ batch โดยไม่ต้องสร้างโมเดล
+     * (เลี่ยง afterFind ที่ lazy-load asset → N+1)
+     *
+     * @param array $t ต้องมีคีย์: created_at, status, device_type_id, data_json(array), updated_at, receive_date
+     * @param array<string,?string> $timeline ผลจาก HelpdeskTimelineHelper
+     * @return array{service_code:string,service_title:string,resolve_minutes:float,actual_minutes:?float,deadline:?string,status:string}
+     */
+    public static function slaResultFromData(array $t, array $timeline): array
+    {
+        $deviceType = $t['device_type_id'] ?? null;
+        $urgency = $t['data_json']['urgency'] ?? null;
+        $service = self::resolveServiceByType($deviceType);
+        $resolveMinutes = self::effectiveResolveMinutesFor($deviceType, $urgency);
+
+        $reported = $timeline['reported_at'] ?? ($t['created_at'] ?? null);
+        $resolved = $timeline['resolved_at'] ?? null;
+
+        return self::buildSlaResult($service, $resolveMinutes, $reported, $resolved);
+    }
+
+    /**
+     * ประเมินผล SLA ของงานหนึ่งใบ (โมเดล) โดยใช้ timeline ที่ derive มาแล้ว
+     *
+     * @param array<string,?string> $timeline ผลจาก HelpdeskTimelineHelper::withFallback()
+     * @return array{service_code:string,service_title:string,resolve_minutes:float,actual_minutes:?float,deadline:?string,status:string}
+     */
+    public static function slaResult(Helpdesk $ticket, array $timeline): array
+    {
+        $service = self::resolveServiceByType($ticket->device_type_id);
+        $resolveMinutes = self::effectiveResolveMinutesFor(
+            $ticket->device_type_id,
+            $ticket->data_json['urgency'] ?? null
+        );
+
+        $reported = $timeline['reported_at'] ?? ($ticket->created_at ?: null);
+        $resolved = $timeline['resolved_at'] ?? null;
+
+        return self::buildSlaResult($service, $resolveMinutes, $reported, $resolved);
+    }
+
+    /**
+     * แกนคำนวณผล SLA ร่วมของทั้งแบบ array และแบบโมเดล
+     *
+     * @param array<string,mixed> $service catalog entry
+     */
+    private static function buildSlaResult(array $service, float $resolveMinutes, ?string $reported, ?string $resolved): array
+    {
+        $base = [
+            'service_code' => (string) ($service['code'] ?? 'other'),
+            'service_title' => (string) ($service['title'] ?? 'อื่นๆ'),
+            'resolve_minutes' => $resolveMinutes,
+            'actual_minutes' => null,
+            'deadline' => null,
+            'status' => 'no_sla',
+        ];
+
+        if (empty($reported)) {
+            return $base;
+        }
+
+        try {
+            $reportedTs = (new \DateTimeImmutable($reported))->getTimestamp();
+        } catch (\Throwable $e) {
+            return $base;
+        }
+        $deadlineTs = $reportedTs + (int) round($resolveMinutes * 60);
+        $base['deadline'] = date('Y-m-d H:i:s', $deadlineTs);
+
+        // งานที่ปิดแล้ว → เทียบเวลาจริงกับ SLA
+        if (!empty($resolved)) {
+            try {
+                $resolvedTs = (new \DateTimeImmutable($resolved))->getTimestamp();
+                $actual = max(0, $resolvedTs - $reportedTs) / 60.0;
+                $base['actual_minutes'] = $actual;
+                $base['status'] = $resolvedTs <= $deadlineTs ? 'met' : 'breached';
+                return $base;
+            } catch (\Throwable $e) {
+                // ตกไปพิจารณาแบบงานเปิด
+            }
+        }
+
+        // งานที่ยังไม่ปิด → เกินกำหนดหรือยังอยู่ในเวลา
+        $now = time();
+        $base['status'] = $now > $deadlineTs ? 'breached' : 'pending';
+        return $base;
+    }
+
+    /**
+     * โหลด (และ cache) เรคคอร์ดตั้งค่า SLA
+     */
+    private static function settingRecord(): HelpdeskSlaSetting
+    {
+        static $record = null;
+        if ($record === null) {
+            $record = HelpdeskSlaSetting::getRecord();
+        }
+        return $record;
     }
 }
 

@@ -12,6 +12,7 @@ use app\modules\medsop\models\DocumentSearch;
 use app\modules\medsop\models\DocumentAudience;
 use app\modules\medsop\models\DocumentAssignment;
 use app\modules\medsop\models\MedSopSetting;
+use app\modules\medsop\models\OrganizationAccess;
 use app\modules\medsop\models\OrganizationSetting;
 use app\modules\medsop\models\TeamSetting;
 use app\modules\medsop\services\DocumentAccessService;
@@ -46,6 +47,8 @@ class DocumentController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'publish' => ['POST'],
+                    'submit' => ['POST'],
+                    'reject' => ['POST'],
                     'audience-publish' => ['POST'],
                     'acknowledge' => ['POST'],
                 ],
@@ -152,7 +155,7 @@ class DocumentController extends Controller
     {
         $access = $this->access();
         $saveError = null;
-        if (!$access->isAdmin()) {
+        if (!$access->canManageSetting()) {
             throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบเท่านั้นที่ตั้งค่า MedSOP ได้');
         }
         $organizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
@@ -330,6 +333,85 @@ class DocumentController extends Controller
         ]);
     }
 
+    /**
+     * เปิดสิทธิ์ให้หน่วยงานอื่นเข้าดูเอกสารที่เผยแพร่แล้วของหน่วยงานตน
+     *
+     * หัวหน้าหน่วยงานเจ้าของเอกสารเป็นผู้กำหนดเอง ไม่ต้องผ่านผู้ดูแลระบบ
+     * ผู้ดูแลระบบทำแทนได้ทุกหน่วยงาน บันทึกแบบแทนที่ทั้งชุดเพื่อให้สิ่งที่เห็นบนจอคือสิ่งที่บันทึก
+     */
+    public function actionAccess($org = null)
+    {
+        $access = $this->access();
+        if (!$access->canGrantAccess()) {
+            throw new ForbiddenHttpException('เฉพาะหัวหน้าหน่วยงานหรือผู้ดูแลระบบเท่านั้นที่กำหนดสิทธิ์เข้าถึงข้ามหน่วยงานได้');
+        }
+
+        $grantableIds = $access->grantableOrganizationIds();
+        $ownerQuery = Organization::find()->where(['active' => 1]);
+        if ($grantableIds !== null) {
+            $ownerQuery->andWhere(['id' => $grantableIds ?: [-1]]);
+        }
+        $ownerOrganizations = $ownerQuery->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
+        if ($ownerOrganizations === []) {
+            throw new ForbiddenHttpException('ไม่พบหน่วยงานที่ท่านกำหนดสิทธิ์ได้');
+        }
+
+        if (Yii::$app->request->isPost) {
+            $postedOwnerId = (int) Yii::$app->request->post('owner_organization_id');
+            if (!$access->canGrantAccessFor($postedOwnerId)) {
+                throw new ForbiddenHttpException('ไม่มีสิทธิ์กำหนดการเข้าถึงเอกสารของหน่วยงานนี้');
+            }
+            $viewerIds = array_filter(array_map('intval', (array) Yii::$app->request->post('viewer_organization_id', [])));
+            $viewerIds = array_values(array_diff(array_unique($viewerIds), [$postedOwnerId]));
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                OrganizationAccess::deleteAll(['owner_organization_id' => $postedOwnerId]);
+                foreach ($viewerIds as $viewerId) {
+                    $grant = new OrganizationAccess([
+                        'owner_organization_id' => $postedOwnerId,
+                        'viewer_organization_id' => $viewerId,
+                    ]);
+                    if (!$grant->save()) {
+                        throw new \RuntimeException('บันทึกสิทธิ์เข้าถึงไม่สำเร็จ: ' . implode(' ', $grant->getFirstErrors()));
+                    }
+                }
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', 'บันทึกสิทธิ์เข้าถึงข้ามหน่วยงานแล้ว ' . number_format(count($viewerIds)) . ' หน่วยงาน');
+            } catch (\Throwable $e) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                Yii::error($e, __METHOD__);
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+            return $this->redirect(['access', 'org' => $postedOwnerId]);
+        }
+
+        $ownerId = (int) $org;
+        if (!$access->canGrantAccessFor($ownerId)) {
+            $ownerId = (int) $ownerOrganizations[0]->id;
+        }
+        $organizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
+        $selectedViewerIds = array_map('intval', OrganizationAccess::find()
+            ->select('viewer_organization_id')
+            ->where(['owner_organization_id' => $ownerId])
+            ->column());
+        $incomingGrants = OrganizationAccess::find()
+            ->with('ownerOrganization')
+            ->where(['viewer_organization_id' => $ownerId])
+            ->all();
+
+        return $this->render('access', compact(
+            'access',
+            'ownerOrganizations',
+            'ownerId',
+            'organizations',
+            'selectedViewerIds',
+            'incomingGrants'
+        ));
+    }
+
     public function actionCoordinatorEmployees($q = '')
     {
         if (!$this->access()->isAdmin()) {
@@ -480,6 +562,8 @@ class DocumentController extends Controller
             'status' => Document::STATUS_DRAFT,
             'announcement_status' => array_key_first($announcementStatuses),
             'current_revision' => 1,
+            // ผู้จัดทำระดับหน่วยงานเลือกหน่วยงานอื่นไม่ได้ ตั้งค่าเริ่มต้นเป็นหน่วยงานที่สังกัด
+            'organization_id' => $access->currentOrganizationId() ?: null,
             'created_emp_id' => $employee ? $employee->id : null,
             'created_by' => Yii::$app->user->id,
             'updated_by' => Yii::$app->user->id,
@@ -510,9 +594,13 @@ class DocumentController extends Controller
             try {
                 $service->save($model, (array) Yii::$app->request->post('audiences', []));
                 if ((string) Yii::$app->request->post('audience_intent', 'draft') === 'publish') {
-                    $recipientCount = $this->publishDocument($model);
-                    Yii::$app->session->setFlash('success', 'บันทึกผู้รับและเผยแพร่เอกสารแล้ว ส่งให้ผู้รับ ' . number_format($recipientCount) . ' คน');
-                    return $this->redirect(['view', 'id' => $model->id]);
+                    // ผู้ดูแลระบบเผยแพร่ได้ทันที ผู้จัดทำหน่วยงานทำได้แค่ส่งให้ตรวจก่อน
+                    if ($access->canPublish($model)) {
+                        $recipientCount = $this->publishDocument($model);
+                        Yii::$app->session->setFlash('success', 'บันทึกผู้รับและเผยแพร่เอกสารแล้ว ส่งให้ผู้รับ ' . number_format($recipientCount) . ' คน');
+                        return $this->redirect(['view', 'id' => $model->id]);
+                    }
+                    return $this->submitForApproval($model, 'บันทึกผู้รับและส่งเอกสารให้ผู้ดูแลระบบตรวจสอบแล้ว');
                 }
                 Yii::$app->session->setFlash('success', 'บันทึกผู้มีสิทธิ์อ่านและรับทราบแล้ว');
                 return $this->redirect(['audience', 'id' => $model->id]);
@@ -596,6 +684,9 @@ class DocumentController extends Controller
                 $model,
                 (array) Yii::$app->request->post('audiences', [])
             );
+            if (!$access->canPublish($model)) {
+                return $this->submitForApproval($model, 'บันทึกผู้รับและส่งเอกสารให้ผู้ดูแลระบบตรวจสอบแล้ว');
+            }
             $recipientCount = $this->publishDocument($model);
             Yii::$app->session->setFlash('success', 'บันทึกผู้รับและเผยแพร่เอกสารแล้ว ส่งให้ผู้รับ ' . number_format($recipientCount) . ' คน');
             return $this->redirect(['view', 'id' => $model->id]);
@@ -643,11 +734,63 @@ class DocumentController extends Controller
         }
     }
 
+    /**
+     * ส่งอนุมัติ: ผู้จัดทำระดับหน่วยงานส่งเอกสารให้ผู้ดูแลระบบตรวจก่อนเผยแพร่
+     * ต้องกำหนดผู้รับไว้ก่อน เพราะผู้ดูแลระบบเผยแพร่ต่อโดยไม่ต้องกลับมาแก้เอง
+     */
+    public function actionSubmit($id)
+    {
+        $model = $this->findModel($id);
+        if (!$this->access()->canSubmit($model)) {
+            throw new ForbiddenHttpException('เอกสารสถานะนี้ไม่สามารถส่งอนุมัติได้');
+        }
+        return $this->submitForApproval($model, 'ส่งเอกสารให้ผู้ดูแลระบบตรวจสอบแล้ว');
+    }
+
+    /** เปลี่ยนสถานะเป็นรออนุมัติ ใช้ร่วมกันทั้งปุ่มส่งอนุมัติและหน้ากำหนดผู้รับ */
+    private function submitForApproval(Document $model, string $message)
+    {
+        if (!DocumentAudience::find()->where(['document_id' => (int) $model->id])->exists()) {
+            Yii::$app->session->setFlash('error', 'กรุณากำหนดและบันทึกผู้รับเอกสารก่อนส่งอนุมัติ');
+            return $this->redirect(['audience', 'id' => $model->id]);
+        }
+
+        $model->status = Document::STATUS_PENDING;
+        $model->submitted_by = Yii::$app->user->id;
+        $model->submitted_at = date('Y-m-d H:i:s');
+        $model->review_note = null;
+        $model->updated_by = Yii::$app->user->id;
+        $model->save(false, ['status', 'submitted_by', 'submitted_at', 'review_note', 'updated_by', 'updated_at']);
+        Yii::$app->session->setFlash('success', $message);
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /** ส่งกลับแก้ไข: ผู้ดูแลระบบตีเอกสารที่รออนุมัติกลับให้ผู้จัดทำพร้อมเหตุผล */
+    public function actionReject($id)
+    {
+        $model = $this->findModel($id);
+        if (!$this->access()->canReject($model)) {
+            throw new ForbiddenHttpException('เอกสารสถานะนี้ไม่สามารถส่งกลับแก้ไขได้');
+        }
+        $note = trim((string) Yii::$app->request->post('review_note', ''));
+        if ($note === '') {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลที่ส่งกลับแก้ไข เพื่อให้ผู้จัดทำแก้ได้ตรงจุด');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->status = Document::STATUS_REJECTED;
+        $model->review_note = mb_substr($note, 0, 500);
+        $model->updated_by = Yii::$app->user->id;
+        $model->save(false, ['status', 'review_note', 'updated_by', 'updated_at']);
+        Yii::$app->session->setFlash('success', 'ส่งเอกสารกลับให้ผู้จัดทำแก้ไขแล้ว');
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     public function actionPublish($id)
     {
         $model = $this->findModel($id);
         $access = $this->access();
-        if (!$access->isAdmin() || !$model->isEditable()) {
+        if (!$access->canPublish($model)) {
             throw new ForbiddenHttpException('เอกสารสถานะนี้ไม่สามารถเผยแพร่ได้');
         }
         if (!DocumentAudience::find()->where(['document_id' => (int) $model->id])->exists()) {
@@ -673,8 +816,9 @@ class DocumentController extends Controller
             $model->status = Document::STATUS_PUBLISHED;
             $model->published_by = (int) Yii::$app->user->id;
             $model->published_at = date('Y-m-d H:i:s');
+            $model->review_note = null;
             $model->updated_by = (int) Yii::$app->user->id;
-            if (!$model->save(false, ['status', 'published_by', 'published_at', 'updated_by', 'updated_at'])) {
+            if (!$model->save(false, ['status', 'published_by', 'published_at', 'review_note', 'updated_by', 'updated_at'])) {
                 throw new \RuntimeException('ไม่สามารถเปลี่ยนสถานะเอกสารเป็นเผยแพร่แล้วได้');
             }
 
@@ -696,7 +840,7 @@ class DocumentController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        if (!Yii::$app->request->isPost || !$this->access()->isAdmin() || $model->status !== Document::STATUS_DRAFT) {
+        if (!Yii::$app->request->isPost || !$this->access()->canDelete($model)) {
             throw new ForbiddenHttpException('ไม่สามารถลบเอกสารนี้ได้');
         }
         $model->deleted_at = date('Y-m-d H:i:s');
@@ -714,6 +858,10 @@ class DocumentController extends Controller
             $mediaFiles[$index] = UploadedFile::getInstancesByName('steps[' . $index . '][media]');
         }
         $loaded = $model->load(Yii::$app->request->post());
+        // ผู้จัดทำระดับหน่วยงานถูกจำกัดหน่วยงาน กันการยัดค่า organization_id ข้ามหน่วยงานมาทาง POST
+        $allowedOrganizationIds = $this->access()->manageableOrganizationIds();
+        $organizationAllowed = $allowedOrganizationIds === null
+            || in_array((int) $model->organization_id, $allowedOrganizationIds, true);
         $relatedLinksValid = true;
         if ($loaded) {
             $reviewDateInput = (string) $model->review_date;
@@ -733,7 +881,10 @@ class DocumentController extends Controller
             $model->document_no = $this->generateDocumentNo((string) $model->document_type, (int) $model->organization_id);
         }
         $coverFile = UploadedFile::getInstanceByName('cover_image');
-        if ($loaded && $relatedLinksValid && (new DocumentService())->save($model, is_array($stepRows) ? $stepRows : [], $mediaFiles, $coverFile)) {
+        if ($loaded && !$organizationAllowed) {
+            $model->addError('organization_id', 'สร้างหรือแก้ไขเอกสารได้เฉพาะหน่วยงานที่ท่านสังกัด');
+        }
+        if ($loaded && $relatedLinksValid && $organizationAllowed && (new DocumentService())->save($model, is_array($stepRows) ? $stepRows : [], $mediaFiles, $coverFile)) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return [
@@ -765,7 +916,11 @@ class DocumentController extends Controller
                 return $row;
             }, $model->steps);
         }
-        $formOrganizations = Organization::find()->where(['active' => 1])->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
+        $formOrganizationQuery = Organization::find()->where(['active' => 1]);
+        if ($allowedOrganizationIds !== null) {
+            $formOrganizationQuery->andWhere(['id' => $allowedOrganizationIds ?: [-1]]);
+        }
+        $formOrganizations = $formOrganizationQuery->orderBy(['root' => SORT_ASC, 'lft' => SORT_ASC])->all();
         $documentTypeCodes = array_keys(MedSopSetting::documentTypes());
         $filterCategories = static function (array $values) use ($documentTypeCodes, $model): array {
             $filtered = array_values(array_diff($values, $documentTypeCodes));

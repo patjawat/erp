@@ -79,13 +79,17 @@ class RepairPartsController extends \yii\web\Controller
 
                     // สร้างเอกสารจ่ายออกใน inventoryV2 เพื่อให้มี "ประวัติการตัดจ่าย" ในระบบการย่อย (Option B)
                     if (!isset($stockOrdersByWarehouse[$warehouseId])) {
+                        // stock_order เก็บเวลาสองรูปแบบ (ตามที่ StockAdjustController ใช้อยู่):
+                        //   disbursement_date = int (unix timestamp)
+                        //   created_at/updated_at = datetime 'Y-m-d H:i:s'
+                        // ห้ามสลับกัน ไม่งั้น MySQL โยน SQLSTATE[22007] Incorrect datetime value
                         $now = time();
-                        $orderSuffix = Yii::$app->security->generateRandomString(6);
-                        $repairToken = $repairNumber !== '' ? $repairNumber : ('HDB' . (int) $helpdesk_id);
-                        $repairToken = preg_replace('/[^A-Za-z0-9\-_]/', '', $repairToken) ?: ('HDB' . (int) $helpdesk_id);
-
-                        $orderNo = 'ISS-HDB-' . $repairToken . '-' . date('YmdHis') . '-' . $orderSuffix;
-                        $orderNo = mb_substr($orderNo, 0, 100);
+                        $nowDateTime = date('Y-m-d H:i:s', $now);
+                        // เลขที่เอกสารรูปแบบสั้น ISS-HDB-YYYYMMDD-NNNN (รันรายวัน)
+                        // ทรงเดียวกับ SUB-OUT-/REQ- ของ inventoryV2 ซึ่งเป็นเอกสารชนิดเดียวกัน
+                        // เลขที่ใบแจ้งซ่อมไม่ต้องใส่ในเลขเอกสาร เพราะเก็บใน ref + data_json.repair_number
+                        // (หน้าประวัติการใช้ของหน่วยงานอ่านจาก data_json อยู่แล้ว)
+                        $orderNo = $this->generateRepairIssueOrderNo();
 
                         $stockOrder = new StockOrder();
                         $stockOrder->order_type = StockOrder::ORDER_TYPE_OUT;
@@ -103,7 +107,10 @@ class RepairPartsController extends \yii\web\Controller
                             'source' => 'helpdesk2.repair-parts',
                         ];
                         $stockOrder->setDisbursementDate($now);
-                        $stockOrder->updated_at = $now; // ใช้ filter ในหน้า inventory-v2
+                        $stockOrder->created_at = $nowDateTime;
+                        $stockOrder->updated_at = $nowDateTime; // ใช้ filter ในหน้า inventory-v2
+                        $stockOrder->created_by = Yii::$app->user->id;
+                        $stockOrder->updated_by = Yii::$app->user->id;
 
                         if (!$stockOrder->save(false)) {
                             throw new \RuntimeException('สร้างเอกสารจ่ายออก (inventoryV2) ไม่สำเร็จ');
@@ -205,7 +212,9 @@ class RepairPartsController extends \yii\web\Controller
             ->where(['helpdesk_id' => (int) $helpdesk_id, 'name' => 'part_record'])
             ->orderBy(['id' => SORT_ASC])
             ->all();
-        $subWarehouses = Warehouse::findSubWarehousesForUser();
+        // opt-in warehouse scope: admin/warehouse เบิกแทนได้ทุกคลังย่อย (idiom เดียวกับ inventoryV2 requisition)
+        // ต้องใช้ argument เดียวกับ actionInventoryLookup ไม่งั้น dropdown กับตัวกรองสิทธิ์จะไม่ตรงกัน
+        $subWarehouses = Warehouse::findSubWarehousesForUser(true);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -516,33 +525,35 @@ class RepairPartsController extends \yii\web\Controller
         $q = trim((string) $q);
         $warehouseId = (int) $warehouse_id;
 
-        $allowedSubWarehouses = Warehouse::findSubWarehousesForUser();
+        $allowedSubWarehouses = Warehouse::findSubWarehousesForUser(true);
         $allowedWarehouseIds = array_map(static fn($w) => (int) $w->id, $allowedSubWarehouses);
         if ($warehouseId <= 0 || !in_array($warehouseId, $allowedWarehouseIds, true)) {
             return ['results' => []];
         }
 
-        $where = '';
+        // ทะเบียนพัสดุ inventoryV2 ถูกยุบไปรวมกับ `categorise` (name='asset_item', group_id='MATER')
+        // ตาม StockItem/StockItemQuery แล้ว — ตาราง `stock_item` เดิมว่างเปล่า ห้ามใช้
+        // column mapping: code -> item_code, title -> item_name, active -> is_active
+        $where = "WHERE si.name = 'asset_item' AND si.group_id = 'MATER' AND si.active = 1 AND sb.warehouse_id = :warehouse_id";
         $params = [];
         if ($q !== '') {
-            $where = "WHERE si.is_active = 1 AND sb.warehouse_id = :warehouse_id AND (si.item_code LIKE :q OR si.item_name LIKE :q)";
+            $where .= " AND (si.code LIKE :q OR si.title LIKE :q)";
             $params[':q'] = '%' . $q . '%';
-        } else {
-            $where = "WHERE si.is_active = 1 AND sb.warehouse_id = :warehouse_id";
         }
         $params[':warehouse_id'] = $warehouseId;
 
         $sql = "
-            SELECT 
-                si.item_code,
-                si.item_name,
+            SELECT
+                si.code AS item_code,
+                si.title AS item_name,
                 COALESCE(JSON_UNQUOTE(JSON_EXTRACT(si.data_json, '$.unit_name')), '') AS unit_name,
                 COALESCE(SUM(sb.balance_qty), 0) AS balance_qty
-            FROM stock_item si
-            INNER JOIN stock_balance sb ON sb.item_code = si.item_code
+            FROM categorise si
+            INNER JOIN stock_balance sb ON sb.item_code = si.code
             {$where}
-            GROUP BY si.item_code, si.item_name, si.data_json
-            ORDER BY si.item_name ASC
+            GROUP BY si.code, si.title, si.data_json
+            HAVING balance_qty > 0
+            ORDER BY item_name ASC
             LIMIT 30
         ";
         $rows = Yii::$app->db->createCommand($sql, $params)->queryAll();
@@ -558,6 +569,25 @@ class RepairPartsController extends \yii\web\Controller
         }
 
         return ['results' => $results];
+    }
+
+    /**
+     * เลขที่ใบตัดจ่ายของงานซ่อม: ISS-HDB-YYYYMMDD-NNNN (รันรายวัน)
+     * ล้อรูปแบบ SubStockController::generateSubIssueOrderNo() เพราะเป็นเอกสารชนิดเดียวกัน
+     * (order_type=OUT, source_type=USAGE, จ่ายออกจากคลังย่อย)
+     */
+    private function generateRepairIssueOrderNo(): string
+    {
+        $prefix = 'ISS-HDB-' . date('Ymd') . '-';
+        for ($n = 1; $n <= 9999; $n++) {
+            $no = $prefix . str_pad((string) $n, 4, '0', STR_PAD_LEFT);
+            if (StockOrder::findOne(['order_no' => $no]) === null) {
+                return $no;
+            }
+        }
+        // กันเหนียว: เลขรันวันนี้เต็ม (แทบเป็นไปไม่ได้) — ต่อท้ายด้วยเวลาแทน
+        // order_no เป็น UNIQUE ถ้าชนจริงจะ throw แล้ว transaction rollback ทั้งชุด ไม่มีข้อมูลค้าง
+        return $prefix . date('His');
     }
 
     private function getAvailableBalanceQty(string $itemCode, int $warehouseId): float

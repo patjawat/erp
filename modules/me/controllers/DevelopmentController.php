@@ -21,6 +21,7 @@ use app\modules\hr\models\Development;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSearch;
 use app\modules\hr\models\Employees;
+use app\modules\hr\services\DevelopmentWordPrinter;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -543,117 +544,15 @@ class DevelopmentController extends Controller
     // ใบขออนุญาตเดินทางไปราชการ
     public function actionPermitRequest($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $model = $this->findModel($id);
-        $title = 'แบบฟอร์มขออนุญาต';
-        $result_name = $title . '-' . $model->id . '.docx';
-        $word_name = $title . '.docx';
-
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name);
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/development/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-
-        // return $model->checkerName(1)['employee']->signature();
-        $dateStart = Yii::$app->thaiFormatter->asDate($model->date_start, 'long');
-        $dateEnd = Yii::$app->thaiFormatter->asDate($model->date_end, 'long');
-
-        $templateProcessor->setValue('org_fullname', $this->GetInfo()['org_fullname']);
-        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('address', $this->GetInfo()['address']);
-        $templateProcessor->setValue('phone', $this->GetInfo()['phone']);
-        $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
-        $templateProcessor->setValue('document_number', $model->document?->doc_number ?? '-');
-        $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
-        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
-        $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
-        $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
-        $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
-        $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
-        $templateProcessor->setValue('department', $model->createdByEmp?->departmentName() ?? '-');
-        $templateProcessor->setValue('topic', $model->topic);
-        // ผู้อำนวยการ
-        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
-        $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
-        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-        try {
-            $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
-        } catch (\Throwable $th) {
-            $templateProcessor->setValue('direc_sign', '...........................................');
-        }
-
-        if ($model->status == 'Approve') {
-            $status = 'อนุมัติ';
-        } else if ($model->status == 'Reject') {
-            $status = 'ไม่อนุมัติ';
-        } else {
-            $status = 'รอการอนุมัติ';
-        }
-        $templateProcessor->setValue('status', $status);
-
-        $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
-        $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        if (file_exists($filePath)) {
-            return $this->Show($result_name);
-        } else {
-            throw new \yii\web\NotFoundHttpException('The file does not exist.');
-        }
-        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+        // ตัวสร้างไฟล์ย้ายไปอยู่ที่ DevelopmentWordPrinter เพื่อให้ฝั่งผู้ดูแลงานอบรม
+        // ในโมดูล hr พิมพ์แทนผู้ขอได้ด้วยเนื้อหาเดียวกัน
+        return $this->Show(DevelopmentWordPrinter::permitRequest($this->findModel($id)));
     }
 
     // ใบตอบรับเป็นวิทยากร
     public function actionFormAcademic($id)
     {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        $model = $this->findModel($id);
-        $title = 'แบบฟอร์มตอบรับวิทยากร';
-        $result_name = $title . '-' . $model->id . '.docx';
-        $word_name = $title . '.docx';
-
-        @unlink(Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name);
-        $templateProcessor = new Processor(Yii::getAlias('@webroot') . '/msword/development/' . $word_name);  // เลือกไฟล์ template ที่เราสร้างไว้
-
-        $templateProcessor->setValue('org_fullname', $this->GetInfo()['org_fullname']);
-        $templateProcessor->setValue('org_name', $this->GetInfo()['company_name']);
-        $templateProcessor->setValue('address', $this->GetInfo()['address']);
-        $templateProcessor->setValue('phone', $this->GetInfo()['phone']);
-        $templateProcessor->setValue('doc_number', $this->GetInfo()['doc_number']);
-        $templateProcessor->setValue('document_number', $model->document?->doc_number ?? '-');
-        $templateProcessor->setValue('document_date', ThaiDateHelper::formatThaiDate($model->document?->doc_date) ?? '-');
-        $templateProcessor->setValue('doc_date', ThaiDateHelper::formatThaiDate(date('Y-m-d')));
-        $templateProcessor->setValue('dev_date', ThaiDateHelper::formatThaiDateRange($model->date_start, $model->date_end));
-        $templateProcessor->setValue('location', $model->data_json['location'] ?? '-');
-        $templateProcessor->setValue('governor', $this->GetInfo()['governor']);
-        $templateProcessor->setValue('fullname', $model->createdByEmp?->fullname ?? '-');
-        $templateProcessor->setValue('position', $model->createdByEmp?->positionName() ?? '-');
-        $templateProcessor->setValue('department', $model->createdByEmp?->departmentName() ?? '-');
-        $templateProcessor->setValue('topic', $model->topic);
-
-        // ลสยมือผู้ปฏิบัติงานแทน
-        try {
-            $templateProcessor->setImg('emp_sign', ['src' => $model->createdByEmp->signature(), 'size' => [150, 50]]);
-        } catch (\Throwable $th) {
-            $templateProcessor->setValue('emp_sign', '........................................');
-        }
-
-        // ผู้อำนวยการ
-        $dicrectorType = ($this->GetInfo()['director_type'] == 'รักษาการแทนผู้อำนวยการ' ? 'รักษาการแทนผู้อำนวยการ' : '');
-        $templateProcessor->setValue('direc_fullname', $this->GetInfo()['director_fullname']);
-        $templateProcessor->setValue('direc_position', $this->GetInfo()['director_position'] . $dicrectorType);
-        try {
-            $templateProcessor->setImg('direc_sign', ['src' => $this->GetInfo()['director']->signature(), 'size' => [150, 60]]);  // ลายมือผู้ตรวจสอบ
-        } catch (\Throwable $th) {
-            $templateProcessor->setValue('direc_sign', '...........................................');
-        }
-
-        $filePath = Yii::getAlias('@webroot') . '/msword/results/development/' . $result_name;
-        $templateProcessor->saveAs($filePath);  // สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
-        if (file_exists($filePath)) {
-            return $this->Show($result_name);
-        } else {
-            throw new \yii\web\NotFoundHttpException('The file does not exist.');
-        }
-        return $this->redirect('https://docs.google.com/viewerng/viewer?url=' . Url::base('https') . '/msword/results/leave/' . $result_name);
+        return $this->Show(DevelopmentWordPrinter::academicForm($this->findModel($id)));
     }
 
     // ดึงค่ากน่วยงาน

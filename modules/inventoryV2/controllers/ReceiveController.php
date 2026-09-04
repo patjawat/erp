@@ -45,6 +45,7 @@ class ReceiveController extends Controller
                     'actions' => [
                         'delete' => ['POST'],
                         'cancel' => ['POST'],
+                        'dismiss-po' => ['POST'],
                     ],
                 ],
             ]
@@ -440,8 +441,15 @@ class ReceiveController extends Controller
         }
         $orders = $query->orderBy(['id' => SORT_DESC])->limit(500)->all();
 
+        // ใบสั่งซื้อที่มีใบรับเข้าคลังผูกอยู่แล้ว ต้องไม่แสดงซ้ำ แม้สถานะจะถูกดึงกลับมาเป็น 5
+        // (เกิดได้เมื่อไปแก้ไขใบตรวจรับของ PO ที่รับเข้าคลังไปแล้ว)
+        $receivedPoIds = $this->getReceivedPoOrderIds();
+
         $results = [];
         foreach ($orders as $order) {
+            if (isset($receivedPoIds[(int) $order->id])) {
+                continue;
+            }
             $vendorTitle = $order->vendor ? $order->vendor->title : ($order->vendor_name ?: '-');
             $assetTypeTitle = $order->assetType ? $order->assetType->title : '-';
             $totalAmount = (float) $order->calculateVAT()['priceAfterVAT'];
@@ -493,6 +501,13 @@ class ReceiveController extends Controller
         }
         if ((int) $order->status !== 5) {
             return ['success' => false, 'message' => 'ใบสั่งซื้อนี้ถูกรับเข้าคลังไปแล้ว หรือไม่อยู่ในสถานะรอรับเข้า'];
+        }
+        $receivedPoIds = $this->getReceivedPoOrderIds();
+        if (isset($receivedPoIds[(int) $order->id])) {
+            return [
+                'success' => false,
+                'message' => 'ใบสั่งซื้อนี้มีใบรับเข้าคลังอยู่แล้ว (' . implode(', ', $receivedPoIds[(int) $order->id]) . ') ไม่สามารถรับเข้าซ้ำได้',
+            ];
         }
 
         $warehouseId = (int) $this->request->get('warehouse_id');
@@ -1148,6 +1163,75 @@ class ReceiveController extends Controller
         }
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * นำใบสั่งซื้อออกจากรายการ "รอรับเข้าคลัง" ด้วยมือ (สำหรับรายการเก่าที่ค้างอยู่/รับเข้าไปแล้วทางอื่น)
+     * ไม่ได้ลบใบสั่งซื้อ แต่เดินสถานะไปเป็น 6 (รับเข้าคลังแล้ว) และบันทึกผู้กด/เวลา/เหตุผลไว้ใน data_json
+     * @param int $id orders.id
+     * @return array
+     */
+    public function actionDismissPo($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $order = PurchaseOrder::findOne(['id' => (int) $id, 'name' => 'order']);
+        if (!$order) {
+            return ['success' => false, 'message' => 'ไม่พบใบสั่งซื้อ'];
+        }
+        if ((int) $order->status !== 5) {
+            return ['success' => false, 'message' => 'ใบสั่งซื้อนี้ไม่ได้อยู่ในสถานะรอรับเข้าคลัง'];
+        }
+
+        $json = $order->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        if (!is_array($json)) {
+            $json = [];
+        }
+        $json['stock_dismissed'] = [
+            'at' => date('Y-m-d H:i:s'),
+            'by' => \Yii::$app->user->isGuest ? null : \Yii::$app->user->id,
+            'note' => trim((string) $this->request->post('note', '')),
+        ];
+        $order->data_json = $json;
+        $order->status = 6;
+        if (!$order->save(false)) {
+            return ['success' => false, 'message' => 'บันทึกไม่สำเร็จ'];
+        }
+
+        return ['success' => true, 'po_number' => $order->po_number];
+    }
+
+    /**
+     * รวม orders.id ของใบสั่งซื้อที่มีใบรับเข้าคลัง (ที่ยังไม่ยกเลิก) ผูกอยู่แล้ว
+     * ใช้กันการรับเข้าซ้ำ กรณีสถานะใบสั่งซื้อถูกดึงกลับมาเป็น 5 จากการแก้ไขใบตรวจรับ
+     * @return array map ของ orders.id => เลขที่ใบรับเข้าที่ผูกอยู่ (array of string)
+     */
+    protected function getReceivedPoOrderIds()
+    {
+        $rows = StockOrder::find()
+            ->select(['order_no', 'data_json'])
+            ->where(['order_type' => StockOrder::ORDER_TYPE_IN])
+            ->andWhere(['<>', 'status', StockOrder::STATUS_CANCELLED])
+            ->andWhere(['like', 'data_json', 'po_order_id'])
+            ->asArray()
+            ->all();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $json = is_array($row['data_json'])
+                ? $row['data_json']
+                : (json_decode((string) $row['data_json'], true) ?: []);
+            if (empty($json['po_order_id'])) {
+                continue;
+            }
+            $poId = (int) $json['po_order_id'];
+            $map[$poId][] = (string) $row['order_no'];
+        }
+
+        return $map;
     }
 
     /**

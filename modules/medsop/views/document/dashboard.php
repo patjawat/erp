@@ -14,7 +14,7 @@ $maxOrganization = max(1, ...array_map(static fn($row) => (int) $row['total'], $
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>สืบค้นขั้นตอนปฏิบัติงานมาตรฐาน (Standard Operating Procedure) และรับทราบหลักเกณฑ์ความปลอดภัยล่าสุดได้ทันที เพื่อรักษาระดับคุณภาพมาตรฐานขององค์กร<?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?><?= $this->render('_nav', ['access' => $access, 'active' => 'dashboard']) ?><?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?><div class="d-flex flex-wrap align-items-center gap-2"><?= $this->render('_nav', ['access' => $access, 'active' => 'dashboard']) ?><?php if ($access->canCreate()): ?><?= Html::a('<i class="bi bi-plus-circle me-sm-2" aria-hidden="true"></i><span class="d-none d-sm-inline">สร้างเอกสาร</span><span class="visually-hidden d-sm-none">สร้างเอกสาร</span>', ['/medsop/document/create'], ['class' => 'btn btn-primary medsop-primary-action', 'aria-label' => 'สร้างเอกสารใหม่']) ?><?php endif; ?></div><?php $this->endBlock(); ?>
 
 <div class="medsop-dashboard">
     <section class="row g-3 mb-3" aria-labelledby="dashboard-summary-title">

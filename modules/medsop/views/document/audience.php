@@ -11,6 +11,13 @@ $appointmentsByTeam = [];
 foreach ($appointments as $appointment) {
     $appointmentsByTeam[(int) $appointment->category_id][] = $appointment;
 }
+// ผู้ดูแลระบบเผยแพร่ได้ทันที ผู้จัดทำหน่วยงานทำได้แค่ส่งให้ตรวจก่อน ปุ่มจึงต้องสื่อให้ตรงกับสิทธิ์
+$canPublish = $access->canPublish($model);
+$finishLabel = $canPublish ? 'เผยแพร่เอกสาร' : 'ส่งอนุมัติ';
+$finishSaveLabel = $canPublish ? 'บันทึกและเผยแพร่' : 'บันทึกและส่งอนุมัติ';
+$finishText = $canPublish
+    ? 'ระบบจะส่งเอกสารให้ผู้รับที่บันทึกไว้'
+    : 'ระบบจะส่งเอกสารให้ผู้ดูแลระบบตรวจสอบก่อนเผยแพร่';
 ?>
 
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
@@ -19,13 +26,13 @@ foreach ($appointments as $appointment) {
 <div class="d-flex flex-wrap align-items-center gap-2">
     <?= $this->render('_nav', ['access' => $access, 'active' => 'index']) ?>
     <?= Html::a('<i class="bi bi-arrow-left me-1" aria-hidden="true"></i>กลับไปยังเอกสาร', ['view', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-    <?= Html::beginForm(['publish', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
-    <?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>เผยแพร่เอกสาร', [
+    <?= Html::beginForm([$canPublish ? 'publish' : 'submit', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
+    <?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>' . $finishLabel, [
         'class' => 'btn btn-sm btn-primary rounded-pill px-3',
         'data-medsop-confirm' => true,
-        'data-confirm-title' => 'ยืนยันการเผยแพร่',
-        'data-confirm-text' => 'ระบบจะส่งเอกสารให้ผู้รับที่บันทึกไว้',
-        'data-confirm-label' => 'เผยแพร่เอกสาร',
+        'data-confirm-title' => 'ยืนยัน' . $finishLabel,
+        'data-confirm-text' => $finishText,
+        'data-confirm-label' => $finishLabel,
     ]) ?>
     <?= Html::endForm() ?>
 </div>
@@ -156,7 +163,7 @@ foreach ($appointments as $appointment) {
                 <p class="small text-body-secondary mt-2 mb-0 d-none" data-preview-more></p>
             </div>
             <div class="p-3 border-top d-grid gap-2">
-                <?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>บันทึกและเผยแพร่', [
+                <?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>' . $finishSaveLabel, [
                     'class' => 'btn btn-primary btn-block',
                     'name' => 'audience_intent',
                     'value' => 'publish',
@@ -164,9 +171,11 @@ foreach ($appointments as $appointment) {
                     'formmethod' => 'post',
                     'data-publish-submit' => true,
                     'data-medsop-confirm' => true,
-                    'data-confirm-title' => 'บันทึกและเผยแพร่',
-                    'data-confirm-text' => 'ระบบจะบันทึกผู้รับและเผยแพร่เอกสารทันที',
-                    'data-confirm-label' => 'บันทึกและเผยแพร่',
+                    'data-confirm-title' => $finishSaveLabel,
+                    'data-confirm-text' => $canPublish
+                        ? 'ระบบจะบันทึกผู้รับและเผยแพร่เอกสารทันที'
+                        : 'ระบบจะบันทึกผู้รับและส่งเอกสารให้ผู้ดูแลระบบตรวจสอบ',
+                    'data-confirm-label' => $finishSaveLabel,
                 ]) ?>
                 <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>บันทึกเป็นฉบับร่าง', ['class' => 'btn btn-outline-secondary btn-block']) ?>
                 <?= Html::a('ยกเลิก', ['view', 'id' => $model->id], ['class' => 'btn btn-outline-secondary btn-block']) ?>

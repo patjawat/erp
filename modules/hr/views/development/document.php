@@ -7,6 +7,7 @@ use app\modules\hr\components\DevelopmentDocumentCatalog;
 
 /** @var yii\web\View $this */
 /** @var array $documentTypes */
+/** @var array $legacyPrints */
 /** @var array $developmentOptions */
 /** @var int|null $defaultDevelopmentId */
 
@@ -114,11 +115,69 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+
+<div class="card border shadow-sm mt-4">
+    <div class="card-header bg-body-tertiary py-3">
+        <h5 class="mb-1">เอกสารพิมพ์สำเร็จรูป</h5>
+        <p class="text-body-secondary mb-0">พิมพ์จากข้อมูลทะเบียนได้ทันที ใช้ทะเบียนที่เลือกไว้ด้านบนเหมือนกัน</p>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col" class="ps-3">เอกสาร</th>
+                        <th scope="col">การใช้งาน</th>
+                        <th scope="col" class="text-end pe-3">พิมพ์</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($legacyPrints as $print): ?>
+                        <?php
+                        $isModal = ($print['open'] ?? 'tab') === 'modal';
+                        $baseUrl = Url::to($print['route']);
+                        $printUrl = $defaultDevelopmentId !== null
+                            ? Url::to(array_merge($print['route'], ['id' => $defaultDevelopmentId]))
+                            : '#';
+                        $linkOptions = [
+                            'class' => 'btn btn-sm btn-outline-secondary js-print-development-document'
+                                . ($defaultDevelopmentId === null ? ' disabled' : ($isModal ? ' open-modal' : '')),
+                            'data' => ['base-url' => $baseUrl],
+                            'aria-disabled' => $defaultDevelopmentId !== null ? 'false' : 'true',
+                        ];
+                        if ($isModal) {
+                            $linkOptions['data']['size'] = $print['modal_size'] ?? 'modal-lg';
+                            $linkOptions['data']['open'] = 'modal';
+                        } else {
+                            $linkOptions['target'] = '_blank';
+                            $linkOptions['data']['open'] = 'tab';
+                        }
+                        ?>
+                        <tr>
+                            <td class="ps-3">
+                                <div class="fw-medium">
+                                    <i class="bi <?= Html::encode($print['icon'] ?? 'bi-printer') ?> me-1 text-body-secondary" aria-hidden="true"></i>
+                                    <?= Html::encode($print['name']) ?>
+                                </div>
+                            </td>
+                            <td class="text-body-secondary"><?= Html::encode($print['description']) ?></td>
+                            <td class="text-end pe-3">
+                                <?= Html::a('<i class="bi bi-printer me-1" aria-hidden="true"></i>พิมพ์', $printUrl, $linkOptions) ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <?php
 $this->registerJs(<<<'JS'
 (function () {
     var source = document.getElementById('development-document-source');
     var buttons = document.querySelectorAll('.js-open-development-document');
+    var printButtons = document.querySelectorAll('.js-print-development-document');
     if (!source) return;
 
     function syncButtons() {
@@ -140,11 +199,37 @@ $this->registerJs(<<<'JS'
         });
     }
 
-    source.addEventListener('change', syncButtons);
-    if (window.jQuery) {
-        window.jQuery(source).on('change', syncButtons);
+    function syncPrintButtons() {
+        var id = source.value;
+        printButtons.forEach(function (button) {
+            if (!id) {
+                button.href = '#';
+                button.classList.add('disabled');
+                button.classList.remove('open-modal');
+                button.setAttribute('aria-disabled', 'true');
+                return;
+            }
+
+            var separator = button.dataset.baseUrl.indexOf('?') === -1 ? '?' : '&';
+            button.href = button.dataset.baseUrl + separator + 'id=' + encodeURIComponent(id);
+            button.classList.remove('disabled');
+            if (button.dataset.open === 'modal') {
+                button.classList.add('open-modal');
+            }
+            button.setAttribute('aria-disabled', 'false');
+        });
     }
-    syncButtons();
+
+    function syncAll() {
+        syncButtons();
+        syncPrintButtons();
+    }
+
+    source.addEventListener('change', syncAll);
+    if (window.jQuery) {
+        window.jQuery(source).on('change', syncAll);
+    }
+    syncAll();
 })();
 JS);
 ?>

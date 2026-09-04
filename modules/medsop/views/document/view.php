@@ -14,7 +14,43 @@ $qrCode->setSize(156)->setMargin(8);
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?><?= Html::encode($model->document_no) ?> · ฉบับที่ <?= number_format($model->current_revision) ?><?php $this->endBlock(); ?>
-<?php $this->beginBlock('page-action'); ?><div class="d-flex flex-wrap align-items-center gap-2"><?= $this->render('_nav', ['access' => $access, 'active' => 'index']) ?><?php if ($access->canUpdate($model)): ?><?= Html::a('<i class="bi bi-people me-1" aria-hidden="true"></i>กำหนดผู้รับเอกสาร', ['audience', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?><?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไขเอกสาร', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?><?= Html::beginForm(['publish', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?><?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>เผยแพร่เอกสาร', ['class' => 'btn btn-sm btn-primary rounded-pill px-3', 'data-medsop-confirm' => true, 'data-confirm-title' => 'ยืนยันการเผยแพร่', 'data-confirm-text' => 'ระบบจะส่งเอกสารฉบับนี้ให้ผู้รับที่กำหนดไว้', 'data-confirm-label' => 'เผยแพร่เอกสาร']) ?><?= Html::endForm() ?><?php endif; ?></div><?php $this->endBlock(); ?>
+<?php $this->beginBlock('page-action'); ?>
+<div class="d-flex flex-wrap align-items-center gap-2">
+    <?= $this->render('_nav', ['access' => $access, 'active' => 'index']) ?>
+    <?php if ($access->canUpdate($model)): ?>
+        <?= Html::a('<i class="bi bi-people me-1" aria-hidden="true"></i>กำหนดผู้รับเอกสาร', ['audience', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+        <?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไขเอกสาร', ['update', 'id' => $model->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+    <?php endif; ?>
+    <?php if ($access->canReject($model)): ?>
+        <?= Html::beginForm(['reject', 'id' => $model->id], 'post', ['class' => 'd-inline', 'data-medsop-reject' => true]) ?>
+        <?= Html::hiddenInput('review_note', '', ['data-reject-note' => true]) ?>
+        <?= Html::submitButton('<i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>ส่งกลับแก้ไข', ['class' => 'btn btn-sm btn-outline-danger']) ?>
+        <?= Html::endForm() ?>
+    <?php endif; ?>
+    <?php if ($access->canSubmit($model) && !$access->canPublish($model)): ?>
+        <?= Html::beginForm(['submit', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
+        <?= Html::submitButton('<i class="bi bi-send me-1" aria-hidden="true"></i>ส่งอนุมัติ', ['class' => 'btn btn-sm btn-primary rounded-pill px-3', 'data-medsop-confirm' => true, 'data-confirm-title' => 'ยืนยันการส่งอนุมัติ', 'data-confirm-text' => 'ระบบจะส่งเอกสารฉบับนี้ให้ผู้ดูแลระบบตรวจสอบก่อนเผยแพร่', 'data-confirm-label' => 'ส่งอนุมัติ']) ?>
+        <?= Html::endForm() ?>
+    <?php endif; ?>
+    <?php if ($access->canPublish($model)): ?>
+        <?= Html::beginForm(['publish', 'id' => $model->id], 'post', ['class' => 'd-inline']) ?>
+        <?= Html::submitButton('<i class="bi bi-send-check me-1" aria-hidden="true"></i>เผยแพร่เอกสาร', ['class' => 'btn btn-sm btn-primary rounded-pill px-3', 'data-medsop-confirm' => true, 'data-confirm-title' => 'ยืนยันการเผยแพร่', 'data-confirm-text' => 'ระบบจะส่งเอกสารฉบับนี้ให้ผู้รับที่กำหนดไว้', 'data-confirm-label' => 'เผยแพร่เอกสาร']) ?>
+        <?= Html::endForm() ?>
+    <?php endif; ?>
+</div>
+<?php $this->endBlock(); ?>
+
+<?php if ($model->status === Document::STATUS_REJECTED && $model->review_note): ?>
+    <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+        <i class="bi bi-arrow-counterclockwise mt-1" aria-hidden="true"></i>
+        <div><strong class="d-block">ผู้ดูแลระบบส่งกลับให้แก้ไข</strong><span><?= Html::encode($model->review_note) ?></span></div>
+    </div>
+<?php elseif ($model->status === Document::STATUS_PENDING): ?>
+    <div class="alert alert-info d-flex align-items-start gap-2" role="status">
+        <i class="bi bi-hourglass-split mt-1" aria-hidden="true"></i>
+        <div><strong class="d-block">รอผู้ดูแลระบบตรวจสอบ</strong><span>เอกสารถูกส่งอนุมัติแล้ว<?= $model->submitted_at ? ' เมื่อ ' . Yii::$app->formatter->asDatetime($model->submitted_at, 'medium') : '' ?> แก้ไขเพิ่มเติมได้หลังผู้ดูแลระบบส่งกลับ</span></div>
+    </div>
+<?php endif; ?>
 
 <div class="medsop-document-tools mb-3" aria-label="รูปแบบการอ่านเอกสาร">
     <?= Html::a('<i class="bi bi-easel2 me-2" aria-hidden="true"></i>ดูแบบสไลด์', ['slides', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
@@ -52,4 +88,37 @@ $qrCode->setSize(156)->setMargin(8);
 </ol></section>
 <?php if ($assignment && $assignmentEmployee): ?>
     <?= $this->render('_acknowledgement', compact('model', 'assignment', 'assignmentEmployee')) ?>
+<?php endif; ?>
+
+<?php if ($access->canReject($model)): ?>
+<?php $this->registerJs(<<<'JS'
+document.addEventListener('submit', function (event) {
+    var form = event.target.closest('[data-medsop-reject]');
+    if (!form || form.dataset.rejectConfirmed === 'true') { return; }
+    event.preventDefault();
+    if (typeof window.Swal === 'undefined') { return; }
+    window.Swal.fire({
+        title: 'ส่งกลับให้แก้ไข',
+        input: 'textarea',
+        inputLabel: 'เหตุผลที่ส่งกลับ',
+        inputPlaceholder: 'ระบุสิ่งที่ต้องแก้ไข เพื่อให้ผู้จัดทำแก้ได้ตรงจุด',
+        inputAttributes: { 'aria-label': 'เหตุผลที่ส่งกลับแก้ไข', maxlength: 500 },
+        showCancelButton: true,
+        reverseButtons: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ส่งกลับแก้ไข',
+        cancelButtonText: 'ยกเลิก',
+        inputValidator: function (value) {
+            if (!value || !value.trim()) { return 'กรุณาระบุเหตุผลที่ส่งกลับแก้ไข'; }
+            return null;
+        }
+    }).then(function (result) {
+        if (!result.isConfirmed) { return; }
+        form.querySelector('[data-reject-note]').value = result.value;
+        form.dataset.rejectConfirmed = 'true';
+        form.submit();
+    });
+});
+JS); ?>
 <?php endif; ?>

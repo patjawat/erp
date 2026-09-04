@@ -361,6 +361,7 @@ $createItemUrl = Url::to(['stock-item/create-item']);
 $createItemModalUrl = Url::to(['stock-item/create']);
 $pendingPoUrl = Url::to(['pending-po']);
 $pendingPoItemsUrl = Url::to(['pending-po-items']);
+$dismissPoUrl = Url::to(['dismiss-po']);
 $itemListUrlJson = json_encode($itemListUrl);
 $itemTypeListUrlJson = json_encode($itemTypeListUrl);
 $importCsvUrlJson = json_encode($importCsvUrl);
@@ -370,6 +371,7 @@ $createItemUrlJson = json_encode($createItemUrl);
 $createItemModalUrlJson = json_encode($createItemModalUrl);
 $pendingPoUrlJson = json_encode($pendingPoUrl);
 $pendingPoItemsUrlJson = json_encode($pendingPoItemsUrl);
+$dismissPoUrlJson = json_encode($dismissPoUrl);
 $initialWarehouseIdJson = json_encode($initialWarehouseId);
 $initialItemTypeJson = json_encode($initialItemType);
 $msgChangeWarehouse = json_encode('การเปลี่ยนคลังสินค้าจะล้างรายการที่เลือกไว้ทั้งหมด ต้องการดำเนินการหรือไม่?');
@@ -1916,11 +1918,58 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                             Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท' +
                         '</div>' +
                     '</div>' +
+                    '<button type="button" class="btn btn-sm btn-outline-danger po-pick-row__dismiss" ' +
+                        'data-id="' + po.id + '" data-po="' + escapeHtml(po.po_number || '-') + '" ' +
+                        'title="นำออกจากรายการรอรับเข้าคลัง (ไม่ลบใบสั่งซื้อ)"><i class="bi bi-trash"></i></button>' +
                     '<span class="po-pick-row__cta">เลือก <i class="bi bi-chevron-right"></i></span>' +
                 '</div>';
             }).join('');
             $('#poListContainer').html(rows);
         }
+
+        // นำใบสั่งซื้อออกจากรายการรอรับเข้าคลัง (รายการเก่าที่ค้าง/รับเข้าไปแล้วทางอื่น) — กันเผลอรับเข้าซ้ำ
+        $(document).on('click', '.po-pick-row__dismiss', function(e) {
+            e.stopPropagation();
+            var poId = $(this).data('id');
+            var poNumber = $(this).data('po');
+            Swal.fire({
+                icon: 'warning',
+                title: 'นำออกจากรายการรอรับเข้าคลัง?',
+                html: 'ใบสั่งซื้อ <b>' + escapeHtml(String(poNumber)) + '</b><br>' +
+                      '<span class="small text-muted">จะไม่แสดงในรายการนี้อีก (ใบสั่งซื้อไม่ถูกลบ) ใช้กับรายการที่รับเข้าคลังไปแล้วหรือไม่ต้องรับเข้า</span>',
+                showCancelButton: true,
+                confirmButtonText: 'นำออก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#dc3545'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                var body = new URLSearchParams();
+                var csrfParam = document.querySelector('meta[name="csrf-param"]');
+                var csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (csrfParam && csrfToken) {
+                    body.append(csrfParam.getAttribute('content'), csrfToken.getAttribute('content'));
+                }
+
+                fetch({$dismissPoUrlJson} + '?id=' + encodeURIComponent(poId), {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    },
+                    credentials: 'same-origin',
+                    body: body.toString()
+                }).then(function(r) { return r.json(); }).then(function(res) {
+                    if (!res || !res.success) {
+                        throw new Error((res && res.message) ? res.message : 'นำออกไม่สำเร็จ');
+                    }
+                    loadPoList($('#poSearchInput').val());
+                }).catch(function(err) {
+                    Swal.fire('ผิดพลาด', err.message || 'นำออกไม่สำเร็จ', 'error');
+                });
+            });
+        });
 
         function loadPoList(q) {
             var warehouseId = currentWarehouseIdForPo();
@@ -2115,6 +2164,11 @@ $this->registerCss(<<<CSS
     flex: 0 0 auto; font-size: 0.8rem; font-weight: 600; color: #0d6efd;
     white-space: nowrap;
 }
+.po-pick-row__dismiss {
+    flex: 0 0 auto; margin-right: 0.6rem; line-height: 1;
+    padding: 0.2rem 0.45rem; opacity: 0.45; transition: opacity 0.15s ease;
+}
+.po-pick-row:hover .po-pick-row__dismiss { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
     .po-pick-row { transition: none; }
 }

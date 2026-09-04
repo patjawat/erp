@@ -299,6 +299,10 @@ $config = [
             'service-profile/*',
             // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
             'iac-risk/*',
+            // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
+            // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
+            // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission
+            'medsop/*',
             // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
@@ -374,6 +378,9 @@ $config = [
             'inventory-v2/main-stock/export-critical-items-excel',
             'helpdesk/repair/create-validator',
             'helpdesk/repair/technician-list',
+            // แดชบอร์ด HAIT ศูนย์คอมพิวเตอร์: endpoint AJAX สำหรับ offcanvas drill-down + หน้าพิมพ์รายงาน (อ่านอย่างเดียว)
+            'helpdesk/computer/drilldown',
+            'helpdesk/computer/report',
             'filemanager/*',
             // 'usermanager/*',
             'site/login',
