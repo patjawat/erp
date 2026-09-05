@@ -344,9 +344,6 @@ class ChatController extends Controller
     private function userFacingAiError(Throwable $exception): string
     {
         $message = trim($exception->getMessage());
-        if (preg_match('/[\x{0E00}-\x{0E7F}]/u', $message) === 1) {
-            return $message;
-        }
         if (preg_match('/HTTP status 402|more credits|fewer max_tokens/i', $message) === 1) {
             return 'เครดิต OpenRouter ไม่เพียงพอสำหรับโมเดลนี้ กรุณาเลือกโมเดลฟรีหรือเติมเครดิตแล้วลองอีกครั้ง';
         }
@@ -360,7 +357,27 @@ class ChatController extends Controller
             return 'OpenRouter ไม่สามารถตอบกลับได้ในขณะนี้ กรุณาลองอีกครั้ง';
         }
 
+        // ปล่อยผ่านเฉพาะข้อความไทยที่ตั้งใจสื่อสารกับผู้ใช้ ไม่ใช่ exception ภายในที่บังเอิญมีภาษาไทย
+        if ($this->isSafeUserFacingMessage($message)) {
+            return $message;
+        }
+
         return 'ไม่สามารถรับคำตอบจาก OpenRouter ได้ กรุณาลองอีกครั้ง';
+    }
+
+    /**
+     * ตรวจว่าข้อความ error ปลอดภัยพอจะแสดงให้ผู้ใช้เห็น (กัน SQL/exception/path ภายในหลุด)
+     */
+    private function isSafeUserFacingMessage(string $message): bool
+    {
+        if ($message === '' || mb_strlen($message) > 300 || preg_match('/[\r\n]/', $message) === 1) {
+            return false;
+        }
+        if (preg_match('/[\x{0E00}-\x{0E7F}]/u', $message) !== 1) {
+            return false;
+        }
+
+        return preg_match('#SQLSTATE|SQL being executed|INSERT INTO|SELECT |UPDATE |DELETE FROM|Exception|Stack trace|/app/|::#i', $message) !== 1;
     }
 
     /**
