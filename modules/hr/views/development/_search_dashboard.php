@@ -45,19 +45,6 @@ use yii\widgets\ActiveForm;
                                         ])->label(false);
                                         ?>
                                 </div>
-                                <div class="col-12 col-sm-4">
-                                    <select id="departmentFilter" class="form-select">
-                                        <option value="all">ทุกหน่วยงาน</option>
-                                        <option value="dept1">สำนักงานใหญ่</option>
-                                        <option value="dept2">สำนักงานภูมิภาค</option>
-                                        <option value="dept3">ฝ่ายวิชาการ</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-4">
-                                    <button id="applyFilter" class="btn btn-primary w-100">
-                                        กรองข้อมูล
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>

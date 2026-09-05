@@ -155,7 +155,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="col-12 col-lg-6">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h5 class="fw-semibold text-dark mb-3">การใช้งบประมาณตามประเภทกิจกรรม</h5>
+                            <h5 class="fw-semibold text-dark mb-3">งบใช้จริงแยกตามหมวดค่าใช้จ่าย</h5>
                             <div id="budgetChart" style="height: 320px;"></div>
                         </div>
                     </div>
@@ -172,71 +172,46 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
 
-            <!-- Recent Activities Table -->
+            <!-- Recent Activities Table — ข้อมูลจริง -->
+            <?php
+            $recent = \app\modules\hr\models\Development::find()
+                ->where(['thai_year' => $searchModel->thai_year, 'deleted_at' => null])
+                ->andWhere(['not in', 'status', \app\modules\hr\services\DevelopmentReport::EXCLUDED_DEV_STATUSES])
+                ->with(['developmentType', 'createdByEmp'])
+                ->orderBy(['date_start' => SORT_DESC, 'id' => SORT_DESC])
+                ->limit(8)
+                ->all();
+            ?>
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-semibold text-dark">กิจกรรมล่าสุด</h5>
-                        <button class="btn btn-sm btn-outline-primary">
-                            ดูทั้งหมด
-                        </button>
+                        <h5 class="fw-semibold text-dark mb-0">กิจกรรมล่าสุด</h5>
+                        <?= Html::a('ดูทั้งหมด', ['/hr/development/index'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped align-middle">
                             <thead>
                                 <tr>
                                     <th scope="col">ชื่อกิจกรรม</th>
                                     <th scope="col">ประเภท</th>
                                     <th scope="col">วันที่</th>
-                                    <th scope="col">ผู้เข้าร่วม</th>
-                                    <th scope="col">งบประมาณ</th>
+                                    <th scope="col" class="text-center">ผู้เข้าร่วม</th>
+                                    <th scope="col" class="text-end">งบ (ประมาณ)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">การประชุมติดตามความก้าวหน้าโครงการ Q3</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary">ประชุมติดตามงาน</span>
-                                    </td>
-                                    <td>15 ส.ค. 2567</td>
-                                    <td>24 คน</td>
-                                    <td>฿15,000</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">อบรมเชิงปฏิบัติการ: การพัฒนาทักษะดิจิทัล</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">ฝึกอบรม</span>
-                                    </td>
-                                    <td>10 ส.ค. 2567</td>
-                                    <td>35 คน</td>
-                                    <td>฿85,000</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">ศึกษาดูงานนวัตกรรมการบริหารจัดการ</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background-color: #d63384;">ศึกษาดูงาน</span>
-                                    </td>
-                                    <td>5 ส.ค. 2567</td>
-                                    <td>18 คน</td>
-                                    <td>฿120,000</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">การนำเสนอผลงานวิชาการประจำปี</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-warning text-dark">นำเสนอผลงาน</span>
-                                    </td>
-                                    <td>28 ก.ค. 2567</td>
-                                    <td>42 คน</td>
-                                    <td>฿95,000</td>
-                                </tr>
+                                <?php if (empty($recent)): ?>
+                                    <tr><td colspan="5" class="text-center text-body-secondary py-3">ยังไม่มีข้อมูลในปีงบนี้</td></tr>
+                                <?php endif; ?>
+                                <?php foreach ($recent as $d): ?>
+                                    <tr>
+                                        <td><span class="fw-medium"><?= Html::encode($d->topic) ?></span></td>
+                                        <td><span class="badge bg-primary-subtle text-primary-emphasis"><?= Html::encode($d->developmentType->title ?? '-') ?></span></td>
+                                        <td class="text-nowrap"><?= $d->showDateRange() ?></td>
+                                        <td class="text-center"><?= (int) $d->memberText()['count'] + 1 ?> คน</td>
+                                        <td class="text-end"><?= number_format($d->totalEstimatedCost(), 2) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
@@ -305,6 +280,15 @@ $activityTypeLabel = Json::encode($searchModel->getSummary()['activityType']['la
 
 $activityTypeSeries = Json::encode($searchModel->getSummary()['activityType']['series']);
 $monthlyTrend = Json::encode($searchModel->getSummary()['monthlyTrend']['series']);
+
+// ── ข้อมูลจริงแทนค่า hardcode เดิม (เฟส 1) ──
+$component = $report['actual_by_component'] ?? [];
+$budgetLabels = Json::encode(array_map(fn($r) => $r['label'], $component));
+$budgetSeries = Json::encode(array_map(fn($r) => round((float) $r['amount'], 2), $component));
+
+$dept = \app\modules\hr\services\DevelopmentReport::participationByDepartment((int) $searchModel->thai_year, 8);
+$deptLabels = Json::encode(array_map(fn($r) => $r['name'], $dept));
+$deptSeries = Json::encode(array_map(fn($r) => (int) $r['n'], $dept));
 
 
 $js = <<<JS
@@ -440,11 +424,11 @@ $js = <<<JS
             const monthlyTrendChart = new ApexCharts(document.querySelector("#monthlyTrendChart"), monthlyTrendOptions);
             monthlyTrendChart.render();
 
-            // Budget Chart
+            // Budget Chart — งบใช้จริงแยกตามหมวดค่าใช้จ่าย (ข้อมูลจริง)
             const budgetOptions = {
                 series: [{
-                    name: 'งบประมาณ (พันบาท)',
-                    data: [420, 650, 180, 320, 280, 90]
+                    name: 'ใช้จริง (บาท)',
+                    data: $budgetSeries
                 }],
                 chart: {
                     type: 'bar',
@@ -465,14 +449,7 @@ $js = <<<JS
                     enabled: false
                 },
                 xaxis: {
-                    categories: [
-                        'ประชุมติดตามงาน', 
-                        'ประชุมวิชาการ/อบรม', 
-                        'เป็นวิทยากร', 
-                        'นำเสนอผลงาน', 
-                        'ศึกษาดูงาน', 
-                        'อื่นๆ'
-                    ],
+                    categories: $budgetLabels,
                     labels: {
                         style: {
                             fontFamily: 'Sarabun, sans-serif',
@@ -481,7 +458,7 @@ $js = <<<JS
                 },
                 yaxis: {
                     title: {
-                        text: 'พันบาท',
+                        text: 'บาท',
                         style: {
                             fontFamily: 'Sarabun, sans-serif',
                         }
@@ -498,7 +475,7 @@ $js = <<<JS
                 tooltip: {
                     y: {
                         formatter: function (val) {
-                            return val + " พันบาท"
+                            return Number(val).toLocaleString() + " บาท"
                         }
                     }
                 }
@@ -506,11 +483,11 @@ $js = <<<JS
             const budgetChart = new ApexCharts(document.querySelector("#budgetChart"), budgetOptions);
             budgetChart.render();
 
-            // Department Chart
+            // Department Chart — คน-ครั้งการเข้าร่วมแยกตามหน่วยงาน (ข้อมูลจริง, Top 8)
             const departmentOptions = {
                 series: [{
-                    name: 'จำนวนผู้เข้าร่วม',
-                    data: [65, 42, 38, 24, 18]
+                    name: 'คน-ครั้ง',
+                    data: $deptSeries
                 }],
                 chart: {
                     type: 'bar',
@@ -530,13 +507,7 @@ $js = <<<JS
                     enabled: false
                 },
                 xaxis: {
-                    categories: [
-                        'สำนักงานใหญ่', 
-                        'สำนักงานภูมิภาค', 
-                        'ฝ่ายวิชาการ', 
-                        'ฝ่ายบริหาร', 
-                        'ฝ่ายวิจัยและพัฒนา'
-                    ],
+                    categories: $deptLabels,
                     labels: {
                         style: {
                             fontFamily: 'Sarabun, sans-serif',
@@ -553,47 +524,6 @@ $js = <<<JS
             };
             const departmentChart = new ApexCharts(document.querySelector("#departmentChart"), departmentOptions);
             departmentChart.render();
-
-            // Filter functionality
-            document.getElementById('applyFilter').addEventListener('click', function() {
-                const fiscalYear = document.getElementById('fiscalYearFilter').value;
-                const department = document.getElementById('departmentFilter').value;
-                
-                // In a real application, you would fetch new data based on these filters
-                // For this demo, we'll update the charts with different data based on fiscal year
-                
-                    // Update monthly trend chart for 2566
-                    monthlyTrendChart.updateSeries([
-                        {
-                            name: 'ประชุมติดตามงาน/รับนโยบาย',
-                            data: [4, 5, 6, 7, 9, 10, 11, 12, 10, 8, 6, 3]
-                        },
-                        {
-                            name: 'ประชุมวิชาการ/สัมมนา/ฝึกอบรม',
-                            data: [2, 3, 4, 6, 7, 8, 9, 10, 7, 5, 3, 2]
-                        },
-                        {
-                            name: 'เพื่อเป็นวิทยากร',
-                            data: [1, 1, 2, 2, 2, 2, 3, 3, 2, 1, 1, 0]
-                        },
-                        {
-                            name: 'นำเสนอผลงาน/จัดนิทรรศการ',
-                            data: [2, 2, 2, 2, 2, 3, 3, 3, 2, 1, 1, 1]
-                        },
-                        {
-                            name: 'เพื่อศึกษาดูงาน',
-                            data: [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1]
-                        },
-                        {
-                            name: 'อื่นๆ',
-                            data: [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
-                        }
-                    ]);
-               
-                
-                // You would also update other charts based on the selected filters
-                // For example, updating the budget chart and department chart
-            });
         });
     // Removed unnecessary or undefined variable reference
 JS;

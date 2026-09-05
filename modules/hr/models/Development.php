@@ -23,6 +23,7 @@ use app\modules\usermanager\models\User;
 use app\modules\booking\models\Vehicle;
 use app\modules\hr\models\DevelopmentDetail;
 use app\modules\hr\models\DevelopmentSummary;
+use app\modules\hr\services\DevelopmentReport;
 
 /**
  * This is the model class for table "development".
@@ -461,84 +462,35 @@ class Development extends \yii\db\ActiveRecord
         return $data;
     }
 
-    // เปรียบเทียบข้อมูลการพัฒนารายปี
-    public  function getYearlyDevelopmentSummary()
+    /**
+     * เปรียบเทียบข้อมูลการพัฒนารายปี (ระดับองค์กร)
+     *
+     * เฟส 0: ย้ายการคำนวณไปที่ DevelopmentReport (แหล่งความจริงเดียว) เพื่อแก้ 3 จุดที่เดิมเพี้ยน
+     *  1) total_count เดิมนับ "แถวค่าใช้จ่ายที่มีราคา" ไม่ใช่จำนวนกิจกรรม → เปลี่ยนเป็นจำนวนใบจริง
+     *  2) emp_count เดิมนับเฉพาะผู้ขอ (DISTINCT emp_id) → รวมสมาชิกคณะเดินทางแล้ว (coverage จริง)
+     *  3) total_price เดิมคิดจาก development_detail.price อย่างเดียว → รวมประมาณการใน data_json ด้วย
+     *
+     * คงคีย์เดิมทั้งหมดไว้ให้ view dashboard เดิมใช้ได้ และเพิ่มคีย์ใหม่ (planned_budget ฯลฯ)
+     * สำหรับหน้ารายงานเฟสถัดไป — งบ "ที่ตั้งไว้" ดึงจากแผนการเงิน (plan_order) ตามที่ตกลง
+     */
+    public function getYearlyDevelopmentSummary()
     {
+        $summary = DevelopmentReport::orgSummary((int) $this->thai_year);
 
-        // ดึงจำนวนบุคลากรทั้งหมด
-        $totalEmployees = Employees::find()
-            ->where(['status' => 1])
-            ->count();
+        $countUp = $summary['activities_change_percent'] >= 0;
 
-        $sql = "
-        SELECT 
-            thai_year,
-            total_price,
-            total_count,
-            unique_emp_count,
-
-            -- ความต่างจำนวนครั้ง
-            IFNULL(total_count - LAG(total_count) OVER (ORDER BY thai_year), 0) AS count_difference,
-
-            -- สถานะ (ดูจากจำนวนครั้ง)
-            CASE
-                WHEN LAG(total_count) OVER (ORDER BY thai_year) IS NULL THEN 'N/A'
-                WHEN total_count > LAG(total_count) OVER (ORDER BY thai_year) THEN 'เพิ่มขึ้น'
-                WHEN total_count < LAG(total_count) OVER (ORDER BY thai_year) THEN 'ลดลง'
-                ELSE 'เท่าเดิม'
-            END AS count_status,
-
-            -- % เปลี่ยนจำนวนครั้ง
-            CASE
-                WHEN LAG(total_count) OVER (ORDER BY thai_year) IS NULL THEN 0
-                WHEN LAG(total_count) OVER (ORDER BY thai_year) = 0 THEN 0
-                ELSE ROUND(
-                    ((total_count - LAG(total_count) OVER (ORDER BY thai_year)) / LAG(total_count) OVER (ORDER BY thai_year)) * 100,
-                    2
-                )
-            END AS count_percent_change,
-
-            -- % บุคลากรที่เข้าร่วมกิจกรรม
-            ROUND((unique_emp_count / :totalEmployees) * 100, 2) AS emp_percent
-
-        FROM (
-            SELECT 
-                d.thai_year, 
-                SUM(t.price) AS total_price,
-                COUNT(t.id) AS total_count,
-                COUNT(DISTINCT d.emp_id) AS unique_emp_count
-            FROM development d
-            LEFT JOIN development_detail t ON t.development_id = d.id
-            WHERE t.price IS NOT NULL
-            AND d.thai_year IN (:last_year, :current_year)
-            GROUP BY d.thai_year
-        ) AS yearly;
-            ";
-
-
-        $lastYear = $this->thai_year - 1;
-        $currentYear = $this->thai_year;
-        $data =  Yii::$app->db->createCommand($sql)
-            ->bindValue(':last_year', $lastYear)
-            ->bindValue(':current_year', $currentYear)
-            ->bindValue(':totalEmployees', $totalEmployees)
-            ->queryAll();
-        return [
-            'total_count' => $data[1]['total_count'] ?? 0,
-            'total_price' => $data[1]['total_price'] ?? 0,
-            'emp_count' => $data[1]['unique_emp_count'] ?? 0,
-            'emp_percent' => $data[1]['emp_percent'] ?? 0,
-            'price_percent_change' => $data[1]['price_percent_change'] ?? 0,
-            'count_percent_change' => $data[1]['count_percent_change'] ?? 0,
-            'year' => $data[1]['thai_year'] ?? 0,
-            'price_status' => (isset($data[1]['count_status'])
-                ? ($data[1]['count_status'] == 'เพิ่มขึ้น'
-                    ? '<span class="text-success"><i class="fa-solid fa-caret-up"></i> เพิ่มขึ้น</span>'
-                    : '<span class="text-danger"><i class="fa-solid fa-caret-down"></i> ลดลง</span>')
-                : '-'),
-
-
-        ];
+        return array_merge($summary, [
+            // ── คีย์เดิมที่ view dashboard อ้างถึง (แมปให้ถูกความหมาย) ──
+            'total_count' => $summary['activities'],
+            'total_price' => $summary['actual_spend'],
+            'emp_count' => $summary['persons_developed'],
+            'emp_percent' => $summary['coverage_percent'],
+            'price_percent_change' => $summary['spend_change_percent'],
+            'count_percent_change' => $summary['activities_change_percent'],
+            'price_status' => $countUp
+                ? '<span class="text-success"><i class="fa-solid fa-caret-up"></i> เพิ่มขึ้น</span>'
+                : '<span class="text-danger"><i class="fa-solid fa-caret-down"></i> ลดลง</span>',
+        ]);
     }
 
 
