@@ -126,6 +126,9 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
                         <button type="button" class="btn btn-outline-secondary px-3" id="btn-close-month" data-bs-toggle="modal" data-bs-target="#modal-close-month">
                             <i class="bi bi-calendar-check me-1"></i> ปิดเดือน
                         </button>
+                        <button type="button" class="btn btn-outline-primary px-3" id="btn-cm-doctor" data-bs-toggle="modal" data-bs-target="#modal-cm-doctor">
+                            <i class="bi bi-clipboard2-pulse me-1"></i> ตรวจ &amp; ซ่อมปิดเดือน
+                        </button>
                         <?php if ($hasData): ?>
                             <button type="button" class="btn btn-outline-danger px-3" id="btn-cancel-close"
                                     data-year="<?= (int)$year ?>" data-month="<?= (int)$month ?>" data-warehouse="<?= $warehouseId ? (int)$warehouseId : '' ?>">
@@ -328,6 +331,71 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
                 <div class="cm-foot-group" data-step="3" hidden>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
                 </div>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Doctor: ตรวจ & ซ่อมปิดเดือน (วิเคราะห์ทั้งช่วงตั้งแต่ต้นจนถึงงวดที่เลือก) -->
+<div class="modal fade" id="modal-cm-doctor" tabindex="-1" aria-labelledby="modal-cm-doctor-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content cm-modal">
+            <header class="cm-modal__head">
+                <div class="cm-modal__head-row">
+                    <h5 class="cm-modal__title" id="modal-cm-doctor-title">
+                        <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i> ตรวจ &amp; ซ่อมปิดเดือน
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+                </div>
+            </header>
+            <div class="modal-body cm-modal__body">
+                <p class="cm-panel__lead">
+                    ไล่คำนวณทุกงวดตั้งแต่งวดแรกที่มีเอกสารจนถึงงวดที่เลือก (ไม่แก้ข้อมูลจนกว่าจะกดซ่อม) แล้วจำแนกพัสดุที่มีปัญหา
+                    — <strong>มูลค่าติดลบเทียม</strong> ซ่อมอัตโนมัติได้ด้วยการปิดเดือนใหม่แบบต้นทุนถัวเฉลี่ย ส่วน
+                    <strong>จำนวนติดลบ</strong> ต้องตรวจ order_date / ปรับยอดเอง
+                </p>
+                <div class="cm-field-grid">
+                    <div class="cm-field">
+                        <label class="cm-field__label" for="cmd-warehouse-id">คลัง</label>
+                        <select id="cmd-warehouse-id" class="form-select cm-select">
+                            <option value="">เลือกคลัง</option>
+                            <option value="all">ทุกคลังหลัก</option>
+                            <?php foreach ($warehouses as $wid => $wname): ?>
+                                <?php if ($wid !== ''): ?>
+                                    <option value="<?= (int)$wid ?>" <?= (string)$warehouseId === (string)$wid ? 'selected' : '' ?>><?= Html::encode($wname) ?></option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="cm-field">
+                        <label class="cm-field__label" for="cmd-month">ถึงงวด / ปีงบประมาณ (พ.ศ.)</label>
+                        <div class="cm-field__pair">
+                            <select id="cmd-month" class="form-select cm-select" aria-label="เดือน">
+                                <?php for ($m = 1; $m <= 12; $m++): ?>
+                                    <option value="<?= $m ?>" <?= (int)$month === $m ? 'selected' : '' ?>><?= $monthNames[$m] ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select id="cmd-year" class="form-select cm-select" aria-label="ปี พ.ศ.">
+                                <?php for ($y = date('Y') + 543; $y >= (date('Y') + 543 - 5); $y--): ?>
+                                    <option value="<?= $y - 543 ?>" <?= (int)$year === ($y - 543) ? 'selected' : '' ?>><?= $y ?> (พ.ศ.)</option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="cm-field" style="align-self:end">
+                        <button type="button" class="btn btn-primary" id="cmd-analyze">
+                            <i class="bi bi-search" aria-hidden="true"></i> วิเคราะห์
+                        </button>
+                    </div>
+                </div>
+                <div id="cmd-result" class="mt-3" aria-live="polite"><!-- injected by JS --></div>
+            </div>
+            <footer class="cm-modal__foot" style="justify-content:space-between">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-success" id="cmd-autofix" disabled>
+                    <span class="cmd-autofix__label"><i class="bi bi-wrench-adjustable" aria-hidden="true"></i> ซ่อมมูลค่าอัตโนมัติ (ปิดใหม่ทั้งช่วง)</span>
+                    <span class="cmd-autofix__spinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+                </button>
             </footer>
         </div>
     </div>
@@ -1051,6 +1119,8 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 <?php
 $closeUrl = Url::to(['/inventory-v2/report/close-month']);
 $previewUrl = Url::to(['/inventory-v2/report/close-month-preview']);
+$doctorUrl = Url::to(['/inventory-v2/report/close-month-doctor']);
+$autofixUrl = Url::to(['/inventory-v2/report/close-month-autofix']);
 $cancelUrl = Url::to(['/inventory-v2/report/cancel-close']);
 $reportUrl = Url::to(['/inventory-v2/report/material-summary']);
 $drillUrl = Url::to(['/inventory-v2/report/category-drilldown']);
@@ -1707,6 +1777,122 @@ $this->registerJs(<<<JS
             }
         });
     }
+
+    // ══ Doctor: ตรวจ & ซ่อมปิดเดือน ══
+    var doctorUrl = '{$doctorUrl}';
+    var autofixUrl = '{$autofixUrl}';
+    var cmdCtx = null;
+
+    var CMD_REASON = {
+        negative_qty:      { cls: 'danger',  label: 'จำนวนติดลบ' },
+        value_only_desync: { cls: 'warning', label: 'มูลค่าติดลบเทียม (ซ่อมอัตโนมัติได้)' },
+        zero_cost:         { cls: 'secondary', label: 'จ่ายออกไม่มีต้นทุน' }
+    };
+
+    function cmdAnalyze(){
+        var wh = $('#cmd-warehouse-id').val();
+        if (!wh){ $('#cmd-result').html(cmAlert('warning','bi-exclamation-triangle','กรุณาเลือกคลัง','')); return; }
+        cmdCtx = { warehouse_id: wh, month: $('#cmd-month').val(), year: $('#cmd-year').val() };
+        $('#cmd-result').html('<div class="cm-load"><span class="spinner-border spinner-border-sm"></span> กำลังไล่คำนวณทุกงวด…</div>');
+        $('#cmd-autofix').prop('disabled', true);
+        $.post(doctorUrl, cmdCtx).done(function(res){
+            if (!res || !res.success){ $('#cmd-result').html(cmAlert('danger','bi-exclamation-triangle','วิเคราะห์ไม่สำเร็จ',(res&&res.message)||'')); return; }
+            cmdRender(res);
+        }).fail(function(){ $('#cmd-result').html(cmAlert('danger','bi-exclamation-triangle','วิเคราะห์ไม่สำเร็จ','')); });
+    }
+
+    function cmdRender(res){
+        var s = res.summary || {};
+        var items = res.items || [];
+        var html = '';
+        html += '<div class="cm-summary">'
+            + cmSumCell('ไล่คำนวณ', (res.months_scanned||0), 'งวด', false)
+            + cmSumCell('มูลค่าติดลบเทียม', (s.value_only_desync||0), 'รายการ', (s.value_only_desync||0)>0)
+            + cmSumCell('จำนวนติดลบ', (s.negative_qty||0), 'รายการ', (s.negative_qty||0)>0)
+            + cmSumCell('จ่ายไม่มีต้นทุน', (s.zero_cost||0), 'รายการ', false)
+            + '</div>';
+
+        if (!items.length){
+            html += cmAlert('success','bi-check-circle-fill','ไม่พบความผิดปกติ','ทุกพัสดุมียอดคงเหลือและมูลค่าปกติตลอดช่วงที่ตรวจ');
+            $('#cmd-result').html(html);
+            $('#cmd-autofix').prop('disabled', true);
+            return;
+        }
+
+        if ((s.value_only_desync||0) > 0){
+            html += cmAlert('info','bi-wrench-adjustable','ซ่อมมูลค่าติดลบเทียมได้อัตโนมัติ',
+                'กดปุ่ม "ซ่อมมูลค่าอัตโนมัติ" ด้านล่าง ระบบจะปิดเดือนใหม่ทุกงวดด้วยต้นทุนถัวเฉลี่ย มูลค่าจะไม่ติดลบเมื่อจำนวนไม่ติดลบ');
+        }
+        if ((s.negative_qty||0) > 0){
+            html += cmAlert('danger','bi-exclamation-octagon-fill','จำนวนติดลบต้องตรวจเอง',
+                'เกิดจาก order_date ผกผัน (จ่ายก่อนรับ) หรือจ่ายเกินจริง — คลิกรายการเพื่อดูประวัติ แล้วแก้ที่เอกสาร/ปรับยอด');
+        }
+
+        var multi = items.some(function(i){ return i.warehouse_name; });
+        var rows = items.map(function(i){
+            var r = CMD_REASON[i.primary_reason] || { cls:'secondary', label:i.primary_reason };
+            return '<tr class="js-neg-history" style="cursor:pointer" '
+                + 'data-item-code="' + cmEsc(i.item_code) + '" data-item-name="' + cmEsc(i.item_name) + '" '
+                + 'data-warehouse-id="' + cmEsc(i.warehouse_id) + '" data-warehouse-name="' + cmEsc(i.warehouse_name||'') + '">'
+                + (multi ? '<td>' + cmEsc(i.warehouse_name||'') + '</td>' : '')
+                + '<td>' + cmEsc(i.item_code) + '</td>'
+                + '<td>' + cmEsc(i.item_name) + '</td>'
+                + '<td>' + cmEsc(i.first_bad_month) + '</td>'
+                + '<td class="' + (Number(i.worst_qty)<-0.005?'is-negative':'') + '">' + Number(i.worst_qty).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>'
+                + '<td class="' + (Number(i.worst_value)<-0.005?'is-negative':'') + '">' + cmFmt(i.worst_value) + '</td>'
+                + '<td><span class="badge bg-' + r.cls + '">' + cmEsc(r.label) + '</span></td>'
+                + '<td class="text-muted small">' + cmEsc(i.fix_hint) + '</td>'
+                + '</tr>';
+        }).join('');
+        html += '<div class="cm-table-wrap"><table class="cm-table"><thead><tr>'
+            + (multi ? '<th>คลัง</th>' : '')
+            + '<th>รหัส</th><th>ชื่อพัสดุ</th><th>งวดแรกที่เพี้ยน</th><th>จำนวนต่ำสุด</th><th>มูลค่าต่ำสุด</th><th>เหตุ</th><th>วิธีซ่อม</th>'
+            + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+        $('#cmd-result').html(html);
+        $('#cmd-autofix').prop('disabled', false);
+    }
+
+    $(document).on('click', '#cmd-analyze', cmdAnalyze);
+    $(document).on('change', '#cmd-warehouse-id, #cmd-month, #cmd-year', function(){
+        $('#cmd-result').empty(); $('#cmd-autofix').prop('disabled', true);
+    });
+
+    $(document).on('click', '#cmd-autofix', function(){
+        if (!cmdCtx){ return; }
+        if (!window.confirm('ซ่อมอัตโนมัติจะดำเนินการ 3 อย่าง:\\n'
+            + '1) ย้ายจำนวนรับข้ามเดือน (สร้างรายการปรับยอดคู่ +/− สุทธิเป็นศูนย์) เพื่อลบยอดติดลบชั่วคราว\\n'
+            + '2) เติมราคาทุนบนแถวรับเข้าที่ราคา 0 ด้วยราคาซื้อล่าสุด\\n'
+            + '3) ปิดเดือนใหม่ทุกงวดด้วยต้นทุนถัวเฉลี่ย\\n\\n'
+            + 'ไม่แก้ยอดคงเหลือปลายทาง/ไม่แก้เอกสารที่ใช้ร่วมหลายพัสดุ และทุกรายการปรับยอดติดแท็กย้อนกลับได้ — ดำเนินการต่อ?')){ return; }
+        var \$btn = $(this).prop('disabled', true);
+        \$btn.find('.cmd-autofix__label').css('opacity', 0.6);
+        \$btn.find('.cmd-autofix__spinner').prop('hidden', false);
+        $.post(autofixUrl, cmdCtx).done(function(res){
+            \$btn.find('.cmd-autofix__label').css('opacity', 1);
+            \$btn.find('.cmd-autofix__spinner').prop('hidden', true);
+            if (!res || !res.success){
+                $('#cmd-result').prepend(cmAlert('danger','bi-exclamation-triangle','ซ่อมไม่สำเร็จ',(res&&res.message)||''));
+                \$btn.prop('disabled', false);
+                return;
+            }
+            var parts = [];
+            if (res.skipped_shortage && res.skipped_shortage.length){
+                parts.push('จำนวนติดลบจริง (จ่ายเกิน ต้องตรวจนับ): ' + res.skipped_shortage.join(', '));
+            }
+            if (res.zero_cost_no_price && res.zero_cost_no_price.length){
+                parts.push('จ่ายไม่มีต้นทุน + ไม่เคยมีราคาซื้อ (ต้องกรอกราคาเอง): ' + res.zero_cost_no_price.join(', '));
+            }
+            var extra = parts.length ? ('ยังต้องซ่อมมือ — ' + parts.join(' · ')) : 'ไม่มีรายการที่ต้องซ่อมมือเพิ่ม';
+            $('#cmd-result').prepend(cmAlert(parts.length ? 'warning' : 'success','bi-check-circle-fill', res.message || 'ซ่อมเรียบร้อย', extra));
+            cmdAnalyze(); // วิเคราะห์ซ้ำให้เห็นผลหลังซ่อม
+        }).fail(function(){
+            \$btn.find('.cmd-autofix__label').css('opacity', 1);
+            \$btn.find('.cmd-autofix__spinner').prop('hidden', true);
+            \$btn.prop('disabled', false);
+            $('#cmd-result').prepend(cmAlert('danger','bi-exclamation-triangle','ซ่อมไม่สำเร็จ',''));
+        });
+    });
 })();
 JS
 );
