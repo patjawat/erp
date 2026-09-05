@@ -2,8 +2,6 @@
 
 namespace app\modules\helpdesk2\helpers;
 
-use DateInterval;
-use DateTime;
 use Yii;
 use yii\helpers\Html;
 use app\modules\helpdesk2\models\Helpdesk;
@@ -11,27 +9,6 @@ use app\modules\helpdesk2\models\HelpdeskSlaSetting;
 
 class HelpdeskSlaHelper
 {
-    /**
-     * Default SLA hours mapping (backward compatible).
-     *
-     * Low → 72h, Medium → 24h, High → 4h, Critical → 1h
-     *
-     * @return array<string,int>
-     */
-    private static function defaultUrgencyHours(): array
-    {
-        return [
-            '1' => 72,
-            '2' => 24,
-            '3' => 4,
-            '4' => 1,
-            'low' => 72,
-            'medium' => 24,
-            'high' => 4,
-            'critical' => 1,
-        ];
-    }
-
     /**
      * Calculate SLA information for a ticket.
      *
@@ -44,114 +21,43 @@ class HelpdeskSlaHelper
      */
     public static function calculate(Helpdesk $ticket): array
     {
-        $createdAt = $ticket->created_at ? new DateTime($ticket->created_at) : null;
-        if ($createdAt === null) {
+        // ใช้ engine เดียวกับแดชบอร์ด: เกณฑ์เวลาตามกลุ่มงานซ่อม (slaResult ใช้ repair_group ในตัว)
+        // + รู้เวลาปิดจริงจาก timeline (งานปิดทันเวลา = ภายใน SLA แม้เวลาผ่านไปนานแล้ว)
+        $timeline = HelpdeskTimelineHelper::forTicket($ticket);
+        $sla = self::slaResult($ticket, $timeline);
+
+        $priority = ($ticket->data_json['urgency'] ?? null) !== null
+            ? self::normalizeUrgencyValue($ticket->data_json['urgency'])
+            : null;
+
+        if (empty($sla['deadline'])) {
             return [
                 'deadline' => null,
                 'secondsRemaining' => null,
                 'status' => 'no_sla',
-                'priority' => null,
+                'priority' => $priority,
             ];
         }
 
-        [$priorityKey, $hours] = self::resolvePriorityAndHours($ticket);
-        if ($hours === null) {
-            return [
-                'deadline' => null,
-                'secondsRemaining' => null,
-                'status' => 'no_sla',
-                'priority' => $priorityKey,
-            ];
-        }
+        $deadlineTs = strtotime($sla['deadline']);
+        $secondsRemaining = $deadlineTs !== false ? ($deadlineTs - time()) : null;
 
-        $deadline = clone $createdAt;
-        $deadline->add(new DateInterval('PT' . $hours . 'H'));
-
-        $now = new DateTime('now');
-        $secondsRemaining = (int) ($deadline->getTimestamp() - $now->getTimestamp());
-
-        if ($secondsRemaining <= 0) {
+        // แปลงสถานะจาก engine (met/breached/pending) → คำศัพท์ป้าย (within/near/breached)
+        if ($sla['status'] === 'breached') {
             $status = 'breached';
-        } elseif ($secondsRemaining <= 3600) {
-            // ภายใน 1 ชั่วโมงสุดท้าย
-            $status = 'near';
+        } elseif ($sla['status'] === 'met') {
+            $status = 'within'; // งานปิดทันเวลา
         } else {
-            $status = 'within';
+            // งานเปิดที่ยังไม่เกิน — "ใกล้ครบกำหนด" เมื่อเหลือ ≤ 1 ชั่วโมง
+            $status = ($secondsRemaining !== null && $secondsRemaining <= 3600) ? 'near' : 'within';
         }
 
         return [
-            'deadline' => $deadline->format('Y-m-d H:i:s'),
+            'deadline' => $sla['deadline'],
             'secondsRemaining' => $secondsRemaining,
             'status' => $status,
-            'priority' => $priorityKey,
+            'priority' => $priority,
         ];
-    }
-
-    /**
-     * Map urgency in data_json to SLA hours.
-     *
-     * Low → 72h, Medium → 24h, High → 4h, Critical → 1h
-     *
-     * @return array{0: string|null, 1: int|null}
-     */
-    private static function resolvePriorityAndHours(Helpdesk $ticket): array
-    {
-        $urgency = $ticket->data_json['urgency'] ?? null;
-        if ($urgency === null) {
-            return [null, null];
-        }
-
-        $key = (string) $urgency;
-
-        // SLA hours mapping from settings (fallback to legacy defaults)
-        static $normalized = null;
-        if ($normalized === null) {
-            $hoursMap = null;
-            try {
-                $record = \app\modules\helpdesk2\models\HelpdeskSlaSetting::getRecord();
-                $cfg = $record->getConfig();
-                $hoursMap = $cfg['urgency_hours'] ?? null;
-            } catch (\Throwable $e) {
-                $hoursMap = null;
-            }
-
-            if (!is_array($hoursMap)) {
-                $hoursMap = self::defaultUrgencyHours();
-            }
-
-            // Normalize configured hours map onto expected keys
-            $normalized = self::defaultUrgencyHours();
-            foreach ($hoursMap as $uKey => $uVal) {
-                $uKey = (string) $uKey;
-                if ($uVal === null) {
-                    continue;
-                }
-                if (is_numeric($uVal) && (int) $uVal > 0) {
-                    $normalized[$uKey] = (int) $uVal;
-                }
-            }
-        }
-
-        if (!isset($normalized[$key]) || (int) $normalized[$key] <= 0) {
-            return [null, null];
-        }
-
-        // Also return priority string (for debug / future UI)
-        $priorityKey = null;
-        if (in_array($key, ['1', 'low'], true)) {
-            $priorityKey = 'low';
-        } elseif (in_array($key, ['2', 'medium'], true)) {
-            $priorityKey = 'medium';
-        } elseif (in_array($key, ['3', 'high'], true)) {
-            $priorityKey = 'high';
-        } elseif (in_array($key, ['4', 'critical'], true)) {
-            $priorityKey = 'critical';
-        } else {
-            // If custom key is used, fall back to generic string
-            $priorityKey = $key;
-        }
-
-        return [$priorityKey, (int) $normalized[$key]];
     }
 
     /**

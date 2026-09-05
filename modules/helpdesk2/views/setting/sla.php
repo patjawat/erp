@@ -69,16 +69,20 @@ $urgencyMult = $slaRecord->getUrgencyMultiplier();
         <div class="card-header bg-primary bg-opacity-10 text-primary border-0 py-3 px-4 rounded-3">
             <div class="d-flex align-items-center gap-2">
                 <i class="fa-solid fa-gauge-high"></i>
-                <h6 class="mb-0 small fw-semibold">ตั้งค่า SLA</h6>
+                <h6 class="mb-0 small fw-semibold">ชั่วโมง SLA ตามความเร่งด่วน (ค่าอ้างอิงเดิม)</h6>
             </div>
         </div>
         <div class="card-body p-4">
+            <div class="alert alert-warning small mb-3 py-2 px-3">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                ปัจจุบันการคำนวณสถานะ SLA (ป้ายรายใบและแดชบอร์ด) ใช้ <strong>“เวลาแก้ไขฐานตามกลุ่มงานซ่อม”</strong> ด้านล่างแล้ว — ตารางชั่วโมงนี้เป็นค่าอ้างอิงเดิม ไม่มีผลต่อการคำนวณ
+            </div>
             <?= Html::beginForm($saveSlaUrl, 'post') ?>
             <?= Html::hiddenInput($csrfParam, $csrfToken) ?>
             <div class="row g-3 align-items-start">
                 <div class="col-12 col-lg-8">
                     <div class="small text-muted mb-3">
-                        กำหนดเวลาการตอบสนองตาม “ความเร่งด่วน” (ใช้คำนวณสถานะ SLA: ภายใน/ใกล้ครบกำหนด/เกิน SLA)
+                        กำหนดเวลาการตอบสนองตาม “ความเร่งด่วน” (เก็บไว้เป็นค่าอ้างอิง — ไม่ถูกใช้คำนวณสถานะ SLA แล้ว)
                     </div>
 
                     <div class="table-responsive">
