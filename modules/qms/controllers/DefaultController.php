@@ -177,6 +177,108 @@ class DefaultController extends Controller
         return $this->redirect(['requirements', 'standard_id' => $standardId]);
     }
 
+    /** นำเข้าข้อกำหนดจากแม่แบบสำเร็จรูป หรือคัดลอกจากมาตรฐานอื่น */
+    public function actionRequirementImport(int $standard_id)
+    {
+        $standard = $this->findStandard($standard_id);
+
+        if (Yii::$app->request->isPost) {
+            $mode = (string) Yii::$app->request->post('mode');
+            if ($mode === 'template') {
+                $tpl = \app\modules\qms\models\TemplateLibrary::get((string) Yii::$app->request->post('template_key'));
+                if (!$tpl) {
+                    Yii::$app->session->setFlash('error', 'ไม่พบแม่แบบที่เลือก');
+                    return $this->redirect(['requirement-import', 'standard_id' => $standard_id]);
+                }
+                $added = $this->applyTemplate($standard, $tpl);
+                Yii::$app->session->setFlash('success', "นำเข้าจากแม่แบบ “{$tpl['name']}” แล้ว (เพิ่ม {$added} ข้อ ข้ามที่ซ้ำ)");
+            } elseif ($mode === 'clone') {
+                $sourceId = (int) Yii::$app->request->post('source_id');
+                if ($sourceId === $standard_id || !Standard::find()->where(['id' => $sourceId])->exists()) {
+                    Yii::$app->session->setFlash('error', 'เลือกมาตรฐานต้นทางไม่ถูกต้อง');
+                    return $this->redirect(['requirement-import', 'standard_id' => $standard_id]);
+                }
+                $added = $this->cloneRequirements($sourceId, $standard);
+                Yii::$app->session->setFlash('success', "คัดลอกข้อกำหนดมาแล้ว (เพิ่ม {$added} ข้อ ข้ามที่ซ้ำ)");
+            }
+            return $this->redirect(['requirements', 'standard_id' => $standard_id]);
+        }
+
+        // มาตรฐานอื่นที่มีข้อกำหนดให้คัดลอก
+        $sourceStandards = Standard::find()
+            ->where(['not', ['id' => $standard_id]])
+            ->andWhere(['exists', Requirement::find()->where('{{%qms_requirement}}.standard_id = {{%qms_standard}}.id')])
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        return $this->render('requirement-import', [
+            'standard' => $standard,
+            'templates' => \app\modules\qms\models\TemplateLibrary::options(),
+            'sourceStandards' => $sourceStandards,
+        ]);
+    }
+
+    /** สร้างข้อกำหนดจากแม่แบบ (หมวด → ข้อย่อย) ข้ามรหัสที่มีแล้ว */
+    private function applyTemplate(Standard $standard, array $tpl): int
+    {
+        $added = 0;
+        $order = (int) Requirement::find()->where(['standard_id' => $standard->id])->max('sort');
+        foreach ($tpl['sections'] as [$secCode, $secTitle, $children]) {
+            $order += 10;
+            $section = $this->ensureRequirementByCode($standard->id, null, $secCode, $secTitle, null, $order, $added);
+            $childOrder = 0;
+            foreach ($children as [$cCode, $cTitle, $hint]) {
+                $childOrder += 10;
+                $this->ensureRequirementByCode($standard->id, (int) $section->id, $cCode, $cTitle, $hint, $childOrder, $added);
+            }
+        }
+        return $added;
+    }
+
+    /** คัดลอกทั้งต้นไม้ข้อกำหนดจากมาตรฐานต้นทาง ข้ามรหัสที่มีแล้ว */
+    private function cloneRequirements(int $sourceStandardId, Standard $target): int
+    {
+        $source = Requirement::find()->where(['standard_id' => $sourceStandardId])
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $byParent = [];
+        foreach ($source as $r) {
+            $byParent[(int) $r->parent_id][] = $r;
+        }
+        $added = 0;
+        $clone = function (int $srcParentId, ?int $newParentId) use (&$clone, $byParent, $target, &$added) {
+            foreach ($byParent[$srcParentId] ?? [] as $r) {
+                $new = $this->ensureRequirementByCode($target->id, $newParentId, $r->code, $r->title, $r->evidence_hint, (int) $r->sort, $added, $r->detail);
+                $clone((int) $r->id, (int) $new->id);
+            }
+        };
+        $clone(0, null);
+        return $added;
+    }
+
+    /** สร้าง requirement ถ้ายังไม่มีรหัสนี้ในมาตรฐาน (คืน model เดิมถ้ามีแล้ว) */
+    private function ensureRequirementByCode(int $standardId, ?int $parentId, ?string $code, string $title, ?string $hint, int $sort, int &$added, ?string $detail = null): Requirement
+    {
+        if ($code !== null && $code !== '') {
+            $exist = Requirement::find()->where(['standard_id' => $standardId, 'code' => $code])->one();
+            if ($exist) {
+                return $exist;
+            }
+        }
+        $model = new Requirement([
+            'standard_id' => $standardId,
+            'parent_id' => $parentId,
+            'code' => $code ?: null,
+            'title' => $title,
+            'detail' => $detail,
+            'evidence_hint' => $hint,
+            'sort' => $sort,
+            'is_active' => 1,
+        ]);
+        if ($model->save()) {
+            $added++;
+        }
+        return $model;
+    }
+
     // ===== รอบปี + checklist =====
 
     /** หน้า checklist ของมาตรฐาน × ปีงบ */

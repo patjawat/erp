@@ -151,6 +151,34 @@ class SeedController extends Controller
         return ExitCode::OK;
     }
 
+    /**
+     * นำเข้าแม่แบบสำเร็จรูปทุกตัวเข้ามาตรฐานที่รหัสตรงกัน (idempotent)
+     *   docker exec dansai php yii qms/seed/templates
+     */
+    public function actionTemplates(): int
+    {
+        foreach (\app\modules\qms\models\TemplateLibrary::all() as $key => $tpl) {
+            $standard = Standard::find()->where(['code' => $key])->one();
+            if (!$standard) {
+                $this->stdout("ข้าม {$key}: ไม่มีมาตรฐานรหัสนี้\n");
+                continue;
+            }
+            $created = 0;
+            $order = (int) Requirement::find()->where(['standard_id' => $standard->id])->max('sort');
+            foreach ($tpl['sections'] as [$secCode, $secTitle, $children]) {
+                $order += 10;
+                $section = $this->ensureRequirement($standard->id, null, $secCode, $secTitle, null, $order, $created);
+                $childOrder = 0;
+                foreach ($children as [$cCode, $cTitle, $hint]) {
+                    $childOrder += 10;
+                    $this->ensureRequirement($standard->id, (int) $section->id, $cCode, $cTitle, $hint, $childOrder, $created);
+                }
+            }
+            $this->stdout("{$key}: เพิ่ม {$created} ข้อ\n");
+        }
+        return ExitCode::OK;
+    }
+
     private function ensureRequirement(int $standardId, ?int $parentId, string $code, string $title, ?string $hint, int $sort, int &$created): Requirement
     {
         $model = Requirement::find()->where(['standard_id' => $standardId, 'code' => $code])->one();

@@ -61,6 +61,7 @@ $renderNode = function (int $parentId, int $level) use (&$renderNode, $byParent,
             </h1>
         </div>
         <div class="d-flex gap-2">
+            <?= Html::a('<i class="bi bi-download me-1"></i>นำเข้าแม่แบบ', ['requirement-import', 'standard_id' => $sid], ['class' => 'btn btn-outline-secondary']) ?>
             <?= Html::a('<i class="bi bi-folder-plus me-1"></i>เพิ่มหมวด', ['requirement-form', 'standard_id' => $sid], ['class' => 'btn btn-outline-primary']) ?>
             <?= Html::a('<i class="bi bi-plus-lg me-1"></i>เพิ่มข้อกำหนด', ['requirement-form', 'standard_id' => $sid], ['class' => 'btn btn-primary']) ?>
         </div>
