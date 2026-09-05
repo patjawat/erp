@@ -5,7 +5,7 @@ return [
     'dsn' =>env('DB_DSN'),
     'username' => env('DB_USERNAME'),
     'password' => env('DB_PASS'),
-    'charset' => 'utf8',
+    'charset' => 'utf8mb4',
 
     // Schema cache options (for production environment)
     'enableSchemaCache' => true,
