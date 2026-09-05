@@ -481,6 +481,7 @@ class DevelopmentController extends Controller
             'benefitRegister' => DevelopmentReport::benefitRegister($year),
             'pendingSummary' => DevelopmentReport::pendingSummary($year),
             'byDepartment' => DevelopmentReport::byDepartment($year),
+            'idpCoverage' => DevelopmentReport::idpCoverage($year),
             'year' => $year,
         ]);
     }
@@ -509,22 +510,51 @@ class DevelopmentController extends Controller
     }
 
     /**
+     * รายงานสรุปการพัฒนาบุคลากรประจำปี แบบพิมพ์ได้ (เฟส 4) — ตามมาตรฐาน HA I-5.2
+     *
+     * เอกสาร HTML เดี่ยว (layout=false) สำหรับสั่งพิมพ์/บันทึก PDF จากเบราว์เซอร์
+     * ใช้ตัวเลขชุดเดียวกับหน้ารายงาน (DevelopmentReport) เพื่อให้ตรงกันทุกที่
+     */
+    public function actionReportPrint($thai_year = null)
+    {
+        $year = (int) ($thai_year ?: AppHelper::YearBudget());
+        $searchModel = new DevelopmentSearch(['thai_year' => $year]);
+        $this->layout = false;
+
+        $director = SiteHelper::viewDirector();
+
+        return $this->render('report_print', [
+            'year' => $year,
+            'info' => SiteHelper::getInfo(),
+            'directorName' => is_array($director) ? ($director['fullname'] ?? null) : null,
+            'report' => DevelopmentReport::orgSummary($year),
+            'activityType' => $searchModel->activityType(),
+            'monthly' => $searchModel->listSummaryMonth(),
+            'byDepartment' => DevelopmentReport::byDepartment($year),
+            'followup' => DevelopmentReport::followupBreakdown($year),
+            'benefitRegister' => DevelopmentReport::benefitRegister($year),
+            'idpCoverage' => DevelopmentReport::idpCoverage($year),
+        ]);
+    }
+
+    /**
      * สมุดพกการพัฒนารายบุคคล (เฟส 3) — เปิดเป็น modal จาก drill-down หรือช่องค้นหาในหน้ารายงาน
      */
     public function actionReportPerson($emp_id, $thai_year)
     {
         $year = (int) $thai_year;
         $data = DevelopmentReport::personPassport($year, (int) $emp_id);
+        $idp = DevelopmentReport::personIdp((int) $emp_id, $year);
 
         if ($this->request->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return [
                 'title' => '<i class="bi bi-person-vcard me-1"></i> สมุดพกการพัฒนา: ' . Html::encode($data['emp']['name']),
-                'content' => $this->renderAjax('_report_person', ['data' => $data, 'year' => $year]),
+                'content' => $this->renderAjax('_report_person', ['data' => $data, 'idp' => $idp, 'year' => $year]),
             ];
         }
 
-        return $this->render('_report_person', ['data' => $data, 'year' => $year]);
+        return $this->render('_report_person', ['data' => $data, 'idp' => $idp, 'year' => $year]);
     }
 
     /**

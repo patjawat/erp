@@ -3,12 +3,16 @@
 use yii\helpers\Html;
 use app\components\AppHelper;
 use app\components\ThaiDateHelper;
+use app\modules\hr\models\IdpPlan;
+use app\modules\hr\models\IdpGoal;
+use app\modules\hr\models\IdpActivity;
 
 /**
  * สมุดพกการพัฒนารายบุคคล (development passport) — เปิดเป็น modal
  *
  * @var yii\web\View $this
  * @var array $data ผลจาก DevelopmentReport::personPassport()
+ * @var array|null $idp แผนพัฒนารายบุคคล (DevelopmentReport::personIdp) หรือ null
  * @var int $year ปีงบประมาณ
  */
 $emp = $data['emp'];
@@ -52,8 +56,8 @@ $roleBadge = static function (string $role): string {
 
     <?php if (!empty($stats['types'])): ?>
         <div class="mb-3 d-flex flex-wrap gap-1">
-            <?php foreach ($stats['types'] as $t => $n): ?>
-                <span class="badge text-bg-light border"><?= Html::encode($t) ?> · <?= $n ?></span>
+            <?php foreach ($stats['types'] as $t): ?>
+                <span class="badge text-bg-light border"><?= Html::encode($t['label']) ?> · <?= $t['n'] ?></span>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
@@ -74,7 +78,7 @@ $roleBadge = static function (string $role): string {
                     <tr>
                         <td class="small text-nowrap"><?= ThaiDateHelper::formatThaiDateRange($a['date_start'], $a['date_end'], 'long', 'short') ?></td>
                         <td class="small"><?= Html::encode($a['topic']) ?></td>
-                        <td class="small text-body-secondary"><?= Html::encode($a['type_title'] ?: '-') ?></td>
+                        <td class="small text-body-secondary"><?= Html::encode($a['type_label'] ?: '-') ?></td>
                         <td class="text-center"><?= $roleBadge($a['role']) ?></td>
                         <td class="text-center"><?= (int) $a['days'] ?></td>
                         <td class="text-center"><span class="badge rounded-pill text-bg-<?= $st['color'] ?? 'secondary' ?>"><?= Html::encode($st['title'] ?? $a['status']) ?></span></td>
@@ -83,5 +87,43 @@ $roleBadge = static function (string $role): string {
                 </tbody>
             </table>
         </div>
+    <?php endif; ?>
+
+    <!-- แผนพัฒนารายบุคคล (IDP) — เฟส 5 เชื่อม competency/IDP -->
+    <hr class="my-3">
+    <h6 class="fw-semibold mb-2"><i class="bi bi-signpost-2 me-1 text-primary"></i>แผนพัฒนารายบุคคล (IDP)</h6>
+    <?php if (!$idp): ?>
+        <div class="alert alert-light border small mb-0">
+            <i class="bi bi-dash-circle me-1"></i>ยังไม่มีแผนพัฒนารายบุคคล (IDP) ในปีงบ <?= $year ?> — ตาม HA การพัฒนาควรตอบช่องว่างสมรรถนะ (competency gap) ผ่าน IDP
+        </div>
+    <?php else: ?>
+        <div class="small text-body-secondary mb-2">
+            รอบ: <?= Html::encode($idp['cycle']) ?>
+            · สถานะ: <span class="badge text-bg-secondary"><?= Html::encode(IdpPlan::statusOptions()[$idp['status']] ?? $idp['status']) ?></span>
+            · ความคืบหน้า <?= (float) $idp['progress'] ?>%
+        </div>
+        <?php foreach ($idp['goals'] as $g): ?>
+            <div class="border rounded p-2 mb-2">
+                <div class="fw-medium small">
+                    <i class="bi bi-bullseye me-1 text-danger"></i><?= Html::encode($g['title']) ?>
+                    <span class="badge text-bg-light border ms-1"><?= Html::encode(IdpGoal::sourceOptions()[$g['source_type']] ?? $g['source_type']) ?></span>
+                </div>
+                <?php if (!empty($g['gap_reason'])): ?>
+                    <div class="small text-body-secondary">ช่องว่างสมรรถนะ: <?= Html::encode($g['gap_reason']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($g['activities'])): ?>
+                    <ul class="small mb-0 mt-1">
+                        <?php foreach ($g['activities'] as $a): ?>
+                            <li>
+                                <?= Html::encode($a['title']) ?>
+                                <span class="text-body-secondary">(<?= Html::encode(IdpActivity::methodOptions()[$a['method_type']] ?? $a['method_type']) ?> · <?= (float) $a['progress_percent'] ?>%)</span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="small text-body-secondary fst-italic">ยังไม่มีกิจกรรมในเป้าหมายนี้</div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
     <?php endif; ?>
 </div>

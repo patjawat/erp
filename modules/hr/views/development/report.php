@@ -73,6 +73,11 @@ $sumColor = $summary['percent'] >= 80 ? 'success' : ($summary['percent'] >= 40 ?
             ]) ?>
             <?= Html::a('', '#', ['id' => 'passport-open', 'class' => 'open-modal d-none', 'data' => ['size' => 'modal-lg']]) ?>
         </div>
+        <?= Html::a(
+            '<i class="bi bi-printer me-1"></i>พิมพ์รายงาน HA',
+            ['report-print', 'thai_year' => $year],
+            ['class' => 'btn btn-outline-danger btn-sm ms-auto', 'target' => '_blank']
+        ) ?>
     </div>
 </div>
 
@@ -296,6 +301,13 @@ $closureColor = $fp['percent'] >= 80 ? 'success' : ($fp['percent'] >= 40 ? 'warn
         <?php if ($fp['percent'] < 80): ?>
             <p class="small text-body-secondary mb-0"><i class="bi bi-info-circle me-1"></i>การพัฒนาจะเกิดประโยชน์ตาม HA ต่อเมื่อมีการสรุปผลและนำไปใช้ — ยังมี <?= number_format($fp['none'] + $fp['draft']) ?> รายการที่ยังไม่ปิด loop (ดูรายการด้านล่างเพื่อติดตาม)</p>
         <?php endif; ?>
+
+        <p class="small mb-0 mt-2">
+            <i class="bi bi-signpost-2 me-1 text-primary"></i>บุคลากรที่มีแผนพัฒนารายบุคคล (IDP):
+            <b><?= number_format($idpCoverage['with_idp']) ?></b> / <?= number_format($idpCoverage['active_staff']) ?>
+            (<?= $idpCoverage['percent'] ?>%)
+            <span class="text-body-secondary">— ตาม HA การพัฒนาควรเชื่อมโยงช่องว่างสมรรถนะผ่าน IDP</span>
+        </p>
 
         <hr class="my-3">
 

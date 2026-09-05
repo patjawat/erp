@@ -37,6 +37,32 @@ class DevelopmentReport
     public const EXCLUDED_PLAN_STATUSES = ['reject'];
 
     /**
+     * ป้ายสั้นของประเภทการพัฒนา (map จากรหัส categorise development_type ที่เสถียร)
+     * ใช้ในมุมมองกะทัดรัด (ป้ายรายคน) แทนชื่อเต็มที่ยาว — ชื่อเต็มยังใช้ในตารางรายงานทางการ
+     */
+    public const TYPE_SHORT = [
+        'dev1' => 'ประชุมงาน',
+        'dev2' => 'อบรม',
+        'dev3' => 'วิทยากร',
+        'dev4' => 'นำเสนอ',
+        'dev5' => 'ดูงาน',
+        'dev6' => 'อื่นๆ',
+    ];
+
+    /** คืนป้ายสั้นของประเภทการพัฒนาจากรหัส ถ้าไม่รู้จักรหัสให้ใช้ชื่อเต็ม (ตัด "เพื่อ" นำหน้า) */
+    public static function typeShort(?string $code, ?string $titleFallback = null): string
+    {
+        if ($code !== null && isset(self::TYPE_SHORT[$code])) {
+            return self::TYPE_SHORT[$code];
+        }
+        $t = trim((string) $titleFallback);
+        if ($t === '') {
+            return 'ไม่ระบุ';
+        }
+        return mb_substr($t, 0, 3) === 'เพื่อ' ? mb_substr($t, 3) : $t;
+    }
+
+    /**
      * หมวดประมาณการค่าใช้จ่ายใน development.data_json → ป้ายแสดงผล
      * ใช้ทั้งการรวมยอด (actualSpend) และการแตกรายการ (actualSpendByComponent)
      */
@@ -257,34 +283,70 @@ class DevelopmentReport
 
     /**
      * Drill-down รายคนในหน่วยงานหนึ่ง (เฟส 2) — บุคลากรทุกคนในหน่วย + จำนวนครั้งที่ได้รับการพัฒนา
+     * แยกตามประเภทการพัฒนา (ประชุม/อบรม/วิทยากร/ดูงาน...) เพื่อไม่ให้เห็นแค่ยอดรวม
      * ครั้ง = 0 คือ "ยังไม่ได้รับการพัฒนา" (gap ที่นำไปตามได้)
-     * @return array<int,array{id:int,name:string,times:int}>
+     * @return array<int,array{id:int,name:string,times:int,by_code:array<string,int>}>
+     *         by_code = จำนวนครั้งแยกตามรหัสประเภท (dev1..dev6) — รหัสที่ไม่รู้จัก/ว่าง รวมเข้า dev6
      */
     public static function departmentPeople(int $thaiYear, int $deptId): array
     {
-        $ptFrom = "
-            SELECT d.emp_id FROM development d
+        $p = [
+            ':y' => $thaiYear, ':dept' => $deptId,
+            ':s1' => self::EXCLUDED_DEV_STATUSES[0], ':s2' => self::EXCLUDED_DEV_STATUSES[1],
+        ];
+
+        // รายชื่อบุคลากรทุกคนในหน่วย (รวมคนที่ยังไม่พัฒนา = 0 ครั้ง)
+        $name = self::fullnameExpr('e');
+        $staff = Yii::$app->db->createCommand(
+            "SELECT e.id, $name AS name FROM employees e WHERE e.status=1 AND e.department=:dept ORDER BY name ASC",
+            [':dept' => $deptId]
+        )->queryAll();
+
+        $rows = [];
+        foreach ($staff as $s) {
+            $rows[(int) $s['id']] = [
+                'id' => (int) $s['id'],
+                'name' => trim((string) $s['name']) ?: ('#' . $s['id']),
+                'times' => 0,
+                'by_code' => [],
+            ];
+        }
+
+        // จำนวนครั้งแยกตามประเภท ต่อคน (ผู้ขอ + คณะเดินทาง) เฉพาะคนในหน่วยนี้
+        $typeFrom = "
+            SELECT d.emp_id, d.development_type_id AS type_id FROM development d
             WHERE d.thai_year=:y AND d.deleted_at IS NULL AND d.status NOT IN (:s1,:s2) AND d.emp_id REGEXP '^[0-9]+$'
             UNION ALL
-            SELECT dd.emp_id FROM development_detail dd JOIN development d ON d.id=dd.development_id
+            SELECT dd.emp_id, d.development_type_id FROM development_detail dd JOIN development d ON d.id=dd.development_id
             WHERE dd.name='member' AND d.thai_year=:y AND d.deleted_at IS NULL AND d.status NOT IN (:s1,:s2)
               AND dd.emp_id REGEXP '^[0-9]+$' AND dd.emp_id <> d.emp_id
         ";
-        $name = self::fullnameExpr('e');
-        $sql = "
-            SELECT e.id, $name AS name, COALESCE(x.times,0) AS times
-            FROM employees e
-            LEFT JOIN (SELECT emp_id, COUNT(*) times FROM ($ptFrom) p GROUP BY emp_id) x ON x.emp_id = e.id
-            WHERE e.status=1 AND e.department=:dept
-            ORDER BY times DESC, name ASC
-        ";
+        $breakdown = Yii::$app->db->createCommand("
+            SELECT u.emp_id, u.type_id AS code, COALESCE(c.title,'ไม่ระบุประเภท') AS title, COUNT(*) AS n
+            FROM ($typeFrom) u
+            JOIN employees e ON e.id = u.emp_id AND e.department = :dept
+            LEFT JOIN categorise c ON c.code = u.type_id AND c.name='development_type'
+            GROUP BY u.emp_id, u.type_id, c.title
+            ORDER BY n DESC
+        ", $p)->queryAll();
 
-        return array_map(static fn($r) => [
-            'id' => (int) $r['id'], 'name' => trim((string) $r['name']) ?: ('#' . $r['id']), 'times' => (int) $r['times'],
-        ], Yii::$app->db->createCommand($sql, [
-            ':y' => $thaiYear, ':dept' => $deptId,
-            ':s1' => self::EXCLUDED_DEV_STATUSES[0], ':s2' => self::EXCLUDED_DEV_STATUSES[1],
-        ])->queryAll());
+        foreach ($breakdown as $b) {
+            $id = (int) $b['emp_id'];
+            if (!isset($rows[$id])) {
+                continue;
+            }
+            // รหัสที่ไม่อยู่ในชุดมาตรฐาน (null/legacy) รวมเข้า "อื่นๆ" เพื่อให้ผลรวมคอลัมน์ = จำนวนรวม
+            $code = isset(self::TYPE_SHORT[$b['code']]) ? $b['code'] : 'dev6';
+            $rows[$id]['times'] += (int) $b['n'];
+            $rows[$id]['by_code'][$code] = ($rows[$id]['by_code'][$code] ?? 0) + (int) $b['n'];
+        }
+
+        // เรียงตามจำนวนครั้งมาก -> น้อย แล้วตามชื่อ
+        usort($rows, static function ($a, $b) {
+            return $b['times'] <=> $a['times'] ?: strcmp($a['name'], $b['name']);
+        });
+
+        return array_values($rows);
     }
 
     /**
@@ -318,12 +380,12 @@ class DevelopmentReport
 
         $unionYear = "
             SELECT d.id, d.topic, d.date_start, d.date_end, d.status, d.response_status,
-                   c.title AS type_title, 'requester' AS role, $days AS days
+                   d.development_type_id AS type_code, c.title AS type_title, 'requester' AS role, $days AS days
             FROM development d $typeJoin
             WHERE d.emp_id = :emp AND d.thai_year = :y AND d.deleted_at IS NULL AND d.status NOT IN (:s1,:s2)
             UNION ALL
             SELECT d.id, d.topic, d.date_start, d.date_end, d.status, d.response_status,
-                   c.title, 'member', $days
+                   d.development_type_id, c.title, 'member', $days
             FROM development_detail dd
             JOIN development d ON d.id = dd.development_id $typeJoin
             WHERE dd.name = 'member' AND dd.emp_id = :emp AND dd.emp_id <> d.emp_id
@@ -335,16 +397,19 @@ class DevelopmentReport
             [':emp' => (string) $empId, ':y' => $thaiYear, ':s1' => $s1, ':s2' => $s2]
         )->queryAll();
 
-        // สถิติของปี
+        // สถิติของปี (จัดกลุ่มประเภทด้วยป้ายสั้น)
         $totalDays = 0;
         $types = [];
         $asSpeaker = 0;
         $asRequester = 0;
-        foreach ($activities as $a) {
+        foreach ($activities as &$a) {
             $totalDays += (int) $a['days'];
-            if (!empty($a['type_title'])) {
-                $types[$a['type_title']] = ($types[$a['type_title']] ?? 0) + 1;
+            $a['type_label'] = self::typeShort($a['type_code'] ?? null, $a['type_title'] ?? null);
+            $key = $a['type_code'] ?: ($a['type_title'] ?: 'ไม่ระบุ');
+            if (!isset($types[$key])) {
+                $types[$key] = ['label' => $a['type_label'], 'n' => 0];
             }
+            $types[$key]['n']++;
             if ($a['response_status'] === 'Accept') {
                 $asSpeaker++;
             }
@@ -352,10 +417,11 @@ class DevelopmentReport
                 $asRequester++;
             }
         }
+        unset($a);
         $stats = [
             'times' => count($activities),
             'days' => $totalDays,
-            'types' => $types,
+            'types' => array_values($types),
             'type_count' => count($types),
             'as_speaker' => $asSpeaker,
             'as_requester' => $asRequester,
@@ -387,6 +453,67 @@ class DevelopmentReport
                 'years' => (int) ($lifetime['years'] ?? 0),
             ],
         ];
+    }
+
+    /**
+     * ความครอบคลุม IDP ระดับองค์กร (เฟส 5, report-only) — % บุคลากรที่มีแผนพัฒนารายบุคคลในปีนั้น
+     * ผูกปีงบผ่าน idp_cycle.fiscal_year ; ไม่นับแผนที่ยกเลิก
+     * @return array{with_idp:int,active_staff:int,percent:float}
+     */
+    public static function idpCoverage(int $thaiYear): array
+    {
+        $withIdp = (int) (new \yii\db\Query())
+            ->from(['p' => 'idp_plan'])
+            ->innerJoin(['c' => 'idp_cycle'], 'c.id = p.cycle_id')
+            ->where(['c.fiscal_year' => $thaiYear])
+            ->andWhere(['<>', 'p.status', 'cancelled'])
+            ->count('DISTINCT p.emp_id');
+        $staff = self::activeStaff();
+
+        return [
+            'with_idp' => $withIdp,
+            'active_staff' => $staff,
+            'percent' => $staff > 0 ? round($withIdp / $staff * 100, 2) : 0.0,
+        ];
+    }
+
+    /**
+     * แผนพัฒนารายบุคคล (IDP) ของบุคลากรหนึ่งคน สำหรับแสดงคู่กับ passport (เฟส 5, report-only)
+     * เลือกแผนของปีงบที่ระบุก่อน ถ้าไม่มีใช้แผนล่าสุด ; คืน null เมื่อไม่มีแผน
+     * @return array|null plan + goals[] (แต่ละ goal มี activities[])
+     */
+    public static function personIdp(int $empId, ?int $thaiYear = null): ?array
+    {
+        $q = (new \yii\db\Query())
+            ->select(['id' => 'p.id', 'status' => 'p.status', 'progress' => 'p.progress_percent', 'cycle' => 'c.title', 'fiscal_year' => 'c.fiscal_year'])
+            ->from(['p' => 'idp_plan'])
+            ->innerJoin(['c' => 'idp_cycle'], 'c.id = p.cycle_id')
+            ->where(['p.emp_id' => $empId])
+            ->andWhere(['<>', 'p.status', 'cancelled']);
+        if ($thaiYear !== null) {
+            $q->andWhere(['c.fiscal_year' => $thaiYear]);
+        }
+        $plan = $q->orderBy(['c.fiscal_year' => SORT_DESC, 'p.id' => SORT_DESC])->one();
+        if (!$plan) {
+            return null;
+        }
+
+        $goals = (new \yii\db\Query())
+            ->from('idp_goal')
+            ->where(['plan_id' => $plan['id']])
+            ->orderBy(['sequence' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+        foreach ($goals as &$g) {
+            $g['activities'] = (new \yii\db\Query())
+                ->from('idp_activity')
+                ->where(['goal_id' => $g['id']])
+                ->orderBy(['sequence' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+        }
+        unset($g);
+        $plan['goals'] = $goals;
+
+        return $plan;
     }
 
     /** จำนวนบุคลากรที่ปฏิบัติงาน (ตัวหารของ coverage) */
