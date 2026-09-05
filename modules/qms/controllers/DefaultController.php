@@ -14,6 +14,7 @@ use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
 use yii\web\UploadedFile;
 
 /**
@@ -453,6 +454,18 @@ class DefaultController extends Controller
             if (!$ev->title) {
                 $ev->title = $ev->file_name;
             }
+        } elseif ($sourceType === Evidence::SOURCE_DMS || $sourceType === Evidence::SOURCE_MEDSOP) {
+            $srcId = (int) Yii::$app->request->post('source_id');
+            $doc = $this->resolveExternalDoc($sourceType, $srcId);
+            if (!$doc) {
+                Yii::$app->session->setFlash('error', 'ไม่พบเอกสารต้นทางที่เลือก');
+                return $this->redirect(['item', 'id' => $item->id]);
+            }
+            $ev->source_module = $sourceType;
+            $ev->source_id = (string) $srcId;
+            if (!$ev->title) {
+                $ev->title = $doc['title'];
+            }
         } else {
             Yii::$app->session->setFlash('error', 'ประเภทหลักฐานยังไม่รองรับในเฟสนี้');
             return $this->redirect(['item', 'id' => $item->id]);
@@ -494,6 +507,47 @@ class DefaultController extends Controller
             throw new NotFoundHttpException('ไฟล์ถูกลบไปแล้ว');
         }
         return Yii::$app->response->sendFile($path, $ev->file_name ?: basename($path));
+    }
+
+    /** ค้นหาเอกสารจาก DMS/medsop สำหรับ picker (JSON) */
+    public function actionEvidenceSearch(string $source, string $q = '')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $q = trim($q);
+        $results = [];
+        if ($source === Evidence::SOURCE_DMS) {
+            $rows = \app\modules\dms\models\Documents::find()
+                ->andFilterWhere(['or', ['like', 'topic', $q], ['like', 'doc_number', $q]])
+                ->orderBy(['id' => SORT_DESC])->limit(20)->all();
+            foreach ($rows as $d) {
+                $results[] = ['id' => (int) $d->id, 'text' => trim(($d->doc_number ? '[' . $d->doc_number . '] ' : '') . $d->topic)];
+            }
+        } elseif ($source === Evidence::SOURCE_MEDSOP) {
+            $rows = \app\modules\medsop\models\Document::find()
+                ->andFilterWhere(['or', ['like', 'title', $q], ['like', 'document_no', $q]])
+                ->orderBy(['id' => SORT_DESC])->limit(20)->all();
+            foreach ($rows as $d) {
+                $results[] = ['id' => (int) $d->id, 'text' => trim(($d->document_no ? '[' . $d->document_no . '] ' : '') . $d->title)];
+            }
+        }
+        return ['results' => $results];
+    }
+
+    /** โหลดข้อมูลย่อของเอกสารต้นทาง (dms/medsop) ไว้ snapshot ชื่อ */
+    private function resolveExternalDoc(string $source, int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+        if ($source === Evidence::SOURCE_DMS) {
+            $d = \app\modules\dms\models\Documents::findOne($id);
+            return $d ? ['title' => trim(($d->doc_number ? '[' . $d->doc_number . '] ' : '') . $d->topic)] : null;
+        }
+        if ($source === Evidence::SOURCE_MEDSOP) {
+            $d = \app\modules\medsop\models\Document::findOne($id);
+            return $d ? ['title' => trim(($d->document_no ? '[' . $d->document_no . '] ' : '') . $d->title)] : null;
+        }
+        return null;
     }
 
     /**

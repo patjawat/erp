@@ -4,6 +4,7 @@ use app\modules\qms\models\CycleItem;
 use app\modules\qms\models\Evidence;
 use app\widgets\TomSelectWidget;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var app\modules\qms\models\CycleItem $item */
@@ -99,6 +100,10 @@ $sourceIcons = [
                                     <?= Html::a('<i class="bi bi-download"></i>', ['evidence-file', 'id' => $ev->id], ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank', 'title' => 'ดาวน์โหลด']) ?>
                                 <?php elseif ($ev->source_type === Evidence::SOURCE_LINK): ?>
                                     <?= Html::a('<i class="bi bi-box-arrow-up-right"></i>', $ev->url, ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank', 'rel' => 'noopener', 'title' => 'เปิดลิงก์']) ?>
+                                <?php elseif ($ev->source_type === Evidence::SOURCE_DMS): ?>
+                                    <?= Html::a('<i class="bi bi-box-arrow-up-right"></i>', ['/dms/documents/view', 'id' => $ev->source_id], ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank', 'title' => 'เปิดในสารบรรณ']) ?>
+                                <?php elseif ($ev->source_type === Evidence::SOURCE_MEDSOP): ?>
+                                    <?= Html::a('<i class="bi bi-box-arrow-up-right"></i>', ['/medsop/document/view', 'id' => $ev->source_id], ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank', 'title' => 'เปิดใน SOP/WI']) ?>
                                 <?php endif; ?>
                                 <?= Html::beginForm(['evidence-delete', 'id' => $ev->id], 'post', ['class' => 'd-inline']) ?>
                                     <?= Html::submitButton('<i class="bi bi-trash"></i>', ['class' => 'btn btn-sm btn-outline-danger', 'data' => ['confirm' => 'ลบหลักฐานนี้?'], 'title' => 'ลบ']) ?>
@@ -114,7 +119,7 @@ $sourceIcons = [
                     <ul class="nav nav-pills nav-sm mb-2" role="tablist">
                         <li class="nav-item"><button class="nav-link active py-1 px-3" data-bs-toggle="tab" data-bs-target="#ev-file" type="button"><i class="bi bi-file-earmark-arrow-up me-1"></i>แนบไฟล์</button></li>
                         <li class="nav-item"><button class="nav-link py-1 px-3" data-bs-toggle="tab" data-bs-target="#ev-link" type="button"><i class="bi bi-link-45deg me-1"></i>ลิงก์</button></li>
-                        <li class="nav-item"><button class="nav-link py-1 px-3 disabled" type="button" title="เฟสถัดไป"><i class="bi bi-folder-symlink me-1"></i>DMS/medsop</button></li>
+                        <li class="nav-item"><button class="nav-link py-1 px-3" data-bs-toggle="tab" data-bs-target="#ev-doc" type="button"><i class="bi bi-folder-symlink me-1"></i>ดึงจาก DMS/medsop</button></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="ev-file">
@@ -135,6 +140,37 @@ $sourceIcons = [
                                     <div class="col-md-5"><?= Html::input('text', 'title', null, ['class' => 'form-control', 'placeholder' => 'ป้ายกำกับ (ไม่บังคับ)']) ?></div>
                                     <div class="col-md-2 d-grid"><?= Html::submitButton('<i class="bi bi-plus-lg"></i>', ['class' => 'btn btn-primary']) ?></div>
                                 </div>
+                            <?= Html::endForm() ?>
+                        </div>
+                        <div class="tab-pane fade" id="ev-doc">
+                            <?= Html::beginForm(['evidence-add', 'cycle_item_id' => $item->id], 'post') ?>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-3">
+                                        <?= Html::dropDownList('source_type', Evidence::SOURCE_DMS, [
+                                            Evidence::SOURCE_DMS => 'สารบรรณ (DMS)',
+                                            Evidence::SOURCE_MEDSOP => 'SOP/WI (medsop)',
+                                        ], ['id' => 'source', 'class' => 'form-select']) ?>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <?= TomSelectWidget::widget([
+                                            'name' => 'source_id',
+                                            'options' => ['class' => 'form-select', 'required' => true],
+                                            'items' => ['' => ''],
+                                            'clientOptions' => [
+                                                'valueField' => 'id',
+                                                'labelField' => 'text',
+                                                'searchField' => ['text'],
+                                                'placeholder' => 'พิมพ์ชื่อ/เลขที่เอกสารเพื่อค้นหา...',
+                                                'preload' => 'focus',
+                                            ],
+                                            'loadUrl' => Url::to(['evidence-search']),
+                                            'loadUrlParamKeys' => ['source'],
+                                            'loadResponseKey' => 'results',
+                                        ]) ?>
+                                    </div>
+                                    <div class="col-md-2 d-grid"><?= Html::submitButton('<i class="bi bi-plus-lg"></i>', ['class' => 'btn btn-primary']) ?></div>
+                                </div>
+                                <div class="form-text"><i class="bi bi-info-circle me-1"></i>เลือกเอกสารที่มีอยู่แล้วในระบบมาผูกเป็นหลักฐาน (ไม่ต้องอัปโหลดซ้ำ)</div>
                             <?= Html::endForm() ?>
                         </div>
                     </div>
