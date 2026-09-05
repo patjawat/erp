@@ -57,10 +57,72 @@ class DefaultController extends Controller
         return $fy ?: (int) AppHelper::YearBudget();
     }
 
-    /** ภาพรวม (Dashboard ผู้บริหาร) */
+    /** ภาพรวม (Dashboard ผู้บริหาร) — ข้อมูลจริงจาก checklist ปีที่เลือก */
     public function actionIndex()
     {
-        return $this->render('index', ['fiscalYear' => $this->fiscalYear()]);
+        $fiscalYear = $this->fiscalYear();
+        $today = date('Y-m-d');
+        $standards = Standard::find()->where(['is_active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $perStandard = [];
+        $agg = ['countable' => 0, 'complete' => 0, 'in_progress' => 0, 'none' => 0, 'na' => 0, 'overdue' => 0];
+
+        foreach ($standards as $standard) {
+            $cycle = Cycle::find()->where(['standard_id' => $standard->id, 'fiscal_year' => $fiscalYear])->one();
+            $row = ['standard' => $standard, 'cycle' => $cycle, 'percent' => 0,
+                'countable' => 0, 'complete' => 0, 'in_progress' => 0, 'none' => 0, 'na' => 0];
+            if ($cycle) {
+                $parentIds = Requirement::find()->select('parent_id')
+                    ->where(['standard_id' => $standard->id])->andWhere(['not', ['parent_id' => null]])
+                    ->distinct()->column();
+                $base = CycleItem::find()->where(['cycle_id' => $cycle->id]);
+                if ($parentIds) {
+                    $base->andWhere(['not in', 'requirement_id', $parentIds]);
+                }
+                $row['countable'] = (int) (clone $base)->andWhere(['<>', 'status', CycleItem::STATUS_NA])->count();
+                $row['complete'] = (int) (clone $base)->andWhere(['status' => CycleItem::STATUS_COMPLETE])->count();
+                $row['in_progress'] = (int) (clone $base)->andWhere(['status' => CycleItem::STATUS_IN_PROGRESS])->count();
+                $row['none'] = (int) (clone $base)->andWhere(['status' => CycleItem::STATUS_NONE])->count();
+                $row['na'] = (int) (clone $base)->andWhere(['status' => CycleItem::STATUS_NA])->count();
+                $overdue = (int) (clone $base)
+                    ->andWhere(['in', 'status', [CycleItem::STATUS_NONE, CycleItem::STATUS_IN_PROGRESS]])
+                    ->andWhere(['<', 'due_date', $today])->andWhere(['not', ['due_date' => null]])->count();
+                $row['percent'] = $row['countable'] > 0 ? (int) round($row['complete'] * 100 / $row['countable']) : 0;
+
+                foreach (['countable', 'complete', 'in_progress', 'none', 'na'] as $k) {
+                    $agg[$k] += $row[$k];
+                }
+                $agg['overdue'] += $overdue;
+            }
+            $perStandard[] = $row;
+        }
+
+        $overallPercent = $agg['countable'] > 0 ? (int) round($agg['complete'] * 100 / $agg['countable']) : 0;
+        $pending = $agg['none'] + $agg['in_progress'];
+
+        // หลักฐานล่าสุด (ของปีที่เลือก)
+        $cycleIds = Cycle::find()->select('id')->where(['fiscal_year' => $fiscalYear])->column();
+        $itemIds = $cycleIds ? CycleItem::find()->select('id')->where(['cycle_id' => $cycleIds])->column() : [];
+        $recentEvidence = $itemIds
+            ? Evidence::find()->with('cycleItem.cycle.standard')->where(['cycle_item_id' => $itemIds])
+                ->orderBy(['id' => SORT_DESC])->limit(6)->all()
+            : [];
+
+        // กำหนดตรวจประเมินที่จะมาถึง
+        $upcoming = Cycle::find()->with('standard')
+            ->andWhere(['not', ['next_review_date' => null]])
+            ->andWhere(['>=', 'next_review_date', $today])
+            ->orderBy(['next_review_date' => SORT_ASC])->limit(5)->all();
+
+        return $this->render('index', [
+            'fiscalYear' => $fiscalYear,
+            'perStandard' => $perStandard,
+            'agg' => $agg,
+            'overallPercent' => $overallPercent,
+            'pending' => $pending,
+            'recentEvidence' => $recentEvidence,
+            'upcoming' => $upcoming,
+        ]);
     }
 
     /** ทะเบียนมาตรฐาน — การ์ดพร้อม % ความพร้อมของปีที่เลือก */
