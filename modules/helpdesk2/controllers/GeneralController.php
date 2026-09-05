@@ -6,6 +6,7 @@ use Yii;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\helpdesk2\helpers\AssetDeptSummaryHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
@@ -239,6 +240,11 @@ class GeneralController extends \yii\web\Controller
             $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
 
+        // กรอง "ยังไม่กำหนดหน่วยงาน" (ใช้ทั้ง checkbox และ drill จากหน้าสรุปรายหน่วยงาน)
+        if ($searchModel->no_department) {
+            $dataProvider->query->andWhere(['or', ['department' => null], ['department' => 0]]);
+        }
+
         $baseQuery = $dataProvider->query;
 
         $equipStats = [
@@ -279,6 +285,25 @@ class GeneralController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
             'active' => 'asset',
              'equipStats' => $equipStats,
+        ]);
+    }
+
+    /** สรุปครุภัณฑ์รายหน่วยงาน (มุมมองแยกหน่วยงาน + drill ไปลิสต์ที่กรองแล้ว) */
+    public function actionAssetByDept()
+    {
+        // ขอบเขตเดียวกับ actionAsset: EQUIP ทุกชนิด ยกเว้นแพทย์/วิทย์/คอม
+        $excluded = ['MED', 'SCI', 'COM'];
+        $types = ArrayHelper::getColumn(
+            Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 'EQUIP'])->andWhere(['NOT IN', 'code', $excluded])->all(),
+            'code'
+        );
+        $q = ArrayHelper::getValue(Yii::$app->request->get('AssetSearch', []), 'q');
+        $summary = AssetDeptSummaryHelper::byDepartment($types, is_string($q) ? $q : null);
+        return $this->render('@app/modules/helpdesk2/views/service/asset_by_dept', [
+            'active' => 'asset',
+            'title' => 'ศูนย์งานซ่อมบำรุง',
+            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+            'summary' => $summary,
         ]);
     }
 

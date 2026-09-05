@@ -6,6 +6,7 @@ use Yii;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\helpdesk2\helpers\AssetDeptSummaryHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
@@ -200,6 +201,11 @@ class MedicalController extends \yii\web\Controller
             $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
 
+        // กรอง "ยังไม่กำหนดหน่วยงาน" (ใช้ทั้ง checkbox และ drill จากหน้าสรุปรายหน่วยงาน)
+        if ($searchModel->no_department) {
+            $dataProvider->query->andWhere(['or', ['department' => null], ['department' => 0]]);
+        }
+
         $baseQuery = $dataProvider->query;
         $equipStats = [
             'total' => (int) (clone $baseQuery)->count('DISTINCT asset.id'),
@@ -225,6 +231,19 @@ class MedicalController extends \yii\web\Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'equipStats' => $equipStats,
+        ]);
+    }
+
+    /** สรุปครุภัณฑ์รายหน่วยงาน (มุมมองแยกหน่วยงาน + drill ไปลิสต์ที่กรองแล้ว) */
+    public function actionAssetByDept()
+    {
+        $q = ArrayHelper::getValue(Yii::$app->request->get('AssetSearch', []), 'q');
+        $summary = AssetDeptSummaryHelper::byDepartment(['MED', 'SCI'], is_string($q) ? $q : null);
+        return $this->render('@app/modules/helpdesk2/views/service/asset_by_dept', [
+            'active' => 'asset',
+            'title' => 'ศูนย์เครื่องมือแพทย์',
+            'icon' => '<i class="fa-solid fa-briefcase-medical fs-2"></i>',
+            'summary' => $summary,
         ]);
     }
 
