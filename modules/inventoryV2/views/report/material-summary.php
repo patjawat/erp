@@ -401,6 +401,46 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
     </div>
 </div>
 
+<!-- Modal ตั้งยอดปิดงวด (period-end override) -->
+<div class="modal fade" id="modal-period-set" tabindex="-1" aria-labelledby="modal-period-set-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content cm-modal">
+            <header class="cm-modal__head">
+                <div class="cm-modal__head-row">
+                    <h5 class="cm-modal__title" id="modal-period-set-title"><i class="bi bi-pin-map" aria-hidden="true"></i> ตั้งยอดปิดงวด</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+                </div>
+            </header>
+            <div class="modal-body cm-modal__body">
+                <p class="cm-panel__lead" id="ps-context">—</p>
+                <p class="cm-panel__lead">กรอกยอดคงเหลือและมูลค่า "ตามที่ตรวจนับจริง" ระบบจะตั้งเป็นยอดยกไปของงวดนี้ และเป็นต้นตั้งต้นเดือนถัดไป (แก้/ยกเลิกภายหลังได้)</p>
+                <div class="cm-field-grid">
+                    <div class="cm-field">
+                        <label class="cm-field__label" for="ps-qty">ยอดคงเหลือจริง (จำนวน)</label>
+                        <input type="number" id="ps-qty" class="form-select cm-select" step="any" min="0" placeholder="เช่น 99">
+                    </div>
+                    <div class="cm-field">
+                        <label class="cm-field__label" for="ps-value">มูลค่าคงเหลือจริง (บาท)</label>
+                        <input type="number" id="ps-value" class="form-select cm-select" step="any" min="0" placeholder="เช่น 54450.00">
+                    </div>
+                </div>
+                <div class="cm-field mt-2">
+                    <label class="cm-field__label" for="ps-note">หมายเหตุ (ถ้ามี)</label>
+                    <input type="text" id="ps-note" class="form-select cm-select" placeholder="เช่น ตรวจนับจริง 30 ก.ย.">
+                </div>
+                <div id="ps-result" class="mt-2" aria-live="polite"></div>
+            </div>
+            <footer class="cm-modal__foot" style="justify-content:space-between">
+                <button type="button" class="btn btn-outline-danger" id="ps-clear">ยกเลิกการตั้งยอด</button>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" id="ps-save"><i class="bi bi-check-lg" aria-hidden="true"></i> บันทึกยอดปิดงวด</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+
 <!-- Modal ยกเลิกปิดเดือน (destructive — ต้องยืนยัน) -->
 <div class="modal fade" id="modal-cancel-close" tabindex="-1" aria-labelledby="modal-cancel-close-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1121,6 +1161,7 @@ $closeUrl = Url::to(['/inventory-v2/report/close-month']);
 $previewUrl = Url::to(['/inventory-v2/report/close-month-preview']);
 $doctorUrl = Url::to(['/inventory-v2/report/close-month-doctor']);
 $autofixUrl = Url::to(['/inventory-v2/report/close-month-autofix']);
+$setClosingUrl = Url::to(['/inventory-v2/report/set-period-closing']);
 $cancelUrl = Url::to(['/inventory-v2/report/cancel-close']);
 $reportUrl = Url::to(['/inventory-v2/report/material-summary']);
 $drillUrl = Url::to(['/inventory-v2/report/category-drilldown']);
@@ -1781,7 +1822,10 @@ $this->registerJs(<<<JS
     // ══ Doctor: ตรวจ & ซ่อมปิดเดือน ══
     var doctorUrl = '{$doctorUrl}';
     var autofixUrl = '{$autofixUrl}';
+    var setClosingUrl = '{$setClosingUrl}';
     var cmdCtx = null;
+    var psCtx = null;
+    var psModal = null;
 
     var CMD_REASON = {
         negative_qty:      { cls: 'danger',  label: 'จำนวนติดลบ' },
@@ -1842,11 +1886,15 @@ $this->registerJs(<<<JS
                 + '<td class="' + (Number(i.worst_value)<-0.005?'is-negative':'') + '">' + cmFmt(i.worst_value) + '</td>'
                 + '<td><span class="badge bg-' + r.cls + '">' + cmEsc(r.label) + '</span></td>'
                 + '<td class="text-muted small">' + cmEsc(i.fix_hint) + '</td>'
+                + '<td><button type="button" class="btn btn-sm btn-outline-primary cmd-set-closing" '
+                +   'data-item-code="' + cmEsc(i.item_code) + '" data-item-name="' + cmEsc(i.item_name) + '" '
+                +   'data-warehouse-id="' + cmEsc(i.warehouse_id) + '" data-warehouse-name="' + cmEsc(i.warehouse_name||'') + '">'
+                +   '<i class="bi bi-pin-map"></i> ตั้งยอด</button></td>'
                 + '</tr>';
         }).join('');
         html += '<div class="cm-table-wrap"><table class="cm-table"><thead><tr>'
             + (multi ? '<th>คลัง</th>' : '')
-            + '<th>รหัส</th><th>ชื่อพัสดุ</th><th>งวดแรกที่เพี้ยน</th><th>จำนวนต่ำสุด</th><th>มูลค่าต่ำสุด</th><th>เหตุ</th><th>วิธีซ่อม</th>'
+            + '<th>รหัส</th><th>ชื่อพัสดุ</th><th>งวดแรกที่เพี้ยน</th><th>จำนวนต่ำสุด</th><th>มูลค่าต่ำสุด</th><th>เหตุ</th><th>วิธีซ่อม</th><th></th>'
             + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 
         $('#cmd-result').html(html);
@@ -1892,6 +1940,57 @@ $this->registerJs(<<<JS
             \$btn.prop('disabled', false);
             $('#cmd-result').prepend(cmAlert('danger','bi-exclamation-triangle','ซ่อมไม่สำเร็จ',''));
         });
+    });
+
+    // ── ตั้งยอดปิดงวด (period-end override) ──
+    var MONTH_TH = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    function psGetModal(){
+        var el = document.getElementById('modal-period-set');
+        if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal){
+            if (!psModal) psModal = bootstrap.Modal.getOrCreateInstance(el);
+        }
+        return psModal;
+    }
+    $(document).on('click', '.cmd-set-closing', function(e){
+        e.stopPropagation(); // กันไม่ให้ไปเปิดโมดัลประวัติของแถว
+        if (!cmdCtx){ return; }
+        var wh = this.getAttribute('data-warehouse-id');
+        // โหมด "ทุกคลัง" ต้องใช้คลังของแถวนั้น (ตั้งยอดรวมทุกคลังไม่ได้)
+        if (cmdCtx.warehouse_id === 'all' && (!wh || wh === 'all')){
+            alert('กรุณาเลือกคลังเดียว (ไม่ใช่ "ทุกคลังหลัก") ก่อนตั้งยอดปิดงวด'); return;
+        }
+        psCtx = {
+            warehouse_id: (cmdCtx.warehouse_id === 'all') ? wh : cmdCtx.warehouse_id,
+            item_code: this.getAttribute('data-item-code'),
+            item_name: this.getAttribute('data-item-name'),
+            year: cmdCtx.year, month: cmdCtx.month
+        };
+        var mth = MONTH_TH[Number(psCtx.month)] || psCtx.month;
+        $('#ps-context').html('<strong>' + cmEsc(psCtx.item_code) + '</strong> ' + cmEsc(psCtx.item_name)
+            + ' · งวด ' + mth + ' ' + (Number(psCtx.year)+543)
+            + (this.getAttribute('data-warehouse-name') ? ' · ' + cmEsc(this.getAttribute('data-warehouse-name')) : ''));
+        $('#ps-qty').val(''); $('#ps-value').val(''); $('#ps-note').val(''); $('#ps-result').empty();
+        var mdl = psGetModal(); if (mdl) mdl.show();
+    });
+    function psSubmit(payload, okMsg){
+        $('#ps-result').html('<div class="cm-load"><span class="spinner-border spinner-border-sm"></span> กำลังบันทึก…</div>');
+        $.post(setClosingUrl, payload).done(function(res){
+            if (!res || !res.success){ $('#ps-result').html(cmAlert('danger','bi-exclamation-triangle','ไม่สำเร็จ',(res&&res.message)||'')); return; }
+            $('#ps-result').html(cmAlert('success','bi-check-circle-fill', res.message || okMsg, 'ปิดเดือนใหม่ ' + (res.closed_months||0) + ' งวด'));
+            setTimeout(function(){ var m = psGetModal(); if (m) m.hide(); cmdAnalyze(); }, 900);
+        }).fail(function(){ $('#ps-result').html(cmAlert('danger','bi-exclamation-triangle','ไม่สำเร็จ','')); });
+    }
+    $(document).on('click', '#ps-save', function(){
+        if (!psCtx){ return; }
+        var q = $('#ps-qty').val(), v = $('#ps-value').val();
+        if (q === '' || v === ''){ $('#ps-result').html(cmAlert('warning','bi-exclamation-triangle','กรอกไม่ครบ','กรุณากรอกทั้งยอดคงเหลือและมูลค่า')); return; }
+        psSubmit({ warehouse_id: psCtx.warehouse_id, item_code: psCtx.item_code, year: psCtx.year, month: psCtx.month,
+            closing_qty: q, closing_value: v, note: $('#ps-note').val() }, 'ตั้งยอดปิดงวดเรียบร้อย');
+    });
+    $(document).on('click', '#ps-clear', function(){
+        if (!psCtx){ return; }
+        if (!window.confirm('ยกเลิกการตั้งยอดปิดงวดของพัสดุนี้ แล้วกลับไปคำนวณตามการเคลื่อนไหว?')){ return; }
+        psSubmit({ warehouse_id: psCtx.warehouse_id, item_code: psCtx.item_code, year: psCtx.year, month: psCtx.month, clear: 1 }, 'ยกเลิกการตั้งยอดแล้ว');
     });
 })();
 JS

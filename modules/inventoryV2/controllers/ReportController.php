@@ -1778,6 +1778,128 @@ class ReportController extends Controller
     }
 
     /**
+     * ตั้งยอดปิดงวด (period-end override): กำหนดยอด/มูลค่าคงเหลือของพัสดุ ณ สิ้นงวดตรง ๆ
+     * (ตรวจนับจริงแล้วล็อกยอด) เก็บเป็นเอกสาร ADJUST source_type=PERIOD_SET (ยกเลิก/แก้ใหม่ได้)
+     * แล้วปิดเดือนใหม่ตั้งแต่งวดนี้ถึงงวดล่าสุด เพื่อให้ยอดยกไปเป็นต้นตั้งต้นเดือนถัดไป
+     * รับ clear=1 เพื่อยกเลิกการตั้งยอด (กลับไปคำนวณตามการเคลื่อนไหว)
+     */
+    public function actionSetPeriodClosing()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        if (!$this->request->isPost) {
+            return ['success' => false, 'message' => 'ต้องเรียกผ่าน POST'];
+        }
+        $wid = (int) $this->request->post('warehouse_id', 0);
+        $itemCode = trim((string) $this->request->post('item_code', ''));
+        $year = (int) $this->request->post('year', 0);
+        $month = (int) $this->request->post('month', 0);
+        $clear = (int) $this->request->post('clear', 0) === 1;
+        $qty = (float) $this->request->post('closing_qty', 0);
+        $value = (float) $this->request->post('closing_value', 0);
+        $note = trim((string) $this->request->post('note', ''));
+
+        if ($wid <= 0 || $itemCode === '' || $year <= 0 || $month < 1 || $month > 12) {
+            return ['success' => false, 'message' => 'ข้อมูลไม่ครบ (คลัง/พัสดุ/งวด)'];
+        }
+        if (!$clear && ($qty < -0.0000001 || $value < -0.005)) {
+            return ['success' => false, 'message' => 'ยอด/มูลค่าคงเหลือต้องไม่ติดลบ'];
+        }
+
+        $lastDay = (int) date('t', strtotime(sprintf('%04d-%02d-01', $year, $month)));
+        $dateStart = sprintf('%04d-%02d-01 00:00:00', $year, $month);
+        $dateEnd = sprintf('%04d-%02d-%02d 23:59:59', $year, $month, $lastDay);
+        $now = date('Y-m-d H:i:s');
+        $uid = Yii::$app->has('user', true) ? (Yii::$app->user->id ?? null) : null;
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // ลบใบตั้งยอดเดิมของพัสดุ+งวด+คลังนี้ (stock_detail ลบตาม FK cascade)
+            $oldIds = (new Query())
+                ->select('so.id')
+                ->from(['so' => StockOrder::tableName()])
+                ->innerJoin(['sd' => StockDetail::tableName()], 'sd.stock_order_id = so.id')
+                ->where([
+                    'so.order_type' => StockOrder::ORDER_TYPE_ADJUST,
+                    'so.source_type' => 'PERIOD_SET',
+                    'so.main_warehouse_id' => $wid,
+                    'sd.item_code' => $itemCode,
+                ])
+                ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
+                ->column();
+            if (!empty($oldIds)) {
+                StockOrder::deleteAll(['id' => $oldIds]);
+            }
+
+            if (!$clear) {
+                $order = new StockOrder();
+                $order->order_no = 'PSET-' . date('YmdHis') . '-' . substr(Yii::$app->security->generateRandomString(6), 0, 6);
+                $order->order_type = StockOrder::ORDER_TYPE_ADJUST;
+                $order->source_type = 'PERIOD_SET';
+                $order->order_date = sprintf('%04d-%02d-%02d 23:59:00', $year, $month, $lastDay);
+                $order->main_warehouse_id = $wid;
+                $order->status = StockOrder::STATUS_CONFIRMED;
+                $order->ref = $note ?: 'ตั้งยอดปิดงวด';
+                $order->data_json = [
+                    'period_set' => true,
+                    'period' => sprintf('%04d-%02d', $year, $month),
+                    'period_override' => ['closing_qty' => $qty, 'closing_value' => $value, 'note' => $note],
+                    'stock_posted_at' => $now,
+                ];
+                $order->created_at = $now;
+                $order->created_by = $uid;
+                if (!$order->save(false)) {
+                    throw new \RuntimeException('บันทึกใบตั้งยอดไม่สำเร็จ');
+                }
+                $detail = new StockDetail();
+                $detail->stock_order_id = $order->id;
+                $detail->item_code = $itemCode;
+                $detail->qty = 0; // ไม่กระทบ stock_balance/FIFO — เป็นการตั้งยอดรายงานปิดงวดเท่านั้น
+                $detail->remain_qty = 0;
+                $detail->unit_price = null;
+                $detail->lot_number = 'PERIOD_SET';
+                $detail->data_json = json_encode([
+                    'period_override' => ['closing_qty' => $qty, 'closing_value' => $value, 'note' => $note],
+                ], JSON_UNESCAPED_UNICODE);
+                $detail->created_at = $now;
+                $detail->created_by = $uid;
+                if (!$detail->save(false)) {
+                    throw new \RuntimeException('บันทึกรายละเอียดใบตั้งยอดไม่สำเร็จ');
+                }
+            }
+
+            // ปิดเดือนใหม่ตั้งแต่งวดนี้ถึงงวดล่าสุดที่เคยปิด (ให้ยอดยกไปไหลต่อเนื่องถึงเดือนถัดไป)
+            $startOrd = $year * 12 + $month;
+            $lastSnap = (int) (new Query())
+                ->select(new Expression('MAX(report_year * 12 + report_month)'))
+                ->from(StockMonthlyReport::tableName())
+                ->where(['warehouse_id' => $wid])
+                ->scalar();
+            $endOrd = max($startOrd, $lastSnap);
+            $opening = self::buildOpeningForMonth($wid, $year, $month); // ยอดยกมาของงวดที่ตั้ง (chain จากต้น)
+            $closed = 0;
+            for ($ord = $startOrd; $ord <= $endOrd; $ord++) {
+                $ry = intdiv($ord - 1, 12);
+                $rm = (($ord - 1) % 12) + 1;
+                $rows = self::computeMonthlyRows($wid, $ry, $rm, $opening);
+                self::persistMonthlyRows($wid, $ry, $rm, $rows);
+                $opening = self::closingMapFromRows($rows);
+                $closed++;
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => $clear ? 'ยกเลิกการตั้งยอดปิดงวดแล้ว' : 'ตั้งยอดปิดงวดเรียบร้อย',
+                'closed_months' => $closed,
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e, __METHOD__);
+            return ['success' => false, 'message' => 'ทำรายการไม่สำเร็จ: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * ตัวอย่างก่อนปิดเดือน: คำนวณยอด (ไม่บันทึก) แล้วคืน summary + ตารางตามประเภท + รายการที่ต้องตรวจสอบ
      * ให้เจ้าหน้าที่บัญชียืนยันความถูกต้องก่อนกดปิดเดือนจริง
      */
@@ -2200,7 +2322,37 @@ class ReportController extends Controller
             ->andWhere(['so.main_warehouse_id' => $warehouseId])
             ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
             ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['not', ['so.source_type' => 'PERIOD_SET']]) // ตั้งยอดปิดงวด ไม่ใช่การเคลื่อนไหวปกติ (นับแยก)
             ->all();
+
+        // ── ตั้งยอดปิดงวด (period-end override): เอกสาร ADJUST source_type=PERIOD_SET ที่ระบุยอด/มูลค่าคงเหลือเป้าหมาย
+        // ระบบจะ "บังคับ" closing ของพัสดุนั้นในงวดนี้เป็นค่าที่ตั้ง แล้วยกไปเป็นต้นตั้งต้นเดือนถัดไป (คงอยู่แม้ปิดใหม่)
+        $periodOverrides = [];
+        foreach ((new Query())
+            ->select(['item_code' => 'sd.item_code', 'data_json' => 'sd.data_json', 'so_id' => 'so.id'])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'so.order_type' => StockOrder::ORDER_TYPE_ADJUST,
+                'so.source_type' => 'PERIOD_SET',
+                'so.main_warehouse_id' => $warehouseId,
+                'so.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
+            ->orderBy(['so.id' => SORT_ASC]) // ใบล่าสุดชนะ
+            ->all() as $ov) {
+            $j = self::decodeStockDetailDataJson($ov['data_json'] ?? null);
+            if (!isset($j['period_override']) || !is_array($j['period_override'])) {
+                continue;
+            }
+            $periodOverrides[(string) $ov['item_code']] = [
+                'closing_qty' => (float) ($j['period_override']['closing_qty'] ?? 0),
+                'closing_value' => (float) ($j['period_override']['closing_value'] ?? 0),
+                'note' => (string) ($j['period_override']['note'] ?? ''),
+            ];
+            $itemCodes[] = (string) $ov['item_code'];
+        }
+        $itemCodes = array_unique($itemCodes);
 
         // ADJUST แยกเป็น 3 กลุ่ม เพื่อรองรับการตีมูลค่าแบบต้นทุนถัวเฉลี่ย (weighted average):
         //  - adjInQty / adjInCost : ปรับเพิ่มที่มีจำนวน (ต้นทุนจริงต่อหน่วยที่กรอก) → เข้า pool เพื่อกำหนดถัวเฉลี่ย
@@ -2296,6 +2448,23 @@ class ReportController extends Controller
             $adjustOutQty = $aOutQty;
             $adjustOutValue = $adjustOutQtyValue + ($voNet < 0 ? -$voNet : 0.0);
 
+            // ตั้งยอดปิดงวด: บังคับ closing = ยอด/มูลค่าที่ตั้ง แล้วพับส่วนต่างเข้าคอลัมน์ปรับปรุง
+            // เพื่อให้สมการ (ยกมา+รับ+ปรับเพิ่ม−จ่าย−ปรับลด = ยกไป) ยังถูกต้อง และยอดยกไปนี้เป็นต้นตั้งต้นเดือนหน้า
+            $isOverride = false;
+            $overrideNote = '';
+            if (isset($periodOverrides[$itemCode])) {
+                $isOverride = true;
+                $overrideNote = $periodOverrides[$itemCode]['note'];
+                $targetQty = (float) $periodOverrides[$itemCode]['closing_qty'];
+                $targetValue = (float) $periodOverrides[$itemCode]['closing_value'];
+                $diffQty = $targetQty - $closingQty;
+                $diffValue = $targetValue - $closingValue;
+                if ($diffQty >= 0) { $adjustInQty += $diffQty; } else { $adjustOutQty += -$diffQty; }
+                if ($diffValue >= 0) { $adjustInValue += $diffValue; } else { $adjustOutValue += -$diffValue; }
+                $closingQty = $targetQty;
+                $closingValue = $targetValue;
+            }
+
             $item = $items[$itemCode] ?? null;
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
 
@@ -2321,6 +2490,8 @@ class ReportController extends Controller
                 'total_out_value' => $totalOutValue,
                 'closing_qty' => $closingQty,
                 'closing_value' => $closingValue,
+                'is_override' => $isOverride,
+                'override_note' => $overrideNote,
             ];
         }
 

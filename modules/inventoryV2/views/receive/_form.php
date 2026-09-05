@@ -1228,10 +1228,19 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
 });
 
         function getAutoLotNumber(rowIndex) {
-            var d = new Date();
-            var y = d.getFullYear();
-            var m = String(d.getMonth() + 1).padStart(2, '0');
-            var day = String(d.getDate()).padStart(2, '0');
+            // ใช้ "วันที่รับเข้า" ที่กรอกในฟอร์มเป็นวันประทับ lot (ไม่ใช่วันที่เปิดฟอร์ม)
+            // เพื่อให้เลข lot ตรงกับวันรับจริง และไม่เกิดวันที่ผกผันตอนปิดเดือน
+            var y, m, day;
+            var recvYmd = convertExpiryThaiToYmd($('#stockorder-order_date').val());
+            if (recvYmd) {
+                var parts = recvYmd.split('-'); // YYYY-MM-DD (zero-padded)
+                y = parts[0]; m = parts[1]; day = parts[2];
+            } else {
+                var d = new Date();
+                y = d.getFullYear();
+                m = String(d.getMonth() + 1).padStart(2, '0');
+                day = String(d.getDate()).padStart(2, '0');
+            }
             var seq = String((rowIndex || 0) + 1).padStart(3, '0');
             return 'LOT-' + y + m + day + '-' + seq;
         }

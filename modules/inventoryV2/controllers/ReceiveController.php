@@ -612,7 +612,10 @@ class ReceiveController extends Controller
                 }
                 $model->data_json = $json;
                 if (!$isDraft) {
-                    $model->setStockPostedAt(time());
+                    // เวลาที่ของเข้าคลังจริง = วันที่รับเข้าที่กรอก (order_date) ไม่ใช่เวลาที่กดบันทึก
+                    // เพื่อให้ประวัติการเคลื่อนไหวตรงกับหน้าใบรับ + ไม่เกิดวันที่ผกผันตอนปิดเดือน
+                    $postedTs = !empty($model->order_date) ? strtotime($model->order_date) : false;
+                    $model->setStockPostedAt($postedTs ?: time());
                 }
 
                 $details = $this->request->post('StockDetail', []);
@@ -851,9 +854,6 @@ class ReceiveController extends Controller
                 $model->status = 'DRAFT';
             } else {
                 $model->status = 'CONFIRMED';
-                if ($wasDraft || !$model->getStockPostedAt()) {
-                    $model->setStockPostedAt(time());
-                }
             }
             // เลขที่ใบรับเข้าเว้นว่างได้เสมอ (รวมถึงรับจาก PO) — ถ้าว่างระบบออกเลข RCV- ให้อัตโนมัติ
             if (trim((string) $model->order_no) === '') {
@@ -864,6 +864,12 @@ class ReceiveController extends Controller
                 if ($model->order_date !== null) {
                     $model->order_date .= ' ' . date('H:i:s');
                 }
+            }
+            // เวลาที่ของเข้าคลังจริง = วันที่รับเข้าที่กรอก (order_date) ไม่ใช่เวลาที่กดบันทึก
+            // ตั้งหลังแปลง order_date เป็น ค.ศ. แล้ว เพื่อให้ประวัติตรงกับหน้าใบรับ
+            if (!$isDraft && ($wasDraft || !$model->getStockPostedAt())) {
+                $postedTs = !empty($model->order_date) ? strtotime($model->order_date) : false;
+                $model->setStockPostedAt($postedTs ?: time());
             }
 
             // เลขที่ส่งสินค้า + ลิงก์ใบสั่งซื้อต้นทาง (ถ้ารับเข้าจาก PO picker) — เก็บใน data_json
