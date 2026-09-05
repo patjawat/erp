@@ -174,7 +174,7 @@ class DefaultController extends Controller
     public function actionRequirements(int $standard_id)
     {
         $standard = $this->findStandard($standard_id);
-        $requirements = Requirement::find()
+        $requirements = Requirement::find()->with('links')
             ->where(['standard_id' => $standard_id])
             ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
@@ -241,6 +241,73 @@ class DefaultController extends Controller
             Yii::$app->session->setFlash('success', 'ลบข้อกำหนดแล้ว');
         }
         return $this->redirect(['requirements', 'standard_id' => $standardId]);
+    }
+
+    /** Matrix การเชื่อมโยงข้อกำหนดข้ามมาตรฐาน + ตัวชี้วัดข้อใช้ร่วม */
+    public function actionMapping()
+    {
+        $standards = Standard::find()->where(['is_active' => 1])->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        // แถว = ข้อกำหนดที่มีการเชื่อมโยงอย่างน้อย 1 รายการ
+        $linkedReqIds = \app\modules\qms\models\RequirementLink::find()->select('requirement_id')->distinct()->column();
+        $rows = $linkedReqIds
+            ? Requirement::find()->with('standard', 'links')->where(['id' => $linkedReqIds])
+                ->orderBy(['standard_id' => SORT_ASC, 'sort' => SORT_ASC, 'id' => SORT_ASC])->all()
+            : [];
+
+        $totalReq = (int) Requirement::find()->where(['is_active' => 1])->count();
+        $sharedCount = count($linkedReqIds);
+        $sharedPercent = $totalReq > 0 ? round($sharedCount * 100 / $totalReq, 1) : 0;
+
+        return $this->render('mapping', [
+            'standards' => $standards,
+            'rows' => $rows,
+            'totalReq' => $totalReq,
+            'sharedCount' => $sharedCount,
+            'sharedPercent' => $sharedPercent,
+        ]);
+    }
+
+    /** จัดการการเชื่อมโยงของข้อกำหนดหนึ่งไปยังมาตรฐานอื่น */
+    public function actionRequirementLinks(int $id)
+    {
+        $req = Requirement::findOne($id);
+        if (!$req) {
+            throw new NotFoundHttpException('ไม่พบข้อกำหนด');
+        }
+        $others = Standard::find()->where(['is_active' => 1])->andWhere(['not', ['id' => $req->standard_id]])
+            ->orderBy(['sort' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        if (Yii::$app->request->isPost) {
+            $rel = (array) Yii::$app->request->post('rel', []);
+            foreach ($others as $std) {
+                $choice = (string) ($rel[$std->id] ?? '');
+                $link = \app\modules\qms\models\RequirementLink::find()
+                    ->where(['requirement_id' => $id, 'standard_id' => $std->id])->one();
+                if ($choice === '') {
+                    if ($link) {
+                        $link->delete();
+                    }
+                    continue;
+                }
+                $link = $link ?: new \app\modules\qms\models\RequirementLink(['requirement_id' => $id, 'standard_id' => $std->id]);
+                $link->relation = $choice;
+                $link->save();
+            }
+            Yii::$app->session->setFlash('success', 'บันทึกการเชื่อมโยงแล้ว');
+            return $this->redirect(['requirements', 'standard_id' => $req->standard_id]);
+        }
+
+        $current = [];
+        foreach ($req->links as $l) {
+            $current[(int) $l->standard_id] = $l->relation;
+        }
+
+        return $this->render('requirement-links', [
+            'req' => $req,
+            'others' => $others,
+            'current' => $current,
+        ]);
     }
 
     /** นำเข้าข้อกำหนดจากแม่แบบสำเร็จรูป หรือคัดลอกจากมาตรฐานอื่น */

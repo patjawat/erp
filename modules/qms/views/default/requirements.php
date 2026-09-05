@@ -35,6 +35,8 @@ $renderNode = function (int $parentId, int $level) use (&$renderNode, $byParent,
         // ปุ่ม
         echo '<div class="d-flex gap-1">';
         echo Html::a('<i class="bi bi-plus-lg"></i>', ['requirement-form', 'standard_id' => $sid, 'parent' => $r->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'เพิ่มข้อย่อย']);
+        $linkCount = count($r->links);
+        echo Html::a('<i class="bi bi-diagram-3"></i>' . ($linkCount ? ' <span class="badge text-bg-info">' . $linkCount . '</span>' : ''), ['requirement-links', 'id' => $r->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'เชื่อมโยงข้ามมาตรฐาน']);
         echo Html::a('<i class="bi bi-pencil"></i>', ['requirement-form', 'standard_id' => $sid, 'id' => $r->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']);
         echo Html::a('<i class="bi bi-trash"></i>', ['requirement-delete', 'id' => $r->id], [
             'class' => 'btn btn-sm btn-outline-danger', 'title' => 'ลบ',

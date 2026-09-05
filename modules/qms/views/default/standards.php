@@ -54,7 +54,7 @@ $statusOf = static function (array $st): array {
             <?= Html::endForm() ?>
             <?= Html::a('<i class="bi bi-plus-lg me-1"></i>เพิ่มมาตรฐาน', ['standard-form'], ['class' => 'btn btn-primary']) ?>
             <button type="button" class="btn btn-outline-secondary" disabled title="เฟสถัดไป"><i class="bi bi-upload me-1"></i>นำเข้า Checklist</button>
-            <button type="button" class="btn btn-outline-secondary" disabled title="เฟสถัดไป"><i class="bi bi-diagram-3 me-1"></i>Mapping ข้อกำหนด</button>
+            <?= Html::a('<i class="bi bi-diagram-3 me-1"></i>Mapping ข้อกำหนด', ['mapping'], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
 

@@ -179,6 +179,49 @@ class SeedController extends Controller
         return ExitCode::OK;
     }
 
+    /**
+     * Seed ตัวอย่างการเชื่อมโยงข้ามมาตรฐาน (HA → ISO9001/PDPA) ให้ matrix มีข้อมูล
+     *   docker exec dansai php yii qms/seed/links
+     */
+    public function actionLinks(): int
+    {
+        // [รหัสข้อ HA => [ [standard_code, relation], ... ] ]
+        $map = [
+            'I-1.1' => [['ISO9001', 'direct'], ['PDPA', 'partial']],   // คำสั่งแต่งตั้งกรรมการ
+            'I-1.2' => [['ISO9001', 'direct']],                        // ประชุมทบทวน = Management Review
+            'II-2.1' => [['ISO9001', 'direct']],                       // บริหารความเสี่ยง = ISO 6.1
+        ];
+        $created = 0;
+        foreach ($map as $haCode => $targets) {
+            $req = Requirement::find()->alias('r')->innerJoinWith('standard s')
+                ->where(['r.code' => $haCode, 's.code' => 'HA'])->one();
+            if (!$req) {
+                $this->stdout("ข้าม {$haCode}: ไม่พบข้อกำหนด HA\n");
+                continue;
+            }
+            foreach ($targets as [$stdCode, $rel]) {
+                $std = Standard::find()->where(['code' => $stdCode])->one();
+                if (!$std) {
+                    continue;
+                }
+                $exist = \app\modules\qms\models\RequirementLink::find()
+                    ->where(['requirement_id' => $req->id, 'standard_id' => $std->id])->exists();
+                if ($exist) {
+                    continue;
+                }
+                $link = new \app\modules\qms\models\RequirementLink([
+                    'requirement_id' => $req->id, 'standard_id' => $std->id, 'relation' => $rel,
+                ]);
+                if ($link->save()) {
+                    $created++;
+                    $this->stdout("  {$haCode} → {$stdCode} ({$rel})\n");
+                }
+            }
+        }
+        $this->stdout("เชื่อมโยง: เพิ่ม {$created} รายการ\n");
+        return ExitCode::OK;
+    }
+
     private function ensureRequirement(int $standardId, ?int $parentId, string $code, string $title, ?string $hint, int $sort, int &$created): Requirement
     {
         $model = Requirement::find()->where(['standard_id' => $standardId, 'code' => $code])->one();
