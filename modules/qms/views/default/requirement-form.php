@@ -1,5 +1,6 @@
 <?php
 
+use app\widgets\TomSelectWidget;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
@@ -8,6 +9,7 @@ use yii\helpers\Html;
 /** @var app\modules\qms\models\Standard $standard */
 /** @var app\modules\qms\models\Requirement $model */
 /** @var app\modules\qms\models\Requirement[] $parentOptions */
+/** @var array $employeeOptions  id => ชื่อ */
 
 $isNew = $model->isNewRecord;
 $this->title = $isNew ? 'เพิ่มข้อกำหนด' : 'แก้ไขข้อกำหนด';
@@ -42,6 +44,11 @@ $parentList = ArrayHelper::map($parentOptions, 'id', function ($r) {
                         <div class="col-md-9"><?= $form->field($model, 'title')->textInput(['maxlength' => true, 'placeholder' => 'ต้องมีคำสั่งแต่งตั้งคณะกรรมการ']) ?></div>
                     </div>
                     <?= $form->field($model, 'detail')->textarea(['rows' => 2]) ?>
+                    <?= $form->field($model, 'default_assignee_emp_id')->widget(TomSelectWidget::class, [
+                        'items' => ['' => '— ไม่ระบุ —'] + $employeeOptions,
+                        'options' => ['class' => 'form-select'],
+                        'clientOptions' => ['placeholder' => 'ค้นหาพนักงาน...'],
+                    ])->hint('ผู้รับผิดชอบตั้งต้น จะติดไปกับ checklist ทุกปีที่เปิดรอบ') ?>
                     <div class="row g-3">
                         <div class="col-md-8"><?= $form->field($model, 'evidence_hint')->textInput(['maxlength' => true, 'placeholder' => 'คำสั่ง / รายงานประชุม / ภาพถ่าย'])->hint('ประเภทหลักฐานที่คาดหวัง') ?></div>
                         <div class="col-md-2"><?= $form->field($model, 'sort')->textInput(['type' => 'number']) ?></div>

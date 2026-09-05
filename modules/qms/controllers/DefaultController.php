@@ -3,6 +3,7 @@
 namespace app\modules\qms\controllers;
 
 use app\components\AppHelper;
+use app\modules\hr\models\Employees;
 use app\modules\qms\models\Cycle;
 use app\modules\qms\models\CycleItem;
 use app\modules\qms\models\Evidence;
@@ -39,6 +40,7 @@ class DefaultController extends Controller
                     'requirement-delete' => ['POST'],
                     'cycle-open' => ['POST'],
                     'cycle-sync' => ['POST'],
+                    'cycle-copy' => ['POST'],
                     'item-save' => ['POST'],
                     'evidence-add' => ['POST'],
                     'evidence-delete' => ['POST'],
@@ -154,6 +156,7 @@ class DefaultController extends Controller
             'standard' => $standard,
             'model' => $model,
             'parentOptions' => $parentOptions,
+            'employeeOptions' => $this->employeeOptions(),
         ]);
     }
 
@@ -301,6 +304,11 @@ class DefaultController extends Controller
             }
         }
 
+        // ปีก่อนหน้าที่มีรอบ (ไว้เสนอปุ่มคัดลอกผู้รับผิดชอบ)
+        $prevCycle = Cycle::find()->where(['standard_id' => $standard_id])
+            ->andWhere(['<', 'fiscal_year', $fiscalYear])
+            ->orderBy(['fiscal_year' => SORT_DESC])->one();
+
         return $this->render('checklist', [
             'standard' => $standard,
             'fiscalYear' => $fiscalYear,
@@ -308,6 +316,8 @@ class DefaultController extends Controller
             'items' => $items,
             'byParent' => $byParent,
             'reqActive' => $reqActive,
+            'prevCycle' => $prevCycle,
+            'employeeById' => $this->employeeOptions(),
         ]);
     }
 
@@ -322,6 +332,47 @@ class DefaultController extends Controller
         }
         $added = $this->generateItems($cycle);
         Yii::$app->session->setFlash('success', "เปิดรอบปี {$fy} แล้ว (สร้าง checklist {$added} ข้อ)");
+        return $this->redirect(['checklist', 'standard_id' => $standard_id, 'fy' => $fy]);
+    }
+
+    /**
+     * เปิดรอบปีใหม่โดยคัดลอกผู้รับผิดชอบจากปีก่อนหน้า (ปีล่าสุดที่มีรอบ)
+     * หลักฐานไม่คัดลอก สถานะเริ่มใหม่เป็น "ยังขาด"
+     */
+    public function actionCycleCopy(int $standard_id, int $fy)
+    {
+        $this->findStandard($standard_id);
+        $source = Cycle::find()->where(['standard_id' => $standard_id])
+            ->andWhere(['<', 'fiscal_year', $fy])
+            ->orderBy(['fiscal_year' => SORT_DESC])->one();
+        if (!$source) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรอบปีก่อนหน้าให้คัดลอก');
+            return $this->redirect(['checklist', 'standard_id' => $standard_id, 'fy' => $fy]);
+        }
+
+        $cycle = Cycle::find()->where(['standard_id' => $standard_id, 'fiscal_year' => $fy])->one()
+            ?: new Cycle(['standard_id' => $standard_id, 'fiscal_year' => $fy, 'status' => Cycle::STATUS_OPEN]);
+        if ($cycle->isNewRecord) {
+            $cycle->save();
+        }
+        $this->generateItems($cycle);
+
+        // แผนที่ผู้รับผิดชอบจากปีต้นทาง (ตาม requirement_id)
+        $srcAssignee = [];
+        foreach (CycleItem::find()->where(['cycle_id' => $source->id])->all() as $s) {
+            $srcAssignee[(int) $s->requirement_id] = ['unit' => $s->assignee_unit_id, 'emp' => $s->assignee_emp_id];
+        }
+        $copied = 0;
+        foreach (CycleItem::find()->where(['cycle_id' => $cycle->id])->all() as $t) {
+            $a = $srcAssignee[(int) $t->requirement_id] ?? null;
+            if ($a && ($a['unit'] || $a['emp']) && !$t->assignee_emp_id && !$t->assignee_unit_id) {
+                $t->assignee_unit_id = $a['unit'];
+                $t->assignee_emp_id = $a['emp'];
+                $t->save(false);
+                $copied++;
+            }
+        }
+        Yii::$app->session->setFlash('success', "เปิดรอบปี {$fy} + คัดลอกผู้รับผิดชอบจากปี {$source->fiscal_year} แล้ว ({$copied} ข้อ)");
         return $this->redirect(['checklist', 'standard_id' => $standard_id, 'fy' => $fy]);
     }
 
@@ -343,6 +394,7 @@ class DefaultController extends Controller
             'cycle' => $item->cycle,
             'standard' => $item->cycle->standard,
             'evidences' => $item->getEvidences()->orderBy(['id' => SORT_DESC])->all(),
+            'employeeOptions' => $this->employeeOptions(),
         ]);
     }
 
@@ -354,6 +406,7 @@ class DefaultController extends Controller
         $item->status = (string) ($post['status'] ?? $item->status);
         $item->due_date = trim((string) ($post['due_date'] ?? '')) ?: null;
         $item->note = trim((string) ($post['note'] ?? '')) ?: null;
+        $item->assignee_emp_id = (int) ($post['assignee_emp_id'] ?? 0) ?: null;
         if ($item->save()) {
             Yii::$app->session->setFlash('success', 'บันทึกสถานะแล้ว');
         } else {
@@ -541,6 +594,19 @@ class DefaultController extends Controller
             throw new NotFoundHttpException('ไม่พบมาตรฐาน');
         }
         return $model;
+    }
+
+    /** รายชื่อพนักงานที่ยังทำงาน [id => "ชื่อ สกุล"] สำหรับ picker ผู้รับผิดชอบ */
+    private function employeeOptions(): array
+    {
+        $rows = Employees::find()
+            ->where(['status' => Employees::STATUS_WORKING])
+            ->orderBy(['fname' => SORT_ASC, 'lname' => SORT_ASC])->all();
+        $out = [];
+        foreach ($rows as $e) {
+            $out[(int) $e->id] = trim(($e->prefix ?: '') . $e->fname . ' ' . $e->lname);
+        }
+        return $out;
     }
 
     private function findRequirement(int $id, int $standardId): Requirement

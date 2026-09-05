@@ -2,6 +2,7 @@
 
 use app\modules\qms\models\CycleItem;
 use app\modules\qms\models\Evidence;
+use app\widgets\TomSelectWidget;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
@@ -9,6 +10,7 @@ use yii\helpers\Html;
 /** @var app\modules\qms\models\Cycle $cycle */
 /** @var app\modules\qms\models\Standard $standard */
 /** @var app\modules\qms\models\Evidence[] $evidences */
+/** @var array $employeeOptions  id => ชื่อ */
 
 $this->title = $item->title_snapshot;
 $sourceIcons = [
@@ -48,6 +50,16 @@ $sourceIcons = [
                         <div class="mb-3">
                             <label class="form-label small text-body-secondary">สถานะความครบถ้วน</label>
                             <?= Html::dropDownList('status', $item->status, CycleItem::statusLabels(), ['class' => 'form-select']) ?>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-body-secondary">ผู้รับผิดชอบ</label>
+                            <?= TomSelectWidget::widget([
+                                'name' => 'assignee_emp_id',
+                                'value' => $item->assignee_emp_id,
+                                'items' => ['' => '— ไม่ระบุ —'] + $employeeOptions,
+                                'options' => ['class' => 'form-select'],
+                                'clientOptions' => ['placeholder' => 'ค้นหาพนักงาน...'],
+                            ]) ?>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-body-secondary">กำหนดส่ง</label>

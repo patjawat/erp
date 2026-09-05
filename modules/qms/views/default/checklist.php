@@ -10,6 +10,8 @@ use yii\helpers\Html;
 /** @var app\modules\qms\models\CycleItem[] $items */
 /** @var array<int, app\modules\qms\models\CycleItem[]> $byParent */
 /** @var int $reqActive */
+/** @var app\modules\qms\models\Cycle|null $prevCycle */
+/** @var array $employeeById  id => ชื่อ */
 
 $this->title = 'Checklist: ' . $standard->name;
 $sid = (int) $standard->id;
@@ -31,7 +33,7 @@ foreach ($items as $it) {
 }
 $percent = $countable > 0 ? (int) round($complete * 100 / $countable) : 0;
 
-$renderNode = function (int $reqParentId, int $level) use (&$renderNode, $byParent) {
+$renderNode = function (int $reqParentId, int $level) use (&$renderNode, $byParent, $employeeById) {
     if (empty($byParent[$reqParentId])) {
         return;
     }
@@ -53,6 +55,9 @@ $renderNode = function (int $reqParentId, int $level) use (&$renderNode, $byPare
             }
             if ($it->due_date) {
                 echo ' <span class="small text-body-secondary ms-1"><i class="bi bi-calendar-event"></i> ' . Yii::$app->formatter->asDate($it->due_date) . '</span>';
+            }
+            if ($it->assignee_emp_id && isset($employeeById[(int) $it->assignee_emp_id])) {
+                echo ' <span class="small text-body-secondary ms-1"><i class="bi bi-person"></i> ' . Html::encode($employeeById[(int) $it->assignee_emp_id]) . '</span>';
             }
         }
         echo '</div>';
@@ -88,6 +93,11 @@ $renderNode = function (int $reqParentId, int $level) use (&$renderNode, $byPare
                 <?= Html::beginForm(['cycle-sync', 'cycle_id' => $cycle->id], 'post') ?>
                     <?= Html::submitButton('<i class="bi bi-arrow-repeat me-1"></i>ซิงก์ข้อกำหนดใหม่', ['class' => 'btn btn-sm btn-outline-secondary']) ?>
                 <?= Html::endForm() ?>
+                <?php if ($prevCycle): ?>
+                    <?= Html::beginForm(['cycle-copy', 'standard_id' => $sid, 'fy' => $fiscalYear], 'post') ?>
+                        <?= Html::submitButton('<i class="bi bi-copy me-1"></i>คัดลอกผู้รับผิดชอบจากปี ' . $prevCycle->fiscal_year, ['class' => 'btn btn-sm btn-outline-secondary', 'data' => ['confirm' => 'คัดลอกผู้รับผิดชอบจากปี ' . $prevCycle->fiscal_year . ' มาเติมข้อที่ยังว่าง?']]) ?>
+                    <?= Html::endForm() ?>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -104,9 +114,16 @@ $renderNode = function (int $reqParentId, int $level) use (&$renderNode, $byPare
                     เปิดรอบเพื่อสร้าง checklist ของปีนี้ (คัดลอกข้อกำหนดทั้งหมดมาให้ติดตาม)
                 </p>
                 <?php if ($reqActive > 0): ?>
-                    <?= Html::beginForm(['cycle-open', 'standard_id' => $sid, 'fy' => $fiscalYear], 'post') ?>
-                        <?= Html::submitButton('<i class="bi bi-calendar-check me-1"></i>เปิดรอบปี ' . $fiscalYear, ['class' => 'btn btn-primary']) ?>
-                    <?= Html::endForm() ?>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        <?= Html::beginForm(['cycle-open', 'standard_id' => $sid, 'fy' => $fiscalYear], 'post') ?>
+                            <?= Html::submitButton('<i class="bi bi-calendar-check me-1"></i>เปิดรอบปี ' . $fiscalYear, ['class' => 'btn btn-primary']) ?>
+                        <?= Html::endForm() ?>
+                        <?php if ($prevCycle): ?>
+                            <?= Html::beginForm(['cycle-copy', 'standard_id' => $sid, 'fy' => $fiscalYear], 'post') ?>
+                                <?= Html::submitButton('<i class="bi bi-copy me-1"></i>เปิดรอบ + คัดลอกผู้รับผิดชอบจากปี ' . $prevCycle->fiscal_year, ['class' => 'btn btn-outline-primary']) ?>
+                            <?= Html::endForm() ?>
+                        <?php endif; ?>
+                    </div>
                 <?php else: ?>
                     <?= Html::a('ไปเพิ่มข้อกำหนดก่อน', ['requirements', 'standard_id' => $sid], ['class' => 'btn btn-outline-primary']) ?>
                 <?php endif; ?>

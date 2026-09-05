@@ -56,6 +56,7 @@ class CycleItem extends QmsActiveRecord
     {
         return [
             [['cycle_id', 'requirement_id', 'title_snapshot'], 'required'],
+            [['assignee_unit_id', 'assignee_emp_id'], 'default', 'value' => null],
             [['cycle_id', 'requirement_id', 'assignee_unit_id', 'assignee_emp_id', 'sort'], 'integer'],
             [['title_snapshot'], 'string', 'max' => 500],
             [['due_date'], 'date', 'format' => 'php:Y-m-d'],

@@ -31,6 +31,8 @@ class Requirement extends QmsActiveRecord
     {
         return [
             [['standard_id', 'title'], 'required'],
+            // เว้นว่างจากฟอร์ม (dropdown prompt) → null กัน FK พัง / เก็บเป็น 0
+            [['parent_id', 'default_assignee_unit_id', 'default_assignee_emp_id'], 'default', 'value' => null],
             [['standard_id', 'parent_id', 'default_assignee_unit_id', 'default_assignee_emp_id', 'sort', 'is_active'], 'integer'],
             [['detail'], 'string'],
             [['code'], 'string', 'max' => 64],
