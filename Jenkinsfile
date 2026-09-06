@@ -33,7 +33,7 @@ pipeline {
                     checkout([
                         $class: 'GitSCM',
 
-                        branches: [[name: '*/ç']],
+                        branches: [[name: '*/decha_dev']],
 
                         userRemoteConfigs: [[
                             url: 'https://github.com/patjawat/erp.git'
