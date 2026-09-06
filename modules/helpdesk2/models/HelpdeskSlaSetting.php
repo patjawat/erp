@@ -188,5 +188,53 @@ class HelpdeskSlaSetting extends ActiveRecord
         $mult = $cfg['urgency_multiplier'] ?? null;
         return is_array($mult) && !empty($mult) ? $mult : self::defaultUrgencyMultiplier();
     }
+
+    /**
+     * เวลาแก้ไขฐาน (นาที ที่ระดับความเร่งด่วน "ปานกลาง") แยกตามกลุ่มงานซ่อม
+     * ค่าเริ่มต้นเป็นค่าเฉลี่ยอ้างอิง — แต่ละ รพ. แก้ไขได้ที่หน้าตั้งค่า SLA
+     * กลุ่ม 2 (คอมพิวเตอร์) ไม่กำหนดที่นี่ → ใช้ตารางรายการบริการ (service_catalog) เดิม
+     *
+     * @return array<string,int> [repair_group => minutes]
+     */
+    public static function defaultGroupResolveMin(): array
+    {
+        return [
+            '1' => 7200, // ซ่อมบำรุงทั่วไป/สาธารณูปโภค ≈ 5 วัน
+            '3' => 4320, // เครื่องมือแพทย์ ≈ 3 วัน
+        ];
+    }
+
+    /**
+     * เวลาแก้ไขฐานต่อกลุ่ม (config ทับ default)
+     *
+     * @return array<string,float>
+     */
+    public function getGroupResolveMin(): array
+    {
+        $out = array_map('floatval', self::defaultGroupResolveMin());
+        $cfg = $this->getConfig();
+        $g = $cfg['group_resolve_min'] ?? null;
+        if (is_array($g)) {
+            foreach ($g as $k => $v) {
+                if (is_numeric($v) && (float) $v > 0) {
+                    $out[(string) $k] = (float) $v;
+                }
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * เวลาแก้ไขฐานของกลุ่มนี้ (นาที) หรือ null ถ้าไม่ได้กำหนด → ให้ใช้ตารางบริการแทน
+     */
+    public function groupResolveMin(?int $group): ?float
+    {
+        if ($group === null) {
+            return null;
+        }
+        $map = $this->getGroupResolveMin();
+        $key = (string) $group;
+        return isset($map[$key]) ? (float) $map[$key] : null;
+    }
 }
 

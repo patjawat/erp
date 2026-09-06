@@ -198,6 +198,8 @@ class DocRenderer
 .d-sheet .d-masthead-side { width:22%; vertical-align:top; }
 .d-sheet .d-masthead-title { width:56%; text-align:center; vertical-align:bottom; }
 .d-sheet .d-title { font-size: {$titleSize}pt; font-weight:bold; text-align:center; }
+.d-sheet .d-loanmemo-ref { width:43%; }
+.d-sheet .d-loanmemo-space { width:2%; }
 .d-sheet .d-emblem { display:inline-block; text-align:center; }
 .d-sheet .d-memo-masthead, .d-sheet .d-memo-masthead td { border:none; }
 .d-sheet .d-memo-masthead { margin-bottom:4pt; }
@@ -381,6 +383,19 @@ class DocRenderer
 .d-sheet .d-loan-note { margin-top:8pt; font-size:{$headSize}pt; }
 .d-sheet .d-loan-review { margin-top:10pt; }
 .d-sheet .d-loan-review td { border:0.5pt solid #000; padding:5pt 7pt; width:50%; vertical-align:top; }
+/* ---- สัญญายืมเงิน แบบ 8500 หน้า 1: ตารางกรอบเดียวเต็มฉบับตามแบบฟอร์มจริง
+   เส้นขอบอยู่ที่ class d-loan-cell (ไม่ใช่ td เปล่า) เพื่อไม่ให้ตารางย่อยไร้เส้น
+   ที่ซ้อนอยู่ข้างในถูกตีเส้นตาม */
+.d-sheet .d-loan-contract { margin-top:2pt; }
+.d-sheet .d-loan-contract td, .d-sheet .d-loan-contract p { line-height:1.25; }
+.d-sheet .d-loan-cell { border:0.5pt solid #000; padding:2pt 6pt; vertical-align:top; }
+.d-sheet .d-loan-ct-title { text-align:center; vertical-align:middle; font-weight:bold; font-size:{$titleSize}pt; }
+.d-sheet .d-loan-ct-head { width:32%; }
+.d-sheet .d-loan-ct-money { width:32%; text-align:right; vertical-align:bottom; white-space:nowrap; }
+.d-sheet .d-loan-ct-right { text-align:right; white-space:nowrap; }
+.d-sheet .d-loan-ct-center { text-align:center; }
+.d-sheet .d-loan-sig { margin-top:3pt; }
+.d-sheet .d-loan-sig td { vertical-align:bottom; }
 CSS;
     }
 

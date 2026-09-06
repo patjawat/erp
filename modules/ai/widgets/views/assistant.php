@@ -986,7 +986,13 @@ $js = <<<'JS'
         if (/HTTP status 5\d\d|provider stream failed/i.test(message)) {
             return 'OpenRouter ไม่สามารถตอบกลับได้ในขณะนี้ กรุณาลองอีกครั้ง';
         }
-        return message || 'ส่งคำถามไปยังผู้ช่วย AI ไม่สำเร็จ';
+        // ปล่อยผ่านเฉพาะข้อความไทยสั้น ๆ ที่ตั้งใจสื่อสารกับผู้ใช้ กัน error ภายใน (SQL/exception/path) หลุด
+        const isSafe = message
+            && message.length <= 300
+            && !/[\r\n]/.test(message)
+            && /[฀-๿]/.test(message)
+            && !/SQLSTATE|SQL being executed|INSERT INTO|SELECT |UPDATE |DELETE FROM|Exception|Stack trace|\/app\/|::/i.test(message);
+        return isSafe ? message : 'ส่งคำถามไปยังผู้ช่วย AI ไม่สำเร็จ กรุณาลองอีกครั้ง';
     };
 
     const consumeEventStream = async (response, handlers) => {

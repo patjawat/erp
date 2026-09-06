@@ -41,6 +41,7 @@ use app\modules\purchase\models\DocTemplate;
 use app\modules\pdfTemplate\models\PdfTemplate;
 use app\modules\pdfTemplate\services\PdfTemplateService;
 use app\modules\hr\services\DevelopmentWordPrinter;
+use app\modules\hr\services\DevelopmentReport;
 
 /**
  * DevelopmentController implements the CRUD actions for Development model.
@@ -151,6 +152,7 @@ class DevelopmentController extends Controller
         return $this->render('dashboard', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'report' => DevelopmentReport::orgSummary((int) $searchModel->thai_year),
         ]);
     }
 
@@ -461,11 +463,98 @@ class DevelopmentController extends Controller
     }
 
     /**
-     * ศูนย์รวมรายงานการเดินทางไปราชการ
+     * รายงานภาพรวมองค์กร — การพัฒนาบุคลากร (อบรม/ประชุม/ดูงาน/วิทยากร)
+     *
+     * ใช้ DevelopmentReport เป็นแหล่งตัวเลขเดียว: ปริมาณ (กิจกรรม/คน-ครั้ง/coverage),
+     * คุณภาพ (อัตราส่งสรุปผล) และงบแบบแผน-vs-ผล (แยกรายการทั้งสองฝั่ง)
      */
     public function actionReport()
     {
-        return $this->render('report');
+        $year = (int) ($this->request->get('thai_year') ?: AppHelper::YearBudget());
+        $searchModel = new DevelopmentSearch(['thai_year' => $year]);
+
+        return $this->render('report', [
+            'searchModel' => $searchModel,
+            'report' => DevelopmentReport::orgSummary($year),
+            'activityType' => $searchModel->activityType(),
+            'followup' => DevelopmentReport::followupBreakdown($year),
+            'benefitRegister' => DevelopmentReport::benefitRegister($year),
+            'pendingSummary' => DevelopmentReport::pendingSummary($year),
+            'byDepartment' => DevelopmentReport::byDepartment($year),
+            'idpCoverage' => DevelopmentReport::idpCoverage($year),
+            'year' => $year,
+        ]);
+    }
+
+    /**
+     * Drill-down รายคนในหน่วยงาน (เฟส 2) — เปิดเป็น modal จากตารางรายหน่วยงานในหน้ารายงาน
+     */
+    public function actionReportDepartment($thai_year, $department)
+    {
+        $year = (int) $thai_year;
+        $deptId = (int) $department;
+        $people = DevelopmentReport::departmentPeople($year, $deptId);
+        $name = (string) (new \yii\db\Query())
+            ->select('name')->from('tree')->where(['id' => $deptId])->scalar();
+        $name = $name !== '' ? $name : 'ไม่ระบุหน่วยงาน';
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="bi bi-people me-1"></i> รายบุคคล: ' . Html::encode($name),
+                'content' => $this->renderAjax('_report_department', ['people' => $people, 'name' => $name, 'year' => $year]),
+            ];
+        }
+
+        return $this->render('_report_department', ['people' => $people, 'name' => $name, 'year' => $year]);
+    }
+
+    /**
+     * รายงานสรุปการพัฒนาบุคลากรประจำปี แบบพิมพ์ได้ (เฟส 4) — ตามมาตรฐาน HA I-5.2
+     *
+     * เอกสาร HTML เดี่ยว (layout=false) สำหรับสั่งพิมพ์/บันทึก PDF จากเบราว์เซอร์
+     * ใช้ตัวเลขชุดเดียวกับหน้ารายงาน (DevelopmentReport) เพื่อให้ตรงกันทุกที่
+     */
+    public function actionReportPrint($thai_year = null)
+    {
+        $year = (int) ($thai_year ?: AppHelper::YearBudget());
+        $searchModel = new DevelopmentSearch(['thai_year' => $year]);
+        $this->layout = false;
+
+        $director = SiteHelper::viewDirector();
+
+        return $this->render('report_print', [
+            'year' => $year,
+            'info' => SiteHelper::getInfo(),
+            'directorName' => is_array($director) ? ($director['fullname'] ?? null) : null,
+            'report' => DevelopmentReport::orgSummary($year),
+            'activityType' => $searchModel->activityType(),
+            'monthly' => $searchModel->listSummaryMonth(),
+            'byDepartment' => DevelopmentReport::byDepartment($year),
+            'followup' => DevelopmentReport::followupBreakdown($year),
+            'benefitRegister' => DevelopmentReport::benefitRegister($year),
+            'idpCoverage' => DevelopmentReport::idpCoverage($year),
+        ]);
+    }
+
+    /**
+     * สมุดพกการพัฒนารายบุคคล (เฟส 3) — เปิดเป็น modal จาก drill-down หรือช่องค้นหาในหน้ารายงาน
+     */
+    public function actionReportPerson($emp_id, $thai_year)
+    {
+        $year = (int) $thai_year;
+        $data = DevelopmentReport::personPassport($year, (int) $emp_id);
+        $idp = DevelopmentReport::personIdp((int) $emp_id, $year);
+
+        if ($this->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => '<i class="bi bi-person-vcard me-1"></i> สมุดพกการพัฒนา: ' . Html::encode($data['emp']['name']),
+                'content' => $this->renderAjax('_report_person', ['data' => $data, 'idp' => $idp, 'year' => $year]),
+            ];
+        }
+
+        return $this->render('_report_person', ['data' => $data, 'idp' => $idp, 'year' => $year]);
     }
 
     /**

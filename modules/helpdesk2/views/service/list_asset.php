@@ -36,6 +36,13 @@ $equipStats = $equipStats ?? [
 <?php echo $this->render('@app/modules/helpdesk2/menu', ['active' => $active]) ?>
 <?php $this->endBlock(); ?>
 
+<!-- ===== แถบสลับมุมมอง ===== -->
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="btn-group btn-group-sm" role="group" aria-label="สลับมุมมองทรัพย์สิน">
+        <?= Html::a('<i class="bi bi-list-ul me-1"></i>รายการทั้งหมด', ['asset'], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('<i class="bi bi-diagram-3 me-1"></i>สรุปรายหน่วยงาน', ['asset-by-dept'], ['class' => 'btn btn-outline-primary']) ?>
+    </div>
+</div>
 
 <?= $this->render('@app/modules/am/views/equip/kpi_summary', ['equipStats' => $equipStats]) ?>
 

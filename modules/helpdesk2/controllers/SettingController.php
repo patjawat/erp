@@ -254,6 +254,47 @@ class SettingController extends Controller
         return $this->redirect(['/helpdesk/setting/index']);
     }
 
+    /**
+     * บันทึกเวลาแก้ไขฐาน (SLA) แยกตามกลุ่มงานซ่อม — ผู้ใช้กรอกเป็น "วัน" (ระดับความเร่งด่วนปานกลาง)
+     * เก็บภายในเป็นนาที (วัน × 1440) ที่ key group_resolve_min
+     */
+    public function actionSaveGroupSla()
+    {
+        $days = Yii::$app->request->post('group_days', []);
+        if (!is_array($days)) {
+            Yii::$app->session->setFlash('error', 'ข้อมูลเวลาแก้ไขไม่ถูกต้อง');
+            return $this->redirect(['/helpdesk/setting/index']);
+        }
+
+        $record = HelpdeskSlaSetting::getRecord();
+        $config = $record->getConfig();
+        if (!is_array($config)) {
+            $config = [];
+        }
+
+        $normalized = [];
+        foreach ($days as $group => $v) {
+            $key = (string) (int) $group;
+            if ($key === '0') {
+                continue;
+            }
+            if (is_numeric($v) && (float) $v > 0) {
+                $normalized[$key] = (int) round((float) $v * 1440); // วัน → นาที
+            }
+        }
+
+        if (empty($normalized)) {
+            Yii::$app->session->setFlash('error', 'กรุณากรอกเวลาแก้ไขฐานอย่างน้อย 1 กลุ่ม (มากกว่า 0 วัน)');
+            return $this->redirect(['/helpdesk/setting/index']);
+        }
+
+        $config['group_resolve_min'] = $normalized;
+        $record->setConfig($config);
+
+        Yii::$app->session->setFlash('success', 'บันทึกเวลาแก้ไขฐาน SLA ตามกลุ่มงานเรียบร้อย');
+        return $this->redirect(['/helpdesk/setting/index']);
+    }
+
     // ─────────────────────────────────────────────
     //  พิมพ์ใบส่งซ่อม PDF
     // ─────────────────────────────────────────────

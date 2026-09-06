@@ -8,6 +8,7 @@ use yii\web\Controller;
 use app\modules\sm\components\SmHelper;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
+use app\modules\sm\services\PurchaseDashboardService;
 use yii\web\Response;
 use yii\db\Expression;
 /**
@@ -27,9 +28,13 @@ class DefaultController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['name' => 'order']);
 
+        $year = $searchModel->thai_year ?: AppHelper::YearBudget();
+        $dashboard = new PurchaseDashboardService($year);
+
        return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'dashboard' => $dashboard,
         ]);
     }
 
@@ -252,6 +257,39 @@ class DefaultController extends Controller
     //     ]);
     //     }
     // }
+
+    // ตารางรายละเอียดประเภทพัสดุย่อย (AJAX) — กรองทั้งปี/รายเดือน
+    public function actionSubtypeDetail($thai_year = null, $month = null)
+    {
+        $year = $thai_year ?: AppHelper::YearBudget();
+        $dashboard = new PurchaseDashboardService($year);
+        $month = ($month === null || $month === '') ? null : (int) $month;
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'content' => $this->renderAjax('_subtype_table', [
+                'dashboard' => $dashboard,
+                'month' => $month,
+            ]),
+        ];
+    }
+
+    // Drill-down (modal): ใบที่ตรวจรับแล้วยังไม่เข้าคลัง ตามประเภท/หมวด/เดือน
+    public function actionPendingItems($thai_year = null, $subtype = null, $cat = null, $month = null, $label = null)
+    {
+        $year = $thai_year ?: AppHelper::YearBudget();
+        $dashboard = new PurchaseDashboardService($year);
+        $month = ($month === null || $month === '') ? null : (int) $month;
+        $data = $dashboard->pendingStockItems($subtype ?: null, $cat ?: null, $month);
+
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return [
+            'status' => 'success',
+            'title' => '<i class="bi bi-box-seam me-1"></i> ค้างเข้าคลัง: ' . ($label ?: ($subtype ?: 'รายการ')),
+            'content' => $this->renderAjax('_pending_items', ['data' => $data]),
+            'footer' => '<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>',
+        ];
+    }
 
     public function actionDemo()
     {

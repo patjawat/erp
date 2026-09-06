@@ -3,6 +3,7 @@
 namespace app\modules\inventoryV2\controllers;
 
 use app\models\Categorise;
+use app\modules\inventoryV2\components\CloseMonthAutofixService;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\inventoryV2\models\StockBalance;
@@ -1629,6 +1630,276 @@ class ReportController extends Controller
     }
 
     /**
+     * Doctor ปิดเดือน (วิเคราะห์): ไล่ทุกงวดตั้งแต่ต้นจนถึงงวดเป้าหมาย (ไม่เขียน DB) แล้วจำแนกพัสดุที่มีปัญหา
+     * คืน: summary ต่อคลัง + รายการรวมทุกคลัง จำแนกเหตุ + วิธีซ่อม + ธงว่าซ่อมอัตโนมัติได้ไหม
+     */
+    public function actionCloseMonthDoctor()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        $year = (int) $this->request->post('year', date('Y'));
+        $month = (int) $this->request->post('month', (int) date('n'));
+        $resolved = $this->resolveCloseWarehouseIds($this->request->post('warehouse_id'));
+        if ($resolved['error'] !== null) {
+            return ['success' => false, 'message' => $resolved['error']];
+        }
+
+        $whNameMap = [];
+        foreach (Warehouse::find()->select(['id', 'warehouse_name'])->where(['id' => $resolved['ids']])->asArray()->all() as $w) {
+            $whNameMap[(int) $w['id']] = (string) $w['warehouse_name'];
+        }
+
+        $items = [];
+        $summary = ['value_only_desync' => 0, 'negative_qty' => 0, 'zero_cost' => 0, 'total' => 0];
+        $monthsScanned = 0;
+        $multi = count($resolved['ids']) > 1;
+        foreach ($resolved['ids'] as $wid) {
+            $diag = self::diagnoseCloseMonth($wid, $year, $month);
+            $monthsScanned = max($monthsScanned, $diag['months']);
+            foreach ($diag['summary'] as $k => $v) {
+                if (isset($summary[$k])) {
+                    $summary[$k] += $v;
+                }
+            }
+            foreach ($diag['items'] as $it) {
+                $it['warehouse_id'] = $wid;
+                $it['warehouse_name'] = $multi ? ($whNameMap[$wid] ?? (string) $wid) : '';
+                $items[] = $it;
+            }
+        }
+        usort($items, function ($a, $b) {
+            return [$a['auto_fixable'], $a['worst_value']] <=> [$b['auto_fixable'], $b['worst_value']];
+        });
+
+        return [
+            'success' => true,
+            'months_scanned' => $monthsScanned,
+            'summary' => $summary,
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * Doctor ปิดเดือน (ซ่อมอัตโนมัติ): ปิดเดือนใหม่ทุกงวดตั้งแต่ต้นจนถึงงวดเป้าหมายของคลังที่เลือก
+     * เพื่อให้ทุกงวดถูกคำนวณด้วยวิธีต้นทุนถัวเฉลี่ยล่าสุด (ล้างมูลค่าติดลบเทียม) — เขียน snapshot รายงานเท่านั้น
+     * ไม่แก้จำนวน/เอกสารต้นทาง จึงไม่กระทบยอดคงเหลือจริง; ปัญหา "จำนวนติดลบ" ยังต้องซ่อมด้วยมือ
+     */
+    public function actionCloseMonthAutofix()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        if (!$this->request->isPost) {
+            return ['success' => false, 'message' => 'ต้องเรียกผ่าน POST'];
+        }
+        $year = (int) $this->request->post('year', date('Y'));
+        $month = (int) $this->request->post('month', (int) date('n'));
+        $resolved = $this->resolveCloseWarehouseIds($this->request->post('warehouse_id'));
+        if ($resolved['error'] !== null) {
+            return ['success' => false, 'message' => $resolved['error']];
+        }
+
+        $target = $year * 12 + $month;
+        $closedMonths = 0;
+        $shiftItems = 0;
+        $shiftOrders = 0;
+        $zeroCostItems = 0;
+        $skippedShortage = [];   // จำนวนติดลบจริง (จ่ายเกิน) — ต้องตรวจนับ
+        $zeroCostNoPrice = [];    // จ่ายไม่มีต้นทุน แต่ไม่เคยมีราคาซื้อในระบบ — ต้องกรอกราคาเอง
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($resolved['ids'] as $wid) {
+                [$sy, $sm] = self::firstStockOrderMonth($wid);
+                if ($sy === null || ($sy * 12 + $sm) > $target) {
+                    continue;
+                }
+
+                // 1) จำนวนติดลบจากวันที่ผกผัน → ย้ายจำนวนรับข้ามเดือน (endpoint คงเดิม)
+                $shiftPlan = CloseMonthAutofixService::planReceiptShift($wid, $year, $month);
+                $applied = CloseMonthAutofixService::applyReceiptShift($shiftPlan['fixable']);
+                $shiftItems += $applied['items'];
+                $shiftOrders += $applied['orders'];
+                foreach ($shiftPlan['skipped'] as $sk) {
+                    $skippedShortage[] = $sk['item_code'];
+                }
+
+                // 2) จ่ายไม่มีต้นทุน → เติมราคาซื้อล่าสุดลงแถวรับเข้าราคา 0
+                $diag = self::diagnoseCloseMonth($wid, $year, $month);
+                $zeroCodes = [];
+                foreach ($diag['items'] as $it) {
+                    if ($it['primary_reason'] === 'zero_cost') {
+                        $zeroCodes[] = $it['item_code'];
+                    }
+                }
+                $zcPlan = CloseMonthAutofixService::planZeroCost($wid, $zeroCodes);
+                $zcFixedCodes = array_map(static fn($p) => $p['item_code'], $zcPlan);
+                $zeroCostNoPrice = array_merge($zeroCostNoPrice, array_values(array_diff($zeroCodes, $zcFixedCodes)));
+                $za = CloseMonthAutofixService::applyZeroCost($zcPlan);
+                $zeroCostItems += $za['items'];
+
+                // 3) ปิดเดือนใหม่ทุกงวด (WA + รับรายการที่เพิ่งซ่อม)
+                $opening = [];
+                $ty = $sy;
+                $tm = $sm;
+                while (($ty * 12 + $tm) <= $target) {
+                    $rows = self::computeMonthlyRows($wid, $ty, $tm, $opening);
+                    self::persistMonthlyRows($wid, $ty, $tm, $rows);
+                    $opening = self::closingMapFromRows($rows);
+                    $closedMonths++;
+                    $tm++;
+                    if ($tm > 12) { $tm = 1; $ty++; }
+                }
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e, __METHOD__);
+            return ['success' => false, 'message' => 'ซ่อมไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        // วิเคราะห์ซ้ำหลังซ่อม เพื่อรายงานว่าที่เหลือคือปัญหาที่ต้องซ่อมมือ
+        $remaining = ['value_only_desync' => 0, 'negative_qty' => 0, 'zero_cost' => 0, 'total' => 0];
+        foreach ($resolved['ids'] as $wid) {
+            foreach (self::diagnoseCloseMonth($wid, $year, $month)['summary'] as $k => $v) {
+                if (isset($remaining[$k])) {
+                    $remaining[$k] += $v;
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'closed_months' => $closedMonths,
+            'shift_items' => $shiftItems,
+            'shift_orders' => $shiftOrders,
+            'zero_cost_items' => $zeroCostItems,
+            'skipped_shortage' => array_values(array_unique($skippedShortage)),
+            'zero_cost_no_price' => array_values(array_unique($zeroCostNoPrice)),
+            'remaining' => $remaining,
+            'message' => "ซ่อมเรียบร้อย: ย้ายจำนวนรับ {$shiftItems} พัสดุ · เติมราคาทุน {$zeroCostItems} พัสดุ · ปิดเดือนใหม่ {$closedMonths} งวด",
+        ];
+    }
+
+    /**
+     * ตั้งยอดปิดงวด (period-end override): กำหนดยอด/มูลค่าคงเหลือของพัสดุ ณ สิ้นงวดตรง ๆ
+     * (ตรวจนับจริงแล้วล็อกยอด) เก็บเป็นเอกสาร ADJUST source_type=PERIOD_SET (ยกเลิก/แก้ใหม่ได้)
+     * แล้วปิดเดือนใหม่ตั้งแต่งวดนี้ถึงงวดล่าสุด เพื่อให้ยอดยกไปเป็นต้นตั้งต้นเดือนถัดไป
+     * รับ clear=1 เพื่อยกเลิกการตั้งยอด (กลับไปคำนวณตามการเคลื่อนไหว)
+     */
+    public function actionSetPeriodClosing()
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        if (!$this->request->isPost) {
+            return ['success' => false, 'message' => 'ต้องเรียกผ่าน POST'];
+        }
+        $wid = (int) $this->request->post('warehouse_id', 0);
+        $itemCode = trim((string) $this->request->post('item_code', ''));
+        $year = (int) $this->request->post('year', 0);
+        $month = (int) $this->request->post('month', 0);
+        $clear = (int) $this->request->post('clear', 0) === 1;
+        $qty = (float) $this->request->post('closing_qty', 0);
+        $value = (float) $this->request->post('closing_value', 0);
+        $note = trim((string) $this->request->post('note', ''));
+
+        if ($wid <= 0 || $itemCode === '' || $year <= 0 || $month < 1 || $month > 12) {
+            return ['success' => false, 'message' => 'ข้อมูลไม่ครบ (คลัง/พัสดุ/งวด)'];
+        }
+        if (!$clear && ($qty < -0.0000001 || $value < -0.005)) {
+            return ['success' => false, 'message' => 'ยอด/มูลค่าคงเหลือต้องไม่ติดลบ'];
+        }
+
+        $lastDay = (int) date('t', strtotime(sprintf('%04d-%02d-01', $year, $month)));
+        $dateStart = sprintf('%04d-%02d-01 00:00:00', $year, $month);
+        $dateEnd = sprintf('%04d-%02d-%02d 23:59:59', $year, $month, $lastDay);
+        $now = date('Y-m-d H:i:s');
+        $uid = Yii::$app->has('user', true) ? (Yii::$app->user->id ?? null) : null;
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // ลบใบตั้งยอดเดิมของพัสดุ+งวด+คลังนี้ (stock_detail ลบตาม FK cascade)
+            $oldIds = (new Query())
+                ->select('so.id')
+                ->from(['so' => StockOrder::tableName()])
+                ->innerJoin(['sd' => StockDetail::tableName()], 'sd.stock_order_id = so.id')
+                ->where([
+                    'so.order_type' => StockOrder::ORDER_TYPE_ADJUST,
+                    'so.source_type' => 'PERIOD_SET',
+                    'so.main_warehouse_id' => $wid,
+                    'sd.item_code' => $itemCode,
+                ])
+                ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
+                ->column();
+            if (!empty($oldIds)) {
+                StockOrder::deleteAll(['id' => $oldIds]);
+            }
+
+            if (!$clear) {
+                $order = new StockOrder();
+                $order->order_no = 'PSET-' . date('YmdHis') . '-' . substr(Yii::$app->security->generateRandomString(6), 0, 6);
+                $order->order_type = StockOrder::ORDER_TYPE_ADJUST;
+                $order->source_type = 'PERIOD_SET';
+                $order->order_date = sprintf('%04d-%02d-%02d 23:59:00', $year, $month, $lastDay);
+                $order->main_warehouse_id = $wid;
+                $order->status = StockOrder::STATUS_CONFIRMED;
+                $order->ref = $note ?: 'ตั้งยอดปิดงวด';
+                $order->data_json = [
+                    'period_set' => true,
+                    'period' => sprintf('%04d-%02d', $year, $month),
+                    'period_override' => ['closing_qty' => $qty, 'closing_value' => $value, 'note' => $note],
+                    'stock_posted_at' => $now,
+                ];
+                $order->created_at = $now;
+                $order->created_by = $uid;
+                if (!$order->save(false)) {
+                    throw new \RuntimeException('บันทึกใบตั้งยอดไม่สำเร็จ');
+                }
+                $detail = new StockDetail();
+                $detail->stock_order_id = $order->id;
+                $detail->item_code = $itemCode;
+                $detail->qty = 0; // ไม่กระทบ stock_balance/FIFO — เป็นการตั้งยอดรายงานปิดงวดเท่านั้น
+                $detail->remain_qty = 0;
+                $detail->unit_price = null;
+                $detail->lot_number = 'PERIOD_SET';
+                $detail->data_json = json_encode([
+                    'period_override' => ['closing_qty' => $qty, 'closing_value' => $value, 'note' => $note],
+                ], JSON_UNESCAPED_UNICODE);
+                $detail->created_at = $now;
+                $detail->created_by = $uid;
+                if (!$detail->save(false)) {
+                    throw new \RuntimeException('บันทึกรายละเอียดใบตั้งยอดไม่สำเร็จ');
+                }
+            }
+
+            // ปิดเดือนใหม่ตั้งแต่งวดนี้ถึงงวดล่าสุดที่เคยปิด (ให้ยอดยกไปไหลต่อเนื่องถึงเดือนถัดไป)
+            $startOrd = $year * 12 + $month;
+            $lastSnap = (int) (new Query())
+                ->select(new Expression('MAX(report_year * 12 + report_month)'))
+                ->from(StockMonthlyReport::tableName())
+                ->where(['warehouse_id' => $wid])
+                ->scalar();
+            $endOrd = max($startOrd, $lastSnap);
+            $opening = self::buildOpeningForMonth($wid, $year, $month); // ยอดยกมาของงวดที่ตั้ง (chain จากต้น)
+            $closed = 0;
+            for ($ord = $startOrd; $ord <= $endOrd; $ord++) {
+                $ry = intdiv($ord - 1, 12);
+                $rm = (($ord - 1) % 12) + 1;
+                $rows = self::computeMonthlyRows($wid, $ry, $rm, $opening);
+                self::persistMonthlyRows($wid, $ry, $rm, $rows);
+                $opening = self::closingMapFromRows($rows);
+                $closed++;
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => $clear ? 'ยกเลิกการตั้งยอดปิดงวดแล้ว' : 'ตั้งยอดปิดงวดเรียบร้อย',
+                'closed_months' => $closed,
+            ];
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e, __METHOD__);
+            return ['success' => false, 'message' => 'ทำรายการไม่สำเร็จ: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * ตัวอย่างก่อนปิดเดือน: คำนวณยอด (ไม่บันทึก) แล้วคืน summary + ตารางตามประเภท + รายการที่ต้องตรวจสอบ
      * ให้เจ้าหน้าที่บัญชียืนยันความถูกต้องก่อนกดปิดเดือนจริง
      */
@@ -2051,37 +2322,68 @@ class ReportController extends Controller
             ->andWhere(['so.main_warehouse_id' => $warehouseId])
             ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
             ->andWhere(['so.status' => StockOrder::STATUS_CONFIRMED])
+            ->andWhere(['not', ['so.source_type' => 'PERIOD_SET']]) // ตั้งยอดปิดงวด ไม่ใช่การเคลื่อนไหวปกติ (นับแยก)
             ->all();
 
-        $adjustIn = [];
-        $adjustOut = [];
+        // ── ตั้งยอดปิดงวด (period-end override): เอกสาร ADJUST source_type=PERIOD_SET ที่ระบุยอด/มูลค่าคงเหลือเป้าหมาย
+        // ระบบจะ "บังคับ" closing ของพัสดุนั้นในงวดนี้เป็นค่าที่ตั้ง แล้วยกไปเป็นต้นตั้งต้นเดือนถัดไป (คงอยู่แม้ปิดใหม่)
+        $periodOverrides = [];
+        foreach ((new Query())
+            ->select(['item_code' => 'sd.item_code', 'data_json' => 'sd.data_json', 'so_id' => 'so.id'])
+            ->from(['sd' => StockDetail::tableName()])
+            ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
+            ->where([
+                'so.order_type' => StockOrder::ORDER_TYPE_ADJUST,
+                'so.source_type' => 'PERIOD_SET',
+                'so.main_warehouse_id' => $warehouseId,
+                'so.status' => StockOrder::STATUS_CONFIRMED,
+            ])
+            ->andWhere(['between', 'so.order_date', $dateStart, $dateEnd])
+            ->orderBy(['so.id' => SORT_ASC]) // ใบล่าสุดชนะ
+            ->all() as $ov) {
+            $j = self::decodeStockDetailDataJson($ov['data_json'] ?? null);
+            if (!isset($j['period_override']) || !is_array($j['period_override'])) {
+                continue;
+            }
+            $periodOverrides[(string) $ov['item_code']] = [
+                'closing_qty' => (float) ($j['period_override']['closing_qty'] ?? 0),
+                'closing_value' => (float) ($j['period_override']['closing_value'] ?? 0),
+                'note' => (string) ($j['period_override']['note'] ?? ''),
+            ];
+            $itemCodes[] = (string) $ov['item_code'];
+        }
+        $itemCodes = array_unique($itemCodes);
+
+        // ADJUST แยกเป็น 3 กลุ่ม เพื่อรองรับการตีมูลค่าแบบต้นทุนถัวเฉลี่ย (weighted average):
+        //  - adjInQty / adjInCost : ปรับเพิ่มที่มีจำนวน (ต้นทุนจริงต่อหน่วยที่กรอก) → เข้า pool เพื่อกำหนดถัวเฉลี่ย
+        //  - adjOutQty            : ปรับลดที่มีจำนวน → ตีมูลค่าออกด้วยถัวเฉลี่ยภายหลัง (ไม่ใช้ราคาบนแถว)
+        //  - valueOnlyNet         : ปรับมูลค่าล้วน (จำนวน 0 / adjust_value_only) → พับรวมเข้า pool value ขยับถัวเฉลี่ย
+        // เดิมตีมูลค่าจ่ายออก/ปรับลดด้วยราคาบนแถว ทำให้มูลค่าถูกดูดออกไม่สัมพันธ์กับจำนวน จนยอดยกไป (มูลค่า) ติดลบ
+        // ทั้งที่จำนวนไม่ติดลบ — วิธีถัวเฉลี่ยรับประกัน closing_value = closing_qty × avg ≥ 0 เมื่อจำนวน ≥ 0
+        $adjInQty = [];
+        $adjInCost = [];
+        $adjOutQty = [];
+        $valueOnlyNet = [];
         foreach ($adjustRows as $row) {
             $code = $row['item_code'];
             $q = (float) $row['qty'];
             $price = (float) $row['unit_price'];
             $dataJson = self::decodeStockDetailDataJson($row['data_json'] ?? null);
             $valueDelta = self::extractNumericStockDetailJsonValue($dataJson, 'value_delta');
-            if (!isset($adjustIn[$code])) {
-                $adjustIn[$code] = ['qty' => 0, 'value' => 0];
-            }
-            if (!isset($adjustOut[$code])) {
-                $adjustOut[$code] = ['qty' => 0, 'value' => 0];
-            }
+            $adjInQty[$code] = $adjInQty[$code] ?? 0.0;
+            $adjInCost[$code] = $adjInCost[$code] ?? 0.0;
+            $adjOutQty[$code] = $adjOutQty[$code] ?? 0.0;
+            $valueOnlyNet[$code] = $valueOnlyNet[$code] ?? 0.0;
             if ($valueDelta !== null && (abs($q) < 0.0000001 || !empty($dataJson['adjust_value_only']))) {
-                if ($valueDelta >= 0) {
-                    $adjustIn[$code]['value'] += $valueDelta;
-                } else {
-                    $adjustOut[$code]['value'] += -$valueDelta;
-                }
+                $valueOnlyNet[$code] += $valueDelta;
                 $itemCodes[] = $code;
                 continue;
             }
             if ($q >= 0) {
-                $adjustIn[$code]['qty'] += $q;
-                $adjustIn[$code]['value'] += $q * $price;
+                $adjInQty[$code] += $q;
+                $adjInCost[$code] += $q * $price;
             } else {
-                $adjustOut[$code]['qty'] += -$q;
-                $adjustOut[$code]['value'] += -$q * $price;
+                $adjOutQty[$code] += -$q;
             }
             $itemCodes[] = $code;
         }
@@ -2110,21 +2412,58 @@ class ReportController extends Controller
             $sub = $outSub[$itemCode] ?? ['qty' => 0, 'value' => 0];
             $hosp = $outHosp[$itemCode] ?? ['qty' => 0, 'value' => 0];
             $outSubQty = $sub['qty'];
-            $outSubValue = $sub['value'];
             $outHospQty = $hosp['qty'];
-            $outHospValue = $hosp['value'];
             $totalOutQty = $outSubQty + $outHospQty;
+
+            $aInQty = $adjInQty[$itemCode] ?? 0.0;
+            $aInCost = $adjInCost[$itemCode] ?? 0.0;
+            $aOutQty = $adjOutQty[$itemCode] ?? 0.0;
+            $voNet = $valueOnlyNet[$itemCode] ?? 0.0;
+
+            // ต้นทุนถัวเฉลี่ยของ pool = (ยกมา + รับเข้า + ปรับเพิ่มมีจำนวน + ปรับมูลค่าล้วน) ÷ จำนวนใน pool
+            $poolQty = $openingQty + $inQty + $aInQty;
+            $poolValue = $openingValue + $inValue + $aInCost + $voNet;
+            $avgCost = ($poolQty > 0.0000001) ? ($poolValue / $poolQty) : 0.0;
+
+            // ตีมูลค่าจ่ายออก / ปรับลด ด้วยต้นทุนถัวเฉลี่ย (ไม่ใช้ราคาบนแถว) → มูลค่าคงเหลือสัมพันธ์กับจำนวนเสมอ
+            $outSubValue = $outSubQty * $avgCost;
+            $outHospValue = $outHospQty * $avgCost;
             $totalOutValue = $outSubValue + $outHospValue;
+            $adjustOutQtyValue = $aOutQty * $avgCost;
 
-            $adjIn = $adjustIn[$itemCode] ?? ['qty' => 0, 'value' => 0];
-            $adjOut = $adjustOut[$itemCode] ?? ['qty' => 0, 'value' => 0];
-            $adjustInQty = $adjIn['qty'];
-            $adjustInValue = $adjIn['value'];
-            $adjustOutQty = $adjOut['qty'];
-            $adjustOutValue = $adjOut['value'];
+            $closingQty = $poolQty - $totalOutQty - $aOutQty;
+            $closingValue = $poolValue - $totalOutValue - $adjustOutQtyValue;
+            // กันเศษ floating: ยอด 0 ให้เป็น 0 จริง (กันมูลค่าติดลบจิ๋ว ๆ จากการปัดเศษถัวเฉลี่ย)
+            if (abs($closingQty) < 0.0000001) {
+                $closingQty = 0.0;
+            }
+            if (abs($closingValue) < 0.005) {
+                $closingValue = 0.0;
+            }
 
-            $closingQty = $openingQty + $inQty + $adjustInQty - $totalOutQty - $adjustOutQty;
-            $closingValue = $openingValue + $inValue + $adjustInValue - $totalOutValue - $adjustOutValue;
+            // ฟิลด์แสดงผล: แยก value-only ตามเครื่องหมายเข้าคอลัมน์ปรับเพิ่ม/ปรับลด เพื่อให้ผลรวมคอลัมน์ยังบวก-ลบครบ
+            // (opening + in + adjust_in − out − adjust_out = closing ยังคงถูกต้อง)
+            $adjustInQty = $aInQty;
+            $adjustInValue = $aInCost + ($voNet > 0 ? $voNet : 0.0);
+            $adjustOutQty = $aOutQty;
+            $adjustOutValue = $adjustOutQtyValue + ($voNet < 0 ? -$voNet : 0.0);
+
+            // ตั้งยอดปิดงวด: บังคับ closing = ยอด/มูลค่าที่ตั้ง แล้วพับส่วนต่างเข้าคอลัมน์ปรับปรุง
+            // เพื่อให้สมการ (ยกมา+รับ+ปรับเพิ่ม−จ่าย−ปรับลด = ยกไป) ยังถูกต้อง และยอดยกไปนี้เป็นต้นตั้งต้นเดือนหน้า
+            $isOverride = false;
+            $overrideNote = '';
+            if (isset($periodOverrides[$itemCode])) {
+                $isOverride = true;
+                $overrideNote = $periodOverrides[$itemCode]['note'];
+                $targetQty = (float) $periodOverrides[$itemCode]['closing_qty'];
+                $targetValue = (float) $periodOverrides[$itemCode]['closing_value'];
+                $diffQty = $targetQty - $closingQty;
+                $diffValue = $targetValue - $closingValue;
+                if ($diffQty >= 0) { $adjustInQty += $diffQty; } else { $adjustOutQty += -$diffQty; }
+                if ($diffValue >= 0) { $adjustInValue += $diffValue; } else { $adjustOutValue += -$diffValue; }
+                $closingQty = $targetQty;
+                $closingValue = $targetValue;
+            }
 
             $item = $items[$itemCode] ?? null;
             $unitName = $item && method_exists($item, 'getUnitName') ? $item->getUnitName() : null;
@@ -2151,6 +2490,8 @@ class ReportController extends Controller
                 'total_out_value' => $totalOutValue,
                 'closing_qty' => $closingQty,
                 'closing_value' => $closingValue,
+                'is_override' => $isOverride,
+                'override_note' => $overrideNote,
             ];
         }
 
@@ -2226,6 +2567,12 @@ class ReportController extends Controller
             $r->created_by = $createdBy;
             $r->save(false);
         }
+    }
+
+    /** wrapper สาธารณะของ firstStockOrderMonth สำหรับ service ภายนอก (CloseMonthAutofixService) */
+    public static function firstStockOrderMonthPublic($warehouseId): array
+    {
+        return self::firstStockOrderMonth($warehouseId);
     }
 
     /** ปี/เดือนแรกที่มี stock_order ในคลังนี้ (จุดเริ่มของ chain) — @return array{0:?int,1:?int} */
@@ -2312,6 +2659,120 @@ class ReportController extends Controller
         $rows = self::computeMonthlyRows($warehouseId, $targetYear, $targetMonth, $opening);
         self::persistMonthlyRows($warehouseId, $targetYear, $targetMonth, $rows);
         return ['count' => count($rows)];
+    }
+
+    /**
+     * Doctor ปิดเดือน: ไล่คำนวณทุกงวด (chain in-memory, ไม่เขียน DB) ตั้งแต่งวดแรกที่มีเอกสารจนถึงงวดเป้าหมาย
+     * แล้วจำแนกปัญหาแต่ละพัสดุพร้อม "งวดแรกที่เริ่มเพี้ยน" + เหตุ + วิธีซ่อมที่เหมาะสม
+     *
+     * เหตุ (reason) และวิธีซ่อม:
+     *  - value_only_desync : จำนวนไม่ติดลบ แต่มูลค่าติดลบ/ค้าง (จำนวน 0 แต่มูลค่า ≠ 0) → ปิดเดือนใหม่ (ถัวเฉลี่ยจัดให้เอง)
+     *  - negative_qty      : จำนวนคงเหลือติดลบ (มักเกิดจาก order_date ผกผัน/จ่ายเกินในงวด) → ตรวจ order_date หรือปรับยอด
+     *  - zero_cost         : จ่ายออกแต่ราคาทุน = 0 (ไม่เคยรับเข้าในคลังนี้) → เติมราคาทุนจากราคาซื้อล่าสุด
+     *
+     * READ-ONLY: ไม่เขียน DB (ใช้เฉพาะ computeMonthlyRows ซึ่งเป็น pure function)
+     *
+     * @return array{months:int, from:?string, to:string, items:array<int,array<string,mixed>>, summary:array<string,int>}
+     */
+    public static function diagnoseCloseMonth($warehouseId, $targetYear, $targetMonth): array
+    {
+        [$sy, $sm] = self::firstStockOrderMonth($warehouseId);
+        $target = $targetYear * 12 + $targetMonth;
+        if ($sy === null || ($sy * 12 + $sm) > $target) {
+            return ['months' => 0, 'from' => null, 'to' => sprintf('%04d-%02d', $targetYear, $targetMonth), 'items' => [], 'summary' => ['value_only_desync' => 0, 'negative_qty' => 0, 'zero_cost' => 0, 'total' => 0]];
+        }
+
+        $opening = [];
+        $issues = []; // item_code => aggregated issue
+        $monthsScanned = 0;
+        $ty = $sy;
+        $tm = $sm;
+        while (($ty * 12 + $tm) <= $target) {
+            $rows = self::computeMonthlyRows($warehouseId, $ty, $tm, $opening);
+            $next = [];
+            $ym = sprintf('%04d-%02d', $ty, $tm);
+            foreach ($rows as $r) {
+                $code = (string) $r['item_code'];
+                $cq = (float) $r['closing_qty'];
+                $cv = (float) $r['closing_value'];
+                $next[$code] = ['closing_qty' => $cq, 'closing_value' => $cv];
+
+                $negQty = $cq < -0.000001;
+                $valueDesync = !$negQty && ($cv < -0.005 || (abs($cq) < 0.000001 && abs($cv) > 0.005));
+                $zeroCost = ((float) $r['total_out_qty'] > 0.005 && abs((float) $r['total_out_value']) < 0.005);
+                if (!$negQty && !$valueDesync && !$zeroCost) {
+                    continue;
+                }
+                if (!isset($issues[$code])) {
+                    $issues[$code] = [
+                        'item_code' => $code, 'first_bad_month' => $ym,
+                        'worst_qty' => 0.0, 'worst_value' => 0.0,
+                        'reasons' => [], 'last_qty' => $cq, 'last_value' => $cv,
+                    ];
+                }
+                if ($cq < $issues[$code]['worst_qty']) $issues[$code]['worst_qty'] = $cq;
+                if ($cv < $issues[$code]['worst_value']) $issues[$code]['worst_value'] = $cv;
+                $issues[$code]['last_qty'] = $cq;
+                $issues[$code]['last_value'] = $cv;
+                if ($negQty) $issues[$code]['reasons']['negative_qty'] = true;
+                if ($valueDesync) $issues[$code]['reasons']['value_only_desync'] = true;
+                if ($zeroCost) $issues[$code]['reasons']['zero_cost'] = true;
+            }
+            $opening = $next;
+            $monthsScanned++;
+            $tm++;
+            if ($tm > 12) { $tm = 1; $ty++; }
+        }
+
+        // เหตุหลัก (primary) เพื่อจัดกลุ่ม/แนะวิธีซ่อม — จำนวนติดลบสำคัญสุด เพราะกระทบทั้งจำนวนและมูลค่า
+        $priority = ['negative_qty', 'value_only_desync', 'zero_cost'];
+        $fixHint = [
+            'negative_qty' => 'ตรวจ order_date ผกผัน (จ่ายก่อนรับ) หรือปรับยอดคงเหลือ',
+            'value_only_desync' => 'ปิดเดือนใหม่ — ระบบตีมูลค่าถัวเฉลี่ยให้เอง (ซ่อมอัตโนมัติได้)',
+            'zero_cost' => 'เติมราคาทุนจากราคาซื้อล่าสุดของพัสดุ',
+        ];
+        $summary = ['value_only_desync' => 0, 'negative_qty' => 0, 'zero_cost' => 0, 'total' => 0];
+        $items = [];
+        $codes = array_keys($issues);
+        $titles = [];
+        if (!empty($codes)) {
+            foreach ((new Query())->select(['code', 'title'])->from(StockItem::tableName())->where(['code' => $codes])->all() as $it) {
+                $titles[(string) $it['code']] = (string) ($it['title'] ?? '');
+            }
+        }
+        foreach ($issues as $code => $it) {
+            $primary = 'zero_cost';
+            foreach ($priority as $p) {
+                if (!empty($it['reasons'][$p])) { $primary = $p; break; }
+            }
+            $summary[$primary]++;
+            $summary['total']++;
+            $items[] = [
+                'item_code' => $code,
+                'item_name' => $titles[$code] ?? $code,
+                'first_bad_month' => $it['first_bad_month'],
+                'worst_qty' => round($it['worst_qty'], 2),
+                'worst_value' => round($it['worst_value'], 2),
+                'last_qty' => round($it['last_qty'], 2),
+                'last_value' => round($it['last_value'], 2),
+                'primary_reason' => $primary,
+                'reasons' => array_keys($it['reasons']),
+                'fix_hint' => $fixHint[$primary],
+                'auto_fixable' => $primary === 'value_only_desync',
+            ];
+        }
+        // เรียง: ซ่อมอัตโนมัติไม่ได้ก่อน (ต้องคนดู) แล้วมูลค่าติดลบมากสุด
+        usort($items, function ($a, $b) {
+            return [$a['auto_fixable'], $a['worst_value']] <=> [$b['auto_fixable'], $b['worst_value']];
+        });
+
+        return [
+            'months' => $monthsScanned,
+            'from' => sprintf('%04d-%02d', $sy, $sm),
+            'to' => sprintf('%04d-%02d', $targetYear, $targetMonth),
+            'items' => $items,
+            'summary' => $summary,
+        ];
     }
 
     /**

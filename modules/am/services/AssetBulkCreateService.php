@@ -159,7 +159,7 @@ class AssetBulkCreateService
 
                 $model = new Asset();
                 $model->asset_group_id = 3;
-                $model->asset_status = 1;
+                $model->asset_status = 'active'; // FK varchar → asset_status.id (เดิม =1 ชน constraint)
                 $model->ref = substr(Yii::$app->security->generateRandomString(), 10);
                 $model->code = $code;
                 $model->asset_item_id = $template['asset_item_id'] ?? null;

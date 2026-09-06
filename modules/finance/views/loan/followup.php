@@ -1,9 +1,23 @@
 <?php
 
+use app\components\AppHelper;
 use app\modules\finance\models\FinanceLoan;
 use app\modules\finance\models\FinanceLoanFollowup;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+
+/** ช่องวันที่มาตรฐาน ERP — datepicker ไทย (พ.ศ. วว/ดด/พ.ศ.) */
+$thaiDate = static function ($model, string $attr): string {
+    $id = Html::getInputId($model, $attr);
+    return '<label class="form-label" for="' . $id . '">' . Html::encode($model->getAttributeLabel($attr)) . '</label>'
+        . DatepickerThai::widget([
+            'name' => Html::getInputName($model, $attr),
+            'value' => $model->$attr ? AppHelper::convertToThai($model->$attr) : '',
+            'options' => ['id' => $id, 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+        ])
+        . Html::error($model, $attr, ['class' => 'invalid-feedback d-block']);
+};
 
 /** @var yii\web\View $this */
 /** @var FinanceLoan $loan */
@@ -32,9 +46,9 @@ $this->beginBlock('sub-title'); ?><?= Html::encode($loan->contract_no) ?> · <?=
         <div class="col-md-5">
             <?= $form->field($letter, 'letter_no')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ลย 0033.301.05/123']) ?>
         </div>
-        <div class="col-md-3"><?= $form->field($letter, 'letter_date')->input('date') ?></div>
+        <div class="col-md-3"><?= $thaiDate($letter, 'letter_date') ?></div>
         <div class="col-md-4">
-            <?= $form->field($letter, 'new_due_at')->input('date') ?>
+            <?= $thaiDate($letter, 'new_due_at') ?>
             <div class="form-text">วันที่ระบุในหนังสือว่าให้ส่งใช้ให้แล้วเสร็จภายใน</div>
         </div>
         <div class="col-12"><?= $form->field($letter, 'note')->textarea(['rows' => 2])->label('หมายเหตุภายใน (ไม่พิมพ์ลงหนังสือ)') ?></div>

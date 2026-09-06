@@ -42,6 +42,7 @@ class WarehouseController extends Controller
                     'history-min-max-preview' => ['POST'],
                     'history-min-max-apply' => ['POST'],
                     'add-items' => ['POST'],
+                    'apply-default' => ['POST'],
                     'delete-settings-batch' => ['POST'],
                 ],
             ],
@@ -848,6 +849,167 @@ class WarehouseController extends Controller
             'status' => 'success',
             'added' => count($toInsert),
             'skipped' => count($validCodes) - count($toInsert),
+        ];
+    }
+
+    /**
+     * AJAX (POST): ตั้งค่า Min/Max เริ่มต้น (default) ให้ทุกรายการของคลังทีเดียว
+     * payload:
+     *   - warehouse_id, min_qty, max_qty
+     *   - scope: 'unconfigured' (เฉพาะที่ยังไม่ตั้ง) | 'all' (ทั้งหมด ทับค่าเดิม)
+     *   - apply_filter: 1 = จำกัดตามตัวกรองบนหน้าจอ (category_id / q)
+     *   - category_id, q  (ใช้เมื่อ apply_filter = 1)
+     *   - preview: 1 = คืนจำนวนที่จะกระทบ โดยยังไม่บันทึก
+     * จำกัด 2000 รายการ/request
+     */
+    public function actionApplyDefault()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $warehouseId = (int) $this->request->post('warehouse_id');
+        $warehouse = Warehouse::findOne(['id' => $warehouseId]);
+        if (!$warehouse) {
+            return ['status' => 'error', 'message' => 'ไม่พบคลังนี้'];
+        }
+        if (!$this->canAccessWarehouse($warehouse)) {
+            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์เข้าถึงคลังนี้'];
+        }
+
+        $scope = (string) $this->request->post('scope', 'unconfigured');
+        if (!in_array($scope, ['unconfigured', 'all'], true)) {
+            return ['status' => 'error', 'message' => 'scope ไม่ถูกต้อง'];
+        }
+        $isPreview = (int) $this->request->post('preview', 0) === 1;
+
+        $minRaw = $this->request->post('min_qty');
+        $maxRaw = $this->request->post('max_qty');
+        // preview ไม่บังคับใส่ค่า — ให้ดูจำนวนก่อนได้
+        if (!$isPreview) {
+            if ($minRaw === null || $minRaw === '' || $maxRaw === null || $maxRaw === '') {
+                return ['status' => 'error', 'message' => 'กรุณาระบุค่า Min และ Max เริ่มต้น'];
+            }
+            if (!is_numeric($minRaw) || !is_numeric($maxRaw)) {
+                return ['status' => 'error', 'message' => 'ค่า Min/Max ต้องเป็นตัวเลข'];
+            }
+            if ((float) $minRaw < 0 || (float) $maxRaw < 0) {
+                return ['status' => 'error', 'message' => 'ค่าต้องไม่ติดลบ'];
+            }
+            if ((float) $maxRaw < (float) $minRaw) {
+                return ['status' => 'error', 'message' => 'Max ต้องไม่น้อยกว่า Min'];
+            }
+        }
+        $minQty = (float) $minRaw;
+        $maxQty = (float) $maxRaw;
+
+        // ---- รวบรวมรหัสวัสดุที่คลังนี้รับผิดชอบ (จาก categorise + allowedTypes + ตัวกรอง) ----
+        $allowedTypes = $warehouse->getAllowedItemTypeCodes();
+        $applyFilter = (int) $this->request->post('apply_filter', 0) === 1;
+        $categoryId = trim((string) $this->request->post('category_id', ''));
+        $q = trim((string) $this->request->post('q', ''));
+
+        $codeQuery = (new Query())
+            ->select(['code' => 'i.code'])
+            ->from(['i' => '{{%categorise}}'])
+            ->where(['i.name' => 'asset_item', 'i.group_id' => 'MATER', 'i.active' => 1]);
+        if (!empty($allowedTypes)) {
+            $codeQuery->andWhere(['i.category_id' => $allowedTypes]);
+        }
+        if ($applyFilter) {
+            if ($categoryId !== '') {
+                $codeQuery->andWhere(['i.category_id' => $categoryId]);
+            }
+            if ($q !== '') {
+                $codeQuery->andWhere(['or', ['like', 'i.code', $q], ['like', 'i.title', $q]]);
+            }
+        }
+        $allCodes = array_map('strval', $codeQuery->column());
+
+        if (empty($allCodes)) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการวัสดุที่คลังนี้รับผิดชอบตามเงื่อนไข'];
+        }
+
+        // รหัสที่ตั้งค่าไว้แล้วในคลังนี้
+        $configuredCodes = array_map('strval', (new Query())
+            ->select('item_code')
+            ->from('{{%stock_item_warehouse_setting}}')
+            ->where(['warehouse_id' => $warehouseId, 'item_code' => $allCodes])
+            ->column());
+        $configuredSet = array_flip($configuredCodes);
+
+        $unconfiguredCodes = array_values(array_filter($allCodes, static fn($c) => !isset($configuredSet[$c])));
+
+        // เป้าหมายที่จะ "แทรกใหม่" และ "อัปเดตทับ"
+        $toInsert = $unconfiguredCodes;
+        $toUpdate = ($scope === 'all') ? $configuredCodes : [];
+
+        $affected = count($toInsert) + count($toUpdate);
+
+        if ($isPreview) {
+            return [
+                'status' => 'success',
+                'preview' => true,
+                'total' => count($allCodes),
+                'configured' => count($configuredCodes),
+                'unconfigured' => count($unconfiguredCodes),
+                'will_insert' => count($toInsert),
+                'will_update' => count($toUpdate),
+                'affected' => $affected,
+            ];
+        }
+
+        if ($affected === 0) {
+            return ['status' => 'error', 'message' => 'ไม่มีรายการที่ต้องปรับตามเงื่อนไขที่เลือก'];
+        }
+        if ($affected > 2000) {
+            return ['status' => 'error', 'message' => 'ปรับได้ครั้งละไม่เกิน 2000 รายการ (พบ ' . number_format($affected) . ') — โปรดใช้ตัวกรองช่วยแบ่ง'];
+        }
+
+        $userId = Yii::$app->user->id;
+        $now = time();
+        $inserted = 0;
+        $updated = 0;
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if (!empty($toInsert)) {
+                $batch = [];
+                foreach ($toInsert as $code) {
+                    $batch[] = [$code, $warehouseId, $minQty, $maxQty, 1, $now, $now, $userId, $userId];
+                }
+                Yii::$app->db->createCommand()->batchInsert(
+                    'stock_item_warehouse_setting',
+                    ['item_code', 'warehouse_id', 'min_qty', 'max_qty', 'is_active',
+                     'created_at', 'updated_at', 'created_by', 'updated_by'],
+                    $batch
+                )->execute();
+                $inserted = count($toInsert);
+            }
+
+            if (!empty($toUpdate)) {
+                $updated = (int) Yii::$app->db->createCommand()->update(
+                    'stock_item_warehouse_setting',
+                    [
+                        'min_qty' => $minQty,
+                        'max_qty' => $maxQty,
+                        'is_active' => 1,
+                        'updated_at' => $now,
+                        'updated_by' => $userId,
+                    ],
+                    ['warehouse_id' => $warehouseId, 'item_code' => $toUpdate]
+                )->execute();
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ: ' . $e->getMessage()];
+        }
+
+        return [
+            'status' => 'success',
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'affected' => $inserted + $updated,
         ];
     }
 

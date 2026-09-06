@@ -57,7 +57,10 @@ $offset = $dataProvider->pagination ? $dataProvider->pagination->offset : 0;
 
                         <!-- เรื่อง / ประเภท -->
                         <td class="dev-col-topic">
-                            <p class="mb-1 fw-semibold text-body dev-topic"><?= Html::encode($item->topic) ?></p>
+                            <p class="mb-1 fw-semibold text-body dev-topic">
+                                <span class="dev-ref" title="เลขที่ทะเบียน (ใช้อ้างอิงตอนพิมพ์เอกสาร)">#<?= $item->id ?></span>
+                                <?= Html::encode($item->topic) ?>
+                            </p>
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <?php if ($typeTitle !== ''): ?>
                                     <span class="dev-type-pill"><?= Html::encode($typeTitle) ?></span>
@@ -293,6 +296,21 @@ $css = <<<CSS
     font-size: 0.9375rem;
     line-height: 1.45;
     color: var(--bs-body);
+}
+
+/* เลขที่ทะเบียน (#id) — ใช้อ้างอิงคู่กับหน้าพิมพ์เอกสาร */
+.dev-ref {
+    display: inline-block;
+    padding: 0.05rem 0.4rem;
+    margin-right: 0.25rem;
+    border-radius: 0.375rem;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    color: var(--bs-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
 }
 
 .dev-type-pill {

@@ -6,6 +6,7 @@ use Yii;
 use yii\db\Expression;
 use app\models\Categorise;
 use yii\helpers\ArrayHelper;
+use app\modules\helpdesk2\helpers\AssetDeptSummaryHelper;
 use app\components\AppHelper;
 use app\modules\am\models\Asset;
 use yii\web\NotFoundHttpException;
@@ -123,14 +124,48 @@ class GeneralController extends \yii\web\Controller
 
     /**
      * แดชบอร์ดงานซ่อมแบบ V2 (กลุ่มทั่วไป) — /helpdesk/general/dashboard-v2
+     * โหมด HA ฉบับ 6 หมวด II-3: ระบบสาธารณูปโภค / ความต่อเนื่อง / บำรุงรักษาเชิงป้องกัน
      */
     public function actionDashboardV2()
     {
-        return $this->render('@app/modules/helpdesk2/views/service/dashboard-v2', [
+        $filters = $this->request->queryParams;
+        return $this->render('@app/modules/helpdesk2/views/service/dashboard-ha', [
             'title' => 'ศูนย์งานซ่อมบำรุง',
             'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
             'active' => 'dashboard-v2',
-            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(1),
+            'haContext' => 'utility',
+            'drillRoute' => '/helpdesk/general/drilldown',
+            'reportRoute' => 'report',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(1, $filters, false, true),
+        ]);
+    }
+
+    /**
+     * รายการงานย่อยสำหรับ offcanvas drill-down (AJAX) — /helpdesk/general/drilldown
+     */
+    public function actionDrilldown()
+    {
+        $params = $this->request->queryParams;
+        $scope = (string) ($params['scope'] ?? 'all');
+        [$tickets, $meta] = RepairDashboardV2Helper::drilldownTickets(1, $params, $scope);
+
+        return $this->renderAjax('@app/modules/helpdesk2/views/service/_drilldown_list', [
+            'tickets' => $tickets,
+            'meta' => $meta,
+        ]);
+    }
+
+    /**
+     * รายงานคุณภาพ HA สำหรับพิมพ์ — /helpdesk/general/report
+     */
+    public function actionReport()
+    {
+        $filters = $this->request->queryParams;
+        $this->layout = false;
+        return $this->renderPartial('@app/modules/helpdesk2/views/service/ha-report', [
+            'title' => 'ศูนย์งานซ่อมบำรุง',
+            'haContext' => 'utility',
+            'dashboardParams' => RepairDashboardV2Helper::prepareViewParams(1, $filters, false, true),
         ]);
     }
 
@@ -205,6 +240,11 @@ class GeneralController extends \yii\web\Controller
             $dataProvider->query->andWhere(new \yii\db\Expression('price BETWEEN ' . $searchModel->price1 . ' AND ' . $searchModel->price2));
         }
 
+        // กรอง "ยังไม่กำหนดหน่วยงาน" (ใช้ทั้ง checkbox และ drill จากหน้าสรุปรายหน่วยงาน)
+        if ($searchModel->no_department) {
+            $dataProvider->query->andWhere(['or', ['department' => null], ['department' => 0]]);
+        }
+
         $baseQuery = $dataProvider->query;
 
         $equipStats = [
@@ -245,6 +285,25 @@ class GeneralController extends \yii\web\Controller
             'dataProvider' => $dataProvider,
             'active' => 'asset',
              'equipStats' => $equipStats,
+        ]);
+    }
+
+    /** สรุปครุภัณฑ์รายหน่วยงาน (มุมมองแยกหน่วยงาน + drill ไปลิสต์ที่กรองแล้ว) */
+    public function actionAssetByDept()
+    {
+        // ขอบเขตเดียวกับ actionAsset: EQUIP ทุกชนิด ยกเว้นแพทย์/วิทย์/คอม
+        $excluded = ['MED', 'SCI', 'COM'];
+        $types = ArrayHelper::getColumn(
+            Categorise::find()->andWhere(['name' => 'asset_type', 'group_id' => 'EQUIP'])->andWhere(['NOT IN', 'code', $excluded])->all(),
+            'code'
+        );
+        $q = ArrayHelper::getValue(Yii::$app->request->get('AssetSearch', []), 'q');
+        $summary = AssetDeptSummaryHelper::byDepartment($types, is_string($q) ? $q : null);
+        return $this->render('@app/modules/helpdesk2/views/service/asset_by_dept', [
+            'active' => 'asset',
+            'title' => 'ศูนย์งานซ่อมบำรุง',
+            'icon' => '<i class="fa-solid fa-screwdriver-wrench fs-2"></i>',
+            'summary' => $summary,
         ]);
     }
 

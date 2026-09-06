@@ -14,6 +14,20 @@ use app\modules\hr\models\Employees;
 /** @var app\modules\helpdesk\models\Repair $model */
 /** @var yii\widgets\ActiveForm $form */
 $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
+// กรองครุภัณฑ์ตามกลุ่มงานซ่อมของใบงาน (แพทย์=MED/SCI, คอม=COM, ทั่วไป=ทั้งหมด)
+$assetTypes = \app\modules\helpdesk2\models\Helpdesk::assetTypesForGroup($model->repair_group);
+$assetPicker = $model->listAssetForPicker($assetTypes);
+$assetItems = $assetPicker['items'];
+// คงค่าครุภัณฑ์ที่ผูกอยู่เดิมให้แสดงได้ แม้อยู่นอกตัวกรองชนิด
+if (!empty($model->asset_number) && !isset($assetItems[$model->asset_number])) {
+    $curAsset = \app\modules\am\models\Asset::findOne(['code' => $model->asset_number]);
+    $curName = '';
+    if ($curAsset) {
+        $dj = is_array($curAsset->data_json) ? $curAsset->data_json : (json_decode((string) $curAsset->data_json, true) ?: []);
+        $curName = (string) ($dj['asset_name'] ?? '');
+    }
+    $assetItems[$model->asset_number] = trim(($curName !== '' ? $curName . ' ' : '') . $model->asset_number);
+}
 
 ?>
 
@@ -31,6 +45,21 @@ $emp = Employees::findOne(['user_id' => Yii::$app->user->id]);
                     ],
                 ])->label('ประเภทอุปกรณ์');
                 ?>
+    </div>
+
+    <div class="col-6 col-md-6">
+        <?= $form->field($model, 'asset_number')->widget(Select2::classname(), [
+                    'data' => $assetItems,
+                    'options' => ['placeholder' => 'ระบุ/แก้ไขครุภัณฑ์ (ค้นหาชื่อหรือรหัส)...'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                        'dropdownParent' => '#main-modal',
+                    ],
+                ])->label('รหัสครุภัณฑ์'); ?>
+        <div class="form-text small text-muted mt-1">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            ผูกครุภัณฑ์ให้ครบเพื่อให้แดชบอร์ด "ชนิดเครื่องมือ" และประวัติสอบเทียบ/บำรุงรักษาสมบูรณ์
+        </div>
     </div>
 
     <div class="col-6">
@@ -109,6 +138,7 @@ $js = <<< JS
                 timer: 1000,
                 showConfirmButton: false
               }).then(() => {
+                $('#main-modal').modal('hide');
                 loadFormServiceRecord()
                 loadTimeline()
               });

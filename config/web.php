@@ -299,6 +299,9 @@ $config = [
             'service-profile/*',
             // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
             'iac-risk/*',
+            // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
+            // (controller ยังใช้ AccessControl roles=['@']; จะเปลี่ยนเป็น guard สิทธิ์จริงในเฟส 1)
+            'qms/*',
             // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
             // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
             // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission
@@ -381,6 +384,11 @@ $config = [
             // แดชบอร์ด HAIT ศูนย์คอมพิวเตอร์: endpoint AJAX สำหรับ offcanvas drill-down + หน้าพิมพ์รายงาน (อ่านอย่างเดียว)
             'helpdesk/computer/drilldown',
             'helpdesk/computer/report',
+            // แดชบอร์ด HA ศูนย์เครื่องมือแพทย์ + งานซ่อมบำรุง: drill-down + พิมพ์รายงาน (อ่านอย่างเดียว)
+            'helpdesk/medical/drilldown',
+            'helpdesk/medical/report',
+            'helpdesk/general/drilldown',
+            'helpdesk/general/report',
             'filemanager/*',
             // 'usermanager/*',
             'site/login',

@@ -526,10 +526,11 @@ class ServiceController extends \yii\web\Controller
 
     public function UpdateAssetStatus($model)
     {
-        if ($model->asset_number !== '' && $model->status == 'success') {
+        // ปิดงานซ่อมสำเร็จ = ครุภัณฑ์กลับมาใช้งานได้ (asset_status เป็น FK varchar → asset_status.id)
+        if (!empty($model->asset_number) && $model->status == 'success') {
             $asset = Asset::findOne(['code' => $model->asset_number]);
             if ($asset) {
-                $asset->asset_status = 1;
+                $asset->asset_status = 'active';
                 return $asset->save(false);
             }
         }
