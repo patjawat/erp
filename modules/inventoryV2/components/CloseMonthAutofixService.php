@@ -37,7 +37,7 @@ class CloseMonthAutofixService
      * วางแผนเติมราคาทุนให้พัสดุที่มีแถว IN ราคา 0 (dry-run)
      * @return array<int,array{warehouse_id:int,item_code:string,detail_ids:int[],to_price:float,affected_qty:float}>
      */
-    public static function planZeroCost(int $warehouseId, array $itemCodes): array
+    public static function planZeroCost(int $warehouseId, array $itemCodes, ?string $startDate = null, ?string $endDate = null): array
     {
         $plans = [];
         foreach ($itemCodes as $code) {
@@ -45,7 +45,7 @@ class CloseMonthAutofixService
             if ($price === null) {
                 continue; // ไม่เคยมีราคาซื้อที่ไหนเลย → เติมอัตโนมัติไม่ได้
             }
-            $rows = (new Query())
+            $query = (new Query())
                 ->select(['sd.id', 'sd.qty'])
                 ->from(['sd' => StockDetail::tableName()])
                 ->innerJoin(['so' => StockOrder::tableName()], 'so.id = sd.stock_order_id')
@@ -55,8 +55,16 @@ class CloseMonthAutofixService
                     'so.order_type' => StockOrder::ORDER_TYPE_IN,
                     'so.main_warehouse_id' => $warehouseId,
                 ])
-                ->andWhere(['or', ['sd.unit_price' => null], ['<', 'sd.unit_price', self::EPS]])
-                ->all();
+                ->andWhere(['or', ['sd.unit_price' => null], ['<', 'sd.unit_price', self::EPS]]);
+            if ($startDate !== null) $query->andWhere(['>=','so.order_date',$startDate]);
+            if ($endDate !== null) $query->andWhere(['<','so.order_date',$endDate]);
+            // Even callers without explicit bounds must never plan changes at/before a certified period.
+            if (\app\modules\inventoryV2\services\MonthlyPeriodProtection::installed()) {
+                $lock=(new Query())->from('stock_monthly_period_lock')->where(['warehouse_id'=>$warehouseId])
+                    ->orderBy(['report_year'=>SORT_DESC,'report_month'=>SORT_DESC])->one();
+                if ($lock) $query->andWhere(['>=','so.order_date',date('Y-m-d H:i:s',strtotime(sprintf('%04d-%02d-01',$lock['report_year'],$lock['report_month']).' +1 month'))]);
+            }
+            $rows=$query->all();
             if (empty($rows)) {
                 continue;
             }
@@ -80,6 +88,10 @@ class CloseMonthAutofixService
         $rowCount = 0;
         foreach ($plans as $p) {
             foreach (StockDetail::findAll(['id' => $p['detail_ids']]) as $detail) {
+                $order=StockOrder::findOne($detail->stock_order_id);
+                if (!$order) throw new \DomainException('ไม่พบเอกสารรับเข้าที่ต้องซ่อม');
+                $date=strtotime($order->order_date);
+                \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable([(int)$order->main_warehouse_id],(int)date('Y',$date),(int)date('n',$date),'from');
                 $json = is_array($detail->data_json)
                     ? $detail->data_json
                     : (is_string($detail->data_json) ? (json_decode($detail->data_json, true) ?: []) : []);
@@ -112,7 +124,7 @@ class CloseMonthAutofixService
      */
     public static function planReceiptShift(int $warehouseId, int $targetYear, int $targetMonth): array
     {
-        [$sy, $sm] = ReportController::firstStockOrderMonthPublic($warehouseId);
+        [$sy, $sm, $baseOpening] = ReportController::repairStart($warehouseId, $targetYear, $targetMonth);
         $target = $targetYear * 12 + $targetMonth;
         if ($sy === null || ($sy * 12 + $sm) > $target) {
             return ['fixable' => [], 'skipped' => []];
@@ -121,7 +133,7 @@ class CloseMonthAutofixService
         // 1) เก็บ closing_qty รายเดือนต่อพัสดุ (chain in-memory)
         $months = [];
         $closingByItem = []; // item => [ym => closing_qty]
-        $opening = [];
+        $opening = $baseOpening;
         $ty = $sy;
         $tm = $sm;
         while (($ty * 12 + $tm) <= $target) {
@@ -144,7 +156,8 @@ class CloseMonthAutofixService
         foreach ($closingByItem as $code => $closingMap) {
             // สร้าง delta รายเดือนจาก closing (delta = closing[m] - closing[m-1])
             $deltas = [];
-            $prev = 0.0;
+            $initial = (float)($baseOpening[$code]['closing_qty'] ?? 0);
+            $prev = $initial;
             foreach ($months as $ym) {
                 $c = $closingMap[$ym] ?? $prev; // เดือนที่ไม่มีรายการ = คงยอดเดิม
                 $deltas[] = ['ym' => $ym, 'delta' => $c - $prev];
@@ -152,7 +165,7 @@ class CloseMonthAutofixService
             }
             $endpoint = $prev;
             $minRunning = 0.0;
-            $run = 0.0;
+            $run = $initial;
             foreach ($deltas as $d) {
                 $run += $d['delta'];
                 if ($run < $minRunning) {
@@ -170,7 +183,7 @@ class CloseMonthAutofixService
             // greedy: ดึงจำนวนรับจากเดือนอนาคตที่เกิน มาชดเชยเดือนที่ขาด
             $work = $deltas; // สำเนาเพื่อแก้
             $shifts = [];
-            $run = 0.0;
+            $run = $initial;
             $n = count($work);
             for ($i = 0; $i < $n; $i++) {
                 $run += $work[$i]['delta'];
@@ -242,6 +255,8 @@ class CloseMonthAutofixService
 
     private static function createReconcileAdjust(int $warehouseId, string $itemCode, string $ym, float $qty, float $price, string $pairYm): void
     {
+        [$year,$month]=array_map('intval',explode('-',$ym));
+        \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable([$warehouseId],$year,$month,'from');
         $lastDay = (int) date('t', strtotime($ym . '-01'));
         $orderDate = sprintf('%s-%02d 12:00:00', $ym, $lastDay);
         $now = date('Y-m-d H:i:s');
