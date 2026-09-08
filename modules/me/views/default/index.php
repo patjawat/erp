@@ -596,6 +596,7 @@ if (!empty($upcomingHealth)): ?>
                     <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-calendar-check"></i></span><span class="d-block small">ร่วมกิจกรรม</span>', ['/appreciation/activity/index'], ['class'=>'appreciation-action appreciation-action--activity d-inline-flex flex-column align-items-center']) ?></div>
                 </div>
                 <div class="text-center mt-3">
+                    <?= Html::a('แบบสำรวจความผูกพันของฉัน', ['/hr/engagement/mine'], ['class'=>'btn btn-outline-primary btn-sm mb-2', 'data-pjax'=>'0']) ?>
                     <?= Html::a('<i class="bi bi-heart-fill me-1 text-danger"></i> ดูฟีดคำขอบคุณทั้งหมด <i class="bi bi-arrow-right ms-1"></i>', ['/appreciation/default/index'], ['class'=>'appreciation-feed-link']) ?>
                 </div>
             </div>

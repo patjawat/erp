@@ -4,7 +4,9 @@ use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\web\View;
 
-$this->title = 'Dashboard บุคลากร (มุมมองผู้บริหาร)';
+$this->registerJsFile('@web/js/hr-workforce-charts.js', ['depends' => [\app\assets\AppAsset::class]]);
+
+$this->title = 'Dashboard บุคลากรและการวางแผน HR';
 $this->params['breadcrumbs'][] = ['label' => 'บุคลากร', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = 'Dashboard';
 
@@ -982,13 +984,13 @@ $hasFilter =!empty($filterGender) || (isset($filterDepartment) && $filterDepartm
 <div class="card hr-dashboard-summary-card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <p class="text-muted small mb-0">
-            <strong>มุมมองผู้บริหาร:</strong>
-            องค์กรมีบุคลากรปฏิบัติราชการ ทั้งหมด <strong><?= $totalCount ?></strong> คน
+            <strong>ภาพรวมตามตัวกรอง:</strong>
+            บุคลากรที่ปฏิบัติงาน <strong><?= number_format($totalCount) ?></strong> คน
             (ชาย <?= $countMale ?> · หญิง <?= $countFemale ?> · สัดส่วน <?= $genderRatio ?>)
             กระจายใน <strong><?= (int)($numWorkgroups ?? 0) ?></strong> กลุ่มงาน
             และ <strong><?= (int)($numPositionTypes ?? 0) ?></strong> ประเภทพนักงาน
             <?php if (isset($newHiresThisYear) || isset($leftThisYear)): ?>
-            · ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?> บรรจุใหม่ <strong><?= (int)($newHiresThisYear ?? 0) ?></strong> คน · ลาออก/สิ้นสุด <strong><?= (int)($leftThisYear ?? 0) ?></strong> คน
+            · ปีงบประมาณ <?= (int)($movementBudgetYear ?? 0) ?> บรรจุใหม่ <strong><?= (int)($newHiresThisYear ?? 0) ?></strong> คน · พ้นจากหน่วยงาน <strong><?= (int)($leftThisYear ?? 0) ?></strong> คน
             <?php endif; ?>
         </p>
     </div>
@@ -1019,7 +1021,7 @@ $kpiCards = [
     ],
     [
         'key' => 'orgUnits',
-        'label' => 'หน่วยงานในผังองค์กร',
+        'label' => 'หน่วยงานในผังองค์กร (ทะเบียนรวม)',
         'value' => number_format($organizationDiagramCount),
         'icon' => 'bi-diagram-3',
         'source' => 'orgUnits',
@@ -1029,7 +1031,7 @@ $kpiCards = [
     ],
     [
         'key' => 'teamGroups',
-        'label' => 'กลุ่ม / ทีมประสานงาน',
+        'label' => 'กลุ่ม / ทีมประสานงาน (ทะเบียนรวม)',
         'value' => number_format($teamGroupCount),
         'icon' => 'bi-person-workspace',
         'source' => 'teamGroups',
@@ -1047,7 +1049,7 @@ $kpiCards = [
     ],
     [
         'key' => 'exits',
-        'label' => 'ลาออก / สิ้นสุด',
+        'label' => 'พ้นจากหน่วยงาน',
         'value' => number_format((int)($leftThisYear ?? 0)),
         'icon' => 'bi-person-dash',
         'source' => 'exits',
@@ -1063,6 +1065,11 @@ $kpiCards = [
         'title' => 'อายุงานรายบุคคล ณ ' . $asOfLabel . ' · เฉลี่ย ' . $avgTenureText . ' ปี',
     ],
 ];
+// Put operational measures first; retain every existing drill-down source.
+$kpiOrder = array_flip(['headcount', 'newHires', 'exits', 'tenure', 'gender', 'orgUnits', 'teamGroups']);
+usort($kpiCards, static function ($a, $b) use ($kpiOrder) {
+    return $kpiOrder[$a['key']] <=> $kpiOrder[$b['key']];
+});
 ?>
 <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mt-1 mb-3 hr-dashboard-kpi-grid">
     <?php foreach ($kpiCards as $card): ?>
@@ -1109,6 +1116,19 @@ $kpiCards = [
     </div>
     <p class="hr-kpi-detail__empty mb-0" id="hrKpiDetailEmpty" hidden>ไม่พบรายการที่ตรงกับคำค้น</p>
 </section>
+
+<?= $this->render('_workforce_insights', [
+    'newHires' => $newHiresThisYear ?? null,
+    'exits' => $leftThisYear ?? null,
+    'exitReasons' => $leftThisYearBreakdown ?? [],
+    'periodText' => $movementPeriodText ?? '',
+]) ?>
+
+<?= $this->render('_engagement_dashboard', [
+    'engagement' => $engagementDashboard ?? ['status' => 'not_authorized', 'rounds' => [], 'report' => null],
+    'filters' => $chartFilterParams,
+    'budgetYear' => $budgetYear,
+]) ?>
 
 <div class="row mb-3">
     <div class="col-12">

@@ -22,6 +22,7 @@ foreach ($activities as $activity) $availableTypes[$activity->activity_type] = $
 <?php $this->beginBlock('page-title'); ?>กิจกรรมของคุณ<?php $this->endBlock(); ?>
 <?php $this->beginBlock('sub-title'); ?>เข้าร่วมกิจกรรมและสะสมคะแนนเพิ่มเติม<?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-action'); ?>
+<?= Html::a('แบบสำรวจความผูกพัน', ['/hr/engagement/mine'], ['class' => 'btn btn-outline-primary', 'data-pjax'=>'0']) ?>
 <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับหน้าฟีด', ['/appreciation/default/index'], ['class' => 'btn btn-outline-secondary']) ?>
 <?php $this->endBlock(); ?>
 
