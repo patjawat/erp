@@ -23,6 +23,10 @@ use app\modules\inventoryV2\models\StockBalance;
  */
 class StockItemSearch extends StockItem
 {
+    // Search values must not inherit record defaults or write into data_json.
+    public $is_active;
+    public $is_innovation;
+
     /** คลังที่ใช้กรอง/แสดงจำนวนคงเหลือ */
     public $warehouse_id;
 
@@ -87,7 +91,8 @@ class StockItemSearch extends StockItem
         // is_innovation — เก็บใน data_json (ใช้ JSON_EXTRACT)
         // หมายเหตุ: ยกเลิกตัวกรอง is_asset — วัสดุที่สร้างใหม่ไม่มี key is_asset ใน data_json
         // ทำให้ JSON_EXTRACT(...) = 0 เป็น NULL แล้วถูกตัดออกจากรายการโดยไม่ตั้งใจ
-        if ($this->is_innovation !== null && $this->is_innovation !== '') {
+        // The checkbox enables innovation-only filtering; unchecked means all items.
+        if ((string) $this->is_innovation === '1') {
             $query->andWhere("JSON_EXTRACT(categorise.data_json, '$.is_innovation') = :is_inno",
                 [':is_inno' => (int) $this->is_innovation]);
         }
