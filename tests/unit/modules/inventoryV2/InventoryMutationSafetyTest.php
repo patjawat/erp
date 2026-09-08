@@ -2,9 +2,9 @@
 
 namespace tests\unit\modules\inventoryV2;
 
-use Codeception\Test\Unit;
+use PHPUnit\Framework\TestCase;
 
-class InventoryMutationSafetyTest extends Unit
+class InventoryMutationSafetyTest extends TestCase
 {
     public function testIssueRecordsExactFifoAllocationsAndLocksTheOrder(): void
     {
@@ -56,7 +56,19 @@ class InventoryMutationSafetyTest extends Unit
         $this->assertStringContainsString('reservedAheadQty(', $source);
         $this->assertStringContainsString('พร้อมจ่ายสำหรับใบนี้', $source);
         $this->assertStringContainsString('assertBalanceMatchesFifo(', $source);
-        $this->assertLessThan(strpos($source, '$transaction->commit();'), strrpos($source, 'assertBalanceMatchesFifo('));
+        $finalCheck = strpos($source, 'assertBalanceMatchesFifo(', strpos($source, 'foreach ($affectedStockPools'));
+        $this->assertLessThan(strpos($source, '$transaction->commit();'), $finalCheck);
+    }
+
+    public function testIssueValidatesMovedLotsBeforeMutationAndAfterConfirmation(): void
+    {
+        $source = $this->source('controllers/IssueController.php');
+        $precheck = 'InventoryService::assertBalanceMatchesFifo($detail->item_code, $warehouseId, [$lot])';
+        $this->assertStringContainsString($precheck, $source);
+        $this->assertLessThan(strpos($source, '$sourceIn->remain_qty -= $take'), strpos($source, $precheck));
+        $this->assertStringContainsString('InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId, [$lot])', $source);
+        $this->assertStringContainsString('if (!isset($affectedStockPools[$poolKey]))', $source);
+        $this->assertStringNotContainsString('InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);', $source);
     }
 
     public function testNormalHistoryOnlyMutationIsDisabled(): void
@@ -70,7 +82,7 @@ class InventoryMutationSafetyTest extends Unit
     {
         $source = $this->source('components/InventoryService.php');
         $this->assertStringContainsString('public static function assertBalanceMatchesFifo', $source);
-        $this->assertStringContainsString('ยกเลิกรายการเพื่อป้องกันสต๊อกคลาดเคลื่อน', $source);
+        $this->assertStringContainsString('การลดจำนวนเบิกไม่แก้ยอดที่คลาดเคลื่อน', $source);
     }
 
     private function source(string $relativePath): string

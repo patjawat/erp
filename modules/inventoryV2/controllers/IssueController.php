@@ -200,6 +200,10 @@ class IssueController extends Controller
                         $detail->item_code,
                         $model->main_warehouse_id
                     );
+                    // Lock both sides; validate only the lots this issue actually moves.
+                    foreach (array_filter([$model->main_warehouse_id, $model->sub_warehouse_id]) as $warehouseId) {
+                        InventoryService::lockStockPool($detail->item_code, $warehouseId);
+                    }
 
                     $reservedAhead = InventoryService::reservedAheadQty(
                         $detail->item_code,
@@ -249,6 +253,15 @@ class IssueController extends Controller
                     foreach ($sourceLots as $sourceIn) {
                         if ($tempQty <= 0) break;
 
+                        $lot = (string) $sourceIn->lot_number;
+                        foreach (array_filter([$model->main_warehouse_id, $model->sub_warehouse_id]) as $warehouseId) {
+                            $poolKey = json_encode([(int) $warehouseId, (string) $detail->item_code, $lot]);
+                            // Check once before mutation: pending OUT rows are not FIFO sources until CONFIRMED.
+                            if (!isset($affectedStockPools[$poolKey])) {
+                                InventoryService::assertBalanceMatchesFifo($detail->item_code, $warehouseId, [$lot]);
+                                $affectedStockPools[$poolKey] = [(int) $warehouseId, (string) $detail->item_code, $lot];
+                            }
+                        }
                         $take = min($tempQty, (float)$sourceIn->remain_qty);
                         $sourceIn->remain_qty -= $take;
                         if (!$sourceIn->save(false)) {
@@ -310,10 +323,6 @@ class IssueController extends Controller
                             ];
                         }, array_keys($lotGroups), $lotGroups),
                     ];
-                    $affectedStockPools[$model->main_warehouse_id . '|' . $detail->item_code] = [(int) $model->main_warehouse_id, (string) $detail->item_code];
-                    if ($model->sub_warehouse_id) {
-                        $affectedStockPools[$model->sub_warehouse_id . '|' . $detail->item_code] = [(int) $model->sub_warehouse_id, (string) $detail->item_code];
-                    }
                     $processedCount++;
                 }
 
@@ -369,8 +378,8 @@ class IssueController extends Controller
                     throw new \Exception("ไม่สามารถบันทึกสถานะใบเบิกได้");
                 }
 
-                foreach ($affectedStockPools as [$warehouseId, $itemCode]) {
-                    InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
+                foreach ($affectedStockPools as [$warehouseId, $itemCode, $lot]) {
+                    InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId, [$lot]);
                 }
 
                 $transaction->commit();
