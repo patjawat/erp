@@ -37,6 +37,7 @@ class CheckinRecord extends \yii\db\ActiveRecord
     const METHOD_QRCODE = 'qrcode';
     const METHOD_PHOTO = 'photo';
     const METHOD_MANUAL = 'manual';
+    const METHOD_IMPORT = 'csv';
 
     const CHECK_TYPE_IN = 'in';
     const CHECK_TYPE_OUT = 'out';
@@ -70,15 +71,17 @@ class CheckinRecord extends \yii\db\ActiveRecord
         return [
             [['emp_id', 'checkin_at', 'method', 'check_type'], 'required'],
             [['emp_id', 'location_id', 'is_in_location', 'approved_by', 'created_by', 'updated_by'], 'integer'],
-            [['checkin_at', 'approved_at', 'created_at', 'updated_at'], 'safe'],
+            [['checkin_at'], 'datetime', 'format' => 'php:Y-m-d H:i:s'],
+            [['approved_at', 'created_at', 'updated_at'], 'safe'],
             [['out_of_location_reason', 'comment'], 'string'],
-            [['method'], 'in', 'range' => [self::METHOD_QRCODE, self::METHOD_PHOTO, self::METHOD_MANUAL]],
+            [['method'], 'in', 'range' => [self::METHOD_QRCODE, self::METHOD_PHOTO, self::METHOD_MANUAL, self::METHOD_IMPORT]],
             [['check_type'], 'in', 'range' => [self::CHECK_TYPE_IN, self::CHECK_TYPE_OUT]],
             [['check_type'], 'default', 'value' => self::CHECK_TYPE_IN],
             [['status'], 'in', 'range' => [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED]],
             [['status'], 'default', 'value' => self::STATUS_PENDING],
             [['is_in_location'], 'default', 'value' => 1],
-            [['lat', 'lng'], 'number'],
+            [['lat'], 'number', 'min' => -90, 'max' => 90],
+            [['lng'], 'number', 'min' => -180, 'max' => 180],
             [['photo_path', 'qr_token'], 'string', 'max' => 500],
             [['data_json'], 'safe'],
             ['out_of_location_reason', 'required', 'when' => function ($m) {
@@ -135,6 +138,7 @@ class CheckinRecord extends \yii\db\ActiveRecord
             self::METHOD_QRCODE => 'สแกน QR',
             self::METHOD_PHOTO => 'ถ่ายรูป',
             self::METHOD_MANUAL => 'กดลงเวลา',
+            self::METHOD_IMPORT => 'นำเข้า CSV',
         ];
         return $labels[$this->method] ?? $this->method;
     }
@@ -164,15 +168,11 @@ class CheckinRecord extends \yii\db\ActiveRecord
      */
     public function createApproveRecord()
     {
-        $approve = Approve::findOne(['name' => 'checkin', 'from_id' => (string)$this->id]);
+        $approve = Approve::findOne(['name' => 'checkin', 'from_id' => (string)$this->id, 'deleted_at' => null]);
         if ($approve) {
             return $approve;
         }
-        $me = UserHelper::GetEmployee();
         $leaderId = $this->getLeaderEmpId();
-        if (!$leaderId) {
-            $leaderId = $me->id; // fallback ตัวเอง
-        }
         $approve = new Approve();
         $approve->from_id = (string)$this->id;
         $approve->name = 'checkin';
@@ -181,7 +181,9 @@ class CheckinRecord extends \yii\db\ActiveRecord
         $approve->data_json = ['label' => 'อนุมัติการลงเวลา'];
         $approve->level = 1;
         $approve->status = 'Pending';
-        $approve->save(false);
+        $approve->created_at = \app\modules\attendance\services\AttendanceService::now();
+        $approve->created_by = Yii::$app->has('user') ? Yii::$app->user->id : null;
+        if (!$approve->save()) throw new \RuntimeException('Could not create attendance approval');
         return $approve;
     }
 
@@ -190,8 +192,7 @@ class CheckinRecord extends \yii\db\ActiveRecord
      */
     protected function getLeaderEmpId()
     {
-        $info = SiteHelper::viewDirector();
-        return isset($info['id']) ? (int)$info['id'] : null;
+        return $this->employee ? $this->employee->supervisorEmpId() : null;
     }
 
     /**
@@ -199,8 +200,9 @@ class CheckinRecord extends \yii\db\ActiveRecord
      */
     public function applyApproveResult($status, $comment = null, $approverEmpId = null)
     {
+        if (!in_array($status, ['Pass', 'Reject', 'Y', 'N'], true)) throw new \DomainException('สถานะอนุมัติไม่ถูกต้อง');
         $this->status = ($status === 'Pass' || $status === 'Y') ? self::STATUS_APPROVED : self::STATUS_REJECTED;
-        $this->approved_at = date('Y-m-d H:i:s');
+        $this->approved_at = \app\modules\attendance\services\AttendanceService::now();
         if ($approverEmpId !== null) {
             $this->approved_by = $approverEmpId;
         } else {

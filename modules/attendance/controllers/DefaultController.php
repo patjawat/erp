@@ -9,6 +9,8 @@ use yii\web\UploadedFile;
 use app\components\UserHelper;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\attendance\models\CheckinLocation;
+use app\modules\attendance\services\AttendanceService;
+use app\modules\attendance\services\RosterAttendance;
 
 class DefaultController extends Controller
 {
@@ -140,7 +142,7 @@ class DefaultController extends Controller
         } catch (\Throwable $e) {
             // ตาราง checkin_location ยังไม่มี (ยังไม่รัน migration)
         }
-        $content = $this->renderPartial('_checkin_modal', [
+        $content = $this->renderAjax('_checkin_modal', [
             'geofences' => $geofences,
             'checkType' => $checkType,
             'saveUrl' => \yii\helpers\Url::to(['/attendance/default/save']),
@@ -161,76 +163,27 @@ class DefaultController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
-        if (!$me) {
-            return ['success' => false, 'message' => 'ไม่พบข้อมูลพนักงาน'];
-        }
-        $method = Yii::$app->request->post('method');
-        $allowed = [CheckinRecord::METHOD_QRCODE, CheckinRecord::METHOD_PHOTO, CheckinRecord::METHOD_MANUAL];
-        if (!in_array($method, $allowed, true)) {
-            return ['success' => false, 'message' => 'วิธีลงเวลาไม่ถูกต้อง'];
-        }
-        $checkType = Yii::$app->request->post('check_type', CheckinRecord::CHECK_TYPE_IN);
-        if (!in_array($checkType, [CheckinRecord::CHECK_TYPE_IN, CheckinRecord::CHECK_TYPE_OUT], true)) {
-            $checkType = CheckinRecord::CHECK_TYPE_IN;
-        }
-        $lat = Yii::$app->request->post('lat');
-        $lng = Yii::$app->request->post('lng');
-        $qrToken = Yii::$app->request->post('qr_token');
-        $photoPath = Yii::$app->request->post('photo_path');
-
+        if (!$me) return ['success' => false, 'message' => 'ไม่พบข้อมูลพนักงาน'];
         try {
-            $validation = CheckinLocation::validateClockIn($lat, $lng, $qrToken);
-            if (!$validation['ok']) {
-                return ['success' => false, 'message' => $validation['message']];
-            }
-            /** @var CheckinLocation|null $matchedLoc */
-            $matchedLoc = $validation['location'];
-            $locationId = $matchedLoc ? $matchedLoc->id : null;
-
-            $record = new CheckinRecord();
-            $record->emp_id = $me->id;
-            $record->checkin_at = date('Y-m-d H:i:s');
-            $record->method = $method;
-            $record->check_type = $checkType;
-            $record->lat = $lat !== null && $lat !== '' ? $lat : null;
-            $record->lng = $lng !== null && $lng !== '' ? $lng : null;
-            $record->location_id = $locationId;
-            $record->is_in_location = 1;
-            $record->out_of_location_reason = null;
-            $record->photo_path = $photoPath ?: null;
-            $record->qr_token = $qrToken ?: null;
-            $record->data_json = [
-                'user_agent' => Yii::$app->request->userAgent,
-                'remote_ip' => Yii::$app->request->userIP,
-                'geofence' => !empty($validation['meta']) ? $validation['meta'] : null,
-            ];
-            $record->status = CheckinRecord::STATUS_PENDING;
-            if (!$record->save()) {
-                return ['success' => false, 'message' => 'บันทึกไม่สำเร็จ', 'errors' => $record->getFirstErrors()];
-            }
-            $record->createApproveRecord();
-            return [
-                'success' => true,
-                'message' => 'ลงเวลาสำเร็จ รอหัวหน้าอนุมัติ',
-                'id' => $record->id,
-                'checkin_at' => $record->checkin_at,
-            ];
+            $record = AttendanceService::record($me, Yii::$app->request->post());
+            return ['success' => true, 'id' => $record->id, 'checkin_at' => $record->checkin_at,
+                'message' => 'บันทึกเวลา ' . $record->checkin_at . ' แล้ว รอหัวหน้าหรือผู้มีสิทธิตรวจสอบอนุมัติ',
+                'attendance' => RosterAttendance::forRecord($record)];
+        } catch (\DomainException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         } catch (\Throwable $e) {
-            // เดิม catch นี้กลืน exception ทิ้งทั้งหมด ทำให้ FK ที่ค้างชี้ตารางเก่าซ่อนอยู่นานโดยไม่มีใครเห็น
-            Yii::error(
-                'checkin save failed (emp_id=' . $me->id . '): ' . $e->getMessage()
-                . ' in ' . $e->getFile() . ':' . $e->getLine(),
-                __METHOD__
-            );
-            $notReady = $e instanceof \yii\db\Exception
-                && stripos($e->getMessage(), "doesn't exist") !== false;
-            return [
-                'success' => false,
-                'message' => $notReady
-                    ? 'ระบบลงเวลายังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบ'
-                    : 'บันทึกไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบพร้อมเวลาที่กด',
-            ];
+            Yii::error($e, __METHOD__);
+            Yii::$app->response->statusCode = 500;
+            return ['success' => false, 'message' => 'บันทึกไม่สำเร็จ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ'];
         }
+    }
+
+    public function actionShifts()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $me = UserHelper::GetEmployee();
+        if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
+        return ['shifts' => RosterAttendance::candidates((int)$me->id, AttendanceService::now()), 'now' => AttendanceService::now()];
     }
 
     /**
@@ -244,7 +197,7 @@ class DefaultController extends Controller
             return ['url' => null, 'error' => 'ไม่พบข้อมูลพนักงาน'];
         }
         $file = UploadedFile::getInstanceByName('file');
-        if (!$file || !in_array(strtolower($file->extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+        if (!$file || $file->error !== UPLOAD_ERR_OK || $file->size > 5 * 1024 * 1024 || !@getimagesize($file->tempName) || !in_array(strtolower($file->extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
             return ['url' => null, 'error' => 'กรุณาเลือกไฟล์รูปภาพ'];
         }
         $dir = Yii::getAlias('@webroot/uploads/checkin');

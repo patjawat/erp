@@ -1,0 +1,26 @@
+/* Loaded only by attendance screens and the shared clock form. */
+.attendance-clock,
+.attendance-correction {
+    min-width: 0;
+}
+.attendance-clock input,
+.attendance-clock select,
+.attendance-clock textarea,
+.attendance-correction input,
+.attendance-correction select,
+.attendance-correction textarea {
+    font-size: 1rem;
+    max-width: 100%;
+}
+@media (max-width: 575.98px) {
+    .page-content-wrapper .page-title-box {
+        margin-inline: 0;
+        max-width: 100%;
+    }
+    .header-fixed {
+        padding-inline: .5rem !important;
+    }
+    .header-fixed .erp-header-brand-icon {
+        display: none;
+    }
+}

@@ -282,6 +282,9 @@ $config = [
     'as access' => [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
+            // Attendance enforces authentication, ownership and reviewer scope in its module/controllers.
+            'attendance/*',
+            'approve-v2/checkin/*',
             'telegrambot/*',
             'dms/webhook/receive',
             // '*',

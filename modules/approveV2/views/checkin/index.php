@@ -42,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $record->employee ? Html::encode($record->employee->fname . ' ' . $record->employee->lname) : '-' ?></td>
                         <td><?= Yii::$app->formatter->asDatetime($record->checkin_at, 'php:d/m/Y H:i') ?></td>
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
-                        <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?></td>
+                        <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div></td>
                         <td class="text-center">
                             <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm me-1">ดู</a>
                             <button type="button" class="btn btn-success btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Pass">อนุมัติ</button>
@@ -56,6 +56,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php if ($dataProvider->getTotalCount() === 0): ?>
         <div class="p-4 text-center text-muted">ไม่มีรายการรออนุมัติ</div>
         <?php endif; ?>
+        <nav class="p-3" aria-label="หน้ารายการรออนุมัติ">
+            <?= \yii\bootstrap5\LinkPager::widget(['pagination' => $dataProvider->getPagination()]) ?>
+        </nav>
     </div>
 </div>
 
@@ -67,14 +70,15 @@ $('.btn-approve').on('click', function() {
     var status = $(this).data('status');
     var comment = '';
     if (status === 'Reject') {
-        comment = prompt('เหตุผล (ถ้ามี):') || '';
+        comment = prompt('เหตุผล (ถ้ามี):');
+        if (comment === null) return;
     }
     var \$btn = $(this);
     \$btn.prop('disabled', true);
     $.post('$updateUrl', { id: id, status: status, comment: comment }).then(function(r) {
         if (r.status === 'success') location.reload();
         else alert(r.message || 'เกิดข้อผิดพลาด');
-    }).always(function() { \$btn.prop('disabled', false); });
+    }).fail(function() { alert('บันทึกผลไม่สำเร็จ กรุณาลองใหม่'); }).always(function() { \$btn.prop('disabled', false); });
 });
 JS
 );

@@ -86,8 +86,10 @@ $statusBadge = function ($status, $label) {
                 'manual' => 'กดลงเวลา',
                 'qrcode' => 'สแกน QR',
                 'photo' => 'ถ่ายรูป',
+                'csv' => 'นำเข้า CSV',
             ], ['class' => 'form-select'])->label('วิธีลงเวลา') ?>
         </div>
+        <div class="col-12 col-md-6 col-lg-2"><?= $form->field($searchModel, 'unmatched')->checkbox(['label' => 'เฉพาะรายการที่ยังไม่ระบุเวร']) ?></div>
         <div class="col-12 col-md-6 col-lg-2 d-flex gap-2 flex-wrap">
             <?= Html::submitButton('<i class="bi bi-search me-1"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
             <?= Html::a('<i class="bi bi-arrow-counterclockwise me-1"></i> ล้างตัวกรอง', ['/attendance/checkin/report'], ['class' => 'btn btn-outline-secondary']) ?>
@@ -97,20 +99,6 @@ $statusBadge = function ($status, $label) {
 </div>
 
 <?php
-$defaultShiftStart = '08:30'; // ใช้คำนวณ "สาย"
-$formatLate = function ($checkinAt) use ($defaultShiftStart) {
-    if (!$checkinAt) return '-';
-    $t = is_string($checkinAt) ? strtotime($checkinAt) : $checkinAt;
-    $start = date('Y-m-d', $t) . ' ' . $defaultShiftStart . ':00';
-    $startTs = strtotime($start);
-    if ($t <= $startTs) return '-';
-    $diff = $t - $startTs;
-    $h = floor($diff / 3600);
-    $m = (int)(($diff % 3600) / 60);
-    if ($h > 0 && $m > 0) return $h . ' ชม. ' . $m . ' น.';
-    if ($h > 0) return $h . ' ชม.';
-    return $m . ' น.';
-};
 $models = $dataProvider->getModels();
 $pagination = $dataProvider->getPagination();
 ?>
@@ -132,8 +120,8 @@ $pagination = $dataProvider->getPagination();
                         <th class="small">ประเภทเวร</th>
                         <th class="small">ชื่อเวร</th>
                         <th class="small">เวลาเวร</th>
-                        <th class="small">สาย</th>
-                        <th class="small">ออกก่อน</th>
+                        <th class="small">สาย (นาที)</th>
+                        <th class="small">ออกก่อน (นาที)</th>
                         <th class="small">รูปภาพ</th>
                         <th class="small">สถานะ</th>
                         <th class="small">คำสั่ง</th>
@@ -152,7 +140,9 @@ $pagination = $dataProvider->getPagination();
                         $nameStr = $emp ? ($emp->fname . ' ' . $emp->lname) : '-';
                         $deptStr = $emp ? $emp->departmentName() : '-';
                         $workTypeStr = $emp && method_exists($emp, 'viewWorkType') ? ($emp->viewWorkType() ?: '-') : '-';
-                        $shiftNameStr = $emp && !empty($emp->work_shift) ? ($emp->work_shift === 'normal' ? 'ปกติ' : 'เวร') : '-';
+                        $comparison = \app\modules\attendance\services\RosterAttendance::forRecord($m);
+                        $shift = $comparison['shift'];
+                        $shiftNameStr = $shift['name'] ?? 'ไม่ระบุเวร';
                     ?>
                     <tr>
                         <td><?= (int)$no ?></td>
@@ -163,9 +153,9 @@ $pagination = $dataProvider->getPagination();
                         <td><?= Html::encode($m->getCheckTypeLabel()) ?></td>
                         <td><?= Html::encode($workTypeStr) ?></td>
                         <td><?= Html::encode($shiftNameStr) ?></td>
-                        <td>08:30-16:30</td>
-                        <td><?= Html::encode($formatLate($m->checkin_at)) ?></td>
-                        <td>-</td>
+                        <td><?= Html::encode($shift ? $shift['start'] . ' ถึง ' . $shift['end'] : '-') ?></td>
+                        <td><?= Html::encode($comparison['late_minutes'] ?? '-') ?></td>
+                        <td><?= Html::encode($comparison['early_minutes'] ?? '-') ?></td>
                         <td>
                             <?php if (empty($m->photo_path)): ?>
                                 <span class="text-muted" title="ไม่มีรูป"><i class="bi bi-image"></i></span>

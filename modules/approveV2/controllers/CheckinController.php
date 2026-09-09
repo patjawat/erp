@@ -9,80 +9,65 @@ use yii\web\NotFoundHttpException;
 use app\components\UserHelper;
 use app\modules\approveV2\models\Approve;
 use app\modules\approveV2\models\ApproveSearch;
-use app\modules\attendance\models\CheckinRecord;
+use app\modules\attendance\services\AttendanceAccess;
+use app\modules\attendance\services\AttendanceService;
 
 class CheckinController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => ['class' => \yii\filters\AccessControl::class, 'rules' => [['allow' => true, 'roles' => ['@']]]],
+            'verbs' => ['class' => \yii\filters\VerbFilter::class, 'actions' => ['update' => ['POST']]],
+        ];
+    }
+
     public function actionIndex()
     {
         $me = UserHelper::GetEmployee();
+        if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
         $searchModel = new ApproveSearch(['status' => 'Pending']);
         $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['approve.name' => 'checkin']);
-        $dataProvider->query->andWhere(['approve.emp_id' => $me->id]);
-        $dataProvider->query->andWhere(['approve.status' => 'Pending']);
-        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
+        $dataProvider->query->andWhere(['approve.name' => 'checkin', 'approve.status' => 'Pending', 'approve.deleted_at' => null]);
         $dataProvider->query->joinWith(['checkinRecord', 'checkinRecord.employee']);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        $dataProvider->query->andWhere(['checkin_record.status' => 'pending']);
+        $dataProvider->query->andWhere(['<>', 'checkin_record.emp_id', $me->id]);
+        if (!AttendanceAccess::isReviewer()) {
+            $dataProvider->query->andWhere(['checkin_record.emp_id' => AttendanceAccess::reviewableEmployeeIds()]);
+        }
+        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
+        return $this->render('index', compact('searchModel', 'dataProvider'));
     }
 
-    public function actionUpdate($id)
+    public function actionUpdate($id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $model = $this->findModel($id);
-        if (!$model || $model->name !== 'checkin') {
-            throw new NotFoundHttpException('ไม่พบรายการ');
-        }
-        $me = UserHelper::GetEmployee();
-        if ($model->emp_id != $me->id) {
-            return ['status' => 'error', 'message' => 'ไม่มีสิทธิ์อนุมัติรายการนี้'];
-        }
-        if (!$this->request->isPost) {
-            return ['status' => 'error', 'message' => 'Invalid request'];
-        }
-        $status = $this->request->post('status'); // Pass | Reject
+        $id = $id ?? $this->request->post('id');
+        $status = $this->request->post('status');
         $comment = $this->request->post('comment', '');
-        $model->status = $status;
-        $model->data_json = array_merge((array)$model->data_json, [
-            'approve_date' => date('Y-m-d H:i:s'),
-            'comment' => $comment,
-        ]);
-        if ($model->save(false)) {
-            $record = CheckinRecord::findOne((int)$model->from_id);
-            if ($record) {
-                $record->applyApproveResult($status, $comment);
-            }
-            return ['status' => 'success'];
+        if (!is_scalar($id) || !ctype_digit((string)$id) || !is_string($status) || !is_string($comment)) {
+            return ['status' => 'error', 'message' => 'ข้อมูลคำขอไม่ถูกต้อง'];
         }
-        return ['status' => 'error', 'message' => 'บันทึกไม่สำเร็จ'];
+        try {
+            AttendanceService::approve((int)$id, $status, trim($comment));
+            return ['status' => 'success'];
+        } catch (\DomainException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        } catch (\yii\web\ForbiddenHttpException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Yii::error($e, __METHOD__);
+            Yii::$app->response->statusCode = 500;
+            return ['status' => 'error', 'message' => 'บันทึกผลไม่สำเร็จ กรุณาลองใหม่'];
+        }
     }
 
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        if (!$model || $model->name !== 'checkin') {
-            throw new NotFoundHttpException('ไม่พบรายการ');
-        }
-        $record = $model->checkinRecord;
-        if (!$record) {
-            throw new NotFoundHttpException('ไม่พบข้อมูลการลงเวลา');
-        }
-        return $this->render('view', [
-            'approve' => $model,
-            'model' => $record,
-        ]);
-    }
-
-    protected function findModel($id)
-    {
-        $model = Approve::findOne($id);
-        if ($model === null) {
-            throw new NotFoundHttpException('ไม่พบรายการอนุมัติ');
-        }
-        return $model;
+        $approve = Approve::findOne(['id' => $id, 'name' => 'checkin', 'deleted_at' => null]);
+        $model = $approve ? $approve->checkinRecord : null;
+        if (!$model) throw new NotFoundHttpException('ไม่พบข้อมูลการลงเวลา');
+        if (!AttendanceAccess::canReview($model)) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์ตรวจสอบรายการนี้');
+        return $this->render('view', compact('approve', 'model'));
     }
 }

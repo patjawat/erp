@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <i class="bi bi-file-earmark-spreadsheet fs-4 text-primary"></i>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted mb-0">รูปแบบ: emp_id หรือเลขบัตรประชาชน, วันเวลา (Y-m-d H:i:s), method (qrcode/photo/manual), lat, lng, out_of_location_reason</p>
+    <p class="text-muted mb-0">ไฟล์ UTF-8 ไม่เกิน 5 MB / 5,000 แถว · มีข้อผิดพลาดจะย้อนกลับทั้งไฟล์ · รายการซ้ำจะข้าม และทุกรายการใหม่รออนุมัติ</p>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -42,6 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-body p-4">
         <p class="text-success mb-2"><strong>นำเข้าสำเร็จ <?= (int)$saved ?> รายการ</strong><?= isset($lineNo) ? ' (จาก ' . $lineNo . ' แถว)' : '' ?></p>
+        <p class="text-body-secondary">ข้ามรายการซ้ำ <?= (int)($skipped ?? 0) ?> รายการ</p>
         <?php if (!empty($errors)): ?>
         <p class="text-danger small mb-1">ข้อผิดพลาด:</p>
         <ul class="small text-danger mb-0">
@@ -58,12 +59,12 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php endif; ?>
 
 <div class="card border-0 shadow-sm rounded-3 mt-3">
-    <div class="card-header bg-light py-2 px-3">
-        <h6 class="mb-0 small fw-normal text-muted">ตัวอย่าง CSV</h6>
+    <div class="card-header bg-body-tertiary py-2 px-3">
+        <h6 class="mb-0 small fw-normal text-body-secondary">ตัวอย่าง CSV (เปลี่ยนรหัสพนักงานและวันเวลาให้ตรงกับข้อมูลของคุณ)</h6>
     </div>
     <div class="card-body p-3">
-        <pre class="mb-0 small bg-light p-3 rounded">emp_id,checkin_at,method,lat,lng,out_of_location_reason
-1,2026-02-24 08:30:00,manual,13.7563,100.5018,
-2,2026-02-24 08:45:00,qrcode,,,</pre>
+        <p>ใช้หัวคอลัมน์ emp_id สำหรับรหัสพนักงานในระบบ หรือ cid สำหรับเลขบัตรประชาชน ห้ามใช้ทั้งสองคอลัมน์ในไฟล์เดียวกัน ส่วน roster_item_id คือรายการเวรที่ประกาศใช้ เว้นว่างเพื่อให้ผู้ตรวจสอบจับคู่ภายหลังได้</p><p>คอลัมน์เสริม: method, lat, lng, out_of_location_reason ข้อมูลนำเข้าจะระบุว่ายังไม่ได้ตรวจ GPS แม้มีพิกัดจากต้นทาง</p><pre class="mb-0 small bg-body-tertiary p-3 rounded">emp_id,checkin_at,check_type,roster_item_id
+1,2026-02-24 08:30:00,in,
+1,2026-02-24 16:30:00,out,</pre>
     </div>
 </div>
