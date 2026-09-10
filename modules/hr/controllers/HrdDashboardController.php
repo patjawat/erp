@@ -57,15 +57,16 @@ class HrdDashboardController extends Controller
         }
 
         $metrics = new HrdMetricsService($fy);
-        $kpis = $metrics->kpis();
-        $trend = $metrics->developmentTrend();
 
         return $this->render('index', [
             'fy' => $fy,
             'currentFy' => $currentFy,
             'fyOptions' => $fyOptions,
-            'kpis' => $kpis,
-            'trend' => $trend,
+            'kpis' => $metrics->kpis(),
+            'trend' => $metrics->developmentTrend(),
+            'activity' => $metrics->recentActivity(8),
+            'inbox' => $metrics->workflowInbox(),
+            'deadlines' => $metrics->upcomingDeadlines(60),
             'coverageThreshold' => HrdMetricsService::COVERAGE_THRESHOLD,
         ]);
     }

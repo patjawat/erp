@@ -244,6 +244,170 @@ class HrdMetricsService
     }
 
     // -----------------------------------------------------------------
+    // เฟส 2: feed กิจกรรม / งานรออนุมัติ / กำหนดการที่จะถึง
+    // -----------------------------------------------------------------
+
+    /** SQL ชื่อ-สกุลจากตาราง employees (alias) */
+    private static function nameSql(string $a): string
+    {
+        return "TRIM(CONCAT(COALESCE({$a}.prefix,''), {$a}.fname, ' ', {$a}.lname))";
+    }
+
+    /**
+     * กิจกรรมพัฒนาบุคลากรล่าสุดในระบบ (รวมจากหลายโมดูล เรียงเวลาใหม่->เก่า)
+     * cache สั้น (5 นาที) เพราะเป็นข้อมูลเคลื่อนไหว
+     *
+     * @return array<int, array{at:string, icon:string, color:string, name:string, text:string, url:string}>
+     */
+    public function recentActivity(int $limit = 8): array
+    {
+        return $this->cache(__FUNCTION__, function () use ($limit) {
+            $items = [];
+            $name = self::nameSql('e');
+
+            // IDP: ส่งแผน / ปิดแผน
+            if ($this->tableExists('idp_plan')) {
+                foreach ($this->all(
+                    "SELECT {$name} AS name, p.submitted_at AS at, 'submitted' AS kind
+                     FROM idp_plan p INNER JOIN employees e ON e.id = p.emp_id
+                     WHERE p.submitted_at IS NOT NULL
+                     UNION ALL
+                     SELECT {$name} AS name, p.completed_at AS at, 'completed' AS kind
+                     FROM idp_plan p INNER JOIN employees e ON e.id = p.emp_id
+                     WHERE p.completed_at IS NOT NULL
+                     ORDER BY at DESC LIMIT 12"
+                ) as $r) {
+                    $done = $r['kind'] === 'completed';
+                    $items[] = [
+                        'at' => $r['at'], 'icon' => $done ? 'bi-clipboard2-check' : 'bi-send',
+                        'color' => $done ? 'success' : 'warning', 'name' => $r['name'],
+                        'text' => $done ? 'ปิดแผน IDP เสร็จสิ้น' : 'ส่งแผน IDP รอเห็นชอบ',
+                        'route' => ['/hr/idp/index'],
+                    ];
+                }
+            }
+            // ประเมินสมรรถนะ: ส่งผล
+            if ($this->tableExists('hr_competency_evaluation') && $this->tableExists('hr_competency_assignment')) {
+                foreach ($this->all(
+                    "SELECT {$name} AS name, ev.submitted_at AS at
+                     FROM hr_competency_evaluation ev
+                     INNER JOIN hr_competency_assignment a ON a.id = ev.assignment_id
+                     INNER JOIN employees e ON e.id = a.emp_id
+                     WHERE ev.submitted_at IS NOT NULL
+                     ORDER BY ev.submitted_at DESC LIMIT 12"
+                ) as $r) {
+                    $items[] = [
+                        'at' => $r['at'], 'icon' => 'bi-bullseye', 'color' => 'primary',
+                        'name' => $r['name'], 'text' => 'ส่งผลประเมินสมรรถนะ',
+                        'route' => ['/hr/competency'],
+                    ];
+                }
+            }
+            // อบรม/พัฒนา: สำเร็จ
+            if ($this->tableExists('employee_training_plan')) {
+                foreach ($this->all(
+                    "SELECT {$name} AS name, p.completed_at AS at
+                     FROM employee_training_plan p INNER JOIN employees e ON e.id = p.emp_id
+                     WHERE p.completed_at IS NOT NULL
+                     ORDER BY p.completed_at DESC LIMIT 12"
+                ) as $r) {
+                    $items[] = [
+                        'at' => $r['at'], 'icon' => 'bi-mortarboard', 'color' => 'info',
+                        'name' => $r['name'], 'text' => 'แผนพัฒนา/อบรมสำเร็จ',
+                        'route' => ['/hr/training-roadmap/index'],
+                    ];
+                }
+            }
+
+            usort($items, fn ($a, $b) => strcmp((string) $b['at'], (string) $a['at']));
+            return array_slice($items, 0, $limit);
+        }, 300);
+    }
+
+    /**
+     * งานที่รอดำเนินการของ HR/หัวหน้า (นับจำนวน + ลิงก์ไปจัดการ) — แสดงเฉพาะที่ค้างจริง
+     *
+     * @return array<int, array{label:string, count:int, url:string, icon:string, color:string}>
+     */
+    public function workflowInbox(): array
+    {
+        return $this->cache(__FUNCTION__, function () {
+            $out = [];
+            $push = function ($label, $count, array $route, $icon, $color) use (&$out) {
+                if ($count > 0) {
+                    $out[] = ['label' => $label, 'count' => (int) $count, 'route' => $route, 'icon' => $icon, 'color' => $color];
+                }
+            };
+            if ($this->tableExists('idp_plan')) {
+                $idpRoute = ['/hr/idp/index'];
+                $push('IDP รอหัวหน้าเห็นชอบ', $this->scalar("SELECT COUNT(*) FROM idp_plan WHERE status='submitted'"), $idpRoute, 'bi-person-check', 'warning');
+                $push('IDP รอ HR เปิดบันทึก', $this->scalar("SELECT COUNT(*) FROM idp_plan WHERE status='approved'"), $idpRoute, 'bi-unlock', 'primary');
+                $push('IDP รอปิดรอบ', $this->scalar("SELECT COUNT(*) FROM idp_plan WHERE status='assessment'"), $idpRoute, 'bi-flag', 'info');
+            }
+            if ($this->tableExists('employee_training_plan')) {
+                $push('แผนอบรมรอประเมินผล', $this->scalar("SELECT COUNT(*) FROM employee_training_plan WHERE status='assessment'"), ['/hr/training-roadmap/index'], 'bi-clipboard-data', 'success');
+            }
+            // ประเมินสมรรถนะรอบเปิดของปีงบ ที่ยังไม่ส่งผล
+            if ($this->tableExists('hr_appraisal_round') && $this->tableExists('hr_competency_assignment')) {
+                $pending = $this->scalar(
+                    "SELECT COUNT(*)
+                     FROM hr_competency_assignment a
+                     INNER JOIN hr_appraisal_round r ON r.id = a.round_id
+                     LEFT JOIN hr_competency_evaluation ev ON ev.assignment_id = a.id AND ev.status='submitted'
+                     WHERE r.fiscal_year = :fy AND r.status='open' AND ev.id IS NULL",
+                    [':fy' => $this->fiscalYear]
+                );
+                $push('รอส่งผลประเมินสมรรถนะ', $pending, ['/hr/competency'], 'bi-bullseye', 'secondary');
+            }
+            return $out;
+        }, 300);
+    }
+
+    /**
+     * กำหนดการพัฒนาที่จะครบใน N วันข้างหน้า (แผนอบรมใกล้ครบกำหนด + กำหนดรอบ IDP)
+     *
+     * @return array<int, array{date:string, label:string, name:?string, icon:string, color:string}>
+     */
+    public function upcomingDeadlines(int $days = 60): array
+    {
+        return $this->cache(__FUNCTION__, function () use ($days) {
+            $today = date('Y-m-d');
+            $until = date('Y-m-d', strtotime("+{$days} day"));
+            $items = [];
+
+            if ($this->tableExists('employee_training_plan') && $this->columnExists('employee_training_plan', 'target_end_date')) {
+                $name = self::nameSql('e');
+                foreach ($this->all(
+                    "SELECT {$name} AS name, p.target_end_date AS date
+                     FROM employee_training_plan p INNER JOIN employees e ON e.id = p.emp_id
+                     WHERE p.target_end_date BETWEEN :today AND :until
+                       AND p.status IN ('assigned','in_progress','assessment')
+                     ORDER BY p.target_end_date ASC LIMIT 15",
+                    [':today' => $today, ':until' => $until]
+                ) as $r) {
+                    $items[] = ['date' => $r['date'], 'label' => 'ครบกำหนดแผนพัฒนา/อบรม', 'name' => $r['name'], 'icon' => 'bi-mortarboard', 'color' => 'info'];
+                }
+            }
+            if ($this->tableExists('idp_cycle')) {
+                foreach ($this->all(
+                    "SELECT title, submission_due_date, review_due_date FROM idp_cycle
+                     WHERE fiscal_year = :fy AND status='active' LIMIT 3",
+                    [':fy' => $this->fiscalYear]
+                ) as $c) {
+                    foreach ([['submission_due_date', 'ครบกำหนดส่งแผน IDP'], ['review_due_date', 'ครบกำหนดทบทวน IDP']] as $d) {
+                        $dt = $c[$d[0]] ?? null;
+                        if ($dt && $dt >= $today && $dt <= $until) {
+                            $items[] = ['date' => $dt, 'label' => $d[1] . ' (' . $c['title'] . ')', 'name' => null, 'icon' => 'bi-clipboard2-check', 'color' => 'warning'];
+                        }
+                    }
+                }
+            }
+            usort($items, fn ($a, $b) => strcmp((string) $a['date'], (string) $b['date']));
+            return array_slice($items, 0, 10);
+        }, 300);
+    }
+
+    // -----------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------
 
@@ -258,7 +422,7 @@ class HrdMetricsService
         return $keys;
     }
 
-    private function cache(string $suffix, callable $fn)
+    private function cache(string $suffix, callable $fn, ?int $ttl = null)
     {
         $cache = Yii::$app->has('cache') ? Yii::$app->cache : null;
         $key = ['hrd-metrics', $suffix, $this->fiscalYear];
@@ -270,7 +434,7 @@ class HrdMetricsService
         }
         $data = $fn();
         if ($cache !== null) {
-            $cache->set($key, $data, self::CACHE_TTL);
+            $cache->set($key, $data, $ttl ?? self::CACHE_TTL);
         }
         return $data;
     }
@@ -281,7 +445,7 @@ class HrdMetricsService
         if (!Yii::$app->has('cache')) {
             return;
         }
-        foreach (['kpis', 'developmentTrend'] as $suffix) {
+        foreach (['kpis', 'developmentTrend', 'recentActivity', 'workflowInbox', 'upcomingDeadlines'] as $suffix) {
             Yii::$app->cache->delete(['hrd-metrics', $suffix, $this->fiscalYear]);
         }
     }
@@ -294,6 +458,11 @@ class HrdMetricsService
     private function row(string $sql, array $params = []): array
     {
         return Yii::$app->db->createCommand($sql, $params)->queryOne() ?: [];
+    }
+
+    private function all(string $sql, array $params = []): array
+    {
+        return Yii::$app->db->createCommand($sql, $params)->queryAll();
     }
 
     private function tableExists(string $table): bool

@@ -9,9 +9,13 @@
  * @var array $fyOptions
  * @var array $kpis             จาก HrdMetricsService::kpis()
  * @var array $trend            จาก HrdMetricsService::developmentTrend()
+ * @var array $activity         จาก HrdMetricsService::recentActivity()
+ * @var array $inbox            จาก HrdMetricsService::workflowInbox()
+ * @var array $deadlines        จาก HrdMetricsService::upcomingDeadlines()
  * @var float $coverageThreshold
  */
 
+use app\components\ThaiDateHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -179,6 +183,99 @@ CSS, [], 'hrd-dashboard');
                             </a>
                         <?php endforeach; ?>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- แถวล่าง: งานรออนุมัติ / กิจกรรมล่าสุด / กำหนดการที่จะถึง -->
+    <div class="row g-3 mt-0">
+        <!-- งานที่รอดำเนินการ -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-inbox-fill text-primary" aria-hidden="true"></i>
+                        <h2 class="h6 fw-bold mb-0">งานที่รอดำเนินการ</h2>
+                    </div>
+                    <?php if (empty($inbox)): ?>
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-check2-circle fs-3 d-block mb-1 text-success"></i>
+                            <span class="small">ไม่มีงานค้างดำเนินการ</span>
+                        </div>
+                    <?php else: ?>
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($inbox as $i): ?>
+                                <a href="<?= Url::to($i['route']) ?>" data-pjax="0" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-1">
+                                    <span class="hrd-kpi__icon bg-<?= $i['color'] ?>-subtle text-<?= $i['color'] ?>-emphasis" style="width:38px;height:38px;font-size:1rem">
+                                        <i class="bi <?= $i['icon'] ?>" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="flex-grow-1 small fw-semibold"><?= Html::encode($i['label']) ?></span>
+                                    <span class="badge bg-<?= $i['color'] ?> rounded-pill"><?= number_format($i['count']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- กิจกรรมล่าสุด -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-clock-history text-primary" aria-hidden="true"></i>
+                        <h2 class="h6 fw-bold mb-0">กิจกรรมล่าสุด</h2>
+                    </div>
+                    <?php if (empty($activity)): ?>
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-clock fs-3 d-block mb-1"></i>
+                            <span class="small">ยังไม่มีกิจกรรมพัฒนาในระบบ</span>
+                        </div>
+                    <?php else: ?>
+                        <ul class="list-unstyled mb-0">
+                            <?php foreach ($activity as $a): ?>
+                                <li class="d-flex align-items-start gap-2 py-2 border-bottom">
+                                    <span class="text-<?= $a['color'] ?> mt-1"><i class="bi <?= $a['icon'] ?>" aria-hidden="true"></i></span>
+                                    <span class="flex-grow-1">
+                                        <span class="d-block small"><span class="fw-semibold"><?= Html::encode($a['name']) ?></span> — <?= Html::encode($a['text']) ?></span>
+                                        <span class="d-block text-body-secondary" style="font-size:.72rem"><?= $a['at'] ? Html::encode(ThaiDateHelper::formatThaiDate(substr((string) $a['at'], 0, 10))) : '' ?></span>
+                                    </span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- กำหนดการที่จะถึง -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-calendar-event text-primary" aria-hidden="true"></i>
+                        <h2 class="h6 fw-bold mb-0">กำหนดการที่จะถึง (60 วัน)</h2>
+                    </div>
+                    <?php if (empty($deadlines)): ?>
+                        <div class="text-center text-body-secondary py-4">
+                            <i class="bi bi-calendar-check fs-3 d-block mb-1 text-success"></i>
+                            <span class="small">ไม่มีกำหนดการใกล้ครบใน 60 วัน</span>
+                        </div>
+                    <?php else: ?>
+                        <ul class="list-unstyled mb-0">
+                            <?php foreach ($deadlines as $d): ?>
+                                <li class="d-flex align-items-start gap-2 py-2 border-bottom">
+                                    <span class="text-<?= $d['color'] ?> mt-1"><i class="bi <?= $d['icon'] ?>" aria-hidden="true"></i></span>
+                                    <span class="flex-grow-1">
+                                        <span class="d-block small fw-semibold"><?= Html::encode(ThaiDateHelper::formatThaiDate($d['date'])) ?></span>
+                                        <span class="d-block text-body-secondary" style="font-size:.72rem"><?= Html::encode($d['label']) ?><?= $d['name'] ? ' · ' . Html::encode($d['name']) : '' ?></span>
+                                    </span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
