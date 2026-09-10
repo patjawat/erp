@@ -344,24 +344,8 @@ if (!empty($upcomingHealth)): ?>
                     </div>
                 </div>
 
-                <?php $todayCheckinCount = isset($todayCheckinCount) ? (int)$todayCheckinCount : 0; ?>
-                <div class="d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-10 p-4 position-relative rounded-4"
-                    style="min-width: 180px; backdrop-filter: blur(12px);">
-                    <p class="text-white text-opacity-75 mb-2 d-flex align-items-center gap-2 fw-bold"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clock" class="lucide lucide-clock">
-                            <path d="M12 6v6l4 2"></path>
-                            <circle cx="12" cy="12" r="10"></circle>
-                        </svg> ลงเวลาเข้า-ออก</p>
-                    <span id="current-time" class="text-white fw-black mb-2 lh-1 d-block" style="font-size: 2.75rem; letter-spacing: 0.02em;">00:00:00</span>
-                    <?php if ($todayCheckinCount > 0): ?>
-                    <p class="text-white text-opacity-90 small mb-3">ลงเวลาแล้ว <span id="today-checkin-count" class="fw-bold"><?= $todayCheckinCount ?></span> ครั้งวันนี้</p>
-                    <?php else: ?>
-                    <p class="text-white text-opacity-75 small mb-3"><span id="today-checkin-count" class="d-none">0</span>ยังไม่ได้ลงเวลาวันนี้</p>
-                    <?php endif; ?>
-                    <a id="btn-clock-in" href="<?= Url::to(['/attendance/default/checkin-modal']) ?>" data-size="modal-md" class="open-modal btn bg-white w-100 py-2 fw-black border-0 shadow-lg d-flex align-items-center justify-content-center gap-2 hover-scale position-relative z-1 text-decoration-none" style="color: #2563eb; border-radius: 16px; font-size: 0.875rem;">ลงเวลา <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-up-right" class="lucide lucide-arrow-up-right">
-                            <path d="M7 7h10v10"></path>
-                            <path d="M7 17 17 7"></path>
-                        </svg></a>
-                    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="text-white text-opacity-90 small text-decoration-none mt-2 d-block">ประวัติ</a>
+                <div class="attendance-home-scan w-100 order-first order-lg-last" style="max-width: 420px">
+                    <?= $this->render('@app/modules/attendance/views/default/_clock_form') ?>
                 </div>
             </div>
 

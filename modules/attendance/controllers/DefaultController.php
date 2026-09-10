@@ -165,9 +165,13 @@ class DefaultController extends Controller
         $me = UserHelper::GetEmployee();
         if (!$me) return ['success' => false, 'message' => 'ไม่พบข้อมูลพนักงาน'];
         try {
-            $record = AttendanceService::record($me, Yii::$app->request->post());
+            $input = Yii::$app->request->post();
+            unset($input['check_type'], $input['roster_item_id']);
+            $record = AttendanceService::record($me, $input, true);
             return ['success' => true, 'id' => $record->id, 'checkin_at' => $record->checkin_at,
-                'message' => 'บันทึกเวลา ' . $record->checkin_at . ' แล้ว รอหัวหน้าหรือผู้มีสิทธิตรวจสอบอนุมัติ',
+                'duplicate' => $record->wasDuplicate, 'status' => $record->status,
+                'location' => $record->location->name ?? null,
+                'message' => ($record->wasDuplicate ? 'บันทึกไว้แล้ว ไม่สร้างรายการซ้ำ: ' : 'บันทึกเวลาสำเร็จ: ') . $record->checkin_at . ' · ' . $record->getStatusLabel() . (RosterAttendance::forRecord($record)['shift'] ? '' : ' · รอตรวจสอบเวลางาน/ตารางเวร'),
                 'attendance' => RosterAttendance::forRecord($record)];
         } catch (\DomainException $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -183,7 +187,18 @@ class DefaultController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $me = UserHelper::GetEmployee();
         if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
-        return ['shifts' => RosterAttendance::candidates((int)$me->id, AttendanceService::now()), 'now' => AttendanceService::now()];
+        $latest = CheckinRecord::find()->where(['emp_id'=>$me->id])->orderBy(['checkin_at'=>SORT_DESC,'id'=>SORT_DESC])->one();
+        return ['shifts' => RosterAttendance::candidates((int)$me->id, AttendanceService::now()), 'now' => AttendanceService::now(), 'latest'=>$latest ? ['at'=>$latest->checkin_at,'status'=>$latest->getStatusLabel()] : null];
+    }
+
+    public function actionPosition()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $input = Yii::$app->request->post();
+        $token = $input['qr_token'] ?? '';
+        if (!is_string($token)) return ['success'=>false,'message'=>'QR ไม่ถูกต้อง'];
+        $result = CheckinLocation::validateClockIn($input['lat']??null, $input['lng']??null, $token, 'ตรวจตำแหน่งก่อนบันทึก');
+        return ['success'=>$result['ok'],'inside'=>$result['inside']??false,'message'=>$result['message']??'', 'location'=>$result['location']->name??null];
     }
 
     /**

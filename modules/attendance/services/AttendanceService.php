@@ -15,7 +15,7 @@ class AttendanceService
         return (new \DateTimeImmutable('now', new \DateTimeZone('Asia/Bangkok')))->format('Y-m-d H:i:s');
     }
 
-    public static function record(Employees $employee, array $input): CheckinRecord
+    public static function record(Employees $employee, array $input, bool $automatic = false): CheckinRecord
     {
         $type = $input['check_type'] ?? 'in';
         $method = $input['method'] ?? 'manual';
@@ -46,22 +46,44 @@ class AttendanceService
                 $existing = CheckinRecord::find()->where(['emp_id' => $employee->id])
                     ->andWhere("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.request_id')) = :request", [':request' => $requestId])->one();
                 if ($existing) {
+                    $existing->wasDuplicate = true;
                     $tx->commit();
                     return $existing;
                 }
+                if ($automatic) {
+                    $existing = CheckinRecord::find()->where(['emp_id'=>$employee->id])
+                        ->andWhere("JSON_CONTAINS(COALESCE(JSON_EXTRACT(data_json, '$.retry_ids'), JSON_ARRAY()), :retry)", [':retry'=>json_encode($requestId)])->one();
+                    if ($existing) { $existing->wasDuplicate = true; $tx->commit(); return $existing; }
+                }
             }
             $at = self::now();
+            if ($automatic) {
+                $previous = CheckinRecord::find()->where(['emp_id'=>$employee->id])->andWhere(['<>','status','rejected'])
+                    ->andWhere(['>=','checkin_at',date('Y-m-d H:i:s',strtotime($at.' -120 seconds'))])->orderBy(['checkin_at'=>SORT_DESC,'id'=>SORT_DESC])->one();
+                if ($previous) {
+                    if ($requestId !== '') {
+                        $json = (array)$previous->data_json;
+                        $json['retry_ids'] = array_values(array_unique(array_merge($json['retry_ids'] ?? [], [$requestId])));
+                        $previous->data_json=$json; $previous->save(false, ['data_json']);
+                    }
+                    $previous->wasDuplicate = true; $tx->commit(); return $previous;
+                }
+            }
             $validation = CheckinLocation::validateClockIn($input['lat'] ?? null, $input['lng'] ?? null, $token, $reason);
             if (!$validation['ok']) throw new \DomainException($validation['message']);
             $candidates = RosterAttendance::candidates((int)$employee->id, $at);
-            $shiftId = (string)($input['roster_item_id'] ?? '');
+            $shiftId = $automatic ? '' : (string)($input['roster_item_id'] ?? '');
             $shift = null;
             foreach ($candidates as $candidate) {
                 if ((string)$candidate['id'] === $shiftId) $shift = $candidate;
             }
             if ($shiftId !== '' && !$shift) throw new \DomainException('เวรที่เลือกไม่ใช่เวรของคุณหรือยังไม่ประกาศใช้ กรุณาโหลดตารางเวรใหม่');
-            if (!$shift && count($candidates) === 1) $shift = $candidates[0];
-            if (!$shift && count($candidates) > 1) throw new \DomainException('มีหลายเวร กรุณาเลือกเวรที่จะลงเวลา');
+            if ($automatic) {
+                $match = ScanMatcher::match($at, $candidates); $shift = $match['shift']; $type = $match['type'];
+            } else {
+                if (!$shift && count($candidates) === 1) $shift = $candidates[0];
+                if (!$shift && count($candidates) > 1) throw new \DomainException('มีหลายเวร กรุณาเลือกเวรที่จะลงเวลา');
+            }
             $recent = CheckinRecord::find()->where(['emp_id' => $employee->id, 'check_type' => $type])
                 ->andWhere(['<>', 'status', CheckinRecord::STATUS_REJECTED])
                 ->andWhere(['>=', 'checkin_at', date('Y-m-d H:i:s', strtotime($at . ' -30 seconds'))])->all();
@@ -89,6 +111,8 @@ class AttendanceService
                 'request_id' => $requestId ?: null,
                 'attendance' => RosterAttendance::evaluate($at, $type, $shift),
                 'geofence' => $validation['meta'],
+                'raw_scan' => ['at'=>$at, 'method'=>$method, 'lat'=>$input['lat'], 'lng'=>$input['lng']],
+                'matching' => $automatic ? 'nearest-boundary-v1' : 'explicit',
             ];
             if (!$record->save()) throw new \DomainException(implode(' ', $record->getFirstErrors()));
             $record->createApproveRecord();

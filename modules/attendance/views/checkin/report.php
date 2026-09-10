@@ -76,6 +76,7 @@ $statusBadge = function ($status, $label) {
         <div class="col-12 col-md-6 col-lg-2">
             <?= $form->field($searchModel, 'check_type')->dropdownList([
                 '' => 'ทุกประเภท',
+                'scan' => 'เวลาสแกนรอจับคู่',
                 'in' => 'บันทึกเข้า',
                 'out' => 'บันทึกออก',
             ], ['class' => 'form-select'])->label('ประเภทการลง') ?>

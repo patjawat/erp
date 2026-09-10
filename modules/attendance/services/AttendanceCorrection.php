@@ -33,7 +33,7 @@ class AttendanceCorrection
     public static function shift(int $employeeId, string $at, $id): ?array
     {
         if ($id === '' || $id === null) return null;
-        if (!is_scalar($id) || !ctype_digit((string)$id)) throw new \DomainException('รหัสเวรไม่ถูกต้อง');
+        if (!is_scalar($id) || !preg_match('/^(?:[0-9]+|normal:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2})$/D', (string)$id)) throw new \DomainException('รหัสเวรไม่ถูกต้อง');
         foreach (RosterAttendance::candidates($employeeId, $at) as $shift) {
             if ((string)$shift['id'] === (string)$id) return $shift;
         }
@@ -48,7 +48,7 @@ class AttendanceCorrection
         $reason = trim($input['reason']);
         if ($reason === '' || mb_strlen($reason) > 2000) throw new \DomainException('กรุณาระบุเหตุผลแก้ไข ไม่เกิน 2,000 ตัวอักษร');
         $at = self::timestamp($input['checkin_at']);
-        if (!in_array($input['check_type'], ['in', 'out'], true)) throw new \DomainException('ประเภทลงเวลาไม่ถูกต้อง');
+        if (!in_array($input['check_type'], ['in', 'out', 'scan'], true)) throw new \DomainException('ประเภทลงเวลาไม่ถูกต้อง');
         $db = Yii::$app->db;
         $tx = $db->beginTransaction();
         try {
@@ -63,6 +63,7 @@ class AttendanceCorrection
                 ->andWhere(['<>', 'id', $id])->exists();
             if ($duplicate) throw new \DomainException('มีรายการประเภทเดียวกันในเวลานี้แล้ว');
             $data = is_array($record->data_json) ? $record->data_json : [];
+            if (!isset($data['raw_scan'])) $data['raw_scan'] = ['at'=>$record->checkin_at,'method'=>$record->method,'lat'=>$record->lat,'lng'=>$record->lng,'check_type'=>$record->check_type];
             $data['amendments'][] = [
                 'at' => AttendanceService::now(), 'by' => Yii::$app->user->id, 'reason' => $reason,
                 'before' => ['checkin_at' => $record->checkin_at, 'check_type' => $record->check_type, 'attendance' => $data['attendance'] ?? null,

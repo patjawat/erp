@@ -15,6 +15,7 @@ class Module extends \yii\base\Module
         if (!parent::beforeAction($action)) return false;
         \Yii::$app->view->registerCssFile('@web/css/attendance.css', ['depends' => [\app\assets\AppAsset::class]]);
         if (\Yii::$app->user->isGuest) {
+            if (in_array($action->id, ['save','position','shifts'], true)) throw new \yii\web\UnauthorizedHttpException('กรุณาเข้าสู่ระบบใหม่');
             \Yii::$app->user->loginRequired();
             return false;
         }
@@ -25,7 +26,7 @@ class Module extends \yii\base\Module
             || ($controller === 'default' && $id === 'qr-code')) && !$manager) {
             throw new \yii\web\ForbiddenHttpException('สำหรับผู้ดูแลระบบลงเวลาเท่านั้น');
         }
-        $writes = ['default' => ['save', 'upload-photo'], 'location' => ['delete'], 'checkin' => ['delete', 'import-csv']];
+        $writes = ['default' => ['save', 'position', 'upload-photo'], 'location' => ['delete'], 'checkin' => ['delete', 'import-csv']];
         if (in_array($id, $writes[$controller] ?? [], true) && !\Yii::$app->request->isPost) {
             throw new \yii\web\MethodNotAllowedHttpException('อนุญาตเฉพาะ POST');
         }

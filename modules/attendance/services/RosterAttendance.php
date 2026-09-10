@@ -28,7 +28,10 @@ class RosterAttendance
             ->andWhere(['<>', 'i.status', Item::STATUS_CANCELLED])
             ->andWhere(['between', 'i.work_date', $from, $to])->orderBy(['i.work_date' => SORT_ASC, 'i.id' => SORT_ASC])->all();
         $result = [];
+        $occupied = [];
         foreach ($items as $item) {
+            // An explicit roster day (including OFF) must never fall back to normal hours.
+            $occupied[(int)$item->emp_id][$item->work_date] = true;
             $shift = $item->unitShift;
             if ($item->isOff() || !$shift || !$shift->start_time || !$shift->end_time) continue;
             $result[] = array_merge(self::interval($item->work_date, $shift->start_time, $shift->end_time), [
@@ -36,7 +39,7 @@ class RosterAttendance
                 'work_date' => $item->work_date, 'name' => $item->shiftName(),
             ]);
         }
-        return $result;
+        return array_merge($result, WorkScheduleService::shifts($employeeIds, $from, $to, $occupied));
     }
 
     /** Limit suggestions to shifts on the adjacent work dates; never guess between multiple shifts. */
@@ -51,16 +54,19 @@ class RosterAttendance
         $days = [];
         $byShift = [];
         $schedule = [];
-        foreach ($shifts as $shift) $schedule[$shift['emp_id'] . ':' . $shift['id']] = $shift;
+        $keyFor = static fn($shift) => $shift['emp_id'] . ':' . (($shift['source'] ?? '') === 'normal' ? 'normal:'.$shift['work_date'] : $shift['id']);
+        $snapshots = [];
+        foreach ($shifts as $shift) $schedule[$keyFor($shift)] = $shift;
         foreach ($records as $record) {
             if ($record->status === 'rejected') continue;
             $evaluation = self::forRecord($record);
             $shift = $evaluation['shift'];
             if (!$shift) continue;
-            $key = (int)$record->emp_id . ':' . $shift['id'];
+            $key = $keyFor($shift);
             $byShift[$key][] = $record;
             // A recorded snapshot remains reportable even after a later roster edit/swap.
-            if (!isset($schedule[$key])) $schedule[$key] = $shift;
+            if (!isset($schedule[$key]) || (($shift['source'] ?? '') === 'normal' && !isset($snapshots[$key]))) $schedule[$key] = $shift;
+            $snapshots[$key] = true;
         }
         foreach ($schedule as $shift) {
             $emp = $shift['emp_id'];
@@ -69,7 +75,7 @@ class RosterAttendance
             $day =& $days[$emp][$date];
             $day['shifts']++;
             $day['ended'] = $day['ended'] || $shift['end'] < $now;
-            $entries = $byShift[$emp . ':' . $shift['id']] ?? [];
+            $entries = $byShift[$keyFor($shift)] ?? [];
             $first = null;
             $hasPending = false;
             foreach ($entries as $record) {
@@ -99,7 +105,7 @@ class RosterAttendance
         $end = (new \DateTimeImmutable($shift['end'], $zone))->getTimestamp();
         return [
             'shift' => $shift,
-            'late_minutes' => $type === 'in' ? max(0, (int)ceil(($time - $start) / 60)) : null,
+            'late_minutes' => $type === 'in' ? max(0, (int)ceil(($time - $start) / 60) - (int)($shift['grace_minutes'] ?? 0)) : null,
             'early_minutes' => $type === 'out' ? max(0, (int)ceil(($end - $time) / 60)) : null,
         ];
     }

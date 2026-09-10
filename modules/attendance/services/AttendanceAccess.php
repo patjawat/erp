@@ -10,7 +10,23 @@ class AttendanceAccess
 {
     public static function isReviewer(): bool
     {
-        return !Yii::$app->user->isGuest && (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview'));
+        if (Yii::$app->user->isGuest) return false;
+        if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview')) return true;
+        $me = UserHelper::GetEmployee();
+        return $me && \app\components\SiteHelper::isDirectorFromSettings((int)$me->id);
+    }
+
+    /** Shared by inbox and badges: only pending, active requests the viewer can decide. */
+    public static function pendingQuery()
+    {
+        $query = \app\modules\approveV2\models\Approve::find()->alias('approve')
+            ->joinWith(['checkinRecord', 'checkinRecord.employee'])
+            ->where(['approve.name'=>'checkin','approve.status'=>'Pending','approve.deleted_at'=>null,'checkin_record.status'=>'pending']);
+        $me = UserHelper::GetEmployee();
+        if (!$me || Yii::$app->user->isGuest) return $query->andWhere('1=0');
+        $query->andWhere(['<>','checkin_record.emp_id',$me->id]);
+        if (!self::isReviewer()) $query->andWhere(['checkin_record.emp_id'=>self::reviewableEmployeeIds()]);
+        return $query;
     }
 
     public static function canReview($record): bool

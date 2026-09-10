@@ -20,7 +20,7 @@ $models = $dataProvider->getModels();
 $pagination = $dataProvider->getPagination();
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/attendance/menu', ['active' => 'history']) ?>
+<?= Html::a('กลับหน้าของฉัน', ['/me'], ['class'=>'btn btn-outline-primary']) ?>
 <?php $this->endBlock(); ?>
 
 <?php $this->beginBlock('page-title'); ?>
@@ -40,11 +40,7 @@ $pagination = $dataProvider->getPagination();
             <a href="<?= Url::to(['/attendance/default/checkin']) ?>" class="att-btn att-btn--primary att-btn--sm">
                 <i class="bi bi-plus-lg"></i> ลงเวลา
             </a>
-            <?php if ($isAdminOrHr): ?>
-            <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="att-btn att-btn--light att-btn--sm">
-                <i class="bi bi-people"></i> ดูของทั้งหน่วยงาน
-            </a>
-            <?php endif; ?>
+
         </div>
 
         <!-- ตัวกรอง: เลือกช่วงเวลาสำเร็จรูป หรือกำหนดวันที่เอง -->

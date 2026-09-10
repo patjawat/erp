@@ -34,6 +34,7 @@ use app\modules\approveV2\models\Approve;
  */
 class CheckinRecord extends \yii\db\ActiveRecord
 {
+    public $wasDuplicate = false;
     const METHOD_QRCODE = 'qrcode';
     const METHOD_PHOTO = 'photo';
     const METHOD_MANUAL = 'manual';
@@ -75,7 +76,7 @@ class CheckinRecord extends \yii\db\ActiveRecord
             [['approved_at', 'created_at', 'updated_at'], 'safe'],
             [['out_of_location_reason', 'comment'], 'string'],
             [['method'], 'in', 'range' => [self::METHOD_QRCODE, self::METHOD_PHOTO, self::METHOD_MANUAL, self::METHOD_IMPORT]],
-            [['check_type'], 'in', 'range' => [self::CHECK_TYPE_IN, self::CHECK_TYPE_OUT]],
+            [['check_type'], 'in', 'range' => [self::CHECK_TYPE_IN, self::CHECK_TYPE_OUT, 'scan']],
             [['check_type'], 'default', 'value' => self::CHECK_TYPE_IN],
             [['status'], 'in', 'range' => [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED]],
             [['status'], 'default', 'value' => self::STATUS_PENDING],
@@ -148,6 +149,7 @@ class CheckinRecord extends \yii\db\ActiveRecord
         $labels = [
             self::CHECK_TYPE_IN => 'บันทึกเข้า',
             self::CHECK_TYPE_OUT => 'บันทึกออก',
+            'scan' => 'เวลาสแกน — รอจับคู่เวร',
         ];
         return $labels[$this->check_type] ?? $this->check_type;
     }

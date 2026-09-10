@@ -69,6 +69,7 @@ JS
 );
 ?>
 
+<?= $this->render('@app/modules/attendance/views/checkin/_scan_evidence', ['model'=>$model]) ?>
 <?php $amendments = (is_array($model->data_json) ? $model->data_json : [])['amendments'] ?? []; ?>
 <?php if ($amendments): ?>
 <section class="mt-3"><h2 class="h6">ประวัติการแก้ไข</h2><ol class="list-group list-group-numbered">

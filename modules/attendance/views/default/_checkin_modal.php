@@ -1,2 +1,2 @@
 <?php
-echo $this->render('_clock_form', ['checkType' => $checkType ?? 'in']);
+echo $this->render('_clock_form', ['autoStart' => true]);

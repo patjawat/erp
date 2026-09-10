@@ -106,7 +106,8 @@ class CheckinController extends Controller
         if (!$record || !\app\modules\attendance\services\AttendanceCorrection::canAmend($record)) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์แก้ไข');
         try {
             $at = \app\modules\attendance\services\AttendanceCorrection::timestamp($at);
-            return ['success' => true, 'shifts' => RosterAttendance::candidates((int)$record->emp_id, $at)];
+            $shifts = RosterAttendance::candidates((int)$record->emp_id, $at);
+            return ['success' => true, 'shifts' => $shifts, 'suggestion'=>\app\modules\attendance\services\ScanMatcher::match($at,$shifts)];
         } catch (\DomainException $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }

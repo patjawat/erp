@@ -26,16 +26,8 @@ class CheckinController extends Controller
     {
         $me = UserHelper::GetEmployee();
         if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
-        $searchModel = new ApproveSearch(['status' => 'Pending']);
-        $dataProvider = $searchModel->search($this->request->queryParams);
-        $dataProvider->query->andWhere(['approve.name' => 'checkin', 'approve.status' => 'Pending', 'approve.deleted_at' => null]);
-        $dataProvider->query->joinWith(['checkinRecord', 'checkinRecord.employee']);
-        $dataProvider->query->andWhere(['checkin_record.status' => 'pending']);
-        $dataProvider->query->andWhere(['<>', 'checkin_record.emp_id', $me->id]);
-        if (!AttendanceAccess::isReviewer()) {
-            $dataProvider->query->andWhere(['checkin_record.emp_id' => AttendanceAccess::reviewableEmployeeIds()]);
-        }
-        $dataProvider->query->orderBy(['approve.id' => SORT_DESC]);
+        $searchModel = new ApproveSearch(['status'=>'Pending']);
+        $dataProvider = new \yii\data\ActiveDataProvider(['query'=>AttendanceAccess::pendingQuery()->orderBy(['approve.id'=>SORT_DESC]),'pagination'=>['pageSize'=>20]]);
         return $this->render('index', compact('searchModel', 'dataProvider'));
     }
 

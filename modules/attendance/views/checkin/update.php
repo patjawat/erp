@@ -23,10 +23,10 @@ foreach ($shifts as $shift) $options[$shift['id']] = $shift['name'] . ' · ' . $
 <div class="mb-3"><label for="correction-time" class="form-label">วันเวลา</label>
 <?= Html::input('datetime-local', 'Correction[checkin_at]', str_replace(' ', 'T', $values['checkin_at'] ?? $model->checkin_at), ['id' => 'correction-time', 'class' => 'form-control', 'required' => true, 'step' => 1]) ?></div>
 <div class="mb-3"><label for="correction-type" class="form-label">ประเภทลงเวลา</label>
-<?= Html::dropDownList('Correction[check_type]', $values['check_type'] ?? $model->check_type, ['in' => 'ลงเวลาเข้า', 'out' => 'ลงเวลาออก'], ['id' => 'correction-type', 'class' => 'form-select']) ?></div>
+<?= Html::dropDownList('Correction[check_type]', $values['check_type'] ?? $model->check_type, ['scan'=>'รอจับคู่เข้า–ออก','in' => 'ลงเวลาเข้า', 'out' => 'ลงเวลาออก'], ['id' => 'correction-type', 'class' => 'form-select']) ?></div>
 <div class="mb-3"><label for="correction-shift" class="form-label">เวรที่เทียบ</label>
 <?= Html::dropDownList('Correction[roster_item_id]', $selected, $options, ['id' => 'correction-shift', 'class' => 'form-select']) ?>
-<button type="button" id="correction-reload" class="btn btn-outline-secondary btn-sm mt-2">โหลดเวรตามวันเวลาใหม่</button>
+<button type="button" id="correction-reload" class="btn btn-outline-secondary btn-sm mt-2">ประเมินตามเวลางานใหม่</button>
 <p id="correction-feedback" class="form-text" role="status"></p></div>
 <div class="mb-3"><label for="correction-reason" class="form-label">เหตุผลแก้ไข</label>
 <?= Html::textarea('Correction[reason]', $values['reason'] ?? '', ['id' => 'correction-reason', 'class' => 'form-control', 'required' => true, 'maxlength' => 2000, 'rows' => 3]) ?></div>
@@ -42,7 +42,9 @@ $('#correction-reload').on('click', function () {
         if (!r.success) { $('#correction-feedback').text(r.message); return; }
         var select = $('#correction-shift').empty().append(new Option('ยังไม่ระบุเวร — รอตรวจสอบ', ''));
         r.shifts.forEach(function (s) { select.append(new Option(s.name + ' · ' + s.start + ' ถึง ' + s.end, s.id)); });
-        $('#correction-feedback').text('โหลดแล้ว กรุณาเลือกเวรอีกครั้ง');
+        select.val(r.suggestion.shift ? String(r.suggestion.shift.id) : '');
+        $('#correction-type').val(r.suggestion.type);
+        $('#correction-feedback').text(r.suggestion.shift ? 'แนะนำการจับคู่แล้ว กรุณาตรวจสอบและระบุเหตุผลก่อนบันทึก' : 'ยังจับคู่ไม่ได้ กรุณาตรวจสอบเวรและประเภทเข้า–ออก');
     }).fail(function () { $('#correction-feedback').text('โหลดเวรไม่สำเร็จ กรุณาลองใหม่'); }).always(function () { button.prop('disabled', false); });
 });
 JS);
