@@ -27,31 +27,7 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/hr/menu', ['a
     </header>
 
     <?php if ($section === 'overview'): ?>
-        <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
-            ['label' => 'บุคลากรที่ปฏิบัติงาน', 'value' => $metrics['employees'], 'icon' => 'bi-people-fill', 'color' => 'primary', 'hint' => 'สถานะปฏิบัติราชการ'],
-            ['label' => 'มี JD ปัจจุบัน', 'value' => $metrics['jd_active'], 'icon' => 'bi-file-earmark-text', 'color' => 'info', 'hint' => 'รอลงนาม ' . number_format($metrics['jd_pending']) . ' คน'],
-            ['label' => 'IDP ในรอบปัจจุบัน', 'value' => $metrics['idp_total'], 'icon' => 'bi-bullseye', 'color' => 'warning', 'hint' => 'ต้องดำเนินการ ' . number_format($metrics['idp_action']) . ' แผน'],
-            ['label' => 'TRM กำลังดำเนินการ', 'value' => $metrics['trm_in_progress'], 'icon' => 'bi-signpost-2', 'color' => 'success', 'hint' => 'Roadmap ใช้งาน ' . number_format($metrics['trm_active']) . ' แบบ'],
-        ]]) ?>
-
-        <div class="workforce-grid">
-            <section class="workforce-panel">
-                <h2>รายการที่ต้องดูแล</h2>
-                <?= Html::a('<span><strong>JD รอลงนามรับทราบ</strong><small>' . number_format($metrics['jd_pending']) . ' คนยังไม่ลงนาม</small></span><i data-lucide="chevron-right"></i>', ['/hr/workforce/index', 'section' => 'jd'], ['class' => 'workforce-link']) ?>
-                <?= Html::a('<span><strong>IDP ที่ต้องดำเนินการ</strong><small>' . number_format($metrics['idp_action']) . ' แผนในรอบปัจจุบัน</small></span><i data-lucide="chevron-right"></i>', ['/hr/idp/index'], ['class' => 'workforce-link']) ?>
-                <?= Html::a('<span><strong>TRM ที่อยู่ระหว่างดำเนินการ</strong><small>' . number_format($metrics['trm_in_progress']) . ' แผนบุคลากร</small></span><i data-lucide="chevron-right"></i>', ['/hr/training-roadmap/index'], ['class' => 'workforce-link']) ?>
-            </section>
-            <aside class="workforce-panel">
-                <h2>รอบที่กำลังใช้งาน</h2>
-                <?php if ($activeCycle): ?>
-                    <div class="fw-semibold"><?= Html::encode($activeCycle->title) ?></div>
-                    <div class="text-muted small mt-1">IDP · <?= Html::encode($activeCycle->start_date) ?> – <?= Html::encode($activeCycle->end_date) ?></div>
-                <?php else: ?>
-                    <p class="text-muted mb-3">ยังไม่มีรอบ IDP ที่กำลังใช้งาน</p>
-                    <?= Html::a('ตั้งค่ารอบ IDP', ['/hr/idp/cycle'], ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data-size' => 'modal-lg']) ?>
-                <?php endif ?>
-            </aside>
-        </div>
+        <?= $this->render('_overview', compact('metrics', 'activeCycle', 'hrd', 'hrdFy', 'hrdFyOptions')) ?>
     <?php elseif ($section === 'jd'): ?>
         <?= $this->render('@app/modules/hr/views/_kpi_cards', ['cards' => [
             ['label' => 'บุคลากรที่ปฏิบัติงาน', 'value' => $metrics['employees'], 'icon' => 'bi-people-fill', 'color' => 'primary'],

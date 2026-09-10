@@ -21,6 +21,8 @@ use app\modules\hr\models\EmployeeType;
 use app\modules\kpi\models\KpiCycle;
 use app\modules\kpi\models\KpiItem;
 use app\modules\kpi\services\KpiService;
+use app\modules\hr\services\HrdMetricsService;
+use app\components\AppHelper;
 use yii\data\ActiveDataProvider;
 
 class WorkforceController extends Controller
@@ -88,6 +90,27 @@ class WorkforceController extends Controller
             'trm_active' => (int) TrainingRoadmap::find()->where(['status' => 'active'])->count(),
             'trm_in_progress' => (int) EmployeeTrainingPlan::find()->where(['status' => ['assigned', 'in_progress', 'assessment']])->count(),
         ];
+
+        // ภาพรวมการพัฒนาบุคลากร (HRD) — ตัวชี้วัดผลลัพธ์ + แนวโน้ม + feed + งานค้าง
+        // คำนวณเฉพาะแท็บ "ภาพรวม" (มี cache ภายใน service จึงไม่กระทบแท็บอื่น/ประสิทธิภาพ)
+        $hrd = null;
+        $hrdFy = (int) AppHelper::YearBudget();
+        $hrdFyOptions = range($hrdFy, $hrdFy - 4);
+        if ($section === 'overview') {
+            $reqFy = (int) Yii::$app->request->get('fy');
+            if ($reqFy && in_array($reqFy, $hrdFyOptions, true)) {
+                $hrdFy = $reqFy;
+            }
+            $hrdMetrics = new HrdMetricsService($hrdFy);
+            $hrd = [
+                'kpis' => $hrdMetrics->kpis(),
+                'trend' => $hrdMetrics->developmentTrend(),
+                'activity' => $hrdMetrics->recentActivity(8),
+                'inbox' => $hrdMetrics->workflowInbox(),
+                'deadlines' => $hrdMetrics->upcomingDeadlines(60),
+                'coverageThreshold' => HrdMetricsService::COVERAGE_THRESHOLD,
+            ];
+        }
 
         $jdDataProvider = null;
         $jdByEmployee = [];
@@ -268,6 +291,9 @@ class WorkforceController extends Controller
             'departments' => $departments,
             'currentFy' => $currentFy,
             'showAll' => $showAll,
+            'hrd' => $hrd,
+            'hrdFy' => $hrdFy,
+            'hrdFyOptions' => $hrdFyOptions,
         ]);
     }
 }
