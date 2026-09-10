@@ -149,9 +149,22 @@ CSS);
         </div>
     </div>
 
-    <!-- งานที่ต้องดูแล + กิจกรรมล่าสุด + กำหนดการ -->
+    <!-- ปฏิทินการอบรม/พัฒนา (เต็มเดือน) -->
+    <div class="hrd-card p-3 mb-3">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-calendar3 text-primary"></i>
+            <h2>ปฏิทินการอบรม/พัฒนา</h2>
+            <span class="ms-auto d-flex align-items-center gap-3 small text-muted">
+                <span class="d-inline-flex align-items-center gap-1"><span style="width:10px;height:10px;border-radius:2px;background:#0f766e;display:inline-block"></span>อบรม/ประชุม</span>
+                <span class="d-inline-flex align-items-center gap-1"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block"></span>ครบกำหนดแผน</span>
+            </span>
+        </div>
+        <div id="hrdCalendar"></div>
+    </div>
+
+    <!-- งานที่ต้องดูแล + กิจกรรมล่าสุด -->
     <div class="row g-3">
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-6">
             <div class="hrd-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-inbox-fill text-primary"></i><h2>งานที่ต้องดูแล</h2></div>
                 <?php
@@ -179,7 +192,7 @@ CSS);
             </div>
         </div>
 
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-6">
             <div class="hrd-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-clock-history text-primary"></i><h2>กิจกรรมล่าสุด</h2></div>
                 <?php if (empty($hrd['activity'])): ?>
@@ -192,27 +205,6 @@ CSS);
                                 <span class="flex-grow-1">
                                     <span class="d-block small"><span class="fw-semibold"><?= Html::encode($a['name']) ?></span> — <?= Html::encode($a['text']) ?></span>
                                     <span class="d-block text-muted" style="font-size:.72rem"><?= $a['at'] ? Html::encode(ThaiDateHelper::formatThaiDate(substr((string) $a['at'], 0, 10))) : '' ?></span>
-                                </span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-4">
-            <div class="hrd-card p-3 h-100">
-                <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-calendar-event text-primary"></i><h2>กำหนดการที่จะถึง (60 วัน)</h2></div>
-                <?php if (empty($hrd['deadlines'])): ?>
-                    <div class="text-center text-muted py-4"><i class="bi bi-calendar-check fs-3 d-block mb-1 text-success"></i><span class="small">ไม่มีกำหนดการใกล้ครบใน 60 วัน</span></div>
-                <?php else: ?>
-                    <ul class="list-unstyled mb-0">
-                        <?php foreach ($hrd['deadlines'] as $d): ?>
-                            <li class="d-flex align-items-start gap-2 py-2 border-bottom">
-                                <span class="text-<?= $d['color'] ?> mt-1"><i class="bi <?= $d['icon'] ?>"></i></span>
-                                <span class="flex-grow-1">
-                                    <span class="d-block small fw-semibold"><?= Html::encode(ThaiDateHelper::formatThaiDate($d['date'])) ?></span>
-                                    <span class="d-block text-muted" style="font-size:.72rem"><?= Html::encode($d['label']) ?><?= $d['name'] ? ' · ' . Html::encode($d['name']) : '' ?></span>
                                 </span>
                             </li>
                         <?php endforeach; ?>
@@ -246,6 +238,26 @@ $this->registerJs(<<<JS
         grid: { borderColor: isDark ? 'rgba(148,163,184,.15)' : 'rgba(2,6,23,.06)', strokeDashArray: 4 },
         tooltip: { theme: isDark ? 'dark' : 'light' }
     }).render();
+})();
+JS);
+
+$eventsUrl = Url::to(['/hr/workforce/index', 'section' => 'overview', 'events' => 1, 'fy' => $hrdFy]);
+$this->registerJs(<<<JS
+(function(){
+    if (typeof FullCalendar === 'undefined') return;
+    var el = document.getElementById('hrdCalendar');
+    if (!el) return;
+    var cal = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        locale: 'th',
+        height: 'auto',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+        buttonText: { today: 'วันนี้', month: 'เดือน', list: 'รายการ' },
+        noEventsText: 'ไม่มีกิจกรรมในช่วงนี้',
+        dayMaxEvents: 3,
+        events: '{$eventsUrl}'
+    });
+    cal.render();
 })();
 JS);
 ?>

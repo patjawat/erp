@@ -408,6 +408,68 @@ class HrdMetricsService
     }
 
     // -----------------------------------------------------------------
+    // ปฏิทินการอบรม/พัฒนา — event ตามช่วงที่ FullCalendar ขอ (ไม่ cache: bounded ด้วยช่วงวันอยู่แล้ว)
+    // -----------------------------------------------------------------
+
+    /**
+     * @param string $start,$end ช่วงวัน ISO ที่ FullCalendar ส่งมา
+     * @return array<int, array<string,mixed>> event object ของ FullCalendar
+     */
+    public function calendarEvents(string $start, string $end): array
+    {
+        $s = date('Y-m-d', strtotime($start));
+        $e = date('Y-m-d', strtotime($end));
+        $events = [];
+
+        // การไปอบรม/ประชุมจริง (development) — ตัดสถานะยกเลิก/ไม่อนุมัติ
+        if ($this->tableExists('development')) {
+            foreach ($this->all(
+                "SELECT id, topic, date_start, date_end
+                 FROM development
+                 WHERE date_start IS NOT NULL AND date_start BETWEEN :s AND :e
+                   AND (status IS NULL OR status NOT IN ('Cancel', 'Reject'))
+                 ORDER BY date_start",
+                [':s' => $s, ':e' => $e]
+            ) as $r) {
+                $endDate = $r['date_end'] && $r['date_end'] >= $r['date_start'] ? $r['date_end'] : $r['date_start'];
+                $events[] = [
+                    'title' => $r['topic'] !== '' ? $r['topic'] : 'อบรม/ประชุม',
+                    'start' => $r['date_start'],
+                    'end' => date('Y-m-d', strtotime($endDate . ' +1 day')), // FullCalendar allDay end = exclusive
+                    'allDay' => true,
+                    'color' => '#0f766e',
+                    'url' => \yii\helpers\Url::to(['/hr/development/view', 'id' => (int) $r['id']]),
+                    'extendedProps' => ['kind' => 'development'],
+                ];
+            }
+        }
+
+        // แผนพัฒนารายบุคคลที่ครบกำหนด (target_end_date) ในช่วง
+        if ($this->tableExists('employee_training_plan') && $this->columnExists('employee_training_plan', 'target_end_date')) {
+            $name = self::nameSql('e');
+            foreach ($this->all(
+                "SELECT {$name} AS name, tp.target_end_date AS d
+                 FROM employee_training_plan tp INNER JOIN employees e ON e.id = tp.emp_id
+                 WHERE tp.target_end_date BETWEEN :s AND :e
+                   AND tp.status IN ('assigned','in_progress','assessment')
+                 ORDER BY tp.target_end_date",
+                [':s' => $s, ':e' => $e]
+            ) as $r) {
+                $events[] = [
+                    'title' => 'ครบกำหนดแผนพัฒนา: ' . $r['name'],
+                    'start' => $r['d'],
+                    'allDay' => true,
+                    'color' => '#f59e0b',
+                    'url' => \yii\helpers\Url::to(['/hr/training-roadmap/index']),
+                    'extendedProps' => ['kind' => 'training_deadline'],
+                ];
+            }
+        }
+
+        return $events;
+    }
+
+    // -----------------------------------------------------------------
     // Drill-down: รายชื่อเบื้องหลังตัวเลขแต่ละ KPI (สำหรับเปิดใน modal)
     // -----------------------------------------------------------------
 

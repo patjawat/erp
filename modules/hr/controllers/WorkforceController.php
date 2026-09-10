@@ -45,6 +45,18 @@ class WorkforceController extends Controller
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูภาพรวมงานบุคลากร');
         }
 
+        // ปฏิทินการอบรม/พัฒนา — FullCalendar ขอ event ตามช่วง (คืน JSON array)
+        if (Yii::$app->request->get('events') !== null) {
+            $start = (string) Yii::$app->request->get('start');
+            $end = (string) Yii::$app->request->get('end');
+            $eventFy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            if ($start === '' || $end === '') {
+                return [];
+            }
+            return (new HrdMetricsService($eventFy))->calendarEvents($start, $end);
+        }
+
         // Drill-down รายชื่อเบื้องหลัง KPI ภาพรวม HRD — เปิดใน modal (คืน JSON {title, content})
         $detail = Yii::$app->request->get('detail');
         if ($detail !== null && $detail !== '') {
@@ -119,7 +131,6 @@ class WorkforceController extends Controller
                 'trend' => $hrdMetrics->developmentTrend(),
                 'activity' => $hrdMetrics->recentActivity(8),
                 'inbox' => $hrdMetrics->workflowInbox(),
-                'deadlines' => $hrdMetrics->upcomingDeadlines(60),
                 'coverageThreshold' => HrdMetricsService::COVERAGE_THRESHOLD,
             ];
         }
