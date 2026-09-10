@@ -60,6 +60,7 @@ $modules['sm'] = ['class' => 'app\modules\sm\Module'];  // งานพัสด
 $modules['old'] = ['class' => 'app\modules\old\Module'];  // theme dev
 $modules['hr'] = ['class' => 'app\modules\hr\Module'];  // HRMS
 $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานและโครงการ (Project mansgement)
+$modules['swot'] = ['class' => 'app\modules\swot\Module'];  // เครื่องมือวิเคราะห์ SWOT & SOAR
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
 $modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การสำรวจครุภัณฑ์ประจำปี
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail

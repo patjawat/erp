@@ -305,6 +305,8 @@ $config = [
             // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
             // (controller ยังใช้ AccessControl roles=['@']; จะเปลี่ยนเป็น guard สิทธิ์จริงในเฟส 1)
             'qms/*',
+            // SWOT & SOAR: เครื่องมือวิเคราะห์เชิงกลยุทธ์ (standalone) — controller ใช้ roles=['@']
+            'swot/*',
             // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
             // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
             // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission
