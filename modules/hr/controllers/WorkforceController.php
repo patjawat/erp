@@ -45,6 +45,18 @@ class WorkforceController extends Controller
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูภาพรวมงานบุคลากร');
         }
 
+        // Drill-down รายชื่อเบื้องหลัง KPI ภาพรวม HRD — เปิดใน modal (คืน JSON {title, content})
+        $detail = Yii::$app->request->get('detail');
+        if ($detail !== null && $detail !== '') {
+            $detailFy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+            $data = (new HrdMetricsService($detailFy))->detail((string) $detail);
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => $data['title'] !== '' ? $data['title'] : 'รายละเอียด',
+                'content' => $this->renderAjax('_hrd_detail', ['data' => $data]),
+            ];
+        }
+
         if ($section === 'health') {
             return $this->redirect(['/health/default/index']);
         }

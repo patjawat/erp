@@ -57,11 +57,11 @@ class HrdMetricsService
         });
     }
 
-    /** จำนวนบุคลากรที่ปฏิบัติงานอยู่ (branch MAIN, active) */
+    /** จำนวนบุคลากรที่ปฏิบัติงานอยู่ (status=1, ไม่รวมบัญชีระบบ id=1) — ตรงกับ detailHeadcount */
     private function computeHeadcount(): array
     {
         $count = (int) $this->scalar(
-            "SELECT COUNT(*) FROM employees WHERE branch = 'MAIN' AND status = 1 AND id <> 1"
+            "SELECT COUNT(*) FROM employees WHERE status = 1 AND id <> 1"
         );
         return ['value' => $count];
     }
@@ -408,6 +408,170 @@ class HrdMetricsService
     }
 
     // -----------------------------------------------------------------
+    // Drill-down: รายชื่อเบื้องหลังตัวเลขแต่ละ KPI (สำหรับเปิดใน modal)
+    // -----------------------------------------------------------------
+
+    /**
+     * @return array{title:string, columns:array<int,array{label:string,align?:string}>, rows:array, empty:string}
+     */
+    public function detail(string $kpi): array
+    {
+        return $this->cache('detail_' . $kpi, function () use ($kpi) {
+            switch ($kpi) {
+                case 'headcount': return $this->detailHeadcount();
+                case 'coverage': return $this->detailCoverage(true);
+                case 'gap': return $this->detailCoverage(false);
+                case 'training': return $this->detailTraining();
+                case 'idp': return $this->detailIdp();
+                case 'succession': return $this->detailSuccession();
+                default: return ['title' => '', 'columns' => [], 'rows' => [], 'empty' => 'ไม่พบข้อมูล'];
+            }
+        }, 300);
+    }
+
+    private const PERSON_SELECT = "TRIM(CONCAT(COALESCE(e.prefix,''), e.fname, ' ', e.lname)) AS name,
+        COALESCE(p.title,'ไม่ระบุ') AS position, COALESCE(org.name,'ไม่ระบุ') AS dept";
+    private const PERSON_JOINS = "LEFT JOIN employee_position p ON p.id = e.employee_position_id
+        LEFT JOIN tree org ON org.id = e.department AND org.tb_name = 'diagram'";
+
+    private function detailHeadcount(): array
+    {
+        // ให้ตรงกับตัวเลขบนการ์ด (WorkforceController นับผู้ปฏิบัติราชการทุก branch: status=1)
+        $rows = $this->all(
+            "SELECT " . self::PERSON_SELECT . "
+             FROM employees e " . self::PERSON_JOINS . "
+             WHERE e.status=1 AND e.id<>1
+             ORDER BY e.fname, e.lname"
+        );
+        return [
+            'title' => 'บุคลากรที่ปฏิบัติงาน',
+            'columns' => [['label' => 'ชื่อ-สกุล'], ['label' => 'ตำแหน่ง'], ['label' => 'หน่วยงาน']],
+            'rows' => array_map(fn ($r) => [$r['name'], $r['position'], $r['dept']], $rows),
+            'empty' => 'ไม่มีข้อมูลบุคลากร',
+        ];
+    }
+
+    private function detailCoverage(bool $pass): array
+    {
+        $empty = ['title' => $pass ? 'ผู้ผ่านเกณฑ์ทักษะ' : 'ผู้มีช่องว่างทักษะ', 'columns' => [], 'rows' => [], 'empty' => 'ยังไม่มีผลประเมินสมรรถนะในปีนี้'];
+        if (!$this->tableExists('hr_competency_evaluation') || !$this->tableExists('hr_competency_assignment') || !$this->tableExists('hr_appraisal_round')) {
+            return $empty;
+        }
+        $roundId = $this->scalar(
+            "SELECT id FROM hr_appraisal_round WHERE fiscal_year=:fy AND status IN ('open','closed') ORDER BY round_no DESC, id DESC LIMIT 1",
+            [':fy' => $this->fiscalYear]
+        );
+        if (!$roundId) {
+            return $empty;
+        }
+        $op = $pass ? '>=' : '<';
+        $rows = $this->all(
+            "SELECT " . self::PERSON_SELECT . ", ev.score_percent AS score
+             FROM hr_competency_evaluation ev
+             INNER JOIN hr_competency_assignment a ON a.id = ev.assignment_id
+             INNER JOIN employees e ON e.id = a.emp_id " . self::PERSON_JOINS . "
+             WHERE a.round_id=:rid AND ev.status='submitted' AND ev.score_percent IS NOT NULL
+               AND ev.score_percent {$op} :th
+             ORDER BY ev.score_percent " . ($pass ? 'DESC' : 'ASC'),
+            [':rid' => (int) $roundId, ':th' => self::COVERAGE_THRESHOLD]
+        );
+        return [
+            'title' => $pass ? 'ผู้ผ่านเกณฑ์ทักษะ (≥ ' . (int) self::COVERAGE_THRESHOLD . '%)' : 'ผู้มีช่องว่างทักษะ (< ' . (int) self::COVERAGE_THRESHOLD . '%)',
+            'columns' => [['label' => 'ชื่อ-สกุล'], ['label' => 'หน่วยงาน'], ['label' => 'คะแนน', 'align' => 'end']],
+            'rows' => array_map(fn ($r) => [$r['name'], $r['dept'], ['t' => rtrim(rtrim(number_format((float) $r['score'], 1), '0'), '.') . '%', 'align' => 'end']], $rows),
+            'empty' => $empty['empty'],
+        ];
+    }
+
+    private function detailTraining(): array
+    {
+        $empty = ['title' => 'แผนอบรมที่สำเร็จ', 'columns' => [], 'rows' => [], 'empty' => 'ยังไม่มีแผนพัฒนาที่สำเร็จในปีนี้'];
+        if (!$this->tableExists('employee_training_plan')) {
+            return $empty;
+        }
+        $range = AppHelper::BudgetYearRange($this->fiscalYear);
+        $hasRoadmap = $this->tableExists('training_roadmap');
+        $rmSelect = $hasRoadmap ? ", COALESCE(rm.title,'—') AS roadmap" : ", '—' AS roadmap";
+        $rmJoin = $hasRoadmap ? "LEFT JOIN training_roadmap rm ON rm.id = tp.roadmap_id" : '';
+        $rows = $this->all(
+            "SELECT TRIM(CONCAT(COALESCE(e.prefix,''), e.fname, ' ', e.lname)) AS name,
+                    COALESCE(org.name,'ไม่ระบุ') AS dept, tp.completed_at {$rmSelect}
+             FROM employee_training_plan tp
+             INNER JOIN employees e ON e.id = tp.emp_id
+             LEFT JOIN tree org ON org.id = e.department AND org.tb_name='diagram'
+             {$rmJoin}
+             WHERE tp.status='completed' AND tp.start_date BETWEEN :s AND :en
+             ORDER BY tp.completed_at DESC",
+            [':s' => $range['start'], ':en' => $range['end']]
+        );
+        return [
+            'title' => 'แผนอบรม/พัฒนาที่สำเร็จ',
+            'columns' => [['label' => 'ชื่อ-สกุล'], ['label' => 'หน่วยงาน'], ['label' => 'หลักสูตร/Roadmap']],
+            'rows' => array_map(fn ($r) => [$r['name'], $r['dept'], $r['roadmap']], $rows),
+            'empty' => $empty['empty'],
+        ];
+    }
+
+    private function detailIdp(): array
+    {
+        $empty = ['title' => 'IDP ที่เสร็จสิ้น', 'columns' => [], 'rows' => [], 'empty' => 'ยังไม่มี IDP ที่ปิดรอบในปีนี้'];
+        if (!$this->tableExists('idp_plan') || !$this->tableExists('idp_cycle')) {
+            return $empty;
+        }
+        $cycleId = $this->scalar(
+            "SELECT id FROM idp_cycle WHERE fiscal_year=:fy ORDER BY (status='active') DESC, id DESC LIMIT 1",
+            [':fy' => $this->fiscalYear]
+        );
+        if (!$cycleId) {
+            return $empty;
+        }
+        $rows = $this->all(
+            "SELECT TRIM(CONCAT(COALESCE(e.prefix,''), e.fname, ' ', e.lname)) AS name,
+                    COALESCE(org.name,'ไม่ระบุ') AS dept, ip.completed_at
+             FROM idp_plan ip
+             INNER JOIN employees e ON e.id = ip.emp_id
+             LEFT JOIN tree org ON org.id = e.department AND org.tb_name='diagram'
+             WHERE ip.cycle_id=:cid AND ip.status='completed'
+             ORDER BY ip.completed_at DESC",
+            [':cid' => (int) $cycleId]
+        );
+        return [
+            'title' => 'IDP ที่เสร็จสิ้น',
+            'columns' => [['label' => 'ชื่อ-สกุล'], ['label' => 'หน่วยงาน']],
+            'rows' => array_map(fn ($r) => [$r['name'], $r['dept']], $rows),
+            'empty' => $empty['empty'],
+        ];
+    }
+
+    private function detailSuccession(): array
+    {
+        $empty = ['title' => 'ผู้สืบทอดพร้อม', 'columns' => [], 'rows' => [], 'empty' => 'ยังไม่ได้จัด 9-Box ในปีนี้'];
+        if (!$this->tableExists('hr_talent_grid')) {
+            return $empty;
+        }
+        $rows = $this->all(
+            "SELECT TRIM(CONCAT(COALESCE(e.prefix,''), e.fname, ' ', e.lname)) AS name,
+                    COALESCE(org.name,'ไม่ระบุ') AS dept, g.performance, g.potential, g.box_no
+             FROM hr_talent_grid g
+             INNER JOIN employees e ON e.id = g.emp_id
+             LEFT JOIN tree org ON org.id = e.department AND org.tb_name='diagram'
+             WHERE g.fiscal_year=:fy AND g.potential=3
+             ORDER BY g.box_no DESC, e.fname",
+            [':fy' => $this->fiscalYear]
+        );
+        $lvl = [1 => 'ต่ำ', 2 => 'ปานกลาง', 3 => 'สูง'];
+        return [
+            'title' => 'ผู้สืบทอดพร้อม (High Potential)',
+            'columns' => [['label' => 'ชื่อ-สกุล'], ['label' => 'หน่วยงาน'], ['label' => 'ผลงาน'], ['label' => 'ศักยภาพ'], ['label' => 'กล่อง', 'align' => 'end']],
+            'rows' => array_map(fn ($r) => [
+                $r['name'], $r['dept'], $lvl[(int) $r['performance']] ?? '-', $lvl[(int) $r['potential']] ?? '-',
+                ['t' => (string) (int) $r['box_no'], 'align' => 'end'],
+            ], $rows),
+            'empty' => $empty['empty'],
+        ];
+    }
+
+    // -----------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------
 
@@ -445,7 +609,11 @@ class HrdMetricsService
         if (!Yii::$app->has('cache')) {
             return;
         }
-        foreach (['kpis', 'developmentTrend', 'recentActivity', 'workflowInbox', 'upcomingDeadlines'] as $suffix) {
+        $suffixes = ['kpis', 'developmentTrend', 'recentActivity', 'workflowInbox', 'upcomingDeadlines'];
+        foreach (['headcount', 'coverage', 'gap', 'training', 'idp', 'succession'] as $k) {
+            $suffixes[] = 'detail_' . $k;
+        }
+        foreach ($suffixes as $suffix) {
             Yii::$app->cache->delete(['hrd-metrics', $suffix, $this->fiscalYear]);
         }
     }

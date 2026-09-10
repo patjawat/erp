@@ -23,30 +23,32 @@ $su = $k['successionReady'];
 $fmtPct = fn ($v) => $v === null ? '—' : rtrim(rtrim(number_format((float) $v, 1), '0'), '.') . '%';
 
 // การ์ดผลลัพธ์ (hero) — headcount ใช้ตัวเลขของหน้านี้ (นับผู้ปฏิบัติราชการทั้งหมด) ให้ตรงกับที่เคยแสดง
+// คลิกการ์ด = เปิด modal รายชื่อเบื้องหลังตัวเลข (drill-down ผ่าน ?detail=)
+$detailUrl = fn ($kpi) => Url::to(['/hr/workforce/index', 'section' => 'overview', 'detail' => $kpi, 'fy' => $hrdFy]);
 $cards = [
     ['label' => 'บุคลากรที่ปฏิบัติงาน', 'icon' => 'bi-people-fill', 'color' => 'primary',
-     'value' => number_format((int) $metrics['employees']), 'unit' => 'คน', 'sub' => 'สถานะปฏิบัติราชการ',
-     'url' => Url::to(['/hr/employees'])],
+     'value' => number_format((int) $k['headcount']['value']), 'unit' => 'คน', 'sub' => 'สถานะปฏิบัติราชการ',
+     'detail' => 'headcount'],
     ['label' => 'ความครอบคลุมทักษะ', 'icon' => 'bi-bullseye', 'color' => 'success',
      'value' => $fmtPct($sc['percent']), 'unit' => '',
      'sub' => $sc['total'] > 0 ? "ผ่านเกณฑ์ {$sc['pass']} / {$sc['total']} คน" : 'ยังไม่มีผลประเมินในปีนี้',
-     'url' => Url::to(['/hr/competency'])],
+     'detail' => 'coverage'],
     ['label' => 'ช่องว่างทักษะสำคัญ', 'icon' => 'bi-graph-down-arrow', 'color' => 'danger',
      'value' => $fmtPct($sc['gap_percent']), 'unit' => '',
      'sub' => $sc['total'] > 0 ? 'ยังต่ำกว่าเกณฑ์ ' . ($sc['total'] - $sc['pass']) . ' คน' : 'ยังไม่มีผลประเมินในปีนี้',
-     'url' => Url::to(['/hr/competency'])],
+     'detail' => 'gap'],
     ['label' => 'การอบรมเสร็จสิ้น', 'icon' => 'bi-mortarboard-fill', 'color' => 'info',
      'value' => $fmtPct($tc['percent']), 'unit' => '',
      'sub' => $tc['total'] > 0 ? "สำเร็จ {$tc['done']} / {$tc['total']} แผน" : 'ยังไม่มีแผนพัฒนาในปีนี้',
-     'url' => Url::to(['/hr/training-roadmap/index'])],
+     'detail' => 'training'],
     ['label' => 'IDP สำเร็จ', 'icon' => 'bi-clipboard2-check-fill', 'color' => 'warning',
      'value' => $fmtPct($idp['percent']), 'unit' => '',
      'sub' => $idp['total'] > 0 ? "ปิดรอบ {$idp['done']} / {$idp['total']} แผน" : 'ยังไม่มีรอบ IDP ในปีนี้',
-     'url' => Url::to(['/hr/idp/index'])],
+     'detail' => 'idp'],
     ['label' => 'ผู้สืบทอดพร้อม', 'icon' => 'bi-people', 'color' => 'secondary',
      'value' => $fmtPct($su['percent']), 'unit' => '',
      'sub' => $su['total'] > 0 ? "High Potential {$su['ready']} / {$su['total']} คน" : 'ยังไม่ได้จัด 9-Box ปีนี้',
-     'url' => Url::to(['/hr/talent-grid'])],
+     'detail' => 'succession'],
 ];
 
 $this->registerCss(<<<CSS
@@ -58,6 +60,9 @@ $this->registerCss(<<<CSS
 .hrd-ov .hrd-kpi__value{font-size:1.75rem;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;color:#1d2939}
 .hrd-ov .hrd-kpi__unit{font-size:.85rem;font-weight:600;color:#667085;margin-inline-start:.15rem}
 .hrd-ov .hrd-kpi__sub{font-size:.73rem;color:#98a2b3;line-height:1.3;margin-top:.3rem;min-height:1.9em}
+.hrd-ov .hrd-kpi__more{display:inline-flex;align-items:center;gap:.25rem;margin-top:.45rem;font-size:.72rem;font-weight:600;opacity:0;transition:opacity .12s}
+.hrd-ov .hrd-kpi:hover .hrd-kpi__more,.hrd-ov .hrd-kpi:focus-within .hrd-kpi__more{opacity:1}
+@media(hover:none){.hrd-ov .hrd-kpi__more{opacity:.85}}
 .hrd-ov .hrd-card{background:#fff;border:1px solid #e4e7ec;border-radius:14px}
 .hrd-ov .hrd-card h2{font-size:1rem;margin:0;color:#1d2939}
 .hrd-ov .hrd-li{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #eef1f5;text-decoration:none;color:#1d2939}
@@ -87,7 +92,7 @@ CSS);
     <div class="row g-3 mb-3">
         <?php foreach ($cards as $c): $color = $c['color']; ?>
             <div class="col-6 col-md-4 col-xl-2">
-                <a class="card hrd-kpi h-100" href="<?= $c['url'] ?>" data-pjax="0" aria-label="<?= Html::encode($c['label']) ?>">
+                <div class="card hrd-kpi h-100 position-relative">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="hrd-kpi__icon bg-<?= $color ?>-subtle text-<?= $color ?>-emphasis"><i class="bi <?= $c['icon'] ?>"></i></span>
@@ -95,8 +100,10 @@ CSS);
                         </div>
                         <div class="hrd-kpi__value"><?= $c['value'] ?><?php if ($c['unit'] !== ''): ?><span class="hrd-kpi__unit"><?= $c['unit'] ?></span><?php endif; ?></div>
                         <div class="hrd-kpi__sub"><?= Html::encode($c['sub']) ?></div>
+                        <span class="hrd-kpi__more small text-<?= $color ?>-emphasis"><i class="bi bi-list-ul"></i> ดูรายชื่อ</span>
                     </div>
-                </a>
+                    <a class="stretched-link open-modal" href="<?= $detailUrl($c['detail']) ?>" data-size="modal-lg" aria-label="ดูรายชื่อ<?= Html::encode($c['label']) ?>"></a>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>
