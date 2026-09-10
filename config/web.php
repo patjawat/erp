@@ -315,6 +315,8 @@ $config = [
             'kpi/manage/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
             'hr/idp/*',
+            // HRD Dashboard V2: ภาพรวมการพัฒนาบุคลากร — controller มี guard ภายในเอง (hr/admin/director)
+            'hr/hrd-dashboard/*',
             // สรุปผลประชุม/อบรม: เจ้าของใบ/คณะเดินทางบันทึกได้ ผู้ที่ถูกกำหนดกดรับทราบได้
             // — controller มี guard ภายในเอง (canEditSummary / ตรวจรายชื่อผู้รับทราบ)
             'hr/development/summary',

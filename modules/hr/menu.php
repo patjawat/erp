@@ -12,6 +12,16 @@ use yii\helpers\Url;
         <span class="d-none d-sm-inline">ภาพรวม</span>
     </a>
 
+    <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin') || Yii::$app->user->can('director')): ?>
+    <a href="<?= Url::to(['/hr/hrd-dashboard/index']) ?>"
+       aria-label="ภาพรวมการพัฒนาบุคลากร"
+       class="btn <?= $active === 'hrd' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+       data-pjax="0">
+        <i data-lucide="line-chart" width="16" height="16" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">ภาพรวม HRD</span>
+    </a>
+    <?php endif; ?>
+
     <a href="<?= Url::to(['/hr/employees']) ?>"
        aria-label="ทะเบียนบุคลากร"
        class="btn <?= $active === 'employees' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
