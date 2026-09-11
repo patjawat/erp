@@ -194,7 +194,10 @@ class CheckinRecord extends \yii\db\ActiveRecord
      */
     protected function getLeaderEmpId()
     {
-        return $this->employee ? $this->employee->supervisorEmpId() : null;
+        $leader = $this->employee ? $this->employee->supervisorEmpId() : null;
+        // ไม่มอบหมายใบยืนยันให้ ผอ. — ปล่อยว่างให้ HR/admin เป็นผู้ยืนยันแทน
+        if ($leader && \app\components\SiteHelper::isDirectorFromSettings((int)$leader)) return null;
+        return $leader;
     }
 
     /**

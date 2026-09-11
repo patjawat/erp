@@ -15,6 +15,12 @@ class AttendanceAccess
         return Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview');
     }
 
+    /** ผอ. (ตามค่าระบบ) ไม่ต้องยืนยันการลงเวลา — กันไม่ให้ถูกมอบหมาย/เห็นคิว ไม่ว่าจะเป็นหัวหน้าหน่วยหรือไม่ */
+    private static function isDirector(?int $empId): bool
+    {
+        return (bool)$empId && \app\components\SiteHelper::isDirectorFromSettings((int)$empId);
+    }
+
     /** Shared by inbox and badges: only pending, active requests the viewer can decide. */
     public static function pendingQuery()
     {
@@ -33,7 +39,9 @@ class AttendanceAccess
         if (Yii::$app->user->isGuest) return false;
         $me = UserHelper::GetEmployee();
         if (!$me || (int)$record->emp_id === (int)$me->id) return false;
-        return self::isReviewer() || ($record->employee && (int)$record->employee->supervisorEmpId() === (int)$me->id);
+        if (self::isReviewer()) return true;
+        if (self::isDirector((int)$me->id)) return false; // ผอ. ไม่ต้องยืนยันการลงเวลา
+        return $record->employee && (int)$record->employee->supervisorEmpId() === (int)$me->id;
     }
 
     public static function canView($record): bool
@@ -48,6 +56,7 @@ class AttendanceAccess
     {
         $me = UserHelper::GetEmployee();
         if (!$me) return [];
+        if (self::isDirector((int)$me->id)) return []; // ผอ. ไม่ยืนยันการลงเวลาของใคร
         $ids = [];
         $leaders = [];
         foreach (\app\modules\hr\models\Organization::find()->all() as $node) {
