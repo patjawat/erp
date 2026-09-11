@@ -41,14 +41,14 @@ JS);
 <div class="attendance-clock-times" aria-label="เวลาเข้าออกวันนี้">
     <?php foreach (['in'=>'IN','out'=>'OUT'] as $direction=>$label): ?>
     <div class="attendance-clock-entry attendance-clock-entry--<?= $direction ?>" aria-label="<?= $direction === 'in' ? 'เวลาเข้า' : 'เวลาออก' ?>">
-        <div class="attendance-entry-heading"><span class="attendance-entry-label"><?= $label ?></span><span data-role="pending-<?= $direction ?>" class="attendance-entry-status d-none"><i class="bi bi-hourglass-split" aria-hidden="true"></i> รออนุมัติ</span></div>
+        <div class="attendance-entry-heading"><span class="attendance-entry-label"><?= $label ?></span><span data-role="pending-<?= $direction ?>" class="attendance-entry-status d-none"><i class="bi bi-hourglass-split" aria-hidden="true"></i> รอยืนยัน</span></div>
         <time data-role="time-<?= $direction ?>">--:--</time>
     </div>
     <?php endforeach; ?>
 </div>
 <div class="attendance-clock-latest small text-center">
 <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="attendance-clock-history" aria-label="ประวัติลงเวลา" title="ประวัติลงเวลา"><i class="bi bi-clock-history" aria-hidden="true"></i></a>
-<span data-role="latest"></span> <span data-role="pending-latest" class="attendance-pending d-none" role="img" aria-label="รออนุมัติ" title="รออนุมัติ"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
+<span data-role="latest"></span> <span data-role="pending-latest" class="attendance-pending d-none" role="img" aria-label="รอยืนยัน" title="รอยืนยัน"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span></div>
 <p data-role="gps" class="small text-body-secondary mb-0" role="status"></p>
 <div data-role="reason-panel" class="d-none">
 <label for="<?= $id ?>-reason" class="form-label">เหตุผลลงเวลานอกพื้นที่</label>

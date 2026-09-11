@@ -157,9 +157,9 @@ class CheckinRecord extends \yii\db\ActiveRecord
     public function getStatusLabel()
     {
         $labels = [
-            self::STATUS_PENDING => 'รออนุมัติ',
-            self::STATUS_APPROVED => 'อนุมัติแล้ว',
-            self::STATUS_REJECTED => 'ไม่อนุมัติ',
+            self::STATUS_PENDING => 'รอยืนยัน',
+            self::STATUS_APPROVED => 'ยืนยันแล้ว',
+            self::STATUS_REJECTED => 'ไม่ยืนยัน',
         ];
         return $labels[$this->status] ?? $this->status;
     }
@@ -179,8 +179,8 @@ class CheckinRecord extends \yii\db\ActiveRecord
         $approve->from_id = (string)$this->id;
         $approve->name = 'checkin';
         $approve->emp_id = $leaderId;
-        $approve->title = 'หัวหน้าอนุมัติการลงเวลา';
-        $approve->data_json = ['label' => 'อนุมัติการลงเวลา'];
+        $approve->title = 'หัวหน้ายืนยันการลงเวลา';
+        $approve->data_json = ['label' => 'ยืนยันการลงเวลา'];
         $approve->level = 1;
         $approve->status = 'Pending';
         $approve->created_at = \app\modules\attendance\services\AttendanceService::now();

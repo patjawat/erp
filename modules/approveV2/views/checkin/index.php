@@ -2,7 +2,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'อนุมัติลงเวลาเข้างาน';
+$this->title = 'ยืนยันการลงเวลา';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบการอนุมัติ', 'url' => ['/approve-v2']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -19,34 +19,54 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-body p-0">
-        <div class="p-3 border-bottom">
-            <h6 class="mb-0">รออนุมัติ <?= $dataProvider->getTotalCount() ?> รายการ</h6>
+        <div class="p-3 border-bottom d-flex flex-wrap align-items-center gap-2">
+            <h6 class="mb-0">รอยืนยัน <?= $dataProvider->getTotalCount() ?> รายการ</h6>
+            <div id="bulk-bar" class="ms-auto d-none align-items-center gap-2">
+                <span class="text-body-secondary small">เลือก <strong id="bulk-count">0</strong> รายการ</span>
+                <button type="button" class="btn btn-success btn-sm btn-bulk" data-status="Pass"><i class="bi bi-check-lg"></i> ยืนยันที่เลือก</button>
+                <button type="button" class="btn btn-outline-danger btn-sm btn-bulk" data-status="Reject"><i class="bi bi-x-lg"></i> ไม่ยืนยันที่เลือก</button>
+            </div>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
+                        <th class="text-center" style="width: 40px;">
+                            <input type="checkbox" id="check-all" class="form-check-input" aria-label="เลือกทั้งหมด" title="เลือกทั้งหมด">
+                        </th>
                         <th class="text-center" style="width: 50px;">ลำดับ</th>
                         <th>พนักงาน</th>
+                        <th>หน่วยงาน</th>
                         <th>วันเวลาที่ลงเวลา</th>
                         <th>วิธีลงเวลา</th>
                         <th>บริเวณ</th>
-                        <th class="text-center" style="width: 140px;">ดำเนินการ</th>
+                        <th class="text-center" style="width: 200px;">ดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider align-middle">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <?php $record = $item->checkinRecord; if (!$record) continue; ?>
                     <tr>
+                        <td class="text-center">
+                            <input type="checkbox" class="form-check-input row-check" value="<?= $item->id ?>" aria-label="เลือกรายการ">
+                        </td>
                         <td class="text-center"><?= ($dataProvider->pagination->offset + $key + 1) ?></td>
-                        <td><?= $record->employee ? Html::encode($record->employee->fname . ' ' . $record->employee->lname) : '-' ?></td>
+                        <td>
+                            <?php if ($record->employee): ?>
+                                <div class="fw-semibold"><?= Html::encode($record->employee->fname . ' ' . $record->employee->lname) ?></div>
+                                <div class="small text-body-secondary"><?= Html::encode($record->employee->positionName()) ?></div>
+                            <?php else: ?>-<?php endif; ?>
+                        </td>
+                        <td><?= $record->employee ? Html::encode($record->employee->departmentName()) : '-' ?></td>
                         <td><?= Yii::$app->formatter->asDatetime($record->checkin_at, 'php:d/m/Y H:i') ?></td>
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
                         <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div></td>
-                        <td class="text-center">
-                            <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm me-1">ดู</a>
-                            <button type="button" class="btn btn-success btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Pass">อนุมัติ</button>
-                            <button type="button" class="btn btn-outline-danger btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Reject">ไม่อนุมัติ</button>
+                        <td>
+                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm">ดู</a>
+                                <button type="button" class="btn btn-success btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Pass">ยืนยัน</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Reject">ไม่ยืนยัน</button>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -54,9 +74,9 @@ $this->params['breadcrumbs'][] = $this->title;
             </table>
         </div>
         <?php if ($dataProvider->getTotalCount() === 0): ?>
-        <div class="p-4 text-center text-muted">ไม่มีรายการรออนุมัติ</div>
+        <div class="p-4 text-center text-muted">ไม่มีรายการรอยืนยัน</div>
         <?php endif; ?>
-        <nav class="p-3" aria-label="หน้ารายการรออนุมัติ">
+        <nav class="p-3" aria-label="หน้ารายการรอยืนยัน">
             <?= \yii\bootstrap5\LinkPager::widget(['pagination' => $dataProvider->getPagination()]) ?>
         </nav>
     </div>
@@ -64,7 +84,18 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $updateUrl = Url::to(['/approve-v2/checkin/update']);
+$bulkUrl = Url::to(['/approve-v2/checkin/bulk-update']);
 $this->registerJs(<<<JS
+function refreshBulkBar() {
+    var n = $('.row-check:checked').length;
+    $('#bulk-count').text(n);
+    $('#bulk-bar').toggleClass('d-none', n === 0).toggleClass('d-flex', n > 0);
+    var total = $('.row-check').length;
+    $('#check-all').prop('checked', total > 0 && n === total).prop('indeterminate', n > 0 && n < total);
+}
+$('#check-all').on('change', function() { $('.row-check').prop('checked', $(this).prop('checked')); refreshBulkBar(); });
+$('.row-check').on('change', refreshBulkBar);
+
 $('.btn-approve').on('click', function() {
     var id = $(this).data('id');
     var status = $(this).data('status');
@@ -79,6 +110,30 @@ $('.btn-approve').on('click', function() {
         if (r.status === 'success') location.reload();
         else alert(r.message || 'เกิดข้อผิดพลาด');
     }).fail(function() { alert('บันทึกผลไม่สำเร็จ กรุณาลองใหม่'); }).always(function() { \$btn.prop('disabled', false); });
+});
+
+$('.btn-bulk').on('click', function() {
+    var ids = $('.row-check:checked').map(function() { return $(this).val(); }).get();
+    if (!ids.length) return;
+    var status = $(this).data('status');
+    var verb = status === 'Pass' ? 'ยืนยัน' : 'ไม่ยืนยัน';
+    var comment = '';
+    if (status === 'Reject') {
+        comment = prompt('เหตุผล (ถ้ามี) สำหรับ ' + ids.length + ' รายการ:');
+        if (comment === null) return;
+    } else if (!confirm(verb + ' ' + ids.length + ' รายการที่เลือก?')) {
+        return;
+    }
+    var \$btns = $('.btn-bulk');
+    \$btns.prop('disabled', true);
+    $.post('$bulkUrl', { ids: ids, status: status, comment: comment }).then(function(r) {
+        if (r.status === 'success') {
+            if (r.failed > 0) alert('สำเร็จ ' + r.done + ' รายการ, ไม่สำเร็จ ' + r.failed + ' รายการ');
+            location.reload();
+        } else {
+            alert(r.message || 'เกิดข้อผิดพลาด');
+        }
+    }).fail(function() { alert('บันทึกผลไม่สำเร็จ กรุณาลองใหม่'); }).always(function() { \$btns.prop('disabled', false); });
 });
 JS
 );

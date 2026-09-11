@@ -68,9 +68,9 @@ $statusBadge = function ($status, $label) {
         <div class="col-12 col-md-6 col-lg-2">
             <?= $form->field($searchModel, 'status')->dropdownList([
                 '' => 'ทุกสถานะ',
-                'pending' => 'รออนุมัติ',
-                'approved' => 'อนุมัติแล้ว',
-                'rejected' => 'ไม่อนุมัติ',
+                'pending' => 'รอยืนยัน',
+                'approved' => 'ยืนยันแล้ว',
+                'rejected' => 'ไม่ยืนยัน',
             ], ['class' => 'form-select'])->label('สถานะ') ?>
         </div>
         <div class="col-12 col-md-6 col-lg-2">

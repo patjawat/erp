@@ -106,16 +106,23 @@ class AttendanceService
             $record->out_of_location_reason = $validation['inside'] ? null : $reason;
             $record->qr_token = $token ?: null;
             $record->photo_path = $method === 'photo' ? $photo : null;
-            $record->status = CheckinRecord::STATUS_PENDING;
+            $attendance = RosterAttendance::evaluate($at, $type, $shift);
+            // ปกติ (ตรงเวลา/ในพื้นที่) = ยืนยันอัตโนมัติ เวลาแสดงทันที; ผิดปกติ (นอกพื้นที่/สาย/ออกก่อน) = รอหัวหน้ายืนยัน
+            $needsConfirm = !$validation['inside']
+                || ((int)($attendance['late_minutes'] ?? 0) > 0)
+                || ((int)($attendance['early_minutes'] ?? 0) > 0);
+            $record->status = $needsConfirm ? CheckinRecord::STATUS_PENDING : CheckinRecord::STATUS_APPROVED;
+            if (!$needsConfirm) $record->approved_at = $at;
             $record->data_json = [
                 'request_id' => $requestId ?: null,
-                'attendance' => RosterAttendance::evaluate($at, $type, $shift),
+                'attendance' => $attendance,
                 'geofence' => $validation['meta'],
                 'raw_scan' => ['at'=>$at, 'method'=>$method, 'lat'=>$input['lat'], 'lng'=>$input['lng']],
                 'matching' => $automatic ? 'nearest-boundary-v1' : 'explicit',
+                'auto_confirmed' => !$needsConfirm,
             ];
             if (!$record->save()) throw new \DomainException(implode(' ', $record->getFirstErrors()));
-            $record->createApproveRecord();
+            if ($needsConfirm) $record->createApproveRecord();
             $tx->commit();
             return $record;
         } catch (\Throwable $e) {

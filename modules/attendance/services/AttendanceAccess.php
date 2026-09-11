@@ -11,9 +11,8 @@ class AttendanceAccess
     public static function isReviewer(): bool
     {
         if (Yii::$app->user->isGuest) return false;
-        if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview')) return true;
-        $me = UserHelper::GetEmployee();
-        return $me && \app\components\SiteHelper::isDirectorFromSettings((int)$me->id);
+        // ผอ. ไม่ต้องยืนยันการลงเวลา (ตัด director ออก) — เหลือ admin/hr/attendanceReview ดูแลภาพรวม + เป็น fallback
+        return Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview');
     }
 
     /** Shared by inbox and badges: only pending, active requests the viewer can decide. */

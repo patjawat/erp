@@ -18,7 +18,7 @@ class CheckinController extends Controller
     {
         return [
             'access' => ['class' => \yii\filters\AccessControl::class, 'rules' => [['allow' => true, 'roles' => ['@']]]],
-            'verbs' => ['class' => \yii\filters\VerbFilter::class, 'actions' => ['update' => ['POST']]],
+            'verbs' => ['class' => \yii\filters\VerbFilter::class, 'actions' => ['update' => ['POST'], 'bulk-update' => ['POST']]],
         ];
     }
 
@@ -52,6 +52,28 @@ class CheckinController extends Controller
             Yii::$app->response->statusCode = 500;
             return ['status' => 'error', 'message' => 'บันทึกผลไม่สำเร็จ กรุณาลองใหม่'];
         }
+    }
+
+    public function actionBulkUpdate()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $ids = $this->request->post('ids', []);
+        $status = $this->request->post('status');
+        $comment = $this->request->post('comment', '');
+        if (!is_array($ids) || !is_string($status) || !is_string($comment)) {
+            return ['status' => 'error', 'message' => 'ข้อมูลคำขอไม่ถูกต้อง'];
+        }
+        $done = 0; $failed = 0;
+        foreach ($ids as $id) {
+            if (!is_scalar($id) || !ctype_digit((string)$id)) { $failed++; continue; }
+            try {
+                AttendanceService::approve((int)$id, $status, trim($comment));
+                $done++;
+            } catch (\Throwable $e) {
+                $failed++;
+            }
+        }
+        return ['status' => 'success', 'done' => $done, 'failed' => $failed];
     }
 
     public function actionView($id)

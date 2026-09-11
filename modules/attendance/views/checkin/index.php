@@ -67,9 +67,9 @@ $pagination = $dataProvider->getPagination();
                     <label class="att-filter__lbl">สถานะ</label>
                     <?= $form->field($searchModel, 'status')->dropdownList([
                         '' => 'ทุกสถานะ',
-                        'pending' => 'รออนุมัติ',
-                        'approved' => 'อนุมัติแล้ว',
-                        'rejected' => 'ไม่อนุมัติ',
+                        'pending' => 'รอยืนยัน',
+                        'approved' => 'ยืนยันแล้ว',
+                        'rejected' => 'ไม่ยืนยัน',
                     ], ['class' => 'form-select']) ?>
                 </div>
                 <div class="att-filter__actions">
