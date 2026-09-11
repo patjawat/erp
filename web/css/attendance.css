@@ -29,21 +29,21 @@
 .attendance-clock [data-role="submit"]:disabled { opacity: .65; cursor: wait; }
 .attendance-clock [data-role="clock"] { font-size: 2.6rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--bs-body-color); }
 .attendance-clock-history { align-self: center; display: grid; place-items: center; width: 44px; height: 44px; font-size: 1.3rem; color: var(--bs-info-text-emphasis); }
-.attendance-clock-times { display: grid; grid-template-columns: minmax(0,1fr); gap: 18px; margin: 8px 12px; }
+.attendance-clock-times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 12px; }
 .attendance-clock-day { color: var(--bs-info-text-emphasis); }
-.attendance-clock-entry { position: relative; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 88px; padding: 25px 20px 16px; border: 1px solid; border-radius: 10px; }
+.attendance-clock-entry { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 58px; padding: .5rem .7rem; border: 1px solid; border-radius: 10px; }
 .attendance-clock-entry--in { background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); border-color: var(--bs-success-border-subtle); }
 .attendance-clock-entry--out { background: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); border-color: var(--bs-danger-border-subtle); }
-.attendance-entry-heading { text-align: center; }
-.attendance-entry-label { font-size: clamp(1.5rem,2.2vw,2.4rem); font-weight: 700; line-height: 1.2; }
+.attendance-entry-heading { text-align: left; }
+.attendance-entry-label { font-size: .78rem; font-weight: 600; line-height: 1.2; }
 .attendance-entry-status { position: absolute; top: 5px; right: 5px; display: inline-flex; align-items: center; gap: 3px; font-size: .65rem; font-weight: 600; color: var(--bs-warning-text-emphasis); background: var(--bs-warning-bg-subtle); padding: 3px 5px; border-radius: 6px; white-space: nowrap; }
-.attendance-clock-entry time { font-size: clamp(1.6rem,2.3vw,2.5rem); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.attendance-clock-entry time { font-size: 1.5rem; font-weight: 700; text-align: left; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .attendance-pending { display: inline-grid; place-items: center; min-width: 26px; min-height: 26px; border-radius: 50%; background: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); font-size: 1rem; vertical-align: middle; }
 .attendance-clock-latest { display:flex; align-items:center; gap:8px; min-height: 44px; line-height: 1.5; margin-top:auto; }
 .attendance-clock-latest [data-role="latest"] { flex:1; }
 .attendance-clock-history { flex-shrink:0; font-size:1.75rem; }
 .attendance-clock-day { text-align:left !important; padding-inline:16px; }
-.attendance-clock [data-role="submit"] { width:168px; height:168px; font-size:1.4rem; }
+.attendance-clock [data-role="submit"] { width:140px; height:140px; font-size:1.25rem; }
 .attendance-clock [data-role="submit"]::before { display:none; }
 .attendance-clock [data-role="gps"] { min-height: 40px; line-height: 1.5; text-align: center; }
 .attendance-clock { background-color: var(--bs-body-bg); }
