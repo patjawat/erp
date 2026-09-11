@@ -19,7 +19,7 @@ function harness(options = {}) {
     const wrapper = {find:field,closest:()=>element(),on:(name,fn)=>{handlers[name]=fn;}};
     const $ = () => wrapper;
     $.ajax = args => {
-        if(args.type!=='POST') {return {done(fn){fn({now:'2026-09-10 08:00:00',latest:null});return this;},fail(){return this;}};}
+        if(args.type!=='POST') {return {done(fn){fn({now:'2026-09-10 08:00:00',latest:options.latest || null,day_summary:options.daySummary});return this;},fail(){return this;}};}
         posts.push({url:args.url,data:{...args.data}});
         if(args.url==='position')return Promise.resolve(options.position || {success:true,inside:true,location:'test'});
         return options.save ? options.save(args) : Promise.resolve({success:true,checkin_at:'2026-09-10 08:00:00',message:'บันทึกเวลาสำเร็จ',location:'test'});
@@ -64,4 +64,30 @@ test('expired login gives a login recovery message',async()=>{
 });
 test('insecure mobile website explains HTTPS requirement',async()=>{
     const h=harness({secure:false});h.click();await h.settle();assert.equal(h.posts.length,0);assert.match(h.role('result').textValue,/HTTPS/);
+});
+test('daily time panel shows matched entry and empty exit',()=>{
+    const h=harness({daySummary:{date:'2026-09-10',in:'2026-09-10 08:05:12',out:null}});
+    assert.equal(h.role('time-in').textValue,'08:05');
+    assert.equal(h.role('time-out').textValue,'--:--');
+});
+test('daily times update from server after saving',async()=>{
+    const h=harness({save:()=>Promise.resolve({success:true,checkin_at:'2026-09-10 16:30:00',message:'สำเร็จ',day_summary:{date:'2026-09-10',in:'2026-09-10 08:05:12',out:'2026-09-10 16:30:00'}})});
+    h.click();await h.settle();
+    assert.equal(h.role('time-in').textValue,'08:05');
+    assert.equal(h.role('time-out').textValue,'16:30');
+});
+test('outside submission displays saved time and pending symbol',async()=>{
+    const h=harness({position:{success:true,inside:false},save:()=>Promise.resolve({success:true,status:'pending',checkin_at:'2026-09-10 08:05:12',message:'สำเร็จ',day_summary:{date:'2026-09-10',in:'2026-09-10 08:05:12',in_status:'pending',out:null}})});
+    h.click();await h.settle();h.field('[name="out_of_location_reason"]').val('ปฏิบัติงานนอกสถานที่');h.click();await h.settle();
+    assert.equal(h.role('time-in').textValue,'08:05');
+    assert.equal(h.role('pending-in').classes.has('d-none'),false);
+    assert.equal(h.role('pending-latest').classes.has('d-none'),false);
+});
+test('pending raw scan retains timestamp after reload without inventing direction',()=>{
+    const h=harness({latest:{at:'2026-09-10 08:05:12',status_code:'pending'},daySummary:{date:'2026-09-10',in:null,out:null}});
+    assert.match(h.role('latest').textValue,/08:05:12/);
+    assert.equal(h.role('pending-latest').classes.has('d-none'),false);
+    assert.equal(h.role('time-in').textValue,'--:--');
+    const approved=harness({latest:{at:'2026-09-10 08:05:12',status_code:'approved'}});
+    assert.equal(approved.role('pending-latest').classes.has('d-none'),true);
 });

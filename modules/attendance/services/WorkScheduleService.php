@@ -73,6 +73,23 @@ class WorkScheduleService
         if ($base['mode'] === 'normal' && $assignment && $assignment['schedule_id']) $base['schedule'] = $schedules !== null ? ($schedules[$assignment['schedule_id']] ?? null) : WorkSchedule::findOne($assignment['schedule_id']);
         return $base;
     }
+    /** Assign selected members atomically; every employee still requires individual permission. */
+    public static function assignMembers(int $departmentId, array $employeeIds, array $input): int
+    {
+        if (!self::canAssign('department', $departmentId)) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์กำหนดเวลาของหน่วยงานนี้');
+        if (!$employeeIds || count($employeeIds) > 5000) throw new \DomainException('กรุณาเลือกบุคลากรอย่างน้อย 1 คน (ไม่เกิน 5,000 คน)');
+        foreach ($employeeIds as $id) if (!is_string($id) || !ctype_digit($id)) throw new \DomainException('รายการบุคลากรไม่ถูกต้อง');
+        $employeeIds = array_values(array_unique($employeeIds));
+        return Yii::$app->db->transaction(function () use ($departmentId, $employeeIds, $input) {
+            $directory = new ScheduleDirectory();
+            $allowed = array_column($directory->members($departmentId), 'id');
+            foreach ($employeeIds as $id) {
+                if (!in_array((int)$id, $allowed)) throw new \DomainException('มีบุคลากรย้ายหน่วยงานหรือไม่ได้ปฏิบัติงานอยู่ กรุณาโหลดรายชื่อใหม่');
+                self::assign(array_merge($input, ['scope'=>'employee','target_id'=>$id]));
+            }
+            return count($employeeIds);
+        });
+    }
     public static function shifts(array $ids, string $from, string $to, array $occupied): array
     {
         if (!self::ready() || !$ids) return [];

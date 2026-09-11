@@ -196,6 +196,7 @@ try {
     }
     verifyAttendance('all monthly Excel late totals match screen matrix', true);
     require __DIR__ . '/attendance_scan_cases.php';
+    require __DIR__ . '/attendance_schedule_cases.php';
     echo "SUCCESS: $pass checks; all fixture changes will be rolled back.\n";
 } catch (Throwable $e) {
     fwrite(STDERR, $e->getMessage() . "\n" . $e->getTraceAsString() . "\n");

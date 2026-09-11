@@ -20,7 +20,7 @@ use yii\helpers\Url;
     <a href="<?= Url::to(['/attendance/location/index']) ?>" class="btn btn-outline-primary">
         <i class="bi bi-geo-alt"></i> จุดลงเวลา
     </a>
-    <a href="<?= Url::to(['/attendance/schedule/index']) ?>" class="btn btn-outline-primary">ตั้งค่าเวลาทำงาน</a>
+    <a href="<?= Url::to(['/attendance/schedule/index']) ?>" class="btn <?= ($active ?? '') === 'schedule' ? 'btn-primary' : 'btn-outline-primary' ?>" <?= ($active ?? '') === 'schedule' ? 'aria-current="page"' : '' ?>><i class="bi bi-calendar-week" aria-hidden="true"></i> ตั้งค่าเวลาทำงาน</a>
     <a href="<?= Url::to(['/attendance/checkin/import-form']) ?>" class="btn btn-outline-primary">
         <i class="bi bi-upload"></i> นำเข้า CSV
     </a>

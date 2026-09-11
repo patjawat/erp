@@ -13,7 +13,7 @@ class Module extends \yii\base\Module
     public function beforeAction($action)
     {
         if (!parent::beforeAction($action)) return false;
-        \Yii::$app->view->registerCssFile('@web/css/attendance.css', ['depends' => [\app\assets\AppAsset::class]]);
+        \Yii::$app->view->registerCssFile('@web/css/attendance.css?v=' . filemtime(\Yii::getAlias('@webroot/css/attendance.css')), ['depends' => [\app\assets\AppAsset::class]], 'attendance-ui');
         if (\Yii::$app->user->isGuest) {
             if (in_array($action->id, ['save','position','shifts'], true)) throw new \yii\web\UnauthorizedHttpException('กรุณาเข้าสู่ระบบใหม่');
             \Yii::$app->user->loginRequired();

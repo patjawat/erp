@@ -8,6 +8,14 @@
             var $form = $(form), busy = false, needsReason = false, requestId, offset = 0;
             var storageKey = 'attendance-request-' + config.employeeId;
             function role(name) { return $form.find('[data-role="' + name + '"]'); }
+            function showDay(summary) {
+                if (!summary) return;
+                role('day-date').text(summary.date || '');
+                role('time-in').text(summary.in ? summary.in.slice(11,16) : '--:--');
+                role('time-out').text(summary.out ? summary.out.slice(11,16) : '--:--');
+                role('pending-in').toggleClass('d-none', !summary.in || summary.in_status !== 'pending');
+                role('pending-out').toggleClass('d-none', !summary.out || summary.out_status !== 'pending');
+            }
             function readKey() { try { return sessionStorage.getItem(storageKey); } catch (e) { return null; } }
             function key() {
                 if (!requestId) {
@@ -17,7 +25,7 @@
                 return requestId;
             }
             function message(text, ok) { role('result').removeClass('d-none alert-success alert-danger').addClass(ok ? 'alert-success' : 'alert-danger').text(text).trigger('focus'); }
-            function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารออนุมัติ' : 'สแกนเวลา'); }
+            function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารออนุมัติ' : 'ลงเวลา'); }
             function ajax(url, data) {
                 if (window.yii) data[window.yii.getCsrfParam()] = window.yii.getCsrfToken();
                 return $.ajax({url:url, type:'POST', data:data, dataType:'json', timeout:30000});
@@ -38,8 +46,10 @@
             $form.closest('.modal').one('hidden.bs.modal.attendance', function () { clearInterval(timer); });
             $.ajax({url:config.shiftsUrl,dataType:'json',timeout:15000}).done(function (r) {
                 if (r.now) offset = new Date(r.now.replace(' ','T')+'+07:00').getTime()-Date.now();
-                role('latest').text(r.latest ? 'บันทึกล่าสุด '+r.latest.at+' · '+r.latest.status : 'ยังไม่มีประวัติลงเวลา');
-            }).fail(function () { role('latest').text('โหลดรายการล่าสุดไม่สำเร็จ เปิดประวัติเพื่อตรวจสอบได้'); });
+                showDay(r.day_summary);
+                role('latest').text(r.latest ? 'บันทึกล่าสุด '+r.latest.at : '');
+                role('pending-latest').toggleClass('d-none', !r.latest || r.latest.status_code !== 'pending');
+            }).fail(function () { role('latest').text(''); });
             async function submit() {
                 if (busy) return;
                 var reason = $form.find('[name="out_of_location_reason"]').val().trim();
@@ -65,13 +75,15 @@
                     }
                     message(result.message+(result.location ? ' · '+result.location : ''), true);
                     role('latest').text('บันทึกล่าสุด '+result.checkin_at);
-                    role('gps').text('ระบบรับเวลาแล้ว กดซ้ำภายใน 2 นาทีจะไม่สร้างรายการใหม่');
+                    role('pending-latest').toggleClass('d-none', result.status !== 'pending');
+                    showDay(result.day_summary);
+                    role('gps').text('');
                     needsReason=false; role('reason-panel').addClass('d-none'); $form.find('textarea').val('');
                     try { sessionStorage.removeItem(storageKey); } catch (e) { /* Storage may be disabled. */ }
                     requestId=null;
                 } catch (error) {
                     message(error.status === 401 || error.status === 403 ? 'เซสชันหมดอายุหรือไม่มีสิทธิ์ กรุณาเข้าสู่ระบบใหม่' : error.message || 'ยังยืนยันผลบันทึกไม่ได้ การเชื่อมต่อขัดข้อง กรุณาลองใหม่ ระบบจะตรวจรายการซ้ำให้');
-                    role('gps').text('กรุณาตรวจข้อความแจ้งเตือน แล้วกดสแกนเวลาเพื่อลองใหม่');
+                    role('gps').text('');
                 } finally { busy=false; state(); }
             }
             $form.on('submit',function(e){e.preventDefault();submit();});

@@ -172,7 +172,7 @@ class DefaultController extends Controller
                 'duplicate' => $record->wasDuplicate, 'status' => $record->status,
                 'location' => $record->location->name ?? null,
                 'message' => ($record->wasDuplicate ? 'บันทึกไว้แล้ว ไม่สร้างรายการซ้ำ: ' : 'บันทึกเวลาสำเร็จ: ') . $record->checkin_at . ' · ' . $record->getStatusLabel() . (RosterAttendance::forRecord($record)['shift'] ? '' : ' · รอตรวจสอบเวลางาน/ตารางเวร'),
-                'attendance' => RosterAttendance::forRecord($record)];
+                'attendance' => RosterAttendance::forRecord($record), 'day_summary'=>$this->daySummary((int)$me->id)];
         } catch (\DomainException $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         } catch (\Throwable $e) {
@@ -188,7 +188,27 @@ class DefaultController extends Controller
         $me = UserHelper::GetEmployee();
         if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
         $latest = CheckinRecord::find()->where(['emp_id'=>$me->id])->orderBy(['checkin_at'=>SORT_DESC,'id'=>SORT_DESC])->one();
-        return ['shifts' => RosterAttendance::candidates((int)$me->id, AttendanceService::now()), 'now' => AttendanceService::now(), 'latest'=>$latest ? ['at'=>$latest->checkin_at,'status'=>$latest->getStatusLabel()] : null];
+        return ['shifts' => RosterAttendance::candidates((int)$me->id, AttendanceService::now()), 'now' => AttendanceService::now(), 'latest'=>$latest ? ['at'=>$latest->checkin_at,'status'=>$latest->getStatusLabel(),'status_code'=>$latest->status] : null, 'day_summary'=>$this->daySummary((int)$me->id)];
+    }
+
+    /** Calendar-day summary: never infer direction for an unmatched raw scan. */
+    private function daySummary(int $employeeId): array
+    {
+        $date = substr(AttendanceService::now(), 0, 10);
+        $next = (new \DateTimeImmutable($date))->modify('+1 day')->format('Y-m-d');
+        $query = CheckinRecord::find()->where(['emp_id'=>$employeeId])
+            ->andWhere(['status'=>['pending','approved']])
+            ->andWhere(['>=','checkin_at',$date.' 00:00:00'])->andWhere(['<','checkin_at',$next.' 00:00:00']);
+        $in = (clone $query)->andWhere(['check_type'=>'in'])->orderBy(['checkin_at'=>SORT_ASC,'id'=>SORT_ASC])->one();
+        $out = (clone $query)->andWhere(['check_type'=>'out'])->orderBy(['checkin_at'=>SORT_DESC,'id'=>SORT_DESC])->one();
+        // Show the first unresolved scan as a provisional entry receipt, without changing its classification.
+        $provisional = false;
+        if (!$in) {
+            $in = (clone $query)->andWhere(['check_type'=>'scan','status'=>'pending'])->orderBy(['checkin_at'=>SORT_ASC,'id'=>SORT_ASC])->one();
+            $provisional = $in !== null;
+        }
+        return ['date'=>$date, 'in'=>$in->checkin_at ?? null, 'out'=>$out->checkin_at ?? null,
+            'in_status'=>$in->status ?? null, 'out_status'=>$out->status ?? null, 'in_provisional'=>$provisional];
     }
 
     public function actionPosition()
