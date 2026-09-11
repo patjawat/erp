@@ -268,7 +268,9 @@ if (!empty($upcomingHealth)): ?>
     <div class="col-12 col-xl-6">
         <div class="position-relative p-4 text-white overflow-hidden h-100 d-flex flex-column rounded-3 erp-profile-panel">
 
-            <div class="d-flex flex-column flex-md-row align-items-center gap-4 position-relative z-1">
+            <div class="erp-profile-columns position-relative z-1 mb-4">
+            <div>
+            <div class="d-flex flex-wrap align-items-center gap-3 erp-profile-identity">
 
                 <div class="position-relative group" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click();">
                     <div class="position-absolute top-0 start-0 translate-middle p-1 rounded-3 shadow-lg border border-2 border-white"
@@ -327,7 +329,6 @@ if (!empty($upcomingHealth)): ?>
                     </div>
                     <div class="mb-4">
                         <p class="text-white text-opacity-75 text-sm fw-medium mb-1"><?= $me->positionName() ?></p>
-                        <p class="text-white fw-bold text-sm mb-0">ระดับ: <?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></p>
                     </div>
                     <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
                         <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-4 bg-white bg-opacity-10 text-white text-xs">
@@ -344,9 +345,31 @@ if (!empty($upcomingHealth)): ?>
                     </div>
                 </div>
 
-                <div class="attendance-home-scan w-100 order-first order-lg-last" style="max-width: 420px">
-                    <?= $this->render('@app/modules/attendance/views/default/_clock_form') ?>
+            </div>
+
+            <a class="erp-thanks-strip mt-3" href="<?= Url::to(['/appreciation/default/index']) ?>">
+                <div class="d-flex justify-content-between gap-2 mb-2"><strong><?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></strong><i class="bi bi-arrow-up-right" aria-hidden="true"></i></div>
+                <progress class="erp-thanks-progress" max="100" value="<?= max(0, min(100, (int)($appreciationStatus['progress'] ?? 0))) ?>" aria-label="ความก้าวหน้าระดับคำขอบคุณ"></progress>
+                <div class="erp-thanks-metrics mt-2">
+                    <span>ได้รับ<strong><?= number_format($appreciationReceivedCount ?? 0) ?></strong></span>
+                    <span>คะแนน<strong><?= number_format($appreciationStatus['balance'] ?? 0) ?></strong></span>
+                    <span>สะสม<strong><?= number_format($appreciationStatus['earned'] ?? 0) ?></strong></span>
                 </div>
+            </a>
+            </div>
+            <div class="erp-profile-side">
+                <section class="erp-pending-box" aria-labelledby="profile-pending-title">
+                    <h3 id="profile-pending-title" class="fs-6 fw-bold mb-3">สิ่งที่รอดำเนินการ</h3>
+                    <a href="<?= Url::to(['/task']) ?>"><span><i class="bi bi-list-task me-2" aria-hidden="true"></i>งาน</span><strong><?= number_format($myOpenTaskCount) ?></strong></a>
+                    <a href="<?= Url::to(['/approve-v2']) ?>"><span><i class="bi bi-check2-square me-2" aria-hidden="true"></i>อนุมัติ</span><strong><?= number_format($notify['total'] ?? 0) ?></strong></a>
+                    <a href="<?= Url::to(['/me/documents', 'DocumentSearch' => ['q_status' => 'unread', 'date_filter' => '', 'date_start' => '', 'date_end' => '']]) ?>"><span><i class="bi bi-envelope me-2" aria-hidden="true"></i>หนังสือยังไม่อ่าน</span><strong><?= number_format($unreadDocumentCount ?? 0) ?></strong></a>
+                </section>
+                <div class="erp-thanks-shortcuts mt-3">
+                    <?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-heart-fill" aria-hidden="true"></i></span><span>ส่ง</span>', ['/appreciation/default/create'], ['class'=>'appreciation-action appreciation-action--thanks open-modal', 'aria-label'=>'ส่งคำขอบคุณ', 'data'=>['size'=>'modal-lg']]) ?>
+                    <?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-gift" aria-hidden="true"></i></span><span>แลก</span>', ['/appreciation/reward/index'], ['class'=>'appreciation-action appreciation-action--reward', 'aria-label'=>'แลกของ']) ?>
+                    <?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-calendar-check" aria-hidden="true"></i></span><span>ร่วม</span>', ['/appreciation/activity/index'], ['class'=>'appreciation-action appreciation-action--activity', 'aria-label'=>'ร่วมกิจกรรม']) ?>
+                </div>
+            </div>
             </div>
 
             <div class="erp-profile-tools position-relative z-1">
@@ -392,6 +415,36 @@ if (!empty($upcomingHealth)): ?>
         </div>
 
         <style>
+            .erp-profile-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.5rem; flex:1; }
+            .erp-profile-columns > div:first-child { display:flex; flex-direction:column; justify-content:space-between; gap:1.5rem; }
+            .erp-profile-side { display:flex; flex-direction:column; justify-content:space-between; gap:1.5rem; }
+            .erp-profile-identity { flex-wrap:nowrap !important; align-items:flex-start !important; }
+            .erp-profile-identity > .group { flex-shrink:0; }
+            .erp-profile-identity > .flex-grow-1 { text-align:left !important; }
+            .erp-profile-columns, .erp-profile-columns * { box-sizing:border-box; min-width:0; }
+            .erp-profile-identity h2 { font-size:1.4rem !important; overflow-wrap:anywhere; }
+            .erp-profile-identity .rounded-5 { width:80px !important; height:80px !important; }
+            .erp-thanks-strip { display:block; padding:1rem; border:1px solid rgb(255 255 255 / 25%); border-radius:1rem; background:rgb(255 255 255 / 10%); color:white; text-decoration:none; }
+            .erp-thanks-strip:hover { color:white; background:rgb(255 255 255 / 18%); }
+            .erp-thanks-progress { display:block; width:100%; height:6px; appearance:none; border:0; border-radius:8px; overflow:hidden; background:rgb(255 255 255 / 25%); }
+            .erp-thanks-progress::-webkit-progress-bar { background:rgb(255 255 255 / 25%); }
+            .erp-thanks-progress::-webkit-progress-value { background:white; }
+            .erp-thanks-progress::-moz-progress-bar { background:white; }
+            .erp-thanks-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; font-size:.75rem; }
+            .erp-thanks-metrics strong { display:block; font-size:1.1rem; font-variant-numeric:tabular-nums; }
+            .erp-pending-box { padding:1rem; border-radius:1rem; background:var(--bs-body-bg); color:var(--bs-body-color); }
+            .erp-pending-box a { display:flex; justify-content:space-between; gap:.5rem; padding:.6rem 0; color:var(--bs-body-color); text-decoration:none; border-bottom:1px solid var(--bs-border-color); }
+            .erp-pending-box a:last-child { border-bottom:0; }
+            .erp-pending-box a:hover { color:var(--bs-primary); }
+            .erp-pending-box strong { font-size:1.2rem; font-variant-numeric:tabular-nums; }
+            .erp-thanks-shortcuts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; }
+            .erp-thanks-shortcuts .appreciation-action { display:flex; flex-direction:column; align-items:center; gap:.4rem; color:white; text-decoration:none; }
+            .erp-thanks-shortcuts .appreciation-action__icon { width:48px; height:48px; box-shadow:none; }
+            .erp-thanks-shortcuts .appreciation-action--thanks .appreciation-action__icon { background:var(--bs-danger-bg-subtle); color:var(--bs-danger-text-emphasis); }
+            .erp-thanks-shortcuts .appreciation-action--reward .appreciation-action__icon { background:var(--bs-warning-bg-subtle); color:var(--bs-warning-text-emphasis); }
+            .erp-thanks-shortcuts .appreciation-action--activity .appreciation-action__icon { background:var(--bs-success-bg-subtle); color:var(--bs-success-text-emphasis); }
+            @media(max-width:767.98px) { .erp-profile-columns { grid-template-columns:minmax(0,1fr); } }
+            @media(min-width:1200px) and (max-width:1599.98px) { .erp-profile-identity { flex-wrap:wrap !important; } }
             .transition-all {
                 transition: all 0.3s ease;
             }
@@ -548,42 +601,8 @@ if (!empty($upcomingHealth)): ?>
     </div>
 
     <div class="col-12 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 appreciation-status-card">
-            <div class="card-body p-3 p-md-4 d-flex flex-column">
-                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-                    <div class="min-w-0 flex-grow-1">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="appreciation-heart d-inline-flex align-items-center justify-content-center rounded-circle"><i class="bi bi-heart-fill" aria-hidden="true"></i></span>
-                            <div><h2 class="h6 fw-bold mb-0">สถานะคำขอบคุณ</h2><div class="small text-muted"><?= !empty($appreciationStatus['year']) ? Html::encode($appreciationStatus['year']->name) : 'ยังไม่เปิดรอบคะแนน' ?></div></div>
-                        </div>
-                    </div>
-                    <div class="text-end flex-shrink-0">
-                        <div class="small text-muted">ระดับ</div>
-                        <div class="fw-bold lh-sm" style="font-size:1.35rem;color:<?= Html::encode($appreciationStatus['levelColor'] ?? '#2563eb') ?>"><?= Html::encode($appreciationStatus['levelName'] ?? 'เริ่มต้น') ?></div>
-                    </div>
-                </div>
-                <div class="appreciation-growth mb-2">
-                    <span class="appreciation-growth__plant" aria-hidden="true">🌱</span>
-                    <div class="small fw-semibold text-dark mb-1"><?= !empty($appreciationStatus['nextLevelName']) ? 'กำลังเติบโตสู่ '.Html::encode($appreciationStatus['nextLevelName']) : 'เติบโตถึงระดับปัจจุบันแล้ว' ?></div>
-                    <div class="d-flex justify-content-between gap-2 small mb-1"><span class="text-muted">เส้นทางของคุณ</span><span class="fw-bold text-success"><?= (int)($appreciationStatus['progress'] ?? 0) ?>%</span></div>
-                    <div class="progress rounded-pill" style="height:8px"><div class="progress-bar rounded-pill" role="progressbar" style="width:<?= (int)($appreciationStatus['progress'] ?? 0) ?>%" aria-valuenow="<?= (int)($appreciationStatus['progress'] ?? 0) ?>" aria-valuemin="0" aria-valuemax="100"></div></div>
-                    <?php if(!empty($appreciationStatus['nextLevelName'])): ?><div class="small text-muted mt-1">อีก <?= number_format($appreciationStatus['pointsToNext']) ?> คะแนน ต้นอ่อนจะเติบโตขึ้น</div><?php endif; ?>
-                </div>
-                <dl class="row g-0 mb-3 small py-2">
-                    <div class="col-4 appreciation-metric px-2"><dt class="text-muted fw-normal"><i class="bi bi-star-fill text-warning me-1" aria-hidden="true"></i>สะสม</dt><dd class="fw-bold fs-6 mb-0 mt-1"><?= number_format($appreciationStatus['earned'] ?? 0) ?></dd></div>
-                    <div class="col-4 appreciation-metric px-3"><dt class="text-muted fw-normal"><i class="bi bi-wallet2 text-primary me-1" aria-hidden="true"></i>คงเหลือ</dt><dd class="fw-bold fs-6 text-primary mb-0 mt-1"><?= number_format($appreciationStatus['balance'] ?? 0) ?></dd></div>
-                    <div class="col-4 appreciation-metric px-3"><dt class="text-muted fw-normal"><i class="bi bi-gift-fill text-success me-1" aria-hidden="true"></i>รางวัล</dt><dd class="fw-bold fs-6 mb-0 mt-1"><?= number_format($appreciationStatus['rewardsCount'] ?? 0) ?></dd></div>
-                </dl>
-                <div class="row g-0 text-center border-top pt-3 pb-1">
-                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-heart-fill"></i></span><span class="d-block small">ส่งคำขอบคุณ</span>', ['/appreciation/default/create'], ['class'=>'appreciation-action appreciation-action--thanks d-inline-flex flex-column align-items-center open-modal','data'=>['size'=>'modal-lg']]) ?></div>
-                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-gift"></i></span><span class="d-block small">แลกของ</span>', ['/appreciation/reward/index'], ['class'=>'appreciation-action appreciation-action--reward d-inline-flex flex-column align-items-center']) ?></div>
-                    <div class="col-4"><?= Html::a('<span class="appreciation-action__icon"><i class="bi bi-calendar-check"></i></span><span class="d-block small">ร่วมกิจกรรม</span>', ['/appreciation/activity/index'], ['class'=>'appreciation-action appreciation-action--activity d-inline-flex flex-column align-items-center']) ?></div>
-                </div>
-                <div class="text-center mt-3">
-                    <?= Html::a('แบบสำรวจความผูกพันของฉัน', ['/hr/engagement/mine'], ['class'=>'btn btn-outline-primary btn-sm mb-2', 'data-pjax'=>'0']) ?>
-                    <?= Html::a('<i class="bi bi-heart-fill me-1 text-danger"></i> ดูฟีดคำขอบคุณทั้งหมด <i class="bi bi-arrow-right ms-1"></i>', ['/appreciation/default/index'], ['class'=>'appreciation-feed-link']) ?>
-                </div>
-            </div>
+        <div class="attendance-home-scan w-100 h-100">
+            <?= $this->render('@app/modules/attendance/views/default/_clock_form') ?>
         </div>
     </div>
 
