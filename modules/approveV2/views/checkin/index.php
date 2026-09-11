@@ -19,12 +19,28 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-body p-0">
-        <div class="p-3 border-bottom d-flex flex-wrap align-items-center gap-2">
-            <h6 class="mb-0">รอยืนยัน <?= $dataProvider->getTotalCount() ?> รายการ</h6>
-            <div id="bulk-bar" class="ms-auto d-none align-items-center gap-2">
-                <span class="text-body-secondary small">เลือก <strong id="bulk-count">0</strong> รายการ</span>
-                <button type="button" class="btn btn-success btn-sm btn-bulk" data-status="Pass"><i class="bi bi-check-lg"></i> ยืนยันที่เลือก</button>
-                <button type="button" class="btn btn-outline-danger btn-sm btn-bulk" data-status="Reject"><i class="bi bi-x-lg"></i> ไม่ยืนยันที่เลือก</button>
+        <div class="p-3 border-bottom">
+            <form method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <label class="form-label small mb-1">ค้นหาพนักงาน</label>
+                    <input type="text" name="q" value="<?= Html::encode($q ?? '') ?>" class="form-control form-control-sm" placeholder="ชื่อ หรือ นามสกุล">
+                </div>
+                <div class="col-8 col-sm-4 col-md-3">
+                    <label class="form-label small mb-1">บริเวณ</label>
+                    <?= Html::dropDownList('loc', $loc ?? '', ['' => 'ทั้งหมด', 'in' => 'อยู่ในบริเวณ', 'out' => 'นอกบริเวณ'], ['class' => 'form-select form-select-sm']) ?>
+                </div>
+                <div class="col-4 col-sm-2 col-md-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> ค้นหา</button>
+                    <?= Html::a('ล้าง', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h6 class="mb-0">รอยืนยัน <?= $dataProvider->getTotalCount() ?> รายการ</h6>
+                <div id="bulk-bar" class="ms-auto d-none align-items-center gap-2">
+                    <span class="text-body-secondary small">เลือก <strong id="bulk-count">0</strong> รายการ</span>
+                    <button type="button" class="btn btn-success btn-sm btn-bulk" data-status="Pass"><i class="bi bi-check-lg"></i> ยืนยันที่เลือก</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm btn-bulk" data-status="Reject"><i class="bi bi-x-lg"></i> ไม่ยืนยันที่เลือก</button>
+                </div>
             </div>
         </div>
         <div class="table-responsive">
@@ -36,6 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </th>
                         <th class="text-center" style="width: 50px;">ลำดับ</th>
                         <th>พนักงาน</th>
+                        <th>ตำแหน่ง</th>
                         <th>หน่วยงาน</th>
                         <th>วันเวลาที่ลงเวลา</th>
                         <th>วิธีลงเวลา</th>
@@ -51,12 +68,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             <input type="checkbox" class="form-check-input row-check" value="<?= $item->id ?>" aria-label="เลือกรายการ">
                         </td>
                         <td class="text-center"><?= ($dataProvider->pagination->offset + $key + 1) ?></td>
-                        <td>
-                            <?php if ($record->employee): ?>
-                                <div class="fw-semibold"><?= Html::encode($record->employee->fname . ' ' . $record->employee->lname) ?></div>
-                                <div class="small text-body-secondary"><?= Html::encode($record->employee->positionName()) ?></div>
-                            <?php else: ?>-<?php endif; ?>
-                        </td>
+                        <td class="fw-semibold"><?= $record->employee ? Html::encode($record->employee->fname . ' ' . $record->employee->lname) : '-' ?></td>
+                        <td><?= $record->employee ? Html::encode($record->employee->positionName()) : '-' ?></td>
                         <td><?= $record->employee ? Html::encode($record->employee->departmentName()) : '-' ?></td>
                         <td><?= Yii::$app->formatter->asDatetime($record->checkin_at, 'php:d/m/Y H:i') ?></td>
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
