@@ -79,7 +79,12 @@ class AttendanceService
             }
             if ($shiftId !== '' && !$shift) throw new \DomainException('เวรที่เลือกไม่ใช่เวรของคุณหรือยังไม่ประกาศใช้ กรุณาโหลดตารางเวรใหม่');
             if ($automatic) {
-                $match = ScanMatcher::match($at, $candidates); $shift = $match['shift']; $type = $match['type'];
+                // ปุ่มเดียว: ตัดสินตามลำดับของรอบเวร/วัน — ยังไม่มี IN → เข้า, มี IN แล้ว → ออก, ครบแล้ว → เตือน (ขึ้นวัน/เวรใหม่เริ่มรอบใหม่เอง)
+                $shift = ScanMatcher::nearestShift($at, $candidates);
+                $recorded = RosterAttendance::recordedTypes((int)$employee->id, $shift, $at);
+                if (!$recorded['in']) { $type = 'in'; }
+                elseif (!$recorded['out']) { $type = 'out'; }
+                else { throw new \DomainException('ช่วงเวลานี้บันทึกเวลาเข้า-ออกครบแล้ว หากผิดพลาดใช้เมนู "แก้ไข/ระบุเวร"'); }
             } else {
                 if (!$shift && count($candidates) === 1) $shift = $candidates[0];
                 if (!$shift && count($candidates) > 1) throw new \DomainException('มีหลายเวร กรุณาเลือกเวรที่จะลงเวลา');

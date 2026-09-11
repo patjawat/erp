@@ -19,4 +19,18 @@ class ScanMatcher
         if (!$matches || (isset($matches[1]) && $matches[0]['distance'] === $matches[1]['distance'])) return ['type'=>'scan','shift'=>null];
         return $matches[0];
     }
+
+    /** Pick the shift this scan belongs to: one that contains the time, else the nearest by boundary. */
+    public static function nearestShift(string $at, array $shifts): ?array
+    {
+        $time = strtotime($at);
+        $best = null; $bestDistance = null;
+        foreach ($shifts as $shift) {
+            $start = strtotime($shift['start']); $end = strtotime($shift['end']);
+            if ($time >= $start && $time <= $end) return $shift;
+            $distance = min(abs($time - $start), abs($time - $end));
+            if ($bestDistance === null || $distance < $bestDistance) { $bestDistance = $distance; $best = $shift; }
+        }
+        return $best;
+    }
 }

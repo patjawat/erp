@@ -48,6 +48,40 @@ class RosterAttendance
         return self::shifts([$employeeId], date('Y-m-d', strtotime($at . ' -1 day')), date('Y-m-d', strtotime($at . ' +1 day')));
     }
 
+    /** Canonical identity of a shift (normal hours keyed by work date, roster by item id). */
+    public static function shiftKey(array $shift): string
+    {
+        return $shift['emp_id'] . ':' . (($shift['source'] ?? '') === 'normal' ? 'normal:' . $shift['work_date'] : $shift['id']);
+    }
+
+    /** Which directions (in/out) are already recorded for this shift — or the calendar day when no shift. */
+    public static function recordedTypes(int $employeeId, ?array $shift, string $at): array
+    {
+        $has = ['in' => false, 'out' => false];
+        if ($shift) {
+            $key = self::shiftKey($shift);
+            $from = date('Y-m-d H:i:s', strtotime($shift['start'] . ' -1 day'));
+            $to = date('Y-m-d H:i:s', strtotime($shift['end'] . ' +1 day'));
+        } else {
+            $key = null;
+            $date = substr($at, 0, 10);
+            $from = $date . ' 00:00:00';
+            $to = date('Y-m-d H:i:s', strtotime($date . ' +1 day'));
+        }
+        $records = \app\modules\attendance\models\CheckinRecord::find()->where(['emp_id' => $employeeId])
+            ->andWhere(['<>', 'status', 'rejected'])
+            ->andWhere(['>=', 'checkin_at', $from])->andWhere(['<', 'checkin_at', $to])->all();
+        foreach ($records as $record) {
+            if ($key !== null) {
+                $recordShift = self::forRecord($record)['shift'];
+                if (!$recordShift || self::shiftKey($recordShift) !== $key) continue;
+            }
+            if ($record->check_type === 'in') $has['in'] = true;
+            elseif ($record->check_type === 'out') $has['out'] = true;
+        }
+        return $has;
+    }
+
     /** Day summaries use work dates, so a night shift's checkout stays on its starting day. */
     public static function summarize(array $shifts, array $records, string $now): array
     {
