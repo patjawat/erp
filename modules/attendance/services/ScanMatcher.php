@@ -33,4 +33,12 @@ class ScanMatcher
         }
         return $best;
     }
+
+    /** สแกนอยู่ในกรอบของเวรนี้ไหม (ช่วง start..end บวกช่วงผ่อนผัน window นาที ทั้งก่อนเริ่มและหลังเลิก) */
+    public static function withinWindow(string $at, array $shift): bool
+    {
+        $time = strtotime($at);
+        $window = (int)($shift['window_minutes'] ?? 240) * 60;
+        return $time >= strtotime($shift['start']) - $window && $time <= strtotime($shift['end']) + $window;
+    }
 }

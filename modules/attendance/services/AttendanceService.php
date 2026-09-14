@@ -74,6 +74,7 @@ class AttendanceService
             $candidates = RosterAttendance::candidates((int)$employee->id, $at);
             $shiftId = $automatic ? '' : (string)($input['roster_item_id'] ?? '');
             $shift = null;
+            $offShift = false;
             foreach ($candidates as $candidate) {
                 if ((string)$candidate['id'] === $shiftId) $shift = $candidate;
             }
@@ -81,6 +82,11 @@ class AttendanceService
             if ($automatic) {
                 // ปุ่มเดียว: ตัดสินตามลำดับของรอบเวร/วัน — ยังไม่มี IN → เข้า, มี IN แล้ว → ออก, ครบแล้ว → เตือน (ขึ้นวัน/เวรใหม่เริ่มรอบใหม่เอง)
                 $shift = ScanMatcher::nearestShift($at, $candidates);
+                // "ไม่ตรงเวร": มีตารางเวร/เวลา (candidates ไม่ว่าง) แต่สแกนอยู่นอกกรอบเวรทั้งหมด — แยกจาก "ไม่มีตารางเลย" (ยัง auto)
+                if (!empty($candidates) && (!$shift || !ScanMatcher::withinWindow($at, $shift))) {
+                    $offShift = true;
+                    $shift = null; // ไม่ผูกกับเวรใด จะได้ไม่คำนวณสายจากเวรที่ไม่ใช่
+                }
                 $recorded = RosterAttendance::recordedTypes((int)$employee->id, $shift, $at);
                 if (!$recorded['in']) { $type = 'in'; }
                 elseif (!$recorded['out']) { $type = 'out'; }
@@ -112,10 +118,13 @@ class AttendanceService
             $record->qr_token = $token ?: null;
             $record->photo_path = $method === 'photo' ? $photo : null;
             $attendance = RosterAttendance::evaluate($at, $type, $shift);
-            // ปกติ (ตรงเวลา/ในพื้นที่) = ยืนยันอัตโนมัติ เวลาแสดงทันที; ผิดปกติ (นอกพื้นที่/สาย/ออกก่อน) = รอหัวหน้ายืนยัน
-            $needsConfirm = !$validation['inside']
-                || ((int)($attendance['late_minutes'] ?? 0) > 0)
-                || ((int)($attendance['early_minutes'] ?? 0) > 0);
+            // ปกติ = ยืนยันอัตโนมัติ เวลาแสดงทันที; ผิดปกติ = รอหัวหน้ายืนยัน (นอกพื้นที่/สาย/ออกก่อน/ไม่ตรงเวร)
+            $reasons = [];
+            if (!$validation['inside']) $reasons[] = 'out_of_location';
+            if ((int)($attendance['late_minutes'] ?? 0) > 0) $reasons[] = 'late';
+            if ((int)($attendance['early_minutes'] ?? 0) > 0) $reasons[] = 'early';
+            if ($offShift) $reasons[] = 'off_shift';
+            $needsConfirm = !empty($reasons);
             $record->status = $needsConfirm ? CheckinRecord::STATUS_PENDING : CheckinRecord::STATUS_APPROVED;
             if (!$needsConfirm) $record->approved_at = $at;
             $record->data_json = [
@@ -125,6 +134,7 @@ class AttendanceService
                 'raw_scan' => ['at'=>$at, 'method'=>$method, 'lat'=>$input['lat'], 'lng'=>$input['lng']],
                 'matching' => $automatic ? 'nearest-boundary-v1' : 'explicit',
                 'auto_confirmed' => !$needsConfirm,
+                'exception_reasons' => $reasons,
             ];
             if (!$record->save()) throw new \DomainException(implode(' ', $record->getFirstErrors()));
             if ($needsConfirm) $record->createApproveRecord();

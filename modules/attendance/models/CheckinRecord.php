@@ -164,6 +164,18 @@ class CheckinRecord extends \yii\db\ActiveRecord
         return $labels[$this->status] ?? $this->status;
     }
 
+    /** สาเหตุที่ต้องให้หัวหน้ายืนยัน (ไทย) จาก data_json.exception_reasons */
+    public function exceptionReasonLabels(): array
+    {
+        $map = ['out_of_location' => 'นอกพื้นที่', 'late' => 'มาสาย', 'early' => 'ออกก่อน', 'off_shift' => 'ไม่ตรงเวร'];
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        $out = [];
+        foreach ((array)($json['exception_reasons'] ?? []) as $reason) {
+            if (isset($map[$reason])) $out[] = $map[$reason];
+        }
+        return $out;
+    }
+
     /**
      * สร้างรายการ approve ให้หัวหน้าอนุมัติ (level=1).
      * เรียกหลัง save checkin_record ครั้งแรก.

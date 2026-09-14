@@ -57,6 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th>วันเวลาที่ลงเวลา</th>
                         <th>วิธีลงเวลา</th>
                         <th>บริเวณ</th>
+                        <th>สาเหตุ</th>
                         <th class="text-center" style="width: 200px;">ดำเนินการ</th>
                     </tr>
                 </thead>
@@ -74,6 +75,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= Yii::$app->formatter->asDatetime($record->checkin_at, 'php:d/m/Y H:i') ?></td>
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
                         <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div></td>
+                        <td>
+                            <?php foreach ($record->exceptionReasonLabels() as $label): ?>
+                                <span class="badge bg-warning-subtle text-warning-emphasis me-1 mb-1"><?= Html::encode($label) ?></span>
+                            <?php endforeach; ?>
+                        </td>
                         <td>
                             <div class="d-flex gap-1 justify-content-center flex-wrap">
                                 <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm">ดู</a>
