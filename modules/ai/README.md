@@ -14,10 +14,12 @@
 
 ## ติดตั้ง
 
-รัน migration ที่อยู่ใน module:
+migration ของโมดูลนี้ย้ายมาไว้ใน `migrations/` (ชั้นเดียว) แล้ว จึงรันด้วยคำสั่งปกติ
+ไม่ต้องระบุ `--migrationPath` (deploy script บนเครื่องจริงสแกน `@app/migrations` เท่านั้น
+การวาง migration ในโฟลเดอร์ย่อยของ module จะถูกมองข้ามเวลา deploy):
 
 ```bash
-php yii migrate --migrationPath=@app/modules/ai/migrations
+php yii migrate
 ```
 
 Migration ชุดนี้มี:
