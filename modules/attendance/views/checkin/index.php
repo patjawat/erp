@@ -94,7 +94,7 @@ $pagination = $dataProvider->getPagination();
                         <tr>
                             <th class="att-table__no">#</th>
                             <th>วันที่</th>
-                            <th class="att-table__right">เวลา</th>
+                            <th>เวลา</th>
                             <th>ประเภท</th>
                             <th>เงื่อนไขเวลา</th>
                             <th>วิธี</th>
@@ -108,7 +108,7 @@ $pagination = $dataProvider->getPagination();
                         <tr>
                             <td class="att-table__no"><?= (int)$no ?></td>
                             <td class="att-table__num"><?= $m->checkin_at ? Yii::$app->formatter->asDate($m->checkin_at, 'php:d/m/Y') : '—' ?></td>
-                            <td class="att-table__num att-table__right"><?= $m->checkin_at ? Yii::$app->formatter->asTime($m->checkin_at, 'php:H:i') : '—' ?></td>
+                            <td class="att-table__num"><?= $m->checkin_at ? Yii::$app->formatter->asTime($m->checkin_at, 'php:H:i') : '—' ?></td>
                             <td><?= Html::encode($m->getCheckTypeLabel()) ?></td>
                             <td>
                                 <?php $td = $m->timeDetail(); ?>
