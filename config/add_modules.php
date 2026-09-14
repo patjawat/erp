@@ -107,5 +107,6 @@ $modules['service-profile'] = ['class' => 'app\modules\serviceProfile\Module']; 
 $modules['iac-risk'] = ['class' => 'app\modules\iacRisk\Module'];  // การควบคุมภายในและการบริหารความเสี่ยง
 $modules['qms'] = ['class' => 'app\modules\qms\Module'];  // ระบบติดตามมาตรฐานโรงพยาบาล (Quality Management System)
 $modules['flowchart'] = ['class' => 'app\modules\flowchart\Module'];  // เครื่องมือสร้างผังกระบวนการ (ป้อนขั้นตอน -> ผัง + เอกสาร)
+$modules['km'] = ['class' => 'app\modules\km\Module'];  // คลังกิจกรรม/หลักฐานการดำเนินงาน (Knowledge Management)
 $modules['tools'] = ['class' => 'app\modules\tools\Module'];  // หน้า hub รวมเครื่องมือ (SWOT, ผังกระบวนการ, ฯลฯ)
 return $modules;

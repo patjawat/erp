@@ -19,6 +19,7 @@ $items = [
     ['key' => 'report',     'label' => 'รายงาน',      'icon' => 'bi-bar-chart-line',         'url' => ['/qms/default/report']],
 ];
 ?>
+<?= $this->render('@app/modules/km/_zone_nav', ['active' => 'qms']) ?>
 <nav class="qms-nav" aria-label="เมนู QMS">
     <div class="d-flex flex-wrap align-items-center gap-2">
         <?php foreach ($items as $item): ?>

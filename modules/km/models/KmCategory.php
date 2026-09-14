@@ -1,0 +1,54 @@
+<?php
+
+namespace app\modules\km\models;
+
+/**
+ * หมวดหมู่กิจกรรม KM (เป็นชั้นได้)
+ *
+ * @property int $id
+ * @property string $name
+ * @property int|null $parent_id
+ * @property string|null $icon
+ * @property string|null $color
+ * @property int $sort
+ * @property int $is_active
+ * @property string $ref
+ */
+class KmCategory extends KmActiveRecord
+{
+    public static function tableName(): string
+    {
+        return '{{%km_category}}';
+    }
+
+    public function rules(): array
+    {
+        return [
+            [['name'], 'required'],
+            [['name'], 'string', 'max' => 255],
+            [['icon'], 'string', 'max' => 64],
+            [['color'], 'string', 'max' => 32],
+            [['parent_id', 'sort', 'is_active'], 'integer'],
+            [['is_active'], 'default', 'value' => 1],
+            [['sort'], 'default', 'value' => 0],
+            [['parent_id'], 'exist', 'targetClass' => self::class, 'targetAttribute' => 'id', 'skipOnEmpty' => true],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'name' => 'ชื่อหมวด',
+            'parent_id' => 'หมวดแม่',
+            'icon' => 'ไอคอน',
+            'color' => 'สี',
+            'sort' => 'ลำดับ',
+            'is_active' => 'เปิดใช้งาน',
+        ];
+    }
+
+    public function getParent()
+    {
+        return $this->hasOne(self::class, ['id' => 'parent_id']);
+    }
+}
