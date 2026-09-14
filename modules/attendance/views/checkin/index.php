@@ -96,6 +96,7 @@ $pagination = $dataProvider->getPagination();
                             <th>วันที่</th>
                             <th class="att-table__right">เวลา</th>
                             <th>ประเภท</th>
+                            <th>เงื่อนไขเวลา</th>
                             <th>วิธี</th>
                             <th>สถานะ</th>
                             <th class="att-table__right">คำสั่ง</th>
@@ -109,6 +110,12 @@ $pagination = $dataProvider->getPagination();
                             <td class="att-table__num"><?= $m->checkin_at ? Yii::$app->formatter->asDate($m->checkin_at, 'php:d/m/Y') : '—' ?></td>
                             <td class="att-table__num att-table__right"><?= $m->checkin_at ? Yii::$app->formatter->asTime($m->checkin_at, 'php:H:i') : '—' ?></td>
                             <td><?= Html::encode($m->getCheckTypeLabel()) ?></td>
+                            <td>
+                                <?php $td = $m->timeDetail(); ?>
+                                <?php if ($td['expected'] !== ''): ?><div class="att-table__muted att-table__num">ตามเวร <?= Html::encode($td['expected']) ?></div><?php endif; ?>
+                                <?php if ($td['badges']): ?><div class="att-detail-badges"><?php foreach ($td['badges'] as $b): ?><span class="att-badge is-<?= $b[0] ?>"><?= Html::encode($b[1]) ?></span><?php endforeach; ?></div><?php endif; ?>
+                                <?php if ($td['expected'] === '' && !$td['badges']): ?><span class="att-table__muted">—</span><?php endif; ?>
+                            </td>
                             <td class="att-table__muted"><?= Html::encode($m->getMethodLabel()) ?></td>
                             <td><?= $statusBadge($m->status, $m->getStatusLabel()) ?></td>
                             <td class="att-table__right">
@@ -130,6 +137,13 @@ $pagination = $dataProvider->getPagination();
                             </span>
                             <?= $statusBadge($m->status, $m->getStatusLabel()) ?>
                         </div>
+                        <?php $td = $m->timeDetail(); ?>
+                        <?php if ($td['expected'] !== '' || $td['badges']): ?>
+                        <div class="att-rowcard__detail">
+                            <?php if ($td['expected'] !== ''): ?><span class="att-rowcard__meta">ตามเวร <?= Html::encode($td['expected']) ?></span><?php endif; ?>
+                            <?php foreach ($td['badges'] as $b): ?><span class="att-badge is-<?= $b[0] ?>"><?= Html::encode($b[1]) ?></span><?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                         <div class="att-rowcard__bottom">
                             <span class="att-rowcard__meta"><?= Html::encode($m->getCheckTypeLabel()) ?> · <?= Html::encode($m->getMethodLabel()) ?></span>
                             <?= Html::a('<i class="bi bi-eye"></i> ดู', ['/attendance/checkin/view', 'id' => $m->id], ['class' => 'att-btn att-btn--light att-btn--sm open-modal', 'data' => ['size' => 'modal-lg']]) ?>
@@ -157,7 +171,9 @@ $pagination = $dataProvider->getPagination();
     --shadow-1:0 1px 2px rgba(15,23,42,.04),0 1px 1px rgba(15,23,42,.03);
     --ease:cubic-bezier(.16,1,.3,1);color:var(--ink-1);
 }
-.att-hist .att-shell{max-width:900px;margin:0 auto;padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
+.att-hist .att-shell{max-width:1040px;margin:0 auto;padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
+.att-hist .att-detail-badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.15rem}
+.att-hist .att-rowcard__detail{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin-top:.4rem}
 .att-hist .att-topbar{display:flex;flex-wrap:wrap;gap:.5rem}
 
 /* filter */

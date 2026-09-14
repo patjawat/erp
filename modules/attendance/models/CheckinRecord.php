@@ -177,6 +177,31 @@ class CheckinRecord extends \yii\db\ActiveRecord
     }
 
     /**
+     * สรุปเงื่อนไขเวลาของรายการนี้ สำหรับแสดงทั้งฝั่งผู้ใช้และผู้ตรวจสอบ
+     * คืน ['expected' => 'HH:MM–HH:MM'|'', 'badges' => [['ok'|'wait'|'no', 'ข้อความ'], ...]]
+     */
+    public function timeDetail(): array
+    {
+        $eval = \app\modules\attendance\services\RosterAttendance::forRecord($this);
+        $shift = $eval['shift'] ?? null;
+        $expected = $shift ? substr((string)$shift['start'], 11, 5) . '–' . substr((string)$shift['end'], 11, 5) : '';
+        $late = (int)($eval['late_minutes'] ?? 0);
+        $early = (int)($eval['early_minutes'] ?? 0);
+        $badges = [];
+        if ($this->check_type === self::CHECK_TYPE_IN) {
+            if ($late > 0) $badges[] = ['no', 'มาสาย ' . $late . ' นาที'];
+            elseif ($shift) $badges[] = ['ok', 'ตรงเวลา'];
+        } elseif ($this->check_type === self::CHECK_TYPE_OUT) {
+            if ($early > 0) $badges[] = ['wait', 'ออกก่อน ' . $early . ' นาที'];
+            elseif ($shift) $badges[] = ['ok', 'ตรงเวลา'];
+        }
+        if (!$this->is_in_location) $badges[] = ['no', 'นอกพื้นที่'];
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        if (in_array('off_shift', (array)($json['exception_reasons'] ?? []), true)) $badges[] = ['wait', 'ไม่ตรงเวร'];
+        return ['expected' => $expected, 'badges' => $badges];
+    }
+
+    /**
      * สร้างรายการ approve ให้หัวหน้าอนุมัติ (level=1).
      * เรียกหลัง save checkin_record ครั้งแรก.
      */

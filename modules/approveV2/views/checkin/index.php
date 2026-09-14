@@ -76,8 +76,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
                         <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div></td>
                         <td>
-                            <?php foreach ($record->exceptionReasonLabels() as $label): ?>
-                                <span class="badge bg-warning-subtle text-warning-emphasis me-1 mb-1"><?= Html::encode($label) ?></span>
+                            <?php $td = $record->timeDetail(); ?>
+                            <?php if ($td['expected'] !== ''): ?><div class="small text-body-secondary" style="font-variant-numeric:tabular-nums">ตามเวร <?= Html::encode($td['expected']) ?></div><?php endif; ?>
+                            <?php foreach ($td['badges'] as $b): $bs = $b[0] === 'ok' ? 'success' : ($b[0] === 'no' ? 'danger' : 'warning'); ?>
+                                <span class="badge bg-<?= $bs ?>-subtle text-<?= $bs ?>-emphasis me-1 mb-1"><?= Html::encode($b[1]) ?></span>
                             <?php endforeach; ?>
                         </td>
                         <td>
