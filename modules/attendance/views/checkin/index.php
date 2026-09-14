@@ -112,9 +112,14 @@ $pagination = $dataProvider->getPagination();
                             <td><?= Html::encode($m->getCheckTypeLabel()) ?></td>
                             <td>
                                 <?php $td = $m->timeDetail(); ?>
-                                <?php if ($td['expected'] !== ''): ?><div class="att-table__muted att-table__num">ตามเวร <?= Html::encode($td['expected']) ?></div><?php endif; ?>
-                                <?php if ($td['badges']): ?><div class="att-detail-badges"><?php foreach ($td['badges'] as $b): ?><span class="att-badge is-<?= $b[0] ?>"><?= Html::encode($b[1]) ?></span><?php endforeach; ?></div><?php endif; ?>
-                                <?php if ($td['expected'] === '' && !$td['badges']): ?><span class="att-table__muted">—</span><?php endif; ?>
+                                <?php if ($td['expected'] === '' && !$td['badges']): ?>
+                                    <span class="att-table__muted">—</span>
+                                <?php else: ?>
+                                <div class="att-timecell">
+                                    <?php if ($td['expected'] !== ''): ?><span class="att-table__muted att-table__num">ตามเวร <?= Html::encode($td['expected']) ?></span><?php endif; ?>
+                                    <?php foreach ($td['badges'] as $b): ?><span class="att-badge is-<?= $b[0] ?>"><?= Html::encode($b[1]) ?></span><?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
                             </td>
                             <td class="att-table__muted"><?= Html::encode($m->getMethodLabel()) ?></td>
                             <td><?= $statusBadge($m->status, $m->getStatusLabel()) ?></td>
@@ -172,7 +177,7 @@ $pagination = $dataProvider->getPagination();
     --ease:cubic-bezier(.16,1,.3,1);color:var(--ink-1);
 }
 .att-hist .att-shell{max-width:100%;margin:0;padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
-.att-hist .att-detail-badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.15rem}
+.att-hist .att-timecell{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
 .att-hist .att-rowcard__detail{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin-top:.4rem}
 .att-hist .att-topbar{display:flex;flex-wrap:wrap;gap:.5rem}
 
