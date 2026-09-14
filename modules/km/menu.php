@@ -16,6 +16,8 @@ $active = $active ?? '';
 // เมนูย่อยภายในคลังกิจกรรม KM (page-nav pill)
 $items = [
     ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/km/default/index']],
+    ['key' => 'activity', 'label' => 'ทะเบียนกิจกรรม', 'icon' => 'bi-collection', 'url' => ['/km/activity/index']],
+    ['key' => 'category', 'label' => 'หมวดหมู่', 'icon' => 'bi-tags', 'url' => ['/km/category/index']],
 ];
 ?>
 <?= $this->render('@app/modules/km/_zone_nav', ['active' => 'km']) ?>
