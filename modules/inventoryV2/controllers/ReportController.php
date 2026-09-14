@@ -86,19 +86,65 @@ class ReportController extends Controller
     }
 
     /**
+     * บริบทคลังหลักสำหรับหน้ารายงาน ตามนโยบายกลาง (ดู Warehouse::userCanSeeAllWarehouses)
+     * - admin/warehouse: เลือกได้ทุกคลังหลัก + option "ทุกคลังหลัก" (null = รวมทั้งระบบ)
+     * - ที่เหลือ (inventory): dropdown เฉพาะคลังที่ตนรับผิดชอบ ไม่มี option "ทุกคลัง"
+     *   และ warehouseId ถูกบังคับให้เป็นคลังของตนเสมอ (default คลังแรก) — กัน aggregate รวมข้ามคลัง
+     * @return array{0:array,1:int|null} [warehouses(dropdown map), warehouseId]
+     */
+    protected function reportWarehouseContext($requested)
+    {
+        $canAll = Warehouse::userCanSeeAllWarehouses();
+        $ids = Warehouse::accessibleMainWarehouseIds();
+        $map = \yii\helpers\ArrayHelper::map(
+            Warehouse::findMainWarehousesForReceive(),
+            'id',
+            'warehouse_name'
+        );
+
+        $warehouseId = ($requested !== null && $requested !== '') ? (int) $requested : null;
+        if ($warehouseId !== null && !in_array($warehouseId, $ids, true)) {
+            $warehouseId = null; // กันดูทะลุคลังที่ไม่มีสิทธิ์ผ่าน URL ตรง
+        }
+
+        if ($canAll) {
+            $warehouses = ['' => '-- ทุกคลังหลัก --'] + $map;
+        } else {
+            $warehouses = $map; // ไม่มี option ทุกคลัง
+            if ($warehouseId === null) {
+                $warehouseId = $ids[0] ?? -1; // -1 = ไม่มีคลังในสิทธิ์ → รายงานว่าง
+            }
+        }
+        return [$warehouses, $warehouseId];
+    }
+
+    /**
+     * กันดูข้อมูลรายคลัง (MAIN/SUB) ที่ไม่มีสิทธิ์ ผ่าน URL ตรง — ใช้กับ drilldown/ประวัติรายคลัง
+     * admin/warehouse ผ่านหมด; ที่เหลือต้องเป็นคลังที่ตนรับผิดชอบ (MAIN officer หรือ SUB officer)
+     * @throws \yii\web\ForbiddenHttpException
+     */
+    protected function assertWarehouseViewable($warehouseId)
+    {
+        if (Warehouse::userCanSeeAllWarehouses()) {
+            return;
+        }
+        $ids = array_map('intval', \yii\helpers\ArrayHelper::getColumn(
+            Warehouse::findAllAccessibleWarehouses(),
+            'id'
+        ));
+        if (!in_array((int) $warehouseId, $ids, true)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ดูข้อมูลของคลังนี้');
+        }
+    }
+
+    /**
      * รายงานสรุปรายงานวัสดุคงคลัง แยกตามประเภทวัสดุ
      */
     public function actionMaterialSummary()
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
-
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
         $hasData = !empty($rows);
@@ -163,8 +209,7 @@ class ReportController extends Controller
 
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
-            ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $category = (string) $this->request->get('category', '');
         $kind = (string) $this->request->get('kind', '');
 
@@ -674,6 +719,7 @@ class ReportController extends Controller
     protected function getItemHistoryData($item_code, $warehouse_id, $start_date = null, $end_date = null)
     {
         $warehouseId = (int) $warehouse_id;
+        $this->assertWarehouseViewable($warehouseId);
         $startDate = $start_date ?: date('Y-m-01');
         $endDate = $end_date ?: date('Y-m-d');
 
@@ -1314,8 +1360,7 @@ class ReportController extends Controller
      */
     public function actionInsufficientToDisburse()
     {
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [$mainWarehouses, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = $this->request->get('category_id') !== null && $this->request->get('category_id') !== ''
@@ -1323,7 +1368,6 @@ class ReportController extends Controller
 
         $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId,$categoryId);
         $rows = $data['rows'];
-        $listMain = $data['listMain'];
         $listSub = $data['listSub'];
 
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
@@ -1331,7 +1375,6 @@ class ReportController extends Controller
             'code',
             'title'
         );
-        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
         $subWarehouses = ['' => '-- ทุกคลังย่อยที่ขอเบิก --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
 
         $this->view->params['active'] = 'report-balance';
@@ -1351,8 +1394,7 @@ class ReportController extends Controller
      */
     public function actionExportInsufficientToDisburse()
     {
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
 
@@ -2854,7 +2896,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
         $itemRows = $this->getRowsByItem($year, $month, $warehouseId);
@@ -3098,13 +3140,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
-
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->getRowsByItem($year, $month, $warehouseId);
         $hasData = !empty($rows);
@@ -3252,7 +3288,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->getRowsByItem($year, $month, $warehouseId);
 
@@ -3351,21 +3387,16 @@ class ReportController extends Controller
     public function actionDisbursementByMonth()
     {
         $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [$mainWarehouses, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $search = trim((string) $this->request->get('q', ''));
 
-        $listMain = Warehouse::find()->where(['warehouse_type' => 'MAIN'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy(['warehouse_name' => SORT_ASC])->all();
         $listSub = Warehouse::find()->where(['warehouse_type' => 'SUB'])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
             ->orderBy(['warehouse_name' => SORT_ASC])->all();
 
-        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
         $subWarehouses = ['' => '-- ทุกคลังปลายทาง --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
             Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->orderBy('title')->all(),
@@ -3579,6 +3610,13 @@ class ReportController extends Controller
             ? [(int) $main_warehouse_id]
             : Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])
                 ->andWhere(['or', ['delete' => null], ['delete' => '']])->column();
+        // scope: ผู้ที่ไม่ใช่ admin/warehouse เห็นเฉพาะคลังหลักที่ตนรับผิดชอบ
+        if (!Warehouse::userCanSeeAllWarehouses()) {
+            $mainIds = array_values(array_intersect(
+                array_map('intval', $mainIds),
+                Warehouse::accessibleMainWarehouseIds()
+            ));
+        }
         if (empty($mainIds)) {
             return ['rows' => [], 'total_qty' => 0, 'total_value' => 0];
         }
@@ -3669,8 +3707,7 @@ class ReportController extends Controller
     public function actionExportDisbursementByMonth()
     {
         $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = trim((string) $this->request->get('category_id', ''));
@@ -3774,16 +3811,11 @@ class ReportController extends Controller
     public function actionProcurementPlan()
     {
         $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $q = trim((string) $this->request->get('q', ''));
         $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));
 
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
         $categories = $this->getProcurementMaterialCategories();
 
         $rows = $this->buildProcurementPlanRows($fiscalYear, $warehouseId, $q, $dataSource, $categoryId);
@@ -3805,7 +3837,7 @@ class ReportController extends Controller
     public function actionExportProcurementPlan()
     {
         $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $q = trim((string) $this->request->get('q', ''));
         $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));

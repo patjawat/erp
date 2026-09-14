@@ -1220,13 +1220,15 @@ class WarehouseController extends Controller
     }
 
     /**
-     * เช็คว่า user ปัจจุบันเข้าถึงคลังนี้ได้หรือไม่
-     * - เจ้าหน้าที่พัสดุ (role 'inventory') เข้าถึงได้ทุกคลัง (ใช้สำหรับ admin/setting)
-     * - นอกนั้น เห็นเฉพาะคลังที่ตนรับผิดชอบ (officer) หรือคลังย่อยที่แผนกตัวเองมีสิทธิ
+     * เช็คว่า user ปัจจุบันเข้าถึง/จัดการคลังนี้ได้หรือไม่
+     * - admin หรือผู้มีสิทธิ์ warehouse: เข้าถึง/จัดการได้ทุกคลัง
+     * - ผู้มีสิทธิ์ inventory (และอื่นๆ): จัดการได้เฉพาะคลังที่ตนรับผิดชอบ (officer)
+     *   หรือคลังย่อยที่แผนกตัวเองมีสิทธิ — สอดคล้องกับ scope ใน IssueController/ReceiveController
      */
     protected function canAccessWarehouse(Warehouse $warehouse)
     {
-        if (!Yii::$app->user->isGuest && Yii::$app->user->can('inventory')) {
+        if (!Yii::$app->user->isGuest
+            && (Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse'))) {
             return true;
         }
         $accessible = Warehouse::findAllAccessibleWarehouses();

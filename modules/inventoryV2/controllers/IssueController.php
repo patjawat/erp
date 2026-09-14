@@ -137,6 +137,20 @@ class IssueController extends Controller
             throw new \yii\web\NotFoundHttpException('ไม่พบใบเบิกที่ต้องการ');
         }
 
+        // จ่ายได้เฉพาะคลังที่ตนรับผิดชอบ — admin/warehouse จ่ายได้ทุกคลัง,
+        // ที่เหลือ (inventory) จำกัดเฉพาะคลังหลักที่ตนเป็น officer
+        // (ด่านบังคับจริงที่ action ไม่ใช่แค่กรอง list ในหน้า index)
+        $canIssueAllWarehouses = Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse');
+        if (!$canIssueAllWarehouses) {
+            $accessibleIds = array_map('intval', ArrayHelper::getColumn(
+                Warehouse::findMainWarehousesForReceive(),
+                'id'
+            ));
+            if (!in_array((int) $model->main_warehouse_id, $accessibleIds, true)) {
+                throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์จ่ายพัสดุของคลังนี้');
+            }
+        }
+
         if (!in_array($model->status, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED])) {
             Yii::$app->session->setFlash('warning', 'เฉพาะใบที่หัวหน้าอนุมัติแล้ว (สถานะอนุมัติแล้ว) จึงจะดำเนินการจ่ายได้');
             return $this->redirect(['index']);
