@@ -171,7 +171,7 @@ $pagination = $dataProvider->getPagination();
     --shadow-1:0 1px 2px rgba(15,23,42,.04),0 1px 1px rgba(15,23,42,.03);
     --ease:cubic-bezier(.16,1,.3,1);color:var(--ink-1);
 }
-.att-hist .att-shell{max-width:1040px;margin:0 auto;padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
+.att-hist .att-shell{max-width:100%;margin:0;padding:1.25rem 0 2rem;display:flex;flex-direction:column;gap:1rem}
 .att-hist .att-detail-badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.15rem}
 .att-hist .att-rowcard__detail{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin-top:.4rem}
 .att-hist .att-topbar{display:flex;flex-wrap:wrap;gap:.5rem}
