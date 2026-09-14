@@ -153,8 +153,9 @@ class ActivityController extends Controller
         $model->status = KmActivity::STATUS_DRAFT;
 
         if ($this->saveFromPost($model, $me)) {
-            Yii::$app->session->setFlash('success', 'บันทึกกิจกรรมเรียบร้อย');
-            return $this->redirect(['view', 'id' => $model->id]);
+            // ไปหน้าแก้ไขต่อ เพื่อให้แนบรูป/ผูกหลักฐานได้ทันที (ส่วนนั้นต้องมี id แล้ว)
+            Yii::$app->session->setFlash('success', 'บันทึกกิจกรรมเรียบร้อย — เพิ่มรูปภาพและผูกหลักฐานได้ด้านล่าง');
+            return $this->redirect(['update', 'id' => $model->id]);
         }
 
         return $this->render('form', $this->formData($model, $me));
@@ -202,7 +203,7 @@ class ActivityController extends Controller
         $files = UploadedFile::getInstancesByName('photos');
         if (!$files) {
             Yii::$app->session->setFlash('error', 'ยังไม่ได้เลือกไฟล์รูป');
-            return $this->redirect(['view', 'id' => $activity->id]);
+            return $this->backToManage($activity);
         }
 
         $sort = (int) KmActivityPhoto::find()->where(['activity_id' => $activity->id])->max('sort');
@@ -228,7 +229,7 @@ class ActivityController extends Controller
         if ($errors) {
             Yii::$app->session->setFlash('error', implode(' / ', array_slice($errors, 0, 5)));
         }
-        return $this->redirect(['view', 'id' => $activity->id]);
+        return $this->backToManage($activity);
     }
 
     /** ลบรูปหนึ่งภาพ */
@@ -249,7 +250,7 @@ class ActivityController extends Controller
         }
 
         Yii::$app->session->setFlash('success', 'ลบรูปแล้ว');
-        return $this->redirect(['view', 'id' => $activity->id]);
+        return $this->backToManage($activity);
     }
 
     /** ตั้งรูปนี้เป็นรูปปก */
@@ -262,7 +263,7 @@ class ActivityController extends Controller
         $activity->cover_photo_id = (int) $photo->id;
         $activity->save(false, ['cover_photo_id']);
         Yii::$app->session->setFlash('success', 'ตั้งรูปปกแล้ว');
-        return $this->redirect(['view', 'id' => $activity->id]);
+        return $this->backToManage($activity);
     }
 
     /** เสิร์ฟไฟล์รูป (นอก webroot) พร้อมตรวจสิทธิ์การดูกิจกรรม */
@@ -311,14 +312,14 @@ class ActivityController extends Controller
 
         if (!KmLinkService::isEnabled($type) || $refId === '') {
             Yii::$app->session->setFlash('error', 'กรุณาเลือกประเภทและรายการที่จะผูก');
-            return $this->redirect(['view', 'id' => $activity->id]);
+            return $this->backToManage($activity);
         }
 
         // ยืนยันว่ารายการปลายทางมีจริง + ดึงป้ายชื่อฝั่ง server (ไม่เชื่อค่าจากหน้าเว็บ)
         $label = KmLinkService::resolveLabel($type, $refId);
         if ($label === null) {
             Yii::$app->session->setFlash('error', 'ไม่พบรายการที่เลือก');
-            return $this->redirect(['view', 'id' => $activity->id]);
+            return $this->backToManage($activity);
         }
 
         // กันผูกซ้ำ
@@ -327,7 +328,7 @@ class ActivityController extends Controller
         ])->exists();
         if ($exists) {
             Yii::$app->session->setFlash('error', 'ผูกรายการนี้ไว้แล้ว');
-            return $this->redirect(['view', 'id' => $activity->id]);
+            return $this->backToManage($activity);
         }
 
         $link = new KmActivityLink([
@@ -342,7 +343,7 @@ class ActivityController extends Controller
         } else {
             Yii::$app->session->setFlash('error', 'ผูกไม่สำเร็จ: ' . implode(' ', $link->getFirstErrors()));
         }
-        return $this->redirect(['view', 'id' => $activity->id]);
+        return $this->backToManage($activity);
     }
 
     /** ยกเลิกการผูกหลักฐาน */
@@ -357,7 +358,7 @@ class ActivityController extends Controller
 
         $link->delete();
         Yii::$app->session->setFlash('success', 'ยกเลิกการผูกแล้ว');
-        return $this->redirect(['view', 'id' => $activity->id]);
+        return $this->backToManage($activity);
     }
 
     /** รับค่าจากฟอร์ม + แปลงวันที่ พ.ศ. → ค.ศ. ก่อน validate/บันทึก */
@@ -372,6 +373,13 @@ class ActivityController extends Controller
         $model->setAttributes($post);
         // ช่องวันที่กรอกเป็น วว/ดด/พ.ศ. — แปลงกลับก่อนบันทึกเสมอ
         $model->activity_date = AppHelper::normalizeDateToDb($req->post('activity_date_thai'));
+        // เวลาว่างต้องเป็น null ไม่ใช่ '' (กัน MySQL strict mode ปฏิเสธค่าเวลาว่าง)
+        $model->start_time = $model->start_time ?: null;
+        $model->end_time = $model->end_time ?: null;
+        // ช่องเนื้อหาแบบ Word — กรอง HTML ก่อนบันทึก (กัน XSS + จำกัดแท็ก)
+        $model->summary = \app\modules\km\components\RichText::sanitize($model->summary) ?: null;
+        $model->objective = \app\modules\km\components\RichText::sanitize($model->objective) ?: null;
+        $model->detail = \app\modules\km\components\RichText::sanitize($model->detail) ?: null;
 
         // กันเลือกหน่วยงานนอกสิทธิ์ (ยกเว้น admin) — ยึดค่าที่ selectableUnits อนุญาต
         $allowed = array_map(static fn ($o) => (int) $o['id'], KmActivityService::selectableUnits($me ? (int) $me->department : null));
@@ -408,6 +416,13 @@ class ActivityController extends Controller
             throw new NotFoundHttpException('ไม่พบรูปที่ต้องการ');
         }
         return $photo;
+    }
+
+    /** กลับไปหน้าที่กำลังจัดการอยู่ (ฟอร์มแก้ไข หรือหน้าดูรายละเอียด) หลังจัดการรูป/ลิงก์ */
+    private function backToManage(KmActivity $activity)
+    {
+        $ref = Yii::$app->request->referrer;
+        return $ref ? $this->redirect($ref) : $this->redirect(['view', 'id' => $activity->id]);
     }
 
     private function assertCanManage(KmActivity $activity): void

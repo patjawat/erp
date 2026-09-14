@@ -62,171 +62,27 @@ $time = trim(($activity->start_time ? substr($activity->start_time, 0, 5) : '') 
                 <div class="card-body">
                     <?php if ($activity->summary): ?>
                         <h2 class="h6 fw-semibold">สรุปย่อ</h2>
-                        <p class="text-body-secondary"><?= nl2br(Html::encode($activity->summary)) ?></p>
+                        <div class="km-richtext text-body-secondary"><?= \app\modules\km\components\RichText::render($activity->summary) ?></div>
                     <?php endif; ?>
                     <?php if ($activity->objective): ?>
                         <h2 class="h6 fw-semibold">วัตถุประสงค์</h2>
-                        <p class="text-body-secondary"><?= nl2br(Html::encode($activity->objective)) ?></p>
+                        <div class="km-richtext text-body-secondary"><?= \app\modules\km\components\RichText::render($activity->objective) ?></div>
                     <?php endif; ?>
                     <?php if ($activity->detail): ?>
                         <h2 class="h6 fw-semibold">รายละเอียด / ถอดบทเรียน</h2>
-                        <p class="text-body-secondary mb-0"><?= nl2br(Html::encode($activity->detail)) ?></p>
+                        <div class="km-richtext text-body-secondary mb-0"><?= \app\modules\km\components\RichText::render($activity->detail) ?></div>
                     <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>
 
             <!-- คลังภาพ -->
-            <div class="card border shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-images me-1"></i> คลังภาพ <span class="text-body-secondary fw-normal">(<?= count($activity->photos) ?>)</span></h2>
-                    </div>
-
-                    <?php if ($canManage): ?>
-                        <?= Html::beginForm(['upload-photos', 'id' => $activity->id], 'post', ['enctype' => 'multipart/form-data', 'class' => 'mb-3']) ?>
-                            <div class="input-group input-group-sm">
-                                <?= Html::fileInput('photos[]', null, ['class' => 'form-control', 'multiple' => true, 'accept' => 'image/*', 'required' => true]) ?>
-                                <?= Html::submitButton('<i class="bi bi-upload me-1"></i> อัปโหลด', ['class' => 'btn btn-primary']) ?>
-                            </div>
-                            <div class="form-text">เลือกได้หลายรูป · ไฟล์ละไม่เกิน 8 MB · jpg/png/webp/gif</div>
-                        <?= Html::endForm() ?>
-                    <?php endif; ?>
-
-                    <?php if (!$activity->photos): ?>
-                        <div class="text-body-secondary small">ยังไม่มีรูปในกิจกรรมนี้</div>
-                    <?php else: ?>
-                        <div class="row g-2">
-                            <?php foreach ($activity->photos as $p): ?>
-                                <?php $isCover = ((int) $activity->cover_photo_id === (int) $p->id); ?>
-                                <div class="col-6 col-md-4">
-                                    <div class="position-relative border rounded overflow-hidden" style="aspect-ratio:1/1;background:#eef1f6">
-                                        <a href="<?= Url::to(['photo', 'id' => $p->id]) ?>" target="_blank" rel="noopener">
-                                            <img src="<?= Url::to(['photo', 'id' => $p->id, 'thumb' => 1]) ?>" alt="<?= Html::encode($p->caption ?: $p->file_name) ?>" style="width:100%;height:100%;object-fit:cover">
-                                        </a>
-                                        <?php if ($isCover): ?>
-                                            <span class="badge text-bg-warning position-absolute top-0 start-0 m-1"><i class="bi bi-star-fill me-1"></i>ปก</span>
-                                        <?php endif; ?>
-                                        <?php if ($canManage): ?>
-                                            <div class="position-absolute bottom-0 end-0 m-1 d-flex gap-1">
-                                                <?php if (!$isCover): ?>
-                                                    <?= Html::beginForm(['set-cover', 'id' => $p->id], 'post', ['class' => 'd-inline']) ?>
-                                                        <?= Html::submitButton('<i class="bi bi-star"></i>', ['class' => 'btn btn-sm btn-light border', 'title' => 'ตั้งเป็นรูปปก']) ?>
-                                                    <?= Html::endForm() ?>
-                                                <?php endif; ?>
-                                                <?= Html::beginForm(['delete-photo', 'id' => $p->id], 'post', ['class' => 'd-inline', 'onsubmit' => "return confirm('ลบรูปนี้?');"]) ?>
-                                                    <?= Html::submitButton('<i class="bi bi-trash"></i>', ['class' => 'btn btn-sm btn-light border text-danger', 'title' => 'ลบรูป']) ?>
-                                                <?= Html::endForm() ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+            <?= $this->render('_photos', ['activity' => $activity, 'canManage' => $canManage]) ?>
         </div>
 
         <div class="col-lg-4">
             <!-- ลิงก์หลักฐาน -->
-            <div class="card border shadow-sm">
-                <div class="card-body">
-                    <h2 class="h6 fw-semibold"><i class="bi bi-link-45deg me-1"></i> หลักฐานที่ผูก <span class="text-body-secondary fw-normal">(<?= count($activity->links) ?>)</span></h2>
-
-                    <?php if (!$activity->links): ?>
-                        <div class="text-body-secondary small mb-2">ยังไม่ได้ผูกหลักฐาน</div>
-                    <?php else: ?>
-                        <ul class="list-group list-group-flush mb-2">
-                            <?php foreach ($activity->links as $lk): ?>
-                                <?php $out = \app\modules\km\services\KmLinkService::outUrl($lk->item_type, $lk->ref_id); ?>
-                                <li class="list-group-item px-0 d-flex align-items-start gap-2">
-                                    <i class="bi <?= \app\modules\km\services\KmLinkService::icon($lk->item_type) ?> mt-1 text-body-secondary"></i>
-                                    <div class="flex-grow-1 min-w-0">
-                                        <div class="small text-body-secondary"><?= Html::encode($lk->typeLabel()) ?></div>
-                                        <div>
-                                            <?php if ($out): ?>
-                                                <?= Html::a(Html::encode($lk->ref_label ?: ('#' . $lk->ref_id)), $out, ['target' => '_blank', 'rel' => 'noopener']) ?>
-                                            <?php else: ?>
-                                                <?= Html::encode($lk->ref_label ?: ('#' . $lk->ref_id)) ?>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if ($lk->note): ?><div class="small text-body-secondary"><?= Html::encode($lk->note) ?></div><?php endif; ?>
-                                    </div>
-                                    <?php if ($canManage): ?>
-                                        <?= Html::beginForm(['delete-link', 'id' => $lk->id], 'post', ['class' => 'd-inline', 'onsubmit' => "return confirm('ยกเลิกการผูกรายการนี้?');"]) ?>
-                                            <?= Html::submitButton('<i class="bi bi-x-lg"></i>', ['class' => 'btn btn-sm btn-link text-danger p-0', 'title' => 'ยกเลิกการผูก']) ?>
-                                        <?= Html::endForm() ?>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-
-                    <?php if ($canManage): ?>
-                        <hr class="my-2">
-                        <?= Html::beginForm(['add-link', 'id' => $activity->id], 'post', ['id' => 'km-link-form']) ?>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">ประเภทหลักฐาน</label>
-                                <?php
-                                $typeOpts = [];
-                                foreach (\app\modules\km\services\KmLinkService::enabledTypes() as $t) {
-                                    $typeOpts[$t] = \app\modules\km\models\KmActivityLink::typeLabels()[$t];
-                                }
-                                ?>
-                                <?= Html::dropDownList('item_type', null, $typeOpts, ['class' => 'form-select form-select-sm', 'id' => 'km-link-type']) ?>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1">ค้นหารายการ</label>
-                                <input type="text" class="form-control form-control-sm" id="km-link-search" placeholder="พิมพ์เพื่อค้นหา...">
-                            </div>
-                            <div class="mb-2">
-                                <?= Html::dropDownList('ref_id', null, [], ['class' => 'form-select form-select-sm', 'id' => 'km-link-target', 'size' => 6]) ?>
-                            </div>
-                            <div class="mb-2">
-                                <?= Html::textInput('note', '', ['class' => 'form-control form-control-sm', 'placeholder' => 'หมายเหตุ (ถ้ามี)', 'maxlength' => 255]) ?>
-                            </div>
-                            <?= Html::submitButton('<i class="bi bi-link-45deg me-1"></i> ผูกหลักฐาน', ['class' => 'btn btn-sm btn-primary w-100', 'id' => 'km-link-submit']) ?>
-                        <?= Html::endForm() ?>
-                    <?php endif; ?>
-                </div>
-            </div>
+            <?= $this->render('_links', ['activity' => $activity, 'canManage' => $canManage]) ?>
         </div>
     </div>
 </div>
-
-<?php if ($canManage): ?>
-<?php
-$optUrl = Url::to(['link-options']);
-$js = <<<JS
-(function(){
-    var typeEl = document.getElementById('km-link-type');
-    var searchEl = document.getElementById('km-link-search');
-    var targetEl = document.getElementById('km-link-target');
-    if (!typeEl || !targetEl) return;
-    var timer = null;
-    function load(){
-        var url = '$optUrl' + (('$optUrl'.indexOf('?')>=0)?'&':'?') + 'type=' + encodeURIComponent(typeEl.value) + '&q=' + encodeURIComponent(searchEl.value || '');
-        targetEl.innerHTML = '<option>กำลังโหลด...</option>';
-        fetch(url, {headers: {'X-Requested-With':'XMLHttpRequest'}})
-            .then(function(r){ return r.json(); })
-            .then(function(d){
-                targetEl.innerHTML = '';
-                var items = (d && d.items) || [];
-                if (!items.length){ targetEl.innerHTML = '<option value="">— ไม่พบรายการ —</option>'; return; }
-                items.forEach(function(it){
-                    var o = document.createElement('option');
-                    o.value = it.id; o.textContent = it.label;
-                    targetEl.appendChild(o);
-                });
-            })
-            .catch(function(){ targetEl.innerHTML = '<option value="">— โหลดไม่สำเร็จ —</option>'; });
-    }
-    typeEl.addEventListener('change', function(){ searchEl.value=''; load(); });
-    searchEl.addEventListener('input', function(){ clearTimeout(timer); timer = setTimeout(load, 300); });
-    load();
-})();
-JS;
-$this->registerJs($js, \yii\web\View::POS_END);
-?>
-<?php endif; ?>
