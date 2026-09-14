@@ -26,9 +26,9 @@
             }
             function message(text, ok) { role('result').removeClass('d-none alert-success alert-danger').addClass(ok ? 'alert-success' : 'alert-danger').text(text).trigger('focus'); }
             function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารออนุมัติ' : 'ลงเวลา'); }
-            function ajax(url, data) {
+            function ajax(url, data, timeout) {
                 if (window.yii) data[window.yii.getCsrfParam()] = window.yii.getCsrfToken();
-                return $.ajax({url:url, type:'POST', data:data, dataType:'json', timeout:30000});
+                return $.ajax({url:url, type:'POST', data:data, dataType:'json', timeout: timeout || 30000});
             }
             function locate() {
                 role('gps').text('กำลังอ่าน GPS กรุณาอนุญาตตำแหน่งของเว็บไซต์');
@@ -44,12 +44,15 @@
             clock();
             var timer = window.setInterval(function () { if (!document.body.contains(form)) { clearInterval(timer); return; } clock(); }, 1000);
             $form.closest('.modal').one('hidden.bs.modal.attendance', function () { clearInterval(timer); });
-            $.ajax({url:config.shiftsUrl,dataType:'json',timeout:15000}).done(function (r) {
-                if (r.now) offset = new Date(r.now.replace(' ','T')+'+07:00').getTime()-Date.now();
-                showDay(r.day_summary);
-                role('latest').text(r.latest ? 'บันทึกล่าสุด '+r.latest.at : '');
-                role('pending-latest').toggleClass('d-none', !r.latest || r.latest.status_code !== 'pending');
-            }).fail(function () { role('latest').text(''); });
+            function refreshDay(initial) {
+                return $.ajax({url:config.shiftsUrl,dataType:'json',timeout:15000}).done(function (r) {
+                    if (r.now) offset = new Date(r.now.replace(' ','T')+'+07:00').getTime()-Date.now();
+                    showDay(r.day_summary);
+                    role('latest').text(r.latest ? 'บันทึกล่าสุด '+r.latest.at : '');
+                    role('pending-latest').toggleClass('d-none', !r.latest || r.latest.status_code !== 'pending');
+                }).fail(function () { if (initial) role('latest').text(''); });
+            }
+            refreshDay(true);
             async function submit() {
                 if (busy) return;
                 var reason = $form.find('[name="out_of_location_reason"]').val().trim();
@@ -67,7 +70,7 @@
                     if (needsReason && !reason) { message('อยู่นอกพื้นที่ กรุณาระบุเหตุผลแล้วส่งลงเวลารออนุมัติ'); $form.find('textarea').trigger('focus'); return; }
                     data.method = data.qr_token ? 'qrcode' : 'manual'; data.out_of_location_reason = reason; data.request_id = key();
                     role('gps').text('กำลังบันทึกเวลา กรุณารอผล');
-                    var result = await ajax(config.saveUrl, data);
+                    var result = await ajax(config.saveUrl, data, 15000);
                     if (!result.success) {
                         message(result.message || 'บันทึกไม่สำเร็จ กรุณาลองใหม่');
                         if ((result.message || '').indexOf('เหตุผล') !== -1) { needsReason=true; role('reason-panel').removeClass('d-none'); }
@@ -82,8 +85,17 @@
                     try { sessionStorage.removeItem(storageKey); } catch (e) { /* Storage may be disabled. */ }
                     requestId=null;
                 } catch (error) {
-                    message(error.status === 401 || error.status === 403 ? 'เซสชันหมดอายุหรือไม่มีสิทธิ์ กรุณาเข้าสู่ระบบใหม่' : error.message || 'ยังยืนยันผลบันทึกไม่ได้ การเชื่อมต่อขัดข้อง กรุณาลองใหม่ ระบบจะตรวจรายการซ้ำให้');
                     role('gps').text('');
+                    if (error && (error.status === 401 || error.status === 403)) {
+                        message('เซสชันหมดอายุหรือไม่มีสิทธิ์ กรุณาเข้าสู่ระบบใหม่');
+                    } else if (error && error.message) {
+                        // ข้อผิดพลาดจาก GPS/ตรวจสอบ (มีข้อความชัดเจน) — ไม่มีการบันทึก
+                        message(error.message);
+                    } else {
+                        // ต่อไม่ติด/หมดเวลา (พบบ่อยในเว็บวิว Telegram) — รายการอาจถูกบันทึกแล้ว ดึงสถานะจริงมาแสดง
+                        message('การเชื่อมต่อช้า ระบบกำลังตรวจสอบเวลาที่บันทึกให้ หากไม่แสดงกรุณาลองใหม่ (ระบบกันรายการซ้ำให้)');
+                        refreshDay();
+                    }
                 } finally { busy=false; state(); }
             }
             $form.on('submit',function(e){e.preventDefault();submit();});
