@@ -769,28 +769,32 @@ class CashController extends Controller
         return $redirect;
     }
 
-    /** สรุปปิดบัญชีประจำวัน แบบปฏิทินรายเดือน (วันไหนปิดแล้วมีแถบ) */
-    public function actionCloseSummary($year = null, $month = null)
+    /** สรุปปิดบัญชีประจำวัน แบบ heatmap ทั้งปีงบ (ปิดแล้ว/รอปิด/ว่าง) */
+    public function actionCloseSummary($year = null)
     {
-        $year = (int) ($year ?: (int) date('Y') + 543);
-        $month = (int) ($month ?: (int) date('n'));
-        if ($month < 1 || $month > 12) {
-            $month = (int) date('n');
-        }
+        $year = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
         $gy = $year - 543;
-        $start = sprintf('%04d-%02d-01', $gy, $month);
-        $end = date('Y-m-t', strtotime($start));
+        $start = sprintf('%04d-10-01', $gy - 1);
+        $end = sprintf('%04d-09-30', $gy);
 
-        $byDate = [];
-        foreach (FinanceCashClose::find()->where(['close_type' => FinanceCashClose::TYPE_DAILY])
-            ->andWhere(['between', 'close_date', $start, $end])->all() as $b) {
-            $d = $b->close_date;
-            $byDate[$d]['in'] = ($byDate[$d]['in'] ?? 0) + (float) $b->total_in;
-            $byDate[$d]['out'] = ($byDate[$d]['out'] ?? 0) + (float) $b->total_out;
-            $byDate[$d]['count'] = ($byDate[$d]['count'] ?? 0) + 1;
+        $closed = FinanceCashClose::find()->select('close_date')->distinct()
+            ->where(['close_type' => FinanceCashClose::TYPE_DAILY])
+            ->andWhere(['between', 'close_date', $start, $end])->column();
+        $active = FinanceCashTxn::find()->select('doc_date')->distinct()
+            ->where(['between', 'doc_date', $start, $end])->column();
+
+        $closedSet = array_flip($closed);
+        $activeSet = array_flip($active);
+        $pending = 0;
+        foreach ($activeSet as $d => $_) {
+            if (!isset($closedSet[$d])) {
+                $pending++;
+            }
         }
         return $this->render('close_summary', [
-            'year' => $year, 'month' => $month, 'gy' => $gy, 'byDate' => $byDate,
+            'year' => $year, 'gy' => $gy, 'start' => $start, 'end' => $end,
+            'closedSet' => $closedSet, 'activeSet' => $activeSet,
+            'closedCount' => count($closed), 'pendingCount' => $pending,
         ]);
     }
 
@@ -827,7 +831,7 @@ class CashController extends Controller
         $back = ['close-summary'];
         if ($dbDate) {
             [$y, $m] = array_map('intval', explode('-', $dbDate));
-            $back = ['close-summary', 'year' => $y + 543, 'month' => $m];
+            $back = ['close-summary', 'year' => ($m >= 10 ? $y + 1 : $y) + 543];
             $tx = Yii::$app->db->beginTransaction();
             try {
                 foreach (FinanceCashClose::find()->where(['close_type' => 'daily', 'close_date' => $dbDate])->all() as $b) {
