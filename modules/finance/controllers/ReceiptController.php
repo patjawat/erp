@@ -28,7 +28,7 @@ class ReceiptController extends Controller
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['save' => ['post'], 'delete' => ['post']],
+                'actions' => ['save' => ['post'], 'issue' => ['post'], 'delete' => ['post']],
             ],
         ]);
     }
@@ -70,6 +70,7 @@ class ReceiptController extends Controller
         return $this->render('view', ['book' => $book, 'usedNums' => $usedNums]);
     }
 
+    /** ฟอร์มที่ 1: รับเล่มใบเสร็จเข้า (สร้าง/แก้ข้อมูลเล่ม) — ไม่ยุ่งกับการเบิก */
     public function actionSave()
     {
         $post = Yii::$app->request->post();
@@ -83,17 +84,42 @@ class ReceiptController extends Controller
         $model->number_to = (int) ($post['number_to'] ?? 0);
         $model->receipt_type = trim((string) ($post['receipt_type'] ?? '')) ?: null;
         $model->received_date = AppHelper::normalizeDateToDb($post['received_date'] ?? null);
-        $model->issued_to_emp_id = ((int) ($post['issued_to_emp_id'] ?? 0)) ?: null;
-        $model->issued_date = AppHelper::normalizeDateToDb($post['issued_date'] ?? null);
         $model->note = trim((string) ($post['note'] ?? '')) ?: null;
-        // สถานะ: ใช้ค่าที่เลือก ไม่งั้น derive — มีคนเบิก=issued, ไม่มี=received
-        $status = $post['status'] ?? '';
-        $model->status = in_array($status, array_keys(FinanceReceiptBook::STATUS_LABELS), true)
-            ? $status
-            : ($model->issued_to_emp_id ? FinanceReceiptBook::STATUS_ISSUED : FinanceReceiptBook::STATUS_RECEIVED);
+        if ($model->isNewRecord) {
+            $model->status = FinanceReceiptBook::STATUS_RECEIVED;
+        }
+        // ไม่แตะ issued_to_emp_id / issued_date / status เดิม — ทำผ่านฟอร์ม "เบิกจ่าย" แยก
 
         if ($model->save()) {
             Yii::$app->session->setFlash('success', 'บันทึกเล่มใบเสร็จเรียบร้อย');
+        } else {
+            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
+        }
+        return $this->redirect(['index']);
+    }
+
+    /** ฟอร์มที่ 2: เบิกจ่ายเล่มให้เจ้าหน้าที่ (แยกจากการรับเข้า) */
+    public function actionIssue()
+    {
+        $post = Yii::$app->request->post();
+        $model = FinanceReceiptBook::findOne((int) ($post['id'] ?? 0));
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบเล่มใบเสร็จ');
+        }
+        $empId = (int) ($post['issued_to_emp_id'] ?? 0);
+        $status = $post['status'] ?? '';
+        $model->issued_to_emp_id = $empId ?: null;
+        $model->issued_date = AppHelper::normalizeDateToDb($post['issued_date'] ?? null);
+        if (in_array($status, [FinanceReceiptBook::STATUS_ISSUED, FinanceReceiptBook::STATUS_COMPLETED, FinanceReceiptBook::STATUS_CANCELLED], true)) {
+            $model->status = $status;
+        } elseif ($empId) {
+            $model->status = FinanceReceiptBook::STATUS_ISSUED;
+        }
+        if (!$empId && $model->status === FinanceReceiptBook::STATUS_ISSUED) {
+            $model->status = FinanceReceiptBook::STATUS_RECEIVED;
+        }
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกการเบิกจ่ายเรียบร้อย');
         } else {
             Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
         }

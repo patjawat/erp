@@ -9,7 +9,7 @@ use yii\helpers\Html;
 
 $this->title = 'เล่มใบเสร็จ ' . $book->book_no;
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
-$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนใบเสร็จ', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนคุมใบเสร็จ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $book->book_no;
 
 $this->beginBlock('page-title'); ?>
