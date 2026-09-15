@@ -16,6 +16,7 @@ use yii\widgets\LinkPager;
 /** @var float $sum */
 /** @var array $tree */
 /** @var array $accounts */
+/** @var array $vendors */
 
 $this->title = 'ทะเบียนรายจ่าย (ใบสำคัญจ่าย)';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -142,4 +143,4 @@ $this->endBlock();
     </div>
 </div>
 
-<?= $this->render('voucher_form', ['tree' => $tree, 'accounts' => $accounts]) ?>
+<?= $this->render('voucher_form', ['tree' => $tree, 'accounts' => $accounts, 'vendors' => $vendors]) ?>

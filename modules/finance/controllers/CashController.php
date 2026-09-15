@@ -91,7 +91,17 @@ class CashController extends Controller
             'sum' => (float) $sum,
             'tree' => FinanceCashCategory::treeArray(FinanceCashCategory::TYPE_OUT),
             'accounts' => FinanceCashAccount::activeList(),
+            'vendors' => $this->vendorTitles(),
         ]);
+    }
+
+    /** ทะเบียนผู้ขาย/ห้างร้าน ใช้ร่วมกับระบบพัสดุ (categorise name='vendor') สำหรับ "จ่ายให้" */
+    private function vendorTitles(): array
+    {
+        return (new \yii\db\Query())->select('title')->from('categorise')
+            ->where(['name' => 'vendor', 'active' => 1])
+            ->andWhere(['not', ['title' => null]])->andWhere(['<>', 'title', ''])
+            ->orderBy('title')->column();
     }
 
     /** ทะเบียนรายการรับ/จ่าย พร้อมตัวกรอง ปีงบ/วันที่/ค้นหา + แบ่งหน้า */
@@ -213,6 +223,11 @@ class CashController extends Controller
         $v->account_id = ((int) ($post['account_id'] ?? 0)) ?: null;
         $v->payee_name = trim((string) ($post['payee_name'] ?? '')) ?: null;
         $v->note = trim((string) ($post['note'] ?? '')) ?: null;
+        // ผูก "จ่ายให้" เข้าทะเบียนผู้ขายพัสดุ (categorise vendor) ถ้าชื่อตรง — เก็บ id อ้างอิง + ชื่อ snapshot
+        $v->payee_id = $v->payee_name
+            ? ((int) (new \yii\db\Query())->select('id')->from('categorise')
+                ->where(['name' => 'vendor', 'title' => $v->payee_name])->scalar() ?: 0) ?: null
+            : null;
 
         // บรรทัด
         $clean = [];
@@ -518,12 +533,26 @@ class CashController extends Controller
         return $result;
     }
 
-    /** ส่งออก Excel — report = daily | summary | yearly */
+    /** ส่งออก Excel — report = register | balance407 | daily | summary | yearly */
     public function actionCloseExcel($report = 'yearly', $date = null, $year = null)
     {
+        $fy = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
+
+        // รายงานตามต้นฉบับ mophcash (ทำใน service แยก)
+        if ($report === 'register' || $report === 'balance407') {
+            $dbDate = ($date ? AppHelper::normalizeDateToDb($date) : null) ?: date('Y-m-d');
+            if ($report === 'register') {
+                $book = \app\modules\finance\services\CashReportService::registerSpreadsheet($dbDate);
+                $fileName = 'ทะเบียนปิดบัญชี_' . AppHelper::convertToThai($dbDate) . '.xlsx';
+            } else {
+                $book = \app\modules\finance\services\CashReportService::balance407Spreadsheet($fy, $dbDate);
+                $fileName = 'เงินคงเหลือประจำวัน407_' . AppHelper::convertToThai($dbDate) . '.xlsx';
+            }
+            return $this->streamBook($book, $fileName, $report);
+        }
+
         $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $book->getActiveSheet();
-        $fy = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
 
         if ($report === 'daily') {
             $dbDate = ($date ? AppHelper::normalizeDateToDb($date) : null) ?: date('Y-m-d');
@@ -577,6 +606,12 @@ class CashController extends Controller
             $fileName = 'รายงานรับจ่ายประจำปี_' . $fy . '.xlsx';
         }
 
+        return $this->streamBook($book, $fileName, $report);
+    }
+
+    /** เขียน xlsx ลง runtime แล้ว sendFile (ลบทิ้งหลังส่ง) */
+    private function streamBook(\PhpOffice\PhpSpreadsheet\Spreadsheet $book, string $fileName, string $report)
+    {
         $path = Yii::getAlias('@runtime') . '/cash_' . $report . '_' . date('YmdHis') . '.xlsx';
         (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($book))->save($path);
         return Yii::$app->response->sendFile($path, $fileName, ['mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->on(\yii\web\Response::EVENT_AFTER_SEND, function () use ($path) {

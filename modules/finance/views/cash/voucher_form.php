@@ -9,6 +9,7 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var array $tree ผังบัญชีฝั่งจ่าย (asArray) */
 /** @var array $accounts id => label */
+/** @var array $vendors รายชื่อผู้ขาย (จากทะเบียนพัสดุ) สำหรับ datalist */
 
 // สร้าง option หมวด (leaf) แบบ optgroup ตามกลุ่ม สำหรับ dropdown บรรทัด
 $childrenOf = [];
@@ -153,7 +154,11 @@ $whtRatesJson = Json::htmlEncode($whtRates);
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="v-payee">จ่ายให้ (ถ้ามี)</label>
-                        <input type="text" class="form-control" id="v-payee" maxlength="255">
+                        <input type="text" class="form-control" id="v-payee" maxlength="255" list="v-vendor-list" placeholder="พิมพ์ค้นหาจากทะเบียนผู้ขาย หรือพิมพ์เอง">
+                        <datalist id="v-vendor-list">
+                            <?php foreach ($vendors as $vt): ?><option value="<?= Html::encode($vt) ?>"></option><?php endforeach; ?>
+                        </datalist>
+                        <div class="form-text">ต่อทะเบียนผู้ขายจากระบบพัสดุ (<?= count($vendors) ?> ราย)</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="v-note">หมายเหตุ</label>

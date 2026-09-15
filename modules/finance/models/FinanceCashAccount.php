@@ -24,6 +24,17 @@ class FinanceCashAccount extends ActiveRecord
     public const TYPE_TREASURY = 'treasury';
     public const TYPE_BANK = 'bank';
 
+    /** รายชื่อธนาคาร (dropdown) */
+    public const BANKS = [
+        'ธนาคารกรุงไทย', 'ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร', 'ธนาคารออมสิน',
+        'ธนาคารไทยพาณิชย์', 'ธนาคารกสิกรไทย', 'ธนาคารกรุงเทพ', 'ธนาคารกรุงศรีอยุธยา',
+        'ธนาคารทหารไทยธนชาต', 'ธนาคารอาคารสงเคราะห์', 'ธนาคารซีไอเอ็มบีไทย',
+        'ธนาคารยูโอบี', 'ธนาคารเกียรตินาคินภัทร', 'ธนาคารทิสโก้', 'ธนาคารไอซีบีซี (ไทย)',
+    ];
+
+    /** ประเภทบัญชีเงินฝาก */
+    public const DEPOSIT_TYPES = ['ออมทรัพย์', 'กระแสรายวัน', 'ฝากประจำ'];
+
     public static function tableName()
     {
         return '{{%finance_cash_account}}';
@@ -34,10 +45,11 @@ class FinanceCashAccount extends ActiveRecord
         return [
             [['name', 'account_type'], 'required'],
             [['account_type'], 'in', 'range' => [self::TYPE_CASH, self::TYPE_TREASURY, self::TYPE_BANK]],
-            [['sort_order', 'is_active', 'created_by', 'updated_by'], 'integer'],
-            [['name'], 'string', 'max' => 255],
+            [['sort_order', 'is_active', 'is_promptpay', 'is_credit', 'created_by', 'updated_by'], 'integer'],
+            [['name', 'bank_name', 'branch'], 'string', 'max' => 255],
             [['code'], 'string', 'max' => 32],
-            [['sort_order'], 'default', 'value' => 0],
+            [['deposit_type'], 'string', 'max' => 24],
+            [['sort_order', 'is_promptpay', 'is_credit'], 'default', 'value' => 0],
             [['is_active'], 'default', 'value' => 1],
         ];
     }
@@ -47,9 +59,26 @@ class FinanceCashAccount extends ActiveRecord
         return [
             'code' => 'เลขที่บัญชี',
             'name' => 'ชื่อบัญชี',
-            'account_type' => 'ประเภท',
+            'bank_name' => 'ธนาคาร',
+            'branch' => 'สาขา',
+            'deposit_type' => 'ประเภทบัญชี',
+            'account_type' => 'ชนิดบัญชี',
+            'is_promptpay' => 'บัญชีพร้อมเพย์',
+            'is_credit' => 'รับเงินบัตรเครดิต',
             'is_active' => 'ใช้งาน',
         ];
+    }
+
+    public function getBalances()
+    {
+        return $this->hasMany(FinanceCashAccountBalance::class, ['account_id' => 'id']);
+    }
+
+    /** ยอดคงเหลือของปีงบที่ระบุ (กรอกเอง) */
+    public function balanceFor(int $fiscalYear): float
+    {
+        $row = FinanceCashAccountBalance::find()->where(['account_id' => $this->id, 'fiscal_year' => $fiscalYear])->one();
+        return $row ? (float) $row->amount : 0.0;
     }
 
     public function label(): string

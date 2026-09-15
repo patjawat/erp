@@ -48,9 +48,17 @@ $outMethods = FinanceCashVoucher::PAY_METHODS;
                 <label class="form-label" for="f-date">วันที่</label>
                 <?= DatepickerThai::widget(['name' => 'date', 'value' => $thaiDate, 'options' => ['id' => 'f-date', 'autocomplete' => 'off']]) ?>
             </div>
-            <div class="col-6 col-md-3 d-flex gap-2">
+            <div class="col-6 col-md-6 d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>ค้นหา</button>
-                <a href="<?= Url::to(['close-excel', 'report' => 'daily', 'date' => $thaiDate]) ?>" class="btn btn-success"><i class="bi bi-file-earmark-excel me-1"></i>ส่งออก Excel</a>
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-file-earmark-excel me-1"></i>ส่งออก/พิมพ์รายงาน</button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="<?= Url::to(['close-excel', 'report' => 'register', 'date' => $thaiDate]) ?>"><i class="bi bi-table me-2"></i>ทะเบียนปิดบัญชี (สรุปการปิดบัญชี)</a></li>
+                        <li><a class="dropdown-item" href="<?= Url::to(['close-excel', 'report' => 'balance407', 'date' => $thaiDate]) ?>"><i class="bi bi-cash-stack me-2"></i>รายงานเงินคงเหลือประจำวัน (407)</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?= Url::to(['close-excel', 'report' => 'daily', 'date' => $thaiDate]) ?>"><i class="bi bi-list-ul me-2"></i>สรุปรับ-จ่ายวันนี้ (ย่อ)</a></li>
+                    </ul>
+                </div>
             </div>
         </form>
     </div>
