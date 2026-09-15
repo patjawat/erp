@@ -50,7 +50,7 @@ $invalid = static fn (array $err, string $attr): string => empty($err[$attr]) ? 
 
                     <div class="col-md-4">
                         <label class="form-label">หมวดหมู่</label>
-                        <?= Html::dropDownList('KmActivity[category_id]', $model->category_id, array_column($categories, 'name', 'id'), ['class' => 'form-select', 'prompt' => '— เลือกหมวด —']) ?>
+                        <?= Html::dropDownList('KmActivity[category_id]', $model->category_id, \app\modules\km\models\KmCategory::dropdownMap(), ['class' => 'form-select', 'prompt' => '— เลือกหมวด —']) ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">ปีงบประมาณ <span class="text-danger">*</span></label>

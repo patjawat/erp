@@ -30,8 +30,11 @@ class CategoryController extends Controller
 
     public function actionIndex()
     {
+        $all = KmCategory::find()->orderBy(['sort' => SORT_ASC, 'name' => SORT_ASC])->all();
         return $this->render('index', [
-            'categories' => KmCategory::find()->orderBy(['sort' => SORT_ASC, 'name' => SORT_ASC])->all(),
+            'categories' => $all,
+            // หมวดหลัก (ไม่มีแม่) สำหรับให้เลือกเป็น "หมวดแม่" ของหมวดย่อย
+            'topCategories' => array_values(array_filter($all, static fn ($c) => empty($c->parent_id))),
         ]);
     }
 
@@ -48,6 +51,30 @@ class CategoryController extends Controller
         $model->color = trim((string) Yii::$app->request->post('color')) ?: null;
         $model->sort = (int) Yii::$app->request->post('sort');
         $model->is_active = Yii::$app->request->post('is_active') ? 1 : 0;
+
+        // หมวดแม่ (หมวดย่อย) — จำกัดลึก 2 ชั้น
+        $parentId = (int) Yii::$app->request->post('parent_id') ?: null;
+        if ($parentId !== null) {
+            if ($id && $parentId === $id) {
+                Yii::$app->session->setFlash('error', 'เลือกหมวดตัวเองเป็นหมวดแม่ไม่ได้');
+                return $this->redirect(['index']);
+            }
+            $parent = KmCategory::findOne($parentId);
+            if (!$parent) {
+                Yii::$app->session->setFlash('error', 'ไม่พบหมวดแม่ที่เลือก');
+                return $this->redirect(['index']);
+            }
+            if (!empty($parent->parent_id)) {
+                Yii::$app->session->setFlash('error', 'เลือกหมวดแม่ได้เฉพาะหมวดหลัก (รองรับลึก 2 ชั้น)');
+                return $this->redirect(['index']);
+            }
+            // หมวดนี้มีหมวดย่อยอยู่แล้ว จะไปเป็นหมวดย่อยของใครไม่ได้ (จะกลายเป็น 3 ชั้น)
+            if ($id && KmCategory::find()->where(['parent_id' => $id])->exists()) {
+                Yii::$app->session->setFlash('error', 'หมวดนี้มีหมวดย่อยอยู่ จึงเป็นหมวดย่อยของหมวดอื่นไม่ได้');
+                return $this->redirect(['index']);
+            }
+        }
+        $model->parent_id = $parentId;
 
         if ($model->save()) {
             Yii::$app->session->setFlash('success', $id ? 'แก้ไขหมวดแล้ว' : 'เพิ่มหมวดแล้ว');

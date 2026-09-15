@@ -55,7 +55,7 @@ $statusTone = ['draft' => 'secondary', 'published' => 'success'];
                 </div>
                 <div class="col-6 col-md-3">
                     <label class="form-label small mb-1">หมวดหมู่</label>
-                    <?= Html::dropDownList('category_id', $filters['category_id'], ['' => 'ทั้งหมด'] + array_column($categories, 'name', 'id'), ['class' => 'form-select form-select-sm']) ?>
+                    <?= Html::dropDownList('category_id', $filters['category_id'], ['' => 'ทั้งหมด'] + \app\modules\km\models\KmCategory::dropdownMap(), ['class' => 'form-select form-select-sm']) ?>
                 </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label small mb-1">หน่วยงานเจ้าภาพ</label>

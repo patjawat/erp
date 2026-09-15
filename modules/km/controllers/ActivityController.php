@@ -85,7 +85,12 @@ class ActivityController extends Controller
         }
 
         if ($categoryId) {
-            $query->andWhere(['category_id' => $categoryId]);
+            // เลือกหมวดหลัก → รวมกิจกรรมในหมวดย่อยด้วย
+            $catIds = array_merge(
+                [$categoryId],
+                KmCategory::find()->select('id')->where(['parent_id' => $categoryId])->column()
+            );
+            $query->andWhere(['category_id' => $catIds]);
         }
         if ($unitId) {
             $query->andWhere(['owner_unit_id' => $unitId]);
