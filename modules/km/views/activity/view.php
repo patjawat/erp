@@ -13,7 +13,7 @@ $statusTone = ['draft' => 'secondary', 'published' => 'success'];
 $time = trim(($activity->start_time ? substr($activity->start_time, 0, 5) : '') . ($activity->end_time ? ' - ' . substr($activity->end_time, 0, 5) : ''));
 ?>
 <?php $this->beginBlock('page-title'); ?>รายละเอียดกิจกรรม<?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>คลังกิจกรรม KM<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>คลัง KM<?php $this->endBlock(); ?>
 
 <div class="container-fluid px-0">
     <div class="mb-3"><?= $this->render('@app/modules/km/menu', ['active' => 'activity']) ?></div>

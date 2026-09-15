@@ -7,7 +7,7 @@ use yii\helpers\Html;
 /** @var int[] $years */
 /** @var array{activities:int,published:int,categories:int} $stats */
 
-$this->title = 'คลังกิจกรรม KM';
+$this->title = 'คลัง KM';
 
 $cards = [
     ['label' => 'กิจกรรมปีนี้', 'value' => $stats['activities'], 'icon' => 'bi-collection', 'tone' => 'primary'],
@@ -21,7 +21,7 @@ $cards = [
 <div class="container-fluid px-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-            <h1 class="h4 fw-semibold mb-0"><i class="bi bi-collection me-1"></i> คลังกิจกรรม KM</h1>
+            <h1 class="h4 fw-semibold mb-0"><i class="bi bi-collection me-1"></i> คลัง KM</h1>
             <div class="text-body-secondary small">บันทึกกิจกรรม แนบภาพ และผูกหลักฐานงานคุณภาพ</div>
         </div>
         <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex align-items-center gap-2']) ?>

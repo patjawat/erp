@@ -30,7 +30,7 @@ $feedback = static function (array $err, string $attr): string {
 $invalid = static fn (array $err, string $attr): string => empty($err[$attr]) ? '' : ' is-invalid';
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>คลังกิจกรรม KM<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>คลัง KM<?php $this->endBlock(); ?>
 
 <div class="container-fluid px-0">
     <div class="mb-3"><?= $this->render('@app/modules/km/menu', ['active' => 'activity']) ?></div>

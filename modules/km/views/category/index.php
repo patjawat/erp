@@ -65,7 +65,7 @@ $row = function ($c, bool $child) use ($byParent) {
 };
 ?>
 <?php $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock(); ?>
-<?php $this->beginBlock('sub-title'); ?>คลังกิจกรรม KM<?php $this->endBlock(); ?>
+<?php $this->beginBlock('sub-title'); ?>คลัง KM<?php $this->endBlock(); ?>
 
 <div class="container-fluid px-0">
     <div class="mb-3"><?= $this->render('@app/modules/km/menu', ['active' => 'category']) ?></div>

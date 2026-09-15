@@ -20,10 +20,10 @@ $active = $active ?? '';
     </a>
 
     <a href="<?= Url::to(['/km/default/index']) ?>"
-       aria-label="คลังกิจกรรม KM"
+       aria-label="คลัง KM"
        class="btn <?= $active === 'km' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
         <i class="bi bi-collection" aria-hidden="true"></i>
-        <span class="d-none d-sm-inline">คลังกิจกรรม KM</span>
+        <span class="d-none d-sm-inline">คลัง KM</span>
     </a>
 
     <?php if ($active === 'km'): ?>
