@@ -44,6 +44,7 @@ class CashController extends Controller
                     'plan-save' => ['post'],
                     'close-yearly-save' => ['post'],
                     'close-do' => ['post'],
+                    'close-undo' => ['post'],
                     'category-save' => ['post'],
                     'category-delete' => ['post'],
                     'seed-chart' => ['post'],
@@ -768,13 +769,80 @@ class CashController extends Controller
         return $redirect;
     }
 
-    public function actionCloseSummary($year = null)
+    /** สรุปปิดบัญชีประจำวัน แบบปฏิทินรายเดือน (วันไหนปิดแล้วมีแถบ) */
+    public function actionCloseSummary($year = null, $month = null)
     {
-        $fy = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
-        $batches = FinanceCashClose::find()
-            ->where(['close_type' => FinanceCashClose::TYPE_DAILY, 'fiscal_year' => $fy])
-            ->orderBy(['close_date' => SORT_DESC, 'id' => SORT_DESC])->all();
-        return $this->render('close_summary', ['fy' => $fy, 'batches' => $batches]);
+        $year = (int) ($year ?: (int) date('Y') + 543);
+        $month = (int) ($month ?: (int) date('n'));
+        if ($month < 1 || $month > 12) {
+            $month = (int) date('n');
+        }
+        $gy = $year - 543;
+        $start = sprintf('%04d-%02d-01', $gy, $month);
+        $end = date('Y-m-t', strtotime($start));
+
+        $byDate = [];
+        foreach (FinanceCashClose::find()->where(['close_type' => FinanceCashClose::TYPE_DAILY])
+            ->andWhere(['between', 'close_date', $start, $end])->all() as $b) {
+            $d = $b->close_date;
+            $byDate[$d]['in'] = ($byDate[$d]['in'] ?? 0) + (float) $b->total_in;
+            $byDate[$d]['out'] = ($byDate[$d]['out'] ?? 0) + (float) $b->total_out;
+            $byDate[$d]['count'] = ($byDate[$d]['count'] ?? 0) + 1;
+        }
+        return $this->render('close_summary', [
+            'year' => $year, 'month' => $month, 'gy' => $gy, 'byDate' => $byDate,
+        ]);
+    }
+
+    /** AJAX: สรุปรับ-จ่ายของวันหนึ่ง (ตามวิธี) สำหรับ modal ในปฏิทิน */
+    public function actionDaySummary($date)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $dbDate = AppHelper::normalizeDateToDb($date) ?: $date;
+        $s = $this->dailySummary($dbDate);
+        $inMethods = FinanceCashTxn::PAY_METHODS;
+        $outMethods = FinanceCashVoucher::PAY_METHODS;
+        $map = function ($rows, $labels) {
+            $out = [];
+            foreach ($rows as $r) {
+                $out[] = ['label' => $labels[$r['pay_method']] ?? ($r['pay_method'] ?: 'ไม่ระบุ'), 'count' => (int) $r['c'], 'sum' => (float) $r['s']];
+            }
+            return $out;
+        };
+        $closed = FinanceCashClose::find()->where(['close_type' => 'daily', 'close_date' => $dbDate])->exists();
+        return [
+            'date' => AppHelper::convertToThai($dbDate),
+            'dbDate' => $dbDate,
+            'in' => $map($s['in'], $inMethods),
+            'out' => $map($s['out'], $outMethods),
+            'closed' => $closed,
+        ];
+    }
+
+    /** ยกเลิกปิดบัญชีของวันหนึ่ง — ปลดล็อกรายการ + ลบงวดปิด */
+    public function actionCloseUndo()
+    {
+        $post = Yii::$app->request->post();
+        $dbDate = AppHelper::normalizeDateToDb($post['date'] ?? null);
+        $back = ['close-summary'];
+        if ($dbDate) {
+            [$y, $m] = array_map('intval', explode('-', $dbDate));
+            $back = ['close-summary', 'year' => $y + 543, 'month' => $m];
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                foreach (FinanceCashClose::find()->where(['close_type' => 'daily', 'close_date' => $dbDate])->all() as $b) {
+                    FinanceCashTxn::updateAll(['is_closed' => 0, 'close_batch_id' => null], ['close_batch_id' => $b->id]);
+                    FinanceCashVoucher::updateAll(['is_closed' => 0, 'close_batch_id' => null], ['close_batch_id' => $b->id]);
+                    $b->delete();
+                }
+                $tx->commit();
+                Yii::$app->session->setFlash('success', 'ยกเลิกปิดบัญชีวันที่ ' . AppHelper::convertToThai($dbDate) . ' แล้ว (ปลดล็อกรายการ)');
+            } catch (\Throwable $e) {
+                $tx->rollBack();
+                Yii::$app->session->setFlash('error', 'ยกเลิกไม่สำเร็จ: ' . $e->getMessage());
+            }
+        }
+        return $this->redirect($back);
     }
 
     public function actionCloseYearly($year = null, $sync = 0)
