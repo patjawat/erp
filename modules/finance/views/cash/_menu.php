@@ -9,10 +9,10 @@ $active = $active ?? '';
 // เมนูระดับ 2 ของระบบรับ-จ่ายเงินบำรุง (pills แนวนอน ตามมาตรฐาน ERP)
 // รายการที่ยังไม่ทำในเฟส 1 แสดงเป็น disabled พร้อมป้ายเฟส เพื่อให้เห็น roadmap
 $items = [
-    ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-graph-up-arrow', 'url' => null, 'phase' => 'เฟส 2'],
+    ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-graph-up-arrow', 'url' => ['/finance/cash/overview']],
     ['key' => 'income', 'label' => 'รายรับ', 'icon' => 'bi-cash-coin', 'url' => ['/finance/cash/income']],
     ['key' => 'expense', 'label' => 'รายจ่าย', 'icon' => 'bi-receipt', 'url' => ['/finance/cash/expense']],
-    ['key' => 'plan', 'label' => 'แผนประจำปี', 'icon' => 'bi-calendar3', 'url' => null, 'phase' => 'เฟส 3'],
+    ['key' => 'plan', 'label' => 'แผนประจำปี', 'icon' => 'bi-calendar3', 'url' => ['/finance/cash/plan']],
     ['key' => 'close', 'label' => 'ปิดบัญชี', 'icon' => 'bi-lock', 'url' => ['/finance/cash/close-daily']],
     ['key' => 'account', 'label' => 'บัญชีเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/account/bank']],
     ['key' => 'category', 'label' => 'จัดการผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/finance/cash/category']],

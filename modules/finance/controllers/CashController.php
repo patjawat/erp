@@ -6,6 +6,7 @@ use app\components\AppHelper;
 use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\models\FinanceCashCategory;
 use app\modules\finance\models\FinanceCashClose;
+use app\modules\finance\models\FinanceCashPlan;
 use app\modules\finance\models\FinanceCashTxn;
 use app\modules\finance\models\FinanceCashVoucher;
 use Yii;
@@ -37,6 +38,7 @@ class CashController extends Controller
                     'voucher-save' => ['post'],
                     'voucher-delete' => ['post'],
                     'seed-accounts' => ['post'],
+                    'plan-save' => ['post'],
                     'close-do' => ['post'],
                     'category-save' => ['post'],
                     'category-delete' => ['post'],
@@ -48,7 +50,134 @@ class CashController extends Controller
 
     public function actionIndex()
     {
-        return $this->redirect(['income']);
+        return $this->redirect(['overview']);
+    }
+
+    // ---- ภาพรวมรายรับ-รายจ่าย (dashboard) --------------------------------
+
+    public function actionOverview($year = null, $period = 'year')
+    {
+        $year = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
+        $today = date('Y-m-d');
+
+        // KPI วันนี้
+        $inToday = (float) FinanceCashTxn::find()->where(['txn_type' => 'IN', 'doc_date' => $today, 'voucher_id' => null])->sum('amount');
+        $outToday = (float) FinanceCashVoucher::find()->where(['pay_date' => $today])->sum('net_amount');
+
+        // donut ตามกลุ่ม (ตามช่วงที่เลือก)
+        [$start, $end] = $this->periodRange($period, $year, $today);
+        $donutIn = $this->groupSums(FinanceCashCategory::TYPE_IN, $start, $end);
+        $donutOut = $this->groupSums(FinanceCashCategory::TYPE_OUT, $start, $end);
+
+        // trend 10 วันล่าสุด
+        $days = [];
+        for ($i = 9; $i >= 0; $i--) {
+            $days[] = date('Y-m-d', strtotime("-$i day"));
+        }
+        $inByDay = FinanceCashTxn::find()->select(['doc_date', 's' => 'SUM(amount)'])
+            ->where(['txn_type' => 'IN'])->andWhere(['between', 'doc_date', $days[0], $days[9]])
+            ->groupBy('doc_date')->indexBy('doc_date')->asArray()->all();
+        $outByDay = FinanceCashTxn::find()->select(['doc_date', 's' => 'SUM(amount)'])
+            ->where(['txn_type' => 'OUT'])->andWhere(['between', 'doc_date', $days[0], $days[9]])
+            ->groupBy('doc_date')->indexBy('doc_date')->asArray()->all();
+        $trend = ['labels' => [], 'in' => [], 'out' => []];
+        foreach ($days as $d) {
+            $trend['labels'][] = AppHelper::convertToThai($d);
+            $trend['in'][] = round((float) ($inByDay[$d]['s'] ?? 0), 2);
+            $trend['out'][] = round((float) ($outByDay[$d]['s'] ?? 0), 2);
+        }
+
+        // รายเดือนตลอดปีงบ (ต.ค. → ก.ย.)
+        $monthly = $this->monthlyData($year);
+
+        return $this->render('overview', [
+            'year' => $year,
+            'period' => $period,
+            'inToday' => $inToday,
+            'outToday' => $outToday,
+            'donutIn' => $donutIn,
+            'donutOut' => $donutOut,
+            'trend' => $trend,
+            'monthly' => $monthly,
+        ]);
+    }
+
+    private function periodRange(string $period, int $year, string $today): array
+    {
+        if ($period === 'today') {
+            return [$today, $today];
+        }
+        if ($period === 'month') {
+            return [date('Y-m-01'), date('Y-m-t')];
+        }
+        $gy = $year - 543;
+        return [sprintf('%04d-10-01', $gy - 1), sprintf('%04d-09-30', $gy)];
+    }
+
+    /** ผลรวมตามกลุ่มบนสุด [groupName => sum] ในช่วงวันที่ */
+    private function groupSums(string $type, string $start, string $end): array
+    {
+        $rows = FinanceCashTxn::find()->select(['category_id', 's' => 'SUM(amount)'])
+            ->where(['txn_type' => $type])->andWhere(['between', 'doc_date', $start, $end])
+            ->groupBy('category_id')->asArray()->all();
+        $map = $this->groupNameMap();
+        $out = [];
+        foreach ($rows as $r) {
+            $g = $map[(int) $r['category_id']] ?? 'อื่น ๆ';
+            $out[$g] = ($out[$g] ?? 0) + (float) $r['s'];
+        }
+        arsort($out);
+        return $out;
+    }
+
+    /** map category_id => ชื่อกลุ่มบนสุด */
+    private function groupNameMap(): array
+    {
+        $rows = FinanceCashCategory::find()->select(['id', 'parent_id', 'name'])->asArray()->all();
+        $parent = [];
+        $name = [];
+        foreach ($rows as $r) {
+            $parent[(int) $r['id']] = (int) ($r['parent_id'] ?? 0);
+            $name[(int) $r['id']] = $r['name'];
+        }
+        $map = [];
+        foreach ($parent as $id => $p) {
+            $cur = $id;
+            $guard = 0;
+            while (($parent[$cur] ?? 0) && $guard++ < 5) {
+                $cur = $parent[$cur];
+            }
+            $map[$id] = $name[$cur] ?? $name[$id];
+        }
+        return $map;
+    }
+
+    private function monthlyData(int $year): array
+    {
+        $rows = FinanceCashTxn::find()
+            ->select(['txn_type', 'ym' => "DATE_FORMAT(doc_date,'%Y-%m')", 's' => 'SUM(amount)'])
+            ->where(['fiscal_year' => $year])
+            ->groupBy(['txn_type', 'ym'])->asArray()->all();
+        $sum = [];
+        foreach ($rows as $r) {
+            $sum[$r['txn_type']][$r['ym']] = (float) $r['s'];
+        }
+        $gy = $year - 543;
+        $labels = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+        $yms = [];
+        foreach ([10, 11, 12] as $m) {
+            $yms[] = sprintf('%04d-%02d', $gy - 1, $m);
+        }
+        foreach (range(1, 9) as $m) {
+            $yms[] = sprintf('%04d-%02d', $gy, $m);
+        }
+        $in = [];
+        $out = [];
+        foreach ($yms as $ym) {
+            $in[] = round($sum['IN'][$ym] ?? 0, 2);
+            $out[] = round($sum['OUT'][$ym] ?? 0, 2);
+        }
+        return ['labels' => $labels, 'in' => $in, 'out' => $out];
     }
 
     public function actionIncome()
@@ -374,6 +503,176 @@ class CashController extends Controller
         }
         Yii::$app->session->setFlash('success', 'ป้อนบัญชีเงินเริ่มต้นแล้ว ' . count($seed) . ' บัญชี');
         return $this->redirect(['expense']);
+    }
+
+    // ---- แผนรายรับ-รายจ่ายประจำปี -----------------------------------------
+
+    public function actionPlan($year = null)
+    {
+        $year = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
+        return $this->render('plan', ['year' => $year] + $this->planMatrix($year));
+    }
+
+    public function actionPlanSave()
+    {
+        $post = Yii::$app->request->post();
+        $year = (int) ($post['year'] ?? FinanceCashTxn::currentFiscalYear());
+        $typeByCat = [];
+        foreach (FinanceCashCategory::find()->select(['id', 'txn_type'])->asArray()->all() as $c) {
+            $typeByCat[(int) $c['id']] = $c['txn_type'];
+        }
+        $count = 0;
+        foreach ((array) ($post['plan'] ?? []) as $catId => $years) {
+            $catId = (int) $catId;
+            if (!isset($typeByCat[$catId])) {
+                continue;
+            }
+            foreach ((array) $years as $fy => $amt) {
+                $fy = (int) $fy;
+                $amt = (float) str_replace([',', ' '], '', (string) $amt);
+                $row = FinanceCashPlan::findOne(['category_id' => $catId, 'fiscal_year' => $fy]);
+                if (!$row && $amt <= 0) {
+                    continue;
+                }
+                if (!$row) {
+                    $row = new FinanceCashPlan(['category_id' => $catId, 'fiscal_year' => $fy]);
+                }
+                $row->txn_type = $typeByCat[$catId];
+                $row->amount = $amt;
+                if ($row->save()) {
+                    $count++;
+                }
+            }
+        }
+        Yii::$app->session->setFlash('success', "บันทึกแผนแล้ว $count รายการ");
+        return $this->redirect(['plan', 'year' => $year]);
+    }
+
+    public function actionPlanExcel($year = null)
+    {
+        $year = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
+        $m = $this->planMatrix($year);
+        $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $s = $book->getActiveSheet();
+        $s->setTitle('แผนรายรับ-รายจ่าย');
+        $s->setCellValue('A1', 'แผนรายรับ-รายจ่ายเงินบำรุง ปีงบประมาณ ' . $m['planYears'][0] . '-' . end($m['planYears']));
+        $r = 3;
+        $col = 'B';
+        $s->setCellValue('A' . $r, 'รายการ');
+        foreach ($m['actualYears'] as $ay) {
+            $s->setCellValue($col . $r, 'ผล ' . $ay);
+            $col++;
+        }
+        foreach ($m['planYears'] as $py) {
+            $s->setCellValue($col . $r, 'แผน ' . $py);
+            $col++;
+        }
+        $r++;
+        foreach ([FinanceCashCategory::TYPE_IN => 'รายรับ', FinanceCashCategory::TYPE_OUT => 'รายจ่าย'] as $type => $label) {
+            $s->setCellValue("A$r", $label);
+            $r++;
+            foreach ($m['types'][$type]['groups'] as $g) {
+                $s->setCellValue("A$r", $g['name']);
+                $r++;
+                foreach ($g['rows'] as $row) {
+                    $s->setCellValue("A$r", '   ' . $row['name']);
+                    $col = 'B';
+                    foreach ($m['actualYears'] as $ay) {
+                        $s->setCellValue($col . $r, $row['actual'][$ay] ?? 0);
+                        $col++;
+                    }
+                    foreach ($m['planYears'] as $py) {
+                        $s->setCellValue($col . $r, $row['plan'][$py] ?? 0);
+                        $col++;
+                    }
+                    $r++;
+                }
+            }
+        }
+        foreach (range('A', 'G') as $c) {
+            $s->getColumnDimension($c)->setAutoSize(true);
+        }
+        return $this->streamBook($book, 'แผนรายรับจ่าย_' . $year . '.xlsx', 'plan');
+    }
+
+    /** matrix แผน: ย้อนหลัง 3 ปี (actual จาก txn) + แผนล่วงหน้า 3 ปี (finance_cash_plan) ต่อหมวด */
+    private function planMatrix(int $year): array
+    {
+        $actualYears = [$year - 3, $year - 2, $year - 1];
+        $planYears = [$year, $year + 1, $year + 2];
+
+        $actual = [];
+        foreach (FinanceCashTxn::find()->select(['fiscal_year', 'category_id', 's' => 'SUM(amount)'])
+            ->where(['fiscal_year' => $actualYears])->groupBy(['fiscal_year', 'category_id'])->asArray()->all() as $r) {
+            $actual[(int) $r['category_id']][(int) $r['fiscal_year']] = (float) $r['s'];
+        }
+        $plan = [];
+        foreach (FinanceCashPlan::find()->where(['fiscal_year' => $planYears])->asArray()->all() as $r) {
+            $plan[(int) $r['category_id']][(int) $r['fiscal_year']] = (float) $r['amount'];
+        }
+
+        $types = [];
+        foreach ([FinanceCashCategory::TYPE_IN, FinanceCashCategory::TYPE_OUT] as $type) {
+            $tree = FinanceCashCategory::treeArray($type);
+            $childrenOf = [];
+            foreach ($tree as $n) {
+                $childrenOf[(int) ($n['parent_id'] ?? 0)][] = $n;
+            }
+            $leaves = function ($nodeId) use (&$leaves, $childrenOf) {
+                $kids = $childrenOf[(int) $nodeId] ?? [];
+                if (!$kids) {
+                    return [];
+                }
+                $out = [];
+                foreach ($kids as $k) {
+                    $sub = $leaves($k['id']);
+                    $out = $sub ? array_merge($out, $sub) : array_merge($out, [$k]);
+                }
+                return $out;
+            };
+            $groups = [];
+            $totA = array_fill_keys($actualYears, 0.0);
+            $totP = array_fill_keys($planYears, 0.0);
+            foreach ($childrenOf[0] ?? [] as $group) {
+                $rows = [];
+                $subA = array_fill_keys($actualYears, 0.0);
+                $subP = array_fill_keys($planYears, 0.0);
+                foreach ($leaves($group['id']) as $leaf) {
+                    $cid = (int) $leaf['id'];
+                    $a = [];
+                    foreach ($actualYears as $ay) {
+                        $a[$ay] = $actual[$cid][$ay] ?? 0.0;
+                        $subA[$ay] += $a[$ay];
+                    }
+                    $p = [];
+                    foreach ($planYears as $py) {
+                        $p[$py] = $plan[$cid][$py] ?? 0.0;
+                        $subP[$py] += $p[$py];
+                    }
+                    $rows[] = ['id' => $cid, 'name' => $leaf['name'], 'actual' => $a, 'plan' => $p];
+                }
+                foreach ($actualYears as $ay) {
+                    $totA[$ay] += $subA[$ay];
+                }
+                foreach ($planYears as $py) {
+                    $totP[$py] += $subP[$py];
+                }
+                $groups[] = ['name' => $group['name'], 'rows' => $rows, 'subA' => $subA, 'subP' => $subP];
+            }
+            $types[$type] = ['groups' => $groups, 'totA' => $totA, 'totP' => $totP];
+        }
+
+        // ผลต่างสุทธิ รับ - จ่าย ต่อปี
+        $netA = [];
+        foreach ($actualYears as $ay) {
+            $netA[$ay] = ($types[FinanceCashCategory::TYPE_IN]['totA'][$ay] ?? 0) - ($types[FinanceCashCategory::TYPE_OUT]['totA'][$ay] ?? 0);
+        }
+        $netP = [];
+        foreach ($planYears as $py) {
+            $netP[$py] = ($types[FinanceCashCategory::TYPE_IN]['totP'][$py] ?? 0) - ($types[FinanceCashCategory::TYPE_OUT]['totP'][$py] ?? 0);
+        }
+
+        return ['actualYears' => $actualYears, 'planYears' => $planYears, 'types' => $types, 'netA' => $netA, 'netP' => $netP];
     }
 
     // ---- ปิดบัญชี ---------------------------------------------------------
