@@ -17,6 +17,7 @@ use yii\widgets\LinkPager;
 /** @var string $q */
 /** @var float $sum */
 /** @var array $tree */
+/** @var app\modules\finance\models\FinanceReceiptBook[] $receiptBooks */
 
 $typeLabel = FinanceCashCategory::typeLabel($type);
 $isIn = $type === FinanceCashCategory::TYPE_IN;
@@ -143,4 +144,4 @@ $this->endBlock();
     </div>
 </div>
 
-<?= $this->render('form', ['type' => $type, 'tree' => $tree]) ?>
+<?= $this->render('form', ['type' => $type, 'tree' => $tree, 'receiptBooks' => $receiptBooks ?? []]) ?>

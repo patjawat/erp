@@ -10,6 +10,7 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var string $type IN|OUT ของหน้ารายการที่ modal นี้อยู่ */
 /** @var array $tree ผังบัญชีของประเภทนี้ (asArray: id, parent_id, level, name) */
+/** @var app\modules\finance\models\FinanceReceiptBook[] $receiptBooks */
 
 $isIn = $type === FinanceCashCategory::TYPE_IN;
 $typeLabel = FinanceCashCategory::typeLabel($type);
@@ -58,6 +59,21 @@ $getUrl = Url::to(['get']);
                             <span id="txn-cat-preview" class="fw-semibold text-primary">— ยังไม่ได้เลือก —</span></div>
                         <div class="text-danger small" data-err="category_id"></div>
                     </div>
+
+                    <?php if ($isIn && !empty($receiptBooks)): ?>
+                    <div class="col-12">
+                        <label class="form-label" for="txn-book">เล่มใบเสร็จที่เบิก <span class="text-body-secondary small">(ช่วยเติมเลขให้)</span></label>
+                        <select class="form-select" id="txn-book">
+                            <option value="">— เลือกเล่ม (หรือกรอกเลขที่ใบเสร็จเอง) —</option>
+                            <?php foreach ($receiptBooks as $bk): ?>
+                                <option value="<?= Html::encode($bk->book_no) ?>"><?= Html::encode($bk->book_no) ?> (<?= (int) $bk->number_from ?>–<?= (int) $bk->number_to ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">เลือกเล่ม → เลขที่ใบเสร็จจะขึ้นต้น "เล่ม/" ให้กรอกต่อเฉพาะเลข</div>
+                    </div>
+                    <?php elseif ($isIn): ?>
+                    <div class="col-12"><div class="alert alert-light border py-2 small mb-0"><i class="bi bi-info-circle me-1"></i>ยังไม่มีเล่มใบเสร็จที่เบิกให้คุณ — กรอกเลขที่ใบเสร็จเองได้ (เบิกเล่มที่เมนู “ทะเบียนใบเสร็จ”)</div></div>
+                    <?php endif; ?>
 
                     <div class="col-md-4">
                         <label class="form-label" for="txn-year">ปีงบประมาณ <span class="text-danger">*</span></label>
@@ -234,4 +250,17 @@ $this->registerJs(<<<JS
     document.querySelectorAll('[data-cash-edit]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.id)));
 })();
 JS);
+
+// เลือกเล่มใบเสร็จ → เติมคำนำหน้า "เล่ม/" ในช่องเลขที่ใบเสร็จ
+$this->registerJs(<<<'JS2'
+(function () {
+    var b = document.getElementById('txn-book'), d = document.getElementById('txn-docno');
+    if (!b || !d) return;
+    b.addEventListener('change', function () {
+        if (!b.value) return;
+        var cur = d.value || '', after = cur.indexOf('/') >= 0 ? cur.split('/').pop() : '';
+        d.value = b.value + '/' + after; d.focus();
+    });
+})();
+JS2);
 ?>

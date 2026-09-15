@@ -12,6 +12,7 @@ $items = [
     ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-graph-up-arrow', 'url' => ['/finance/cash/overview']],
     ['key' => 'income', 'label' => 'รายรับ', 'icon' => 'bi-cash-coin', 'url' => ['/finance/cash/income']],
     ['key' => 'expense', 'label' => 'รายจ่าย', 'icon' => 'bi-receipt', 'url' => ['/finance/cash/expense']],
+    ['key' => 'receipt', 'label' => 'ทะเบียนใบเสร็จ', 'icon' => 'bi-receipt-cutoff', 'url' => ['/finance/receipt']],
     ['key' => 'plan', 'label' => 'แผนประจำปี', 'icon' => 'bi-calendar3', 'url' => ['/finance/cash/plan']],
     ['key' => 'close', 'label' => 'ปิดบัญชี', 'icon' => 'bi-lock', 'url' => ['/finance/cash/close-daily']],
     ['key' => 'account', 'label' => 'บัญชีเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/account/bank']],

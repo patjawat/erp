@@ -8,6 +8,7 @@ use app\modules\finance\models\FinanceCashCategory;
 use app\modules\finance\models\FinanceCashClose;
 use app\modules\finance\models\FinanceCashPlan;
 use app\modules\finance\models\FinanceCashTxn;
+use app\modules\finance\models\FinanceReceiptBook;
 use app\modules\finance\models\FinanceCashVoucher;
 use Yii;
 use yii\data\ActiveDataProvider;
@@ -276,6 +277,7 @@ class CashController extends Controller
             'q' => $q,
             'sum' => (float) $sum,
             'tree' => FinanceCashCategory::treeArray($type),
+            'receiptBooks' => FinanceReceiptBook::issuedToEmployee($this->currentEmpId()),
         ]);
     }
 
@@ -296,6 +298,13 @@ class CashController extends Controller
         // แปลงวันที่ไทย (วว/ดด/พ.ศ.) → ค.ศ. Y-m-d ก่อน validate
         $model->doc_date = AppHelper::normalizeDateToDb($post['FinanceCashTxn']['doc_date'] ?? null);
         if ($model->save()) {
+            // เตือน (ไม่บล็อก) ถ้าเลขใบเสร็จไม่ตรงทะเบียนเล่ม/นอกช่วง/ซ้ำ/ไม่ใช่เล่มที่เบิก
+            if ($model->txn_type === FinanceCashCategory::TYPE_IN && $model->doc_no) {
+                $warn = $this->receiptWarnings($model->doc_no);
+                if ($warn) {
+                    Yii::$app->session->setFlash('warning', 'บันทึกแล้ว — ข้อควรระวังใบเสร็จ: ' . implode(' · ', $warn));
+                }
+            }
             return ['ok' => true, 'message' => 'บันทึกรายการเรียบร้อย'];
         }
         return ['ok' => false, 'errors' => $model->getErrors()];
@@ -1031,6 +1040,48 @@ class CashController extends Controller
             throw new NotFoundHttpException('ไม่พบรายการ');
         }
         return $model;
+    }
+
+    /** employee id ของผู้ใช้ปัจจุบัน (0 ถ้าไม่ผูก) */
+    private function currentEmpId(): int
+    {
+        try {
+            if (!Yii::$app->has('user')) {
+                return 0;
+            }
+            $me = \app\components\UserHelper::GetEmployee();
+            return $me ? (int) $me->id : 0;
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    /** ตรวจเลขใบเสร็จกับทะเบียนเล่ม — คืน array ข้อความเตือน (ไม่บล็อก) */
+    private function receiptWarnings(string $docNo): array
+    {
+        $parts = explode('/', $docNo, 2);
+        if (count($parts) < 2 || !ctype_digit(trim($parts[1]))) {
+            return []; // ไม่ใช่รูปแบบ "เล่ม/เลข" → ข้าม
+        }
+        $bookNo = $parts[0];
+        $num = (int) $parts[1];
+        $book = FinanceReceiptBook::find()->where(['book_no' => $bookNo])->one();
+        if (!$book) {
+            return ["ไม่พบเล่ม $bookNo ในทะเบียนใบเสร็จ"];
+        }
+        $w = [];
+        if ($num < $book->number_from || $num > $book->number_to) {
+            $w[] = "เลข {$num} อยู่นอกช่วงเล่ม ({$book->number_from}–{$book->number_to})";
+        }
+        $dup = (int) FinanceCashTxn::find()->where(['txn_type' => FinanceCashCategory::TYPE_IN, 'doc_no' => $docNo])->count();
+        if ($dup > 1) {
+            $w[] = "เลข $docNo ถูกใช้ซ้ำ ($dup ครั้ง)";
+        }
+        $empId = $this->currentEmpId();
+        if ($book->issued_to_emp_id && $empId && (int) $book->issued_to_emp_id !== $empId) {
+            $w[] = "เล่ม $bookNo เบิกให้เจ้าหน้าที่คนอื่น";
+        }
+        return $w;
     }
 
     /**
