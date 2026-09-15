@@ -19,53 +19,36 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title'); ?>
 <h4 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-calendar-check" aria-hidden="true"></i><?= Html::encode($this->title) ?></h4>
 <?php $this->endBlock();
-$this->beginBlock('sub-title'); ?>ภาพรวมทั้งปีงบ — คลิกจุดวันเพื่อดูสรุป/ยกเลิกปิด<?php $this->endBlock();
+$this->beginBlock('sub-title'); ?>ภาพรวมทั้งปีงบ — คลิกวันเพื่อดูสรุป/ยกเลิกปิด<?php $this->endBlock();
 $this->beginBlock('page-action');
 echo $this->render('@app/modules/finance/menu', ['active' => 'payment']);
 $this->endBlock();
 
-$dows = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 $mAbbr = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-$startTs = strtotime($start);
-$endTs = strtotime($end);
-$gridStartTs = $startTs - (int) date('w', $startTs) * 86400;
 $today = date('Y-m-d');
-
-// สร้างตาราง [col][row] = date | null + ป้ายเดือน
-$cols = [];
-$monthLabel = [];
-$ts = $gridStartTs;
-$c = 0;
-while ($ts <= $endTs) {
-    for ($r = 0; $r < 7; $r++) {
-        $d = date('Y-m-d', $ts);
-        $inRange = ($ts >= $startTs && $ts <= $endTs);
-        $cols[$c][$r] = $inRange ? $d : null;
-        if ($inRange && (int) date('j', $ts) === 1) {
-            $monthLabel[$c] = $mAbbr[(int) date('n', $ts)];
-        }
-        $ts += 86400;
-    }
-    $c++;
+// เดือนตามปีงบ ต.ค.(gy-1) → ก.ย.(gy)
+$fmonths = [];
+foreach ([10, 11, 12] as $m) {
+    $fmonths[] = [$gy - 1, $m];
+}
+foreach (range(1, 9) as $m) {
+    $fmonths[] = [$gy, $m];
 }
 $daySummaryUrl = Url::to(['day-summary']);
 $excelUrl = Url::to(['close-excel']);
-$activeTotal = count($activeSet);
 ?>
 
 <style>
-.fc-hm{width:14px;height:14px;border-radius:3px;margin:1px;border:1px solid rgba(0,0,0,.06)}
-.fc-hm.s-closed{background:#22c55e;cursor:pointer}
-.fc-hm.s-pending{background:#f59e0b;cursor:pointer}
-.fc-hm.s-empty{background:#e9ecef}
-.fc-hm.s-none{background:transparent;border-color:transparent}
-.fc-hm.s-today{outline:2px solid #0d6efd;outline-offset:1px}
-.fc-hm-wrap{overflow-x:auto}
-.fc-hm-tbl{border-collapse:separate;border-spacing:0}
-.fc-hm-tbl td{padding:0;text-align:center}
-.fc-hm-dow{font-size:.7rem;color:var(--bs-secondary-color);padding-right:6px!important;text-align:right;white-space:nowrap}
-.fc-hm-mo{font-size:.72rem;color:var(--bs-secondary-color);text-align:left;height:16px}
-.fc-legend span{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:3px}
+.hm2{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;min-width:760px}
+.hm2 th.hm-d{font-size:.68rem;color:var(--bs-secondary-color);text-align:center;font-weight:400;padding:0}
+.hm2 th.hm-mo{font-size:.78rem;text-align:right;white-space:nowrap;width:70px;padding-right:6px;color:var(--bs-secondary-color)}
+.hm2 .cell{height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.72rem;border:1px solid rgba(0,0,0,.05)}
+.cell.s-closed{background:#22c55e;color:#fff;cursor:pointer}
+.cell.s-pending{background:#f59e0b;color:#fff;cursor:pointer}
+.cell.s-empty{background:#eef0f2;color:#adb5bd}
+.cell.s-none{background:transparent;border-color:transparent}
+.cell.s-today{outline:2px solid #0d6efd;outline-offset:1px}
+.hm-legend span{width:13px;height:13px;border-radius:4px;display:inline-block;vertical-align:-2px;margin-right:4px}
 </style>
 
 <?= $this->render('_menu', ['active' => 'close']) ?>
@@ -86,53 +69,60 @@ $activeTotal = count($activeSet);
             <button type="submit" class="btn btn-sm btn-primary">ดู</button>
         </form>
     </div></div></div>
-    <div class="col-md-4"><div class="card border-success h-100"><div class="card-body text-center">
+    <div class="col-md-4"><div class="card border-success h-100"><div class="card-body text-center py-3">
         <div class="fs-3 fw-bold text-success"><?= number_format($closedCount) ?></div><div class="text-body-secondary small">วันที่ปิดบัญชีแล้ว</div>
     </div></div></div>
-    <div class="col-md-4"><div class="card border-warning h-100"><div class="card-body text-center">
+    <div class="col-md-4"><div class="card border-warning h-100"><div class="card-body text-center py-3">
         <div class="fs-3 fw-bold text-warning"><?= number_format($pendingCount) ?></div><div class="text-body-secondary small">วันที่มีรายการ<strong>รอปิด</strong></div>
     </div></div></div>
 </div>
 
 <div class="card border"><div class="card-body">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-        <h6 class="mb-0">ภาพรวมการปิดบัญชี ปีงบ <?= $year ?> <span class="text-body-secondary small">(ต.ค. <?= $gy + 542 ?> – ก.ย. <?= $year ?>)</span></h6>
-        <div class="fc-legend small text-body-secondary">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h6 class="mb-0">ภาพรวมการปิดบัญชี ปีงบ <?= $year ?></h6>
+        <div class="hm-legend small text-body-secondary">
             <span style="background:#22c55e"></span>ปิดแล้ว &nbsp;
             <span style="background:#f59e0b"></span>รอปิด &nbsp;
-            <span style="background:#e9ecef"></span>ไม่มีรายการ
+            <span style="background:#eef0f2"></span>ไม่มีรายการ
         </div>
     </div>
-    <div class="fc-hm-wrap"><table class="fc-hm-tbl">
-        <tr><td></td><?php foreach ($cols as $ci => $rows): ?><td class="fc-hm-mo"><?= $monthLabel[$ci] ?? '' ?></td><?php endforeach; ?></tr>
-        <?php for ($r = 0; $r < 7; $r++): ?>
-            <tr>
-                <td class="fc-hm-dow"><?= $r % 2 === 1 ? $dows[$r] : '' ?></td>
-                <?php foreach ($cols as $ci => $rows): $d = $rows[$r] ?? null; ?>
-                    <td>
-                        <?php if ($d === null): ?>
-                            <div class="fc-hm s-none"></div>
-                        <?php else:
-                            $closed = isset($closedSet[$d]);
-                            $active = isset($activeSet[$d]);
-                            $s = $closed ? 's-closed' : ($active ? 's-pending' : 's-empty');
-                            $clickable = $closed || $active;
-                            $tip = $d . ($closed ? ' • ปิดบัญชีแล้ว' : ($active ? ' • มีรายการ (ยังไม่ปิด)' : ' • ไม่มีรายการ'));
-                            ?>
-                            <div class="fc-hm <?= $s ?><?= $d === $today ? ' s-today' : '' ?>" title="<?= Html::encode($tip) ?>"
-                                <?= $clickable ? 'data-day="' . $d . '"' : '' ?>></div>
-                        <?php endif; ?>
-                    </td>
-                <?php endforeach; ?>
-            </tr>
-        <?php endfor; ?>
+    <div style="overflow-x:auto"><table class="hm2">
+        <thead><tr>
+            <th class="hm-mo"></th>
+            <?php for ($d = 1; $d <= 31; $d++): ?><th class="hm-d"><?= $d ?></th><?php endfor; ?>
+        </tr></thead>
+        <tbody>
+            <?php foreach ($fmonths as [$Y, $m]):
+                $days = (int) date('t', mktime(0, 0, 0, $m, 1, $Y)); ?>
+                <tr>
+                    <th class="hm-mo"><?= $mAbbr[$m] ?> <?= substr((string) ($Y + 543), -2) ?></th>
+                    <?php for ($d = 1; $d <= 31; $d++): ?>
+                        <td>
+                            <?php if ($d > $days): ?>
+                                <div class="cell s-none"></div>
+                            <?php else:
+                                $date = sprintf('%04d-%02d-%02d', $Y, $m, $d);
+                                $closed = isset($closedSet[$date]);
+                                $active = isset($activeSet[$date]);
+                                $s = $closed ? 's-closed' : ($active ? 's-pending' : 's-empty');
+                                $click = $closed || $active;
+                                $tip = $date . ($closed ? ' • ปิดบัญชีแล้ว' : ($active ? ' • มีรายการ (รอปิด)' : ' • ไม่มีรายการ'));
+                                ?>
+                                <div class="cell <?= $s ?><?= $date === $today ? ' s-today' : '' ?>" title="<?= Html::encode($tip) ?>"
+                                    <?= $click ? 'data-day="' . $date . '"' : '' ?>><?= $d ?></div>
+                            <?php endif; ?>
+                        </td>
+                    <?php endfor; ?>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
     </table></div>
-    <?php if ($activeTotal === 0): ?>
+    <?php if (count($activeSet) === 0): ?>
         <div class="text-body-secondary small mt-3">ยังไม่มีรายการรับ-จ่ายในปีงบนี้</div>
     <?php endif; ?>
 </div></div>
 
-<!-- Modal สรุปรายวัน (คลิกจุด) -->
+<!-- Modal สรุปรายวัน (คลิกวัน) -->
 <div class="modal fade" id="daySumModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header"><h5 class="modal-title">สรุป ปิดบัญชี วันที่ <span id="ds-date"></span></h5>
