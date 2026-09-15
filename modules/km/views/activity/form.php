@@ -3,7 +3,10 @@
 use app\components\AppHelper;
 use app\widgets\datepicker\DatepickerThai;
 use app\modules\km\models\KmActivity;
+use app\modules\km\models\KmCategory;
+use kartik\select2\Select2;
 use kartik\time\TimePicker;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
@@ -50,7 +53,13 @@ $invalid = static fn (array $err, string $attr): string => empty($err[$attr]) ? 
 
                     <div class="col-md-4">
                         <label class="form-label">หมวดหมู่</label>
-                        <?= Html::dropDownList('KmActivity[category_id]', $model->category_id, \app\modules\km\models\KmCategory::dropdownMap(), ['class' => 'form-select', 'prompt' => '— เลือกหมวด —']) ?>
+                        <?= Select2::widget([
+                            'name' => 'KmActivity[category_id]',
+                            'value' => $model->category_id,
+                            'data' => KmCategory::dropdownMap(),
+                            'options' => ['placeholder' => '— เลือกหมวด —'],
+                            'pluginOptions' => ['allowClear' => true],
+                        ]) ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">ปีงบประมาณ <span class="text-danger">*</span></label>
@@ -59,7 +68,13 @@ $invalid = static fn (array $err, string $attr): string => empty($err[$attr]) ? 
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">หน่วยงานเจ้าภาพ</label>
-                        <?= Html::dropDownList('KmActivity[owner_unit_id]', $model->owner_unit_id, array_column($units, 'name', 'id'), ['class' => 'form-select', 'prompt' => '— เลือกหน่วยงาน —']) ?>
+                        <?= Select2::widget([
+                            'name' => 'KmActivity[owner_unit_id]',
+                            'value' => $model->owner_unit_id,
+                            'data' => ArrayHelper::map($units, 'id', 'name'),
+                            'options' => ['placeholder' => '— เลือกหน่วยงาน —'],
+                            'pluginOptions' => ['allowClear' => true],
+                        ]) ?>
                     </div>
 
                     <div class="col-md-4">

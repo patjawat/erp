@@ -1,6 +1,9 @@
 <?php
 
 use app\components\AppHelper;
+use app\modules\km\models\KmCategory;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\LinkPager;
@@ -55,11 +58,25 @@ $statusTone = ['draft' => 'secondary', 'published' => 'success'];
                 </div>
                 <div class="col-6 col-md-3">
                     <label class="form-label small mb-1">หมวดหมู่</label>
-                    <?= Html::dropDownList('category_id', $filters['category_id'], ['' => 'ทั้งหมด'] + \app\modules\km\models\KmCategory::dropdownMap(), ['class' => 'form-select form-select-sm']) ?>
+                    <?= Select2::widget([
+                        'name' => 'category_id',
+                        'value' => $filters['category_id'],
+                        'data' => KmCategory::dropdownMap(),
+                        'options' => ['placeholder' => 'ทั้งหมด'],
+                        'size' => Select2::SMALL,
+                        'pluginOptions' => ['allowClear' => true],
+                    ]) ?>
                 </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label small mb-1">หน่วยงานเจ้าภาพ</label>
-                    <?= Html::dropDownList('unit_id', $filters['unit_id'], ['' => 'ทั้งหมด'] + array_column($units, 'name', 'id'), ['class' => 'form-select form-select-sm']) ?>
+                    <?= Select2::widget([
+                        'name' => 'unit_id',
+                        'value' => $filters['unit_id'],
+                        'data' => ArrayHelper::map($units, 'id', 'name'),
+                        'options' => ['placeholder' => 'ทั้งหมด'],
+                        'size' => Select2::SMALL,
+                        'pluginOptions' => ['allowClear' => true],
+                    ]) ?>
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label small mb-1">สถานะ</label>

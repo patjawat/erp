@@ -21,12 +21,20 @@ $parentOptions = ArrayHelper::map($topCategories, 'id', 'name');
 /** แถวหนึ่งในตาราง — $child=true จะเยื้องเข้าไป */
 $row = function ($c, bool $child) use ($byParent) {
     $hasChildren = !empty($byParent[(int) $c->id]);
+    $attrs = 'data-cat-row data-name="' . Html::encode(mb_strtolower($c->name)) . '" ';
+    $attrs .= $child ? ('data-child-of="' . (int) $c->parent_id . '"') : ('data-top-id="' . (int) $c->id . '"');
     ob_start();
     ?>
-    <tr>
+    <tr <?= $attrs ?>>
         <td class="text-body-secondary"><?= (int) $c->sort ?></td>
         <td>
-            <?php if ($child): ?><span class="text-body-secondary ms-3 me-1">└</span><?php endif; ?>
+            <?php if ($child): ?>
+                <span class="text-body-secondary ms-3 me-1">└</span>
+            <?php elseif ($hasChildren): ?>
+                <button type="button" class="btn btn-sm btn-link p-0 me-1 text-body-secondary km-cat-toggle" data-toggle-id="<?= (int) $c->id ?>" aria-label="ย่อ/ขยายหมวดย่อย"><i class="bi bi-chevron-down"></i></button>
+            <?php else: ?>
+                <span class="d-inline-block me-1" style="width:1rem"></span>
+            <?php endif; ?>
             <?php if ($c->icon): ?><i class="bi <?= Html::encode($c->icon) ?> me-1" <?= $c->color ? 'style="color:' . Html::encode($c->color) . '"' : '' ?>></i><?php endif; ?>
             <?= Html::encode($c->name) ?>
             <?php if (!$child && $hasChildren): ?><span class="badge text-bg-light border ms-1"><?= count($byParent[(int) $c->id]) ?> ย่อย</span><?php endif; ?>
@@ -72,12 +80,18 @@ $row = function ($c, bool $child) use ($byParent) {
         <div class="col-lg-8">
             <div class="card border shadow-sm">
                 <div class="card-body">
-                    <h2 class="h6 fw-semibold mb-3">รายการหมวด <span class="text-body-secondary fw-normal small">(หมวดหลัก → หมวดย่อย)</span></h2>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h2 class="h6 fw-semibold mb-0">รายการหมวด <span class="text-body-secondary fw-normal small">(หมวดหลัก → หมวดย่อย)</span></h2>
+                        <div class="input-group input-group-sm" style="width:auto">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" id="km-cat-search" placeholder="ค้นหาหมวด..." style="min-width:180px" autocomplete="off">
+                        </div>
+                    </div>
                     <?php if (!$categories): ?>
                         <div class="text-body-secondary small">ยังไม่มีหมวด — เพิ่มได้จากแบบฟอร์มด้านขวา</div>
                     <?php else: ?>
                         <div class="table-responsive">
-                            <table class="table table-sm align-middle mb-0">
+                            <table class="table table-sm align-middle mb-0" id="km-cat-table">
                                 <thead><tr>
                                     <th style="width:60px">ลำดับ</th><th>ชื่อหมวด</th><th style="width:90px">สถานะ</th><th style="width:170px"></th>
                                 </tr></thead>
@@ -91,6 +105,7 @@ $row = function ($c, bool $child) use ($byParent) {
                                 </tbody>
                             </table>
                         </div>
+                        <div class="text-body-secondary small mt-2" id="km-cat-empty" hidden><i class="bi bi-inbox me-1"></i>ไม่พบหมวดที่ตรงกับคำค้น</div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -148,6 +163,8 @@ $js = <<<'JS'
     function setVal(id, v){ var el = document.getElementById(id); if (el) el.value = v; }
     var parentSel = document.getElementById('km-cat-parent');
     var parentHint = document.getElementById('km-cat-parent-hint');
+
+    // แก้ไข: เติมค่าเข้าฟอร์ม
     document.querySelectorAll('.km-cat-edit').forEach(function(btn){
         btn.addEventListener('click', function(){
             var d = btn.dataset;
@@ -156,7 +173,6 @@ $js = <<<'JS'
             setVal('km-cat-sort', d.sort || '0');
             setVal('km-cat-parent', d.parent && d.parent !== '0' ? d.parent : '');
             document.getElementById('km-cat-active').checked = (d.active === '1');
-            // หมวดที่มีลูก ห้ามตั้งเป็นหมวดย่อย (กัน 3 ชั้น)
             var lockParent = (d.haschildren === '1');
             if (parentSel) { parentSel.disabled = lockParent; if (lockParent) parentSel.value = ''; }
             if (parentHint) parentHint.hidden = !lockParent;
@@ -164,6 +180,8 @@ $js = <<<'JS'
             f.scrollIntoView({behavior:'smooth', block:'center'});
         });
     });
+
+    // เพิ่มหมวดย่อย: เปิดฟอร์มใหม่ พร้อมเลือกหมวดแม่ให้
     document.querySelectorAll('.km-cat-addsub').forEach(function(btn){
         btn.addEventListener('click', function(){
             f.reset(); setVal('km-cat-id','');
@@ -175,6 +193,7 @@ $js = <<<'JS'
             var nameEl = document.getElementById('km-cat-name'); if (nameEl) nameEl.focus();
         });
     });
+
     var reset = document.getElementById('km-cat-reset');
     if (reset) reset.addEventListener('click', function(){
         f.reset(); setVal('km-cat-id','');
@@ -182,6 +201,56 @@ $js = <<<'JS'
         if (parentHint) parentHint.hidden = true;
         document.getElementById('km-cat-active').checked = true;
         document.getElementById('km-cat-form-title').textContent = 'เพิ่มหมวดใหม่';
+    });
+
+    // พับ/ขยายหมวดย่อยของหมวดหลัก
+    var collapsed = {};
+    function childrenOf(id){ return document.querySelectorAll('[data-child-of="' + id + '"]'); }
+    document.querySelectorAll('.km-cat-toggle').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var id = btn.dataset.toggleId;
+            collapsed[id] = !collapsed[id];
+            childrenOf(id).forEach(function(tr){ tr.hidden = collapsed[id]; });
+            var icon = btn.querySelector('i');
+            if (icon) icon.className = collapsed[id] ? 'bi bi-chevron-right' : 'bi bi-chevron-down';
+        });
+    });
+
+    // ค้นหา: กรองแถวตามชื่อ (เจอลูก→โชว์แม่ด้วย, เจอแม่→โชว์ลูกด้วย)
+    var search = document.getElementById('km-cat-search');
+    var emptyMsg = document.getElementById('km-cat-empty');
+    if (search) search.addEventListener('input', function(){
+        var q = (search.value || '').trim().toLowerCase();
+        var rows = document.querySelectorAll('[data-cat-row]');
+        if (q === ''){
+            rows.forEach(function(tr){
+                var of = tr.getAttribute('data-child-of');
+                tr.hidden = of ? !!collapsed[of] : false; // คืนสถานะพับ
+            });
+            if (emptyMsg) emptyMsg.hidden = true;
+            return;
+        }
+        var showTop = {};
+        rows.forEach(function(tr){
+            var match = (tr.getAttribute('data-name') || '').indexOf(q) !== -1;
+            if (match){
+                var of = tr.getAttribute('data-child-of');
+                if (of) showTop[of] = true;                 // ลูกเจอ → จำว่าแม่ต้องโชว์
+                var top = tr.getAttribute('data-top-id');
+                if (top) showTop[top] = true;               // แม่เจอ → โชว์แม่ (ลูกจะถูกโชว์ผ่านลูป)
+            }
+        });
+        var any = false;
+        rows.forEach(function(tr){
+            var name = tr.getAttribute('data-name') || '';
+            var of = tr.getAttribute('data-child-of');
+            var top = tr.getAttribute('data-top-id');
+            var match = name.indexOf(q) !== -1;
+            var show = match || (of && showTop[of]) || (top && showTop[top]);
+            tr.hidden = !show;
+            if (show) any = true;
+        });
+        if (emptyMsg) emptyMsg.hidden = any;
     });
 })();
 JS;
