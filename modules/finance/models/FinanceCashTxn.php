@@ -31,11 +31,12 @@ class FinanceCashTxn extends ActiveRecord
     public const TYPE_IN = 'IN';
     public const TYPE_OUT = 'OUT';
 
-    /** วิธีรับ/จ่าย — เลือกทีละอัน (ตามพฤติกรรม mophcash ที่คอลัมน์ "ประเภท" โชว์ค่าเดียว) */
+    /** วิธีรับ (ฝั่งรายรับ) — เลือกทีละอัน; ฝั่งจ่ายใช้ FinanceCashVoucher::PAY_METHODS แทน */
     public const PAY_METHODS = [
         'cash' => 'เงินสด',
         'transfer' => 'โอน',
         'cheque' => 'เช็ค',
+        'promptpay' => 'พร้อมเพย์',
         'credit' => 'บัตรเครดิต',
     ];
 
@@ -61,7 +62,9 @@ class FinanceCashTxn extends ActiveRecord
             [['amount'], 'number', 'min' => 0.01],
             [['doc_no'], 'string', 'max' => 64],
             [['party_name'], 'string', 'max' => 255],
-            [['pay_method'], 'in', 'range' => array_keys(self::PAY_METHODS)],
+            [['pay_method'], 'in', 'range' => array_merge(array_keys(self::PAY_METHODS), array_keys(FinanceCashVoucher::PAY_METHODS))],
+            [['voucher_id'], 'integer'],
+            [['bc_ref'], 'string', 'max' => 64],
             [['note'], 'string'],
             [['is_closed'], 'default', 'value' => 0],
             [['category_id'], 'exist', 'targetClass' => FinanceCashCategory::class, 'targetAttribute' => 'id'],
@@ -98,6 +101,11 @@ class FinanceCashTxn extends ActiveRecord
     public function getCategory()
     {
         return $this->hasOne(FinanceCashCategory::class, ['id' => 'category_id']);
+    }
+
+    public function getVoucher()
+    {
+        return $this->hasOne(FinanceCashVoucher::class, ['id' => 'voucher_id']);
     }
 
     public function payMethodLabel(): string
