@@ -8,6 +8,8 @@ use app\modules\finance\models\FinanceCashCategory;
 use app\modules\finance\models\FinanceCashClose;
 use app\modules\finance\models\FinanceCashPlan;
 use app\modules\finance\models\FinanceCashTxn;
+use app\modules\finance\models\FinanceCashYearClose;
+use app\modules\finance\models\FinanceCashYearCloseItem;
 use app\modules\finance\models\FinanceReceiptBook;
 use app\modules\finance\models\FinanceCashVoucher;
 use Yii;
@@ -40,6 +42,7 @@ class CashController extends Controller
                     'voucher-delete' => ['post'],
                     'seed-accounts' => ['post'],
                     'plan-save' => ['post'],
+                    'close-yearly-save' => ['post'],
                     'close-do' => ['post'],
                     'category-save' => ['post'],
                     'category-delete' => ['post'],
@@ -774,10 +777,143 @@ class CashController extends Controller
         return $this->render('close_summary', ['fy' => $fy, 'batches' => $batches]);
     }
 
-    public function actionCloseYearly($year = null)
+    public function actionCloseYearly($year = null, $sync = 0)
     {
         $fy = (int) ($year ?: FinanceCashTxn::currentFiscalYear());
-        return $this->render('close_yearly', ['fy' => $fy, 'data' => $this->yearlyReport($fy)]);
+        return $this->render('close_yearly', ['fy' => $fy] + $this->yearCloseWorksheet($fy, (bool) $sync));
+    }
+
+    public function actionCloseYearlySave()
+    {
+        $post = Yii::$app->request->post();
+        $fy = (int) ($post['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+
+        $head = FinanceCashYearClose::findOne(['fiscal_year' => $fy]) ?: new FinanceCashYearClose(['fiscal_year' => $fy]);
+        foreach (['carried_forward', 'fund_pending', 'obligation', 'purchase_obligation',
+            'cash_amount', 'treasury_amount', 'bank_fixed', 'bank_savings', 'bank_current'] as $f) {
+            $head->$f = $post[$f] ?? 0;
+        }
+        $head->save();
+
+        foreach ((array) ($post['item'] ?? []) as $catId => $amt) {
+            $catId = (int) $catId;
+            $amt = (float) str_replace([',', ' '], '', (string) $amt);
+            $row = FinanceCashYearCloseItem::findOne(['fiscal_year' => $fy, 'category_id' => $catId]);
+            if (!$row && $amt == 0.0) {
+                continue;
+            }
+            if (!$row) {
+                $row = new FinanceCashYearCloseItem(['fiscal_year' => $fy, 'category_id' => $catId]);
+            }
+            $row->amount = $amt;
+            $row->save();
+        }
+        Yii::$app->session->setFlash('success', 'บันทึกปิดบัญชีประจำปีเรียบร้อย');
+        return $this->redirect(['close-yearly', 'year' => $fy]);
+    }
+
+    /** worksheet ปิดบัญชีประจำปี — ยอดหมวดแก้ได้ (ซิงค์จาก txn) + reconciliation + composition */
+    private function yearCloseWorksheet(int $fy, bool $sync): array
+    {
+        // ยอดจริงต่อหมวดจาก txn (ใช้ตอนซิงค์ หรือเมื่อยังไม่เคยบันทึก)
+        $actual = [];
+        foreach (FinanceCashTxn::find()->select(['category_id', 's' => 'SUM(amount)'])
+            ->where(['fiscal_year' => $fy])->groupBy('category_id')->asArray()->all() as $r) {
+            $actual[(int) $r['category_id']] = (float) $r['s'];
+        }
+        $savedItems = [];
+        foreach (FinanceCashYearCloseItem::find()->where(['fiscal_year' => $fy])->asArray()->all() as $r) {
+            $savedItems[(int) $r['category_id']] = (float) $r['amount'];
+        }
+        $head = FinanceCashYearClose::findOne(['fiscal_year' => $fy]);
+        $hasSaved = $head !== null;
+
+        $val = function ($catId) use ($sync, $savedItems, $actual) {
+            if (!$sync && isset($savedItems[$catId])) {
+                return $savedItems[$catId];
+            }
+            return $actual[$catId] ?? 0.0;
+        };
+
+        $types = [];
+        $totIn = 0.0;
+        $totOut = 0.0;
+        foreach ([FinanceCashCategory::TYPE_IN, FinanceCashCategory::TYPE_OUT] as $type) {
+            $tree = FinanceCashCategory::treeArray($type);
+            $childrenOf = [];
+            foreach ($tree as $n) {
+                $childrenOf[(int) ($n['parent_id'] ?? 0)][] = $n;
+            }
+            $leaves = function ($id) use (&$leaves, $childrenOf) {
+                $kids = $childrenOf[(int) $id] ?? [];
+                if (!$kids) {
+                    return [];
+                }
+                $out = [];
+                foreach ($kids as $k) {
+                    $sub = $leaves($k['id']);
+                    $out = $sub ? array_merge($out, $sub) : array_merge($out, [$k]);
+                }
+                return $out;
+            };
+            $groups = [];
+            foreach ($childrenOf[0] ?? [] as $group) {
+                $rows = [];
+                $sub = 0.0;
+                foreach ($leaves($group['id']) as $leaf) {
+                    $a = $val((int) $leaf['id']);
+                    $sub += $a;
+                    $rows[] = ['id' => (int) $leaf['id'], 'name' => $leaf['name'], 'amount' => $a];
+                }
+                $groups[] = ['name' => $group['name'], 'rows' => $rows, 'subtotal' => $sub];
+                if ($type === FinanceCashCategory::TYPE_IN) {
+                    $totIn += $sub;
+                } else {
+                    $totOut += $sub;
+                }
+            }
+            $types[$type] = $groups;
+        }
+
+        // หัว (reconciliation + composition)
+        $fields = ['carried_forward', 'fund_pending', 'obligation', 'purchase_obligation',
+            'cash_amount', 'treasury_amount', 'bank_fixed', 'bank_savings', 'bank_current'];
+        $H = [];
+        foreach ($fields as $f) {
+            $H[$f] = $hasSaved && !$sync ? (float) $head->$f : 0.0;
+        }
+        // ตอนซิงค์ (หรือยังไม่เคยบันทึก) → เติม composition จากยอดคงเหลือบัญชีของปีงบ
+        if ($sync || !$hasSaved) {
+            $H['cash_amount'] = $this->accTypeBalance($fy, FinanceCashAccount::TYPE_CASH);
+            $H['treasury_amount'] = $this->accTypeBalance($fy, FinanceCashAccount::TYPE_TREASURY);
+            $H['bank_fixed'] = $this->accTypeBalance($fy, FinanceCashAccount::TYPE_BANK, 'ฝากประจำ');
+            $H['bank_savings'] = $this->accTypeBalance($fy, FinanceCashAccount::TYPE_BANK, 'ออมทรัพย์');
+            $H['bank_current'] = $this->accTypeBalance($fy, FinanceCashAccount::TYPE_BANK, 'กระแสรายวัน');
+        }
+
+        $net = $totIn - $totOut;
+        $balance1 = $net + $H['carried_forward'];
+        $balanceAfter = $balance1 - $H['fund_pending'] - $H['obligation'] - $H['purchase_obligation'];
+        $comp2 = $H['cash_amount'] + $H['treasury_amount'] + $H['bank_fixed'] + $H['bank_savings'] + $H['bank_current'];
+
+        return [
+            'types' => $types, 'totIn' => $totIn, 'totOut' => $totOut, 'net' => $net,
+            'H' => $H, 'balance1' => $balance1, 'balanceAfter' => $balanceAfter, 'comp2' => $comp2,
+            'hasSaved' => $hasSaved,
+        ];
+    }
+
+    private function accTypeBalance(int $fy, string $type, ?string $deposit = null): float
+    {
+        $q = FinanceCashAccount::find()->where(['account_type' => $type]);
+        if ($deposit !== null) {
+            $q->andWhere(['deposit_type' => $deposit]);
+        }
+        $sum = 0.0;
+        foreach ($q->all() as $a) {
+            $sum += $a->balanceFor($fy);
+        }
+        return $sum;
     }
 
     /** สรุปประจำวันแยกตามวิธีรับ/จ่าย (รับจาก txn เดี่ยว, จ่ายจาก voucher) */
