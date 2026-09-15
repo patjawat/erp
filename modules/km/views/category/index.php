@@ -33,6 +33,13 @@ $row = function ($c, bool $child) use ($byParent) {
         </td>
         <td><?= $c->is_active ? '<span class="badge text-bg-success">เปิด</span>' : '<span class="badge text-bg-secondary">ปิด</span>' ?></td>
         <td class="text-end">
+            <?php if (!$child): ?>
+                <button type="button" class="btn btn-sm btn-outline-primary km-cat-addsub"
+                    data-parent-id="<?= $c->id ?>" data-parent-name="<?= Html::encode($c->name) ?>"
+                    title="เพิ่มหมวดย่อยใน <?= Html::encode($c->name) ?>">
+                    <i class="bi bi-plus-lg"></i><span class="d-none d-xl-inline"> ย่อย</span>
+                </button>
+            <?php endif; ?>
             <button type="button" class="btn btn-sm btn-outline-secondary km-cat-edit"
                 data-id="<?= $c->id ?>" data-name="<?= Html::encode($c->name) ?>"
                 data-icon="<?= Html::encode($c->icon) ?>" data-color="<?= Html::encode($c->color) ?>"
@@ -72,7 +79,7 @@ $row = function ($c, bool $child) use ($byParent) {
                         <div class="table-responsive">
                             <table class="table table-sm align-middle mb-0">
                                 <thead><tr>
-                                    <th style="width:60px">ลำดับ</th><th>ชื่อหมวด</th><th style="width:90px">สถานะ</th><th style="width:110px"></th>
+                                    <th style="width:60px">ลำดับ</th><th>ชื่อหมวด</th><th style="width:90px">สถานะ</th><th style="width:170px"></th>
                                 </tr></thead>
                                 <tbody>
                                 <?php foreach ($tops as $top): ?>
@@ -155,6 +162,17 @@ $js = <<<'JS'
             if (parentHint) parentHint.hidden = !lockParent;
             document.getElementById('km-cat-form-title').textContent = 'แก้ไขหมวด: ' + d.name;
             f.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+    });
+    document.querySelectorAll('.km-cat-addsub').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            f.reset(); setVal('km-cat-id','');
+            document.getElementById('km-cat-active').checked = true;
+            if (parentSel) { parentSel.disabled = false; parentSel.value = btn.dataset.parentId; }
+            if (parentHint) parentHint.hidden = true;
+            document.getElementById('km-cat-form-title').textContent = 'เพิ่มหมวดย่อยใน: ' + btn.dataset.parentName;
+            f.scrollIntoView({behavior:'smooth', block:'center'});
+            var nameEl = document.getElementById('km-cat-name'); if (nameEl) nameEl.focus();
         });
     });
     var reset = document.getElementById('km-cat-reset');
