@@ -313,6 +313,8 @@ $config = [
             // เครื่องมือ (hub) + ผังกระบวนการ — เปิดให้ผู้ล็อกอินทุกคน controller ใช้ roles=['@']
             'tools/*',
             'flowchart/*',
+            // Leave: ประวัติการแก้ไขใบลา — controller ตรวจสิทธิ์ผู้ดูแลระบบลา (can('leave')) ภายในเอง
+            'leave/leave/edit-history',
             // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
             // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
             // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission
