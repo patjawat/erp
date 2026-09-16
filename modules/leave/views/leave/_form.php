@@ -377,9 +377,23 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
         </div>
 
         <?php $approveSteps = $isUpdate ? $model->listApprove() : []; ?>
+        <?php $canEditApprover = $isUpdate && Yii::$app->user->can('leave'); ?>
         <?php if (!empty($approveSteps)): ?>
             <div class="mb-3">
-                <label class="form-label">ลำดับผู้อนุมัติ</label>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <label class="form-label mb-0">ลำดับผู้อนุมัติ</label>
+                    <?php if ($canEditApprover): ?>
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">
+                            <i class="bi bi-person-gear me-1"></i> ผู้ดูแลแก้ไขผู้อนุมัติได้
+                        </span>
+                    <?php endif; ?>
+                </div>
+                <?php if ($canEditApprover): ?>
+                    <div class="form-text mb-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        เลือกชื่อในช่องที่ยังไม่ระบุ แล้วกด "บันทึกผู้อนุมัติ" (บันทึกแยกจากข้อมูลใบลา)
+                    </div>
+                <?php endif; ?>
                 <div class="leave-flow">
                     <?php foreach ($approveSteps as $step): ?>
                         <?php
@@ -402,14 +416,32 @@ $resolveEmpId = (int) ($model->emp_id ?? 0);
                             </span>
                             <span class="leave-flow__text">
                                 <span class="leave-flow__title"><?= Html::encode($stepTitle) ?></span>
-                                <span class="leave-flow__name">
-                                    <?= Html::encode($approveEmployee ? $approveEmployee->fullname : 'ยังไม่ระบุผู้อนุมัติ') ?>
-                                </span>
+                                <?php if ($canEditApprover): ?>
+                                    <select class="form-select form-select-sm leave-approver-picker mt-1"
+                                            id="leave-approver-<?= (int) $step->id ?>"
+                                            data-approve-id="<?= (int) $step->id ?>">
+                                        <option></option>
+                                        <?php if ($approveEmployee): ?>
+                                            <option value="<?= (int) $approveEmployee->id ?>" selected><?= Html::encode($approveEmployee->fullname) ?></option>
+                                        <?php endif; ?>
+                                    </select>
+                                <?php else: ?>
+                                    <span class="leave-flow__name">
+                                        <?= Html::encode($approveEmployee ? $approveEmployee->fullname : 'ยังไม่ระบุผู้อนุมัติ') ?>
+                                    </span>
+                                <?php endif; ?>
                             </span>
                             <?= $step->viewApproveStatus() ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <?php if ($canEditApprover): ?>
+                    <div class="d-flex justify-content-end mt-2">
+                        <button type="button" class="btn btn-sm btn-warning rounded-3" id="btn-save-approvers">
+                            <i class="bi bi-save me-1"></i> บันทึกผู้อนุมัติ
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
@@ -950,4 +982,66 @@ $sigJs = <<<JS
 })();
 JS;
 $this->registerJs($sigJs, \yii\web\View::POS_END);
+
+// ── แก้ไขผู้อนุมัติ (admin) — Select2 + บันทึกแยกผ่าน AJAX ────────────────
+if (!empty($canEditApprover)) {
+    $approverSearchUrl = \yii\helpers\Url::to(['/leave/leave/search-employee']);
+    $saveApproversUrl  = \yii\helpers\Url::to(['/leave/approver/save-approvers', 'id' => $model->id]);
+    $csrfParamApprover = \Yii::$app->request->csrfParam;
+    $csrfTokenApprover = \Yii::$app->request->csrfToken;
+    $approverJs = <<<JS
+(function(){
+    if (typeof jQuery === 'undefined') return;
+    var jq = jQuery;
+    var searchUrl = "{$approverSearchUrl}";
+    var saveUrl   = "{$saveApproversUrl}";
+    var csrfParam = "{$csrfParamApprover}";
+    var csrfToken = "{$csrfTokenApprover}";
+    var modalParent = jq('#main-modal').length ? jq('#main-modal') : jq(document.body);
+
+    jq('.leave-approver-picker').each(function(){
+        var el = jq(this);
+        if (el.hasClass('select2-hidden-accessible')) return;
+        el.select2({
+            placeholder: 'ค้นหาชื่อผู้อนุมัติ...',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: modalParent,
+            minimumInputLength: 1,
+            ajax: {
+                url: searchUrl,
+                dataType: 'json',
+                delay: 250,
+                data: function(params){ return { q: params.term }; },
+                processResults: function(data){ return { results: data.results }; },
+                cache: true
+            }
+        });
+    });
+
+    jq('#btn-save-approvers').off('click.saveApprovers').on('click.saveApprovers', function(){
+        var approves = {};
+        jq('.leave-approver-picker').each(function(){
+            approves[jq(this).data('approve-id')] = jq(this).val() || '';
+        });
+        var payload = { approves: approves };
+        payload[csrfParam] = csrfToken;
+        Swal.fire({ title: 'บันทึกผู้อนุมัติ?', icon: 'question', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก' }).then(function(r){
+            if (!r.isConfirmed) return;
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: function(){ Swal.showLoading(); } });
+            jq.ajax({ url: saveUrl, type: 'post', data: payload, dataType: 'json' })
+                .done(function(res){
+                    if (res && res.status === 'success') {
+                        Swal.fire({ icon: 'success', title: res.message || 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 }).then(function(){ location.reload(); });
+                    } else {
+                        Swal.fire({ icon: 'error', text: (res && res.message) ? res.message : 'บันทึกไม่สำเร็จ' });
+                    }
+                })
+                .fail(function(){ Swal.fire({ icon: 'error', text: 'เกิดข้อผิดพลาด' }); });
+        });
+    });
+})();
+JS;
+    $this->registerJs($approverJs, \yii\web\View::POS_END);
+}
 ?>

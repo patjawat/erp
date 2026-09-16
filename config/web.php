@@ -318,6 +318,8 @@ $config = [
             'flowchart/*',
             // Leave: ประวัติการแก้ไขใบลา — controller ตรวจสิทธิ์ผู้ดูแลระบบลา (can('leave')) ภายในเอง
             'leave/leave/edit-history',
+            // Leave: เติม/แก้ไขผู้อนุมัติที่ยังไม่ระบุ — controller ตรวจ can('leave') ภายในเอง
+            'leave/approver/save-approvers',
             // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
             // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
             // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission
