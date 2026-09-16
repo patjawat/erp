@@ -10,6 +10,7 @@ $items = [
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/accounting/payable']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'chart', 'label' => 'ผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/accounting/chart']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'journal', 'label' => 'รายการบัญชีร่าง', 'icon' => 'bi-journal-check', 'url' => ['/accounting/journal']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'ledger', 'label' => 'บัญชีแยกประเภท', 'icon' => 'bi-book', 'url' => ['/accounting/ledger']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'vendor-reconciliation', 'label' => 'ตรวจผู้ขาย', 'icon' => 'bi-person-check', 'url' => ['/accounting/vendor-reconciliation']],
 ];
 ?>
@@ -28,7 +29,6 @@ $items = [
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-person-lines-fill me-2"></i>ทะเบียนลูกหนี้</button></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-box-seam me-2"></i>สินค้าคงคลังทางบัญชี</button></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-building me-2"></i>สินทรัพย์และค่าเสื่อมราคา</button></li>
-            <li><button class="dropdown-item" type="button" disabled><i class="bi bi-book me-2"></i>บัญชีแยกประเภท</button></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-calendar-check me-2"></i>ปิดงวดและรายงาน</button></li>
         </ul>

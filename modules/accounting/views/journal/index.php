@@ -14,6 +14,6 @@ $this->beginBlock('page-action'); ?><div class="d-flex flex-wrap gap-2"><?= $thi
  ['attribute'=>'description','label'=>'คำอธิบาย'],['attribute'=>'fiscal_year','label'=>'ปีงบประมาณ'],
  ['attribute'=>'total_debit','label'=>'เดบิต','format'=>['decimal',2],'contentOptions'=>['class'=>'text-end'],'headerOptions'=>['class'=>'text-end']],
  ['attribute'=>'total_credit','label'=>'เครดิต','format'=>['decimal',2],'contentOptions'=>['class'=>'text-end'],'headerOptions'=>['class'=>'text-end']],
- ['attribute'=>'status','label'=>'สถานะ','format'=>'raw','value'=>fn(AccountingJournalDraft $m)=>Html::tag('span','ร่าง',['class'=>'badge bg-warning-subtle text-warning-emphasis'])],
+ ['attribute'=>'status','label'=>'สถานะ','format'=>'raw','value'=>fn(AccountingJournalDraft $m)=>$m->status===AccountingJournalDraft::STATUS_POSTED?Html::tag('span','ผ่านรายการแล้ว',['class'=>'badge bg-success-subtle text-success-emphasis']):Html::tag('span','ร่าง',['class'=>'badge bg-warning-subtle text-warning-emphasis'])],
 ],'emptyText'=>'ยังไม่มีรายการบัญชีร่าง','emptyTextOptions'=>['class'=>'text-center text-body-secondary py-5']]) ?>
 </div></section>
