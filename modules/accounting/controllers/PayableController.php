@@ -14,6 +14,7 @@ use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
 use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
+use app\modules\accounting\models\AccountingChartAccount;
 use app\modules\sm\models\Vendor;
 
 class PayableController extends Controller
@@ -60,7 +61,7 @@ class PayableController extends Controller
                 Yii::$app->session->setFlash('success', 'สร้างร่างทะเบียนเจ้าหนี้เรียบร้อยแล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
             } catch (\DomainException $e) {
-                $model->addError('invoice_no', $e->getMessage());
+                $model->addError($this->domainErrorAttribute($e), $e->getMessage());
             } catch (\Throwable $e) {
                 Yii::error($e, __METHOD__);
                 $model->addError('invoice_no', 'สร้างร่างทะเบียนเจ้าหนี้ไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
@@ -87,7 +88,7 @@ class PayableController extends Controller
                 Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขร่างทะเบียนเจ้าหนี้แล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
             } catch (\DomainException $e) {
-                $model->addError('invoice_no', $e->getMessage());
+                $model->addError($this->domainErrorAttribute($e), $e->getMessage());
             } catch (\Throwable $e) {
                 Yii::error($e, __METHOD__);
                 $model->addError('invoice_no', 'บันทึกการแก้ไขไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
@@ -135,10 +136,26 @@ class PayableController extends Controller
     private function renderForm(FinancePayable $model, FinanceInbox $inbox)
     {
         $vendors = Vendor::find()->where(['name' => 'vendor', 'active' => 1])->orderBy(['title' => SORT_ASC])->all();
+        $service = new FinancePayableDraftService();
+        $invoiceDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $model->invoice_date) ? $model->invoice_date : date('Y-m-d');
+        try {
+            $chartVersion = $service->activeHospitalChart($invoiceDate);
+            $accounts = $service->eligibleAccounts($invoiceDate);
+        } catch (\DomainException $e) {
+            $chartVersion = null;
+            $accounts = [];
+        }
         return $this->render('create', [
             'model' => $model,
             'inbox' => $inbox,
             'vendors' => ArrayHelper::map($vendors, 'id', static fn(Vendor $vendor) => $vendor->title . ' (' . $vendor->code . ')'),
+            'chartVersion' => $chartVersion,
+            'accountOptions' => ArrayHelper::map(
+                $accounts,
+                'id',
+                static fn(AccountingChartAccount $account) => $account->code . ' — ' . $account->name,
+                static fn(AccountingChartAccount $account) => $account->category === '1' ? 'สินทรัพย์/สินค้าคงคลัง' : 'ค่าใช้จ่าย'
+            ),
         ]);
     }
 
@@ -149,6 +166,14 @@ class PayableController extends Controller
             throw new NotFoundHttpException('ไม่พบทะเบียนเจ้าหนี้');
         }
         return $model;
+    }
+
+    private function domainErrorAttribute(\DomainException $exception): string
+    {
+        $message = $exception->getMessage();
+        return str_contains($message, 'บัญชี') || str_contains($message, 'ผัง')
+            ? 'accounting_chart_account_id'
+            : 'invoice_no';
     }
 
     private function findInbox($id): FinanceInbox

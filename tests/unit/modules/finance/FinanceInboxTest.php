@@ -91,6 +91,27 @@ class FinanceInboxTest extends Unit
         $this->assertSame('INV-001', FinancePayableDraftService::normalizeInvoiceNo(' inv- 001 '));
     }
 
+    /** @dataProvider fiscalYearDateProvider */
+    public function testThaiFiscalYearForInvoiceDate(string $date, int $expected): void
+    {
+        $this->assertSame($expected, FinancePayableDraftService::fiscalYearForDate($date));
+    }
+
+    public static function fiscalYearDateProvider(): array
+    {
+        return [
+            'before October' => ['2026-09-30', 2569],
+            'from October' => ['2025-10-01', 2569],
+            'next fiscal year' => ['2026-10-01', 2570],
+        ];
+    }
+
+    public function testFiscalYearRejectsInvalidDate(): void
+    {
+        $this->expectException(\DomainException::class);
+        FinancePayableDraftService::fiscalYearForDate('2026-02-30');
+    }
+
     public function testPayableApprovalTransitionRules(): void
     {
         $this->assertSame(

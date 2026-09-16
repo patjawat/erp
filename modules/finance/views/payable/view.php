@@ -25,12 +25,12 @@ $this->endBlock();
             <section class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" aria-label="ขั้นตอนถัดไป">
                 <div class="d-flex gap-2 align-items-start">
                     <i class="bi bi-send-check mt-1" aria-hidden="true"></i>
-                    <div><strong>พร้อมส่งตรวจอนุมัติ</strong><div>ยืนยันข้อมูลผู้ขาย ใบแจ้งหนี้ ยอดเงิน และวันครบกำหนดก่อนส่ง</div></div>
+                    <div><strong><?= $model->accounting_chart_account_id ? 'พร้อมส่งตรวจอนุมัติ' : 'ต้องเลือกบัญชีก่อนส่ง' ?></strong><div>ยืนยันข้อมูลผู้ขาย ใบแจ้งหนี้ ยอดเงิน วันครบกำหนด และบัญชีเดบิตหลักก่อนส่ง</div></div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 flex-shrink-0">
                     <?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไขร่าง', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
                     <?= Html::beginForm(['submit', 'id' => $model->id], 'post') ?>
-                    <?= Html::submitButton('<i class="bi bi-send me-1" aria-hidden="true"></i>ส่งตรวจอนุมัติ', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::submitButton('<i class="bi bi-send me-1" aria-hidden="true"></i>ส่งตรวจอนุมัติ', ['class' => 'btn btn-primary', 'disabled' => !$model->accounting_chart_account_id]) ?>
                     <?= Html::endForm() ?>
                 </div>
             </section>
@@ -83,6 +83,7 @@ $this->endBlock();
                     <dt class="col-sm-4 text-body-secondary">วันเครดิต</dt><dd class="col-sm-8"><?= number_format($model->credit_days) ?> วัน</dd>
                     <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/accounting/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">บัญชีเดบิตหลัก</dt><dd class="col-sm-8"><?php if ($model->account_code_snapshot): ?><span class="font-monospace"><?= Html::encode($model->account_code_snapshot) ?></span><div class="small text-body-secondary"><?= Html::encode($model->account_name_snapshot) ?></div><?php else: ?><span class="text-danger">ยังไม่ได้เลือก</span><?php endif; ?></dd>
                 </dl>
             </div>
         </section>
