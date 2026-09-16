@@ -4,6 +4,7 @@ namespace tests\unit\modules\accounting;
 
 use app\modules\accounting\services\AccountingChartImportService;
 use app\modules\accounting\services\AccountingJournalDraftService;
+use app\modules\accounting\services\AccountingPeriodReviewService;
 use Codeception\Test\Unit;
 
 class AccountingChartImportServiceTest extends Unit
@@ -63,5 +64,19 @@ class AccountingChartImportServiceTest extends Unit
             ['debit_amount' => 99, 'credit_amount' => 0],
             ['debit_amount' => 0, 'credit_amount' => 100],
         ]);
+    }
+
+    public function testPeriodReviewIsReadyOnlyWithoutBlockingItems(): void
+    {
+        $result = AccountingPeriodReviewService::evaluateReadiness(['journal_count'=>2,'debit'=>100,'credit'=>100,'draft_count'=>0,'misplaced_count'=>0]);
+        $this->assertTrue($result['ready']);
+        $this->assertSame([], $result['issues']);
+    }
+
+    public function testPeriodReviewReportsEveryBlockingCondition(): void
+    {
+        $result = AccountingPeriodReviewService::evaluateReadiness(['journal_count'=>0,'debit'=>100,'credit'=>99,'draft_count'=>2,'misplaced_count'=>1]);
+        $this->assertFalse($result['ready']);
+        $this->assertCount(4, $result['issues']);
     }
 }
