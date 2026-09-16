@@ -2,6 +2,8 @@
 
 namespace app\modules\complaint\controllers;
 
+use app\components\AppHelper;
+use app\modules\complaint\models\ComplaintIndicator;
 use app\modules\complaint\models\ComplaintMaster;
 use app\modules\complaint\services\ComplaintService;
 use Yii;
@@ -25,7 +27,7 @@ class MasterController extends Controller
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['save' => ['POST'], 'delete' => ['POST'], 'toggle' => ['POST']],
+                'actions' => ['save' => ['POST'], 'delete' => ['POST'], 'toggle' => ['POST'], 'save-indicator' => ['POST']],
             ],
         ]);
     }
@@ -107,5 +109,32 @@ class MasterController extends Controller
         $model->delete();
         Yii::$app->session->setFlash('success', 'ลบรายการแล้ว');
         return $this->redirect(['index', 'group' => $group]);
+    }
+
+    /** ข้อมูลพื้นฐานตัวชี้วัด — จำนวน visit รายปีงบ (ตัวหาร CC01) */
+    public function actionIndicator()
+    {
+        $this->assertManager();
+        $items = ComplaintIndicator::find()->orderBy(['fiscal_year' => SORT_DESC])->all();
+        return $this->render('indicator', [
+            'items' => $items,
+            'years' => range((int) AppHelper::YearBudget() + 1, (int) AppHelper::YearBudget() - 4),
+        ]);
+    }
+
+    public function actionSaveIndicator()
+    {
+        $this->assertManager();
+        $req = Yii::$app->request;
+        $fy = (int) $req->post('fiscal_year');
+        $model = ComplaintIndicator::find()->where(['fiscal_year' => $fy])->one() ?: new ComplaintIndicator(['fiscal_year' => $fy]);
+        $model->visit_count = (int) $req->post('visit_count');
+        $model->note = trim((string) $req->post('note')) ?: null;
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกจำนวน visit แล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
+        }
+        return $this->redirect(['indicator']);
     }
 }

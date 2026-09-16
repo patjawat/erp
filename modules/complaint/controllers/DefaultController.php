@@ -5,6 +5,7 @@ namespace app\modules\complaint\controllers;
 use app\components\AppHelper;
 use app\components\UserHelper;
 use app\modules\complaint\models\Complaint;
+use app\modules\complaint\services\ComplaintKpiService;
 use app\modules\complaint\services\ComplaintService;
 use Yii;
 use yii\filters\AccessControl;
@@ -72,6 +73,60 @@ class DefaultController extends Controller
             'open' => (int) $open,
             'overdue' => $overdue,
             'recent' => $recent,
+        ]);
+    }
+
+    /** ขอบเขตสิทธิ์สำหรับ KPI: manager=null (ทุกหน่วย) ; อื่น ๆ = [scopeIds, userId] */
+    private function kpiScope(): array
+    {
+        if (ComplaintService::isManager()) {
+            return [null, null];
+        }
+        $me = UserHelper::GetEmployee();
+        $empUnitId = $me ? (int) $me->department : null;
+        $userId = Yii::$app->user->id !== null ? (int) Yii::$app->user->id : null;
+        return [ComplaintService::unitScopeIds($empUnitId) ?: [-1], $userId];
+    }
+
+    /** แดชบอร์ด KPI (CC01–CC07) + กราฟ */
+    public function actionKpi()
+    {
+        $fy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+        [$scope, $userId] = $this->kpiScope();
+        $m = ComplaintKpiService::metrics($fy, $scope, $userId);
+
+        return $this->render('kpi', [
+            'm' => $m,
+            'fiscalYear' => $fy,
+            'years' => range($fy + 1, $fy - 3),
+        ]);
+    }
+
+    /** SLA monitor — เคสที่เกินกำหนดแยกตามช่วง */
+    public function actionMonitor()
+    {
+        $fy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+        [$scope, $userId] = $this->kpiScope();
+        $m = ComplaintKpiService::metrics($fy, $scope, $userId);
+
+        return $this->render('monitor', [
+            'm' => $m,
+            'fiscalYear' => $fy,
+            'years' => range($fy + 1, $fy - 3),
+        ]);
+    }
+
+    /** รายงานสรุป (พิมพ์ได้) — KPI + การกระจาย ตามปีงบ */
+    public function actionReport()
+    {
+        $fy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+        [$scope, $userId] = $this->kpiScope();
+        $m = ComplaintKpiService::metrics($fy, $scope, $userId);
+
+        return $this->render('report', [
+            'm' => $m,
+            'fiscalYear' => $fy,
+            'years' => range($fy + 1, $fy - 3),
         ]);
     }
 }

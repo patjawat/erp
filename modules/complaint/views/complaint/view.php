@@ -259,7 +259,7 @@ $steps = [
                                     <div class="d-flex justify-content-between align-items-start gap-2">
                                         <div>
                                             <span class="badge text-bg-secondary me-1"><?= $a->action_level ? 'L' . (int) $a->action_level : '—' ?></span>
-                                            <span class="fw-semibold small"><?= Html::encode($a->action_kind ?: 'ดำเนินการ') ?></span>
+                                            <span class="fw-semibold small"><?= Html::encode($a->kindLabel()) ?></span>
                                             <span class="text-body-secondary small ms-1"><?= $thaiDate($a->action_date) ?></span>
                                             <?php if ($a->title): ?><div class="small"><?= Html::encode($a->title) ?></div><?php endif; ?>
                                             <?php if ($a->detail): ?><div class="small text-body-secondary" style="white-space:pre-line"><?= nl2br(Html::encode($a->detail)) ?></div><?php endif; ?>
@@ -291,7 +291,7 @@ $steps = [
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small">ประเภทการดำเนินงาน</label>
-                                    <?= Html::dropDownList('action_kind', null, ['' => '— เลือก —'] + array_combine(array_values($masters['action_kind']), array_values($masters['action_kind'])), ['class' => 'form-select form-select-sm']) ?>
+                                    <?= Html::dropDownList('action_kind', null, ['' => '— เลือก —'] + \app\modules\complaint\models\ComplaintAction::KINDS, ['class' => 'form-select form-select-sm']) ?>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small">หัวข้อ</label>

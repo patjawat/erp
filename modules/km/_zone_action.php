@@ -55,6 +55,7 @@ $active = $active ?? '';
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
             <li><?= Html::a('<i class="bi bi-sliders me-2"></i>ตัวเลือกกลาง (Master Data)', ['/complaint/master/index'], ['class' => 'dropdown-item']) ?></li>
+            <li><?= Html::a('<i class="bi bi-people me-2"></i>จำนวน visit รายปี (CC01)', ['/complaint/master/indicator'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
     <?php endif; ?>

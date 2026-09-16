@@ -19,9 +19,33 @@ use yii\db\ActiveQuery;
  */
 class ComplaintAction extends ComplaintActiveRecord
 {
+    /**
+     * ประเภทการดำเนินงาน — คีย์คงที่ (เพื่อให้ KPI จับ milestone ได้แน่นอน) + ป้ายไทย
+     * คีย์ start/review/reply ใช้คำนวณ CC03/CC04/CC05
+     */
+    public const KINDS = [
+        'start' => 'เริ่มดำเนินการ',
+        'review' => 'ตรวจสอบข้อเท็จจริง/RCA',
+        'rrt' => 'ทีม RRT/ลงหน้างาน',
+        'committee' => 'ประชุมคณะกรรมการ',
+        'reply' => 'ตอบกลับผู้ร้อง',
+        'meeting' => 'ประชุม/เยียวยา',
+        'improve' => 'ปรับปรุงแก้ไข',
+        'outcome' => 'สรุปผล',
+    ];
+
     public static function tableName(): string
     {
         return '{{%complaint_action}}';
+    }
+
+    /** ป้ายไทยของ action_kind (รองรับค่าเดิมที่อาจเป็นข้อความไทยอยู่แล้ว) */
+    public function kindLabel(): string
+    {
+        if ($this->action_kind === null || $this->action_kind === '') {
+            return 'ดำเนินการ';
+        }
+        return self::KINDS[$this->action_kind] ?? $this->action_kind;
     }
 
     public function rules(): array

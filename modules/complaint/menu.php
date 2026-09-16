@@ -19,6 +19,9 @@ $this->endBlock();
 $items = [
     ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/complaint/default/index']],
     ['key' => 'registry', 'label' => 'ทะเบียนเรื่องร้องเรียน', 'icon' => 'bi-megaphone', 'url' => ['/complaint/complaint/index']],
+    ['key' => 'kpi', 'label' => 'ตัวชี้วัด (KPI)', 'icon' => 'bi-graph-up-arrow', 'url' => ['/complaint/default/kpi']],
+    ['key' => 'monitor', 'label' => 'ติดตาม SLA', 'icon' => 'bi-alarm', 'url' => ['/complaint/default/monitor']],
+    ['key' => 'report', 'label' => 'รายงาน', 'icon' => 'bi-file-earmark-bar-graph', 'url' => ['/complaint/default/report']],
 ];
 ?>
 <nav class="complaint-subnav d-flex flex-wrap align-items-center gap-2" aria-label="เมนูรับเรื่องร้องเรียน">
