@@ -60,7 +60,12 @@ $this->endBlock();
         <?php elseif ($model->status === FinancePayable::STATUS_APPROVED): ?>
             <div class="alert alert-success d-flex gap-2 align-items-start">
                 <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                <span>รายการนี้อนุมัติเข้าทะเบียนเจ้าหนี้แล้ว แต่ยังไม่สร้างรายการบัญชี ฎีกา หรือแผนจ่ายเงิน</span>
+                <div class="flex-grow-1"><strong>อนุมัติเข้าทะเบียนเจ้าหนี้แล้ว</strong><div>ยังไม่ผ่านรายการเข้าบัญชีแยกประเภท และยังไม่สั่งจ่ายเงิน</div></div>
+                <?php if ($model->journalDraft): ?>
+                    <?= Html::a('ดูรายการบัญชีร่าง', ['/accounting/journal/view', 'id' => $model->journalDraft->id], ['class' => 'btn btn-outline-success flex-shrink-0']) ?>
+                <?php elseif (Yii::$app->user->can('accountingPrepare')): ?>
+                    <?= Html::beginForm(['/accounting/journal/create', 'payable_id' => $model->id], 'post', ['class' => 'flex-shrink-0']) ?><?= Html::submitButton('สร้างรายการบัญชีร่าง', ['class' => 'btn btn-success']) ?><?= Html::endForm() ?>
+                <?php endif; ?>
             </div>
         <?php elseif ($model->status === FinancePayable::STATUS_PENDING_APPROVAL): ?>
             <div class="alert alert-secondary d-flex gap-2 align-items-start">

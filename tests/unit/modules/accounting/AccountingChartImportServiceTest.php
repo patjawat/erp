@@ -3,6 +3,7 @@
 namespace tests\unit\modules\accounting;
 
 use app\modules\accounting\services\AccountingChartImportService;
+use app\modules\accounting\services\AccountingJournalDraftService;
 use Codeception\Test\Unit;
 
 class AccountingChartImportServiceTest extends Unit
@@ -43,5 +44,24 @@ class AccountingChartImportServiceTest extends Unit
     {
         $this->assertSame('2101020199.137', AccountingChartImportService::standardCandidateCode('2101020199.137.01'));
         $this->assertNull(AccountingChartImportService::standardCandidateCode('2101020199.137'));
+    }
+
+    public function testJournalDraftBalanceValidation(): void
+    {
+        AccountingJournalDraftService::assertBalanced([
+            ['debit_amount' => 93, 'credit_amount' => 0],
+            ['debit_amount' => 7, 'credit_amount' => 0],
+            ['debit_amount' => 0, 'credit_amount' => 100],
+        ]);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testJournalDraftRejectsUnbalancedLines(): void
+    {
+        $this->expectException(\DomainException::class);
+        AccountingJournalDraftService::assertBalanced([
+            ['debit_amount' => 99, 'credit_amount' => 0],
+            ['debit_amount' => 0, 'credit_amount' => 100],
+        ]);
     }
 }

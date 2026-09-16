@@ -7,6 +7,7 @@ use yii\db\ActiveRecord;
 use app\modules\sm\models\Vendor;
 use app\modules\accounting\models\AccountingChartAccount;
 use app\modules\accounting\models\AccountingChartVersion;
+use app\modules\accounting\models\AccountingJournalDraft;
 
 /**
  * Draft creditor register. No accounting entry is generated at this stage.
@@ -137,5 +138,11 @@ class FinancePayable extends ActiveRecord
     public function getAccountingChartAccount()
     {
         return $this->hasOne(AccountingChartAccount::class, ['id' => 'accounting_chart_account_id']);
+    }
+
+    public function getJournalDraft()
+    {
+        return $this->hasOne(AccountingJournalDraft::class, ['source_id' => 'id'])
+            ->andOnCondition(['source_type' => AccountingJournalDraft::SOURCE_PAYABLE]);
     }
 }
