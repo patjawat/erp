@@ -26,6 +26,9 @@
             }
             function message(text, ok) { role('result').removeClass('d-none alert-success alert-danger').addClass(ok ? 'alert-success' : 'alert-danger').text(text).trigger('focus'); }
             function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารออนุมัติ' : 'ลงเวลา'); }
+            // The mobile module's global submit listener pops a full-screen "กำลังบันทึก…" overlay
+            // that only hides on a real page load; this AJAX form never navigates, so dismiss it ourselves.
+            function hideMobileLoader() { try { if (window.hideMobileLoader) window.hideMobileLoader(); } catch (e) { /* overlay not present outside mobile layout */ } }
             function ajax(url, data, timeout) {
                 if (window.yii) data[window.yii.getCsrfParam()] = window.yii.getCsrfToken();
                 return $.ajax({url:url, type:'POST', data:data, dataType:'json', timeout: timeout || 30000});
@@ -62,7 +65,7 @@
             refreshDay(true);
             function reconcile() {
                 // Pull the server's real state and clear any stuck spinner; confirm if the save actually landed.
-                busy = false; startedAt = 0; state(); role('gps').text('');
+                busy = false; startedAt = 0; state(); role('gps').text(''); hideMobileLoader();
                 refreshDay().done(function (r) {
                     if (r && r.latest) message('ระบบตรวจสอบแล้ว บันทึกเวลาล่าสุด ' + r.latest.at, true);
                     else if (r && r.day_summary && (r.day_summary.in || r.day_summary.out)) message('ระบบตรวจสอบแล้ว มีการบันทึกเวลาวันนี้เรียบร้อย', true);
@@ -115,9 +118,9 @@
                         message('การเชื่อมต่อช้า ระบบกำลังตรวจสอบเวลาที่บันทึกให้ หากไม่แสดงกรุณาลองใหม่ (ระบบกันรายการซ้ำให้)');
                         reconcile();
                     }
-                } finally { busy=false; startedAt=0; state(); }
+                } finally { busy=false; startedAt=0; state(); hideMobileLoader(); }
             }
-            $form.on('submit',function(e){e.preventDefault();submit();});
+            $form.on('submit',function(e){e.preventDefault();hideMobileLoader();submit();});
             if (config.autoStart) submit();
         }
     };

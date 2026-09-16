@@ -33,7 +33,7 @@ $this->registerJs(<<<JS
 })();
 JS);
 ?>
-<form id="<?= $id ?>" class="attendance-clock d-flex flex-column gap-3 text-body p-3 rounded-3" novalidate>
+<form id="<?= $id ?>" class="attendance-clock d-flex flex-column gap-3 text-body p-3 rounded-3" novalidate data-ajax="true" data-no-loader="true">
 <?= Html::hiddenInput('qr_token',$qr) ?>
 <div class="attendance-clock-day small text-center">วันนี้ <span data-role="day-date"></span></div>
 <div class="text-center"><time data-role="clock" aria-label="เวลาประเทศไทย"></time></div>
