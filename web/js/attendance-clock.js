@@ -5,7 +5,7 @@
             var form = document.getElementById(id);
             if (!form || form.dataset.mounted) return;
             form.dataset.mounted = '1';
-            var $form = $(form), busy = false, needsReason = false, requestId, offset = 0;
+            var $form = $(form), busy = false, needsReason = false, requestId, offset = 0, startedAt = 0;
             var storageKey = 'attendance-request-' + config.employeeId;
             function role(name) { return $form.find('[data-role="' + name + '"]'); }
             function showDay(summary) {
@@ -42,7 +42,14 @@
             }
             function clock() { role('clock').text(new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(Date.now()+offset))); }
             clock();
-            var timer = window.setInterval(function () { if (!document.body.contains(form)) { clearInterval(timer); return; } clock(); }, 1000);
+            var timer = window.setInterval(function () {
+                if (!document.body.contains(form)) { clearInterval(timer); return; }
+                clock();
+                // Wall-clock watchdog: Telegram's in-app webview can freeze XHR/timers when backgrounded,
+                // so a save may land on the server while the client stays stuck at busy. Date.now() reflects
+                // real elapsed time once the interval resumes, so recover the true state then.
+                if (busy && startedAt && Date.now() - startedAt > 35000) { startedAt = 0; reconcile(); }
+            }, 1000);
             $form.closest('.modal').one('hidden.bs.modal.attendance', function () { clearInterval(timer); });
             function refreshDay(initial) {
                 return $.ajax({url:config.shiftsUrl,dataType:'json',timeout:15000}).done(function (r) {
@@ -53,11 +60,23 @@
                 }).fail(function () { if (initial) role('latest').text(''); });
             }
             refreshDay(true);
+            function reconcile() {
+                // Pull the server's real state and clear any stuck spinner; confirm if the save actually landed.
+                busy = false; startedAt = 0; state(); role('gps').text('');
+                refreshDay().done(function (r) {
+                    if (r && r.latest) message('ระบบตรวจสอบแล้ว บันทึกเวลาล่าสุด ' + r.latest.at, true);
+                    else if (r && r.day_summary && (r.day_summary.in || r.day_summary.out)) message('ระบบตรวจสอบแล้ว มีการบันทึกเวลาวันนี้เรียบร้อย', true);
+                });
+            }
+            // Recover the moment the webview returns to the foreground (visibility + Telegram 'activated').
+            function onResume() { if (busy && document.body.contains(form)) reconcile(); }
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) onResume(); });
+            try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.onEvent) window.Telegram.WebApp.onEvent('activated', onResume); } catch (e) { /* Telegram SDK optional */ }
             async function submit() {
                 if (busy) return;
                 var reason = $form.find('[name="out_of_location_reason"]').val().trim();
                 if (needsReason && !reason) { message('กรุณาระบุเหตุผลลงเวลานอกพื้นที่'); $form.find('textarea').trigger('focus'); return; }
-                busy = true; state();
+                busy = true; startedAt = Date.now(); state();
                 try {
                     var coords = await locate();
                     var data = {lat:coords.latitude,lng:coords.longitude,qr_token:$form.find('[name="qr_token"]').val()};
@@ -70,7 +89,7 @@
                     if (needsReason && !reason) { message('อยู่นอกพื้นที่ กรุณาระบุเหตุผลแล้วส่งลงเวลารออนุมัติ'); $form.find('textarea').trigger('focus'); return; }
                     data.method = data.qr_token ? 'qrcode' : 'manual'; data.out_of_location_reason = reason; data.request_id = key();
                     role('gps').text('กำลังบันทึกเวลา กรุณารอผล');
-                    var result = await ajax(config.saveUrl, data, 15000);
+                    var result = await ajax(config.saveUrl, data, 30000);
                     if (!result.success) {
                         message(result.message || 'บันทึกไม่สำเร็จ กรุณาลองใหม่');
                         if ((result.message || '').indexOf('เหตุผล') !== -1) { needsReason=true; role('reason-panel').removeClass('d-none'); }
@@ -94,9 +113,9 @@
                     } else {
                         // ต่อไม่ติด/หมดเวลา (พบบ่อยในเว็บวิว Telegram) — รายการอาจถูกบันทึกแล้ว ดึงสถานะจริงมาแสดง
                         message('การเชื่อมต่อช้า ระบบกำลังตรวจสอบเวลาที่บันทึกให้ หากไม่แสดงกรุณาลองใหม่ (ระบบกันรายการซ้ำให้)');
-                        refreshDay();
+                        reconcile();
                     }
-                } finally { busy=false; state(); }
+                } finally { busy=false; startedAt=0; state(); }
             }
             $form.on('submit',function(e){e.preventDefault();submit();});
             if (config.autoStart) submit();
