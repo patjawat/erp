@@ -36,6 +36,7 @@ $this->beginBlock('page-action'); ?>
             ['attribute' => 'fiscal_year', 'label' => 'ปีงบประมาณ', 'contentOptions' => ['class' => 'fw-semibold text-nowrap']],
             ['attribute' => 'version_code', 'label' => 'เวอร์ชัน', 'contentOptions' => ['class' => 'text-nowrap']],
             ['attribute' => 'title', 'label' => 'ชื่อผังบัญชี'],
+            ['attribute' => 'scope', 'label' => 'ประเภท', 'value' => static fn(AccountingChartVersion $model) => AccountingChartVersion::scopeOptions()[$model->scope] ?? $model->scope],
             ['attribute' => 'account_count', 'label' => 'จำนวนรหัส', 'format' => ['decimal', 0], 'contentOptions' => ['class' => 'text-end text-nowrap'], 'headerOptions' => ['class' => 'text-end']],
             [
                 'attribute' => 'status', 'label' => 'สถานะ', 'format' => 'raw',

@@ -11,10 +11,13 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title'); ?>
 <h4 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-diagram-3" aria-hidden="true"></i><?= Html::encode($this->title) ?></h4>
 <?php $this->endBlock();
-$this->beginBlock('sub-title'); ?>ปีงบประมาณ <?= Html::encode($model->fiscal_year) ?> · เวอร์ชัน <?= Html::encode($model->version_code) ?><?php $this->endBlock();
+$this->beginBlock('sub-title'); ?><?= Html::encode(AccountingChartVersion::scopeOptions()[$model->scope] ?? $model->scope) ?> · ปีงบประมาณ <?= Html::encode($model->fiscal_year) ?> · เวอร์ชัน <?= Html::encode($model->version_code) ?><?php $this->endBlock();
 $this->beginBlock('page-action'); ?>
 <div class="d-flex flex-wrap gap-2">
     <?= $this->render('@app/modules/accounting/menu', ['active' => 'chart']) ?>
+    <?php if ($model->scope === AccountingChartVersion::SCOPE_HOSPITAL): ?>
+        <?= Html::a('<i class="bi bi-link-45deg me-1" aria-hidden="true"></i>ตรวจการจับคู่มาตรฐาน', ['mappings', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+    <?php endif; ?>
     <?php if ($model->status === AccountingChartVersion::STATUS_DRAFT && Yii::$app->user->can('accountingChartManage')): ?>
         <?= Html::beginForm(['activate', 'id' => $model->id], 'post') ?>
         <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>เปิดใช้เป็นมาตรฐานอ้างอิง', [

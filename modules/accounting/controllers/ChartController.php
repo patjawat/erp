@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 use app\modules\accounting\models\AccountingChartImportForm;
+use app\modules\accounting\models\AccountingChartMapping;
 use app\modules\accounting\models\AccountingChartVersion;
 use app\modules\accounting\services\AccountingChartImportService;
 
@@ -22,11 +23,12 @@ class ChartController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['accountingView']],
-                ['allow' => true, 'actions' => ['import', 'confirm-import', 'delete-import-preview', 'activate'], 'roles' => ['accountingChartManage']],
+                ['allow' => true, 'actions' => ['index', 'view', 'mappings'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['import', 'confirm-import', 'delete-import-preview', 'activate', 'confirm-mapping', 'reject-mapping'], 'roles' => ['accountingChartManage']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'confirm-import' => ['POST'], 'delete-import-preview' => ['POST'], 'activate' => ['POST'],
+                'confirm-mapping' => ['POST'], 'reject-mapping' => ['POST'],
             ]],
         ]);
     }
@@ -73,7 +75,8 @@ class ChartController extends Controller
                             (int) $model->fiscal_year,
                             (string) $model->version_code,
                             (string) $model->title,
-                            $model->sheet
+                            $model->sheet,
+                            (string) $model->scope
                         );
                         $preview = $this->storePreview($preview);
                     } catch (\Throwable $e) {
@@ -90,6 +93,7 @@ class ChartController extends Controller
                 'version_code' => $preview['version_code'],
                 'title' => $preview['title'],
                 'sheet' => $preview['sheet'],
+                'scope' => $preview['scope'],
             ], false);
         }
         return $this->render('import', compact('model', 'preview'));
@@ -134,12 +138,55 @@ class ChartController extends Controller
         return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    public function actionMappings($id)
+    {
+        $model = $this->findVersion($id);
+        if ($model->scope !== AccountingChartVersion::SCOPE_HOSPITAL) {
+            Yii::$app->session->setFlash('warning', 'การจับคู่ใช้สำหรับผังโรงพยาบาลเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+        $mappings = AccountingChartMapping::find()
+            ->where(['hospital_version_id' => $model->id])
+            ->with(['hospitalAccount', 'standardAccount'])
+            ->orderBy(['status' => SORT_DESC, 'match_type' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+        $mappedIds = array_map(static fn(AccountingChartMapping $mapping) => $mapping->hospital_account_id, $mappings);
+        $unmapped = $model->getAccounts()
+            ->andWhere(['category' => ['4', '5']])
+            ->andFilterWhere(['not in', 'id', $mappedIds])
+            ->all();
+        return $this->render('mappings', compact('model', 'mappings', 'unmapped'));
+    }
+
+    public function actionConfirmMapping($id)
+    {
+        return $this->updateMappingStatus($id, AccountingChartMapping::STATUS_CONFIRMED, 'ยืนยันการจับคู่แล้ว');
+    }
+
+    public function actionRejectMapping($id)
+    {
+        return $this->updateMappingStatus($id, AccountingChartMapping::STATUS_REJECTED, 'ปฏิเสธคำแนะนำการจับคู่แล้ว');
+    }
+
     private function findVersion($id): AccountingChartVersion
     {
         if (!$model = AccountingChartVersion::findOne($id)) {
             throw new NotFoundHttpException('ไม่พบผังบัญชี');
         }
         return $model;
+    }
+
+    private function updateMappingStatus($id, string $status, string $message)
+    {
+        $mapping = AccountingChartMapping::findOne($id);
+        if (!$mapping) throw new NotFoundHttpException('ไม่พบรายการจับคู่');
+        $mapping->status = $status;
+        if ($mapping->save()) {
+            Yii::$app->session->setFlash('success', $message);
+        } else {
+            Yii::$app->session->setFlash('error', 'บันทึกผลการจับคู่ไม่สำเร็จ');
+        }
+        return $this->redirect(['mappings', 'id' => $mapping->hospital_version_id]);
     }
 
     private function storePreview(array $preview): array

@@ -32,4 +32,16 @@ class AccountingChartImportServiceTest extends Unit
     {
         return [[''], ['ABC'], ['123.101'], ['12345678901.101'], ['4201020106.1000'], ['5104040102.1']];
     }
+
+    public function testHospitalChartAllowsTwoDigitSubcode(): void
+    {
+        $this->assertSame('2101020199.137.01', AccountingChartImportService::normalizeCode('2101020199.137.01', true));
+        $this->assertNull(AccountingChartImportService::normalizeCode('2101020199.137.01', false));
+    }
+
+    public function testHospitalSubcodeMapsToStandardParentCandidate(): void
+    {
+        $this->assertSame('2101020199.137', AccountingChartImportService::standardCandidateCode('2101020199.137.01'));
+        $this->assertNull(AccountingChartImportService::standardCandidateCode('2101020199.137'));
+    }
 }

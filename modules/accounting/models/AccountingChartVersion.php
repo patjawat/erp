@@ -11,6 +11,7 @@ class AccountingChartVersion extends ActiveRecord
     public const STATUS_ACTIVE = 'active';
     public const STATUS_ARCHIVED = 'archived';
     public const SCOPE_STANDARD = 'standard';
+    public const SCOPE_HOSPITAL = 'hospital';
 
     public static function tableName()
     {
@@ -28,8 +29,8 @@ class AccountingChartVersion extends ActiveRecord
             [['title', 'source_file_name'], 'string', 'max' => 255],
             [['source_file_hash', 'ref'], 'string', 'max' => 64],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
-            [['scope'], 'in', 'range' => [self::SCOPE_STANDARD]],
-            [['version_code'], 'unique', 'targetAttribute' => ['fiscal_year', 'version_code']],
+            [['scope'], 'in', 'range' => array_keys(self::scopeOptions())],
+            [['version_code'], 'unique', 'targetAttribute' => ['fiscal_year', 'scope', 'version_code']],
         ];
     }
 
@@ -56,6 +57,14 @@ class AccountingChartVersion extends ActiveRecord
             self::STATUS_DRAFT => 'ฉบับรอตรวจสอบ',
             self::STATUS_ACTIVE => 'ใช้งานอยู่',
             self::STATUS_ARCHIVED => 'เก็บประวัติ',
+        ];
+    }
+
+    public static function scopeOptions(): array
+    {
+        return [
+            self::SCOPE_STANDARD => 'ผังมาตรฐาน',
+            self::SCOPE_HOSPITAL => 'ผังโรงพยาบาล',
         ];
     }
 

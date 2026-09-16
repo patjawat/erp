@@ -3,6 +3,7 @@
 namespace app\modules\accounting\services;
 
 use app\modules\accounting\models\AccountingChartAccount;
+use app\modules\accounting\models\AccountingChartMapping;
 use app\modules\accounting\models\AccountingChartVersion;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Yii;
@@ -11,7 +12,7 @@ class AccountingChartImportService
 {
     public const MAX_ROWS = 5000;
 
-    public function preview(string $path, string $originalName, int $fiscalYear, string $versionCode, string $title, ?string $sheetName = null): array
+    public function preview(string $path, string $originalName, int $fiscalYear, string $versionCode, string $title, ?string $sheetName = null, string $scope = AccountingChartVersion::SCOPE_STANDARD): array
     {
         $reader = IOFactory::createReaderForFile($path);
         $reader->setReadDataOnly(true);
@@ -27,28 +28,31 @@ class AccountingChartImportService
         }
         $codeHeader = trim((string) $sheet->getCell('A1')->getFormattedValue());
         $nameHeader = trim((string) $sheet->getCell('B1')->getFormattedValue());
-        if (!in_array($codeHeader, ['รหัส', 'รหัสบัญชี'], true) || !in_array($nameHeader, ['ชื่อบัญชี', 'ชื่อ'], true)) {
-            throw new \RuntimeException('หัวตารางไม่ถูกต้อง: คอลัมน์ A ต้องเป็น “รหัส” และคอลัมน์ B ต้องเป็น “ชื่อบัญชี”');
-        }
+        $hasHeader = in_array($codeHeader, ['รหัส', 'รหัสบัญชี'], true) && in_array($nameHeader, ['ชื่อบัญชี', 'ชื่อ'], true);
+        $firstDataRow = $hasHeader ? 2 : 1;
         $highestRow = $sheet->getHighestDataRow();
         if ($highestRow > self::MAX_ROWS) {
             throw new \RuntimeException('ไฟล์มีข้อมูลเกิน ' . number_format(self::MAX_ROWS) . ' แถว กรุณาตรวจสอบไฟล์');
         }
 
-        $baseline = $this->baselineAccounts($fiscalYear);
+        $baseline = $this->baselineAccounts($fiscalYear, $scope);
         $seen = [];
         $rows = [];
         $counts = ['new' => 0, 'unchanged' => 0, 'changed' => 0, 'invalid' => 0];
-        for ($row = 2; $row <= $highestRow; $row++) {
+        for ($row = $firstDataRow; $row <= $highestRow; $row++) {
             $rawCode = $sheet->getCell('A' . $row)->getValue();
             $name = trim((string) $sheet->getCell('B' . $row)->getFormattedValue());
-            if (($rawCode === null || $rawCode === '') && $name === '') {
+            // แบบฟอร์มผังโรงพยาบาลมีแถว subtotal เช่น “รวมเงินสดในมือ” ซึ่งตั้งใจไม่มีรหัส
+            // จึงไม่ใช่บัญชีที่ต้องนำเข้า แม้คอลัมน์ชื่อจะมีข้อความอยู่ก็ตาม
+            if ($rawCode === null || trim((string) $rawCode) === '') {
                 continue;
             }
-            $code = self::normalizeCode($rawCode);
+            $code = self::normalizeCode($rawCode, $scope === AccountingChartVersion::SCOPE_HOSPITAL);
             $errors = [];
             if ($code === null) {
-                $errors[] = 'รหัสต้องอยู่ในรูป 10 หลัก.3 หลัก';
+                $errors[] = $scope === AccountingChartVersion::SCOPE_HOSPITAL
+                    ? 'รหัสต้องอยู่ในรูป 10 หลัก.3 หลัก หรือรหัสย่อย .2 หลัก'
+                    : 'รหัสต้องอยู่ในรูป 10 หลัก.3 หลัก';
             }
             if ($name === '') {
                 $errors[] = 'ไม่มีชื่อบัญชี';
@@ -89,6 +93,7 @@ class AccountingChartImportService
 
         return [
             'fiscal_year' => $fiscalYear,
+            'scope' => $scope,
             'version_code' => strtoupper($versionCode),
             'title' => $title,
             'sheet' => $resolvedSheet,
@@ -108,12 +113,14 @@ class AccountingChartImportService
         }
         if (AccountingChartVersion::find()->where([
             'fiscal_year' => $preview['fiscal_year'],
+            'scope' => $preview['scope'],
             'version_code' => $preview['version_code'],
         ])->exists()) {
             throw new \DomainException('มีรหัสเวอร์ชันนี้ในปีงบประมาณเดียวกันแล้ว กรุณาเปลี่ยนรหัสเวอร์ชัน');
         }
         if (AccountingChartVersion::find()->where([
             'fiscal_year' => $preview['fiscal_year'],
+            'scope' => $preview['scope'],
             'source_file_hash' => $preview['file_hash'],
         ])->exists()) {
             throw new \DomainException('ไฟล์นี้เคยถูกนำเข้าในปีงบประมาณนี้แล้ว');
@@ -123,9 +130,9 @@ class AccountingChartImportService
         try {
             $version = new AccountingChartVersion([
                 'fiscal_year' => $preview['fiscal_year'],
+                'scope' => $preview['scope'],
                 'version_code' => $preview['version_code'],
                 'title' => $preview['title'],
-                'scope' => AccountingChartVersion::SCOPE_STANDARD,
                 'status' => AccountingChartVersion::STATUS_DRAFT,
                 'source_file_name' => $preview['file_name'],
                 'source_file_hash' => $preview['file_hash'],
@@ -145,6 +152,9 @@ class AccountingChartImportService
                 if (!$account->save()) {
                     throw new \RuntimeException('แถว ' . $row['row'] . ': ' . implode(' ', $account->getFirstErrors()));
                 }
+            }
+            if ($version->scope === AccountingChartVersion::SCOPE_HOSPITAL) {
+                $this->buildSuggestedMappings($version);
             }
             $transaction->commit();
             return $version;
@@ -169,7 +179,7 @@ class AccountingChartImportService
         try {
             AccountingChartVersion::updateAll(
                 ['status' => AccountingChartVersion::STATUS_ARCHIVED, 'updated_at' => date('Y-m-d H:i:s')],
-                ['fiscal_year' => $version->fiscal_year, 'status' => AccountingChartVersion::STATUS_ACTIVE]
+                ['fiscal_year' => $version->fiscal_year, 'scope' => $version->scope, 'status' => AccountingChartVersion::STATUS_ACTIVE]
             );
             $version->status = AccountingChartVersion::STATUS_ACTIVE;
             $version->activated_at = date('Y-m-d H:i:s');
@@ -184,28 +194,78 @@ class AccountingChartImportService
         }
     }
 
-    public static function normalizeCode($value): ?string
+    public static function normalizeCode($value, bool $allowHospitalSubcode = false): ?string
     {
         if (is_int($value) || is_float($value)) {
             $value = number_format((float) $value, 3, '.', '');
         }
         $value = trim((string) $value);
-        if (preg_match('/^\d{10}\.\d{3}$/', $value)) {
+        $pattern = $allowHospitalSubcode ? '/^\d{10}\.\d{3}(?:\.\d{2})?$/' : '/^\d{10}\.\d{3}$/';
+        if (preg_match($pattern, $value)) {
             return $value;
         }
         return null;
     }
 
-    private function baselineAccounts(int $fiscalYear): array
+    private function baselineAccounts(int $fiscalYear, string $scope): array
     {
         $version = AccountingChartVersion::find()
-            ->where(['fiscal_year' => $fiscalYear])
+            ->where(['fiscal_year' => $fiscalYear, 'scope' => $scope])
             ->orderBy(new \yii\db\Expression("CASE status WHEN 'active' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END, id DESC"))
             ->one();
         if (!$version) {
             return [];
         }
         return AccountingChartAccount::find()->select('name')->indexBy('code')->where(['version_id' => $version->id])->column();
+    }
+
+    private function buildSuggestedMappings(AccountingChartVersion $hospitalVersion): void
+    {
+        $standardVersion = AccountingChartVersion::find()
+            ->where([
+                'fiscal_year' => $hospitalVersion->fiscal_year,
+                'scope' => AccountingChartVersion::SCOPE_STANDARD,
+            ])
+            ->orderBy(new \yii\db\Expression("CASE status WHEN 'active' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END, id DESC"))
+            ->one();
+        if (!$standardVersion) return;
+
+        $standardByCode = AccountingChartAccount::find()
+            ->where(['version_id' => $standardVersion->id])
+            ->indexBy('code')
+            ->all();
+        $hospitalAccounts = AccountingChartAccount::find()
+            ->where(['version_id' => $hospitalVersion->id, 'category' => ['4', '5']])
+            ->all();
+        foreach ($hospitalAccounts as $hospitalAccount) {
+            $standardAccount = $standardByCode[$hospitalAccount->code] ?? null;
+            $matchType = AccountingChartMapping::TYPE_EXACT;
+            $parentCode = self::standardCandidateCode($hospitalAccount->code);
+            if (!$standardAccount && $parentCode !== null) {
+                $standardAccount = $standardByCode[$parentCode] ?? null;
+                $matchType = AccountingChartMapping::TYPE_PARENT;
+            }
+            if (!$standardAccount) continue;
+            $mapping = new AccountingChartMapping([
+                'fiscal_year' => $hospitalVersion->fiscal_year,
+                'standard_version_id' => $standardVersion->id,
+                'standard_account_id' => $standardAccount->id,
+                'hospital_version_id' => $hospitalVersion->id,
+                'hospital_account_id' => $hospitalAccount->id,
+                'match_type' => $matchType,
+                'status' => $matchType === AccountingChartMapping::TYPE_EXACT
+                    ? AccountingChartMapping::STATUS_CONFIRMED
+                    : AccountingChartMapping::STATUS_SUGGESTED,
+            ]);
+            if (!$mapping->save()) {
+                throw new \RuntimeException('สร้างคำแนะนำการจับคู่รหัส ' . $hospitalAccount->code . ' ไม่สำเร็จ');
+            }
+        }
+    }
+
+    public static function standardCandidateCode(string $hospitalCode): ?string
+    {
+        return preg_match('/^(\d{10}\.\d{3})\.\d{2}$/', $hospitalCode, $match) ? $match[1] : null;
     }
 
     private function resolveSheetName(array $names, ?string $requested): string
