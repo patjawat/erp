@@ -20,8 +20,9 @@ $this->beginBlock('page-action'); ?>
     <?php endif; ?>
     <?php if ($model->status === AccountingChartVersion::STATUS_DRAFT && Yii::$app->user->can('accountingChartManage')): ?>
         <?= Html::beginForm(['activate', 'id' => $model->id], 'post') ?>
-        <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>เปิดใช้เป็นมาตรฐานอ้างอิง', [
+        <?= Html::submitButton('<i class="bi bi-check2-circle me-1" aria-hidden="true"></i>เปิดใช้ผังบัญชี', [
             'class' => 'btn btn-success',
+            'disabled' => $mappingReadiness !== null && !$mappingReadiness['ready'],
             'data' => ['confirm' => 'ยืนยันใช้เวอร์ชันนี้เป็นมาตรฐานอ้างอิง? เวอร์ชันก่อนหน้าในปีเดียวกันจะถูกเก็บเป็นประวัติ โดยยังไม่เปลี่ยนทะเบียนเจ้าหนี้'],
         ]) ?>
         <?= Html::endForm() ?>
@@ -42,6 +43,14 @@ $this->beginBlock('page-action'); ?>
         </div>
     </div>
 </section>
+
+<?php if ($mappingReadiness !== null): ?>
+<div class="alert <?= $mappingReadiness['ready'] ? 'alert-success' : 'alert-warning' ?>" role="status">
+    ตรวจบัญชีรายได้และค่าใช้จ่าย <?= number_format($mappingReadiness['confirmed']) ?>/<?= number_format($mappingReadiness['total']) ?> รหัสแล้ว
+    <?php if (!$mappingReadiness['ready']): ?> — กรุณาตรวจคำแนะนำ <?= number_format($mappingReadiness['suggested']) ?> รายการ ปฏิเสธ <?= number_format($mappingReadiness['rejected']) ?> รายการ และยังไม่จับคู่ <?= number_format($mappingReadiness['unmapped']) ?> รายการ ก่อนเปิดใช้<?php endif; ?>
+    <?= Html::a('ไปหน้าตรวจการจับคู่', ['mappings', 'id' => $model->id], ['class' => 'alert-link']) ?>
+</div>
+<?php endif; ?>
 
 <section class="card border" aria-labelledby="account-list-heading">
     <div class="card-header bg-body"><h5 class="mb-0" id="account-list-heading">รายการบัญชี</h5></div>

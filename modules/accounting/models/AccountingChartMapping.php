@@ -10,6 +10,7 @@ class AccountingChartMapping extends ActiveRecord
     public const TYPE_EXACT = 'exact';
     public const TYPE_PARENT = 'parent';
     public const TYPE_MANUAL = 'manual';
+    public const TYPE_HOSPITAL_ONLY = 'hospital_only';
     public const STATUS_SUGGESTED = 'suggested';
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_REJECTED = 'rejected';
@@ -22,10 +23,12 @@ class AccountingChartMapping extends ActiveRecord
     public function rules()
     {
         return [
-            [['fiscal_year', 'standard_version_id', 'standard_account_id', 'hospital_version_id', 'hospital_account_id', 'match_type', 'status'], 'required'],
-            [['fiscal_year', 'standard_version_id', 'standard_account_id', 'hospital_version_id', 'hospital_account_id', 'created_by', 'updated_by'], 'integer'],
+            [['fiscal_year', 'standard_version_id', 'hospital_version_id', 'hospital_account_id', 'match_type', 'status'], 'required'],
+            [['standard_account_id'], 'required', 'when' => fn($model) => $model->match_type !== self::TYPE_HOSPITAL_ONLY],
+            [['fiscal_year', 'standard_version_id', 'standard_account_id', 'hospital_version_id', 'hospital_account_id', 'created_by', 'updated_by', 'decided_by'], 'integer'],
+            [['decided_at'], 'safe'],
             [['note'], 'string'],
-            [['match_type'], 'in', 'range' => [self::TYPE_EXACT, self::TYPE_PARENT, self::TYPE_MANUAL]],
+            [['match_type'], 'in', 'range' => [self::TYPE_EXACT, self::TYPE_PARENT, self::TYPE_MANUAL, self::TYPE_HOSPITAL_ONLY]],
             [['status'], 'in', 'range' => [self::STATUS_SUGGESTED, self::STATUS_CONFIRMED, self::STATUS_REJECTED]],
         ];
     }

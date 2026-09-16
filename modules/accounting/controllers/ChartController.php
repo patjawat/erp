@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 use app\modules\accounting\models\AccountingChartImportForm;
+use app\modules\accounting\models\AccountingChartAccount;
 use app\modules\accounting\models\AccountingChartMapping;
 use app\modules\accounting\models\AccountingChartVersion;
 use app\modules\accounting\services\AccountingChartImportService;
@@ -24,11 +25,12 @@ class ChartController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'view', 'mappings'], 'roles' => ['accountingView']],
-                ['allow' => true, 'actions' => ['import', 'confirm-import', 'delete-import-preview', 'activate', 'confirm-mapping', 'reject-mapping'], 'roles' => ['accountingChartManage']],
+                ['allow' => true, 'actions' => ['import', 'confirm-import', 'delete-import-preview', 'activate', 'confirm-mapping', 'reject-mapping', 'map-manually', 'mark-hospital-only', 'reset-mapping'], 'roles' => ['accountingChartManage']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'confirm-import' => ['POST'], 'delete-import-preview' => ['POST'], 'activate' => ['POST'],
                 'confirm-mapping' => ['POST'], 'reject-mapping' => ['POST'],
+                'map-manually' => ['POST'], 'mark-hospital-only' => ['POST'], 'reset-mapping' => ['POST'],
             ]],
         ]);
     }
@@ -44,8 +46,12 @@ class ChartController extends Controller
     public function actionView($id)
     {
         $model = $this->findVersion($id);
+        $mappingReadiness = $model->scope === AccountingChartVersion::SCOPE_HOSPITAL
+            ? (new AccountingChartImportService())->mappingReadiness($model)
+            : null;
         return $this->render('view', [
             'model' => $model,
+            'mappingReadiness' => $mappingReadiness,
             'dataProvider' => new ActiveDataProvider([
                 'query' => $model->getAccounts(),
                 'pagination' => ['pageSize' => 100],
@@ -133,7 +139,7 @@ class ChartController extends Controller
             Yii::$app->session->setFlash('success', 'เปิดใช้ผังบัญชี “' . $model->title . '” เป็นมาตรฐานอ้างอิงแล้ว โดยยังไม่เชื่อมทะเบียนเจ้าหนี้');
         } catch (\Throwable $e) {
             Yii::error($e, __METHOD__);
-            Yii::$app->session->setFlash('error', 'เปิดใช้ผังบัญชีไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
+            Yii::$app->session->setFlash('error', $e instanceof \DomainException ? $e->getMessage() : 'เปิดใช้ผังบัญชีไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
         }
         return $this->redirect(['view', 'id' => $model->id]);
     }
@@ -155,7 +161,12 @@ class ChartController extends Controller
             ->andWhere(['category' => ['4', '5']])
             ->andFilterWhere(['not in', 'id', $mappedIds])
             ->all();
-        return $this->render('mappings', compact('model', 'mappings', 'unmapped'));
+        $standardVersion = $this->findStandardVersion($model);
+        $standardAccounts = $standardVersion
+            ? AccountingChartAccount::find()->where(['version_id' => $standardVersion->id, 'category' => ['4', '5']])->orderBy('code')->all()
+            : [];
+        $readiness = (new AccountingChartImportService())->mappingReadiness($model);
+        return $this->render('mappings', compact('model', 'mappings', 'unmapped', 'standardVersion', 'standardAccounts', 'readiness'));
     }
 
     public function actionConfirmMapping($id)
@@ -166,6 +177,71 @@ class ChartController extends Controller
     public function actionRejectMapping($id)
     {
         return $this->updateMappingStatus($id, AccountingChartMapping::STATUS_REJECTED, 'ปฏิเสธคำแนะนำการจับคู่แล้ว');
+    }
+
+    public function actionMapManually($id)
+    {
+        $hospitalVersion = $this->findVersion($id);
+        $standardVersion = $this->findStandardVersion($hospitalVersion);
+        $hospitalAccount = AccountingChartAccount::findOne((int) Yii::$app->request->post('hospital_account_id'));
+        $standardAccount = AccountingChartAccount::findOne((int) Yii::$app->request->post('standard_account_id'));
+        if (!$standardVersion || !$hospitalAccount || !$standardAccount
+            || (int) $hospitalAccount->version_id !== (int) $hospitalVersion->id
+            || (int) $standardAccount->version_id !== (int) $standardVersion->id
+            || !in_array($hospitalAccount->category, ['4', '5'], true)
+            || !in_array($standardAccount->category, ['4', '5'], true)) {
+            Yii::$app->session->setFlash('error', 'ข้อมูลบัญชีที่เลือกไม่อยู่ในผังปีเดียวกัน กรุณาเลือกใหม่');
+            return $this->redirect(['mappings', 'id' => $hospitalVersion->id]);
+        }
+        $mapping = AccountingChartMapping::findOne(['hospital_version_id' => $hospitalVersion->id, 'hospital_account_id' => $hospitalAccount->id])
+            ?: new AccountingChartMapping(['hospital_version_id' => $hospitalVersion->id, 'hospital_account_id' => $hospitalAccount->id]);
+        $mapping->setAttributes([
+            'fiscal_year' => $hospitalVersion->fiscal_year,
+            'standard_version_id' => $standardVersion->id,
+            'standard_account_id' => $standardAccount->id,
+            'match_type' => AccountingChartMapping::TYPE_MANUAL,
+            'status' => AccountingChartMapping::STATUS_CONFIRMED,
+            'note' => trim((string) Yii::$app->request->post('note')) ?: null,
+            'decided_at' => date('Y-m-d H:i:s'),
+            'decided_by' => Yii::$app->user->id,
+        ]);
+        Yii::$app->session->setFlash($mapping->save() ? 'success' : 'error', $mapping->hasErrors() ? 'บันทึกการจับคู่ไม่สำเร็จ' : 'บันทึกการจับคู่ด้วยตนเองแล้ว');
+        return $this->redirect(['mappings', 'id' => $hospitalVersion->id]);
+    }
+
+    public function actionMarkHospitalOnly($id)
+    {
+        $hospitalVersion = $this->findVersion($id);
+        $standardVersion = $this->findStandardVersion($hospitalVersion);
+        $hospitalAccount = AccountingChartAccount::findOne((int) Yii::$app->request->post('hospital_account_id'));
+        if (!$standardVersion || !$hospitalAccount || (int) $hospitalAccount->version_id !== (int) $hospitalVersion->id || !in_array($hospitalAccount->category, ['4', '5'], true)) {
+            Yii::$app->session->setFlash('error', 'ไม่พบบัญชีโรงพยาบาลที่เลือก');
+            return $this->redirect(['mappings', 'id' => $hospitalVersion->id]);
+        }
+        $mapping = AccountingChartMapping::findOne(['hospital_version_id' => $hospitalVersion->id, 'hospital_account_id' => $hospitalAccount->id])
+            ?: new AccountingChartMapping(['hospital_version_id' => $hospitalVersion->id, 'hospital_account_id' => $hospitalAccount->id]);
+        $mapping->setAttributes([
+            'fiscal_year' => $hospitalVersion->fiscal_year,
+            'standard_version_id' => $standardVersion->id,
+            'standard_account_id' => null,
+            'match_type' => AccountingChartMapping::TYPE_HOSPITAL_ONLY,
+            'status' => AccountingChartMapping::STATUS_CONFIRMED,
+            'note' => trim((string) Yii::$app->request->post('note')) ?: 'บัญชีเฉพาะโรงพยาบาล ไม่มีคู่ในผังมาตรฐาน',
+            'decided_at' => date('Y-m-d H:i:s'),
+            'decided_by' => Yii::$app->user->id,
+        ]);
+        Yii::$app->session->setFlash($mapping->save() ? 'success' : 'error', $mapping->hasErrors() ? 'บันทึกผลไม่สำเร็จ' : 'ระบุเป็นบัญชีเฉพาะโรงพยาบาลแล้ว');
+        return $this->redirect(['mappings', 'id' => $hospitalVersion->id]);
+    }
+
+    public function actionResetMapping($id)
+    {
+        $mapping = AccountingChartMapping::findOne($id);
+        if (!$mapping) throw new NotFoundHttpException('ไม่พบรายการจับคู่');
+        $versionId = $mapping->hospital_version_id;
+        $deleted = $mapping->delete() !== false;
+        Yii::$app->session->setFlash($deleted ? 'success' : 'error', $deleted ? 'นำผลตัดสินออกแล้ว สามารถเลือกใหม่ได้' : 'นำผลตัดสินออกไม่สำเร็จ');
+        return $this->redirect(['mappings', 'id' => $versionId]);
     }
 
     private function findVersion($id): AccountingChartVersion
@@ -180,13 +256,30 @@ class ChartController extends Controller
     {
         $mapping = AccountingChartMapping::findOne($id);
         if (!$mapping) throw new NotFoundHttpException('ไม่พบรายการจับคู่');
+        if ($mapping->match_type !== AccountingChartMapping::TYPE_PARENT || $mapping->status !== AccountingChartMapping::STATUS_SUGGESTED) {
+            Yii::$app->session->setFlash('error', 'รายการนี้ไม่ใช่คำแนะนำที่รอตรวจ กรุณาเลือกบัญชีใหม่ด้วยตนเอง');
+            return $this->redirect(['mappings', 'id' => $mapping->hospital_version_id]);
+        }
         $mapping->status = $status;
+        $mapping->decided_at = date('Y-m-d H:i:s');
+        $mapping->decided_by = Yii::$app->user->id;
         if ($mapping->save()) {
             Yii::$app->session->setFlash('success', $message);
         } else {
             Yii::$app->session->setFlash('error', 'บันทึกผลการจับคู่ไม่สำเร็จ');
         }
         return $this->redirect(['mappings', 'id' => $mapping->hospital_version_id]);
+    }
+
+    private function findStandardVersion(AccountingChartVersion $hospitalVersion): ?AccountingChartVersion
+    {
+        if ($hospitalVersion->scope !== AccountingChartVersion::SCOPE_HOSPITAL) return null;
+        $existing = AccountingChartMapping::find()->where(['hospital_version_id' => $hospitalVersion->id])->one();
+        if ($existing) return AccountingChartVersion::findOne($existing->standard_version_id);
+        return AccountingChartVersion::find()
+            ->where(['fiscal_year' => $hospitalVersion->fiscal_year, 'scope' => AccountingChartVersion::SCOPE_STANDARD, 'status' => [AccountingChartVersion::STATUS_ACTIVE, AccountingChartVersion::STATUS_DRAFT]])
+            ->orderBy(new \yii\db\Expression("CASE status WHEN 'active' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END, id DESC"))
+            ->one();
     }
 
     private function storePreview(array $preview): array

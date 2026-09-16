@@ -175,6 +175,9 @@ class AccountingChartImportService
         if ($version->account_count < 1 || AccountingChartAccount::find()->where(['version_id' => $version->id])->count() != $version->account_count) {
             throw new \DomainException('จำนวนรหัสในผังบัญชีไม่ตรงกับที่นำเข้า กรุณาตรวจสอบก่อนเปิดใช้');
         }
+        if ($version->scope === AccountingChartVersion::SCOPE_HOSPITAL && !$this->mappingReadiness($version)['ready']) {
+            throw new \DomainException('ยังตรวจการจับคู่บัญชีรายได้และค่าใช้จ่ายไม่ครบ จึงเปิดใช้ผังโรงพยาบาลไม่ได้');
+        }
         $transaction = Yii::$app->db->beginTransaction();
         try {
             AccountingChartVersion::updateAll(
@@ -266,6 +269,30 @@ class AccountingChartImportService
     public static function standardCandidateCode(string $hospitalCode): ?string
     {
         return preg_match('/^(\d{10}\.\d{3})\.\d{2}$/', $hospitalCode, $match) ? $match[1] : null;
+    }
+
+    public function mappingReadiness(AccountingChartVersion $hospitalVersion): array
+    {
+        $total = (int) AccountingChartAccount::find()
+            ->where(['version_id' => $hospitalVersion->id, 'category' => ['4', '5']])
+            ->count();
+        $counts = AccountingChartMapping::find()
+            ->select(['status', 'total' => new \yii\db\Expression('COUNT(*)')])
+            ->where(['hospital_version_id' => $hospitalVersion->id])
+            ->groupBy('status')
+            ->indexBy('status')
+            ->column();
+        $confirmed = (int) ($counts[AccountingChartMapping::STATUS_CONFIRMED] ?? 0);
+        $suggested = (int) ($counts[AccountingChartMapping::STATUS_SUGGESTED] ?? 0);
+        $rejected = (int) ($counts[AccountingChartMapping::STATUS_REJECTED] ?? 0);
+        $unmapped = max(0, $total - $confirmed - $suggested - $rejected);
+        $standardVersions = (int) AccountingChartMapping::find()
+            ->select('standard_version_id')->distinct()
+            ->where(['hospital_version_id' => $hospitalVersion->id])->count();
+
+        return compact('total', 'confirmed', 'suggested', 'rejected', 'unmapped') + [
+            'ready' => $total > 0 && $confirmed === $total && $standardVersions === 1,
+        ];
     }
 
     private function resolveSheetName(array $names, ?string $requested): string
