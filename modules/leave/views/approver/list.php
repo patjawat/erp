@@ -162,6 +162,13 @@ $csrfToken     = Yii::$app->request->csrfToken;
                                 </li>
                                 <li>
                                     <?= Html::a(
+                                        '<i class="bi bi-clock-history me-2"></i> ประวัติการแก้ไข',
+                                        ['/leave/leave/edit-history', 'id' => $item->id, 'title' => 'ประวัติการแก้ไขใบลา'],
+                                        ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]
+                                    ) ?>
+                                </li>
+                                <li>
+                                    <?= Html::a(
                                         '<i class="bi bi-printer me-2"></i> พิมพ์ใบลา (PDF)',
                                         ['/leave/leave/pdf', 'id' => $item->id],
                                         [

@@ -80,7 +80,13 @@ class StockItemController extends Controller
         }
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
 
+        // ยอดคงเหลือรายคลังต้อง scope ตามสิทธิ์ (admin/warehouse ทุกคลัง, ที่เหลือเฉพาะ officer)
+        $canSeeAllWarehouses = Warehouse::userCanSeeAllWarehouses();
+        $allowedMainIds = $canSeeAllWarehouses ? null : Warehouse::accessibleMainWarehouseIds();
         $warehouseId = $searchModel->warehouse_id ? (int) $searchModel->warehouse_id : null;
+        if (!$canSeeAllWarehouses && $warehouseId && !in_array($warehouseId, $allowedMainIds, true)) {
+            $warehouseId = null; // ไม่มีสิทธิ์คลังนี้ — ไม่แสดงยอดคงเหลือ
+        }
         $balanceMap = [];
         if ($warehouseId > 0) {
             $models = $dataProvider->getModels();
@@ -101,9 +107,12 @@ class StockItemController extends Controller
             }
         }
 
-        $listWarehouse = Warehouse::find()
-            ->orderBy(['warehouse_type' => SORT_ASC, 'warehouse_name' => SORT_ASC])
-            ->all();
+        $listWarehouseQuery = Warehouse::find()
+            ->orderBy(['warehouse_type' => SORT_ASC, 'warehouse_name' => SORT_ASC]);
+        if (!$canSeeAllWarehouses) {
+            $listWarehouseQuery->andWhere(['id' => $allowedMainIds ?: [0]]);
+        }
+        $listWarehouse = $listWarehouseQuery->all();
         $warehouses = ['' => '-- ทุกคลัง (ไม่แสดงยอดคงเหลือ) --'];
         foreach ($listWarehouse as $w) {
             $prefix = $w->warehouse_type === 'MAIN' ? 'คลังหลัก: ' : ($w->warehouse_type === 'SUB' ? 'คลังย่อย: ' : '');
@@ -136,7 +145,13 @@ class StockItemController extends Controller
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
         $dataProvider->pagination = false;
 
+        // ยอดคงเหลือรายคลังต้อง scope ตามสิทธิ์เช่นเดียวกับหน้า index
+        $canSeeAllWarehouses = Warehouse::userCanSeeAllWarehouses();
         $warehouseId = $searchModel->warehouse_id ? (int) $searchModel->warehouse_id : null;
+        if (!$canSeeAllWarehouses && $warehouseId
+            && !in_array($warehouseId, Warehouse::accessibleMainWarehouseIds(), true)) {
+            $warehouseId = null;
+        }
         $balanceMap = [];
         $models = $dataProvider->getModels();
         if ($warehouseId > 0 && !empty($models)) {

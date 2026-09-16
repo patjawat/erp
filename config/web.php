@@ -282,6 +282,9 @@ $config = [
     'as access' => [
         'class' => 'mdm\admin\components\AccessControl',
         'allowActions' => [
+            // Attendance enforces authentication, ownership and reviewer scope in its module/controllers.
+            'attendance/*',
+            'approve-v2/checkin/*',
             'telegrambot/*',
             'dms/webhook/receive',
             // '*',
@@ -302,6 +305,21 @@ $config = [
             // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
             // (controller ยังใช้ AccessControl roles=['@']; จะเปลี่ยนเป็น guard สิทธิ์จริงในเฟส 1)
             'qms/*',
+            // KM: คลังกิจกรรม/หลักฐานงานคุณภาพ (เฟส 0 โครงเปล่า) — controller ใช้ roles=['@']
+            // เฟสถัดไปจะคุมขอบเขตหน่วยงาน (owner=tree.id) ภายใน controller เอง
+            'km/*',
+            // Complaint: ระบบรับเรื่องร้องเรียน — controller ใช้ roles=['@'] แล้ว guard สิทธิ์จริง
+            // ผ่าน ComplaintService (ทีมศูนย์ฯ = admin/role complaint ; ผู้ใช้ทั่วไป = เฉพาะสายหน่วยตนเอง)
+            'complaint/*',
+            // SWOT & SOAR: เครื่องมือวิเคราะห์เชิงกลยุทธ์ (standalone) — controller ใช้ roles=['@']
+            'swot/*',
+            // เครื่องมือ (hub) + ผังกระบวนการ — เปิดให้ผู้ล็อกอินทุกคน controller ใช้ roles=['@']
+            'tools/*',
+            'flowchart/*',
+            // Leave: ประวัติการแก้ไขใบลา — controller ตรวจสิทธิ์ผู้ดูแลระบบลา (can('leave')) ภายในเอง
+            'leave/leave/edit-history',
+            // Leave: เติม/แก้ไขผู้อนุมัติที่ยังไม่ระบุ — controller ตรวจ can('leave') ภายในเอง
+            'leave/approver/save-approvers',
             // MedSOP: ผู้ใช้ที่ล็อกอินทุกคนต้องเปิดอ่านเอกสาร SOP/WI ที่ตนมีสิทธิ์ได้
             // สิทธิ์จริงมาจาก DocumentAccessService ที่ทุก action เรียกตรวจเอง
             // (isAdmin/isAuthor/canView/canUpdate/canPublish) ไม่ได้อิง route permission

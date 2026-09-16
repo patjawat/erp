@@ -96,11 +96,13 @@ class Warehouse extends \yii\db\ActiveRecord
      */
     public function listUserstore()
     {
-        $sql = "SELECT concat(emp.fname,' ',emp.lname) as fullname,emp.user_id FROM employees emp
+        // ผู้ที่กำหนดเป็นเจ้าหน้าที่รับผิดชอบคลังได้ = มีสิทธิ์ warehouse หรือ inventory
+        // (inventory จะถูก scope ให้จัดการเฉพาะคลังหลักที่ตนเป็น officer)
+        $sql = "SELECT DISTINCT concat(emp.fname,' ',emp.lname) as fullname, emp.user_id FROM employees emp
         INNER JOIN user ON user.id = emp.user_id
         INNER JOIN auth_assignment auth ON auth.user_id = user.id
-        where auth.item_name = :item_name";
-        $querys = Yii::$app->db->createCommand($sql)->bindValue(':item_name', 'warehouse')->queryAll();
+        where auth.item_name IN ('warehouse', 'inventory')";
+        $querys = Yii::$app->db->createCommand($sql)->queryAll();
         return ArrayHelper::map($querys, 'user_id', 'fullname');
     }
 
@@ -186,8 +188,29 @@ class Warehouse extends \yii\db\ActiveRecord
     }
 
     /**
-     * คลังหลักสำหรับ dropdown ใบรับเข้า
-     * แสดงเฉพาะคลังที่ผู้ใช้ล็อกอินถูกกำหนดเป็นเจ้าหน้าที่ (data_json.officer)
+     * นโยบายสิทธิ์คลังกลาง (ใช้ร่วมทุก controller ในโมดูล):
+     * admin หรือผู้มีสิทธิ์ warehouse = เห็น/จัดการได้ทุกคลัง
+     * ที่เหลือ (เช่น inventory) = เฉพาะคลังที่ตนเป็นผู้รับผิดชอบ (data_json.officer)
+     * @return bool
+     */
+    public static function userCanSeeAllWarehouses()
+    {
+        return !Yii::$app->user->isGuest
+            && (Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse'));
+    }
+
+    /**
+     * รหัสคลังหลัก (MAIN) ที่ user ปัจจุบันมีสิทธิ์เห็น/จัดการ ตามนโยบายกลาง
+     * ใช้เป็นตัวกรอง andWhere(['... ' => Warehouse::accessibleMainWarehouseIds()])
+     * @return int[] (คืน [] ถ้าไม่มีสิทธิ์คลังใดเลย — ควร guard ด้วย ?: [0] ก่อนใช้เป็นเงื่อนไข IN)
+     */
+    public static function accessibleMainWarehouseIds()
+    {
+        return array_map('intval', ArrayHelper::getColumn(self::findMainWarehousesForReceive(), 'id'));
+    }
+
+    /**
+     * คลังหลักสำหรับ dropdown ใบรับเข้า/จ่าย ตามนโยบายกลาง (ดู userCanSeeAllWarehouses)
      * @return Warehouse[]
      */
     public static function findMainWarehousesForReceive()
@@ -196,7 +219,7 @@ class Warehouse extends \yii\db\ActiveRecord
             return [];
         }
 
-        if (Yii::$app->user->can('admin')) {
+        if (self::userCanSeeAllWarehouses()) {
             return self::find()
                 ->where(['warehouse_type' => 'MAIN'])
                 ->andWhere(['or', ['delete' => null], ['delete' => '']])

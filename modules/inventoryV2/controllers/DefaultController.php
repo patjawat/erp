@@ -81,8 +81,17 @@ class DefaultController extends Controller
             $dataProvider->sort->defaultOrder = ['warehouse_name' => SORT_ASC];
         }
 
-        // แสดงคลังทั้งหมดในหน้าตั้งค่า เพื่อให้กำหนดผู้รับผิดชอบคลังได้
-        // โดยไม่ต้องมีสิทธิ์ officer ในคลังนั้นมาก่อน (เดิมกรองเฉพาะคลังที่ตนเป็น officer)
+        // admin/warehouse: เห็นทุกคลัง (ใช้กำหนดผู้รับผิดชอบคลังให้ผู้อื่นได้)
+        // inventory และอื่นๆ: เห็นเฉพาะคลังที่ตนรับผิดชอบ (officer) — สอดคล้องกับ canAccessWarehouse
+        $canSeeAllWarehouses = !\Yii::$app->user->isGuest
+            && (\Yii::$app->user->can('admin') || \Yii::$app->user->can('warehouse'));
+        if (!$canSeeAllWarehouses) {
+            $accessibleIds = array_map(
+                static fn($w) => (int) $w->id,
+                Warehouse::findAllAccessibleWarehouses()
+            );
+            $dataProvider->query->andWhere(['id' => $accessibleIds ?: [0]]);
+        }
 
         $models = $dataProvider->getModels();
         $departmentNames = [];

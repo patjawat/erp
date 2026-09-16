@@ -60,6 +60,7 @@ $modules['sm'] = ['class' => 'app\modules\sm\Module'];  // งานพัสด
 $modules['old'] = ['class' => 'app\modules\old\Module'];  // theme dev
 $modules['hr'] = ['class' => 'app\modules\hr\Module'];  // HRMS
 $modules['pm'] = ['class' => 'app\modules\pm\Module'];  // แผนงานและโครงการ (Project mansgement)
+$modules['swot'] = ['class' => 'app\modules\swot\Module'];  // เครื่องมือวิเคราะห์ SWOT & SOAR
 $modules['am'] = ['class' => 'app\modules\am\Module'];  // งานทรัพย์สิน
 $modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การสำรวจครุภัณฑ์ประจำปี
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
@@ -105,4 +106,8 @@ $modules['roster'] = ['class' => 'app\modules\roster\Module'];  // ตารา�
 $modules['service-profile'] = ['class' => 'app\modules\serviceProfile\Module'];  // Service Profile ประจำปีของหน่วยงาน
 $modules['iac-risk'] = ['class' => 'app\modules\iacRisk\Module'];  // การควบคุมภายในและการบริหารความเสี่ยง
 $modules['qms'] = ['class' => 'app\modules\qms\Module'];  // ระบบติดตามมาตรฐานโรงพยาบาล (Quality Management System)
+$modules['flowchart'] = ['class' => 'app\modules\flowchart\Module'];  // เครื่องมือสร้างผังกระบวนการ (ป้อนขั้นตอน -> ผัง + เอกสาร)
+$modules['km'] = ['class' => 'app\modules\km\Module'];  // คลังกิจกรรม/หลักฐานการดำเนินงาน (Knowledge Management)
+$modules['complaint'] = ['class' => 'app\modules\complaint\Module'];  // ระบบรับเรื่องร้องเรียน (workflow 5 ขั้น)
+$modules['tools'] = ['class' => 'app\modules\tools\Module'];  // หน้า hub รวมเครื่องมือ (SWOT, ผังกระบวนการ, ฯลฯ)
 return $modules;

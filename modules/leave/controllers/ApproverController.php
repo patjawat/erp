@@ -204,6 +204,86 @@ class ApproverController extends Controller
     }
 
     /**
+     * เติม/แก้ไขผู้อนุมัติที่ยังไม่ระบุ (admin only) — เรียกจากฟอร์มแก้ไขใบลา
+     * บันทึกแยกจากการ save ข้อมูลใบลา เพื่อไม่ให้ติด validation ฟิลด์อื่น
+     * รับ POST approves = { <approveId>: <empId> } อัปเดตเฉพาะ emp_id ไม่ยุ่ง status/ลำดับ
+     */
+    public function actionSaveApprovers($id)
+    {
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการนี้');
+        }
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $leave = Leave::findOne(['id' => (int) $id]);
+        if ($leave === null) {
+            return ['status' => 'error', 'message' => 'ไม่พบรายการวันลา'];
+        }
+
+        $data = Yii::$app->request->post('approves', []);
+        if (!is_array($data) || empty($data)) {
+            return ['status' => 'error', 'message' => 'ไม่มีข้อมูลผู้อนุมัติที่จะบันทึก'];
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        $updated = 0;
+
+        try {
+            foreach ($data as $approveId => $empId) {
+                $approveId = (int) $approveId;
+                if ($approveId <= 0) {
+                    continue;
+                }
+
+                $record = Approve::findOne([
+                    'id'      => $approveId,
+                    'name'    => 'leave',
+                    'from_id' => (string) $leave->id,
+                ]);
+                if (!$record) {
+                    continue;
+                }
+
+                $newEmpId = (int) $empId;
+                $targetEmpId = $newEmpId > 0 ? $newEmpId : null;
+
+                // ข้ามถ้าไม่มีการเปลี่ยนแปลงจริง
+                if ((int) $record->emp_id === (int) $newEmpId) {
+                    continue;
+                }
+
+                $record->emp_id = $targetEmpId;
+                if (!$record->save(false)) {
+                    throw new \RuntimeException("บันทึกผู้อนุมัติ #{$approveId} ไม่สำเร็จ");
+                }
+                $updated++;
+
+                // ถ้า step นี้กำลังรออนุมัติและเพิ่งได้ผู้อนุมัติ → แจ้งเตือน (best-effort)
+                if ($record->status === 'Pending' && $targetEmpId !== null) {
+                    try {
+                        (new LeaveTelegramService())->notifyPendingApprove($record);
+                    } catch (\Throwable $e) {
+                        Yii::warning('Telegram notify failed: ' . $e->getMessage(), __METHOD__);
+                    }
+                }
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+
+        if ($updated === 0) {
+            return ['status' => 'success', 'message' => 'ไม่มีการเปลี่ยนแปลงผู้อนุมัติ'];
+        }
+
+        return ['status' => 'success', 'message' => 'บันทึกผู้อนุมัติสำเร็จ ' . $updated . ' รายการ'];
+    }
+
+    /**
      * เปิด modal สำหรับเปลี่ยนผู้อนุมัติแบบหลายรายการจากรายการที่เลือก
      */
     public function actionBulkChangeApprover()

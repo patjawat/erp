@@ -97,7 +97,7 @@ JS;
                 <label class="form-label small text-muted mb-2">เลือกจุดบนแผนที่</label>
                 <p class="small text-muted mb-2">คลิกบนแผนที่หรือลากหมุดเพื่อกำหนดศูนย์กลางจุดลงเวลา พิกัดจะอัปเดตในช่อง Latitude / Longitude</p>
                 <div class="ratio ratio-16x9 rounded-3 border overflow-hidden shadow-sm">
-                    <div id="attendance-location-map" class="bg-light"></div>
+                    <div id="attendance-location-map" class="bg-body-tertiary"></div>
                 </div>
             </div>
             <?php else: ?>
@@ -106,8 +106,8 @@ JS;
             </div>
             <?php endif; ?>
             <div class="col-12 col-md-6">
-                <?= $form->field($model, 'radius_m')->textInput(['type' => 'number', 'min' => 0, 'max' => 100000, 'class' => 'form-control'])->label('รัศมีอนุญาตลงเวลา (เมตร)') ?>
-                <p class="form-text text-muted small mb-0">ระยะห่างสูงสุดจากจุดศูนย์กลาง (Lat/Lng) ที่ยอมรับเมื่อลงเวลาด้วย GPS — ใส่ 0 = ไม่ใช้รัศมีกับจุดนี้ (ถ้าทุกจุดเป็น 0 ระบบจะไม่บังคับตรวจพิกัด)</p>
+                <?= $form->field($model, 'radius_m')->textInput(['type' => 'number', 'min' => 1, 'max' => 100000, 'class' => 'form-control'])->label('รัศมีอนุญาตลงเวลา (เมตร)') ?>
+                <p class="form-text text-muted small mb-0">กำหนดตั้งแต่ 1–100,000 เมตร ระบบบังคับ GPS ทุกครั้ง หากเกินรัศมีต้องระบุเหตุผลรออนุมัติ</p>
             </div>
             <div class="col-12 col-md-6">
                 <?= $form->field($model, 'qr_token')->textInput(['class' => 'form-control', 'placeholder' => 'เว้นว่างให้ระบบสร้างอัตโนมัติ'])->label('ค่า QR (ถ้ามี)') ?>

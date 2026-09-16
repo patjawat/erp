@@ -7,6 +7,7 @@ $this->params['breadcrumbs'][] = ['label' => 'จุดลงเวลา', 'url
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('action'); ?>
+<?= Html::a('<i class="bi bi-qr-code me-1"></i> ป้าย QR สำหรับพิมพ์', ['qr', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank', 'rel' => 'noopener']) ?>
 <?= Html::a('<i class="bi bi-pencil me-1"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-primary btn-sm']) ?>
 <?= Html::a('<i class="bi bi-arrow-left me-1"></i> รายการ', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
 <?php $this->endBlock(); ?>
@@ -27,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </tbody>
         </table>
         <?php if ($model->qr_token): ?>
-        <p class="text-muted small mt-3 mb-0">สร้าง QR Code โดยใช้ข้อความ: <code><?= Html::encode($model->qr_token) ?></code> แล้วแปะที่จุดลงเวลา</p>
+        <p class="text-muted small mt-3 mb-0">รหัสสำหรับตรวจสอบ QR: <code><?= Html::encode($model->qr_token) ?></code> ใช้ปุ่มป้าย QR สำหรับพิมพ์เพื่อสร้างป้ายที่จุดลงเวลา</p>
         <?php endif; ?>
     </div>
 </div>

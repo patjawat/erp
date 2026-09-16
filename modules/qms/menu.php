@@ -8,6 +8,12 @@ use yii\helpers\Url;
  */
 $active = $active ?? '';
 
+// ระดับโซน (มาตรฐานโรงพยาบาล / คลังกิจกรรม KM) → บล็อก page-action มุมขวาหัวข้อหน้า
+// จัดวางแนวเดียวกับงาน HRD
+$this->beginBlock('page-action');
+echo $this->render('@app/modules/km/_zone_action', ['active' => 'qms']);
+$this->endBlock();
+
 $items = [
     ['key' => 'overview',   'label' => 'ภาพรวม',      'icon' => 'bi-speedometer2',           'url' => ['/qms/default/index']],
     ['key' => 'standards',  'label' => 'มาตรฐาน',     'icon' => 'bi-shield-check',           'url' => ['/qms/default/standards']],

@@ -21,15 +21,38 @@ use app\modules\inventoryV2\components\InventoryService;
 class StockAdjustController extends Controller
 {
     /**
+     * ตรวจสิทธิ์คลังตามนโยบายกลาง (admin/warehouse = ทุกคลัง, ที่เหลือ = officer)
+     * ใช้เป็นด่านบังคับในทุก action ที่ปรับ/ลบยอดของคลังใดคลังหนึ่ง
+     * @throws \yii\web\ForbiddenHttpException
+     */
+    protected function assertWarehouseAccess($warehouseId)
+    {
+        if (Warehouse::userCanSeeAllWarehouses()) {
+            return;
+        }
+        if (!in_array((int) $warehouseId, Warehouse::accessibleMainWarehouseIds(), true)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์จัดการคลังนี้');
+        }
+    }
+
+    /** dropdown คลังหลักตามสิทธิ์ (admin/warehouse ทุกคลัง, ที่เหลือเฉพาะ officer) */
+    protected function accessibleMainWarehouseDropdown()
+    {
+        $query = Warehouse::find()
+            ->where(['warehouse_type' => 'MAIN'])
+            ->orderBy(['warehouse_name' => SORT_ASC]);
+        if (!Warehouse::userCanSeeAllWarehouses()) {
+            $query->andWhere(['id' => Warehouse::accessibleMainWarehouseIds() ?: [0]]);
+        }
+        return ['' => '-- เลือกคลัง --'] + \yii\helpers\ArrayHelper::map($query->all(), 'id', 'warehouse_name');
+    }
+
+    /**
      * ฟอร์มปรับยอด
      */
     public function actionIndex()
     {
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- เลือกคลัง --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        $warehouses = $this->accessibleMainWarehouseDropdown();
 
         // prefill จาก variance banner ในหน้า main-stock/balance
         $request = Yii::$app->request;
@@ -67,6 +90,7 @@ class StockAdjustController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $warehouseId = (int) Yii::$app->request->get('warehouse_id', 0);
+        $this->assertWarehouseAccess($warehouseId);
         $itemCode = trim((string) Yii::$app->request->get('item_code', ''));
 
         if ($warehouseId <= 0 || $itemCode === '') {
@@ -99,6 +123,7 @@ class StockAdjustController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $warehouseId = (int) $warehouse_id;
+        $this->assertWarehouseAccess($warehouseId);
         $itemCode = trim((string) $item_code);
 
         $item = StockItem::findOne(['item_code' => $itemCode]);
@@ -142,6 +167,7 @@ class StockAdjustController extends Controller
         }
 
         $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
+        $this->assertWarehouseAccess($warehouseId);
         $itemCode = trim((string) Yii::$app->request->post('item_code', ''));
         $adjustmentQty = (float) Yii::$app->request->post('adjustment_qty', 0);
         $currentQtyRaw = Yii::$app->request->post('current_qty');
@@ -397,6 +423,7 @@ class StockAdjustController extends Controller
             return ['success' => false, 'message' => 'แก้ได้เฉพาะใบเบิกที่ยืนยันแล้ว'];
         }
 
+        $this->assertWarehouseAccess((int) $order->main_warehouse_id);
         $warehouseId = $warehouseId > 0 ? $warehouseId : (int) $order->main_warehouse_id;
         $itemCode = $itemCode !== '' ? $itemCode : (string) $detail->item_code;
         if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
@@ -697,6 +724,7 @@ class StockAdjustController extends Controller
         if ((string) $order->status !== StockOrder::STATUS_CONFIRMED) {
             return ['success' => false, 'message' => 'ลบได้เฉพาะเอกสารที่ยืนยันแล้วเท่านั้น'];
         }
+        $this->assertWarehouseAccess((int) $order->main_warehouse_id);
         if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
             return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
         }
@@ -792,6 +820,7 @@ class StockAdjustController extends Controller
         if ((string) $order->status !== StockOrder::STATUS_CONFIRMED) {
             return ['success' => false, 'message' => 'แก้ได้เฉพาะเอกสารที่ยืนยันแล้วเท่านั้น'];
         }
+        $this->assertWarehouseAccess((int) $order->main_warehouse_id);
         if ((string) $detail->item_code !== $itemCode || (int) $order->main_warehouse_id !== $warehouseId) {
             return ['success' => false, 'message' => 'รายการที่ส่งมาไม่ตรงกับคลังหรือรหัสพัสดุ'];
         }
@@ -1153,13 +1182,10 @@ class StockAdjustController extends Controller
         $warehouseId = (int) Yii::$app->request->post('warehouse_id', 0);
         $confirm = trim((string) Yii::$app->request->post('confirm_text', ''));
 
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- เลือกคลัง --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        $warehouses = $this->accessibleMainWarehouseDropdown();
 
         if (Yii::$app->request->isPost && $warehouseId > 0) {
+            $this->assertWarehouseAccess($warehouseId);
             $warehouse = Warehouse::findOne($warehouseId);
             if (!$warehouse) {
                 Yii::$app->session->setFlash('error', 'ไม่พบคลังที่เลือก');
