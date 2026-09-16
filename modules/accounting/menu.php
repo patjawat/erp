@@ -10,6 +10,7 @@ $items = [
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/accounting/payable']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'chart', 'label' => 'ผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/accounting/chart']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'journal', 'label' => 'รายการบัญชีร่าง', 'icon' => 'bi-journal-check', 'url' => ['/accounting/journal']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'vendor-reconciliation', 'label' => 'ตรวจผู้ขาย', 'icon' => 'bi-person-check', 'url' => ['/accounting/vendor-reconciliation']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2" aria-label="เมนูระบบบัญชี">
