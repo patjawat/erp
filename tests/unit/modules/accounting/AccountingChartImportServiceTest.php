@@ -5,6 +5,7 @@ namespace tests\unit\modules\accounting;
 use app\modules\accounting\services\AccountingChartImportService;
 use app\modules\accounting\services\AccountingJournalDraftService;
 use app\modules\accounting\services\AccountingPeriodReviewService;
+use app\modules\accounting\services\AccountingPeriodCloseService;
 use Codeception\Test\Unit;
 
 class AccountingChartImportServiceTest extends Unit
@@ -78,5 +79,12 @@ class AccountingChartImportServiceTest extends Unit
         $result = AccountingPeriodReviewService::evaluateReadiness(['journal_count'=>0,'debit'=>100,'credit'=>99,'draft_count'=>2,'misplaced_count'=>1]);
         $this->assertFalse($result['ready']);
         $this->assertCount(4, $result['issues']);
+    }
+
+    public function testPeriodCloseSnapshotHashDoesNotDependOnBalanceOrder(): void
+    {
+        $summary=['journal_count'=>2,'debit'=>100,'credit'=>100];
+        $a=[['account_code_snapshot'=>'2','debit'=>0,'credit'=>100],['account_code_snapshot'=>'1','debit'=>100,'credit'=>0]];
+        $this->assertSame(AccountingPeriodCloseService::snapshotHash($summary,$a),AccountingPeriodCloseService::snapshotHash($summary,array_reverse($a)));
     }
 }

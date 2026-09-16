@@ -4,6 +4,7 @@ namespace app\modules\accounting\services;
 use Yii;
 use app\modules\accounting\models\AccountingJournalDraft;
 use app\modules\accounting\models\AccountingPeriod;
+use app\modules\accounting\models\AccountingGlPeriodClose;
 
 class AccountingPostingService
 {
@@ -15,12 +16,13 @@ class AccountingPostingService
         if (abs((float)$journal->total_debit - array_sum(array_column($lines, 'debit_amount'))) > 0.001 || abs((float)$journal->total_credit - array_sum(array_column($lines, 'credit_amount'))) > 0.001) {
             throw new \DomainException('ยอดรวมของรายการไม่ตรงกับยอดรวมบรรทัดบัญชี');
         }
-        $period = $this->findOpenPeriod($journal->document_date);
-        if (!$period) throw new \DomainException('ไม่พบงวดบัญชีรายเดือนที่ยังไม่ล็อกสำหรับวันที่เอกสาร กรุณาสร้างหรือเปิดงวดก่อนผ่านรายการ');
-        if ((int)$period->fiscal_year !== (int)$journal->fiscal_year) throw new \DomainException('ปีงบประมาณของรายการไม่ตรงกับงวดบัญชี');
-
         $tx = Yii::$app->db->beginTransaction();
         try {
+            $period = $this->findOpenPeriod($journal->document_date);
+            if (!$period) throw new \DomainException('ไม่พบงวดบัญชีรายเดือนที่ยังไม่ล็อกสำหรับวันที่เอกสาร กรุณาสร้างหรือเปิดงวดก่อนผ่านรายการ');
+            Yii::$app->db->createCommand('SELECT id FROM {{%accounting_periods}} WHERE id=:id FOR UPDATE',[':id'=>$period->id])->queryScalar();
+            if(AccountingGlPeriodClose::find()->where(['period_id'=>$period->id,'status'=>AccountingGlPeriodClose::STATUS_CLOSED])->exists()) throw new \DomainException('งวด GL นี้ปิดแล้ว ไม่สามารถผ่านรายการย้อนหลังได้');
+            if ((int)$period->fiscal_year !== (int)$journal->fiscal_year) throw new \DomainException('ปีงบประมาณของรายการไม่ตรงกับงวดบัญชี');
             $changed = AccountingJournalDraft::updateAll([
                 'status'=>AccountingJournalDraft::STATUS_POSTED, 'period_id'=>$period->id,
                 'posted_at'=>date('Y-m-d H:i:s'), 'posted_by'=>Yii::$app->user->id,
