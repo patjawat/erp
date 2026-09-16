@@ -7,7 +7,7 @@ use yii\helpers\Url;
  * เมนูระดับโซน "งานคุณภาพ" สำหรับวางในบล็อก page-action (มุมขวาหัวข้อหน้า)
  * จัดวางแนวเดียวกับงาน HRD (modules/hr/menu.php) — ปุ่ม btn-outline-primary / active=btn-primary
  *
- * @var string $active  'qms' | 'km'
+ * @var string $active  'qms' | 'km' | 'complaint'
  */
 $active = $active ?? '';
 ?>
@@ -26,6 +26,13 @@ $active = $active ?? '';
         <span class="d-none d-sm-inline">คลัง KM</span>
     </a>
 
+    <a href="<?= Url::to(['/complaint/default/index']) ?>"
+       aria-label="รับเรื่องร้องเรียน"
+       class="btn <?= $active === 'complaint' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
+        <i class="bi bi-megaphone" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">รับเรื่องร้องเรียน</span>
+    </a>
+
     <?php if ($active === 'km'): ?>
     <div class="dropdown">
         <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2"
@@ -35,6 +42,19 @@ $active = $active ?? '';
         </button>
         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
             <li><?= Html::a('<i class="bi bi-tags me-2"></i>จัดการหมวดหมู่', ['/km/category/index'], ['class' => 'dropdown-item']) ?></li>
+        </ul>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($active === 'complaint' && \app\modules\complaint\services\ComplaintService::isManager()): ?>
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2"
+                type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="ตั้งค่า">
+            <i class="bi bi-gear" aria-hidden="true"></i>
+            <span class="d-none d-sm-inline">ตั้งค่า</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><?= Html::a('<i class="bi bi-sliders me-2"></i>ตัวเลือกกลาง (Master Data)', ['/complaint/master/index'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
     <?php endif; ?>

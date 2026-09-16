@@ -1,0 +1,61 @@
+<?php
+
+namespace app\modules\complaint\models;
+
+use app\modules\hr\models\Employees;
+use yii\db\ActiveQuery;
+
+/**
+ * การดำเนินงาน (ขั้น 4) — timeline 1:หลาย ต่อเรื่องร้องเรียน
+ *
+ * @property int         $id
+ * @property int         $complaint_id
+ * @property string|null $action_date
+ * @property int|null    $action_level
+ * @property string|null $action_kind
+ * @property string|null $title
+ * @property string|null $detail
+ * @property int|null    $action_by
+ */
+class ComplaintAction extends ComplaintActiveRecord
+{
+    public static function tableName(): string
+    {
+        return '{{%complaint_action}}';
+    }
+
+    public function rules(): array
+    {
+        return [
+            [['complaint_id'], 'required'],
+            [['complaint_id', 'action_level', 'action_by'], 'integer'],
+            [['action_date'], 'safe'],
+            [['action_level'], 'in', 'range' => [1, 2, 3, 4], 'skipOnEmpty' => true],
+            [['detail'], 'string'],
+            [['title'], 'string', 'max' => 500],
+            [['action_kind'], 'string', 'max' => 32],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'action_date' => 'วันที่ดำเนินการ',
+            'action_level' => 'ระดับ (L)',
+            'action_kind' => 'ประเภทการดำเนินงาน',
+            'title' => 'หัวข้อ',
+            'detail' => 'รายละเอียด',
+            'action_by' => 'ผู้ดำเนินการ',
+        ];
+    }
+
+    public function getComplaint(): ActiveQuery
+    {
+        return $this->hasOne(Complaint::class, ['id' => 'complaint_id']);
+    }
+
+    public function getActor(): ActiveQuery
+    {
+        return $this->hasOne(Employees::class, ['id' => 'action_by']);
+    }
+}

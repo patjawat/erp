@@ -108,5 +108,6 @@ $modules['iac-risk'] = ['class' => 'app\modules\iacRisk\Module'];  // การ�
 $modules['qms'] = ['class' => 'app\modules\qms\Module'];  // ระบบติดตามมาตรฐานโรงพยาบาล (Quality Management System)
 $modules['flowchart'] = ['class' => 'app\modules\flowchart\Module'];  // เครื่องมือสร้างผังกระบวนการ (ป้อนขั้นตอน -> ผัง + เอกสาร)
 $modules['km'] = ['class' => 'app\modules\km\Module'];  // คลังกิจกรรม/หลักฐานการดำเนินงาน (Knowledge Management)
+$modules['complaint'] = ['class' => 'app\modules\complaint\Module'];  // ระบบรับเรื่องร้องเรียน (workflow 5 ขั้น)
 $modules['tools'] = ['class' => 'app\modules\tools\Module'];  // หน้า hub รวมเครื่องมือ (SWOT, ผังกระบวนการ, ฯลฯ)
 return $modules;
