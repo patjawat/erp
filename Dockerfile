@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/tmp/composer-cache,sharing=locked \
     attempt=1; \
     while true; do \
         set +e; \
-        composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress \
+        composer install --prefer-dist --no-interaction --no-progress \
             --no-scripts --no-autoloader; \
         status=$?; \
         set -e; \
@@ -66,7 +66,7 @@ RUN --mount=type=cache,target=/tmp/composer-cache,sharing=locked \
 # ตอนนี้ deps อยู่ใน vendor แล้ว (vendor/ อยู่ใน .dockerignore จึงไม่ถูกทับ) สเต็ปนี้
 # จะไม่ download อะไรใหม่ ทำแค่ dump-autoload + post-install scripts จึงเร็ว
 COPY ./ /app/
-RUN composer install --ignore-platform-reqs --prefer-dist --no-interaction --no-progress
+RUN composer install --prefer-dist --no-interaction --no-progress
 # RUN composer install --prefer-dist --no-dev --optimize-autoloader
 
 

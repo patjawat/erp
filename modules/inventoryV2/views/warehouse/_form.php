@@ -128,7 +128,7 @@ JS;
                         'clientOptions' => [
                             'moveOnSelect' => false,
                             'selectedListLabel' => 'เจ้าหน้าที่รับผิดชอบคลัง',
-                            'nonSelectedListLabel' => '(กำหนดสิทธิ์ warehouse ก่อนถึงจะปรากฏ)',
+                            'nonSelectedListLabel' => '(กำหนดสิทธิ์ warehouse หรือ inventory ก่อนถึงจะปรากฏ)',
                         ],
                     ]) ?>
                 </div>

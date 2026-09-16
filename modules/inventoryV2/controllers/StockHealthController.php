@@ -125,9 +125,10 @@ class StockHealthController extends Controller
 
     private function accessibleWarehouses(): array
     {
-        $warehouses = Warehouse::findMainWarehousesForReceive();
+        // Use the same existing SUB/BRANCH scope as the requisition dropdown.
+        $warehouses = array_merge(Warehouse::findMainWarehousesForReceive(), Warehouse::findSubWarehousesForUser(true));
         if (empty($warehouses)) {
-            throw new ForbiddenHttpException('ไม่มีสิทธิ์ตรวจสอบคลังหลัก');
+            throw new ForbiddenHttpException('ไม่มีสิทธิ์ตรวจสอบคลัง');
         }
         return $warehouses;
     }

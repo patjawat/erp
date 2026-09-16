@@ -49,6 +49,17 @@ class LocationController extends Controller
         return $this->render('view', ['model' => $model]);
     }
 
+    public function actionQr($id)
+    {
+        $model = $this->findModel($id);
+        if (!$model->active || !$model->hasGeofence() || !$model->qr_token) {
+            throw new \yii\web\BadRequestHttpException('จุดนี้ต้องเปิดใช้งาน และกำหนดพิกัด รัศมี และ QR ให้ครบก่อน');
+        }
+        $url = \yii\helpers\Url::to(['/attendance/default/checkin', 'qr_token' => $model->qr_token], true);
+        $qr = \Endroid\QrCode\Builder\Builder::create()->writer(new \Endroid\QrCode\Writer\PngWriter())->data($url)->size(320)->margin(16)->build();
+        return $this->renderPartial('qr', ['model' => $model, 'url' => $url, 'image' => $qr->getDataUri()]);
+    }
+
     public function actionDelete($id)
     {
         $model = $this->findModel($id);

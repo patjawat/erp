@@ -1,0 +1,96 @@
+/* Loaded only by attendance screens and the shared clock form. */
+.attendance-home-scan .attendance-clock { min-height: 320px; height: 100%; justify-content: center; }
+.attendance-clock, .attendance-clock * { box-sizing: border-box; }
+.attendance-clock { --clock-accent: var(--bs-primary); --clock-ink: var(--bs-primary-text-emphasis); --clock-soft: var(--bs-primary-bg-subtle); }
+.attendance-clock[data-clock-state="out"] { --clock-accent: var(--bs-danger); --clock-ink: var(--bs-danger-text-emphasis); --clock-soft: var(--bs-danger-bg-subtle); }
+.attendance-clock[data-clock-state="complete"] { --clock-accent: var(--bs-success); --clock-ink: var(--bs-success-text-emphasis); --clock-soft: var(--bs-success-bg-subtle); }
+.attendance-clock [data-role="submit"] {
+    align-self: center;
+    width: 128px;
+    max-width: 100%;
+    height: 128px;
+    flex-shrink: 0;
+    padding: 12px;
+    border: 5px solid var(--clock-accent);
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    color: var(--clock-ink);
+    box-shadow: inset 0 0 0 5px var(--clock-soft);
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-weight: 600;
+    white-space: normal;
+}
+.attendance-clock [data-role="submit"]::before { content: '\f1be'; font-family: bootstrap-icons; display: block; font-size: 1.65rem; line-height: 1.25; margin-bottom: 4px; }
+.attendance-clock[data-clock-state="out"] [data-role="submit"]::before { content: '\f1c3'; }
+.attendance-clock[data-clock-state="complete"] [data-role="submit"]::before { content: '\f26b'; }
+.attendance-clock [data-role="submit"]:hover { background: var(--clock-soft); }
+.attendance-clock [data-role="submit"]:focus-visible { outline: 3px solid var(--bs-info-text-emphasis); outline-offset: 4px; }
+.attendance-clock [data-role="submit"]:disabled { opacity: .65; cursor: wait; }
+.attendance-clock [data-role="clock"] { font-size: 2.6rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--bs-body-color); }
+.attendance-clock-history { align-self: center; display: grid; place-items: center; width: 44px; height: 44px; font-size: 1.3rem; color: var(--bs-info-text-emphasis); }
+.attendance-clock-times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 12px; }
+.attendance-clock-day { color: var(--bs-info-text-emphasis); }
+.attendance-clock-entry { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 58px; padding: .5rem .7rem; border: 1px solid; border-radius: 10px; }
+.attendance-clock-entry--in { background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); border-color: var(--bs-success-border-subtle); }
+.attendance-clock-entry--out { background: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); border-color: var(--bs-danger-border-subtle); }
+.attendance-entry-heading { text-align: left; }
+.attendance-entry-label { font-size: .78rem; font-weight: 600; line-height: 1.2; }
+.attendance-entry-status { position: absolute; top: 5px; right: 5px; display: inline-flex; align-items: center; gap: 3px; font-size: .65rem; font-weight: 600; color: var(--bs-warning-text-emphasis); background: var(--bs-warning-bg-subtle); padding: 3px 5px; border-radius: 6px; white-space: nowrap; }
+.attendance-clock-entry time { font-size: 1.5rem; font-weight: 700; text-align: left; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.attendance-pending { display: inline-grid; place-items: center; min-width: 26px; min-height: 26px; border-radius: 50%; background: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); font-size: 1rem; vertical-align: middle; }
+.attendance-clock-latest { display:flex; align-items:center; gap:8px; min-height: 44px; line-height: 1.5; margin-top:auto; }
+.attendance-clock-latest [data-role="latest"] { flex:1; }
+.attendance-clock-history { flex-shrink:0; font-size:1.75rem; }
+.attendance-clock-day { text-align:left !important; padding-inline:16px; }
+.attendance-clock [data-role="submit"] { width:140px; height:140px; font-size:1.25rem; }
+.attendance-clock [data-role="submit"]::before { display:none; }
+.attendance-clock [data-role="gps"] { min-height: 40px; line-height: 1.5; text-align: center; }
+.attendance-clock { background-color: var(--bs-body-bg); }
+.attendance-clock,
+.attendance-correction {
+    min-width: 0;
+}
+
+/* Work schedule settings follow the ERP Bootstrap surfaces and color modes. */
+.page-content-wrapper .page-title-box { margin-inline: 0; max-width: 100%; }
+.attendance-settings { min-width: 0; }
+.attendance-settings.card, .attendance-settings .card { border-radius: 10px; }
+.attendance-settings .form-control, .attendance-settings .form-select { min-height: 42px; font-size: 1rem; }
+.attendance-settings .schedule-table th, .attendance-settings .schedule-table td { padding: .85rem 1rem; }
+.attendance-settings .schedule-table th { background: var(--bs-tertiary-bg); font-weight: 600; }
+.attendance-settings .schedule-table td { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.attendance-settings [hidden] { display: none !important; }
+.attendance-settings .schedule-members { max-height: 32rem; overflow: auto; }
+.attendance-settings .schedule-members th { position: sticky; top: 0; z-index: 1; }
+.attendance-settings .form-check-input { width: 1.15rem; height: 1.15rem; }
+@media (max-width: 991.98px) {
+    .attendance-settings .schedule-table, .attendance-settings .schedule-table tbody,
+    .attendance-settings .schedule-table tr, .attendance-settings .schedule-table td { display: block; width: 100%; }
+    .attendance-settings .schedule-table thead { display: none; }
+    .attendance-settings .schedule-table tr { padding: .75rem 1rem; border-bottom: 1px solid var(--bs-border-color); }
+    .attendance-settings .schedule-table td { padding: .3rem 0; border: 0; }
+    .attendance-settings .schedule-table td[data-label]::before { content: attr(data-label); display: block; font-size: .8rem; color: var(--bs-secondary-color); }
+    .attendance-settings .schedule-members { max-height: none; overflow: visible; }
+}
+.attendance-clock input,
+.attendance-clock select,
+.attendance-clock textarea,
+.attendance-correction input,
+.attendance-correction select,
+.attendance-correction textarea {
+    font-size: 1rem;
+    max-width: 100%;
+}
+@media (max-width: 575.98px) {
+    .page-content-wrapper .page-title-box {
+        margin-inline: 0;
+        max-width: 100%;
+    }
+    .header-fixed {
+        padding-inline: .5rem !important;
+    }
+    .header-fixed .erp-header-brand-icon {
+        display: none;
+    }
+}

@@ -63,6 +63,7 @@ CSS;
 ?>
 <?php Pjax::begin(['id' => 'hr-container','enablePushState' => true,'timeout' => 50000 ]); ?>
 <style><?= $profileNavCss ?></style>
+<?= $this->render('@app/modules/attendance/views/schedule/_profile', ['model'=>$model]) ?>
 <?php $this->beginBlock('page-title'); ?>
 <?= $isRequestedManagedProfile ? 'แฟ้มบริหารบุคลากร' : 'ข้อมูลส่วนบุคคล' ?> | <?=$this->title;?>
 <?php $this->endBlock(); ?>

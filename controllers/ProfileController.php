@@ -33,6 +33,19 @@ use yii\web\ForbiddenHttpException;
 class ProfileController extends \yii\web\Controller
 
 {
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) return false;
+        // Self-service profile fields must not change the attendance policy or its unit.
+        if (Yii::$app->request->isPost) {
+            $body = Yii::$app->request->getBodyParams();
+            if (isset($body['Employees']) && is_array($body['Employees'])) {
+                unset($body['Employees']['work_shift'], $body['Employees']['department']);
+                Yii::$app->request->setBodyParams($body);
+            }
+        }
+        return true;
+    }
 
         //เชื่อม line กับ user ที่ลงทะเบียนไว้แล้ว
         public function actionLineConnect(){

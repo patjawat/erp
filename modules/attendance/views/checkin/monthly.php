@@ -23,6 +23,7 @@ $glyph = function ($cell) {
     switch ($cell['state']) {
         case 'ontime': return '<span class="g-time">' . Html::encode($cell['time']) . '</span>';
         case 'late':   return '<span class="g-time is-late">' . Html::encode($cell['time']) . '</span>';
+        case 'pending': return '<span class="text-warning-emphasis">รอ</span>';
         case 'shift':  return '<span class="g-time is-shift">' . Html::encode($cell['time']) . '</span>';
         case 'leave':  return '<span class="g-leave">' . Html::encode($cell['lv']['ab'] ?? 'ล') . '</span>';
         case 'trip':   return '<span class="g-trip">ร</span>';
@@ -51,6 +52,10 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
     $w = (int)date('w', strtotime($dateStr));
     $out = '<div class="tp"><div class="tp-h">' . $dayNames[$w] . ' ' . Html::encode($fmtDate($dateStr)) . '</div>';
     $body = '';
+    if (!empty($cell['roster'])) {
+        $rd = $cell['roster'];
+        $body .= '<div class="tp-note">มี ' . (int)$rd['shifts'] . ' เวร · รออนุมัติ ' . (int)$rd['pending'] . ' · ไม่พบเวลาเข้า ' . (int)$rd['missing'] . '</div>';
+    }
 
     if (!empty($cell['time'])) {
         $label = $cell['state'] === 'late' ? 'ลงเวลาเข้า (สาย)' : ($cell['state'] === 'shift' ? 'ลงเวลาเข้า (เวร)' : 'ลงเวลาเข้า');
@@ -82,7 +87,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
         if ($cell['state'] === 'absent') {
             $body = '<div class="tp-note">ไม่มีการลงเวลา</div>';
         } elseif ($cell['state'] === 'nodata') {
-            $body = '<div class="tp-note">ยังไม่เริ่มใช้ระบบลงเวลา (ไม่นับเป็นขาด)</div>';
+            $body = '<div class="tp-note">ไม่มีเวรที่ประกาศใช้ (ไม่ประเมินขาดหรือสาย)</div>';
         } elseif ($weekends[$d]) {
             $body = '<div class="tp-note">วันหยุดสุดสัปดาห์</div>';
         } else {
@@ -102,7 +107,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
         <i class="bi bi-calendar3"></i>
         <?= Html::encode($this->title) ?>
     </h4>
-    <p class="text-muted small mb-0">บุคลากรปฏิบัติราชการ ไล่การลงเวลาเข้ารายวัน พร้อมสรุปจำนวนครั้งที่มาสาย</p>
+    <p class="text-muted small mb-0">เทียบตารางเวรที่ประกาศใช้ตามวันเริ่มเวร รวมกะข้ามคืน · สายคิดจากรายการอนุมัติแล้ว · ไม่พบเวลาเข้าต้องตรวจสอบก่อนสรุปขาดงาน</p>
 </div>
 <?php $this->endBlock(); ?>
 
@@ -162,7 +167,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
                 <span class="att-mtx__dot">·</span>
                 <span>มาสาย <strong class="<?= $totalLate > 0 ? 'text-late' : '' ?>"><?= $totalLate ?></strong> ครั้ง</span>
                 <span class="att-mtx__dot">·</span>
-                <span>ขาด <strong class="<?= ($totalAbsent ?? 0) > 0 ? 'text-absent' : '' ?>"><?= (int)($totalAbsent ?? 0) ?></strong> วัน</span>
+                <span>ไม่พบเวลาเข้า <strong class="<?= ($totalAbsent ?? 0) > 0 ? 'text-absent' : '' ?>"><?= (int)($totalAbsent ?? 0) ?></strong> เวร</span>
                 <span class="att-mtx__dot">·</span>
                 <span>ลา <strong class="<?= ($totalLeave ?? 0) > 0 ? 'text-leave' : '' ?>"><?= (int)($totalLeave ?? 0) ?></strong> วัน</span>
                 <span class="att-mtx__dot">·</span>
@@ -170,12 +175,12 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
             </div>
             <div class="att-mtx__legend">
                 <span class="lg"><span class="g-time">08:12</span> ตรงเวลา</span>
-                <span class="lg"><span class="g-time is-late">09:05</span> สาย <span class="lg-hint">(หลัง <?= Html::encode($shiftStart ?? '08:30') ?> น.)</span></span>
+                <span class="lg"><span class="g-time is-late">09:05</span> สาย <span class="lg-hint">(เทียบเวรที่ลงเวลา)</span></span>
                 <span class="lg"><span class="g-time is-shift">07:40</span> เวร</span>
                 <span class="lg"><span class="g-leave">ล</span> ลา <span class="lg-hint">(ป ป่วย · ก กิจ · พ พักผ่อน)</span></span>
                 <span class="lg"><span class="g-trip">ร</span> ไปราชการ</span>
-                <span class="lg"><span class="g-absent">—</span> ขาด</span>
-                <span class="lg"><span class="g-nodata">·</span> ยังไม่เริ่มใช้ระบบ</span>
+                <span class="lg"><span class="g-absent">—</span> ไม่พบเวลาเข้า</span>
+                <span class="lg"><span class="g-nodata">·</span> ไม่มีเวรที่ประกาศใช้</span>
                 <span class="lg"><span class="lg-weekend"></span> เสาร์-อาทิตย์</span>
                 <span class="lg"><span class="lg-holiday"></span> วันหยุดนักขัตฤกษ์</span>
             </div>
@@ -184,11 +189,14 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
         <?php if (!empty($rows) && ($coveredCount ?? 0) < $personCount): ?>
         <p class="att-mtx__coverage">
             <i class="bi bi-info-circle"></i>
-            ระบบลงเวลามีข้อมูลของ <strong><?= (int)($coveredCount ?? 0) ?></strong> จาก <?= $personCount ?> คน
-            ช่องที่เป็น <span class="g-nodata">·</span> คือช่วงที่บุคลากรยังไม่เริ่มใช้ระบบ จึงไม่ถูกนับเป็นขาดงาน
+            มีเวรประกาศใช้หรือเวรที่ผูกกับรายการลงเวลาของ <strong><?= (int)($coveredCount ?? 0) ?></strong> จาก <?= $personCount ?> คน
+            ช่องที่เป็น <span class="g-nodata">·</span> คือวันที่ไม่มีเวรประกาศใช้ จึงไม่ประเมินขาดหรือสาย
         </p>
         <?php endif; ?>
 
+        <?php if (($unmatchedCount ?? 0) > 0): ?>
+        <p class="alert alert-warning">มี <?= (int)$unmatchedCount ?> รายการที่ยังไม่ระบุเวร จึงยังไม่นำมาประเมินสาย <?= Html::a('ตรวจสอบรายการ', ['/attendance/checkin/report', 'CheckinRecordSearch' => ['unmatched' => 1, 'date_start' => sprintf('%04d-%02d-01', $yearCE, $month), 'date_end' => sprintf('%04d-%02d-%02d', $yearCE, $month, $daysInMonth)]], ['class' => 'alert-link']) ?></p>
+        <?php endif; ?>
         <!-- Matrix -->
         <?php if (empty($rows)): ?>
             <div class="att-mtx__empty">
@@ -221,7 +229,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
                         <?php endfor; ?>
                         <th class="mtx-sum mtx-sum--trip" scope="col"><button type="button" class="mtx-sort" data-sort="trip">รวมไปราชการ <i class="bi bi-arrow-down-up mtx-sort__i" aria-hidden="true"></i></button></th>
                         <th class="mtx-sum mtx-sum--leave" scope="col"><button type="button" class="mtx-sort" data-sort="leave">รวมลา <i class="bi bi-arrow-down-up mtx-sort__i" aria-hidden="true"></i></button></th>
-                        <th class="mtx-sum mtx-sum--absent" scope="col"><button type="button" class="mtx-sort" data-sort="absent">รวมขาด <i class="bi bi-arrow-down-up mtx-sort__i" aria-hidden="true"></i></button></th>
+                        <th class="mtx-sum mtx-sum--absent" scope="col"><button type="button" class="mtx-sort" data-sort="absent">ไม่พบเวลาเข้า <i class="bi bi-arrow-down-up mtx-sort__i" aria-hidden="true"></i></button></th>
                         <th class="mtx-sum mtx-sum--late" scope="col"><button type="button" class="mtx-sort" data-sort="late">รวมสาย <i class="bi bi-arrow-down-up mtx-sort__i" aria-hidden="true"></i></button></th>
                     </tr>
                 </thead>
@@ -265,7 +273,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
                         <td class="mtx-sum mtx-sum--late <?= $totalLate > 0 ? 'is-late' : '' ?>"><?= $totalLate ?></td>
                     </tr>
                     <tr class="mtx-tot mtx-tot--absent">
-                        <th class="mtx-name" scope="row">ขาดรายวัน (คน)</th>
+                        <th class="mtx-name" scope="row">ไม่พบเวลาเข้ารายวัน (คน)</th>
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
                         <td class="mtx-day <?= $weekends[$d] ? 'is-weekend' : '' ?> <?= isset($holidays[$d]) ? 'is-holiday' : '' ?>"><?= ($dayAbsent[$d] ?? 0) > 0 ? '<span class="tot-absent">' . (int)$dayAbsent[$d] . '</span>' : '' ?></td>
                         <?php endfor; ?>

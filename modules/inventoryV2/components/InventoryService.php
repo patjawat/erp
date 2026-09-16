@@ -283,9 +283,13 @@ class InventoryService
     /**
      * Fail closed before commit when the operational balance and FIFO sources diverge.
      * Ledger is validated after the confirmed document has been fully saved by the caller.
+     * With lotNumbers, validate only the lots moved by an issue; unrelated legacy
+     * discrepancies remain visible to stock health and are never repaired here.
      */
-    public static function assertBalanceMatchesFifo($itemCode, $warehouseId): void
+    public static function assertBalanceMatchesFifo($itemCode, $warehouseId, ?array $lotNumbers = null): void
     {
+        $warehouse = Warehouse::findOne((int) $warehouseId);
+        $context = 'คลัง ' . ($warehouse->warehouse_name ?? $warehouseId) . ' (ID ' . (int) $warehouseId . ')';
         $balanceRows = (new Query())
             ->select(['lot_number', 'qty' => new \yii\db\Expression('SUM(balance_qty)'), 'rows' => new \yii\db\Expression('COUNT(*)')])
             ->from(StockBalance::tableName())
@@ -305,16 +309,20 @@ class InventoryService
             ])->groupBy('sd.lot_number')->all();
         $balance = [];
         foreach ($balanceRows as $row) {
-            if ((int) $row['rows'] > 1) throw new \RuntimeException("พบ Balance ซ้ำ พัสดุ {$itemCode} Lot {$row['lot_number']}");
+            if ($lotNumbers !== null && !in_array((string) $row['lot_number'], $lotNumbers, true)) continue;
+            if ((int) $row['rows'] > 1) throw new \RuntimeException("{$context}: พบ Balance ซ้ำ พัสดุ {$itemCode} Lot {$row['lot_number']}");
             $balance[(string) $row['lot_number']] = (float) $row['qty'];
         }
         $fifo = [];
-        foreach ($fifoRows as $row) $fifo[(string) $row['lot_number']] = (float) $row['qty'];
+        foreach ($fifoRows as $row) {
+            if ($lotNumbers !== null && !in_array((string) $row['lot_number'], $lotNumbers, true)) continue;
+            $fifo[(string) $row['lot_number']] = (float) $row['qty'];
+        }
         foreach (array_unique(array_merge(array_keys($balance), array_keys($fifo))) as $lot) {
             $balanceQty = (float) ($balance[$lot] ?? 0);
             $fifoQty = (float) ($fifo[$lot] ?? 0);
-            if (abs($balanceQty - $fifoQty) > 0.0001) {
-                throw new \RuntimeException("ยกเลิกรายการเพื่อป้องกันสต๊อกคลาดเคลื่อน: {$itemCode} Lot {$lot} (Balance {$balanceQty}, FIFO {$fifoQty}) กรุณาตรวจสุขภาพสต๊อก");
+            if ($balanceQty < -0.0001 || $fifoQty < -0.0001 || abs($balanceQty - $fifoQty) > 0.0001) {
+                throw new \RuntimeException("{$context}: พัสดุ {$itemCode} Lot {$lot} มียอดไม่ตรงกัน (Balance {$balanceQty}, FIFO {$fifoQty}) กรุณาตรวจสุขภาพสต็อกของคลังนี้ก่อนจ่าย การลดจำนวนเบิกไม่แก้ยอดที่คลาดเคลื่อน");
             }
         }
     }

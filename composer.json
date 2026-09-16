@@ -83,7 +83,7 @@
         "platform": {
             "php": "8.2.0"
         },
-        "platform-check": false,
+        "platform-check": true,
         "allow-plugins": {
             "yiisoft/yii2-composer": true
         },

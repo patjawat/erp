@@ -1,0 +1,176 @@
+<?php
+
+namespace app\modules\attendance\services;
+
+use Yii;
+use app\modules\attendance\models\CheckinRecord;
+use app\modules\attendance\models\CheckinLocation;
+use app\modules\hr\models\Employees;
+use app\modules\approveV2\models\Approve;
+
+class AttendanceService
+{
+    public static function now(): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone('Asia/Bangkok')))->format('Y-m-d H:i:s');
+    }
+
+    public static function record(Employees $employee, array $input, bool $automatic = false): CheckinRecord
+    {
+        $type = $input['check_type'] ?? 'in';
+        $method = $input['method'] ?? 'manual';
+        if (!in_array($type, ['in', 'out'], true) || !in_array($method, ['manual', 'qrcode', 'photo'], true)) {
+            throw new \DomainException('ประเภทหรือวิธีลงเวลาไม่ถูกต้อง');
+        }
+        foreach (['qr_token', 'out_of_location_reason', 'request_id', 'photo_path', 'roster_item_id'] as $key) {
+            if (isset($input[$key]) && !is_scalar($input[$key])) throw new \DomainException('รูปแบบข้อมูลไม่ถูกต้อง');
+        }
+        $token = trim((string)($input['qr_token'] ?? ''));
+        if ($method === 'qrcode' && $token === '') throw new \DomainException('กรุณาสแกน QR จุดลงเวลา');
+        if ($method !== 'qrcode' && $token !== '') throw new \DomainException('กรุณาเลือกวิธีสแกน QR');
+        $requestId = (string)($input['request_id'] ?? '');
+        if ($requestId !== '' && !preg_match('/^[a-zA-Z0-9_-]{16,100}$/D', $requestId)) throw new \DomainException('รหัสคำขอไม่ถูกต้อง กรุณาเปิดหน้าลงเวลาใหม่');
+        $reason = trim((string)($input['out_of_location_reason'] ?? ''));
+        if (mb_strlen($reason) > 2000) throw new \DomainException('เหตุผลยาวได้ไม่เกิน 2,000 ตัวอักษร');
+        $photo = (string)($input['photo_path'] ?? '');
+        if ($method === 'photo' && (!preg_match('~^uploads/checkin/\d{8}_\d{6}_' . (int)$employee->id . '_[a-f0-9]{8}\.(jpg|jpeg|png|gif|webp)$~D', $photo)
+            || !is_file(Yii::getAlias('@webroot/' . $photo)))) {
+            throw new \DomainException('กรุณาอัปโหลดรูปถ่ายของคุณก่อนลงเวลา');
+        }
+        $db = Yii::$app->db;
+        $tx = $db->beginTransaction();
+        try {
+            // Serialise submissions per employee, including requests from multiple tabs/devices.
+            $db->createCommand('SELECT id FROM {{%employees}} WHERE id=:id FOR UPDATE', [':id' => $employee->id])->queryScalar();
+            if ($requestId !== '') {
+                $existing = CheckinRecord::find()->where(['emp_id' => $employee->id])
+                    ->andWhere("JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.request_id')) = :request", [':request' => $requestId])->one();
+                if ($existing) {
+                    $existing->wasDuplicate = true;
+                    $tx->commit();
+                    return $existing;
+                }
+                if ($automatic) {
+                    $existing = CheckinRecord::find()->where(['emp_id'=>$employee->id])
+                        ->andWhere("JSON_CONTAINS(COALESCE(JSON_EXTRACT(data_json, '$.retry_ids'), JSON_ARRAY()), :retry)", [':retry'=>json_encode($requestId)])->one();
+                    if ($existing) { $existing->wasDuplicate = true; $tx->commit(); return $existing; }
+                }
+            }
+            $at = self::now();
+            if ($automatic) {
+                $previous = CheckinRecord::find()->where(['emp_id'=>$employee->id])->andWhere(['<>','status','rejected'])
+                    ->andWhere(['>=','checkin_at',date('Y-m-d H:i:s',strtotime($at.' -120 seconds'))])->orderBy(['checkin_at'=>SORT_DESC,'id'=>SORT_DESC])->one();
+                if ($previous) {
+                    if ($requestId !== '') {
+                        $json = (array)$previous->data_json;
+                        $json['retry_ids'] = array_values(array_unique(array_merge($json['retry_ids'] ?? [], [$requestId])));
+                        $previous->data_json=$json; $previous->save(false, ['data_json']);
+                    }
+                    $previous->wasDuplicate = true; $tx->commit(); return $previous;
+                }
+            }
+            $validation = CheckinLocation::validateClockIn($input['lat'] ?? null, $input['lng'] ?? null, $token, $reason);
+            if (!$validation['ok']) throw new \DomainException($validation['message']);
+            $candidates = RosterAttendance::candidates((int)$employee->id, $at);
+            $shiftId = $automatic ? '' : (string)($input['roster_item_id'] ?? '');
+            $shift = null;
+            $offShift = false;
+            foreach ($candidates as $candidate) {
+                if ((string)$candidate['id'] === $shiftId) $shift = $candidate;
+            }
+            if ($shiftId !== '' && !$shift) throw new \DomainException('เวรที่เลือกไม่ใช่เวรของคุณหรือยังไม่ประกาศใช้ กรุณาโหลดตารางเวรใหม่');
+            if ($automatic) {
+                // ปุ่มเดียว: ตัดสินตามลำดับของรอบเวร/วัน — ยังไม่มี IN → เข้า, มี IN แล้ว → ออก, ครบแล้ว → เตือน (ขึ้นวัน/เวรใหม่เริ่มรอบใหม่เอง)
+                $shift = ScanMatcher::nearestShift($at, $candidates);
+                // "ไม่ตรงเวร": มีตารางเวร/เวลา (candidates ไม่ว่าง) แต่สแกนอยู่นอกกรอบเวรทั้งหมด — แยกจาก "ไม่มีตารางเลย" (ยัง auto)
+                if (!empty($candidates) && (!$shift || !ScanMatcher::withinWindow($at, $shift))) {
+                    $offShift = true;
+                    $shift = null; // ไม่ผูกกับเวรใด จะได้ไม่คำนวณสายจากเวรที่ไม่ใช่
+                }
+                $recorded = RosterAttendance::recordedTypes((int)$employee->id, $shift, $at);
+                if (!$recorded['in']) { $type = 'in'; }
+                elseif (!$recorded['out']) { $type = 'out'; }
+                else { throw new \DomainException('ช่วงเวลานี้บันทึกเวลาเข้า-ออกครบแล้ว หากผิดพลาดใช้เมนู "แก้ไข/ระบุเวร"'); }
+            } else {
+                if (!$shift && count($candidates) === 1) $shift = $candidates[0];
+                if (!$shift && count($candidates) > 1) throw new \DomainException('มีหลายเวร กรุณาเลือกเวรที่จะลงเวลา');
+            }
+            $recent = CheckinRecord::find()->where(['emp_id' => $employee->id, 'check_type' => $type])
+                ->andWhere(['<>', 'status', CheckinRecord::STATUS_REJECTED])
+                ->andWhere(['>=', 'checkin_at', date('Y-m-d H:i:s', strtotime($at . ' -30 seconds'))])->all();
+            foreach ($recent as $previous) {
+                $previousShift = RosterAttendance::forRecord($previous)['shift'];
+                if (($previousShift['id'] ?? null) === ($shift['id'] ?? null)) {
+                    $tx->commit();
+                    return $previous;
+                }
+            }
+            $record = new CheckinRecord();
+            $record->emp_id = $employee->id;
+            $record->checkin_at = $at;
+            $record->method = $method;
+            $record->check_type = $type;
+            $record->lat = $input['lat'];
+            $record->lng = $input['lng'];
+            $record->location_id = $validation['location']->id ?? null;
+            $record->is_in_location = $validation['inside'] ? 1 : 0;
+            $record->out_of_location_reason = $validation['inside'] ? null : $reason;
+            $record->qr_token = $token ?: null;
+            $record->photo_path = $method === 'photo' ? $photo : null;
+            $attendance = RosterAttendance::evaluate($at, $type, $shift);
+            // ปกติ = ยืนยันอัตโนมัติ เวลาแสดงทันที; ผิดปกติ = รอหัวหน้ายืนยัน (นอกพื้นที่/สาย/ออกก่อน/ไม่ตรงเวร)
+            $reasons = [];
+            if (!$validation['inside']) $reasons[] = 'out_of_location';
+            if ((int)($attendance['late_minutes'] ?? 0) > 0) $reasons[] = 'late';
+            if ((int)($attendance['early_minutes'] ?? 0) > 0) $reasons[] = 'early';
+            if ($offShift) $reasons[] = 'off_shift';
+            $needsConfirm = !empty($reasons);
+            $record->status = $needsConfirm ? CheckinRecord::STATUS_PENDING : CheckinRecord::STATUS_APPROVED;
+            if (!$needsConfirm) $record->approved_at = $at;
+            $record->data_json = [
+                'request_id' => $requestId ?: null,
+                'attendance' => $attendance,
+                'geofence' => $validation['meta'],
+                'raw_scan' => ['at'=>$at, 'method'=>$method, 'lat'=>$input['lat'], 'lng'=>$input['lng']],
+                'matching' => $automatic ? 'nearest-boundary-v1' : 'explicit',
+                'auto_confirmed' => !$needsConfirm,
+                'exception_reasons' => $reasons,
+            ];
+            if (!$record->save()) throw new \DomainException(implode(' ', $record->getFirstErrors()));
+            if ($needsConfirm) $record->createApproveRecord();
+            $tx->commit();
+            return $record;
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+
+    public static function approve(int $approveId, string $status, string $comment): void
+    {
+        if (!in_array($status, ['Pass', 'Reject'], true)) throw new \DomainException('สถานะอนุมัติไม่ถูกต้อง');
+        if (mb_strlen($comment) > 2000) throw new \DomainException('ความเห็นยาวได้ไม่เกิน 2,000 ตัวอักษร');
+        $db = Yii::$app->db;
+        $tx = $db->beginTransaction();
+        try {
+            $approve = Approve::findOne(['id' => $approveId, 'name' => 'checkin', 'deleted_at' => null]);
+            if (!$approve) throw new \DomainException('ไม่พบคำขออนุมัติ');
+            $db->createCommand('SELECT id FROM {{%checkin_record}} WHERE id=:id FOR UPDATE', [':id' => (int)$approve->from_id])->queryScalar();
+            if (!$approve->refresh() || $approve->deleted_at !== null) throw new \DomainException('คำขอนี้ถูกแทนที่แล้ว กรุณาโหลดรายการใหม่');
+            $record = CheckinRecord::findOne((int)$approve->from_id);
+            if (!$record || !AttendanceAccess::canReview($record)) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์อนุมัติรายการนี้');
+            if ($record->status !== CheckinRecord::STATUS_PENDING || $approve->status !== 'Pending') throw new \DomainException('รายการนี้ถูกพิจารณาแล้ว กรุณาโหลดรายการใหม่');
+            $me = \app\components\UserHelper::GetEmployee();
+            $approve->status = $status;
+            $approve->emp_id = $me->id;
+            $approve->updated_at = self::now();
+            $approve->updated_by = Yii::$app->user->id;
+            $approve->data_json = array_merge((array)$approve->data_json, ['approve_date' => self::now(), 'comment' => $comment, 'reviewer_emp_id' => (int)$me->id]);
+            if (!$approve->save() || !$record->applyApproveResult($status, $comment, $me->id)) throw new \RuntimeException('Could not persist approval');
+            $tx->commit();
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+}

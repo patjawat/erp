@@ -14,6 +14,7 @@ use app\components\UserHelper;
 use app\modules\approveV2\models\Approve as ApproveModel;
 use app\components\AppHelper;
 use app\modules\leave\models\Leave;
+use app\modules\leave\models\LeaveEditHistory;
 use app\modules\leave\models\LeaveType;
 use app\modules\leave\components\LeaveApprovalService;
 use app\components\SiteHelper;
@@ -151,7 +152,10 @@ class LeaveController extends Controller
         }
 
         // --- ส่วนที่เหลือคงเดิม ---
-        
+
+        // เก็บค่าเดิมไว้เปรียบเทียบ เพื่อบันทึกประวัติการแก้ไข (ค่ายัง Gregorian ตรงตาม DB)
+        $originalSnapshot = $this->buildEditSnapshot($model);
+
         // แปลงวันที่เป็น พ.ศ. สำหรับแสดงในฟอร์ม
         $model->date_start = AppHelper::convertToThai($model->date_start);
         $model->date_end   = AppHelper::convertToThai($model->date_end);
@@ -184,7 +188,8 @@ class LeaveController extends Controller
                 (int) $model->emp_id,
                 (int) $model->thai_year,
                 (string) $model->leave_type_id,
-                $model->total_days
+                $model->total_days,
+                (int) $model->id
             );
             if ($annualError !== null) {
                 if (Yii::$app->request->isAjax) {
@@ -193,6 +198,9 @@ class LeaveController extends Controller
                 }
                 Yii::$app->session->setFlash('error', $annualError);
             } elseif ($model->save(false)) {
+                // บันทึกประวัติการแก้ไข (เฉพาะฟิลด์ที่เปลี่ยนจริง) แม้ใบลาจะอนุมัติแล้ว
+                $this->logLeaveEdit($model, $originalSnapshot);
+
                 // กลับไปหน้าเดิมพร้อมตัวกรองที่ผู้ใช้ตั้งไว้ ไม่ให้ผลค้นหาถูกล้างหลังบันทึก
                 $backUrl = $this->safeReturnUrl(Url::to(['/leave/approver/index']));
                 if (Yii::$app->request->isAjax) {
@@ -227,6 +235,101 @@ class LeaveController extends Controller
             'leaveWorkSendInitText' => $leaveWorkSendInitText,
             'stats' => $stats,
             'roundLabel' => $roundLabel,
+        ]);
+    }
+
+    /** ฟิลด์ที่ติดตามการแก้ไข */
+    private function buildEditSnapshot(Leave $model): array
+    {
+        $dj = is_array($model->data_json) ? $model->data_json : [];
+        return [
+            'date_start'      => (string) ($model->date_start ?? ''),
+            'date_end'        => (string) ($model->date_end ?? ''),
+            'date_start_type' => $model->date_start_type,
+            'date_end_type'   => $model->date_end_type,
+            'leave_type_id'   => (string) ($model->leave_type_id ?? ''),
+            'total_days'      => $model->total_days,
+            'status'          => (string) ($model->status ?? ''),
+            'reason'          => (string) ($dj['reason'] ?? ''),
+            'thai_year'       => $model->thai_year,
+        ];
+    }
+
+    /** เปรียบเทียบค่าเดิม/ใหม่ แล้วบันทึกประวัติการแก้ไขใบลา */
+    private function logLeaveEdit(Leave $model, array $old): void
+    {
+        $new = $this->buildEditSnapshot($model);
+        $numericFields = ['date_start_type', 'date_end_type', 'total_days', 'thai_year'];
+
+        $changes = [];
+        foreach ($new as $field => $newVal) {
+            $oldVal = $old[$field] ?? null;
+            if (in_array($field, $numericFields, true)) {
+                if ((float) $oldVal === (float) $newVal) {
+                    continue;
+                }
+            } elseif ((string) $oldVal === (string) $newVal) {
+                continue;
+            }
+            $changes[$field] = ['old' => $oldVal, 'new' => $newVal];
+        }
+
+        if (empty($changes)) {
+            return;
+        }
+
+        // การบันทึกประวัติต้องไม่ทำให้การแก้ไขใบลาล้มเหลว (เช่น ยังไม่ได้รัน migration)
+        try {
+            $me = UserHelper::GetEmployee();
+            LeaveEditHistory::record(
+                (int) $model->id,
+                $changes,
+                (string) $model->status,
+                $me ? (int) $me->id : null
+            );
+        } catch (\Throwable $e) {
+            Yii::error('บันทึกประวัติการแก้ไขใบลาไม่สำเร็จ: ' . $e->getMessage(), __METHOD__);
+        }
+    }
+
+    /**
+     * แสดงประวัติการแก้ไขใบลา (โมดัล AJAX)
+     * @param int $id
+     * @return string|array
+     * @throws NotFoundHttpException
+     */
+    public function actionEditHistory($id)
+    {
+        // ประวัติการแก้ไขเป็นข้อมูลผู้ดูแลระบบลาเท่านั้น
+        if (!Yii::$app->user->can('leave')) {
+            throw new ForbiddenHttpException('ไม่มีสิทธิ์เข้าถึงประวัติการแก้ไขใบลา');
+        }
+
+        $model = Leave::findOne((int) $id);
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบรายการที่ต้องการ');
+        }
+
+        $items = LeaveEditHistory::find()
+            ->where(['leave_id' => (int) $id])
+            ->orderBy(['edited_at' => SORT_DESC, 'id' => SORT_DESC])
+            ->all();
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title'   => 'ประวัติการแก้ไขใบลา',
+                'content' => $this->renderAjax('edit_history', [
+                    'model' => $model,
+                    'items' => $items,
+                ]),
+                'footer'  => '',
+            ];
+        }
+
+        return $this->render('edit_history', [
+            'model' => $model,
+            'items' => $items,
         ]);
     }
 
@@ -587,7 +690,7 @@ class LeaveController extends Controller
         return rtrim(rtrim($text, '0'), '.') ?: '0';
     }
 
-    protected function validateAnnualLeaveLimit(int $empId, int $thaiYear, string $leaveTypeId, $totalDays): ?string
+    protected function validateAnnualLeaveLimit(int $empId, int $thaiYear, string $leaveTypeId, $totalDays, ?int $excludeLeaveId = null): ?string
     {
         $requestedDays = round(max(0, (float) $totalDays), 2);
         if ($requestedDays <= 0) {
@@ -599,7 +702,24 @@ class LeaveController extends Controller
         }
 
         $summary = $this->getAnnualLeaveSummary($empId, $thaiYear);
-        $remaining = round((float) ($summary['remaining'] ?? 0), 2);
+        $total = round((float) ($summary['total'] ?? 0), 2);
+        $used  = round((float) ($summary['used'] ?? 0), 2);
+
+        // กรณีแก้ไข: ไม่นับวันลาพักผ่อนของใบที่กำลังแก้ซ้ำ (คืนวันเดิมกลับมาก่อนคำนวณ)
+        if ($excludeLeaveId) {
+            $ownDays = (float) Leave::find()
+                ->where([
+                    'id'            => $excludeLeaveId,
+                    'emp_id'        => $empId,
+                    'thai_year'     => $thaiYear,
+                    'leave_type_id' => 'LT4',
+                    'status'        => 'Approve',
+                ])
+                ->sum('total_days');
+            $used = max(0, $used - round($ownDays, 2));
+        }
+
+        $remaining = round(max(0, $total - $used), 2);
         if ($requestedDays > $remaining) {
             return 'วันลาพักผ่อนไม่เพียงพอ (คงเหลือ ' . $this->formatLeaveDays($remaining) . ' วัน, ขอใช้ ' . $this->formatLeaveDays($requestedDays) . ' วัน)';
         }
