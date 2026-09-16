@@ -8,6 +8,7 @@ $items = [
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/accounting/dashboard']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'inbox', 'label' => 'กล่องรับงาน', 'icon' => 'bi-inbox', 'url' => ['/accounting/inbox']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'payable', 'label' => 'ทะเบียนเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/accounting/payable']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'chart', 'label' => 'ผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/accounting/chart']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2" aria-label="เมนูระบบบัญชี">
