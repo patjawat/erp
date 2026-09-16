@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
 <div class="d-flex align-items-center gap-2">
+    <?= Html::a('<i data-lucide="heart-handshake" aria-hidden="true"></i><span class="d-none d-sm-inline">ความผูกพัน</span>', ['/hr/engagement/mine'], ['class'=>'btn btn-outline-primary d-inline-flex align-items-center gap-2', 'aria-label'=>'แบบสำรวจความผูกพัน', 'data-pjax'=>'0']) ?>
     <a href="<?= Url::to(['/hr/default/dashboard']) ?>"
        aria-label="ภาพรวม"
        class="btn <?= ($active === 'overview' || $active === 'dashboard') ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">

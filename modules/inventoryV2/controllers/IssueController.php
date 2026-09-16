@@ -137,6 +137,20 @@ class IssueController extends Controller
             throw new \yii\web\NotFoundHttpException('ไม่พบใบเบิกที่ต้องการ');
         }
 
+        // จ่ายได้เฉพาะคลังที่ตนรับผิดชอบ — admin/warehouse จ่ายได้ทุกคลัง,
+        // ที่เหลือ (inventory) จำกัดเฉพาะคลังหลักที่ตนเป็น officer
+        // (ด่านบังคับจริงที่ action ไม่ใช่แค่กรอง list ในหน้า index)
+        $canIssueAllWarehouses = Yii::$app->user->can('admin') || Yii::$app->user->can('warehouse');
+        if (!$canIssueAllWarehouses) {
+            $accessibleIds = array_map('intval', ArrayHelper::getColumn(
+                Warehouse::findMainWarehousesForReceive(),
+                'id'
+            ));
+            if (!in_array((int) $model->main_warehouse_id, $accessibleIds, true)) {
+                throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์จ่ายพัสดุของคลังนี้');
+            }
+        }
+
         if (!in_array($model->status, [StockOrder::STATUS_APPROVED, StockOrder::STATUS_CONFIRMED])) {
             Yii::$app->session->setFlash('warning', 'เฉพาะใบที่หัวหน้าอนุมัติแล้ว (สถานะอนุมัติแล้ว) จึงจะดำเนินการจ่ายได้');
             return $this->redirect(['index']);
@@ -200,6 +214,10 @@ class IssueController extends Controller
                         $detail->item_code,
                         $model->main_warehouse_id
                     );
+                    // Lock both sides; validate only the lots this issue actually moves.
+                    foreach (array_filter([$model->main_warehouse_id, $model->sub_warehouse_id]) as $warehouseId) {
+                        InventoryService::lockStockPool($detail->item_code, $warehouseId);
+                    }
 
                     $reservedAhead = InventoryService::reservedAheadQty(
                         $detail->item_code,
@@ -249,6 +267,15 @@ class IssueController extends Controller
                     foreach ($sourceLots as $sourceIn) {
                         if ($tempQty <= 0) break;
 
+                        $lot = (string) $sourceIn->lot_number;
+                        foreach (array_filter([$model->main_warehouse_id, $model->sub_warehouse_id]) as $warehouseId) {
+                            $poolKey = json_encode([(int) $warehouseId, (string) $detail->item_code, $lot]);
+                            // Check once before mutation: pending OUT rows are not FIFO sources until CONFIRMED.
+                            if (!isset($affectedStockPools[$poolKey])) {
+                                InventoryService::assertBalanceMatchesFifo($detail->item_code, $warehouseId, [$lot]);
+                                $affectedStockPools[$poolKey] = [(int) $warehouseId, (string) $detail->item_code, $lot];
+                            }
+                        }
                         $take = min($tempQty, (float)$sourceIn->remain_qty);
                         $sourceIn->remain_qty -= $take;
                         if (!$sourceIn->save(false)) {
@@ -310,10 +337,6 @@ class IssueController extends Controller
                             ];
                         }, array_keys($lotGroups), $lotGroups),
                     ];
-                    $affectedStockPools[$model->main_warehouse_id . '|' . $detail->item_code] = [(int) $model->main_warehouse_id, (string) $detail->item_code];
-                    if ($model->sub_warehouse_id) {
-                        $affectedStockPools[$model->sub_warehouse_id . '|' . $detail->item_code] = [(int) $model->sub_warehouse_id, (string) $detail->item_code];
-                    }
                     $processedCount++;
                 }
 
@@ -369,8 +392,8 @@ class IssueController extends Controller
                     throw new \Exception("ไม่สามารถบันทึกสถานะใบเบิกได้");
                 }
 
-                foreach ($affectedStockPools as [$warehouseId, $itemCode]) {
-                    InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId);
+                foreach ($affectedStockPools as [$warehouseId, $itemCode, $lot]) {
+                    InventoryService::assertBalanceMatchesFifo($itemCode, $warehouseId, [$lot]);
                 }
 
                 $transaction->commit();

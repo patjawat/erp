@@ -34,18 +34,19 @@ class ApproveHelper extends Component
         $idp = self::Idp();
         $probation = self::Probation();
         $housingHandover = self::HousingHandover();
+        $checkin = self::Checkin();
 
         return [
             // 'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::StockApprove()['total'] + self::Development()['total'] + self::Checkin()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total']),
             // เบิกวัสดุรุ่นเก่า (StockApprove) ไม่ถูกนับรวมแล้วตั้งแต่ 2026-08-31
             // เพราะเลิกใช้ไปแล้ว ใช้ RequisitionV2 แทน — คงเมธอดกับคีย์ไว้เผื่อโค้ดเก่าเรียกใช้
-            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total']),
+            'total' => (self::Leave()['total'] + self::Purchase()['total'] + self::Development()['total'] + self::AssetMove()['total'] + self::RequisitionV2()['total'] + $jdAcknowledgement['total'] + $jdSignature['total'] + $jdChangeReview['total'] + $idp['total'] + $probation['total'] + $housingHandover['total'] + $checkin['total']),
             'leave' => self::Leave(),
             'booking_car' => self::DriverService(),
             'stock' => self::StockApprove(),
             'purchase' => self::Purchase(),
             'development' => self::Development(),
-            'checkin' => self::Checkin(),
+            'checkin' => $checkin,
             'assetMove' => self::AssetMove(),
             'requisitionV2' => self::RequisitionV2(),
             'jd_acknowledgement' => $jdAcknowledgement,
@@ -553,9 +554,8 @@ class ApproveHelper extends Component
             if (!$me) {
                 return ['title' => 'อนุมัติลงเวลา', 'total' => 0, 'datas' => []];
             }
-            $datas = Approve::find()
-                ->where(['name' => 'checkin', 'status' => 'Pending', 'emp_id' => $empId])
-                ->orderBy(['id' => SORT_DESC])
+            $datas = \app\modules\attendance\services\AttendanceAccess::pendingQuery()
+                ->orderBy(['approve.id' => SORT_DESC])
                 ->all();
             return [
                 'title' => 'อนุมัติลงเวลา',

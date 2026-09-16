@@ -9,7 +9,8 @@ class m260722_000002_seed_ai_default_datasets extends Migration
 {
     public function safeUp(): void
     {
-        $definitions = require dirname(__DIR__) . '/datasets/default.php';
+        // นิยาม dataset อยู่ที่ modules/ai/datasets/default.php (migration ถูกย้ายมา migrations/ ชั้นเดียว → dirname(__DIR__)=root)
+        $definitions = require dirname(__DIR__) . '/modules/ai/datasets/default.php';
         $now = date('Y-m-d H:i:s');
 
         foreach ($definitions as $code => $definition) {
@@ -65,7 +66,8 @@ class m260722_000002_seed_ai_default_datasets extends Migration
 
     public function safeDown(): void
     {
-        $definitions = require dirname(__DIR__) . '/datasets/default.php';
+        // นิยาม dataset อยู่ที่ modules/ai/datasets/default.php (migration ถูกย้ายมา migrations/ ชั้นเดียว → dirname(__DIR__)=root)
+        $definitions = require dirname(__DIR__) . '/modules/ai/datasets/default.php';
         $this->delete('{{%ai_datasets}}', ['code' => array_keys($definitions)]);
     }
 

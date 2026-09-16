@@ -9,26 +9,57 @@ use yii\web\Controller;
 
 class StockCardController extends Controller
 {
+    /**
+     * admin/warehouse เห็นทุกคลัง; ที่เหลือ (inventory) เฉพาะคลังหลักที่ตนเป็น officer
+     * @return array{0:bool,1:int[]} [canSeeAll, allowedMainWarehouseIds]
+     */
+    protected function warehouseScope()
+    {
+        $canSeeAll = !\Yii::$app->user->isGuest
+            && (\Yii::$app->user->can('admin') || \Yii::$app->user->can('warehouse'));
+        $allowedIds = $canSeeAll ? [] : array_map(
+            'intval',
+            \yii\helpers\ArrayHelper::getColumn(Warehouse::findMainWarehousesForReceive(), 'id')
+        );
+        return [$canSeeAll, $allowedIds];
+    }
+
     public function actionIndex()
     {
-        $warehouses = Warehouse::find()->asArray()->all();
+        [$canSeeAll, $allowedIds] = $this->warehouseScope();
+        $query = Warehouse::find();
+        if (!$canSeeAll) {
+            // เห็นเฉพาะคลังหลักที่ตนรับผิดชอบ
+            $query->andWhere(['id' => $allowedIds ?: [0]]);
+        }
+        $warehouses = $query->asArray()->all();
         return $this->render('index', [
             'warehouses' => \yii\helpers\ArrayHelper::map($warehouses, 'id', 'warehouse_name')
         ]);
     }
-    
+
     public function actionGetStockData($item_code, $start_date, $end_date, $warehouse_id = null)
 {
     \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    [$canSeeAll, $allowedIds] = $this->warehouseScope();
+    // ผู้ใช้ที่ถูก scope: ถ้าเจาะจงคลังที่ไม่ใช่ของตน = 403; ถ้าไม่เจาะจง = จำกัดเฉพาะคลังของตน
+    if (!$canSeeAll && $warehouse_id !== null && $warehouse_id !== ''
+        && !in_array((int) $warehouse_id, $allowedIds, true)) {
+        throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ดูบัตรคุมพัสดุของคลังนี้');
+    }
+    $scopeIds = $allowedIds ?: [0];
 
     // --- 1. คำนวณยอดยกมา (Brought Forward - BF) ก่อนวันที่เริ่มต้น ---
     $queryBF = StockDetail::find()->joinWith('stockOrder')
         ->where(['stock_detail.item_code' => $item_code])
         ->andWhere(['<', 'stock_order.order_date', $start_date . ' 00:00:00']);
 
-    // กรองคลังสำหรับยอดยกมา (ถ้ามีการเลือก)
+    // กรองคลังสำหรับยอดยกมา (ถ้ามีการเลือก) มิฉะนั้นจำกัดเฉพาะคลังที่ตนรับผิดชอบ
     if ($warehouse_id) {
         $queryBF->andWhere(['stock_order.main_warehouse_id' => $warehouse_id]);
+    } elseif (!$canSeeAll) {
+        $queryBF->andWhere(['stock_order.main_warehouse_id' => $scopeIds]);
     }
 
     $modelsBF = $queryBF->all();
@@ -52,9 +83,11 @@ class StockCardController extends Controller
         ->where(['stock_detail.item_code' => $item_code])
         ->andWhere(['between', 'stock_order.order_date', $start_date . ' 00:00:00', $end_date . ' 23:59:59']);
 
-    // กรองคลังสำหรับรายการระหว่างงวด (ถ้ามีการเลือก)
+    // กรองคลังสำหรับรายการระหว่างงวด (ถ้ามีการเลือก) มิฉะนั้นจำกัดเฉพาะคลังที่ตนรับผิดชอบ
     if ($warehouse_id) {
         $queryTrans->andWhere(['stock_order.main_warehouse_id' => $warehouse_id]);
+    } elseif (!$canSeeAll) {
+        $queryTrans->andWhere(['stock_order.main_warehouse_id' => $scopeIds]);
     }
 
     $transactions = $queryTrans->orderBy([

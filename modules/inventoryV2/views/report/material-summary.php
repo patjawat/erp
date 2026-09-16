@@ -84,6 +84,19 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
 <?php $this->endBlock(); ?>
 
 <div class="container-fluid py-4 ms-report-summary">
+    <?php if (\app\modules\inventoryV2\services\MonthlyPeriodProtection::installed()): ?>
+        <?php
+        $certQuery=(new \yii\db\Query())->from('stock_monthly_period_lock')->where(['report_year'=>$year,'report_month'=>$month]);
+        if ($warehouseId) $certQuery->andWhere(['warehouse_id'=>$warehouseId]);
+        $certifications=$certQuery->all();
+        ?>
+        <?php if ($certifications): ?>
+            <div class="alert alert-info"><strong>ยอดยกไปรับรองจาก Excel และล็อกแล้ว</strong>
+                <div>ยอดยกไปใช้จำนวนและมูลค่าจากไฟล์ที่ส่งบัญชี ส่วนยอดยกมา รับ และจ่ายในรายงานนี้ยังเป็นข้อมูลเดิมของระบบ จึงอาจไม่สัมพันธ์ตามสูตรหลังคืนยอด</div>
+                <?= Html::a('ดูชุดคืนยอดและประวัติ',['/inventory-v2/monthly-snapshot/draft','id'=>$certifications[0]['restore_id']],['class'=>'alert-link']) ?>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
     <div class="card border shadow-sm rounded-3 mb-4">
         <div class="card-body py-3 px-4">
             <form method="get" action="<?= Url::to(['/inventory-v2/report/material-summary']) ?>" id="form-material-summary">
@@ -112,6 +125,7 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
                         </select>
                     </div>
                     <div class="col-12 col-md d-flex flex-wrap gap-2 justify-content-md-end">
+                        <?= Html::a('ตรวจไฟล์ยอดปิดเดือน', ['/inventory-v2/monthly-snapshot/index', 'year' => $year, 'month' => $month], ['class' => 'btn btn-outline-secondary', 'title' => 'สำหรับผู้มีสิทธิ์ตรวจซ่อมและเข้าถึงทุกคลังหลัก']) ?>
                         <button type="submit" class="btn btn-primary px-3">
                             <i class="bi bi-search me-1"></i> แสดงรายงาน
                         </button>
@@ -393,7 +407,7 @@ $renderCell = function ($value, $kind, $categoryCode) use ($drillKinds) {
             <footer class="cm-modal__foot" style="justify-content:space-between">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
                 <button type="button" class="btn btn-success" id="cmd-autofix" disabled>
-                    <span class="cmd-autofix__label"><i class="bi bi-wrench-adjustable" aria-hidden="true"></i> ซ่อมมูลค่าอัตโนมัติ (ปิดใหม่ทั้งช่วง)</span>
+                    <span class="cmd-autofix__label"><i class="bi bi-wrench-adjustable" aria-hidden="true"></i> ซ่อมและปิดใหม่เฉพาะช่วงที่ยังไม่ล็อก</span>
                     <span class="cmd-autofix__spinner spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
                 </button>
             </footer>
@@ -1837,7 +1851,7 @@ $this->registerJs(<<<JS
         var wh = $('#cmd-warehouse-id').val();
         if (!wh){ $('#cmd-result').html(cmAlert('warning','bi-exclamation-triangle','กรุณาเลือกคลัง','')); return; }
         cmdCtx = { warehouse_id: wh, month: $('#cmd-month').val(), year: $('#cmd-year').val() };
-        $('#cmd-result').html('<div class="cm-load"><span class="spinner-border spinner-border-sm"></span> กำลังไล่คำนวณทุกงวด…</div>');
+        $('#cmd-result').html('<div class="cm-load"><span class="spinner-border spinner-border-sm"></span> กำลังตรวจงวดหลังยอดรับรองถึงงวดที่เลือก…</div>');
         $('#cmd-autofix').prop('disabled', true);
         $.post(doctorUrl, cmdCtx).done(function(res){
             if (!res || !res.success){ $('#cmd-result').html(cmAlert('danger','bi-exclamation-triangle','วิเคราะห์ไม่สำเร็จ',(res&&res.message)||'')); return; }
@@ -1865,7 +1879,7 @@ $this->registerJs(<<<JS
 
         if ((s.value_only_desync||0) > 0){
             html += cmAlert('info','bi-wrench-adjustable','ซ่อมมูลค่าติดลบเทียมได้อัตโนมัติ',
-                'กดปุ่ม "ซ่อมมูลค่าอัตโนมัติ" ด้านล่าง ระบบจะปิดเดือนใหม่ทุกงวดด้วยต้นทุนถัวเฉลี่ย มูลค่าจะไม่ติดลบเมื่อจำนวนไม่ติดลบ');
+                'กดปุ่มซ่อมด้านล่าง ระบบใช้ยอดงวดที่ล็อกเป็นฐาน แล้วคำนวณใหม่เฉพาะงวดหลังจากนั้นถึงงวดที่เลือก หากยังมีปัญหาให้ตรวจรายการในงวดที่เปิด');
         }
         if ((s.negative_qty||0) > 0){
             html += cmAlert('danger','bi-exclamation-octagon-fill','จำนวนติดลบต้องตรวจเอง',
@@ -1911,7 +1925,7 @@ $this->registerJs(<<<JS
         if (!window.confirm('ซ่อมอัตโนมัติจะดำเนินการ 3 อย่าง:\\n'
             + '1) ย้ายจำนวนรับข้ามเดือน (สร้างรายการปรับยอดคู่ +/− สุทธิเป็นศูนย์) เพื่อลบยอดติดลบชั่วคราว\\n'
             + '2) เติมราคาทุนบนแถวรับเข้าที่ราคา 0 ด้วยราคาซื้อล่าสุด\\n'
-            + '3) ปิดเดือนใหม่ทุกงวดด้วยต้นทุนถัวเฉลี่ย\\n\\n'
+            + '3) ใช้ยอดงวดที่ล็อกเป็นฐาน ปิดใหม่เฉพาะงวดหลังจากนั้นถึงงวดที่เลือก (ถ้ายังไม่มีงวดล็อก เริ่มจากงวดแรก)\\n\\n'
             + 'ไม่แก้ยอดคงเหลือปลายทาง/ไม่แก้เอกสารที่ใช้ร่วมหลายพัสดุ และทุกรายการปรับยอดติดแท็กย้อนกลับได้ — ดำเนินการต่อ?')){ return; }
         var \$btn = $(this).prop('disabled', true);
         \$btn.find('.cmd-autofix__label').css('opacity', 0.6);

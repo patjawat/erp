@@ -24,6 +24,12 @@ use yii\db\Expression;
  */
 class CheckinLocation extends \yii\db\ActiveRecord
 {
+    public function beforeValidate()
+    {
+        if (!parent::beforeValidate()) return false;
+        if (empty($this->qr_token)) $this->qr_token = Yii::$app->security->generateRandomString(32);
+        return true;
+    }
     public static function tableName()
     {
         return 'checkin_location';
@@ -48,11 +54,14 @@ class CheckinLocation extends \yii\db\ActiveRecord
     {
         return [
             [['name'], 'required'],
-            [['lat', 'lng'], 'number'],
+            [['lat'], 'number', 'min' => -90, 'max' => 90],
+            [['lng'], 'number', 'min' => -180, 'max' => 180],
+            [['lat', 'lng'], 'required'],
             [['active', 'created_by', 'updated_by'], 'integer'],
-            [['radius_m'], 'integer', 'min' => 0, 'max' => 100000],
-            [['radius_m'], 'default', 'value' => 0],
+            [['radius_m'], 'integer', 'min' => 1, 'max' => 100000],
+            [['radius_m'], 'default', 'value' => 100],
             [['active'], 'default', 'value' => 1],
+            [['active'], 'in', 'range' => [0, 1]],
             [['name', 'qr_token'], 'string', 'max' => 255],
             [['qr_token'], 'unique'],
             [['created_at', 'updated_at'], 'safe'],
@@ -81,7 +90,8 @@ class CheckinLocation extends \yii\db\ActiveRecord
      */
     public function hasValidCenter()
     {
-        return $this->lat !== null && $this->lat !== '' && $this->lng !== null && $this->lng !== '';
+        return is_numeric($this->lat) && is_numeric($this->lng) && is_finite((float)$this->lat) && is_finite((float)$this->lng)
+            && abs((float)$this->lat) <= 90 && abs((float)$this->lng) <= 180;
     }
 
     /**
@@ -114,6 +124,7 @@ class CheckinLocation extends \yii\db\ActiveRecord
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
         $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        $a = max(0.0, min(1.0, $a));
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         return $R * $c;
     }
@@ -197,78 +208,28 @@ class CheckinLocation extends \yii\db\ActiveRecord
      * @param string|null $qrToken
      * @return array{ok: bool, location: ?static, message: string, meta: array}
      */
-    public static function validateClockIn($lat, $lng, $qrToken)
+    public static function validateClockIn($lat, $lng, $qrToken, $reason = '')
     {
-        $qrToken = $qrToken !== null && $qrToken !== '' ? trim((string)$qrToken) : null;
-
-        $parseCoord = static function ($v) {
-            if ($v === null || $v === '') {
-                return null;
-            }
-            if (!is_numeric($v)) {
-                return null;
-            }
-            return (float)$v;
-        };
-        $latF = $parseCoord($lat);
-        $lngF = $parseCoord($lng);
-
-        if ($qrToken !== null) {
-            $loc = static::findByQrToken($qrToken);
-            if (!$loc) {
-                return ['ok' => false, 'location' => null, 'message' => 'ไม่พบ QR จุดลงเวลา หรือจุดนี้ปิดใช้งาน', 'meta' => []];
-            }
-            if ($loc->hasGeofence()) {
-                if ($latF === null || $lngF === null) {
-                    return ['ok' => false, 'location' => null, 'message' => 'จุดลงเวลานี้กำหนดรัศมี GPS — กรุณาเปิดการเข้าถึงตำแหน่งแล้วลองใหม่', 'meta' => []];
-                }
-                if (!$loc->isPointInside($latF, $lngF)) {
-                    $d = static::haversineDistance((float)$loc->lat, (float)$loc->lng, $latF, $lngF);
-                    return [
-                        'ok' => false,
-                        'location' => null,
-                        'message' => sprintf(
-                            'อยู่ห่างจากจุด «%s» ประมาณ %d เมตร (รัศมีที่อนุญาต %d เมตร)',
-                            $loc->name,
-                            (int)round($d),
-                            (int)$loc->radius_m
-                        ),
-                        'meta' => ['distance_m' => $d, 'location_id' => $loc->id],
-                    ];
-                }
-            }
-            return ['ok' => true, 'location' => $loc, 'message' => '', 'meta' => []];
+        $fail = static function ($message) { return ['ok' => false, 'inside' => false, 'location' => null, 'message' => $message, 'meta' => []]; };
+        if (!is_scalar($lat) || !is_scalar($lng) || !is_numeric($lat) || !is_numeric($lng)
+            || !is_finite((float)$lat) || !is_finite((float)$lng)
+            || abs((float)$lat) > 90 || abs((float)$lng) > 180) {
+            return $fail('ต้องได้รับพิกัด GPS ที่ถูกต้อง กรุณาเปิดตำแหน่งแล้วลองใหม่');
         }
-
-        if (!static::requiresOpenCheckinGeofence()) {
-            $inside = ($latF !== null && $lngF !== null) ? static::findLocationAt($latF, $lngF) : null;
-            return ['ok' => true, 'location' => $inside, 'message' => '', 'meta' => []];
-        }
-
-        if ($latF === null || $lngF === null) {
-            return [
-                'ok' => false,
-                'location' => null,
-                'message' => 'องค์กรกำหนดบริเวณลงเวลาด้วย GPS — กรุณาเปิดการเข้าถึงตำแหน่งแล้วลองใหม่',
-                'meta' => [],
-            ];
-        }
-
-        $loc = static::findLocationAt($latF, $lngF);
+        if (!is_scalar($qrToken) && $qrToken !== null) return $fail('ข้อมูล QR ไม่ถูกต้อง');
+        $qrToken = trim((string)$qrToken);
+        $loc = $qrToken !== '' ? static::findByQrToken($qrToken) : static::findLocationAt($lat, $lng);
+        if ($qrToken !== '' && !$loc) return $fail('ไม่พบ QR จุดลงเวลา หรือจุดนี้ปิดใช้งาน');
+        if ($loc && !$loc->hasGeofence()) return $fail('จุดลงเวลายังไม่กำหนดพิกัดและรัศมี กรุณาติดต่อผู้ดูแลระบบ');
         if (!$loc) {
-            $near = static::nearestGeofenceFrom($latF, $lngF);
-            $msg = 'ไม่อยู่ในบริเวณที่กำหนดสำหรับลงเวลา';
-            if ($near !== null) {
-                $msg .= sprintf(
-                    ' (ห่างจากจุดใกล้ที่สุด «%s» ~%d เมตร รัศมีอนุญาต %d เมตร)',
-                    $near['location']->name,
-                    (int)round($near['distance_m']),
-                    (int)$near['location']->radius_m
-                );
-            }
-            return ['ok' => false, 'location' => null, 'message' => $msg, 'meta' => $near ?? []];
+            $near = static::nearestGeofenceFrom($lat, $lng);
+            if (!$near) return $fail('ยังไม่มีจุดลงเวลาที่กำหนด GPS กรุณาติดต่อผู้ดูแลระบบ');
+            $loc = $near['location'];
         }
-
-        return ['ok' => true, 'location' => $loc, 'message' => '', 'meta' => []];
+        $distance = static::haversineDistance((float)$loc->lat, (float)$loc->lng, (float)$lat, (float)$lng);
+        $inside = $distance <= (float)$loc->radius_m;
+        if (!$inside && (!is_string($reason) || trim($reason) === '')) return $fail('อยู่นอกพื้นที่ กรุณาระบุเหตุผลเพื่อส่งให้หัวหน้าหรือผู้มีสิทธิตรวจสอบอนุมัติ');
+        return ['ok' => true, 'inside' => $inside, 'location' => $loc, 'message' => '',
+            'meta' => ['distance_m' => round($distance, 2), 'radius_m' => (int)$loc->radius_m, 'location_id' => (int)$loc->id]];
     }
 }

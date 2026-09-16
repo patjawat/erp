@@ -1,0 +1,5 @@
+<?php use yii\helpers\Html; use app\modules\hr\services\EngagementService as E; $this->title='แบบสำรวจของฉัน'; ?>
+<?= $this->render('_nav') ?>
+<h2 class="h5">แบบสำรวจของฉัน</h2><p class="text-body-secondary">คำตอบเป็นความลับ ใช้รายงานภาพรวมตามคำชี้แจงของแต่ละรอบ</p>
+<div class="row g-3"><?php foreach($rounds as $r): ?><div class="col-12 col-lg-6"><div class="card border-0 shadow-sm rounded-4 h-100"><div class="card-body p-4"><h3 class="h6"><?= Html::encode($r['title']) ?></h3><p class="small text-body-secondary"><?= E::localDate($r['open_at']) ?> – <?= E::localDate($r['close_at']) ?> (เวลาไทย)</p><p><?= $r['completion_status']==='submitted'?'ส่งคำตอบแล้ว':E::statusLabel($r['status']) ?></p><?= Html::a($r['completion_status']==='submitted'?'ดูสถานะ':'เปิดแบบสำรวจ',['respond','id'=>$r['id']],['class'=>'btn btn-outline-primary']) ?></div></div></div><?php endforeach ?></div>
+<?php if(!$rounds): ?><div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4 text-body-secondary">ยังไม่มีแบบสำรวจที่กำหนดให้คุณตอบ</div></div><?php endif ?>

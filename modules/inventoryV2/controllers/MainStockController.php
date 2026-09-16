@@ -1138,7 +1138,8 @@ class MainStockController extends \yii\web\Controller
      */
     protected function applyOfficerFilter($query)
     {
-        if (Yii::$app->user->can('admin')) {
+        // admin/warehouse เห็นทุกคลัง; ที่เหลือ (inventory) เฉพาะคลังที่ตนเป็น officer
+        if (Warehouse::userCanSeeAllWarehouses()) {
             return;
         }
         $userId = (string) Yii::$app->user->id;

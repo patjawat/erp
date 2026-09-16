@@ -14,10 +14,12 @@ class CheckinRecordSearch extends CheckinRecord
     public $date_end;
     public $q;
     public $q_emp;
+    public $unmatched;
 
     public function rules()
     {
         return [
+            [['unmatched'], 'boolean'],
             [['id', 'emp_id', 'location_id', 'is_in_location', 'approved_by'], 'integer'],
             [['checkin_at', 'method', 'status', 'check_type', 'date_filter', 'date_start', 'date_end', 'q', 'q_emp'], 'safe'],
         ];
@@ -35,8 +37,11 @@ class CheckinRecordSearch extends CheckinRecord
 
         $this->load($params);
         if (!$this->validate()) {
+            $query->andWhere('1=0');
             return $dataProvider;
         }
+
+        if ($this->unmatched) $query->andWhere("JSON_EXTRACT(checkin_record.data_json, '$.attendance.shift.id') IS NULL");
 
         $query->andFilterWhere(['checkin_record.id' => $this->id]);
         $query->andFilterWhere(['checkin_record.emp_id' => $this->emp_id]);

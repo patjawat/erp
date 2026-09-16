@@ -29,6 +29,46 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
  */
 class ReportController extends Controller
 {
+    private $monthlyWriteLocked = false;
+
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) return false;
+        if (in_array($action->id, ['close-month', 'close-month-autofix', 'set-period-closing', 'cancel-close'], true)) {
+            if (!Yii::$app->request->isPost) throw new \yii\web\MethodNotAllowedHttpException('ต้องเรียกผ่าน POST');
+            \app\modules\inventoryV2\services\MonthlyPeriodProtection::acquire();
+            $this->monthlyWriteLocked = true;
+            // Also release when an action throws before afterAction can run.
+            Yii::$app->on(\yii\base\Application::EVENT_AFTER_REQUEST, function () { $this->releaseMonthlyWriteLock(); });
+            try {
+                $resolved = $this->resolveCloseWarehouseIds(Yii::$app->request->post('warehouse_id'));
+                if ($resolved['error'] !== null) throw new \DomainException($resolved['error']);
+                $range = in_array($action->id, ['close-month-autofix','set-period-closing'], true) ? 'from' : 'exact';
+                \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable($resolved['ids'],
+                    (int) Yii::$app->request->post('year', date('Y')), (int) Yii::$app->request->post('month', date('n')), $range);
+            } catch (\Throwable $e) {
+                $this->releaseMonthlyWriteLock();
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                Yii::$app->response->data = ['success'=>false,'message'=>$e->getMessage()];
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function afterAction($action, $result)
+    {
+        try { return parent::afterAction($action, $result); }
+        finally { $this->releaseMonthlyWriteLock(); }
+    }
+
+    private function releaseMonthlyWriteLock(): void
+    {
+        if ($this->monthlyWriteLocked) {
+            $this->monthlyWriteLocked = false;
+            \app\modules\inventoryV2\services\MonthlyPeriodProtection::release();
+        }
+    }
     /** รหัสคลังที่จัดเป็น "จ่ายส่วนของ รพ.สต." (ที่เหลือนับเป็นโรงพยาบาล)
      * ลำดับความสำคัญ: param inventoryV2.disburseSubWarehouseIds (ถ้ากำหนดไว้) →
      * ถ้าว่าง fallback ไปดึงคลังประเภท BRANCH (=รพ.สต.) อัตโนมัติ
@@ -46,19 +86,65 @@ class ReportController extends Controller
     }
 
     /**
+     * บริบทคลังหลักสำหรับหน้ารายงาน ตามนโยบายกลาง (ดู Warehouse::userCanSeeAllWarehouses)
+     * - admin/warehouse: เลือกได้ทุกคลังหลัก + option "ทุกคลังหลัก" (null = รวมทั้งระบบ)
+     * - ที่เหลือ (inventory): dropdown เฉพาะคลังที่ตนรับผิดชอบ ไม่มี option "ทุกคลัง"
+     *   และ warehouseId ถูกบังคับให้เป็นคลังของตนเสมอ (default คลังแรก) — กัน aggregate รวมข้ามคลัง
+     * @return array{0:array,1:int|null} [warehouses(dropdown map), warehouseId]
+     */
+    protected function reportWarehouseContext($requested)
+    {
+        $canAll = Warehouse::userCanSeeAllWarehouses();
+        $ids = Warehouse::accessibleMainWarehouseIds();
+        $map = \yii\helpers\ArrayHelper::map(
+            Warehouse::findMainWarehousesForReceive(),
+            'id',
+            'warehouse_name'
+        );
+
+        $warehouseId = ($requested !== null && $requested !== '') ? (int) $requested : null;
+        if ($warehouseId !== null && !in_array($warehouseId, $ids, true)) {
+            $warehouseId = null; // กันดูทะลุคลังที่ไม่มีสิทธิ์ผ่าน URL ตรง
+        }
+
+        if ($canAll) {
+            $warehouses = ['' => '-- ทุกคลังหลัก --'] + $map;
+        } else {
+            $warehouses = $map; // ไม่มี option ทุกคลัง
+            if ($warehouseId === null) {
+                $warehouseId = $ids[0] ?? -1; // -1 = ไม่มีคลังในสิทธิ์ → รายงานว่าง
+            }
+        }
+        return [$warehouses, $warehouseId];
+    }
+
+    /**
+     * กันดูข้อมูลรายคลัง (MAIN/SUB) ที่ไม่มีสิทธิ์ ผ่าน URL ตรง — ใช้กับ drilldown/ประวัติรายคลัง
+     * admin/warehouse ผ่านหมด; ที่เหลือต้องเป็นคลังที่ตนรับผิดชอบ (MAIN officer หรือ SUB officer)
+     * @throws \yii\web\ForbiddenHttpException
+     */
+    protected function assertWarehouseViewable($warehouseId)
+    {
+        if (Warehouse::userCanSeeAllWarehouses()) {
+            return;
+        }
+        $ids = array_map('intval', \yii\helpers\ArrayHelper::getColumn(
+            Warehouse::findAllAccessibleWarehouses(),
+            'id'
+        ));
+        if (!in_array((int) $warehouseId, $ids, true)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ดูข้อมูลของคลังนี้');
+        }
+    }
+
+    /**
      * รายงานสรุปรายงานวัสดุคงคลัง แยกตามประเภทวัสดุ
      */
     public function actionMaterialSummary()
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
-
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
         $hasData = !empty($rows);
@@ -123,8 +209,7 @@ class ReportController extends Controller
 
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') !== null && $this->request->get('warehouse_id') !== ''
-            ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $category = (string) $this->request->get('category', '');
         $kind = (string) $this->request->get('kind', '');
 
@@ -634,6 +719,7 @@ class ReportController extends Controller
     protected function getItemHistoryData($item_code, $warehouse_id, $start_date = null, $end_date = null)
     {
         $warehouseId = (int) $warehouse_id;
+        $this->assertWarehouseViewable($warehouseId);
         $startDate = $start_date ?: date('Y-m-01');
         $endDate = $end_date ?: date('Y-m-d');
 
@@ -1274,8 +1360,7 @@ class ReportController extends Controller
      */
     public function actionInsufficientToDisburse()
     {
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [$mainWarehouses, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = $this->request->get('category_id') !== null && $this->request->get('category_id') !== ''
@@ -1283,7 +1368,6 @@ class ReportController extends Controller
 
         $data = $this->getInsufficientToDisburseRows($mainWarehouseId, $subWarehouseId,$categoryId);
         $rows = $data['rows'];
-        $listMain = $data['listMain'];
         $listSub = $data['listSub'];
 
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
@@ -1291,7 +1375,6 @@ class ReportController extends Controller
             'code',
             'title'
         );
-        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
         $subWarehouses = ['' => '-- ทุกคลังย่อยที่ขอเบิก --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
 
         $this->view->params['active'] = 'report-balance';
@@ -1311,8 +1394,7 @@ class ReportController extends Controller
      */
     public function actionExportInsufficientToDisburse()
     {
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
 
@@ -1706,7 +1788,7 @@ class ReportController extends Controller
         $transaction = Yii::$app->db->beginTransaction();
         try {
             foreach ($resolved['ids'] as $wid) {
-                [$sy, $sm] = self::firstStockOrderMonth($wid);
+                [$sy, $sm, $baseOpening] = self::repairStart($wid, $year, $month);
                 if ($sy === null || ($sy * 12 + $sm) > $target) {
                     continue;
                 }
@@ -1728,14 +1810,16 @@ class ReportController extends Controller
                         $zeroCodes[] = $it['item_code'];
                     }
                 }
-                $zcPlan = CloseMonthAutofixService::planZeroCost($wid, $zeroCodes);
+                $startDate = sprintf('%04d-%02d-01 00:00:00', $sy, $sm);
+                $endDate = date('Y-m-d H:i:s', strtotime(sprintf('%04d-%02d-01', $year, $month).' +1 month'));
+                $zcPlan = CloseMonthAutofixService::planZeroCost($wid, $zeroCodes, $startDate, $endDate);
                 $zcFixedCodes = array_map(static fn($p) => $p['item_code'], $zcPlan);
                 $zeroCostNoPrice = array_merge($zeroCostNoPrice, array_values(array_diff($zeroCodes, $zcFixedCodes)));
                 $za = CloseMonthAutofixService::applyZeroCost($zcPlan);
                 $zeroCostItems += $za['items'];
 
                 // 3) ปิดเดือนใหม่ทุกงวด (WA + รับรายการที่เพิ่งซ่อม)
-                $opening = [];
+                $opening = $baseOpening;
                 $ty = $sy;
                 $tm = $sm;
                 while (($ty * 12 + $tm) <= $target) {
@@ -2540,9 +2624,12 @@ class ReportController extends Controller
      */
     public static function closeMonthForWarehouse($warehouseId, $year, $month)
     {
+        return \app\modules\inventoryV2\services\MonthlyPeriodProtection::run(function () use ($warehouseId, $year, $month) {
+        \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable([(int)$warehouseId], (int)$year, (int)$month);
         $rows = self::computeMonthlyRows($warehouseId, $year, $month);
         self::persistMonthlyRows($warehouseId, $year, $month, $rows);
         return ['count' => count($rows)];
+        });
     }
 
     /**
@@ -2551,6 +2638,10 @@ class ReportController extends Controller
      */
     protected static function persistMonthlyRows($warehouseId, $year, $month, array $rows): void
     {
+        \app\modules\inventoryV2\services\MonthlyPeriodProtection::run(function () use ($warehouseId, $year, $month, $rows) {
+        \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable([(int)$warehouseId], (int)$year, (int)$month);
+        $tx = Yii::$app->db->beginTransaction();
+        try {
         StockMonthlyReport::deleteAll([
             'report_year' => $year,
             'report_month' => $month,
@@ -2565,14 +2656,36 @@ class ReportController extends Controller
             $r->setAttributes($row, false);
             $r->created_at = $createdAt;
             $r->created_by = $createdBy;
-            $r->save(false);
+            if (!$r->save(false)) throw new \RuntimeException('บันทึกยอดปิดเดือนไม่สำเร็จ');
         }
+        $tx->commit();
+        } catch (\Throwable $e) { $tx->rollBack(); throw $e; }
+        });
     }
 
     /** wrapper สาธารณะของ firstStockOrderMonth สำหรับ service ภายนอก (CloseMonthAutofixService) */
     public static function firstStockOrderMonthPublic($warehouseId): array
     {
         return self::firstStockOrderMonth($warehouseId);
+    }
+
+    /** Start after the latest certified period, using its balances as the immutable opening. */
+    public static function repairStart(int $warehouseId, int $year, int $month): array
+    {
+        if (\app\modules\inventoryV2\services\MonthlyPeriodProtection::installed()) {
+            $lock=(new Query())->from('stock_monthly_period_lock')->where(['warehouse_id'=>$warehouseId])
+                ->andWhere(['<=',new \yii\db\Expression('report_year * 12 + report_month'),$year*12+$month])
+                ->orderBy(['report_year'=>SORT_DESC,'report_month'=>SORT_DESC])->one();
+            if ($lock) {
+                $opening=self::snapshotClosingMap($warehouseId,$lock['report_year'],$lock['report_month']);
+                if (!$opening) throw new \DomainException('ไม่พบยอดของงวดที่ล็อก ต้องตรวจข้อมูลรับรองก่อนคำนวณต่อ');
+                $next=(int)$lock['report_month']+1; $nextYear=(int)$lock['report_year'];
+                if ($next>12) { $next=1; $nextYear++; }
+                return [$nextYear,$next,$opening];
+            }
+        }
+        [$sy,$sm]=self::firstStockOrderMonth($warehouseId);
+        return [$sy,$sm,[]];
     }
 
     /** ปี/เดือนแรกที่มี stock_order ในคลังนี้ (จุดเริ่มของ chain) — @return array{0:?int,1:?int} */
@@ -2630,15 +2743,13 @@ class ReportController extends Controller
             $prevYear--;
         }
 
-        [$startYear, $startMonth] = self::firstStockOrderMonth($warehouseId);
+        $snapshot = self::snapshotClosingMap($warehouseId, $prevYear, $prevMonth);
+        if (!empty($snapshot)) return $snapshot;
+        [$startYear, $startMonth, $certifiedOpening] = self::repairStart((int)$warehouseId, (int)$year, (int)$month);
+        if ($startYear !== null && $year*12+$month === $startYear*12+$startMonth && $certifiedOpening) return $certifiedOpening;
         // ไม่มี order เลย หรือ งวดก่อนอยู่ก่อนงวดแรกสุด → ยอดยกมา = 0
         if ($startYear === null || ($prevYear * 12 + $prevMonth) < ($startYear * 12 + $startMonth)) {
             return [];
-        }
-
-        $snapshot = self::snapshotClosingMap($warehouseId, $prevYear, $prevMonth);
-        if (!empty($snapshot)) {
-            return $snapshot;
         }
 
         // งวดก่อนยังไม่ปิด → คำนวณ chain ต่อ
@@ -2655,10 +2766,13 @@ class ReportController extends Controller
      */
     public static function closeMonthFromStart($warehouseId, $targetYear, $targetMonth): array
     {
+        return \app\modules\inventoryV2\services\MonthlyPeriodProtection::run(function () use ($warehouseId, $targetYear, $targetMonth) {
+        \app\modules\inventoryV2\services\MonthlyPeriodProtection::assertWritable([(int)$warehouseId], (int)$targetYear, (int)$targetMonth);
         $opening = self::buildOpeningForMonth($warehouseId, $targetYear, $targetMonth);
         $rows = self::computeMonthlyRows($warehouseId, $targetYear, $targetMonth, $opening);
         self::persistMonthlyRows($warehouseId, $targetYear, $targetMonth, $rows);
         return ['count' => count($rows)];
+        });
     }
 
     /**
@@ -2676,13 +2790,13 @@ class ReportController extends Controller
      */
     public static function diagnoseCloseMonth($warehouseId, $targetYear, $targetMonth): array
     {
-        [$sy, $sm] = self::firstStockOrderMonth($warehouseId);
+        [$sy, $sm, $baseOpening] = self::repairStart((int)$warehouseId, (int)$targetYear, (int)$targetMonth);
         $target = $targetYear * 12 + $targetMonth;
         if ($sy === null || ($sy * 12 + $sm) > $target) {
             return ['months' => 0, 'from' => null, 'to' => sprintf('%04d-%02d', $targetYear, $targetMonth), 'items' => [], 'summary' => ['value_only_desync' => 0, 'negative_qty' => 0, 'zero_cost' => 0, 'total' => 0]];
         }
 
-        $opening = [];
+        $opening = $baseOpening;
         $issues = []; // item_code => aggregated issue
         $monthsScanned = 0;
         $ty = $sy;
@@ -2782,7 +2896,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->aggregateByCategory($year, $month, $warehouseId);
         $itemRows = $this->getRowsByItem($year, $month, $warehouseId);
@@ -3026,13 +3140,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
-
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->getRowsByItem($year, $month, $warehouseId);
         $hasData = !empty($rows);
@@ -3180,7 +3288,7 @@ class ReportController extends Controller
     {
         $year = (int) ($this->request->get('year') ?: date('Y'));
         $month = (int) ($this->request->get('month') ?: (int) date('n'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
 
         $rows = $this->getRowsByItem($year, $month, $warehouseId);
 
@@ -3279,21 +3387,16 @@ class ReportController extends Controller
     public function actionDisbursementByMonth()
     {
         $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [$mainWarehouses, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $search = trim((string) $this->request->get('q', ''));
 
-        $listMain = Warehouse::find()->where(['warehouse_type' => 'MAIN'])
-            ->andWhere(['or', ['delete' => null], ['delete' => '']])
-            ->orderBy(['warehouse_name' => SORT_ASC])->all();
         $listSub = Warehouse::find()->where(['warehouse_type' => 'SUB'])
             ->andWhere(['or', ['delete' => null], ['delete' => '']])
             ->orderBy(['warehouse_name' => SORT_ASC])->all();
 
-        $mainWarehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listMain, 'id', 'warehouse_name');
         $subWarehouses = ['' => '-- ทุกคลังปลายทาง --'] + \yii\helpers\ArrayHelper::map($listSub, 'id', 'warehouse_name');
         $categories = ['' => '-- ทุกประเภท --'] + \yii\helpers\ArrayHelper::map(
             Categorise::find()->where(['name' => 'asset_type', 'group_id' => 'MATER'])->orderBy('title')->all(),
@@ -3507,6 +3610,13 @@ class ReportController extends Controller
             ? [(int) $main_warehouse_id]
             : Warehouse::find()->select('id')->where(['warehouse_type' => 'MAIN'])
                 ->andWhere(['or', ['delete' => null], ['delete' => '']])->column();
+        // scope: ผู้ที่ไม่ใช่ admin/warehouse เห็นเฉพาะคลังหลักที่ตนรับผิดชอบ
+        if (!Warehouse::userCanSeeAllWarehouses()) {
+            $mainIds = array_values(array_intersect(
+                array_map('intval', $mainIds),
+                Warehouse::accessibleMainWarehouseIds()
+            ));
+        }
         if (empty($mainIds)) {
             return ['rows' => [], 'total_qty' => 0, 'total_value' => 0];
         }
@@ -3597,8 +3707,7 @@ class ReportController extends Controller
     public function actionExportDisbursementByMonth()
     {
         $thaiYear = (int) ($this->request->get('year') ?: \app\components\AppHelper::YearBudget());
-        $mainWarehouseId = $this->request->get('main_warehouse_id') !== null && $this->request->get('main_warehouse_id') !== ''
-            ? (int) $this->request->get('main_warehouse_id') : null;
+        [, $mainWarehouseId] = $this->reportWarehouseContext($this->request->get('main_warehouse_id'));
         $subWarehouseId = $this->request->get('sub_warehouse_id') !== null && $this->request->get('sub_warehouse_id') !== ''
             ? (int) $this->request->get('sub_warehouse_id') : null;
         $categoryId = trim((string) $this->request->get('category_id', ''));
@@ -3702,16 +3811,11 @@ class ReportController extends Controller
     public function actionProcurementPlan()
     {
         $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [$warehouses, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $q = trim((string) $this->request->get('q', ''));
         $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));
 
-        $listWarehouse = Warehouse::find()
-            ->where(['warehouse_type' => 'MAIN'])
-            ->orderBy(['warehouse_name' => SORT_ASC])
-            ->all();
-        $warehouses = ['' => '-- ทุกคลังหลัก --'] + \yii\helpers\ArrayHelper::map($listWarehouse, 'id', 'warehouse_name');
         $categories = $this->getProcurementMaterialCategories();
 
         $rows = $this->buildProcurementPlanRows($fiscalYear, $warehouseId, $q, $dataSource, $categoryId);
@@ -3733,7 +3837,7 @@ class ReportController extends Controller
     public function actionExportProcurementPlan()
     {
         $fiscalYear = $this->normalizeProcurementFiscalYear($this->request->get('fiscal_year'));
-        $warehouseId = $this->request->get('warehouse_id') ? (int) $this->request->get('warehouse_id') : null;
+        [, $warehouseId] = $this->reportWarehouseContext($this->request->get('warehouse_id'));
         $categoryId = trim((string) $this->request->get('category_id', ''));
         $q = trim((string) $this->request->get('q', ''));
         $dataSource = $this->normalizeProcurementDataSource($this->request->get('data_source'));

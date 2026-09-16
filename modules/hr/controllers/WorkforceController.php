@@ -21,6 +21,8 @@ use app\modules\hr\models\EmployeeType;
 use app\modules\kpi\models\KpiCycle;
 use app\modules\kpi\models\KpiItem;
 use app\modules\kpi\services\KpiService;
+use app\modules\hr\services\HrdMetricsService;
+use app\components\AppHelper;
 use yii\data\ActiveDataProvider;
 
 class WorkforceController extends Controller
@@ -41,6 +43,30 @@ class WorkforceController extends Controller
     {
         if (!Yii::$app->user->can('hr') && !Yii::$app->user->can('admin')) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูภาพรวมงานบุคลากร');
+        }
+
+        // ปฏิทินการอบรม/พัฒนา — FullCalendar ขอ event ตามช่วง (คืน JSON array)
+        if (Yii::$app->request->get('events') !== null) {
+            $start = (string) Yii::$app->request->get('start');
+            $end = (string) Yii::$app->request->get('end');
+            $eventFy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            if ($start === '' || $end === '') {
+                return [];
+            }
+            return (new HrdMetricsService($eventFy))->calendarEvents($start, $end);
+        }
+
+        // Drill-down รายชื่อเบื้องหลัง KPI ภาพรวม HRD — เปิดใน modal (คืน JSON {title, content})
+        $detail = Yii::$app->request->get('detail');
+        if ($detail !== null && $detail !== '') {
+            $detailFy = (int) Yii::$app->request->get('fy') ?: (int) AppHelper::YearBudget();
+            $data = (new HrdMetricsService($detailFy))->detail((string) $detail);
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'title' => $data['title'] !== '' ? $data['title'] : 'รายละเอียด',
+                'content' => $this->renderAjax('_hrd_detail', ['data' => $data]),
+            ];
         }
 
         if ($section === 'health') {
@@ -88,6 +114,26 @@ class WorkforceController extends Controller
             'trm_active' => (int) TrainingRoadmap::find()->where(['status' => 'active'])->count(),
             'trm_in_progress' => (int) EmployeeTrainingPlan::find()->where(['status' => ['assigned', 'in_progress', 'assessment']])->count(),
         ];
+
+        // ภาพรวมการพัฒนาบุคลากร (HRD) — ตัวชี้วัดผลลัพธ์ + แนวโน้ม + feed + งานค้าง
+        // คำนวณเฉพาะแท็บ "ภาพรวม" (มี cache ภายใน service จึงไม่กระทบแท็บอื่น/ประสิทธิภาพ)
+        $hrd = null;
+        $hrdFy = (int) AppHelper::YearBudget();
+        $hrdFyOptions = range($hrdFy, $hrdFy - 4);
+        if ($section === 'overview') {
+            $reqFy = (int) Yii::$app->request->get('fy');
+            if ($reqFy && in_array($reqFy, $hrdFyOptions, true)) {
+                $hrdFy = $reqFy;
+            }
+            $hrdMetrics = new HrdMetricsService($hrdFy);
+            $hrd = [
+                'kpis' => $hrdMetrics->kpis(),
+                'trend' => $hrdMetrics->developmentTrend(),
+                'activity' => $hrdMetrics->recentActivity(8),
+                'inbox' => $hrdMetrics->workflowInbox(),
+                'coverageThreshold' => HrdMetricsService::COVERAGE_THRESHOLD,
+            ];
+        }
 
         $jdDataProvider = null;
         $jdByEmployee = [];
@@ -268,6 +314,9 @@ class WorkforceController extends Controller
             'departments' => $departments,
             'currentFy' => $currentFy,
             'showAll' => $showAll,
+            'hrd' => $hrd,
+            'hrdFy' => $hrdFy,
+            'hrdFyOptions' => $hrdFyOptions,
         ]);
     }
 }
