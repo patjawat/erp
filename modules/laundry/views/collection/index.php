@@ -10,6 +10,7 @@ use yii\helpers\Html;
 /** @var LaundryUnit[] $units */
 /** @var array $names        tree_id => name */
 /** @var array $totals       department_id => [times, soiled, infectious] */
+/** @var string $staffName */
 $this->title = 'รับผ้า';
 $canManage = Yii::$app->user->can('laundry.manage');
 ?>
@@ -38,13 +39,14 @@ $canManage = Yii::$app->user->can('laundry.manage');
             ยังไม่มีหน่วยงานในทะเบียน — ไปเพิ่มที่ <?= Html::a('เมนูตั้งค่า → หน่วยงาน', ['/laundry/setting/unit'], ['class' => 'fw-semibold']) ?> ก่อน
         </div></div>
     <?php else: ?>
+        <?php $tones = ['primary', 'success', 'info', 'warning', 'danger', 'secondary']; ?>
         <div class="row g-3">
-            <?php foreach ($units as $u): $t = $totals[$u->tree_id] ?? null; ?>
+            <?php foreach ($units as $i => $u): $t = $totals[$u->tree_id] ?? null; $tone = $tones[$i % count($tones)]; $times = (int) ($t['times'] ?? 0); ?>
                 <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
                     <?php
                     $attrs = [
                         'class' => 'card border-0 shadow-sm rounded-4 h-100 w-100 text-start lnd-unit-card' . ($canManage ? '' : ' disabled'),
-                        'style' => 'transition:transform .1s',
+                        'style' => 'transition:transform .1s;background:var(--bs-' . $tone . '-bg-subtle,#f8f9fa);border-top:4px solid var(--bs-' . $tone . ',#0d6efd) !important',
                         'data-dept' => $u->tree_id,
                         'data-name' => $names[$u->tree_id] ?? ('#' . $u->tree_id),
                         'data-abbr' => $u->abbr ?: '',
@@ -57,13 +59,21 @@ $canManage = Yii::$app->user->can('laundry.manage');
                     $tag = $canManage ? 'button' : 'div';
                     ?>
                     <<?= $tag ?> <?= Html::renderTagAttributes($attrs) ?>>
-                        <div class="card-body text-center py-4">
-                            <div class="fw-bold text-primary lh-1 mb-1" style="font-size:2rem"><?= Html::encode($u->abbr ?: mb_substr($names[$u->tree_id] ?? '?', 0, 4)) ?></div>
-                            <div class="small text-body-secondary text-truncate mb-3" title="<?= Html::encode($names[$u->tree_id] ?? '') ?>"><?= Html::encode($names[$u->tree_id] ?? ('#' . $u->tree_id)) ?></div>
+                        <div class="card-body py-3">
+                            <div class="text-center">
+                                <div class="fw-bold lh-1 mb-1" style="font-size:1.9rem;color:var(--bs-<?= $tone ?>,#0d6efd)"><?= Html::encode($u->abbr ?: mb_substr($names[$u->tree_id] ?? '?', 0, 4)) ?></div>
+                                <div class="small text-body-secondary text-truncate mb-3" title="<?= Html::encode($names[$u->tree_id] ?? '') ?>"><?= Html::encode($names[$u->tree_id] ?? ('#' . $u->tree_id)) ?></div>
+                            </div>
                             <div class="small">
-                                <div>รับผ้า <span class="fw-semibold"><?= (int) ($t['times'] ?? 0) ?></span> ครั้ง</div>
-                                <div class="text-body-secondary">เปื้อน <?= number_format((float) ($t['soiled'] ?? 0), 1) ?> กก.</div>
-                                <div class="text-body-secondary">ติดเชื้อ <?= number_format((float) ($t['infectious'] ?? 0), 1) ?> กก.</div>
+                                <div class="d-flex justify-content-between border-bottom pb-1 mb-1">
+                                    <span>รับผ้า</span><span class="fw-semibold"><?= $times ?> ครั้ง</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-body-secondary">ผ้าเปื้อน</span><span><span class="fw-semibold"><?= number_format((float) ($t['soiled'] ?? 0), 1) ?></span> กก.</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-body-secondary">ผ้าติดเชื้อ</span><span><span class="fw-semibold"><?= number_format((float) ($t['infectious'] ?? 0), 1) ?></span> กก.</span>
+                                </div>
                             </div>
                         </div>
                     </<?= $tag ?>>
@@ -85,6 +95,10 @@ $canManage = Yii::$app->user->can('laundry.manage');
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
             </div>
             <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom small">
+                    <span class="text-body-secondary"><i class="bi bi-person-badge me-1"></i>เจ้าหน้าที่เก็บ</span>
+                    <span class="fw-semibold"><?= Html::encode($staffName) ?></span>
+                </div>
                 <div class="row g-3">
                     <div class="col-6">
                         <label class="form-label">ผ้าเปื้อน (กก.)</label>

@@ -63,7 +63,14 @@ class CollectionController extends Controller
                 ->groupBy('s.department_id')->indexBy('department_id')->all();
             $totals = $rows;
         }
-        return $this->render('index', compact('date', 'units', 'names', 'totals'));
+        $staffName = $this->currentStaffName();
+        return $this->render('index', compact('date', 'units', 'names', 'totals', 'staffName'));
+    }
+
+    private function currentStaffName(): string
+    {
+        $emp = \app\modules\hr\models\Employees::find()->where(['user_id' => Yii::$app->user->id])->one();
+        return $emp ? (string) $emp->fullname : (string) (Yii::$app->user->identity->username ?? '');
     }
 
     /** บันทึกรับผ้า 1 รายการ (mobile) — หา/สร้างรอบรายวันให้เอง */

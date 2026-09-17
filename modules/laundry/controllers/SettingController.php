@@ -37,7 +37,7 @@ class SettingController extends Controller
     {
         $units = LaundryUnit::find()->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
         // ตัวเลือกหน่วยงานมาตรฐาน ERP: org_unit จัดกลุ่ม+เยื้องระดับ (value = org_unit_id)
-        $thaiYear = (int) date('Y') + 543;
+        $thaiYear = \app\modules\plan\components\PlanHelper::currentPlanYear();
         $ouGroups = OrgUnit::groupedForSelect($thaiYear);
         return $this->render('unit', compact('units', 'ouGroups'));
     }
