@@ -105,6 +105,45 @@ class ProcessingService
         }
     }
 
+    /** เริ่มรอบแบบง่าย: เครื่อง + กลุ่มผ้า + น้ำหนัก (ไม่ผูกแหล่งผ้า/รอบเก็บ) */
+    public function startSimple(string $stage, int $assetId, string $linenClass, $inputKg, ?string $program, ?int $operatorId): int
+    {
+        if (!in_array($stage, ['WASH', 'DRY'], true) || !in_array($linenClass, ['SOILED', 'INFECTIOUS'], true)) {
+            throw new InvalidArgumentException('ขั้นตอนหรือประเภทผ้าไม่ถูกต้อง');
+        }
+        $input = CollectionService::netKg($inputKg, '0');
+        $tx = $this->db->beginTransaction();
+        try {
+            $machine = $this->db->createCommand('SELECT * FROM {{%laundry_machine}} WHERE asset_id = :id FOR UPDATE', [':id' => $assetId])->queryOne();
+            $asset = $this->db->createCommand('SELECT id, lifecycle_status FROM {{%asset}} WHERE id = :id FOR UPDATE', [':id' => $assetId])->queryOne();
+            if (!$machine || !$asset || !(int) $machine['is_active'] || $machine['machine_type'] !== $stage
+                || in_array($asset['lifecycle_status'], [Asset::LIFECYCLE_REPAIR, Asset::LIFECYCLE_DISPOSED], true)) {
+                throw new InvalidArgumentException('เครื่องไม่พร้อมใช้งานหรือชนิดเครื่องไม่ตรงกับรอบ');
+            }
+            $running = (int) $this->db->createCommand('SELECT COUNT(*) FROM {{%laundry_processing_batch}} WHERE asset_id = :id AND status = :status', [':id' => $assetId, ':status' => 'RUNNING'])->queryScalar();
+            if ($running) {
+                throw new InvalidArgumentException('เครื่องนี้กำลังทำงานในรอบอื่น');
+            }
+            if (round((float) $input, 3) > (float) $machine['capacity_kg']) {
+                throw new InvalidArgumentException('น้ำหนักเกินกำลังเครื่อง (' . number_format((float) $machine['capacity_kg'], 1) . ' กก.)');
+            }
+            $now = date('Y-m-d H:i:s');
+            $number = 'LB-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+            $this->db->createCommand()->insert('laundry_processing_batch', [
+                'batch_no' => $number, 'stage' => $stage, 'linen_class' => $linenClass,
+                'asset_id' => $assetId, 'status' => 'RUNNING', 'program' => $program,
+                'input_kg' => $input, 'started_at' => $now,
+                'operator_id' => $operatorId, 'created_at' => $now,
+            ])->execute();
+            $batchId = (int) $this->db->getLastInsertID();
+            $tx->commit();
+            return $batchId;
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+
     public function finish(int $batchId, $outputKg): void
     {
         $output = CollectionService::netKg($outputKg, '0');

@@ -9,17 +9,54 @@ $canApprove = Yii::$app->user->can('laundry.approve');
 <div class="container-fluid py-3">
     <?= $this->render('../_nav', ['active' => 'processing']) ?>
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
-        <div><h1 class="h4 fw-bold mb-1"><i class="bi bi-moisture me-2"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">บันทึกเครื่องครุภัณฑ์ เวลา และน้ำหนักต่อรอบ (กิโลกรัม)</div></div>
-        <?php if ($canManage): ?>
-            <div class="d-flex flex-wrap gap-2">
-                <?= Html::a('<i class="bi bi-droplet me-1"></i>เริ่มรอบซัก', ['new', 'stage' => 'WASH'], ['class' => 'btn btn-primary']) ?>
-                <?= Html::a('<i class="bi bi-wind me-1"></i>เริ่มรอบอบ', ['new', 'stage' => 'DRY'], ['class' => 'btn btn-outline-primary']) ?>
-            </div>
-        <?php endif; ?>
+        <div><h1 class="h4 fw-bold mb-1"><i class="bi bi-moisture me-2"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">แตะเครื่องเพื่อเริ่มรอบ — ใส่กลุ่มผ้าและน้ำหนัก (กิโลกรัม)</div></div>
     </div>
     <?php foreach (['error' => 'danger', 'success' => 'success'] as $key => $class): ?>
         <?php if (Yii::$app->session->hasFlash($key)): ?><div class="alert alert-<?= $class ?> d-flex align-items-center"><i class="bi bi-<?= $class === 'danger' ? 'exclamation-triangle' : 'check-circle' ?> me-2"></i><?= Html::encode(Yii::$app->session->getFlash($key)) ?></div><?php endif; ?>
     <?php endforeach; ?>
+
+    <?php
+    $runningByAsset = [];
+    foreach ($batches as $b) { if ($b['status'] === 'RUNNING') { $runningByAsset[$b['asset_id']] = $b; } }
+    ?>
+    <?php if ($canManage): ?>
+        <?php if (!$machines): ?>
+            <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body text-center text-body-secondary py-4">
+                <i class="bi bi-cpu fs-3 d-block mb-2"></i>ยังไม่มีเครื่อง — เพิ่มที่ <?= Html::a('ตั้งค่า → เครื่องซัก–อบ', ['/laundry/setting/machine'], ['class' => 'fw-semibold']) ?>
+            </div></div>
+        <?php else: ?>
+            <div class="row g-3 mb-3">
+                <?php foreach ($machines as $m): $isWash = $m['machine_type'] === 'WASH'; $tone = $isWash ? 'primary' : 'info'; $run = $runningByAsset[$m['asset_id']] ?? null; ?>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <?php
+                        $attrs = [
+                            'class' => 'card border-0 shadow-sm rounded-4 h-100 w-100 text-start',
+                            'style' => 'background:var(--bs-' . $tone . '-bg-subtle,#f8f9fa);border-top:4px solid var(--bs-' . $tone . ',#0d6efd) !important',
+                            'data-asset' => $m['asset_id'], 'data-stage' => $m['machine_type'],
+                            'data-name' => ($m['asset_code'] ?: '#' . $m['asset_id']) . ' · ' . ($m['asset_name'] ?: ''),
+                            'data-cap' => (float) $m['capacity_kg'],
+                        ];
+                        if (!$run) { $attrs['type'] = 'button'; $attrs['data-bs-toggle'] = 'modal'; $attrs['data-bs-target'] = '#startModal'; }
+                        $tag = $run ? 'div' : 'button';
+                        ?>
+                        <<?= $tag ?> <?= Html::renderTagAttributes($attrs) ?>>
+                            <div class="card-body py-3 text-center">
+                                <i class="bi bi-<?= $isWash ? 'droplet' : 'wind' ?> fs-1" style="color:var(--bs-<?= $tone ?>)"></i>
+                                <div class="fw-bold mt-1"><?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?></div>
+                                <div class="small text-body-secondary text-truncate" title="<?= Html::encode($m['asset_name'] ?? '') ?>"><?= Html::encode($m['asset_code'] ?: '#' . $m['asset_id']) ?></div>
+                                <div class="small text-body-secondary">กำลัง <?= number_format((float) $m['capacity_kg'], 0) ?> กก.</div>
+                                <?php if ($run): ?>
+                                    <span class="badge text-bg-warning mt-2"><i class="bi bi-arrow-repeat me-1"></i>กำลังทำงาน</span>
+                                <?php else: ?>
+                                    <span class="badge text-bg-success mt-2"><i class="bi bi-play-fill"></i> พร้อมเริ่ม</span>
+                                <?php endif; ?>
+                            </div>
+                        </<?= $tag ?>>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-header bg-body px-4 py-3"><h5 class="fw-semibold mb-0">รอบเครื่องล่าสุด</h5></div>
@@ -94,3 +131,63 @@ $canApprove = Yii::$app->user->can('laundry.approve');
         </table></div></div>
     </div>
 </div>
+
+<?php if ($canManage): ?>
+<div class="modal fade" id="startModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <?= Html::beginForm(['start'], 'post') ?>
+            <?= Html::hiddenInput('asset_id', '', ['id' => 'start_asset']) ?>
+            <?= Html::hiddenInput('stage', '', ['id' => 'start_stage']) ?>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-play-circle me-2"></i>เริ่มรอบ — <span id="start_machine" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">กลุ่มผ้า</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="linen_class" id="lc_soiled" value="SOILED" checked>
+                            <label class="btn btn-outline-secondary" for="lc_soiled"><i class="bi bi-droplet-half me-1"></i>ผ้าเปื้อน</label>
+                            <input type="radio" class="btn-check" name="linen_class" id="lc_inf" value="INFECTIOUS">
+                            <label class="btn btn-outline-danger" for="lc_inf"><i class="bi bi-exclamation-triangle me-1"></i>ผ้าติดเชื้อ</label>
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        <label class="form-label">น้ำหนักเข้าเครื่อง (กก.)</label>
+                        <?= Html::input('number', 'input_kg', '', ['id' => 'start_kg', 'class' => 'form-control form-control-lg', 'min' => '0.001', 'step' => '0.001', 'inputmode' => 'decimal', 'required' => true]) ?>
+                        <div class="form-text" id="start_caphint"></div>
+                    </div>
+                    <div class="col-5">
+                        <label class="form-label">โปรแกรม</label>
+                        <?= Html::textInput('program', '', ['class' => 'form-control', 'maxlength' => 100, 'placeholder' => '(ถ้ามี)']) ?>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <?= Html::submitButton('<i class="bi bi-play-fill me-1"></i>เริ่มรอบ', ['class' => 'btn btn-primary']) ?>
+            </div>
+            <?= Html::endForm() ?>
+        </div>
+    </div>
+</div>
+<?php
+$this->registerJs(<<<'JS'
+var startModal = document.getElementById('startModal');
+if (startModal) {
+  startModal.addEventListener('show.bs.modal', function (e) {
+    var c = e.relatedTarget; if (!c) return;
+    document.getElementById('start_asset').value = c.getAttribute('data-asset') || '';
+    document.getElementById('start_stage').value = c.getAttribute('data-stage') || '';
+    document.getElementById('start_machine').textContent = c.getAttribute('data-name') || '';
+    var cap = c.getAttribute('data-cap') || '';
+    var kg = document.getElementById('start_kg');
+    kg.value = ''; kg.setAttribute('max', cap);
+    document.getElementById('start_caphint').textContent = cap ? ('ไม่เกินกำลังเครื่อง ' + cap + ' กก.') : '';
+  });
+}
+JS);
+?>
+<?php endif; ?>

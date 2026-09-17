@@ -148,20 +148,27 @@ class ProcessingController extends Controller
 
     public function actionStart()
     {
-        $stage = (string) Yii::$app->request->post('stage');
-        $class = (string) Yii::$app->request->post('linen_class');
-        $mode = (string) Yii::$app->request->post('mode', 'NORMAL');
+        $req = Yii::$app->request;
+        $stage = (string) $req->post('stage');
+        $class = (string) $req->post('linen_class');
+        $uid = Yii::$app->user->id ? (int) Yii::$app->user->id : null;
         try {
-            (new ProcessingService())->start($stage, (int) Yii::$app->request->post('asset_id'), $class,
-                [(int) Yii::$app->request->post('source_id') => Yii::$app->request->post('allocated_kg')],
-                trim((string) Yii::$app->request->post('program')),
-                Yii::$app->user->id ? (int) Yii::$app->user->id : null, $mode);
+            if ($req->post('input_kg') !== null) {
+                // flow ง่าย: เครื่อง + กลุ่มผ้า + กก. (ไม่ผูกแหล่งผ้า)
+                (new ProcessingService())->startSimple($stage, (int) $req->post('asset_id'), $class,
+                    $req->post('input_kg'), trim((string) $req->post('program')), $uid);
+            } else {
+                // flow เดิม (recovery จากหน้า /new)
+                $mode = (string) $req->post('mode', 'NORMAL');
+                (new ProcessingService())->start($stage, (int) $req->post('asset_id'), $class,
+                    [(int) $req->post('source_id') => $req->post('allocated_kg')],
+                    trim((string) $req->post('program')), $uid, $mode);
+            }
             Yii::$app->session->setFlash('success', 'เริ่มรอบเครื่องแล้ว');
-            return $this->redirect(['index']);
         } catch (\Throwable $e) {
             $this->flashError($e);
-            return $this->redirect(['new', 'stage' => $stage, 'linenClass' => $class, 'mode' => $mode]);
         }
+        return $this->redirect(['index']);
     }
 
     public function actionFinish(int $id)
