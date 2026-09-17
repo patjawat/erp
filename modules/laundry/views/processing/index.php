@@ -7,20 +7,18 @@ $canManage = Yii::$app->user->can('laundry.manage');
 $canApprove = Yii::$app->user->can('laundry.approve');
 ?>
 <div class="container-fluid py-3">
+    <?= $this->render('../_nav', ['active' => 'processing']) ?>
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
-        <div><h4 class="fw-bold mb-1"><?= Html::encode($this->title) ?></h4><div class="text-muted">บันทึกเครื่องครุภัณฑ์ เวลา และน้ำหนักต่อรอบ</div></div>
-        <div class="d-flex flex-wrap gap-2">
-            <?= Html::a('บัญชีผ้าเป็นชิ้น', ['/laundry/inventory/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
-            <?= Html::a('รอบเก็บผ้า', ['/laundry/collection/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
-            <?= Html::a('รายงานรอบเครื่อง', ['/laundry/machine-report/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
-            <?php if ($canManage): ?>
-                <?= Html::a('เริ่มรอบซัก', ['new', 'stage' => 'WASH'], ['class' => 'btn btn-primary rounded-3']) ?>
-                <?= Html::a('เริ่มรอบอบ', ['new', 'stage' => 'DRY'], ['class' => 'btn btn-outline-primary rounded-3']) ?>
-            <?php endif; ?>
-        </div>
+        <div><h1 class="h4 fw-bold mb-1"><i class="bi bi-moisture me-2"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">บันทึกเครื่องครุภัณฑ์ เวลา และน้ำหนักต่อรอบ (กิโลกรัม)</div></div>
+        <?php if ($canManage): ?>
+            <div class="d-flex flex-wrap gap-2">
+                <?= Html::a('<i class="bi bi-droplet me-1"></i>เริ่มรอบซัก', ['new', 'stage' => 'WASH'], ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('<i class="bi bi-wind me-1"></i>เริ่มรอบอบ', ['new', 'stage' => 'DRY'], ['class' => 'btn btn-outline-primary']) ?>
+            </div>
+        <?php endif; ?>
     </div>
     <?php foreach (['error' => 'danger', 'success' => 'success'] as $key => $class): ?>
-        <?php if (Yii::$app->session->hasFlash($key)): ?><div class="alert alert-<?= $class ?>"><?= Html::encode(Yii::$app->session->getFlash($key)) ?></div><?php endif; ?>
+        <?php if (Yii::$app->session->hasFlash($key)): ?><div class="alert alert-<?= $class ?> d-flex align-items-center"><i class="bi bi-<?= $class === 'danger' ? 'exclamation-triangle' : 'check-circle' ?> me-2"></i><?= Html::encode(Yii::$app->session->getFlash($key)) ?></div><?php endif; ?>
     <?php endforeach; ?>
 
     <div class="card border-0 shadow-sm rounded-4 mb-3">

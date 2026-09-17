@@ -14,11 +14,12 @@ foreach ($machines as $machine) {
 }
 ?>
 <div class="container-fluid py-3">
+    <?= $this->render('../_nav', ['active' => 'processing']) ?>
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
-        <div><h4 class="fw-bold mb-1"><?= Html::encode($this->title) ?></h4><div class="text-muted">เลือกน้ำหนักต้นทางหนึ่งรายการต่อรอบในหน้าจอระยะแรก</div></div>
-        <?= Html::a('กลับรอบเครื่อง', ['index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
+        <div><h1 class="h4 fw-bold mb-1"><i class="bi bi-<?= $stage === 'WASH' ? 'droplet' : 'wind' ?> me-2"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">เลือกน้ำหนักต้นทางหนึ่งรายการต่อรอบในหน้าจอระยะแรก</div></div>
+        <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับรอบเครื่อง', ['index'], ['class' => 'btn btn-outline-secondary align-self-start']) ?>
     </div>
-    <?php if (Yii::$app->session->hasFlash('error')): ?><div class="alert alert-danger"><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div><?php endif; ?>
+    <?php if (Yii::$app->session->hasFlash('error')): ?><div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle me-2"></i><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div><?php endif; ?>
     <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body">
         <?= Html::beginForm(['new'], 'get', ['class' => 'row g-3 align-items-end']) ?>
             <div class="col-12 col-sm-3"><label class="form-label">ขั้นตอน</label><?= Html::dropDownList('stage', $stage, ['WASH' => 'ซัก', 'DRY' => 'อบ'], ['class' => 'form-select']) ?></div>
