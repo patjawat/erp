@@ -1,5 +1,7 @@
 <?php
 
+use app\components\ThaiDateHelper;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 
 $this->title = 'รอบเก็บ ' . $round['round_no'];
@@ -12,15 +14,22 @@ foreach ($byStop as $values) {
 }
 ?>
 <div class="container-fluid py-3">
+    <?= $this->render('../_nav', ['active' => 'collection']) ?>
     <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 mb-3">
         <div>
-            <h4 class="fw-bold mb-1"><?= Html::encode($this->title) ?></h4>
-            <div class="text-muted">วันที่เก็บ <?= Html::encode($round['collection_date']) ?> · <?= $round['status'] === 'CONFIRMED' ? 'ยืนยันแล้ว' : 'กำลังบันทึก' ?></div>
+            <h1 class="h4 fw-bold mb-1"><i class="bi bi-basket3 me-2"></i><?= Html::encode($this->title) ?></h1>
+            <div class="text-body-secondary">วันที่เก็บ <?= Html::encode(ThaiDateHelper::formatThaiDate($round['collection_date'])) ?> ·
+                <?php if ($round['status'] === 'CONFIRMED'): ?>
+                    <span class="text-success-emphasis"><i class="bi bi-check-circle me-1"></i>ตรวจรับแล้ว</span>
+                <?php else: ?>
+                    <span class="text-warning-emphasis"><i class="bi bi-pencil me-1"></i>กำลังบันทึก</span>
+                <?php endif; ?>
+            </div>
         </div>
-        <?= Html::a('กลับรายการรอบ', ['index'], ['class' => 'btn btn-outline-secondary rounded-3 align-self-start']) ?>
+        <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับรายการรอบ', ['index'], ['class' => 'btn btn-outline-secondary align-self-start']) ?>
     </div>
     <?php if (Yii::$app->session->hasFlash('error')): ?>
-        <div class="alert alert-danger"><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div>
+        <div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle me-2"></i><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div>
     <?php endif; ?>
     <div class="row g-3 mb-3">
         <?php foreach (['ผ้าเปื้อน' => $totalSoiled, 'ผ้าติดเชื้อ' => $totalInfectious, 'รวม' => $totalSoiled + $totalInfectious] as $label => $kg): ?>
@@ -38,8 +47,15 @@ foreach ($byStop as $values) {
                 <div class="col-12 col-lg-4"><label class="form-label">หน่วยงาน</label>
                     <?= Html::dropDownList('department_id', null, $departments, ['prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?>
                 </div>
-                <div class="col-12 col-lg-3"><label class="form-label">วันที่และเวลาที่เก็บ</label>
-                    <?= Html::input('datetime-local', 'collected_at', $round['collection_date'] . 'T' . date('H:i'), ['class' => 'form-control', 'required' => true]) ?>
+                <div class="col-7 col-lg-2"><label class="form-label">วันที่เก็บ</label>
+                    <?= DatepickerThai::widget([
+                        'name' => 'collected_date',
+                        'value' => ThaiDateHelper::formatThaiDate($round['collection_date'], 'numeric'),
+                        'options' => ['class' => 'form-control', 'placeholder' => 'วัน/เดือน/พ.ศ.', 'required' => true],
+                    ]) ?>
+                </div>
+                <div class="col-5 col-lg-1"><label class="form-label">เวลา</label>
+                    <?= Html::input('time', 'collected_time', date('H:i'), ['class' => 'form-control', 'required' => true]) ?>
                 </div>
                 <div class="col-6 col-lg-2"><label class="form-label">ถุงผ้าเปื้อน</label>
                     <?= Html::input('number', 'soiled_bag_count', 0, ['class' => 'form-control', 'min' => 0, 'required' => true]) ?>
@@ -59,7 +75,7 @@ foreach ($byStop as $values) {
             <?php foreach ($stops as $stop): ?>
                 <?php $w = $byStop[$stop['id']] ?? []; $soiled = $w['SOILED']['net_kg'] ?? null; $infectious = $w['INFECTIOUS']['net_kg'] ?? null; ?>
                 <tr>
-                    <td class="ps-4 fw-semibold"><?= Html::encode($stop['department_name'] ?: '#' . $stop['department_id']) ?><div class="small text-muted"><?= Html::encode($stop['collected_at']) ?></div></td>
+                    <td class="ps-4 fw-semibold"><?= Html::encode($stop['department_name'] ?: '#' . $stop['department_id']) ?><div class="small text-body-secondary"><?= $stop['collected_at'] ? Html::encode(ThaiDateHelper::formatThaiDate($stop['collected_at']) . ' ' . date('H:i', strtotime($stop['collected_at']))) : '' ?></div></td>
                     <td><?= (int) $stop['soiled_bag_count'] ?> ถุง · <?= $soiled === null ? 'รอชั่ง' : number_format((float) $soiled, 3) . ' กก.' ?></td>
                     <td><?= (int) $stop['infectious_bag_count'] ?> ถุง · <?= $infectious === null ? 'รอชั่ง' : number_format((float) $infectious, 3) . ' กก.' ?></td>
                     <td class="fw-semibold"><?= number_format((float) $soiled + (float) $infectious, 3) ?> กก.</td>

@@ -18,9 +18,9 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
         <a href="<?= Url::to(['/laundry/collection/index']) ?>" class="<?= $btn('collection') ?>">
             <i class="bi bi-basket3 me-1"></i>รับผ้า
         </a>
-        <span class="btn btn-outline-secondary disabled" title="อยู่ระหว่างพัฒนา (เฟส 2)">
+        <a href="<?= Url::to(['/laundry/collection/inspect']) ?>" class="<?= $btn('inspect') ?>">
             <i class="bi bi-clipboard-check me-1"></i>ตรวจรับผ้า
-        </span>
+        </a>
         <a href="<?= Url::to(['/laundry/processing/index']) ?>" class="<?= $btn('processing') ?>">
             <i class="bi bi-moisture me-1"></i>ซัก–อบ
         </a>

@@ -2,6 +2,7 @@
 
 namespace app\modules\laundry\controllers;
 
+use app\components\AppHelper;
 use app\modules\hr\models\Organization;
 use app\modules\laundry\services\CollectionReport;
 use app\modules\laundry\services\CollectionService;
@@ -21,7 +22,7 @@ class CollectionController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['index', 'view', 'report'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['index', 'view', 'report', 'inspect'], 'roles' => ['laundry.view']],
                     ['allow' => true, 'actions' => ['create', 'add-stop', 'weigh', 'confirm'], 'roles' => ['laundry.manage']],
                 ],
             ],
@@ -39,6 +40,34 @@ class CollectionController extends Controller
             'pagination' => ['pageSize' => 20],
         ]);
         return $this->render('index', ['provider' => $provider]);
+    }
+
+    /** ตรวจรับผ้า: รอบที่ยังไม่ยืนยัน (OPEN) รอตรวจสอบน้ำหนัก/ถุงแล้วยืนยันรับเข้า */
+    public function actionInspect()
+    {
+        $provider = new \yii\data\ActiveDataProvider([
+            'query' => \app\modules\laundry\models\CollectionRound::find()
+                ->where(['status' => 'OPEN'])
+                ->orderBy(['collection_date' => SORT_DESC, 'id' => SORT_DESC]),
+            'pagination' => ['pageSize' => 20],
+        ]);
+        // จำนวนหน่วยงาน/ยอดชั่งต่อรอบ เพื่อดูความพร้อมตรวจรับ
+        $roundIds = array_map(static fn($r) => $r->id, $provider->getModels());
+        $stats = [];
+        if ($roundIds) {
+            $stats = (new Query())
+                ->select([
+                    'round_id' => 's.round_id',
+                    'stops' => new \yii\db\Expression('COUNT(DISTINCT s.id)'),
+                    'weighed' => new \yii\db\Expression('COUNT(DISTINCT w.stop_id)'),
+                    'kg' => new \yii\db\Expression('COALESCE(SUM(w.net_kg),0)'),
+                ])
+                ->from(['s' => 'laundry_collection_stop'])
+                ->leftJoin(['w' => 'laundry_collection_weight'], 'w.stop_id = s.id')
+                ->where(['s.round_id' => $roundIds])
+                ->groupBy('s.round_id')->indexBy('round_id')->all();
+        }
+        return $this->render('inspect', compact('provider', 'stats'));
     }
 
     public function actionView(int $id)
@@ -60,8 +89,10 @@ class CollectionController extends Controller
     public function actionCreate()
     {
         try {
+            $dateInput = trim((string) Yii::$app->request->post('collection_date'));
+            $collectionDate = $dateInput !== '' ? AppHelper::convertToGregorian($dateInput) : date('Y-m-d');
             $id = (new CollectionService())->createRound(
-                (string) Yii::$app->request->post('collection_date', date('Y-m-d')),
+                (string) $collectionDate,
                 Yii::$app->user->id ? (int) Yii::$app->user->id : null,
                 trim((string) Yii::$app->request->post('note')),
                 Yii::$app->user->id ? (int) Yii::$app->user->id : null
@@ -75,10 +106,14 @@ class CollectionController extends Controller
     public function actionAddStop(int $id)
     {
         try {
-            (new CollectionService())->addStop($id, (int) Yii::$app->request->post('department_id'),
-                (int) Yii::$app->request->post('soiled_bag_count'),
-                (int) Yii::$app->request->post('infectious_bag_count'),
-                (string) Yii::$app->request->post('collected_at'));
+            $req = Yii::$app->request;
+            $dateG = AppHelper::convertToGregorian(trim((string) $req->post('collected_date')));
+            $time = trim((string) $req->post('collected_time')) ?: date('H:i');
+            $collectedAt = $dateG ? ($dateG . ' ' . $time . ':00') : date('Y-m-d H:i:s');
+            (new CollectionService())->addStop($id, (int) $req->post('department_id'),
+                (int) $req->post('soiled_bag_count'),
+                (int) $req->post('infectious_bag_count'),
+                $collectedAt);
             return $this->redirect(['view', 'id' => $id]);
         } catch (\Throwable $e) {
             return $this->fail($e, ['view', 'id' => $id]);
