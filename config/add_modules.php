@@ -66,6 +66,7 @@ $modules['amSurvey'] = ['class' => 'app\modules\amSurvey\Module'];  // การ
 $modules['line'] = ['class' => 'app\modules\line\Module'];  // line officail
 $modules['inventory'] = ['class' => 'app\modules\inventory\Module', 'frozen' => false];  // คลัง (freeze ปิดชั่วคราว — ยังใช้งาน V1 คู่ขนานกับ V2 อยู่)
 $modules['inventory-v2'] = ['class' => 'app\modules\inventoryV2\Module'];  // คลัง
+$modules['laundry'] = ['class' => 'app\modules\laundry\Module'];  // ซักฟอก: รอบเก็บและชั่งผ้า
 $modules['sub-warehouse'] = ['class' => 'app\modules\SubWarehouse\Module'];  // คลังหน่วยงาน (คลังย่อย)
 $modules['stock'] = ['class' => 'app\modules\stock\Module'];  // คลัง by โอ๋
 $modules['helpdesk'] = ['class' => 'app\modules\helpdesk2\Module'];  // บริการช่วยเหลือ (งานซ่อม)
