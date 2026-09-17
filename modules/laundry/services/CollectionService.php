@@ -80,6 +80,71 @@ class CollectionService
         }
     }
 
+    /**
+     * รับผ้าแบบกรอกง่าย: หน่วยงาน + น้ำหนักผ้าเปื้อน/ผ้าติดเชื้อ (กก.ตรง ไม่ต้องชั่ง gross/tare)
+     * สร้างรายการหน่วยงาน + น้ำหนักในครั้งเดียว. $collectedAt รับได้ทั้ง "Y-m-d H:i", "Y-m-d H:i:s"
+     */
+    public function addEntry(int $roundId, int $departmentId, string $collectedAt, $soiledKg, $infectiousKg, ?int $userId): int
+    {
+        if (!Organization::find()->where(['id' => $departmentId])->exists()) {
+            throw new InvalidArgumentException('ไม่พบหน่วยงาน');
+        }
+        $ts = strtotime($collectedAt);
+        if ($ts === false) {
+            throw new InvalidArgumentException('วันเวลาที่เก็บไม่ถูกต้อง');
+        }
+        $collected = date('Y-m-d H:i:s', $ts);
+        $soiled = $this->normalizeKg($soiledKg);
+        $infectious = $this->normalizeKg($infectiousKg);
+        if ($soiled <= 0 && $infectious <= 0) {
+            throw new InvalidArgumentException('กรุณากรอกน้ำหนักผ้าอย่างน้อยหนึ่งประเภท');
+        }
+
+        $tx = $this->db->beginTransaction();
+        try {
+            $round = $this->lockedRound($roundId);
+            $this->assertEditable($round);
+            $now = date('Y-m-d H:i:s');
+            $this->db->createCommand()->insert('laundry_collection_stop', [
+                'round_id' => $roundId, 'department_id' => $departmentId,
+                'collected_at' => $collected,
+                'soiled_bag_count' => 0, 'infectious_bag_count' => 0,
+            ])->execute();
+            $stopId = (int) $this->db->getLastInsertID();
+            foreach (['SOILED' => $soiled, 'INFECTIOUS' => $infectious] as $class => $kg) {
+                if ($kg <= 0) {
+                    continue;
+                }
+                $net = number_format(round($kg, 3), 3, '.', '');
+                $this->db->createCommand()->insert('laundry_collection_weight', [
+                    'stop_id' => $stopId, 'linen_class' => $class,
+                    'gross_kg' => $net, 'tare_kg' => '0.000', 'net_kg' => $net,
+                    'weighed_at' => $now, 'weighed_by' => $userId, 'scale_ref' => null,
+                ])->execute();
+            }
+            if (!$round['returned_at']) {
+                $this->db->createCommand()->update('laundry_collection_round', ['returned_at' => $now], ['id' => $roundId])->execute();
+            }
+            $tx->commit();
+            return $stopId;
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            throw $e;
+        }
+    }
+
+    private function normalizeKg($value): float
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return 0.0;
+        }
+        if (!preg_match('/^\d{1,9}(?:\.\d{1,3})?$/', $value)) {
+            throw new InvalidArgumentException('น้ำหนักต้องเป็นตัวเลขไม่เกิน 3 ตำแหน่งทศนิยม');
+        }
+        return (float) $value;
+    }
+
     public function weigh(int $roundId, int $stopId, string $class, $gross, $tare, ?string $scaleRef, ?int $userId): void
     {
         if (!in_array($class, ['SOILED', 'INFECTIOUS'], true)) {

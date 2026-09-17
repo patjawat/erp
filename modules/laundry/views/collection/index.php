@@ -1,5 +1,6 @@
 <?php
 
+use app\components\AppHelper;
 use app\components\widgets\DataSummaryWidget;
 use app\components\ThaiDateHelper;
 use app\widgets\datepicker\DatepickerThai;
@@ -33,8 +34,8 @@ $canManage = Yii::$app->user->can('laundry.manage');
                         <label class="form-label">วันที่ออกเก็บ</label>
                         <?= DatepickerThai::widget([
                             'name' => 'collection_date',
-                            'value' => ThaiDateHelper::formatThaiDate(date('Y-m-d'), 'numeric'),
-                            'options' => ['class' => 'form-control', 'placeholder' => 'วัน/เดือน/พ.ศ.', 'required' => true],
+                            'value' => AppHelper::convertToThai(date('Y-m-d')),
+                            'options' => ['id' => 'collection_date', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.', 'required' => true],
                         ]) ?>
                     </div>
                     <div class="col-12 col-sm-5 col-lg-6">

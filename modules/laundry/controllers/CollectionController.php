@@ -109,11 +109,12 @@ class CollectionController extends Controller
             $req = Yii::$app->request;
             $dateG = AppHelper::convertToGregorian(trim((string) $req->post('collected_date')));
             $time = trim((string) $req->post('collected_time')) ?: date('H:i');
-            $collectedAt = $dateG ? ($dateG . ' ' . $time . ':00') : date('Y-m-d H:i:s');
-            (new CollectionService())->addStop($id, (int) $req->post('department_id'),
-                (int) $req->post('soiled_bag_count'),
-                (int) $req->post('infectious_bag_count'),
-                $collectedAt);
+            $collectedAt = ($dateG ?: date('Y-m-d')) . ' ' . $time;
+            (new CollectionService())->addEntry($id, (int) $req->post('department_id'),
+                $collectedAt,
+                $req->post('soiled_kg'),
+                $req->post('infectious_kg'),
+                Yii::$app->user->id ? (int) Yii::$app->user->id : null);
             return $this->redirect(['view', 'id' => $id]);
         } catch (\Throwable $e) {
             return $this->fail($e, ['view', 'id' => $id]);
