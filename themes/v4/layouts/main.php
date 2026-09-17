@@ -81,13 +81,12 @@ AppAsset::register($this);
         position: sticky;
         top: 64px;
         z-index: 1040;
-        height: 86px;
+        height: 76px;
         background-color: var(--bs-body-bg, #fff);
         border-bottom: 1px solid var(--bs-border-color, #dee2e6);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: visible;
     }
 
     .navbar-fixed-container::-webkit-scrollbar {
@@ -112,6 +111,17 @@ AppAsset::register($this);
         margin: 0;
         padding: 0 4px;
         list-style: none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .erp-nav-shortcuts {
+        min-width: 0;
+        scrollbar-width: thin;
+    }
+
+    .erp-nav-item[hidden], .erp-system-row[hidden], .erp-system-group[hidden] {
+        display: none !important;
     }
 
     .erp-nav-item {
@@ -119,7 +129,7 @@ AppAsset::register($this);
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-width: 120px;
+        min-width: 112px;
         height: 100%;
         padding: 8px 4px;
         text-decoration: none;
@@ -260,9 +270,9 @@ AppAsset::register($this);
 
     <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center"
         id="erpPrimaryNavbar">
-        <div class="erp-nav-list">
+        <nav class="erp-nav-list" aria-label="เมนูระบบ">
             <?= $this->render('navbar') ?>
-        </div>
+        </nav>
     </div>
 
     <div class="d-flex flex-column flex-grow-1 page-content-wrapper">
