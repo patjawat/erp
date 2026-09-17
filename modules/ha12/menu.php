@@ -24,7 +24,7 @@ $items = [
     ['key' => 'mrec', 'label' => 'เวชระเบียน', 'icon' => 'bi-journal-medical', 'url' => ['/ha12/mrec/index']],
     ['key' => 'indicator', 'label' => 'ตัวชี้วัด', 'icon' => 'bi-graph-up', 'url' => ['/ha12/indicator/index']],
     ['key' => 'round', 'label' => 'รอบประเมิน PCT', 'icon' => 'bi-clipboard2-data', 'url' => ['/ha12/round/index']],
-    ['key' => 'report', 'label' => 'รายงาน', 'icon' => 'bi-file-earmark-bar-graph', 'url' => ['/ha12/default/index']],
+    ['key' => 'report', 'label' => 'รายงาน', 'icon' => 'bi-file-earmark-bar-graph', 'url' => ['/ha12/report/index']],
 ];
 ?>
 <nav class="ha12-subnav d-flex flex-wrap align-items-center gap-2" aria-label="เมนู HA12-PCT">
