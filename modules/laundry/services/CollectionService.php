@@ -84,7 +84,20 @@ class CollectionService
      * รับผ้าแบบกรอกง่าย: หน่วยงาน + น้ำหนักผ้าเปื้อน/ผ้าติดเชื้อ (กก.ตรง ไม่ต้องชั่ง gross/tare)
      * สร้างรายการหน่วยงาน + น้ำหนักในครั้งเดียว. $collectedAt รับได้ทั้ง "Y-m-d H:i", "Y-m-d H:i:s"
      */
-    public function addEntry(int $roundId, int $departmentId, string $collectedAt, $soiledKg, $infectiousKg, ?int $userId): int
+    /** หารอบเก็บของวัน (OPEN) หรือสร้างใหม่ — ผู้ใช้ไม่ต้องจัดการรอบเอง (mobile flow) */
+    public function findOrCreateDailyRound(string $date, ?int $userId): int
+    {
+        $this->assertDate($date);
+        $existing = (new Query())->select('id')->from('laundry_collection_round')
+            ->where(['collection_date' => $date, 'status' => 'OPEN'])
+            ->orderBy(['id' => SORT_DESC])->scalar($this->db);
+        if ($existing) {
+            return (int) $existing;
+        }
+        return $this->createRound($date, $userId, null, $userId);
+    }
+
+    public function addEntry(int $roundId, int $departmentId, string $collectedAt, $soiledKg, $infectiousKg, ?int $userId, ?int $roundSeq = null): int
     {
         if (!Organization::find()->where(['id' => $departmentId])->exists()) {
             throw new InvalidArgumentException('ไม่พบหน่วยงาน');
@@ -107,10 +120,13 @@ class CollectionService
             $now = date('Y-m-d H:i:s');
             $this->db->createCommand()->insert('laundry_collection_stop', [
                 'round_id' => $roundId, 'department_id' => $departmentId,
-                'collected_at' => $collected,
+                'collected_at' => $collected, 'round_seq' => $roundSeq,
                 'soiled_bag_count' => 0, 'infectious_bag_count' => 0,
             ])->execute();
             $stopId = (int) $this->db->getLastInsertID();
+            // เลขที่รับ GB{พ.ศ.2หลัก}-{running}
+            $receiptNo = 'GB' . (((int) date('Y', $ts) + 543) % 100) . '-' . str_pad((string) $stopId, 5, '0', STR_PAD_LEFT);
+            $this->db->createCommand()->update('laundry_collection_stop', ['receipt_no' => $receiptNo], ['id' => $stopId])->execute();
             foreach (['SOILED' => $soiled, 'INFECTIOUS' => $infectious] as $class => $kg) {
                 if ($kg <= 0) {
                     continue;

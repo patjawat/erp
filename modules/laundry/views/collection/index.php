@@ -1,81 +1,131 @@
 <?php
 
 use app\components\AppHelper;
-use app\components\widgets\DataSummaryWidget;
 use app\components\ThaiDateHelper;
+use app\modules\laundry\models\LaundryUnit;
 use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 
-/** @var yii\data\ActiveDataProvider $provider */
-$this->title = 'รับผ้า — รอบเก็บผ้าซักฟอก';
+/** @var string $date        Y-m-d */
+/** @var LaundryUnit[] $units */
+/** @var array $names        tree_id => name */
+/** @var array $totals       department_id => [times, soiled, infectious] */
+$this->title = 'รับผ้า';
 $canManage = Yii::$app->user->can('laundry.manage');
 ?>
 <div class="container-fluid py-3">
     <?= $this->render('../_nav', ['active' => 'collection']) ?>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h1 class="h4 fw-bold mb-0"><i class="bi bi-basket3 me-2"></i>รับผ้า</h1>
-        <div class="text-body-secondary small">ออกเก็บผ้าใช้แล้วตามหน่วยงาน → ชั่งแยกผ้าเปื้อน/ผ้าติดเชื้อเมื่อกลับโรงซัก</div>
+        <h1 class="h4 fw-bold mb-0"><i class="bi bi-basket3 me-2"></i>รับผ้า <span class="text-body-secondary fs-6 fw-normal">ประจำวันที่ <?= Html::encode(ThaiDateHelper::formatThaiDate($date)) ?></span></h1>
+        <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex align-items-center gap-2']) ?>
+            <label class="text-body-secondary small mb-0 text-nowrap">เลือกวันที่</label>
+            <?= DatepickerThai::widget([
+                'name' => 'date',
+                'value' => AppHelper::convertToThai($date),
+                'options' => ['id' => 'recv_date', 'class' => 'form-control form-control-sm', 'style' => 'max-width:150px', 'autocomplete' => 'off', 'onchange' => 'this.form.submit()'],
+            ]) ?>
+        <?= Html::endForm() ?>
     </div>
 
-    <?php if (Yii::$app->session->hasFlash('error')): ?>
-        <div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle me-2"></i><?= Html::encode(Yii::$app->session->getFlash('error')) ?></div>
-    <?php endif; ?>
-    <?php if (Yii::$app->session->hasFlash('success')): ?>
-        <div class="alert alert-success d-flex align-items-center"><i class="bi bi-check-circle me-2"></i><?= Html::encode(Yii::$app->session->getFlash('success')) ?></div>
-    <?php endif; ?>
+    <?php foreach (['error' => 'danger', 'success' => 'success'] as $k => $c): ?>
+        <?php if (Yii::$app->session->hasFlash($k)): ?><div class="alert alert-<?= $c ?> d-flex align-items-center"><i class="bi bi-<?= $c === 'danger' ? 'exclamation-triangle' : 'check-circle' ?> me-2"></i><?= Html::encode(Yii::$app->session->getFlash($k)) ?></div><?php endif; ?>
+    <?php endforeach; ?>
 
-    <?php if ($canManage): ?>
-        <div class="card border-0 shadow-sm rounded-4 mb-3">
-            <div class="card-body">
-                <h2 class="h6 fw-semibold mb-3"><i class="bi bi-plus-circle me-2"></i>เปิดรอบเก็บใหม่</h2>
-                <?= Html::beginForm(['create'], 'post', ['class' => 'row g-3 align-items-end']) ?>
-                    <div class="col-12 col-sm-4 col-lg-3">
-                        <label class="form-label">วันที่ออกเก็บ</label>
-                        <?= DatepickerThai::widget([
-                            'name' => 'collection_date',
-                            'value' => AppHelper::convertToThai(date('Y-m-d')),
-                            'options' => ['id' => 'collection_date', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.', 'required' => true],
-                        ]) ?>
-                    </div>
-                    <div class="col-12 col-sm-5 col-lg-6">
-                        <label class="form-label">หมายเหตุ</label>
-                        <?= Html::textInput('note', '', ['class' => 'form-control', 'maxlength' => 500, 'placeholder' => 'เช่น รอบเช้า / ผู้ออกเก็บ']) ?>
-                    </div>
-                    <div class="col-12 col-sm-3 col-lg-3">
-                        <?= Html::submitButton('<i class="bi bi-box-arrow-in-down me-1"></i>เปิดรอบเก็บ', ['class' => 'btn btn-primary w-100']) ?>
-                    </div>
-                <?= Html::endForm() ?>
-            </div>
+    <?php if (!$units): ?>
+        <div class="card border-0 shadow-sm rounded-4"><div class="card-body text-center text-body-secondary py-5">
+            <i class="bi bi-diagram-3 fs-1 d-block mb-3"></i>
+            ยังไม่มีหน่วยงานในทะเบียน — ไปเพิ่มที่ <?= Html::a('เมนูตั้งค่า → หน่วยงาน', ['/laundry/setting/unit'], ['class' => 'fw-semibold']) ?> ก่อน
+        </div></div>
+    <?php else: ?>
+        <div class="row g-3">
+            <?php foreach ($units as $u): $t = $totals[$u->tree_id] ?? null; ?>
+                <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
+                    <?php
+                    $attrs = [
+                        'class' => 'card border-0 shadow-sm rounded-4 h-100 w-100 text-start lnd-unit-card' . ($canManage ? '' : ' disabled'),
+                        'style' => 'transition:transform .1s',
+                        'data-dept' => $u->tree_id,
+                        'data-name' => $names[$u->tree_id] ?? ('#' . $u->tree_id),
+                        'data-abbr' => $u->abbr ?: '',
+                    ];
+                    if ($canManage) {
+                        $attrs['type'] = 'button';
+                        $attrs['data-bs-toggle'] = 'modal';
+                        $attrs['data-bs-target'] = '#recvModal';
+                    }
+                    $tag = $canManage ? 'button' : 'div';
+                    ?>
+                    <<?= $tag ?> <?= Html::renderTagAttributes($attrs) ?>>
+                        <div class="card-body text-center py-4">
+                            <div class="fw-bold text-primary lh-1 mb-1" style="font-size:2rem"><?= Html::encode($u->abbr ?: mb_substr($names[$u->tree_id] ?? '?', 0, 4)) ?></div>
+                            <div class="small text-body-secondary text-truncate mb-3" title="<?= Html::encode($names[$u->tree_id] ?? '') ?>"><?= Html::encode($names[$u->tree_id] ?? ('#' . $u->tree_id)) ?></div>
+                            <div class="small">
+                                <div>รับผ้า <span class="fw-semibold"><?= (int) ($t['times'] ?? 0) ?></span> ครั้ง</div>
+                                <div class="text-body-secondary">เปื้อน <?= number_format((float) ($t['soiled'] ?? 0), 1) ?> กก.</div>
+                                <div class="text-body-secondary">ติดเชื้อ <?= number_format((float) ($t['infectious'] ?? 0), 1) ?> กก.</div>
+                            </div>
+                        </div>
+                    </<?= $tag ?>>
+                </div>
+            <?php endforeach; ?>
         </div>
     <?php endif; ?>
+</div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-body px-4 py-3"><h2 class="h6 fw-semibold mb-0"><i class="bi bi-list-ul me-2"></i>รายการรอบเก็บ</h2></div>
-        <div class="card-body p-0"><div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead class="table-light"><tr><th class="ps-4">เลขรอบ</th><th>วันที่เก็บ</th><th>สถานะ</th><th class="text-end pe-4">รายละเอียด</th></tr></thead>
-                <tbody>
-                <?php foreach ($provider->getModels() as $round): ?>
-                    <tr>
-                        <td class="ps-4 fw-semibold"><?= Html::encode($round->round_no) ?></td>
-                        <td><?= Html::encode(ThaiDateHelper::formatThaiDate($round->collection_date)) ?></td>
-                        <td>
-                            <?php if ($round->status === 'CONFIRMED'): ?>
-                                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>ตรวจรับแล้ว</span>
-                            <?php else: ?>
-                                <span class="badge text-bg-warning"><i class="bi bi-pencil me-1"></i>กำลังบันทึก</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-end pe-4"><?= Html::a('<i class="bi bi-box-arrow-up-right me-1"></i>เปิด', ['view', 'id' => $round->id], ['class' => 'btn btn-sm btn-outline-primary']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (!$provider->getModels()): ?><tr><td colspan="4" class="text-center text-body-secondary py-4"><i class="bi bi-inbox me-1"></i>ยังไม่มีรอบเก็บผ้า</td></tr><?php endif; ?>
-                </tbody>
-            </table>
-        </div></div>
-        <div class="card-footer bg-body border-top py-3 px-4">
-            <?= DataSummaryWidget::widget(['dataProvider' => $provider, 'pagerOptions' => []]) ?>
+<?php if ($canManage && $units): ?>
+<div class="modal fade" id="recvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <?= Html::beginForm(['save'], 'post') ?>
+            <?= Html::hiddenInput('department_id', '', ['id' => 'recv_dept']) ?>
+            <?= Html::hiddenInput('collected_date', AppHelper::convertToThai($date)) ?>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-lg me-2"></i>รับผ้า — <span id="recv_unit_name" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label">ผ้าเปื้อน (กก.)</label>
+                        <?= Html::input('number', 'soiled_kg', '', ['class' => 'form-control form-control-lg', 'min' => '0', 'step' => '0.001', 'placeholder' => '0.000', 'inputmode' => 'decimal']) ?>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">ผ้าติดเชื้อ (กก.)</label>
+                        <?= Html::input('number', 'infectious_kg', '', ['class' => 'form-control form-control-lg', 'min' => '0', 'step' => '0.001', 'placeholder' => '0.000', 'inputmode' => 'decimal']) ?>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">รอบเก็บ</label>
+                        <?= Html::input('number', 'round_seq', '1', ['class' => 'form-control', 'min' => '1', 'inputmode' => 'numeric']) ?>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">เวลา</label>
+                        <?= Html::input('time', 'collected_time', date('H:i'), ['class' => 'form-control']) ?>
+                    </div>
+                </div>
+                <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>กรอกน้ำหนักอย่างน้อยหนึ่งประเภท</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <?= Html::submitButton('<i class="bi bi-save me-1"></i>บันทึกข้อมูล', ['class' => 'btn btn-primary']) ?>
+            </div>
+            <?= Html::endForm() ?>
         </div>
     </div>
 </div>
+<?php
+$this->registerJs(<<<'JS'
+var recvModal = document.getElementById('recvModal');
+if (recvModal) {
+  recvModal.addEventListener('show.bs.modal', function (e) {
+    var card = e.relatedTarget; if (!card) return;
+    document.getElementById('recv_dept').value = card.getAttribute('data-dept') || '';
+    var abbr = card.getAttribute('data-abbr'), name = card.getAttribute('data-name') || '';
+    document.getElementById('recv_unit_name').textContent = abbr ? (abbr + ' · ' + name) : name;
+    recvModal.querySelector('[name="soiled_kg"]').value = '';
+    recvModal.querySelector('[name="infectious_kg"]').value = '';
+  });
+}
+JS);
+?>
+<?php endif; ?>

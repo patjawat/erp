@@ -23,23 +23,67 @@ class CollectionController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     ['allow' => true, 'actions' => ['index', 'view', 'report', 'inspect'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['create', 'add-stop', 'weigh', 'confirm'], 'roles' => ['laundry.manage']],
+                    ['allow' => true, 'actions' => ['create', 'add-stop', 'save', 'weigh', 'confirm'], 'roles' => ['laundry.manage']],
                 ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['create' => ['POST'], 'add-stop' => ['POST'], 'weigh' => ['POST'], 'confirm' => ['POST']],
+                'actions' => ['create' => ['POST'], 'add-stop' => ['POST'], 'save' => ['POST'], 'weigh' => ['POST'], 'confirm' => ['POST']],
             ],
         ];
     }
 
+    /** รับผ้า (mobile) — การ์ดหน่วยงาน + ยอดวันนั้น */
     public function actionIndex()
     {
-        $provider = new \yii\data\ActiveDataProvider([
-            'query' => \app\modules\laundry\models\CollectionRound::find()->orderBy(['collection_date' => SORT_DESC, 'id' => SORT_DESC]),
-            'pagination' => ['pageSize' => 20],
-        ]);
-        return $this->render('index', ['provider' => $provider]);
+        $dateInput = trim((string) Yii::$app->request->get('date'));
+        $date = $dateInput !== '' ? (AppHelper::convertToGregorian($dateInput) ?: date('Y-m-d')) : date('Y-m-d');
+
+        $units = \app\modules\laundry\models\LaundryUnit::find()
+            ->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $treeIds = array_map(static fn($u) => $u->tree_id, $units);
+        $names = $treeIds
+            ? Organization::find()->select(['name', 'id'])->where(['id' => $treeIds])->indexBy('id')->column()
+            : [];
+
+        // ยอดต่อหน่วยงานของวันนั้น: จำนวนครั้ง + ผ้าเปื้อน/ผ้าติดเชื้อ (กก.)
+        $totals = [];
+        if ($treeIds) {
+            $rows = (new Query())
+                ->select([
+                    'department_id' => 's.department_id',
+                    'times' => new \yii\db\Expression('COUNT(DISTINCT s.id)'),
+                    'soiled' => new \yii\db\Expression("COALESCE(SUM(CASE WHEN w.linen_class='SOILED' THEN w.net_kg ELSE 0 END),0)"),
+                    'infectious' => new \yii\db\Expression("COALESCE(SUM(CASE WHEN w.linen_class='INFECTIOUS' THEN w.net_kg ELSE 0 END),0)"),
+                ])
+                ->from(['s' => 'laundry_collection_stop'])
+                ->innerJoin(['r' => 'laundry_collection_round'], 'r.id = s.round_id')
+                ->leftJoin(['w' => 'laundry_collection_weight'], 'w.stop_id = s.id')
+                ->where(['r.collection_date' => $date, 's.department_id' => $treeIds])
+                ->groupBy('s.department_id')->indexBy('department_id')->all();
+            $totals = $rows;
+        }
+        return $this->render('index', compact('date', 'units', 'names', 'totals'));
+    }
+
+    /** บันทึกรับผ้า 1 รายการ (mobile) — หา/สร้างรอบรายวันให้เอง */
+    public function actionSave()
+    {
+        $req = Yii::$app->request;
+        $date = AppHelper::convertToGregorian(trim((string) $req->post('collected_date'))) ?: date('Y-m-d');
+        try {
+            $svc = new CollectionService();
+            $roundId = $svc->findOrCreateDailyRound($date, Yii::$app->user->id ? (int) Yii::$app->user->id : null);
+            $time = trim((string) $req->post('collected_time')) ?: date('H:i');
+            $seq = (int) $req->post('round_seq') ?: null;
+            $svc->addEntry($roundId, (int) $req->post('department_id'), $date . ' ' . $time,
+                $req->post('soiled_kg'), $req->post('infectious_kg'),
+                Yii::$app->user->id ? (int) Yii::$app->user->id : null, $seq);
+            Yii::$app->session->setFlash('success', 'บันทึกรับผ้าแล้ว');
+        } catch (\Throwable $e) {
+            $this->fail($e, ['index', 'date' => AppHelper::convertToThai($date)]);
+        }
+        return $this->redirect(['index', 'date' => AppHelper::convertToThai($date)]);
     }
 
     /** ตรวจรับผ้า: รอบที่ยังไม่ยืนยัน (OPEN) รอตรวจสอบน้ำหนัก/ถุงแล้วยืนยันรับเข้า */
