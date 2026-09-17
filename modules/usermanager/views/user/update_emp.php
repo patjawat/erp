@@ -9,21 +9,21 @@ use yii\bootstrap5\ActiveForm;
 ]); ?>
 <?= $form->field($model, 'fullname')->hiddenInput(['maxlength' => true])->label(false) ?>
 
-<div class="row" class="shadow">
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
 
         <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
         <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
         <?= $form->field($model, 'status')->radioList($model->getItemStatus())->label('สถานะ') ?>
     </div>
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <div class="col-12 col-lg-6">
         <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
         <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
-        <?= $form->field($model, 'roles')->checkboxList($model->getAllRoles())->label('สิทธิเข้าถึงข้อมูล') ?>
     </div>
 </div>
 
-<!-- /.card-footer -->
+<div class="border-top pt-3 mt-3">
+    <?= $this->render('_role_picker', ['model' => $model, 'excludeDirector' => false]) ?>
 </div>
 
 

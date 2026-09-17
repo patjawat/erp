@@ -409,6 +409,8 @@ $config = [
             'helpdesk/general/report',
             'filemanager/*',
             // 'usermanager/*',
+            // Template controller จำกัดเฉพาะ admin ด้วย AccessControl ภายใน
+            'usermanager/template/*',
             'site/login',
             'site/logout',
             'site/sign-up',
