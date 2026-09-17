@@ -104,7 +104,7 @@ class MedController extends Controller
             'sort' => false,
         ]);
 
-        return $this->render('med/index', [
+        return $this->render('index', [
             'reports' => $dataProvider->getModels(),
             'dataProvider' => $dataProvider,
             'fiscalYear' => $fiscalYear,
@@ -152,9 +152,9 @@ class MedController extends Controller
         $data = ['model' => $model, 'units' => Ha12ReviewService::selectableUnits($empUnitId)];
         if ($req->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => 'สร้างรายงานความคลาดเคลื่อนทางยา', 'content' => $this->renderAjax('med/_form', $data)];
+            return ['title' => 'สร้างรายงานความคลาดเคลื่อนทางยา', 'content' => $this->renderAjax('_form', $data)];
         }
-        return $this->render('med/_form', $data);
+        return $this->render('_form', $data);
     }
 
     /** หน้าแก้ไขรายงาน (ตารางกรอก 5 หัวข้อ) */
@@ -166,7 +166,7 @@ class MedController extends Controller
         }
         $this->assertManage($report);
 
-        return $this->render('med/edit', [
+        return $this->render('edit', [
             'report' => $report,
             'canManage' => true,
         ]);
@@ -183,7 +183,7 @@ class MedController extends Controller
         if (!Ha12MedService::canView($report, $userId, $empUnitId)) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูรายงานนี้');
         }
-        return $this->render('med/view', [
+        return $this->render('view', [
             'report' => $report,
             'canManage' => Ha12MedService::canManage($report, $userId, $empUnitId),
         ]);

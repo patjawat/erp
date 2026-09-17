@@ -63,7 +63,7 @@ class AssessmentController extends Controller
         $assessment = Ha12RoundService::getOrCreateAssessment($round, (int) $activity->id);
         $assessment = $this->findAssessment((int) $assessment->id);
 
-        return $this->render('assessment/edit', [
+        return $this->render('edit', [
             'round' => $round,
             'activity' => $activity,
             'assessment' => $assessment,
@@ -79,7 +79,7 @@ class AssessmentController extends Controller
         if (!$assessment->isPublished() && !Ha12RoundService::isManager()) {
             throw new ForbiddenHttpException('ผลประเมินนี้ยังไม่เผยแพร่');
         }
-        return $this->render('assessment/view', [
+        return $this->render('view', [
             'assessment' => $assessment,
             'round' => $assessment->round,
             'activity' => $assessment->activity,

@@ -71,7 +71,7 @@ class RoundController extends Controller
             $progress[$r->id] = Ha12RoundService::progress($r);
         }
 
-        return $this->render('round/index', [
+        return $this->render('index', [
             'rounds' => $rounds, 'dataProvider' => $dataProvider, 'progress' => $progress,
             'fiscalYear' => $fiscalYear, 'years' => range($fiscalYear + 1, $fiscalYear - 3),
             'isManager' => Ha12RoundService::isManager(),
@@ -107,9 +107,9 @@ class RoundController extends Controller
         $data = ['model' => $model, 'units' => Ha12RoundService::scopeUnitOptions()];
         if ($req->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => 'สร้างรอบประเมิน', 'content' => $this->renderAjax('round/_form', $data)];
+            return ['title' => 'สร้างรอบประเมิน', 'content' => $this->renderAjax('_form', $data)];
         }
-        return $this->render('round/_form', $data);
+        return $this->render('_form', $data);
     }
 
     /** แดชบอร์ดรอบ — 12 กิจกรรม + สถานะประเมิน */
@@ -119,7 +119,7 @@ class RoundController extends Controller
         $activities = Ha12Activity::activeList();
         $assessments = Ha12Assessment::find()->where(['round_id' => $round->id])->indexBy('activity_id')->all();
 
-        return $this->render('round/view', [
+        return $this->render('view', [
             'round' => $round,
             'activities' => $activities,
             'assessments' => $assessments,

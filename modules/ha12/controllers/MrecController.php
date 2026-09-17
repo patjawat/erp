@@ -84,7 +84,7 @@ class MrecController extends Controller
             'pagination' => ['pageSize' => 20], 'sort' => false,
         ]);
 
-        return $this->render('mrec/index', [
+        return $this->render('index', [
             'audits' => $dataProvider->getModels(), 'dataProvider' => $dataProvider,
             'fiscalYear' => $fiscalYear, 'years' => range($fiscalYear + 1, $fiscalYear - 3),
             'units' => Ha12ReviewService::orderedUnits(),
@@ -121,9 +121,9 @@ class MrecController extends Controller
         $data = ['model' => $model, 'units' => Ha12ReviewService::selectableUnits($empUnitId)];
         if ($req->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => 'สร้างการตรวจเวชระเบียน', 'content' => $this->renderAjax('mrec/_form', $data)];
+            return ['title' => 'สร้างการตรวจเวชระเบียน', 'content' => $this->renderAjax('_form', $data)];
         }
-        return $this->render('mrec/_form', $data);
+        return $this->render('_form', $data);
     }
 
     public function actionEdit($id)
@@ -133,7 +133,7 @@ class MrecController extends Controller
             throw new NotFoundHttpException('ไม่พบการตรวจ');
         }
         $this->assertManage($audit);
-        return $this->render('mrec/edit', ['audit' => $audit]);
+        return $this->render('edit', ['audit' => $audit]);
     }
 
     public function actionView($id)
@@ -146,7 +146,7 @@ class MrecController extends Controller
         if (!Ha12MrecService::canView($audit, $userId, $empUnitId)) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูรายการนี้');
         }
-        return $this->render('mrec/view', [
+        return $this->render('view', [
             'audit' => $audit,
             'canManage' => Ha12MrecService::canManage($audit, $userId, $empUnitId),
         ]);

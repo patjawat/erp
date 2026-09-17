@@ -72,7 +72,7 @@ class ImportController extends Controller
         $activities = $this->generalActivities();
         $activityId = (int) Yii::$app->request->get('activity_id') ?: (int) ($activities[0]->id ?? 0);
         $me = UserHelper::GetEmployee();
-        return $this->render('import/index', [
+        return $this->render('index', [
             'activities' => $activities,
             'activityId' => $activityId,
             'fiscalYear' => (int) AppHelper::YearBudget(),

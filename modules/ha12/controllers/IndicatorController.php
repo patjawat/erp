@@ -83,7 +83,7 @@ class IndicatorController extends Controller
             'pagination' => ['pageSize' => 20], 'sort' => false,
         ]);
 
-        return $this->render('indicator/index', [
+        return $this->render('index', [
             'indicators' => $dataProvider->getModels(), 'dataProvider' => $dataProvider,
             'fiscalYear' => $fiscalYear, 'years' => range($fiscalYear + 1, $fiscalYear - 3),
             'units' => Ha12ReviewService::orderedUnits(),
@@ -130,9 +130,9 @@ class IndicatorController extends Controller
         $data = ['model' => $model, 'units' => Ha12ReviewService::selectableUnits($empUnitId)];
         if ($req->isAjax) {
             Yii::$app->response->format = Response::FORMAT_JSON;
-            return ['title' => $title, 'content' => $this->renderAjax('indicator/_form', $data)];
+            return ['title' => $title, 'content' => $this->renderAjax('_form', $data)];
         }
-        return $this->render('indicator/_form', $data);
+        return $this->render('_form', $data);
     }
 
     /** หน้ากรอกค่ารายเดือน */
@@ -146,7 +146,7 @@ class IndicatorController extends Controller
         if (!Ha12IndicatorService::canView($model, $userId, $empUnitId)) {
             throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ดูรายการนี้');
         }
-        return $this->render('indicator/values', [
+        return $this->render('values', [
             'model' => $model,
             'canManage' => Ha12IndicatorService::canManage($model, $userId, $empUnitId),
         ]);

@@ -48,7 +48,7 @@ class ReportController extends Controller
     {
         $fiscalYear = $this->fiscalYear();
         $rounds = Ha12Round::find()->with('scopeUnit')->where(['fiscal_year' => $fiscalYear])->orderBy(['id' => SORT_DESC])->all();
-        return $this->render('report/index', [
+        return $this->render('index', [
             'rounds' => $rounds,
             'fiscalYear' => $fiscalYear,
             'years' => range($fiscalYear + 1, $fiscalYear - 3),
@@ -63,7 +63,7 @@ class ReportController extends Controller
             'pagination' => ['pageSize' => 50],
             'sort' => false,
         ]);
-        return $this->render('report/audit', [
+        return $this->render('audit', [
             'logs' => $dataProvider->getModels(),
             'dataProvider' => $dataProvider,
         ]);
@@ -73,7 +73,7 @@ class ReportController extends Controller
     public function actionRound($id)
     {
         $round = $this->findRound((int) $id);
-        return $this->render('report/round', $this->roundData($round));
+        return $this->render('round', $this->roundData($round));
     }
 
     /** เทียบสองรอบ */
@@ -94,7 +94,7 @@ class ReportController extends Controller
             return $rows;
         };
 
-        return $this->render('report/compare', [
+        return $this->render('compare', [
             'fiscalYear' => $fiscalYear,
             'years' => range($fiscalYear + 1, $fiscalYear - 3),
             'rounds' => $rounds,
