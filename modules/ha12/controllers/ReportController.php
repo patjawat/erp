@@ -5,6 +5,7 @@ namespace app\modules\ha12\controllers;
 use app\components\AppHelper;
 use app\modules\ha12\models\Ha12Activity;
 use app\modules\ha12\models\Ha12Assessment;
+use app\modules\ha12\models\Ha12Audit;
 use app\modules\ha12\models\Ha12Round;
 use Yii;
 use yii\filters\AccessControl;
@@ -51,6 +52,20 @@ class ReportController extends Controller
             'rounds' => $rounds,
             'fiscalYear' => $fiscalYear,
             'years' => range($fiscalYear + 1, $fiscalYear - 3),
+        ]);
+    }
+
+    /** บันทึกร่องรอยการกำกับดูแล (audit trail) */
+    public function actionAudit()
+    {
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => Ha12Audit::find()->orderBy(['id' => SORT_DESC]),
+            'pagination' => ['pageSize' => 50],
+            'sort' => false,
+        ]);
+        return $this->render('report/audit', [
+            'logs' => $dataProvider->getModels(),
+            'dataProvider' => $dataProvider,
         ]);
     }
 

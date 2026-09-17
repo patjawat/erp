@@ -5,6 +5,7 @@ namespace app\modules\ha12\controllers;
 use app\components\AppHelper;
 use app\modules\ha12\models\Ha12Activity;
 use app\modules\ha12\models\Ha12Assessment;
+use app\modules\ha12\models\Ha12Audit;
 use app\modules\ha12\models\Ha12Round;
 use app\modules\ha12\services\Ha12RoundService;
 use Yii;
@@ -94,6 +95,7 @@ class RoundController extends Controller
             $model->status = Ha12Round::STATUS_OPEN;
 
             if ($model->save()) {
+                Ha12Audit::log('round', (int) $model->id, 'create', $model->displayTitle());
                 if ($req->isAjax) {
                     Yii::$app->response->format = Response::FORMAT_JSON;
                     return ['status' => 'success', 'redirect_url' => \yii\helpers\Url::to(['view', 'id' => $model->id])];
@@ -137,6 +139,7 @@ class RoundController extends Controller
         }
         $round->status = Ha12Round::STATUS_CLOSED;
         $round->save(false);
+        Ha12Audit::log('round', (int) $round->id, 'close', $round->displayTitle());
         Yii::$app->session->setFlash('success', 'ปิดรอบแล้ว');
         return $this->redirect(['view', 'id' => $round->id]);
     }
@@ -153,6 +156,7 @@ class RoundController extends Controller
         $round->status = Ha12Round::STATUS_OPEN;
         $round->reopen_reason = $reason;
         $round->save(false);
+        Ha12Audit::log('round', (int) $round->id, 'reopen', $reason);
         Yii::$app->session->setFlash('success', 'เปิดรอบใหม่แล้ว');
         return $this->redirect(['view', 'id' => $round->id]);
     }

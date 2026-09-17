@@ -20,7 +20,11 @@ foreach ($rounds as $r) {
 <div class="container-fluid px-0">
     <div class="mb-3"><?= $this->render('@app/modules/ha12/menu', ['active' => 'report']) ?></div>
 
-    <div class="d-flex justify-content-end mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="d-flex gap-2">
+            <?= Html::a('<i class="bi bi-upload"></i> นำเข้าข้อมูล', ['/ha12/import/index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+            <?= Html::a('<i class="bi bi-shield-lock"></i> ร่องรอยการกำกับดูแล', ['audit'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+        </div>
         <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex align-items-center gap-2']) ?>
             <label class="small text-body-secondary mb-0">ปีงบ</label>
             <?= Html::dropDownList('fy', $fiscalYear, array_combine($years, $years), ['class' => 'form-select form-select-sm', 'style' => 'width:auto', 'onchange' => 'this.form.submit()']) ?>

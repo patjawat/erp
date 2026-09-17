@@ -4,6 +4,7 @@ namespace app\modules\ha12\controllers;
 
 use app\modules\ha12\models\Ha12Activity;
 use app\modules\ha12\models\Ha12Assessment;
+use app\modules\ha12\models\Ha12Audit;
 use app\modules\ha12\models\Ha12Round;
 use app\modules\ha12\models\Ha12SummaryRow;
 use app\modules\ha12\models\Ha12SummarySource;
@@ -192,6 +193,7 @@ class AssessmentController extends Controller
         $a->status = Ha12Assessment::STATUS_PUBLISHED;
         $a->published_at = date('Y-m-d H:i:s');
         $a->save(false);
+        Ha12Audit::log('assessment', (int) $a->id, 'publish', $a->activity->name ?? null);
         Yii::$app->session->setFlash('success', 'เผยแพร่ผลประเมินแล้ว');
         return $this->redirect(['edit', 'round_id' => $a->round_id, 'activity_id' => $a->activity_id]);
     }
@@ -202,6 +204,7 @@ class AssessmentController extends Controller
         $a = $this->findAssessment((int) $id);
         $a->status = Ha12Assessment::STATUS_DRAFT;
         $a->save(false);
+        Ha12Audit::log('assessment', (int) $a->id, 'unpublish', $a->activity->name ?? null);
         Yii::$app->session->setFlash('success', 'ยกเลิกการเผยแพร่ (กลับเป็นร่าง)');
         return $this->redirect(['edit', 'round_id' => $a->round_id, 'activity_id' => $a->activity_id]);
     }

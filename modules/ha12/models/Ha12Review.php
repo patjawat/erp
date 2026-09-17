@@ -42,6 +42,8 @@ class Ha12Review extends Ha12ActiveRecord
             [['review_date'], 'date', 'format' => 'php:Y-m-d'],
             [['reviewer_name'], 'string', 'max' => 255],
             [['title'], 'string', 'max' => 500],
+            [['source_system'], 'string', 'max' => 32],
+            [['source_ref'], 'string', 'max' => 128],
             [['fields'], 'safe'],
             [['activity_id'], 'exist', 'targetClass' => Ha12Activity::class, 'targetAttribute' => 'id'],
         ];
