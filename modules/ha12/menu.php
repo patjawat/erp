@@ -20,7 +20,9 @@ $this->endBlock();
 $items = [
     ['key' => 'overview', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/ha12/default/index']],
     ['key' => 'review', 'label' => 'การทบทวน', 'icon' => 'bi-journal-check', 'url' => ['/ha12/review/index']],
-    ['key' => 'med', 'label' => 'ความคลาดเคลื่อนยา', 'icon' => 'bi-capsule', 'url' => ['/ha12/default/index']],
+    ['key' => 'med', 'label' => 'ความคลาดเคลื่อนยา', 'icon' => 'bi-capsule', 'url' => ['/ha12/med/index']],
+    ['key' => 'mrec', 'label' => 'เวชระเบียน', 'icon' => 'bi-journal-medical', 'url' => ['/ha12/mrec/index']],
+    ['key' => 'indicator', 'label' => 'ตัวชี้วัด', 'icon' => 'bi-graph-up', 'url' => ['/ha12/indicator/index']],
     ['key' => 'round', 'label' => 'รอบประเมิน PCT', 'icon' => 'bi-clipboard2-data', 'url' => ['/ha12/default/index']],
     ['key' => 'report', 'label' => 'รายงาน', 'icon' => 'bi-file-earmark-bar-graph', 'url' => ['/ha12/default/index']],
 ];
