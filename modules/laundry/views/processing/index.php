@@ -12,6 +12,7 @@ $canApprove = Yii::$app->user->can('laundry.approve');
         <div class="d-flex flex-wrap gap-2">
             <?= Html::a('บัญชีผ้าเป็นชิ้น', ['/laundry/inventory/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
             <?= Html::a('รอบเก็บผ้า', ['/laundry/collection/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
+            <?= Html::a('รายงานรอบเครื่อง', ['/laundry/machine-report/index'], ['class' => 'btn btn-outline-secondary rounded-3']) ?>
             <?php if ($canManage): ?>
                 <?= Html::a('เริ่มรอบซัก', ['new', 'stage' => 'WASH'], ['class' => 'btn btn-primary rounded-3']) ?>
                 <?= Html::a('เริ่มรอบอบ', ['new', 'stage' => 'DRY'], ['class' => 'btn btn-outline-primary rounded-3']) ?>

@@ -65,6 +65,13 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg>'
     ],
     [
+        'show' => Yii::$app->user->can('laundry.view'),
+        'label' => 'งานซักฟอก',
+        'url' => ['/laundry/collection/index'],
+        'active' => 'laundry',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2"></rect><path d="M3 8h18"></path><circle cx="7" cy="5" r=".5" fill="currentColor" stroke="none"></circle><circle cx="10" cy="5" r=".5" fill="currentColor" stroke="none"></circle><circle cx="12" cy="15" r="4"></circle><path d="M10 15c1-1 2 1 4 0"></path></svg>'
+    ],
+    [
          'show' => Yii::$app->user->can('asset') ? true : false,
         'label' => 'ทรัพย์สิน', 
         'url' => ['/am'], 

@@ -21,8 +21,8 @@ class InventoryController extends Controller
                 'rules' => [
                     ['allow' => true, 'actions' => ['index'], 'roles' => ['laundry.view']],
                     ['allow' => true, 'actions' => ['index'], 'roles' => ['laundry.approve']],
-                    ['allow' => true, 'actions' => ['create-item', 'set-par', 'receive', 'issue', 'return-counted', 'qc', 'request-loss'], 'roles' => ['laundry.manage']],
-                    ['allow' => true, 'actions' => ['opening', 'approve-loss', 'set-receiving-warehouse'], 'roles' => ['laundry.approve']],
+                    ['allow' => true, 'actions' => ['create-item', 'set-par', 'receive', 'issue', 'return-counted', 'qc', 'request-loss', 'request-dry-count', 'record-ironing', 'return-for-rewash', 'request-qc-disposal'], 'roles' => ['laundry.manage']],
+                    ['allow' => true, 'actions' => ['opening', 'approve-loss', 'set-receiving-warehouse', 'approve-dry-count', 'complete-repair', 'approve-qc-disposal'], 'roles' => ['laundry.approve']],
                 ],
             ],
             'verbs' => [
@@ -31,6 +31,9 @@ class InventoryController extends Controller
                     'create-item' => ['POST'], 'set-par' => ['POST'], 'set-receiving-warehouse' => ['POST'], 'opening' => ['POST'],
                     'receive' => ['POST'], 'issue' => ['POST'], 'return-counted' => ['POST'],
                     'qc' => ['POST'], 'request-loss' => ['POST'], 'approve-loss' => ['POST'],
+                    'request-dry-count' => ['POST'], 'approve-dry-count' => ['POST'], 'record-ironing' => ['POST'],
+                    'return-for-rewash' => ['POST'], 'complete-repair' => ['POST'],
+                    'request-qc-disposal' => ['POST'], 'approve-qc-disposal' => ['POST'],
                 ],
             ],
         ];
@@ -43,6 +46,9 @@ class InventoryController extends Controller
         foreach ($items as &$item) {
             $item['clean_qty'] = $inventory->balance((int) $item['id'], 'CLEAN');
             $item['dirty_qty'] = $inventory->balance((int) $item['id'], 'DIRTY');
+            $item['rework_qty'] = $inventory->balance((int) $item['id'], 'REWORK');
+            $item['repair_qty'] = $inventory->balance((int) $item['id'], 'REPAIR');
+            $item['disposal_pending_qty'] = $inventory->balance((int) $item['id'], 'DISPOSAL_PENDING');
         }
         unset($item);
         $events = (new Query())->select(['e.*', 'item_name' => 'i.item_name'])
@@ -66,7 +72,28 @@ class InventoryController extends Controller
             $warehouseOptions[$warehouse['id']] = $warehouse['warehouse_name'];
         }
         $receivingWarehouseId = (new Query())->select('receiving_warehouse_id')->from('laundry_config')->where(['id' => 1])->scalar();
-        return $this->render('index', compact('items', 'events', 'departments', 'batchOptions', 'par', 'warehouseOptions', 'receivingWarehouseId'));
+        $dryCounts = (new Query())->select(['c.*', 'batch_no' => 'b.batch_no', 'item_name' => 'i.item_name'])
+            ->from(['c' => 'laundry_batch_piece_count'])->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = c.dry_batch_id')
+            ->innerJoin(['i' => 'laundry_item'], 'i.id = c.item_id')
+            ->orderBy(['c.id' => SORT_DESC])->limit(40)->all();
+        $lots = (new Query())->select(['l.*', 'item_name' => 'i.item_name', 'item_code' => 'i.item_code', 'batch_no' => 'b.batch_no'])
+            ->from(['l' => 'laundry_clean_lot'])->innerJoin(['i' => 'laundry_item'], 'i.id = l.item_id')
+            ->leftJoin(['b' => 'laundry_processing_batch'], 'b.id = l.dry_batch_id')
+            ->orderBy(['l.id' => SORT_DESC])->all();
+        $lotBalances = $inventory->lotBalances();
+        $availableLots = [];
+        foreach ($lots as &$lot) {
+            $lot['available_qty'] = $lotBalances[(int) $lot['id']] ?? 0;
+            if ($lot['available_qty'] > 0) {
+                $availableLots[$lot['id']] = $lot['lot_no'] . ' · ' . $lot['item_name'] . ' (' . $lot['available_qty'] . ' ชิ้น)';
+            }
+        }
+        unset($lot);
+        $ironing = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'item_name' => 'i.item_name'])
+            ->from(['r' => 'laundry_ironing'])->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = r.dry_batch_id')
+            ->innerJoin(['i' => 'laundry_item'], 'i.id = r.item_id')
+            ->orderBy(['r.id' => SORT_DESC])->limit(40)->all();
+        return $this->render('index', compact('items', 'events', 'departments', 'batchOptions', 'par', 'warehouseOptions', 'receivingWarehouseId', 'dryCounts', 'lots', 'availableLots', 'ironing'));
     }
 
     public function actionCreateItem()
@@ -114,7 +141,7 @@ class InventoryController extends Controller
     public function actionIssue()
     {
         return $this->runWrite(function (PieceInventoryService $service) {
-            $service->issue((int) Yii::$app->request->post('item_id'),
+            $service->issueFromLot((int) Yii::$app->request->post('lot_id'),
                 (int) Yii::$app->request->post('department_id'),
                 (int) Yii::$app->request->post('qty'), $this->userId());
         });
@@ -138,6 +165,32 @@ class InventoryController extends Controller
         });
     }
 
+    public function actionRequestDryCount()
+    {
+        return $this->runWrite(function (PieceInventoryService $service) {
+            $service->requestDryPieceCount((int) Yii::$app->request->post('dry_batch_id'),
+                (int) Yii::$app->request->post('item_id'), (int) Yii::$app->request->post('qty'),
+                (string) Yii::$app->request->post('evidence'), (int) $this->userId());
+        });
+    }
+
+    public function actionRecordIroning()
+    {
+        return $this->runWrite(function (PieceInventoryService $service) {
+            $service->recordIroning((int) Yii::$app->request->post('dry_batch_id'),
+                (int) Yii::$app->request->post('item_id'), (int) Yii::$app->request->post('qty'),
+                (string) Yii::$app->request->post('started_at'), (string) Yii::$app->request->post('ended_at'),
+                (string) Yii::$app->request->post('evidence'), (int) $this->userId());
+        });
+    }
+
+    public function actionApproveDryCount(int $id)
+    {
+        return $this->runWrite(function (PieceInventoryService $service) use ($id) {
+            $service->approveDryPieceCount($id, (int) $this->userId());
+        });
+    }
+
     public function actionRequestLoss()
     {
         return $this->runWrite(function (PieceInventoryService $service) {
@@ -151,6 +204,37 @@ class InventoryController extends Controller
     {
         return $this->runWrite(function (PieceInventoryService $service) use ($id) {
             $service->approveLoss($id, (int) $this->userId());
+        });
+    }
+
+    public function actionReturnForRewash()
+    {
+        return $this->runWrite(function (PieceInventoryService $service) {
+            $service->returnForRewash((int) Yii::$app->request->post('item_id'),
+                (int) Yii::$app->request->post('qty'), (string) Yii::$app->request->post('evidence'), $this->userId());
+        });
+    }
+
+    public function actionCompleteRepair()
+    {
+        return $this->runWrite(function (PieceInventoryService $service) {
+            $service->completeRepair((int) Yii::$app->request->post('item_id'),
+                (int) Yii::$app->request->post('qty'), (string) Yii::$app->request->post('evidence'), $this->userId());
+        });
+    }
+
+    public function actionRequestQcDisposal()
+    {
+        return $this->runWrite(function (PieceInventoryService $service) {
+            $service->requestQcDisposal((int) Yii::$app->request->post('item_id'),
+                (int) Yii::$app->request->post('qty'), (string) Yii::$app->request->post('reason'), (int) $this->userId());
+        });
+    }
+
+    public function actionApproveQcDisposal(int $id)
+    {
+        return $this->runWrite(function (PieceInventoryService $service) use ($id) {
+            $service->approveQcDisposal($id, (int) $this->userId());
         });
     }
 
