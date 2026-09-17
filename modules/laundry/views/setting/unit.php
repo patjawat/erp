@@ -1,10 +1,11 @@
 <?php
 
 use app\modules\laundry\models\LaundryUnit;
+use kartik\widgets\Select2;
 use yii\helpers\Html;
 
 /** @var LaundryUnit[] $units */
-/** @var array $available  id => name */
+/** @var array $ouGroups  groupTitle => [org_unit_id => name] */
 $this->title = 'ตั้งค่า — หน่วยงานซักฟอก';
 ?>
 <div class="container-fluid py-3">
@@ -24,13 +25,15 @@ $this->title = 'ตั้งค่า — หน่วยงานซักฟ�
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-body px-4 py-3"><h2 class="h6 fw-semibold mb-0"><i class="bi bi-plus-circle me-2"></i>เพิ่มหน่วยงาน</h2></div>
                 <div class="card-body">
-                    <?php if (!$available): ?>
-                        <div class="text-body-secondary small"><i class="bi bi-check2-circle me-1"></i>เพิ่มครบทุกหน่วยงานแล้ว</div>
-                    <?php else: ?>
                         <?= Html::beginForm(['unit-save'], 'post', ['class' => 'row g-3']) ?>
                             <div class="col-12">
                                 <label class="form-label">หน่วยงาน</label>
-                                <?= Html::dropDownList('tree_id', null, $available, ['prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?>
+                                <?= Select2::widget([
+                                    'name' => 'org_unit_id',
+                                    'data' => $ouGroups,
+                                    'options' => ['placeholder' => 'เลือกหน่วยงาน', 'id' => 'lnd-unit-select'],
+                                    'pluginOptions' => ['allowClear' => false, 'width' => '100%'],
+                                ]) ?>
                             </div>
                             <div class="col-6">
                                 <label class="form-label">ชื่อย่อ</label>
@@ -50,7 +53,6 @@ $this->title = 'ตั้งค่า — หน่วยงานซักฟ�
                                 <?= Html::submitButton('<i class="bi bi-save me-1"></i>เพิ่ม', ['class' => 'btn btn-primary']) ?>
                             </div>
                         <?= Html::endForm() ?>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

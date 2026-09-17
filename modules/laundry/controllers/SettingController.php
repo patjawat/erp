@@ -4,6 +4,7 @@ namespace app\modules\laundry\controllers;
 
 use app\modules\hr\models\Organization;
 use app\modules\laundry\models\LaundryUnit;
+use app\modules\settings\models\OrgUnit;
 use Yii;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -35,13 +36,10 @@ class SettingController extends Controller
     public function actionUnit()
     {
         $units = LaundryUnit::find()->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
-        $usedIds = array_map(static fn($u) => $u->tree_id, $units);
-        // หน่วยงานที่ยังไม่อยู่ในทะเบียน (ให้เลือกเพิ่ม)
-        $available = Organization::find()
-            ->select(['name', 'id'])
-            ->andFilterWhere(['not in', 'id', $usedIds ?: [0]])
-            ->orderBy(['name' => SORT_ASC])->indexBy('id')->column();
-        return $this->render('unit', compact('units', 'available'));
+        // ตัวเลือกหน่วยงานมาตรฐาน ERP: org_unit จัดกลุ่ม+เยื้องระดับ (value = org_unit_id)
+        $thaiYear = (int) date('Y') + 543;
+        $ouGroups = OrgUnit::groupedForSelect($thaiYear);
+        return $this->render('unit', compact('units', 'ouGroups'));
     }
 
     public function actionUnitSave()
@@ -50,7 +48,14 @@ class SettingController extends Controller
         $id = (int) $req->post('id');
         $model = $id ? $this->findUnit($id) : new LaundryUnit(['is_active' => 1, 'sort_order' => 0]);
         if (!$id) {
-            $model->tree_id = (int) $req->post('tree_id');
+            // แปลง org_unit_id (มาตรฐาน) → tree_id (ให้ตรงกับ department_id ในบัญชีผ้า)
+            $ou = OrgUnit::findOne((int) $req->post('org_unit_id'));
+            $treeId = $ou && $ou->ref_id !== null ? (int) $ou->ref_id : 0;
+            if (!$treeId) {
+                Yii::$app->session->setFlash('error', 'หน่วยงานนี้ไม่ผูกกับโครงสร้างจริง เลือกหน่วยงานในผังองค์กร');
+                return $this->redirect(['unit']);
+            }
+            $model->tree_id = $treeId;
             $model->created_at = date('Y-m-d H:i:s');
             $model->created_by = Yii::$app->user->id ? (int) Yii::$app->user->id : null;
         }
