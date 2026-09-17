@@ -1,6 +1,9 @@
 <?php
 
+use kartik\widgets\Select2;
 use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\web\JsExpression;
 
 $this->title = 'รอบซัก–อบ';
 $canManage = Yii::$app->user->can('laundry.manage');
@@ -26,7 +29,24 @@ $canApprove = Yii::$app->user->can('laundry.approve');
         <div class="card-body">
             <?php if ($canManage): ?>
                 <?= Html::beginForm(['register-machine'], 'post', ['class' => 'row g-3 align-items-end mb-3']) ?>
-                    <div class="col-12 col-md-4"><label class="form-label">เลขครุภัณฑ์</label><?= Html::textInput('asset_code', '', ['class' => 'form-control', 'required' => true]) ?></div>
+                    <div class="col-12 col-md-4"><label class="form-label">ครุภัณฑ์ (จากระบบทรัพย์สิน)</label>
+                        <?= Select2::widget([
+                            'name' => 'asset_id',
+                            'data' => [],
+                            'options' => ['placeholder' => 'ค้นหาเลข/ชื่อครุภัณฑ์...', 'id' => 'lnd-asset-select'],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                                'minimumInputLength' => 1,
+                                'ajax' => [
+                                    'url' => Url::to(['/laundry/processing/asset-search']),
+                                    'dataType' => 'json',
+                                    'delay' => 250,
+                                    'data' => new JsExpression('function(params){ return {q: params.term}; }'),
+                                    'cache' => true,
+                                ],
+                            ],
+                        ]) ?>
+                    </div>
                     <div class="col-6 col-md-2"><label class="form-label">ประเภท</label><?= Html::dropDownList('machine_type', 'WASH', ['WASH' => 'เครื่องซัก', 'DRY' => 'เครื่องอบ'], ['class' => 'form-select']) ?></div>
                     <div class="col-6 col-md-3"><label class="form-label">กำลังเครื่อง (กก.)</label><?= Html::input('number', 'capacity_kg', '', ['class' => 'form-control', 'step' => '0.001', 'min' => '0.001', 'required' => true]) ?></div>
                     <div class="col-12 col-md-3"><?= Html::submitButton('เชื่อมครุภัณฑ์', ['class' => 'btn btn-primary rounded-3 w-100']) ?></div>

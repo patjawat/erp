@@ -10,6 +10,7 @@ use yii\db\Query;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\Response;
 
 class ProcessingController extends Controller
 {
@@ -19,8 +20,8 @@ class ProcessingController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['index', 'new'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['index'], 'roles' => ['laundry.approve']],
+                    ['allow' => true, 'actions' => ['index', 'new', 'asset-search'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['index', 'asset-search'], 'roles' => ['laundry.approve']],
                     ['allow' => true, 'actions' => ['register-machine', 'start', 'finish', 'abort', 'request-recovery'], 'roles' => ['laundry.manage']],
                     ['allow' => true, 'actions' => ['approve-recovery'], 'roles' => ['laundry.approve']],
                 ],
@@ -109,13 +110,30 @@ class ProcessingController extends Controller
         return $this->render('new', compact('stage', 'linenClass', 'mode', 'machines', 'sources'));
     }
 
+    /** ค้นหาครุภัณฑ์จากระบบทรัพย์สิน (สำหรับ Select2 ajax) */
+    public function actionAssetSearch(string $q = '')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $q = trim($q);
+        $rows = (new Query())->select(['id', 'code', 'asset_name'])
+            ->from(Asset::tableName())
+            ->andFilterWhere(['or', ['like', 'code', $q], ['like', 'asset_name', $q]])
+            ->orderBy(['code' => SORT_ASC])->limit(20)->all();
+        $results = [];
+        foreach ($rows as $r) {
+            $label = trim(($r['code'] ? $r['code'] . ' · ' : '') . ($r['asset_name'] ?? ''));
+            $results[] = ['id' => (int) $r['id'], 'text' => $label ?: ('#' . $r['id'])];
+        }
+        return ['results' => $results];
+    }
+
     public function actionRegisterMachine()
     {
         try {
-            $code = trim((string) Yii::$app->request->post('asset_code'));
-            $asset = Asset::findOne(['code' => $code]);
+            $assetId = (int) Yii::$app->request->post('asset_id');
+            $asset = $assetId ? Asset::findOne($assetId) : Asset::findOne(['code' => trim((string) Yii::$app->request->post('asset_code'))]);
             if (!$asset) {
-                throw new InvalidArgumentException('ไม่พบเลขครุภัณฑ์นี้');
+                throw new InvalidArgumentException('ไม่พบครุภัณฑ์นี้ในระบบทรัพย์สิน');
             }
             (new ProcessingService())->registerMachine((int) $asset->id,
                 (string) Yii::$app->request->post('machine_type'),
