@@ -35,8 +35,8 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
                 <i class="bi bi-shop me-1"></i>คลังผ้า
             </button>
             <ul class="dropdown-menu">
-                <li><span class="dropdown-item disabled"><i class="bi bi-building me-2"></i>คลังหลัก (เฟส 4)</span></li>
-                <li><span class="dropdown-item disabled"><i class="bi bi-diagram-3 me-2"></i>คลังย่อยหน่วยงาน (เฟส 4)</span></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/laundry/stock/main']) ?>"><i class="bi bi-building me-2"></i>คลังหลัก</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/laundry/stock/sub']) ?>"><i class="bi bi-diagram-3 me-2"></i>คลังย่อยหน่วยงาน</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/annual-count/index']) ?>"><i class="bi bi-calendar-check me-2"></i>สอบยอดสิ้นปี</a></li>
             </ul>
