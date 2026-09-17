@@ -110,5 +110,6 @@ $modules['qms'] = ['class' => 'app\modules\qms\Module'];  // ระบบติ�
 $modules['flowchart'] = ['class' => 'app\modules\flowchart\Module'];  // เครื่องมือสร้างผังกระบวนการ (ป้อนขั้นตอน -> ผัง + เอกสาร)
 $modules['km'] = ['class' => 'app\modules\km\Module'];  // คลังกิจกรรม/หลักฐานการดำเนินงาน (Knowledge Management)
 $modules['complaint'] = ['class' => 'app\modules\complaint\Module'];  // ระบบรับเรื่องร้องเรียน (workflow 5 ขั้น)
+$modules['ha12'] = ['class' => 'app\modules\ha12\Module'];  // HA12-PCT ระบบทบทวน 12 กิจกรรม + สรุปประเมินโดย PCT
 $modules['tools'] = ['class' => 'app\modules\tools\Module'];  // หน้า hub รวมเครื่องมือ (SWOT, ผังกระบวนการ, ฯลฯ)
 return $modules;

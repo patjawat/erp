@@ -311,6 +311,9 @@ $config = [
             // Complaint: ระบบรับเรื่องร้องเรียน — controller ใช้ roles=['@'] แล้ว guard สิทธิ์จริง
             // ผ่าน ComplaintService (ทีมศูนย์ฯ = admin/role complaint ; ผู้ใช้ทั่วไป = เฉพาะสายหน่วยตนเอง)
             'complaint/*',
+            // HA12-PCT: ระบบทบทวน 12 กิจกรรม (เฟส 0 โครง) — controller ใช้ roles=['@']
+            // เฟสถัดไปจะคุมขอบเขตหน่วยงาน (owner=tree.id) ภายใน controller เอง
+            'ha12/*',
             // SWOT & SOAR: เครื่องมือวิเคราะห์เชิงกลยุทธ์ (standalone) — controller ใช้ roles=['@']
             'swot/*',
             // เครื่องมือ (hub) + ผังกระบวนการ — เปิดให้ผู้ล็อกอินทุกคน controller ใช้ roles=['@']
