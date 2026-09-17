@@ -1,9 +1,6 @@
 <?php
 
-use kartik\widgets\Select2;
 use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\JsExpression;
 
 $this->title = 'รอบซัก–อบ';
 $canManage = Yii::$app->user->can('laundry.manage');
@@ -23,55 +20,6 @@ $canApprove = Yii::$app->user->can('laundry.approve');
     <?php foreach (['error' => 'danger', 'success' => 'success'] as $key => $class): ?>
         <?php if (Yii::$app->session->hasFlash($key)): ?><div class="alert alert-<?= $class ?> d-flex align-items-center"><i class="bi bi-<?= $class === 'danger' ? 'exclamation-triangle' : 'check-circle' ?> me-2"></i><?= Html::encode(Yii::$app->session->getFlash($key)) ?></div><?php endif; ?>
     <?php endforeach; ?>
-
-    <div class="card border-0 shadow-sm rounded-4 mb-3">
-        <div class="card-header bg-body px-4 py-3"><h5 class="fw-semibold mb-0">เครื่องซักและเครื่องอบจากทะเบียนครุภัณฑ์</h5></div>
-        <div class="card-body">
-            <?php if ($canManage): ?>
-                <?= Html::beginForm(['register-machine'], 'post', ['class' => 'row g-3 align-items-end mb-3']) ?>
-                    <div class="col-12 col-md-4"><label class="form-label">ครุภัณฑ์ (จากระบบทรัพย์สิน)</label>
-                        <?= Select2::widget([
-                            'name' => 'asset_id',
-                            'data' => [],
-                            'options' => ['placeholder' => 'ค้นหาเลข/ชื่อครุภัณฑ์...', 'id' => 'lnd-asset-select'],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                                'minimumInputLength' => 1,
-                                'ajax' => [
-                                    'url' => Url::to(['/laundry/processing/asset-search']),
-                                    'dataType' => 'json',
-                                    'delay' => 250,
-                                    'data' => new JsExpression('function(params){ return {q: params.term}; }'),
-                                    'cache' => true,
-                                ],
-                            ],
-                        ]) ?>
-                    </div>
-                    <div class="col-6 col-md-2"><label class="form-label">ประเภท</label><?= Html::dropDownList('machine_type', 'WASH', ['WASH' => 'เครื่องซัก', 'DRY' => 'เครื่องอบ'], ['class' => 'form-select']) ?></div>
-                    <div class="col-6 col-md-3"><label class="form-label">กำลังเครื่อง (กก.)</label><?= Html::input('number', 'capacity_kg', '', ['class' => 'form-control', 'step' => '0.001', 'min' => '0.001', 'required' => true]) ?></div>
-                    <div class="col-12 col-md-3"><?= Html::submitButton('เชื่อมครุภัณฑ์', ['class' => 'btn btn-primary rounded-3 w-100']) ?></div>
-                <?= Html::endForm() ?>
-            <?php endif; ?>
-            <div class="table-responsive"><table class="table align-middle mb-0">
-                <thead><tr><th>เครื่อง</th><th>เลขครุภัณฑ์</th><th>กำลัง</th><th>สถานะครุภัณฑ์</th><th>รายละเอียด</th></tr></thead>
-                <tbody>
-                <?php foreach ($machines as $machine): ?>
-                    <tr>
-                        <td><?= $machine['machine_type'] === 'WASH' ? 'เครื่องซัก' : 'เครื่องอบ' ?></td>
-                        <td><?= Html::encode(($machine['asset_code'] ?: '#' . $machine['asset_id']) . ' · ' . ($machine['asset_name'] ?: '')) ?></td>
-                        <td><?= number_format((float) $machine['capacity_kg'], 3) ?> กก.</td>
-                        <td><?= Html::encode($machine['lifecycle_status'] ?: 'ไม่ระบุ') ?></td>
-                        <td class="d-flex flex-wrap gap-1">
-                            <?= Html::a('ทะเบียน/ประวัติซ่อม', ['/am/equip/view-asset', 'id' => $machine['asset_id']], ['class' => 'btn btn-sm btn-outline-secondary rounded-3']) ?>
-                            <?= Html::a('บำรุงรักษา', ['/am/maintenance/index', 'code' => $machine['asset_code']], ['class' => 'btn btn-sm btn-outline-secondary rounded-3']) ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (!$machines): ?><tr><td colspan="5" class="text-center text-muted py-4">ยังไม่เชื่อมเครื่องกับครุภัณฑ์</td></tr><?php endif; ?>
-                </tbody>
-            </table></div>
-        </div>
-    </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-header bg-body px-4 py-3"><h5 class="fw-semibold mb-0">รอบเครื่องล่าสุด</h5></div>

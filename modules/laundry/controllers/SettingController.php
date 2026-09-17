@@ -2,10 +2,12 @@
 
 namespace app\modules\laundry\controllers;
 
+use app\modules\am\models\Asset;
 use app\modules\hr\models\Organization;
 use app\modules\laundry\models\LaundryUnit;
 use app\modules\settings\models\OrgUnit;
 use Yii;
+use yii\db\Query;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -22,7 +24,7 @@ class SettingController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['unit'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['unit', 'machine'], 'roles' => ['laundry.view']],
                     ['allow' => true, 'actions' => ['unit-save', 'unit-delete'], 'roles' => ['laundry.manage']],
                 ],
             ],
@@ -31,6 +33,15 @@ class SettingController extends Controller
                 'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST']],
             ],
         ];
+    }
+
+    /** ตั้งค่าเครื่องซัก-อบ (เชื่อมครุภัณฑ์ + รายการเครื่อง) — ย้ายมาจากหน้าปฏิบัติงาน */
+    public function actionMachine()
+    {
+        $machines = (new Query())->select(['m.*', 'asset_name' => 'a.asset_name', 'asset_code' => 'a.code', 'lifecycle_status' => 'a.lifecycle_status'])
+            ->from(['m' => 'laundry_machine'])->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
+            ->orderBy(['m.machine_type' => SORT_ASC, 'a.code' => SORT_ASC])->all();
+        return $this->render('machine', compact('machines'));
     }
 
     public function actionUnit()

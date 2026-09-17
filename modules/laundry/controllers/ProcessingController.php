@@ -143,7 +143,7 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->redirect(['/laundry/setting/machine']);
     }
 
     public function actionStart()
