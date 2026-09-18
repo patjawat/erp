@@ -50,20 +50,37 @@ class CountController extends Controller
         $items = (new Query())->select(['id', 'item_name'])->from('laundry_item')
             ->where(['is_active' => 1])->orderBy(['item_name' => SORT_ASC])->all();
 
-        // สรุปต่อหน่วยงาน: จำนวนครั้งที่นับ + ผลนับล่าสุด (รวมชิ้น)
+        // สรุปต่อหน่วยงาน: จำนวนครั้ง + ผลนับล่าสุด (วันที่ / คนนับ / กี่ประเภท / รวมชิ้น)
         $summary = [];
         if ($treeIds) {
             $rows = (new Query())->select(['tree_id', 'times' => new Expression('COUNT(*)'), 'last_id' => new Expression('MAX(id)')])
                 ->from('laundry_unit_count')->where(['tree_id' => $treeIds])->groupBy('tree_id')->all();
             $lastIds = array_column($rows, 'last_id');
-            $lastTotals = $lastIds
-                ? (new Query())->select(['count_id', 'total' => new Expression('SUM(qty)')])
+            $lastHead = $lastIds
+                ? (new Query())->select(['id', 'counted_at', 'created_by'])->from('laundry_unit_count')->where(['id' => $lastIds])->indexBy('id')->all()
+                : [];
+            $lastLines = $lastIds
+                ? (new Query())->select(['count_id', 'total' => new Expression('SUM(qty)'), 'types' => new Expression('COUNT(*)')])
                     ->from('laundry_unit_count_line')->where(['count_id' => $lastIds])->groupBy('count_id')->indexBy('count_id')->all()
                 : [];
+            // ชื่อคนนับ (created_by = user_id) → fullname
+            $userIds = array_filter(array_column($lastHead, 'created_by'));
+            $staffNames = $userIds
+                ? \yii\helpers\ArrayHelper::map(
+                    \app\modules\hr\models\Employees::find()->select(['user_id', 'prefix', 'fname', 'lname'])->where(['user_id' => $userIds])->asArray()->all(),
+                    'user_id',
+                    static fn($e) => trim(($e['prefix'] ?? '') . ($e['fname'] ?? '') . ' ' . ($e['lname'] ?? ''))
+                )
+                : [];
             foreach ($rows as $r) {
+                $head = $lastHead[$r['last_id']] ?? null;
+                $line = $lastLines[$r['last_id']] ?? null;
                 $summary[$r['tree_id']] = [
                     'times' => (int) $r['times'],
-                    'latest' => (int) ($lastTotals[$r['last_id']]['total'] ?? 0),
+                    'latest' => (int) ($line['total'] ?? 0),
+                    'types' => (int) ($line['types'] ?? 0),
+                    'counted_at' => $head['counted_at'] ?? null,
+                    'staff' => $head && $head['created_by'] ? ($staffNames[$head['created_by']] ?? '') : '',
                 ];
             }
         }

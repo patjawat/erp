@@ -57,7 +57,15 @@ $tones = ['success', 'primary', 'info', 'warning', 'danger', 'secondary'];
                             <div class="fw-bold lh-1 mb-1" style="font-size:1.9rem;color:var(--bs-<?= $tone ?>)"><?= Html::encode($u->abbr ?: mb_substr($names[$u->tree_id] ?? '?', 0, 4)) ?></div>
                             <div class="small text-body-secondary text-truncate mb-2" title="<?= Html::encode($names[$u->tree_id] ?? '') ?>"><?= Html::encode($names[$u->tree_id] ?? ('#' . $u->tree_id)) ?></div>
                             <div class="small text-body-secondary">ตรวจนับ <span class="fw-semibold text-body"><?= (int) ($s['times'] ?? 0) ?></span> ครั้ง</div>
-                            <div class="small text-body-secondary">ล่าสุด <?= number_format((int) ($s['latest'] ?? 0)) ?> ชิ้น</div>
+                            <?php if ($s && !empty($s['counted_at'])): ?>
+                                <div class="small text-body-secondary">ล่าสุด <?= Html::encode(ThaiDateHelper::formatThaiDate($s['counted_at'])) ?></div>
+                                <div class="small"><span class="fw-semibold"><?= (int) $s['types'] ?></span> ประเภท · <span class="fw-semibold"><?= number_format((int) $s['latest']) ?></span> ชิ้น</div>
+                                <?php if (!empty($s['staff'])): ?>
+                                    <div class="small text-body-secondary text-truncate" title="<?= Html::encode($s['staff']) ?>"><i class="bi bi-person me-1"></i><?= Html::encode($s['staff']) ?></div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <div class="small text-body-secondary">ยังไม่เคยนับ</div>
+                            <?php endif; ?>
                         </div>
                     </<?= $tag ?>>
                 </div>
