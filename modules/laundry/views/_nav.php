@@ -18,8 +18,8 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
         <a href="<?= Url::to(['/laundry/collection/index']) ?>" class="<?= $btn('collection') ?>">
             <i class="bi bi-basket3 me-1"></i>รับผ้า
         </a>
-        <a href="<?= Url::to(['/laundry/collection/inspect']) ?>" class="<?= $btn('inspect') ?>">
-            <i class="bi bi-clipboard-check me-1"></i>ตรวจรับผ้า
+        <a href="<?= Url::to(['/laundry/count/index']) ?>" class="<?= $btn('inspect') ?>">
+            <i class="bi bi-clipboard-check me-1"></i>ตรวจนับผ้า
         </a>
         <a href="<?= Url::to(['/laundry/processing/index', 'stage' => 'WASH']) ?>" class="<?= $btn('wash') ?>">
             <i class="bi bi-droplet-half me-1"></i>ซักผ้า
