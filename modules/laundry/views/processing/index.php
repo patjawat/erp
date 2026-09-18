@@ -2,14 +2,18 @@
 
 use yii\helpers\Html;
 
-$this->title = 'รอบซัก–อบ';
+/** @var string $stage */
+$isWash = ($stage ?? 'WASH') === 'WASH';
+$pageIcon = $isWash ? 'bi-droplet-half' : 'bi-wind';
+$pageTone = $isWash ? 'primary' : 'warning';
+$this->title = $isWash ? 'ซักผ้า' : 'อบผ้า';
 $canManage = Yii::$app->user->can('laundry.manage');
 $canApprove = Yii::$app->user->can('laundry.approve');
 ?>
 <div class="container-fluid py-3">
-    <?= $this->render('../_nav', ['active' => 'processing']) ?>
+    <?= $this->render('../_nav', ['active' => $isWash ? 'wash' : 'dry']) ?>
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
-        <div><h1 class="h4 fw-bold mb-1"><i class="bi bi-moisture me-2"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">แตะเครื่องเพื่อเริ่มรอบ — ใส่กลุ่มผ้าและน้ำหนัก (กิโลกรัม)</div></div>
+        <div><h1 class="h4 fw-bold mb-1"><i class="bi <?= $pageIcon ?> me-2 text-<?= $pageTone ?>"></i><?= Html::encode($this->title) ?></h1><div class="text-body-secondary">แตะ<?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?>เพื่อเริ่มรอบ — ใส่กลุ่มผ้าและน้ำหนัก (กิโลกรัม)</div></div>
     </div>
     <?php foreach (['error' => 'danger', 'success' => 'success'] as $key => $class): ?>
         <?php if (Yii::$app->session->hasFlash($key)): ?><div class="alert alert-<?= $class ?> d-flex align-items-center"><i class="bi bi-<?= $class === 'danger' ? 'exclamation-triangle' : 'check-circle' ?> me-2"></i><?= Html::encode(Yii::$app->session->getFlash($key)) ?></div><?php endif; ?>
@@ -22,17 +26,17 @@ $canApprove = Yii::$app->user->can('laundry.approve');
     <?php if ($canManage): ?>
         <?php if (!$machines): ?>
             <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body text-center text-body-secondary py-4">
-                <i class="bi bi-cpu fs-3 d-block mb-2"></i>ยังไม่มีเครื่อง — เพิ่มที่ <?= Html::a('ตั้งค่า → เครื่องซัก–อบ', ['/laundry/setting/machine'], ['class' => 'fw-semibold']) ?>
+                <i class="bi bi-cpu fs-3 d-block mb-2"></i>ยังไม่มี<?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?> — เพิ่มที่ <?= Html::a('ตั้งค่า → เครื่องซัก–อบ', ['/laundry/setting/machine'], ['class' => 'fw-semibold']) ?>
             </div></div>
         <?php else: ?>
-            <div class="row g-3 mb-3">
-                <?php foreach ($machines as $m): $isWash = $m['machine_type'] === 'WASH'; $tone = $isWash ? 'primary' : 'info'; $run = $runningByAsset[$m['asset_id']] ?? null; ?>
-                    <div class="col-6 col-md-4 col-lg-3">
+            <div class="row g-4 mb-4">
+                <?php foreach ($machines as $idx => $m): $run = $runningByAsset[$m['asset_id']] ?? null; ?>
+                    <div class="col-12 col-sm-6 col-lg-4">
                         <?php
                         $attrs = [
-                            'class' => 'card border-0 shadow-sm rounded-4 h-100 w-100 text-start',
-                            'style' => 'background:var(--bs-' . $tone . '-bg-subtle,#f8f9fa);border-top:4px solid var(--bs-' . $tone . ',#0d6efd) !important',
-                            'data-asset' => $m['asset_id'], 'data-stage' => $m['machine_type'],
+                            'class' => 'card border-0 shadow-sm rounded-4 h-100 w-100',
+                            'style' => 'background:var(--bs-' . $pageTone . '-bg-subtle,#f8f9fa);border:2px solid var(--bs-' . $pageTone . '-border-subtle,#dee2e6) !important',
+                            'data-asset' => $m['asset_id'], 'data-stage' => $stage,
                             'data-name' => ($m['asset_code'] ?: '#' . $m['asset_id']) . ' · ' . ($m['asset_name'] ?: ''),
                             'data-cap' => (float) $m['capacity_kg'],
                         ];
@@ -40,16 +44,20 @@ $canApprove = Yii::$app->user->can('laundry.approve');
                         $tag = $run ? 'div' : 'button';
                         ?>
                         <<?= $tag ?> <?= Html::renderTagAttributes($attrs) ?>>
-                            <div class="card-body py-3 text-center">
-                                <i class="bi bi-<?= $isWash ? 'droplet' : 'wind' ?> fs-1" style="color:var(--bs-<?= $tone ?>)"></i>
-                                <div class="fw-bold mt-1"><?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?></div>
-                                <div class="small text-body-secondary text-truncate" title="<?= Html::encode($m['asset_name'] ?? '') ?>"><?= Html::encode($m['asset_code'] ?: '#' . $m['asset_id']) ?></div>
-                                <div class="small text-body-secondary">กำลัง <?= number_format((float) $m['capacity_kg'], 0) ?> กก.</div>
-                                <?php if ($run): ?>
-                                    <span class="badge text-bg-warning mt-2"><i class="bi bi-arrow-repeat me-1"></i>กำลังทำงาน</span>
-                                <?php else: ?>
-                                    <span class="badge text-bg-success mt-2"><i class="bi bi-play-fill"></i> พร้อมเริ่ม</span>
-                                <?php endif; ?>
+                            <div class="card-body d-flex align-items-center gap-3 p-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-<?= $pageTone ?> text-white flex-shrink-0" style="width:72px;height:72px">
+                                    <i class="bi <?= $pageIcon ?>" style="font-size:2.4rem"></i>
+                                </span>
+                                <div class="text-start flex-grow-1" style="min-width:0">
+                                    <div class="fw-bold fs-5"><?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?> <?= $idx + 1 ?></div>
+                                    <div class="small text-body-secondary text-truncate" title="<?= Html::encode($m['asset_name'] ?? '') ?>"><?= Html::encode($m['asset_code'] ?: '#' . $m['asset_id']) ?></div>
+                                    <div class="small text-body-secondary mb-1">กำลัง <?= number_format((float) $m['capacity_kg'], 0) ?> กก.</div>
+                                    <?php if ($run): ?>
+                                        <span class="badge text-bg-warning"><i class="bi bi-arrow-repeat me-1"></i>กำลังทำงาน</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-success"><i class="bi bi-play-fill"></i> แตะเพื่อเริ่มรอบ</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </<?= $tag ?>>
                     </div>

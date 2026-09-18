@@ -37,16 +37,22 @@ class ProcessingController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionIndex(string $stage = 'WASH')
     {
+        if (!in_array($stage, ['WASH', 'DRY'], true)) {
+            $stage = 'WASH';
+        }
         $machines = (new Query())->select(['m.*', 'asset_name' => 'a.asset_name', 'asset_code' => 'a.code', 'lifecycle_status' => 'a.lifecycle_status'])
             ->from(['m' => 'laundry_machine'])->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
-            ->orderBy(['m.machine_type' => SORT_ASC, 'a.code' => SORT_ASC])->all();
+            ->where(['m.machine_type' => $stage])
+            ->orderBy(['a.code' => SORT_ASC])->all();
         $batches = (new Query())->select(['b.*', 'asset_name' => 'a.asset_name', 'asset_code' => 'a.code'])
             ->from(['b' => 'laundry_processing_batch'])->innerJoin(['a' => Asset::tableName()], 'a.id = b.asset_id')
+            ->where(['b.stage' => $stage])
             ->orderBy(['b.id' => SORT_DESC])->limit(50)->all();
         $recoveries = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'stage' => 'b.stage', 'linen_class' => 'b.linen_class', 'input_kg' => 'b.input_kg'])
             ->from(['r' => 'laundry_batch_recovery'])->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = r.aborted_batch_id')
+            ->where(['b.stage' => $stage])
             ->orderBy(['r.id' => SORT_DESC])->limit(50)->all();
         $recoveryByBatch = [];
         $visibleBatchIds = array_column($batches, 'id');
@@ -55,7 +61,7 @@ class ProcessingController extends Controller
         foreach ($existingRecoveries as $recovery) {
             $recoveryByBatch[$recovery['aborted_batch_id']] = $recovery;
         }
-        return $this->render('index', compact('machines', 'batches', 'recoveries', 'recoveryByBatch'));
+        return $this->render('index', compact('machines', 'batches', 'recoveries', 'recoveryByBatch', 'stage'));
     }
 
     public function actionNew(string $stage = 'WASH', string $linenClass = 'SOILED', string $mode = 'NORMAL')
