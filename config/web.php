@@ -300,6 +300,8 @@ $config = [
             'jd/employee-jd/review-inbox',
             // Service Profile: controller ตรวจ RBAC และขอบเขตหน่วยงานภายในทุก action
             'service-profile/*',
+            // Laundry: controller ตรวจ laundry.view/manage/approve ทุก action (ด่านกลางปล่อยผ่าน)
+            'laundry/*',
             // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
             'iac-risk/*',
             // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
