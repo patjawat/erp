@@ -20,11 +20,13 @@ class ProcurementController extends Controller
 
     public function actionIndex()
     {
-        $year = filter_var(Yii::$app->request->get('year', date('Y')), FILTER_VALIDATE_INT);
-        if ($year === false || $year < 2000 || $year > 2200) {
+        // รับปีเป็น พ.ศ. แล้วแปลงเป็น ค.ศ. (count_year เก็บเป็น ค.ศ.)
+        $year = filter_var(Yii::$app->request->get('year', (int) date('Y') + 543), FILTER_VALIDATE_INT);
+        $gy = ($year ?: 0) - 543;
+        if ($year === false || $gy < 2000 || $gy > 2200) {
             throw new BadRequestHttpException('ปีสอบยอดไม่ถูกต้อง');
         }
-        $rows = (new ProcurementGapService())->report($year);
+        $rows = (new ProcurementGapService())->report($gy);
         return $this->render('index', compact('year', 'rows'));
     }
 }

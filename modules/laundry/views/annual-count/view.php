@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 
-$this->title = 'สอบยอดผ้าปี ' . $count['count_year'];
+$this->title = 'สอบยอดผ้าปี ' . ((int) $count['count_year'] + 543);
 $canManage = $count['status'] === 'OPEN' && Yii::$app->user->can('laundry.manage');
 $canApprove = $count['status'] === 'OPEN' && Yii::$app->user->can('laundry.approve')
     && (int) $count['created_by'] !== (int) Yii::$app->user->id;

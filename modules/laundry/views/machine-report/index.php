@@ -11,7 +11,7 @@ $this->title = 'รายงานรอบเครื่องซัก–อ�
     </div>
     <div class="alert alert-info">อัตราบรรทุก = น้ำหนักเข้าของรอบที่เสร็จ ÷ (กำลังเครื่อง × จำนวนรอบที่เสร็จ) ไม่ใช่อัตราเครื่องพร้อมใช้ ส่วน “รอบหยุด” และน้ำหนักที่ได้รับผลกระทบไม่ใช่ระยะเวลาหยุดซ่อม ซึ่งต้องอ่านจากงานครุภัณฑ์/ใบซ่อมแยกต่างหาก</div>
     <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex align-items-end gap-2 mb-3']) ?>
-        <div><label class="form-label">ปี ค.ศ.</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2000, 'max' => 2200, 'required' => true]) ?></div>
+        <div><label class="form-label">ปี พ.ศ.</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2543, 'max' => 2743, 'required' => true]) ?></div>
         <?= Html::submitButton('แสดงรายงาน', ['class' => 'btn btn-primary']) ?>
     <?= Html::endForm() ?>
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">

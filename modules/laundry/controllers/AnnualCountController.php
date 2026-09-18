@@ -60,7 +60,7 @@ class AnnualCountController extends Controller
     {
         try {
             $id = (new AnnualCountService())->open((int) Yii::$app->request->post('department_id'),
-                (int) Yii::$app->request->post('count_year'), $this->userId());
+                (int) Yii::$app->request->post('count_year') - 543, $this->userId());
             return $this->redirect(['view', 'id' => $id]);
         } catch (\Throwable $e) {
             return $this->fail($e, ['index']);

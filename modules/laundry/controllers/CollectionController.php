@@ -197,12 +197,14 @@ class CollectionController extends Controller
 
     public function actionReport()
     {
-        $year = (int) Yii::$app->request->get('year', date('Y'));
-        if ($year < 2000 || $year > 2200) {
+        // ปีเป็น พ.ศ. (มาตรฐาน ERP) แปลงเป็น ค.ศ. สำหรับช่วงวันที่
+        $year = (int) Yii::$app->request->get('year', (int) date('Y') + 543);
+        $gy = $year - 543;
+        if ($gy < 2000 || $gy > 2200) {
             throw new InvalidArgumentException('ปีไม่ถูกต้อง');
         }
         $departmentId = (int) Yii::$app->request->get('department_id');
-        $rows = (new CollectionReport())->monthly($year . '-01-01', $year . '-12-31', $departmentId ?: null);
+        $rows = (new CollectionReport())->monthly($gy . '-01-01', $gy . '-12-31', $departmentId ?: null);
         $departments = Organization::find()->select(['name', 'id'])->orderBy(['name' => SORT_ASC])->indexBy('id')->column();
         return $this->render('report', compact('rows', 'year', 'departmentId', 'departments'));
     }

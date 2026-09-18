@@ -16,7 +16,7 @@ foreach ($rows as $row) {
     </div>
     <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body">
         <?= Html::beginForm(['report'], 'get', ['class' => 'row g-3 align-items-end']) ?>
-            <div class="col-12 col-sm-3"><label class="form-label">ปี ค.ศ.</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2000, 'max' => 2200]) ?></div>
+            <div class="col-12 col-sm-3"><label class="form-label">ปี พ.ศ.</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2543, 'max' => 2743]) ?></div>
             <div class="col-12 col-sm-6"><label class="form-label">หน่วยงาน</label><?= Html::dropDownList('department_id', $departmentId ?: '', $departments, ['prompt' => 'ทุกหน่วยงาน', 'class' => 'form-select']) ?></div>
             <div class="col-12 col-sm-3"><?= Html::submitButton('แสดงรายงาน', ['class' => 'btn btn-primary rounded-3 w-100']) ?></div>
         <?= Html::endForm() ?>

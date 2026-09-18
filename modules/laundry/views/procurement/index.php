@@ -11,7 +11,7 @@ $this->title = 'ช่องว่างผ้าสำหรับวางแ�
     </div>
     <div class="alert alert-info">เป็นตัวเลขเบื้องต้นเพื่อวางแผนเท่านั้น ไม่ใช่ใบขอซื้อ: ยอดสอบนับเป็นภาพ ณ วันตัดยอดของแต่ละหน่วยงาน แต่ยอดคลังสะอาดเป็นยอดปัจจุบัน ยังไม่หักใบสั่งซื้อค้างรับ ยอดสำรองกลาง ผ้ารอซ่อม หรือความต้องการขยายบริการ ต้องตรวจทานก่อนเสนอพัสดุ</div>
     <?= Html::beginForm(['index'], 'get', ['class' => 'd-flex gap-2 align-items-end mb-3']) ?>
-        <div><label class="form-label">ปีสอบยอด (ค.ศ.)</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2000, 'max' => 2200, 'required' => true]) ?></div>
+        <div><label class="form-label">ปีสอบยอด (พ.ศ.)</label><?= Html::input('number', 'year', $year, ['class' => 'form-control', 'min' => 2543, 'max' => 2743, 'required' => true]) ?></div>
         <?= Html::submitButton('แสดงรายงาน', ['class' => 'btn btn-primary']) ?>
     <?= Html::endForm() ?>
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden"><div class="table-responsive"><table class="table align-middle mb-0">
