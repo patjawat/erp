@@ -4,6 +4,7 @@ namespace app\modules\laundry\controllers;
 
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Organization;
+use app\modules\laundry\models\LaundryItem;
 use app\modules\laundry\models\LaundryUnit;
 use app\modules\settings\models\OrgUnit;
 use Yii;
@@ -24,15 +25,59 @@ class SettingController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['unit', 'machine'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete', 'machine-save', 'machine-delete'], 'roles' => ['laundry.manage']],
+                    ['allow' => true, 'actions' => ['unit', 'machine', 'item'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete', 'machine-save', 'machine-delete', 'item-save', 'item-delete'], 'roles' => ['laundry.manage']],
                 ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST'], 'machine-save' => ['POST'], 'machine-delete' => ['POST']],
+                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST'], 'machine-save' => ['POST'], 'machine-delete' => ['POST'], 'item-save' => ['POST'], 'item-delete' => ['POST']],
             ],
         ];
+    }
+
+    /** ตั้งค่าประเภทผ้า (ผ้าห่ม/ผ้าปูเตียง/เสื้อ/กางเกง ฯลฯ) */
+    public function actionItem()
+    {
+        $items = LaundryItem::find()->orderBy(['is_active' => SORT_DESC, 'item_name' => SORT_ASC])->all();
+        return $this->render('item', compact('items'));
+    }
+
+    public function actionItemSave()
+    {
+        $req = Yii::$app->request;
+        $id = (int) $req->post('id');
+        $model = $id ? (LaundryItem::findOne($id) ?: new LaundryItem()) : new LaundryItem();
+        $model->item_name = trim((string) $req->post('item_name'));
+        $model->is_active = $req->post('is_active') ? 1 : 0;
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกประเภทผ้าแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', implode(' ', $model->getFirstErrors()) ?: 'บันทึกไม่สำเร็จ');
+        }
+        return $this->redirect(['item']);
+    }
+
+    public function actionItemDelete()
+    {
+        $id = (int) Yii::$app->request->post('id');
+        $model = LaundryItem::findOne($id);
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบประเภทผ้า');
+        }
+        // ถ้ามีการใช้งานแล้ว (เดินสต็อก/ตรวจนับ/ยอดตั้งต้น) ให้ปิดใช้แทนลบ (กันข้อมูลอ้างอิงพัง)
+        $used = (new Query())->from('laundry_piece_event')->where(['item_id' => $id])->exists()
+            || (new Query())->from('laundry_unit_count_line')->where(['item_id' => $id])->exists()
+            || (new Query())->from('laundry_par')->where(['item_id' => $id])->exists();
+        if ($used) {
+            $model->is_active = 0;
+            $model->save(false);
+            Yii::$app->session->setFlash('success', 'ประเภทผ้านี้มีการใช้งานแล้ว จึงปิดใช้งานแทนการลบ');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบประเภทผ้าแล้ว');
+        }
+        return $this->redirect(['item']);
     }
 
     /** ตั้งค่าเครื่องซัก-อบ (เชื่อมครุภัณฑ์ + รายการเครื่อง) — ย้ายมาจากหน้าปฏิบัติงาน */

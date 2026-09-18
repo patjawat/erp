@@ -37,7 +37,7 @@ $tones = ['success', 'primary', 'info', 'warning', 'danger', 'secondary'];
         </div></div>
     <?php elseif (!$items): ?>
         <div class="card border-0 shadow-sm rounded-4"><div class="card-body text-center text-body-secondary py-5">
-            <i class="bi bi-collection fs-1 d-block mb-3"></i>ยังไม่มีประเภทผ้า — เพิ่มที่ <?= Html::a('ตั้งค่า → ประเภทผ้า', ['/laundry/inventory/index', 'section' => 'setup'], ['class' => 'fw-semibold']) ?> ก่อน
+            <i class="bi bi-collection fs-1 d-block mb-3"></i>ยังไม่มีประเภทผ้า — เพิ่มที่ <?= Html::a('ตั้งค่า → ประเภทผ้า', ['/laundry/setting/item'], ['class' => 'fw-semibold']) ?> ก่อน
         </div></div>
     <?php else: ?>
         <div class="row g-3">
