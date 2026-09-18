@@ -113,19 +113,14 @@ class DashboardController extends Controller
             $backlog[$label] = $this->locationBalance($loc);
         }
 
-        // ---- คลังหลักคงเหลือ รายประเภท (5 อันดับแรก) ----
+        // ---- คลังหลักคงเหลือ รายประเภท (จากตารางยอดคงเหลือ) ----
         $cleanByType = (new Query())
-            ->select([
-                'name' => 'i.item_name',
-                'qty' => new Expression("COALESCE(SUM(CASE WHEN e.to_location='CLEAN' THEN e.qty ELSE 0 END),0)"
-                    . " - COALESCE(SUM(CASE WHEN e.from_location='CLEAN' THEN e.qty ELSE 0 END),0)"),
-            ])
-            ->from(['e' => 'laundry_piece_event'])
-            ->innerJoin(['i' => 'laundry_item'], 'i.id = e.item_id')
-            ->where(['e.status' => 'CONFIRMED'])
-            ->groupBy(['i.id', 'i.item_name'])
-            ->having(new Expression('qty > 0'))
-            ->orderBy(['qty' => SORT_DESC])
+            ->select(['name' => 'i.item_name', 'qty' => 'b.qty'])
+            ->from(['b' => 'laundry_stock_balance'])
+            ->innerJoin(['i' => 'laundry_item'], 'i.id = b.item_id')
+            ->where(['b.location' => 'CLEAN', 'b.department_id' => 0])
+            ->andWhere(['>', 'b.qty', 0])
+            ->orderBy(['b.qty' => SORT_DESC])
             ->limit(8)->all();
 
         // ---- หน่วยงานที่รับผ้ามากสุด (กก.) ----
@@ -150,20 +145,9 @@ class DashboardController extends Controller
         ));
     }
 
-    /** ยอดคงเหลือสุทธิใน location หนึ่ง (ชิ้น) = เข้า - ออก (เฉพาะ CONFIRMED) */
+    /** ยอดคงเหลือสุทธิใน location หนึ่ง (ชิ้น) — จากตารางยอดคงเหลือ */
     private function locationBalance(string $loc): int
     {
-        $row = (new Query())
-            ->select([
-                'bal' => new Expression(
-                    "COALESCE(SUM(CASE WHEN to_location=:l THEN qty ELSE 0 END),0)"
-                    . " - COALESCE(SUM(CASE WHEN from_location=:l THEN qty ELSE 0 END),0)"
-                ),
-            ])
-            ->from('laundry_piece_event')
-            ->where(['status' => 'CONFIRMED'])
-            ->addParams([':l' => $loc])
-            ->one();
-        return (int) ($row['bal'] ?? 0);
+        return \app\modules\laundry\services\LaundryBalance::locationTotal($loc);
     }
 }

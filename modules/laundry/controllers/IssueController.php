@@ -5,6 +5,7 @@ namespace app\modules\laundry\controllers;
 use app\components\AppHelper;
 use app\modules\hr\models\Organization;
 use app\modules\laundry\models\LaundryUnit;
+use app\modules\laundry\services\LaundryBalance;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
@@ -99,7 +100,7 @@ class IssueController extends Controller
                 ->select([
                     'item_id' => 'p.item_id', 'item_name' => 'i.item_name',
                     'target_qty' => 'p.target_qty', 'min_qty' => 'p.min_qty',
-                    'main_balance' => new Expression("COALESCE((SELECT SUM(CASE WHEN e.to_location='CLEAN' THEN e.qty ELSE 0 END) - SUM(CASE WHEN e.from_location='CLEAN' THEN e.qty ELSE 0 END) FROM laundry_piece_event e WHERE e.item_id=p.item_id AND e.status='CONFIRMED'),0)"),
+                    'main_balance' => new Expression("COALESCE((SELECT sb.qty FROM laundry_stock_balance sb WHERE sb.item_id=p.item_id AND sb.location='CLEAN' AND sb.department_id=0),0)"),
                     'counted' => new Expression($countId
                         ? "(SELECT ucl.qty FROM laundry_unit_count_line ucl WHERE ucl.count_id=" . $countId . " AND ucl.item_id=p.item_id LIMIT 1)"
                         : "(SELECT ucl.qty FROM laundry_unit_count_line ucl JOIN laundry_unit_count uc ON uc.id=ucl.count_id WHERE ucl.item_id=p.item_id AND uc.tree_id=p.department_id ORDER BY uc.counted_at DESC, uc.id DESC LIMIT 1)"),
@@ -159,14 +160,14 @@ class IssueController extends Controller
                 $db->createCommand()->insert('laundry_issue_line', [
                     'issue_id' => $issueId, 'item_id' => $itemId, 'need_qty' => $v['need'], 'issue_qty' => $v['issue'],
                 ])->execute();
-                // ตัดคลังหลัก: piece_event ISSUE (CLEAN → WARD ของหน่วยงาน)
-                $db->createCommand()->insert('laundry_piece_event', [
+                // ตัดคลังหลัก: piece_event ISSUE (CLEAN → WARD ของหน่วยงาน) + อัปเดตยอดคงเหลือ
+                LaundryBalance::applyEvent($db, [
                     'event_no' => 'LP-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4))),
                     'event_type' => 'ISSUE', 'item_id' => $itemId, 'qty' => $v['issue'],
                     'from_location' => 'CLEAN', 'to_location' => 'WARD', 'to_department_id' => $treeId,
                     'status' => 'CONFIRMED', 'occurred_at' => date('Y-m-d H:i:s', $ts),
                     'created_by' => $uid, 'approved_at' => $now, 'approved_by' => $uid,
-                ])->execute();
+                ]);
             }
             $tx->commit();
             Yii::$app->session->setFlash('success', 'บันทึกการส่งผ้าแล้ว');

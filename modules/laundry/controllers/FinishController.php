@@ -3,6 +3,7 @@
 namespace app\modules\laundry\controllers;
 
 use app\components\AppHelper;
+use app\modules\laundry\services\LaundryBalance;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
@@ -55,11 +56,8 @@ class FinishController extends Controller
             ->groupBy('f.id')->orderBy(['f.id' => SORT_DESC])->all();
         $staffNames = $this->staffNames(array_filter(array_column($finishes, 'created_by')));
 
-        // ยอดคลังหลักปัจจุบัน (รวมชิ้น)
-        $cleanTotal = (int) (new Query())->from('laundry_piece_event')
-            ->where(['status' => 'CONFIRMED'])
-            ->select(new Expression("COALESCE(SUM(CASE WHEN to_location='CLEAN' THEN qty ELSE 0 END) - SUM(CASE WHEN from_location='CLEAN' THEN qty ELSE 0 END),0)"))
-            ->scalar();
+        // ยอดคลังหลักปัจจุบัน (อ่านจากตารางยอดคงเหลือ — เร็วคงที่)
+        $cleanTotal = LaundryBalance::cleanTotal();
 
         return $this->render('index', compact('date', 'items', 'dryBatches', 'finishes', 'staffNames', 'cleanTotal'));
     }
@@ -102,15 +100,15 @@ class FinishController extends Controller
                 $db->createCommand()->insert('laundry_finish_line', [
                     'finish_id' => $finishId, 'item_id' => $itemId, 'qty' => $q,
                 ])->execute();
-                // บวกเข้าคลังหลัก: piece_event PRODUCTION (EXTERNAL → CLEAN)
-                $db->createCommand()->insert('laundry_piece_event', [
+                // บวกเข้าคลังหลัก: piece_event PRODUCTION (EXTERNAL → CLEAN) + อัปเดตยอดคงเหลือ
+                LaundryBalance::applyEvent($db, [
                     'event_no' => 'LP-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4))),
                     'event_type' => 'PRODUCTION', 'item_id' => $itemId, 'qty' => $q,
                     'from_location' => 'EXTERNAL', 'to_location' => 'CLEAN',
                     'processing_batch_id' => $dryBatchId,
                     'status' => 'CONFIRMED', 'occurred_at' => date('Y-m-d H:i:s', $ts),
                     'created_by' => $uid, 'approved_at' => $now, 'approved_by' => $uid,
-                ])->execute();
+                ]);
             }
             $tx->commit();
             Yii::$app->session->setFlash('success', 'บันทึกผ้าสะอาดเข้าคลังหลักแล้ว');

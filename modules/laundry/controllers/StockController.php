@@ -38,20 +38,17 @@ class StockController extends Controller
     /** คลังหลัก: ยอดผ้าสะอาดคงเหลือรายประเภท (CLEAN) */
     public function actionMain()
     {
+        // อ่านจากตารางยอดคงเหลือ (perpetual) — เร็วคงที่ ไม่ SUM ประวัติ
         $rows = (new Query())
             ->select([
                 'item_id' => 'i.id',
                 'item_name' => 'i.item_name',
                 'item_code' => 'i.item_code',
-                'balance' => new Expression(
-                    "COALESCE(SUM(CASE WHEN e.to_location='CLEAN' AND e.status='CONFIRMED' THEN e.qty ELSE 0 END),0)"
-                    . " - COALESCE(SUM(CASE WHEN e.from_location='CLEAN' AND e.status='CONFIRMED' THEN e.qty ELSE 0 END),0)"
-                ),
+                'balance' => new Expression('COALESCE(b.qty,0)'),
             ])
             ->from(['i' => 'laundry_item'])
-            ->leftJoin(['e' => 'laundry_piece_event'], 'e.item_id = i.id')
+            ->leftJoin(['b' => 'laundry_stock_balance'], "b.item_id = i.id AND b.location='CLEAN' AND b.department_id=0")
             ->where(['i.is_active' => 1])
-            ->groupBy(['i.id', 'i.item_name', 'i.item_code'])
             ->orderBy(['i.item_name' => SORT_ASC])
             ->all();
         $total = array_sum(array_map(static fn($r) => (int) $r['balance'], $rows));
