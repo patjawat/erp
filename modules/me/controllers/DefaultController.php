@@ -3,6 +3,7 @@
 namespace app\modules\me\controllers;
 
 use app\components\AppHelper;
+use app\components\DocumentAccessPolicy;
 use app\components\UserHelper;
 use app\modules\appreciation\models\Appreciation;
 use app\modules\appreciation\models\AppreciationProgramYear;
@@ -75,21 +76,27 @@ class DefaultController extends Controller
             $employeeNames = "'comment_emp', 'tags', 'employee_tag', 'employee', 'req_approve'";
             $departmentNames = "'comment_dept', 'department'";
 
+            // กันนับหนังสือระดับหน่วยงานที่ผู้ใช้ไม่มีสิทธิเปิดอ่าน (โหมด heads_only เห็นเฉพาะหัวหน้า)
+            // ให้สอดคล้องกับ DocumentsController::applyDocumentsIndexBaseQuery + DocumentAccessPolicy::canRead
+            // ห้ามใช้ 0 เป็น sentinel เพราะ legacy อาจมี to_id = 0
+            $employeeRouteId = $empId > 0 ? $empId : -1;
+            $departmentRouteId = DocumentAccessPolicy::canUseDepartmentRoute($depId, $empId) ? $depId : -1;
+
             $query = Documents::find()
                 ->leftJoin(
                     ['te' => 'documents_detail'],
                     "te.document_id = documents.id AND te.name IN ({$employeeNames}) AND te.to_id = :empId",
-                    [':empId' => (string) $empId]
+                    [':empId' => (string) $employeeRouteId]
                 )
                 ->leftJoin(
                     ['td' => 'documents_detail'],
                     "td.document_id = documents.id AND td.name IN ({$departmentNames}) AND td.to_id = :depId",
-                    [':depId' => (string) $depId]
+                    [':depId' => (string) $departmentRouteId]
                 )
                 ->leftJoin(
                     ['tr' => 'documents_detail'],
                     'tr.document_id = documents.id AND tr.name = :readName AND tr.to_id = :empIdRead',
-                    [':readName' => 'read', ':empIdRead' => (string) $empId]
+                    [':readName' => 'read', ':empIdRead' => (string) $employeeRouteId]
                 )
                 ->andWhere([
                     'or',
