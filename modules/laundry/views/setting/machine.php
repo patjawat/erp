@@ -50,21 +50,41 @@ $canManage = Yii::$app->user->can('laundry.manage');
                 <?= Html::endForm() ?>
             <?php endif; ?>
             <div class="table-responsive"><table class="table align-middle mb-0">
-                <thead class="table-light"><tr><th class="ps-4">เครื่อง</th><th>เลขครุภัณฑ์</th><th class="text-end">กำลัง</th><th>สถานะครุภัณฑ์</th><th class="pe-4">รายละเอียด</th></tr></thead>
+                <thead class="table-light"><tr><th class="ps-4">เครื่อง</th><th>เลขครุภัณฑ์</th><th style="width:220px">กำลัง (กก.) / สถานะ</th><th class="pe-4 text-end">จัดการ</th></tr></thead>
                 <tbody>
                 <?php foreach ($machines as $machine): ?>
                     <tr>
-                        <td class="ps-4"><?= $machine['machine_type'] === 'WASH' ? '<i class="bi bi-droplet me-1"></i>เครื่องซัก' : '<i class="bi bi-wind me-1"></i>เครื่องอบ' ?></td>
-                        <td><?= Html::encode(($machine['asset_code'] ?: '#' . $machine['asset_id']) . ' · ' . ($machine['asset_name'] ?: '')) ?></td>
-                        <td class="text-end"><?= number_format((float) $machine['capacity_kg'], 3) ?> กก.</td>
-                        <td><?= Html::encode($machine['lifecycle_status'] ?: 'ไม่ระบุ') ?></td>
-                        <td class="pe-4 d-flex flex-wrap gap-1">
-                            <?= Html::a('<i class="bi bi-journal-text me-1"></i>ทะเบียน/ประวัติซ่อม', ['/am/equip/view-asset', 'id' => $machine['asset_id']], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-                            <?= Html::a('<i class="bi bi-tools me-1"></i>บำรุงรักษา', ['/am/maintenance/index', 'code' => $machine['asset_code']], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                        <td class="ps-4"><?= $machine['machine_type'] === 'WASH' ? '<i class="bi bi-droplet-half text-primary me-1"></i>เครื่องซัก' : '<i class="bi bi-wind text-warning me-1"></i>เครื่องอบ' ?></td>
+                        <td><?= Html::encode(($machine['asset_code'] ?: '#' . $machine['asset_id']) . ' · ' . ($machine['asset_name'] ?: '')) ?><div class="small text-body-secondary"><?= Html::encode($machine['lifecycle_status'] ?: '') ?></div></td>
+                        <td>
+                            <?php if ($canManage): ?>
+                                <?= Html::beginForm(['machine-save'], 'post', ['class' => 'd-flex align-items-center gap-1']) ?>
+                                    <?= Html::hiddenInput('id', $machine['id']) ?>
+                                    <?= Html::input('number', 'capacity_kg', (float) $machine['capacity_kg'], ['class' => 'form-control form-control-sm', 'style' => 'width:90px', 'step' => '0.001', 'min' => '0.001', 'required' => true]) ?>
+                                    <div class="form-check form-switch mb-0 ms-1" title="เปิดใช้งาน">
+                                        <?= Html::checkbox('is_active', (int) $machine['is_active'] === 1, ['class' => 'form-check-input']) ?>
+                                    </div>
+                                    <?= Html::submitButton('<i class="bi bi-save"></i>', ['class' => 'btn btn-sm btn-outline-primary', 'title' => 'บันทึก']) ?>
+                                <?= Html::endForm() ?>
+                            <?php else: ?>
+                                <?= number_format((float) $machine['capacity_kg'], 1) ?> กก.
+                            <?php endif; ?>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                <?= Html::a('<i class="bi bi-journal-text"></i>', ['/am/equip/view-asset', 'id' => $machine['asset_id']], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'ทะเบียน/ประวัติซ่อม']) ?>
+                                <?= Html::a('<i class="bi bi-tools"></i>', ['/am/maintenance/index', 'code' => $machine['asset_code']], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'บำรุงรักษา']) ?>
+                                <?php if ($canManage): ?>
+                                    <?= Html::beginForm(['machine-delete'], 'post', ['class' => 'd-inline']) ?>
+                                        <?= Html::hiddenInput('id', $machine['id']) ?>
+                                        <?= Html::submitButton('<i class="bi bi-trash"></i>', ['class' => 'btn btn-sm btn-outline-danger', 'title' => 'ลบเครื่อง', 'data-confirm' => 'ลบเครื่องนี้ออกจากทะเบียน?']) ?>
+                                    <?= Html::endForm() ?>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
-                <?php if (!$machines): ?><tr><td colspan="5" class="text-center text-body-secondary py-4"><i class="bi bi-inbox me-1"></i>ยังไม่เชื่อมเครื่องกับครุภัณฑ์</td></tr><?php endif; ?>
+                <?php if (!$machines): ?><tr><td colspan="4" class="text-center text-body-secondary py-4"><i class="bi bi-inbox me-1"></i>ยังไม่เชื่อมเครื่องกับครุภัณฑ์</td></tr><?php endif; ?>
                 </tbody>
             </table></div>
         </div>

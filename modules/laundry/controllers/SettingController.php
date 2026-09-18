@@ -25,12 +25,12 @@ class SettingController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     ['allow' => true, 'actions' => ['unit', 'machine'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete'], 'roles' => ['laundry.manage']],
+                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete', 'machine-save', 'machine-delete'], 'roles' => ['laundry.manage']],
                 ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST']],
+                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST'], 'machine-save' => ['POST'], 'machine-delete' => ['POST']],
             ],
         ];
     }
@@ -42,6 +42,45 @@ class SettingController extends Controller
             ->from(['m' => 'laundry_machine'])->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
             ->orderBy(['m.machine_type' => SORT_ASC, 'a.code' => SORT_ASC])->all();
         return $this->render('machine', compact('machines'));
+    }
+
+    public function actionMachineSave()
+    {
+        $req = Yii::$app->request;
+        $id = (int) $req->post('id');
+        $machine = (new Query())->from('laundry_machine')->where(['id' => $id])->one();
+        if (!$machine) {
+            throw new NotFoundHttpException('ไม่พบเครื่อง');
+        }
+        $cap = (float) $req->post('capacity_kg');
+        if ($cap <= 0) {
+            Yii::$app->session->setFlash('error', 'กำลังเครื่องต้องมากกว่า 0');
+            return $this->redirect(['machine']);
+        }
+        Yii::$app->db->createCommand()->update('laundry_machine', [
+            'capacity_kg' => number_format(round($cap, 3), 3, '.', ''),
+            'is_active' => $req->post('is_active') ? 1 : 0,
+        ], ['id' => $id])->execute();
+        Yii::$app->session->setFlash('success', 'บันทึกเครื่องแล้ว');
+        return $this->redirect(['machine']);
+    }
+
+    public function actionMachineDelete()
+    {
+        $id = (int) Yii::$app->request->post('id');
+        $machine = (new Query())->from('laundry_machine')->where(['id' => $id])->one();
+        if (!$machine) {
+            throw new NotFoundHttpException('ไม่พบเครื่อง');
+        }
+        $running = (new Query())->from('laundry_processing_batch')
+            ->where(['asset_id' => $machine['asset_id'], 'status' => 'RUNNING'])->exists();
+        if ($running) {
+            Yii::$app->session->setFlash('error', 'เครื่องกำลังทำงานอยู่ ลบไม่ได้');
+            return $this->redirect(['machine']);
+        }
+        Yii::$app->db->createCommand()->delete('laundry_machine', ['id' => $id])->execute();
+        Yii::$app->session->setFlash('success', 'ลบเครื่องออกจากทะเบียนแล้ว');
+        return $this->redirect(['machine']);
     }
 
     public function actionUnit()

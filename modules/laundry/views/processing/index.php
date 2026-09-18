@@ -211,8 +211,8 @@ if (startModal) {
     if (c.getAttribute('data-stage')) document.getElementById('start_stage').value = c.getAttribute('data-stage');
     document.getElementById('start_machine').textContent = c.getAttribute('data-name') || '';
     var cap = c.getAttribute('data-cap') || '';
-    var kg = document.getElementById('start_kg'); kg.value = ''; if (cap) kg.setAttribute('max', cap);
-    document.getElementById('start_caphint').textContent = cap ? ('ไม่เกินกำลังเครื่อง ' + cap + ' กก.') : '';
+    var kg = document.getElementById('start_kg'); kg.value = ''; kg.removeAttribute('max');
+    document.getElementById('start_caphint').textContent = cap ? ('กำลังเครื่อง ' + cap + ' กก.') : '';
   });
 }
 JS);
