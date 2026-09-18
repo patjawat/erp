@@ -244,9 +244,10 @@ foreach ($menuItems as $item) {
 }
 $storageKey = 'erp-nav-favorites-' . (int) Yii::$app->user->id;
 ?>
-<button class="btn btn-outline-secondary btn-sm flex-shrink-0 mx-2" type="button" data-bs-toggle="offcanvas"
-    data-bs-target="#erpSystemChooser" aria-controls="erpSystemChooser">
-    <i class="bi bi-grid-3x3-gap me-1" aria-hidden="true"></i> ระบบทั้งหมด
+<button class="erp-nav-item erp-nav-launcher flex-shrink-0" type="button" data-bs-toggle="offcanvas"
+    data-bs-target="#erpSystemChooser" aria-controls="erpSystemChooser" aria-label="ระบบทั้งหมด" title="ระบบทั้งหมด">
+    <span class="erp-icon-box erp-icon-box-square" aria-hidden="true"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+    <span class="erp-nav-text">ระบบทั้งหมด</span>
 </button>
 <div class="erp-nav-shortcuts d-flex align-items-center overflow-auto h-100" id="erpNavShortcuts" aria-label="ระบบที่ปักหมุด">
     <?php foreach ($visible as $item): ?>

@@ -3,8 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 ?>
-<div class="d-flex align-items-center gap-2">
-    <?= Html::a('<i data-lucide="heart-handshake" aria-hidden="true"></i><span class="d-none d-sm-inline">ความผูกพัน</span>', ['/hr/engagement/mine'], ['class'=>'btn btn-outline-primary d-inline-flex align-items-center gap-2', 'aria-label'=>'แบบสำรวจความผูกพัน', 'data-pjax'=>'0']) ?>
+<div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
     <a href="<?= Url::to(['/hr/default/dashboard']) ?>"
        aria-label="ภาพรวม"
        class="btn <?= ($active === 'overview' || $active === 'dashboard') ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
@@ -20,10 +19,10 @@ use yii\helpers\Url;
     </a>
 
     <a href="<?= Url::to(['/hr/organization/diagram']) ?>"
-       aria-label="ผังโครงสร้างองค์กร"
+       aria-label="ผังโครงสร้าง"
        class="btn <?= $active === 'organization' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
         <i data-lucide="network" width="16" height="16" aria-hidden="true"></i>
-        <span class="d-none d-sm-inline">ผังโครงสร้างองค์กร</span>
+        <span class="d-none d-sm-inline">ผังโครงสร้าง</span>
     </a>
 
     <a href="<?= Url::to(['/hr/workforce-frame/index']) ?>"
@@ -35,13 +34,38 @@ use yii\helpers\Url;
     </a>
 
     <?php if (Yii::$app->user->can('hr') || Yii::$app->user->can('admin')): ?>
-    <a href="<?= Url::to(['/hr/workforce/index']) ?>"
-       aria-label="งาน HRD"
-       class="btn <?= in_array($active, ['workforce', 'idp', 'training-roadmap', 'jd', 'appraisal', 'exit', 'talent', 'core'], true) ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
-       data-pjax="0">
-        <i data-lucide="briefcase-business" width="16" height="16" aria-hidden="true"></i>
-        <span class="d-none d-sm-inline">งาน HRD</span>
-    </a>
+    <?php $hrdActive = in_array($active, ['workforce', 'idp', 'training-roadmap', 'jd', 'appraisal', 'exit', 'talent', 'core', 'engagement'], true); ?>
+    <div class="btn-group">
+        <a href="<?= Url::to(['/hr/workforce/index']) ?>"
+           aria-label="งาน HRD"
+           class="btn <?= $hrdActive ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+           data-pjax="0">
+            <i data-lucide="briefcase-business" width="16" height="16" aria-hidden="true"></i>
+            <span class="d-none d-sm-inline">งาน HRD</span>
+        </a>
+        <button type="button"
+                class="btn <?= $hrdActive ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown" aria-expanded="false" aria-label="เมนูย่อยงาน HRD">
+            <span class="visually-hidden">เปิดเมนูย่อยงาน HRD</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li>
+                <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="layout-grid" width="15" height="15" class="text-body-secondary" aria-hidden="true"></i> ภาพรวมงาน HRD</span>',
+                    ['/hr/workforce/index'],
+                    ['class' => 'dropdown-item', 'data-pjax' => '0']
+                ) ?>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <li>
+                <?= Html::a(
+                    '<span class="d-flex align-items-center gap-2"><i data-lucide="heart-handshake" width="15" height="15" class="text-body-secondary" aria-hidden="true"></i> ความผูกพัน</span>',
+                    ['/hr/engagement/mine'],
+                    ['class' => 'dropdown-item', 'data-pjax' => '0']
+                ) ?>
+            </li>
+        </ul>
+    </div>
     <?php endif; ?>
 
     <div class="dropdown">

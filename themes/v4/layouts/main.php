@@ -175,6 +175,40 @@ AppAsset::register($this);
         color:var(--bs-primary)
     }
 
+    /* ปุ่ม "ระบบทั้งหมด" ทำเป็นไทล์สี่เหลี่ยมจตุรัส (rounded-square) ให้เข้าชุดกับไอคอนอื่น */
+    .erp-nav-launcher {
+        background: transparent;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .erp-nav-launcher:hover {
+        background-color: #f8fafc;
+        color: #334155;
+    }
+
+    .erp-icon-box-square {
+        border-radius: 10px;
+        background-color: var(--erp-primary-light);
+        color: var(--erp-primary);
+    }
+
+    .erp-icon-box-square i {
+        font-size: 20px;
+        line-height: 1;
+        color: var(--erp-primary);
+    }
+
+    .erp-nav-launcher:hover .erp-icon-box-square {
+        background-color: var(--erp-primary);
+    }
+
+    .erp-nav-launcher:hover .erp-icon-box-square i {
+        color: #fff;
+    }
+
     .erp-icon-box-md {
         width: 40px;
         height: 40px;
