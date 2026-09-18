@@ -47,12 +47,21 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                                 <div class="fw-bold fs-5"><?= $isWash ? 'เครื่องซัก' : 'เครื่องอบ' ?> <?= $idx + 1 ?></div>
                                 <div class="small text-body-secondary text-truncate"><?= Html::encode($m['asset_code'] ?: '#' . $aid) ?> · <?= number_format((float) $m['capacity_kg'], 0) ?> กก.</div>
                             </div>
+                            <?php if (!$run && $canManage): ?>
+                                <button type="button" class="btn btn-<?= $pageTone ?> rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:46px;height:46px"
+                                    title="เริ่มรอบ" data-bs-toggle="modal" data-bs-target="#startModal"
+                                    data-asset="<?= $aid ?>" data-stage="<?= $stage ?>" data-cap="<?= (float) $m['capacity_kg'] ?>"
+                                    data-name="<?= Html::encode(($isWash ? 'เครื่องซัก' : 'เครื่องอบ') . ' ' . ($idx + 1)) ?>">
+                                    <i class="bi bi-play-fill fs-4"></i>
+                                </button>
+                            <?php elseif ($run): ?>
+                                <span class="badge text-bg-warning flex-shrink-0"><i class="bi bi-arrow-repeat me-1"></i>กำลังทำงาน</span>
+                            <?php endif; ?>
                         </div>
 
                         <?php if ($run): ?>
                             <div class="alert alert-warning py-2 px-3 mb-2 small">
-                                <span class="badge text-bg-warning me-1"><i class="bi bi-arrow-repeat me-1"></i>กำลังทำงาน</span>
-                                <?= Html::encode($classLabel($run['linen_class'])) ?> · <?= number_format((float) $run['input_kg'], 1) ?> กก. · เริ่ม <?= date('H:i', strtotime($run['started_at'])) ?>
+                                <?= Html::encode($classLabel($run['linen_class'])) ?> · เข้า <?= number_format((float) $run['input_kg'], 1) ?> กก. · เริ่ม <?= date('H:i', strtotime($run['started_at'])) ?>
                             </div>
                             <?php if ($canManage): ?>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
@@ -66,14 +75,6 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                                     <?= Html::endForm() ?>
                                 </div>
                             <?php endif; ?>
-                        <?php elseif ($canManage): ?>
-                            <button type="button" class="btn btn-<?= $pageTone ?> w-100 mb-2" data-bs-toggle="modal" data-bs-target="#startModal"
-                                data-asset="<?= $aid ?>" data-stage="<?= $stage ?>" data-cap="<?= (float) $m['capacity_kg'] ?>"
-                                data-name="<?= Html::encode(($isWash ? 'เครื่องซัก' : 'เครื่องอบ') . ' ' . ($idx + 1)) ?>">
-                                <i class="bi bi-play-fill me-1"></i>เริ่มรอบ
-                            </button>
-                        <?php else: ?>
-                            <span class="badge text-bg-success mb-2">พร้อม</span>
                         <?php endif; ?>
 
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top small">
