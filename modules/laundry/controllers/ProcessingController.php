@@ -46,22 +46,35 @@ class ProcessingController extends Controller
             ->from(['m' => 'laundry_machine'])->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
             ->where(['m.machine_type' => $stage])
             ->orderBy(['a.code' => SORT_ASC])->all();
-        $batches = (new Query())->select(['b.*', 'asset_name' => 'a.asset_name', 'asset_code' => 'a.code'])
-            ->from(['b' => 'laundry_processing_batch'])->innerJoin(['a' => Asset::tableName()], 'a.id = b.asset_id')
-            ->where(['b.stage' => $stage])
-            ->orderBy(['b.id' => SORT_DESC])->limit(50)->all();
-        $recoveries = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'stage' => 'b.stage', 'linen_class' => 'b.linen_class', 'input_kg' => 'b.input_kg'])
-            ->from(['r' => 'laundry_batch_recovery'])->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = r.aborted_batch_id')
+        $assetIds = array_column($machines, 'asset_id');
+
+        // รอบล่าสุดของแต่ละเครื่อง (จัดกลุ่มตามเครื่อง เพื่อแสดงในบล็อกเดียวกับเครื่อง)
+        $batchesByMachine = [];
+        $runByAsset = [];
+        if ($assetIds) {
+            $rows = (new Query())->from('laundry_processing_batch')
+                ->where(['stage' => $stage, 'asset_id' => $assetIds])
+                ->orderBy(['id' => SORT_DESC])->limit(300)->all();
+            foreach ($rows as $b) {
+                $batchesByMachine[$b['asset_id']][] = $b;
+                if ($b['status'] === 'RUNNING' && !isset($runByAsset[$b['asset_id']])) {
+                    $runByAsset[$b['asset_id']] = $b;
+                }
+            }
+        }
+
+        // ผ้ากู้คืนที่รออนุมัติ (แยกส่วนสำหรับผู้อนุมัติ) + map ปิดปุ่มขอกู้คืนซ้ำ
+        $recoveries = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'linen_class' => 'b.linen_class', 'input_kg' => 'b.input_kg', 'asset_code' => 'a.code'])
+            ->from(['r' => 'laundry_batch_recovery'])
+            ->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = r.aborted_batch_id')
+            ->innerJoin(['a' => Asset::tableName()], 'a.id = b.asset_id')
             ->where(['b.stage' => $stage])
             ->orderBy(['r.id' => SORT_DESC])->limit(50)->all();
         $recoveryByBatch = [];
-        $visibleBatchIds = array_column($batches, 'id');
-        $existingRecoveries = $visibleBatchIds ? (new Query())->from('laundry_batch_recovery')
-            ->where(['aborted_batch_id' => $visibleBatchIds])->all() : [];
-        foreach ($existingRecoveries as $recovery) {
+        foreach ($recoveries as $recovery) {
             $recoveryByBatch[$recovery['aborted_batch_id']] = $recovery;
         }
-        return $this->render('index', compact('machines', 'batches', 'recoveries', 'recoveryByBatch', 'stage'));
+        return $this->render('index', compact('machines', 'batchesByMachine', 'runByAsset', 'recoveries', 'recoveryByBatch', 'stage'));
     }
 
     public function actionNew(string $stage = 'WASH', string $linenClass = 'SOILED', string $mode = 'NORMAL')
