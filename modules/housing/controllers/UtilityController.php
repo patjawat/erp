@@ -14,8 +14,8 @@ use app\modules\housing\models\MonthlyAccountItem;
 use app\modules\housing\models\Occupancy;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
+use app\modules\housing\services\HousingExpenseNotifyService;
 use Yii;
-use yii\db\Expression;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -26,7 +26,7 @@ use yii\widgets\ActiveForm;
 
 final class UtilityController extends BaseController
 {
-    public function behaviors():array{return array_merge(parent::behaviors(),['verbs'=>['class'=>VerbFilter::class,'actions'=>['confirm-reading'=>['POST'],'generate-month'=>['POST'],'close-period'=>['POST']]]]);}
+    public function behaviors():array{return array_merge(parent::behaviors(),['verbs'=>['class'=>VerbFilter::class,'actions'=>['confirm-reading'=>['POST'],'generate-month'=>['POST'],'close-period'=>['POST'],'refresh-occupants'=>['POST'],'notify-expenses'=>['POST']]]]);}
     public function actionIndex(){return $this->redirect(['monthly']);}
     public function actionCreateRate(){return $this->save(new HousingRate(),'rate');}
     public function actionUpdateRate(int $id){return $this->save($this->find(HousingRate::class,$id),'rate');}
@@ -98,8 +98,9 @@ final class UtilityController extends BaseController
             }catch(\Throwable $e){$transaction->rollBack();throw $e;}
         }
         $defaults=[];foreach($types as $type)$defaults[$type->id]=$this->defaultAmount($account,$type);
+        $equipment=$this->equipmentAssignments($account);
         Yii::$app->response->format=Response::FORMAT_JSON;
-        return ['title'=>$isLocked?'รายละเอียดค่าใช้จ่าย':'ลงค่าใช้จ่ายประจำเดือน','content'=>$this->renderAjax('_account_form',compact('account','types','existing','defaults','isLocked'))];
+        return ['title'=>$isLocked?'รายละเอียดค่าใช้จ่าย':'ลงค่าใช้จ่ายประจำเดือน','content'=>$this->renderAjax('_account_form',compact('account','types','existing','defaults','isLocked','equipment'))];
     }
 
     public function actionClosePeriod(int $id)
@@ -113,19 +114,63 @@ final class UtilityController extends BaseController
         return $this->redirect(['monthly','period_id'=>$id]);
     }
 
+    public function actionRefreshOccupants(int $period_id)
+    {
+        $period=$this->find(BillingPeriod::class,$period_id);
+        if($period->status!=='open')throw new BadRequestHttpException('รอบเดือนนี้ปิดแล้ว ไม่สามารถอัปเดตได้');
+        $accounts=MonthlyAccount::find()->where(['billing_period_id'=>$period->id])->andWhere(['not',['occupancy_id'=>null]])->with(['occupancy.residents'])->all();
+        $updated=0;
+        foreach($accounts as $account){
+            if(!$account->occupancy)continue;
+            $counts=$account->occupancy->occupantCounts($period->end_date);
+            if((int)$account->occupants_total!==$counts['total']||(int)$account->occupants_over_15!==$counts['over15']){
+                $account->updateAttributes(['occupants_total'=>$counts['total'],'occupants_over_15'=>$counts['over15']]);
+                $updated++;
+            }
+        }
+        Yii::$app->session->setFlash('success',$updated>0?"อัปเดตจำนวนผู้พักอาศัยแล้ว {$updated} รายการ":'จำนวนผู้พักอาศัยเป็นปัจจุบันอยู่แล้ว');
+        return $this->redirect(['monthly','period_id'=>$period->id]);
+    }
+
+    public function actionNotifyExpenses(int $period_id)
+    {
+        $period=$this->find(BillingPeriod::class,$period_id);
+        $result=(new HousingExpenseNotifyService())->notifyPeriod($period);
+        if($result['targets']===0){
+            Yii::$app->session->setFlash('error','ยังไม่มีรายการที่พร้อมแจ้ง (ต้องบันทึกค่าใช้จ่ายและมียอด > 0)');
+        }else{
+            Yii::$app->session->setFlash('success',"ส่งแจ้งเตือนค่าใช้จ่ายแล้ว {$result['targets']} ราย · ทาง Telegram {$result['telegram']} ราย · ยังไม่ได้ผูก Telegram {$result['skipped']} ราย (ผู้พักดูรายละเอียดได้ในระบบบ้านพักของฉัน)");
+        }
+        return $this->redirect(['monthly','period_id'=>$period->id]);
+    }
+
     private function createAccount(BillingPeriod $period,Building $building,?Unit $unit,?Room $room,?Occupancy $occupancy):void
     {
         $key=$occupancy?'O-'.$occupancy->id:($room?'R-'.$room->id:($unit?'U-'.$unit->id:'B-'.$building->id));
         if(MonthlyAccount::find()->where(['billing_period_id'=>$period->id,'subject_key'=>$key])->exists())return;
-        $employee=$occupancy?->employee;$over15=$occupancy?1:0;
-        if($occupancy){$cutoff=date('Y-m-d',strtotime($period->end_date.' -15 years'));foreach($occupancy->residents as $resident)if($resident->status==='active'&&$resident->count_for_charge&&$resident->birth_date&&$resident->birth_date<=$cutoff)$over15++;}
-        $model=new MonthlyAccount(['billing_period_id'=>$period->id,'building_id'=>$building->id,'unit_id'=>$unit?->id,'room_id'=>$room?->id,'occupancy_id'=>$occupancy?->id,'payer_emp_id'=>$occupancy?->payer_emp_id,'subject_key'=>$key,'building_name'=>$building->name,'unit_name'=>$unit?->name,'room_name'=>$room?->name,'electric_account_no'=>$unit?->electric_account_no?:$building->electric_account_no,'payer_name'=>$employee?->fullname(),'position_name'=>$employee?->positionName(),'occupants_over_15'=>$over15,'status'=>MonthlyAccount::STATUS_PENDING,'payment_status'=>MonthlyAccount::PAYMENT_UNPAID]);
+        $employee=$occupancy?->employee;
+        $counts=$occupancy?$occupancy->occupantCounts($period->end_date):['total'=>0,'over15'=>0];
+        $model=new MonthlyAccount(['billing_period_id'=>$period->id,'building_id'=>$building->id,'unit_id'=>$unit?->id,'room_id'=>$room?->id,'occupancy_id'=>$occupancy?->id,'payer_emp_id'=>$occupancy?->payer_emp_id,'subject_key'=>$key,'building_name'=>$building->name,'unit_name'=>$unit?->name,'room_name'=>$room?->name,'electric_account_no'=>$unit?->electric_account_no?:$building->electric_account_no,'payer_name'=>$employee?->fullname(),'position_name'=>$employee?->positionName(),'occupants_over_15'=>$counts['over15'],'occupants_total'=>$counts['total'],'status'=>MonthlyAccount::STATUS_PENDING,'payment_status'=>MonthlyAccount::PAYMENT_UNPAID]);
         if(!$model->save())throw new \RuntimeException(implode(' ',$model->getFirstErrors()));
+    }
+
+    /**
+     * รายการอุปกรณ์/เครื่องใช้ไฟฟ้าที่คิดค่าเช่ากับบัญชีนี้
+     * - บ้าน/ห้อง "ทั้งหลัง" (ไม่มี room_id): รวมอุปกรณ์ทุกห้องย่อยของ unit
+     * - ห้องย่อย (มี room_id): เฉพาะอุปกรณ์ของห้องนั้น
+     * @return AssetAssignment[]
+     */
+    private function equipmentAssignments(MonthlyAccount $account):array
+    {
+        if(!$account->unit_id)return [];
+        $query=AssetAssignment::find()->where(['unit_id'=>$account->unit_id,'is_active'=>1]);
+        if($account->room_id)$query->andWhere(['room_id'=>$account->room_id]);
+        return $query->with('room')->orderBy(['room_id'=>SORT_ASC,'item_name'=>SORT_ASC])->all();
     }
 
     private function defaultAmount(MonthlyAccount $account,ChargeType $type):float
     {
-        if($type->calculation_method===ChargeType::METHOD_EQUIPMENT&&$account->unit_id)return (float)AssetAssignment::find()->where(['unit_id'=>$account->unit_id,'room_id'=>$account->room_id,'is_active'=>1])->sum(new Expression('quantity * monthly_rent'));
+        if($type->calculation_method===ChargeType::METHOD_EQUIPMENT&&$account->unit_id){$sum=0.0;foreach($this->equipmentAssignments($account) as $asset)$sum+=$asset->totalMonthlyRent();return round($sum,2);}
         $rate=HousingRate::find()->where(['charge_type_id'=>$type->id,'status'=>'active'])->andWhere(['<=','effective_from',$account->period->start_date])->andWhere(['or',['effective_to'=>null],['>=','effective_to',$account->period->start_date]])->orderBy(['unit_id'=>SORT_DESC,'building_id'=>SORT_DESC,'effective_from'=>SORT_DESC])->one();
         // อัตราเฉพาะ (ราย อาคาร/ห้อง) มาก่อน ถ้าไม่มีให้ใช้อัตราตั้งต้นที่ตั้งไว้บนประเภทค่าใช้จ่าย
         $value=(float)($rate?->rate??$type->default_rate??0);
