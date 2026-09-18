@@ -369,6 +369,54 @@ JS;
     ?>
 
 
+    <?php
+    // โมดัล "มีอะไรใหม่" — เด้งครั้งเดียวเมื่อ รพ. อัปเดตเป็นเวอร์ชันใหม่
+    $__ver = (string) Yii::$app->version;
+    $__clFile = Yii::getAlias('@app/config/changelog.php');
+    $__cl = is_file($__clFile) ? (array) require $__clFile : [];
+    $__note = $__cl[$__ver] ?? null;
+    if ($__note && !Yii::$app->user->isGuest):
+        $__enc = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    ?>
+    <div class="modal fade" id="whatsNewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-stars me-2"></i>อัปเดตใหม่ <?= $__enc($__ver) ?></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="fw-semibold fs-6 mb-1"><?= $__enc($__note['title'] ?? '') ?></div>
+                    <div class="text-body-secondary small mb-3"><i class="bi bi-calendar3 me-1"></i><?= $__enc($__note['date'] ?? '') ?></div>
+                    <ul class="mb-0 ps-3">
+                        <?php foreach ((array) ($__note['highlights'] ?? []) as $__h): ?>
+                            <li class="mb-2"><?= $__enc($__h) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="bi bi-check-lg me-1"></i>รับทราบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        try {
+            var v = <?= json_encode($__ver) ?>;
+            if (localStorage.getItem('erp_seen_version') === v) return;
+            document.addEventListener('DOMContentLoaded', function(){
+                var el = document.getElementById('whatsNewModal');
+                if (el && window.bootstrap && bootstrap.Modal) {
+                    new bootstrap.Modal(el).show();
+                    el.addEventListener('hidden.bs.modal', function(){ try { localStorage.setItem('erp_seen_version', v); } catch(e){} });
+                } else { try { localStorage.setItem('erp_seen_version', v); } catch(e){} }
+            });
+        } catch(e){}
+    })();
+    </script>
+    <?php endif; ?>
+
     <?php $this->endBody() ?>
 </body>
 
