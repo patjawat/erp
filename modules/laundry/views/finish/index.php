@@ -85,18 +85,19 @@ foreach ($dryBatches as $b) {
                 <div class="card-header bg-body px-4 py-3"><h2 class="h6 fw-semibold mb-0"><i class="bi bi-list-ul me-2"></i>รายการนับหลังอบวันนี้</h2></div>
                 <div class="card-body p-0"><div class="table-responsive">
                     <table class="table align-middle mb-0">
-                        <thead class="table-light"><tr><th class="ps-4">เลขที่</th><th>เวลา</th><th>ผู้บันทึก</th><th class="text-end">ประเภท</th><th class="text-end pe-4">รวม (ชิ้น)</th></tr></thead>
+                        <thead class="table-light"><tr><th class="ps-4">เลขที่</th><th>วันที่</th><th>เวลา</th><th>ผู้นับ</th><th class="text-end">ประเภท</th><th class="text-end pe-4">รวม (ชิ้น)</th></tr></thead>
                         <tbody>
                         <?php foreach ($finishes as $f): ?>
                             <tr>
                                 <td class="ps-4 fw-semibold"><?= Html::encode($f['finish_no'] ?: '#' . $f['id']) ?></td>
+                                <td class="small"><?= Html::encode(ThaiDateHelper::formatThaiDate($f['counted_at'])) ?></td>
                                 <td><?= date('H:i', strtotime($f['counted_at'])) ?></td>
                                 <td class="text-body-secondary small"><?= Html::encode($staffNames[$f['created_by']] ?? '') ?></td>
                                 <td class="text-end"><?= (int) $f['types'] ?></td>
                                 <td class="text-end pe-4 fw-semibold"><?= number_format((int) $f['total']) ?></td>
                             </tr>
                         <?php endforeach; ?>
-                        <?php if (!$finishes): ?><tr><td colspan="5" class="text-center text-body-secondary py-5"><i class="bi bi-inbox fs-3 d-block mb-2"></i>ยังไม่มีการนับหลังอบวันนี้</td></tr><?php endif; ?>
+                        <?php if (!$finishes): ?><tr><td colspan="6" class="text-center text-body-secondary py-5"><i class="bi bi-inbox fs-3 d-block mb-2"></i>ยังไม่มีการนับหลังอบวันนี้</td></tr><?php endif; ?>
                         </tbody>
                     </table>
                 </div></div>
