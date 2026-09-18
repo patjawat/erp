@@ -30,9 +30,9 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
         <a href="<?= Url::to(['/laundry/inventory/index', 'section' => 'finish']) ?>" class="<?= $btn('finish') ?>">
             <i class="bi bi-ui-checks me-1"></i>นับ–รีด–QC
         </a>
-        <span class="btn btn-outline-secondary disabled" title="อยู่ระหว่างพัฒนา (เฟส 4)">
+        <a href="<?= Url::to(['/laundry/issue/index']) ?>" class="<?= $btn('issue') ?>">
             <i class="bi bi-box-arrow-right me-1"></i>ส่งผ้า/เบิกจ่าย
-        </span>
+        </a>
         <div class="dropdown">
             <button type="button" class="btn <?= $active === 'stock' ? 'btn-primary' : 'btn-outline-primary' ?> dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-shop me-1"></i>คลังผ้า
