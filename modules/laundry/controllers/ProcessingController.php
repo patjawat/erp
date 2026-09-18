@@ -2,10 +2,14 @@
 
 namespace app\modules\laundry\controllers;
 
+use app\components\AppHelper;
+use app\components\ThaiDateHelper;
 use app\modules\am\models\Asset;
 use app\modules\laundry\services\ProcessingService;
 use Yii;
 use yii\base\InvalidArgumentException;
+use yii\data\ActiveDataProvider;
+use yii\db\Expression;
 use yii\db\Query;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -20,8 +24,8 @@ class ProcessingController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['index', 'new', 'asset-search'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['index', 'asset-search'], 'roles' => ['laundry.approve']],
+                    ['allow' => true, 'actions' => ['index', 'new', 'asset-search', 'history'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['index', 'asset-search', 'history'], 'roles' => ['laundry.approve']],
                     ['allow' => true, 'actions' => ['register-machine', 'start', 'finish', 'abort', 'request-recovery'], 'roles' => ['laundry.manage']],
                     ['allow' => true, 'actions' => ['approve-recovery'], 'roles' => ['laundry.approve']],
                 ],
@@ -47,34 +51,38 @@ class ProcessingController extends Controller
             ->where(['m.machine_type' => $stage])
             ->orderBy(['a.code' => SORT_ASC])->all();
         $assetIds = array_column($machines, 'asset_id');
+        $today = date('Y-m-d');
 
-        // รอบล่าสุดของแต่ละเครื่อง (จัดกลุ่มตามเครื่อง เพื่อแสดงในบล็อกเดียวกับเครื่อง)
-        $batchesByMachine = [];
+        // สรุป "วันนี้" ต่อเครื่อง (กะทัดรัด ไม่ยัดลิสต์เต็มในการ์ด) + รอบที่กำลังทำงาน
+        $summaryByAsset = [];
         $runByAsset = [];
         if ($assetIds) {
-            $rows = (new Query())->from('laundry_processing_batch')
+            $summaryByAsset = (new Query())
+                ->select([
+                    'asset_id',
+                    'times' => new Expression('COUNT(*)'),
+                    'in_kg' => new Expression('COALESCE(SUM(input_kg),0)'),
+                    'out_kg' => new Expression('COALESCE(SUM(output_kg),0)'),
+                ])
+                ->from('laundry_processing_batch')
                 ->where(['stage' => $stage, 'asset_id' => $assetIds])
-                ->orderBy(['id' => SORT_DESC])->limit(300)->all();
-            foreach ($rows as $b) {
-                $batchesByMachine[$b['asset_id']][] = $b;
-                if ($b['status'] === 'RUNNING' && !isset($runByAsset[$b['asset_id']])) {
-                    $runByAsset[$b['asset_id']] = $b;
-                }
+                ->andWhere(['between', 'started_at', $today . ' 00:00:00', $today . ' 23:59:59'])
+                ->groupBy('asset_id')->indexBy('asset_id')->all();
+            $runRows = (new Query())->from('laundry_processing_batch')
+                ->where(['stage' => $stage, 'asset_id' => $assetIds, 'status' => 'RUNNING'])->all();
+            foreach ($runRows as $b) {
+                $runByAsset[$b['asset_id']] = $b;
             }
         }
 
-        // ผ้ากู้คืนที่รออนุมัติ (แยกส่วนสำหรับผู้อนุมัติ) + map ปิดปุ่มขอกู้คืนซ้ำ
-        $recoveries = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'linen_class' => 'b.linen_class', 'input_kg' => 'b.input_kg', 'asset_code' => 'a.code'])
+        // ผ้ากู้คืนที่รออนุมัติ (bounded to-do list)
+        $pendingRecoveries = (new Query())->select(['r.*', 'batch_no' => 'b.batch_no', 'linen_class' => 'b.linen_class', 'input_kg' => 'b.input_kg', 'asset_code' => 'a.code'])
             ->from(['r' => 'laundry_batch_recovery'])
             ->innerJoin(['b' => 'laundry_processing_batch'], 'b.id = r.aborted_batch_id')
             ->innerJoin(['a' => Asset::tableName()], 'a.id = b.asset_id')
-            ->where(['b.stage' => $stage])
+            ->where(['b.stage' => $stage, 'r.status' => 'PENDING'])
             ->orderBy(['r.id' => SORT_DESC])->limit(50)->all();
-        $recoveryByBatch = [];
-        foreach ($recoveries as $recovery) {
-            $recoveryByBatch[$recovery['aborted_batch_id']] = $recovery;
-        }
-        return $this->render('index', compact('machines', 'batchesByMachine', 'runByAsset', 'recoveries', 'recoveryByBatch', 'stage'));
+        return $this->render('index', compact('machines', 'summaryByAsset', 'runByAsset', 'pendingRecoveries', 'stage'));
     }
 
     public function actionNew(string $stage = 'WASH', string $linenClass = 'SOILED', string $mode = 'NORMAL')
@@ -127,6 +135,41 @@ class ProcessingController extends Controller
                 ->orderBy(['b.id' => SORT_DESC])->limit(200)->all();
         }
         return $this->render('new', compact('stage', 'linenClass', 'mode', 'machines', 'sources'));
+    }
+
+    /** ประวัติรอบเครื่อง — ช่วงวันที่ + เครื่อง + ค้นหา + แบ่งหน้า (รองรับข้อมูลเยอะ) */
+    public function actionHistory(string $stage = 'WASH')
+    {
+        if (!in_array($stage, ['WASH', 'DRY'], true)) {
+            $stage = 'WASH';
+        }
+        $req = Yii::$app->request;
+        $from = AppHelper::convertToGregorian(trim((string) $req->get('from'))) ?: date('Y-m-01');
+        $to = AppHelper::convertToGregorian(trim((string) $req->get('to'))) ?: date('Y-m-d');
+        $q = trim((string) $req->get('q'));
+        $assetId = (int) $req->get('asset_id');
+
+        $query = (new Query())->select(['b.*', 'asset_name' => 'a.asset_name', 'asset_code' => 'a.code'])
+            ->from(['b' => 'laundry_processing_batch'])->innerJoin(['a' => Asset::tableName()], 'a.id = b.asset_id')
+            ->where(['b.stage' => $stage])
+            ->andWhere(['between', 'b.started_at', $from . ' 00:00:00', $to . ' 23:59:59']);
+        if ($assetId) {
+            $query->andWhere(['b.asset_id' => $assetId]);
+        }
+        if ($q !== '') {
+            $query->andWhere(['like', 'b.batch_no', $q]);
+        }
+        $query->orderBy(['b.id' => SORT_DESC]);
+        $provider = new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30], 'sort' => false]);
+
+        $machineOptions = [];
+        foreach ((new Query())->select(['m.asset_id', 'code' => 'a.code', 'idx' => 'm.id'])
+            ->from(['m' => 'laundry_machine'])->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
+            ->where(['m.machine_type' => $stage])->orderBy(['a.code' => SORT_ASC])->all() as $i => $row) {
+            $label = ($stage === 'WASH' ? 'เครื่องซัก' : 'เครื่องอบ') . ' · ' . ($row['code'] ?: '#' . $row['asset_id']);
+            $machineOptions[$row['asset_id']] = $label;
+        }
+        return $this->render('history', compact('provider', 'stage', 'from', 'to', 'q', 'assetId', 'machineOptions'));
     }
 
     /** ค้นหาครุภัณฑ์จากระบบทรัพย์สิน (สำหรับ Select2 ajax) */

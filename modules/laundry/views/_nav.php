@@ -50,6 +50,8 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/collection/report']) ?>"><i class="bi bi-speedometer me-2"></i>น้ำหนักผ้ารายหน่วยงาน</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/laundry/processing/history', 'stage' => 'WASH']) ?>"><i class="bi bi-clock-history me-2"></i>ประวัติรอบซัก</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/laundry/processing/history', 'stage' => 'DRY']) ?>"><i class="bi bi-clock-history me-2"></i>ประวัติรอบอบ</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/machine-report/index']) ?>"><i class="bi bi-gear-wide-connected me-2"></i>ประสิทธิภาพเครื่อง</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/procurement/index']) ?>"><i class="bi bi-cart-plus me-2"></i>ส่วนขาด/จัดซื้อ</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/audit/index']) ?>"><i class="bi bi-clipboard2-pulse me-2"></i>ตรวจสอบยอดผ้า</a></li>
