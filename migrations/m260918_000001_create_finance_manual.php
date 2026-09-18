@@ -6,8 +6,7 @@ use yii\db\Migration;
  * คู่มือการเงิน (survival guide) — โครงสร้าง 3 ระดับ
  *  หมวด (category) → เรื่อง (topic) → บรรทัดเอกสาร/ข้อกำหนด (item)
  *
- * รันแยกด้วย:
- *   php yii migrate --migrationPath=@app/migrations/finance_manual
+ * อยู่ระดับ migrations/ ชั้นเดียว เพื่อให้ deploy (yii migrate) รันเจอบน production
  */
 class m260918_000001_create_finance_manual extends Migration
 {

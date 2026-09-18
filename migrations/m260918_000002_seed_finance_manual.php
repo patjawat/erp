@@ -6,8 +6,7 @@ use yii\db\Migration;
  * Seed เนื้อหาคู่มือการเงิน จากไฟล์ "คู่มือการเงิน" (งานการเงินและบัญชี สสจ.อุบลราชธานี)
  * โครงสร้าง: หมวด → เรื่อง → บรรทัดเอกสาร (kind: doc/warning/note)
  *
- * รันแยกด้วย:
- *   php yii migrate --migrationPath=@app/migrations/finance_manual
+ * อยู่ระดับ migrations/ ชั้นเดียว เพื่อให้ deploy (yii migrate) รันเจอบน production
  */
 class m260918_000002_seed_finance_manual extends Migration
 {
