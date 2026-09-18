@@ -29,7 +29,7 @@ $items = [
             </span>
         <?php else: ?>
             <a href="<?= Url::to($item['url']) ?>"
-               class="btn rounded-pill <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-secondary' ?>">
+               class="btn <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-secondary' ?>">
                 <i class="bi <?= Html::encode($item['icon']) ?> me-1" aria-hidden="true"></i>
                 <?= Html::encode($item['label']) ?>
             </a>
