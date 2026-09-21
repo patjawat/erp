@@ -1,0 +1,113 @@
+<?php
+
+use yii\helpers\Html;
+use yii\helpers\Json;
+use app\components\RichText;
+use app\modules\pm\components\KpiStatus;
+use app\modules\pm\models\KpiIndicator;
+
+/** @var array $meta @var array $rowsY @var int[] $labels @var array $targetData @var array $actualData @var array|null $latest */
+
+$this->title = 'รายละเอียดตัวชี้วัด';
+$this->beginBlock('page-title'); ?>รายละเอียดตัวชี้วัด<?php $this->endBlock();
+$this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'overview']) ?><?php $this->endBlock();
+app\assets\RichTextAsset::register($this);
+
+$num = static fn ($v) => $v === null ? '-' : rtrim(rtrim(number_format((float) $v, 4, '.', ''), '0'), '.');
+$rt = static fn ($val) => trim((string) $val) !== '' ? RichText::render($val) : '<span class="text-body-secondary">-</span>';
+$opLabel = KpiIndicator::operatorList()[$meta['operator']] ?? '-';
+$hasChart = count(array_filter($actualData, fn ($v) => $v !== null)) >= 1 || count(array_filter($targetData, fn ($v) => $v !== null)) >= 1;
+$latestStatus = $latest ? KpiStatus::evaluate($latest['target'], $latest['actual'], $meta['operator']) : KpiStatus::NODATA;
+?>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h4 mb-1"><?= Html::encode(RichText::plain($meta['name'], 300)) ?></h1>
+        <span class="badge bg-primary-subtle text-primary-emphasis"><?= Html::encode($meta['group']) ?></span>
+    </div>
+    <div class="d-flex gap-2">
+        <?php if (!empty($meta['editUrl'])): ?>
+            <?= Html::a('<i class="bi bi-box-arrow-up-right me-1"></i> ' . Html::encode($meta['editLabel'] ?? 'เปิด'), $meta['editUrl'], ['class' => 'btn btn-outline-primary']) ?>
+        <?php endif; ?>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i> พิมพ์</button>
+        <?= Html::a('<i class="bi bi-arrow-left me-1"></i> กลับภาพรวม', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+            <h6 class="fw-bold mb-3">แนวโน้มหลายปี (Trend Analysis)</h6>
+            <?php if ($hasChart): ?><div id="kpi-trend"></div>
+            <?php else: ?><div class="text-center text-muted py-5">ยังไม่มีข้อมูลรายปี</div><?php endif; ?>
+        </div></div>
+
+        <div class="card border-0 shadow-sm"><div class="card-body p-0">
+            <div class="table-responsive"><table class="table align-middle mb-0">
+                <thead class="table-light"><tr><th class="ps-4">ปีงบประมาณ</th><th class="text-end">เป้าหมาย</th><th class="text-end">ผลจริง</th><th class="text-center pe-4">สถานะ</th></tr></thead>
+                <tbody>
+                <?php foreach ($rowsY as $r): $st = KpiStatus::evaluate($r['target'], $r['actual'], $meta['operator']); ?>
+                    <tr>
+                        <td class="ps-4 fw-semibold"><?= (int) $r['fy'] ?></td>
+                        <td class="text-end" style="font-variant-numeric:tabular-nums"><?= Html::encode($num($r['target'])) ?></td>
+                        <td class="text-end" style="font-variant-numeric:tabular-nums"><?= Html::encode($num($r['actual'])) ?></td>
+                        <td class="text-center pe-4"><span class="badge <?= KpiStatus::badgeClass($st) ?>"><?= Html::encode(KpiStatus::label($st)) ?></span></td>
+                    </tr>
+                <?php endforeach; ?>
+                <?php if (!$rowsY): ?><tr><td colspan="4" class="text-center text-muted py-4">ยังไม่มีข้อมูลรายปี</td></tr><?php endif; ?>
+                </tbody>
+            </table></div>
+        </div></div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-3 border-start border-4 border-<?= $latestStatus === KpiStatus::PASS ? 'success' : ($latestStatus === KpiStatus::GAP ? 'danger' : 'secondary') ?>">
+            <div class="card-body">
+                <h6 class="fw-bold mb-2">สรุปผลการประเมิน</h6>
+                <?php if ($latest): ?>
+                    <div class="mb-2"><span class="badge <?= KpiStatus::badgeClass($latestStatus) ?> fs-6"><?= Html::encode(KpiStatus::label($latestStatus)) ?></span>
+                        <span class="text-muted small ms-1">ปี <?= (int) $latest['fy'] ?></span></div>
+                    <div class="small">เป้าหมาย: <span class="fw-semibold"><?= Html::encode($num($latest['target'])) ?></span> <?= Html::encode($meta['unit']) ?></div>
+                    <div class="small">ผลจริง: <span class="fw-semibold"><?= Html::encode($num($latest['actual'])) ?></span> <?= Html::encode($meta['unit']) ?></div>
+                <?php else: ?>
+                    <div class="text-body-secondary small">ยังไม่มีผลจริงบันทึกไว้</div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm"><div class="card-body">
+            <h6 class="fw-bold mb-3">รายละเอียดตัวชี้วัด</h6>
+            <dl class="row small mb-0">
+                <dt class="col-5 text-muted">หน่วยวัด</dt><dd class="col-7"><?= Html::encode($meta['unit'] ?: '-') ?></dd>
+                <dt class="col-5 text-muted">ทิศทาง</dt><dd class="col-7"><?= Html::encode($opLabel) ?></dd>
+                <dt class="col-5 text-muted">ผู้รับผิดชอบ</dt><dd class="col-7"><?= Html::encode($meta['owner'] ?: '-') ?></dd>
+                <dt class="col-5 text-muted">หน่วยงาน</dt><dd class="col-7"><?= Html::encode($meta['orgUnit'] ?: '-') ?></dd>
+            </dl>
+            <hr class="my-3">
+            <div class="mb-2"><div class="text-muted small mb-1">คำนิยาม</div><div class="erp-richtext"><?= $rt($meta['definition']) ?></div></div>
+            <div class="mb-2"><div class="text-muted small mb-1">สูตรคำนวณ</div><div class="erp-richtext"><?= $rt($meta['formula']) ?></div></div>
+            <div class="mb-2"><div class="text-muted small mb-1">วิธีประเมินผล</div><div class="erp-richtext"><?= $rt($meta['evaluation_method']) ?></div></div>
+            <div class="mb-0"><div class="text-muted small mb-1">แหล่งข้อมูล</div><div class="erp-richtext"><?= $rt($meta['data_source']) ?></div></div>
+        </div></div>
+    </div>
+</div>
+
+<?php if ($hasChart): ?>
+<?php $chart = Json::encode(['labels' => $labels, 'target' => $targetData, 'actual' => $actualData]); ?>
+<?php $this->registerJs(<<<JS
+(function(){
+    if (typeof ApexCharts === 'undefined') return;
+    var d = $chart;
+    var el = document.getElementById('kpi-trend');
+    if (!el) return;
+    new ApexCharts(el, {
+        chart: { type: 'line', height: 340, toolbar: { show: false } },
+        series: [ { name: 'เป้าหมาย', data: d.target }, { name: 'ผลจริง', data: d.actual } ],
+        xaxis: { categories: d.labels },
+        stroke: { width: [2, 3], dashArray: [6, 0], curve: 'straight' },
+        colors: ['#f59e0b', '#2563eb'], markers: { size: 4 },
+        legend: { position: 'top' }, tooltip: { shared: true }
+    }).render();
+})();
+JS); ?>
+<?php endif; ?>

@@ -60,31 +60,38 @@ class KpiController extends Controller
         return $this->redirect(['index', 'year' => $to]);
     }
 
-    public function actionIndex(?int $group = null, ?int $unit = null, ?int $year = null)
+    public function actionIndex(?int $group = null, ?int $unit = null, ?int $year = null, ?string $status = null)
     {
         $year = $year ?: KpiRegistry::defaultFiscalYear();
         $q = trim((string) Yii::$app->request->get('q'));
+        $status = in_array($status, [KpiStatus::PASS, KpiStatus::GAP, KpiStatus::NODATA], true) ? $status : null;
 
         $stdGroupIds = KpiGroup::find()->select('id')->where(['kind' => KpiGroup::KIND_STANDALONE])->column();
         $query = KpiIndicator::find()->with(['group', 'years'])->where(['group_id' => $stdGroupIds]);
         if ($group) $query->andWhere(['group_id' => $group]);
         if ($unit) $query->andWhere(['org_unit_id' => $unit]);
         if ($q !== '') $query->andWhere(['like', 'name', $q]);
-        $indicators = $query->orderBy(['group_id' => SORT_ASC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $all = $query->orderBy(['group_id' => SORT_ASC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
 
-        // สรุปสถานะของปีที่เลือก
+        // สถานะรายตัว (คำนวณครั้งเดียว) + สรุปจากทั้งหมด แล้วค่อยกรองรายการที่แสดงตามการ์ดที่คลิก
+        $statusMap = [];
         $summary = ['total' => 0, 'pass' => 0, 'gap' => 0, 'nodata' => 0];
-        foreach ($indicators as $ind) {
+        foreach ($all as $ind) {
+            $st = $ind->statusFor($year);
+            $statusMap[$ind->id] = $st;
             $summary['total']++;
-            $summary[$ind->statusFor($year)]++;
+            $summary[$st]++;
         }
+        $indicators = $status ? array_values(array_filter($all, static fn ($ind) => $statusMap[$ind->id] === $status)) : $all;
 
         return $this->render('index', [
             'indicators' => $indicators,
+            'statusMap' => $statusMap,
             'year' => $year,
             'q' => $q,
             'group' => $group,
             'unit' => $unit,
+            'status' => $status,
             'summary' => $summary,
             'groups' => $this->groupItems(),
             'units' => $this->orgUnitItems($unit),

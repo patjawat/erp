@@ -17,11 +17,13 @@ $defYear = \app\modules\pm\services\KpiRegistry::defaultFiscalYear();
 $yearOpts = range($defYear + 1, $defYear - 4);
 
 $cards = [
-    ['label' => 'ตัวชี้วัดทั้งหมด', 'value' => $summary['total'], 'cls' => 'text-body'],
-    ['label' => 'ผ่าน (PASS)', 'value' => $summary['pass'], 'cls' => 'text-success'],
-    ['label' => 'ต้องพัฒนา (GAP)', 'value' => $summary['gap'], 'cls' => 'text-danger'],
-    ['label' => 'ยังไม่มีข้อมูล', 'value' => $summary['nodata'], 'cls' => 'text-secondary'],
+    ['label' => 'ตัวชี้วัดทั้งหมด', 'value' => $summary['total'], 'cls' => 'text-body', 'status' => null, 'border' => 'primary'],
+    ['label' => 'ผ่าน (PASS)', 'value' => $summary['pass'], 'cls' => 'text-success', 'status' => 'pass', 'border' => 'success'],
+    ['label' => 'ต้องพัฒนา (GAP)', 'value' => $summary['gap'], 'cls' => 'text-danger', 'status' => 'gap', 'border' => 'danger'],
+    ['label' => 'ยังไม่มีข้อมูล', 'value' => $summary['nodata'], 'cls' => 'text-secondary', 'status' => 'nodata', 'border' => 'secondary'],
 ];
+// รักษาตัวกรองเดิมไว้เมื่อคลิกการ์ด
+$cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q];
 ?>
 
 <?php foreach (['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $cls): ?>
@@ -61,14 +63,23 @@ $cards = [
 
 <div class="row g-2 g-md-3 mb-3">
     <?php foreach ($cards as $c): ?>
+        <?php $isActive = ($status === $c['status']); ?>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body py-3">
-                <div class="small text-muted"><?= Html::encode($c['label']) ?></div>
-                <div class="fs-3 fw-bold <?= $c['cls'] ?>" style="font-variant-numeric:tabular-nums"><?= (int) $c['value'] ?></div>
-            </div></div>
+            <?= Html::a(
+                '<div class="card-body py-3"><div class="small text-muted d-flex justify-content-between align-items-center">'
+                    . Html::encode($c['label'])
+                    . ($isActive ? '<i class="bi bi-funnel-fill text-' . $c['border'] . '"></i>' : '')
+                    . '</div><div class="fs-3 fw-bold ' . $c['cls'] . '" style="font-variant-numeric:tabular-nums">' . (int) $c['value'] . '</div></div>',
+                array_merge($cardBase, ['status' => $c['status']]),
+                ['class' => 'card border-0 shadow-sm h-100 text-decoration-none' . ($isActive ? ' border-2 border-' . $c['border'] : ''), 'style' => $isActive ? 'outline:2px solid var(--bs-' . $c['border'] . ')' : '']
+            ) ?>
         </div>
     <?php endforeach; ?>
 </div>
+<?php if ($status): ?>
+    <div class="mb-3"><span class="badge bg-light text-dark border">กรอง: <?= Html::encode(\app\modules\pm\components\KpiStatus::label($status)) ?></span>
+        <?= Html::a('<i class="bi bi-x"></i> ล้างตัวกรองสถานะ', $cardBase, ['class' => 'btn btn-sm btn-link text-decoration-none py-0']) ?></div>
+<?php endif; ?>
 
 <div class="card border-0 shadow-sm mb-3"><div class="card-body">
     <?= Html::beginForm(['index'], 'get', ['class' => 'row g-3 align-items-end']) ?>
@@ -104,7 +115,7 @@ $cards = [
         </tr></thead>
         <tbody>
         <?php foreach ($indicators as $ind): ?>
-            <?php $entry = $ind->yearEntry($year); $status = $ind->statusFor($year); ?>
+            <?php $entry = $ind->yearEntry($year); $rowStatus = $statusMap[$ind->id] ?? $ind->statusFor($year); ?>
             <tr>
                 <td class="ps-4"><?= Html::a(Html::encode(RichText::plain($ind->name, 160)), ['view', 'id' => $ind->id], ['class' => 'fw-semibold text-decoration-none']) ?></td>
                 <td><span class="badge rounded-pill" style="background:<?= Html::encode($ind->group->color ?? '#6c757d') ?>1a;color:<?= Html::encode($ind->group->color ?? '#6c757d') ?>"><?= Html::encode($ind->group->name ?? '-') ?></span></td>
@@ -112,7 +123,7 @@ $cards = [
                 <td class="text-center small"><?= Html::encode($ind->unit ?: '-') ?></td>
                 <td class="text-end" style="font-variant-numeric:tabular-nums"><?= $entry && $entry->target_value !== null ? Html::encode(rtrim(rtrim((string) $entry->target_value, '0'), '.')) : '-' ?></td>
                 <td class="text-end" style="font-variant-numeric:tabular-nums"><?= $entry && $entry->actual_value !== null ? Html::encode(rtrim(rtrim((string) $entry->actual_value, '0'), '.')) : '-' ?></td>
-                <td class="text-center"><span class="badge <?= KpiStatus::badgeClass($status) ?>"><?= Html::encode(KpiStatus::label($status)) ?></span></td>
+                <td class="text-center"><span class="badge <?= KpiStatus::badgeClass($rowStatus) ?>"><?= Html::encode(KpiStatus::label($rowStatus)) ?></span></td>
                 <?php if ($canManage): ?>
                     <td class="text-end pe-4">
                         <?= Html::a('แก้ไข', ['update', 'id' => $ind->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>

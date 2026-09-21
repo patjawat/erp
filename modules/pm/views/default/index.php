@@ -39,13 +39,14 @@ $spark = static function (array $series): string {
 };
 
 $cards = [
-    ['label' => 'ตัวชี้วัดทั้งหมด', 'value' => $summary['total'], 'icon' => 'bi-clipboard2-data', 'color' => 'primary'],
-    ['label' => 'ผ่าน (PASS)', 'value' => $summary['pass'], 'icon' => 'bi-check2-circle', 'color' => 'success'],
-    ['label' => 'ต้องพัฒนา (GAP)', 'value' => $summary['gap'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
-    ['label' => 'อัตราสำเร็จ', 'value' => $summary['successRate'] . '%', 'icon' => 'bi-graph-up-arrow', 'color' => 'info'],
+    ['label' => 'ตัวชี้วัดทั้งหมด', 'value' => $summary['total'], 'icon' => 'bi-clipboard2-data', 'color' => 'primary', 'status' => null, 'filter' => true],
+    ['label' => 'ผ่าน (PASS)', 'value' => $summary['pass'], 'icon' => 'bi-check2-circle', 'color' => 'success', 'status' => 'pass', 'filter' => true],
+    ['label' => 'ต้องพัฒนา (GAP)', 'value' => $summary['gap'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger', 'status' => 'gap', 'filter' => true],
+    ['label' => 'อัตราสำเร็จ', 'value' => $summary['successRate'] . '%', 'icon' => 'bi-graph-up-arrow', 'color' => 'info', 'status' => null, 'filter' => false],
 ];
 
 $yearOpts = range($defaultYear + 1, $defaultYear - 4);
+$cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q];
 ?>
 
 <div class="d-flex justify-content-end mb-2">
@@ -54,17 +55,27 @@ $yearOpts = range($defaultYear + 1, $defaultYear - 4);
 
 <div class="row g-2 g-md-3 mb-3">
     <?php foreach ($cards as $c): ?>
+        <?php
+        $isActive = $c['filter'] && ($status === $c['status']);
+        $inner = '<div class="card-body d-flex align-items-center gap-3 py-3">'
+            . '<span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-' . $c['color'] . '-subtle text-' . $c['color'] . '" style="width:44px;height:44px"><i class="bi ' . $c['icon'] . ' fs-5"></i></span>'
+            . '<div><div class="small text-muted d-flex align-items-center gap-1">' . Html::encode($c['label'])
+            . ($isActive ? '<i class="bi bi-funnel-fill text-' . $c['color'] . '"></i>' : '')
+            . '</div><div class="fs-4 fw-bold" style="font-variant-numeric:tabular-nums">' . (is_string($c['value']) ? Html::encode($c['value']) : (int) $c['value']) . '</div></div></div>';
+        ?>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3 py-3">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-<?= $c['color'] ?>-subtle text-<?= $c['color'] ?>" style="width:44px;height:44px"><i class="bi <?= $c['icon'] ?> fs-5"></i></span>
-                <div>
-                    <div class="small text-muted"><?= Html::encode($c['label']) ?></div>
-                    <div class="fs-4 fw-bold" style="font-variant-numeric:tabular-nums"><?= is_string($c['value']) ? Html::encode($c['value']) : (int) $c['value'] ?></div>
-                </div>
-            </div></div>
+            <?php if ($c['filter']): ?>
+                <?= Html::a($inner, array_merge($cardBase, ['status' => $c['status']]), ['class' => 'card border-0 shadow-sm h-100 text-decoration-none text-reset', 'style' => $isActive ? 'outline:2px solid var(--bs-' . $c['color'] . ')' : '']) ?>
+            <?php else: ?>
+                <div class="card border-0 shadow-sm h-100"><?= $inner ?></div>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
 </div>
+<?php if ($status): ?>
+    <div class="mb-3"><span class="badge bg-light text-dark border">กรอง: <?= Html::encode(KpiStatus::label($status)) ?></span>
+        <?= Html::a('<i class="bi bi-x"></i> ล้างตัวกรองสถานะ', $cardBase, ['class' => 'btn btn-sm btn-link text-decoration-none py-0']) ?></div>
+<?php endif; ?>
 
 <div class="card border-0 shadow-sm mb-3"><div class="card-body">
     <?= Html::beginForm(['index'], 'get', ['class' => 'row g-3 align-items-end']) ?>

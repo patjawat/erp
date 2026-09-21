@@ -64,7 +64,7 @@ class KpiRegistry
                 }
             }
             $row->status = KpiStatus::evaluate($row->target, $row->actual, $row->operator);
-            $row->detailUrl = ['/pm/kpi/view', 'id' => (int) $ind->id];
+            $row->detailUrl = ['/pm/default/detail', 'source' => 'standalone', 'id' => (int) $ind->id];
             $rows[] = $row;
         }
         return $rows;
@@ -85,24 +85,17 @@ class KpiRegistry
             $row->groupName = $group->name;
             $row->name = (string) $ind->name;
             $row->unit = $ind->unit;
-            $lastYearId = null;
             foreach ($ind->years as $y) {
                 $row->series[(int) $y->fiscal_year] = $y->actual_value !== null ? (float) $y->actual_value : null;
                 $row->targetSeries[(int) $y->fiscal_year] = $y->target_value !== null ? (float) $y->target_value : null;
-                $lastYearId = (int) $y->id;
                 if ((int) $y->fiscal_year === $year) {
                     $row->operator = $y->operator;
                     $row->target = $y->target_value !== null ? (float) $y->target_value : null;
                     $row->actual = $y->actual_value !== null ? (float) $y->actual_value : null;
-                    // ตัวยุทธศาสตร์ดูรายละเอียดผ่านแบบฟอร์ม KPI Template เดิม (ระดับปี)
-                    $row->detailUrl = ['/pm/strategy-catalog/template', 'id' => (int) $y->id];
                 }
             }
-            // ถ้าปีที่เลือกไม่มีข้อมูล แต่มีข้อมูลปีอื่น ให้ลิงก์ไปปีล่าสุดที่มี
-            if ($row->detailUrl === null && $lastYearId !== null) {
-                $row->detailUrl = ['/pm/strategy-catalog/template', 'id' => $lastYearId];
-            }
             $row->status = KpiStatus::evaluate($row->target, $row->actual, $row->operator);
+            $row->detailUrl = ['/pm/default/detail', 'source' => 'strategy', 'id' => (int) $ind->id];
             $rows[] = $row;
         }
         return $rows;
