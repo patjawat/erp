@@ -10,7 +10,7 @@ use yii\helpers\Url;
 /** @var int[] $planYears */
 /** @var array $groups */
 /** @var array $incomeTot */
-/** @var array $expenseRows */
+/** @var array $expenseTypes */
 /** @var array $expenseTot */
 /** @var array $net */
 /** @var array $compare */
@@ -91,14 +91,20 @@ $fmt = fn($v) => number_format((float) $v, 2);
 
             <!-- รายจ่าย -->
             <tr class="table-secondary"><td colspan="<?= $nCols ?>" class="fw-bold">รายจ่าย <span class="fw-normal small text-body-secondary">(ดึงจากแผนรายจ่าย — อ่านอย่างเดียว)</span></td></tr>
-            <?php if (!$expenseRows): ?>
+            <?php if (!$expenseTypes): ?>
                 <tr><td colspan="<?= $nCols ?>" class="text-center text-body-secondary py-3">ยังไม่มีข้อมูลแผนรายจ่าย — เพิ่มได้ที่เมนู <a href="<?= Url::to(['/plan/overview']) ?>">แผนรายจ่าย</a></td></tr>
             <?php endif; ?>
-            <?php foreach ($expenseRows as $row): ?>
-                <tr>
-                    <td class="ps-4"><?= Html::encode($row['name']) ?></td>
-                    <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($row['vals'][$y] ?? 0) ?></td><?php endforeach; ?>
+            <?php foreach ($expenseTypes as $type): ?>
+                <tr class="table-light">
+                    <td class="fw-semibold"><?= Html::encode($type['title']) ?></td>
+                    <?php foreach ($allYears as $y): ?><td class="text-end fw-semibold"><?= $fmt($type['vals'][$y] ?? 0) ?></td><?php endforeach; ?>
                 </tr>
+                <?php foreach ($type['cats'] as $cat): ?>
+                    <tr>
+                        <td class="ps-4"><?= Html::encode($cat['title']) ?></td>
+                        <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($cat['vals'][$y] ?? 0) ?></td><?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
             <?php endforeach; ?>
             <tr class="table-primary fw-bold">
                 <td class="text-end">รวมรายจ่าย</td>

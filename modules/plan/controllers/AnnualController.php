@@ -142,17 +142,26 @@ class AnnualController extends Controller
         }
         $r += 2;
 
-        // รายจ่าย
+        // รายจ่าย (แตกถึงระดับหมวด)
         $s->setCellValue("A$r", 'รายจ่าย (จากแผนรายจ่าย)');
         $r++;
-        foreach ($m['expenseRows'] as $row) {
-            $s->setCellValue("A$r", '   ' . $row['name']);
+        foreach ($m['expenseTypes'] as $type) {
+            $s->setCellValue("A$r", $type['title']);
             $col = 'B';
             foreach ($allYears as $y) {
-                $s->setCellValue($col . $r, $row['vals'][$y] ?? 0);
+                $s->setCellValue($col . $r, $type['vals'][$y] ?? 0);
                 $col++;
             }
             $r++;
+            foreach ($type['cats'] as $cat) {
+                $s->setCellValue("A$r", '   ' . $cat['title']);
+                $col = 'B';
+                foreach ($allYears as $y) {
+                    $s->setCellValue($col . $r, $cat['vals'][$y] ?? 0);
+                    $col++;
+                }
+                $r++;
+            }
         }
         $s->setCellValue("A$r", 'รวมรายจ่าย');
         $col = 'B';
@@ -222,30 +231,39 @@ class AnnualController extends Controller
             $incomeGroups[] = ['name' => $g['name'], 'rows' => $rows, 'sub' => $sub];
         }
 
-        // รายจ่ายจาก plan_order (read-only) ทุกปี
-        $expenseRows = [];
+        // รายจ่ายจาก plan_order (read-only) ทุกปี — แตกถึงระดับหมวด (เช่น 1.1) เหมือนหน้าภาพรวมแผนรายจ่าย
         $expenseTot = array_fill_keys($allYears, 0.0);
-        $byType = [];
+        $acc = []; // [tc => ['title','vals'=>[y=>..],'cats'=>[cc=>['title','vals'=>[y=>..]]]]]
         foreach ($allYears as $y) {
             $ov = PlanOrder::overviewByType($y, 'all');
             foreach ((array) ($ov['types'] ?? []) as $tc => $t) {
-                if (!isset($byType[$tc])) {
-                    $byType[$tc] = ['name' => $t['title'] ?: $tc, 'vals' => array_fill_keys($allYears, 0.0)];
+                if (!isset($acc[$tc])) {
+                    $acc[$tc] = ['title' => $t['title'] ?: $tc, 'vals' => array_fill_keys($allYears, 0.0), 'cats' => []];
                 }
-                $byType[$tc]['vals'][$y] = (float) ($t['sub']['total'] ?? 0);
+                $acc[$tc]['vals'][$y] = (float) ($t['sub']['total'] ?? 0);
+                foreach ((array) ($t['categories'] ?? []) as $cat) {
+                    $cc = (string) $cat['code'];
+                    if (!isset($acc[$tc]['cats'][$cc])) {
+                        $acc[$tc]['cats'][$cc] = ['title' => $cat['title'], 'vals' => array_fill_keys($allYears, 0.0)];
+                    }
+                    $acc[$tc]['cats'][$cc]['vals'][$y] = (float) ($cat['total'] ?? 0);
+                }
             }
             $expenseTot[$y] = (float) ($ov['grand']['total'] ?? 0);
         }
-        // เรียงตามลำดับมาตรฐาน PER/OPS/INV/OTH
-        foreach (self::EXPENSE_TYPE_ORDER as $tc) {
-            if (isset($byType[$tc])) {
-                $expenseRows[] = $byType[$tc];
+        // จัดลำดับประเภทตามมาตรฐาน PER/OPS/INV/OTH แล้วตามด้วยที่เหลือ
+        $expenseTypes = [];
+        $ordered = array_merge(self::EXPENSE_TYPE_ORDER, array_diff(array_keys($acc), self::EXPENSE_TYPE_ORDER));
+        foreach ($ordered as $tc) {
+            if (!isset($acc[$tc])) {
+                continue;
             }
-        }
-        foreach ($byType as $tc => $row) {
-            if (!in_array($tc, self::EXPENSE_TYPE_ORDER, true)) {
-                $expenseRows[] = $row;
-            }
+            $expenseTypes[] = [
+                'code' => $tc,
+                'title' => $acc[$tc]['title'],
+                'vals' => $acc[$tc]['vals'],
+                'cats' => array_values($acc[$tc]['cats']),
+            ];
         }
 
         // net ต่อปี
@@ -259,7 +277,7 @@ class AnnualController extends Controller
             'planYears' => $planYears,
             'groups' => $incomeGroups,
             'incomeTot' => $incomeTot,
-            'expenseRows' => $expenseRows,
+            'expenseTypes' => $expenseTypes,
             'expenseTot' => $expenseTot,
             'net' => $net,
         ];
