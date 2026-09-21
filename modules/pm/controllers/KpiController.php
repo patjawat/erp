@@ -66,6 +66,28 @@ class KpiController extends Controller
         ]);
     }
 
+    /** รายละเอียดตัวชี้วัด + กราฟเทรนด์ (เป้า vs ผลจริง) */
+    public function actionView(int $id)
+    {
+        $model = $this->findModel($id);
+        $years = $model->getYears()->all();
+        $unitName = $model->org_unit_id ? (string) OrgUnit::find()->select('name')->where(['id' => $model->org_unit_id])->scalar() : null;
+
+        // ปีล่าสุดที่มีผลจริง ใช้สรุปผลประเมิน
+        $latest = null;
+        foreach ($years as $y) {
+            if ($y->actual_value !== null) $latest = $y;
+        }
+
+        return $this->render('view', [
+            'model' => $model,
+            'years' => $years,
+            'unitName' => $unitName,
+            'latest' => $latest,
+            'canManage' => Yii::$app->user->can('kpiManage'),
+        ]);
+    }
+
     public function actionCreate()
     {
         return $this->formPage(new KpiIndicator(['is_active' => true, 'operator' => '>=', 'frequency' => 'year']));

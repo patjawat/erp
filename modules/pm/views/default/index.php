@@ -126,7 +126,7 @@ $yearOpts = range($defaultYear + 1, $defaultYear - 4);
         <tbody>
         <?php foreach ($rows as $r): ?>
             <tr>
-                <td class="ps-4"><div class="fw-semibold"><?= Html::encode(RichText::plain($r->name, 160)) ?></div></td>
+                <td class="ps-4"><?php $nm = Html::encode(RichText::plain($r->name, 160)); ?><?= $r->detailUrl ? Html::a($nm, $r->detailUrl, ['class' => 'fw-semibold text-decoration-none']) : '<span class="fw-semibold">' . $nm . '</span>' ?></td>
                 <td class="small text-muted"><?= Html::encode($r->groupName) ?></td>
                 <td class="small"><?= Html::encode($r->orgUnitId ? ($unitNames[$r->orgUnitId] ?? '-') : '-') ?></td>
                 <td class="text-center small"><?= Html::encode($r->unit ?: '-') ?></td>

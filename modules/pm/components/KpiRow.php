@@ -26,6 +26,8 @@ final class KpiRow
     public array $targetSeries = [];
     /** @var int[] รายการ ha_part_id ที่ตัวชี้วัดนี้ map ตอบ (เฟส 5) */
     public array $haParts = [];
+    /** ลิงก์ไปหน้ารายละเอียด (route array) หรือ null ถ้าไม่มี */
+    public ?array $detailUrl = null;
 
     public static function make(string $source, int $id): self
     {

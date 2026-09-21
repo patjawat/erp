@@ -78,7 +78,7 @@ $cards = [
         <?php foreach ($indicators as $ind): ?>
             <?php $entry = $ind->yearEntry($year); $status = $ind->statusFor($year); ?>
             <tr>
-                <td class="ps-4"><div class="fw-semibold"><?= Html::encode(RichText::plain($ind->name, 160)) ?></div></td>
+                <td class="ps-4"><?= Html::a(Html::encode(RichText::plain($ind->name, 160)), ['view', 'id' => $ind->id], ['class' => 'fw-semibold text-decoration-none']) ?></td>
                 <td><span class="badge rounded-pill" style="background:<?= Html::encode($ind->group->color ?? '#6c757d') ?>1a;color:<?= Html::encode($ind->group->color ?? '#6c757d') ?>"><?= Html::encode($ind->group->name ?? '-') ?></span></td>
                 <td class="small"><?= Html::encode($ind->org_unit_id ? ($unitNames[$ind->org_unit_id] ?? '-') : '-') ?></td>
                 <td class="text-center small"><?= Html::encode($ind->unit ?: '-') ?></td>
