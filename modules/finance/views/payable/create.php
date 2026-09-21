@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
 
 $isUpdate = !$model->isNewRecord;
 $this->title = $isUpdate ? 'แก้ไขร่างทะเบียนเจ้าหนี้' : 'สร้างร่างทะเบียนเจ้าหนี้';
@@ -33,6 +34,19 @@ $this->endBlock();
                 <div class="form-text mb-3">
                     รหัสจากระบบพัสดุ: <?= Html::encode($inbox->vendor_code_snapshot ?: 'ไม่ระบุ') ?>,
                     ชื่อเดิม: <?= Html::encode($inbox->vendor_name_snapshot ?: 'ไม่ระบุ') ?>
+                </div>
+
+                <div class="mb-3">
+                    <?= $form->field($model, 'accounting_chart_account_id')->widget(Select2::class, [
+                        'data' => $accountOptions,
+                        'options' => ['placeholder' => $chartVersion ? 'ค้นหารหัสหรือชื่อบัญชี' : 'ยังไม่มีผังโรงพยาบาลที่เปิดใช้', 'disabled' => !$chartVersion],
+                        'pluginOptions' => ['allowClear' => true, 'width' => '100%'],
+                    ])->label('บัญชีเดบิตหลัก') ?>
+                    <?php if ($chartVersion): ?>
+                        <div class="form-text">ผังโรงพยาบาล <?= Html::encode($chartVersion->version_code) ?> ปีงบประมาณ <?= Html::encode($chartVersion->fiscal_year) ?> · เลือกหมวดสินทรัพย์/สินค้าคงคลัง หรือค่าใช้จ่าย</div>
+                    <?php else: ?>
+                        <div class="alert alert-warning mt-2 mb-0" role="alert">ยังไม่มีผังบัญชีโรงพยาบาลที่เปิดใช้สำหรับปีงบประมาณของใบแจ้งหนี้ สามารถบันทึกร่างได้ แต่ยังส่งตรวจอนุมัติไม่ได้</div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="row g-3">

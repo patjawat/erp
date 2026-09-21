@@ -45,7 +45,12 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
         </div>
         <div class="entry-meta">
             <span class="entry-chip">หมายเลขผู้ใช้ไฟฟ้า: <?= Html::encode($account->electric_account_no ?: 'ยังไม่ระบุ') ?></span>
-            <span class="entry-chip">ผู้พักอายุเกิน 15 ปี: <?= (int) $account->occupants_over_15 ?> คน</span>
+            <?php if ($account->occupancy_id): ?>
+                <span class="entry-chip">ผู้พักอาศัยรวม: <?= (int) $account->occupants_total ?> คน</span>
+                <span class="entry-chip">คิดค่าใช้จ่ายรายหัว (เกิน 15 ปี): <?= (int) $account->occupants_over_15 ?> คน</span>
+            <?php else: ?>
+                <span class="entry-chip">ค่าใช้จ่ายประจำห้อง (ไม่มีผู้พัก)</span>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -87,6 +92,54 @@ $location = implode(' / ', array_filter([$account->building_name, $account->unit
             </div>
         <?php endforeach; ?>
     </div>
+
+    <?php if (!empty($equipment)):
+        $equipmentTotal = 0.0;
+        foreach ($equipment as $asset) { $equipmentTotal += $asset->totalMonthlyRent(); }
+    ?>
+        <div class="equipment-breakdown mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-2">
+                <div>
+                    <div class="fw-semibold"><i class="bi bi-box-seam"></i> อุปกรณ์/เครื่องใช้ไฟฟ้าที่คิดค่าเช่า</div>
+                    <div class="small text-body-secondary">ยอดรวมนี้เป็นค่าตั้งต้นของรายการ “ค่าเช่าอุปกรณ์” ด้านบน</div>
+                </div>
+                <div class="text-end">
+                    <div class="small text-body-secondary">รวมค่าเช่า/เดือน</div>
+                    <div class="fw-bold fs-6"><?= Yii::$app->formatter->asDecimal($equipmentTotal, 2) ?> บาท</div>
+                </div>
+            </div>
+            <div class="table-responsive border rounded-3">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="small text-body-secondary">
+                        <tr>
+                            <th>รายการ</th>
+                            <th>ห้อง</th>
+                            <th class="text-center">จำนวน</th>
+                            <th class="text-end">ค่าเช่า/หน่วย</th>
+                            <th class="text-end">รวม/เดือน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($equipment as $asset): ?>
+                            <tr>
+                                <td><?= Html::encode($asset->item_name) ?><?php if ($asset->category): ?><div class="small text-body-secondary"><?= Html::encode($asset->category) ?></div><?php endif; ?></td>
+                                <td class="small"><?= Html::encode($asset->room?->name ?: 'ทั้งหลัง/ส่วนกลาง') ?></td>
+                                <td class="text-center"><?= Yii::$app->formatter->asDecimal($asset->quantity, 2) ?> <?= Html::encode($asset->unit_name) ?></td>
+                                <td class="text-end"><?= Yii::$app->formatter->asDecimal($asset->monthly_rent, 2) ?></td>
+                                <td class="text-end fw-semibold"><?= Yii::$app->formatter->asDecimal($asset->totalMonthlyRent(), 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-top">
+                            <th colspan="4" class="text-end">รวมค่าเช่าอุปกรณ์ทั้งหมด</th>
+                            <th class="text-end"><?= Yii::$app->formatter->asDecimal($equipmentTotal, 2) ?> บาท</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <div class="payment-panel">
         <div class="row g-3 align-items-end">

@@ -81,13 +81,12 @@ AppAsset::register($this);
         position: sticky;
         top: 64px;
         z-index: 1040;
-        height: 86px;
+        height: 76px;
         background-color: var(--bs-body-bg, #fff);
         border-bottom: 1px solid var(--bs-border-color, #dee2e6);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         width: 100%;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: visible;
     }
 
     .navbar-fixed-container::-webkit-scrollbar {
@@ -112,6 +111,17 @@ AppAsset::register($this);
         margin: 0;
         padding: 0 4px;
         list-style: none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .erp-nav-shortcuts {
+        min-width: 0;
+        scrollbar-width: thin;
+    }
+
+    .erp-nav-item[hidden], .erp-system-row[hidden], .erp-system-group[hidden] {
+        display: none !important;
     }
 
     .erp-nav-item {
@@ -119,7 +129,7 @@ AppAsset::register($this);
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-width: 120px;
+        min-width: 112px;
         height: 100%;
         padding: 8px 4px;
         text-decoration: none;
@@ -163,6 +173,40 @@ AppAsset::register($this);
         height: 20px;
         stroke-width: 2px;
         color:var(--bs-primary)
+    }
+
+    /* ปุ่ม "ระบบทั้งหมด" ทำเป็นไทล์สี่เหลี่ยมจตุรัส (rounded-square) ให้เข้าชุดกับไอคอนอื่น */
+    .erp-nav-launcher {
+        background: transparent;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .erp-nav-launcher:hover {
+        background-color: #f8fafc;
+        color: #334155;
+    }
+
+    .erp-icon-box-square {
+        border-radius: 10px;
+        background-color: var(--erp-primary-light);
+        color: var(--erp-primary);
+    }
+
+    .erp-icon-box-square i {
+        font-size: 20px;
+        line-height: 1;
+        color: var(--erp-primary);
+    }
+
+    .erp-nav-launcher:hover .erp-icon-box-square {
+        background-color: var(--erp-primary);
+    }
+
+    .erp-nav-launcher:hover .erp-icon-box-square i {
+        color: #fff;
     }
 
     .erp-icon-box-md {
@@ -260,9 +304,9 @@ AppAsset::register($this);
 
     <div class="navbar-fixed-container d-none d-flex justify-content-center align-items-center"
         id="erpPrimaryNavbar">
-        <div class="erp-nav-list">
+        <nav class="erp-nav-list" aria-label="เมนูระบบ">
             <?= $this->render('navbar') ?>
-        </div>
+        </nav>
     </div>
 
     <div class="d-flex flex-column flex-grow-1 page-content-wrapper">
@@ -358,6 +402,54 @@ JS;
     $this->registerJS($js, View::POS_END);
     ?>
 
+
+    <?php
+    // โมดัล "มีอะไรใหม่" — เด้งครั้งเดียวเมื่อ รพ. อัปเดตเป็นเวอร์ชันใหม่
+    $__ver = (string) Yii::$app->version;
+    $__clFile = Yii::getAlias('@app/config/changelog.php');
+    $__cl = is_file($__clFile) ? (array) require $__clFile : [];
+    $__note = $__cl[$__ver] ?? null;
+    if ($__note && !Yii::$app->user->isGuest):
+        $__enc = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    ?>
+    <div class="modal fade" id="whatsNewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-stars me-2"></i>อัปเดตใหม่ <?= $__enc($__ver) ?></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="fw-semibold fs-6 mb-1"><?= $__enc($__note['title'] ?? '') ?></div>
+                    <div class="text-body-secondary small mb-3"><i class="bi bi-calendar3 me-1"></i><?= $__enc($__note['date'] ?? '') ?></div>
+                    <ul class="mb-0 ps-3">
+                        <?php foreach ((array) ($__note['highlights'] ?? []) as $__h): ?>
+                            <li class="mb-2"><?= $__enc($__h) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"><i class="bi bi-check-lg me-1"></i>รับทราบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        try {
+            var v = <?= json_encode($__ver) ?>;
+            if (localStorage.getItem('erp_seen_version') === v) return;
+            document.addEventListener('DOMContentLoaded', function(){
+                var el = document.getElementById('whatsNewModal');
+                if (el && window.bootstrap && bootstrap.Modal) {
+                    new bootstrap.Modal(el).show();
+                    el.addEventListener('hidden.bs.modal', function(){ try { localStorage.setItem('erp_seen_version', v); } catch(e){} });
+                } else { try { localStorage.setItem('erp_seen_version', v); } catch(e){} }
+            });
+        } catch(e){}
+    })();
+    </script>
+    <?php endif; ?>
 
     <?php $this->endBody() ?>
 </body>

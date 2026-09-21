@@ -37,6 +37,8 @@ class Notify extends \yii\db\ActiveRecord
     const TYPE_APPRECIATION_THANK = 'appreciation_thank';
     const TYPE_CHALLENGE_WINNER = 'challenge_winner';
     const TYPE_TASK_ASSIGNED = 'task_assigned';
+    /** แจ้งค่าใช้จ่ายบ้านพักประจำเดือนให้ผู้พักอาศัย */
+    const TYPE_HOUSING_EXPENSE = 'housing_expense';
 
     const REF_TYPE_TEST = 'test';
 
@@ -56,6 +58,7 @@ class Notify extends \yii\db\ActiveRecord
             self::TYPE_APPRECIATION_THANK => 'มีคำขอบคุณส่งถึงคุณ',
             self::TYPE_CHALLENGE_WINNER => 'ทำ Challenge ครบเป้า',
             self::TYPE_TASK_ASSIGNED => 'มีงานมอบหมายถึงคุณ',
+            self::TYPE_HOUSING_EXPENSE => 'ค่าใช้จ่ายบ้านพักประจำเดือน',
         ];
     }
 

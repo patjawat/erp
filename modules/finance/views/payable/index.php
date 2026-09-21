@@ -47,6 +47,12 @@ $this->endBlock();
                 ['attribute' => 'vendor_name_snapshot', 'label' => 'เจ้าหนี้'],
                 ['attribute' => 'invoice_no', 'label' => 'ใบแจ้งหนี้'],
                 [
+                    'attribute' => 'account_code_snapshot',
+                    'label' => 'บัญชีเดบิตหลัก',
+                    'value' => static fn(FinancePayable $model) => $model->account_code_snapshot ?: 'ยังไม่เลือก',
+                    'contentOptions' => ['class' => 'font-monospace text-nowrap'],
+                ],
+                [
                     'attribute' => 'due_date',
                     'label' => 'วันครบกำหนด',
                     'format' => ['date', 'php:d/m/Y'],

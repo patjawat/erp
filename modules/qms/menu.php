@@ -3,7 +3,8 @@
 use yii\helpers\Url;
 
 /**
- * QMS page-nav — pill แนวนอนตามมาตรฐาน UI กลาง (active=primary / ที่เหลือ=outline-secondary)
+ * QMS page-nav — ปุ่มมุมมนปกติ (สไตล์เดียวกับ HA12/KM/ร้องเรียน)
+ * active=btn-primary / ที่เหลือ=btn-outline-primary
  * @var string $active คีย์เมนูที่กำลังเปิด
  */
 $active = $active ?? '';
@@ -29,8 +30,9 @@ $items = [
     <div class="d-flex flex-wrap align-items-center gap-2">
         <?php foreach ($items as $item): ?>
             <a href="<?= Url::to($item['url']) ?>"
-               class="btn rounded-pill <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-secondary' ?>">
-                <i class="bi <?= $item['icon'] ?> me-1" aria-hidden="true"></i><?= $item['label'] ?>
+               class="btn <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2"
+               <?= $active === $item['key'] ? 'aria-current="page"' : '' ?>>
+                <i class="bi <?= $item['icon'] ?>" aria-hidden="true"></i><span><?= $item['label'] ?></span>
             </a>
         <?php endforeach; ?>
     </div>

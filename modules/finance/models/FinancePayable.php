@@ -5,6 +5,9 @@ namespace app\modules\finance\models;
 use Yii;
 use yii\db\ActiveRecord;
 use app\modules\sm\models\Vendor;
+use app\modules\accounting\models\AccountingChartAccount;
+use app\modules\accounting\models\AccountingChartVersion;
+use app\modules\accounting\models\AccountingJournalDraft;
 
 /**
  * Draft creditor register. No accounting entry is generated at this stage.
@@ -51,7 +54,7 @@ class FinancePayable extends ActiveRecord
                 'invoice_date', 'billing_date', 'due_date_basis', 'credit_days',
                 'due_date', 'gross_amount', 'net_amount', 'status',
             ], 'required'],
-            [['finance_inbox_id', 'vendor_id', 'credit_days', 'submitted_by', 'approved_by', 'created_by', 'updated_by'], 'integer'],
+            [['finance_inbox_id', 'vendor_id', 'accounting_chart_version_id', 'accounting_chart_account_id', 'credit_days', 'submitted_by', 'approved_by', 'created_by', 'updated_by'], 'integer'],
             [['credit_days'], 'integer', 'min' => 0, 'max' => 3650],
             [['invoice_date', 'billing_date', 'due_date'], 'date', 'format' => 'php:Y-m-d'],
             [['gross_amount', 'vat_amount', 'withholding_tax_amount', 'net_amount'], 'number', 'min' => 0],
@@ -59,6 +62,8 @@ class FinancePayable extends ActiveRecord
             [['payable_no'], 'string', 'max' => 50],
             [['vendor_code_snapshot', 'invoice_no', 'source_document_no'], 'string', 'max' => 100],
             [['vendor_name_snapshot'], 'string', 'max' => 255],
+            [['account_code_snapshot'], 'string', 'max' => 30],
+            [['account_name_snapshot'], 'string', 'max' => 500],
             [['due_date_basis'], 'in', 'range' => [self::DUE_BASIS_BILLING_DATE]],
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
@@ -123,5 +128,21 @@ class FinancePayable extends ActiveRecord
     public function getVoucher()
     {
         return $this->hasOne(FinanceVoucher::class, ['finance_payable_id' => 'id']);
+    }
+
+    public function getAccountingChartVersion()
+    {
+        return $this->hasOne(AccountingChartVersion::class, ['id' => 'accounting_chart_version_id']);
+    }
+
+    public function getAccountingChartAccount()
+    {
+        return $this->hasOne(AccountingChartAccount::class, ['id' => 'accounting_chart_account_id']);
+    }
+
+    public function getJournalDraft()
+    {
+        return $this->hasOne(AccountingJournalDraft::class, ['source_id' => 'id'])
+            ->andOnCondition(['source_type' => AccountingJournalDraft::SOURCE_PAYABLE]);
     }
 }

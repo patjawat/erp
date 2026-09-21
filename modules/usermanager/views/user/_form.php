@@ -1,170 +1,50 @@
 <?php
 
-use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
+use yii\helpers\Html;
 
-$sql = "SELECT * FROM `auth_item` WHERE `type` = 1 ORDER BY `type` ASC";
-$querys = Yii::$app->db->createCommand($sql)->queryAll();
+/** @var app\modules\usermanager\models\User $model */
 
+$form = ActiveForm::begin(['id' => 'form-usermanager']);
 ?>
-
-<style>
-.form-group>label {
-    text-align: end;
-    font-size: 15px;
-}
-
-.form-horizontal .control-label {
-    padding-top: 7px;
-    margin-bottom: 0;
-    text-align: right;
-}
-
-.help-block {
-    display: block;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    color: #737373;
-}
-
-.form-group {
-    margin-bottom: 5px;
-}
-
-.card-top {
-    width: 100%;
-    display: inline-block;
-    border-radius: 5px;
-    padding: 10px 30px;
-    border-top: 2px solid var(--color-blue-d);
-    box-shadow: 0px 6px 6px 0px rgba(0, 0, 0, 0.15);
-    text-align: left;
-    color: var(--color-gray-xd);
-    text-decoration: none;
-    margin-bottom: 1rem;
-}
-
-.custom-control-label::before {
-    left: -24px !important;
-}
-
-.custom-control-label::after {
-    left: -24px !important;
-}
-
-.alert-primary {
-    color: #004085 !important;
-    background-color: #cce5ff !important;
-    border-color: #b8daff !important;
-}
-</style>
-
-<?php $form = ActiveForm::begin([
-    'id' => 'form-usermanager',
-    'fieldConfig' => [
-        'horizontalCssClasses' => [
-            'label' => 'col-lg-4 col-md-4 col-sm-4',
-            'wrapper' => 'col-lg-8 col-md-8 col-sm-8',
-        ],
-    ],
-    'layout' => 'horizontal',
-]); ?>
-
-<div class="card">
-            <div class="card-body">
+<div class="card border shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-3">ข้อมูลผู้ใช้งาน</h2>
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
                 <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
-                <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
-                <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'fullname')->textInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
+            </div>
+            <div class="col-12 col-lg-6">
+                <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
                 <?= $form->field($model, 'status')->inline()->radioList($model->getItemStatus()) ?>
-
-                <div class="form-group row field-user-email">
-                    <label class="col-lg-4 col-md-4 col-sm-4" for="user-email"></label>
-                    <div class="col-lg-8 col-md-8 col-sm-8">
-                        <div class="">
-                            <span class="btn btn-sm btn-success float-left" id="test"><i class="fas fa-check"></i>
-                                บันทึก</span>
-                            <?php Html::submitButton($model->isNewRecord ? Yii::t('app', '<i class="fas fa-check"></i> บันทึก') : Yii::t('app', '<i class="fas fa-check"></i> แก้ไข'), ['class' => $model->isNewRecord ? 'btn btn-sm btn-success float-left link-loading shadow' : 'btn btn-sm btn-info float-left link-loading shadow']) ?>
-                            &nbsp;
-                            <?= Html::a('<i class="fas fa-redo"></i> ยกเลิก', ['/usermanager/user'], ['class' => 'btn btn-sm btn-secondary link-loading', 'title' =>  'Reset Grid']) ?>
-                        </div>
-                        <div class="invalid-feedback "></div>
-
-                    </div>
-                </div>
             </div>
         </div>
-<div class="row">
-<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <?php
-    // ระบุ list ที่ไม่ต้องการแสดง
-    $exclude = ['director']; 
-    // $exclude = ['']; 
-    
-    // กรองเอาเฉพาะที่ไม่มีในรายการ exclude
-    $filteredRoles = array_diff_key($model->getAllRoles(), array_flip($exclude));
-    
-    ?>
-        <?= $form->field($model, 'roles')->checkboxList($filteredRoles)->label(false) ?>
-
     </div>
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+</div>
 
-        
-
-        <div
-            class="table-responsive"
-        >
-            <table
-                class="table table-primary"
-            >
-                <thead>
-                    <tr>
-                        <th scope="col">ชื่อของสิทธิ</th>
-                        <th scope="col">คำอธิบานเกี่ยวกับสิทธิ</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach($querys as $item):?>
-                    <tr class="">
-                        <td scope="row"><?php echo $item['name']?></td>
-                        <td><?php echo $item['description']?></td>
-                    </tr>
-                    <?php endforeach;?>
-                </tbody>
-            </table>
-        </div>
-        
+<div class="card border shadow-sm mb-3">
+    <div class="card-body">
+        <?= $this->render('_role_picker', ['model' => $model, 'excludeDirector' => true]) ?>
     </div>
-
 </div>
 
-
-<!-- /.card-footer -->
+<div class="d-flex flex-wrap gap-2 justify-content-end mb-4">
+    <?= Html::a('<i class="bi bi-x-lg me-1" aria-hidden="true"></i> ยกเลิก', ['/usermanager/user'], ['class' => 'btn btn-outline-secondary']) ?>
+    <?= Html::submitButton('<i class="bi bi-check-lg me-1" aria-hidden="true"></i> บันทึก', ['class' => 'btn btn-success']) ?>
 </div>
-</div>
-
 <?php ActiveForm::end(); ?>
-<br>
-
 <?php
-$js = <<< JS
-
-$('#test').click(function (e) { 
-//   e.preventDefault(); // stopping submitting
-  var form = $(this);
-  $('#user-roles > div > input').each(function(index,e){
-        if ($(this).is(":checked") && $(this).val() === 'doctor' && $('#user-doctor_id').val() === '' ) {
-            alert('ระบุรหัสแพทย์');
-            return false;
-        }else{
-           $('#form-usermanager').submit();
-        }
-    });
+$this->registerJs(<<<'JS'
+$('#form-usermanager').on('beforeSubmit', function () {
+    if ($(this).find('input[name="User[roles][]"][value="doctor"]').is(':checked')
+        && !$(this).find('#user-doctor_id').val()) {
+        alert('ระบุรหัสแพทย์');
+        return false;
+    }
+    return true;
 });
-
-JS;
-$this->registerJS($js);
+JS);
 ?>

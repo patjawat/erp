@@ -54,6 +54,7 @@ composer.lock
 .claude
 .tokensave
 /tmp/
+/.tmp/
 
 # ไฟล์สำรองฐานข้อมูล — เก็บไว้บนเครื่องเท่านั้น ห้ามขึ้น remote
 backups/*.sql

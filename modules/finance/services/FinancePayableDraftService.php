@@ -5,6 +5,8 @@ namespace app\modules\finance\services;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinancePayable;
 use app\modules\sm\models\Vendor;
+use app\modules\accounting\models\AccountingChartAccount;
+use app\modules\accounting\models\AccountingChartVersion;
 
 class FinancePayableDraftService
 {
@@ -79,6 +81,7 @@ class FinancePayableDraftService
         $model->net_amount = round($gross - $withholding, 2);
         $model->source_document_no = $inbox->source_document_no;
         $model->status = FinancePayable::STATUS_DRAFT;
+        $this->assignAccountingSnapshot($model);
 
         if (!$model->save()) {
             throw new \RuntimeException('สร้างร่างทะเบียนเจ้าหนี้ไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
@@ -116,6 +119,7 @@ class FinancePayableDraftService
         $model->invoice_no = $invoiceNo;
         $model->due_date = self::calculateDueDate((string) $model->billing_date, (int) $model->credit_days);
         $model->net_amount = round($gross - $withholding, 2);
+        $this->assignAccountingSnapshot($model);
         if (!$model->save()) {
             throw new \RuntimeException('บันทึกการแก้ไขร่างทะเบียนเจ้าหนี้ไม่สำเร็จ: ' . implode(' ', $model->getFirstErrors()));
         }
@@ -146,6 +150,62 @@ class FinancePayableDraftService
     public static function normalizeInvoiceNo(string $value): string
     {
         return mb_strtoupper(preg_replace('/\s+/', '', trim($value)), 'UTF-8');
+    }
+
+    public static function fiscalYearForDate(string $date): int
+    {
+        $value = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        if (!$value || $value->format('Y-m-d') !== $date) {
+            throw new \DomainException('วันที่ใบแจ้งหนี้ไม่ถูกต้อง');
+        }
+        return (int) $value->format('Y') + ((int) $value->format('n') >= 10 ? 544 : 543);
+    }
+
+    public function activeHospitalChart(string $invoiceDate): ?AccountingChartVersion
+    {
+        return AccountingChartVersion::findOne([
+            'fiscal_year' => self::fiscalYearForDate($invoiceDate),
+            'scope' => AccountingChartVersion::SCOPE_HOSPITAL,
+            'status' => AccountingChartVersion::STATUS_ACTIVE,
+        ]);
+    }
+
+    public function eligibleAccounts(string $invoiceDate): array
+    {
+        $version = $this->activeHospitalChart($invoiceDate);
+        if (!$version) return [];
+        return AccountingChartAccount::find()
+            ->where(['version_id' => $version->id, 'category' => ['1', '5'], 'is_active' => 1])
+            ->orderBy('code')->all();
+    }
+
+    public function assertAccountingReady(FinancePayable $model): void
+    {
+        if (!$model->accounting_chart_account_id) {
+            throw new \DomainException('กรุณาเลือกบัญชีเดบิตหลักก่อนส่งตรวจอนุมัติ');
+        }
+        $this->assignAccountingSnapshot($model);
+    }
+
+    private function assignAccountingSnapshot(FinancePayable $model): void
+    {
+        if (!$model->accounting_chart_account_id) {
+            $model->accounting_chart_version_id = null;
+            $model->account_code_snapshot = null;
+            $model->account_name_snapshot = null;
+            return;
+        }
+        $version = $this->activeHospitalChart((string) $model->invoice_date);
+        $account = AccountingChartAccount::findOne((int) $model->accounting_chart_account_id);
+        if (!$version) {
+            throw new \DomainException('ยังไม่มีผังบัญชีโรงพยาบาลที่เปิดใช้สำหรับปีงบประมาณของใบแจ้งหนี้');
+        }
+        if (!$account || (int) $account->version_id !== (int) $version->id || !$account->is_active || !in_array($account->category, ['1', '5'], true)) {
+            throw new \DomainException('บัญชีที่เลือกไม่อยู่ในผังโรงพยาบาลที่เปิดใช้ หรือไม่ใช่หมวดสินทรัพย์/ค่าใช้จ่าย');
+        }
+        $model->accounting_chart_version_id = $version->id;
+        $model->account_code_snapshot = $account->code;
+        $model->account_name_snapshot = $account->name;
     }
 
     private function payload(FinanceInbox $inbox): array
