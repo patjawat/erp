@@ -307,6 +307,25 @@ JS;
 
             <div class="row g-3 mt-3 pt-3 border-top">
                 <div class="col-12">
+                    <h5 class="border-bottom pb-2"><i class="bi bi-hospital me-1"></i> ข้อมูลโปรไฟล์โรงพยาบาล</h5>
+                    <p class="text-muted small mb-0">ใช้แสดงบนหน้า Hospital Profile ในแผนยุทธศาสตร์</p>
+                </div>
+                <div class="col-12 col-md-4">
+                    <?= $form->field($model, 'data_json[beds]')->textInput(['placeholder' => 'เช่น 36'])->label('จำนวนเตียง') ?>
+                </div>
+                <div class="col-12 col-md-4">
+                    <?= $form->field($model, 'data_json[established_year]')->textInput(['placeholder' => 'พ.ศ. เช่น 2546'])->label('ปีก่อตั้ง (พ.ศ.)') ?>
+                </div>
+                <div class="col-12 col-md-4">
+                    <?= $form->field($model, 'data_json[ha_level]')->textInput(['placeholder' => 'เช่น HA Reaccreditation ขั้นที่ 3'])->label('การรับรองคุณภาพ') ?>
+                </div>
+                <div class="col-12">
+                    <?= $form->field($model, 'data_json[core_values]')->textArea(['rows' => 6, 'placeholder' => "หนึ่งค่านิยมต่อบรรทัด เช่น\nN - Nice (เป็นคนดี มีจิตบริการ)\nD - Development and learning (มีการพัฒนาและเรียนรู้)"])->label('ค่านิยมองค์กร')->hint('พิมพ์หนึ่งค่านิยมต่อบรรทัด รูปแบบ "อักษรย่อ - คำอธิบาย"') ?>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-3 pt-3 border-top">
+                <div class="col-12">
                     <h5 class="border-bottom pb-2"><i class="bi bi-type me-1"></i> ข้อความบนแถบเมนู (Header)</h5>
                     <p class="text-muted small mb-0">
                         กำหนดข้อความแทน &quot;HOSPITAL&quot; / &quot;ERP SYSTEM&quot; ได้ ปรับขนาด สี ความหนา และฟอนต์จาก

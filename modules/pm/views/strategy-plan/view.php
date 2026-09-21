@@ -168,15 +168,10 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
     <?php endif; ?>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="small text-body-secondary fw-semibold mb-2">วิสัยทัศน์</div>
-        <div class="fs-5 erp-richtext"><?= $model->vision ? RichText::render($model->vision) : 'ยังไม่ได้ระบุ' ?></div>
-    </div>
-</div>
-
+<?php /* วิสัยทัศน์ย้ายไปแสดง/แก้ที่หน้า "ข้อมูลโรงพยาบาล" แล้ว จึงไม่แสดงซ้ำที่นี่ */ ?>
 <div class="d-flex flex-wrap gap-2 mb-4">
-    <?= Html::a('ทะเบียนตัวชี้วัด', ['/pm/strategy-catalog/index', 'type' => 'indicator', 'planId' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+    <?= Html::a('<i class="bi bi-hospital me-1"></i> ข้อมูลโรงพยาบาล', ['profile', 'id' => $model->id], ['class' => 'btn btn-outline-primary']) ?>
+    <?= Html::a('ทะเบียนตัวชี้วัด', ['/pm/strategy-catalog/index', 'type' => 'indicator', 'planId' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::a('ปัจจัยความสำเร็จ/RCA', ['/pm/strategy-catalog/index', 'type' => 'factor', 'planId' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::a('มาตรการ', ['/pm/strategy-catalog/index', 'type' => 'measure', 'planId' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
     <?= Html::a('แผนงาน/โครงการ', ['/pm/projects/index'], ['class' => 'btn btn-outline-secondary']) ?>

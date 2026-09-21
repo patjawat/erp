@@ -17,7 +17,7 @@ class StrategyPlanController extends Controller
     {
         return [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['pmStrategyView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'profile'], 'roles' => ['pmStrategyView']],
                 ['allow' => true, 'roles' => ['pmStrategyManage']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => ['publish' => ['POST'], 'delete' => ['POST'], 'clone' => ['POST']]],
@@ -35,6 +35,109 @@ class StrategyPlanController extends Controller
     }
 
     public function actionView($id) { return $this->render('view', ['model' => $this->findModel($id)]); }
+
+    /**
+     * หน้าโปรไฟล์โรงพยาบาล — ข้อมูลทั่วไป/สถิติ/ค่านิยม ดึงจากตั้งค่าองค์กร (settings/company)
+     * ส่วนวิสัยทัศน์/พันธกิจ ดึงจากชุดแผนยุทธศาสตร์ที่กำลังเปิดอยู่
+     * รองรับแก้ไขในหน้า (inline) — เขียนกลับ 2 แหล่ง: site (Categorise) + แผน (vision/missions)
+     */
+    public function actionProfile($id, $edit = 0)
+    {
+        $model = $this->findModel($id);
+        $site = \app\models\Categorise::findOne(['name' => 'site']) ?: new \app\models\Categorise(['name' => 'site', 'data_json' => []]);
+        $canManage = Yii::$app->user->can('pmStrategyManage');
+
+        if (Yii::$app->request->isPost) {
+            if (!$canManage) throw new ForbiddenHttpException('ไม่มีสิทธิ์แก้ไขข้อมูลโรงพยาบาล');
+            $this->saveProfile($model, $site);
+            return $this->redirect(['profile', 'id' => $model->id]);
+        }
+
+        return $this->render('profile', [
+            'model' => $model,
+            'site' => is_array($site->data_json) ? $site->data_json : [],
+            'logo' => (!$site->isNewRecord) ? $site->logo() : null,
+            'editing' => ((int) $edit === 1 && $canManage),
+            'canManage' => $canManage,
+        ]);
+    }
+
+    /** บันทึกโปรไฟล์โรงพยาบาล: ฟิลด์องค์กร → data_json (merge เฉพาะคีย์โปรไฟล์), วิสัยทัศน์/พันธกิจ → แผน */
+    private function saveProfile(StrategyPlan $model, \app\models\Categorise $site): void
+    {
+        $post = Yii::$app->request->post();
+
+        // 1) ฟิลด์องค์กร — merge เฉพาะคีย์โปรไฟล์ ไม่แตะ director/branding/อื่น ๆ
+        $data = is_array($site->data_json) ? $site->data_json : [];
+        $input = $post['Site'] ?? [];
+        foreach (['address', 'province', 'phone', 'email', 'website', 'beds', 'established_year', 'ha_level', 'core_values'] as $f) {
+            if (array_key_exists($f, $input)) {
+                $data[$f] = trim((string) $input[$f]);
+            }
+        }
+        $site->data_json = $data;
+        $site->save(false);
+
+        // 2) วิสัยทัศน์/พันธกิจ — เขียนกลับแผน เฉพาะเมื่อแผนยังแก้ได้ (ฉบับร่าง)
+        if ($model->isEditable()) {
+            $model->vision = trim((string) ($post['vision'] ?? '')) ?: null;
+            $model->save(); // ผ่าน validation เพื่อ sanitize richtext
+            $this->saveProfileMissions($model, $post['Missions'] ?? []);
+            Yii::$app->session->setFlash('success', 'บันทึกข้อมูลโรงพยาบาลแล้ว');
+        } else {
+            Yii::$app->session->setFlash('warning', 'บันทึกข้อมูลองค์กรแล้ว — แต่วิสัยทัศน์/พันธกิจแก้ไม่ได้เพราะแผนถูกประกาศใช้/ล็อกแล้ว');
+        }
+    }
+
+    /**
+     * เพิ่ม/แก้/ลบ พันธกิจจากหน้าโปรไฟล์
+     * ลบได้เฉพาะพันธกิจที่ยังไม่มีประเด็นยุทธศาสตร์ใต้มัน (กันข้อมูลโครงสร้างหาย)
+     */
+    private function saveProfileMissions(StrategyPlan $plan, array $rows): void
+    {
+        $existing = [];
+        foreach ($plan->missions as $m) {
+            $existing[(int) $m->id] = $m;
+        }
+        $maxCode = 0;
+        foreach ($plan->missions as $m) {
+            if (preg_match('/(\d+)/', (string) $m->code, $mm)) $maxCode = max($maxCode, (int) $mm[1]);
+        }
+
+        $blocked = [];
+        $sort = 0;
+        foreach ($rows as $row) {
+            $sort++;
+            $name = trim((string) ($row['name'] ?? ''));
+            $rid = (int) ($row['id'] ?? 0);
+
+            if ($rid && isset($existing[$rid])) {
+                $mission = $existing[$rid];
+                unset($existing[$rid]);
+                if ($name === '') {
+                    if (count($mission->issues) > 0) { $blocked[] = $mission->code; continue; }
+                    $mission->delete();
+                    continue;
+                }
+                $mission->name = $name;
+                $mission->sort_order = $sort;
+                $mission->save(false);
+            } elseif ($name !== '') {
+                (new \app\modules\pm\models\StrategyMission([
+                    'plan_id' => $plan->id, 'code' => 'M' . (++$maxCode),
+                    'name' => $name, 'sort_order' => $sort, 'is_active' => true,
+                ]))->save();
+            }
+        }
+        // พันธกิจเดิมที่ถูกตัดออกจากฟอร์มทั้งแถว — ลบได้เฉพาะที่ไม่มีโครงสร้างใต้
+        foreach ($existing as $mission) {
+            if (count($mission->issues) > 0) { $blocked[] = $mission->code; continue; }
+            $mission->delete();
+        }
+        if ($blocked) {
+            Yii::$app->session->setFlash('warning', 'ลบพันธกิจ ' . implode(', ', $blocked) . ' ไม่ได้ เพราะยังมีประเด็นยุทธศาสตร์อยู่ข้างใต้ (ต้องไปลบในหน้าแผนก่อน)');
+        }
+    }
 
     public function actionCreate()
     {
