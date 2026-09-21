@@ -14,6 +14,9 @@ class FinancePayableApprovalService
         $decision = trim($decision);
         $note = trim((string) $note);
         $toStatus = self::targetStatus((string) $payable->status, $decision);
+        if (in_array($decision, [FinancePayableReview::DECISION_SUBMIT, FinancePayableReview::DECISION_APPROVE], true)) {
+            (new FinancePayableDraftService())->assertAccountingReady($payable);
+        }
         if ($decision === FinancePayableReview::DECISION_REQUEST_REVISION && $note === '') {
             throw new \DomainException('กรุณาระบุสิ่งที่ต้องแก้ไขก่อนส่งกลับ');
         }
@@ -32,6 +35,9 @@ class FinancePayableApprovalService
         if ($decision === FinancePayableReview::DECISION_SUBMIT) {
             $attributes['submitted_at'] = $now;
             $attributes['submitted_by'] = $userId;
+            $attributes['accounting_chart_version_id'] = $payable->accounting_chart_version_id;
+            $attributes['account_code_snapshot'] = $payable->account_code_snapshot;
+            $attributes['account_name_snapshot'] = $payable->account_name_snapshot;
         } elseif ($decision === FinancePayableReview::DECISION_APPROVE) {
             $attributes['approved_at'] = $now;
             $attributes['approved_by'] = $userId;
@@ -56,6 +62,8 @@ class FinancePayableApprovalService
                     'payable_no' => $payable->payable_no,
                     'invoice_no' => $payable->invoice_no,
                     'net_amount' => $payable->net_amount,
+                    'account_code' => $payable->account_code_snapshot,
+                    'account_name' => $payable->account_name_snapshot,
                 ],
             ]);
             if (!$review->save()) {

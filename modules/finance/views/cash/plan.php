@@ -38,31 +38,28 @@ $nCols = count($actualYears) + count($planYears) + 1;
 <?php endforeach; ?>
 
 <div class="card border mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-end gap-2">
+    <a href="<?= Url::to(['plan-excel', 'year' => $year]) ?>" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
     <form method="get" class="d-flex gap-2 align-items-end">
         <div><label class="form-label mb-0 small">ปีงบเริ่มแผน (พ.ศ.)</label>
             <input type="number" class="form-control form-control-sm" name="year" value="<?= $year ?>" style="width:120px"></div>
         <button type="submit" class="btn btn-sm btn-primary">ดู</button>
     </form>
-    <a href="<?= Url::to(['plan-excel', 'year' => $year]) ?>" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel me-1"></i>ส่งออก Excel</a>
 </div></div>
 
 <?= Html::beginForm(['plan-save'], 'post') ?>
 <?= Html::hiddenInput('year', $year) ?>
-<div class="d-flex justify-content-end mb-2">
-    <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกแผน', ['class' => 'btn btn-primary']) ?>
-</div>
 
 <div class="card border"><div class="table-responsive">
     <table class="table table-bordered table-sm align-middle mb-0">
-        <thead class="table-dark text-center">
+        <thead class="table-light text-center">
             <tr>
                 <th rowspan="2" style="min-width:260px">รายการ</th>
                 <th colspan="<?= count($actualYears) ?>">ผลจริงย้อนหลัง</th>
                 <th colspan="<?= count($planYears) ?>">แผน</th>
             </tr>
             <tr>
-                <?php foreach ($actualYears as $ay): ?><th><?= $ay ?></th><?php endforeach; ?>
-                <?php foreach ($planYears as $py): ?><th class="text-warning"><?= $py ?></th><?php endforeach; ?>
+                <?php foreach ($actualYears as $ay): ?><th style="width:120px"><?= $ay ?></th><?php endforeach; ?>
+                <?php foreach ($planYears as $py): ?><th class="text-primary" style="width:140px"><?= $py ?></th><?php endforeach; ?>
             </tr>
         </thead>
         <tbody>
@@ -76,9 +73,9 @@ $nCols = count($actualYears) + count($planYears) + 1;
                     </tr>
                     <?php foreach ($g['rows'] as $row): ?>
                         <tr>
-                            <td class="ps-4"><small><?= Html::encode($row['name']) ?></small></td>
+                            <td class="ps-4"><?= Html::encode($row['name']) ?></td>
                             <?php foreach ($actualYears as $ay): ?>
-                                <td class="text-end text-body-secondary"><small><?= number_format($row['actual'][$ay], 2) ?></small></td>
+                                <td class="text-end text-body-secondary"><?= number_format($row['actual'][$ay], 2) ?></td>
                             <?php endforeach; ?>
                             <?php foreach ($planYears as $py): ?>
                                 <td class="p-1"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end plan-input"
@@ -94,7 +91,7 @@ $nCols = count($actualYears) + count($planYears) + 1;
                     <?php foreach ($planYears as $py): ?><td class="text-end"><?= number_format($types[$type]['totP'][$py], 2) ?></td><?php endforeach; ?>
                 </tr>
             <?php endforeach; ?>
-            <tr class="table-dark fw-bold">
+            <tr class="table-primary fw-bold border-top border-3 border-primary-subtle">
                 <td class="text-end">รายรับสูง (ต่ำกว่า) รายจ่ายสุทธิ</td>
                 <?php foreach ($actualYears as $ay): ?><td class="text-end <?= $netA[$ay] < 0 ? 'text-danger' : '' ?>"><?= number_format($netA[$ay], 2) ?></td><?php endforeach; ?>
                 <?php foreach ($planYears as $py): ?><td class="text-end <?= $netP[$py] < 0 ? 'text-danger' : '' ?>"><?= number_format($netP[$py], 2) ?></td><?php endforeach; ?>

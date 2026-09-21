@@ -27,4 +27,47 @@ final class Resident extends HousingActiveRecord
             [['status'], 'default', 'value' => 'active'],
         ];
     }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'prefix' => 'คำนำหน้า',
+            'first_name' => 'ชื่อ',
+            'last_name' => 'นามสกุล',
+            'relationship' => 'ความสัมพันธ์',
+            'citizen_id' => 'เลขบัตรประชาชน',
+            'phone' => 'เบอร์โทร',
+            'birth_date' => 'วันเดือนปีเกิด',
+            'count_for_charge' => 'นับรวมคิดค่าใช้จ่ายรายหัว',
+            'status' => 'สถานะ',
+            'note' => 'หมายเหตุ',
+        ];
+    }
+
+    public static function relationshipOptions(): array
+    {
+        return [
+            'spouse' => 'คู่สมรส',
+            'child' => 'บุตร',
+            'parent' => 'บิดา/มารดา',
+            'sibling' => 'พี่น้อง',
+            'relative' => 'ญาติ',
+            'other' => 'อื่น ๆ',
+        ];
+    }
+
+    public static function statusOptions(): array
+    {
+        return ['active' => 'พักอาศัยอยู่', 'ended' => 'ย้ายออกแล้ว'];
+    }
+
+    public function isEmployee(): bool
+    {
+        return $this->resident_type === 'employee';
+    }
+
+    public function fullName(): string
+    {
+        return trim(($this->prefix ? $this->prefix . ' ' : '') . $this->first_name . ' ' . $this->last_name);
+    }
 }

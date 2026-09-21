@@ -85,15 +85,21 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
                 <?php if ($occupancies === []): ?>
                     <div class="p-4 text-center detail-muted">ยังไม่มีผู้พักอาศัยในปัจจุบัน</div>
                 <?php else: ?>
-                    <?php foreach ($occupancies as $occupancy): ?>
+                    <?php foreach ($occupancies as $occupancy): $occCounts = $occupancy->occupantCounts(); ?>
                         <div class="p-3 border-bottom">
-                            <div class="fw-semibold"><?= Html::encode($occupancy->employee?->fullname() ?: 'รหัสบุคลากร ' . $occupancy->emp_id) ?></div>
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div class="fw-semibold"><?= Html::encode($occupancy->employee?->fullname() ?: 'รหัสบุคลากร ' . $occupancy->emp_id) ?></div>
+                                <?= Html::a('<i class="bi bi-people"></i> จัดการผู้พักร่วม', ['residents', 'occupancy_id' => $occupancy->id], ['class' => 'btn btn-sm btn-outline-primary flex-shrink-0']) ?>
+                            </div>
                             <div class="row g-2 small mt-1">
                                 <div class="col-md-6"><span class="detail-muted">ตำแหน่ง:</span> <?= Html::encode($occupancy->employee?->positionName() ?: 'ไม่ระบุ') ?></div>
                                 <div class="col-md-6"><span class="detail-muted">หน่วยงาน/สถานที่ทำงาน:</span> <?= Html::encode($occupancy->employee?->departmentName() ?: 'ไม่ระบุ') ?></div>
                             </div>
-                            <?php if ($occupancy->residents !== []): ?>
-                                <div class="small mt-2"><span class="detail-muted">ผู้พักร่วม:</span> <?= Html::encode(implode(', ', array_map(static fn($resident): string => trim($resident->first_name . ' ' . $resident->last_name), $occupancy->residents))) ?></div>
+                            <div class="small mt-2"><span class="detail-muted">ผู้พักอาศัยรวม:</span> <?= (int) $occCounts['total'] ?> คน <span class="detail-muted">(เกิน 15 ปี <?= (int) $occCounts['over15'] ?>)</span></div>
+                            <?php
+                            $coResidents = array_filter($occupancy->residents, static fn($r): bool => $r->resident_type !== 'employee' && $r->status === 'active');
+                            if ($coResidents !== []): ?>
+                                <div class="small mt-1"><span class="detail-muted">ผู้พักร่วม:</span> <?= Html::encode(implode(', ', array_map(static fn($resident): string => trim($resident->first_name . ' ' . $resident->last_name), $coResidents))) ?></div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>

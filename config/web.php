@@ -300,6 +300,8 @@ $config = [
             'jd/employee-jd/review-inbox',
             // Service Profile: controller ตรวจ RBAC และขอบเขตหน่วยงานภายในทุก action
             'service-profile/*',
+            // Laundry: controller ตรวจ laundry.view/manage/approve ทุก action (ด่านกลางปล่อยผ่าน)
+            'laundry/*',
             // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
             'iac-risk/*',
             // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
@@ -311,6 +313,9 @@ $config = [
             // Complaint: ระบบรับเรื่องร้องเรียน — controller ใช้ roles=['@'] แล้ว guard สิทธิ์จริง
             // ผ่าน ComplaintService (ทีมศูนย์ฯ = admin/role complaint ; ผู้ใช้ทั่วไป = เฉพาะสายหน่วยตนเอง)
             'complaint/*',
+            // HA12-PCT: ระบบทบทวน 12 กิจกรรม (เฟส 0 โครง) — controller ใช้ roles=['@']
+            // เฟสถัดไปจะคุมขอบเขตหน่วยงาน (owner=tree.id) ภายใน controller เอง
+            'ha12/*',
             // SWOT & SOAR: เครื่องมือวิเคราะห์เชิงกลยุทธ์ (standalone) — controller ใช้ roles=['@']
             'swot/*',
             // เครื่องมือ (hub) + ผังกระบวนการ — เปิดให้ผู้ล็อกอินทุกคน controller ใช้ roles=['@']
@@ -409,6 +414,8 @@ $config = [
             'helpdesk/general/report',
             'filemanager/*',
             // 'usermanager/*',
+            // Template controller จำกัดเฉพาะ admin ด้วย AccessControl ภายใน
+            'usermanager/template/*',
             'site/login',
             'site/logout',
             'site/sign-up',

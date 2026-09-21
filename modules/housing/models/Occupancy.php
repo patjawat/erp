@@ -74,6 +74,48 @@ final class Occupancy extends HousingActiveRecord
         return $this->hasMany(Resident::class, ['occupancy_id' => 'id']);
     }
 
+    /**
+     * นับจำนวนผู้พักอาศัยของ occupancy นี้
+     * - total  = ผู้พัก active ทั้งหมด (รวมเจ้าหน้าที่ผู้ครอบครอง)
+     * - over15 = ผู้ที่คิดค่าใช้จ่ายรายหัวและอายุเกิน 15 ปี (เจ้าหน้าที่นับเป็นผู้ใหญ่เสมอ)
+     *
+     * @param string|null $chargeEndDate วันสิ้นสุดรอบสำหรับอ้างอิงอายุ (ว่าง = ใช้วันนี้)
+     * @return array{total:int,over15:int}
+     */
+    public function occupantCounts(?string $chargeEndDate = null): array
+    {
+        $active = array_filter(
+            $this->residents,
+            static fn(Resident $r): bool => $r->status === 'active'
+        );
+        $hasEmployeeRow = false;
+        foreach ($active as $r) {
+            if ($r->resident_type === 'employee') {
+                $hasEmployeeRow = true;
+                break;
+            }
+        }
+        $hasOfficer = (int) $this->emp_id > 0;
+        // ถ้ายังไม่มีแถวเจ้าหน้าที่ (occupancy ที่ไม่ได้ผ่าน flow รับมอบ) ให้บวกเจ้าหน้าที่เข้าไป 1
+        $total = count($active) + (!$hasEmployeeRow && $hasOfficer ? 1 : 0);
+
+        $cutoff = date('Y-m-d', strtotime(($chargeEndDate ?: date('Y-m-d')) . ' -15 years'));
+        $over15 = $hasOfficer ? 1 : 0; // เจ้าหน้าที่ผู้ครอบครองนับเป็นผู้ใหญ่เสมอ
+        foreach ($active as $r) {
+            if ($r->resident_type === 'employee') {
+                continue; // นับเจ้าหน้าที่ไปแล้ว
+            }
+            if (!$r->count_for_charge) {
+                continue;
+            }
+            if ($r->birth_date && $r->birth_date <= $cutoff) {
+                $over15++;
+            }
+        }
+
+        return ['total' => $total, 'over15' => $over15];
+    }
+
     public function getEmployee(): ActiveQuery
     {
         return $this->hasOne(Employees::class, ['id' => 'emp_id']);

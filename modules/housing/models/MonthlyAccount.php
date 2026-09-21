@@ -10,7 +10,7 @@ final class MonthlyAccount extends HousingActiveRecord
     public static function tableName():string{return '{{%housing_monthly_account}}';}
     public function rules():array{return [
         [['billing_period_id','building_id','subject_key','building_name'],'required'],
-        [['billing_period_id','building_id','unit_id','room_id','occupancy_id','payer_emp_id','occupants_over_15','created_by','updated_by'],'integer'],
+        [['billing_period_id','building_id','unit_id','room_id','occupancy_id','payer_emp_id','occupants_over_15','occupants_total','created_by','updated_by'],'integer'],
         [['total_amount','paid_amount','balance_amount'],'number','min'=>0],
         [['subject_key','electric_account_no'],'string','max'=>100],
         [['building_name','payer_name','position_name'],'string','max'=>255],
@@ -22,5 +22,6 @@ final class MonthlyAccount extends HousingActiveRecord
     public function getPeriod():ActiveQuery{return $this->hasOne(BillingPeriod::class,['id'=>'billing_period_id']);}
     public function getBuilding():ActiveQuery{return $this->hasOne(Building::class,['id'=>'building_id']);}
     public function getUnit():ActiveQuery{return $this->hasOne(Unit::class,['id'=>'unit_id']);}
+    public function getOccupancy():ActiveQuery{return $this->hasOne(Occupancy::class,['id'=>'occupancy_id']);}
     public function getInvoice():ActiveQuery{return $this->hasOne(Invoice::class,['monthly_account_id'=>'id']);}
 }

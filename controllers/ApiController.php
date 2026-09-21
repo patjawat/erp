@@ -46,10 +46,18 @@ class ApiController extends Controller
             'no-store, no-cache, must-revalidate, max-age=0'
         );
 
+        // สรุปการเปลี่ยนแปลงของเวอร์ชันปัจจุบัน (ให้ตัวเช็คภายนอก/รพ.อื่นทราบว่ามีอะไรใหม่)
+        $changelogFile = Yii::getAlias('@app/config/changelog.php');
+        $changelog = is_file($changelogFile) ? (array) require $changelogFile : [];
+        $notes = $changelog[$displayVersion] ?? null;
+
         return $this->asJson([
-            'schema_version' => 1,
+            'schema_version' => 2,
             'version' => $version,
             'display_version' => $displayVersion,
+            'released_at' => $notes['date'] ?? null,
+            'title' => $notes['title'] ?? null,
+            'highlights' => $notes['highlights'] ?? [],
         ]);
     }
 }
