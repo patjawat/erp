@@ -50,7 +50,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <span class="badge bg-body text-body"><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
                 <span class="badge bg-body text-body">รวม <?= number_format($totalAmount, 2) ?> บาท</span>
             </h6>
-            <div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-light" id="planExpandAll" title="ขยายทุกกลุ่ม"><i class="bi bi-arrows-expand"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-light" id="planCollapseAll" title="ย่อทุกกลุ่ม"><i class="bi bi-arrows-collapse"></i></button>
                 <?= Html::a('<i class="fa-solid fa-circle-plus me-1"></i> สร้างใหม่', [
                     'create',
                     'returnUrl' => Yii::$app->request->url,
@@ -61,7 +63,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <div class="card-body">
 
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover" id="plan-group-table">
             <thead>
                 <tr>
                     <th class="text-center" style="width:30px">ลำดับ</th>
@@ -70,44 +72,47 @@ $this->params['breadcrumbs'][] = $this->title;
                     <th scope="col">วัตถุประสงค์</th>
                     <th scope="col" class="text-end">วงเงิน</th>
                     <th scope="col" class="text-center">แหล่งของเงิน</th>
-                    <th scope="col">หน่วยงาน</th>
                     <th scope="col">สถานะ</th>
                     <th class="fw-semibold text-center" scope="col" style="width: 100px;">จัดการ</th>
                 </tr>
             </thead>
             <tbody class="align-middle table-group-divider">
-                <?php foreach ($dataProvider->getModels() as $key => $item): ?>
-                    <tr class="">
-                    <tr>
-                        <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
-                        <td><?= $item->planItem?->title ?? '-' ?></td>
-                        <td> <?= $item->planItem?->planCategory?->title ?? '-' ?></td>
-                        <td><?= $item->description ?></td>
-                        <td class="text-end"><?= number_format($item->order_price ?? 0, 2) ?></td>
-                        <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
-                        <td><?= Html::encode($item->departmentName()) ?><?php if ($t = $item->unitTypeTitle()): ?> <span class="badge text-bg-light border"><?= Html::encode($t) ?></span><?php endif; ?></td>
-                        <td><?= $item->viewStatus()['view'] ?></td>
-                        <td class="text-center">
-                            <?= $this->render('action', ['model' => $item]) ?>
+                <?php $groups = \app\modules\plan\models\PlanOrder::groupByUnit($dataProvider->getModels()); ?>
+                <?php if (empty($groups)): ?>
+                    <tr><td colspan="8" class="text-center text-muted py-3">ไม่พบข้อมูล</td></tr>
+                <?php endif; ?>
+                <?php $seq = 0; $gi = 0; ?>
+                <?php foreach ($groups as $g): $gi++; $gid = 'g' . $gi; ?>
+                    <tr class="plan-grp" data-grp="<?= $gid ?>">
+                        <td colspan="8" class="fw-semibold">
+                            <i class="fa-solid fa-chevron-down plan-grp-caret me-1"></i>
+                            <?= Html::encode($g['name']) ?>
+                            <?php if ($g['unit_type']): ?><span class="badge text-bg-light border ms-1"><?= Html::encode($g['unit_type']) ?></span><?php endif; ?>
+                            <span class="badge bg-secondary ms-1"><?= count($g['models']) ?> รายการ</span>
+                            <span class="text-muted small ms-2">รวม <?= number_format($g['total'], 2) ?> บาท</span>
                         </td>
                     </tr>
+                    <?php foreach ($g['models'] as $item): $seq++; ?>
+                        <tr class="plan-grp-row" data-grp="<?= $gid ?>">
+                            <td class="text-center"><?= $seq ?></td>
+                            <td><?= $item->planItem?->title ?? '-' ?></td>
+                            <td><?= $item->planItem?->planCategory?->title ?? '-' ?></td>
+                            <td><?= $item->description ?></td>
+                            <td class="text-end"><?= number_format($item->order_price ?? 0, 2) ?></td>
+                            <td class="text-center"><?= $item->budge?->title ?? '-' ?></td>
+                            <td><?= $item->viewStatus()['view'] ?></td>
+                            <td class="text-center action">
+                                <?= $this->render('action', ['model' => $item]) ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 <?php endforeach; ?>
             </tbody>
         </table>
-
-        <div class="iq-card-footer text-muted d-flex justify-content-center mt-4">
-            <?= yii\bootstrap5\LinkPager::widget([
-                'pagination' => $dataProvider->pagination,
-                'firstPageLabel' => 'หน้าแรก',
-                'lastPageLabel' => 'หน้าสุดท้าย',
-                'options' => [
-                    'listOptions' => 'pagination pagination-sm',
-                    'class' => 'pagination-sm',
-                ],
-            ]); ?>
-        </div>
     </div>
 </div>
+
+<?= $this->render('@app/modules/plan/views/_group_toggle') ?>
 
 <?php
 $js = <<< JS

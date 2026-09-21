@@ -259,21 +259,21 @@ class PlanOrder extends \yii\db\ActiveRecord
         }
 
         // เฟส 2: ผูกทะเบียนหน่วยงาน (org_unit) แบบ dual-write
-        if (empty($this->plan_unit_id) && !empty($this->department_id) && !empty($this->thai_year)) {
-            // ฟอร์มเดิม (เลือกหน่วยจากผัง) -> เติม plan_unit_id จากหน่วยในโครงสร้างปีเดียวกัน
-            $this->plan_unit_id = (new \yii\db\Query())
-                ->select('id')->from('org_unit')
-                ->where(['thai_year' => (int) $this->thai_year, 'source' => 'structure', 'ref_id' => (int) $this->department_id])
-                ->scalar() ?: null;
-        } elseif (!empty($this->plan_unit_id) && empty($this->department_id)) {
-            // ฟอร์มใหม่ (เลือกจากทะเบียน) -> เติม department_id กลับถ้าเป็นหน่วยในโครงสร้าง (manual = null)
+        // ยึด plan_unit_id เป็นค่าหลัก (ฟอร์มปัจจุบันส่งค่านี้) แล้ว sync department_id ตามทุกครั้ง
+        // เพื่อกันบั๊ก: แก้ไขหน่วยงานแล้ว department_id (ผังเดิม) ยังค้างค่าเก่า → ค้นหาเจอผิดหน่วย
+        if (!empty($this->plan_unit_id)) {
             $refId = (new \yii\db\Query())
                 ->select('ref_id')->from('org_unit')
                 ->where(['id' => (int) $this->plan_unit_id, 'source' => 'structure'])
                 ->scalar();
-            if ($refId) {
-                $this->department_id = (int) $refId;
-            }
+            // หน่วยในโครงสร้าง -> เก็บ ref_id ; หน่วยนอกผัง/ทีมประสาน (manual) -> ล้างเป็น null
+            $this->department_id = $refId ? (int) $refId : null;
+        } elseif (!empty($this->department_id) && !empty($this->thai_year)) {
+            // ฟอร์มเดิม (เลือกหน่วยจากผัง ไม่มี plan_unit_id) -> เติม plan_unit_id จากหน่วยในโครงสร้างปีเดียวกัน
+            $this->plan_unit_id = (new \yii\db\Query())
+                ->select('id')->from('org_unit')
+                ->where(['thai_year' => (int) $this->thai_year, 'source' => 'structure', 'ref_id' => (int) $this->department_id])
+                ->scalar() ?: null;
         }
 
         return true;
@@ -385,6 +385,36 @@ class PlanOrder extends \yii\db\ActiveRecord
         }
         $model = Organization::findOne(['id' => $this->department_id]);
         return $model ? $model->name : '-';
+    }
+
+    /**
+     * จัดกลุ่มรายการแผนตามหน่วยงาน (สำหรับหน้าทะเบียนที่แสดงแบบกรุ๊ป)
+     * @param self[] $models
+     * @return array<string,array{name:string,unit_type:string,models:self[],total:float}>
+     */
+    public static function groupByUnit(array $models): array
+    {
+        $groups = [];
+        foreach ($models as $m) {
+            $name = $m->departmentName() ?: 'ไม่ระบุหน่วยงาน';
+            if (!isset($groups[$name])) {
+                $groups[$name] = [
+                    'name'      => $name,
+                    'unit_type' => $m->unitTypeTitle(),
+                    'models'    => [],
+                    'total'     => 0.0,
+                ];
+            }
+            $groups[$name]['models'][] = $m;
+            $groups[$name]['total'] += (float) ($m->order_price ?? 0);
+        }
+        // เรียงชื่อหน่วยงานแบบธรรมชาติ ให้ "ไม่ระบุหน่วยงาน" ไปท้ายสุด
+        uksort($groups, function ($a, $b) {
+            $na = $a === 'ไม่ระบุหน่วยงาน' ? 1 : 0;
+            $nb = $b === 'ไม่ระบุหน่วยงาน' ? 1 : 0;
+            return $na <=> $nb ?: strnatcasecmp($a, $b);
+        });
+        return $groups;
     }
 
     /** ชื่อประเภทหน่วยงาน (org_unit_type) สำหรับแสดง/กรอง */
@@ -520,10 +550,12 @@ class PlanOrder extends \yii\db\ActiveRecord
             $params[':status'] = $status;
         }
 
+        // ดึงถึงระดับ "รายการ" (plan_item) เพื่อให้ขยายดูรายการย่อยได้
         $sql = "
             SELECT
                 t.code AS type_code, t.title AS type_title,
                 c.code AS cat_code, c.title AS cat_title,
+                i.code AS item_code, i.title AS item_title,
                 COALESCE(SUM(o.order_price),0) AS total,
                 $monthSelect
             FROM categorise t
@@ -531,8 +563,8 @@ class PlanOrder extends \yii\db\ActiveRecord
             LEFT JOIN categorise i ON i.category_id = c.code AND i.name = 'plan_item'
             LEFT JOIN plan_order o ON o.plan_item_id = i.code AND o.thai_year = :year{$statusCond}
             WHERE t.name = 'plan_type'
-            GROUP BY t.code, t.title, c.code, c.title
-            ORDER BY FIELD(t.code,'PER','OPS','INV','OTH'), c.code
+            GROUP BY t.code, t.title, c.code, c.title, i.code, i.title
+            ORDER BY FIELD(t.code,'PER','OPS','INV','OTH'), c.code, LENGTH(i.code), i.code
         ";
 
         $rows = Yii::$app->db->createCommand($sql, $params)->queryAll();
@@ -553,15 +585,35 @@ class PlanOrder extends \yii\db\ActiveRecord
                 ];
             }
 
-            $cat = ['code' => $r['cat_code'], 'title' => $r['cat_title']];
-            foreach ($keys as $k) {
-                $val = (float) $r[$k];
-                $cat[$k] = $val;
-                $types[$tc]['sub'][$k] += $val;
-                $grand[$k] += $val;
+            $cc = $r['cat_code'];
+            if (!isset($types[$tc]['categories'][$cc])) {
+                $types[$tc]['categories'][$cc] = array_merge(
+                    ['code' => $cc, 'title' => $r['cat_title'], 'items' => []],
+                    $blank
+                );
             }
-            $types[$tc]['categories'][] = $cat;
+            $cat =& $types[$tc]['categories'][$cc];
+
+            // แถวรายการ (plan_item) — บางหมวดยังไม่ได้นิยามรายการ (item_code = null)
+            if ($r['item_code'] !== null) {
+                $item = ['code' => $r['item_code'], 'title' => $r['item_title']];
+                foreach ($keys as $k) {
+                    $val = (float) $r[$k];
+                    $item[$k]  = $val;
+                    $cat[$k]  += $val;
+                    $types[$tc]['sub'][$k] += $val;
+                    $grand[$k] += $val;
+                }
+                $cat['items'][] = $item;
+            }
+            unset($cat);
         }
+
+        // แปลง categories จาก assoc (คีย์ = code) เป็น list เพื่อคง order เดิม
+        foreach ($types as &$type) {
+            $type['categories'] = array_values($type['categories']);
+        }
+        unset($type);
 
         return ['types' => $types, 'grand' => $grand];
     }

@@ -14,6 +14,9 @@ class PlanOrderSearch extends PlanOrder
     /** ตัวกรองประเภทหน่วยงาน (org_unit_type code) */
     public $unit_type;
 
+    /** ค้นหาด้วยคำค้น (ชื่อรายการ / วัตถุประสงค์ / รายการย่อย) */
+    public $keyword;
+
     /**
      * {@inheritdoc}
      */
@@ -22,7 +25,7 @@ class PlanOrderSearch extends PlanOrder
         return [
             [['id', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [['plan_group_id', 'title', 'description', 'start_date', 'end_date', 'status', 'emp_id', 'data_json', 'created_at', 'updated_at', 'deleted_at', 'plan_type_id', 'asset_group_id', 'asset_type_id', 'asset_category_id', 'plan_category_id', 'thai_year', 'department_id',
-                    'plan_item_id', 'wage_type_id', 'plan_budget_type_id', 'unit_type', 'plan_unit_id'], 'safe'],
+                    'plan_item_id', 'wage_type_id', 'plan_budget_type_id', 'unit_type', 'plan_unit_id', 'keyword'], 'safe'],
             [['budget_total', 'budget_used'], 'number'],
         ];
     }
@@ -102,6 +105,24 @@ class PlanOrderSearch extends PlanOrder
             } else {
                 $query->andWhere($unitCondition);
             }
+        }
+
+        // ค้นหาด้วยคำค้นอิสระ: ชื่อรายการ (plan_item), วัตถุประสงค์, ชื่อแผน และรายการย่อย
+        if (($kw = trim((string) $this->keyword)) !== '') {
+            $itemCodes = (new \yii\db\Query())
+                ->select('code')->from('categorise')
+                ->where(['name' => 'plan_item'])
+                ->andWhere(['like', 'title', $kw]);
+            $ordersByChild = (new \yii\db\Query())
+                ->select('plan_order_id')->from('plan_order_item')
+                ->where(['like', 'item_name', $kw]);
+            $query->andWhere([
+                'or',
+                ['like', 'plan_order.description', $kw],
+                ['like', 'plan_order.title', $kw],
+                ['plan_order.plan_item_id' => $itemCodes],
+                ['plan_order.id' => $ordersByChild],
+            ]);
         }
 
         // หมวดที่แสดงในตารางอ้างผ่าน plan_item สำหรับข้อมูลเดิมบางชุด

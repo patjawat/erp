@@ -80,6 +80,15 @@ $cell = fn($v, $q) => '<td class="text-end ' . $qClass[$q] . ' text-dark bg-opac
         <?php endforeach; ?>
     </select>
     <?php \yii\widgets\ActiveForm::end(); ?>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="ovExpandAll">
+            <i class="bi bi-arrows-expand me-1"></i>ขยายทุกรายการ
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="ovCollapseAll">
+            <i class="bi bi-arrows-collapse me-1"></i>ย่อทั้งหมด
+        </button>
+    </div>
 </div>
 
 <div class="table-responsive">
@@ -106,26 +115,55 @@ $cell = fn($v, $q) => '<td class="text-end ' . $qClass[$q] . ' text-dark bg-opac
         <?php endif; ?>
 
         <?php foreach ($summary['types'] as $typeCode => $type): ?>
-            <!-- หัวข้อประเภท -->
-            <tr>
+            <!-- หัวข้อประเภท (คลิกเพื่อย่อ/ขยายทั้งกลุ่ม) -->
+            <tr class="ov-type" data-type="<?= Html::encode($typeCode) ?>" role="button">
                 <td colspan="15" class="fw-semibold bg-warning text-dark bg-opacity-25">
-                    <i class="fa-solid fa-chevron-right me-1"></i><?= Html::encode($type['title']) ?>
+                    <i class="fa-solid fa-chevron-down ov-caret me-1"></i><?= Html::encode($type['title']) ?>
                 </td>
             </tr>
 
             <?php foreach ($type['categories'] as $cat): ?>
-                <tr>
-                    <td style="width:16px"></td>
+                <?php
+                    $items = $cat['items'] ?? [];
+                    $hasItems = count($items) > 0;
+                ?>
+                <tr class="ov-child ov-cat<?= $hasItems ? '' : ' ov-noexpand' ?>"
+                    data-type="<?= Html::encode($typeCode) ?>"
+                    data-cat="<?= Html::encode($cat['code']) ?>"
+                    <?= $hasItems ? 'role="button"' : '' ?>>
+                    <td class="text-center" style="width:24px">
+                        <?php if ($hasItems): ?>
+                            <i class="fa-solid fa-chevron-right ov-caret text-muted"></i>
+                        <?php endif; ?>
+                    </td>
                     <td><?= Html::encode($cat['title']) ?></td>
-                    <td class="text-end"><?= $fmt($cat['total']) ?></td>
+                    <td class="text-end fw-semibold"><?= $fmt($cat['total']) ?></td>
                     <?php foreach ($monthCols as $m): ?>
                         <?= $cell($cat[$m['k']], $m['q']) ?>
                     <?php endforeach; ?>
                 </tr>
+
+                <?php foreach ($items as $it): ?>
+                    <?php $empty = (float) $it['total'] <= 0; ?>
+                    <tr class="ov-child ov-item<?= $empty ? ' ov-empty' : '' ?>"
+                        data-type="<?= Html::encode($typeCode) ?>"
+                        data-cat="<?= Html::encode($cat['code']) ?>"
+                        style="display:none">
+                        <td style="width:24px"></td>
+                        <td class="ps-4 small">
+                            <i class="fa-solid fa-turn-up fa-rotate-90 text-muted me-1 small"></i>
+                            <?= Html::encode($it['title']) ?>
+                        </td>
+                        <td class="text-end small"><?= $fmt($it['total']) ?></td>
+                        <?php foreach ($monthCols as $m): ?>
+                            <td class="text-end small <?= $qClass[$m['q']] ?> text-dark bg-opacity-10"><?= $fmt($it[$m['k']]) ?></td>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
             <?php endforeach; ?>
 
             <!-- รวมประเภท -->
-            <tr class="fw-semibold table-light">
+            <tr class="ov-child fw-semibold table-light" data-type="<?= Html::encode($typeCode) ?>">
                 <td colspan="2" class="text-end">รวม<?= Html::encode($type['title']) ?></td>
                 <td class="text-end"><?= $fmt($type['sub']['total']) ?></td>
                 <?php foreach ($monthCols as $m): ?>
@@ -150,3 +188,80 @@ $cell = fn($v, $q) => '<td class="text-end ' . $qClass[$q] . ' text-dark bg-opac
     <i class="fa-solid fa-circle-info me-1"></i>
     รวมยอดจากคำขอที่ผูกรายการ (plan item) ในปีงบประมาณ <?= $thaiYear ?> — หมวดรายรับ/งบกลางยังไม่รวมในตารางนี้ (ยังไม่มีชุดข้อมูล)
 </p>
+
+<?php
+$css = <<<CSS
+.ov-type { cursor: pointer; }
+.ov-cat[role="button"] { cursor: pointer; }
+.ov-caret { transition: transform .15s ease; }
+.ov-cat.ov-open .ov-caret { transform: rotate(90deg); }
+.ov-type.ov-collapsed .ov-caret { transform: rotate(-90deg); }
+.ov-item.ov-empty td { color: #b02a37; }
+.table-overview .ov-item td { background-clip: padding-box; }
+CSS;
+$this->registerCss($css);
+
+$js = <<<JS
+(function () {
+    var table = document.querySelector('.table-overview');
+    if (!table) return;
+
+    function catItems(catRow) {
+        return table.querySelectorAll(
+            '.ov-item[data-type="' + catRow.dataset.type + '"][data-cat="' + catRow.dataset.cat + '"]'
+        );
+    }
+
+    function openCat(catRow, open) {
+        if (catRow.classList.contains('ov-noexpand')) return;
+        catRow.classList.toggle('ov-open', open);
+        catItems(catRow).forEach(function (r) {
+            // เปิดรายการย่อยเฉพาะเมื่อกลุ่มประเภทไม่ได้ถูกย่ออยู่
+            var typeRow = table.querySelector('.ov-type[data-type="' + r.dataset.type + '"]');
+            var typeCollapsed = typeRow && typeRow.classList.contains('ov-collapsed');
+            r.style.display = (open && !typeCollapsed) ? '' : 'none';
+        });
+    }
+
+    function toggleType(typeRow) {
+        var collapsed = typeRow.classList.toggle('ov-collapsed');
+        var rows = table.querySelectorAll('.ov-child[data-type="' + typeRow.dataset.type + '"]');
+        rows.forEach(function (r) {
+            if (collapsed) {
+                r.style.display = 'none';
+            } else if (r.classList.contains('ov-item')) {
+                // แสดงรายการย่อยเฉพาะหมวดที่กำลังเปิดอยู่
+                var catRow = table.querySelector(
+                    '.ov-cat[data-type="' + r.dataset.type + '"][data-cat="' + r.dataset.cat + '"]'
+                );
+                r.style.display = (catRow && catRow.classList.contains('ov-open')) ? '' : 'none';
+            } else {
+                r.style.display = '';
+            }
+        });
+    }
+
+    table.addEventListener('click', function (e) {
+        var catRow = e.target.closest('.ov-cat');
+        if (catRow && table.contains(catRow)) {
+            openCat(catRow, !catRow.classList.contains('ov-open'));
+            return;
+        }
+        var typeRow = e.target.closest('.ov-type');
+        if (typeRow && table.contains(typeRow)) {
+            toggleType(typeRow);
+        }
+    });
+
+    document.getElementById('ovExpandAll')?.addEventListener('click', function () {
+        table.querySelectorAll('.ov-type.ov-collapsed').forEach(toggleType);
+        table.querySelectorAll('.ov-cat').forEach(function (c) { openCat(c, true); });
+    });
+
+    document.getElementById('ovCollapseAll')?.addEventListener('click', function () {
+        table.querySelectorAll('.ov-cat').forEach(function (c) { openCat(c, false); });
+    });
+})();
+JS;
+$this->registerJs($js, \yii\web\View::POS_END);
+?>

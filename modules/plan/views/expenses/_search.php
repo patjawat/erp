@@ -42,14 +42,19 @@ $ouGroups = \app\modules\settings\models\OrgUnit::groupedForSelect($ouYear);
                 'pluginOptions' => ['allowClear' => true],
             ])->label(false) ?>
         </div>
-                       <div class="col-12 col-md-9 col-xl-6">
+        <div class="col-12 col-md-9 col-xl-3">
+            <?= $form->field($model, 'keyword')->textInput([
+                'placeholder' => 'ค้นหาชื่อรายการ / วัตถุประสงค์',
+            ])->label(false) ?>
+        </div>
+                       <div class="col-12 col-md-9 col-xl-4">
                         <?= $form->field($model, 'plan_unit_id')->widget(Select2::class, [
                             'data' => $ouGroups,
                             'options' => ['placeholder' => 'ทุกหน่วยงาน (จากทะเบียน)'],
                             'pluginOptions' => ['allowClear' => true],
                         ])->label(false); ?>
                     </div>
-        <div class="col-12 col-md-8 col-xl-3">
+        <div class="col-12 col-md-8 col-xl-2">
             <?php
 
             echo $form->field($model, 'status')->widget(Select2::classname(), [

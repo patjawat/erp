@@ -55,6 +55,7 @@ class ParcelController extends Controller
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'parcel']);
         $dataProvider->query->orderBy(['id' => SORT_DESC]);
+        $dataProvider->pagination = false; // แสดงทั้งหมดแบบจัดกลุ่มตามหน่วยงาน
         $totalAmount = (float) (clone $dataProvider->query)->sum('order_price');
 
         return $this->render('index', [

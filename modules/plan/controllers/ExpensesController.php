@@ -48,6 +48,7 @@ class ExpensesController extends Controller
         }
         $dataProvider = $searchModel->search($this->request->queryParams);
         $dataProvider->query->andFilterWhere(['plan_group_id' => 'expenses']);
+        $dataProvider->pagination = false; // แสดงทั้งหมดแบบจัดกลุ่มตามหน่วยงาน
         $totalAmount = (float) (clone $dataProvider->query)->sum('order_price');
 
         return $this->render('index', [
