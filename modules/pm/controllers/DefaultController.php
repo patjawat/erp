@@ -73,4 +73,35 @@ class DefaultController extends Controller
             'defaultYear' => KpiRegistry::defaultFiscalYear(),
         ]);
     }
+
+    /** รายงานรวมสำหรับพิมพ์ — ตัวชี้วัดทุกกลุ่ม ค่าย้อนหลัง 5 ปี + สถานะ จัดกลุ่มตามกลุ่มตัวชี้วัด */
+    public function actionReport()
+    {
+        $registry = new KpiRegistry();
+        $year = (int) Yii::$app->request->get('year', 0) ?: KpiRegistry::defaultFiscalYear();
+        $group = (int) Yii::$app->request->get('group', 0) ?: null;
+        $unit = (int) Yii::$app->request->get('unit', 0) ?: null;
+        $q = trim((string) Yii::$app->request->get('q'));
+
+        $rows = array_values(array_filter($registry->rows($year), static function ($r) use ($group, $unit, $q) {
+            if ($group && $r->groupId !== $group) return false;
+            if ($unit && $r->orgUnitId !== $unit) return false;
+            if ($q !== '' && mb_stripos($r->name, $q) === false) return false;
+            return true;
+        }));
+
+        // จัดกลุ่มตามลำดับกลุ่ม
+        $byGroup = [];
+        foreach (KpiGroup::activeGroups() as $g) $byGroup[$g->name] = [];
+        foreach ($rows as $r) $byGroup[$r->groupName][] = $r;
+        $byGroup = array_filter($byGroup);
+
+        $unitNames = ArrayHelper::map(OrgUnit::find()->select(['id', 'name'])->asArray()->all(), 'id', 'name');
+        $site = \app\components\SiteHelper::getInfo();
+
+        return $this->render('report', [
+            'byGroup' => $byGroup, 'year' => $year, 'years' => range($year - 4, $year),
+            'unitNames' => $unitNames, 'hospitalName' => $site['company_name'] ?? 'โรงพยาบาล',
+        ]);
+    }
 }

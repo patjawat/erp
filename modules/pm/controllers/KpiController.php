@@ -29,8 +29,35 @@ class KpiController extends Controller
                 ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['pmStrategyView', 'kpiManage']],
                 ['allow' => true, 'roles' => ['kpiManage']],
             ]],
-            'verbs' => ['class' => VerbFilter::class, 'actions' => ['delete' => ['POST']]],
+            'verbs' => ['class' => VerbFilter::class, 'actions' => ['delete' => ['POST'], 'copy-year' => ['POST']]],
         ];
+    }
+
+    /** คัดลอกค่าเป้าหมายของตัวชี้วัดนอกแผนจากปีหนึ่งไปอีกปีหนึ่ง (ผลจริงเว้นว่างให้กรอกใหม่) */
+    public function actionCopyYear()
+    {
+        $from = (int) Yii::$app->request->post('from_year');
+        $to = (int) Yii::$app->request->post('to_year');
+        if (!$from || !$to || $from === $to) {
+            Yii::$app->session->setFlash('error', 'กรุณาเลือกปีต้นทางและปลายทางที่ต่างกัน');
+            return $this->redirect(['index']);
+        }
+
+        $stdGroupIds = KpiGroup::find()->select('id')->where(['kind' => KpiGroup::KIND_STANDALONE])->column();
+        $indicators = KpiIndicator::find()->where(['group_id' => $stdGroupIds, 'is_active' => true])->all();
+        $created = 0; $skipped = 0;
+        foreach ($indicators as $ind) {
+            $src = $ind->yearEntry($from);
+            if (!$src || $src->target_value === null) continue;
+            if ($ind->yearEntry($to)) { $skipped++; continue; }
+            (new KpiIndicatorYear([
+                'kpi_indicator_id' => $ind->id, 'fiscal_year' => $to,
+                'target_value' => $src->target_value, 'actual_value' => null,
+            ]))->save();
+            $created++;
+        }
+        Yii::$app->session->setFlash('success', "คัดลอกเป้าหมายจากปี $from → ปี $to แล้ว: สร้างใหม่ $created รายการ, ข้าม (มีอยู่แล้ว) $skipped รายการ");
+        return $this->redirect(['index', 'year' => $to]);
     }
 
     public function actionIndex(?int $group = null, ?int $unit = null, ?int $year = null)

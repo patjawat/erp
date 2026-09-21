@@ -48,6 +48,10 @@ $cards = [
 $yearOpts = range($defaultYear + 1, $defaultYear - 4);
 ?>
 
+<div class="d-flex justify-content-end mb-2">
+    <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', ['report', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q], ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']) ?>
+</div>
+
 <div class="row g-2 g-md-3 mb-3">
     <?php foreach ($cards as $c): ?>
         <div class="col-6 col-lg-3">

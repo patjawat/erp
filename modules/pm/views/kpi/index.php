@@ -13,6 +13,9 @@ $this->beginBlock('page-title'); ?>KPI โรงพยาบาล<?php $this->e
 $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => 'kpi']) ?><?php $this->endBlock();
 app\assets\RichTextAsset::register($this);
 
+$defYear = \app\modules\pm\services\KpiRegistry::defaultFiscalYear();
+$yearOpts = range($defYear + 1, $defYear - 4);
+
 $cards = [
     ['label' => 'ตัวชี้วัดทั้งหมด', 'value' => $summary['total'], 'cls' => 'text-body'],
     ['label' => 'ผ่าน (PASS)', 'value' => $summary['pass'], 'cls' => 'text-success'],
@@ -21,15 +24,40 @@ $cards = [
 ];
 ?>
 
+<?php foreach (['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $cls): ?>
+    <?php if (Yii::$app->session->hasFlash($key)): ?>
+        <div class="alert alert-<?= $cls ?> alert-dismissible fade show"><?= Html::encode(Yii::$app->session->getFlash($key)) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+<?php endforeach; ?>
+
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
     <div>
         <h2 class="h5 mb-1">ตัวชี้วัดของโรงพยาบาล</h2>
         <p class="text-muted mb-0">ตัวชี้วัดของ รพ. / ทีมประสาน / งานพยาบาล / หน่วยงาน — ปีงบประมาณ <?= $year ?></p>
     </div>
-    <?php if ($canManage): ?>
-        <?= Html::a('<i data-lucide="plus" class="me-1"></i> เพิ่มตัวชี้วัด', ['create'], ['class' => 'btn btn-primary']) ?>
-    <?php endif; ?>
+    <div class="d-flex flex-wrap gap-2">
+        <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', ['/pm/default/report', 'year' => $year], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
+        <?php if ($canManage): ?>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#copyYearBox"><i class="bi bi-files me-1"></i> คัดลอกค่าข้ามปี</button>
+            <?= Html::a('<i data-lucide="plus" class="me-1"></i> เพิ่มตัวชี้วัด', ['create'], ['class' => 'btn btn-primary']) ?>
+        <?php endif; ?>
+    </div>
 </div>
+
+<?php if ($canManage): ?>
+    <div class="collapse mb-3" id="copyYearBox"><div class="card border-0 shadow-sm"><div class="card-body">
+        <?= Html::beginForm(['copy-year'], 'post', ['class' => 'row g-2 align-items-end']) ?>
+        <div class="col-auto"><label class="form-label small fw-semibold mb-1">จากปี</label>
+            <?= Html::dropDownList('from_year', $defYear - 1, array_combine($yearOpts, $yearOpts), ['class' => 'form-select form-select-sm']) ?></div>
+        <div class="col-auto d-flex align-items-end pb-2"><i class="bi bi-arrow-right"></i></div>
+        <div class="col-auto"><label class="form-label small fw-semibold mb-1">ไปปี</label>
+            <?= Html::dropDownList('to_year', $defYear, array_combine($yearOpts, $yearOpts), ['class' => 'form-select form-select-sm']) ?></div>
+        <div class="col-auto"><?= Html::submitButton('คัดลอกเป้าหมาย', ['class' => 'btn btn-sm btn-primary', 'data-confirm' => 'คัดลอกค่าเป้าหมายไปปีปลายทาง? (ผลจริงเว้นว่าง, ตัวที่มีข้อมูลปีปลายทางแล้วจะข้าม)']) ?></div>
+        <div class="col-12"><div class="form-text">คัดลอกเฉพาะ "ค่าเป้าหมาย" ผลจริงเว้นว่างให้กรอกใหม่ · ข้ามตัวที่มีข้อมูลปีปลายทางอยู่แล้ว</div></div>
+        <?= Html::endForm() ?>
+    </div></div></div>
+<?php endif; ?>
 
 <div class="row g-2 g-md-3 mb-3">
     <?php foreach ($cards as $c): ?>
