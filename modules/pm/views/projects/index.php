@@ -28,7 +28,10 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="text-muted small">พบ <?= $dataProvider->getTotalCount() ?> โครงการ</div>
-        <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เขียนโครงการ', ['create'], ['class' => 'btn btn-success']) ?>
+        <div class="d-flex gap-2">
+            <?= Html::a('<i class="bi bi-pie-chart me-1"></i> ภาพรวมโครงการ', ['overview'], ['class' => 'btn btn-outline-primary']) ?>
+            <?= Html::a('<i class="fa-solid fa-plus me-1"></i> เขียนโครงการ', ['create'], ['class' => 'btn btn-success']) ?>
+        </div>
     </div>
 
     <div class="card">

@@ -8,8 +8,10 @@ use app\modules\pm\models\ProjectsSearch;
 use app\modules\pm\models\ProjectObjective;
 use app\modules\pm\models\ProjectIndicator;
 use app\modules\pm\models\ProjectResponsible;
+use app\modules\settings\models\OrgUnit;
 use app\components\UserHelper;
 use app\modules\plan\components\PlanHelper;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -52,6 +54,43 @@ class ProjectsController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * ภาพรวมโครงการ/งบประมาณ (ย้ายมาจากหน้า "ภาพรวม" เดิม ซึ่งตอนนี้เป็น KPI Dashboard)
+     */
+    public function actionOverview()
+    {
+        $year = (int) Yii::$app->request->get('thai_year', PlanHelper::currentPlanYear());
+        $base = Projects::find()->where(['deleted_at' => null]);
+
+        $byStatus = [];
+        $budgetByStatus = [];
+        foreach (array_keys(Projects::statusList()) as $st) {
+            $byStatus[$st] = (int) (clone $base)->andWhere(['status' => $st, 'thai_year' => $year])->count();
+            $budgetByStatus[$st] = (float) (clone $base)->andWhere(['status' => $st, 'thai_year' => $year])->sum('budget_total');
+        }
+
+        $total = (int) (clone $base)->andWhere(['thai_year' => $year])->count();
+        $budgetSum = (float) (clone $base)->andWhere(['thai_year' => $year])->sum('budget_total');
+
+        $deptRows = (clone $base)
+            ->select(['org_unit_id', 'cnt' => 'COUNT(*)', 'budget' => 'COALESCE(SUM(budget_total),0)'])
+            ->andWhere(['thai_year' => $year])->groupBy('org_unit_id')->orderBy(['budget' => SORT_DESC])->asArray()->all();
+        $unitNames = ArrayHelper::map(OrgUnit::find()->select(['id', 'name'])->asArray()->all(), 'id', 'name');
+        $byDept = [];
+        foreach ($deptRows as $r) {
+            $byDept[] = ['name' => $unitNames[$r['org_unit_id']] ?? 'ไม่ระบุหน่วยงาน', 'count' => (int) $r['cnt'], 'budget' => (float) $r['budget']];
+        }
+
+        $recent = (clone $base)->andWhere(['thai_year' => $year])->orderBy(['id' => SORT_DESC])->limit(8)->all();
+        $years = Projects::find()->select('thai_year')->where(['deleted_at' => null])
+            ->andWhere(['not', ['thai_year' => null]])->distinct()->orderBy(['thai_year' => SORT_DESC])->column();
+
+        return $this->render('overview', [
+            'year' => $year, 'years' => $years, 'byStatus' => $byStatus, 'budgetByStatus' => $budgetByStatus,
+            'byDept' => $byDept, 'total' => $total, 'budgetSum' => $budgetSum, 'recent' => $recent,
         ]);
     }
 

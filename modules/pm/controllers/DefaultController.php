@@ -3,15 +3,16 @@
 namespace app\modules\pm\controllers;
 
 use Yii;
-use app\modules\pm\models\Projects;
+use app\modules\pm\components\KpiStatus;
+use app\modules\pm\models\KpiGroup;
+use app\modules\pm\services\KpiRegistry;
 use app\modules\settings\models\OrgUnit;
-use app\modules\plan\components\PlanHelper;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\filters\AccessControl;
 
 /**
- * Default controller for the `pm` module — หน้าภาพรวม
+ * Default controller for the `pm` module — ภาพรวม = KPI Dashboard (ตัวชี้วัดทุกกลุ่ม)
  */
 class DefaultController extends Controller
 {
@@ -27,76 +28,49 @@ class DefaultController extends Controller
         ];
     }
 
+    /**
+     * ภาพรวมตัวชี้วัดทุกกลุ่ม (ยุทธศาสตร์ + ของ รพ.) รวมผ่าน KpiRegistry
+     * สรุป PASS/GAP + ตัวกรอง + ตาราง union — ชุดนำเสนอสำหรับผู้บริหาร
+     */
     public function actionIndex()
     {
-        $year = (int) Yii::$app->request->get('thai_year', PlanHelper::currentPlanYear());
+        $registry = new KpiRegistry();
+        $year = (int) Yii::$app->request->get('year', 0) ?: KpiRegistry::defaultFiscalYear();
+        $group = (int) Yii::$app->request->get('group', 0) ?: null;
+        $unit = (int) Yii::$app->request->get('unit', 0) ?: null;
+        $q = trim((string) Yii::$app->request->get('q'));
 
-        $base = Projects::find()->where(['deleted_at' => null]);
+        $rows = array_values(array_filter($registry->rows($year), static function ($r) use ($group, $unit, $q) {
+            if ($group && $r->groupId !== $group) return false;
+            if ($unit && $r->orgUnitId !== $unit) return false;
+            if ($q !== '' && mb_stripos($r->name, $q) === false) return false;
+            return true;
+        }));
 
-        $byStatus = [];
-        foreach (array_keys(Projects::statusList()) as $st) {
-            $byStatus[$st] = (int) (clone $base)->andWhere(['status' => $st, 'thai_year' => $year])->count();
+        $summary = ['total' => 0, 'pass' => 0, 'gap' => 0, 'nodata' => 0];
+        $byGroup = [];
+        foreach ($rows as $r) {
+            $summary['total']++;
+            $summary[$r->status]++;
+            $byGroup[$r->groupName] ??= ['total' => 0, 'pass' => 0, 'gap' => 0, 'nodata' => 0, 'color' => '#6c757d'];
+            $byGroup[$r->groupName]['total']++;
+            $byGroup[$r->groupName][$r->status]++;
         }
+        $judged = $summary['pass'] + $summary['gap'];
+        $summary['successRate'] = $judged ? (int) round($summary['pass'] * 100 / $judged) : 0;
 
-        $total = (int) (clone $base)->andWhere(['thai_year' => $year])->count();
-        $budgetSum = (float) (clone $base)->andWhere(['thai_year' => $year])->sum('budget_total');
-
-        // งบประมาณ + จำนวนโครงการ แยกตามสถานะ
-        $budgetByStatus = [];
-        foreach (array_keys(Projects::statusList()) as $st) {
-            $budgetByStatus[$st] = (float) (clone $base)->andWhere(['status' => $st, 'thai_year' => $year])->sum('budget_total');
+        $groupItems = [];
+        foreach (KpiGroup::activeGroups() as $g) {
+            $groupItems[$g->id] = $g->name;
+            if (isset($byGroup[$g->name])) $byGroup[$g->name]['color'] = $g->color ?: '#6c757d';
         }
-
-        // งบประมาณ + จำนวนโครงการ แยกตามหน่วยงาน
-        // สรุปตามทะเบียนหน่วยงาน (org_unit) ไม่ใช่ผังบุคลากร มิฉะนั้นโครงการของทีมประสาน
-        // ซึ่งไม่มีตัวตนในผัง จะไปกองรวมกันที่ "ไม่ระบุหน่วยงาน" ทั้งหมด
-        $deptRows = (clone $base)
-            ->select([
-                'org_unit_id',
-                'cnt' => 'COUNT(*)',
-                'budget' => 'COALESCE(SUM(budget_total),0)',
-            ])
-            ->andWhere(['thai_year' => $year])
-            ->groupBy('org_unit_id')
-            ->orderBy(['budget' => SORT_DESC])
-            ->asArray()
-            ->all();
-
-        // ไม่กรองด้วยปี เพราะ id ของทะเบียนไม่ซ้ำข้ามปีอยู่แล้ว
-        // ถ้ากรอง โครงการที่อ้างหน่วยของปีอื่น (เช่นปีที่ยังไม่ได้ตั้งทะเบียน) จะกลายเป็น "ไม่ระบุหน่วยงาน"
-        $unitNames = ArrayHelper::map(
-            OrgUnit::find()->select(['id', 'name'])->asArray()->all(),
-            'id',
-            'name'
-        );
-        $byDept = [];
-        foreach ($deptRows as $r) {
-            $byDept[] = [
-                'name' => $unitNames[$r['org_unit_id']] ?? 'ไม่ระบุหน่วยงาน',
-                'count' => (int) $r['cnt'],
-                'budget' => (float) $r['budget'],
-            ];
-        }
-
-        $recent = (clone $base)->andWhere(['thai_year' => $year])->orderBy(['id' => SORT_DESC])->limit(8)->all();
-
-        $years = Projects::find()
-            ->select('thai_year')
-            ->where(['deleted_at' => null])
-            ->andWhere(['not', ['thai_year' => null]])
-            ->distinct()
-            ->orderBy(['thai_year' => SORT_DESC])
-            ->column();
+        $unitNames = ArrayHelper::map(OrgUnit::find()->select(['id', 'name'])->asArray()->all(), 'id', 'name');
 
         return $this->render('index', [
-            'year' => $year,
-            'years' => $years,
-            'byStatus' => $byStatus,
-            'budgetByStatus' => $budgetByStatus,
-            'byDept' => $byDept,
-            'total' => $total,
-            'budgetSum' => $budgetSum,
-            'recent' => $recent,
+            'rows' => $rows, 'summary' => $summary, 'byGroup' => $byGroup,
+            'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q,
+            'groupItems' => $groupItems, 'unitNames' => $unitNames,
+            'defaultYear' => KpiRegistry::defaultFiscalYear(),
         ]);
     }
 }
