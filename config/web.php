@@ -371,6 +371,9 @@ $config = [
             'hr/document/*',
             'dms/documents/comment-validator',
             'hr/leave/create-validator',
+            // แผนประจำปี (รับ-จ่าย) ย้ายจาก finance/cash มาไว้ในโมดูลแผนงบประมาณ
+            // เปิด route ให้เข้าใช้ได้ทันที (ผู้ใช้ = การเงิน/พัสดุ/แอดมิน) — ถ้าต้องจำกัด role ค่อยผูกใน UI สิทธิ์
+            'plan/annual/*',
             // งานเขียน TOR: controller กันสิทธิ์เอง (AccessControl roles=['purchase'])
             // ใส่ไว้ที่นี่เพื่อให้ใช้งานได้ทันทีโดยไม่ต้องไปผูก route ในระบบจัดการสิทธิ์ก่อน
             'purchase/tor/*',
