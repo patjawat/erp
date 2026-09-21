@@ -216,6 +216,12 @@ $totalColumns = 11 + count($historyYears) + (count($quarterLabels) * 2);
                         <button type="submit" class="btn btn-sm btn-success">
                             <i class="bi bi-file-earmark-excel me-1"></i>Excel
                         </button>
+                        <?php if ($plan !== null): ?>
+                            <a class="btn btn-sm btn-outline-info"
+                               href="<?= Url::to(['/inventory-v2/material-plan/report', 'fiscal_year' => $filter['fiscal_year'], 'warehouse_id' => $filter['warehouse_id']]) ?>">
+                                <i class="bi bi-bar-chart-line me-1"></i>เทียบจัดซื้อจริง
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 

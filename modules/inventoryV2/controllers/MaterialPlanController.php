@@ -6,6 +6,7 @@ use app\components\SiteHelper;
 use app\modules\inventoryV2\models\MaterialPlan;
 use app\modules\inventoryV2\models\MaterialPlanItem;
 use app\modules\inventoryV2\services\MaterialPlanForecastService;
+use app\modules\inventoryV2\services\MaterialPlanVarianceService;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -167,6 +168,48 @@ class MaterialPlanController extends Controller
         }
 
         return $this->streamXlsx($rows, $service->summarize($rows), $filter, $coverage);
+    }
+
+    /**
+     * รายงานเปรียบเทียบ "แผนจัดซื้อ" ที่บันทึกไว้ กับ "จัดซื้อจริง" (รับเข้าคลังจริง) ในปีงบเดียวกัน
+     * คำนวณสดจากธุรกรรมจริงทุกครั้ง ต้องมีแผนที่บันทึกไว้ก่อนจึงจะเทียบได้
+     */
+    public function actionReport()
+    {
+        $filter = $this->resolveFilter();
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        if ($plan === null) {
+            Yii::$app->session->setFlash('warning', 'ยังไม่มีแผนที่บันทึกไว้สำหรับปีงบ ' . $filter['fiscal_year'] . ' ต้องบันทึกแผนก่อนจึงจะเทียบกับจัดซื้อจริงได้');
+
+            return $this->redirect($this->filterUrl($filter));
+        }
+
+        $result = (new MaterialPlanVarianceService())->build($plan);
+
+        return $this->render('report', array_merge($result, [
+            'filter' => $filter,
+            'warehouses' => MaterialPlanForecastService::mainWarehouseOptions(),
+        ]));
+    }
+
+    /**
+     * ส่งออก Excel รายงานแผน vs จัดซื้อจริง ตามแบบฟอร์มราชการ (เติมช่องจัดซื้อจริงอัตโนมัติ)
+     */
+    public function actionReportExport()
+    {
+        $filter = $this->resolveFilter();
+        $plan = MaterialPlan::findForScope($filter['fiscal_year'], $filter['warehouse_id']);
+
+        if ($plan === null) {
+            Yii::$app->session->setFlash('warning', 'ยังไม่มีแผนที่บันทึกไว้สำหรับปีงบ ' . $filter['fiscal_year']);
+
+            return $this->redirect($this->filterUrl($filter));
+        }
+
+        $result = (new MaterialPlanVarianceService())->build($plan);
+
+        return $this->streamReportXlsx($result, $filter);
     }
 
     /**
@@ -453,7 +496,7 @@ class MaterialPlanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('แผนจัดซื้อ ปี ' . $planYear);
 
-        $lastColumn = 'AF';
+        $lastColumn = 'W';
         $sheet->setCellValue('A1', 'แผนการจัดวัสดุ ' . $this->organizationName() . ' ประจำปีงบประมาณ ' . $planYear);
         $sheet->mergeCells("A1:{$lastColumn}1");
         $sheet->setCellValue('A2', $this->filterCaption($filter, $coverage));
@@ -461,39 +504,62 @@ class MaterialPlanController extends Controller
 
         $this->writeHeader($sheet, $historyYears, $planYear, $quarterLabels);
 
+        // แต่ละรายการกินพื้นที่ 2 แถว: แถวบน = จำนวน, แถวล่าง = มูลค่า
         $rowIndex = 6;
         foreach ($rows as $row) {
+            $qtyRow = $rowIndex;        // แถวจำนวน
+            $valueRow = $rowIndex + 1;  // แถวมูลค่า
             $history = $row['history'];
-            $sheet->setCellValue('A' . $rowIndex, $row['item_code']);
-            $sheet->setCellValue('B' . $rowIndex, $row['item_name']);
-            $sheet->setCellValue('C' . $rowIndex, $row['category_title']);
-            $sheet->setCellValue('D' . $rowIndex, $row['unit_name']);
 
+            // คอลัมน์ซ้ายเป็นค่าเดียวต่อรายการ ผสานเซลล์คร่อม 2 แถว
+            $left = [
+                'A' => $row['item_code'],
+                'B' => $row['item_name'],
+                'C' => $row['category_title'],
+                'D' => $row['unit_name'],
+            ];
             $column = 'E';
             foreach ($historyYears as $year) {
-                $sheet->setCellValue($column . $rowIndex, $history[$year] ?? 0);
+                $left[$column] = $history[$year] ?? 0;
                 $column++;
             }
-
-            $sheet->setCellValue('H' . $rowIndex, $row['forecast_qty']);
-            $sheet->setCellValue('I' . $rowIndex, $row['opening_qty']);
-            $sheet->setCellValue('J' . $rowIndex, $row['plan_qty']);
-            $sheet->setCellValue('K' . $rowIndex, $row['unit_price']);
-            $sheet->setCellValue('L' . $rowIndex, $row['plan_value']);
-
-            // ไตรมาส 1-4 บล็อกละ 4 คอลัมน์: แผนจัดซื้อ, มูลค่า, ซื้อจริง, มูลค่าซื้อจริง
-            // ช่อง "ซื้อจริง" เว้นว่างไว้ให้กรอกระหว่างปี ตามแบบฟอร์มเดิม
-            $blockStart = 13; // คอลัมน์ M
-            foreach ($row['quarters'] as $index => $qty) {
-                $qtyColumn = Coordinate::stringFromColumnIndex($blockStart + ($index * 4));
-                $valueColumn = Coordinate::stringFromColumnIndex($blockStart + ($index * 4) + 1);
-                $sheet->setCellValue($qtyColumn . $rowIndex, $qty);
-                $sheet->setCellValue($valueColumn . $rowIndex, $row['quarter_values'][$index]);
+            $left['H'] = $row['forecast_qty'];
+            $left['I'] = $row['opening_qty'];
+            $left['J'] = $row['plan_qty'];
+            $left['K'] = $row['unit_price'];
+            $left['L'] = $row['plan_value'];
+            foreach ($left as $col => $value) {
+                $sheet->setCellValue($col . $qtyRow, $value);
+                $sheet->mergeCells("{$col}{$qtyRow}:{$col}{$valueRow}");
             }
 
-            $sheet->setCellValue('AC' . $rowIndex, array_sum($row['quarters']));
-            $sheet->setCellValue('AD' . $rowIndex, array_sum($row['quarter_values']));
-            $rowIndex++;
+            // คอลัมน์กำกับงวด: แถวบน = จำนวน, แถวล่าง = มูลค่า
+            $sheet->setCellValue('M' . $qtyRow, 'จำนวน');
+            $sheet->setCellValue('M' . $valueRow, 'มูลค่า');
+
+            // แต่ละงวด 2 คอลัมน์: แผนจัดซื้อ, จัดซื้อจริง
+            // ช่อง "จัดซื้อจริง" ใส่ 0 ไว้ให้กรอกระหว่างปี ตามแบบฟอร์มต้นฉบับ
+            $blockStart = 14; // คอลัมน์ N
+            foreach ($row['quarters'] as $index => $qty) {
+                $planColumn = Coordinate::stringFromColumnIndex($blockStart + ($index * 2));
+                $actualColumn = Coordinate::stringFromColumnIndex($blockStart + ($index * 2) + 1);
+                $sheet->setCellValue($planColumn . $qtyRow, $qty);
+                $sheet->setCellValue($planColumn . $valueRow, $row['quarter_values'][$index]);
+                $sheet->setCellValue($actualColumn . $qtyRow, 0);
+                $sheet->setCellValue($actualColumn . $valueRow, 0);
+            }
+
+            // ยอดรวม: V = แผนจัดซื้อ, W = จัดซื้อจริง
+            $sheet->setCellValue('V' . $qtyRow, array_sum($row['quarters']));
+            $sheet->setCellValue('V' . $valueRow, array_sum($row['quarter_values']));
+            $sheet->setCellValue('W' . $qtyRow, 0);
+            $sheet->setCellValue('W' . $valueRow, 0);
+
+            // แถวจำนวนเป็นจำนวนเต็ม แถวมูลค่าเป็นตัวเลขคั่นหลักพัน
+            $sheet->getStyle("N{$qtyRow}:W{$qtyRow}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("N{$valueRow}:W{$valueRow}")->getNumberFormat()->setFormatCode('#,##0');
+
+            $rowIndex += 2;
         }
 
         $lastRow = $rowIndex - 1;
@@ -509,6 +575,260 @@ class MaterialPlanController extends Controller
             ->on(Response::EVENT_AFTER_SEND, static function () use ($tempPath) {
                 @unlink($tempPath);
             });
+    }
+
+    /**
+     * เขียนไฟล์ Excel รายงานแผน vs จัดซื้อจริง — แบบฟอร์ม 2 แถวต่อรายการ (จำนวน/มูลค่า)
+     * เติมช่อง "จัดซื้อจริง" ด้วยยอดรับเข้าจริง แล้วเพิ่มคอลัมน์ส่วนต่างและ %สำเร็จ
+     *
+     * @param array $result ผลจาก MaterialPlanVarianceService::build()
+     */
+    protected function streamReportXlsx(array $result, array $filter)
+    {
+        $plan = $result['plan'];
+        $planYear = (int) $plan->fiscal_year;
+        $quarterLabels = $result['quarter_labels'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('แผน vs จริง ปี ' . $planYear);
+
+        $lastColumn = 'Q';
+        $sheet->setCellValue('A1', 'รายงานเปรียบเทียบแผนจัดซื้อกับจัดซื้อจริง ' . $this->organizationName() . ' ปีงบประมาณ ' . $planYear);
+        $sheet->mergeCells("A1:{$lastColumn}1");
+        $sheet->setCellValue('A2', 'จัดซื้อจริง = รับเข้าคลังจริง · ' . $this->filterCaption($filter));
+        $sheet->mergeCells("A2:{$lastColumn}2");
+
+        $this->writeReportHeader($sheet, $quarterLabels);
+
+        $rowIndex = 6;
+        foreach ($result['rows'] as $row) {
+            $rowIndex = $this->writeReportItem($sheet, $rowIndex, [
+                'code' => $row['item_code'],
+                'name' => $row['item_name'],
+                'category' => $row['category_title'],
+                'unit' => $row['unit_name'],
+                'plan_qty' => $row['plan_quarters'],
+                'plan_value' => $row['plan_quarter_values'],
+                'actual_qty' => $row['actual_quarters'],
+                'actual_value' => $row['actual_quarter_values'],
+                'plan_total_qty' => $row['plan_qty'],
+                'plan_total_value' => $row['plan_value'],
+                'actual_total_qty' => $row['actual_qty'],
+                'actual_total_value' => $row['actual_value'],
+                'variance_qty' => $row['variance_qty'],
+                'variance_value' => $row['variance_value'],
+                'achieve_pct' => $row['achieve_pct'],
+            ]);
+        }
+
+        // รายการนอกแผน: ซื้อจริงแต่ไม่มีในแผน (ช่องแผนเว้นว่าง)
+        if (!empty($result['off_plan'])) {
+            $sheet->setCellValue('A' . $rowIndex, 'รายการนอกแผน (จัดซื้อจริงแต่ไม่มีในแผน)');
+            $sheet->mergeCells("A{$rowIndex}:{$lastColumn}{$rowIndex}");
+            $sheet->getStyle("A{$rowIndex}")->getFont()->setBold(true);
+            $sheet->getStyle("A{$rowIndex}")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('FFF3CD');
+            $rowIndex++;
+
+            foreach ($result['off_plan'] as $row) {
+                $rowIndex = $this->writeReportItem($sheet, $rowIndex, [
+                    'code' => $row['item_code'],
+                    'name' => $row['item_name'],
+                    'category' => '-',
+                    'unit' => '',
+                    'plan_qty' => [null, null, null, null],
+                    'plan_value' => [null, null, null, null],
+                    'actual_qty' => $row['actual_quarters'],
+                    'actual_value' => $row['actual_quarter_values'],
+                    'plan_total_qty' => null,
+                    'plan_total_value' => null,
+                    'actual_total_qty' => $row['actual_qty'],
+                    'actual_total_value' => $row['actual_value'],
+                    'variance_qty' => $row['actual_qty'],
+                    'variance_value' => $row['actual_value'],
+                    'achieve_pct' => null,
+                ]);
+            }
+        }
+
+        $lastRow = $rowIndex - 1;
+        $this->styleReportSheet($sheet, $lastColumn, $lastRow);
+        $this->writeReportFooter($sheet, $rowIndex, $result['summary']);
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'material-plan-report-');
+        (new Xlsx($spreadsheet))->save($tempPath);
+        $filename = 'material-plan-report-' . $planYear . '.xlsx';
+
+        return Yii::$app->response
+            ->sendFile($tempPath, $filename)
+            ->on(Response::EVENT_AFTER_SEND, static function () use ($tempPath) {
+                @unlink($tempPath);
+            });
+    }
+
+    /**
+     * หัวตารางรายงานเทียบ: A–D ข้อมูลรายการ, E ป้ายงวด, F–M งวด×(แผน/จริง), N–O รวม, P ส่วนต่าง, Q %สำเร็จ
+     */
+    protected function writeReportHeader($sheet, array $quarterLabels): void
+    {
+        $single = [
+            'A' => 'รหัส',
+            'B' => 'รายการสินค้า',
+            'C' => 'ประเภทรายการ',
+            'D' => 'หน่วยบรรจุ',
+            'E' => 'งวดจัดซื้อ',
+        ];
+        foreach ($single as $column => $label) {
+            $sheet->setCellValue($column . '4', $label);
+            $sheet->mergeCells("{$column}4:{$column}5");
+        }
+
+        $blockStart = 6; // คอลัมน์ F
+        foreach ($quarterLabels as $index => $label) {
+            $from = Coordinate::stringFromColumnIndex($blockStart + ($index * 2));
+            $to = Coordinate::stringFromColumnIndex($blockStart + ($index * 2) + 1);
+            $sheet->setCellValue($from . '4', $label);
+            $sheet->mergeCells("{$from}4:{$to}4");
+            $sheet->setCellValue($from . '5', 'แผนจัดซื้อ');
+            $sheet->setCellValue($to . '5', 'จัดซื้อจริง');
+        }
+
+        $sheet->setCellValue('N4', 'ยอดรวม');
+        $sheet->mergeCells('N4:O4');
+        $sheet->setCellValue('N5', 'แผนจัดซื้อ');
+        $sheet->setCellValue('O5', 'จัดซื้อจริง');
+
+        $sheet->setCellValue('P4', 'ส่วนต่าง');
+        $sheet->setCellValue('P5', '(จริง-แผน)');
+        $sheet->setCellValue('Q4', '%สำเร็จ');
+        $sheet->mergeCells('Q4:Q5');
+    }
+
+    /**
+     * เขียนหนึ่งรายการเป็น 2 แถว (จำนวน/มูลค่า) คืนเลขแถวถัดไป
+     *
+     * @param array $d code, name, category, unit, plan_qty[4], plan_value[4], actual_qty[4],
+     *                 actual_value[4], plan_total_qty, plan_total_value, actual_total_qty,
+     *                 actual_total_value, variance_qty, variance_value, achieve_pct
+     */
+    protected function writeReportItem($sheet, int $rowIndex, array $d): int
+    {
+        $qtyRow = $rowIndex;
+        $valueRow = $rowIndex + 1;
+
+        $left = ['A' => $d['code'], 'B' => $d['name'], 'C' => $d['category'], 'D' => $d['unit']];
+        foreach ($left as $col => $value) {
+            $sheet->setCellValue($col . $qtyRow, $value);
+            $sheet->mergeCells("{$col}{$qtyRow}:{$col}{$valueRow}");
+        }
+
+        $sheet->setCellValue('E' . $qtyRow, 'จำนวน');
+        $sheet->setCellValue('E' . $valueRow, 'มูลค่า');
+
+        $blockStart = 6; // คอลัมน์ F
+        for ($i = 0; $i < 4; $i++) {
+            $planCol = Coordinate::stringFromColumnIndex($blockStart + ($i * 2));
+            $actualCol = Coordinate::stringFromColumnIndex($blockStart + ($i * 2) + 1);
+            $sheet->setCellValue($planCol . $qtyRow, $d['plan_qty'][$i]);
+            $sheet->setCellValue($planCol . $valueRow, $d['plan_value'][$i]);
+            $sheet->setCellValue($actualCol . $qtyRow, $d['actual_qty'][$i]);
+            $sheet->setCellValue($actualCol . $valueRow, $d['actual_value'][$i]);
+        }
+
+        $sheet->setCellValue('N' . $qtyRow, $d['plan_total_qty']);
+        $sheet->setCellValue('N' . $valueRow, $d['plan_total_value']);
+        $sheet->setCellValue('O' . $qtyRow, $d['actual_total_qty']);
+        $sheet->setCellValue('O' . $valueRow, $d['actual_total_value']);
+        $sheet->setCellValue('P' . $qtyRow, $d['variance_qty']);
+        $sheet->setCellValue('P' . $valueRow, $d['variance_value']);
+
+        $sheet->setCellValue('Q' . $qtyRow, $d['achieve_pct'] === null ? '-' : $d['achieve_pct'] . '%');
+        $sheet->mergeCells("Q{$qtyRow}:Q{$valueRow}");
+
+        $sheet->getStyle("F{$qtyRow}:P{$qtyRow}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("F{$valueRow}:P{$valueRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+
+        return $rowIndex + 2;
+    }
+
+    /**
+     * แถวสรุปและช่องลงนามของรายงานเทียบ
+     */
+    protected function writeReportFooter($sheet, int $rowIndex, array $summary): void
+    {
+        $summaryRow = $rowIndex + 1;
+        $sheet->setCellValue('A' . $summaryRow, 'สรุป');
+        $sheet->setCellValue('B' . $summaryRow, number_format($summary['item_count']) . ' รายการในแผน · จัดซื้อแล้ว ' . number_format($summary['purchased_count']) . ' รายการ');
+        $sheet->setCellValue('N' . $summaryRow, $summary['plan_value']);
+        $sheet->setCellValue('O' . $summaryRow, $summary['actual_value']);
+        $sheet->setCellValue('P' . $summaryRow, $summary['variance_value']);
+        $sheet->setCellValue('Q' . $summaryRow, $summary['achieve_pct'] === null ? '-' : $summary['achieve_pct'] . '%');
+        $sheet->getStyle("A{$summaryRow}:Q{$summaryRow}")->getFont()->setBold(true);
+        $sheet->getStyle("N{$summaryRow}:P{$summaryRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+
+        if ((int) $summary['off_plan_count'] > 0) {
+            $offRow = $summaryRow + 1;
+            $sheet->setCellValue('B' . $offRow, 'นอกแผน ' . number_format($summary['off_plan_count']) . ' รายการ มูลค่า ' . number_format($summary['off_plan_value'], 2) . ' บาท');
+            $sheet->getStyle("B{$offRow}")->getFont()->getColor()->setRGB('9C6500');
+        }
+
+        $signRow = $summaryRow + 4;
+        $signatures = [
+            'B' => 'ผู้จัดทำรายงาน.............................................................',
+            'K' => 'ผู้ตรวจสอบ.............................................................',
+        ];
+        foreach ($signatures as $column => $label) {
+            $sheet->setCellValue($column . $signRow, $label);
+            $sheet->setCellValue($column . ($signRow + 1), '(.............................................................)');
+        }
+    }
+
+    /**
+     * ตกแต่งตารางรายงานเทียบ
+     */
+    protected function styleReportSheet($sheet, string $lastColumn, int $lastRow): void
+    {
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getStyle("A4:{$lastColumn}5")->applyFromArray([
+            'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+        ]);
+
+        if ($lastRow >= 6) {
+            $sheet->getStyle("A4:{$lastColumn}{$lastRow}")
+                ->getBorders()
+                ->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle("A6:{$lastColumn}{$lastRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("A6:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle("D6:D{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("E6:{$lastColumn}{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+
+        $sheet->freezePane('F6');
+        $sheet->getColumnDimension('A')->setWidth(14);
+        $sheet->getColumnDimension('B')->setWidth(38);
+        $sheet->getColumnDimension('C')->setWidth(22);
+        $sheet->getColumnDimension('D')->setWidth(11);
+        $sheet->getColumnDimension('E')->setWidth(10);
+        for ($index = 6; $index <= 16; $index++) { // F–P
+            $sheet->getColumnDimensionByColumn($index)->setWidth(12);
+        }
+        $sheet->getColumnDimension('Q')->setWidth(11);
+        $sheet->getRowDimension(4)->setRowHeight(22);
+        $sheet->getRowDimension(5)->setRowHeight(28);
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
     }
 
     /**
@@ -547,25 +867,25 @@ class MaterialPlanController extends Controller
             $sheet->setCellValue($col . '5', $labels[1]);
         }
 
-        $blockStart = 13; // คอลัมน์ M
+        // คอลัมน์กำกับสองแถวของแต่ละรายการ (จำนวน / มูลค่า)
+        $sheet->setCellValue('M4', 'งวดจัดซื้อ');
+        $sheet->mergeCells('M4:M5');
+
+        // แต่ละงวด 2 คอลัมน์: แผนจัดซื้อ, จัดซื้อจริง
+        $blockStart = 14; // คอลัมน์ N
         foreach ($quarterLabels as $index => $label) {
-            $from = Coordinate::stringFromColumnIndex($blockStart + ($index * 4));
-            $to = Coordinate::stringFromColumnIndex($blockStart + ($index * 4) + 3);
+            $from = Coordinate::stringFromColumnIndex($blockStart + ($index * 2));
+            $to = Coordinate::stringFromColumnIndex($blockStart + ($index * 2) + 1);
             $sheet->setCellValue($from . '4', $label);
             $sheet->mergeCells("{$from}4:{$to}4");
-
-            $subs = ['แผนจัดซื้อ', 'มูลค่า', 'ซื้อจริง', 'มูลค่าซื้อจริง'];
-            foreach ($subs as $offset => $sub) {
-                $column = Coordinate::stringFromColumnIndex($blockStart + ($index * 4) + $offset);
-                $sheet->setCellValue($column . '5', $sub);
-            }
+            $sheet->setCellValue($from . '5', 'แผนจัดซื้อ');
+            $sheet->setCellValue($to . '5', 'จัดซื้อจริง');
         }
 
-        $sheet->setCellValue('AC4', 'ยอดรวม');
-        $sheet->mergeCells('AC4:AF4');
-        foreach (['AC' => 'แผนจัดซื้อ', 'AD' => 'มูลค่า', 'AE' => 'ซื้อจริง', 'AF' => 'มูลค่าซื้อจริง'] as $column => $label) {
-            $sheet->setCellValue($column . '5', $label);
-        }
+        $sheet->setCellValue('V4', 'ยอดรวม');
+        $sheet->mergeCells('V4:W4');
+        $sheet->setCellValue('V5', 'แผนจัดซื้อ');
+        $sheet->setCellValue('W5', 'จัดซื้อจริง');
     }
 
     /**
@@ -620,9 +940,13 @@ class MaterialPlanController extends Controller
                 ->getBorders()
                 ->getAllBorders()
                 ->setBorderStyle(Border::BORDER_THIN);
-            $sheet->getStyle("E6:{$lastColumn}{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            // คอลัมน์ซ้าย (มูลค่า/ราคา/ยอด) ทศนิยม 2 ตำแหน่ง ส่วนงวดจัดการทีละแถวในลูป
+            $sheet->getStyle("E6:L{$lastRow}")->getNumberFormat()->setFormatCode('#,##0.00');
+            // ผสานเซลล์คร่อม 2 แถว จัดกึ่งกลางแนวตั้งให้อ่านง่าย
+            $sheet->getStyle("A6:{$lastColumn}{$lastRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $sheet->getStyle("A6:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle("D6:D{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("M6:{$lastColumn}{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
 
         $sheet->freezePane('E6');
@@ -633,8 +957,9 @@ class MaterialPlanController extends Controller
         foreach (range('E', 'L') as $column) {
             $sheet->getColumnDimension($column)->setWidth(14);
         }
-        for ($index = 13; $index <= 32; $index++) {
-            $sheet->getColumnDimensionByColumn($index)->setWidth(13);
+        $sheet->getColumnDimension('M')->setWidth(11); // งวดจัดซื้อ (จำนวน/มูลค่า)
+        for ($index = 14; $index <= 23; $index++) { // N–W: แต่ละงวด + ยอดรวม
+            $sheet->getColumnDimensionByColumn($index)->setWidth(12);
         }
         $sheet->getRowDimension(4)->setRowHeight(24);
         $sheet->getRowDimension(5)->setRowHeight(30);

@@ -64,6 +64,7 @@ if ($issuePendingCount === null) {
                 <li><a class="dropdown-item <?= $active === 'stock-health' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/stock-health/index']) ?>"><i class="bi bi-clipboard2-pulse me-2"></i>ตรวจสุขภาพสต็อก</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item <?= $active === 'report-material-plan' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/material-plan/index']) ?>"><i class="bi bi-calendar2-check me-2"></i>จัดทำแผนวัสดุประจำปี</a></li>
+                <li><a class="dropdown-item <?= $active === 'report-material-plan-variance' ? 'active' : '' ?>" href="<?= Url::to(['/inventory-v2/material-plan/report']) ?>"><i class="bi bi-bar-chart-line me-2"></i>แผน vs จัดซื้อจริง</a></li>
             </ul>
         </div>
         <div class="dropdown">
