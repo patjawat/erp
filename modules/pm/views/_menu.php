@@ -8,7 +8,8 @@ $this->registerCss('.pm-module-menu{max-width:100%;overflow-x:auto;scrollbar-wid
 $items = [
     'overview' => ['label' => 'ภาพรวม', 'url' => ['/pm/default/index'], 'icon' => 'layout-dashboard'],
     'strategy' => ['label' => 'แผนยุทธศาสตร์', 'url' => ['/pm/strategy-plan/index'], 'icon' => 'map'],
-    'indicator' => ['label' => 'ตัวชี้วัด', 'url' => ['/pm/strategy-catalog/index', 'type' => 'indicator'], 'icon' => 'gauge'],
+    // 'indicator' ถูกเอาออก — ตัวชี้วัดยุทธศาสตร์เข้าผ่านปุ่ม "ทะเบียนตัวชี้วัด" ในหน้าแผน (ข้อมูลเดียวกัน)
+    'kpi' => ['label' => 'KPI โรงพยาบาล', 'url' => ['/pm/kpi/index'], 'icon' => 'activity'],
     // 'program' ถูกซ่อน — เลิกใช้ทะเบียนแผนงานหลัก ให้โครงการเป็นชั้นปฏิบัติชั้นเดียว
     'projects' => ['label' => 'แผนงาน/โครงการ', 'url' => ['/pm/projects/index'], 'icon' => 'folder-kanban'],
     'report' => ['label' => 'รายงาน', 'url' => ['/pm/report/index'], 'icon' => 'bar-chart-3'],

@@ -300,12 +300,11 @@ $config = [
             'jd/employee-jd/review-inbox',
             // Service Profile: controller ตรวจ RBAC และขอบเขตหน่วยงานภายในทุก action
             'service-profile/*',
-            // Laundry: controller ตรวจ laundry.view/manage/approve ทุก action (ด่านกลางปล่อยผ่าน)
+            // Laundry controllers enforce laundry.view/manage/approve on every action.
             'laundry/*',
             // IAC&Risk: controller ตรวจ RBAC และขอบเขตโรงพยาบาล/หน่วยงานภายในทุก action
             'iac-risk/*',
-            // QMS: ระบบติดตามมาตรฐาน — โครงเปล่า ปล่อยผู้ล็อกอินเข้าได้ก่อน
-            // (controller ยังใช้ AccessControl roles=['@']; จะเปลี่ยนเป็น guard สิทธิ์จริงในเฟส 1)
+            // QMS: controller ตรวจ qms.view/qms.admin และผู้รับผิดชอบรายการ
             'qms/*',
             // KM: คลังกิจกรรม/หลักฐานงานคุณภาพ (เฟส 0 โครงเปล่า) — controller ใช้ roles=['@']
             // เฟสถัดไปจะคุมขอบเขตหน่วยงาน (owner=tree.id) ภายใน controller เอง
@@ -316,9 +315,8 @@ $config = [
             // HA12-PCT: ระบบทบทวน 12 กิจกรรม (เฟส 0 โครง) — controller ใช้ roles=['@']
             // เฟสถัดไปจะคุมขอบเขตหน่วยงาน (owner=tree.id) ภายใน controller เอง
             'ha12/*',
-            // SWOT & SOAR: เครื่องมือวิเคราะห์เชิงกลยุทธ์ (standalone) — controller ใช้ roles=['@']
+            // เครื่องมือ: controller ตรวจ swot.use/flowchart.use อีกชั้น
             'swot/*',
-            // เครื่องมือ (hub) + ผังกระบวนการ — เปิดให้ผู้ล็อกอินทุกคน controller ใช้ roles=['@']
             'tools/*',
             'flowchart/*',
             // Leave: ประวัติการแก้ไขใบลา — controller ตรวจสิทธิ์ผู้ดูแลระบบลา (can('leave')) ภายในเอง
@@ -331,6 +329,8 @@ $config = [
             'medsop/*',
             // KPI: หน้าจัดการ/บันทึกผลรายบุคคล — controller มี guard ภายในเอง (canViewEmp/canRecord/assertManage)
             'kpi/manage/*',
+            // PM/KPI โรงพยาบาล: ทะเบียนตัวชี้วัดนอกแผน — KpiController ตรวจ pmStrategyView/kpiManage เองทุก action
+            'pm/kpi/*',
             // IDP: เจ้าหน้าที่จัดทำ/บันทึกผล + หัวหน้าเห็นชอบ + HR เปิด/ปิดรอบ — controller มี guard ภายในเอง (assertOwner/assertCanReview/assertCanManage)
             'hr/idp/*',
             // สรุปผลประชุม/อบรม: เจ้าของใบ/คณะเดินทางบันทึกได้ ผู้ที่ถูกกำหนดกดรับทราบได้
