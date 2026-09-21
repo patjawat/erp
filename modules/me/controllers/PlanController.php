@@ -41,6 +41,7 @@ class PlanController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                     'submit' => ['POST'],
+                    'submit-bulk' => ['POST'],
                     'adjust' => ['POST'],
                     'pull-employees' => ['POST'],
                 ],
@@ -360,7 +361,7 @@ class PlanController extends Controller
     public function actionCreatePersonnel($returnUrl = null)
     {
         $returnUrl = $this->safePlanReturnUrl($returnUrl)
-            ?: \yii\helpers\Url::to(['/plan/personnel/index']);
+            ?: \yii\helpers\Url::to(['index']);
         if (!PlanHelper::canAdd()) {
             throw new ForbiddenHttpException('รอบทำแผนปิดรับข้อมูลแล้ว');
         }
@@ -787,7 +788,9 @@ class PlanController extends Controller
     {
         $model = $this->findModel($id);
         $returnUrl = $this->safePlanReturnUrl($returnUrl);
-        if ($model->plan_group_id === 'personnel' && $returnUrl === null) {
+        // เฉพาะผู้ดูแลแผน/แอดมินเท่านั้นที่กลับไปทะเบียนส่วนกลาง /plan/* ได้
+        // หัวหน้าหน่วยงานทั่วไป (role user) จะกลับหน้า /me/plan ของตนเองเพื่อกัน 403
+        if ($model->plan_group_id === 'personnel' && $returnUrl === null && PlanHelper::isPlanAdmin()) {
             $returnUrl = \yii\helpers\Url::to([
                 '/plan/personnel/index',
                 'PlanOrderSearch' => ['thai_year' => $model->thai_year],
@@ -843,6 +846,45 @@ class PlanController extends Controller
             Yii::$app->session->setFlash('success', 'ส่งขออนุมัติแล้ว');
         }
         return $this->redirect(['index', 'thai_year' => $model->thai_year]);
+    }
+
+    /** ส่งขออนุมัติหลายแผนพร้อมกัน (เลือกจาก checkbox ในทะเบียน) */
+    public function actionSubmitBulk()
+    {
+        $ids = array_values(array_filter(array_map('intval', (array) $this->request->post('ids', []))));
+        $thaiYear = (int) $this->request->post('thai_year', \app\modules\plan\components\PlanHelper::currentPlanYear());
+        if (empty($ids)) {
+            Yii::$app->session->setFlash('warning', 'กรุณาเลือกแผนที่ต้องการส่งขออนุมัติอย่างน้อย 1 รายการ');
+            return $this->redirect(['index', 'thai_year' => $thaiYear]);
+        }
+
+        // เฉพาะแผนในหน่วยงานที่ตนดูแล (planAdmin = ทุกหน่วย)
+        $query = PlanOrder::find()->where(['id' => $ids]);
+        if (!PlanHelper::isPlanAdmin()) {
+            $query->andWhere(['department_id' => $this->ledOrgIds]);
+        }
+
+        $done = 0;
+        foreach ($query->all() as $model) {
+            $workflow = is_array($model->data_json) ? $model->data_json : (json_decode((string) $model->data_json, true) ?: []);
+            $normalSubmit = in_array($model->status, ['draft', 'reject'], true) && PlanHelper::canAdd($model->thai_year);
+            $adjustSubmit = in_array($model->status, ['renew', 'reject'], true)
+                && ($workflow['workflow_cycle'] ?? '') === 'adjust'
+                && PlanHelper::canAdjust($model->thai_year);
+            if ($normalSubmit || $adjustSubmit) {
+                $model->status = 'submit';
+                if ($model->save(false)) {
+                    $done++;
+                }
+            }
+        }
+
+        if ($done > 0) {
+            Yii::$app->session->setFlash('success', "ส่งขออนุมัติแล้ว $done รายการ");
+        } else {
+            Yii::$app->session->setFlash('warning', 'ไม่มีแผนที่ส่งขออนุมัติได้ (อาจส่งไปแล้วหรือปิดรอบ)');
+        }
+        return $this->redirect(['index', 'thai_year' => $thaiYear]);
     }
 
     /** เปิดแผนอนุมัติเดิมให้แก้ไขในรอบปรับแผน พร้อมเก็บตัวเลขเดิมครบ 12 เดือน */
@@ -909,6 +951,11 @@ class PlanController extends Controller
     private function safePlanReturnUrl($returnUrl): ?string
     {
         if (!is_string($returnUrl) || $returnUrl === '' || strpos($returnUrl, '//') === 0) {
+            return null;
+        }
+        // /plan/* เปิดเฉพาะผู้ดูแลแผน/แอดมิน — หัวหน้าหน่วยงานทั่วไปต้องอยู่ในหน้า /me/plan
+        // (กัน 403 หลังบันทึกแล้วถูก redirect ไปทะเบียนส่วนกลาง)
+        if (!PlanHelper::isPlanAdmin()) {
             return null;
         }
         $path = parse_url($returnUrl, PHP_URL_PATH);

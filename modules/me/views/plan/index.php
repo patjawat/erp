@@ -162,7 +162,38 @@ $typeCards = [
     <?php endforeach; ?>
 </div>
 
-<!-- รายการแผน -->
+<!-- รายการแผน (จัดกลุ่มตามหมวด → รายการ) -->
+<?php
+// จัดกลุ่มรายการแผนตามหมวด (plan_category) แล้วเรียงรายการภายในกลุ่ม
+$groups = [];
+foreach ($models as $m) {
+    $it = $itemMap[$m->plan_item_id] ?? null;
+    $catKey = $it['cat'] ?? '__none__';
+    if (!isset($groups[$catKey])) {
+        $groups[$catKey] = [
+            'title' => $it['cat'] ?? 'ไม่ระบุหมวด',
+            'rows'  => [],
+            'cnt'   => 0,
+            'amt'   => 0.0,
+        ];
+    }
+    $groups[$catKey]['rows'][] = $m;
+    $groups[$catKey]['cnt']++;
+    $groups[$catKey]['amt'] += (float) $m->order_price;
+}
+// เรียงหมวดตามชื่อ (หมวดที่ไม่ระบุไว้ท้ายสุด)
+uasort($groups, function ($a, $b) {
+    if (($a['title'] === 'ไม่ระบุหมวด') !== ($b['title'] === 'ไม่ระบุหมวด')) {
+        return $a['title'] === 'ไม่ระบุหมวด' ? 1 : -1;
+    }
+    return strcmp($a['title'], $b['title']);
+});
+$colspan = $multiDept ? 6 : 5; // เลือก + รายการ [+ หน่วยงาน] + ยอดรวม + สถานะ + จัดการ
+?>
+<!-- ฟอร์มส่งขออนุมัติแบบเลือกหลายรายการ (แยกจากตารางเพื่อไม่ให้ซ้อนกับฟอร์มค้นหา) -->
+<?= Html::beginForm(['submit-bulk'], 'post', ['id' => 'bulk-submit-form']) ?>
+<input type="hidden" name="thai_year" value="<?= $thaiYear ?>">
+<?= Html::endForm() ?>
 <div class="card">
     <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">
         <span class="fw-semibold">
@@ -171,35 +202,45 @@ $typeCards = [
                 <span class="text-body-secondary fw-normal">(กรองอยู่)</span>
             <?php endif; ?>
         </span>
-        <form method="get" class="d-flex flex-wrap align-items-center gap-2">
-            <input type="hidden" name="status" value="<?= Html::encode($status) ?>">
-            <input type="hidden" name="type" value="<?= Html::encode($type) ?>">
-            <select name="thai_year" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                <?php foreach ($years as $y): ?>
-                    <option value="<?= $y ?>" <?= (int) $y === $thaiYear ? 'selected' : '' ?>><?= $y ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?php if ($multiDept): ?>
-                <select name="department_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                    <option value="0">ทุกหน่วยงาน</option>
-                    <?php foreach ($orgNames as $id => $name): ?>
-                        <option value="<?= $id ?>" <?= (int) $deptFilter === (int) $id ? 'selected' : '' ?>><?= Html::encode($name) ?></option>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="submit" form="bulk-submit-form" id="bulk-submit-btn" class="btn btn-sm btn-primary" disabled
+                onclick="return confirm('ส่งแผนที่เลือกขออนุมัติ?');">
+                <i class="fa-solid fa-paper-plane me-1"></i> ส่งขออนุมัติที่เลือก
+                <span class="badge bg-light text-primary ms-1" id="bulk-count">0</span>
+            </button>
+            <form method="get" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="status" value="<?= Html::encode($status) ?>">
+                <input type="hidden" name="type" value="<?= Html::encode($type) ?>">
+                <select name="thai_year" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <?php foreach ($years as $y): ?>
+                        <option value="<?= $y ?>" <?= (int) $y === $thaiYear ? 'selected' : '' ?>><?= $y ?></option>
                     <?php endforeach; ?>
                 </select>
-            <?php endif; ?>
-            <div class="input-group input-group-sm w-auto">
-                <input type="text" name="q" value="<?= Html::encode($q) ?>" class="form-control form-control-sm" placeholder="ค้นหารายการ / วัตถุประสงค์">
-                <button type="submit" class="btn btn-outline-secondary"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
-            <?php if ($status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter): ?>
-                <?= Html::a('ล้างตัวกรอง', ['index', 'thai_year' => $thaiYear], ['class' => 'btn btn-sm btn-link text-decoration-none']) ?>
-            <?php endif; ?>
-        </form>
+                <?php if ($multiDept): ?>
+                    <select name="department_id" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                        <option value="0">ทุกหน่วยงาน</option>
+                        <?php foreach ($orgNames as $id => $name): ?>
+                            <option value="<?= $id ?>" <?= (int) $deptFilter === (int) $id ? 'selected' : '' ?>><?= Html::encode($name) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
+                <div class="input-group input-group-sm w-auto">
+                    <input type="text" name="q" value="<?= Html::encode($q) ?>" class="form-control form-control-sm" placeholder="ค้นหารายการ / วัตถุประสงค์">
+                    <button type="submit" class="btn btn-outline-secondary"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <?php if ($status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter): ?>
+                    <?= Html::a('ล้างตัวกรอง', ['index', 'thai_year' => $thaiYear], ['class' => 'btn btn-sm btn-link text-decoration-none']) ?>
+                <?php endif; ?>
+            </form>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="bg-body-tertiary">
                 <tr>
+                    <th style="width:2.5rem" class="text-center">
+                        <input type="checkbox" class="form-check-input" id="bulk-check-all" title="เลือกทั้งหมดที่ส่งได้">
+                    </th>
                     <th>รายการ</th>
                     <?php if ($multiDept): ?><th>หน่วยงาน</th><?php endif; ?>
                     <th class="text-end">ยอดรวม (บาท)</th>
@@ -210,7 +251,7 @@ $typeCards = [
             <tbody>
                 <?php if (empty($models)): ?>
                     <?php $filtered = $status !== 'all' || $type !== 'all' || $q !== '' || $deptFilter; ?>
-                    <tr><td colspan="<?= $multiDept ? 5 : 4 ?>" class="text-center text-body-secondary py-5">
+                    <tr><td colspan="<?= $colspan ?>" class="text-center text-body-secondary py-5">
                         <?php if ($filtered): ?>
                             <i class="fa-solid fa-filter-circle-xmark fs-3 d-block mb-2 opacity-50"></i>
                             ไม่พบรายการตามเงื่อนไข
@@ -224,68 +265,117 @@ $typeCards = [
                         <?php endif; ?>
                     </td></tr>
                 <?php endif; ?>
-                <?php foreach ($models as $m): ?>
-                    <?php
-                    $it = $itemMap[$m->plan_item_id] ?? null;
-                    $st = $statusMeta[$m->status] ?? ['label' => $m->status, 'color' => 'secondary'];
-                    $editable = in_array($m->status, ['draft', 'reject'], true);
-                    $dj = is_array($m->data_json) ? $m->data_json : (json_decode((string) $m->data_json, true) ?: []);
-                    $rowCanEdit = PlanHelper::canEdit($m->thai_year);
-                    $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
-                    $rowCanAdjust = PlanHelper::canAdjust($m->thai_year);
-                    $rowEditable = ($editable && $rowCanEdit)
-                        || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
-                    $rowSubmittable = ($editable && $rowCanAdd)
-                        || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
-                    ?>
-                    <tr>
-                        <td>
-                            <div class="fw-semibold text-body"><?= Html::encode($it['item'] ?? $m->plan_item_id ?? '-') ?></div>
-                            <?php if (!empty($it['cat'])): ?><small class="text-body-secondary"><?= Html::encode($it['cat']) ?></small><?php endif; ?>
-                            <?php if (!empty($m->description)): ?><div class="small text-body-secondary"><?= Html::encode($m->description) ?></div><?php endif; ?>
-                        </td>
-                        <?php if ($multiDept): ?>
-                            <td class="text-body-secondary"><?= Html::encode($orgNames[$m->department_id] ?? '-') ?></td>
-                        <?php endif; ?>
-                        <td class="text-end fw-semibold"><?= number_format((float) $m->order_price, 2) ?></td>
-                        <td class="text-center">
-                            <span class="badge bg-<?= $st['color'] ?>-subtle text-<?= $st['color'] ?>-emphasis"><?= $st['label'] ?></span>
-                            <?php if ($m->status === 'reject' && !empty($dj['reject_reason'])): ?>
-                                <div class="small text-danger-emphasis mt-1"><i class="fa-solid fa-comment-dots me-1"></i><?= Html::encode($dj['reject_reason']) ?></div>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-end">
-                            <div class="d-flex gap-1 justify-content-end">
-                                <?php if ($rowEditable): ?>
-                                    <?= Html::a('<i class="fa-solid fa-pen"></i>', ['update', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']) ?>
-                                <?php endif; ?>
-                                <?php if ($m->status === 'approve' && $rowCanAdjust): ?>
-                                    <?= Html::a('<i class="fa-solid fa-rotate me-1"></i> ปรับแผน', ['adjust', 'id' => $m->id], [
-                                        'class' => 'btn btn-sm btn-outline-info',
-                                        'data' => ['method' => 'post', 'confirm' => 'เปิดแผนนี้เพื่อปรับตัวเลขครบทั้ง 12 เดือน?'],
-                                    ]) ?>
-                                <?php endif; ?>
-                                <?php if ($rowSubmittable): ?>
-                                    <?= Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งขออนุมัติ', ['submit', 'id' => $m->id], [
-                                        'class' => 'btn btn-sm btn-outline-primary',
-                                        'data' => ['method' => 'post', 'confirm' => 'ส่งแผนนี้ขออนุมัติ?'],
-                                    ]) ?>
-                                <?php endif; ?>
-                                <?php if ($m->status === 'draft' && $rowCanEdit): ?>
-                                    <?= Html::a('<i class="fa-solid fa-trash"></i>', ['delete', 'id' => $m->id], [
-                                        'class' => 'btn btn-sm btn-outline-danger',
-                                        'title' => 'ลบ',
-                                        'data' => ['method' => 'post', 'confirm' => 'ลบแผนนี้?'],
-                                    ]) ?>
-                                <?php endif; ?>
-                            </div>
+                <?php foreach ($groups as $g): ?>
+                    <!-- หัวข้อหมวด -->
+                    <tr class="table-light">
+                        <td colspan="<?= $colspan ?>" class="fw-semibold">
+                            <i class="fa-solid fa-folder-open text-warning me-1"></i>
+                            <?= Html::encode($g['title']) ?>
+                            <span class="text-body-secondary fw-normal ms-1">· <?= number_format($g['cnt']) ?> รายการ · <?= number_format($g['amt'], 2) ?> บาท</span>
                         </td>
                     </tr>
+                    <?php foreach ($g['rows'] as $m): ?>
+                        <?php
+                        $it = $itemMap[$m->plan_item_id] ?? null;
+                        $st = $statusMeta[$m->status] ?? ['label' => $m->status, 'color' => 'secondary'];
+                        $editable = in_array($m->status, ['draft', 'reject'], true);
+                        $dj = is_array($m->data_json) ? $m->data_json : (json_decode((string) $m->data_json, true) ?: []);
+                        $rowCanEdit = PlanHelper::canEdit($m->thai_year);
+                        $rowCanAdd  = PlanHelper::canAdd($m->thai_year);
+                        $rowCanAdjust = PlanHelper::canAdjust($m->thai_year);
+                        $rowEditable = ($editable && $rowCanEdit)
+                            || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
+                        $rowSubmittable = ($editable && $rowCanAdd)
+                            || (in_array($m->status, ['renew', 'reject'], true) && ($dj['workflow_cycle'] ?? '') === 'adjust' && $rowCanAdjust);
+                        ?>
+                        <tr>
+                            <td class="text-center">
+                                <?php if ($rowSubmittable): ?>
+                                    <input type="checkbox" form="bulk-submit-form" class="form-check-input bulk-check" name="ids[]" value="<?= $m->id ?>">
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-body"><?= Html::encode($it['item'] ?? $m->plan_item_id ?? '-') ?></div>
+                                <?php if (!empty($m->description)): ?><div class="small text-body-secondary"><?= Html::encode($m->description) ?></div><?php endif; ?>
+                            </td>
+                            <?php if ($multiDept): ?>
+                                <td class="text-body-secondary"><?= Html::encode($orgNames[$m->department_id] ?? '-') ?></td>
+                            <?php endif; ?>
+                            <td class="text-end fw-semibold"><?= number_format((float) $m->order_price, 2) ?></td>
+                            <td class="text-center">
+                                <span class="badge bg-<?= $st['color'] ?>-subtle text-<?= $st['color'] ?>-emphasis"><?= $st['label'] ?></span>
+                                <?php if ($m->status === 'reject' && !empty($dj['reject_reason'])): ?>
+                                    <div class="small text-danger-emphasis mt-1"><i class="fa-solid fa-comment-dots me-1"></i><?= Html::encode($dj['reject_reason']) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <?php if ($rowEditable): ?>
+                                        <?= Html::a('<i class="fa-solid fa-pen"></i>', ['update', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'แก้ไข']) ?>
+                                    <?php endif; ?>
+                                    <?php if ($m->status === 'approve' && $rowCanAdjust): ?>
+                                        <?= Html::a('<i class="fa-solid fa-rotate me-1"></i> ปรับแผน', ['adjust', 'id' => $m->id], [
+                                            'class' => 'btn btn-sm btn-outline-info',
+                                            'data' => ['method' => 'post', 'confirm' => 'เปิดแผนนี้เพื่อปรับตัวเลขครบทั้ง 12 เดือน?'],
+                                        ]) ?>
+                                    <?php endif; ?>
+                                    <?php if ($rowSubmittable): ?>
+                                        <?= Html::a('<i class="fa-solid fa-paper-plane"></i> ส่งขออนุมัติ', ['submit', 'id' => $m->id], [
+                                            'class' => 'btn btn-sm btn-outline-primary',
+                                            'data' => ['method' => 'post', 'confirm' => 'ส่งแผนนี้ขออนุมัติ?'],
+                                        ]) ?>
+                                    <?php endif; ?>
+                                    <?php if ($m->status === 'draft' && $rowCanEdit): ?>
+                                        <?= Html::a('<i class="fa-solid fa-trash"></i>', ['delete', 'id' => $m->id], [
+                                            'class' => 'btn btn-sm btn-outline-danger',
+                                            'title' => 'ลบ',
+                                            'data' => ['method' => 'post', 'confirm' => 'ลบแผนนี้?'],
+                                        ]) ?>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<?php
+$this->registerJs(<<<'JS'
+(function () {
+    var form = document.getElementById('bulk-submit-form');
+    if (!form) return;
+    var checks = function () { return Array.prototype.slice.call(document.querySelectorAll('.bulk-check')); };
+    var master = document.getElementById('bulk-check-all');
+    var btn = document.getElementById('bulk-submit-btn');
+    var count = document.getElementById('bulk-count');
+
+    function refresh() {
+        var boxes = checks();
+        var sel = boxes.filter(function (c) { return c.checked; }).length;
+        if (count) count.textContent = sel;
+        if (btn) btn.disabled = sel === 0;
+        if (master) {
+            master.checked = sel > 0 && sel === boxes.length;
+            master.indeterminate = sel > 0 && sel < boxes.length;
+        }
+    }
+    if (master) {
+        master.addEventListener('change', function () {
+            checks().forEach(function (c) { c.checked = master.checked; });
+            refresh();
+        });
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.classList.contains('bulk-check')) refresh();
+    });
+    refresh();
+})();
+JS
+);
+?>
 
 <!-- สรุปตามหมวด (พับเก็บ) -->
 <?php if (!empty($byCat)):
