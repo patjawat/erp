@@ -14,6 +14,7 @@ use yii\helpers\Url;
 /** @var array $expenseTot */
 /** @var array $net */
 /** @var array $compare */
+/** @var array $liquidity */
 
 $this->title = 'แผนประจำปี';
 $this->params['breadcrumbs'][] = ['label' => 'แผนงาน', 'url' => ['/plan/dashboard']];
@@ -45,9 +46,10 @@ $fmt = fn($v) => number_format((float) $v, 2);
 <?php endforeach; ?>
 
 <div class="card border mb-3"><div class="card-body d-flex flex-wrap justify-content-between align-items-end gap-2">
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <a href="<?= Url::to(['excel', 'year' => $year]) ?>" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
         <a href="<?= Url::to(['income', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>แก้ไขแผนรายรับ</a>
+        <a href="<?= Url::to(['liquidity', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-wallet2 me-1"></i>ยกมา / แนบ 1-2</a>
     </div>
     <form method="get" class="d-flex gap-2 align-items-end">
         <div><label class="form-label mb-0 small">ปีงบเริ่มแผน (พ.ศ.)</label>
@@ -111,10 +113,40 @@ $fmt = fn($v) => number_format((float) $v, 2);
                 <?php foreach ($allYears as $y): ?><td class="text-end"><?= $fmt($expenseTot[$y] ?? 0) ?></td><?php endforeach; ?>
             </tr>
 
-            <!-- สุทธิ -->
-            <tr class="table-primary fw-bold border-top border-3 border-primary-subtle">
+            <!-- ===== บล็อกสภาพคล่อง (ตามแบบฟอร์มแผนเงินบำรุง สป.สธ.) ===== -->
+            <tr class="fw-semibold border-top border-2">
                 <td class="text-end">รับสูง (ต่ำ) กว่าจ่ายสุทธิ</td>
-                <?php foreach ($allYears as $y): ?><td class="text-end <?= ($net[$y] ?? 0) < 0 ? 'text-danger' : 'text-success' ?>"><?= $fmt($net[$y] ?? 0) ?></td><?php endforeach; ?>
+                <?php foreach ($allYears as $y): ?><td class="text-end <?= ($liquidity[$y]['net'] ?? 0) < 0 ? 'text-danger' : '' ?>"><?= $fmt($liquidity[$y]['net'] ?? 0) ?></td><?php endforeach; ?>
+            </tr>
+            <tr>
+                <td class="text-end text-body-secondary">บวก เงินคงเหลือสะสมยกมา</td>
+                <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($liquidity[$y]['opening'] ?? 0) ?></td><?php endforeach; ?>
+            </tr>
+            <tr class="fw-semibold table-light">
+                <td class="text-end">เงินคงเหลือทั้งสิ้น (1)</td>
+                <?php foreach ($allYears as $y): ?><td class="text-end"><?= $fmt($liquidity[$y]['closing'] ?? 0) ?></td><?php endforeach; ?>
+            </tr>
+            <tr>
+                <td class="text-end text-body-secondary">หัก เงินกองทุนรอการจัดสรร (4)</td>
+                <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($liquidity[$y]['reserve'] ?? 0) ?></td><?php endforeach; ?>
+            </tr>
+            <tr>
+                <td class="text-end text-body-secondary">หัก ภาระผูกพัน (5)</td>
+                <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($liquidity[$y]['commitment'] ?? 0) ?></td><?php endforeach; ?>
+            </tr>
+            <tr class="fw-bold border-top border-3 border-primary-subtle" style="background:var(--bs-primary-bg-subtle)">
+                <td class="text-end">เงินคงเหลือหลังหัก (4)(5) — สภาพคล่องแท้จริง</td>
+                <?php foreach ($allYears as $y): $a = $liquidity[$y]['after'] ?? 0; ?>
+                    <td class="text-end <?= $a < 0 ? 'text-danger' : 'text-success' ?>"><?= $fmt($a) ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <tr class="small">
+                <td class="text-end text-body-secondary">อัตราส่วนรายได้/ค่าใช้จ่าย (I/E)</td>
+                <?php foreach ($allYears as $y): $ie = $liquidity[$y]['ie'] ?? null; ?>
+                    <td class="text-end text-body-secondary <?= ($ie !== null && $ie < 1) ? 'text-danger' : '' ?>">
+                        <?= $ie === null ? '–' : number_format($ie, 2) ?>
+                    </td>
+                <?php endforeach; ?>
             </tr>
         </tbody>
     </table>

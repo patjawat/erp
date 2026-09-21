@@ -5,6 +5,8 @@ namespace app\modules\plan\controllers;
 use Yii;
 use yii\web\Controller;
 use app\modules\plan\models\PlanOrder;
+use app\modules\plan\models\PlanAnnualLedger;
+use app\modules\plan\models\PlanAnnualAttachment;
 use app\modules\plan\components\PlanHelper;
 use app\modules\finance\models\FinanceCashCategory;
 use app\modules\finance\models\FinanceCashPlan;
@@ -24,18 +26,76 @@ class AnnualController extends Controller
 {
     private const EXPENSE_TYPE_ORDER = ['PER', 'OPS', 'INV', 'OTH'];
 
-    /** แผนประจำปี — ตารางรวมย้อนหลัง 3 ปี + แผน 3 ปี + เทียบแผน-ผลปีปัจจุบัน */
+    /** แผนประจำปี — ตารางรวมย้อนหลัง 3 ปี + แผน 3 ปี + บล็อกสภาพคล่อง + เทียบแผน-ผลปีปัจจุบัน */
     public function actionIndex($year = null)
     {
         $year = (int) ($year ?: PlanHelper::currentPlanYear());
         $matrix = $this->matrix($year);
         $cmpYear = (int) FinanceCashTxn::currentFiscalYear();
+        $allYears = array_merge($matrix['actualYears'], $matrix['planYears']);
 
         return $this->render('index', $matrix + [
             'year' => $year,
             'cmpYear' => $cmpYear,
             'compare' => $this->compare($cmpYear),
+            'liquidity' => $this->liquidity($allYears, $matrix['incomeTot'], $matrix['expenseTot']),
         ]);
+    }
+
+    /** หน้ากรอกข้อมูลสภาพคล่อง: เงินคงเหลือยกมา/แยกประเภท (แนบ) + แนบ1 กองทุนรอจัดสรร + แนบ2 ภาระผูกพัน */
+    public function actionLiquidity($year = null)
+    {
+        $year = (int) ($year ?: PlanHelper::currentPlanYear());
+        $ledger = PlanAnnualLedger::forYear($year);
+        $reserve = PlanAnnualAttachment::find()
+            ->where(['fiscal_year' => $year, 'kind' => PlanAnnualAttachment::KIND_RESERVE])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $commitment = PlanAnnualAttachment::find()
+            ->where(['fiscal_year' => $year, 'kind' => PlanAnnualAttachment::KIND_COMMITMENT])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        return $this->render('liquidity', [
+            'year' => $year,
+            'ledger' => $ledger,
+            'reserve' => $reserve,
+            'commitment' => $commitment,
+        ]);
+    }
+
+    /** บันทึกข้อมูลสภาพคล่อง (ledger + แนบ1/แนบ2) */
+    public function actionLiquiditySave()
+    {
+        $post = Yii::$app->request->post();
+        $year = (int) ($post['year'] ?? PlanHelper::currentPlanYear());
+
+        $ledger = PlanAnnualLedger::forYear($year);
+        foreach (['carry_forward', 'cash', 'deposit_treasury', 'deposit_fixed', 'deposit_saving', 'deposit_current'] as $f) {
+            $ledger->$f = (float) str_replace([',', ' '], '', (string) ($post['ledger'][$f] ?? 0));
+        }
+        $ledger->note = (string) ($post['ledger']['note'] ?? '') ?: null;
+        $ledger->save();
+
+        foreach ([PlanAnnualAttachment::KIND_RESERVE, PlanAnnualAttachment::KIND_COMMITMENT] as $kind) {
+            PlanAnnualAttachment::deleteAll(['fiscal_year' => $year, 'kind' => $kind]);
+            $i = 0;
+            foreach ((array) ($post[$kind] ?? []) as $r) {
+                $name = trim((string) ($r['name'] ?? ''));
+                if ($name === '') {
+                    continue;
+                }
+                (new PlanAnnualAttachment([
+                    'fiscal_year' => $year,
+                    'kind' => $kind,
+                    'name' => $name,
+                    'amount' => (float) str_replace([',', ' '], '', (string) ($r['amount'] ?? 0)),
+                    'note' => trim((string) ($r['note'] ?? '')) ?: null,
+                    'sort_order' => $i++,
+                ]))->save();
+            }
+        }
+
+        Yii::$app->session->setFlash('success', "บันทึกข้อมูลสภาพคล่องปี $year แล้ว");
+        return $this->redirect(['liquidity', 'year' => $year]);
     }
 
     /** แผนรายรับ — ฟอร์มคีย์รายรับล่วงหน้า (finance_cash_plan IN) */
@@ -418,5 +478,51 @@ class AnnualController extends Controller
             'expPlan' => $expPlan,
             'expActual' => $expActual,
         ];
+    }
+
+    /**
+     * บล็อกสภาพคล่องต่อปี (ตามแบบฟอร์มแผนเงินบำรุง สป.สธ.)
+     *   net = รับ - จ่าย ; opening ยกมา (ปีที่มี ledger ใช้ค่ากรอก, ปีอื่น roll จากปีก่อน)
+     *   closing(1) = opening + net ; after = closing - reserve(4) - commitment(5)
+     *   ie = รับ/จ่าย ; position(2) = รวมเงินคงเหลือแยกประเภท (ไว้ validate กับ (1))
+     */
+    private function liquidity(array $years, array $incomeTot, array $expenseTot): array
+    {
+        $reserve = PlanAnnualAttachment::sumByYear(PlanAnnualAttachment::KIND_RESERVE, $years);
+        $commit = PlanAnnualAttachment::sumByYear(PlanAnnualAttachment::KIND_COMMITMENT, $years);
+
+        $ledgers = [];
+        foreach (PlanAnnualLedger::find()->where(['fiscal_year' => $years])->all() as $l) {
+            $ledgers[(int) $l->fiscal_year] = $l;
+        }
+
+        $rows = [];
+        $prevClosing = null;
+        foreach ($years as $y) {
+            $net = (float) ($incomeTot[$y] ?? 0) - (float) ($expenseTot[$y] ?? 0);
+            $ledger = $ledgers[$y] ?? null;
+            // opening: ถ้ามี ledger ของปีนี้ = ค่ากรอกมือ (authoritative); ไม่มี = roll จาก closing ปีก่อน
+            if ($ledger !== null) {
+                $opening = (float) $ledger->carry_forward;
+            } else {
+                $opening = $prevClosing ?? 0.0;
+            }
+            $closing = $opening + $net;
+            $res = (float) ($reserve[$y] ?? 0);
+            $com = (float) ($commit[$y] ?? 0);
+            $rows[$y] = [
+                'net' => $net,
+                'opening' => $opening,
+                'closing' => $closing,
+                'reserve' => $res,
+                'commitment' => $com,
+                'after' => $closing - $res - $com,
+                'ie' => (float) ($expenseTot[$y] ?? 0) > 0 ? (float) ($incomeTot[$y] ?? 0) / (float) $expenseTot[$y] : null,
+                'position' => $ledger ? $ledger->positionTotal() : null,
+                'hasLedger' => $ledger !== null,
+            ];
+            $prevClosing = $closing;
+        }
+        return $rows;
     }
 }
