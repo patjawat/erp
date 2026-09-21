@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\modules\housing\controllers;
 
+use app\components\AppHelper;
 use app\modules\filemanager\components\FileManagerHelper;
 use app\modules\filemanager\models\Uploads;
 use app\modules\housing\models\AssetAssignment;
@@ -13,6 +14,7 @@ use app\modules\housing\models\LocationPhoto;
 use app\modules\housing\models\Meter;
 use app\modules\housing\models\MonthlyAccount;
 use app\modules\housing\models\Occupancy;
+use app\modules\housing\models\Resident;
 use app\modules\housing\models\Room;
 use app\modules\housing\models\Unit;
 use app\modules\housing\services\HousingUploadService;
@@ -39,6 +41,7 @@ final class UnitController extends BaseController
                     'delete-room' => ['POST'],
                     'toggle-room-status' => ['POST'],
                     'delete-asset' => ['POST'],
+                    'delete-resident' => ['POST'],
                     'delete-photo' => ['POST'],
                     'set-primary-photo' => ['POST'],
                 ],
@@ -312,6 +315,92 @@ final class UnitController extends BaseController
             Yii::$app->session->setFlash('success', 'ลบรายการอุปกรณ์แล้ว');
         }
         return $this->redirect($redirect);
+    }
+
+    public function actionResidents(int $occupancy_id)
+    {
+        $occupancy = $this->findOccupancy($occupancy_id);
+        return $this->render('residents', [
+            'occupancy' => $occupancy,
+            'unit' => $occupancy->unit,
+            'room' => $occupancy->room,
+            'residents' => Resident::find()
+                ->where(['occupancy_id' => $occupancy->id])
+                ->orderBy([
+                    new \yii\db\Expression("FIELD(resident_type,'employee') DESC"),
+                    'status' => SORT_ASC,
+                    'id' => SORT_ASC,
+                ])
+                ->all(),
+            'counts' => $occupancy->occupantCounts(),
+        ]);
+    }
+
+    public function actionCreateResident(int $occupancy_id)
+    {
+        $occupancy = $this->findOccupancy($occupancy_id);
+        return $this->saveResident(new Resident([
+            'occupancy_id' => $occupancy->id,
+            'resident_type' => 'family',
+            'status' => 'active',
+            'count_for_charge' => 1,
+            'start_date' => $occupancy->start_date ?: date('Y-m-d'),
+        ]), $occupancy);
+    }
+
+    public function actionUpdateResident(int $id)
+    {
+        $model = $this->findResident($id);
+        return $this->saveResident($model, $this->findOccupancy((int) $model->occupancy_id));
+    }
+
+    public function actionDeleteResident(int $id)
+    {
+        $model = $this->findResident($id);
+        $occupancyId = (int) $model->occupancy_id;
+        if ($model->resident_type === 'employee') {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบเจ้าหน้าที่ผู้ครอบครองห้องพักได้');
+        } elseif ($model->delete() === false) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบผู้พักอาศัยได้ กรุณาลองใหม่');
+        } else {
+            Yii::$app->session->setFlash('success', 'ลบผู้พักอาศัยแล้ว');
+        }
+        return $this->redirect(['residents', 'occupancy_id' => $occupancyId]);
+    }
+
+    private function saveResident(Resident $model, Occupancy $occupancy)
+    {
+        if ($model->load(Yii::$app->request->post())) {
+            $model->occupancy_id = $occupancy->id;
+            $model->birth_date = AppHelper::normalizeDateToDb($model->birth_date);
+            if (!$model->start_date) {
+                $model->start_date = $occupancy->start_date ?: date('Y-m-d');
+            }
+        }
+        if (Yii::$app->request->isPost && $model->save()) {
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return [
+                    'status' => 'success',
+                    'message' => 'บันทึกผู้พักอาศัยแล้ว',
+                    'redirect' => Url::to(['residents', 'occupancy_id' => $occupancy->id]),
+                ];
+            }
+            return $this->redirect(['residents', 'occupancy_id' => $occupancy->id]);
+        }
+        if (Yii::$app->request->isPost && Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ['errors' => $this->activeFormErrors($model)];
+        }
+        $params = ['model' => $model, 'occupancy' => $occupancy];
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return [
+                'title' => $model->isNewRecord ? 'เพิ่มผู้พักอาศัย' : 'แก้ไขผู้พักอาศัย',
+                'content' => $this->renderAjax('_resident_form', $params),
+            ];
+        }
+        return $this->render('_resident_form', $params);
     }
 
     public function actionUploadPhoto(int $unit_id, ?int $room_id = null)
@@ -630,6 +719,23 @@ final class UnitController extends BaseController
     {
         if (($model = AssetAssignment::findOne($id)) === null) {
             throw new NotFoundHttpException('ไม่พบรายการอุปกรณ์');
+        }
+        return $model;
+    }
+
+    private function findOccupancy(int $id): Occupancy
+    {
+        $model = Occupancy::find()->with(['employee', 'unit', 'room', 'residents'])->where(['id' => $id])->one();
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบผู้ครอบครองห้องพัก');
+        }
+        return $model;
+    }
+
+    private function findResident(int $id): Resident
+    {
+        if (($model = Resident::findOne($id)) === null) {
+            throw new NotFoundHttpException('ไม่พบผู้พักอาศัย');
         }
         return $model;
     }

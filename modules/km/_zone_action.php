@@ -7,7 +7,7 @@ use yii\helpers\Url;
  * เมนูระดับโซน "งานคุณภาพ" สำหรับวางในบล็อก page-action (มุมขวาหัวข้อหน้า)
  * จัดวางแนวเดียวกับงาน HRD (modules/hr/menu.php) — ปุ่ม btn-outline-primary / active=btn-primary
  *
- * @var string $active  'qms' | 'km' | 'complaint'
+ * @var string $active  'qms' | 'ha12' | 'km' | 'complaint'
  */
 $active = $active ?? '';
 ?>
@@ -17,6 +17,13 @@ $active = $active ?? '';
        class="btn <?= $active === 'qms' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
         <i class="bi bi-shield-check" aria-hidden="true"></i>
         <span class="d-none d-sm-inline">มาตรฐานโรงพยาบาล</span>
+    </a>
+
+    <a href="<?= Url::to(['/ha12/default/index']) ?>"
+       aria-label="HA12-PCT"
+       class="btn <?= $active === 'ha12' ? 'btn-primary' : 'btn-outline-primary' ?> d-inline-flex align-items-center gap-2">
+        <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
+        <span class="d-none d-sm-inline">HA12-PCT</span>
     </a>
 
     <a href="<?= Url::to(['/km/default/index']) ?>"

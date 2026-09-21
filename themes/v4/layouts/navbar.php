@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use yii\helpers\Html;
 
 // รับค่า Controller ID เพื่อเช็คว่าเมนูไหนกำลัง Active
 // (ถ้า $c ถูกส่งมาจาก main.php แล้ว ก็ใช้ได้เลย หรือเรียกใหม่เพื่อความชัวร์ก็ได้)
@@ -65,6 +66,13 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg>'
     ],
     [
+        'show' => Yii::$app->user->can('laundry.view'),
+        'label' => 'งานซักฟอก',
+        'url' => ['/laundry/dashboard/index'],
+        'active' => 'laundry',
+        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2"></rect><path d="M3 8h18"></path><circle cx="7" cy="5" r=".5" fill="currentColor" stroke="none"></circle><circle cx="10" cy="5" r=".5" fill="currentColor" stroke="none"></circle><circle cx="12" cy="15" r="4"></circle><path d="M10 15c1-1 2 1 4 0"></path></svg>'
+    ],
+    [
          'show' => Yii::$app->user->can('asset') ? true : false,
         'label' => 'ทรัพย์สิน', 
         'url' => ['/am'], 
@@ -86,8 +94,6 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M8 7h8"></path><path d="M8 11h6"></path></svg>'
     ],
     [
-        // QMS ระยะต้นแบบ: เปิดให้ผู้ล็อกอินเห็นก่อน
-        // เฟส 1 จะเปลี่ยนเป็นสิทธิ์จริง เช่น Yii::$app->user->can('qms')
         'show' => !Yii::$app->user->isGuest,
         'label' => 'งานคุณภาพ',
         'url' => ['/qms/default/index'],
@@ -128,8 +134,6 @@ $menuItems = [
         'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"></path></svg>'
     ],
     [
-        // โซนเครื่องมือ (hub) รวม SWOT, ผังกระบวนการ ฯลฯ — เปิดให้ผู้ล็อกอินทุกคน
-        // เครื่องมือแต่ละตัวมี guard สิทธิ์ของตัวเองอยู่แล้ว
         'show' => !Yii::$app->user->isGuest,
         'label' => 'เครื่องมือ',
         'url' => ['/tools/default/index'],
@@ -206,49 +210,135 @@ $menuItems = [
     ],
 ];
 
-// 3. Logic หาชื่อระบบอัตโนมัติจากเมนู
-$systemName = 'ระบบทั่วไป';
-if (!empty($menuItems)) {
-    foreach ($menuItems as $item) {
-        if ($moduleId === $item['active']) {
-            $systemName = $item['label'];
+$groups = [
+    'งานส่วนตัว' => ['me', 'booking', 'leave'],
+    'บริหารและแผนงาน' => ['dashboard-admin', 'executive', 'pm', 'plan', 'qms', 'tools', 'ai'],
+    'บุคลากรและเวร' => ['hr', 'development', 'roster', 'attendance'],
+    'การเงินและพัสดุ' => ['accounting', 'finance', 'inventory', 'am', 'sm'],
+    'บริการและสนับสนุน' => ['dms', 'medsop', 'helpdesk', 'housing', 'laundry'],
+];
+$visible = [];
+foreach ($menuItems as $item) {
+    if (empty($item['show'])) {
+        continue;
+    }
+    $rule = $item['active'];
+    $isActive = in_array($moduleId, ['booking', 'hr', 'helpdesk'], true)
+        ? (is_array($rule) ? in_array($c, $rule, true) : $c === $rule)
+        : $moduleId === $rule;
+    $item['isActive'] = $isActive;
+    $item['key'] = is_array($rule) ? implode('-', $rule) : $rule;
+    $item['group'] = 'อื่น ๆ';
+    $route = is_array($item['url']) ? $item['url'][0] : '';
+    $prefix = $route ? explode('/', trim($route, '/'))[0] : (is_string($rule) ? $rule : '');
+    if ($prefix === 'booking') $prefix = 'booking';
+    if ($prefix === 'helpdesk') $prefix = 'helpdesk';
+    if (in_array($rule, ['development', 'roster', 'attendance'], true)) $prefix = $rule;
+    foreach ($groups as $group => $modules) {
+        if (in_array($prefix, $modules, true)) {
+            $item['group'] = $group;
             break;
         }
     }
+    $visible[] = $item;
 }
+$storageKey = 'erp-nav-favorites-' . (int) Yii::$app->user->id;
 ?>
-
-<?php if (!empty($menuItems)): ?>
-<?php foreach ($menuItems as $item): ?>
-    <?php 
-        $isActive = false;
-        $activeRule = $item['active'];
-
-        // กรณี Module 'booking' หรือ 'hr' ให้เช็ค Controller ID ($c)
-        if ($moduleId === 'booking' || $moduleId === 'hr' || $moduleId === 'helpdesk') {
-            if (is_array($activeRule)) {
-                // ถ้า active เป็น array ให้เช็คว่า Controller ปัจจุบันอยู่ในลิสต์ไหม
-                $isActive = in_array($c, $activeRule);
-            } else {
-                // ถ้าเป็น string ปกติ
-                $isActive = ($c === $activeRule);
-            }
-        } else {
-            // กรณีโมดูลอื่นๆ เช็คที่ Module ID ตามเดิม
-            $isActive = ($moduleId === $activeRule);
-        }
-
-        if ($isActive) {
-            $systemName = $item['label'];
-        }
-    ?>
-    <?php if(isset($item['show']) && $item['show']):?>
-    <a href="<?= Url::to($item['url']) ?>" class="erp-nav-item <?= $isActive ? 'active' : '' ?>">
-        <div class="erp-icon-box">
-            <?= $item['icon'] ?> 
+<button class="erp-nav-item erp-nav-launcher flex-shrink-0" type="button" data-bs-toggle="offcanvas"
+    data-bs-target="#erpSystemChooser" aria-controls="erpSystemChooser" aria-label="ระบบทั้งหมด" title="ระบบทั้งหมด">
+    <span class="erp-icon-box erp-icon-box-square" aria-hidden="true"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+    <span class="erp-nav-text">ระบบทั้งหมด</span>
+</button>
+<div class="erp-nav-shortcuts d-flex align-items-center overflow-auto h-100" id="erpNavShortcuts" aria-label="ระบบที่ปักหมุด">
+    <?php foreach ($visible as $item): ?>
+        <a href="<?= Html::encode(Url::to($item['url'])) ?>" class="erp-nav-item <?= $item['isActive'] ? 'active' : '' ?>"
+            data-system-key="<?= Html::encode($item['key']) ?>" hidden>
+            <span class="erp-icon-box" aria-hidden="true"><?= $item['icon'] ?></span>
+            <span class="erp-nav-text"><?= Html::encode($item['label']) ?></span>
+        </a>
+    <?php endforeach; ?>
+</div>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="erpSystemChooser" aria-labelledby="erpSystemChooserTitle">
+    <div class="offcanvas-header border-bottom">
+        <h2 class="offcanvas-title h5 mb-0" id="erpSystemChooserTitle">ระบบทั้งหมด</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+    </div>
+    <div class="offcanvas-body">
+        <label class="visually-hidden" for="erpSystemSearch">ค้นหาระบบ</label>
+        <input class="form-control mb-3" id="erpSystemSearch" type="search" placeholder="ค้นหาระบบ..." autocomplete="off">
+        <p class="small text-body-secondary">กดดาวเพื่อปักหมุดระบบที่ใช้บ่อยบนแถบด้านบน</p>
+        <div id="erpSystemGroups">
+            <?php foreach (array_keys($groups + ['อื่น ๆ' => []]) as $group): ?>
+                <?php $items = array_values(array_filter($visible, static fn ($item) => $item['group'] === $group)); ?>
+                <?php if (!$items) continue; ?>
+                <section class="erp-system-group mb-4" aria-label="<?= Html::encode($group) ?>">
+                    <h3 class="h6 text-body-secondary border-bottom pb-2"><?= Html::encode($group) ?></h3>
+                    <?php foreach ($items as $item): ?>
+                        <div class="erp-system-row d-flex align-items-center gap-2 border-bottom py-1" data-search="<?= Html::encode(mb_strtolower($item['label'])) ?>">
+                            <a class="flex-grow-1 text-body text-decoration-none py-2" href="<?= Html::encode(Url::to($item['url'])) ?>">
+                                <span class="text-primary me-2" aria-hidden="true"><?= $item['icon'] ?></span><?= Html::encode($item['label']) ?>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary erp-pin-button" data-system-key="<?= Html::encode($item['key']) ?>"
+                                aria-label="ปักหมุด <?= Html::encode($item['label']) ?>" aria-pressed="false" title="ปักหมุด">
+                                <i class="bi bi-star" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
+                </section>
+            <?php endforeach; ?>
         </div>
-        <span class="erp-nav-text"><?= $item['label'] ?></span>
-    </a>
-    <?php endif?>
-<?php endforeach; ?>
-<?php endif; ?>
+        <p class="text-body-secondary d-none" id="erpSystemEmpty">ไม่พบระบบที่ค้นหา</p>
+    </div>
+</div>
+<script>
+(function () {
+    const key = <?= json_encode($storageKey) ?>;
+    const bar = document.getElementById('erpNavShortcuts');
+    const chooser = document.getElementById('erpSystemChooser');
+    const links = [...bar.querySelectorAll('[data-system-key]')];
+    const allowed = links.map(link => link.dataset.systemKey);
+    let saved;
+    try { saved = JSON.parse(localStorage.getItem(key)); } catch (_) { saved = null; }
+    let pins = Array.isArray(saved) ? saved.filter(id => allowed.includes(id)) : allowed.slice(0, 5);
+    function render() {
+        links.forEach(link => { link.hidden = !pins.includes(link.dataset.systemKey); });
+        pins.forEach(id => {
+            const link = links.find(node => node.dataset.systemKey === id);
+            if (link) bar.appendChild(link);
+        });
+        chooser.querySelectorAll('.erp-pin-button').forEach(button => {
+            const pinned = pins.includes(button.dataset.systemKey);
+            button.setAttribute('aria-pressed', String(pinned));
+            button.setAttribute('aria-label', (pinned ? 'เลิกปักหมุด ' : 'ปักหมุด ') + button.closest('.erp-system-row').querySelector('a').textContent.trim());
+            button.title = pinned ? 'เลิกปักหมุด' : 'ปักหมุด';
+            button.querySelector('i').className = pinned ? 'bi bi-star-fill' : 'bi bi-star';
+            button.classList.toggle('btn-primary', pinned);
+            button.classList.toggle('btn-outline-secondary', !pinned);
+        });
+    }
+    chooser.addEventListener('click', event => {
+        const button = event.target.closest('.erp-pin-button');
+        if (!button) return;
+        const id = button.dataset.systemKey;
+        pins = pins.includes(id) ? pins.filter(value => value !== id) : [...pins, id];
+        try { localStorage.setItem(key, JSON.stringify(pins)); } catch (_) {}
+        render();
+    });
+    document.getElementById('erpSystemSearch').addEventListener('input', event => {
+        const query = event.target.value.trim().toLocaleLowerCase();
+        let count = 0;
+        chooser.querySelectorAll('.erp-system-group').forEach(group => {
+            let found = 0;
+            group.querySelectorAll('.erp-system-row').forEach(row => {
+                const match = row.dataset.search.includes(query);
+                row.hidden = !match;
+                if (match) found++;
+            });
+            group.hidden = found === 0;
+            count += found;
+        });
+        document.getElementById('erpSystemEmpty').classList.toggle('d-none', count !== 0);
+    });
+    render();
+})();
+</script>

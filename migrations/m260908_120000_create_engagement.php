@@ -2,7 +2,7 @@
 
 use yii\db\Migration;
 
-/** Additive, independently deployable: yii migrate --migrationPath=@app/migrations/engagement */
+/** Additive; อยู่ระดับ migrations/ ชั้นเดียว เพื่อให้ deploy (yii migrate) รันเจอบน production */
 class m260908_120000_create_engagement extends Migration
 {
     public function safeUp()
