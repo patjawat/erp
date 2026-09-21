@@ -5,8 +5,8 @@ use app\components\RichText;
 use app\modules\pm\components\KpiStatus;
 
 /** @var app\modules\pm\models\KpiIndicator[] $indicators */
-/** @var int $year @var string $q @var int|null $group @var int|null $unit */
-/** @var array $summary @var array $groups @var array $units @var array $unitNames @var bool $canManage */
+/** @var int $year @var string $q @var int|null $group @var int|null $unit @var int|null $part @var string|null $status */
+/** @var array $statusMap @var array $summary @var array $groups @var array $parts @var array $units @var array $unitNames @var bool $canManage */
 
 $this->title = 'KPI โรงพยาบาล';
 $this->beginBlock('page-title'); ?>KPI โรงพยาบาล<?php $this->endBlock();
@@ -23,7 +23,7 @@ $cards = [
     ['label' => 'ยังไม่มีข้อมูล', 'value' => $summary['nodata'], 'cls' => 'text-secondary', 'status' => 'nodata', 'border' => 'secondary'],
 ];
 // รักษาตัวกรองเดิมไว้เมื่อคลิกการ์ด
-$cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q];
+$cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' => $q, 'part' => $part];
 ?>
 
 <?php foreach (['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $cls): ?>
@@ -39,10 +39,19 @@ $cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' =
         <p class="text-muted mb-0">ตัวชี้วัดของ รพ. / ทีมประสาน / งานพยาบาล / หน่วยงาน — ปีงบประมาณ <?= $year ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', ['/pm/default/report', 'year' => $year], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
         <?php if ($canManage): ?>
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#copyYearBox"><i class="bi bi-files me-1"></i> คัดลอกค่าข้ามปี</button>
-            <?= Html::a('<i data-lucide="plus" class="me-1"></i> เพิ่มตัวชี้วัด', ['create'], ['class' => 'btn btn-primary']) ?>
+            <?= Html::a('<i class="bi bi-plus-lg me-1"></i> เพิ่มตัวชี้วัด', ['create'], ['class' => 'btn btn-primary rounded-pill']) ?>
+            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-toggle="collapse" data-bs-target="#copyYearBox"><i class="bi bi-files me-1"></i> คัดลอกค่าข้ามปี</button>
+        <?php endif; ?>
+        <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์รายงาน', ['/pm/default/report', 'year' => $year], ['class' => 'btn btn-outline-secondary rounded-pill', 'target' => '_blank']) ?>
+        <?php if ($canManage): ?>
+            <div class="dropdown">
+                <button type="button" class="btn btn-outline-secondary rounded-pill dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-gear me-1"></i> ตั้งค่า</button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><?= Html::a('<i class="bi bi-collection me-2"></i>จัดการกลุ่มตัวชี้วัด', ['groups'], ['class' => 'dropdown-item']) ?></li>
+                    <li><?= Html::a('<i class="bi bi-diagram-3 me-2"></i>จัดการตอน HA (Part)', ['parts'], ['class' => 'dropdown-item']) ?></li>
+                </ul>
+            </div>
         <?php endif; ?>
     </div>
 </div>
@@ -87,15 +96,19 @@ $cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' =
         <label class="form-label fw-semibold">ปีงบประมาณ</label>
         <?= Html::input('number', 'year', $year, ['class' => 'form-control']) ?>
     </div>
-    <div class="col-12 col-md-3">
+    <div class="col-6 col-md-2">
         <label class="form-label fw-semibold">กลุ่ม</label>
         <?= Html::dropDownList('group', $group, $groups, ['class' => 'form-select', 'prompt' => 'ทุกกลุ่ม']) ?>
     </div>
-    <div class="col-12 col-md-3">
+    <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold">ตอน HA</label>
+        <?= Html::dropDownList('part', $part, $parts, ['class' => 'form-select', 'prompt' => 'ทุก Part']) ?>
+    </div>
+    <div class="col-6 col-md-2">
         <label class="form-label fw-semibold">หน่วยงาน</label>
         <?= Html::dropDownList('unit', $unit, $units, ['class' => 'form-select', 'prompt' => 'ทุกหน่วยงาน']) ?>
     </div>
-    <div class="col-12 col-md-2">
+    <div class="col-6 col-md-2">
         <label class="form-label fw-semibold">ค้นหา</label>
         <?= Html::textInput('q', $q, ['class' => 'form-control', 'placeholder' => 'ชื่อตัวชี้วัด']) ?>
     </div>
@@ -109,7 +122,7 @@ $cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' =
 <div class="card border-0 shadow-sm overflow-hidden"><div class="card-body p-0">
     <div class="table-responsive"><table class="table align-middle mb-0">
         <thead class="table-light"><tr>
-            <th class="ps-4">ตัวชี้วัด</th><th>กลุ่ม</th><th>หน่วยงาน</th><th class="text-center">หน่วย</th>
+            <th class="ps-4">ตัวชี้วัด</th><th>กลุ่ม</th><th>ตอน HA</th><th>หน่วยงาน</th><th class="text-center">หน่วย</th>
             <th class="text-end">เป้า</th><th class="text-end">ผลจริง</th><th class="text-center">สถานะ</th>
             <?php if ($canManage): ?><th class="text-end pe-4">จัดการ</th><?php endif; ?>
         </tr></thead>
@@ -119,13 +132,15 @@ $cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' =
             <tr>
                 <td class="ps-4"><?= Html::a(Html::encode(RichText::plain($ind->name, 160)), ['view', 'id' => $ind->id], ['class' => 'fw-semibold text-decoration-none']) ?></td>
                 <td><span class="badge rounded-pill" style="background:<?= Html::encode($ind->group->color ?? '#6c757d') ?>1a;color:<?= Html::encode($ind->group->color ?? '#6c757d') ?>"><?= Html::encode($ind->group->name ?? '-') ?></span></td>
+                <td class="small"><?= $ind->part ? Html::encode($ind->part->code) : '<span class="text-body-secondary">-</span>' ?></td>
                 <td class="small"><?= Html::encode($ind->org_unit_id ? ($unitNames[$ind->org_unit_id] ?? '-') : '-') ?></td>
                 <td class="text-center small"><?= Html::encode($ind->unit ?: '-') ?></td>
                 <td class="text-end" style="font-variant-numeric:tabular-nums"><?= $entry && $entry->target_value !== null ? Html::encode(rtrim(rtrim((string) $entry->target_value, '0'), '.')) : '-' ?></td>
                 <td class="text-end" style="font-variant-numeric:tabular-nums"><?= $entry && $entry->actual_value !== null ? Html::encode(rtrim(rtrim((string) $entry->actual_value, '0'), '.')) : '-' ?></td>
                 <td class="text-center"><span class="badge <?= KpiStatus::badgeClass($rowStatus) ?>"><?= Html::encode(KpiStatus::label($rowStatus)) ?></span></td>
                 <?php if ($canManage): ?>
-                    <td class="text-end pe-4">
+                    <td class="text-end pe-4 text-nowrap">
+                        <?= Html::a('<i class="bi bi-calendar-week"></i> บันทึกข้อมูล', ['data', 'id' => $ind->id, 'year' => $year], ['class' => 'btn btn-sm btn-outline-success']) ?>
                         <?= Html::a('แก้ไข', ['update', 'id' => $ind->id], ['class' => 'btn btn-sm btn-outline-primary']) ?>
                         <?= Html::a('ลบ', ['delete', 'id' => $ind->id], ['class' => 'btn btn-sm btn-outline-danger', 'data-method' => 'post', 'data-confirm' => 'ยืนยันการลบตัวชี้วัดนี้? (ค่ารายปีจะถูกลบด้วย)']) ?>
                     </td>
@@ -133,7 +148,7 @@ $cardBase = ['index', 'year' => $year, 'group' => $group, 'unit' => $unit, 'q' =
             </tr>
         <?php endforeach; ?>
         <?php if (!$indicators): ?>
-            <tr><td colspan="<?= $canManage ? 8 : 7 ?>" class="text-center text-muted py-5">ยังไม่มีตัวชี้วัดในเงื่อนไขนี้</td></tr>
+            <tr><td colspan="<?= $canManage ? 9 : 8 ?>" class="text-center text-muted py-5">ยังไม่มีตัวชี้วัดในเงื่อนไขนี้</td></tr>
         <?php endif; ?>
         </tbody>
     </table></div>

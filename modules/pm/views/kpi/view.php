@@ -92,6 +92,7 @@ $latestStatus = $latest ? KpiStatus::evaluate($latest->target_value, $latest->ac
             <h6 class="fw-bold mb-3">รายละเอียดตัวชี้วัด</h6>
             <dl class="row small mb-0">
                 <dt class="col-5 text-muted">หน่วยวัด</dt><dd class="col-7"><?= Html::encode($model->unit ?: '-') ?></dd>
+                <dt class="col-5 text-muted">ตอน HA</dt><dd class="col-7"><?= $model->part ? Html::encode($model->part->name) : '-' ?></dd>
                 <dt class="col-5 text-muted">ทิศทาง</dt><dd class="col-7"><?= Html::encode(KpiIndicator::operatorList()[$model->operator] ?? '-') ?></dd>
                 <dt class="col-5 text-muted">ความถี่</dt><dd class="col-7"><?= Html::encode(KpiIndicator::frequencyList()[$model->frequency] ?? '-') ?></dd>
                 <dt class="col-5 text-muted">ผู้รับผิดชอบ</dt><dd class="col-7"><?= Html::encode($model->owner_name ?: '-') ?></dd>

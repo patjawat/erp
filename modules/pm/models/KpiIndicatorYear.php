@@ -32,6 +32,42 @@ class KpiIndicatorYear extends StrategyRecord
     }
 
     public function getIndicator() { return $this->hasOne(KpiIndicator::class, ['id' => 'kpi_indicator_id']); }
+    public function getMonths() { return $this->hasMany(KpiIndicatorMonth::class, ['kpi_indicator_year_id' => 'id']); }
+
+    /** ผลงานรายเดือนครบ 12 เดือน เรียง ต.ค.→ก.ย. เติมเดือนที่ยังไม่มีเป็นรายการว่าง */
+    public function monthRows(): array
+    {
+        $existing = [];
+        foreach ($this->months as $m) $existing[(int) $m->month] = $m;
+        $rows = [];
+        foreach (KpiIndicatorMonth::FISCAL_MONTHS as $month) {
+            $rows[] = $existing[$month] ?? new KpiIndicatorMonth(['kpi_indicator_year_id' => $this->id, 'month' => $month]);
+        }
+        return $rows;
+    }
+
+    /**
+     * คำนวณค่าจริงรายปีจากค่ารายเดือนตามวิธีสรุปของตัวชี้วัด (avg/sum/latest)
+     * ถ้าไม่มีค่ารายเดือนเลย จะไม่แตะ actual_value (ให้คงค่าที่กรอกเองไว้)
+     */
+    public function recomputeActualFromMonths(): void
+    {
+        $months = KpiIndicatorMonth::find()->where(['kpi_indicator_year_id' => $this->id])->all();
+        $vals = [];
+        foreach (KpiIndicatorMonth::FISCAL_MONTHS as $m) {
+            foreach ($months as $row) {
+                if ((int) $row->month === $m && $row->value !== null) $vals[] = (float) $row->value;
+            }
+        }
+        if (!$vals) return;
+        $agg = $this->indicator?->aggregation ?: 'avg';
+        $this->actual_value = match ($agg) {
+            'sum' => array_sum($vals),
+            'latest' => end($vals),
+            default => round(array_sum($vals) / count($vals), 4),
+        };
+        $this->save(false); // beforeSave คำนวณ status ใหม่
+    }
 
     /**
      * คำนวณสถานะ pass/gap/nodata จาก operator ของตัวชี้วัดแม่ แล้วเก็บลง status

@@ -135,6 +135,12 @@ Code review ต้องไม่ผ่านเมื่อพบสี hardcod
 
 `rounded-4` Bootstrap class **ห้ามใช้** บน card/input ใหม่
 
+**ทรงปุ่ม vs การ์ด (บังคับทุกหน้าใหม่):**
+- **page-nav (แถบเมนูโมดูล ใน block `page-action`)** → แคปซูล (rounded-pill) — ได้อัตโนมัติจากกฎกลาง `.action-box .btn { border-radius: 50rem }` ใน `themes/v4/layouts/page_title.php` **ไม่ต้องใส่ rounded-pill เอง**; active = `btn-primary`, ที่เหลือ = `btn-outline-secondary`
+- **ปุ่มคำสั่งระดับหน้า (toolbar: เพิ่ม/พิมพ์/ตั้งค่า/คัดลอก ฯลฯ)** → ใส่ `rounded-pill` ให้เข้าชุดกับ page-nav; CTA หลัก = `btn-primary`, utility = `btn-outline-secondary`
+- **ปุ่มในฟอร์ม/โมดัล (submit/cancel/inline)** → radius ปกติ `--radius-sm` (8px) **ไม่ต้อง pill**
+- **การ์ด/กล่องข้อมูล (card/stat/panel)** → สี่เหลี่ยมมุมมน `--radius` (10px) **ห้าม pill** แม้การ์ดจะคลิกได้
+
 ### Shadow
 ```
 --shadow-1: 0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03)  /* surface-card default */

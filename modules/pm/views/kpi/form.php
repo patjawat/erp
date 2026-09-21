@@ -6,7 +6,7 @@ use app\modules\pm\models\KpiIndicator;
 
 /** @var app\modules\pm\models\KpiIndicator $model */
 /** @var int[] $years @var array $rowModels (fiscal_year => KpiIndicatorYear) */
-/** @var array $groups @var array $units */
+/** @var array $groups @var array $units @var array $parts */
 
 $this->title = $model->isNewRecord ? 'เพิ่มตัวชี้วัด' : 'แก้ไขตัวชี้วัด';
 $this->beginBlock('page-title'); ?><?= Html::encode($this->title) ?><?php $this->endBlock();
@@ -22,10 +22,13 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 <div class="card border-0 shadow-sm mb-3"><div class="card-body">
     <h3 class="h6 mb-3">ข้อมูลทั่วไป</h3>
     <div class="row g-3">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
             <?= $form->field($model, 'group_id')->dropDownList($groups, ['prompt' => 'เลือกกลุ่ม']) ?>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
+            <?= $form->field($model, 'ha_part_id')->dropDownList($parts, ['prompt' => 'เลือกตอน HA (ถ้ามี)']) ?>
+        </div>
+        <div class="col-12 col-md-4">
             <?= $form->field($model, 'org_unit_id')->dropDownList($units, ['prompt' => 'เลือกหน่วยงาน (ถ้ามี)']) ?>
         </div>
         <div class="col-12">
@@ -37,13 +40,16 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
         <div class="col-12">
             <?= $form->field($model, 'formula')->textarea(['rows' => 2])->hint('เช่น (ผลงานที่ได้ / เป้าหมาย) × 100') ?>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-3">
             <?= $form->field($model, 'unit')->textInput(['placeholder' => 'เช่น %, ครั้ง, ราย']) ?>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-3">
             <?= $form->field($model, 'operator')->dropDownList(KpiIndicator::operatorList()) ?>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-3">
+            <?= $form->field($model, 'aggregation')->dropDownList(KpiIndicator::aggregationList())->hint('ใช้สรุปค่าจริงรายปีจากข้อมูลรายเดือน') ?>
+        </div>
+        <div class="col-6 col-md-3">
             <?= $form->field($model, 'frequency')->dropDownList(KpiIndicator::frequencyList(), ['prompt' => '-']) ?>
         </div>
         <div class="col-12 col-md-6">

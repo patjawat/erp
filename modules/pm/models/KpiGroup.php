@@ -21,7 +21,8 @@ class KpiGroup extends StrategyRecord
             [['sort_order'], 'integer'],
             ['is_active', 'boolean'],
             [['code'], 'string', 'max' => 50],
-            [['name'], 'string', 'max' => 255],
+            [['name', 'name_en'], 'string', 'max' => 255],
+            [['description'], 'string'],
             [['icon', 'color'], 'string', 'max' => 50],
             ['kind', 'in', 'range' => array_keys(self::kindList())],
             ['kind', 'default', 'value' => self::KIND_STANDALONE],
@@ -32,7 +33,8 @@ class KpiGroup extends StrategyRecord
     public function attributeLabels(): array
     {
         return [
-            'code' => 'รหัสกลุ่ม', 'name' => 'ชื่อกลุ่ม', 'kind' => 'ชนิด',
+            'code' => 'รหัสกลุ่ม', 'name' => 'ชื่อกลุ่ม (ไทย)', 'name_en' => 'ชื่อกลุ่ม (English)',
+            'description' => 'คำอธิบาย', 'kind' => 'ชนิด',
             'icon' => 'ไอคอน', 'color' => 'สี', 'sort_order' => 'ลำดับ', 'is_active' => 'ใช้งาน',
         ];
     }

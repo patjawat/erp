@@ -9,7 +9,9 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use app\modules\pm\components\KpiStatus;
 use app\modules\pm\models\KpiGroup;
+use app\modules\pm\models\KpiHaPart;
 use app\modules\pm\models\KpiIndicator;
+use app\modules\pm\models\KpiIndicatorMonth;
 use app\modules\pm\models\KpiIndicatorYear;
 use app\modules\pm\services\KpiRegistry;
 use app\modules\settings\models\OrgUnit;
@@ -29,7 +31,10 @@ class KpiController extends Controller
                 ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['pmStrategyView', 'kpiManage']],
                 ['allow' => true, 'roles' => ['kpiManage']],
             ]],
-            'verbs' => ['class' => VerbFilter::class, 'actions' => ['delete' => ['POST'], 'copy-year' => ['POST']]],
+            'verbs' => ['class' => VerbFilter::class, 'actions' => [
+                'delete' => ['POST'], 'copy-year' => ['POST'],
+                'group-delete' => ['POST'], 'part-delete' => ['POST'],
+            ]],
         ];
     }
 
@@ -60,15 +65,16 @@ class KpiController extends Controller
         return $this->redirect(['index', 'year' => $to]);
     }
 
-    public function actionIndex(?int $group = null, ?int $unit = null, ?int $year = null, ?string $status = null)
+    public function actionIndex(?int $group = null, ?int $unit = null, ?int $year = null, ?string $status = null, ?int $part = null)
     {
         $year = $year ?: KpiRegistry::defaultFiscalYear();
         $q = trim((string) Yii::$app->request->get('q'));
         $status = in_array($status, [KpiStatus::PASS, KpiStatus::GAP, KpiStatus::NODATA], true) ? $status : null;
 
         $stdGroupIds = KpiGroup::find()->select('id')->where(['kind' => KpiGroup::KIND_STANDALONE])->column();
-        $query = KpiIndicator::find()->with(['group', 'years'])->where(['group_id' => $stdGroupIds]);
+        $query = KpiIndicator::find()->with(['group', 'years', 'part'])->where(['group_id' => $stdGroupIds]);
         if ($group) $query->andWhere(['group_id' => $group]);
+        if ($part) $query->andWhere(['ha_part_id' => $part]);
         if ($unit) $query->andWhere(['org_unit_id' => $unit]);
         if ($q !== '') $query->andWhere(['like', 'name', $q]);
         $all = $query->orderBy(['group_id' => SORT_ASC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
@@ -91,9 +97,11 @@ class KpiController extends Controller
             'q' => $q,
             'group' => $group,
             'unit' => $unit,
+            'part' => $part,
             'status' => $status,
             'summary' => $summary,
             'groups' => $this->groupItems(),
+            'parts' => \yii\helpers\ArrayHelper::map(KpiHaPart::activeParts(), 'id', 'name'),
             'units' => $this->orgUnitItems($unit),
             'unitNames' => \yii\helpers\ArrayHelper::map(OrgUnit::find()->select(['id', 'name'])->asArray()->all(), 'id', 'name'),
             'canManage' => Yii::$app->user->can('kpiManage'),
@@ -137,6 +145,140 @@ class KpiController extends Controller
         $this->findModel($id)->delete(); // ค่ารายปีลบตามด้วย FK cascade
         Yii::$app->session->setFlash('success', 'ลบตัวชี้วัดแล้ว');
         return $this->redirect(['index']);
+    }
+
+    // ===================== จัดการกลุ่มตัวชี้วัด =====================
+
+    public function actionGroups()
+    {
+        return $this->groupForm(new KpiGroup(['kind' => KpiGroup::KIND_STANDALONE, 'is_active' => true, 'color' => '#4f46e5', 'icon' => 'bi-graph-up']));
+    }
+
+    public function actionGroupUpdate(int $id)
+    {
+        return $this->groupForm(KpiGroup::findOne($id) ?: throw new NotFoundHttpException('ไม่พบกลุ่ม'));
+    }
+
+    private function groupForm(KpiGroup $model)
+    {
+        if ($model->load(Yii::$app->request->post())) {
+            if (!$model->code) $model->code = $this->uniqueGroupCode($model);
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'บันทึกกลุ่มตัวชี้วัดแล้ว');
+                return $this->redirect(['groups']);
+            }
+        }
+        return $this->render('groups', [
+            'model' => $model,
+            'groups' => KpiGroup::find()->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all(),
+        ]);
+    }
+
+    public function actionGroupDelete(int $id)
+    {
+        $model = KpiGroup::findOne($id) ?: throw new NotFoundHttpException('ไม่พบกลุ่ม');
+        if ($model->isStrategy()) {
+            Yii::$app->session->setFlash('error', 'ลบกลุ่มยุทธศาสตร์ไม่ได้');
+        } elseif (KpiIndicator::find()->where(['group_id' => $id])->exists()) {
+            Yii::$app->session->setFlash('error', 'ลบไม่ได้ เพราะยังมีตัวชี้วัดในกลุ่มนี้');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบกลุ่มแล้ว');
+        }
+        return $this->redirect(['groups']);
+    }
+
+    private function uniqueGroupCode(KpiGroup $m): string
+    {
+        $base = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '_', (string) ($m->name_en ?: $m->name)), '_')) ?: 'grp';
+        $code = $base; $i = 1;
+        while (KpiGroup::find()->where(['code' => $code])->andWhere(['<>', 'id', $m->id ?? 0])->exists()) {
+            $code = $base . '_' . (++$i);
+        }
+        return $code;
+    }
+
+    // ===================== จัดการตอน HA (Part) =====================
+
+    public function actionParts()
+    {
+        return $this->partForm(new KpiHaPart(['is_active' => true]));
+    }
+
+    public function actionPartUpdate(int $id)
+    {
+        return $this->partForm(KpiHaPart::findOne($id) ?: throw new NotFoundHttpException('ไม่พบตอน HA'));
+    }
+
+    private function partForm(KpiHaPart $model)
+    {
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกตอน HA แล้ว');
+            return $this->redirect(['parts']);
+        }
+        return $this->render('parts', [
+            'model' => $model,
+            'parts' => KpiHaPart::find()->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all(),
+        ]);
+    }
+
+    public function actionPartDelete(int $id)
+    {
+        $model = KpiHaPart::findOne($id) ?: throw new NotFoundHttpException('ไม่พบตอน HA');
+        if (KpiIndicator::find()->where(['ha_part_id' => $id])->exists()) {
+            Yii::$app->session->setFlash('error', 'ลบไม่ได้ เพราะยังมีตัวชี้วัดผูกกับตอนนี้');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบตอน HA แล้ว');
+        }
+        return $this->redirect(['parts']);
+    }
+
+    // ===================== บันทึกข้อมูลรายเดือน =====================
+
+    /** บันทึกเป้า + ค่ารายเดือน (ต.ค.→ก.ย.) — ค่าจริงรายปีคำนวณอัตโนมัติจากรายเดือน */
+    public function actionData(int $id, ?int $year = null)
+    {
+        $indicator = $this->findModel($id);
+        $year = (int) ($year ?: KpiRegistry::defaultFiscalYear());
+        $entry = $indicator->yearEntry($year) ?: new KpiIndicatorYear(['kpi_indicator_id' => $indicator->id, 'fiscal_year' => $year]);
+
+        $post = Yii::$app->request->post();
+        if ($post) {
+            $tx = Yii::$app->db->beginTransaction();
+            $t = $post['target'] ?? '';
+            $entry->kpi_indicator_id = $indicator->id;
+            $entry->fiscal_year = $year;
+            $entry->target_value = (trim((string) $t) === '' ? null : $t);
+            $entry->save(false);
+
+            $input = $post['Months'] ?? [];
+            foreach (KpiIndicatorMonth::FISCAL_MONTHS as $m) {
+                $v = $input[$m]['value'] ?? '';
+                $row = KpiIndicatorMonth::findOne(['kpi_indicator_year_id' => $entry->id, 'month' => $m])
+                    ?: new KpiIndicatorMonth(['kpi_indicator_year_id' => $entry->id, 'month' => $m]);
+                if (trim((string) $v) === '') {
+                    if (!$row->isNewRecord) $row->delete();
+                    continue;
+                }
+                $row->value = $v;
+                $row->save();
+            }
+            $entry->recomputeActualFromMonths();
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'บันทึกข้อมูลรายเดือนแล้ว (คำนวณค่าจริงรายปีอัตโนมัติ)');
+            return $this->redirect(['data', 'id' => $id, 'year' => $year]);
+        }
+
+        $monthMap = [];
+        if (!$entry->isNewRecord) {
+            foreach ($entry->months as $mm) $monthMap[(int) $mm->month] = $mm;
+        }
+        $dy = KpiRegistry::defaultFiscalYear();
+        return $this->render('data', [
+            'indicator' => $indicator, 'entry' => $entry, 'year' => $year,
+            'monthMap' => $monthMap, 'yearOpts' => range($dy - 4, $dy + 1), // น้อย→มาก เหมือนยุทธศาสตร์
+        ]);
     }
 
     /** ฟอร์มตัวชี้วัด + ตารางค่ารายปี (เป้า/ผลจริง) ในหน้าเดียว */
@@ -183,6 +325,7 @@ class KpiController extends Controller
             'years' => $years,
             'rowModels' => $rowModels,
             'groups' => $this->groupItems(),
+            'parts' => \yii\helpers\ArrayHelper::map(KpiHaPart::activeParts(), 'id', 'name'),
             'units' => $this->orgUnitItems($model->org_unit_id),
         ]);
     }

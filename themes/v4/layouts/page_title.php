@@ -34,6 +34,8 @@ use yii\bootstrap5\Breadcrumbs;
          flex-wrap: wrap;
       }
    }
+   /* มาตรฐาน page-nav ทั้งระบบ: ปุ่มในแถบ action (page-nav ของทุกโมดูล) เป็นแคปซูล */
+   .action-box .btn { border-radius: 50rem; }
 </style>
 
 <div class="page-title-box">
