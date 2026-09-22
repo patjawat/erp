@@ -1082,15 +1082,15 @@ function cutDecimal($number, $precision = 5)
         );
     }
 
-    // ร้อยละดำเนินการ
+    // ร้อยละดำเนินการ (ไม่นับสถานะ "ยกเลิก" code 8 เป็นขั้นตอน → ส่งการเงิน = 100%)
     function OrderProgress()
     {
-        $total = Categorise::find()->where(['name' => 'order_status'])->count('id');
-        $status = $this->status;
+        $total = Categorise::find()->where(['name' => 'order_status'])->andWhere(['<>', 'code', 8])->count('id');
+        $status = (int) $this->status;
         if ($total == 0) {
             return 0;
         }
-        return number_format((($status / $total) * 100), 0);
+        return number_format(min(100, ($status / $total) * 100), 0);
     }
 
     public function viewCreated()
