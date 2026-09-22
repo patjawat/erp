@@ -45,7 +45,7 @@ $this->endBlock();
                     <?php if ($chartVersion): ?>
                         <div class="form-text">ผังโรงพยาบาล <?= Html::encode($chartVersion->version_code) ?> ปีงบประมาณ <?= Html::encode($chartVersion->fiscal_year) ?> · เลือกหมวดสินทรัพย์/สินค้าคงคลัง หรือค่าใช้จ่าย</div>
                     <?php else: ?>
-                        <div class="alert alert-warning mt-2 mb-0" role="alert">ยังไม่มีผังบัญชีโรงพยาบาลที่เปิดใช้สำหรับปีงบประมาณของใบแจ้งหนี้ สามารถบันทึกร่างได้ แต่ยังส่งตรวจอนุมัติไม่ได้</div>
+                        <div class="alert alert-info mt-2 mb-0" role="alert">ยังไม่มีผังบัญชีโรงพยาบาลที่เปิดใช้สำหรับปีงบประมาณนี้ — เว้นบัญชีเดบิตไว้ก่อนได้ ส่งตรวจ/อนุมัติออกเลขทะเบียนคุมได้ตามปกติ ส่วนการผูกผังบัญชีและลงบัญชีแยกประเภทเป็นขั้นตอนของงานบัญชี</div>
                     <?php endif; ?>
                 </div>
 
