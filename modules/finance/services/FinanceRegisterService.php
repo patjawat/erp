@@ -14,6 +14,7 @@ use app\modules\finance\models\FinanceBudgetAllotment;
 use app\modules\finance\models\FinanceBudgetReturn;
 use app\modules\finance\models\FinanceBudgetTxn;
 use app\modules\finance\models\FinanceCashAccount;
+use app\modules\finance\models\FinanceCashProject;
 use app\modules\finance\models\FinanceCashTransfer;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinancePatientDeposit;
@@ -69,6 +70,8 @@ class FinanceRegisterService
     private const PATIENT_DEPOSIT_KEYS = ['patient_deposit'];
     /** ทะเบียนคุมเงินฝากธนาคาร/เงินฝากคลัง (running per บัญชี) */
     private const BANK_DEPOSIT_KEYS = ['bank_deposit'];
+    /** ทะเบียนคุมเงินนอกงบฯ จำแนกตามโครงการ (running per โครงการ) */
+    private const FUND_BY_PROJECT_KEYS = ['fund_by_project'];
     /** หมวด 1 เงินงบประมาณ */
     private const BUDGET_ALLOTMENT_KEYS = ['budget_allotment'];
     private const BUDGET_CASHBOOK_KEYS = ['budget_cashbook'];
@@ -111,6 +114,9 @@ class FinanceRegisterService
         if (in_array($key, self::BANK_DEPOSIT_KEYS, true)) {
             return self::buildBankDeposit($filters);
         }
+        if (in_array($key, self::FUND_BY_PROJECT_KEYS, true)) {
+            return self::buildFundByProject($filters);
+        }
         if (in_array($key, self::BUDGET_ALLOTMENT_KEYS, true)) {
             return self::buildBudgetAllotment($filters);
         }
@@ -143,6 +149,7 @@ class FinanceRegisterService
             self::AR_ACCRUED_KEYS,
             self::PATIENT_DEPOSIT_KEYS,
             self::BANK_DEPOSIT_KEYS,
+            self::FUND_BY_PROJECT_KEYS,
             self::BUDGET_ALLOTMENT_KEYS,
             self::BUDGET_CASHBOOK_KEYS,
             self::TREASURY_REMIT_KEYS,
@@ -1051,6 +1058,85 @@ class FinanceRegisterService
             'rows' => $rows,
             'totals' => ['amount' => $sum],
             'period' => ['fiscal_year' => $fy, 'month' => $month],
+        ];
+    }
+
+    // ---------- ทะเบียนคุมเงินนอกงบฯ จำแนกตามโครงการ (2.4) — running per โครงการ ----------
+
+    private static function buildFundByProject(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+        $projects = FinanceCashProject::activeList();
+        $projectId = !empty($filters['project_id']) ? (int) $filters['project_id'] : (int) (array_key_first($projects) ?? 0);
+
+        $opening = 0.0;
+        $balance = 0.0;
+        $sumIn = 0.0;
+        $sumOut = 0.0;
+        $rows = [];
+
+        if ($projectId) {
+            $base = FinanceCashTxn::find()->where(['fiscal_year' => $fy, 'project_id' => $projectId]);
+            if ($month) {
+                [$start, $end] = self::fiscalRange($fy, $month);
+                $before = (clone $base)->andWhere(['<', 'doc_date', $start]);
+                $inB = (float) (clone $before)->andWhere(['txn_type' => FinanceCashTxn::TYPE_IN])->sum('amount');
+                $outB = (float) (clone $before)->andWhere(['txn_type' => FinanceCashTxn::TYPE_OUT])->sum('amount');
+                $opening = $inB - $outB;
+                $base->andWhere(['between', 'doc_date', $start, $end]);
+            }
+            $balance = $opening;
+
+            $txns = $base->with('category')->orderBy(['doc_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+            $seq = 0;
+            foreach ($txns as $t) {
+                $isIn = $t->txn_type === FinanceCashTxn::TYPE_IN;
+                $in = $isIn ? (float) $t->amount : 0.0;
+                $out = $isIn ? 0.0 : (float) $t->amount;
+                $balance += $in - $out;
+                $sumIn += $in;
+                $sumOut += $out;
+                $desc = $t->category ? $t->category->name : '';
+                if ($t->party_name) {
+                    $desc .= ($desc ? ' — ' : '') . $t->party_name;
+                }
+                $rows[] = [
+                    'seq' => ++$seq,
+                    'date' => AppHelper::convertToThai($t->doc_date),
+                    'doc_no' => $t->doc_no ?: '-',
+                    'description' => $desc ?: '-',
+                    'debit' => $in ?: null,
+                    'credit' => $out ?: null,
+                    'balance' => $balance,
+                ];
+            }
+        }
+
+        return [
+            'mode' => 'running',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่เอกสาร', 'w' => '9rem'],
+                ['key' => 'description', 'label' => 'รายการ'],
+                ['key' => 'debit', 'label' => 'รับ', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'credit', 'label' => 'จ่าย', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'balance', 'label' => 'คงเหลือ', 'align' => 'end', 'w' => '9rem', 'money' => true],
+            ],
+            'opening' => $opening,
+            'runningKey' => 'balance',
+            'totalLabelKey' => 'description',
+            'rows' => $rows,
+            'totals' => ['debit' => $sumIn, 'credit' => $sumOut, 'balance' => $balance],
+            'filterSelect' => [
+                'param' => 'project_id',
+                'label' => 'โครงการ',
+                'allLabel' => $projects ? '— เลือกโครงการ —' : 'ยังไม่มีโครงการ',
+                'options' => $projects,
+                'selected' => $projectId,
+            ],
+            'period' => ['fiscal_year' => $fy, 'month' => $month, 'project_id' => $projectId],
         ];
     }
 

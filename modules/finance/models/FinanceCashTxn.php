@@ -57,7 +57,7 @@ class FinanceCashTxn extends ActiveRecord
         return [
             [['txn_type', 'fiscal_year', 'category_id', 'doc_date', 'amount'], 'required'],
             [['txn_type'], 'in', 'range' => [self::TYPE_IN, self::TYPE_OUT]],
-            [['fiscal_year', 'category_id', 'money_account_id', 'party_id', 'is_closed', 'close_batch_id', 'created_by', 'updated_by'], 'integer'],
+            [['fiscal_year', 'category_id', 'money_account_id', 'party_id', 'project_id', 'is_closed', 'close_batch_id', 'created_by', 'updated_by'], 'integer'],
             [['doc_date'], 'date', 'format' => 'php:Y-m-d'],
             [['amount'], 'number', 'min' => 0.01],
             [['doc_no'], 'string', 'max' => 64],

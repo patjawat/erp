@@ -93,6 +93,8 @@ class RegisterController extends Controller
             'status' => $req->get('status') ?: null,
             'fund_id' => (int) $req->get('fund_id', 0) ?: null,
             'account_id' => (int) $req->get('account_id', 0) ?: null,
+            'project_id' => (int) $req->get('project_id', 0) ?: null,
+            'category' => $req->get('category') ?: null,
         ];
     }
 }
