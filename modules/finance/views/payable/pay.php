@@ -9,6 +9,9 @@ use yii\helpers\Url;
 /** @var string $vendor */
 /** @var array $rows */
 /** @var string $today */
+/** @var array $accounts */
+/** @var array $accountMeta */
+/** @var array $templates */
 
 $this->title = 'จ่ายชำระเจ้าหนี้';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -75,18 +78,45 @@ $thDate = function ($d) {
     <?= Html::beginForm(['pay'], 'post', ['id' => 'pay-form']) ?>
     <?= Html::hiddenInput('vendor', $vendor) ?>
 
+    <?= Html::hiddenInput('pay_method', 'cheque') ?>
     <div class="card border mb-3">
         <div class="card-header bg-body-tertiary fw-semibold"><i class="bi bi-building me-1"></i><?= Html::encode($vendor) ?></div>
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3"><label class="form-label small mb-1">วันที่จ่าย</label>
                     <input type="text" class="form-control form-control-sm" name="pay_date" value="<?= $today ?>" placeholder="วว/ดด/ปปปป"></div>
-                <div class="col-md-3"><label class="form-label small mb-1">เลขที่เช็ค</label>
+                <div class="col-md-5"><label class="form-label small mb-1">บัญชีจ่าย</label>
+                    <select class="form-select form-select-sm" name="cash_account_id" id="cash-account">
+                        <option value="">— เลือกบัญชีจ่าย —</option>
+                        <?php foreach (($accounts ?? []) as $aid => $alabel): ?>
+                            <option value="<?= $aid ?>"
+                                data-bank="<?= Html::encode($accountMeta[$aid]['bank'] ?? '') ?>"
+                                data-branch="<?= Html::encode($accountMeta[$aid]['branch'] ?? '') ?>"><?= Html::encode($alabel) ?></option>
+                        <?php endforeach; ?>
+                    </select></div>
+                <div class="col-md-2"><label class="form-label small mb-1">เลขที่เช็ค</label>
                     <input type="text" class="form-control form-control-sm" name="cheque_no" placeholder="เลขที่เช็ค"></div>
+                <div class="col-md-2"><label class="form-label small mb-1">เล่มเช็ค</label>
+                    <input type="text" class="form-control form-control-sm" name="cheque_book_no" placeholder="เล่มที่"></div>
+
                 <div class="col-md-3"><label class="form-label small mb-1">ธนาคาร</label>
-                    <input type="text" class="form-control form-control-sm" name="bank_name" value="กรุงไทย"></div>
+                    <input type="text" class="form-control form-control-sm" name="bank_name" id="bank-name" value="กรุงไทย"></div>
                 <div class="col-md-3"><label class="form-label small mb-1">สาขา</label>
-                    <input type="text" class="form-control form-control-sm" name="bank_branch" value="ด่านซ้าย"></div>
+                    <input type="text" class="form-control form-control-sm" name="bank_branch" id="bank-branch" value="ด่านซ้าย"></div>
+                <div class="col-md-4"><label class="form-label small mb-1">แม่แบบเช็ค (สำหรับพิมพ์)</label>
+                    <select class="form-select form-select-sm" name="template_id">
+                        <option value="">— ไม่ระบุ (ใช้แม่แบบที่ใช้งาน) —</option>
+                        <?php foreach (($templates ?? []) as $tid => $tlabel): ?>
+                            <option value="<?= $tid ?>"><?= Html::encode($tlabel) ?></option>
+                        <?php endforeach; ?>
+                    </select></div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="is_ac_payee" id="ac-payee" value="1" checked>
+                        <label class="form-check-label small" for="ac-payee">พิมพ์ A/C PAYEE ONLY</label>
+                    </div>
+                </div>
+
                 <div class="col-md-4"><label class="form-label small mb-1">เลขที่หนังสือ</label>
                     <input type="text" class="form-control form-control-sm" name="doc_no" placeholder="ลย 0033.301.05/..."></div>
                 <div class="col-md-8"><label class="form-label small mb-1">เรื่อง</label>
@@ -129,7 +159,7 @@ $thDate = function ($d) {
         </div>
         <?php if ($rows): ?>
         <div class="card-footer d-flex justify-content-end">
-            <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกจ่าย + ออกหนังสือนำส่ง', ['class' => 'btn btn-primary']) ?>
+            <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกจ่าย + ออกเช็ค/หนังสือนำส่ง', ['class' => 'btn btn-primary']) ?>
         </div>
         <?php endif; ?>
     </section>
@@ -158,6 +188,14 @@ $thDate = function ($d) {
     if(inp){ inp.value = this.checked ? fmt(parse(inp.dataset.max)) : '0.00'; inp.disabled = !this.checked; recalc(); }
   }));
   recalc();
+  // เลือกบัญชีจ่าย → เติมธนาคาร/สาขาอัตโนมัติ
+  const acc = document.getElementById('cash-account');
+  if(acc){ acc.addEventListener('change', function(){
+    const o = this.options[this.selectedIndex];
+    const bn = document.getElementById('bank-name'), bb = document.getElementById('bank-branch');
+    if(o && o.dataset.bank && bn) bn.value = o.dataset.bank;
+    if(o && o.dataset.branch && bb) bb.value = o.dataset.branch;
+  }); }
 })();
 JS;
     $this->registerJs($js, \yii\web\View::POS_END);

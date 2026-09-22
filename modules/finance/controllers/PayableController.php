@@ -16,6 +16,9 @@ use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
 use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\finance\models\FinancePayablePayment;
+use app\modules\finance\models\FinanceCheque;
+use app\modules\finance\models\FinanceChequeTemplate;
+use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
 use app\modules\accounting\models\AccountingChartAccount;
@@ -156,11 +159,23 @@ class PayableController extends Controller
         if ($vendor === '') {
             return $this->render('pay', ['mode' => 'vendors', 'vendors' => $this->outstandingVendors()]);
         }
+        // บัญชีจ่าย (ธนาคาร/เงินฝากคลัง) + meta สำหรับ autofill ธนาคาร/สาขา
+        $accounts = FinanceCashAccount::find()->where(['is_active' => 1])
+            ->andWhere(['in', 'account_type', [FinanceCashAccount::TYPE_BANK, FinanceCashAccount::TYPE_TREASURY]])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $accountMeta = [];
+        foreach ($accounts as $a) {
+            $accountMeta[$a->id] = ['bank' => (string) $a->bank_name, 'branch' => (string) $a->branch];
+        }
+
         return $this->render('pay', [
             'mode' => 'bills',
             'vendor' => $vendor,
             'rows' => $this->outstandingBills($vendor),
             'today' => date('d/m/') . ((int) date('Y') + 543),
+            'accounts' => ArrayHelper::map($accounts, 'id', fn(FinanceCashAccount $a) => $a->label()),
+            'accountMeta' => $accountMeta,
+            'templates' => FinanceChequeTemplate::activeList(),
         ]);
     }
 
@@ -176,6 +191,7 @@ class PayableController extends Controller
             'pay' => $pay,
             'lines' => $pay->paidLines(),
             'site' => SiteHelper::getInfo(),
+            'cheque' => FinanceCheque::find()->where(['payment_id' => $pay->id])->one(),
         ]);
     }
 
@@ -247,16 +263,31 @@ class PayableController extends Controller
             return $this->redirect(['pay', 'vendor' => $vendor]);
         }
 
+        // บัญชีจ่าย: ถ้าเลือกจากทะเบียน ให้ดึงธนาคาร/สาขามาเติมอัตโนมัติ
+        $accountId = (int) $req->post('cash_account_id', 0) ?: null;
+        $bankName = trim((string) $req->post('bank_name', '')) ?: null;
+        $bankBranch = trim((string) $req->post('bank_branch', '')) ?: null;
+        if ($accountId) {
+            $acc = FinanceCashAccount::findOne($accountId);
+            if ($acc) {
+                $bankName = $acc->bank_name ?: $bankName;
+                $bankBranch = $acc->branch ?: $bankBranch;
+            }
+        }
+        $payMethod = (string) $req->post('pay_method', 'cheque');
+        $chequeNo = trim((string) $req->post('cheque_no', '')) ?: null;
+
         $tx = Yii::$app->db->beginTransaction();
         try {
             $pay = new FinancePayablePayment([
                 'vendor_name_snapshot' => $vendor ?: $selected[0]['p']->vendor_name_snapshot,
                 'vendor_id' => (int) $selected[0]['p']->vendor_id,
+                'cash_account_id' => $accountId,
                 'pay_date' => $settleDate,
-                'pay_method' => (string) $req->post('pay_method', 'cheque'),
-                'bank_name' => trim((string) $req->post('bank_name', '')) ?: null,
-                'bank_branch' => trim((string) $req->post('bank_branch', '')) ?: null,
-                'cheque_no' => trim((string) $req->post('cheque_no', '')) ?: null,
+                'pay_method' => $payMethod,
+                'bank_name' => $bankName,
+                'bank_branch' => $bankBranch,
+                'cheque_no' => $chequeNo,
                 'doc_no' => trim((string) $req->post('doc_no', '')) ?: null,
                 'subject' => trim((string) $req->post('subject', '')) ?: null,
                 'gross_total' => $gross,
@@ -273,6 +304,16 @@ class PayableController extends Controller
                     'settle_date' => $settleDate,
                     'note' => $pay->cheque_no ? ('เช็ค ' . $pay->cheque_no) : null,
                 ]))->save(false);
+            }
+
+            // จ่ายด้วยเช็ค → บันทึกเช็คเข้าทะเบียนคุมเช็คอัตโนมัติ
+            if ($payMethod === 'cheque' && $chequeNo) {
+                $cheque = FinanceCheque::fromPayment($pay);
+                $cheque->template_id = (int) $req->post('template_id', 0) ?: null;
+                $cheque->cheque_book_no = trim((string) $req->post('cheque_book_no', '')) ?: null;
+                $cheque->is_ac_payee = $req->post('is_ac_payee') ? 1 : 0;
+                $cheque->status = FinanceCheque::STATUS_DRAFT;
+                $cheque->save(false);
             }
             $tx->commit();
             Yii::$app->session->setFlash('success', 'บันทึกจ่ายชำระ ' . count($selected) . ' บิล รวม ' . number_format($net, 2) . ' บาท');

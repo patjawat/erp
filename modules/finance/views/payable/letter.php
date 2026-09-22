@@ -107,6 +107,9 @@ $hasWht = (float) $pay->wht_total > 0.005;
 <body>
 <div class="toolbar">
     <button onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    <?php if (!empty($cheque)): ?>
+        <a href="<?= \yii\helpers\Url::to(['/finance/cheque/print', 'id' => $cheque->id]) ?>" target="_blank">🧾 พิมพ์เช็ค</a>
+    <?php endif; ?>
     <a href="<?= \yii\helpers\Url::to(['pay']) ?>">← กลับหน้าจ่ายชำระ</a>
 </div>
 
