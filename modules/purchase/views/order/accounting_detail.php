@@ -29,11 +29,13 @@ $inbox = FinanceInbox::find()->where([
                         ระบบเก็บสำเนาเอกสารไว้ตรวจสอบ โดยสถานะในระบบพัสดุยังไม่เปลี่ยนแปลง
                     </p>
                 </div>
-                <?= Html::a(
-                    '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายการที่ส่ง',
-                    ['/finance/inbox/view', 'id' => $inbox->id],
-                    ['class' => 'btn btn-outline-primary']
-                ) ?>
+                <?php if (Yii::$app->user->can('financeView')): ?>
+                    <?= Html::a(
+                        '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายการที่ส่ง',
+                        ['/finance/inbox/view', 'id' => $inbox->id],
+                        ['class' => 'btn btn-outline-primary']
+                    ) ?>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <p class="text-body-secondary">

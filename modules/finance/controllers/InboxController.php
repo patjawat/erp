@@ -46,17 +46,12 @@ class InboxController extends Controller
                 Yii::$app->session->setFlash('error', 'ยังส่งการเงินไม่ได้: ' . implode(' · ', $snapshot['blocking_errors']));
                 return $this->redirect($sourceRedirect);
             }
-            $inbox = (new FinanceInboxService())->receive($snapshot['source'], $snapshot['payload']);
+            (new FinanceInboxService())->receive($snapshot['source'], $snapshot['payload']);
             Yii::$app->session->setFlash('success', 'ส่งสำเนาเอกสารเข้ากล่องรอรับของการเงินแล้ว โดยยังไม่เปลี่ยนสถานะพัสดุ');
-            return $this->redirect(['/finance/inbox/view', 'id' => $inbox->id]);
+            return $this->redirect($sourceRedirect);
         } catch (\DomainException $e) {
-            $existing = FinanceInbox::find()->where([
-                'source_system' => PurchaseFinanceSnapshotBuilder::SOURCE_SYSTEM,
-                'source_id' => (string) $order->id,
-                'source_version' => 1,
-            ])->orderBy(['id' => SORT_DESC])->one();
             Yii::$app->session->setFlash('info', $e->getMessage());
-            return $existing ? $this->redirect(['/finance/inbox/view', 'id' => $existing->id]) : $this->redirect($sourceRedirect);
+            return $this->redirect($sourceRedirect);
         } catch (\Throwable $e) {
             Yii::error($e, __METHOD__);
             Yii::$app->session->setFlash('error', 'ส่งเข้ากล่องรอรับของการเงินไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
