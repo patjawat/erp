@@ -23,7 +23,7 @@ class PayableController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'aging'], 'roles' => ['accountingView']],
                 ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['accountingPrepare']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingReview', 'accountingApprove']],
             ]],
@@ -44,6 +44,67 @@ class PayableController extends Controller
             'query' => FinancePayable::find()->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]),
             'pagination' => ['pageSize' => 30],
         ])]);
+    }
+
+    /** รายงานเจ้าหนี้ค้างชำระ (aging) — หนี้ที่อนุมัติแล้วและยังคงค้าง จัด bucket ตามวันครบกำหนด */
+    public function actionAging()
+    {
+        $sql = "
+            SELECT p.id, p.payable_no, p.vendor_name_snapshot, p.invoice_no, p.due_date,
+                   p.net_amount, COALESCE(s.paid, 0) AS paid,
+                   (p.net_amount - COALESCE(s.paid, 0)) AS outstanding
+            FROM {{%finance_payable}} p
+            LEFT JOIN (
+                SELECT payable_id, SUM(amount) AS paid
+                FROM {{%finance_payable_settlement}} GROUP BY payable_id
+            ) s ON s.payable_id = p.id
+            WHERE p.status = :approved AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            ORDER BY p.due_date ASC, p.id ASC
+        ";
+        $rows = Yii::$app->db->createCommand($sql, [':approved' => FinancePayable::STATUS_APPROVED])->queryAll();
+
+        $today = new \DateTimeImmutable('today');
+        $monthEnd = new \DateTimeImmutable('last day of this month');
+        $buckets = [
+            'not_due' => ['label' => 'ยังไม่ถึงกำหนด', 'total' => 0.0, 'count' => 0],
+            'd30' => ['label' => 'เกิน 1–30 วัน', 'total' => 0.0, 'count' => 0],
+            'd60' => ['label' => 'เกิน 31–60 วัน', 'total' => 0.0, 'count' => 0],
+            'd90' => ['label' => 'เกิน 61–90 วัน', 'total' => 0.0, 'count' => 0],
+            'd90p' => ['label' => 'เกิน 90 วัน', 'total' => 0.0, 'count' => 0],
+        ];
+        $sumOutstanding = 0.0;
+        $sumOverdue = 0.0;
+        $sumDueThisMonth = 0.0;
+
+        foreach ($rows as &$r) {
+            $out = (float) $r['outstanding'];
+            $sumOutstanding += $out;
+            $due = $r['due_date'] ? new \DateTimeImmutable($r['due_date']) : null;
+            $overdueDays = $due ? (int) $today->diff($due)->format('%r%a') : 0; // ลบ = เกินกำหนด
+            $overdueDays = -$overdueDays; // จำนวนวันที่เกินกำหนด (บวก = เลยมาแล้ว)
+            if (!$due || $overdueDays <= 0) {
+                $key = 'not_due';
+                if ($due && $due <= $monthEnd) {
+                    $sumDueThisMonth += $out;
+                }
+            } else {
+                $sumOverdue += $out;
+                $key = $overdueDays <= 30 ? 'd30' : ($overdueDays <= 60 ? 'd60' : ($overdueDays <= 90 ? 'd90' : 'd90p'));
+            }
+            $buckets[$key]['total'] += $out;
+            $buckets[$key]['count']++;
+            $r['bucket'] = $key;
+            $r['overdue_days'] = $overdueDays;
+        }
+        unset($r);
+
+        return $this->render('aging', [
+            'rows' => $rows,
+            'buckets' => $buckets,
+            'sumOutstanding' => $sumOutstanding,
+            'sumOverdue' => $sumOverdue,
+            'sumDueThisMonth' => $sumDueThisMonth,
+        ]);
     }
 
     public function actionCreate($inbox_id)

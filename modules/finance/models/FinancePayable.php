@@ -145,4 +145,48 @@ class FinancePayable extends ActiveRecord
         return $this->hasOne(AccountingJournalDraft::class, ['source_id' => 'id'])
             ->andOnCondition(['source_type' => AccountingJournalDraft::SOURCE_PAYABLE]);
     }
+
+    // ---- การตัดหนี้/จ่ายชำระ (AP settlement) ------------------------------
+
+    public function getSettlements()
+    {
+        return $this->hasMany(FinancePayableSettlement::class, ['payable_id' => 'id'])
+            ->orderBy(['settle_date' => SORT_ASC, 'id' => SORT_ASC]);
+    }
+
+    /** ยอดที่จ่าย/ตัดไปแล้ว */
+    public function getPaidAmount(): float
+    {
+        return (float) FinancePayableSettlement::find()->where(['payable_id' => $this->id])->sum('amount');
+    }
+
+    /** ยอดคงค้าง = net_amount - จ่ายแล้ว (ไม่ต่ำกว่า 0) */
+    public function getOutstanding(): float
+    {
+        return max(0.0, (float) $this->net_amount - $this->getPaidAmount());
+    }
+
+    /** สถานะการจ่าย (derive จากยอดตัด): unpaid / partial / paid */
+    public function paymentStatus(): string
+    {
+        $paid = $this->getPaidAmount();
+        if ($paid <= 0.005) {
+            return 'unpaid';
+        }
+        return $paid + 0.005 < (float) $this->net_amount ? 'partial' : 'paid';
+    }
+
+    public static function paymentStatusLabel(string $s): string
+    {
+        return ['unpaid' => 'ยังไม่จ่าย', 'partial' => 'จ่ายบางส่วน', 'paid' => 'จ่ายครบ'][$s] ?? $s;
+    }
+
+    public static function paymentStatusBadgeClass(string $s): string
+    {
+        return match ($s) {
+            'paid' => 'bg-success-subtle text-success-emphasis',
+            'partial' => 'bg-warning-subtle text-warning-emphasis',
+            default => 'bg-danger-subtle text-danger-emphasis',
+        };
+    }
 }
