@@ -10,10 +10,12 @@ use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
 use app\modules\finance\models\FinancePayableSettlement;
+use app\modules\finance\models\FinancePayablePayment;
 use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
 use app\modules\accounting\models\AccountingChartAccount;
@@ -25,7 +27,7 @@ class PayableController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view', 'aging'], 'roles' => ['accountingView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter'], 'roles' => ['accountingView']],
                 ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['accountingPrepare']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingReview', 'accountingApprove']],
                 ['allow' => true, 'actions' => ['pay'], 'roles' => ['accountingApprove']],
@@ -111,72 +113,146 @@ class PayableController extends Controller
         ]);
     }
 
-    /** รอบจ่ายเจ้าหนี้ (payment run): เลือกบิลค้าง → บันทึกตัดหนี้ (จ่ายบางบิล/บางส่วนได้) */
+    /** จ่ายชำระรายเจ้าหนี้: เลือกบริษัท → ติ๊กบิลที่จ่าย → บันทึก batch (1 เช็ค + 1 หนังสือนำส่ง) */
     public function actionPay()
     {
         $req = Yii::$app->request;
 
         if ($req->isPost) {
-            $settleDate = AppHelper::normalizeDateToDb((string) $req->post('settle_date')) ?: date('Y-m-d');
-            $note = trim((string) $req->post('note', '')) ?: null;
-            $lines = (array) $req->post('pay', []); // pay[payable_id] = amount
-
-            $tx = Yii::$app->db->beginTransaction();
-            try {
-                $count = 0;
-                $total = 0.0;
-                foreach ($lines as $pid => $amt) {
-                    $pid = (int) $pid;
-                    $amt = (float) str_replace([',', ' '], '', (string) $amt);
-                    if ($amt <= 0) {
-                        continue;
-                    }
-                    $p = FinancePayable::findOne(['id' => $pid, 'status' => FinancePayable::STATUS_APPROVED]);
-                    if (!$p) {
-                        continue;
-                    }
-                    $out = $p->getOutstanding();
-                    if ($amt > $out + 0.005) {
-                        $amt = $out; // กันจ่ายเกินยอดคงค้าง
-                    }
-                    if ($amt <= 0) {
-                        continue;
-                    }
-                    (new FinancePayableSettlement([
-                        'payable_id' => $pid,
-                        'amount' => $amt,
-                        'settle_date' => $settleDate,
-                        'note' => $note,
-                    ]))->save();
-                    $count++;
-                    $total += $amt;
-                }
-                $tx->commit();
-                Yii::$app->session->setFlash('success', "บันทึกจ่ายชำระ $count รายการ รวม " . number_format($total, 2) . " บาท");
-            } catch (\Throwable $e) {
-                $tx->rollBack();
-                Yii::error($e, __METHOD__);
-                Yii::$app->session->setFlash('error', 'บันทึกจ่ายชำระไม่สำเร็จ');
-            }
-            return $this->redirect(['aging']);
+            return $this->processPayment($req);
         }
 
-        // GET: แสดงบิลค้าง (approved + outstanding > 0)
+        $vendor = trim((string) $req->get('vendor', ''));
+        if ($vendor === '') {
+            return $this->render('pay', ['mode' => 'vendors', 'vendors' => $this->outstandingVendors()]);
+        }
+        return $this->render('pay', [
+            'mode' => 'bills',
+            'vendor' => $vendor,
+            'rows' => $this->outstandingBills($vendor),
+            'today' => date('d/m/') . ((int) date('Y') + 543),
+        ]);
+    }
+
+    /** หนังสือนำส่งชำระเงิน (พิมพ์) จากรอบจ่าย */
+    public function actionLetter($id)
+    {
+        $pay = FinancePayablePayment::findOne($id);
+        if (!$pay) {
+            throw new NotFoundHttpException('ไม่พบรอบจ่ายเจ้าหนี้');
+        }
+        $this->layout = false; // หน้าเอกสารพิมพ์ standalone
+        return $this->render('letter', [
+            'pay' => $pay,
+            'lines' => $pay->paidLines(),
+            'site' => SiteHelper::getInfo(),
+        ]);
+    }
+
+    /** เจ้าหนี้ที่มีบิลค้าง (สรุปรายบริษัท) */
+    private function outstandingVendors(): array
+    {
         $sql = "
-            SELECT p.id, p.payable_no, p.vendor_name_snapshot, p.invoice_no, p.due_date,
-                   p.net_amount, COALESCE(s.paid, 0) AS paid,
+            SELECT p.vendor_name_snapshot AS vendor, COUNT(*) AS bills,
+                   SUM(p.net_amount - COALESCE(s.paid, 0)) AS outstanding, MIN(p.due_date) AS earliest_due
+            FROM {{%finance_payable}} p
+            LEFT JOIN (SELECT payable_id, SUM(amount) paid FROM {{%finance_payable_settlement}} GROUP BY payable_id) s
+              ON s.payable_id = p.id
+            WHERE p.status = :a AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            GROUP BY p.vendor_name_snapshot
+            ORDER BY earliest_due ASC
+        ";
+        return Yii::$app->db->createCommand($sql, [':a' => FinancePayable::STATUS_APPROVED])->queryAll();
+    }
+
+    /** บิลค้างของเจ้าหนี้รายหนึ่ง */
+    private function outstandingBills(string $vendor): array
+    {
+        $sql = "
+            SELECT p.id, p.payable_no, p.invoice_no, p.due_date, p.gross_amount,
+                   p.withholding_tax_amount, p.net_amount, COALESCE(s.paid, 0) AS paid,
                    (p.net_amount - COALESCE(s.paid, 0)) AS outstanding
             FROM {{%finance_payable}} p
-            LEFT JOIN (
-                SELECT payable_id, SUM(amount) AS paid
-                FROM {{%finance_payable_settlement}} GROUP BY payable_id
-            ) s ON s.payable_id = p.id
-            WHERE p.status = :approved AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            LEFT JOIN (SELECT payable_id, SUM(amount) paid FROM {{%finance_payable_settlement}} GROUP BY payable_id) s
+              ON s.payable_id = p.id
+            WHERE p.status = :a AND p.vendor_name_snapshot = :v AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
             ORDER BY p.due_date ASC, p.id ASC
         ";
-        $rows = Yii::$app->db->createCommand($sql, [':approved' => FinancePayable::STATUS_APPROVED])->queryAll();
+        return Yii::$app->db->createCommand($sql, [':a' => FinancePayable::STATUS_APPROVED, ':v' => $vendor])->queryAll();
+    }
 
-        return $this->render('pay', ['rows' => $rows]);
+    /** บันทึกรอบจ่าย: สร้าง batch + settlement ผูก payment_id */
+    private function processPayment($req)
+    {
+        $vendor = trim((string) $req->post('vendor', ''));
+        $settleDate = AppHelper::normalizeDateToDb((string) $req->post('pay_date')) ?: date('Y-m-d');
+        $lines = (array) $req->post('pay', []);
+
+        $selected = [];
+        $gross = $wht = $net = 0.0;
+        foreach ($lines as $pid => $amt) {
+            $pid = (int) $pid;
+            $amt = (float) str_replace([',', ' '], '', (string) $amt);
+            if ($amt <= 0) {
+                continue;
+            }
+            $p = FinancePayable::findOne(['id' => $pid, 'status' => FinancePayable::STATUS_APPROVED]);
+            if (!$p) {
+                continue;
+            }
+            $out = $p->getOutstanding();
+            if ($amt > $out + 0.005) {
+                $amt = $out;
+            }
+            if ($amt <= 0) {
+                continue;
+            }
+            $selected[] = ['p' => $p, 'amt' => $amt];
+            $gross += (float) $p->gross_amount;
+            $wht += (float) $p->withholding_tax_amount;
+            $net += $amt;
+        }
+        if (!$selected) {
+            Yii::$app->session->setFlash('error', 'ยังไม่ได้เลือกบิลที่จะจ่าย');
+            return $this->redirect(['pay', 'vendor' => $vendor]);
+        }
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $pay = new FinancePayablePayment([
+                'vendor_name_snapshot' => $vendor ?: $selected[0]['p']->vendor_name_snapshot,
+                'vendor_id' => (int) $selected[0]['p']->vendor_id,
+                'pay_date' => $settleDate,
+                'pay_method' => (string) $req->post('pay_method', 'cheque'),
+                'bank_name' => trim((string) $req->post('bank_name', '')) ?: null,
+                'bank_branch' => trim((string) $req->post('bank_branch', '')) ?: null,
+                'cheque_no' => trim((string) $req->post('cheque_no', '')) ?: null,
+                'doc_no' => trim((string) $req->post('doc_no', '')) ?: null,
+                'subject' => trim((string) $req->post('subject', '')) ?: null,
+                'gross_total' => $gross,
+                'wht_total' => $wht,
+                'net_total' => $net,
+                'note' => trim((string) $req->post('note', '')) ?: null,
+            ]);
+            $pay->save(false);
+            foreach ($selected as $s) {
+                (new FinancePayableSettlement([
+                    'payable_id' => $s['p']->id,
+                    'payment_id' => $pay->id,
+                    'amount' => $s['amt'],
+                    'settle_date' => $settleDate,
+                    'note' => $pay->cheque_no ? ('เช็ค ' . $pay->cheque_no) : null,
+                ]))->save(false);
+            }
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'บันทึกจ่ายชำระ ' . count($selected) . ' บิล รวม ' . number_format($net, 2) . ' บาท');
+            return $this->redirect(['letter', 'id' => $pay->id]);
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e, __METHOD__);
+            Yii::$app->session->setFlash('error', 'บันทึกจ่ายชำระไม่สำเร็จ');
+            return $this->redirect(['pay', 'vendor' => $vendor]);
+        }
     }
 
     public function actionCreate($inbox_id)

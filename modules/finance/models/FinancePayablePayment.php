@@ -1,0 +1,78 @@
+<?php
+
+namespace app\modules\finance\models;
+
+use Yii;
+use yii\db\ActiveRecord;
+
+/**
+ * รอบจ่ายเจ้าหนี้รายบริษัท (payment batch) = 1 เช็ค + 1 หนังสือนำส่ง
+ *
+ * @property int $id
+ * @property int|null $vendor_id
+ * @property string $vendor_name_snapshot
+ * @property string $pay_date
+ * @property string $pay_method
+ * @property string|null $bank_name
+ * @property string|null $bank_branch
+ * @property string|null $cheque_no
+ * @property string|null $doc_no
+ * @property string|null $subject
+ * @property string $gross_total
+ * @property string $wht_total
+ * @property string $net_total
+ * @property string|null $note
+ */
+class FinancePayablePayment extends ActiveRecord
+{
+    public static function tableName(): string
+    {
+        return '{{%finance_payable_payment}}';
+    }
+
+    public function rules(): array
+    {
+        return [
+            [['vendor_name_snapshot', 'pay_date'], 'required'],
+            [['vendor_id', 'created_by'], 'integer'],
+            [['pay_date'], 'date', 'format' => 'php:Y-m-d'],
+            [['gross_total', 'wht_total', 'net_total'], 'number'],
+            [['pay_method'], 'string', 'max' => 20],
+            [['bank_name', 'bank_branch', 'cheque_no'], 'string', 'max' => 100],
+            [['doc_no'], 'string', 'max' => 60],
+            [['vendor_name_snapshot', 'subject', 'note'], 'string', 'max' => 255],
+        ];
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+        if ($insert) {
+            $this->created_at = $this->created_at ?: time();
+            $this->created_by = $this->created_by
+                ?: (Yii::$app->has('user') && !Yii::$app->user->isGuest ? Yii::$app->user->id : null);
+        }
+        return true;
+    }
+
+    public function getSettlements()
+    {
+        return $this->hasMany(FinancePayableSettlement::class, ['payment_id' => 'id']);
+    }
+
+    /** บิลที่จ่ายในรอบนี้ พร้อมยอดที่จ่าย — คืน list ของ [payable, amount] */
+    public function paidLines(): array
+    {
+        $out = [];
+        $rows = FinancePayableSettlement::find()->where(['payment_id' => $this->id])->orderBy(['id' => SORT_ASC])->all();
+        foreach ($rows as $s) {
+            $p = FinancePayable::findOne($s->payable_id);
+            if ($p) {
+                $out[] = ['payable' => $p, 'amount' => (float) $s->amount];
+            }
+        }
+        return $out;
+    }
+}
