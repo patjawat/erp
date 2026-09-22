@@ -101,35 +101,8 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                 </div>
             </div>
         </section>
-    </div>
-    <div class="col-xl-4">
-        <section class="card border shadow-sm">
-            <div class="card-header bg-body"><h5 class="mb-0">ผลตรวจเบื้องต้น</h5></div>
-            <div class="card-body">
-                <?php if (!$messages): ?>
-                    <div class="d-flex gap-2 text-success-emphasis">
-                        <i class="bi bi-check-circle" aria-hidden="true"></i>
-                        <span>ข้อมูลขั้นต่ำครบ พร้อมให้เจ้าหน้าที่บัญชีตรวจรายละเอียด</span>
-                    </div>
-                <?php else: ?>
-                    <ul class="mb-0 ps-3">
-                        <?php foreach ($messages as $message): ?>
-                            <li class="mb-2"><?= Html::encode($message) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </div>
-        </section>
 
-        <div class="alert alert-secondary mt-3 mb-0">
-            กด "รับรอง &amp; ตั้งเจ้าหนี้" เพื่อรับรองเอกสารและตั้งเป็นเจ้าหนี้ (ร่าง) พร้อมกัน จากนั้นให้หัวหน้าอนุมัติเข้าทะเบียนคุม
-        </div>
-    </div>
-</div>
-
-<div class="row g-3 mt-1">
-    <div class="col-xl-8">
-        <section class="card border shadow-sm" aria-labelledby="review-history-heading">
+        <section class="card border shadow-sm mt-3" aria-labelledby="review-history-heading">
             <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
                 <h5 class="mb-0" id="review-history-heading">ประวัติการตรวจสอบ</h5>
                 <span class="text-body-secondary small"><?= number_format(count($reviews)) ?> รายการ</span>
@@ -158,8 +131,27 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
             <?php endif; ?>
         </section>
     </div>
+
     <div class="col-xl-4">
-        <section class="card border shadow-sm" aria-labelledby="review-decision-heading">
+        <section class="card border shadow-sm">
+            <div class="card-header bg-body"><h5 class="mb-0">ผลตรวจเบื้องต้น</h5></div>
+            <div class="card-body">
+                <?php if (!$messages): ?>
+                    <div class="d-flex gap-2 text-success-emphasis">
+                        <i class="bi bi-check-circle" aria-hidden="true"></i>
+                        <span>ข้อมูลขั้นต่ำครบ พร้อมให้เจ้าหน้าที่บัญชีตรวจรายละเอียด</span>
+                    </div>
+                <?php else: ?>
+                    <ul class="mb-0 ps-3">
+                        <?php foreach ($messages as $message): ?>
+                            <li class="mb-2"><?= Html::encode($message) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <section class="card border shadow-sm mt-3" aria-labelledby="review-decision-heading">
             <div class="card-header bg-body"><h5 class="mb-0" id="review-decision-heading">ผลการตรวจสอบ</h5></div>
             <div class="card-body">
                 <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('accountingPrepare')): ?>
@@ -208,6 +200,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                 <?php endif; ?>
             </div>
         </section>
+
         <?php if ($model->status === FinanceInbox::STATUS_ACCEPTED): ?>
             <section class="card border shadow-sm mt-3">
                 <div class="card-header bg-body"><h5 class="mb-0">ทะเบียนเจ้าหนี้</h5></div>
@@ -234,5 +227,9 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                 </div>
             </section>
         <?php endif; ?>
+
+        <div class="alert alert-secondary mt-3 mb-0">
+            กด "รับรอง &amp; ตั้งเจ้าหนี้" เพื่อรับรองเอกสารและตั้งเป็นเจ้าหนี้ (ร่าง) พร้อมกัน จากนั้นให้หัวหน้าอนุมัติเข้าทะเบียนคุม
+        </div>
     </div>
 </div>
