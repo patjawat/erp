@@ -119,7 +119,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                         <?php if ($model->status >= 5 && $model->category_id != 'M25'): ?>
                                             <li class="nav-item">
-                                                <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
+                                                <a class="nav-link <?= $model->status == 5 ? 'active' : null; ?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
                                                         class="<?= $stepCls($model->status >= 6) ?>"><?= $stepMark(5, $model->status >= 6) ?></span> <?= $model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง' ?></a>
                                             </li>
                                         <?php endif ?>
