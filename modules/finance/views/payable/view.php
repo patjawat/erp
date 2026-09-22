@@ -89,7 +89,12 @@ $this->endBlock();
         <section class="card border shadow-sm">
             <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
                 <h5 class="mb-0">รายละเอียดเจ้าหนี้</h5>
-                <span class="badge <?= FinancePayable::statusBadgeClass($model->status) ?>"><?= Html::encode(FinancePayable::statusOptions()[$model->status]) ?></span>
+                <div class="d-flex align-items-center gap-2">
+                    <?= Html::a('<i class="bi bi-printer me-1"></i>พิมพ์ใบอนุมัติจ่าย',
+                        ['/finance/payable-doc/open', 'payable_id' => $model->id],
+                        ['class' => 'btn btn-sm btn-outline-primary open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                    <span class="badge <?= FinancePayable::statusBadgeClass($model->status) ?>"><?= Html::encode(FinancePayable::statusOptions()[$model->status]) ?></span>
+                </div>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
