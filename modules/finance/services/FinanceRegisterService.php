@@ -10,6 +10,9 @@ use app\modules\finance\models\FinanceCheque;
 use app\modules\finance\models\FinanceArFund;
 use app\modules\finance\models\FinanceArInvoice;
 use app\modules\finance\models\FinanceArSettlement;
+use app\modules\finance\models\FinanceBudgetAllotment;
+use app\modules\finance\models\FinanceBudgetReturn;
+use app\modules\finance\models\FinanceBudgetTxn;
 use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\models\FinanceCashTransfer;
 use app\modules\finance\models\FinanceInbox;
@@ -17,6 +20,7 @@ use app\modules\finance\models\FinancePatientDeposit;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePettyCash;
 use app\modules\finance\models\FinancePettyCashTxn;
+use app\modules\finance\models\FinanceTreasuryRemit;
 use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\finance\models\RegisterCatalog;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -65,6 +69,12 @@ class FinanceRegisterService
     private const PATIENT_DEPOSIT_KEYS = ['patient_deposit'];
     /** ทะเบียนคุมเงินฝากธนาคาร/เงินฝากคลัง (running per บัญชี) */
     private const BANK_DEPOSIT_KEYS = ['bank_deposit'];
+    /** หมวด 1 เงินงบประมาณ */
+    private const BUDGET_ALLOTMENT_KEYS = ['budget_allotment'];
+    private const BUDGET_CASHBOOK_KEYS = ['budget_cashbook'];
+    private const TREASURY_REMIT_KEYS = ['treasury_remit'];
+    private const BUDGET_RETURN_KEYS = ['budget_return'];
+    private const CENTRAL_FUND_KEYS = ['central_fund'];
 
     public static function build(string $key, array $filters = []): ?array
     {
@@ -101,6 +111,21 @@ class FinanceRegisterService
         if (in_array($key, self::BANK_DEPOSIT_KEYS, true)) {
             return self::buildBankDeposit($filters);
         }
+        if (in_array($key, self::BUDGET_ALLOTMENT_KEYS, true)) {
+            return self::buildBudgetAllotment($filters);
+        }
+        if (in_array($key, self::BUDGET_CASHBOOK_KEYS, true)) {
+            return self::buildBudgetCashbook($filters);
+        }
+        if (in_array($key, self::TREASURY_REMIT_KEYS, true)) {
+            return self::buildTreasuryRemit($filters);
+        }
+        if (in_array($key, self::BUDGET_RETURN_KEYS, true)) {
+            return self::buildBudgetReturn($filters);
+        }
+        if (in_array($key, self::CENTRAL_FUND_KEYS, true)) {
+            return self::buildCentralFund($filters);
+        }
         return null;
     }
 
@@ -117,7 +142,12 @@ class FinanceRegisterService
             self::AR_FUND_KEYS,
             self::AR_ACCRUED_KEYS,
             self::PATIENT_DEPOSIT_KEYS,
-            self::BANK_DEPOSIT_KEYS
+            self::BANK_DEPOSIT_KEYS,
+            self::BUDGET_ALLOTMENT_KEYS,
+            self::BUDGET_CASHBOOK_KEYS,
+            self::TREASURY_REMIT_KEYS,
+            self::BUDGET_RETURN_KEYS,
+            self::CENTRAL_FUND_KEYS
         ), true);
     }
 
@@ -1018,6 +1048,291 @@ class FinanceRegisterService
                 ['key' => 'return_date', 'label' => 'วันคืน', 'align' => 'center', 'w' => '7rem'],
             ],
             'totalLabelKey' => 'form',
+            'rows' => $rows,
+            'totals' => ['amount' => $sum],
+            'period' => ['fiscal_year' => $fy, 'month' => $month],
+        ];
+    }
+
+    // ---------- หมวด 1 เงินงบประมาณ ----------
+
+    private static function budgetCategoryFilter(?string $selected): array
+    {
+        return [
+            'param' => 'category',
+            'label' => 'งบรายจ่าย',
+            'allLabel' => 'ทุกงบรายจ่าย',
+            'options' => FinanceBudgetTxn::CATEGORIES,
+            'selected' => $selected,
+        ];
+    }
+
+    /** 1.1 เงินประจำงวด */
+    private static function buildBudgetAllotment(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $category = !empty($filters['category']) ? (string) $filters['category'] : null;
+
+        $query = FinanceBudgetAllotment::find()->where(['fiscal_year' => $fy]);
+        if ($category) {
+            $query->andWhere(['budget_category' => $category]);
+        }
+        $rowsDb = $query->orderBy(['period_no' => SORT_ASC, 'budget_category' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $sumA = 0.0;
+        $sumD = 0.0;
+        $sumR = 0.0;
+        $rows = [];
+        $seq = 0;
+        foreach ($rowsDb as $a) {
+            $amt = (float) $a->amount;
+            $dis = $a->getDisbursed();
+            $rem = $amt - $dis;
+            $sumA += $amt;
+            $sumD += $dis;
+            $sumR += $rem;
+            $rows[] = [
+                'seq' => ++$seq,
+                'date' => $a->allotment_date ? AppHelper::convertToThai($a->allotment_date) : '-',
+                'doc_no' => $a->allotment_no ?: '-',
+                'period' => $a->period_no ?: '-',
+                'category' => $a->categoryLabel(),
+                'amount' => $amt,
+                'disbursed' => $dis ?: null,
+                'remaining' => $rem,
+            ];
+        }
+
+        return [
+            'mode' => 'log',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่จัดสรร', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่หนังสือ', 'w' => '9rem'],
+                ['key' => 'period', 'label' => 'งวดที่', 'align' => 'center', 'w' => '5rem'],
+                ['key' => 'category', 'label' => 'งบรายจ่าย'],
+                ['key' => 'amount', 'label' => 'ยอดจัดสรร', 'align' => 'end', 'w' => '9rem', 'money' => true],
+                ['key' => 'disbursed', 'label' => 'เบิกจ่ายแล้ว', 'align' => 'end', 'w' => '9rem', 'money' => true],
+                ['key' => 'remaining', 'label' => 'คงเหลือ', 'align' => 'end', 'w' => '9rem', 'money' => true],
+            ],
+            'totalLabelKey' => 'category',
+            'rows' => $rows,
+            'totals' => ['amount' => $sumA, 'disbursed' => $sumD, 'remaining' => $sumR],
+            'filterSelect' => self::budgetCategoryFilter($category),
+            'period' => ['fiscal_year' => $fy, 'category' => $category],
+        ];
+    }
+
+    /** 1.2 รับ-จ่ายเงินงบประมาณ (running) */
+    private static function buildBudgetCashbook(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+        $category = !empty($filters['category']) ? (string) $filters['category'] : null;
+
+        // ยึด fiscal_year column เป็นหลัก (กรองช่วงวันที่เฉพาะเมื่อเลือกเดือน)
+        $base = FinanceBudgetTxn::find()->where(['fiscal_year' => $fy]);
+        if ($category) {
+            $base->andWhere(['budget_category' => $category]);
+        }
+        $opening = 0.0;
+        if ($month) {
+            [$start] = self::fiscalRange($fy, $month);
+            $before = (clone $base)->andWhere(['<', 'doc_date', $start]);
+            $inB = (float) (clone $before)->andWhere(['txn_type' => FinanceBudgetTxn::TYPE_RECEIVE])->sum('amount');
+            $outB = (float) (clone $before)->andWhere(['txn_type' => FinanceBudgetTxn::TYPE_DISBURSE])->sum('amount');
+            $opening = $inB - $outB;
+        }
+        $balance = $opening;
+
+        $txnQuery = clone $base;
+        if ($month) {
+            [$start, $end] = self::fiscalRange($fy, $month);
+            $txnQuery->andWhere(['between', 'doc_date', $start, $end]);
+        }
+        $txns = $txnQuery->orderBy(['doc_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $sumIn = 0.0;
+        $sumOut = 0.0;
+        $rows = [];
+        $seq = 0;
+        foreach ($txns as $t) {
+            $isIn = $t->txn_type === FinanceBudgetTxn::TYPE_RECEIVE;
+            $in = $isIn ? (float) $t->amount : 0.0;
+            $out = $isIn ? 0.0 : (float) $t->amount;
+            $balance += $in - $out;
+            $sumIn += $in;
+            $sumOut += $out;
+            $desc = $t->categoryLabel();
+            if ($t->description) {
+                $desc .= ' — ' . $t->description;
+            }
+            if ($t->payee) {
+                $desc .= ' (จ่ายให้ ' . $t->payee . ')';
+            }
+            $rows[] = [
+                'seq' => ++$seq,
+                'date' => AppHelper::convertToThai($t->doc_date),
+                'doc_no' => $t->doc_no ?: '-',
+                'description' => $desc,
+                'debit' => $in ?: null,
+                'credit' => $out ?: null,
+                'balance' => $balance,
+            ];
+        }
+
+        return [
+            'mode' => 'running',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่เอกสาร', 'w' => '9rem'],
+                ['key' => 'description', 'label' => 'รายการ'],
+                ['key' => 'debit', 'label' => 'รับจากคลัง', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'credit', 'label' => 'จ่าย', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'balance', 'label' => 'คงเหลือ', 'align' => 'end', 'w' => '9rem', 'money' => true],
+            ],
+            'opening' => $opening,
+            'runningKey' => 'balance',
+            'totalLabelKey' => 'description',
+            'rows' => $rows,
+            'totals' => ['debit' => $sumIn, 'credit' => $sumOut, 'balance' => $balance],
+            'filterSelect' => self::budgetCategoryFilter($category),
+            'period' => ['fiscal_year' => $fy, 'month' => $month, 'category' => $category],
+        ];
+    }
+
+    /** 1.3 รับและนำส่งเงิน (นส.02) */
+    private static function buildTreasuryRemit(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+
+        $query = FinanceTreasuryRemit::find()->where(['fiscal_year' => $fy]);
+        if ($month) {
+            [$s, $e] = self::fiscalRange($fy, $month);
+            $query->andWhere(['between', 'collect_date', $s, $e]);
+        }
+        $rowsDb = $query->orderBy(['collect_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $sum = 0.0;
+        $rows = [];
+        $seq = 0;
+        foreach ($rowsDb as $r) {
+            $sum += (float) $r->collected_amount;
+            $rows[] = [
+                'seq' => ++$seq,
+                'date' => $r->collect_date ? AppHelper::convertToThai($r->collect_date) : '-',
+                'revenue_type' => $r->revenue_type ?: '-',
+                'collected' => (float) $r->collected_amount,
+                'remit_date' => $r->remit_date ? AppHelper::convertToThai($r->remit_date) : '-',
+                'remit_no' => $r->remit_no ?: '-',
+                'status' => $r->isRemitted() ? 'นำส่งแล้ว' : 'ค้างนำส่ง',
+            ];
+        }
+
+        return [
+            'mode' => 'log',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่จัดเก็บ', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'revenue_type', 'label' => 'ประเภทรายได้แผ่นดิน'],
+                ['key' => 'collected', 'label' => 'ยอดจัดเก็บ', 'align' => 'end', 'w' => '9rem', 'money' => true],
+                ['key' => 'remit_date', 'label' => 'วันนำส่งคลัง', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'remit_no', 'label' => 'เลขที่ นส.02', 'w' => '8rem'],
+                ['key' => 'status', 'label' => 'สถานะ', 'align' => 'center', 'w' => '7rem'],
+            ],
+            'totalLabelKey' => 'revenue_type',
+            'rows' => $rows,
+            'totals' => ['collected' => $sum],
+            'period' => ['fiscal_year' => $fy, 'month' => $month],
+        ];
+    }
+
+    /** 1.4 เบิกเกินส่งคืนคลัง */
+    private static function buildBudgetReturn(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+
+        $query = FinanceBudgetReturn::find()->where(['fiscal_year' => $fy]);
+        if ($month) {
+            [$s, $e] = self::fiscalRange($fy, $month);
+            $query->andWhere(['between', 'return_date', $s, $e]);
+        }
+        $rowsDb = $query->orderBy(['return_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $sum = 0.0;
+        $rows = [];
+        $seq = 0;
+        foreach ($rowsDb as $r) {
+            $sum += (float) $r->amount;
+            $rows[] = [
+                'seq' => ++$seq,
+                'date' => $r->return_date ? AppHelper::convertToThai($r->return_date) : '-',
+                'doc_no' => $r->return_no ?: '-',
+                'category' => $r->categoryLabel(),
+                'source_ref' => $r->source_ref ?: '-',
+                'amount' => (float) $r->amount,
+            ];
+        }
+
+        return [
+            'mode' => 'log',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่ส่งคืน', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่เอกสาร', 'w' => '9rem'],
+                ['key' => 'category', 'label' => 'งบรายจ่าย', 'w' => '11rem'],
+                ['key' => 'source_ref', 'label' => 'อ้างการเบิกเดิม'],
+                ['key' => 'amount', 'label' => 'ยอดส่งคืน', 'align' => 'end', 'w' => '9rem', 'money' => true],
+            ],
+            'totalLabelKey' => 'source_ref',
+            'rows' => $rows,
+            'totals' => ['amount' => $sum],
+            'period' => ['fiscal_year' => $fy, 'month' => $month],
+        ];
+    }
+
+    /** 1.5 ค่าใช้จ่ายงบกลาง (สวัสดิการ) — การจ่ายในหมวด central */
+    private static function buildCentralFund(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+
+        $q = FinanceBudgetTxn::find()
+            ->where(['fiscal_year' => $fy, 'budget_category' => 'central', 'txn_type' => FinanceBudgetTxn::TYPE_DISBURSE]);
+        if ($month) {
+            [$start, $end] = self::fiscalRange($fy, $month);
+            $q->andWhere(['between', 'doc_date', $start, $end]);
+        }
+        $rowsDb = $q->orderBy(['doc_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $sum = 0.0;
+        $rows = [];
+        $seq = 0;
+        foreach ($rowsDb as $t) {
+            $sum += (float) $t->amount;
+            $rows[] = [
+                'seq' => ++$seq,
+                'date' => AppHelper::convertToThai($t->doc_date),
+                'doc_no' => $t->doc_no ?: '-',
+                'description' => $t->description ?: '-',
+                'payee' => $t->payee ?: '-',
+                'amount' => (float) $t->amount,
+            ];
+        }
+
+        return [
+            'mode' => 'log',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่เอกสาร', 'w' => '9rem'],
+                ['key' => 'description', 'label' => 'รายการสวัสดิการ'],
+                ['key' => 'payee', 'label' => 'จ่ายให้', 'w' => '12rem'],
+                ['key' => 'amount', 'label' => 'จำนวนเงิน', 'align' => 'end', 'w' => '9rem', 'money' => true],
+            ],
+            'totalLabelKey' => 'payee',
             'rows' => $rows,
             'totals' => ['amount' => $sum],
             'period' => ['fiscal_year' => $fy, 'month' => $month],

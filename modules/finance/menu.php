@@ -12,6 +12,7 @@ $items = [
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'petty', 'label' => 'เงินสดย่อย', 'icon' => 'bi-wallet2', 'url' => ['/finance/petty-cash']],
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'payable', 'label' => 'งานเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'ar', 'label' => 'ลูกหนี้ค่ารักษา', 'icon' => 'bi-clipboard2-pulse', 'url' => ['/finance/ar']],
+    ['show' => Yii::$app->user->can('financeView'), 'key' => 'budget', 'label' => 'เงินงบประมาณ', 'icon' => 'bi-bank2', 'url' => ['/finance/budget']],
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'register', 'label' => 'ทะเบียนคุม', 'icon' => 'bi-journals', 'url' => ['/finance/register']],
     ['show' => Yii::$app->user->can('payrollView'), 'key' => 'payroll', 'label' => 'เงินเดือน', 'icon' => 'bi-cash-stack', 'url' => ['/finance/payroll']],
 ];
