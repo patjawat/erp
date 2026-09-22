@@ -6,6 +6,7 @@ use yii\helpers\Url;
 $active = $active ?? '';
 $items = [
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/accounting/dashboard']],
+    ['show' => Yii::$app->user->can('accountingView'), 'key' => 'pending', 'label' => 'รอลงบัญชี', 'icon' => 'bi-inbox', 'url' => ['/accounting/journal/pending']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'chart', 'label' => 'ผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/accounting/chart']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'journal', 'label' => 'รายการบัญชีร่าง', 'icon' => 'bi-journal-check', 'url' => ['/accounting/journal']],
     ['show' => Yii::$app->user->can('accountingView'), 'key' => 'ledger', 'label' => 'บัญชีแยกประเภท', 'icon' => 'bi-book', 'url' => ['/accounting/ledger']],

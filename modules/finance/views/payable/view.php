@@ -58,15 +58,28 @@ $this->endBlock();
                 </div>
             </section>
         <?php elseif ($model->status === FinancePayable::STATUS_APPROVED): ?>
-            <div class="alert alert-success d-flex gap-2 align-items-start">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                <div class="flex-grow-1"><strong>อนุมัติเข้าทะเบียนเจ้าหนี้แล้ว</strong><div>ยังไม่ผ่านรายการเข้าบัญชีแยกประเภท และยังไม่สั่งจ่ายเงิน</div></div>
-                <?php if ($model->journalDraft): ?>
-                    <?= Html::a('ดูรายการบัญชีร่าง', ['/accounting/journal/view', 'id' => $model->journalDraft->id], ['class' => 'btn btn-outline-success flex-shrink-0']) ?>
-                <?php elseif (Yii::$app->user->can('accountingPrepare')): ?>
-                    <?= Html::beginForm(['/accounting/journal/create', 'payable_id' => $model->id], 'post', ['class' => 'flex-shrink-0']) ?><?= Html::submitButton('สร้างรายการบัญชีร่าง', ['class' => 'btn btn-success']) ?><?= Html::endForm() ?>
-                <?php endif; ?>
-            </div>
+            <?php if ($model->isJournalized()): ?>
+                <div class="alert alert-success d-flex gap-2 align-items-start">
+                    <i class="bi bi-check2-all" aria-hidden="true"></i>
+                    <div class="flex-grow-1"><strong>บัญชีลงบันทึกแล้ว</strong><div>ผ่านรายการเข้าสู่บัญชีแยกประเภทเรียบร้อย</div></div>
+                </div>
+            <?php elseif ($model->isSentAccounting()): ?>
+                <div class="alert alert-info d-flex gap-2 align-items-start">
+                    <i class="bi bi-send-check" aria-hidden="true"></i>
+                    <div class="flex-grow-1"><strong>ส่งบัญชีแล้ว — รอบัญชีลงบันทึก</strong>
+                        <div>ส่งเมื่อ <?= Yii::$app->formatter->asDatetime($model->sent_accounting_at, 'php:d/m/Y H:i') ?> น.</div></div>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-success d-flex gap-2 align-items-start">
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                    <div class="flex-grow-1"><strong>อนุมัติเข้าทะเบียนเจ้าหนี้แล้ว</strong><div>ตรวจสอบเอกสารให้ครบถ้วน แล้วส่งให้บัญชีลงบันทึก</div></div>
+                    <?php if (Yii::$app->user->can('financeOperate')): ?>
+                        <?= Html::beginForm(['send-accounting', 'id' => $model->id], 'post', ['class' => 'flex-shrink-0']) ?>
+                        <?= Html::submitButton('<i class="bi bi-send me-1"></i>ส่งบัญชี', ['class' => 'btn btn-primary', 'data' => ['confirm' => 'ยืนยันส่งเจ้าหนี้รายนี้ให้บัญชีลงบันทึก?']]) ?>
+                        <?= Html::endForm() ?>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         <?php elseif ($model->status === FinancePayable::STATUS_PENDING_APPROVAL): ?>
             <div class="alert alert-secondary d-flex gap-2 align-items-start">
                 <i class="bi bi-lock" aria-hidden="true"></i><span>รายการอยู่ระหว่างตรวจอนุมัติ คุณมีสิทธิ์ดูข้อมูลแต่ไม่มีสิทธิ์ตัดสินใจ</span>

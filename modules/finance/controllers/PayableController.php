@@ -28,13 +28,13 @@ class PayableController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['financeApprove', 'financeOperate']],
                 ['allow' => true, 'actions' => ['pay'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
-                'pay' => ['GET', 'POST'],
+                'pay' => ['GET', 'POST'], 'send-accounting' => ['POST'],
             ]],
         ]);
     }
@@ -283,6 +283,25 @@ class PayableController extends Controller
             Yii::$app->session->setFlash('error', 'บันทึกจ่ายชำระไม่สำเร็จ');
             return $this->redirect(['pay', 'vendor' => $vendor]);
         }
+    }
+
+    /** การเงินส่งเจ้าหนี้ (อนุมัติแล้ว) ให้บัญชีลงบันทึก */
+    public function actionSendAccounting($id)
+    {
+        $model = $this->findPayable($id);
+        if ($model->status !== FinancePayable::STATUS_APPROVED) {
+            Yii::$app->session->setFlash('warning', 'ส่งบัญชีได้เฉพาะรายการที่อนุมัติเข้าทะเบียนแล้ว');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+        if ($model->isSentAccounting()) {
+            Yii::$app->session->setFlash('info', 'รายการนี้ส่งบัญชีไปแล้ว');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+        $model->sent_accounting_at = date('Y-m-d H:i:s');
+        $model->sent_accounting_by = Yii::$app->user->id;
+        $model->save(false, ['sent_accounting_at', 'sent_accounting_by']);
+        Yii::$app->session->setFlash('success', 'ส่งให้บัญชีลงบันทึกแล้ว');
+        return $this->redirect(['view', 'id' => $model->id]);
     }
 
     public function actionCreate($inbox_id)

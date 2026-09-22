@@ -189,4 +189,18 @@ class FinancePayable extends ActiveRecord
             default => 'bg-danger-subtle text-danger-emphasis',
         };
     }
+
+    // ---- ส่งต่อบัญชี (การเงิน → บัญชี) ------------------------------------
+
+    /** การเงินส่งให้บัญชีแล้วหรือยัง */
+    public function isSentAccounting(): bool
+    {
+        return !empty($this->sent_accounting_at);
+    }
+
+    /** บัญชีลงบันทึก (มีสมุดรายวันร่าง) แล้วหรือยัง */
+    public function isJournalized(): bool
+    {
+        return $this->journalDraft !== null;
+    }
 }
