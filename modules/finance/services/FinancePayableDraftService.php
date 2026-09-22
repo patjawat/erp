@@ -181,9 +181,9 @@ class FinancePayableDraftService
 
     public function assertAccountingReady(FinancePayable $model): void
     {
-        if (!$model->accounting_chart_account_id) {
-            throw new \DomainException('กรุณาเลือกบัญชีเดบิตหลักก่อนส่งตรวจอนุมัติ');
-        }
+        // บัญชีเดบิตเป็น "ทางเลือก" ที่ขั้นการเงิน — ถ้ายังไม่เลือก (เช่นยังไม่เปิดผังบัญชี)
+        // ให้ส่งตรวจ/อนุมัติออกเลขทะเบียนคุมได้ ส่วนการผูกผังบัญชี/ลง GL เป็นงานบัญชีขั้นถัดไป
+        // ถ้าเลือกบัญชีมาแล้ว ยังตรวจความถูกต้องกับผังที่เปิดใช้ตามเดิม
         $this->assignAccountingSnapshot($model);
     }
 
