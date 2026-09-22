@@ -197,6 +197,9 @@ class UpdateRoleController extends Controller
             ['name' => 'planApprove', 'type' => 2, 'description' => 'ผู้อนุมัติแผนของหน่วยงาน'],
             ['name' => '/plan/approve/*', 'type' => 2, 'description' => 'หน้าอนุมัติแผนหน่วยงาน'],
 
+            // ระบบแผนงาน/โครงการ (pm) — เมนู "แผนงาน/โครงการ" ชี้ /pm/default/index
+            ['name' => '/pm/*', 'type' => 2, 'description' => 'ระบบแผนงาน/โครงการ (PM)'],
+
             //Router
             ['name' => '/hr/leave/*', 'type' => 2, 'description' => ''],
             ['name' => '/hr/leave/create', 'type' => 2, 'description' => ''],
@@ -538,6 +541,25 @@ class UpdateRoleController extends Controller
             ['child' => '/sm/default/pr-order', 'parent' => 'user'],
             ['child' => '/warehouse/*', 'parent' => 'warehouse'],
             ['child' => '/purchase/po-order/index', 'parent' => 'purchase'],
+
+            // ─────────────────────────────────────────────────────────────
+            // แก้บทบาทให้เข้าเมนูของตัวเองได้เอง โดยไม่ต้องพึ่ง role 'user'
+            // (2026-09-22 : เมนูโผล่จาก can('role') แต่กดแล้ว 403 เพราะ route ไม่ครบ)
+            // ─────────────────────────────────────────────────────────────
+            // ระบบลา: โมดูลย้ายมาที่ /leave/* แล้ว (ของเดิม /hr/leave/* ตายแล้ว)
+            // ทุก controller ในโมดูล leave มี can('leave') กันสิทธิ์ในตัวอยู่แล้ว
+            ['child' => '/leave/*', 'parent' => 'leave'],
+            // แผนงาน/โครงการ: role pm เข้าโมดูล pm ได้ทั้งหมด (หน้าจำกัดมี guard ในตัว)
+            ['child' => '/pm/*', 'parent' => 'pm'],
+            // ทรัพย์สิน: ให้ role asset เปิดแดชบอร์ด /am (default/index) ได้เอง
+            ['child' => '/am/default/index', 'parent' => 'asset'],
+            // งานพัสดุ: role purchase เปิดแดชบอร์ด /sm ได้เอง (ชุดเดียวกับที่ user มี)
+            ['child' => '/sm/default/index', 'parent' => 'purchase'],
+            ['child' => '/sm/default/chart', 'parent' => 'purchase'],
+            ['child' => '/sm/default/budget-chart', 'parent' => 'purchase'],
+            ['child' => '/sm/default/pr-order', 'parent' => 'purchase'],
+            ['child' => '/sm/default/pq-order', 'parent' => 'purchase'],
+            ['child' => '/sm/default/accept-pr-order', 'parent' => 'purchase'],
 
             // /plan/* จำกัดเฉพาะ role 'plan' (+ admin ผ่าน /*) — ไม่เปิดให้ user ทั่วไป
             // หัวหน้าหน่วยงานจัดทำแผนผ่าน /me/plan (อยู่ใต้ role user) แทน
