@@ -41,6 +41,10 @@ $bucketBadge = [
 ];
 ?>
 
+<div class="d-flex justify-content-end mb-3">
+    <a href="<?= Url::to(['pay']) ?>" class="btn btn-primary"><i class="bi bi-cash-stack me-1"></i>จ่ายชำระเจ้าหนี้</a>
+</div>
+
 <div class="row g-3 mb-3">
     <div class="col-md-4">
         <div class="card border h-100"><div class="card-body">

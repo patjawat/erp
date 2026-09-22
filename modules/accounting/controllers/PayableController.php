@@ -9,9 +9,11 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use app\components\AppHelper;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
+use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
 use app\modules\accounting\models\AccountingChartAccount;
@@ -26,9 +28,11 @@ class PayableController extends Controller
                 ['allow' => true, 'actions' => ['index', 'view', 'aging'], 'roles' => ['accountingView']],
                 ['allow' => true, 'actions' => ['create', 'update', 'submit'], 'roles' => ['accountingPrepare']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['accountingReview', 'accountingApprove']],
+                ['allow' => true, 'actions' => ['pay'], 'roles' => ['accountingApprove']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
+                'pay' => ['GET', 'POST'],
             ]],
         ]);
     }
@@ -105,6 +109,74 @@ class PayableController extends Controller
             'sumOverdue' => $sumOverdue,
             'sumDueThisMonth' => $sumDueThisMonth,
         ]);
+    }
+
+    /** รอบจ่ายเจ้าหนี้ (payment run): เลือกบิลค้าง → บันทึกตัดหนี้ (จ่ายบางบิล/บางส่วนได้) */
+    public function actionPay()
+    {
+        $req = Yii::$app->request;
+
+        if ($req->isPost) {
+            $settleDate = AppHelper::normalizeDateToDb((string) $req->post('settle_date')) ?: date('Y-m-d');
+            $note = trim((string) $req->post('note', '')) ?: null;
+            $lines = (array) $req->post('pay', []); // pay[payable_id] = amount
+
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                $count = 0;
+                $total = 0.0;
+                foreach ($lines as $pid => $amt) {
+                    $pid = (int) $pid;
+                    $amt = (float) str_replace([',', ' '], '', (string) $amt);
+                    if ($amt <= 0) {
+                        continue;
+                    }
+                    $p = FinancePayable::findOne(['id' => $pid, 'status' => FinancePayable::STATUS_APPROVED]);
+                    if (!$p) {
+                        continue;
+                    }
+                    $out = $p->getOutstanding();
+                    if ($amt > $out + 0.005) {
+                        $amt = $out; // กันจ่ายเกินยอดคงค้าง
+                    }
+                    if ($amt <= 0) {
+                        continue;
+                    }
+                    (new FinancePayableSettlement([
+                        'payable_id' => $pid,
+                        'amount' => $amt,
+                        'settle_date' => $settleDate,
+                        'note' => $note,
+                    ]))->save();
+                    $count++;
+                    $total += $amt;
+                }
+                $tx->commit();
+                Yii::$app->session->setFlash('success', "บันทึกจ่ายชำระ $count รายการ รวม " . number_format($total, 2) . " บาท");
+            } catch (\Throwable $e) {
+                $tx->rollBack();
+                Yii::error($e, __METHOD__);
+                Yii::$app->session->setFlash('error', 'บันทึกจ่ายชำระไม่สำเร็จ');
+            }
+            return $this->redirect(['aging']);
+        }
+
+        // GET: แสดงบิลค้าง (approved + outstanding > 0)
+        $sql = "
+            SELECT p.id, p.payable_no, p.vendor_name_snapshot, p.invoice_no, p.due_date,
+                   p.net_amount, COALESCE(s.paid, 0) AS paid,
+                   (p.net_amount - COALESCE(s.paid, 0)) AS outstanding
+            FROM {{%finance_payable}} p
+            LEFT JOIN (
+                SELECT payable_id, SUM(amount) AS paid
+                FROM {{%finance_payable_settlement}} GROUP BY payable_id
+            ) s ON s.payable_id = p.id
+            WHERE p.status = :approved AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            ORDER BY p.due_date ASC, p.id ASC
+        ";
+        $rows = Yii::$app->db->createCommand($sql, [':approved' => FinancePayable::STATUS_APPROVED])->queryAll();
+
+        return $this->render('pay', ['rows' => $rows]);
     }
 
     public function actionCreate($inbox_id)
