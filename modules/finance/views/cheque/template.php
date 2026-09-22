@@ -18,6 +18,10 @@ echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'cheque']
 $this->endBlock();
 ?>
 
+<div class="d-flex justify-content-end mb-2">
+    <a href="<?= Url::to(['create-template']) ?>" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>เพิ่มแม่แบบ</a>
+</div>
+
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">

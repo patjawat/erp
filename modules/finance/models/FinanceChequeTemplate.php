@@ -41,6 +41,18 @@ class FinanceChequeTemplate extends ActiveRecord
         return '{{%finance_cheque_template}}';
     }
 
+    /** พิกัดตั้งต้นสำหรับแม่แบบใหม่ (ค่าเดา ต้องปรับกับเช็คจริงบนหน้า calibrate) */
+    public static function defaultLayout(): array
+    {
+        return [
+            ['key' => 'cheque_date',   'x' => 78, 'y' => 14, 'font_size' => 16, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
+            ['key' => 'payee',         'x' => 22, 'y' => 33, 'font_size' => 16, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
+            ['key' => 'amount_text',   'x' => 17, 'y' => 47, 'font_size' => 16, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
+            ['key' => 'amount_number', 'x' => 90, 'y' => 47, 'font_size' => 18, 'align' => 'R', 'bold' => 1, 'enabled' => 1],
+            ['key' => 'ac_payee',      'x' => 40, 'y' => 60, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
+        ];
+    }
+
     public function rules(): array
     {
         return [

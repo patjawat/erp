@@ -23,10 +23,10 @@ class ChequeController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'template', 'preview', 'test-print', 'print'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['calibrate', 'upload-background', 'void'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['calibrate', 'create-template', 'upload-background', 'void'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
-                'calibrate' => ['GET', 'POST'], 'upload-background' => ['POST'], 'void' => ['POST'],
+                'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'], 'upload-background' => ['POST'], 'void' => ['POST'],
             ]],
         ]);
     }
@@ -51,6 +51,30 @@ class ChequeController extends Controller
         return $this->render('template', [
             'templates' => FinanceChequeTemplate::find()->orderBy(['bank_name' => SORT_ASC, 'name' => SORT_ASC])->all(),
         ]);
+    }
+
+    /** สร้างแม่แบบเช็คธนาคารใหม่ */
+    public function actionCreateTemplate()
+    {
+        $tpl = new FinanceChequeTemplate([
+            'page_width_mm' => 178,
+            'page_height_mm' => 82,
+            'is_active' => 1,
+        ]);
+        if (Yii::$app->request->isPost) {
+            $post = Yii::$app->request->post();
+            $tpl->bank_name = trim((string) ($post['bank_name'] ?? ''));
+            $tpl->bank_code = trim((string) ($post['bank_code'] ?? '')) ?: null;
+            $tpl->name = trim((string) ($post['name'] ?? ''));
+            $tpl->page_width_mm = (float) ($post['page_width_mm'] ?? 178);
+            $tpl->page_height_mm = (float) ($post['page_height_mm'] ?? 82);
+            $tpl->layout_json = \yii\helpers\Json::encode(FinanceChequeTemplate::defaultLayout());
+            if ($tpl->validate() && $tpl->save()) {
+                Yii::$app->session->setFlash('success', 'สร้างแม่แบบแล้ว — ปรับตำแหน่งให้ตรงเช็คจริงได้เลย');
+                return $this->redirect(['calibrate', 'id' => $tpl->id]);
+            }
+        }
+        return $this->render('create-template', ['tpl' => $tpl]);
     }
 
     /** ปรับตำแหน่งช่องพิมพ์ของแม่แบบ (calibrate) */
