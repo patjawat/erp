@@ -44,10 +44,61 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
             </div>
         </section>
 
+        <?php
+        $vat = is_array($payload['vat'] ?? null) ? $payload['vat'] : null;
+        $items = is_array($payload['items'] ?? null) ? $payload['items'] : [];
+        $dec = fn($v) => Yii::$app->formatter->asDecimal((float) $v, 2);
+        $vatTypeLabel = ['IN' => 'ราคารวมภาษี (VAT in)', 'OUT' => 'ราคายังไม่รวมภาษี (VAT out)', 'NONE' => 'ไม่มีภาษี'];
+        ?>
         <section class="card border shadow-sm mt-3">
-            <div class="card-header bg-body"><h5 class="mb-0">ข้อมูลดิบสำหรับตรวจสอบ</h5></div>
+            <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
+                <h5 class="mb-0">รายละเอียดสำหรับตรวจสอบ</h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#raw-json">
+                    <i class="bi bi-code-slash me-1"></i>ข้อมูลดิบ (JSON)
+                </button>
+            </div>
             <div class="card-body">
-                <pre class="bg-body-tertiary border rounded p-3 mb-0 overflow-auto"><code><?= Html::encode(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) ?></code></pre>
+                <?php if ($vat): ?>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="small text-body-secondary">มูลค่าก่อนภาษี</div><div class="fw-semibold text-end"><?= $dec($vat['before_vat'] ?? 0) ?></div></div></div>
+                        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="small text-body-secondary">ภาษีมูลค่าเพิ่ม</div><div class="fw-semibold text-end"><?= $dec($vat['vat_amount'] ?? 0) ?></div></div></div>
+                        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="small text-body-secondary">รวมทั้งสิ้น</div><div class="fw-semibold text-end"><?= $dec($vat['after_vat'] ?? 0) ?></div></div></div>
+                        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="small text-body-secondary">ประเภทภาษี</div><div class="fw-semibold"><?= Html::encode($vatTypeLabel[$vat['type'] ?? ''] ?? ($vat['type'] ?? '-')) ?></div></div></div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($items): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0">
+                            <thead class="table-light text-center">
+                                <tr><th style="width:44px">#</th><th>รหัสสินค้า</th><th>รายละเอียด</th><th class="text-end" style="width:80px">จำนวน</th><th class="text-end" style="width:110px">ราคา/หน่วย</th><th class="text-end" style="width:120px">จำนวนเงิน</th></tr>
+                            </thead>
+                            <tbody>
+                                <?php $i = 1; $sum = 0; foreach ($items as $it): $sum += (float) ($it['line_amount'] ?? 0); ?>
+                                    <tr>
+                                        <td class="text-center"><?= $i++ ?></td>
+                                        <td class="font-monospace"><?= Html::encode((string) ($it['item_code'] ?? '-')) ?></td>
+                                        <td><?= Html::encode((string) ($it['description'] ?? '')) ?: '<span class="text-body-secondary">—</span>' ?></td>
+                                        <td class="text-end"><?= $dec($it['quantity'] ?? 0) ?></td>
+                                        <td class="text-end"><?= $dec($it['unit_price'] ?? 0) ?></td>
+                                        <td class="text-end"><?= $dec($it['line_amount'] ?? 0) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot class="table-light fw-semibold">
+                                <tr><td colspan="5" class="text-end">รวมมูลค่าสินค้า</td><td class="text-end"><?= $dec($sum) ?></td></tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!$vat && !$items): ?>
+                    <p class="text-body-secondary mb-0">ไม่มีรายละเอียดสินค้า/ภาษีในเอกสารต้นทาง</p>
+                <?php endif; ?>
+
+                <div class="collapse mt-3" id="raw-json">
+                    <pre class="bg-body-tertiary border rounded p-3 mb-0 overflow-auto small"><code><?= Html::encode(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) ?></code></pre>
+                </div>
             </div>
         </section>
     </div>
