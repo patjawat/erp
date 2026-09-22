@@ -21,7 +21,7 @@ $this->beginBlock('page-title');
 echo '<div class="d-flex align-items-center gap-2"><i class="bi bi-bank fs-4"></i><h4 class="mb-0">' . Html::encode($this->title) . '</h4></div>';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'register']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'bankrec']);
 $this->endBlock();
 ?>
 

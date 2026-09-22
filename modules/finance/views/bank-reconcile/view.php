@@ -32,7 +32,7 @@ $this->beginBlock('sub-title');
 echo Html::encode(($model->account ? $model->account->label() : '') . ' · ' . ($model->period_month ? $months[$model->period_month] . ' ' : '') . 'ปีงบ ' . $model->fiscal_year);
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'register']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'bankrec']);
 $this->endBlock();
 
 $sidePanel = function (string $side, string $title, array $rows, float $base, float $adjusted) use ($money, $canOperate) {
