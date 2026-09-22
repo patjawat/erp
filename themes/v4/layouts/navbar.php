@@ -16,13 +16,6 @@ $menuItems = [
         'show' => !Yii::$app->user->isGuest && Yii::$app->user->can('ai.chat.use'),
     ],
     [
-        'show' => Yii::$app->user->can('dashboard-admin') ? true : false,
-        'label' => 'Dashboard (Admin)', 
-        'url' => ['/dashboard-admin/index'], 
-        'active' => 'dashboard-admin',
-        'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>'
-    ],
-    [
         'show' => Yii::$app->user->can('executiveDashboardView'),
         'label' => 'Dashboard ผู้บริหาร',
         'url' => ['/executive/dashboard/index'],
@@ -212,7 +205,7 @@ $menuItems = [
 
 $groups = [
     'งานส่วนตัว' => ['me', 'booking', 'leave'],
-    'บริหารและแผนงาน' => ['dashboard-admin', 'executive', 'pm', 'plan', 'qms', 'tools', 'ai'],
+    'บริหารและแผนงาน' => ['executive', 'pm', 'plan', 'qms', 'tools', 'ai'],
     'บุคลากรและเวร' => ['hr', 'development', 'roster', 'attendance'],
     'การเงินและพัสดุ' => ['accounting', 'finance', 'inventory', 'am', 'sm'],
     'บริการและสนับสนุน' => ['dms', 'medsop', 'helpdesk', 'housing', 'laundry'],
