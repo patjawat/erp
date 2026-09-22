@@ -11,7 +11,7 @@ class AttendanceCsv
     /** Header-based import. Any invalid row rolls back the entire file. */
     public static function import($handle): array
     {
-        if (Yii::$app->user->isGuest || (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr'))) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์นำเข้า');
+        if (Yii::$app->user->isGuest || (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance'))) throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์นำเข้า');
         $result = ['saved' => 0, 'skipped' => 0, 'errors' => [], 'lineNo' => 0];
         $header = fgetcsv($handle);
         if (!$header) { $result['errors'][] = 'ไม่พบหัวตาราง CSV'; return $result; }

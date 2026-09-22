@@ -10,7 +10,7 @@ use yii\helpers\Url;
         <i class="bi bi-list-ul"></i> ประวัติของฉัน
     </a>
     <a href="<?= Url::to(['/approve-v2/checkin/index']) ?>" class="btn btn-outline-primary"><i class="bi bi-check2-square"></i> ตรวจสอบลงเวลา</a>
-    <?php if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr')): ?>
+    <?php if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance')): ?>
     <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?>">
         <i class="bi bi-people"></i> ทั้งหน่วยงาน
     </a>

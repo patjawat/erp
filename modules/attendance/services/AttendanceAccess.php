@@ -11,8 +11,8 @@ class AttendanceAccess
     public static function isReviewer(): bool
     {
         if (Yii::$app->user->isGuest) return false;
-        // ผอ. ไม่ต้องยืนยันการลงเวลา (ตัด director ออก) — เหลือ admin/hr/attendanceReview ดูแลภาพรวม + เป็น fallback
-        return Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendanceReview');
+        // ผอ. ไม่ต้องยืนยันการลงเวลา (ตัด director ออก) — เหลือ admin/hr/attendance (เจ้าหน้าที่ลงเวลา) ดูแลภาพรวม + เป็น fallback
+        return Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance');
     }
 
     /** ผอ. (ตามค่าระบบ) ไม่ต้องยืนยันการลงเวลา — กันไม่ให้ถูกมอบหมาย/เห็นคิว ไม่ว่าจะเป็นหัวหน้าหน่วยหรือไม่ */

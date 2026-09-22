@@ -39,7 +39,7 @@ class CheckinController extends Controller
         } else {
             $dataProvider->query->andWhere('1=0'); // ไม่พบพนักงาน → ไม่แสดงของใคร
         }
-        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr');
+        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance');
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -121,7 +121,7 @@ class CheckinController extends Controller
         if (!Yii::$app->request->isPost) {
             throw new \yii\web\MethodNotAllowedHttpException('อนุญาตเฉพาะ POST');
         }
-        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance')) {
             throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์ลบ');
         }
         $model = CheckinRecord::findOne($id);
@@ -172,7 +172,7 @@ class CheckinController extends Controller
      */
     public function actionReport()
     {
-        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance')) {
             throw new \yii\web\ForbiddenHttpException('หน้านี้สำหรับผู้ดูแลระบบเท่านั้น ดูประวัติของคุณได้ที่หน้าประวัติการลงเวลา');
         }
         $searchModel = new CheckinRecordSearch();
@@ -202,7 +202,7 @@ class CheckinController extends Controller
      */
     public function actionMonthly($month = null, $year = null, $group = null, $unit = null)
     {
-        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance')) {
             throw new \yii\web\ForbiddenHttpException('หน้านี้สำหรับผู้ดูแลระบบเท่านั้น');
         }
         $month = $this->clampMonth($month);
@@ -222,7 +222,7 @@ class CheckinController extends Controller
      */
     public function actionMonthlyExcel($month = null, $year = null, $group = null, $unit = null)
     {
-        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance')) {
             throw new \yii\web\ForbiddenHttpException('การส่งออกรายงานสำหรับผู้ดูแลระบบเท่านั้น');
         }
         $month = $this->clampMonth($month);
@@ -730,7 +730,7 @@ class CheckinController extends Controller
      */
     public function actionExportExcel()
     {
-        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr')) {
+        if (!Yii::$app->user->can('admin') && !Yii::$app->user->can('hr') && !Yii::$app->user->can('attendance')) {
             throw new \yii\web\ForbiddenHttpException('การส่งออกรายงานสำหรับผู้ดูแลระบบเท่านั้น');
         }
         $searchModel = new CheckinRecordSearch();

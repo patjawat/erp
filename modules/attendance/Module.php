@@ -21,7 +21,7 @@ class Module extends \yii\base\Module
         }
         $controller = $action->controller->id;
         $id = $action->id;
-        $manager = \Yii::$app->user->can('admin') || \Yii::$app->user->can('hr');
+        $manager = \Yii::$app->user->can('admin') || \Yii::$app->user->can('hr') || \Yii::$app->user->can('attendance');
         if (($controller === 'location' || ($controller === 'checkin' && in_array($id, ['import-csv', 'import-form', 'delete'], true))
             || ($controller === 'default' && $id === 'qr-code')) && !$manager) {
             throw new \yii\web\ForbiddenHttpException('สำหรับผู้ดูแลระบบลงเวลาเท่านั้น');

@@ -10,7 +10,7 @@ use app\modules\hr\models\Employees;
 class WorkScheduleService
 {
     public static function ready(): bool { return Yii::$app->db->getTableSchema('{{%attendance_schedule}}') !== null; }
-    public static function manager(): bool { return !Yii::$app->user->isGuest && (Yii::$app->user->can('admin') || Yii::$app->user->can('hr')); }
+    public static function manager(): bool { return !Yii::$app->user->isGuest && (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance')); }
     public static function canAssign(string $scope, int $id): bool
     {
         if (self::manager()) return true;

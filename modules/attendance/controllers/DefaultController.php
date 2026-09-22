@@ -33,7 +33,7 @@ class DefaultController extends Controller
         $lastCheckin = null;
         $statsAll = null;
         $recentCheckinsAll = [];
-        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr');
+        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance');
 
         try {
             $locations = CheckinLocation::find()->where(['active' => 1])->all();

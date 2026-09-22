@@ -78,6 +78,7 @@ class UpdateRoleController extends Controller
             ['name' => 'inventory', 'type' => 1, 'description' => 'ระบบคลัง'],
             ['name' => 'sm', 'type' => 1, 'description' => 'บริหารพัสดุ'],
             ['name' => 'leave', 'type' => 1, 'description' => 'ระบบลา'],
+            ['name' => 'attendance', 'type' => 1, 'description' => 'เจ้าหน้าที่ลงเวลา'],
             ['name' => 'document', 'type' => 1, 'description' => 'ระบบสารบรรณ'],
             ['name' => 'asset', 'type' => 1, 'description' => 'ระบบทรัพย์สิน'],
             ['name' => 'vehicle', 'type' => 1, 'description' => 'ระบบยานพาหนะ'],
@@ -553,6 +554,9 @@ class UpdateRoleController extends Controller
             ['child' => '/pm/*', 'parent' => 'pm'],
             // ทรัพย์สิน: ให้ role asset เปิดแดชบอร์ด /am (default/index) ได้เอง
             ['child' => '/am/default/index', 'parent' => 'asset'],
+            // ลงเวลา: role attendance (เจ้าหน้าที่ลงเวลา) เข้าโมดูล attendance ได้
+            // (สิทธิ์จัดการภาพรวม/ตรวจสอบ กันในตัว controller = admin||hr||attendance)
+            ['child' => '/attendance/*', 'parent' => 'attendance'],
             // งานพัสดุ: role purchase เปิดแดชบอร์ด /sm ได้เอง (ชุดเดียวกับที่ user มี)
             ['child' => '/sm/default/index', 'parent' => 'purchase'],
             ['child' => '/sm/default/chart', 'parent' => 'purchase'],
