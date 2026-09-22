@@ -77,43 +77,56 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="col-9">
 
                             <div class="border border-secondary border-opacity-25 p-3 rounded">
+                                <?php
+                                // ส่งการเงินแล้วหรือยัง = มีสำเนาในกล่องรอรับของการเงิน (ไม่เปลี่ยนสถานะพัสดุ)
+                                $apSourceType = \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::classify((string) $model->category_id, (string) $model->group_id);
+                                $sentToFinance = \app\modules\finance\models\FinanceInbox::find()->where([
+                                    'source_system' => \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::SOURCE_SYSTEM,
+                                    'source_type' => $apSourceType,
+                                    'source_id' => (string) $model->id,
+                                    'source_version' => 1,
+                                ])->exists();
+                                // ผ่านขั้นแล้ว = ติ๊กถูกเขียว, ยังไม่ถึง/ปัจจุบัน = เลขน้ำเงิน
+                                $stepCls = fn($done) => 'badge rounded-pill text-white ' . ($done ? 'bg-success' : 'bg-primary');
+                                $stepMark = fn($num, $done) => $done ? '<i class="bi bi-check-lg"></i>' : (string) $num;
+                                ?>
                                 <div class="d-flex justify-content-between">
                                     <!-- Nav tabs -->
                                     <ul class="nav nav-tabs" role="pillist" style="visibility: visible;">
                                         <li class="nav-item">
                                             <a class="nav-link <?= $model->status <= 1 ? 'active' : null; ?>" data-bs-toggle="pill" href="#home1" role="pill"><span
-                                                    class="badge bg-primary rounded-pill text-white">1</span> ขอซื้อ</a>
+                                                    class="<?= $stepCls($model->status >= 2) ?>"><?= $stepMark(1, $model->status >= 2) ?></span> ขอซื้อ</a>
                                         </li>
                                         <?php if ($model->status >= 2): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 2 ? 'active' : null; ?>" data-bs-toggle="pill" href="#pq_detail" role="pill"><span
-                                                        class="badge bg-primary rounded-pill text-white">2</span> ทะเบียนคุม</a>
+                                                        class="<?= $stepCls($model->status >= 3) ?>"><?= $stepMark(2, $model->status >= 3) ?></span> ทะเบียนคุม</a>
                                             </li>
                                         <?php endif ?>
                                         <?php if ($model->status >= 3): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 3 ? 'active' : null; ?>" data-bs-toggle="pill" href="#po_detail" role="pill"><span
-                                                        class="badge bg-primary rounded-pill text-white">3</span> คำสั่งซื้อ</a>
+                                                        class="<?= $stepCls($model->status >= 4) ?>"><?= $stepMark(3, $model->status >= 4) ?></span> คำสั่งซื้อ</a>
                                             </li>
                                         <?php endif ?>
 
                                         <?php if ($model->status >= 4): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 4 ? 'active' : null; ?>" data-bs-toggle="pill" href="#gr_detail" role="pill"><span
-                                                        class="badge bg-primary rounded-pill text-white">4</span> ตรวจรับ</a>
+                                                        class="<?= $stepCls($model->status >= 5) ?>"><?= $stepMark(4, $model->status >= 5) ?></span> ตรวจรับ</a>
                                             </li>
                                         <?php endif ?>
 
                                         <?php if ($model->status >= 5 && $model->category_id != 'M25'): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#warehouse_detail" role="pill"><span
-                                                        class="badge bg-primary rounded-pill text-white">5</span> <?= $model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง' ?></a>
+                                                        class="<?= $stepCls($model->status >= 6) ?>"><?= $stepMark(5, $model->status >= 6) ?></span> <?= $model->group_id == 3 ? 'ทะเบียนทรัพสินย์'  : 'คลัง' ?></a>
                                             </li>
                                         <?php endif ?>
                                         <?php if ($model->status >= 5): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
-                                                        class="badge bg-primary rounded-pill text-white">7</span> ส่งบัญชี</a>
+                                                        class="<?= $stepCls($sentToFinance) ?>"><?= $stepMark(7, $sentToFinance) ?></span> ส่งบัญชี</a>
                                             </li>
                                         <?php endif ?>
                                     </ul>
