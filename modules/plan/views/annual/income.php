@@ -78,10 +78,8 @@ $fmt = fn($v) => number_format((float) $v, 2);
                 <?php foreach ($g['rows'] as $row): ?>
                     <tr>
                         <td class="ps-4"><?= Html::encode($row['name']) ?></td>
-                        <?php foreach ($actualYears as $ay): ?>
-                            <td class="text-end text-body-secondary">
-                                <?= $fmt($row['actual'][$ay] ?? 0) ?><?php if (!empty($row['actualIsPlan'][$ay])): ?><span class="badge text-bg-light border text-warning-emphasis fw-normal ms-1" title="ยังไม่มีรับจริง — แสดงยอดตามแผนที่เคยตั้งไว้">แผน</span><?php endif; ?>
-                            </td>
+                        <?php foreach ($actualYears as $ay): $isPlan = !empty($row['actualIsPlan'][$ay]); ?>
+                            <td class="text-end text-body-secondary<?= $isPlan ? ' fst-italic' : '' ?>"<?= $isPlan ? ' title="ยอดตามแผนที่ตั้งไว้ (ยังไม่มีรับจริง)"' : '' ?>><?= $fmt($row['actual'][$ay] ?? 0) ?></td>
                         <?php endforeach; ?>
                         <?php foreach ($planYears as $py): ?>
                             <td class="p-1"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end plan-input"
