@@ -24,15 +24,15 @@ $this->endBlock();
 <section class="card border shadow-sm" aria-labelledby="accounting-work-heading">
     <div class="card-header bg-body"><h5 class="mb-0" id="accounting-work-heading">งานบัญชีที่ต้องดำเนินการ</h5></div>
     <div class="list-group list-group-flush">
-        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/accounting/inbox', 'status' => FinanceInbox::STATUS_PENDING_REVIEW]) ?>">
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/finance/inbox', 'status' => FinanceInbox::STATUS_PENDING_REVIEW]) ?>">
             <span><strong>ตรวจเอกสารต้นทาง</strong><span class="d-block text-body-secondary small">รายการจากพัสดุที่รอฝ่ายบัญชีตรวจรับ</span></span>
             <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"><?= number_format($inboxPending) ?></span>
         </a>
-        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/accounting/payable']) ?>">
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/finance/payable']) ?>">
             <span><strong>จัดทำหรือแก้ไขร่างเจ้าหนี้</strong><span class="d-block text-body-secondary small">ตรวจผู้ขาย ใบแจ้งหนี้ ภาษี และวันครบกำหนด</span></span>
             <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill"><?= number_format($payableDraft) ?></span>
         </a>
-        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/accounting/payable']) ?>">
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 py-3" href="<?= \yii\helpers\Url::to(['/finance/payable']) ?>">
             <span><strong>ตรวจอนุมัติทะเบียนเจ้าหนี้</strong><span class="d-block text-body-secondary small">รายการที่ผู้จัดทำส่งมาและรอผู้ตรวจตัดสินใจ</span></span>
             <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"><?= number_format($payablePending) ?></span>
         </a>

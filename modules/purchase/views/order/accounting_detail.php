@@ -15,7 +15,7 @@ $inbox = FinanceInbox::find()->where([
 
 <section class="card border shadow-sm mt-3" aria-labelledby="send-accounting-heading">
     <div class="card-header bg-body">
-        <h5 class="mb-0" id="send-accounting-heading">ส่งเอกสารให้ฝ่ายบัญชีตรวจสอบ</h5>
+        <h5 class="mb-0" id="send-accounting-heading">ส่งข้อมูลเจ้าหนี้ให้การเงิน</h5>
     </div>
     <div class="card-body">
         <?php if ($inbox): ?>
@@ -23,7 +23,7 @@ $inbox = FinanceInbox::find()->where([
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <i class="bi bi-check-circle text-success" aria-hidden="true"></i>
-                        <strong>ส่งเข้ากล่องรับงานบัญชีแล้ว</strong>
+                        <strong>ส่งเข้ากล่องรอรับของการเงินแล้ว</strong>
                     </div>
                     <p class="text-body-secondary mb-0">
                         ระบบเก็บสำเนาเอกสารไว้ตรวจสอบ โดยสถานะในระบบพัสดุยังไม่เปลี่ยนแปลง
@@ -31,7 +31,7 @@ $inbox = FinanceInbox::find()->where([
                 </div>
                 <?= Html::a(
                     '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายการที่ส่ง',
-                    ['/accounting/inbox/view', 'id' => $inbox->id],
+                    ['/finance/inbox/view', 'id' => $inbox->id],
                     ['class' => 'btn btn-outline-primary']
                 ) ?>
             </div>
@@ -45,13 +45,13 @@ $inbox = FinanceInbox::find()->where([
             </div>
             <?php if (Yii::$app->user->can('accountingInboxReceive')): ?>
                 <?= Html::a(
-                    '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งบัญชี',
-                    ['/accounting/inbox/receive-purchase', 'id' => $model->id],
+                    '<i class="bi bi-send-check me-1" aria-hidden="true"></i>ตรวจความพร้อมและส่งการเงิน',
+                    ['/finance/inbox/receive-purchase', 'id' => $model->id],
                     ['class' => 'btn btn-primary', 'data-method' => 'post']
                 ) ?>
             <?php else: ?>
                 <div class="text-body-secondary d-flex gap-2 align-items-start">
-                    <i class="bi bi-lock" aria-hidden="true"></i><span>คุณไม่มีสิทธิ์ส่งเอกสารเข้ากล่องรับงานบัญชี</span>
+                    <i class="bi bi-lock" aria-hidden="true"></i><span>คุณไม่มีสิทธิ์ส่งเอกสารเข้ากล่องรอรับของการเงิน</span>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

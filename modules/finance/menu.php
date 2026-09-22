@@ -9,6 +9,7 @@ $items = [
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/finance/dashboard']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'loan', 'label' => 'เงินยืม', 'icon' => 'bi-person-vcard', 'url' => ['/finance/loan']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'payment', 'label' => 'รับ–จ่ายเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/cash']],
+    ['show' => Yii::$app->user->can('financeView'), 'key' => 'payable', 'label' => 'งานเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['show' => Yii::$app->user->can('payrollView'), 'key' => 'payroll', 'label' => 'เงินเดือน', 'icon' => 'bi-cash-stack', 'url' => ['/finance/payroll']],
 ];
 ?>

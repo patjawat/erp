@@ -11,8 +11,8 @@ use yii\helpers\Url;
 /** @var float $sumDueThisMonth */
 
 $this->title = 'เจ้าหนี้ค้างชำระ (Aging)';
-$this->params['breadcrumbs'][] = ['label' => 'บัญชี', 'url' => ['/accounting/dashboard']];
-$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนเจ้าหนี้', 'url' => ['/accounting/payable']];
+$this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
+$this->params['breadcrumbs'][] = ['label' => 'ทะเบียนเจ้าหนี้', 'url' => ['/finance/payable']];
 $this->params['breadcrumbs'][] = $this->title;
 $this->beginBlock('page-title');
 echo Html::encode($this->title);
@@ -21,7 +21,7 @@ $this->beginBlock('sub-title');
 echo 'หนี้ที่อนุมัติเข้าทะเบียนแล้วและยังคงค้าง จัดกลุ่มตามวันครบกำหนด';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/accounting/menu', ['active' => 'aging']);
+echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'aging']);
 $this->endBlock();
 
 $fmt = fn($v) => number_format((float) $v, 2);
