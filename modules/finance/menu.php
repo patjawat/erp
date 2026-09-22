@@ -31,6 +31,10 @@ $items = [
             <i class="bi bi-three-dots me-1" aria-hidden="true"></i> เพิ่มเติม
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
+            <?php if (Yii::$app->user->can('financeView')): ?>
+                <li><a class="dropdown-item" href="<?= Url::to(['/finance/bank-reconcile']) ?>"><i class="bi bi-bank me-2"></i>งบพิสูจน์ยอดเงินฝาก</a></li>
+                <li><hr class="dropdown-divider"></li>
+            <?php endif; ?>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-bar-chart-line me-2"></i>รายงาน</button></li>
             <li><hr class="dropdown-divider"></li>
             <li><button class="dropdown-item" type="button" disabled><i class="bi bi-gear me-2"></i>ตั้งค่าระบบ</button></li>

@@ -92,6 +92,7 @@ class RegisterController extends Controller
             'wht_type' => $req->get('wht_type') ?: null,
             'status' => $req->get('status') ?: null,
             'fund_id' => (int) $req->get('fund_id', 0) ?: null,
+            'account_id' => (int) $req->get('account_id', 0) ?: null,
         ];
     }
 }

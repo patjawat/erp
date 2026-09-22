@@ -10,6 +10,8 @@ use app\modules\finance\models\FinanceCheque;
 use app\modules\finance\models\FinanceArFund;
 use app\modules\finance\models\FinanceArInvoice;
 use app\modules\finance\models\FinanceArSettlement;
+use app\modules\finance\models\FinanceCashAccount;
+use app\modules\finance\models\FinanceCashTransfer;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\models\FinancePatientDeposit;
 use app\modules\finance\models\FinancePayable;
@@ -61,6 +63,8 @@ class FinanceRegisterService
     private const AR_ACCRUED_KEYS = ['ar_accrued'];
     /** ทะเบียนคุมเงินมัดจำ/รับฝากผู้ป่วย */
     private const PATIENT_DEPOSIT_KEYS = ['patient_deposit'];
+    /** ทะเบียนคุมเงินฝากธนาคาร/เงินฝากคลัง (running per บัญชี) */
+    private const BANK_DEPOSIT_KEYS = ['bank_deposit'];
 
     public static function build(string $key, array $filters = []): ?array
     {
@@ -94,6 +98,9 @@ class FinanceRegisterService
         if (in_array($key, self::PATIENT_DEPOSIT_KEYS, true)) {
             return self::buildPatientDeposit($filters);
         }
+        if (in_array($key, self::BANK_DEPOSIT_KEYS, true)) {
+            return self::buildBankDeposit($filters);
+        }
         return null;
     }
 
@@ -109,7 +116,8 @@ class FinanceRegisterService
             self::PETTY_KEYS,
             self::AR_FUND_KEYS,
             self::AR_ACCRUED_KEYS,
-            self::PATIENT_DEPOSIT_KEYS
+            self::PATIENT_DEPOSIT_KEYS,
+            self::BANK_DEPOSIT_KEYS
         ), true);
     }
 
@@ -390,6 +398,124 @@ class FinanceRegisterService
             ],
             'period' => ['fiscal_year' => $fy, 'month' => $month, 'wht_type' => $whtType],
         ];
+    }
+
+    // ---------- ทะเบียนคุมเงินฝากธนาคาร/เงินฝากคลัง (2.3) — running per บัญชี ----------
+
+    private static function buildBankDeposit(array $filters): array
+    {
+        $fy = (int) ($filters['fiscal_year'] ?? FinanceCashTxn::currentFiscalYear());
+        $month = !empty($filters['month']) ? (int) $filters['month'] : null;
+        $accounts = FinanceCashAccount::activeList();
+        $accountId = !empty($filters['account_id']) ? (int) $filters['account_id'] : (int) (array_key_first($accounts) ?? 0);
+
+        [$start, $end] = self::fiscalRange($fy, $month);
+        [$fyStart] = self::fiscalRange($fy, null);
+
+        $opening = 0.0;
+        $balance = 0.0;
+        $sumIn = 0.0;
+        $sumOut = 0.0;
+        $rows = [];
+
+        if ($accountId) {
+            $account = FinanceCashAccount::findOne($accountId);
+            $baseOpening = $account ? $account->balanceFor($fy) : 0.0;
+
+            // การเคลื่อนไหวก่อนช่วง (ภายในปีงบ) เพื่อคำนวณยอดยกมา
+            $movBefore = self::bankMovements($accountId, $fyStart, self::dayBefore($start));
+            $opening = $baseOpening;
+            foreach ($movBefore as $m) {
+                $opening += $m['in'] - $m['out'];
+            }
+            $balance = $opening;
+
+            $movements = self::bankMovements($accountId, $start, $end);
+            usort($movements, fn ($a, $b) => strcmp((string) $a['date'], (string) $b['date']) ?: ($a['seq'] <=> $b['seq']));
+            $seq = 0;
+            foreach ($movements as $m) {
+                $balance += $m['in'] - $m['out'];
+                $sumIn += $m['in'];
+                $sumOut += $m['out'];
+                $rows[] = [
+                    'seq' => ++$seq,
+                    'date' => AppHelper::convertToThai($m['date']),
+                    'doc_no' => $m['ref'] ?: '-',
+                    'description' => $m['desc'],
+                    'debit' => $m['in'] ?: null,
+                    'credit' => $m['out'] ?: null,
+                    'balance' => $balance,
+                    'note' => '',
+                ];
+            }
+        }
+
+        return [
+            'mode' => 'running',
+            'columns' => [
+                ['key' => 'seq', 'label' => 'ลำดับ', 'align' => 'center', 'w' => '3rem'],
+                ['key' => 'date', 'label' => 'วันที่', 'align' => 'center', 'w' => '7rem'],
+                ['key' => 'doc_no', 'label' => 'เลขที่เอกสาร', 'w' => '9rem'],
+                ['key' => 'description', 'label' => 'รายการ'],
+                ['key' => 'debit', 'label' => 'เงินเข้า', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'credit', 'label' => 'เงินออก', 'align' => 'end', 'w' => '8rem', 'money' => true],
+                ['key' => 'balance', 'label' => 'คงเหลือ', 'align' => 'end', 'w' => '9rem', 'money' => true],
+                ['key' => 'note', 'label' => 'หมายเหตุ', 'w' => '7rem'],
+            ],
+            'opening' => $opening,
+            'runningKey' => 'balance',
+            'totalLabelKey' => 'description',
+            'rows' => $rows,
+            'totals' => ['debit' => $sumIn, 'credit' => $sumOut, 'balance' => $balance],
+            'filterSelect' => [
+                'param' => 'account_id',
+                'label' => 'บัญชีเงินฝาก',
+                'allLabel' => $accounts ? '— เลือกบัญชี —' : 'ยังไม่มีบัญชี',
+                'options' => $accounts,
+                'selected' => $accountId,
+            ],
+            'period' => ['fiscal_year' => $fy, 'month' => $month, 'account_id' => $accountId],
+        ];
+    }
+
+    /** การเคลื่อนไหวของบัญชีในช่วง: โอนเข้า/ออก + ใบสำคัญจ่าย */
+    private static function bankMovements(int $accountId, string $start, string $end): array
+    {
+        $out = [];
+        $seq = 0;
+        foreach (FinanceCashTransfer::find()->with('fromAccount', 'toAccount')
+            ->where(['and', ['between', 'transfer_date', $start, $end],
+                ['or', ['from_account_id' => $accountId], ['to_account_id' => $accountId]]])
+            ->all() as $tr) {
+            $isOut = (int) $tr->from_account_id === $accountId;
+            $other = $isOut ? ($tr->toAccount ? $tr->toAccount->label() : '') : ($tr->fromAccount ? $tr->fromAccount->label() : '');
+            $out[] = [
+                'seq' => ++$seq,
+                'date' => $tr->transfer_date,
+                'ref' => $tr->doc_ref,
+                'desc' => $isOut ? ('โอนไป ' . $other) : ('รับโอนจาก ' . $other),
+                'in' => $isOut ? 0.0 : (float) $tr->amount,
+                'out' => $isOut ? (float) $tr->amount : 0.0,
+            ];
+        }
+        foreach (FinanceCashVoucher::find()
+            ->where(['account_id' => $accountId])->andWhere(['between', 'pay_date', $start, $end])
+            ->all() as $v) {
+            $out[] = [
+                'seq' => ++$seq,
+                'date' => $v->pay_date,
+                'ref' => $v->cheque_no ?: $v->doc_no,
+                'desc' => 'จ่าย: ' . ($v->payee_name ?: ('ใบสำคัญ ' . $v->doc_no)),
+                'in' => 0.0,
+                'out' => (float) $v->net_amount,
+            ];
+        }
+        return $out;
+    }
+
+    private static function dayBefore(string $date): string
+    {
+        return date('Y-m-d', strtotime($date . ' -1 day'));
     }
 
     // ---------- ลูกหนี้ค่ารักษา (หมวด 3) ----------
