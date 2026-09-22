@@ -1,0 +1,126 @@
+<?php
+
+namespace app\modules\finance\services;
+
+use Yii;
+use setasign\Fpdi\Fpdi;
+use app\modules\finance\components\BahtText;
+use app\modules\finance\models\FinanceChequeTemplate;
+
+/**
+ * พิมพ์ข้อความลงบนแผ่นเช็ค (overlay) ด้วย FPDI/FPDF
+ *
+ * โหมดพิมพ์จริง : สร้างหน้า PDF ขนาดเท่าแผ่นเช็ค วางเฉพาะข้อความตามพิกัด แล้วป้อนเช็คจริงเข้าเครื่องพิมพ์
+ * โหมดพรีวิว   : วางรูปสแกนเช็คเป็นพื้นหลังก่อน เพื่อดูตำแหน่งบนจอ (ไม่ใช้ตอนพิมพ์จริง)
+ *
+ * พิกัดฟิลด์เก็บเป็น % (0-100) ของขนาดแผ่นเช็ค + ชดเชย (calibrate offset) หน่วย มม.
+ */
+class ChequePrintService
+{
+    /**
+     * @param FinanceChequeTemplate $tpl แม่แบบ (ขนาดแผ่น + พิกัดฟิลด์ + offset)
+     * @param array $data ['cheque_date'=>'Y-m-d','payee'=>string,'amount'=>float]
+     * @param bool $preview true = วาดพื้นหลังรูปสแกนด้วย (ดูบนจอ)
+     * @return string PDF binary
+     */
+    public function renderPdf(FinanceChequeTemplate $tpl, array $data, bool $preview = false): string
+    {
+        if (!defined('FPDF_FONTPATH')) {
+            define('FPDF_FONTPATH', Yii::getAlias('@webroot') . '/fonts/');
+        }
+
+        $w = (float) ($tpl->page_width_mm ?: 178);
+        $h = (float) ($tpl->page_height_mm ?: 82);
+        $ox = (float) $tpl->calibrate_offset_x;
+        $oy = (float) $tpl->calibrate_offset_y;
+
+        $pdf = new Fpdi();
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
+        $pdf->SetAutoPageBreak(false);
+        $orientation = $w >= $h ? 'L' : 'P';
+        $pdf->AddPage($orientation, [$w, $h]);
+
+        // พื้นหลัง (เฉพาะพรีวิว)
+        if ($preview) {
+            $bg = $this->backgroundFile($tpl);
+            if ($bg !== null) {
+                try {
+                    $pdf->Image($bg, 0, 0, $w, $h);
+                } catch (\Throwable $e) {
+                    // ไม่มีรูป/รูปเสีย — ข้ามพื้นหลังไป
+                }
+            }
+        }
+
+        $values = $this->fieldValues($data);
+        $pdf->SetTextColor(0, 0, 0);
+
+        foreach ($tpl->layout() as $f) {
+            $key = $f['key'] ?? '';
+            if ($key === '' || empty($f['enabled']) || !isset($values[$key])) {
+                continue;
+            }
+            $text = (string) $values[$key];
+            if ($text === '') {
+                continue;
+            }
+            $x = ((float) ($f['x'] ?? 0)) / 100 * $w + $ox;
+            $y = ((float) ($f['y'] ?? 0)) / 100 * $h + $oy;
+            $size = (float) ($f['font_size'] ?? 16);
+            $style = !empty($f['bold']) ? 'B' : '';
+            $align = $f['align'] ?? 'L';
+
+            $pdf->SetFont('THSarabunNew', $style, $size);
+            $enc = iconv('UTF-8', 'cp874//IGNORE', $text);
+            $textWidth = $pdf->GetStringWidth($enc);
+            if ($align === 'R') {
+                $x -= $textWidth;
+            } elseif ($align === 'C') {
+                $x -= $textWidth / 2;
+            }
+            // FPDF Text() วางที่ baseline — y ที่เก็บคือ baseline
+            $pdf->Text($x, $y, $enc);
+        }
+
+        return $pdf->Output('', 'S');
+    }
+
+    /** แปลงข้อมูลดิบเป็นค่าที่จะพิมพ์ในแต่ละฟิลด์ */
+    public function fieldValues(array $data): array
+    {
+        $amount = isset($data['amount']) ? (float) $data['amount'] : 0.0;
+        $text = $amount > 0 ? BahtText::convert($amount) : '';
+        // ac_payee: เช็คเปล่าจริงไม่มี ต้องพิมพ์เอง เปิด/ปิดได้ต่อใบ (default เปิด)
+        $printAcPayee = array_key_exists('print_ac_payee', $data) ? !empty($data['print_ac_payee']) : true;
+        return [
+            'cheque_date' => $this->thaiDate($data['cheque_date'] ?? null),
+            'payee' => trim((string) ($data['payee'] ?? '')),
+            'amount_text' => $text !== '' ? ('-' . $text . '-') : '',
+            'amount_number' => $amount > 0 ? number_format($amount, 2) : '',
+            'ac_payee' => $printAcPayee ? 'A/C PAYEE ONLY' : '',
+        ];
+    }
+
+    /** Y-m-d -> วว/ดด/ปปปป (พ.ศ.) */
+    private function thaiDate(?string $ymd): string
+    {
+        if (!$ymd || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $ymd, $m)) {
+            return '';
+        }
+        return sprintf('%02d/%02d/%d', (int) $m[3], (int) $m[2], (int) $m[1] + 543);
+    }
+
+    /** path ไฟล์รูปพื้นหลัง (สำหรับพรีวิว) หรือ null */
+    private function backgroundFile(FinanceChequeTemplate $tpl): ?string
+    {
+        if (empty($tpl->background_path)) {
+            return null;
+        }
+        $path = $tpl->background_path;
+        if (!preg_match('#^([a-zA-Z]:[\\\\/]|/)#', $path)) {
+            $path = Yii::getAlias('@webroot') . '/' . ltrim($path, '/');
+        }
+        return is_file($path) ? $path : null;
+    }
+}

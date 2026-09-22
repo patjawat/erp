@@ -9,6 +9,7 @@ $items = [
     ['key' => 'inbox', 'label' => 'กล่องรอรับ', 'icon' => 'bi-inbox', 'url' => ['/finance/inbox']],
     ['key' => 'payable', 'label' => 'ทะเบียนคุมเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['key' => 'aging', 'label' => 'เจ้าหนี้ค้างชำระ', 'icon' => 'bi-hourglass-split', 'url' => ['/finance/payable/aging']],
+    ['key' => 'cheque', 'label' => 'พิมพ์เช็ค', 'icon' => 'bi-cash-stack', 'url' => ['/finance/cheque']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="เมนูงานเจ้าหนี้">
