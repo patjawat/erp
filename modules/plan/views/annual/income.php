@@ -69,21 +69,23 @@ $fmt = fn($v) => number_format((float) $v, 2);
             <?php if (!$groups): ?>
                 <tr><td colspan="<?= $nCols ?>" class="text-center text-body-secondary py-3">ยังไม่มีหมวดรายรับ — เพิ่มได้ที่ <a href="<?= Url::to(['/finance/cash/category']) ?>">จัดการผังบัญชี</a></td></tr>
             <?php endif; ?>
-            <?php foreach ($groups as $g): ?>
+            <?php foreach ($groups as $gi => $g): ?>
                 <tr class="table-light">
                     <td class="fw-semibold"><?= Html::encode($g['name']) ?></td>
                     <?php foreach ($actualYears as $ay): ?><td class="text-end fw-semibold"><?= $fmt($g['subA'][$ay] ?? 0) ?></td><?php endforeach; ?>
-                    <?php foreach ($planYears as $py): ?><td class="text-end fw-semibold text-warning-emphasis"><?= $fmt($g['subP'][$py] ?? 0) ?></td><?php endforeach; ?>
+                    <?php foreach ($planYears as $py): ?><td class="text-end fw-semibold text-warning-emphasis" data-sub="<?= $gi ?>" data-year="<?= $py ?>"><?= $fmt($g['subP'][$py] ?? 0) ?></td><?php endforeach; ?>
                 </tr>
                 <?php foreach ($g['rows'] as $row): ?>
                     <tr>
                         <td class="ps-4"><?= Html::encode($row['name']) ?></td>
                         <?php foreach ($actualYears as $ay): ?>
-                            <td class="text-end text-body-secondary"><?= $fmt($row['actual'][$ay] ?? 0) ?></td>
+                            <td class="text-end text-body-secondary">
+                                <?= $fmt($row['actual'][$ay] ?? 0) ?><?php if (!empty($row['actualIsPlan'][$ay])): ?><span class="badge text-bg-light border text-warning-emphasis fw-normal ms-1" title="ยังไม่มีรับจริง — แสดงยอดตามแผนที่เคยตั้งไว้">แผน</span><?php endif; ?>
+                            </td>
                         <?php endforeach; ?>
                         <?php foreach ($planYears as $py): ?>
                             <td class="p-1"><input type="text" inputmode="decimal" class="form-control form-control-sm text-end plan-input"
-                                name="plan[<?= $row['id'] ?>][<?= $py ?>]"
+                                name="plan[<?= $row['id'] ?>][<?= $py ?>]" data-group="<?= $gi ?>" data-year="<?= $py ?>"
                                 value="<?= ($row['plan'][$py] ?? 0) > 0 ? $fmt($row['plan'][$py]) : '' ?>" placeholder="0.00"></td>
                         <?php endforeach; ?>
                     </tr>
@@ -92,7 +94,7 @@ $fmt = fn($v) => number_format((float) $v, 2);
             <tr class="table-primary fw-bold">
                 <td class="text-end">รวมรายรับ</td>
                 <?php foreach ($actualYears as $ay): ?><td class="text-end"><?= $fmt($totA[$ay] ?? 0) ?></td><?php endforeach; ?>
-                <?php foreach ($planYears as $py): ?><td class="text-end"><?= $fmt($totP[$py] ?? 0) ?></td><?php endforeach; ?>
+                <?php foreach ($planYears as $py): ?><td class="text-end" data-total="1" data-year="<?= $py ?>"><?= $fmt($totP[$py] ?? 0) ?></td><?php endforeach; ?>
             </tr>
         </tbody>
     </table>
@@ -102,3 +104,37 @@ $fmt = fn($v) => number_format((float) $v, 2);
     <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกแผนรายรับ', ['class' => 'btn btn-primary']) ?>
 </div>
 <?= Html::endForm() ?>
+
+<?php
+// รวมยอดสด: พิมพ์ในช่องแผนแล้วยอดกลุ่ม + รวมรายรับ (ต่อปี) ขยับตามทันที
+// รวมเฉพาะช่อง input จริง ๆ ต่อปี ไม่นับแถวยอดกลุ่มซ้ำ → กันปัญหา "ผลรวมไม่ตรง/นับซ้ำ"
+$this->registerJs(<<<'JS'
+(function () {
+    var form = document.querySelector('form[action*="income-save"]') || document.querySelector('.plan-input') && document.querySelector('.plan-input').closest('form');
+    if (!form) { return; }
+    function num(v) { return parseFloat(String(v).replace(/[, ]/g, '')) || 0; }
+    function money(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function recalc() {
+        var years = {};   // year -> total
+        var subs = {};    // group|year -> subtotal
+        form.querySelectorAll('input.plan-input').forEach(function (el) {
+            var y = el.getAttribute('data-year');
+            var g = el.getAttribute('data-group');
+            var v = num(el.value);
+            years[y] = (years[y] || 0) + v;
+            subs[g + '|' + y] = (subs[g + '|' + y] || 0) + v;
+        });
+        form.querySelectorAll('td[data-sub]').forEach(function (td) {
+            var key = td.getAttribute('data-sub') + '|' + td.getAttribute('data-year');
+            td.textContent = money(subs[key] || 0);
+        });
+        form.querySelectorAll('td[data-total]').forEach(function (td) {
+            td.textContent = money(years[td.getAttribute('data-year')] || 0);
+        });
+    }
+    form.addEventListener('input', function (e) {
+        if (e.target && e.target.classList.contains('plan-input')) { recalc(); }
+    });
+})();
+JS);
+?>

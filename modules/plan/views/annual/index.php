@@ -82,7 +82,7 @@ $fmt = fn($v) => number_format((float) $v, 2);
                 <?php foreach ($g['rows'] as $row): ?>
                     <tr>
                         <td class="ps-4"><?= Html::encode($row['name']) ?></td>
-                        <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($row['vals'][$y] ?? 0) ?></td><?php endforeach; ?>
+                        <?php foreach ($allYears as $y): ?><td class="text-end text-body-secondary"><?= $fmt($row['vals'][$y] ?? 0) ?><?php if (!empty($row['valsIsPlan'][$y])): ?><span class="badge text-bg-light border text-warning-emphasis fw-normal ms-1" title="ยังไม่มีรับจริง — แสดงยอดตามแผนที่เคยตั้งไว้">แผน</span><?php endif; ?></td><?php endforeach; ?>
                     </tr>
                 <?php endforeach; ?>
             <?php endforeach; ?>

@@ -276,13 +276,15 @@ class AnnualController extends Controller
             $rows = [];
             foreach ($g['rows'] as $row) {
                 $vals = [];
+                $valsIsPlan = [];
                 foreach ($actualYears as $ay) {
                     $vals[$ay] = $row['actual'][$ay] ?? 0.0;
+                    $valsIsPlan[$ay] = !empty($row['actualIsPlan'][$ay]);
                 }
                 foreach ($planYears as $py) {
                     $vals[$py] = $row['plan'][$py] ?? 0.0;
                 }
-                $rows[] = ['name' => $row['name'], 'vals' => $vals, 'planYears' => $planYears, 'plan' => $row['plan']];
+                $rows[] = ['name' => $row['name'], 'vals' => $vals, 'valsIsPlan' => $valsIsPlan, 'planYears' => $planYears, 'plan' => $row['plan']];
             }
             $sub = [];
             foreach ($allYears as $y) {
@@ -348,6 +350,7 @@ class AnnualController extends Controller
     {
         $actualYears = [$year - 3, $year - 2, $year - 1];
         $planYears = [$year, $year + 1, $year + 2];
+        $allYears = array_merge($actualYears, $planYears);
 
         $actual = [];
         foreach (
@@ -357,9 +360,11 @@ class AnnualController extends Controller
         ) {
             $actual[(int) $r['category_id']][(int) $r['fiscal_year']] = (float) $r['s'];
         }
+        // ดึงแผนทุกปี (ย้อนหลัง + ล่วงหน้า) เพื่อใช้เป็น fallback ในคอลัมน์ซ้าย
+        // เมื่อปีที่เคยตั้งแผนไว้เลื่อนพ้นหน้าต่างแผน 3 ปี ตัวเลขจะไม่หายไปจากจอ
         $plan = [];
         foreach (
-            FinanceCashPlan::find()->where(['fiscal_year' => $planYears, 'txn_type' => FinanceCashCategory::TYPE_IN])
+            FinanceCashPlan::find()->where(['fiscal_year' => $allYears, 'txn_type' => FinanceCashCategory::TYPE_IN])
                 ->asArray()->all() as $r
         ) {
             $plan[(int) $r['category_id']][(int) $r['fiscal_year']] = (float) $r['amount'];
@@ -375,8 +380,18 @@ class AnnualController extends Controller
             foreach ($group['rows'] as $leaf) {
                 $cid = $leaf['id'];
                 $a = [];
+                $aIsPlan = [];
                 foreach ($actualYears as $ay) {
-                    $a[$ay] = $actual[$cid][$ay] ?? 0.0;
+                    $tx = $actual[$cid][$ay] ?? 0.0;
+                    // มีรับจริง = ใช้รับจริง; ไม่มี = ถอยมาแสดงแผนที่เคยตั้งไว้ (ทำเครื่องหมายว่าเป็นแผน)
+                    if ($tx > 0) {
+                        $a[$ay] = $tx;
+                        $aIsPlan[$ay] = false;
+                    } else {
+                        $pl = $plan[$cid][$ay] ?? 0.0;
+                        $a[$ay] = $pl;
+                        $aIsPlan[$ay] = $pl > 0;
+                    }
                     $subA[$ay] += $a[$ay];
                 }
                 $p = [];
@@ -384,7 +399,7 @@ class AnnualController extends Controller
                     $p[$py] = $plan[$cid][$py] ?? 0.0;
                     $subP[$py] += $p[$py];
                 }
-                $rows[] = ['id' => $cid, 'name' => $leaf['name'], 'actual' => $a, 'plan' => $p];
+                $rows[] = ['id' => $cid, 'name' => $leaf['name'], 'actual' => $a, 'actualIsPlan' => $aIsPlan, 'plan' => $p];
             }
             foreach ($actualYears as $ay) {
                 $totA[$ay] += $subA[$ay];
