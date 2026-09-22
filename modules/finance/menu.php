@@ -9,7 +9,10 @@ $items = [
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'dashboard', 'label' => 'ภาพรวม', 'icon' => 'bi-speedometer2', 'url' => ['/finance/dashboard']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'loan', 'label' => 'เงินยืม', 'icon' => 'bi-person-vcard', 'url' => ['/finance/loan']],
     ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'payment', 'label' => 'รับ–จ่ายเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/cash']],
+    ['show' => Yii::$app->user->can('financeOperate'), 'key' => 'petty', 'label' => 'เงินสดย่อย', 'icon' => 'bi-wallet2', 'url' => ['/finance/petty-cash']],
     ['show' => Yii::$app->user->can('financeView'), 'key' => 'payable', 'label' => 'งานเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
+    ['show' => Yii::$app->user->can('financeView'), 'key' => 'ar', 'label' => 'ลูกหนี้ค่ารักษา', 'icon' => 'bi-clipboard2-pulse', 'url' => ['/finance/ar']],
+    ['show' => Yii::$app->user->can('financeView'), 'key' => 'register', 'label' => 'ทะเบียนคุม', 'icon' => 'bi-journals', 'url' => ['/finance/register']],
     ['show' => Yii::$app->user->can('payrollView'), 'key' => 'payroll', 'label' => 'เงินเดือน', 'icon' => 'bi-cash-stack', 'url' => ['/finance/payroll']],
 ];
 ?>
