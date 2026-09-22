@@ -464,20 +464,70 @@ class AnnualController extends Controller
             }
         }
 
-        // รายจ่าย: แผน (plan_order รวม) vs จ่ายจริง (finance_cash_txn OUT รวม)
+        // รายจ่าย: แผน (plan_order รายหมวด) vs ผลจัดซื้อจริงตามแผน (orders ตรวจรับ รายหมวด)
         $ov = PlanOrder::overviewByType($fy, 'all');
-        $expPlan = (float) ($ov['grand']['total'] ?? 0);
-        $expActual = (float) FinanceCashTxn::find()
-            ->where(['fiscal_year' => $fy, 'txn_type' => FinanceCashTxn::TYPE_OUT])
-            ->sum('amount');
+        $actualByCat = $this->expenseActualByCategory($fy);
+        $expTypes = [];
+        $expPlan = 0.0;
+        $expActual = 0.0;
+        foreach ((array) ($ov['types'] ?? []) as $tc => $t) {
+            $cats = [];
+            $tpPlan = 0.0;
+            $tpActual = 0.0;
+            foreach ((array) ($t['categories'] ?? []) as $cat) {
+                $p = (float) ($cat['total'] ?? 0);
+                $a = (float) ($actualByCat[(string) $cat['code']] ?? 0);
+                if ($p == 0.0 && $a == 0.0) {
+                    continue;
+                }
+                $cats[] = ['title' => $cat['title'], 'plan' => $p, 'actual' => $a, 'diff' => $a - $p];
+                $tpPlan += $p;
+                $tpActual += $a;
+            }
+            if (!$cats) {
+                continue;
+            }
+            $expTypes[] = ['title' => $t['title'] ?: $tc, 'cats' => $cats, 'plan' => $tpPlan, 'actual' => $tpActual];
+            $expPlan += $tpPlan;
+            $expActual += $tpActual;
+        }
 
         return [
             'incomeRows' => $incomeRows,
             'incPlan' => $incPlan,
             'incActual' => $incActual,
+            'expTypes' => $expTypes,
             'expPlan' => $expPlan,
             'expActual' => $expActual,
         ];
+    }
+
+    /**
+     * ผลจัดซื้อจริงตามแผน รายหมวด (plan_category) — orders ที่ตรวจรับแล้ว (status >= 5) ผูกกับแผน
+     * เชื่อมผ่าน orders.plan_order_id -> plan_order.plan_item_id -> plan_item.category_id -> plan_category
+     * @return array [plan_category_code => ยอดจริง]
+     */
+    private function expenseActualByCategory(int $fy): array
+    {
+        $sql = "
+            SELECT c.code AS cat_code, COALESCE(SUM(oi.price * oi.qty), 0) AS actual
+            FROM orders o
+            JOIN orders oi ON oi.category_id = o.id AND oi.name = 'order_item'
+            JOIN plan_order po ON po.id = o.plan_order_id AND po.deleted_at IS NULL
+            JOIN categorise i ON i.code = po.plan_item_id AND i.name = 'plan_item'
+            JOIN categorise c ON c.code = i.category_id AND c.name = 'plan_category'
+            WHERE o.name = 'order' AND o.thai_year = :yr AND o.status >= 5 AND o.status <> 8
+            GROUP BY c.code
+        ";
+        $out = [];
+        try {
+            foreach (Yii::$app->db->createCommand($sql, [':yr' => $fy])->queryAll() as $r) {
+                $out[(string) $r['cat_code']] = (float) $r['actual'];
+            }
+        } catch (\Throwable $e) {
+            // ถ้าโครง orders/plan ไม่พร้อม ให้คืนว่าง (comparison แสดงเฉพาะแผน)
+        }
+        return $out;
     }
 
     /**

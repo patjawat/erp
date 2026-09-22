@@ -59,7 +59,7 @@ $fmt = fn($v) => number_format((float) $v, 2);
 </div></div>
 
 <div class="card border mb-3"><div class="table-responsive">
-    <table class="table table-bordered table-sm align-middle mb-0">
+    <table class="table table-bordered table-sm align-middle mb-0 annual-table">
         <thead class="table-light text-center">
             <tr>
                 <th rowspan="2" style="min-width:260px">รายการ</th>
@@ -153,64 +153,84 @@ $fmt = fn($v) => number_format((float) $v, 2);
 </div></div>
 
 <!-- เทียบแผน-ผล ปีปัจจุบัน -->
+<?php
+$cmpCells = function (float $plan, float $actual, bool $expenseSense = false) use ($fmt) {
+    $diff = $actual - $plan;
+    $pct = $plan > 0 ? ($actual / $plan * 100) : null;
+    // รายรับ: ผลต่ำกว่าแผน = แย่(แดง); รายจ่าย: ผลสูงกว่าแผน = แย่(แดง)
+    $bad = $expenseSense ? ($diff > 0) : ($diff < 0);
+    $cls = abs($diff) < 0.005 ? '' : ($bad ? 'text-danger' : 'text-success');
+    return '<td class="text-end">' . $fmt($plan) . '</td>'
+        . '<td class="text-end">' . $fmt($actual) . '</td>'
+        . '<td class="text-end ' . $cls . '">' . $fmt($diff) . '</td>'
+        . '<td class="text-end text-body-secondary">' . ($pct === null ? '–' : number_format($pct, 0) . '%') . '</td>';
+};
+?>
 <div class="card border">
     <div class="card-header bg-body-tertiary fw-semibold d-flex align-items-center gap-2">
         <i class="bi bi-bar-chart-line"></i> เปรียบเทียบแผน–ผล ปีงบประมาณ <?= $cmpYear ?>
-        <span class="small text-body-secondary fw-normal">(อัปเดตตามการบันทึกรับ-จ่ายจริง)</span>
+        <span class="small text-body-secondary fw-normal">(อัปเดตตามการบันทึกจริง)</span>
     </div>
     <div class="card-body">
-        <?php
-        $cmpRow = function (string $label, float $plan, float $actual, bool $expenseSense = false) use ($fmt) {
-            $diff = $actual - $plan;
-            $pct = $plan > 0 ? ($actual / $plan * 100) : 0;
-            // รายรับ: ผลต่ำกว่าแผน = แย่(แดง); รายจ่าย: ผลสูงกว่าแผน = แย่(แดง)
-            $bad = $expenseSense ? ($diff > 0) : ($diff < 0);
-            $cls = abs($diff) < 0.005 ? '' : ($bad ? 'text-danger' : 'text-success');
-            return '<td class="ps-3">' . Html::encode($label) . '</td>'
-                . '<td class="text-end">' . $fmt($plan) . '</td>'
-                . '<td class="text-end">' . $fmt($actual) . '</td>'
-                . '<td class="text-end ' . $cls . '">' . $fmt($diff) . '</td>'
-                . '<td class="text-end text-body-secondary">' . number_format($pct, 0) . '%</td>';
-        };
-        ?>
-        <div class="row g-3">
-            <div class="col-lg-7">
-                <div class="fw-semibold mb-2">รายรับ (รายหมวด)</div>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light text-center">
-                            <tr><th>หมวดรายรับ</th><th style="width:120px">แผน</th><th style="width:120px">รับจริง</th><th style="width:110px">ต่าง</th><th style="width:70px">%</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!$compare['incomeRows']): ?>
-                                <tr><td colspan="5" class="text-center text-body-secondary py-3">ยังไม่มีแผน/ผลรายรับปีนี้</td></tr>
-                            <?php endif; ?>
-                            <?php foreach ($compare['incomeRows'] as $r): ?>
-                                <tr><?= $cmpRow($r['name'], $r['plan'], $r['actual']) ?></tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot class="table-primary fw-bold">
-                            <tr><?= $cmpRow('รวมรายรับ', $compare['incPlan'], $compare['incActual']) ?></tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="fw-semibold mb-2">รายจ่าย (ยอดรวม)</div>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light text-center">
-                            <tr><th>รายการ</th><th style="width:120px">แผน</th><th style="width:120px">จ่ายจริง</th><th style="width:110px">ต่าง</th><th style="width:70px">%</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><?= $cmpRow('รายจ่ายรวม', $compare['expPlan'], $compare['expActual'], true) ?></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="small text-body-secondary mt-2">
-                    <i class="bi bi-info-circle me-1"></i>รายจ่ายเทียบระดับยอดรวม เพราะผังหมวดแผน (plan_order) กับบันทึกจ่ายจริง (เงินบำรุง) เป็นคนละชุด
-                </div>
-            </div>
+        <!-- รายรับ รายหมวด -->
+        <div class="fw-semibold mb-2"><i class="bi bi-cash-coin me-1"></i>รายรับ (รายหมวด — แผน vs รับจริง)</div>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered align-middle mb-0 annual-cmp">
+                <thead class="table-light text-center">
+                    <tr><th class="text-start">หมวดรายรับ</th><th style="width:150px">แผน</th><th style="width:150px">รับจริง</th><th style="width:140px">ต่าง</th><th style="width:80px">%</th></tr>
+                </thead>
+                <tbody>
+                    <?php if (!$compare['incomeRows']): ?>
+                        <tr><td colspan="5" class="text-center text-body-secondary py-3">ยังไม่มีแผน/ผลรายรับปีนี้</td></tr>
+                    <?php endif; ?>
+                    <?php foreach ($compare['incomeRows'] as $r): ?>
+                        <tr><td class="ps-3"><?= Html::encode($r['name']) ?></td><?= $cmpCells($r['plan'], $r['actual']) ?></tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot class="table-primary fw-bold">
+                    <tr><td class="text-end">รวมรายรับ</td><?= $cmpCells($compare['incPlan'], $compare['incActual']) ?></tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- รายจ่าย รายหมวด -->
+        <div class="fw-semibold mb-2"><i class="bi bi-receipt me-1"></i>รายจ่าย (รายหมวด — แผน vs จัดซื้อจริงตามแผน)</div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0 annual-cmp">
+                <thead class="table-light text-center">
+                    <tr><th class="text-start">หมวดรายจ่าย</th><th style="width:150px">แผน</th><th style="width:150px">จัดซื้อจริง</th><th style="width:140px">ต่าง</th><th style="width:80px">%</th></tr>
+                </thead>
+                <tbody>
+                    <?php if (!$compare['expTypes']): ?>
+                        <tr><td colspan="5" class="text-center text-body-secondary py-3">ยังไม่มีแผน/ผลรายจ่ายปีนี้</td></tr>
+                    <?php endif; ?>
+                    <?php foreach ($compare['expTypes'] as $type): ?>
+                        <tr class="table-light">
+                            <td class="fw-semibold"><?= Html::encode($type['title']) ?></td>
+                            <?= $cmpCells($type['plan'], $type['actual'], true) ?>
+                        </tr>
+                        <?php foreach ($type['cats'] as $cat): ?>
+                            <tr><td class="ps-4"><?= Html::encode($cat['title']) ?></td><?= $cmpCells($cat['plan'], $cat['actual'], true) ?></tr>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot class="table-primary fw-bold">
+                    <tr><td class="text-end">รวมรายจ่าย</td><?= $cmpCells($compare['expPlan'], $compare['expActual'], true) ?></tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="small text-body-secondary mt-2">
+            <i class="bi bi-info-circle me-1"></i>"จัดซื้อจริง" = มูลค่าที่ตรวจรับแล้วของใบสั่งซื้อที่ผูกกับแผน (orders ตรวจรับ status ≥ 5) — ยังไม่ใช่ยอดจ่ายเงินสดจริง (คนละขั้นในวงจร)
         </div>
     </div>
 </div>
+
+<?php
+// อ่านตัวเลขง่ายขึ้น: ขยายพื้นที่หน้า + กันตัวเลขตกบรรทัด/ถูกตัด + จัดเลขชิดหลักเท่ากัน
+$this->registerCss(<<<CSS
+main > .container-fluid { max-width: 1800px !important; }
+.annual-table td, .annual-table th, .annual-cmp td, .annual-cmp th { padding: .45rem .7rem; }
+.annual-table td.text-end, .annual-cmp td.text-end { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.annual-table thead th { white-space: nowrap; }
+CSS);
+?>
