@@ -12,8 +12,10 @@ use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\SiteHelper;
 use app\modules\finance\models\FinanceInbox;
+use app\modules\finance\models\FinanceInboxReview;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
+use app\modules\finance\services\FinanceInboxReviewService;
 use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\finance\models\FinancePayablePayment;
 use app\modules\finance\models\FinanceCheque;
@@ -31,13 +33,13 @@ class PayableController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting', 'send-accounting-bulk'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['financeApprove', 'financeOperate']],
                 ['allow' => true, 'actions' => ['pay'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
-                'pay' => ['GET', 'POST'], 'send-accounting' => ['POST'],
+                'pay' => ['GET', 'POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
             ]],
         ]);
     }
@@ -345,6 +347,35 @@ class PayableController extends Controller
         return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    /** ส่งบัญชีทีละหลายรายการ (เลือกจากทะเบียนคุมเจ้าหนี้) */
+    public function actionSendAccountingBulk()
+    {
+        $ids = array_values(array_filter(array_map('intval', (array) Yii::$app->request->post('ids', []))));
+        if (!$ids) {
+            Yii::$app->session->setFlash('warning', 'ยังไม่ได้เลือกรายการที่จะส่งบัญชี');
+            return $this->redirect(['index']);
+        }
+        $now = date('Y-m-d H:i:s');
+        $userId = Yii::$app->user->id;
+        $done = 0;
+        $skipped = 0;
+        foreach (FinancePayable::find()->where(['id' => $ids])->all() as $model) {
+            if ($model->status !== FinancePayable::STATUS_APPROVED || $model->isSentAccounting()) {
+                $skipped++;
+                continue;
+            }
+            $model->sent_accounting_at = $now;
+            $model->sent_accounting_by = $userId;
+            $model->save(false, ['sent_accounting_at', 'sent_accounting_by']);
+            $done++;
+        }
+        Yii::$app->session->setFlash(
+            $done ? 'success' : 'warning',
+            "ส่งบัญชีแล้ว {$done} รายการ" . ($skipped ? " (ข้าม {$skipped} รายการที่ยังไม่อนุมัติหรือส่งแล้ว)" : '')
+        );
+        return $this->redirect(['index']);
+    }
+
     public function actionCreate($inbox_id)
     {
         $inbox = $this->findInbox($inbox_id);
@@ -352,18 +383,35 @@ class PayableController extends Controller
         if ($existing) {
             return $this->redirect(['view', 'id' => $existing->id]);
         }
+        // ตั้งเจ้าหนี้ได้จากรายการที่ยังรอตรวจ (จะรับรองให้พร้อมกัน) หรือรายการที่รับรองแล้ว
+        if (!in_array($inbox->status, [FinanceInbox::STATUS_PENDING_REVIEW, FinanceInbox::STATUS_ACCEPTED], true)) {
+            Yii::$app->session->setFlash('warning', 'ตั้งเจ้าหนี้ได้เฉพาะรายการที่รอตรวจหรือรับรองแล้ว');
+            return $this->redirect(['/finance/inbox/view', 'id' => $inbox->id]);
+        }
+
         $service = new FinancePayableDraftService();
         $model = $service->prepare($inbox);
         if ($model->load(Yii::$app->request->post())) {
+            $transaction = Yii::$app->db->beginTransaction();
             try {
+                // รอตรวจ → รับรองเอกสารในจังหวะเดียวกับตั้งเจ้าหนี้ (transaction เดียว)
+                if ($inbox->status === FinanceInbox::STATUS_PENDING_REVIEW) {
+                    (new FinanceInboxReviewService())->review($inbox, FinanceInboxReview::DECISION_ACCEPT, 'รับรองและตั้งเจ้าหนี้');
+                    $inbox->refresh();
+                }
                 $service->create($inbox, $model);
-                Yii::$app->session->setFlash('success', 'สร้างร่างทะเบียนเจ้าหนี้เรียบร้อยแล้ว');
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', 'รับรองเอกสารและตั้งเจ้าหนี้ (ร่างทะเบียนเจ้าหนี้) เรียบร้อยแล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
             } catch (\DomainException $e) {
+                $transaction->rollBack();
+                $inbox->refresh();
                 $model->addError($this->domainErrorAttribute($e), $e->getMessage());
             } catch (\Throwable $e) {
+                $transaction->rollBack();
+                $inbox->refresh();
                 Yii::error($e, __METHOD__);
-                $model->addError('invoice_no', 'สร้างร่างทะเบียนเจ้าหนี้ไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
+                $model->addError('invoice_no', 'รับรองและตั้งเจ้าหนี้ไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
             }
         }
         return $this->renderForm($model, $inbox);

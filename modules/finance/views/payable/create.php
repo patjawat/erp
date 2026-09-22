@@ -5,7 +5,10 @@ use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 
 $isUpdate = !$model->isNewRecord;
-$this->title = $isUpdate ? 'แก้ไขร่างทะเบียนเจ้าหนี้' : 'สร้างร่างทะเบียนเจ้าหนี้';
+$isPendingReview = !$isUpdate && ($inbox->status === \app\modules\finance\models\FinanceInbox::STATUS_PENDING_REVIEW);
+$this->title = $isUpdate
+    ? 'แก้ไขร่างทะเบียนเจ้าหนี้'
+    : ($isPendingReview ? 'รับรอง & ตั้งเจ้าหนี้' : 'ตั้งเจ้าหนี้ (สร้างร่าง)');
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
 $this->params['breadcrumbs'][] = ['label' => 'กล่องรับงานบัญชี', 'url' => ['/finance/inbox']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -53,7 +56,10 @@ $this->endBlock();
                     <div class="col-md-6"><?= $form->field($model, 'invoice_no')->textInput(['maxlength' => true])->label('เลขที่ใบแจ้งหนี้') ?></div>
                     <div class="col-md-6"><?= $form->field($model, 'invoice_date')->input('date')->label('วันที่ใบแจ้งหนี้') ?></div>
                     <div class="col-md-6"><?= $form->field($model, 'billing_date')->input('date')->label('วันที่รับวางบิล') ?></div>
-                    <div class="col-md-6"><?= $form->field($model, 'credit_days')->input('number', ['min' => 0, 'max' => 3650])->label('จำนวนวันเครดิต') ?></div>
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'credit_days')->input('number', ['min' => 0, 'max' => 3650])->label('จำนวนวันเครดิต') ?>
+                        <div class="form-text">ดึงจากทะเบียนผู้ขายให้อัตโนมัติ ถ้ายังไม่เคยตั้ง ระบบจะบันทึกค่านี้กลับไปเก็บที่ผู้ขายให้</div>
+                    </div>
                     <div class="col-md-6"><?= $form->field($model, 'withholding_tax_amount')->input('number', ['min' => 0, 'step' => '0.01'])->label('ภาษีหัก ณ ที่จ่าย (ประมาณการ)') ?></div>
                 </div>
 
@@ -63,7 +69,9 @@ $this->endBlock();
                     <?= Html::submitButton(
                         $isUpdate
                             ? '<i class="bi bi-save me-1" aria-hidden="true"></i>บันทึกการแก้ไข'
-                            : '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>สร้างร่างทะเบียนเจ้าหนี้',
+                            : ($isPendingReview
+                                ? '<i class="bi bi-person-check me-1" aria-hidden="true"></i>รับรองเอกสารและตั้งเจ้าหนี้'
+                                : '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>ตั้งเจ้าหนี้ (สร้างร่าง)'),
                         ['class' => 'btn btn-primary']
                     ) ?>
                     <?= Html::a('ยกเลิก', ['/finance/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-outline-secondary']) ?>

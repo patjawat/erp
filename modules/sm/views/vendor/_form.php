@@ -61,6 +61,10 @@ use iamsaint\datetimepicker\Datetimepicker;
                 </div>
               
                 <div class="col-6">
+                    <?= $form->field($model, 'data_json[credit_days]')->input('number', ['min' => 0, 'max' => 3650])->label('เครดิต (วัน)') ?>
+                    <div class="form-text">ใช้เป็นค่าตั้งต้นวันครบกำหนดตอนตั้งเจ้าหนี้ (เว้นว่าง = จ่ายทันที)</div>
+                </div>
+                <div class="col-6">
                     <?= $form->field($model, 'data_json[contact_name]')->textInput(['maxlength' => true])->label('ชื่อผู้ติดต่อ') ?>
                 </div>
                 <div class="col-6">

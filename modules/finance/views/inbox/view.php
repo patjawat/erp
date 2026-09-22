@@ -122,7 +122,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
         </section>
 
         <div class="alert alert-secondary mt-3 mb-0">
-            การรับรองในขั้นนี้ยืนยันเฉพาะความครบถ้วนของเอกสาร ยังไม่สร้างเจ้าหนี้และยังไม่ลงบัญชี
+            กด "รับรอง &amp; ตั้งเจ้าหนี้" เพื่อรับรองเอกสารและตั้งเป็นเจ้าหนี้ (ร่าง) พร้อมกัน จากนั้นให้หัวหน้าอนุมัติเข้าทะเบียนคุม
         </div>
     </div>
 </div>
@@ -163,17 +163,27 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
             <div class="card-header bg-body"><h5 class="mb-0" id="review-decision-heading">ผลการตรวจสอบ</h5></div>
             <div class="card-body">
                 <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('accountingPrepare')): ?>
-                    <?= Html::beginForm(['review', 'id' => $model->id], 'post') ?>
-                    <label class="form-label" for="finance-review-note">หมายเหตุหรือเหตุผล</label>
-                    <textarea class="form-control" id="finance-review-note" name="note" rows="4"
-                              placeholder="ระบุสิ่งที่ต้องแก้ไขหรือเหตุผลที่ไม่รับรายการ"></textarea>
-                    <div class="form-text mb-3">จำเป็นเมื่อขอข้อมูลเพิ่มเติมหรือไม่รับรายการ</div>
+                    <?php if ($messages): ?>
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+                            ข้อมูลขั้นต่ำยังไม่ครบ จึงยังตั้งเจ้าหนี้ไม่ได้ — ขอข้อมูลเพิ่มเติมหรือให้ต้นทางส่งเอกสารใหม่
+                        </div>
+                    <?php else: ?>
+                        <div class="d-grid mb-2">
+                            <?= Html::a(
+                                '<i class="bi bi-person-check me-1" aria-hidden="true"></i>รับรอง &amp; ตั้งเจ้าหนี้',
+                                ['/finance/payable/create', 'inbox_id' => $model->id],
+                                ['class' => 'btn btn-success']
+                            ) ?>
+                        </div>
+                        <div class="form-text mb-3">กรอกเลขใบแจ้งหนี้ ผู้ขาย และเครดิต เมื่อบันทึกจะรับรองเอกสารและตั้งเจ้าหนี้ (ร่าง) พร้อมกัน</div>
+                    <?php endif; ?>
 
+                    <?= Html::beginForm(['review', 'id' => $model->id], 'post') ?>
+                    <label class="form-label" for="finance-review-note">หมายเหตุ (กรณีขอข้อมูลเพิ่ม/ไม่รับ)</label>
+                    <textarea class="form-control mb-2" id="finance-review-note" name="note" rows="3"
+                              placeholder="ระบุสิ่งที่ต้องแก้ไขหรือเหตุผลที่ไม่รับรายการ"></textarea>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-success" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_ACCEPT ?>"
-                                <?= $messages ? 'disabled' : '' ?>>
-                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>รับรองรายการ
-                        </button>
                         <button class="btn btn-outline-warning" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_REQUEST_INFORMATION ?>">
                             <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>ขอข้อมูลเพิ่มเติม
                         </button>
@@ -210,9 +220,9 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                             ['class' => 'btn btn-outline-primary']
                         ) ?>
                     <?php elseif (Yii::$app->user->can('accountingPrepare')): ?>
-                        <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนสร้างร่าง</p>
+                        <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนตั้งเจ้าหนี้</p>
                         <?= Html::a(
-                            '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>สร้างร่างทะเบียนเจ้าหนี้',
+                            '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>ตั้งเจ้าหนี้ (สร้างร่าง)',
                             ['/finance/payable/create', 'inbox_id' => $model->id],
                             ['class' => 'btn btn-primary']
                         ) ?>

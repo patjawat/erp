@@ -56,10 +56,19 @@ $this->endBlock();
     </div>
 </form>
 
+<?= Html::beginForm(['send-accounting-bulk'], 'post', ['id' => 'bulk-accounting-form']) ?>
 <section class="card border shadow-sm" aria-labelledby="payable-list-heading">
-    <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
+    <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2 flex-wrap">
         <h5 class="mb-0" id="payable-list-heading">รายการเจ้าหนี้</h5>
-        <span class="text-body-secondary small"><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-body-secondary small"><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
+            <?php if (Yii::$app->user->can('financeOperate')): ?>
+                <button type="submit" class="btn btn-sm btn-success"
+                        onclick="return confirm('ยืนยันส่งบัญชีรายการที่เลือก?');">
+                    <i class="bi bi-send-check me-1" aria-hidden="true"></i>ส่งบัญชีที่เลือก
+                </button>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="table-responsive">
         <?= GridView::widget([
@@ -67,6 +76,15 @@ $this->endBlock();
             'layout' => "{items}\n<div class=\"card-footer bg-body d-flex justify-content-between align-items-center flex-wrap gap-2\">{summary}{pager}</div>",
             'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
             'columns' => [
+                [
+                    'class' => 'yii\grid\CheckboxColumn',
+                    'name' => 'ids',
+                    'checkboxOptions' => static function (FinancePayable $model) {
+                        $eligible = $model->status === FinancePayable::STATUS_APPROVED && !$model->isSentAccounting();
+                        return ['value' => $model->id, 'disabled' => !$eligible];
+                    },
+                    'headerOptions' => ['style' => 'width:36px'],
+                ],
                 [
                     'attribute' => 'payable_no',
                     'label' => 'เลขทะเบียน',
@@ -124,9 +142,23 @@ $this->endBlock();
                         ['class' => 'badge ' . FinancePayable::statusBadgeClass($model->status)]
                     ),
                 ],
+                [
+                    'label' => 'ส่งบัญชี',
+                    'format' => 'raw',
+                    'contentOptions' => ['class' => 'text-nowrap'],
+                    'value' => static function (FinancePayable $model) {
+                        if ($model->isSentAccounting()) {
+                            return '<span class="badge text-bg-success">ส่งแล้ว</span>';
+                        }
+                        return $model->status === FinancePayable::STATUS_APPROVED
+                            ? '<span class="badge text-bg-warning">รอส่ง</span>'
+                            : '<span class="text-body-secondary">—</span>';
+                    },
+                ],
             ],
             'emptyText' => 'ยังไม่มีร่างทะเบียนเจ้าหนี้ ให้เริ่มจากรับรองรายการในกล่องรับงานบัญชี',
             'emptyTextOptions' => ['class' => 'text-center text-body-secondary py-5'],
         ]) ?>
     </div>
 </section>
+<?= Html::endForm() ?>

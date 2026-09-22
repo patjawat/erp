@@ -15,7 +15,7 @@ class FinancePayableDraftService
         $payload = $this->payload($inbox);
         $vendor = $this->resolveVendor($inbox);
         $billingDate = date('Y-m-d');
-        $creditDays = (int) ($payload['credit_days'] ?? 0);
+        $creditDays = self::vendorCreditDays($vendor) ?? (int) ($payload['credit_days'] ?? 0);
         $gross = round((float) $inbox->amount, 2);
 
         return new FinancePayable([
@@ -90,7 +90,33 @@ class FinancePayableDraftService
         if (!$model->save(false, ['payable_no', 'updated_at', 'updated_by'])) {
             throw new \RuntimeException('กำหนดเลขร่างทะเบียนเจ้าหนี้ไม่สำเร็จ');
         }
+        // ถ้าผู้ขายยังไม่เคยตั้งเครดิตในทะเบียนหลัก ให้บันทึกค่าที่กรอกกลับไปเก็บไว้ใช้ครั้งหน้า
+        $this->rememberVendorCredit($vendor, (int) $model->credit_days);
         return $model;
+    }
+
+    /** อ่านจำนวนวันเครดิตจากทะเบียนผู้ขาย (null = ยังไม่เคยตั้ง) */
+    public static function vendorCreditDays(?Vendor $vendor): ?int
+    {
+        if (!$vendor) {
+            return null;
+        }
+        $data = is_array($vendor->data_json) ? $vendor->data_json : [];
+        if (!array_key_exists('credit_days', $data) || $data['credit_days'] === '' || $data['credit_days'] === null) {
+            return null;
+        }
+        return (int) $data['credit_days'];
+    }
+
+    private function rememberVendorCredit(Vendor $vendor, int $creditDays): void
+    {
+        if ($creditDays <= 0 || self::vendorCreditDays($vendor) !== null) {
+            return;
+        }
+        $data = is_array($vendor->data_json) ? $vendor->data_json : [];
+        $data['credit_days'] = $creditDays;
+        $vendor->data_json = $data;
+        $vendor->save(false, ['data_json']);
     }
 
     /** @throws \DomainException|\RuntimeException */
