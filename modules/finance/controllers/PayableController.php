@@ -46,10 +46,40 @@ class PayableController extends Controller
 
     public function actionIndex()
     {
-        return $this->render('index', ['dataProvider' => new ActiveDataProvider([
-            'query' => FinancePayable::find()->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]),
-            'pagination' => ['pageSize' => 30],
-        ])]);
+        $req = Yii::$app->request;
+        $q = trim((string) $req->get('q', ''));
+        $status = (string) $req->get('status', '');
+        $payment = (string) $req->get('payment', '');
+
+        $query = FinancePayable::find()->orderBy(['created_at' => SORT_DESC, 'id' => SORT_DESC]);
+        if ($q !== '') {
+            $query->andWhere(['or',
+                ['like', 'vendor_name_snapshot', $q],
+                ['like', 'invoice_no', $q],
+                ['like', 'payable_no', $q],
+            ]);
+        }
+        if ($status !== '' && isset(FinancePayable::statusOptions()[$status])) {
+            $query->andWhere(['status' => $status]);
+        }
+        // กรองตามสถานะการจ่าย (คำนวณจากยอดตัดหนี้)
+        if (in_array($payment, ['unpaid', 'partial', 'paid'], true)) {
+            $paid = '(SELECT COALESCE(SUM(fps.amount),0) FROM finance_payable_settlement fps WHERE fps.payable_id = finance_payable.id)';
+            if ($payment === 'unpaid') {
+                $query->andWhere($paid . ' <= 0.005');
+            } elseif ($payment === 'partial') {
+                $query->andWhere($paid . ' > 0.005 AND ' . $paid . ' + 0.005 < finance_payable.net_amount');
+            } else {
+                $query->andWhere($paid . ' + 0.005 >= finance_payable.net_amount');
+            }
+        }
+
+        return $this->render('index', [
+            'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30]]),
+            'q' => $q,
+            'status' => $status,
+            'payment' => $payment,
+        ]);
     }
 
     /** รายงานเจ้าหนี้ค้างชำระ (aging) — หนี้ที่อนุมัติแล้วและยังคงค้าง จัด bucket ตามวันครบกำหนด */

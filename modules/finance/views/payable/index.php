@@ -2,7 +2,14 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use app\modules\finance\models\FinancePayable;
+
+/** @var yii\web\View $this */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var string $q */
+/** @var string $status */
+/** @var string $payment */
 
 $this->title = 'ทะเบียนคุมเจ้าหนี้';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -18,10 +25,36 @@ echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'payable'
 $this->endBlock();
 ?>
 
-<div class="alert alert-info d-flex gap-2 align-items-start">
-    <i class="bi bi-journal-check" aria-hidden="true"></i>
-    <span>ทะเบียนนี้ครอบคลุมตั้งแต่ร่างจนถึงอนุมัติเข้าทะเบียน แต่ยังไม่สร้างรายการบัญชี ฎีกา หรือแผนจ่ายเงิน</span>
-</div>
+<form method="get" class="card border mb-3">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-end">
+        <div class="flex-grow-1" style="min-width:220px">
+            <label class="form-label small mb-1">ค้นหา</label>
+            <input type="text" name="q" value="<?= Html::encode($q) ?>" class="form-control form-control-sm" placeholder="เลขทะเบียน / ชื่อเจ้าหนี้ / เลขใบแจ้งหนี้">
+        </div>
+        <div>
+            <label class="form-label small mb-1">สถานะทะเบียน</label>
+            <select name="status" class="form-select form-select-sm" style="min-width:150px">
+                <option value="">ทั้งหมด</option>
+                <?php foreach (FinancePayable::statusOptions() as $k => $v): ?>
+                    <option value="<?= $k ?>" <?= $status === $k ? 'selected' : '' ?>><?= Html::encode($v) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="form-label small mb-1">สถานะการจ่าย</label>
+            <select name="payment" class="form-select form-select-sm" style="min-width:130px">
+                <option value="">ทั้งหมด</option>
+                <option value="unpaid" <?= $payment === 'unpaid' ? 'selected' : '' ?>>ยังไม่จ่าย</option>
+                <option value="partial" <?= $payment === 'partial' ? 'selected' : '' ?>>จ่ายบางส่วน</option>
+                <option value="paid" <?= $payment === 'paid' ? 'selected' : '' ?>>จ่ายครบ</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>ค้นหา</button>
+            <a href="<?= Url::to(['index']) ?>" class="btn btn-sm btn-outline-secondary">ล้าง</a>
+        </div>
+    </div>
+</form>
 
 <section class="card border shadow-sm" aria-labelledby="payable-list-heading">
     <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2">
@@ -64,6 +97,22 @@ $this->endBlock();
                     'format' => ['decimal', 2],
                     'contentOptions' => ['class' => 'text-end text-nowrap'],
                     'headerOptions' => ['class' => 'text-end'],
+                ],
+                [
+                    'label' => 'คงค้าง',
+                    'format' => ['decimal', 2],
+                    'value' => static fn(FinancePayable $model) => $model->getOutstanding(),
+                    'contentOptions' => ['class' => 'text-end text-nowrap fw-semibold'],
+                    'headerOptions' => ['class' => 'text-end'],
+                ],
+                [
+                    'label' => 'การจ่าย',
+                    'format' => 'raw',
+                    'value' => static fn(FinancePayable $model) => Html::tag(
+                        'span',
+                        Html::encode(FinancePayable::paymentStatusLabel($model->paymentStatus())),
+                        ['class' => 'badge ' . FinancePayable::paymentStatusBadgeClass($model->paymentStatus())]
+                    ),
                 ],
                 [
                     'attribute' => 'status',
