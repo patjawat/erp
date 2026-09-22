@@ -26,7 +26,7 @@ $inbox = FinanceInbox::find()->where([
                         <strong>ส่งเข้ากล่องรอรับของการเงินแล้ว</strong>
                     </div>
                     <p class="text-body-secondary mb-0">
-                        ระบบเก็บสำเนาเอกสารไว้ตรวจสอบ โดยสถานะในระบบพัสดุยังไม่เปลี่ยนแปลง
+                        ระบบเก็บสำเนาเอกสารไว้ให้การเงินตรวจสอบ และเปลี่ยนสถานะพัสดุเป็น "ส่งบัญชี" แล้ว
                     </p>
                 </div>
                 <?php if (Yii::$app->user->can('financeView')): ?>
@@ -37,13 +37,18 @@ $inbox = FinanceInbox::find()->where([
                     ) ?>
                 <?php endif; ?>
             </div>
+        <?php elseif ((int) $model->status < 6): ?>
+            <div class="alert alert-warning d-flex gap-2 align-items-start mb-0">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <span>ต้องรับวัสดุเข้าคลังให้เรียบร้อย (สถานะ "วัสดุเข้าคลัง") ก่อนจึงจะส่งการเงินได้</span>
+            </div>
         <?php else: ?>
             <p class="text-body-secondary">
                 ระบบจะตรวจใบสั่งซื้อ ใบตรวจรับ ผู้แทนจำหน่าย และหลักฐานรับเข้าคลังหรือทะเบียนสินทรัพย์ก่อนส่ง
             </p>
             <div class="alert alert-info d-flex gap-2 align-items-start">
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
-                <span>ขั้นตอนนี้ยังไม่ตั้งเจ้าหนี้ ไม่ลงบัญชี และไม่เปลี่ยนสถานะเอกสารพัสดุ</span>
+                <span>กดส่งแล้วระบบจะเก็บสำเนาเข้ากล่องรอรับของการเงิน และเปลี่ยนสถานะพัสดุเป็น "ส่งบัญชี" (ยังไม่ตั้งเจ้าหนี้/ไม่ลงบัญชี)</span>
             </div>
             <?php if (Yii::$app->user->can('accountingInboxReceive')): ?>
                 <?= Html::a(

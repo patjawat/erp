@@ -40,6 +40,11 @@ class InboxController extends Controller
             throw new NotFoundHttpException('ไม่พบเอกสารจัดซื้อจัดจ้างต้นทาง');
         }
         $sourceRedirect = ['/purchase/order/view', 'id' => $order->id];
+        // ส่งการเงินได้เฉพาะใบที่รับเข้าคลังแล้ว (สถานะ 6 วัสดุเข้าคลัง) เท่านั้น
+        if ((int) $order->status !== 6) {
+            Yii::$app->session->setFlash('error', 'ส่งการเงินได้เฉพาะใบที่รับเข้าคลังแล้ว (สถานะวัสดุเข้าคลัง) เท่านั้น');
+            return $this->redirect($sourceRedirect);
+        }
         try {
             $snapshot = (new PurchaseFinanceSnapshotBuilder())->build($order);
             if ($snapshot['blocking_errors']) {
@@ -47,7 +52,12 @@ class InboxController extends Controller
                 return $this->redirect($sourceRedirect);
             }
             (new FinanceInboxService())->receive($snapshot['source'], $snapshot['payload']);
-            Yii::$app->session->setFlash('success', 'ส่งสำเนาเอกสารเข้ากล่องรอรับของการเงินแล้ว โดยยังไม่เปลี่ยนสถานะพัสดุ');
+            // ส่งสำเร็จ → เดินสถานะพัสดุจาก 6 (วัสดุเข้าคลัง) ไป 7 (ส่งบัญชี/ส่งการเงิน)
+            $order->status = 7;
+            if (!$order->save(false, ['status'])) {
+                throw new \RuntimeException('อัปเดตสถานะใบสั่งซื้อเป็น "ส่งบัญชี" ไม่สำเร็จ');
+            }
+            Yii::$app->session->setFlash('success', 'ส่งเอกสารเข้ากล่องรอรับของการเงินแล้ว และเปลี่ยนสถานะพัสดุเป็น "ส่งบัญชี" เรียบร้อย');
             return $this->redirect($sourceRedirect);
         } catch (\DomainException $e) {
             Yii::$app->session->setFlash('info', $e->getMessage());

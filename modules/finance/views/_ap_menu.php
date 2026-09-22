@@ -2,11 +2,18 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\finance\models\FinanceInbox;
 
 /** เมนูงานเจ้าหนี้ (การเงิน) — กล่องรอรับ / ทะเบียนคุมเจ้าหนี้ / เจ้าหนี้ค้างชำระ */
 $active = $active ?? '';
+
+// จำนวนรายการในกล่องรอรับที่ยังรอการเงินตรวจ (รวมที่ขอข้อมูลเพิ่ม)
+$inboxPending = (int) FinanceInbox::find()
+    ->where(['status' => [FinanceInbox::STATUS_PENDING_REVIEW, FinanceInbox::STATUS_NEEDS_INFORMATION]])
+    ->count();
+
 $items = [
-    ['key' => 'inbox', 'label' => 'กล่องรอรับ', 'icon' => 'bi-inbox', 'url' => ['/finance/inbox']],
+    ['key' => 'inbox', 'label' => 'กล่องรอรับ', 'icon' => 'bi-inbox', 'url' => ['/finance/inbox'], 'badge' => $inboxPending],
     ['key' => 'payable', 'label' => 'ทะเบียนคุมเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['key' => 'aging', 'label' => 'เจ้าหนี้ค้างชำระ', 'icon' => 'bi-hourglass-split', 'url' => ['/finance/payable/aging']],
     ['key' => 'cheque', 'label' => 'พิมพ์เช็ค', 'icon' => 'bi-cash-stack', 'url' => ['/finance/cheque']],
@@ -14,8 +21,12 @@ $items = [
 ?>
 <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="เมนูงานเจ้าหนี้">
     <?php foreach ($items as $item): ?>
-        <a href="<?= Url::to($item['url']) ?>" class="btn <?= $active === $item['key'] ? 'btn-primary' : 'btn-outline-primary' ?>">
+        <?php $isActive = $active === $item['key']; ?>
+        <a href="<?= Url::to($item['url']) ?>" class="btn <?= $isActive ? 'btn-primary' : 'btn-outline-primary' ?> position-relative">
             <i class="bi <?= Html::encode($item['icon']) ?> me-1" aria-hidden="true"></i><?= Html::encode($item['label']) ?>
+            <?php if (!empty($item['badge'])): ?>
+                <span class="badge rounded-pill <?= $isActive ? 'text-bg-light' : 'text-bg-danger' ?> ms-1"><?= number_format($item['badge']) ?></span>
+            <?php endif; ?>
         </a>
     <?php endforeach; ?>
 </nav>

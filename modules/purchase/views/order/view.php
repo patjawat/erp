@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
 
-<?php if ($model->status == 7): ?>
+<?php if ($model->status == 8): ?>
     <div class="row d-flex justify-content-center">
         <div class="col-4">
             <div class="card text-bg-secondary mb-3" style="max-width: 18rem;">
@@ -78,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <div class="border border-secondary border-opacity-25 p-3 rounded">
                                 <?php
-                                // ส่งการเงินแล้วหรือยัง = มีสำเนาในกล่องรอรับของการเงิน (ไม่เปลี่ยนสถานะพัสดุ)
+                                // ส่งการเงินแล้วหรือยัง = มีสำเนาในกล่องรอรับของการเงิน (ส่งแล้วสถานะพัสดุขึ้นเป็น 7 ส่งบัญชี)
                                 $apSourceType = \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::classify((string) $model->category_id, (string) $model->group_id);
                                 $sentToFinance = \app\modules\finance\models\FinanceInbox::find()->where([
                                     'source_system' => \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::SOURCE_SYSTEM,
@@ -125,7 +125,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif ?>
                                         <?php if ($model->status >= 5): ?>
                                             <li class="nav-item">
-                                                <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
+                                                <a class="nav-link <?= ($model->status == 6 && !$sentToFinance) ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
                                                         class="<?= $stepCls($sentToFinance) ?>"><?= $stepMark(7, $sentToFinance) ?></span> ส่งการเงิน</a>
                                             </li>
                                         <?php endif ?>
@@ -165,7 +165,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         </div>
                                     <?php endif; ?>
 
-                                    <div id="accounting_detail" class="container tab-pane <?= $model->status == 6 ? 'active' : null; ?>">
+                                    <div id="accounting_detail" class="container tab-pane <?= $model->status >= 6 ? 'active' : null; ?>">
                                         <?= $this->render('accounting_detail', ['model' => $model]) ?>
                                     </div>
                                 </div>

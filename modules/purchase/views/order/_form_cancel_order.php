@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <!-- ชื่อของประเภท -->
 
   <?= $form->field($model, 'data_json[cancel_order_note]')->textArea()->label('ระบุเหตุผล') ?>
-  <?= $form->field($model, 'status')->hiddenInput(['value' => 7])->label(false) ?>
+  <?= $form->field($model, 'status')->hiddenInput(['value' => 8])->label(false) ?>
 
 <div class="form-group mt-3 d-flex justify-content-center">
     <?= Html::submitButton('<i class="bi bi-check2-circle"></i> บันทึก', ['class' => 'btn btn-primary', 'id' => 'summit']) ?>

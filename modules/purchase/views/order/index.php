@@ -168,7 +168,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                                         <i class="bi bi-caret-down-fill"></i>
                                     </button>
 
-                                    <?php if ($item->status !== 7): ?>
+                                    <?php if ($item->status != 8): ?>
                                         <ul class="dropdown-menu">
                                             <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
                                                 <?php if ($item->status >= 2): ?>
