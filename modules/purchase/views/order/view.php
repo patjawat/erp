@@ -126,7 +126,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php if ($model->status >= 5): ?>
                                             <li class="nav-item">
                                                 <a class="nav-link <?= $model->status == 6 ? 'active' : null; ?>" data-bs-toggle="pill" href="#accounting_detail" role="pill"><span
-                                                        class="<?= $stepCls($sentToFinance) ?>"><?= $stepMark(7, $sentToFinance) ?></span> ส่งบัญชี</a>
+                                                        class="<?= $stepCls($sentToFinance) ?>"><?= $stepMark(7, $sentToFinance) ?></span> ส่งการเงิน</a>
                                             </li>
                                         <?php endif ?>
                                     </ul>
