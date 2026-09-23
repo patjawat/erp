@@ -646,12 +646,22 @@ class Order extends \yii\db\ActiveRecord
 
 
 
-    public function StackApprove()
+    /**
+     * @param Approve[]|null $approves ขั้นอนุมัติ name=purchase ของใบนี้ที่โหลดมาแล้ว (หน้ารายการส่งมาเพื่อกัน N+1)
+     *                                 null = query เอง
+     */
+    public function StackApprove(?array $approves = null)
     {
+        if ($approves === null) {
+            $approves = Approve::find()->where(['from_id' => $this->id, 'name' => 'purchase'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all();
+        } else {
+            $approves = array_values(array_filter($approves, fn($a) => $a->status !== null && !in_array($a->status, ['None', 'Pending'], true)));
+            usort($approves, fn($a, $b) => (int) $b->level <=> (int) $a->level);
+        }
         // try {
         $data = '';
         $data .= '<div class="avatar-stack">';
-        foreach (Approve::find()->where(['from_id' => $this->id, 'name' => 'purchase'])->andWhere(['not in', 'status', ['None', 'Pending']])->orderBy(['level' => SORT_DESC])->all() as $key => $item) {
+        foreach ($approves as $key => $item) {
             try {
                 $data .= Html::img('@web/img/loading.gif', [
                     'class' => 'avatar-sm rounded-circle shadow lazyload' . ($item->status == 'Reject' ? ' border-danger' : null),

@@ -112,16 +112,9 @@ class OrderController extends Controller
          * คำนวณผลรวมทั้งหมดด้วย clone query
          * -------------------------f
          */
-        $sumTotal = 0;
-
-        $sumQuery = clone $dataProvider->query;
-        $sumQuery->orderBy(null); // ลบ order by ออก, สำคัญมาก
-
-        foreach ($sumQuery->all() as $order) {
-            $sumTotal += $order->calculateVAT()['priceAfterVAT'];
-        }
         // การส่งออก
         $export = $this->request->get('export');
+        $sumTotal = $export == 1 ? 0 : $this->sumPriceAfterVat($dataProvider->query);
 
         if ($export == 1) {
             $dataProvider->pagination = false;
@@ -129,11 +122,63 @@ class OrderController extends Controller
         }
 
 
+        $dataProvider->query->with(['assetType', 'vendor']);
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'sumTotal' => $sumTotal,
+            'approveMap' => $this->approveMapFor($dataProvider->getModels()),
         ]);
+    }
+
+    /**
+     * มูลค่ารวม (หลัง VAT) ของใบทั้งหมดที่ตรงเงื่อนไขค้นหา ด้วย SQL คำสั่งเดียว
+     *
+     * เดิมดึงทุกใบมาเรียก calculateVAT() ทีละใบ (1 query/ใบ) ~2,900 ใบใช้ ~20 วินาที
+     * สูตรตรงกับ Order::calculateVAT(): ยอดรายการ (ติดลบนับเป็น 0) − ส่วนลด แล้ว ×1.07 เฉพาะ VAT แบบ EX
+     */
+    private function sumPriceAfterVat(\yii\db\ActiveQuery $query): float
+    {
+        $ids = (clone $query)->select('id')->orderBy(null)->with([]);
+        $items = (new \yii\db\Query())
+            ->select(['category_id', 'total' => new Expression('SUM(price * qty)')])
+            ->from('orders')
+            ->where(['is not', 'category_id', null])
+            ->groupBy('category_id');
+
+        $sum = (new \yii\db\Query())
+            ->from(['o' => 'orders'])
+            ->leftJoin(['s' => $items], 's.category_id = o.id')
+            ->where(['o.id' => $ids])
+            ->sum(new Expression(
+                "(GREATEST(IFNULL(s.total, 0), 0) - IFNULL(o.discount_price, 0))"
+                . " * IF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.vat')) = 'EX', 1.07, 1)"
+            ));
+
+        return (float) $sum;
+    }
+
+    /**
+     * ขั้นอนุมัติ (name=purchase) ของใบในหน้านี้ โหลดครั้งเดียว จัดกลุ่มตาม from_id
+     * แทนการยิง query 2 ครั้ง/แถว (StackApprove + ApproveHelper::viewStep)
+     */
+    private function approveMapFor(array $orders): array
+    {
+        $ids = array_map(fn($o) => (string) $o->id, $orders);
+        if (!$ids) {
+            return [];
+        }
+        $map = array_fill_keys($ids, []);
+        $rows = \app\modules\approve\models\Approve::find()
+            ->where(['name' => 'purchase', 'from_id' => $ids])
+            ->with('employee')
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+        foreach ($rows as $row) {
+            $map[(string) $row->from_id][] = $row;
+        }
+        return $map;
     }
 
 

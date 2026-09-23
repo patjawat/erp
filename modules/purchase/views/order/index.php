@@ -10,6 +10,8 @@ use app\components\ApproveHelper;
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\OrderSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var array $approveMap from_id => Approve[] ขั้นอนุมัติที่ controller โหลดล่วงหน้า (กัน N+1) */
+$approveMap = $approveMap ?? [];
 $this->title = 'จัดซื้อจัดจ้าง';
 $this->params['breadcrumbs'][] = ['label' => 'ระบบขอซื้อ', 'url' => ['/sm']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -87,7 +89,10 @@ if ($searchModel->date_between == 'pr_create_date') {
                 <tbody class="align-middle table-group-divider">
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <?php
-                        $totalPrice += $item->calculateVAT()['priceAfterVAT'];
+                        $priceAfterVat = $item->calculateVAT()['priceAfterVAT'];
+                        $totalPrice += $priceAfterVat;
+                        $status = $item->viewStatus();
+                        $steps = $approveMap[(string) $item->id] ?? [];
                         ?>
                         <tr>
                             <td class="text-center"><?php echo (($dataProvider->pagination->offset + 1) + $key) ?></td>
@@ -123,7 +128,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                             <td><?= $item->data_json['pq_purchase_type_name'] ?? '-' ?></td>
                             <td><?= isset($item->data_json['gr_date']) ? AppHelper::convertToThai($item->data_json['gr_date'] ?? null) : ''; ?></td>
                             <td class="fw-light align-middle">
-                                <?php echo $item->StackApprove() ?>
+                                <?php echo $item->StackApprove($steps) ?>
                             </td>
 
                             <td class="fw-light align-middle">
@@ -131,8 +136,8 @@ if ($searchModel->date_between == 'pr_create_date') {
                                     <div class="d-flex justify-content-between">
                                         <span class="text-muted mb-0 fs-13">
                                             <span
-                                                class="badge rounded-pill text-bg-<?= $item->viewStatus()['color'] ?> fs-13"><?= $item->viewStatus()['status_name'] ?> </span>
-                                            <?php echo ApproveHelper::viewStep('purchase', $item->id); ?>
+                                                class="badge rounded-pill text-bg-<?= $status['color'] ?> fs-13"><?= $status['status_name'] ?> </span>
+                                            <?php echo ApproveHelper::viewStepFromSteps($steps); ?>
                                     </div>
 
                                 <?php else: ?>
@@ -141,14 +146,14 @@ if ($searchModel->date_between == 'pr_create_date') {
                                         <span class="text-muted mb-0 fs-13">
                                             <i class="bi bi-stop-circle text-danger"></i> ยกเลิกรายการ<span
                                                 class="text-primary">
-                                                <?= $item->viewStatus()['progress'] ?>%</span>
+                                                <?= $status['progress'] ?>%</span>
                                         </span>
                                     </div>
 
                                 <?php endif; ?>
                                 <!-- <div class="progress" style="height: 5px;">
-                                    <div class="progress-bar bg-<?= $item->viewStatus()['color'] ?>" role="progressbar"
-                                        aria-label="Progress" aria-valuenow="<?= $item->viewStatus()['progress'] ?>"
+                                    <div class="progress-bar bg-<?= $status['color'] ?>" role="progressbar"
+                                        aria-label="Progress" aria-valuenow="<?= $status['progress'] ?>"
                                         aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div> -->
@@ -156,7 +161,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                             <td class="fw-light align-middle text-end">
                                 <div class="d-felx flex-column">
                                     <p class="fw-medium text-dark">
-                                        <?= number_format($item->calculateVAT()['priceAfterVAT'], 2) ?>
+                                        <?= number_format($priceAfterVat, 2) ?>
                                     </p>
                                 </div>
                             </td>
