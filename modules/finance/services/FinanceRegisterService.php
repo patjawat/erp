@@ -1484,6 +1484,16 @@ class FinanceRegisterService
         for ($i = 1; $i <= count($cols); $i++) {
             $s->getColumnDimension(self::colLetter($i))->setAutoSize(true);
         }
+        // จัดรูปแบบตัวเลขเงินให้มีคอมม่าคั่นหลักพัน (#,##0.00) ตั้งแต่แถวยอดยกมา/ข้อมูล ถึงแถวรวม
+        $ci = 1;
+        foreach ($cols as $col) {
+            if (!empty($col['money'])) {
+                $letter = self::colLetter($ci);
+                $s->getStyle("{$letter}" . ($headRow + 1) . ":{$letter}{$r}")
+                    ->getNumberFormat()->setFormatCode('#,##0.00');
+            }
+            $ci++;
+        }
         return $book;
     }
 
