@@ -56,6 +56,23 @@ class OrderController extends Controller
      */
     public function actionIndex()
     {
+        // จำตัวกรองล่าสุดไว้ใน session: กลับจากหน้าดู/แก้ไข หรือกดเมนูมาใหม่ ไม่ต้องเลือกเงื่อนไขซ้ำ
+        $session = Yii::$app->session;
+        $filterKey = 'purchase.order.index.filter';
+        if ($this->request->get('reset')) {
+            $session->remove($filterKey);
+            return $this->redirect(['index']);
+        }
+        $params = $this->request->queryParams;
+        unset($params['_pjax'], $params['export']);
+        if ($this->request->get('export') == 1) {
+            // ส่งออก Excel ใช้เงื่อนไขตาม URL ตรง ๆ ไม่แตะค่าที่จำไว้
+        } elseif ($params) {
+            $session->set($filterKey, $params);
+        } elseif ($saved = $session->get($filterKey)) {
+            return $this->redirect(array_merge(['index'], $saved));
+        }
+
         $searchModel = new OrderSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
         if (!Yii::$app->user->can('purchase')) {

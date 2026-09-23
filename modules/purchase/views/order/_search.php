@@ -126,6 +126,12 @@ echo $form->field($model, 'request_type')->radioList(
                 'id' => 'summit'
             ]) ?>
 
+            <?= Html::a('<i class="bi bi-x-circle"></i> <span class="d-none d-sm-inline">ล้างตัวกรอง</span>', ['index', 'reset' => 1], [
+                'class' => 'btn btn-outline-secondary w-100 w-md-auto',
+                'data-pjax' => 0,
+                'title' => 'ล้างเงื่อนไขการค้นหาที่จำไว้',
+            ]) ?>
+
             <?= Html::a(
                 '<i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
                 ['/purchase/pr-order/create','name' => 'order', 'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างรายการขอซื้อ'],
