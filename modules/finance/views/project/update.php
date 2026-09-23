@@ -16,9 +16,11 @@ $this->beginBlock('page-title');
 echo '<div class="d-flex align-items-center gap-2"><i class="bi bi-diagram-3 fs-4"></i><h4 class="mb-0">' . Html::encode($this->title) . '</h4></div>';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'project']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'budget']);
 $this->endBlock();
 ?>
+
+<?= $this->render('@app/modules/finance/views/budget/_menu', ['active' => 'project']) ?>
 
 <div class="card shadow-sm">
     <div class="card-body">

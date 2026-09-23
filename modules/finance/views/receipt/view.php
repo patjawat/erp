@@ -16,7 +16,7 @@ $this->beginBlock('page-title'); ?>
 <h4 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-receipt-cutoff" aria-hidden="true"></i>เล่มใบเสร็จ <?= Html::encode($book->book_no) ?></h4>
 <?php $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'receipt']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'payment']);
 $this->endBlock();
 
 $u = $book->usage();

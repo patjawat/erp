@@ -27,7 +27,7 @@ $this->beginBlock('sub-title');
 echo Html::encode(($model->code ? $model->code . ' · ' : '') . $model->fundSourceLabel() . ' · ปีงบ ' . ($model->fiscal_year ?: '-'));
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'project']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'budget']);
 $this->endBlock();
 
 $txnRow = function (FinanceCashTxn $t) use ($money) {
@@ -39,6 +39,8 @@ $txnRow = function (FinanceCashTxn $t) use ($money) {
         . '<td class="text-end">' . ($isIn ? '' : $money($t->amount)) . '</td>';
 };
 ?>
+
+<?= $this->render('@app/modules/finance/views/budget/_menu', ['active' => 'project']) ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <a href="<?= Url::to(['index']) ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>ทุกโครงการ</a>

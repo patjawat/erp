@@ -32,7 +32,7 @@ $this->beginBlock('sub-title');
 echo Html::encode(($model->account ? $model->account->label() : '') . ' · ' . ($model->period_month ? $months[$model->period_month] . ' ' : '') . 'ปีงบ ' . $model->fiscal_year);
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'bankrec']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'payment']);
 $this->endBlock();
 
 $sidePanel = function (string $side, string $title, array $rows, float $base, float $adjusted) use ($money, $canOperate) {
@@ -73,6 +73,8 @@ $sidePanel = function (string $side, string $title, array $rows, float $base, fl
     <?php return ob_get_clean();
 };
 ?>
+
+<?= $this->render('@app/modules/finance/views/cash/_menu', ['active' => 'bankrec']) ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <a href="<?= Url::to(['index', 'fiscal_year' => $model->fiscal_year]) ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>รายการทั้งหมด</a>

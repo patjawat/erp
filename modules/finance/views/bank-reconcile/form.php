@@ -21,9 +21,11 @@ $this->beginBlock('page-title');
 echo '<div class="d-flex align-items-center gap-2"><i class="bi bi-bank fs-4"></i><h4 class="mb-0">' . Html::encode($this->title) . '</h4></div>';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'bankrec']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'payment']);
 $this->endBlock();
 ?>
+
+<?= $this->render('@app/modules/finance/views/cash/_menu', ['active' => 'bankrec']) ?>
 
 <div class="card shadow-sm">
     <div class="card-body">

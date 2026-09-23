@@ -14,6 +14,7 @@ $items = [
     ['key' => 'transactions', 'label' => 'รับ-จ่ายงบประมาณ', 'icon' => 'bi-arrow-left-right', 'url' => ['/finance/budget/transactions']],
     ['key' => 'treasury', 'label' => 'นำส่งคลัง (นส.02)', 'icon' => 'bi-send', 'url' => ['/finance/budget/treasury']],
     ['key' => 'returns', 'label' => 'เบิกเกินส่งคืน', 'icon' => 'bi-arrow-return-left', 'url' => ['/finance/budget/returns']],
+    ['key' => 'project', 'label' => 'โครงการเงินบำรุง', 'icon' => 'bi-diagram-3', 'url' => ['/finance/project']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="เมนูเงินงบประมาณ">

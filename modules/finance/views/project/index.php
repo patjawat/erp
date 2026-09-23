@@ -21,9 +21,11 @@ $this->beginBlock('sub-title');
 echo 'จำแนกเงินนอกงบประมาณตามโครงการ (บริจาค/อุดหนุน/เงินบำรุงเฉพาะโครงการ)';
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'project']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'budget']);
 $this->endBlock();
 ?>
+
+<?= $this->render('@app/modules/finance/views/budget/_menu', ['active' => 'project']) ?>
 
 <?php if ($canOperate): ?>
 <div class="card shadow-sm mb-3">

@@ -16,6 +16,7 @@ $items = [
     // แผนประจำปี (รับ-จ่าย) ย้ายไปโมดูลแผนงบประมาณแล้ว: /plan/annual
     ['key' => 'close', 'label' => 'ปิดบัญชี', 'icon' => 'bi-lock', 'url' => ['/finance/cash/close-daily']],
     ['key' => 'account', 'label' => 'บัญชีเงิน', 'icon' => 'bi-bank', 'url' => ['/finance/account/bank']],
+    ['key' => 'bankrec', 'label' => 'งบพิสูจน์ยอด', 'icon' => 'bi-clipboard-check', 'url' => ['/finance/bank-reconcile']],
     ['key' => 'category', 'label' => 'จัดการผังบัญชี', 'icon' => 'bi-diagram-3', 'url' => ['/finance/cash/category']],
 ];
 ?>

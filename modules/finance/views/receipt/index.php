@@ -22,7 +22,7 @@ $this->beginBlock('page-title'); ?>
 <?php $this->endBlock();
 $this->beginBlock('sub-title'); ?>รับเล่มเข้า → เบิกจ่ายให้เจ้าหน้าที่ → ใช้บันทึกรายรับ (คุมใช้แล้ว/คงเหลือ/เลขซ้ำ-ข้าม)<?php $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/menu', ['active' => 'receipt']);
+echo $this->render('@app/modules/finance/menu', ['active' => 'payment']);
 $this->endBlock();
 
 $badgeCls = fn ($s) => $s === 'issued' ? 'primary' : ($s === 'completed' ? 'success' : ($s === 'cancelled' ? 'secondary' : 'info'));
