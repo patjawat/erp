@@ -52,12 +52,12 @@ class InboxController extends Controller
                 return $this->redirect($sourceRedirect);
             }
             (new FinanceInboxService())->receive($snapshot['source'], $snapshot['payload']);
-            // ส่งสำเร็จ → เดินสถานะพัสดุจาก 6 (วัสดุเข้าคลัง) ไป 7 (ส่งบัญชี/ส่งการเงิน)
+            // ส่งสำเร็จ → เดินสถานะพัสดุจาก 6 (วัสดุเข้าคลัง) ไป 7 (ส่งการเงิน)
             $order->status = 7;
             if (!$order->save(false, ['status'])) {
-                throw new \RuntimeException('อัปเดตสถานะใบสั่งซื้อเป็น "ส่งบัญชี" ไม่สำเร็จ');
+                throw new \RuntimeException('อัปเดตสถานะใบสั่งซื้อเป็น "ส่งการเงิน" ไม่สำเร็จ');
             }
-            Yii::$app->session->setFlash('success', 'ส่งเอกสารเข้ากล่องรอรับของการเงินแล้ว และเปลี่ยนสถานะพัสดุเป็น "ส่งบัญชี" เรียบร้อย');
+            Yii::$app->session->setFlash('success', 'ส่งเอกสารเข้ากล่องรอรับของการเงินแล้ว และเปลี่ยนสถานะพัสดุเป็น "ส่งการเงิน" เรียบร้อย');
             return $this->redirect($sourceRedirect);
         } catch (\DomainException $e) {
             Yii::$app->session->setFlash('info', $e->getMessage());

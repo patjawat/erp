@@ -15,7 +15,7 @@ use Yii;
  *
  * รหัสสถานะจริง (categorise name='order_status'):
  *   1 ขอซื้อ(PR) · 2 ผอ.อนุมัติ · 3 ทะเบียนคุม · 4 ใบสั่งซื้อ
- *   5 ตรวจรับวัสดุ · 6 วัสดุเข้าคลัง · 7 ส่งบัญชี · 8 ยกเลิก
+ *   5 ตรวจรับวัสดุ · 6 วัสดุเข้าคลัง · 7 ส่งการเงิน · 8 ยกเลิก
  */
 class PurchaseDashboardService
 {
@@ -40,7 +40,7 @@ class PurchaseDashboardService
         4 => ['label' => 'ออกใบสั่งซื้อ', 'cssvar' => '--bs-orange'],
         5 => ['label' => 'ตรวจรับวัสดุ', 'cssvar' => '--bs-pink'],
         6 => ['label' => 'เข้าคลัง', 'cssvar' => '--bs-green'],
-        7 => ['label' => 'ส่งบัญชี', 'cssvar' => '--bs-teal'],
+        7 => ['label' => 'ส่งการเงิน', 'cssvar' => '--bs-teal'],
     ];
 
     /** วันที่อ้างอิงสำหรับคำนวณอายุงาน (ค้างกี่วัน) */

@@ -78,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             <div class="border border-secondary border-opacity-25 p-3 rounded">
                                 <?php
-                                // ส่งการเงินแล้วหรือยัง = มีสำเนาในกล่องรอรับของการเงิน (ส่งแล้วสถานะพัสดุขึ้นเป็น 7 ส่งบัญชี)
+                                // ส่งการเงินแล้วหรือยัง = มีสำเนาในกล่องรอรับของการเงิน (ส่งแล้วสถานะพัสดุขึ้นเป็น 7 ส่งการเงิน)
                                 $apSourceType = \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::classify((string) $model->category_id, (string) $model->group_id);
                                 $sentToFinance = \app\modules\finance\models\FinanceInbox::find()->where([
                                     'source_system' => \app\modules\finance\services\PurchaseFinanceSnapshotBuilder::SOURCE_SYSTEM,
