@@ -1,5 +1,6 @@
 <?php
 
+use app\modules\finance\services\FinanceRegisterService;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -11,21 +12,14 @@ $this->title = 'ทะเบียนคุมงานการเงิน';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$statusMeta = [
-    'ready'  => ['label' => 'พร้อมพัฒนา', 'badge' => 'bg-success-subtle text-success-emphasis', 'dot' => 'text-success'],
-    'extend' => ['label' => 'ต่อยอด', 'badge' => 'bg-warning-subtle text-warning-emphasis', 'dot' => 'text-warning'],
-    'todo'   => ['label' => 'ยังไม่มีข้อมูล', 'badge' => 'bg-danger-subtle text-danger-emphasis', 'dot' => 'text-danger'],
-];
-
-// จัดกลุ่มทะเบียนตามหมวด
+// จัดกลุ่มตามหมวด + คิดสถานะจริงจาก builder (พร้อมใช้งานเมื่อมี builder แล้ว)
 $byCat = [];
+$ready = 0;
+$soon = 0;
 foreach ($registers as $r) {
+    $r['ready'] = FinanceRegisterService::isImplemented($r['key']);
     $byCat[$r['cat']][] = $r;
-}
-
-$counts = ['ready' => 0, 'extend' => 0, 'todo' => 0];
-foreach ($registers as $r) {
-    $counts[$r['status']]++;
+    $r['ready'] ? $ready++ : $soon++;
 }
 
 $this->beginBlock('page-title');
@@ -40,23 +34,22 @@ $this->endBlock();
 ?>
 
 <div class="row g-3 mb-4">
-    <?php foreach ([
-        ['label' => 'พร้อมพัฒนา (มีข้อมูลแล้ว)', 'value' => $counts['ready'], 'class' => 'text-success-emphasis', 'icon' => 'bi-check-circle'],
-        ['label' => 'ต่อยอดจากของเดิม', 'value' => $counts['extend'], 'class' => 'text-warning-emphasis', 'icon' => 'bi-tools'],
-        ['label' => 'ยังไม่มีข้อมูลต้นทาง', 'value' => $counts['todo'], 'class' => 'text-danger-emphasis', 'icon' => 'bi-hourglass-split'],
-    ] as $summary): ?>
-        <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body py-3 d-flex align-items-center gap-3">
-                    <i class="bi <?= $summary['icon'] ?> fs-2 <?= $summary['class'] ?>" aria-hidden="true"></i>
-                    <div>
-                        <div class="fs-3 fw-semibold <?= $summary['class'] ?>"><?= (int) $summary['value'] ?> <span class="fs-6 fw-normal text-body-secondary">เล่ม</span></div>
-                        <div class="text-body-secondary small"><?= Html::encode($summary['label']) ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endforeach; ?>
+    <div class="col-12 col-md-6">
+        <div class="card h-100 shadow-sm"><div class="card-body py-3 d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle fs-2 text-success-emphasis" aria-hidden="true"></i>
+            <div><div class="fs-3 fw-semibold text-success-emphasis"><?= (int) $ready ?> <span class="fs-6 fw-normal text-body-secondary">เล่ม</span></div>
+            <div class="text-body-secondary small">พร้อมใช้งาน (พิมพ์/Excel ได้)</div></div>
+        </div></div>
+    </div>
+    <?php if ($soon): ?>
+    <div class="col-12 col-md-6">
+        <div class="card h-100 shadow-sm"><div class="card-body py-3 d-flex align-items-center gap-3">
+            <i class="bi bi-hourglass-split fs-2 text-body-secondary" aria-hidden="true"></i>
+            <div><div class="fs-3 fw-semibold text-body-secondary"><?= (int) $soon ?> <span class="fs-6 fw-normal text-body-secondary">เล่ม</span></div>
+            <div class="text-body-secondary small">เร็ว ๆ นี้</div></div>
+        </div></div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php foreach ($categories as $catKey => $cat): ?>
@@ -68,7 +61,6 @@ $this->endBlock();
         </div>
         <div class="list-group list-group-flush">
             <?php foreach ($rows as $r): ?>
-                <?php $meta = $statusMeta[$r['status']]; ?>
                 <a href="<?= Url::to(['/finance/register/view', 'key' => $r['key']]) ?>"
                    class="list-group-item list-group-item-action py-3">
                     <div class="d-flex justify-content-between align-items-start gap-3">
@@ -76,14 +68,14 @@ $this->endBlock();
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                 <span class="badge bg-secondary-subtle text-secondary-emphasis font-monospace"><?= Html::encode($r['no']) ?></span>
                                 <strong><?= Html::encode($r['label']) ?></strong>
-                                <span class="badge <?= $meta['badge'] ?>">
-                                    <i class="bi bi-circle-fill <?= $meta['dot'] ?>" style="font-size:.5rem" aria-hidden="true"></i>
-                                    <?= Html::encode($meta['label']) ?>
-                                </span>
                             </div>
                             <small class="text-body-secondary"><i class="bi bi-database me-1" aria-hidden="true"></i><?= Html::encode($r['source']) ?></small>
                         </div>
-                        <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis text-nowrap">เฟส <?= (int) $r['phase'] ?></span>
+                        <?php if ($r['ready']): ?>
+                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis text-nowrap"><i class="bi bi-check2 me-1" aria-hidden="true"></i>พร้อมใช้งาน</span>
+                        <?php else: ?>
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis text-nowrap">เร็ว ๆ นี้</span>
+                        <?php endif; ?>
                     </div>
                 </a>
             <?php endforeach; ?>
@@ -93,5 +85,5 @@ $this->endBlock();
 
 <p class="text-body-secondary small mt-3">
     <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-    แผนพัฒนาเต็มดูที่ <code>docs/finance/control-registry-plan.md</code> — เฟส 0 กำลังทำ Register Layer กลางสำหรับทะเบียน "พร้อมพัฒนา"
+    ทะเบียนคุมทั้งหมดฉายจากธุรกรรมจริงในระบบ — เปิดแต่ละเล่มเพื่อดู/กรอง/พิมพ์/ส่งออก Excel
 </p>
