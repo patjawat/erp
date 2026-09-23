@@ -878,36 +878,42 @@ HTML,
     // ตารางประเภทหนังสือแยกตามหน่วยงานที่ส่งมา 10 อันดับ
     public function summaryOrg()
     {
-        return self::find()
-            ->select([
-                'c.title as org_name',
-                'd.thai_year',
-                new Expression('COUNT(CASE WHEN d.document_type = "DT1" THEN 1 END) AS DT1'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT2" THEN 1 END) AS DT2'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT3" THEN 1 END) AS DT3'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT4" THEN 1 END) AS DT4'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT5" THEN 1 END) AS DT5'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT6" THEN 1 END) AS DT6'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT7" THEN 1 END) AS DT7'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT8" THEN 1 END) AS DT8'),
-                new Expression('COUNT(CASE WHEN d.document_type = "DT9" THEN 1 END) AS DT9'),
-                new Expression('COUNT(CASE WHEN d.document_type NOT IN ("DT1", "DT2", "DT3", "DT4", "DT5", "DT8", "DT9") THEN 1 END) AS other_count'),
-                new Expression('count(d.id) as total_count'),
-            ])
-            ->alias('d')
+        // document_org เป็นคอลัมน์ JSON — join ตรงกับ categorise.code ใช้ index ไม่ได้
+        // (เดิมเทียบ JSON ทุกเอกสาร × ทุกหน่วยงาน ~29 วินาที) จึงนับรวมรายหน่วยงานก่อนแล้วค่อย join ชื่อ
+        // ผลเท่าเดิม: เฉพาะค่า JSON แบบ string ("4") ที่จับคู่กับ code ได้ ค่าอื่น (เช่น array) ตกไปกลุ่มไม่ระบุ
+        $types = ['DT1', 'DT2', 'DT3', 'DT4', 'DT5', 'DT6', 'DT7', 'DT8', 'DT9'];
+        $inner = [
+            'org_code' => new Expression("IF(JSON_TYPE(document_org) = 'STRING', JSON_UNQUOTE(document_org), NULL)"),
+        ];
+        $outer = ['c.title as org_name', 't.thai_year'];
+        foreach ($types as $type) {
+            $inner[$type] = new Expression("SUM(CASE WHEN document_type = '{$type}' THEN 1 ELSE 0 END)");
+            $outer[$type] = new Expression("SUM(t.{$type})");
+        }
+        $inner['other_count'] = new Expression("SUM(CASE WHEN document_type NOT IN ('DT1', 'DT2', 'DT3', 'DT4', 'DT5', 'DT8', 'DT9') THEN 1 ELSE 0 END)");
+        $inner['total_count'] = new Expression('COUNT(*)');
+        $outer['other_count'] = new Expression('SUM(t.other_count)');
+        $outer['total_count'] = new Expression('SUM(t.total_count)');
+
+        $byOrg = self::find()
+            ->select(array_merge($inner, ['thai_year']))
+            ->where(['thai_year' => (string) $this->thai_year])
+            ->groupBy(['org_code', 'thai_year']);
+
+        return (new \yii\db\Query())
+            ->select($outer)
+            ->from(['t' => $byOrg])
             ->leftJoin(['c' => Categorise::tableName()], [
                 'and',
-                'c.code = d.document_org',
+                't.org_code COLLATE utf8mb4_unicode_ci = c.code',
                 ['c.name' => 'document_org'],
             ])
-            ->where(['thai_year' => $this->thai_year])
-            ->groupBy(['c.code', 'd.thai_year'])
+            ->groupBy(['c.code', 't.thai_year'])
             ->orderBy([
-                'd.thai_year' => SORT_DESC,
+                't.thai_year' => SORT_DESC,
                 'total_count' => SORT_DESC,
             ])
             ->limit(10)
-            ->asArray()
             ->all();
     }
 

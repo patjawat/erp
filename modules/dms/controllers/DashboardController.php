@@ -15,7 +15,8 @@ class DashboardController extends \yii\web\Controller
     public function actionIndex()
     {
         $searchModel = new DocumentSearch([
-            'thai_year' => (Date('Y') + 543),
+            // thai_year ในตารางเป็น varchar — ส่งเป็น string เพื่อให้ MySQL ใช้ index ได้ (int ทำให้ scan ทั้งตาราง)
+            'thai_year' => (string) (date('Y') + 543),
         ]);
         $searchModel->load($this->request->queryParams);
 
