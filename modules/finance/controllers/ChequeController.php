@@ -201,6 +201,10 @@ class ChequeController extends Controller
         if (!$tpl) {
             throw new NotFoundHttpException('ยังไม่มีแม่แบบเช็ค');
         }
+        // พิมพ์จากทะเบียนครั้งแรก → เดินสถานะ "พิมพ์แล้ว" อัตโนมัติ
+        if ($cheque->status === FinanceCheque::STATUS_DRAFT) {
+            $cheque->moveTo(FinanceCheque::STATUS_PRINTED);
+        }
         return $this->outputPdf($tpl, [
             'cheque_date' => $cheque->cheque_date,
             'payee' => $cheque->payee_name,
