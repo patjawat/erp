@@ -5,7 +5,7 @@ use yii\helpers\Url;
 
 /** @var string $stage */
 /** @var array $machines */
-/** @var array $summaryByAsset  asset_id => [times, in_kg, out_kg] */
+/** @var array $summaryByAsset  asset_id => [times, in_kg] */
 /** @var array $runByAsset       asset_id => running round */
 /** @var array $pendingRecoveries */
 $isWash = ($stage ?? 'WASH') === 'WASH';
@@ -78,7 +78,7 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                         <?php endif; ?>
 
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top small">
-                            <span class="text-body-secondary">วันนี้ <span class="fw-semibold text-body"><?= (int) ($s['times'] ?? 0) ?></span> รอบ · เข้า <?= number_format((float) ($s['in_kg'] ?? 0), 0) ?><?= (float) ($s['out_kg'] ?? 0) > 0 ? ' / ออก ' . number_format((float) $s['out_kg'], 0) : '' ?> กก.</span>
+                            <span class="text-body-secondary">วันนี้ <span class="fw-semibold text-body"><?= (int) ($s['times'] ?? 0) ?></span> รอบ · เข้า <?= number_format((float) ($s['in_kg'] ?? 0), 0) ?> กก.</span>
                             <a href="<?= Url::to(['history', 'stage' => $stage, 'asset_id' => $aid]) ?>" class="link-secondary text-nowrap ms-2"><i class="bi bi-clock-history"></i></a>
                         </div>
                     </div>

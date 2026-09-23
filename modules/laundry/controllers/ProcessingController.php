@@ -62,7 +62,6 @@ class ProcessingController extends Controller
                     'asset_id',
                     'times' => new Expression('COUNT(*)'),
                     'in_kg' => new Expression('COALESCE(SUM(input_kg),0)'),
-                    'out_kg' => new Expression('COALESCE(SUM(output_kg),0)'),
                 ])
                 ->from('laundry_processing_batch')
                 ->where(['stage' => $stage, 'asset_id' => $assetIds])

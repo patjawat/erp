@@ -46,7 +46,7 @@ class FinishController extends Controller
         $externalOptions = LaundryExternalSource::options();
 
         // รอบอบที่เสร็จแล้ว (อ้างอิงได้)
-        $dryBatches = (new Query())->select(['b.id', 'b.batch_no', 'b.input_kg', 'b.output_kg', 'b.ended_at', 'code' => 'a.code'])
+        $dryBatches = (new Query())->select(['b.id', 'b.batch_no', 'b.input_kg', 'b.ended_at', 'code' => 'a.code'])
             ->from(['b' => 'laundry_processing_batch'])
             ->leftJoin(['a' => 'asset'], 'a.id = b.asset_id')
             ->where(['b.stage' => 'DRY', 'b.status' => 'COMPLETED'])

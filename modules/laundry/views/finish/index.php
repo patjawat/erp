@@ -20,7 +20,7 @@ $canManage = Yii::$app->user->can('laundry.manage');
 $source = Yii::$app->request->get('source') === 'EXTERNAL' ? 'EXTERNAL' : 'DRY';
 $batchOptions = [];
 foreach ($dryBatches as $b) {
-    $batchOptions[$b['id']] = ($b['batch_no'] ?? '#' . $b['id']) . ' · ' . ($b['code'] ?: '') . ($b['output_kg'] !== null ? ' · ออก ' . number_format((float) $b['output_kg'], 0) : ' · เข้า ' . number_format((float) $b['input_kg'], 0)) . ' กก.';
+    $batchOptions[$b['id']] = ($b['batch_no'] ?? '#' . $b['id']) . ' · ' . ($b['code'] ?: '') . ' · เข้าอบ ' . number_format((float) $b['input_kg'], 0) . ' กก.';
 }
 ?>
 <div class="container-fluid py-3">

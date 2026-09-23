@@ -55,7 +55,7 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
             <table class="table align-middle mb-0">
                 <thead class="table-light"><tr>
                     <th class="ps-4">เลขรอบ</th><th>เครื่อง</th><th>กลุ่มผ้า</th>
-                    <th>เริ่ม–สิ้นสุด</th><th class="text-end">เข้า (กก.)</th><th class="text-end">ออก (กก.)</th><th class="pe-4">สถานะ</th>
+                    <th>เริ่ม–สิ้นสุด</th><th class="text-end">เข้า (กก.)</th><th class="pe-4">สถานะ</th>
                 </tr></thead>
                 <tbody>
                 <?php foreach ($provider->getModels() as $b): ?>
@@ -64,8 +64,7 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                         <td class="small"><?= Html::encode($b['asset_code'] ?: '#' . $b['asset_id']) ?></td>
                         <td><?= Html::encode($classLabel($b['linen_class'])) ?></td>
                         <td class="small"><?= Html::encode(ThaiDateHelper::formatThaiDate($b['started_at']) . ' ' . date('H:i', strtotime($b['started_at']))) ?><?= $b['ended_at'] ? '<br>ถึง ' . date('H:i', strtotime($b['ended_at'])) : '' ?></td>
-                        <td class="text-end"><?= number_format((float) $b['input_kg'], 1) ?></td>
-                        <td class="text-end fw-semibold"><?= $b['output_kg'] === null ? '—' : number_format((float) $b['output_kg'], 1) ?></td>
+                        <td class="text-end fw-semibold"><?= number_format((float) $b['input_kg'], 1) ?></td>
                         <td class="pe-4">
                             <?php if ($b['status'] === 'COMPLETED'): ?><span class="badge text-bg-success">เสร็จ</span>
                             <?php elseif ($b['status'] === 'ABORTED'): ?><span class="badge text-bg-danger">หยุด</span>
@@ -75,7 +74,7 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                     </tr>
                 <?php endforeach; ?>
                 <?php if (!$provider->getModels()): ?>
-                    <tr><td colspan="7" class="text-center text-body-secondary py-5"><i class="bi bi-inbox fs-3 d-block mb-2"></i>ไม่พบรอบในช่วงที่เลือก</td></tr>
+                    <tr><td colspan="6" class="text-center text-body-secondary py-5"><i class="bi bi-inbox fs-3 d-block mb-2"></i>ไม่พบรอบในช่วงที่เลือก</td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>
