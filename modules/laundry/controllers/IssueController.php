@@ -54,7 +54,28 @@ class IssueController extends Controller
 
         // ชื่อผู้จ่าย
         $staffNames = $this->staffNames(array_filter(array_column($rows, 'created_by')));
-        return $this->render('index', compact('date', 'rows', 'staffNames'));
+
+        // การ์ดหน่วยงาน (เรียงตามหน้าตั้งค่า เหมือนรับผ้า/ตรวจนับ) + ยอดส่งของวันนั้น + ผลนับล่าสุด
+        $units = LaundryUnit::find()->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $treeIds = array_map(static fn($u) => $u->tree_id, $units);
+        $names = $treeIds
+            ? Organization::find()->select(['name', 'id'])->where(['id' => $treeIds])->indexBy('id')->column()
+            : [];
+        $issuedToday = [];
+        foreach ($rows as $r) {
+            $t = (int) $r['tree_id'];
+            $issuedToday[$t]['times'] = ($issuedToday[$t]['times'] ?? 0) + 1;
+            $issuedToday[$t]['total'] = ($issuedToday[$t]['total'] ?? 0) + (int) $r['total'];
+        }
+        $lastCount = $treeIds
+            ? (new Query())->select(['counted_at' => new Expression('MAX(counted_at)'), 'tree_id'])
+                ->from('laundry_unit_count')->where(['tree_id' => $treeIds])->groupBy('tree_id')->indexBy('tree_id')->column()
+            : [];
+        $parUnits = $treeIds
+            ? array_flip((new Query())->select('department_id')->distinct()->from('laundry_par')->where(['department_id' => $treeIds])->column())
+            : [];
+
+        return $this->render('index', compact('date', 'rows', 'staffNames', 'units', 'names', 'issuedToday', 'lastCount', 'parUnits'));
     }
 
     /** ฟอร์มเปิดรายการส่งผ้า (เลือกอ้างอิงตรวจนับ หรือหน่วยงาน → ตารางประเภทผ้า) */
@@ -81,14 +102,11 @@ class IssueController extends Controller
             ->orderBy(['uc.id' => SORT_DESC])->limit(50)->all() as $r) {
             $countOptions[$r['id']] = ($r['count_no'] ?: '#' . $r['id']) . ' · ' . ($r['name'] ?: '') . ' · ' . AppHelper::convertToThai($r['counted_at']);
         }
-        $units = LaundryUnit::find()->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC])->all();
-        $unitOptions = [];
-        if ($units) {
-            $unitNames = Organization::find()->select(['name', 'id'])->where(['id' => array_map(fn($u) => $u->tree_id, $units)])->indexBy('id')->column();
-            foreach ($units as $u) {
-                $unitOptions[$u->tree_id] = $unitNames[$u->tree_id] ?? ('#' . $u->tree_id);
-            }
-        }
+        // หน่วยงานเรียงตามหน้าตั้งค่า (ตรงกับลำดับการ์ด)
+        $unitOptions = LaundryUnit::options();
+        // วันที่ส่ง: ตามวันที่ที่เลือกในหน้าภาพรวม (ถ้ามี)
+        $dateInput = trim((string) $req->get('date'));
+        $issueDate = $dateInput !== '' ? (AppHelper::convertToGregorian($dateInput) ?: date('Y-m-d')) : date('Y-m-d');
 
         // สร้างแถวรายการผ้าจากยอดตั้งต้น (PAR) ของหน่วยงาน
         $lines = [];
@@ -112,7 +130,7 @@ class IssueController extends Controller
         }
 
         $staffName = current(array_values($this->staffNames([Yii::$app->user->id ? (int) Yii::$app->user->id : 0]))) ?: '';
-        return $this->render('create', compact('countId', 'countCode', 'treeId', 'unitName', 'countOptions', 'unitOptions', 'lines', 'staffName'));
+        return $this->render('create', compact('countId', 'countCode', 'treeId', 'unitName', 'countOptions', 'unitOptions', 'lines', 'staffName', 'issueDate'));
     }
 
     public function actionSave()

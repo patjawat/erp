@@ -64,6 +64,7 @@ $btn = fn(string $key) => 'btn ' . ($active === $key ? 'btn-primary' : 'btn-outl
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/setting/unit']) ?>"><i class="bi bi-diagram-3 me-2"></i>หน่วยงานซักฟอก</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/setting/item']) ?>"><i class="bi bi-collection me-2"></i>ประเภทผ้า</a></li>
+                <li><a class="dropdown-item" href="<?= Url::to(['/laundry/setting/external']) ?>"><i class="bi bi-truck me-2"></i>หน่วยงานภายนอก</a></li>
                 <li><a class="dropdown-item" href="<?= Url::to(['/laundry/setting/machine']) ?>"><i class="bi bi-cpu me-2"></i>เครื่องซัก–อบ</a></li>
             </ul>
         </div>

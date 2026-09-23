@@ -1,5 +1,6 @@
 <?php
 
+use kartik\widgets\Select2;
 use yii\helpers\Html;
 
 /** @var array $departments id => name */
@@ -25,8 +26,11 @@ $canManage = Yii::$app->user->can('laundry.manage');
         <?= Html::beginForm(['sub'], 'get', ['class' => 'row g-2 align-items-end']) ?>
             <div class="col-12 col-sm-6 col-lg-4">
                 <label class="form-label">หน่วยงาน</label>
-                <?= Html::dropDownList('department_id', $departmentId ?: '', $departments, [
-                    'prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'onchange' => 'this.form.submit()',
+                <?= Select2::widget([
+                    'name' => 'department_id', 'value' => $departmentId ?: '', 'data' => $departments,
+                    'options' => ['placeholder' => 'ค้นหา/เลือกหน่วยงาน', 'id' => 'sub-department'],
+                    'pluginOptions' => ['allowClear' => false, 'width' => '100%'],
+                    'pluginEvents' => ['change' => 'function(){ this.form.submit(); }'],
                 ]) ?>
             </div>
         <?= Html::endForm() ?>

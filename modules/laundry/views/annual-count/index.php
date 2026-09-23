@@ -1,5 +1,6 @@
 <?php
 
+use kartik\widgets\Select2;
 use yii\helpers\Html;
 
 $this->title = 'สอบยอดผ้ารายหน่วยงาน';
@@ -15,7 +16,11 @@ $canManage = Yii::$app->user->can('laundry.manage');
         <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body">
             <h5 class="fw-semibold">เปิดรอบสอบยอด</h5>
             <?= Html::beginForm(['open'], 'post', ['class' => 'row g-3 align-items-end']) ?>
-                <div class="col-12 col-sm-7"><label class="form-label">หน่วยงาน</label><?= Html::dropDownList('department_id', null, $departments, ['prompt' => 'เลือกหน่วยงาน', 'class' => 'form-select', 'required' => true]) ?></div>
+                <div class="col-12 col-sm-7"><label class="form-label">หน่วยงาน</label><?= Select2::widget([
+                    'name' => 'department_id', 'data' => $departments,
+                    'options' => ['placeholder' => 'ค้นหา/เลือกหน่วยงาน', 'id' => 'annual-department', 'required' => true],
+                    'pluginOptions' => ['allowClear' => false, 'width' => '100%'],
+                ]) ?></div>
                 <div class="col-12 col-sm-2"><label class="form-label">ปี พ.ศ.</label><?= Html::input('number', 'count_year', (int) date('Y') + 543, ['class' => 'form-control', 'min' => 2543, 'max' => 2743, 'required' => true]) ?></div>
                 <div class="col-12 col-sm-3"><?= Html::submitButton('เปิดรอบ', ['class' => 'btn btn-primary rounded-3 w-100']) ?></div>
             <?= Html::endForm() ?>

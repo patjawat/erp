@@ -4,7 +4,9 @@ namespace app\modules\laundry\controllers;
 
 use app\modules\am\models\Asset;
 use app\modules\hr\models\Organization;
+use app\modules\laundry\models\LaundryExternalSource;
 use app\modules\laundry\models\LaundryItem;
+use app\modules\laundry\models\LaundryItemCategory;
 use app\modules\laundry\models\LaundryUnit;
 use app\modules\settings\models\OrgUnit;
 use Yii;
@@ -25,13 +27,13 @@ class SettingController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['unit', 'machine', 'item'], 'roles' => ['laundry.view']],
-                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete', 'machine-save', 'machine-delete', 'item-save', 'item-delete'], 'roles' => ['laundry.manage']],
+                    ['allow' => true, 'actions' => ['unit', 'machine', 'item', 'external'], 'roles' => ['laundry.view']],
+                    ['allow' => true, 'actions' => ['unit-save', 'unit-delete', 'machine-save', 'machine-delete', 'item-save', 'item-delete', 'category-save', 'category-delete', 'external-save', 'external-delete'], 'roles' => ['laundry.manage']],
                 ],
             ],
             'verbs' => [
                 'class' => VerbFilter::class,
-                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST'], 'machine-save' => ['POST'], 'machine-delete' => ['POST'], 'item-save' => ['POST'], 'item-delete' => ['POST']],
+                'actions' => ['unit-save' => ['POST'], 'unit-delete' => ['POST'], 'machine-save' => ['POST'], 'machine-delete' => ['POST'], 'item-save' => ['POST'], 'item-delete' => ['POST'], 'category-save' => ['POST'], 'category-delete' => ['POST'], 'external-save' => ['POST'], 'external-delete' => ['POST']],
             ],
         ];
     }
@@ -40,7 +42,10 @@ class SettingController extends Controller
     public function actionItem()
     {
         $items = LaundryItem::find()->orderBy(['is_active' => SORT_DESC, 'item_name' => SORT_ASC])->all();
-        return $this->render('item', compact('items'));
+        $categories = LaundryItemCategory::find()->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        // จัดกลุ่มรายการตามหมวด (แสดงเป็นหัวข้อในตาราง)
+        $grouped = LaundryItemCategory::group(array_map(static fn($it) => ['category_id' => $it->category_id, 'model' => $it], $items));
+        return $this->render('item', compact('items', 'categories', 'grouped'));
     }
 
     public function actionItemSave()
@@ -50,6 +55,9 @@ class SettingController extends Controller
         $model = $id ? (LaundryItem::findOne($id) ?: new LaundryItem()) : new LaundryItem();
         $model->item_name = trim((string) $req->post('item_name'));
         $model->is_active = $req->post('is_active') ? 1 : 0;
+        if ($req->post('category_id') !== null) {
+            $model->category_id = (int) $req->post('category_id') ?: null;
+        }
         if ($model->save()) {
             Yii::$app->session->setFlash('success', 'บันทึกประเภทผ้าแล้ว');
         } else {
@@ -78,6 +86,106 @@ class SettingController extends Controller
             Yii::$app->session->setFlash('success', 'ลบประเภทผ้าแล้ว');
         }
         return $this->redirect(['item']);
+    }
+
+    /** เพิ่ม/แก้หมวดประเภทผ้า (เช่น ผ้าของโรงพยาบาล / ผ้าจากหน่วยงานภายนอก) */
+    public function actionCategorySave()
+    {
+        $req = Yii::$app->request;
+        $id = (int) $req->post('id');
+        $model = $id ? LaundryItemCategory::findOne($id) : new LaundryItemCategory(['is_active' => 1]);
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบหมวดผ้า');
+        }
+        if (!$id) {
+            $model->created_by = Yii::$app->user->id ? (int) Yii::$app->user->id : null;
+        }
+        $model->name = trim((string) $req->post('name'));
+        $model->sort_order = (int) $req->post('sort_order');
+        if ($req->post('is_active') !== null) {
+            $model->is_active = $req->post('is_active') ? 1 : 0;
+        }
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกหมวดผ้าแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', implode(' ', $model->getFirstErrors()) ?: 'บันทึกไม่สำเร็จ');
+        }
+        return $this->redirect(['item']);
+    }
+
+    public function actionCategoryDelete()
+    {
+        $model = LaundryItemCategory::findOne((int) Yii::$app->request->post('id'));
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบหมวดผ้า');
+        }
+        // มีประเภทผ้าอยู่ในหมวด → ปิดใช้แทนลบ (ประเภทผ้าไม่หลุดหมวด)
+        if (LaundryItem::find()->where(['category_id' => $model->id])->exists()) {
+            $model->is_active = 0;
+            $model->save(false);
+            Yii::$app->session->setFlash('success', 'หมวดนี้มีประเภทผ้าอยู่ จึงปิดใช้งานแทนการลบ');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบหมวดผ้าแล้ว');
+        }
+        return $this->redirect(['item']);
+    }
+
+    /** ทะเบียนหน่วยงานภายนอกที่ส่งผ้ามาให้ (เช่น รพ.เลย) — ใช้ในหน้า นับ–รีด–QC */
+    public function actionExternal()
+    {
+        $sources = LaundryExternalSource::find()->orderBy(['is_active' => SORT_DESC, 'sort_order' => SORT_ASC, 'name' => SORT_ASC])->all();
+        // จำนวนครั้ง/ชิ้นที่รับมาแล้ว (ต่อหน่วยงาน)
+        $usage = (new Query())->select([
+                'external_source_id', 'times' => new \yii\db\Expression('COUNT(DISTINCT f.id)'),
+                'pieces' => new \yii\db\Expression('COALESCE(SUM(l.qty),0)'),
+            ])
+            ->from(['f' => 'laundry_finish'])->leftJoin(['l' => 'laundry_finish_line'], 'l.finish_id = f.id')
+            ->where(['f.source_type' => 'EXTERNAL'])->andWhere(['not', ['f.external_source_id' => null]])
+            ->groupBy('f.external_source_id')->indexBy('external_source_id')->all();
+        return $this->render('external', compact('sources', 'usage'));
+    }
+
+    public function actionExternalSave()
+    {
+        $req = Yii::$app->request;
+        $id = (int) $req->post('id');
+        $model = $id ? LaundryExternalSource::findOne($id) : new LaundryExternalSource(['is_active' => 1]);
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบหน่วยงานภายนอก');
+        }
+        if (!$id) {
+            $model->created_by = Yii::$app->user->id ? (int) Yii::$app->user->id : null;
+        }
+        $model->name = (string) $req->post('name');
+        $model->sort_order = (int) $req->post('sort_order');
+        if ($req->post('is_active') !== null) {
+            $model->is_active = $req->post('is_active') ? 1 : 0;
+        }
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'บันทึกหน่วยงานภายนอกแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', implode(' ', $model->getFirstErrors()) ?: 'บันทึกไม่สำเร็จ');
+        }
+        return $this->redirect(['external']);
+    }
+
+    public function actionExternalDelete()
+    {
+        $model = LaundryExternalSource::findOne((int) Yii::$app->request->post('id'));
+        if (!$model) {
+            throw new NotFoundHttpException('ไม่พบหน่วยงานภายนอก');
+        }
+        // เคยรับผ้าแล้ว → ปิดใช้แทนลบ (ประวัติยังอ้างชื่อได้)
+        if ((new Query())->from('laundry_finish')->where(['external_source_id' => $model->id])->exists()) {
+            $model->is_active = 0;
+            $model->save(false);
+            Yii::$app->session->setFlash('success', 'หน่วยงานนี้มีประวัติรับผ้าแล้ว จึงปิดใช้งานแทนการลบ');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบหน่วยงานภายนอกแล้ว');
+        }
+        return $this->redirect(['external']);
     }
 
     /** ตั้งค่าเครื่องซัก-อบ (เชื่อมครุภัณฑ์ + รายการเครื่อง) — ย้ายมาจากหน้าปฏิบัติงาน */

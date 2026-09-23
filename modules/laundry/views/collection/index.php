@@ -40,7 +40,7 @@ $canManage = Yii::$app->user->can('laundry.manage');
         </div></div>
     <?php else: ?>
         <?php $tones = ['primary', 'success', 'info', 'warning', 'danger', 'secondary']; ?>
-        <div class="row g-3">
+        <div class="row g-4 g-xl-5">
             <?php foreach ($units as $i => $u): $t = $totals[$u->tree_id] ?? null; $tone = $tones[$i % count($tones)]; $times = (int) ($t['times'] ?? 0); ?>
                 <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
                     <?php

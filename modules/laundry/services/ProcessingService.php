@@ -144,9 +144,13 @@ class ProcessingService
         }
     }
 
-    public function finish(int $batchId, $outputKg): void
+    /**
+     * ปิดรอบเครื่อง — น้ำหนักออกไม่บังคับ (หน้างานชั่งเฉพาะตอนเข้าเครื่อง ไม่ชั่งตอนออก)
+     * ว่าง = ไม่ได้ชั่ง (output_kg = NULL); ขั้นถัดไปที่ต้องใช้น้ำหนักจะใช้น้ำหนักเข้าแทน
+     */
+    public function finish(int $batchId, $outputKg = null): void
     {
-        $output = CollectionService::netKg($outputKg, '0');
+        $output = trim((string) $outputKg) === '' ? null : CollectionService::netKg($outputKg, '0');
         $tx = $this->db->beginTransaction();
         try {
             $batch = $this->lockedBatch($batchId);
@@ -256,13 +260,14 @@ class ProcessingService
             return (float) $row['net_kg'];
         }
         $row = $this->db->createCommand(
-            'SELECT output_kg, linen_class, stage, status FROM {{%laundry_processing_batch}} WHERE id = :id FOR UPDATE',
+            'SELECT input_kg, output_kg, linen_class, stage, status FROM {{%laundry_processing_batch}} WHERE id = :id FOR UPDATE',
             [':id' => $id]
         )->queryOne();
         if (!$row || $row['stage'] !== 'WASH' || $row['status'] !== 'COMPLETED' || $row['linen_class'] !== $class) {
             throw new InvalidArgumentException('รอบซักต้นทางยังไม่เสร็จหรือประเภทไม่ตรง');
         }
-        return (float) $row['output_kg'];
+        // ไม่ได้ชั่งตอนออก → ใช้น้ำหนักเข้าเครื่องแทน
+        return (float) ($row['output_kg'] ?? $row['input_kg']);
     }
 
     private function lockedBatch(int $id): array

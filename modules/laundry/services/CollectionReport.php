@@ -15,7 +15,11 @@ class CollectionReport
         $this->db = $db ?: Yii::$app->db;
     }
 
-    /** Rows grouped by actual collection month and department, never by wash date. */
+    /**
+     * Rows grouped by actual collection month and department, never by wash date.
+     * นับทุกรอบรับผ้า (ไม่กรองเฉพาะ CONFIRMED) — หน้ารับผ้าบันทึกเข้ารอบรายวันสถานะ OPEN และไม่มีขั้นยืนยันรอบ
+     * ในเมนูแล้ว ถ้ากรอง CONFIRMED รายงานจะว่างตลอด (ให้ตรงกับแดชบอร์ด)
+     */
     public function monthly(string $from, string $to, ?int $departmentId = null): array
     {
         $query = (new Query())
@@ -32,8 +36,7 @@ class CollectionReport
             ->innerJoin(['s' => 'laundry_collection_stop'], 's.id = w.stop_id')
             ->innerJoin(['r' => 'laundry_collection_round'], 'r.id = s.round_id')
             ->leftJoin(['d' => 'tree'], 'd.id = s.department_id')
-            ->where(['r.status' => 'CONFIRMED'])
-            ->andWhere(['>=', 's.collected_at', $from . ' 00:00:00'])
+            ->where(['>=', 's.collected_at', $from . ' 00:00:00'])
             ->andWhere(['<', 's.collected_at', (new \DateTimeImmutable($to))->modify('+1 day')->format('Y-m-d') . ' 00:00:00'])
             ->groupBy(['month', 's.department_id', 'd.name'])
             ->orderBy(['month' => SORT_ASC, 'department_name' => SORT_ASC]);

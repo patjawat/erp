@@ -29,7 +29,7 @@ class MachineReport
         ])->from(['m' => 'laundry_machine'])
             ->innerJoin(['a' => Asset::tableName()], 'a.id = m.asset_id')
             ->orderBy(['m.machine_type' => SORT_ASC, 'a.code' => SORT_ASC])->all($this->db);
-        $batches = (new Query())->select(['asset_id', 'stage', 'linen_class', 'status', 'input_kg', 'output_kg', 'started_at', 'ended_at'])
+        $batches = (new Query())->select(['asset_id', 'stage', 'linen_class', 'status', 'input_kg', 'started_at', 'ended_at'])
             ->from('laundry_processing_batch')
             ->where(['>=', 'started_at', sprintf('%04d-01-01 00:00:00', $year)])
             ->andWhere(['<', 'started_at', sprintf('%04d-01-01 00:00:00', $year + 1)])
@@ -49,7 +49,7 @@ class MachineReport
     {
         $result = [
             'completed' => 0, 'aborted' => 0, 'running' => 0,
-            'soiled_kg' => 0.0, 'infectious_kg' => 0.0, 'output_kg' => 0.0,
+            'soiled_kg' => 0.0, 'infectious_kg' => 0.0,
             'aborted_input_kg' => 0.0, 'completed_minutes' => 0,
             'load_percent' => null,
         ];
@@ -75,7 +75,6 @@ class MachineReport
             } else {
                 $result['soiled_kg'] += $input;
             }
-            $result['output_kg'] += (float) $batch['output_kg'];
             if ($batch['ended_at'] && $batch['started_at']) {
                 $seconds = strtotime($batch['ended_at']) - strtotime($batch['started_at']);
                 $result['completed_minutes'] += max(0, (int) ceil($seconds / 60));

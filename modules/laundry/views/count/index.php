@@ -9,7 +9,8 @@ use yii\helpers\Html;
 /** @var string $date */
 /** @var LaundryUnit[] $units */
 /** @var array $names   tree_id => name */
-/** @var array $items   [{id, item_name}] */
+/** @var array $items   [{id, item_name, category_id}] */
+/** @var array $itemGroups [['name' => หมวด, 'items' => [...]], ...] */
 /** @var array $summary tree_id => [times, latest] */
 $this->title = 'ตรวจนับผ้า';
 $canManage = Yii::$app->user->can('laundry.manage');
@@ -40,7 +41,7 @@ $tones = ['success', 'primary', 'info', 'warning', 'danger', 'secondary'];
             <i class="bi bi-collection fs-1 d-block mb-3"></i>ยังไม่มีประเภทผ้า — เพิ่มที่ <?= Html::a('ตั้งค่า → ประเภทผ้า', ['/laundry/setting/item'], ['class' => 'fw-semibold']) ?> ก่อน
         </div></div>
     <?php else: ?>
-        <div class="row g-3">
+        <div class="row g-4 g-xl-5">
             <?php foreach ($units as $i => $u): $s = $summary[$u->tree_id] ?? null; $tone = $tones[$i % count($tones)]; ?>
                 <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
                     <?php
@@ -96,11 +97,16 @@ $tones = ['success', 'primary', 'info', 'warning', 'danger', 'secondary'];
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light"><tr><th class="ps-2">ประเภทผ้า</th><th class="text-end pe-2" style="width:130px">จำนวน (ชิ้น)</th></tr></thead>
                     <tbody>
-                    <?php foreach ($items as $it): ?>
+                    <?php foreach ($itemGroups as $g): ?>
+                        <?php if (count($itemGroups) > 1): ?>
+                            <tr><td colspan="2" class="ps-2 fw-semibold text-primary bg-body-tertiary small"><i class="bi bi-tag me-1"></i><?= Html::encode($g['name']) ?></td></tr>
+                        <?php endif; ?>
+                        <?php foreach ($g['items'] as $it): ?>
                         <tr>
                             <td class="ps-2"><?= Html::encode($it['item_name']) ?></td>
                             <td class="pe-2"><?= Html::input('number', 'qty[' . $it['id'] . ']', '', ['class' => 'form-control form-control-sm text-end count-qty', 'min' => '0', 'step' => '1', 'inputmode' => 'numeric', 'placeholder' => '0']) ?></td>
                         </tr>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
                     </tbody>
                 </table>

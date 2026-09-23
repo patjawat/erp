@@ -2,7 +2,6 @@
 
 namespace app\modules\laundry\controllers;
 
-use app\modules\hr\models\Organization;
 use app\modules\laundry\services\AnnualCountService;
 use Yii;
 use yii\base\InvalidArgumentException;
@@ -38,7 +37,8 @@ class AnnualCountController extends Controller
         $counts = (new Query())->select(['c.*', 'department_name' => 'd.name'])
             ->from(['c' => 'laundry_annual_count'])->leftJoin(['d' => 'tree'], 'd.id = c.department_id')
             ->orderBy(['c.count_year' => SORT_DESC, 'c.id' => SORT_DESC])->limit(100)->all();
-        $departments = Organization::find()->select(['name', 'id'])->orderBy(['name' => SORT_ASC])->indexBy('id')->column();
+        // หน่วยงานเรียงตามหน้าตั้งค่าซักฟอก
+        $departments = \app\modules\laundry\models\LaundryUnit::options();
         return $this->render('index', compact('counts', 'departments'));
     }
 

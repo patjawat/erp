@@ -205,7 +205,8 @@ class CollectionController extends Controller
         }
         $departmentId = (int) Yii::$app->request->get('department_id');
         $rows = (new CollectionReport())->monthly($gy . '-01-01', $gy . '-12-31', $departmentId ?: null);
-        $departments = Organization::find()->select(['name', 'id'])->orderBy(['name' => SORT_ASC])->indexBy('id')->column();
+        // หน่วยงานเรียงตามหน้าตั้งค่าซักฟอก (รวมที่ปิดใช้ เผื่อดูย้อนหลัง)
+        $departments = \app\modules\laundry\models\LaundryUnit::options(false);
         return $this->render('report', compact('rows', 'year', 'departmentId', 'departments'));
     }
 

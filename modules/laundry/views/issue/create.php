@@ -2,6 +2,7 @@
 
 use app\components\AppHelper;
 use app\widgets\datepicker\DatepickerThai;
+use kartik\widgets\Select2;
 use yii\helpers\Html;
 
 /** @var int $countId */
@@ -12,6 +13,7 @@ use yii\helpers\Html;
 /** @var array $unitOptions   tree_id => name */
 /** @var array $lines */
 /** @var string $staffName */
+/** @var string $issueDate Y-m-d */
 $this->title = 'เพิ่มข้อมูลส่งผ้า';
 ?>
 <div class="container-fluid py-3">
@@ -19,7 +21,7 @@ $this->title = 'เพิ่มข้อมูลส่งผ้า';
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h4 fw-bold mb-0"><i class="bi bi-box-arrow-right me-2"></i>เพิ่มข้อมูลส่งผ้า</h1>
-        <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับ', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::a('<i class="bi bi-arrow-left me-1"></i>กลับ', ['index', 'date' => AppHelper::convertToThai($issueDate)], ['class' => 'btn btn-outline-secondary']) ?>
     </div>
 
     <?php if (Yii::$app->session->hasFlash('error')): ?>
@@ -29,18 +31,23 @@ $this->title = 'เพิ่มข้อมูลส่งผ้า';
     <!-- เลือกอ้างอิง / หน่วยงาน -->
     <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body">
         <?= Html::beginForm(['create'], 'get', ['class' => 'row g-3 align-items-end']) ?>
+            <?= Html::hiddenInput('date', AppHelper::convertToThai($issueDate)) ?>
             <div class="col-12 col-md-5">
                 <label class="form-label">อ้างอิงผลตรวจนับ <span class="text-body-secondary small">(รู้ส่วนขาด)</span></label>
-                <?= Html::dropDownList('count_id', $countId ?: '', $countOptions, [
-                    'prompt' => '— เลือกผลตรวจนับ —', 'class' => 'form-select', 'id' => 'sel_count',
-                    'onchange' => "document.getElementById('sel_tree').value='';this.form.submit()",
+                <?= Select2::widget([
+                    'name' => 'count_id', 'value' => $countId ?: '', 'data' => $countOptions,
+                    'options' => ['placeholder' => '— ค้นหา/เลือกผลตรวจนับ —', 'id' => 'sel_count'],
+                    'pluginOptions' => ['allowClear' => true, 'width' => '100%'],
+                    'pluginEvents' => ['select2:select' => "function(){ $('#sel_tree').val(null); this.form.submit(); }"],
                 ]) ?>
             </div>
             <div class="col-12 col-md-5">
                 <label class="form-label">หรือเลือกหน่วยงาน <span class="text-body-secondary small">(กรอกเอง)</span></label>
-                <?= Html::dropDownList('tree_id', $countId ? '' : ($treeId ?: ''), $unitOptions, [
-                    'prompt' => '— เลือกหน่วยงาน —', 'class' => 'form-select', 'id' => 'sel_tree',
-                    'onchange' => "document.getElementById('sel_count').value='';this.form.submit()",
+                <?= Select2::widget([
+                    'name' => 'tree_id', 'value' => $countId ? '' : ($treeId ?: ''), 'data' => $unitOptions,
+                    'options' => ['placeholder' => '— ค้นหา/เลือกหน่วยงาน —', 'id' => 'sel_tree'],
+                    'pluginOptions' => ['allowClear' => true, 'width' => '100%'],
+                    'pluginEvents' => ['select2:select' => "function(){ $('#sel_count').val(null); this.form.submit(); }"],
                 ]) ?>
             </div>
         <?= Html::endForm() ?>
@@ -61,7 +68,7 @@ $this->title = 'เพิ่มข้อมูลส่งผ้า';
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2 small">
                         <span class="text-body-secondary">วันที่</span>
-                        <?= DatepickerThai::widget(['name' => 'issued_date', 'value' => AppHelper::convertToThai(date('Y-m-d')), 'options' => ['class' => 'form-control form-control-sm', 'style' => 'width:130px', 'autocomplete' => 'off']]) ?>
+                        <?= DatepickerThai::widget(['name' => 'issued_date', 'value' => AppHelper::convertToThai($issueDate), 'options' => ['class' => 'form-control form-control-sm', 'style' => 'width:130px', 'autocomplete' => 'off']]) ?>
                         <span class="text-body-secondary">เวลา</span>
                         <?= Html::input('time', 'issued_time', date('H:i'), ['class' => 'form-control form-control-sm', 'style' => 'width:110px']) ?>
                         <span class="text-body-secondary">ผู้จ่าย <b class="text-body"><?= Html::encode($staffName) ?></b></span>

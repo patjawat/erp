@@ -4,6 +4,7 @@ namespace app\modules\laundry\controllers;
 
 use app\components\AppHelper;
 use app\modules\hr\models\Organization;
+use app\modules\laundry\models\LaundryItemCategory;
 use app\modules\laundry\models\LaundryUnit;
 use Yii;
 use yii\db\Expression;
@@ -46,9 +47,10 @@ class CountController extends Controller
             ? Organization::find()->select(['name', 'id'])->where(['id' => $treeIds])->indexBy('id')->column()
             : [];
 
-        // ประเภทผ้าทั้งหมด (ให้ลงจำนวนทีเดียว)
-        $items = (new Query())->select(['id', 'item_name'])->from('laundry_item')
+        // ประเภทผ้าทั้งหมด (ให้ลงจำนวนทีเดียว) แยกตามหมวด — ผ้าของ รพ. / ผ้าจากหน่วยงานภายนอก (Refer ส่งกลับ)
+        $items = (new Query())->select(['id', 'item_name', 'category_id'])->from('laundry_item')
             ->where(['is_active' => 1])->orderBy(['item_name' => SORT_ASC])->all();
+        $itemGroups = LaundryItemCategory::group($items);
 
         // สรุปต่อหน่วยงาน: จำนวนครั้ง + ผลนับล่าสุด (วันที่ / คนนับ / กี่ประเภท / รวมชิ้น)
         $summary = [];
@@ -85,7 +87,7 @@ class CountController extends Controller
             }
         }
 
-        return $this->render('index', compact('date', 'units', 'names', 'items', 'summary'));
+        return $this->render('index', compact('date', 'units', 'names', 'items', 'itemGroups', 'summary'));
     }
 
     public function actionSave()

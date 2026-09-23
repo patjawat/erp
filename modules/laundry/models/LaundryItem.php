@@ -10,6 +10,7 @@ use yii\db\ActiveRecord;
  * @property int $id
  * @property string $item_code
  * @property string $item_name
+ * @property int|null $category_id  หมวดผ้า (laundry_item_category)
  * @property string|null $stock_item_code
  * @property int $is_active
  * @property string $created_at
@@ -29,9 +30,15 @@ class LaundryItem extends ActiveRecord
             [['item_name'], 'string', 'max' => 255],
             [['item_code'], 'string', 'max' => 50],
             [['item_code'], 'unique'],
-            [['is_active', 'created_by'], 'integer'],
+            [['is_active', 'created_by', 'category_id'], 'integer'],
+            [['category_id'], 'exist', 'skipOnEmpty' => true, 'targetClass' => LaundryItemCategory::class, 'targetAttribute' => 'id'],
             [['created_at'], 'safe'],
         ];
+    }
+
+    public function getCategory()
+    {
+        return $this->hasOne(LaundryItemCategory::class, ['id' => 'category_id']);
     }
 
     public function beforeSave($insert)

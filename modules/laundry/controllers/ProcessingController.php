@@ -126,12 +126,13 @@ class ProcessingController extends Controller
                 ->orderBy(['w.id' => SORT_DESC])->limit(200)->all();
         } else {
             $sources = (new Query())->select([
-                'id' => 'b.id', 'kg' => 'b.output_kg', 'used_kg' => new \yii\db\Expression('COALESCE(u.used_kg, 0)'),
+                // ไม่ได้ชั่งตอนออก (output_kg ว่าง) → ใช้น้ำหนักเข้าเครื่องแทน
+                'id' => 'b.id', 'kg' => new \yii\db\Expression('COALESCE(b.output_kg, b.input_kg)'), 'used_kg' => new \yii\db\Expression('COALESCE(u.used_kg, 0)'),
                 'label' => 'b.batch_no',
             ])->from(['b' => 'laundry_processing_batch'])
                 ->leftJoin(['u' => $usedQuery], 'u.source_id = b.id')
                 ->where(['b.stage' => 'WASH', 'b.status' => 'COMPLETED', 'b.linen_class' => $linenClass])
-                ->andWhere('b.output_kg > COALESCE(u.used_kg, 0)')
+                ->andWhere('COALESCE(b.output_kg, b.input_kg) > COALESCE(u.used_kg, 0)')
                 ->orderBy(['b.id' => SORT_DESC])->limit(200)->all();
         }
         return $this->render('new', compact('stage', 'linenClass', 'mode', 'machines', 'sources'));

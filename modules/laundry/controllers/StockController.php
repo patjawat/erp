@@ -2,7 +2,6 @@
 
 namespace app\modules\laundry\controllers;
 
-use app\modules\hr\models\Organization;
 use app\modules\laundry\models\LaundryUnit;
 use Yii;
 use yii\db\Expression;
@@ -60,12 +59,8 @@ class StockController extends Controller
     {
         $departmentId = (int) Yii::$app->request->get('department_id');
 
-        // หน่วยงานซักฟอกทั้งหมด (เลือกเพื่อกำหนดยอดตั้งต้นได้)
-        $units = LaundryUnit::find()->where(['is_active' => 1])->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
-        $treeIds = array_map(static fn($u) => $u->tree_id, $units);
-        $departments = $treeIds
-            ? Organization::find()->select(['name', 'id'])->where(['id' => $treeIds])->orderBy(['name' => SORT_ASC])->indexBy('id')->column()
-            : [];
+        // หน่วยงานซักฟอกทั้งหมด เรียงตามหน้าตั้งค่า (เลือกเพื่อกำหนดยอดตั้งต้นได้)
+        $departments = LaundryUnit::options();
 
         $rows = [];
         $availableItems = [];

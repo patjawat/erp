@@ -66,8 +66,13 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                             <?php if ($canManage): ?>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
                                     <?= Html::beginForm(['finish', 'id' => $run['id']], 'post', ['class' => 'd-flex gap-1 flex-grow-1']) ?>
-                                        <?= Html::input('number', 'output_kg', '', ['class' => 'form-control form-control-sm', 'step' => '0.001', 'min' => '0.001', 'placeholder' => 'ออก กก.', 'required' => true]) ?>
-                                        <?= Html::submitButton('<i class="bi bi-check-lg"></i> ปิดรอบ', ['class' => 'btn btn-sm btn-success text-nowrap']) ?>
+                                        <?php if ($isWash): ?>
+                                            <?php // หน้างานชั่งเฉพาะตอนเข้าเครื่อง — ปิดรอบซักได้ทันทีไม่ต้องชั่งออก ?>
+                                            <?= Html::submitButton('<i class="bi bi-check-lg"></i> ซักเสร็จ / ปิดรอบ', ['class' => 'btn btn-sm btn-success text-nowrap flex-grow-1', 'data-confirm' => 'ปิดรอบซักนี้?']) ?>
+                                        <?php else: ?>
+                                            <?= Html::input('number', 'output_kg', '', ['class' => 'form-control form-control-sm', 'step' => '0.001', 'min' => '0.001', 'placeholder' => 'ออก กก. (ถ้าชั่ง)', 'title' => 'ไม่บังคับ — เว้นว่างได้ถ้าไม่ได้ชั่ง']) ?>
+                                            <?= Html::submitButton('<i class="bi bi-check-lg"></i> ปิดรอบ', ['class' => 'btn btn-sm btn-success text-nowrap']) ?>
+                                        <?php endif; ?>
                                     <?= Html::endForm() ?>
                                     <?= Html::beginForm(['abort', 'id' => $run['id']], 'post', ['class' => 'd-flex gap-1']) ?>
                                         <?= Html::textInput('reason', '', ['class' => 'form-control form-control-sm', 'style' => 'width:90px', 'placeholder' => 'เหตุหยุด', 'minlength' => 5, 'required' => true]) ?>
@@ -78,7 +83,7 @@ $classLabel = static fn($c) => $c === 'INFECTIOUS' ? 'ผ้าติดเช�
                         <?php endif; ?>
 
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top small">
-                            <span class="text-body-secondary">วันนี้ <span class="fw-semibold text-body"><?= (int) ($s['times'] ?? 0) ?></span> รอบ · เข้า <?= number_format((float) ($s['in_kg'] ?? 0), 0) ?> / ออก <?= number_format((float) ($s['out_kg'] ?? 0), 0) ?> กก.</span>
+                            <span class="text-body-secondary">วันนี้ <span class="fw-semibold text-body"><?= (int) ($s['times'] ?? 0) ?></span> รอบ · เข้า <?= number_format((float) ($s['in_kg'] ?? 0), 0) ?><?= (float) ($s['out_kg'] ?? 0) > 0 ? ' / ออก ' . number_format((float) $s['out_kg'], 0) : '' ?> กก.</span>
                             <a href="<?= Url::to(['history', 'stage' => $stage, 'asset_id' => $aid]) ?>" class="link-secondary text-nowrap ms-2"><i class="bi bi-clock-history"></i></a>
                         </div>
                     </div>
