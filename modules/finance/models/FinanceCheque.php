@@ -45,9 +45,39 @@ class FinanceCheque extends ActiveRecord
         ];
     }
 
+    /** ลำดับการเดินสถานะที่อนุญาต (ไม่รวม void ซึ่งทำได้ทุกสถานะที่ยังไม่ยกเลิก) */
+    public const FLOW = [
+        self::STATUS_DRAFT => [self::STATUS_PRINTED],
+        self::STATUS_PRINTED => [self::STATUS_HANDED],
+        self::STATUS_HANDED => [self::STATUS_CLEARED, self::STATUS_BOUNCED],
+        self::STATUS_BOUNCED => [self::STATUS_HANDED],
+        self::STATUS_CLEARED => [],
+        self::STATUS_VOID => [],
+    ];
+
     public static function tableName(): string
     {
         return '{{%finance_cheque}}';
+    }
+
+    /** สถานะถัดไปที่เดินได้จากสถานะปัจจุบัน */
+    public function nextStatuses(): array
+    {
+        return self::FLOW[$this->status] ?? [];
+    }
+
+    /** เดินสถานะไปยัง $status ถ้าเป็นขั้นที่อนุญาต (บันทึกเวลาพิมพ์อัตโนมัติ) */
+    public function moveTo(string $status): bool
+    {
+        if ($this->isVoid() || !in_array($status, $this->nextStatuses(), true)) {
+            return false;
+        }
+        $this->status = $status;
+        if ($status === self::STATUS_PRINTED && !$this->printed_at) {
+            $this->printed_at = time();
+            $this->printed_by = (Yii::$app->has('user') && !Yii::$app->user->isGuest) ? Yii::$app->user->id : null;
+        }
+        return $this->save(false);
     }
 
     public function rules(): array

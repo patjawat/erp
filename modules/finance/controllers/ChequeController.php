@@ -22,11 +22,12 @@ class ChequeController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'template', 'preview', 'test-print', 'print'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['calibrate', 'create-template', 'upload-background', 'void'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['calibrate', 'create-template', 'upload-background', 'status', 'void'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
-                'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'], 'upload-background' => ['POST'], 'void' => ['POST'],
+                'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'], 'upload-background' => ['POST'],
+                'status' => ['POST'], 'void' => ['POST'],
             ]],
         ]);
     }
@@ -36,13 +37,71 @@ class ChequeController extends Controller
         return Yii::getAlias('@app/modules/finance/views/cheque');
     }
 
-    /** ทะเบียนคุมเช็ค */
+    /** ทะเบียนคุมเช็ค + ตัวกรอง + สรุปยอด */
     public function actionIndex()
     {
+        $req = Yii::$app->request;
+        $q = trim((string) $req->get('q', ''));
+        $status = (string) $req->get('status', '');
+
         $query = FinanceCheque::find()->orderBy(['id' => SORT_DESC]);
+        if ($q !== '') {
+            $query->andWhere(['or', ['like', 'cheque_no', $q], ['like', 'payee_name', $q], ['like', 'cheque_book_no', $q]]);
+        }
+        if (isset(FinanceCheque::statusOptions()[$status])) {
+            $query->andWhere(['status' => $status]);
+        }
+
+        // สรุปจำนวน+ยอด แยกตามสถานะ (นับทั้งทะเบียน ไม่อิงตัวกรอง)
+        $summary = [];
+        $rows = FinanceCheque::find()->select(['status', 'c' => 'COUNT(*)', 's' => 'SUM(amount)'])
+            ->groupBy('status')->asArray()->all();
+        foreach ($rows as $r) {
+            $summary[$r['status']] = ['count' => (int) $r['c'], 'sum' => (float) $r['s']];
+        }
+
         return $this->render('index', [
             'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30]]),
+            'q' => $q,
+            'status' => $status,
+            'summary' => $summary,
         ]);
+    }
+
+    /** รายละเอียดเช็ค + เดินสถานะ */
+    public function actionView($id)
+    {
+        return $this->render('view', ['cheque' => $this->findCheque($id)]);
+    }
+
+    /** เดินสถานะเช็ค (พิมพ์แล้ว/ส่งมอบ/ขึ้นเงิน/เด้ง) */
+    public function actionStatus($id)
+    {
+        $cheque = $this->findCheque($id);
+        $to = (string) Yii::$app->request->post('to', '');
+        if ($cheque->moveTo($to)) {
+            Yii::$app->session->setFlash('success', 'เปลี่ยนสถานะเป็น "' . $cheque->statusLabel() . '" แล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'เปลี่ยนสถานะไม่ได้ (ขั้นตอนไม่ถูกต้อง หรือเช็คถูกยกเลิกแล้ว)');
+        }
+        return $this->redirect(['view', 'id' => $cheque->id]);
+    }
+
+    /** ยกเลิกเช็ค (เช็คเสีย/พิมพ์ผิด) โดยคงเลขไว้ในทะเบียน */
+    public function actionVoid($id)
+    {
+        $cheque = $this->findCheque($id);
+        $reason = trim((string) Yii::$app->request->post('reason', ''));
+        if ($reason === '') {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลการยกเลิก');
+        } elseif ($cheque->isVoid()) {
+            Yii::$app->session->setFlash('info', 'เช็คนี้ถูกยกเลิกแล้ว');
+        } elseif ($cheque->void($reason)) {
+            Yii::$app->session->setFlash('success', 'ยกเลิกเช็คเลขที่ ' . $cheque->cheque_no . ' แล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ยกเลิกไม่สำเร็จ');
+        }
+        return $this->redirect(['view', 'id' => $cheque->id]);
     }
 
     /** รายการแม่แบบเช็ค */
@@ -221,6 +280,15 @@ class ChequeController extends Controller
             ];
         }
         return $out;
+    }
+
+    private function findCheque($id): FinanceCheque
+    {
+        $cheque = FinanceCheque::findOne($id);
+        if (!$cheque) {
+            throw new NotFoundHttpException('ไม่พบเช็ค');
+        }
+        return $cheque;
     }
 
     private function findTemplate($id): FinanceChequeTemplate

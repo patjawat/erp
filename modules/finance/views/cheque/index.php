@@ -6,6 +6,9 @@ use app\modules\finance\models\FinanceCheque;
 
 /** @var yii\web\View $this */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var string $q */
+/** @var string $status */
+/** @var array $summary */
 
 $this->title = 'ทะเบียนคุมเช็ค';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -14,7 +17,7 @@ $this->beginBlock('page-title');
 echo Html::encode($this->title);
 $this->endBlock();
 $this->beginBlock('sub-title');
-echo 'เลขที่เช็ค · ผู้รับ · ยอด · สถานะ (พิมพ์/ยกเลิก/ขึ้นเงิน)';
+echo 'เลขที่เช็ค · ผู้รับ · ยอด · สถานะ (พิมพ์/ส่งมอบ/ขึ้นเงิน/เด้ง/ยกเลิก)';
 $this->endBlock();
 $this->beginBlock('page-action');
 echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'cheque']);
@@ -32,9 +35,25 @@ $thDate = fn($d) => $d ? (date_create($d) ? date_create($d)->format('d/m/') . ((
 $models = $dataProvider->getModels();
 ?>
 
-<div class="d-flex justify-content-end mb-2">
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <div class="d-flex flex-wrap gap-2">
+        <?php foreach (FinanceCheque::statusOptions() as $sk => $sl): $c = $summary[$sk]['count'] ?? 0; ?>
+            <a href="<?= Url::to(['index', 'status' => $status === $sk ? '' : $sk, 'q' => $q]) ?>"
+               class="badge <?= $badge[$sk] ?? 'bg-light' ?> text-decoration-none <?= $status === $sk ? 'border border-2 border-dark-subtle' : '' ?>"
+               style="font-size:.8rem;padding:.4rem .6rem">
+                <?= Html::encode($sl) ?> <span class="fw-bold"><?= $c ?></span>
+            </a>
+        <?php endforeach; ?>
+    </div>
     <a href="<?= Url::to(['template']) ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-ruled me-1"></i>แม่แบบเช็ค</a>
 </div>
+
+<?= Html::beginForm(['index'], 'get', ['class' => 'input-group input-group-sm mb-2', 'style' => 'max-width:420px']) ?>
+    <?= Html::hiddenInput('status', $status) ?>
+    <input type="text" name="q" class="form-control" placeholder="ค้นหา เลขที่เช็ค / ผู้รับ / เล่ม" value="<?= Html::encode($q) ?>">
+    <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+    <?php if ($q !== '' || $status !== ''): ?><a href="<?= Url::to(['index']) ?>" class="btn btn-outline-secondary">ล้าง</a><?php endif; ?>
+<?= Html::endForm() ?>
 
 <div class="card shadow-sm">
     <div class="table-responsive">
@@ -51,11 +70,12 @@ $models = $dataProvider->getModels();
             <?php else: foreach ($models as $c): ?>
                 <tr>
                     <td><?= $thDate($c->cheque_date) ?></td>
-                    <td><?= Html::encode($c->cheque_no) ?></td>
+                    <td><a href="<?= Url::to(['view', 'id' => $c->id]) ?>" class="fw-semibold text-decoration-none"><?= Html::encode($c->cheque_no) ?></a></td>
                     <td><?= Html::encode($c->payee_name) ?></td>
                     <td class="text-end"><?= number_format((float) $c->amount, 2) ?></td>
                     <td class="text-center"><span class="badge <?= $badge[$c->status] ?? 'bg-light' ?>"><?= Html::encode($c->statusLabel()) ?></span></td>
                     <td class="text-end">
+                        <a href="<?= Url::to(['view', 'id' => $c->id]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                         <a href="<?= Url::to(['print', 'id' => $c->id]) ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i></a>
                     </td>
                 </tr>
