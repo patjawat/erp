@@ -230,7 +230,7 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->redirect(['index', 'stage' => $stage === 'DRY' ? 'DRY' : 'WASH']);
     }
 
     public function actionFinish(int $id)
@@ -241,7 +241,7 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->backToStage($id);
     }
 
     public function actionAbort(int $id)
@@ -252,7 +252,7 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->backToStage($id);
     }
 
     public function actionRequestRecovery(int $id)
@@ -266,7 +266,7 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->backToStage($id);
     }
 
     public function actionApproveRecovery(int $id)
@@ -277,7 +277,14 @@ class ProcessingController extends Controller
         } catch (\Throwable $e) {
             $this->flashError($e);
         }
-        return $this->redirect(['index']);
+        return $this->backToStage((int) (new Query())->select('aborted_batch_id')->from('laundry_batch_recovery')->where(['id' => $id])->scalar());
+    }
+
+    /** กลับหน้าขั้นตอนของรอบนั้น (ปิดรอบอบ → หน้าอบ ไม่เด้งไปหน้าซัก) */
+    private function backToStage(int $batchId)
+    {
+        $stage = (new Query())->select('stage')->from('laundry_processing_batch')->where(['id' => $batchId])->scalar();
+        return $this->redirect(['index', 'stage' => $stage === 'DRY' ? 'DRY' : 'WASH']);
     }
 
     private function flashError(\Throwable $e): void
