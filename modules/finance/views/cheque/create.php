@@ -36,7 +36,7 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
         <div class="card shadow-sm">
             <div class="card-header fw-semibold"><i class="bi bi-cash-stack me-1"></i>ออกเช็คใหม่</div>
             <div class="card-body">
-                <?php $form = Html::beginForm(['create'], 'post'); ?>
+                <?= Html::beginForm(['create'], 'post') ?>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small">บัญชีจ่าย <span class="text-danger">*</span></label>
@@ -90,7 +90,7 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
                     <?= Html::submitButton('<i class="bi bi-save me-1"></i>บันทึกเข้าทะเบียน', ['class' => 'btn btn-primary']) ?>
                     <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
                 </div>
-                <?php Html::endForm(); ?>
+                <?= Html::endForm() ?>
             </div>
         </div>
     </div>

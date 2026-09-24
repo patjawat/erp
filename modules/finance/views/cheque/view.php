@@ -86,10 +86,10 @@ $thDate = fn($d) => $d ? (date_create($d) ? date_create($d)->format('d/m/') . ((
                 <?php else: ?>
                     <div class="d-flex gap-2 flex-wrap">
                     <?php foreach ($next as $ns): [$lbl, $cls] = $nextLabelBtn[$ns] ?? [$ns, 'btn-secondary']; ?>
-                        <?php $f = Html::beginForm(['status', 'id' => $cheque->id], 'post'); ?>
+                        <?= Html::beginForm(['status', 'id' => $cheque->id], 'post') ?>
                             <?= Html::hiddenInput('to', $ns) ?>
                             <?= Html::submitButton('<i class="bi bi-check2 me-1"></i>' . Html::encode($lbl), ['class' => 'btn ' . $cls]) ?>
-                        <?php Html::endForm(); ?>
+                        <?= Html::endForm() ?>
                     <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
@@ -100,13 +100,13 @@ $thDate = fn($d) => $d ? (date_create($d) ? date_create($d)->format('d/m/') . ((
         <div class="card shadow-sm border-danger-subtle">
             <div class="card-header fw-semibold text-danger"><i class="bi bi-x-octagon me-1"></i>ยกเลิกเช็ค (เช็คเสีย/พิมพ์ผิด)</div>
             <div class="card-body">
-                <?php $vf = Html::beginForm(['void', 'id' => $cheque->id], 'post', ['onsubmit' => 'return confirm("ยืนยันยกเลิกเช็คนี้? เลขเช็คจะยังคงอยู่ในทะเบียน")']); ?>
+                <?= Html::beginForm(['void', 'id' => $cheque->id], 'post', ['onsubmit' => 'return confirm("ยืนยันยกเลิกเช็คนี้? เลขเช็คจะยังคงอยู่ในทะเบียน")']) ?>
                     <div class="input-group">
                         <input type="text" name="reason" class="form-control" placeholder="เหตุผลการยกเลิก" required>
                         <?= Html::submitButton('ยกเลิกเช็ค', ['class' => 'btn btn-danger']) ?>
                     </div>
                     <div class="form-text">เลขที่เช็คจะถูกคงไว้ในทะเบียนเพื่อกันเลขหาย</div>
-                <?php Html::endForm(); ?>
+                <?= Html::endForm() ?>
             </div>
         </div>
         <?php endif; ?>

@@ -30,7 +30,7 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
 
 <div class="row g-3">
     <div class="col-lg-6">
-        <?php $form = Html::beginForm(['calibrate', 'id' => $tpl->id], 'post'); ?>
+        <?= Html::beginForm(['calibrate', 'id' => $tpl->id], 'post') ?>
         <div class="card shadow-sm mb-3">
             <div class="card-header fw-semibold"><i class="bi bi-aspect-ratio me-1"></i>ขนาดแผ่นเช็ค & ชดเชยเครื่องพิมพ์</div>
             <div class="card-body">
@@ -94,16 +94,16 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
                 <a href="<?= $testUrl ?>" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer me-1"></i>พิมพ์ทดสอบ (ลงเช็คจริง)</a>
             </div>
         </div>
-        <?php Html::endForm(); ?>
+        <?= Html::endForm() ?>
 
         <div class="card shadow-sm">
             <div class="card-header fw-semibold"><i class="bi bi-image me-1"></i>รูปสแกนเช็คเปล่า (ใช้ดูตำแหน่งบนจอ)</div>
             <div class="card-body">
-                <?php $up = Html::beginForm(['upload-background', 'id' => $tpl->id], 'post', ['enctype' => 'multipart/form-data', 'class' => 'd-flex gap-2 flex-wrap align-items-center']); ?>
+                <?= Html::beginForm(['upload-background', 'id' => $tpl->id], 'post', ['enctype' => 'multipart/form-data', 'class' => 'd-flex gap-2 flex-wrap align-items-center']) ?>
                     <input type="file" name="background" accept="image/*" class="form-control form-control-sm" style="max-width:280px">
                     <?= Html::submitButton('อัปโหลด', ['class' => 'btn btn-outline-primary btn-sm']) ?>
                     <?php if ($tpl->background_path): ?><span class="text-success small"><i class="bi bi-check-circle me-1"></i>มีรูปพื้นหลังแล้ว</span><?php endif; ?>
-                <?php Html::endForm(); ?>
+                <?= Html::endForm() ?>
                 <div class="form-text">รูปนี้ใช้เฉพาะดูตำแหน่งในพรีวิว ไม่ถูกพิมพ์ลงเช็คจริง</div>
             </div>
         </div>

@@ -27,7 +27,7 @@ $this->endBlock();
         <div class="card shadow-sm">
             <div class="card-header fw-semibold"><i class="bi bi-plus-square me-1"></i>สร้างแม่แบบเช็คธนาคารใหม่</div>
             <div class="card-body">
-                <?php $form = Html::beginForm(['create-template'], 'post'); ?>
+                <?= Html::beginForm(['create-template'], 'post') ?>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small">ธนาคาร <span class="text-danger">*</span></label>
@@ -60,7 +60,7 @@ $this->endBlock();
                     <?= Html::submitButton('<i class="bi bi-arrow-right-circle me-1"></i>สร้าง & ปรับตำแหน่ง', ['class' => 'btn btn-primary']) ?>
                     <?= Html::a('ยกเลิก', ['template'], ['class' => 'btn btn-outline-secondary']) ?>
                 </div>
-                <?php Html::endForm(); ?>
+                <?= Html::endForm() ?>
             </div>
         </div>
     </div>
