@@ -6,6 +6,7 @@ use Yii;
 use app\components\AppHelper;
 use app\modules\approve\models\Approve;
 use app\modules\plan\components\PlanHelper;
+use app\modules\plan\components\PlanItemAssetMap;
 use app\modules\plan\models\PlanOrder;
 use app\modules\purchase\models\Order;
 
@@ -30,6 +31,7 @@ class PurchasePlanControl
     const WRONG_YEAR   = 'wrong_year';
     const NOT_APPROVED = 'not_approved';
     const OVER_BUDGET  = 'over_budget';
+    const TYPE_MISMATCH = 'type_mismatch';
 
     const STATUS_CANCEL = 8;
 
@@ -53,6 +55,41 @@ class PurchasePlanControl
     public static function isPending(Order $order): bool
     {
         return self::isControlled($order) && (string) $order->status !== '' && $order->request_type === null;
+    }
+
+    /**
+     * ประเภทพัสดุที่แผนนี้ซื้อได้ ; [] = ไม่จำกัด
+     * = ที่กำหนดไว้ของแผนงาน (/plan/plan-item-asset) + ประเภทวัสดุที่ระบุบนแผนเอง (แผนวัสดุ)
+     */
+    public static function allowedAssetTypes(PlanOrder $plan): array
+    {
+        $types = PlanItemAssetMap::typesFor($plan->plan_item_id);
+        if (!empty($plan->asset_type_id)) {
+            $types[] = (string) $plan->asset_type_id;
+        }
+        return array_values(array_unique($types));
+    }
+
+    /** ประเภทพัสดุของรายการในใบ (asset_item → asset_type) */
+    public static function orderAssetTypes(Order $order): array
+    {
+        return (new \yii\db\Query())
+            ->select('a.category_id')->distinct()
+            ->from(['i' => 'orders'])
+            ->innerJoin(['a' => 'categorise'], "a.name = 'asset_item' AND a.code = i.asset_item")
+            ->where(['i.name' => 'order_item', 'i.category_id' => $order->id])
+            ->andWhere(['not', ['a.category_id' => null]])
+            ->column();
+    }
+
+    /** ชื่อประเภทพัสดุ (ไม่พบใช้รหัส) */
+    public static function assetTypeTitles(array $codes): array
+    {
+        $map = \yii\helpers\ArrayHelper::map(
+            \app\models\Categorise::find()->where(['name' => 'asset_type', 'code' => array_values($codes)])->all(),
+            'code', 'title'
+        );
+        return array_map(fn($c) => $map[$c] ?? $c, array_values($codes));
     }
 
     /** ยอดเงินของใบ (รวม VAT หลังหักส่วนลด) — ใช้เทียบวงเงินแผน */
@@ -117,6 +154,19 @@ class PurchasePlanControl
             $r['code'] = self::NOT_APPROVED;
             $r['message'] = 'แผนที่เลือกยังไม่ได้รับอนุมัติ — จะเป็น "นอกแผน" และต้องรออนุมัติ';
             return $r;
+        }
+
+        // ประเภทพัสดุต้องอยู่ในหมวดของแผน (กันเลือกแผนมั่วเพื่อให้ผ่าน แล้วซื้อของอื่น)
+        $allowed = self::allowedAssetTypes($plan);
+        if ($allowed && $order->id) {
+            $outside = array_diff(self::orderAssetTypes($order), $allowed);
+            if ($outside) {
+                $r['code'] = self::TYPE_MISMATCH;
+                $r['message'] = 'มีรายการประเภท ' . implode(', ', self::assetTypeTitles($outside))
+                    . ' ซึ่งไม่อยู่ในแผนงานของแผนที่เลือก (ซื้อได้: ' . implode(', ', self::assetTypeTitles($allowed))
+                    . ') — จะปรับเป็น "นอกแผน" และต้องรออนุมัติ';
+                return $r;
+            }
         }
 
         $r['used'] = self::usedAmount((int) $plan->id, $order->id ? (int) $order->id : null);
@@ -226,6 +276,7 @@ class PurchasePlanControl
                 'budget' => $budget,
                 'used' => $used,
                 'remaining' => $budget - $used,
+                'types' => self::assetTypeTitles(self::allowedAssetTypes($p)), // [] = ไม่จำกัดประเภท
             ];
         }
 

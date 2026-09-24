@@ -23,7 +23,18 @@ $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
-<?php echo $this->render('_search_product', ['searchModel' => $searchModel,'dataProvider' => $dataProvider, 'model' => $model]); ?>
+<?php
+$allowedTypes = $allowedTypes ?? [];
+$plan = $plan ?? null;
+if ($plan): ?>
+    <div class="alert <?= $allowedTypes ? 'alert-info' : 'alert-warning' ?> py-2 small mb-2">
+        <i class="bi bi-diagram-3 me-1"></i> แผน: <b><?= Html::encode(trim(strip_tags((string) ($plan->description ?: $plan->title)))) ?></b> —
+        <?= $allowedTypes
+            ? 'เลือกได้เฉพาะประเภท: <b>' . Html::encode(implode(', ', \app\modules\purchase\components\PurchasePlanControl::assetTypeTitles($allowedTypes))) . '</b>'
+            : 'แผนงานนี้ยังไม่กำหนดประเภทพัสดุ (เลือกได้ทุกประเภท)' ?>
+    </div>
+<?php endif; ?>
+<?php echo $this->render('_search_product', ['searchModel' => $searchModel,'dataProvider' => $dataProvider, 'model' => $model, 'allowedTypes' => $allowedTypes]); ?>
 
 
 <?php if (count($dataProvider->getModels()) == 0) { ?>

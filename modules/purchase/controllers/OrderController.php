@@ -19,6 +19,7 @@ use app\modules\am\models\AssetSearch;
 use app\modules\purchase\models\Order;
 use app\modules\sm\models\ProductSearch;
 use app\modules\purchase\models\OrderSearch;
+use app\modules\purchase\components\PurchasePlanControl;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -596,8 +597,19 @@ class OrderController extends Controller
         $dataProvider->query->andfilterWhere(['!=', 'group_id', '0']);
         $dataProvider->query->andfilterWhere(['name' => 'asset_item']);
 
+        // ปีผูกแผน + เลือกแผนแล้ว: แสดงเฉพาะประเภทพัสดุที่แผนงานนั้นซื้อได้ ([] = ไม่จำกัด)
+        $allowedTypes = [];
+        $plan = null;
+        if ($model && $model->plan_order_id && PurchasePlanControl::isControlled($model)
+            && ($plan = \app\modules\plan\models\PlanOrder::findOne($model->plan_order_id))) {
+            $allowedTypes = PurchasePlanControl::allowedAssetTypes($plan);
+        }
+
         if ($model->category_id == "") {
             $dataProvider->query->andFilterWhere(['category_id' => $searchModel->category_id]);
+            if ($allowedTypes) {
+                $dataProvider->query->andWhere(['category_id' => $allowedTypes]);
+            }
         } else {
             $dataProvider->query->andFilterWhere(['category_id' => $model->category_id]);
         }
@@ -622,6 +634,8 @@ class OrderController extends Controller
                     'model' => $model,
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'allowedTypes' => $allowedTypes,
+                    'plan' => $plan,
                 ]),
             ];
         } else {
@@ -629,6 +643,8 @@ class OrderController extends Controller
                 'model' => $model,
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'allowedTypes' => $allowedTypes,
+                'plan' => $plan,
             ]);
         }
     }

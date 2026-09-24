@@ -69,6 +69,9 @@ $resultsJs = <<< JS
     'validationUrl' => ['/purchase/pr-order/createvalidator'],
 ]); ?>
 
+<?php // popup modal-lg: 2 คอลัมน์ ซ้าย = ข้อมูลใบ / ขวา = กรรมการ+แผน — ลดการเลื่อน scroll ?>
+<div class="row">
+    <div class="col-lg-6">
 <div class="row">
     <div class="col-6">
 
@@ -170,6 +173,9 @@ try {
         ])->label('ผู้เห็นชอบ')
     ?>
 
+<?= $form->field($model, 'data_json[comment]')->textArea(['rows' => 4])->label('รายละเอียดและความจำเป็น') ?>
+    </div><!-- /คอลัมน์ซ้าย -->
+    <div class="col-lg-6">
 <?php
 // ปีที่เปิด "จัดซื้อผูกแผน": ไม่ต้องเลือก — ระบบตัดสินจากแผนที่พัสดุเลือกในทะเบียนคุม
 if (\app\modules\purchase\components\PurchasePlanControl::isControlled($model)):
@@ -217,11 +223,11 @@ $dis = $planLocked ? 'disabled' : '';
 <fieldset class="border rounded p-2 mb-3" id="plan-picker">
     <legend class="float-none w-auto px-2 fs-6 mb-0">รายการแผน <small class="text-muted">(ปีงบ <?= $planYear ?>)</small></legend>
     <div class="row g-2">
-        <div class="col-12 col-md-6">
+        <div class="col-12">
             <label class="form-label small mb-1">1. ประเภทแผน</label>
             <select class="form-select form-select-sm" id="pp-type" <?= $dis ?>></select>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12">
             <label class="form-label small mb-1">2. หมวด</label>
             <select class="form-select form-select-sm" id="pp-cat" <?= $dis ?>></select>
         </div>
@@ -265,7 +271,9 @@ $this->registerJs(<<<JS
             return;
         }
         \$info.html('<div class="alert alert-info py-1 px-2 mb-0">' + esc(pl.title) + '<br><span class="text-muted">' + esc(pl.unit)
-            + '</span> — วงเงิน ' + fmt(pl.budget) + ' ใช้ไปแล้ว ' + fmt(pl.used) + ' <b>คงเหลือ ' + fmt(pl.remaining) + '</b> บาท</div>');
+            + '</span> — วงเงิน ' + fmt(pl.budget) + ' ใช้ไปแล้ว ' + fmt(pl.used) + ' <b>คงเหลือ ' + fmt(pl.remaining) + '</b> บาท'
+            + '<br>ซื้อได้เฉพาะประเภท: ' + (pl.types && pl.types.length ? '<b>' + esc(pl.types.join(', ')) + '</b>'
+                : '<span class="text-warning-emphasis">ยังไม่กำหนดประเภท (ไม่จำกัด)</span>') + '</div>');
     }
     fill(\$t, tree, '-- เลือกประเภทแผน --', function (x) { return x.title; });
     \$t.on('change', function () { fill(\$c, cats(), '-- เลือกหมวด --', function (x) { return x.title; }); \$c.trigger('change'); });
@@ -301,8 +309,8 @@ echo $form->field($model, 'request_type')->radioList(
 )->label('ประเภทจัดซื้อ');
 endif;
 ?>
-
-<?= $form->field($model, 'data_json[comment]')->textArea()->label('รายละเอียดและความจำเป็น') ?>
+    </div><!-- /คอลัมน์ขวา -->
+</div><!-- /row 2 คอลัมน์ -->
 
 <?= $form->field($model, 'data_json[vendor_address]')->hiddenInput()->label(false) ?>
 <?= $form->field($model, 'data_json[vendor_phone]')->hiddenInput()->label(false) ?>

@@ -28,7 +28,10 @@ use kartik\select2\Select2;
 <?php
   
         echo $form->field($searchModel, 'category_id')->widget(Select2::classname(), [
-            'data' => $model->ListProductType(),
+            // ปีผูกแผน: จำกัดตัวเลือกประเภทตามแผนงานของแผนที่เลือก
+            'data' => !empty($allowedTypes)
+                ? array_intersect_key($model->ListProductType(), array_flip($allowedTypes))
+                : $model->ListProductType(),
             'options' => ['placeholder' => ($model->category_id ?  $model->data_json['order_type_name'] : 'ระบุประเภท'),
             'disabled' => ($model->category_id ?  true : false)
         ],

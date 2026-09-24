@@ -62,6 +62,8 @@ $expenseActive = in_array($active, $expenseKeys, true);
             <li><?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> ประเภท', ['/plan/plan-type'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> หมวดหมู่', ['/plan/plan-category'], ['class' => 'dropdown-item']) ?></li>
             <li><?= Html::a('<i class="fa-solid fa-caret-right me-2"></i> รายการ', ['/plan/plan-item'], ['class' => 'dropdown-item']) ?></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><?= Html::a('<i class="bi bi-diagram-3 me-2"></i> แผนงาน ↔ ประเภทพัสดุ', ['/plan/plan-item-asset'], ['class' => 'dropdown-item']) ?></li>
         </ul>
     </div>
 </nav>
