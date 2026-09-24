@@ -233,9 +233,9 @@ class Projects extends ActiveRecord
             'duration_text' => '6. ระยะเวลาการดำเนินการ',
             'location' => '7. สถานที่ดำเนินโครงการ',
             'lecturer' => '8. วิทยากร',
-            'evaluation' => '9. การประเมินผลโครงการ',
-            'expected_result' => '10. ผลที่คาดว่าจะได้รับ',
-            'budget_total' => '12. งบประมาณ (บาท)',
+            'evaluation' => '10. การประเมินผลโครงการ',
+            'expected_result' => '11. ผลที่คาดว่าจะได้รับ',
+            'budget_total' => 'งบประมาณ (บาท)',
             'budget_source' => 'แหล่งงบประมาณ',
             'budget_detail' => 'รายละเอียดงบประมาณ',
             'status' => 'สถานะ',
@@ -323,6 +323,87 @@ class Projects extends ActiveRecord
             self::STATUS_REJECTED => 'bg-danger',
             self::STATUS_DONE => 'bg-primary',
         ][$this->status] ?? 'bg-secondary';
+    }
+
+    /** ข้อ 13 ผู้อนุมัติโครงการ — ลายเซ็น 3 ช่องตามแบบฟอร์ม */
+    public const SIGNER_PROPOSER = 'proposer';
+    public const SIGNER_ENDORSER = 'endorser';
+    public const SIGNER_APPROVER = 'approver';
+
+    public static function signerRoleList(): array
+    {
+        return [
+            self::SIGNER_PROPOSER => 'ผู้เสนอโครงการ',
+            self::SIGNER_ENDORSER => 'ผู้เห็นชอบโครงการ',
+            self::SIGNER_APPROVER => 'ผู้อนุมัติโครงการ',
+        ];
+    }
+
+    /**
+     * ผู้ลงนามข้อ 13 ที่บันทึกไว้ใน data_json['signers'] — ช่องที่ยังไม่เคยกรอกเติมค่าเริ่มต้นให้
+     * ผู้เสนอ = ผู้รับผิดชอบคนแรก · ผู้เห็นชอบ = ผู้อำนวยการจากตั้งค่าองค์กร · ผู้อนุมัติ = เว้นว่าง
+     * (แบบฟอร์มระบุว่าช่องผู้อนุมัติไม่ต้องใส่ชื่อ เว้นว่างไว้)
+     *
+     * @return array<string, array{name: string, position: string}>
+     */
+    public function signers(): array
+    {
+        $saved = is_array($this->data_json) ? ($this->data_json['signers'] ?? []) : [];
+        $result = [];
+        foreach (array_keys(self::signerRoleList()) as $role) {
+            $row = $saved[$role] ?? null;
+            $result[$role] = is_array($row)
+                ? ['name' => (string) ($row['name'] ?? ''), 'position' => (string) ($row['position'] ?? '')]
+                : $this->defaultSigner($role);
+        }
+        return $result;
+    }
+
+    protected function defaultSigner(string $role): array
+    {
+        if ($role === self::SIGNER_PROPOSER) {
+            foreach ($this->isNewRecord ? [] : $this->responsibles as $r) {
+                if ($r->role === ProjectResponsible::ROLE_OWNER) {
+                    return ['name' => (string) $r->fullname, 'position' => (string) $r->position];
+                }
+            }
+            return ['name' => '', 'position' => ''];
+        }
+        if ($role === self::SIGNER_ENDORSER) {
+            // ตำแหน่งในทะเบียนบุคลากรเป็นตำแหน่งบริหาร (เช่น "ผู้อำนวยการ อำนวยการระดับต้น") ไม่ตรงกับที่แบบฟอร์มใช้
+            // จึงประกอบจากตั้งค่าองค์กรแทน — ตำแหน่งสายวิชาชีพ/รักษาการ ให้ผู้ใช้เติมเองในฟอร์ม
+            $info = \app\components\SiteHelper::getInfo();
+            $director = \app\components\SiteHelper::viewDirector();
+            $title = trim((string) ($info['director_position'] ?? '')) ?: 'ผู้อำนวยการ';
+            $position = $title . trim((string) ($info['company_name'] ?? ''));
+            return ['name' => (string) ($director['fullname'] ?? ''), 'position' => $position];
+        }
+        return ['name' => '', 'position' => ''];
+    }
+
+    /** เก็บผู้ลงนามข้อ 13 ลง data_json โดยไม่ไปทับคีย์อื่นที่อยู่ในนั้น */
+    public function setSigners(array $rows): void
+    {
+        $signers = [];
+        foreach (array_keys(self::signerRoleList()) as $role) {
+            $signers[$role] = [
+                'name' => trim((string) ($rows[$role]['name'] ?? '')),
+                'position' => trim((string) ($rows[$role]['position'] ?? '')),
+            ];
+        }
+        $data = is_array($this->data_json) ? $this->data_json : [];
+        $data['signers'] = $signers;
+        $this->data_json = $data;
+    }
+
+    /** หัวเอกสารตามแบบฟอร์ม: "รหัส - โครงการ... ปีงบ 25xx" */
+    public function documentTitle(): string
+    {
+        $name = trim((string) $this->name);
+        if ($name !== '' && mb_strpos($name, 'โครงการ') !== 0) {
+            $name = 'โครงการ' . $name;
+        }
+        return trim(($this->code ? $this->code . ' - ' : '') . $name . ($this->thai_year ? ' ปีงบ ' . $this->thai_year : ''));
     }
 
     public function creatorEmployee()

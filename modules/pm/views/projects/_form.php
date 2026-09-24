@@ -137,39 +137,85 @@ $form = ActiveForm::begin(['id' => 'project-form']);
 </div>
 </div>
 
-<!-- 4. กลุ่มเป้าหมาย / 5. วิธีดำเนินการ -->
+<!-- 4. กลุ่มเป้าหมาย -->
 <div class="card mb-3">
+    <div class="card-header fw-semibold">4. กลุ่มเป้าหมาย</div>
     <div class="card-body">
-        <?= $form->field($model, 'target_group')->textarea($rich('กลุ่มเป้าหมาย', 2)) ?>
-        <?= $form->field($model, 'method')->textarea($rich('วิธีดำเนินการ', 4)) ?>
+        <?= $form->field($model, 'target_group')->textarea($rich('กลุ่มเป้าหมาย', 2))->label(false) ?>
     </div>
 </div>
 
-<!-- 6-8. ระยะเวลา / สถานที่ / วิทยากร -->
+<!-- 5. วิธีดำเนินการ -->
 <div class="card mb-3">
+    <div class="card-header fw-semibold">5. วิธีดำเนินการ (งานและกิจกรรม)</div>
+    <div class="card-body">
+        <?= $form->field($model, 'method')->textarea($rich('วิธีดำเนินการ', 4))->label(false) ?>
+    </div>
+</div>
+
+<!-- 6. ระยะเวลา -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold">6. ระยะเวลาการดำเนินการ</div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"><?= $form->field($model, 'start_date')->input('date') ?></div>
             <div class="col-md-6"><?= $form->field($model, 'end_date')->input('date') ?></div>
         </div>
-        <?= $form->field($model, 'duration_text')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ไตรมาส 2 ปีงบประมาณ 2569']) ?>
-        <?= $form->field($model, 'location')->textInput(['maxlength' => true]) ?>
-        <?= $form->field($model, 'lecturer')->textarea($rich('วิทยากร', 2)) ?>
+        <?= $form->field($model, 'duration_text')->textInput(['maxlength' => true, 'placeholder' => 'เช่น ไตรมาส 2 ปีงบประมาณ 2569'])->label('ระยะเวลา (ข้อความ)') ?>
     </div>
 </div>
 
-<!-- 9-10. ประเมินผล / ผลที่คาดว่าจะได้รับ -->
+<!-- 7. สถานที่ -->
 <div class="card mb-3">
+    <div class="card-header fw-semibold">7. สถานที่ดำเนินโครงการ</div>
     <div class="card-body">
-        <?= $form->field($model, 'evaluation')->textarea($rich('การประเมินผลโครงการ', 3)) ?>
-        <?= $form->field($model, 'expected_result')->textarea($rich('ผลที่คาดว่าจะได้รับ', 3)) ?>
+        <?= $form->field($model, 'location')->textInput(['maxlength' => true])->label(false) ?>
     </div>
 </div>
 
-<!-- 11. ผู้รับผิดชอบ -->
+<!-- 8. วิทยากร -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold">8. วิทยากร</div>
+    <div class="card-body">
+        <?= $form->field($model, 'lecturer')->textarea($rich('วิทยากร', 2))->label(false) ?>
+    </div>
+</div>
+
+<!-- 9. งบประมาณ -->
+<div class="<?= $isActivity ? 'collapse pm-extra' : '' ?>">
+<div class="card mb-3">
+    <div class="card-header fw-semibold">9. งบประมาณ<?= $isActivity ? ' <span class="small text-muted fw-normal">(แผนงาน/กิจกรรมจะกรอกหรือไม่ก็ได้)</span>' : '' ?></div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01', 'min' => 0]) ?></div>
+            <div class="col-md-8"><?= $form->field($model, 'budget_source')->textInput(['maxlength' => true, 'placeholder' => 'เช่น เงินบำรุง / งบ สปสช. / เงินนอกงบประมาณ']) ?></div>
+        </div>
+        <?= $form->field($model, 'budget_detail')->textarea($rich('รายละเอียดงบประมาณ', 3) + ['placeholder' => 'แจกแจงรายการค่าใช้จ่าย']) ?>
+        <div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>
+    </div>
+</div>
+</div>
+
+<!-- 10. การประเมินผล -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold">10. การประเมินผลโครงการ</div>
+    <div class="card-body">
+        <?= $form->field($model, 'evaluation')->textarea($rich('การประเมินผลโครงการ', 3))->label(false) ?>
+    </div>
+</div>
+
+<!-- 11. ผลที่คาดว่าจะได้รับ -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold">11. ผลที่คาดว่าจะได้รับ</div>
+    <div class="card-body">
+        <?= $form->field($model, 'expected_result')->textarea($rich('ผลที่คาดว่าจะได้รับ', 3))->label(false) ?>
+    </div>
+</div>
+
+<!-- 12. ผู้รับผิดชอบ -->
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold">11. ผู้รับผิดชอบโครงการ</span>
+        <span class="fw-semibold">12. ผู้รับผิดชอบโครงการ</span>
         <button type="button" class="btn btn-sm btn-outline-primary" data-add-row="responsibles"><i class="fa-solid fa-plus"></i> เพิ่ม</button>
     </div>
     <div class="card-body">
@@ -210,20 +256,8 @@ $form = ActiveForm::begin(['id' => 'project-form']);
     </div>
 </div>
 
-<!-- 12. งบประมาณ -->
-<div class="<?= $isActivity ? 'collapse pm-extra' : '' ?>">
-<div class="card mb-3">
-    <div class="card-header fw-semibold">12. งบประมาณ<?= $isActivity ? ' <span class="small text-muted fw-normal">(แผนงาน/กิจกรรมจะกรอกหรือไม่ก็ได้)</span>' : '' ?></div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4"><?= $form->field($model, 'budget_total')->input('number', ['step' => '0.01', 'min' => 0]) ?></div>
-            <div class="col-md-8"><?= $form->field($model, 'budget_source')->textInput(['maxlength' => true, 'placeholder' => 'เช่น เงินบำรุง / งบ สปสช. / เงินนอกงบประมาณ']) ?></div>
-        </div>
-        <?= $form->field($model, 'budget_detail')->textarea($rich('รายละเอียดงบประมาณ', 3) + ['placeholder' => 'แจกแจงรายการค่าใช้จ่าย']) ?>
-        <div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>
-    </div>
-</div>
-</div>
+<!-- 13. ผู้อนุมัติโครงการ -->
+<?= $this->render('_form_signers', ['model' => $model, 'responsibles' => $responsibles]) ?>
 
 <div class="d-flex gap-2 mb-4">
     <?= Html::submitButton('<i class="fa-solid fa-floppy-disk me-1"></i> บันทึก', ['class' => 'btn btn-success']) ?>

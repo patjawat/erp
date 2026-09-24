@@ -101,6 +101,18 @@ class ProjectsController extends Controller
         ]);
     }
 
+    /**
+     * หน้าพิมพ์แบบเสนอโครงการ — เปิดเป็นเอกสาร A4 ที่แก้ไขข้อความบนจอได้ก่อนสั่งพิมพ์
+     * การแก้บนจอไม่เขียนกลับฐานข้อมูล (เก็บร่างไว้ในเบราว์เซอร์เท่านั้น)
+     */
+    public function actionPrint($id)
+    {
+        $this->layout = '@app/views/layouts/print';
+        return $this->render('print', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
     public function actionCreate()
     {
         $model = new Projects();
@@ -180,6 +192,10 @@ class ProjectsController extends Controller
                     $model->thai_year ? (int) $model->thai_year : null,
                     (string) ($model->work_type ?: Projects::WORK_PROJECT)
                 );
+            }
+
+            if (isset($post['Signers']) && is_array($post['Signers'])) {
+                $model->setSigners($post['Signers']);
             }
 
             if (!$model->save()) {

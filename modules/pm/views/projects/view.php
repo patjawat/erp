@@ -13,17 +13,6 @@ $this->beginBlock('page-action'); ?><?= $this->render('../_menu', ['active' => '
 \yii\web\YiiAsset::register($this);
 app\assets\RichTextAsset::register($this);
 
-$fmt = Yii::$app->formatter;
-$row = function ($no, $title, $body) {
-    if ($body === null || $body === '' ) {
-        $body = '<span class="text-muted">-</span>';
-    }
-    return '<div class="mb-3"><div class="fw-semibold">' . $no . '. ' . Html::encode($title) . '</div>'
-        . '<div class="ps-3">' . $body . '</div></div>';
-};
-$text = function ($v) {
-    return \app\components\RichText::isEmpty($v) ? null : '<div class="erp-richtext">' . \app\components\RichText::render($v) . '</div>';
-};
 ?>
 <div class="projects-view container-fluid">
 
@@ -38,81 +27,31 @@ $text = function ($v) {
             <span class="text-muted ms-2">ปีงบประมาณ <?= Html::encode($model->thai_year) ?> · <?= Html::encode($model->departmentPath()) ?></span>
         </div>
         <div class="d-flex gap-2">
-            <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์', '#', ['class' => 'btn btn-outline-secondary', 'onclick' => 'window.print();return false;']) ?>
+            <?= Html::a('<i class="fa-solid fa-print me-1"></i> พิมพ์ / แก้ไขเอกสาร', ['print', 'id' => $model->id], ['class' => 'btn btn-outline-secondary', 'target' => '_blank', 'data-pjax' => 0]) ?>
             <?= Html::a('<i class="fa-solid fa-pen me-1"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body" id="project-doc">
-            <div class="text-center mb-4">
-                <h5 class="fw-bold mb-1">โครงการ <?= Html::encode($model->name) ?></h5>
-                <?php if ($model->code): ?><div class="text-muted">เลขที่ <?= Html::encode($model->code) ?></div><?php endif; ?>
-            </div>
-
-            <?= $row(1, 'หลักการและเหตุผล', $text($model->rationale)) ?>
-
-            <?php
-            $objBody = '<span class="text-muted">-</span>';
-            if ($model->objectives) {
-                $objBody = '<ol class="mb-0 ps-3">';
-                foreach ($model->objectives as $o) {
-                    $objBody .= '<li>' . nl2br(Html::encode($o->detail)) . '</li>';
-                }
-                $objBody .= '</ol>';
-            }
-            echo $row(2, 'วัตถุประสงค์', $objBody);
-
-            $indBody = '<span class="text-muted">-</span>';
-            if ($model->indicators) {
-                $indBody = '<ol class="mb-0 ps-3">';
-                foreach ($model->indicators as $ind) {
-                    $pct = $ind->target_percent !== null ? ' <span class="text-primary">(ร้อยละ ' . $fmt->asDecimal($ind->target_percent, 2) . ')</span>' : '';
-                    $indBody .= '<li>' . nl2br(Html::encode($ind->detail)) . $pct . '</li>';
-                }
-                $indBody .= '</ol>';
-            }
-            echo $row(3, 'เป้าหมาย/ตัวชี้วัดผลสำเร็จของโครงการ', $indBody);
-
-            echo $row(4, 'กลุ่มเป้าหมาย', $text($model->target_group));
-            echo $row(5, 'วิธีดำเนินการ (งานและกิจกรรม)', $text($model->method));
-
-            $duration = $model->duration_text;
-            if ($model->start_date || $model->end_date) {
-                $duration = trim(($model->start_date ? $fmt->asDate($model->start_date, 'long') : '') . ' - ' . ($model->end_date ? $fmt->asDate($model->end_date, 'long') : ''), ' -')
-                    . ($model->duration_text ? '<br>' . Html::encode($model->duration_text) : '');
-            } elseif ($duration) {
-                $duration = Html::encode($duration);
-            }
-            echo $row(6, 'ระยะเวลาการดำเนินการ', $duration);
-            echo $row(7, 'สถานที่ดำเนินโครงการ', $text($model->location));
-            echo $row(8, 'วิทยากร', $text($model->lecturer));
-            echo $row(9, 'การประเมินผลโครงการ', $text($model->evaluation));
-            echo $row(10, 'ผลที่คาดว่าจะได้รับ', $text($model->expected_result));
-
-            $respBody = '<span class="text-muted">-</span>';
-            if ($model->responsibles) {
-                $respBody = '<ol class="mb-0 ps-3">';
-                foreach ($model->responsibles as $r) {
-                    $line = Html::encode($r->fullname);
-                    if ($r->position) $line .= ' &mdash; ' . Html::encode($r->position);
-                    if ($r->phone) $line .= ' <span class="text-muted">โทร ' . Html::encode($r->phone) . '</span>';
-                    $respBody .= '<li>' . $line . '</li>';
-                }
-                $respBody .= '</ol>';
-            }
-            echo $row(11, 'ผู้รับผิดชอบโครงการ', $respBody);
-
-            $budgetBody = '<div>งบประมาณรวม <strong>' . $fmt->asDecimal($model->budget_total, 2) . '</strong> บาท'
-                . ($model->budget_source ? ' <span class="text-muted">(' . Html::encode($model->budget_source) . ')</span>' : '') . '</div>'
-                . ($model->budget_detail ? '<div class="mt-1">' . $text($model->budget_detail) . '</div>' : '')
-                . '<div class="form-text">หมายเหตุ ค่าใช้จ่ายทุกรายการสามารถถัวเฉลี่ยจ่ายแทนกันได้</div>';
-            echo $row(12, 'งบประมาณ', $budgetBody);
-            ?>
+            <?= $this->render('_document', ['model' => $model]) ?>
         </div>
     </div>
 </div>
 
 <?php
-$this->registerCss('@media print { .no-print, .breadcrumb, .navbar, .sidebar, footer { display:none !important; } #project-doc { font-size: 15px; } }');
+$this->registerCss(<<<CSS
+#project-doc .pdoc { max-width: 900px; margin: 0 auto; }
+#project-doc .pdoc-title { font-weight: 700; font-size: 1.15rem; margin-bottom: 1rem; }
+#project-doc .pdoc-section { margin-bottom: .9rem; }
+#project-doc .pdoc-head { font-weight: 600; }
+#project-doc .pdoc-body { padding-left: 1.5rem; }
+#project-doc .pdoc-body p { margin-bottom: .25rem; }
+#project-doc .pdoc-list { margin-bottom: 0; padding-left: 1.25rem; }
+#project-doc .pdoc-blank { color: var(--bs-secondary-color); }
+#project-doc .pdoc-blank::before { content: '-'; }
+#project-doc .pdoc-note { font-size: .9rem; color: var(--bs-secondary-color); margin: -.5rem 0 .9rem 1.5rem; }
+#project-doc .pdoc-sign { text-align: center; margin: 1.25rem 0; }
+#project-doc .pdoc-sign p { margin-bottom: .15rem; }
+CSS);
 ?>
