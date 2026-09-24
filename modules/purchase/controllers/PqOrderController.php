@@ -244,6 +244,9 @@ class PqOrderController extends Controller
                         $transaction->rollBack();
                         throw $e;
                     }
+                    if (!$check['planned']) {
+                        (new \app\modules\purchase\components\PurchaseTelegramService())->notifyLevel($model, 1);
+                    }
                     return [
                         'status' => 'success',
                         'container' => '#purchase-container',

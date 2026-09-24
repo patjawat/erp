@@ -17,6 +17,7 @@ use app\modules\purchase\models\Order;
 use app\modules\approve\models\Approve;
 use app\modules\purchase\models\OrderSearch;
 use app\modules\purchase\components\PurchasePlanControl;
+use app\modules\purchase\components\PurchaseTelegramService;
 
 /**
  * PrOrderController implements the CRUD actions for Order model.
@@ -427,6 +428,10 @@ class PrOrderController extends Controller
             if($approve){
                  $approve->status = 'Pending';
                 $approve->save(false);
+                // ปีผูกแผน: แจ้ง ผอ. ทาง Telegram (ปีเก่าคงพฤติกรรมเดิม)
+                if (PurchasePlanControl::isControlled($model->purchase)) {
+                    (new PurchaseTelegramService())->notifyPendingApprove($model->purchase, $approve);
+                }
             }
 
             return [
@@ -577,6 +582,10 @@ class PrOrderController extends Controller
                 } catch (\Throwable $e) {
                     $transaction->rollBack();
                     throw $e;
+                }
+                if (!$check['planned']) {
+                    // นอกแผน: แจ้งหัวหน้า (ขั้นเห็นชอบ) ทาง Telegram
+                    (new PurchaseTelegramService())->notifyLevel($model, 1);
                 }
 
                 return [
