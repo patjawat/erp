@@ -276,20 +276,6 @@ if (!empty($upcomingHealth)): ?>
             <div class="erp-profile-identity d-flex flex-wrap align-items-center gap-3">
 
                 <div class="position-relative group" style="cursor: pointer;" onclick="document.getElementById('avatar-upload').click();">
-                    <div class="position-absolute top-0 start-0 translate-middle p-1 rounded-3 shadow-lg border border-2 border-white"
-                        style="background: linear-gradient(to top right, #fbbf24, #fef08a); transform: rotate(-12deg) !important; z-index: 10;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            data-lucide="trophy" style="color: #92400e;" class="lucide lucide-trophy">
-                            <path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"></path>
-                            <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"></path>
-                            <path d="M18 9h1.5a1 1 0 0 0 0-5H18"></path>
-                            <path d="M4 22h16"></path>
-                            <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path>
-                            <path d="M6 9H4.5a1 1 0 0 1 0-5H6"></path>
-                        </svg>
-                    </div>
-
                     <div class="position-relative overflow-hidden rounded-5 shadow-lg border border-4 border-white border-opacity-25" style="width: 128px; height: 128px;">
                         <?= Html::img($me->showAvatar(), [
                             "id" => "avatar-preview",
@@ -477,7 +463,7 @@ if (!empty($upcomingHealth)): ?>
             .erp-profile-panel {
                 background:
                     radial-gradient(circle at 85% 12%, rgb(255 255 255 / 14%), transparent 28%),
-                    linear-gradient(145deg, #2149b7 0%, #2f70dc 100%);
+                    linear-gradient(145deg, color-mix(in srgb, var(--bs-primary) 72%, #000) 0%, var(--bs-primary) 100%);
             }
 
             .erp-profile-tools {
@@ -485,7 +471,7 @@ if (!empty($upcomingHealth)): ?>
                 overflow: hidden;
                 border: 1px solid rgb(255 255 255 / 24%);
                 border-radius: 1rem;
-                background: rgb(96 165 250 / 22%);
+                background: rgb(255 255 255 / 12%);
                 box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
             }
 
@@ -523,27 +509,27 @@ if (!empty($upcomingHealth)): ?>
             }
 
             .department-management-action--profile {
-                color: #1246a0;
+                color: color-mix(in srgb, var(--bs-primary) 80%, #000);
                 background: #fff;
                 border-color: #fff;
             }
 
             .department-management-action--executive {
-                color: #123d7a;
-                background: #cfe2ff;
-                border-color: #b9d5ff;
+                color: color-mix(in srgb, var(--bs-primary) 70%, #000);
+                background: color-mix(in srgb, var(--bs-primary) 22%, #fff);
+                border-color: color-mix(in srgb, var(--bs-primary) 30%, #fff);
             }
 
             .department-management-action--plan {
-                color: #17458d;
-                background: #e5efff;
-                border-color: #d5e5ff;
+                color: color-mix(in srgb, var(--bs-primary) 70%, #000);
+                background: color-mix(in srgb, var(--bs-primary) 10%, #fff);
+                border-color: color-mix(in srgb, var(--bs-primary) 16%, #fff);
             }
 
             .department-management-action--risk {
-                color: #17458d;
-                background: #dbeafe;
-                border-color: #c6dcff;
+                color: color-mix(in srgb, var(--bs-primary) 70%, #000);
+                background: color-mix(in srgb, var(--bs-primary) 15%, #fff);
+                border-color: color-mix(in srgb, var(--bs-primary) 22%, #fff);
             }
 
             .department-management-action__icon {
@@ -564,7 +550,7 @@ if (!empty($upcomingHealth)): ?>
 
             a.department-management-action:hover,
             a.department-management-action:focus-visible {
-                color: #0d3b8b;
+                color: color-mix(in srgb, var(--bs-primary) 60%, #000);
                 transform: translateY(-2px);
                 box-shadow: 0 .5rem 1rem rgb(4 25 70 / 24%);
             }
