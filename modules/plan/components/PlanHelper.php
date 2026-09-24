@@ -49,6 +49,17 @@ class PlanHelper
         return (int) AppHelper::YearBudget() + 1;
     }
 
+    /**
+     * ปีนี้งานจัดซื้อบังคับผูกแผนไหม (data_json.purchase_control=1)
+     * ค่าเริ่มต้น = ไม่บังคับ — ปีที่ไม่มีรอบ/ไม่ได้เปิด ใช้วิธีเดิม (เลือกในแผน/นอกแผนเองตอนขอซื้อ)
+     * เปิดใช้: ในแผน/นอกแผนตัดสินที่ทะเบียนคุมจากแผนที่เลือก
+     */
+    public static function purchaseControl($year)
+    {
+        $p = $year ? self::period($year) : null;
+        return $p && !empty(self::json($p)['purchase_control']);
+    }
+
     /** phase ของปี (ไม่ระบุ = ปีปัจจุบัน) ; ไม่มีรอบ = closed */
     public static function phase($year = null)
     {

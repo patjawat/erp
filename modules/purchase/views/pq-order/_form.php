@@ -18,6 +18,9 @@ try {
 } catch (\Throwable $th) {
     $orderTypeName = '';
 }
+// ปีที่เปิด "จัดซื้อผูกแผน" (ดู PurchasePlanControl) — ใบปีเก่าใช้ฟอร์มเดิมทุกอย่าง
+$planControlled = \app\modules\purchase\components\PurchasePlanControl::isControlled($model);
+$planPending = \app\modules\purchase\components\PurchasePlanControl::isPending($model);
 ?>
 <?php Pjax::begin(['id' => 'purchase-container']); ?>
 <style>
@@ -72,6 +75,26 @@ try {
                     <?= $form->field($model, 'data_json[pq_egp_report]')->textInput()->label('รายการแผน EGP') ?>
                 </div>
 
+                <?php if ($planControlled && !$planPending): ?>
+                    <?php $pc = $model->data_json['plan_check'] ?? []; ?>
+                    <div class="col-12">
+                        <div class="alert <?= $model->request_type === 'planned' ? 'alert-success' : 'alert-warning' ?> py-2 mb-2">
+                            <div class="fw-semibold"><?= $model->requestType()['view'] ?> ตรวจแผนแล้ว — ล็อกการเปลี่ยนแผน</div>
+                            <div class="small"><?= Html::encode($pc['message'] ?? '') ?></div>
+                            <?php if (!empty($pc['checked_at'])): ?>
+                                <div class="small text-muted">ตรวจโดย <?= Html::encode($pc['checked_by'] ?? '-') ?> เมื่อ <?= Html::encode($pc['checked_at']) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                <?php if ($planPending): ?>
+                    <div class="col-12">
+                        <div class="alert alert-info py-2 mb-2 small">
+                            <i class="bi bi-diagram-3 me-1"></i> ปีงบ <?= Html::encode($model->thai_year) ?> ผูกแผน: เลือกแผนที่อนุมัติแล้วและยอดไม่เกินวงเงิน = <b>ในแผน</b> ผ่านอนุมัติอัตโนมัติ /
+                            ไม่เลือกแผน หรือยอดเกินวงเงิน = <b>นอกแผน</b> ต้องรอหัวหน้าและผู้อำนวยการอนุมัติ
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div class="col-4">
                     <?php
                     echo $form->field($model, 'plan_type_id')->widget(Select2::classname(), [
@@ -152,7 +175,10 @@ try {
                         ],
                         'pluginOptions' => [
                             'depends' => ['plan_item_id'], // ให้โหลดตามหมวด
-                            'url' => Url::to(['/plan/depdrop/plan-order']),
+                            // ใบผูกแผน: เฉพาะแผนปีเดียวกัน+อนุมัติแล้ว ; ใบปีเก่าใช้รายการเดิม (ไม่กรอง)
+                            'url' => $planPending
+                                ? Url::to(['/purchase/pq-order/plan-order-list', 'id' => $model->id])
+                                : Url::to(['/plan/depdrop/plan-order']),
                             'loadingText' => 'กำลังโหลด ...',
                            'initialize' => true,
                             'initDepends' => ['plan_item_id'], // 🟢 ให้โหลดค่าตามหมวดเมื่อเป็นหน้า update
@@ -182,6 +208,10 @@ try {
                     ?>
 
                 </div>
+                <?php if ($planPending): ?>
+                    <div class="col-12"><div id="plan-check-result" class="small"></div></div>
+                <?php endif; ?>
+                <?php endif; ?>
 
             </div>
     </div>
@@ -336,22 +366,62 @@ try {
 
 
 <?php
+$planPendingJs = $planPending ? 'true' : 'false';
+$planCheckUrl = Url::to(['/purchase/pq-order/plan-check', 'id' => $model->id]);
 $js = <<< JS
 
 thaiDatepicker('#order-data_json-order_date')
+
+// ใบผูกแผน: ตรวจแผนก่อนบันทึก — ไม่ผ่านต้องยืนยันว่าจะเป็นนอกแผน (รออนุมัติ)
+var PLAN_PENDING = {$planPendingJs};
+var PLAN_CHECK_URL = '{$planCheckUrl}';
+
+function planCheck() {
+    return $.getJSON(PLAN_CHECK_URL, { plan_order_id: $('#order-plan_order_id').val() || '' });
+}
+
+if (PLAN_PENDING) {
+    $('#order-plan_order_id').on('change', function () {
+        planCheck().then(function (r) {
+            $('#plan-check-result').html(
+                '<div class="alert py-2 mb-0 ' + (r.planned ? 'alert-success' : 'alert-warning') + '">'
+                + (r.planned ? '<i class="bi bi-check-circle me-1"></i>' : '<i class="bi bi-exclamation-triangle me-1"></i>')
+                + $('<span>').text(r.message).html() + '</div>'
+            );
+        });
+    });
+}
+
+function askSave() {
+    if (!PLAN_PENDING) {
+        return Swal.fire({
+            title: 'ยืนยันการบันทึก?',
+            text: 'คุณต้องการบันทึกข้อมูลนี้หรือไม่?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'บันทึก',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (res) { return { isConfirmed: res.isConfirmed, extra: '' }; });
+    }
+    return planCheck().then(function (r) {
+        return Swal.fire({
+            title: r.planned ? 'ในแผน — ผ่านอนุมัติอัตโนมัติ' : 'จะเป็น "นอกแผน" ต้องรออนุมัติ',
+            text: r.message,
+            icon: r.planned ? 'question' : 'warning',
+            showCancelButton: true,
+            confirmButtonText: r.planned ? 'บันทึก' : 'ยืนยัน บันทึกเป็นนอกแผน',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function (res) {
+            return { isConfirmed: res.isConfirmed, extra: r.planned ? '' : '&confirm_unplanned=1' };
+        });
+    });
+}
 
 $('#form-order').on('beforeSubmit', function (e) {
     e.preventDefault(); // ป้องกันการส่งฟอร์มโดยปกติ
     var form = $(this);
 
-    Swal.fire({
-        title: 'ยืนยันการบันทึก?',
-        text: 'คุณต้องการบันทึกข้อมูลนี้หรือไม่?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'บันทึก',
-        cancelButtonText: 'ยกเลิก'
-    }).then((result) => {
+    askSave().then((result) => {
         if (result.isConfirmed) {
             Swal.fire({
                 title: 'กำลังบันทึก...',
@@ -365,7 +435,7 @@ $('#form-order').on('beforeSubmit', function (e) {
             $.ajax({
                 url: form.attr('action'),
                 type: 'post',
-                data: form.serialize(),
+                data: form.serialize() + (result.extra || ''),
                 dataType: 'json',
                 success: async function (response) {
                     form.yiiActiveForm('updateMessages', response, true);

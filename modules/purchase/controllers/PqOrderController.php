@@ -11,6 +11,7 @@ use app\components\AppHelper;
 use yii\web\NotFoundHttpException;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\OrderSearch;
+use app\modules\purchase\components\PurchasePlanControl;
 
 /**
  * PqOrderController implements the CRUD actions for Order model.
@@ -196,9 +197,22 @@ class PqOrderController extends Controller
         // $thaiYear = substr(AppHelper::YearBudget(), 
         $thaiYear = AppHelper::YearBudget();
         $oldObj = $model->data_json;
+        $controlled = PurchasePlanControl::isControlled($model);
+        $pending = PurchasePlanControl::isPending($model);
+        $oldPlan = [
+            'plan_type_id' => $model->plan_type_id,
+            'plan_category_id' => $model->plan_category_id,
+            'plan_item_id' => $model->plan_item_id,
+            'plan_order_id' => $model->plan_order_id,
+        ];
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
+
+                if ($controlled && !$pending) {
+                    // ตัดสินในแผน/นอกแผนไปแล้ว — ห้ามเปลี่ยนแผนย้อนหลัง (กันผ่านอนุมัติอัตโนมัติแล้วสลับแผน)
+                    $model->setAttributes($oldPlan, false);
+                }
                 if ($model->pq_number == '') {
                     $model->pq_number = \mdm\autonumber\AutoNumber::generate(substr($thaiYear, -2). '-????');
                 }  // validate all models
@@ -208,6 +222,30 @@ class PqOrderController extends Controller
                 ];
 
                 $model->data_json =  ArrayHelper::merge($oldObj,$model->data_json,$convertDate);
+
+                if ($pending) {
+                    if ($model->plan_order_id === '' || $model->plan_order_id === null) {
+                        $model->plan_order_id = null;
+                    }
+                    $check =PurchasePlanControl::check($model, $model->plan_order_id);
+                    // ไม่ผ่าน = นอกแผน ต้องให้ผู้ใช้กดยืนยันจากหน้าฟอร์มก่อน (JS ถามผ่าน plan-check)
+                    if (!$check['planned'] && !$this->request->post('confirm_unplanned')) {
+                        return ['status' => 'confirm', 'message' => $check['message']];
+                    }
+                    $transaction = Yii::$app->db->beginTransaction();
+                    try {
+                        PurchasePlanControl::decide($model, $check);
+                        $model->save(false);
+                        $transaction->commit();
+                    } catch (\Throwable $e) {
+                        $transaction->rollBack();
+                        throw $e;
+                    }
+                    return [
+                        'status' => 'success',
+                        'container' => '#purchase-container',
+                    ];
+                }
 
                 if($model->status == 2){
                     $model->status = 3;
@@ -248,6 +286,31 @@ class PqOrderController extends Controller
                 ]);
             }
         }
+    }
+
+    /**
+     * DepDrop รายการแผนของใบที่ผูกแผน: เฉพาะปีเดียวกับใบ + อนุมัติแล้ว (ใบปีเก่ายังใช้ /plan/depdrop/plan-order เดิม)
+     */
+    public function actionPlanOrderList($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        $parents = $this->request->post('depdrop_parents');
+        if (!empty($parents[0])) {
+            return ['output' => PurchasePlanControl::planOptions($model, $parents[0]), 'selected' => ''];
+        }
+        return ['output' => '', 'selected' => ''];
+    }
+
+    /** ตรวจแผนก่อนบันทึกทะเบียนคุม — ให้ฟอร์มเตือนก่อนกลายเป็นนอกแผน */
+    public function actionPlanCheck($id, $plan_order_id = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel($id);
+        if (!PurchasePlanControl::isPending($model)) {
+            return ['code' => 'not_pending', 'planned' => true, 'message' => ''];
+        }
+        return PurchasePlanControl::check($model, $plan_order_id ?: null);
     }
 
     /**

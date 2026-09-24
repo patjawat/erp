@@ -253,6 +253,12 @@ class Order extends \yii\db\ActiveRecord
     {
 
         switch ($this->request_type) {
+            case null:
+                // ใบปีที่ผูกแผน: ยังไม่ผ่านทะเบียนคุม (ดู PurchasePlanControl)
+                $label = 'รอตรวจแผน';
+                $color = 'secondary';
+                $icon = '<i class="bi bi-hourglass-split me-1"></i>';
+                break;
             case 'planned':
                 $label = 'ในแผน';
                 $color = 'primary';

@@ -16,6 +16,7 @@ use yii\web\NotFoundHttpException;
 use app\modules\purchase\models\Order;
 use app\modules\approve\models\Approve;
 use app\modules\purchase\models\OrderSearch;
+use app\modules\purchase\components\PurchasePlanControl;
 
 /**
  * PrOrderController implements the CRUD actions for Order model.
@@ -504,6 +505,28 @@ class PrOrderController extends Controller
                 $newObj,
                 $model->data_json
             );
+            // ปีที่เปิด "จัดซื้อผูกแผน": ยังไม่ตัดสินในแผน/นอกแผน — รอพัสดุลงทะเบียนคุมแล้วเลือกแผน
+            if ((string) $model->status === '' && PurchasePlanControl::isControlled($model)) {
+                if (count($model->ListCommittee()) < 1) {
+                    return [
+                        'status' => 'error',
+                        'message' => 'ต้องกำหนดกรรมการตรวจรับอย่างน้อย 1 คนก่อนส่งคำขอซื้อ',
+                    ];
+                }
+                $model->data_json = ArrayHelper::merge($model->data_json, ['plan_control' => 1]);
+                $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
+                $model->request_type = null;
+                $model->status = 1;
+                $model->approve = 'Y';
+                $model->save(false);
+
+                return [
+                    'status' => 'success',
+                    'container' => '#purchase-container',
+                    'message' => 'ส่งคำขอซื้อแล้ว รอพัสดุลงทะเบียนคุมและตรวจแผน',
+                ];
+            }
+
             $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
             if ($model->request_type == 'planned') {
                 //ถ้าอยู่ในแผนเป็น รออนุมัติ   

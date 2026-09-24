@@ -38,6 +38,7 @@ class PlanPeriodController extends Controller
                     'save'        => ['POST'],
                     'set-phase'   => ['POST'],
                     'set-current' => ['POST'],
+                    'set-purchase-control' => ['POST'],
                     'delete'      => ['POST'],
                 ],
             ],
@@ -105,6 +106,29 @@ class PlanPeriodController extends Controller
             $p->data_json = $dj;
             $p->save(false);
             Yii::$app->session->setFlash('success', 'ตั้งปี ' . $year . ' เป็นปีที่เปิดทำแผนปัจจุบัน');
+        }
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * เปิด/ปิด การบังคับผูกแผนของงานจัดซื้อรายปี
+     * มีผลเฉพาะใบขอซื้อปีนั้นที่ยังไม่ได้ส่งคำขอ — ใบที่ส่งแล้วเดินตามวิธีที่ประทับไว้ตอนส่ง
+     */
+    public function actionSetPurchaseControl()
+    {
+        $year = (int) $this->request->post('thai_year');
+        $on   = (int) $this->request->post('on', 0);
+        $p = PlanHelper::period($year);
+        if ($p) {
+            $dj = $this->json($p);
+            if ($on) {
+                $dj['purchase_control'] = 1;
+            } else {
+                unset($dj['purchase_control']);
+            }
+            $p->data_json = $dj;
+            $p->save(false);
+            Yii::$app->session->setFlash('success', ($on ? 'เปิด' : 'ปิด') . 'การบังคับผูกแผนงานจัดซื้อ ปี ' . $year);
         }
         return $this->redirect(['index']);
     }

@@ -76,12 +76,13 @@ $nextYear = \app\components\AppHelper::YearBudget() + 1;
                     <th>ปีงบประมาณ</th>
                     <th style="min-width:220px">สถานะรอบ</th>
                     <th class="text-center">ปีปัจจุบัน</th>
+                    <th class="text-center" title="บังคับใช้ = ใบขอซื้อปีนี้ตัดสินในแผน/นอกแผนจากแผนที่เลือกในทะเบียนคุม">จัดซื้อผูกแผน</th>
                     <th class="text-end">จัดการ</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($periods)): ?>
-                    <tr><td colspan="4" class="text-center text-muted py-3">ยังไม่มีรอบทำแผน</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีรอบทำแผน</td></tr>
                 <?php endif; ?>
                 <?php foreach ($periods as $p): ?>
                     <?php
@@ -111,6 +112,18 @@ $nextYear = \app\components\AppHelper::YearBudget() + 1;
                                     <button type="submit" class="btn btn-sm btn-outline-primary">ตั้งเป็นปัจจุบัน</button>
                                 <?= Html::endForm() ?>
                             <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <?php $pc = !empty($dj['purchase_control']); ?>
+                            <?= Html::beginForm(['set-purchase-control'], 'post', ['data' => ['confirm' => $pc
+                                ? 'ปิดการบังคับผูกแผนงานจัดซื้อ ปี ' . $p->code . '? (ใบที่ส่งคำขอไปแล้วยังเดินตามวิธีเดิมที่ใช้ตอนส่ง)'
+                                : 'เปิดการบังคับผูกแผนงานจัดซื้อ ปี ' . $p->code . '? ใบขอซื้อปีนี้จะตัดสินในแผน/นอกแผนจากแผนที่เลือกในทะเบียนคุม (เฉพาะแผนที่อนุมัติแล้ว)']]) ?>
+                                <input type="hidden" name="thai_year" value="<?= Html::encode($p->code) ?>">
+                                <input type="hidden" name="on" value="<?= $pc ? 0 : 1 ?>">
+                                <button type="submit" class="btn btn-sm <?= $pc ? 'btn-success' : 'btn-outline-secondary' ?>">
+                                    <i class="fa-solid <?= $pc ? 'fa-link' : 'fa-link-slash' ?> me-1"></i><?= $pc ? 'บังคับใช้' : 'ไม่บังคับ' ?>
+                                </button>
+                            <?= Html::endForm() ?>
                         </td>
                         <td class="text-end">
                             <?php if (!$isCur): ?>

@@ -3,6 +3,7 @@
 use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\widgets\Pjax;
+use app\modules\purchase\components\PurchasePlanControl;
 
 /** @var yii\web\View $this */
 /** @var app\modules\sm\models\Order $model */
@@ -200,7 +201,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ], ['class' => 'btn btn-primary rounded shadow confirm-order', 'data' => ['title' => 'ยืนยัน?', 'text' => 'ส่งคำขอซื้อเพื่อรอการพิจารณา']]) ?>
                                 <?php endif; ?>
 
-                                <?php if ($model->status == 1 && $model->data_json['pr_leader_confirm'] == 'Y' && $model->data_json['pr_officer_checker'] == 'Y' && $model->data_json['pr_director_confirm'] == 'Y'): ?>
+                                <?php if ($model->status == '' && PurchasePlanControl::isControlled($model) && count($model->ListCommittee()) < 1): ?>
+                                    <div class="alert alert-warning small py-2 mb-0">
+                                        <i class="bi bi-people me-1"></i> ต้องเพิ่มกรรมการตรวจรับอย่างน้อย 1 คนก่อนส่งคำขอซื้อ
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (PurchasePlanControl::isPending($model) && $model->status == 1): ?>
+                                    <?= Html::a('<i class="bi bi-diagram-3"></i> ลงทะเบียนคุม + ตรวจแผน', [
+                                        '/purchase/pq-order/update',
+                                        'id' => $model->id,
+                                        'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างทะเบียนคุม',
+                                    ], ['class' => 'btn btn-primary rounded shadow open-modal', 'data' => ['size' => 'modal-xl']]) ?>
+                                <?php endif; ?>
+
+                                <?php if ($model->status == 1 && !PurchasePlanControl::isControlled($model) && $model->data_json['pr_leader_confirm'] == 'Y' && $model->data_json['pr_officer_checker'] == 'Y' && $model->data_json['pr_director_confirm'] == 'Y'): ?>
                                     <?= Html::a('<i class="bi bi-exclamation-circle"></i> ลงทะเบียนคุม', [
                                         '/purchase/pq-order/update',
                                         'id' => $model->id,
@@ -300,6 +315,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 if (response.close) {
                    \$("#main-modal").modal("hide");
                 }
+              } else if (response.status == "error" && response.message) {
+                Swal.fire({ icon: "warning", title: "ยังส่งคำขอไม่ได้", text: response.message });
               }
             },
           });

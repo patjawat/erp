@@ -170,7 +170,14 @@ try {
         ])->label('ผู้เห็นชอบ')
     ?>
 
-<?php 
+<?php
+// ปีที่เปิด "จัดซื้อผูกแผน": ไม่ต้องเลือก — ระบบตัดสินจากแผนที่พัสดุเลือกในทะเบียนคุม
+if (\app\modules\purchase\components\PurchasePlanControl::isControlled($model)):
+?>
+<div class="alert alert-light border small py-2 mb-3">
+    <i class="bi bi-diagram-3 me-1"></i> ในแผน/นอกแผน ระบบตรวจจากแผนที่พัสดุเลือกตอนลงทะเบียนคุม
+</div>
+<?php else:
 echo $form->field($model, 'request_type')->radioList(
     [
     'planned' => 'ในแผน',
@@ -178,6 +185,7 @@ echo $form->field($model, 'request_type')->radioList(
 ], 
     ['custom' => true,'inline' => true]
 )->label('ประเภทจัดซื้อ');
+endif;
 ?>
 
 <?= $form->field($model, 'data_json[comment]')->textArea()->label('รายละเอียดและความจำเป็น') ?>
