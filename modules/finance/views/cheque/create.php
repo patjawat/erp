@@ -28,6 +28,8 @@ $dateVal = $cheque->cheque_date
 $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small mt-1">' . Html::encode($cheque->getFirstError($attr)) . '</div>' : '';
 $previewBase = Url::to(['preview']);
 $nextBase = Url::to(['next-cheque-no']);
+$booksBase = Url::to(['books-by-account']);
+$bookCreate = Url::to(['book-create']);
 ?>
 
 <div class="row g-3">
@@ -66,7 +68,10 @@ $nextBase = Url::to(['next-cheque-no']);
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">เล่มเช็ค</label>
-                        <input type="text" name="cheque_book_no" class="form-control" value="<?= Html::encode($cheque->cheque_book_no) ?>">
+                        <select name="book_id" id="ck-book" class="form-select">
+                            <option value="">— เลือกบัญชีก่อน —</option>
+                        </select>
+                        <div id="ck-book-hint" class="form-text"></div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">วันที่สั่งจ่าย</label>
@@ -153,21 +158,39 @@ $js = <<<JS
   var date=document.getElementById('ck-date'), ac=document.getElementById('ck-ac');
   var frame=document.getElementById('ck-preview'), base='{$previewBase}';
   var acc=document.getElementById('ck-acc'), no=document.getElementById('ck-no'), noHint=document.getElementById('ck-no-hint');
-  var nextBase='{$nextBase}';
-  function fetchNextNo(){
+  var book=document.getElementById('ck-book'), bookHint=document.getElementById('ck-book-hint');
+  var nextBase='{$nextBase}', booksBase='{$booksBase}', bookCreate='{$bookCreate}';
+  function fetchNextNo(){ // สำรอง: เลขล่าสุดของบัญชี (กรณีไม่มีเล่ม)
     if(!acc.value){ noHint.textContent=''; return; }
     fetch(nextBase+'?account_id='+encodeURIComponent(acc.value),{headers:{'X-Requested-With':'XMLHttpRequest'}})
       .then(function(r){return r.json();})
       .then(function(d){
-        if(d && d.next){
-          noHint.innerHTML='เลขถัดไปในทะเบียน: <b>'+d.next+'</b> <a href="#" id="ck-no-apply">ใช้เลขนี้</a>';
-          if(!no.value){ no.value=d.next; }
-          var ap=document.getElementById('ck-no-apply');
-          if(ap) ap.addEventListener('click',function(e){e.preventDefault(); no.value=d.next; updPreview();});
-        } else {
-          noHint.textContent='ยังไม่มีเลขเช็คในบัญชีนี้ — กรอกเลขเริ่มต้นเอง';
-        }
+        if(d && d.next){ if(!no.value) no.value=d.next; noHint.innerHTML='เลขถัดไปในทะเบียน: <b>'+d.next+'</b>'; }
+        else { noHint.textContent='ยังไม่มีเลขเช็คในบัญชีนี้ — กรอกเลขเริ่มต้นเอง'; }
       }).catch(function(){ noHint.textContent=''; });
+  }
+  function applyBook(){
+    var opt=book.options[book.selectedIndex];
+    if(!opt || !opt.value){ bookHint.textContent=''; return; }
+    var rem=opt.getAttribute('data-remaining'), nx=opt.getAttribute('data-next');
+    bookHint.innerHTML='คงเหลือในเล่ม: <b>'+rem+'</b> ใบ';
+    if(nx){ no.value=nx; noHint.innerHTML='เลขถัดไปในเล่ม: <b>'+nx+'</b>'; }
+    else { noHint.innerHTML='<span class="text-danger">เล่มนี้ใช้หมดแล้ว</span>'; }
+    updPreview();
+  }
+  function fetchBooks(){
+    if(!acc.value){ book.innerHTML='<option value="">— เลือกบัญชีก่อน —</option>'; bookHint.textContent=''; return; }
+    fetch(booksBase+'?account_id='+encodeURIComponent(acc.value),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.json();})
+      .then(function(list){
+        if(list && list.length){
+          var h=''; list.forEach(function(b){ h+='<option value="'+b.id+'" data-next="'+(b.next||'')+'" data-remaining="'+b.remaining+'">'+b.label+'</option>'; });
+          book.innerHTML=h; applyBook();
+        } else {
+          book.innerHTML='<option value="">— ไม่มีเล่ม (ใช้เลขล่าสุดบัญชี) —</option>';
+          bookHint.innerHTML='<a href="'+bookCreate+'">+ รับเล่มเช็คเข้า</a>'; fetchNextNo();
+        }
+      }).catch(function(){ book.innerHTML='<option value="">— โหลดเล่มไม่ได้ —</option>'; });
   }
   function updBaht(){ baht.textContent = bahtText(amount.value) || '—'; }
   function tplId(){ if(tpl.value) return tpl.value; return tpl.options[1] ? tpl.options[1].value : ''; }
@@ -184,8 +207,9 @@ $js = <<<JS
   amount.addEventListener('input', updBaht);
   document.getElementById('ck-refresh').addEventListener('click', updPreview);
   [payee,amount,date,tpl,ac].forEach(function(el){ el.addEventListener('change', updPreview); });
-  if(acc){ acc.addEventListener('change', function(){ fetchNextNo(); updPreview(); }); }
-  updBaht(); updPreview(); if(acc && acc.value) fetchNextNo();
+  if(acc){ acc.addEventListener('change', function(){ fetchBooks(); updPreview(); }); }
+  if(book){ book.addEventListener('change', applyBook); }
+  updBaht(); updPreview(); if(acc && acc.value) fetchBooks();
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_END);

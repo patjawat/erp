@@ -12,6 +12,7 @@ use yii\web\UploadedFile;
 use app\components\AppHelper;
 use app\modules\finance\models\FinanceCheque;
 use app\modules\finance\models\FinanceChequeTemplate;
+use app\modules\finance\models\FinanceChequeBook;
 use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\services\ChequePrintService;
 
@@ -24,12 +25,13 @@ class ChequeController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print', 'next-cheque-no'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['create', 'calibrate', 'create-template', 'upload-background', 'status', 'void'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print', 'next-cheque-no', 'book-index', 'books-by-account'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['create', 'calibrate', 'create-template', 'upload-background', 'status', 'void', 'book-create', 'book-close'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'],
                 'upload-background' => ['POST'], 'status' => ['POST'], 'void' => ['POST'],
+                'book-create' => ['GET', 'POST'], 'book-close' => ['POST'],
             ]],
         ]);
     }
@@ -79,8 +81,13 @@ class ChequeController extends Controller
         if ($req->isPost) {
             $cheque->cash_account_id = (int) $req->post('cash_account_id', 0) ?: null;
             $cheque->template_id = (int) $req->post('template_id', 0) ?: null;
+            $cheque->book_id = (int) $req->post('book_id', 0) ?: null;
             $cheque->cheque_no = trim((string) $req->post('cheque_no', ''));
             $cheque->cheque_book_no = trim((string) $req->post('cheque_book_no', '')) ?: null;
+            // ผูกเล่ม → เติมเลขเล่ม snapshot จากทะเบียนเล่ม
+            if ($cheque->book_id && ($bk = FinanceChequeBook::findOne($cheque->book_id))) {
+                $cheque->cheque_book_no = $bk->book_no ?: $cheque->cheque_book_no;
+            }
             $cheque->cheque_date = AppHelper::normalizeDateToDb((string) $req->post('cheque_date', '')) ?: null;
             $cheque->payee_name = trim((string) $req->post('payee_name', ''));
             $cheque->amount = (float) str_replace([',', ' '], '', (string) $req->post('amount', '0'));
@@ -99,22 +106,93 @@ class ChequeController extends Controller
             }
         }
 
-        $accounts = FinanceCashAccount::find()->where(['is_active' => 1])
-            ->andWhere(['in', 'account_type', [FinanceCashAccount::TYPE_BANK, FinanceCashAccount::TYPE_TREASURY]])
-            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
-
         return $this->render('create', [
             'cheque' => $cheque,
-            'accounts' => \yii\helpers\ArrayHelper::map($accounts, 'id', fn($a) => $a->label()),
+            'accounts' => $this->payingAccounts(),
             'templates' => FinanceChequeTemplate::activeList(),
         ]);
     }
 
-    /** คืนเลขที่เช็คถัดไปของบัญชีจ่าย (AJAX) */
-    public function actionNextChequeNo($account_id)
+    /** คืนเลขที่เช็คถัดไป (AJAX) — ถ้าระบุเล่มใช้เลขในเล่ม ไม่งั้นใช้เลขล่าสุดของบัญชี */
+    public function actionNextChequeNo($account_id, $book_id = null)
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if ($book_id && ($book = FinanceChequeBook::findOne($book_id))) {
+            return ['next' => $book->nextNo(), 'remaining' => $book->remaining(), 'full' => $book->isFull()];
+        }
         return ['next' => FinanceCheque::nextChequeNo((int) $account_id)];
+    }
+
+    /** เล่มเช็คที่ใช้งานได้ของบัญชี (AJAX) สำหรับ dropdown หน้าออกเช็ค */
+    public function actionBooksByAccount($account_id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $out = [];
+        foreach (FinanceChequeBook::activeForAccount((int) $account_id) as $b) {
+            $out[] = ['id' => $b->id, 'label' => $b->label(), 'next' => $b->nextNo(), 'remaining' => $b->remaining()];
+        }
+        return $out;
+    }
+
+    /** ทะเบียนเล่มเช็ค */
+    public function actionBookIndex($account_id = null)
+    {
+        $query = FinanceChequeBook::find()->orderBy(['cash_account_id' => SORT_ASC, 'start_no' => SORT_ASC]);
+        if ($account_id) {
+            $query->andWhere(['cash_account_id' => (int) $account_id]);
+        }
+        return $this->render('book-index', [
+            'books' => $query->all(),
+            'accounts' => $this->payingAccounts(),
+            'accountId' => $account_id,
+        ]);
+    }
+
+    /** รับเล่มเช็คเข้าใหม่ */
+    public function actionBookCreate()
+    {
+        $book = new FinanceChequeBook(['status' => FinanceChequeBook::STATUS_ACTIVE]);
+        if (Yii::$app->request->isPost) {
+            $post = Yii::$app->request->post();
+            $book->cash_account_id = (int) ($post['cash_account_id'] ?? 0) ?: null;
+            $book->book_no = trim((string) ($post['book_no'] ?? '')) ?: null;
+            $book->prefix = trim((string) ($post['prefix'] ?? '')) ?: null;
+            $book->start_no = (int) preg_replace('/\D/', '', (string) ($post['start_no'] ?? '0'));
+            $book->end_no = (int) preg_replace('/\D/', '', (string) ($post['end_no'] ?? '0'));
+            $book->number_width = (int) ($post['number_width'] ?? 0);
+            $book->received_date = AppHelper::normalizeDateToDb((string) ($post['received_date'] ?? '')) ?: null;
+            $book->note = trim((string) ($post['note'] ?? '')) ?: null;
+            if ($book->validate() && $book->save()) {
+                Yii::$app->session->setFlash('success', 'รับเล่มเช็คเข้าทะเบียนแล้ว');
+                return $this->redirect(['book-index', 'account_id' => $book->cash_account_id]);
+            }
+        }
+        return $this->render('book-form', ['book' => $book, 'accounts' => $this->payingAccounts()]);
+    }
+
+    /** ปิดเล่ม (ใช้หมด/ยกเลิก) */
+    public function actionBookClose($id)
+    {
+        $book = FinanceChequeBook::findOne($id);
+        if (!$book) {
+            throw new NotFoundHttpException('ไม่พบเล่มเช็ค');
+        }
+        $status = (string) Yii::$app->request->post('status', FinanceChequeBook::STATUS_USED_UP);
+        if (isset(FinanceChequeBook::statusOptions()[$status])) {
+            $book->status = $status;
+            $book->save(false, ['status', 'updated_at', 'updated_by']);
+            Yii::$app->session->setFlash('success', 'ปรับสถานะเล่มเช็คแล้ว');
+        }
+        return $this->redirect(['book-index', 'account_id' => $book->cash_account_id]);
+    }
+
+    /** บัญชีจ่าย (ธนาคาร/เงินฝากคลัง) id => label */
+    private function payingAccounts(): array
+    {
+        $rows = FinanceCashAccount::find()->where(['is_active' => 1])
+            ->andWhere(['in', 'account_type', [FinanceCashAccount::TYPE_BANK, FinanceCashAccount::TYPE_TREASURY]])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+        return \yii\helpers\ArrayHelper::map($rows, 'id', fn($a) => $a->label());
     }
 
     /** รายละเอียดเช็ค + เดินสถานะ */

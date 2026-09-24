@@ -47,6 +47,7 @@ $models = $dataProvider->getModels();
     </div>
     <div class="d-flex gap-2">
         <a href="<?= Url::to(['create']) ?>" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>ออกเช็คใหม่</a>
+        <a href="<?= Url::to(['book-index']) ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-journals me-1"></i>เล่มเช็ค</a>
         <a href="<?= Url::to(['template']) ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-ruled me-1"></i>แม่แบบเช็ค</a>
     </div>
 </div>
