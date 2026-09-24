@@ -45,7 +45,10 @@ $models = $dataProvider->getModels();
             </a>
         <?php endforeach; ?>
     </div>
-    <a href="<?= Url::to(['template']) ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-ruled me-1"></i>แม่แบบเช็ค</a>
+    <div class="d-flex gap-2">
+        <a href="<?= Url::to(['create']) ?>" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>ออกเช็คใหม่</a>
+        <a href="<?= Url::to(['template']) ?>" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-ruled me-1"></i>แม่แบบเช็ค</a>
+    </div>
 </div>
 
 <?= Html::beginForm(['index'], 'get', ['class' => 'input-group input-group-sm mb-2', 'style' => 'max-width:420px']) ?>
@@ -66,7 +69,9 @@ $models = $dataProvider->getModels();
             </thead>
             <tbody>
             <?php if (!$models): ?>
-                <tr><td colspan="6" class="text-center text-muted py-4">ยังไม่มีเช็คในทะเบียน — สร้างจากการจ่ายเจ้าหนี้</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">
+                    ยังไม่มีเช็คในทะเบียน — กด <a href="<?= Url::to(['create']) ?>">ออกเช็คใหม่</a> หรือสร้างจากการจ่ายเจ้าหนี้
+                </td></tr>
             <?php else: foreach ($models as $c): ?>
                 <tr>
                     <td><?= $thDate($c->cheque_date) ?></td>

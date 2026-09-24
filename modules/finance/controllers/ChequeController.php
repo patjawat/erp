@@ -9,8 +9,10 @@ use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
+use app\components\AppHelper;
 use app\modules\finance\models\FinanceCheque;
 use app\modules\finance\models\FinanceChequeTemplate;
+use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\services\ChequePrintService;
 
 /**
@@ -23,11 +25,11 @@ class ChequeController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['calibrate', 'create-template', 'upload-background', 'status', 'void'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['create', 'calibrate', 'create-template', 'upload-background', 'status', 'void'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
-                'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'], 'upload-background' => ['POST'],
-                'status' => ['POST'], 'void' => ['POST'],
+                'create' => ['GET', 'POST'], 'calibrate' => ['GET', 'POST'], 'create-template' => ['GET', 'POST'],
+                'upload-background' => ['POST'], 'status' => ['POST'], 'void' => ['POST'],
             ]],
         ]);
     }
@@ -65,6 +67,46 @@ class ChequeController extends Controller
             'q' => $q,
             'status' => $status,
             'summary' => $summary,
+        ]);
+    }
+
+    /** ออกเช็คใหม่เอง (ไม่ผ่านจ่ายเจ้าหนี้) — คีย์ข้อมูล → บันทึกทะเบียน → พิมพ์ */
+    public function actionCreate()
+    {
+        $cheque = new FinanceCheque(['status' => FinanceCheque::STATUS_DRAFT, 'is_ac_payee' => 1]);
+        $req = Yii::$app->request;
+
+        if ($req->isPost) {
+            $cheque->cash_account_id = (int) $req->post('cash_account_id', 0) ?: null;
+            $cheque->template_id = (int) $req->post('template_id', 0) ?: null;
+            $cheque->cheque_no = trim((string) $req->post('cheque_no', ''));
+            $cheque->cheque_book_no = trim((string) $req->post('cheque_book_no', '')) ?: null;
+            $cheque->cheque_date = AppHelper::normalizeDateToDb((string) $req->post('cheque_date', '')) ?: null;
+            $cheque->payee_name = trim((string) $req->post('payee_name', ''));
+            $cheque->amount = (float) str_replace([',', ' '], '', (string) $req->post('amount', '0'));
+            $cheque->is_ac_payee = $req->post('is_ac_payee') ? 1 : 0;
+
+            if ($cheque->validate()) {
+                // กันเลขเช็คซ้ำต่อบัญชี (unique index) ให้ error สวย ๆ แทน exception
+                $dup = $cheque->cash_account_id && FinanceCheque::find()
+                    ->where(['cash_account_id' => $cheque->cash_account_id, 'cheque_no' => $cheque->cheque_no])->exists();
+                if ($dup) {
+                    $cheque->addError('cheque_no', 'เลขที่เช็คนี้มีในบัญชีจ่ายนี้แล้ว');
+                } elseif ($cheque->save(false)) {
+                    Yii::$app->session->setFlash('success', 'บันทึกเช็คเข้าทะเบียนแล้ว — กดพิมพ์เพื่อออกเช็ค');
+                    return $this->redirect(['view', 'id' => $cheque->id]);
+                }
+            }
+        }
+
+        $accounts = FinanceCashAccount::find()->where(['is_active' => 1])
+            ->andWhere(['in', 'account_type', [FinanceCashAccount::TYPE_BANK, FinanceCashAccount::TYPE_TREASURY]])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        return $this->render('create', [
+            'cheque' => $cheque,
+            'accounts' => \yii\helpers\ArrayHelper::map($accounts, 'id', fn($a) => $a->label()),
+            'templates' => FinanceChequeTemplate::activeList(),
         ]);
     }
 
