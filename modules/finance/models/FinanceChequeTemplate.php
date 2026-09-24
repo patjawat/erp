@@ -54,7 +54,8 @@ class FinanceChequeTemplate extends ActiveRecord
             ['key' => 'amount_text',   'x' => 17, 'y' => 47, 'font_size' => 16, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
             ['key' => 'amount_number', 'x' => 90, 'y' => 47, 'font_size' => 18, 'align' => 'R', 'bold' => 1, 'enabled' => 1],
             ['key' => 'ac_payee',      'x' => 40, 'y' => 60, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
-            ['key' => 'strike_bearer', 'x' => 90, 'y' => 30, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'pitch' => 7, 'enabled' => 1],
+            // strike_bearer: x = ปลายเส้น (ขวาสุด), y = ระดับบรรทัดจ่าย ; เริ่มลากจากท้ายชื่อผู้รับอัตโนมัติ
+            ['key' => 'strike_bearer', 'x' => 99, 'y' => 30, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'pitch' => 0, 'enabled' => 1],
         ];
     }
 

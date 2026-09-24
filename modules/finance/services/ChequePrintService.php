@@ -54,6 +54,19 @@ class ChequePrintService
         }
 
         $values = $this->fieldValues($data);
+
+        // วัดตำแหน่ง "ท้ายชื่อผู้รับ" ไว้ก่อน เพื่อลากเส้นขีดฆ่าต่อจากชื่อไปจนคร่อม "หรือผู้ถือ"
+        $payeeEndX = null;
+        foreach ($tpl->layout() as $f) {
+            if (($f['key'] ?? '') === 'payee' && !empty($f['enabled'])) {
+                $pt = (string) ($values['payee'] ?? '');
+                $px = ((float) ($f['x'] ?? 0)) / 100 * $w + $ox;
+                $pdf->SetFont('THSarabunNew', !empty($f['bold']) ? 'B' : '', (float) ($f['font_size'] ?? 16));
+                $payeeEndX = $px + ($pt !== '' ? $pdf->GetStringWidth(iconv('UTF-8', 'cp874//IGNORE', $pt)) : 0);
+                break;
+            }
+        }
+
         $pdf->SetTextColor(0, 0, 0);
 
         foreach ($tpl->layout() as $f) {
@@ -63,13 +76,17 @@ class ChequePrintService
             }
             $x = ((float) ($f['x'] ?? 0)) / 100 * $w + $ox;
             $y = ((float) ($f['y'] ?? 0)) / 100 * $h + $oy;
-            $pitch = (float) ($f['pitch'] ?? 0); // ช่องตัวเลข = ระยะ/ตัวอักษร ; เส้น = ความยาว (% ของแผ่น)
+            $pitch = (float) ($f['pitch'] ?? 0); // ช่องตัวเลข = ระยะ/ตัวอักษร
 
-            // ขีดฆ่า "หรือผู้ถือ" — วาดเป็นเส้นทับข้อความที่พิมพ์มาบนเช็ค (เช็คระบุชื่อผู้รับ)
+            // ขีดฆ่า "หรือผู้ถือ": ลากเส้นจากท้ายชื่อผู้รับ → ปลายบรรทัด (field.x=ปลายเส้น, field.y=ระดับเส้น)
+            // กันเติมชื่อ/ข้อความแทรก และคร่อมทับ "หรือผู้ถือ/or bearer" ที่พิมพ์มาบนเช็ค
             if ($key === 'strike_bearer') {
-                $len = ($pitch > 0 ? $pitch : 7) / 100 * $w;
-                $pdf->SetLineWidth(0.4);
-                $pdf->Line($x, $y, $x + $len, $y);
+                $endX = $x;
+                $startX = $payeeEndX !== null ? $payeeEndX + 2 : $endX - ($pitch > 0 ? $pitch : 40) / 100 * $w;
+                if ($endX > $startX) {
+                    $pdf->SetLineWidth(0.4);
+                    $pdf->Line($startX, $y, $endX, $y);
+                }
                 continue;
             }
 
