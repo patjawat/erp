@@ -30,7 +30,7 @@ $previewBase = Url::to(['preview']);
 ?>
 
 <div class="row g-3">
-    <div class="col-lg-7">
+    <div class="col-lg-5 order-lg-2">
         <?php if ($cheque->hasErrors()): ?>
             <div class="alert alert-danger"><?= implode('<br>', $cheque->getErrorSummary(true)) ?></div>
         <?php endif; ?>
@@ -102,14 +102,14 @@ $previewBase = Url::to(['preview']);
         </div>
     </div>
 
-    <div class="col-lg-5">
-        <div class="card shadow-sm sticky-lg-top" style="top:1rem">
+    <div class="col-lg-7 order-lg-1">
+        <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-eye me-1"></i>ตัวอย่างบนเช็ค</span>
                 <button type="button" id="ck-refresh" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>อัปเดต</button>
             </div>
             <div class="card-body p-2">
-                <iframe id="ck-preview" style="width:100%;height:360px;border:1px solid #dee2e6;border-radius:.375rem;background:#fff"></iframe>
+                <iframe id="ck-preview" style="width:100%;height:460px;border:1px solid #dee2e6;border-radius:.375rem;background:#fff"></iframe>
                 <div class="form-text mt-2">ตัวอย่างซ้อนบนรูปเช็คจริง ปรับข้อมูลด้านซ้ายแล้วกด "อัปเดต" (ตำแหน่งจริงปรับได้ที่เมนู "แม่แบบเช็ค")</div>
             </div>
         </div>
