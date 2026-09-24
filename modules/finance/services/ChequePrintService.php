@@ -58,19 +58,31 @@ class ChequePrintService
 
         foreach ($tpl->layout() as $f) {
             $key = $f['key'] ?? '';
-            if ($key === '' || empty($f['enabled']) || !isset($values[$key])) {
+            if ($key === '' || empty($f['enabled'])) {
+                continue;
+            }
+            $x = ((float) ($f['x'] ?? 0)) / 100 * $w + $ox;
+            $y = ((float) ($f['y'] ?? 0)) / 100 * $h + $oy;
+            $pitch = (float) ($f['pitch'] ?? 0); // ช่องตัวเลข = ระยะ/ตัวอักษร ; เส้น = ความยาว (% ของแผ่น)
+
+            // ขีดฆ่า "หรือผู้ถือ" — วาดเป็นเส้นทับข้อความที่พิมพ์มาบนเช็ค (เช็คระบุชื่อผู้รับ)
+            if ($key === 'strike_bearer') {
+                $len = ($pitch > 0 ? $pitch : 7) / 100 * $w;
+                $pdf->SetLineWidth(0.4);
+                $pdf->Line($x, $y, $x + $len, $y);
+                continue;
+            }
+
+            if (!isset($values[$key])) {
                 continue;
             }
             $text = (string) $values[$key];
             if ($text === '') {
                 continue;
             }
-            $x = ((float) ($f['x'] ?? 0)) / 100 * $w + $ox;
-            $y = ((float) ($f['y'] ?? 0)) / 100 * $h + $oy;
             $size = (float) ($f['font_size'] ?? 16);
             $style = !empty($f['bold']) ? 'B' : '';
             $align = $f['align'] ?? 'L';
-            $pitch = (float) ($f['pitch'] ?? 0); // ระยะห่างต่อตัวอักษร (% ของความกว้างแผ่น) สำหรับช่องตัวเลข
 
             $pdf->SetFont('THSarabunNew', $style, $size);
 

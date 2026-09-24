@@ -33,8 +33,12 @@ class FinanceChequeTemplate extends ActiveRecord
         'payee' => 'จ่ายให้ (ชื่อผู้รับ)',
         'amount_text' => 'จำนวนเงินตัวอักษร',
         'amount_number' => 'จำนวนเงินตัวเลข',
-        'ac_payee' => 'ขีดคร่อม A/C PAYEE ONLY',
+        'ac_payee' => 'A/C PAYEE ONLY (ขีดคร่อม)',
+        'strike_bearer' => 'ขีดฆ่า "หรือผู้ถือ" (เส้น)',
     ];
+
+    /** ฟิลด์ที่วาดเป็น "เส้น" ไม่ใช่ข้อความ (ช่อง %ช่อง = ความยาวเส้น % ของแผ่น) */
+    public const LINE_FIELDS = ['strike_bearer'];
 
     public static function tableName(): string
     {
@@ -50,6 +54,7 @@ class FinanceChequeTemplate extends ActiveRecord
             ['key' => 'amount_text',   'x' => 17, 'y' => 47, 'font_size' => 16, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
             ['key' => 'amount_number', 'x' => 90, 'y' => 47, 'font_size' => 18, 'align' => 'R', 'bold' => 1, 'enabled' => 1],
             ['key' => 'ac_payee',      'x' => 40, 'y' => 60, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'enabled' => 1],
+            ['key' => 'strike_bearer', 'x' => 90, 'y' => 30, 'font_size' => 14, 'align' => 'L', 'bold' => 0, 'pitch' => 7, 'enabled' => 1],
         ];
     }
 
