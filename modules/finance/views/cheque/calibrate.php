@@ -29,7 +29,7 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
 ?>
 
 <div class="row g-3">
-    <div class="col-lg-6">
+    <div class="col-lg-7 order-lg-2">
         <?= Html::beginForm(['calibrate', 'id' => $tpl->id], 'post') ?>
         <div class="card shadow-sm mb-3">
             <div class="card-header fw-semibold"><i class="bi bi-aspect-ratio me-1"></i>ขนาดแผ่นเช็ค & ชดเชยเครื่องพิมพ์</div>
@@ -109,7 +109,7 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
         </div>
     </div>
 
-    <div class="col-lg-6">
+    <div class="col-lg-5 order-lg-1">
         <div class="card shadow-sm sticky-lg-top" style="top:1rem">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-eye me-1"></i>พรีวิว (ข้อมูลตัวอย่าง)</span>
