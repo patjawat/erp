@@ -62,8 +62,9 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>พิมพ์</th><th>ช่อง</th><th style="width:80px">X %</th><th style="width:80px">Y %</th>
-                            <th style="width:80px">ขนาด</th><th style="width:90px">จัดชิด</th><th>หนา</th>
+                            <th>พิมพ์</th><th>ช่อง</th><th style="width:74px">X %</th><th style="width:74px">Y %</th>
+                            <th style="width:70px">ขนาด</th><th style="width:84px">จัดชิด</th><th>หนา</th>
+                            <th style="width:78px" title="ระยะห่างต่อตัวอักษร (% ของแผ่น) สำหรับช่องตัวเลข เช่น วันที่">ช่อง %</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -82,6 +83,7 @@ $aligns = ['L' => 'ซ้าย', 'C' => 'กลาง', 'R' => 'ขวา'];
                                 </select>
                             </td>
                             <td><input type="checkbox" class="form-check-input" name="field[<?= $k ?>][bold]" value="1" <?= $f['bold'] ? 'checked' : '' ?>></td>
+                            <td><input type="number" step="0.05" class="form-control form-control-sm" name="field[<?= $k ?>][pitch]" value="<?= Html::encode($f['pitch']) ?>" placeholder="0"></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>

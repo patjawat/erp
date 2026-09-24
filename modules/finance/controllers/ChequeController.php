@@ -157,6 +157,7 @@ class ChequeController extends Controller
                     'font_size' => (float) ($f['font_size'] ?? 16),
                     'align' => in_array($f['align'] ?? 'L', ['L', 'C', 'R'], true) ? $f['align'] : 'L',
                     'bold' => !empty($f['bold']) ? 1 : 0,
+                    'pitch' => (float) ($f['pitch'] ?? 0),
                     'enabled' => !empty($f['enabled']) ? 1 : 0,
                 ];
             }
@@ -280,6 +281,7 @@ class ChequeController extends Controller
                 'font_size' => $f['font_size'] ?? 16,
                 'align' => $f['align'] ?? 'L',
                 'bold' => !empty($f['bold']),
+                'pitch' => $f['pitch'] ?? 0,
                 'enabled' => !empty($f['enabled']),
             ];
         }

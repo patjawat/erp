@@ -70,8 +70,22 @@ class ChequePrintService
             $size = (float) ($f['font_size'] ?? 16);
             $style = !empty($f['bold']) ? 'B' : '';
             $align = $f['align'] ?? 'L';
+            $pitch = (float) ($f['pitch'] ?? 0); // ระยะห่างต่อตัวอักษร (% ของความกว้างแผ่น) สำหรับช่องตัวเลข
 
             $pdf->SetFont('THSarabunNew', $style, $size);
+
+            // โหมดช่องตัวเลข: พิมพ์ทีละตัวเว้นระยะเท่า ๆ กัน (เช่น วันที่ในช่อง วว ดด ปปปป)
+            if ($pitch > 0) {
+                $raw = $key === 'cheque_date' ? preg_replace('/\D/', '', $text) : $text;
+                $step = $pitch / 100 * $w;
+                $cx = $x;
+                foreach (preg_split('//u', $raw, -1, PREG_SPLIT_NO_EMPTY) as $ch) {
+                    $pdf->Text($cx, $y, iconv('UTF-8', 'cp874//IGNORE', $ch));
+                    $cx += $step;
+                }
+                continue;
+            }
+
             $enc = iconv('UTF-8', 'cp874//IGNORE', $text);
             $textWidth = $pdf->GetStringWidth($enc);
             if ($align === 'R') {
