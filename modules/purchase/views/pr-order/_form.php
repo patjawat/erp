@@ -69,9 +69,9 @@ $resultsJs = <<< JS
     'validationUrl' => ['/purchase/pr-order/createvalidator'],
 ]); ?>
 
-<?php // popup modal-lg: 2 คอลัมน์ ซ้าย = ข้อมูลใบ / ขวา = กรรมการ+แผน — ลดการเลื่อน scroll ?>
+<?php // popup modal-xl: 2 คอลัมน์ (5:7) ซ้าย = ข้อมูลใบ / ขวา = กรรมการ+แผน — ลดการเลื่อน scroll ?>
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-5">
 <div class="row">
     <div class="col-6">
 
@@ -175,9 +175,9 @@ try {
 
 <?= $form->field($model, 'data_json[comment]')->textArea(['rows' => 4])->label('รายละเอียดและความจำเป็น') ?>
     </div><!-- /คอลัมน์ซ้าย -->
-    <div class="col-lg-6">
+    <div class="col-lg-7">
 <?php
-// ปีที่เปิด "จัดซื้อผูกแผน": ไม่ต้องเลือก — ระบบตัดสินจากแผนที่พัสดุเลือกในทะเบียนคุม
+// ปีที่เปิด "จัดซื้อผูกแผน": ไม่ต้องเลือกในแผน/นอกแผน — เลือกกรรมการ + รายการแผน แล้วระบบตัดสินตอนส่งคำขอ
 if (\app\modules\purchase\components\PurchasePlanControl::isControlled($model)):
 ?>
 <?php

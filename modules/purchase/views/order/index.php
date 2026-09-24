@@ -177,9 +177,9 @@ if ($searchModel->date_between == 'pr_create_date') {
 
                                     <?php if ($item->status != 8): ?>
                                         <ul class="dropdown-menu">
-                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                                 <?php if ($item->status >= 2): ?>
-                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-xl']]) ?>
                                             <?php endif; ?>
 
                                             <?php if ($item->status >= 3): ?>
