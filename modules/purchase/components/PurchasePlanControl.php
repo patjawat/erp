@@ -12,10 +12,13 @@ use app\modules\purchase\models\Order;
 /**
  * งานจัดซื้อผูกแผนรายปี (เปิดที่ /plan/plan-period คอลัมน์ "จัดซื้อผูกแผน")
  *
- * ปีที่เปิด: ผู้ขอไม่ต้องเลือกในแผน/นอกแผน — ตอนส่งคำขอประทับ data_json.plan_control=1 และ request_type=NULL (รอตรวจแผน)
- * แล้วพัสดุลงทะเบียนคุม + เลือกแผน → check() ตัดสิน
- *   ผ่าน   = ในแผน: ขั้นอนุมัติผ่านอัตโนมัติ → status 3 (ออกใบสั่งซื้อได้)
- *   ไม่ผ่าน = นอกแผน: หัวหน้า → พัสดุ → ผอ. (ขั้นอนุมัติเดิม) → status 2 → พัสดุยืนยันทะเบียนคุม → 3
+ * ปีที่เปิด: ผู้ขอไม่ต้องเลือกในแผน/นอกแผน — เลือก "รายการแผน" ในฟอร์มขอซื้อ (เว้นว่างได้)
+ * ตอนกด "ส่งคำขอซื้อ" (มีรายการ/ยอดเงินแล้ว) check() ตัดสิน แล้วประทับ data_json.plan_control=1
+ *   ผ่าน   = ในแผน: ขั้นอนุมัติผ่านอัตโนมัติ → status 2 → ลงทะเบียนคุมตามเดิม
+ *   ไม่ผ่าน = นอกแผน (เตือนก่อนส่ง): หัวหน้า → พัสดุ → ผอ. (ขั้นอนุมัติเดิม) → status 2
+ * ทะเบียนคุมแสดงแผนแบบอ่านอย่างเดียว
+ *
+ * isPending (request_type NULL) = ใบที่ส่งตามวิธีรุ่นแรก (ตัดสินที่ทะเบียนคุม) — ยังรองรับให้ลงทะเบียนต่อได้
  *
  * ปีที่ไม่เปิด / ใบที่ส่งคำขอก่อนเปิด: ทำงานแบบเดิมทุกอย่าง (ไม่แตะข้อมูลเก่า)
  */
@@ -165,16 +168,88 @@ class PurchasePlanControl
         ];
         $order->data_json = $dj;
 
-        if ($check['planned']) {
-            // ในแผน: ข้ามรอ ผอ. ไปขั้นออกใบสั่งซื้อ (ทะเบียนคุมเพิ่งกรอกเสร็จ)
-            $order->status = 3;
-        }
-        // นอกแผน: คง status 1 — ขั้นอนุมัติเดิมพาไป 2 เมื่อ ผอ.อนุมัติ
+        // ในแผน: เข้าเส้นทางเดิม = ผ่านอนุมัติอัตโนมัติ → status 2 (บอลที่ 2 ลงทะเบียนคุม)
+        // นอกแผน: คง status 1 — ขั้นอนุมัติเดิม (หัวหน้า → พัสดุ → ผอ.) พาไป 2 เมื่อ ผอ.อนุมัติ
+        $order->status = $check['planned'] ? 2 : 1;
 
         $exists = Approve::find()->where(['from_id' => $order->id, 'name' => 'purchase'])->exists();
         if (!$exists) {
             $order->createApprove();
         }
+    }
+
+    /**
+     * ต้นไม้แผนสำหรับเลือกทีละขั้นในฟอร์มขอซื้อ: ประเภท → หมวด → แผนงาน → รายการแผน
+     * เฉพาะแผนอนุมัติแล้วของปีนั้น — หมวดที่ไม่มีแผนไม่แสดง
+     * สายหมวดยึด plan_item → categorise (plan_type_id/plan_category_id บน plan_order ปนเปื้อน)
+     * @return array ['types' => [{code,title,cats:[{code,title,items:[{code,title,plans:[{id,title,unit,budget,used,remaining}]}]}]}]]
+     */
+    public static function planTree(int $year, ?int $excludeOrderId = null): array
+    {
+        $rows = (new \yii\db\Query())
+            ->select([
+                'pid' => 'p.id',
+                'icode' => 'i.code', 'ititle' => 'i.title',
+                'ccode' => 'c.code', 'ctitle' => 'c.title',
+                'tcode' => 't.code', 'ttitle' => 't.title',
+            ])
+            ->from(['p' => 'plan_order'])
+            ->leftJoin(['i' => 'categorise'], "i.name = 'plan_item' AND i.code = p.plan_item_id")
+            ->leftJoin(['c' => 'categorise'], "c.name = 'plan_category' AND c.code = i.category_id")
+            ->leftJoin(['t' => 'categorise'], "t.name = 'plan_type' AND t.code = c.category_id")
+            ->where(['p.thai_year' => $year, 'p.status' => 'approve', 'p.deleted_at' => null])
+            ->orderBy(['t.code' => SORT_ASC, 'c.code' => SORT_ASC, 'i.code' => SORT_ASC, 'p.id' => SORT_ASC])
+            ->all();
+
+        $plans = PlanOrder::find()->where(['id' => array_column($rows, 'pid')])->indexBy('id')->all();
+        $tree = [];
+        foreach ($rows as $r) {
+            $p = $plans[$r['pid']] ?? null;
+            if (!$p) {
+                continue;
+            }
+            $t = $r['tcode'] ?: '_';
+            $c = $r['ccode'] ?: '_';
+            $i = $r['icode'] ?: '_';
+            $tree[$t]['code'] = $t;
+            $tree[$t]['title'] = $r['ttitle'] ?: 'ไม่ระบุประเภท';
+            $tree[$t]['cats'][$c]['code'] = $c;
+            $tree[$t]['cats'][$c]['title'] = $r['ctitle'] ?: 'ไม่ระบุหมวด';
+            $tree[$t]['cats'][$c]['items'][$i]['code'] = $i;
+            $tree[$t]['cats'][$c]['items'][$i]['title'] = $r['ititle'] ?: 'ไม่ระบุแผนงาน';
+            $budget = (float) $p->order_price;
+            $used = self::usedAmount((int) $p->id, $excludeOrderId);
+            $tree[$t]['cats'][$c]['items'][$i]['plans'][] = [
+                'id' => (int) $p->id,
+                'title' => trim(strip_tags((string) ($p->description ?: $p->title))),
+                'unit' => $p->departmentName(),
+                'budget' => $budget,
+                'used' => $used,
+                'remaining' => $budget - $used,
+            ];
+        }
+
+        // เป็น list เรียงลำดับ (JSON object คีย์ตัวเลขจะถูกเรียงใหม่ในเบราว์เซอร์)
+        $out = [];
+        foreach ($tree as $t) {
+            $cats = [];
+            foreach ($t['cats'] as $c) {
+                $c['items'] = array_values($c['items']);
+                $cats[] = $c;
+            }
+            $t['cats'] = $cats;
+            $out[] = $t;
+        }
+        return ['types' => $out];
+    }
+
+    /** ข้อความแสดงแผน: ชื่อ — หน่วยงาน (คงเหลือ) */
+    public static function planLabel(PlanOrder $p, ?int $excludeOrderId = null): string
+    {
+        $remaining = (float) $p->order_price - self::usedAmount((int) $p->id, $excludeOrderId);
+        $title = trim(strip_tags((string) ($p->description ?: $p->title)));
+        return mb_strimwidth($title, 0, 80, '…') . ' — ' . $p->departmentName()
+            . ' (คงเหลือ ' . number_format($remaining, 2) . ')';
     }
 
     /**

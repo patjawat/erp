@@ -174,9 +174,123 @@ try {
 // ปีที่เปิด "จัดซื้อผูกแผน": ไม่ต้องเลือก — ระบบตัดสินจากแผนที่พัสดุเลือกในทะเบียนคุม
 if (\app\modules\purchase\components\PurchasePlanControl::isControlled($model)):
 ?>
-<div class="alert alert-light border small py-2 mb-3">
-    <i class="bi bi-diagram-3 me-1"></i> ในแผน/นอกแผน ระบบตรวจจากแผนที่พัสดุเลือกตอนลงทะเบียนคุม
-</div>
+<?php
+// กรรมการตรวจรับ: ผู้ขอระบุเองตั้งแต่ขอซื้อ (บันทึกเป็นแถว name=committee ผ่าน Order::syncCommittee)
+$committeeData = [];
+$committeeIds = [];
+if (!$model->isNewRecord) {
+    foreach ($model->ListCommittee() as $c) {
+        $eid = (string) ($c->data_json['employee_id'] ?? '');
+        if ($eid !== '') {
+            $committeeIds[] = $eid;
+            $committeeData[$eid] = $c->data_json['emp_fullname'] ?? $eid;
+        }
+    }
+}
+echo $form->field($model, 'data_json[committee_ids]')->widget(Select2::classname(), [
+    'data' => $committeeData,
+    'options' => ['placeholder' => 'พิมพ์ชื่อเพื่อค้นหา ...', 'multiple' => true, 'value' => $committeeIds],
+    'pluginOptions' => [
+        'dropdownParent' => '#main-modal',
+        'minimumInputLength' => 1,
+        'ajax' => [
+            'url' => Url::to(['/depdrop/employee-by-id']),
+            'dataType' => 'json',
+            'delay' => 250,
+            'data' => new JsExpression('function(params) { return {q:params.term, page: params.page}; }'),
+            'processResults' => new JsExpression($resultsJs),
+            'cache' => true,
+        ],
+        'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+        'templateSelection' => new JsExpression('function (item) { return item.fullname || item.text; }'),
+        'templateResult' => new JsExpression('formatRepo'),
+    ],
+])->label('กรรมการตรวจรับ')->hint('1 คน = ผู้ตรวจรับพัสดุ ; หลายคน = คนแรกเป็นประธานกรรมการ (เรียงตามลำดับที่เลือก)');
+?>
+<?php
+// รายการแผน: ระบบตัดสินในแผน/นอกแผนตอนกด "ส่งคำขอซื้อ" (เทียบยอดกับวงเงินคงเหลือ) — ส่งแล้วเปลี่ยนแผนไม่ได้
+$planLocked = (string) $model->status !== '';
+$planYear = (int) ($model->thai_year ?: \app\components\AppHelper::YearBudget());
+$planTree = \app\modules\purchase\components\PurchasePlanControl::planTree($planYear, $model->id ? (int) $model->id : null);
+$dis = $planLocked ? 'disabled' : '';
+?>
+<fieldset class="border rounded p-2 mb-3" id="plan-picker">
+    <legend class="float-none w-auto px-2 fs-6 mb-0">รายการแผน <small class="text-muted">(ปีงบ <?= $planYear ?>)</small></legend>
+    <div class="row g-2">
+        <div class="col-12 col-md-6">
+            <label class="form-label small mb-1">1. ประเภทแผน</label>
+            <select class="form-select form-select-sm" id="pp-type" <?= $dis ?>></select>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label small mb-1">2. หมวด</label>
+            <select class="form-select form-select-sm" id="pp-cat" <?= $dis ?>></select>
+        </div>
+        <div class="col-12">
+            <label class="form-label small mb-1">3. แผนงาน</label>
+            <select class="form-select form-select-sm" id="pp-item" <?= $dis ?>></select>
+        </div>
+        <div class="col-12">
+            <label class="form-label small mb-1">4. รายการแผน</label>
+            <?= Html::activeDropDownList($model, 'plan_order_id', [], ['class' => 'form-select form-select-sm', 'id' => 'pp-plan', 'disabled' => $planLocked]) ?>
+        </div>
+        <div class="col-12"><div id="pp-info" class="small"></div></div>
+    </div>
+    <div class="form-text">
+        <?= $planLocked
+            ? 'ส่งคำขอแล้ว — ' . Html::encode($model->requestType()['label']) . ' (เปลี่ยนแผนไม่ได้)'
+            : 'แสดงเฉพาะแผนที่อนุมัติแล้ว ทุกหน่วยงาน — ยอดไม่เกินวงเงินคงเหลือ = <b>ในแผน</b> ผ่านอนุมัติอัตโนมัติ ; ไม่เลือก/เกินวงเงิน = <b>นอกแผน</b> ต้องรออนุมัติ (ตรวจตอนกดส่งคำขอซื้อ)' ?>
+    </div>
+</fieldset>
+<?php
+$planTreeJson = json_encode($planTree, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+$planCurrent = (int) $model->plan_order_id;
+$this->registerJs(<<<JS
+(function () {
+    var tree = {$planTreeJson}.types, current = {$planCurrent};
+    var \$t = $('#pp-type'), \$c = $('#pp-cat'), \$i = $('#pp-item'), \$p = $('#pp-plan'), \$info = $('#pp-info');
+    var fmt = function (n) { return Number(n).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    var esc = function (s) { return $('<span>').text(s == null ? '' : s).html(); };
+    function fill(\$sel, list, ph, label) {
+        \$sel.empty().append($('<option>').val('').text(ph));
+        (list || []).forEach(function (x, idx) { \$sel.append($('<option>').val(x.code !== undefined ? idx : x.id).text(label(x))); });
+    }
+    function cats() { var t = tree[\$t.val()]; return t ? t.cats : []; }
+    function items() { var c = cats()[\$c.val()]; return c ? c.items : []; }
+    function plans() { var i = items()[\$i.val()]; return i ? i.plans : []; }
+    function showInfo() {
+        var id = parseInt(\$p.val(), 10), pl = plans().filter(function (x) { return x.id === id; })[0];
+        if (!pl) {
+            \$info.html(tree.length ? '<div class="alert alert-light border py-1 px-2 mb-0">ไม่เลือกรายการแผน = <b>นอกแผน</b> ต้องรออนุมัติ</div>'
+                : '<div class="alert alert-warning py-1 px-2 mb-0">ปีงบนี้ยังไม่มีแผนที่อนุมัติแล้ว — ใบนี้จะเป็น <b>นอกแผน</b></div>');
+            return;
+        }
+        \$info.html('<div class="alert alert-info py-1 px-2 mb-0">' + esc(pl.title) + '<br><span class="text-muted">' + esc(pl.unit)
+            + '</span> — วงเงิน ' + fmt(pl.budget) + ' ใช้ไปแล้ว ' + fmt(pl.used) + ' <b>คงเหลือ ' + fmt(pl.remaining) + '</b> บาท</div>');
+    }
+    fill(\$t, tree, '-- เลือกประเภทแผน --', function (x) { return x.title; });
+    \$t.on('change', function () { fill(\$c, cats(), '-- เลือกหมวด --', function (x) { return x.title; }); \$c.trigger('change'); });
+    \$c.on('change', function () { fill(\$i, items(), '-- เลือกแผนงาน --', function (x) { return x.title; }); \$i.trigger('change'); });
+    \$i.on('change', function () {
+        fill(\$p, plans(), '-- ไม่เลือก (นอกแผน) --', function (x) { return x.title + ' — ' + x.unit + ' (คงเหลือ ' + fmt(x.remaining) + ')'; });
+        showInfo();
+    });
+    \$p.on('change', showInfo);
+
+    // ค่าเดิม (แก้ไขใบ): หาเส้นทางของแผนที่เลือกไว้แล้วเลือกตามลำดับ
+    var found = false;
+    tree.forEach(function (t, ti) { t.cats.forEach(function (c, ci) { c.items.forEach(function (it, ii) { it.plans.forEach(function (p) {
+        if (p.id === current && !found) {
+            found = true;
+            \$t.val(ti).trigger('change'); \$c.val(ci).trigger('change'); \$i.val(ii).trigger('change'); \$p.val(p.id); showInfo();
+        }
+    }); }); }); });
+    if (!found) {
+        \$t.trigger('change');
+        if (current) { \$info.html('<div class="alert alert-warning py-1 px-2 mb-0">แผนที่เลือกไว้เดิม (#' + current + ') ไม่อยู่ในรายการแผนอนุมัติของปีนี้แล้ว</div>'); }
+    }
+})();
+JS);
+?>
 <?php else:
 echo $form->field($model, 'request_type')->radioList(
     [

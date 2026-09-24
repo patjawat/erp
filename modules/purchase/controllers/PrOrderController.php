@@ -128,8 +128,15 @@ class PrOrderController extends Controller
                 ];
 
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json);
+                $committeeIds = $this->pullCommitteeIds($model);
+                if ($model->plan_order_id === '') {
+                    $model->plan_order_id = null;
+                }
                 $model->save(false);
-               
+                if (!empty(array_filter((array) $committeeIds, 'strlen'))) { // ว่าง = ไม่ลบกรรมการเดิม
+                    $model->syncCommittee($committeeIds);
+                }
+
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
                 return false;
@@ -168,8 +175,16 @@ class PrOrderController extends Controller
     {
         $model = $this->findModel($id);
         $oldObj = $model->data_json;
+        $oldPlanOrderId = $model->plan_order_id;
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+                // ส่งคำขอแล้ว = ตัดสินในแผน/นอกแผนไปแล้ว ห้ามเปลี่ยนแผนย้อนหลัง
+                if ((string) $model->getOldAttribute('status') !== '' && PurchasePlanControl::isControlled($model)) {
+                    $model->plan_order_id = $oldPlanOrderId;
+                }
+                if ($model->plan_order_id === '') {
+                    $model->plan_order_id = null;
+                }
                 // validate all models
                 $vendor = $model->vendor;
                 $newObj = [
@@ -185,7 +200,11 @@ class PrOrderController extends Controller
                 $model->data_json = ArrayHelper::merge($oldObj, $model->data_json, $newObj);
                 \Yii::$app->response->format = Response::FORMAT_JSON;
 
+                $committeeIds = $this->pullCommitteeIds($model);
                 $model->save(false);
+                if (!empty(array_filter((array) $committeeIds, 'strlen'))) { // ว่าง = ไม่ลบกรรมการเดิม
+                    $model->syncCommittee($committeeIds);
+                }
 
                 return $this->redirect(['/purchase/order/view', 'id' => $model->id]);
             } else {
@@ -293,6 +312,22 @@ class PrOrderController extends Controller
     // }
 
     // ตรวจสอบความถูกต้อง
+    /**
+     * แยกรายชื่อกรรมการตรวจรับออกจาก data_json (ไม่เก็บซ้ำในใบ — กรรมการเป็นแถว name=committee)
+     * @return array|null null = ฟอร์มไม่มีช่องนี้ (ปีที่ไม่ผูกแผน) ไม่ต้องแตะกรรมการเดิม
+     */
+    private function pullCommitteeIds(Order $model)
+    {
+        $dj = $model->data_json;
+        if (!is_array($dj) || !array_key_exists('committee_ids', $dj)) {
+            return null;
+        }
+        $ids = (array) $dj['committee_ids'];
+        unset($dj['committee_ids']);
+        $model->data_json = $dj;
+        return $ids;
+    }
+
     public function actionCreatevalidator()
     {
         \Yii::$app->response->format = Response::FORMAT_JSON;
@@ -312,6 +347,12 @@ class PrOrderController extends Controller
 
             if (isset($model->vendor_id)) {
                 $model->vendor_id == '' ? $model->addError('vendor_id', $requiredName) : null;
+            }
+
+            // มีช่องกรรมการตรวจรับเฉพาะปีที่ผูกแผน (ไม่เลือกเลย = ส่งค่า '' จาก hidden input ของ multi-select)
+            if (is_array($model->data_json) && array_key_exists('committee_ids', $model->data_json)
+                && count(array_filter((array) $model->data_json['committee_ids'], 'strlen')) < 1) {
+                $model->addError('data_json[committee_ids]', 'ต้องระบุกรรมการตรวจรับอย่างน้อย 1 คน');
             }
         }
         foreach ($model->getErrors() as $attribute => $errors) {
@@ -505,25 +546,45 @@ class PrOrderController extends Controller
                 $newObj,
                 $model->data_json
             );
-            // ปีที่เปิด "จัดซื้อผูกแผน": ยังไม่ตัดสินในแผน/นอกแผน — รอพัสดุลงทะเบียนคุมแล้วเลือกแผน
+            // ปีที่เปิด "จัดซื้อผูกแผน": ตัดสินในแผน/นอกแผนจากรายการแผนที่เลือกในฟอร์มขอซื้อ (ตอนนี้มียอดเงินแล้ว)
             if ((string) $model->status === '' && PurchasePlanControl::isControlled($model)) {
+                if (count($model->ListOrderItems()) < 1) {
+                    return ['status' => 'error', 'message' => 'ยังไม่มีรายการขอซื้อ'];
+                }
                 if (count($model->ListCommittee()) < 1) {
                     return [
                         'status' => 'error',
                         'message' => 'ต้องกำหนดกรรมการตรวจรับอย่างน้อย 1 คนก่อนส่งคำขอซื้อ',
                     ];
                 }
-                $model->data_json = ArrayHelper::merge($model->data_json, ['plan_control' => 1]);
-                $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
-                $model->request_type = null;
-                $model->status = 1;
-                $model->approve = 'Y';
-                $model->save(false);
+                if ($model->plan_order_id === '') {
+                    $model->plan_order_id = null;
+                }
+                $check = PurchasePlanControl::check($model, $model->plan_order_id);
+                // ไม่ผ่าน = นอกแผน ต้องให้ผู้ส่งยืนยันก่อน (หน้าจอถามซ้ำแล้วส่ง confirm_unplanned=1)
+                if (!$check['planned'] && !$this->request->post('confirm_unplanned')) {
+                    return ['status' => 'confirm', 'message' => $check['message']];
+                }
+
+                $transaction = \Yii::$app->db->beginTransaction();
+                try {
+                    $model->data_json = ArrayHelper::merge($model->data_json, ['plan_control' => 1]);
+                    $model->pr_number = \mdm\autonumber\AutoNumber::generate('PR-'.$thaiYear.'????');
+                    $model->approve = 'Y';
+                    PurchasePlanControl::decide($model, $check);
+                    $model->save(false);
+                    $transaction->commit();
+                } catch (\Throwable $e) {
+                    $transaction->rollBack();
+                    throw $e;
+                }
 
                 return [
                     'status' => 'success',
                     'container' => '#purchase-container',
-                    'message' => 'ส่งคำขอซื้อแล้ว รอพัสดุลงทะเบียนคุมและตรวจแผน',
+                    'message' => $check['planned']
+                        ? 'ในแผน — ผ่านอนุมัติอัตโนมัติ ลงทะเบียนคุมได้'
+                        : 'นอกแผน — ส่งขออนุมัติตามขั้นตอนแล้ว',
                 ];
             }
 

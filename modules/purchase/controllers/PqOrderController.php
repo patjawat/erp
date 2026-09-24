@@ -235,6 +235,9 @@ class PqOrderController extends Controller
                     $transaction = Yii::$app->db->beginTransaction();
                     try {
                         PurchasePlanControl::decide($model, $check);
+                        if ($check['planned']) {
+                            $model->status = 3; // ทะเบียนคุมกรอกแล้วในคำขอนี้ — ไปขั้นออกใบสั่งซื้อ
+                        }
                         $model->save(false);
                         $transaction->commit();
                     } catch (\Throwable $e) {

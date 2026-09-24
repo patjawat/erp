@@ -310,11 +310,31 @@ $this->params['breadcrumbs'][] = $this->title;
                   history: false,
                   url: response.url,
                 });
-                success("ดำเนินการลบสำเร็จ รอหัวหน้าเห็นชอบ!.");
+                success(response.message || "ดำเนินการลบสำเร็จ รอหัวหน้าเห็นชอบ!.");
                 // location.reload();
                 if (response.close) {
                    \$("#main-modal").modal("hide");
                 }
+              } else if (response.status == "confirm") {
+                // ปีผูกแผน: ไม่มีแผน/เกินวงเงิน → ยืนยันว่าจะส่งเป็นนอกแผน
+                Swal.fire({
+                  icon: "warning",
+                  title: 'จะเป็น "นอกแผน" ต้องรออนุมัติ',
+                  text: response.message,
+                  showCancelButton: true,
+                  confirmButtonText: "ยืนยัน ส่งเป็นนอกแผน",
+                  cancelButtonText: "ยกเลิก",
+                }).then(function (r) {
+                  if (!r.isConfirmed) return;
+                  \$.post(url, { confirm_unplanned: 1 }, function (res) {
+                    if (res.status == "success") {
+                      \$.pjax.reload({ container: res.container, history: false });
+                      success(res.message || "ส่งคำขอซื้อแล้ว");
+                    } else if (res.message) {
+                      Swal.fire({ icon: "warning", title: "ยังส่งคำขอไม่ได้", text: res.message });
+                    }
+                  }, "json");
+                });
               } else if (response.status == "error" && response.message) {
                 Swal.fire({ icon: "warning", title: "ยังส่งคำขอไม่ได้", text: response.message });
               }

@@ -619,8 +619,47 @@ class Order extends \yii\db\ActiveRecord
     {
         return self::find()
             ->where(['name' => 'committee', 'category_id' => $this->id])
-            ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc"))
+            ->orderBy(new \yii\db\Expression("JSON_EXTRACT(data_json, '\$.committee') asc, id asc"))
             ->all();
+    }
+
+    /**
+     * กำหนดกรรมการตรวจรับจากฟอร์มขอซื้อ (เรียงตามลำดับที่เลือก)
+     * 1 คน = ผู้ตรวจรับพัสดุหรืองานจ้าง ; หลายคน = คนแรกประธานกรรมการ ที่เหลือกรรมการ
+     * รายชื่อเดิม (ลำดับเดิม) = ไม่แตะ — คงตำแหน่งที่พัสดุปรับไว้ในหน้าใบขอซื้อ
+     */
+    public function syncCommittee(array $empIds)
+    {
+        $empIds = array_values(array_unique(array_filter(array_map('strval', $empIds), 'strlen')));
+        $current = $this->ListCommittee();
+        $currentIds = array_map(fn($c) => (string) ($c->data_json['employee_id'] ?? ''), $current);
+        if ($currentIds === $empIds) {
+            return;
+        }
+
+        foreach ($current as $c) {
+            $c->delete();
+        }
+        $boards = $this->ListBoard();
+        $n = count($empIds);
+        foreach ($empIds as $i => $empId) {
+            $emp = Employees::findOne($empId);
+            if (!$emp) {
+                continue;
+            }
+            $code = $n === 1 ? '6' : ($i === 0 ? '1' : '2');
+            (new self([
+                'name' => 'committee',
+                'category_id' => $this->id,
+                'data_json' => [
+                    'committee' => $code,
+                    'committee_name' => $boards[$code] ?? '',
+                    'employee_id' => (string) $emp->id,
+                    'emp_fullname' => $emp->fullname,
+                    'emp_position' => $emp->data_json['position_name_text'] ?? '-',
+                ],
+            ]))->save(false);
+        }
     }
 
     // กรรมการกำหนดรายละเอียด
