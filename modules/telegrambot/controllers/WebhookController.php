@@ -24,6 +24,19 @@ class WebhookController extends Controller
             return ['ok' => true];
         }
 
+        // ปุ่ม inline (callback_query) — ส่งต่อให้โมดูลเจ้าของปุ่ม
+        $callback = $update['callback_query'] ?? null;
+        if (is_array($callback)) {
+            try {
+                if (\app\modules\purchase\components\PurchaseTelegramService::isOwnCallback($callback['data'] ?? null)) {
+                    (new \app\modules\purchase\components\PurchaseTelegramService())->handleCallback($callback, new TelegramBot());
+                }
+            } catch (\Throwable $e) {
+                Yii::error('Telegram callback failed: ' . $e->getMessage(), __METHOD__);
+            }
+            return ['ok' => true];
+        }
+
         $message = $update['message'] ?? null;
         if (!is_array($message)) {
             return ['ok' => true];

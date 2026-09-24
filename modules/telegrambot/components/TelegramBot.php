@@ -29,6 +29,30 @@ class TelegramBot
         return $this->dispatchRequest('sendMessage', $payload, ['reply_markup']);
     }
 
+    /** ตอบการกดปุ่ม inline (ต้องตอบทุกครั้ง ไม่งั้นปุ่มหมุนค้าง) */
+    public function answerCallbackQuery($callbackQueryId, $text = '', bool $showAlert = false)
+    {
+        return $this->dispatchRequest('answerCallbackQuery', [
+            'callback_query_id' => (string) $callbackQueryId,
+            'text' => mb_substr((string) $text, 0, 200),
+            'show_alert' => $showAlert ? 'true' : 'false',
+        ], []);
+    }
+
+    /** แก้ข้อความเดิม (เช่น ใส่ผลอนุมัติ + เอาปุ่มออก) — ไม่ส่ง reply_markup = ปุ่มหาย */
+    public function editMessageText($chatId, $messageId, $text, array $options = [])
+    {
+        $payload = array_merge([
+            'chat_id' => trim((string) $chatId),
+            'message_id' => (int) $messageId,
+            'text' => $text,
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true,
+        ], $options);
+
+        return $this->dispatchRequest('editMessageText', $payload, ['reply_markup']);
+    }
+
     public function getMe()
     {
         return $this->dispatchRequest('getMe', [], []);
