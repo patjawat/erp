@@ -10,6 +10,31 @@ use yii\data\ActiveDataProvider;
  */
 class OrderSearch extends Order
 {
+    const REQUEST_PENDING = 'pending';
+
+    /**
+     * ตัวเลือกปีงบ: ปีที่มีใบจริง + ปีงบปัจจุบัน + ปีถัดไป (เฉพาะเมื่อเปิดรอบทำแผนปีถัดไปแล้ว — ดูล่วงหน้า)
+     */
+    public static function yearOptions()
+    {
+        $current = (int) \app\components\AppHelper::YearBudget();
+        $years = Order::find()->select('thai_year')->distinct()
+            ->where(['name' => 'order'])->andWhere(['not', ['thai_year' => null]])
+            ->column();
+        $years[] = $current;
+        if (\app\modules\plan\components\PlanHelper::period($current + 1)) {
+            $years[] = $current + 1;
+        }
+        $years = array_unique(array_map('intval', $years));
+        rsort($years);
+
+        $out = [];
+        foreach ($years as $y) {
+            $out[$y] = 'ปีงบ ' . $y . ($y === $current ? ' (ปัจจุบัน)' : ($y > $current ? ' (ล่วงหน้า)' : ''));
+        }
+        return $out;
+    }
+
     public function rules()
     {
         return [
@@ -73,6 +98,13 @@ class OrderSearch extends Order
 
         $this->load($params);
 
+        // "รอตรวจแผน" = request_type ว่าง (ใบปีผูกแผนที่ยังไม่ผ่านทะเบียนคุม) — andFilterWhere ข้ามค่า null จึงกรองแยก
+        $requestType = $this->request_type;
+        if ($requestType === self::REQUEST_PENDING) {
+            $query->andWhere(['request_type' => null]);
+            $this->request_type = null;
+        }
+
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');
@@ -105,6 +137,8 @@ class OrderSearch extends Order
             ->andFilterWhere(['like', 'pq_number', $this->pq_number])
             ->andFilterWhere(['like', 'approve', $this->approve])
             ->andFilterWhere(['like', 'data_json', $this->data_json]);
+
+        $this->request_type = $requestType;
 
         return $dataProvider;
     }

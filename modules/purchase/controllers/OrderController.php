@@ -74,7 +74,12 @@ class OrderController extends Controller
         }
 
         $searchModel = new OrderSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        // ค่าเริ่มต้น = ปีงบปัจจุบัน ; เลือก "ทุกปีงบประมาณ" ในฟอร์ม = ส่งค่าว่างมา (ไม่กรองปี)
+        $queryParams = $this->request->queryParams;
+        if (!isset($queryParams['OrderSearch']) || !array_key_exists('thai_year', $queryParams['OrderSearch'])) {
+            $queryParams['OrderSearch']['thai_year'] = AppHelper::YearBudget();
+        }
+        $dataProvider = $searchModel->search($queryParams);
         if (!Yii::$app->user->can('purchase')) {
             $dataProvider->query->andFilterWhere(['created_by' => Yii::$app->user->id]);
         }

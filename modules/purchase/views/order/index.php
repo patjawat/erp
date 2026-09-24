@@ -60,6 +60,7 @@ if ($searchModel->date_between == 'pr_create_date') {
         <div class="d-flex justify-content-between  align-items-center">
             <h6 class="text-white mt-2">
                 <i class="bi bi-ui-checks"></i> ทะเบียนขอซื้อขอจ้าง
+                <?= $searchModel->thai_year ? 'ปีงบ ' . Html::encode($searchModel->thai_year) : 'ทุกปีงบประมาณ' ?>
                 <span class="badge bg-secondary-subtle text-secondary-emphasis">
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
@@ -106,6 +107,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                                     <?php endif ?>
                                    <?= $item->requestType()['view'] ?>
                                 </div>
+                                <div class="small text-muted">ปีงบ <?= Html::encode($item->thai_year ?: '-') ?></div>
                             </td>
                             <td>
                                 <p class="mb-0 text-truncate">
@@ -175,9 +177,9 @@ if ($searchModel->date_between == 'pr_create_date') {
 
                                     <?php if ($item->status != 8): ?>
                                         <ul class="dropdown-menu">
-                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> คำขอซื้อ', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> คำขอซื้อ'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                                 <?php if ($item->status >= 2): ?>
-                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-md']]) ?>
+                                            <li><?= Html::a('<i class="bi bi-pencil-square me-1"></i> ทะเบียนคุม', ['/purchase/pr-order/update', 'id' => $item->id, 'title' => '<i class="bi bi-printer"></i> ทะเบียนคุม'], ['class' => 'dropdown-item open-modal', 'data' => ['size' => 'modal-lg']]) ?>
                                             <?php endif; ?>
 
                                             <?php if ($item->status >= 3): ?>

@@ -91,22 +91,29 @@ use kartik\widgets\ActiveForm;
         ])->label(false);
         ?>
     </div>
+    <div class="col-lg-2 col-md-6 col-sm-12">
+        <?= $form->field($model, 'thai_year')->dropDownList(
+            \app\modules\purchase\models\OrderSearch::yearOptions(),
+            ['prompt' => 'ทุกปีงบประมาณ', 'class' => 'form-select', 'onchange' => 'this.form.submit()']
+        )->label(false) ?>
+    </div>
     <div class="col-lg-4 col-md-6 col-sm-12">
-<?php 
+<?php
 echo $form->field($model, 'request_type')->radioList(
     [
     '' => 'ทั้งหมด',
     'planned' => 'ในแผน',
-    'unplanned' => 'นอกแผน'
-], 
+    'unplanned' => 'นอกแผน',
+    \app\modules\purchase\models\OrderSearch::REQUEST_PENDING => 'รอตรวจแผน',
+],
     ['custom' => true,'inline' => true]
 )->label(false);
 ?>
     </div>
-    <div class="col-lg-4 col-md-6 col-sm-12">
+    <div class="col-lg-3 col-md-6 col-sm-12">
         <?= $form->field($model, 'q')->textInput(['placeholder' => 'ระบุคำค้นหา...'])->label(false) ?>
     </div>
-     <div class="col-lg-4 col-md-6 col-sm-12">
+     <div class="col-lg-3 col-md-6 col-sm-12">
          <?php
                 echo $form->field($model, 'pq_purchase_type')->widget(Select2::classname(), [
                     'data' => $model->ListPurchase(),
@@ -135,7 +142,7 @@ echo $form->field($model, 'request_type')->radioList(
             <?= Html::a(
                 '<i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">สร้างใหม่</span>',
                 ['/purchase/pr-order/create','name' => 'order', 'title' => '<i class="bi bi-plus-circle text-primary"></i> สร้างรายการขอซื้อ'],
-                ['class' => 'btn btn-outline-secondary open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-md']]
+                ['class' => 'btn btn-outline-secondary open-modal w-100 w-md-auto', 'data' => ['size' => 'modal-lg']]
             ) ?>
 
             <div class="dropdown w-100 w-md-auto">
