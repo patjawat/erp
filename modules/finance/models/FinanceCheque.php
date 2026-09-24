@@ -166,6 +166,35 @@ class FinanceCheque extends ActiveRecord
         return $this->save(false, ['status', 'void_reason', 'voided_at', 'voided_by', 'updated_at', 'updated_by']);
     }
 
+    /**
+     * เลขที่เช็คถัดไปของบัญชีจ่าย = เลขสูงสุดในทะเบียน + 1 (นับทุกสถานะรวม void — เลขเดินตามเล่มจริง)
+     * รักษา prefix และจำนวนหลัก (เติมศูนย์หน้า) เช่น 10225123 -> 10225124 , CHB-0009 -> CHB-0010
+     */
+    public static function nextChequeNo(int $accountId): ?string
+    {
+        if ($accountId <= 0) {
+            return null;
+        }
+        $nos = self::find()->select('cheque_no')->where(['cash_account_id' => $accountId])->column();
+        $bestVal = -1;
+        $bestPrefix = '';
+        $bestWidth = 0;
+        foreach ($nos as $no) {
+            if (preg_match('/^(.*?)(\d+)\s*$/u', (string) $no, $m)) {
+                $val = (int) $m[2];
+                if ($val > $bestVal) {
+                    $bestVal = $val;
+                    $bestPrefix = $m[1];
+                    $bestWidth = strlen($m[2]);
+                }
+            }
+        }
+        if ($bestVal < 0) {
+            return null;
+        }
+        return $bestPrefix . str_pad((string) ($bestVal + 1), $bestWidth, '0', STR_PAD_LEFT);
+    }
+
     /** สร้างเช็คร่างจากรอบจ่ายเจ้าหนี้ (payment batch) */
     public static function fromPayment(FinancePayablePayment $pay): self
     {

@@ -24,7 +24,7 @@ class ChequeController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print', 'next-cheque-no'], 'roles' => ['financeView']],
                 ['allow' => true, 'actions' => ['create', 'calibrate', 'create-template', 'upload-background', 'status', 'void'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
@@ -108,6 +108,13 @@ class ChequeController extends Controller
             'accounts' => \yii\helpers\ArrayHelper::map($accounts, 'id', fn($a) => $a->label()),
             'templates' => FinanceChequeTemplate::activeList(),
         ]);
+    }
+
+    /** คืนเลขที่เช็คถัดไปของบัญชีจ่าย (AJAX) */
+    public function actionNextChequeNo($account_id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ['next' => FinanceCheque::nextChequeNo((int) $account_id)];
     }
 
     /** รายละเอียดเช็ค + เดินสถานะ */

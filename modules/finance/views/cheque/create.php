@@ -27,6 +27,7 @@ $dateVal = $cheque->cheque_date
     : date('d/m/') . ((int) date('Y') + 543);
 $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small mt-1">' . Html::encode($cheque->getFirstError($attr)) . '</div>' : '';
 $previewBase = Url::to(['preview']);
+$nextBase = Url::to(['next-cheque-no']);
 ?>
 
 <div class="row g-3">
@@ -59,7 +60,8 @@ $previewBase = Url::to(['preview']);
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">เลขที่เช็ค <span class="text-danger">*</span></label>
-                        <input type="text" name="cheque_no" class="form-control" value="<?= Html::encode($cheque->cheque_no) ?>" required>
+                        <input type="text" name="cheque_no" id="ck-no" class="form-control" value="<?= Html::encode($cheque->cheque_no) ?>" required>
+                        <div id="ck-no-hint" class="form-text"></div>
                         <?= $err('cheque_no') ?>
                     </div>
                     <div class="col-md-4">
@@ -150,6 +152,23 @@ $js = <<<JS
   var payee=document.getElementById('ck-payee'), tpl=document.getElementById('ck-tpl');
   var date=document.getElementById('ck-date'), ac=document.getElementById('ck-ac');
   var frame=document.getElementById('ck-preview'), base='{$previewBase}';
+  var acc=document.getElementById('ck-acc'), no=document.getElementById('ck-no'), noHint=document.getElementById('ck-no-hint');
+  var nextBase='{$nextBase}';
+  function fetchNextNo(){
+    if(!acc.value){ noHint.textContent=''; return; }
+    fetch(nextBase+'?account_id='+encodeURIComponent(acc.value),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d && d.next){
+          noHint.innerHTML='เลขถัดไปในทะเบียน: <b>'+d.next+'</b> <a href="#" id="ck-no-apply">ใช้เลขนี้</a>';
+          if(!no.value){ no.value=d.next; }
+          var ap=document.getElementById('ck-no-apply');
+          if(ap) ap.addEventListener('click',function(e){e.preventDefault(); no.value=d.next; updPreview();});
+        } else {
+          noHint.textContent='ยังไม่มีเลขเช็คในบัญชีนี้ — กรอกเลขเริ่มต้นเอง';
+        }
+      }).catch(function(){ noHint.textContent=''; });
+  }
   function updBaht(){ baht.textContent = bahtText(amount.value) || '—'; }
   function tplId(){ if(tpl.value) return tpl.value; return tpl.options[1] ? tpl.options[1].value : ''; }
   function updPreview(){
@@ -165,7 +184,8 @@ $js = <<<JS
   amount.addEventListener('input', updBaht);
   document.getElementById('ck-refresh').addEventListener('click', updPreview);
   [payee,amount,date,tpl,ac].forEach(function(el){ el.addEventListener('change', updPreview); });
-  updBaht(); updPreview();
+  if(acc){ acc.addEventListener('change', function(){ fetchNextNo(); updPreview(); }); }
+  updBaht(); updPreview(); if(acc && acc.value) fetchNextNo();
 })();
 JS;
 $this->registerJs($js, \yii\web\View::POS_END);
