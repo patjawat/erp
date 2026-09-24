@@ -163,8 +163,10 @@ class Order extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
-            // แปลงวันที่จาก พ.ศ. เป็น ค.ศ. ก่อนบันทึกในฐานข้อมูล
-            $this->thai_year = AppHelper::YearBudget();
+            // ปีงบประทับครั้งเดียวตอนสร้าง — เดิมประทับทุกครั้งที่ save ทำให้ใบข้ามปีงบถูกย้ายปี
+            if ($insert || empty($this->thai_year)) {
+                $this->thai_year = AppHelper::YearBudget();
+            }
 
             return true;
         } else {
