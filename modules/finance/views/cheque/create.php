@@ -16,7 +16,7 @@ $this->beginBlock('page-title');
 echo Html::encode($this->title);
 $this->endBlock();
 $this->beginBlock('sub-title');
-echo 'คีย์รายละเอียดเช็ค → บันทึกเข้าทะเบียน → กดพิมพ์ลงเช็ค';
+echo 'คีย์รายละเอียดเช็ค → ดูตัวอย่างบนเช็คจริง → บันทึกเข้าทะเบียน → พิมพ์';
 $this->endBlock();
 $this->beginBlock('page-action');
 echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'cheque']);
@@ -26,10 +26,11 @@ $dateVal = $cheque->cheque_date
     ? (date_create($cheque->cheque_date) ? date_create($cheque->cheque_date)->format('d/m/') . ((int) date_create($cheque->cheque_date)->format('Y') + 543) : '')
     : date('d/m/') . ((int) date('Y') + 543);
 $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small mt-1">' . Html::encode($cheque->getFirstError($attr)) . '</div>' : '';
+$previewBase = Url::to(['preview']);
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<div class="row g-3">
+    <div class="col-lg-7">
         <?php if ($cheque->hasErrors()): ?>
             <div class="alert alert-danger"><?= implode('<br>', $cheque->getErrorSummary(true)) ?></div>
         <?php endif; ?>
@@ -40,7 +41,7 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small">บัญชีจ่าย <span class="text-danger">*</span></label>
-                        <select name="cash_account_id" class="form-select">
+                        <select name="cash_account_id" id="ck-acc" class="form-select">
                             <option value="">— เลือกบัญชีจ่าย —</option>
                             <?php foreach ($accounts as $aid => $al): ?>
                                 <option value="<?= $aid ?>" <?= (int) $cheque->cash_account_id === (int) $aid ? 'selected' : '' ?>><?= Html::encode($al) ?></option>
@@ -49,7 +50,7 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small">แม่แบบเช็ค (สำหรับพิมพ์)</label>
-                        <select name="template_id" class="form-select">
+                        <select name="template_id" id="ck-tpl" class="form-select">
                             <option value="">— ไม่ระบุ (ใช้แม่แบบที่ใช้งาน) —</option>
                             <?php foreach ($templates as $tid => $tl): ?>
                                 <option value="<?= $tid ?>" <?= (int) $cheque->template_id === (int) $tid ? 'selected' : '' ?>><?= Html::encode($tl) ?></option>
@@ -67,22 +68,28 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">วันที่สั่งจ่าย</label>
-                        <input type="text" name="cheque_date" class="form-control" value="<?= Html::encode($dateVal) ?>" placeholder="วว/ดด/ปปปป">
+                        <input type="text" name="cheque_date" id="ck-date" class="form-control" value="<?= Html::encode($dateVal) ?>" placeholder="วว/ดด/ปปปป">
                     </div>
                     <div class="col-md-8">
                         <label class="form-label small">จ่ายให้ (ชื่อผู้รับ) <span class="text-danger">*</span></label>
-                        <input type="text" name="payee_name" class="form-control" value="<?= Html::encode($cheque->payee_name) ?>" required>
+                        <input type="text" name="payee_name" id="ck-payee" class="form-control" value="<?= Html::encode($cheque->payee_name) ?>" required>
                         <?= $err('payee_name') ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">จำนวนเงิน (บาท) <span class="text-danger">*</span></label>
-                        <input type="text" inputmode="decimal" name="amount" class="form-control text-end" value="<?= $cheque->amount ? Html::encode(number_format((float) $cheque->amount, 2)) : '' ?>" required>
+                        <input type="text" inputmode="decimal" name="amount" id="ck-amount" class="form-control text-end" value="<?= $cheque->amount ? Html::encode(number_format((float) $cheque->amount, 2)) : '' ?>" required>
                         <?= $err('amount') ?>
                     </div>
                     <div class="col-12">
+                        <div class="alert alert-light border mb-0 py-2 px-3">
+                            <span class="text-body-secondary small">ตัวอักษร:</span>
+                            <span id="ck-bahttext" class="fw-semibold ms-1">—</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="is_ac_payee" id="ac" value="1" <?= $cheque->is_ac_payee ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="ac">พิมพ์ขีดคร่อม A/C PAYEE ONLY</label>
+                            <input type="checkbox" class="form-check-input" name="is_ac_payee" id="ck-ac" value="1" <?= $cheque->is_ac_payee ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="ck-ac">พิมพ์ขีดคร่อม A/C PAYEE ONLY</label>
                         </div>
                     </div>
                 </div>
@@ -94,4 +101,72 @@ $err = fn($attr) => $cheque->hasErrors($attr) ? '<div class="text-danger small m
             </div>
         </div>
     </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm sticky-lg-top" style="top:1rem">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-eye me-1"></i>ตัวอย่างบนเช็ค</span>
+                <button type="button" id="ck-refresh" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>อัปเดต</button>
+            </div>
+            <div class="card-body p-2">
+                <iframe id="ck-preview" style="width:100%;height:360px;border:1px solid #dee2e6;border-radius:.375rem;background:#fff"></iframe>
+                <div class="form-text mt-2">ตัวอย่างซ้อนบนรูปเช็คจริง ปรับข้อมูลด้านซ้ายแล้วกด "อัปเดต" (ตำแหน่งจริงปรับได้ที่เมนู "แม่แบบเช็ค")</div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<?php
+$js = <<<JS
+(function(){
+  var digits=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+  var places=['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+  function readInt(s){
+    s=s.replace(/^0+/,''); if(s==='') return '';
+    if(s.length>6){ return readInt(s.slice(0,s.length-6))+'ล้าน'+readInt(s.slice(s.length-6)); }
+    var r='', len=s.length;
+    for(var i=0;i<len;i++){ var d=+s[i], place=len-i-1; if(d===0) continue;
+      if(place===1&&d===1) r+='สิบ';
+      else if(place===1&&d===2) r+='ยี่สิบ';
+      else if(place===0&&d===1&&len>1) r+='เอ็ด';
+      else r+=digits[d]+places[place];
+    } return r;
+  }
+  function bahtText(v){
+    var num=parseFloat(String(v).replace(/[,\\s]/g,''))||0;
+    if(num<=0) return '';
+    num=num.toFixed(2); var p=num.split('.'), baht=p[0].replace(/^0+/,''), satang=p[1];
+    var t=(baht===''?'ศูนย์':readInt(baht))+'บาท';
+    if(satang==='00') t+='ถ้วน'; else t+=readInt(satang.replace(/^0+/,'')||'0')+'สตางค์';
+    return t;
+  }
+  function toYmd(th){
+    var m=String(th).match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{3,4})$/);
+    if(!m) return '';
+    var y=parseInt(m[3],10); if(y>2400) y-=543;
+    return y+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  }
+  var amount=document.getElementById('ck-amount'), baht=document.getElementById('ck-bahttext');
+  var payee=document.getElementById('ck-payee'), tpl=document.getElementById('ck-tpl');
+  var date=document.getElementById('ck-date'), ac=document.getElementById('ck-ac');
+  var frame=document.getElementById('ck-preview'), base='{$previewBase}';
+  function updBaht(){ baht.textContent = bahtText(amount.value) || '—'; }
+  function tplId(){ if(tpl.value) return tpl.value; return tpl.options[1] ? tpl.options[1].value : ''; }
+  function updPreview(){
+    var tid=tplId(); if(!tid){ return; }
+    var q=new URLSearchParams();
+    q.set('id',tid);
+    var d=toYmd(date.value); if(d) q.set('d',d);
+    q.set('p', payee.value||'');
+    q.set('a', String(amount.value).replace(/[,\\s]/g,'')||'0');
+    q.set('ac', ac.checked?'1':'0');
+    frame.src = base+'?'+q.toString();
+  }
+  amount.addEventListener('input', updBaht);
+  document.getElementById('ck-refresh').addEventListener('click', updPreview);
+  [payee,amount,date,tpl,ac].forEach(function(el){ el.addEventListener('change', updPreview); });
+  updBaht(); updPreview();
+})();
+JS;
+$this->registerJs($js, \yii\web\View::POS_END);
+?>

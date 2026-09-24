@@ -218,10 +218,15 @@ class ChequeController extends Controller
         ]);
     }
 
-    /** พรีวิว PDF (มีพื้นหลังสแกน) สำหรับ iframe บนหน้า calibrate */
-    public function actionPreview($id)
+    /** พรีวิว PDF (มีพื้นหลังสแกน) สำหรับ iframe บนหน้า calibrate/ออกเช็ค */
+    public function actionPreview($id = 0)
     {
-        return $this->outputPdf($this->findTemplate($id), $this->sampleData(), true);
+        $tpl = FinanceChequeTemplate::findOne($id)
+            ?: FinanceChequeTemplate::find()->where(['is_active' => 1])->orderBy(['id' => SORT_ASC])->one();
+        if (!$tpl) {
+            throw new NotFoundHttpException('ยังไม่มีแม่แบบเช็ค');
+        }
+        return $this->outputPdf($tpl, $this->sampleData(), true);
     }
 
     /** พิมพ์จริง (ไม่มีพื้นหลัง) — ทดสอบวางทาบเช็คจริง */
