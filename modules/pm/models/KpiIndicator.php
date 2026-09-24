@@ -17,6 +17,8 @@ class KpiIndicator extends StrategyRecord
         return [
             [['group_id', 'name'], 'required'],
             [['group_id', 'org_unit_id', 'ha_part_id', 'sort_order'], 'integer'],
+            // ช่องลำดับเว้นว่างได้ — คอลัมน์เป็น NOT NULL จึงต้องแปลงค่าว่างเป็น 0 ไม่เช่นนั้นบันทึกแล้ว error
+            [['sort_order'], 'default', 'value' => 0],
             ['is_active', 'boolean'],
             [['name', 'definition', 'formula', 'evaluation_method', 'data_source'], 'string'],
             ['unit', 'string', 'max' => 100],

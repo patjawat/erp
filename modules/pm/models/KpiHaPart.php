@@ -12,6 +12,7 @@ class KpiHaPart extends StrategyRecord
         return [
             [['code', 'name'], 'required'],
             [['sort_order'], 'integer'],
+            [['sort_order'], 'default', 'value' => 0],
             ['is_active', 'boolean'],
             ['code', 'string', 'max' => 20],
             ['name', 'string', 'max' => 255],

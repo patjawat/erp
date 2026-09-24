@@ -19,6 +19,7 @@ class KpiGroup extends StrategyRecord
         return [
             [['code', 'name'], 'required'],
             [['sort_order'], 'integer'],
+            [['sort_order'], 'default', 'value' => 0],
             ['is_active', 'boolean'],
             [['code'], 'string', 'max' => 50],
             [['name', 'name_en'], 'string', 'max' => 255],
