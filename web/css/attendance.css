@@ -53,7 +53,6 @@
 }
 
 /* Work schedule settings follow the ERP Bootstrap surfaces and color modes. */
-.page-content-wrapper .page-title-box { margin-inline: 0; max-width: 100%; }
 .attendance-settings { min-width: 0; }
 .attendance-settings.card, .attendance-settings .card { border-radius: 10px; }
 .attendance-settings .form-control, .attendance-settings .form-select { min-height: 42px; font-size: 1rem; }

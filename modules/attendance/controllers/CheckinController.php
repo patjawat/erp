@@ -48,6 +48,21 @@ class CheckinController extends Controller
         ]);
     }
 
+    /** ตรวจสอบลงเวลา (ผู้ดูแล) — คิวเดียวกับกล่องอนุมัติ แต่อยู่ในเมนูระบบลงเวลา */
+    public function actionConfirm()
+    {
+        if (!\app\modules\attendance\services\WorkScheduleService::manager()) {
+            return $this->redirect(['/approve-v2/checkin/index']);
+        }
+        $q = trim((string) Yii::$app->request->get('q', ''));
+        $loc = (string) Yii::$app->request->get('loc', '');
+        $query = \app\modules\attendance\services\AttendanceAccess::searchPending($q, $loc);
+        $dataProvider = new \yii\data\ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 20]]);
+        return $this->render('@app/modules/approveV2/views/checkin/index', [
+            'dataProvider' => $dataProvider, 'q' => $q, 'loc' => $loc, 'context' => 'attendance',
+        ]);
+    }
+
     public function actionView($id)
     {
         $model = CheckinRecord::find()->where(['id' => $id])->with(['employee', 'location', 'approver'])->one();
@@ -237,10 +252,12 @@ class CheckinController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('สรุปลงเวลา');
 
-        $tripColIdx = 3 + $days + 1;       // รวมไปราชการ
-        $leaveColIdx = 3 + $days + 2;      // รวมลา
-        $absentColIdx = 3 + $days + 3;     // รวมขาด
-        $lastColIdx = 3 + $days + 4;       // รวมสาย
+        $base = 5;                             // A ลำดับ, B คำนำหน้า, C ชื่อ-นามสกุล, D ประเภท, E ตำแหน่ง → วันที่เริ่มคอลัมน์ F
+        $firstDayCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($base + 1);
+        $tripColIdx = $base + $days + 1;       // รวมไปราชการ
+        $leaveColIdx = $base + $days + 2;      // รวมลา
+        $absentColIdx = $base + $days + 3;     // รวมขาด
+        $lastColIdx = $base + $days + 4;       // รวมสาย
         $tripCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($tripColIdx);
         $leaveCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($leaveColIdx);
         $absentCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($absentColIdx);
@@ -253,10 +270,12 @@ class CheckinController extends Controller
 
         // header
         $sheet->setCellValue('A2', 'ลำดับ');
-        $sheet->setCellValue('B2', 'ชื่อ-นามสกุล');
-        $sheet->setCellValue('C2', 'ตำแหน่ง');
+        $sheet->setCellValue('B2', 'คำนำหน้า');
+        $sheet->setCellValue('C2', 'ชื่อ-นามสกุล');
+        $sheet->setCellValue('D2', 'ประเภท');
+        $sheet->setCellValue('E2', 'ตำแหน่ง');
         for ($d = 1; $d <= $days; $d++) {
-            $sheet->setCellValue([3 + $d, 2], $d);
+            $sheet->setCellValue([$base + $d, 2], $d);
         }
         $sheet->setCellValue($tripCol . '2', 'รวมไปราชการ');
         $sheet->setCellValue($leaveCol . '2', 'รวมลา');
@@ -272,11 +291,13 @@ class CheckinController extends Controller
         $r = 3;
         foreach ($rows as $idx => $row) {
             $sheet->setCellValue('A' . $r, $idx + 1);
-            $sheet->setCellValue('B' . $r, $row['name']);
-            $sheet->setCellValue('C' . $r, $row['position']);
+            $sheet->setCellValue('B' . $r, $row['prefix']);
+            $sheet->setCellValue('C' . $r, $row['name']);
+            $sheet->setCellValue('D' . $r, $row['type']);
+            $sheet->setCellValue('E' . $r, $row['position']);
             for ($d = 1; $d <= $days; $d++) {
                 $cell = $row['cells'][$d];
-                $col = 3 + $d;
+                $col = $base + $d;
                 $val = '';
                 switch ($cell['state']) {
                     case 'ontime': $val = $cell['time']; break;
@@ -327,19 +348,21 @@ class CheckinController extends Controller
             $sheet->getStyle('A2:' . $lastCol . ($r - 1))->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
-            $sheet->getStyle('D3:' . $lastCol . ($r - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($firstDayCol . '3:' . $lastCol . ($r - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
         $sheet->getColumnDimension('A')->setWidth(6);
-        $sheet->getColumnDimension('B')->setWidth(26);
-        $sheet->getColumnDimension('C')->setWidth(22);
+        $sheet->getColumnDimension('B')->setWidth(9);
+        $sheet->getColumnDimension('C')->setWidth(24);
+        $sheet->getColumnDimension('D')->setWidth(22);
+        $sheet->getColumnDimension('E')->setWidth(22);
         for ($d = 1; $d <= $days; $d++) {
-            $sheet->getColumnDimensionByColumn(3 + $d)->setWidth(6);
+            $sheet->getColumnDimensionByColumn($base + $d)->setWidth(6);
         }
         $sheet->getColumnDimension($tripCol)->setWidth(13);
         $sheet->getColumnDimension($leaveCol)->setWidth(9);
         $sheet->getColumnDimension($absentCol)->setWidth(9);
         $sheet->getColumnDimension($lastCol)->setWidth(9);
-        $sheet->freezePane('D3');
+        $sheet->freezePane($firstDayCol . '3');
 
         $dir = Yii::getAlias('@runtime/attendance-exports');
         if (!is_dir($dir)) {
@@ -455,7 +478,7 @@ class CheckinController extends Controller
         // ดึงเป็น array ไม่ใช่ ActiveRecord — Employees::afterFind() ทำงานหนักต่อ record
         // (UpdateFormDetail/joinDate/Age ยิง query ต่อคน) รายงานนี้ใช้แค่ 8 คอลัมน์ จึงไม่ต้อง hydrate
         $empQuery = Employees::find()
-            ->select(['id', 'prefix', 'fname', 'lname', 'ref', 'work_shift', 'department', 'employee_position_id'])
+            ->select(['id', 'prefix', 'fname', 'lname', 'ref', 'work_shift', 'department', 'employee_position_id', 'employee_type_id'])
             ->andWhere(['branch' => 'MAIN', 'status' => '1'])
             ->andWhere(['not', ['id' => 1]]);
         if ($deptIds !== null) {
@@ -474,6 +497,12 @@ class CheckinController extends Controller
                     $posTitles[(int)$p['id']] = (string)$p['title'];
                 }
             }
+        } catch (\Throwable $e) {
+        }
+        // ประเภทบุคลากร (ข้าราชการ / พกส. / ลูกจ้าง ฯลฯ) จากตาราง employee_type
+        $typeTitles = [];
+        try {
+            $typeTitles = (new \yii\db\Query())->from('employee_type')->select(['title', 'id'])->indexBy('id')->column();
         } catch (\Throwable $e) {
         }
         $deptNames = [];
@@ -688,7 +717,9 @@ class CheckinController extends Controller
             $totalAbsent += $absentCount;
             $rows[] = [
                 'id' => $empId,
+                'prefix' => trim((string)$emp['prefix']),
                 'name' => trim($emp['fname'] . ' ' . $emp['lname']),
+                'type' => (string)($typeTitles[(int)$emp['employee_type_id']] ?? ''),
                 'position' => $pos,
                 'avatar' => $avatar,
                 'dept' => $deptNames[(int)$emp['department']] ?? 'ไม่ระบุ',

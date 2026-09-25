@@ -1,11 +1,14 @@
 <?php
 use yii\helpers\Html;
 $this->title = 'ลงเวลาเข้า-ออก';
-$this->params['breadcrumbs'][] = ['label' => 'ลงเวลา', 'url' => ['/attendance/default/index']];
+$this->params['breadcrumbs'][] = ['label' => 'ของฉัน', 'url' => ['/me']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <?php $this->beginBlock('action'); ?>
-<?= $this->render('@app/modules/attendance/menu', ['active' => 'checkin']) ?>
+<div class="d-flex flex-wrap gap-2">
+    <?= Html::a('<i class="bi bi-list-ul" aria-hidden="true"></i> ประวัติของฉัน', ['/attendance/checkin/index'], ['class' => 'btn btn-outline-primary']) ?>
+    <?= Html::a('กลับหน้าของฉัน', ['/me'], ['class' => 'btn btn-outline-primary']) ?>
+</div>
 <?php $this->endBlock(); ?>
 <?php $this->beginBlock('page-title'); ?>
 <h4 class="fw-semibold text-body mb-1"><?= Html::encode($this->title) ?></h4>

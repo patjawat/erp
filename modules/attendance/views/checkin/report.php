@@ -5,7 +5,7 @@ use yii\widgets\ActiveForm;
 use yii\widgets\LinkPager;
 
 $this->title = 'รายงานการลงเวลา (ทั้งหน่วยงาน)';
-$this->params['breadcrumbs'][] = ['label' => 'ลงเวลา', 'url' => ['/attendance/default/index']];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลงเวลา', 'url' => ['/attendance/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 /** status → [class,label] ด้วย token semantic */

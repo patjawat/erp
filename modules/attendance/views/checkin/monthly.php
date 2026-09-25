@@ -7,7 +7,7 @@ use yii\helpers\Url;
 /** @var array $groups @var array $units @var ?int $selGroup @var ?int $selUnit */
 
 $this->title = 'สรุปการลงเวลารายเดือน';
-$this->params['breadcrumbs'][] = ['label' => 'ลงเวลา', 'url' => ['/attendance/default/index']];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลงเวลา', 'url' => ['/attendance/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $thaiMonths = [1 => 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -235,16 +235,22 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
                 </thead>
                 <tbody>
                     <?php foreach ($rows as $row): ?>
-                    <tr data-name="<?= Html::encode(mb_strtolower($row['name'] . ' ' . $row['position'])) ?>"
+                    <?php
+                    // ประเภทแบบย่อบนจอ (ชื่อเต็มอยู่ใน title + Excel): "พนักงานกระทรวง (พกส.)" → "พกส.", "ลูกจ้างชั่วคราวรายเดือน" → "ลูกจ้างรายเดือน"
+                    $typeShort = preg_match('/\(([^)]+)\)/u', $row['type'], $tm) ? $tm[1] : $row['type'];
+                    $typeShort = str_replace('ชั่วคราว', '', $typeShort); // ลูกจ้างชั่วคราวรายเดือน → ลูกจ้างรายเดือน
+                    ?>
+                    <tr data-name="<?= Html::encode(mb_strtolower($row['prefix'] . $row['name'] . ' ' . $row['name'] . ' ' . $row['type'] . ' ' . $row['position'])) ?>"
                         data-late="<?= (int)$row['lateCount'] ?>" data-absent="<?= (int)($row['absentCount'] ?? 0) ?>"
                         data-leave="<?= (int)$row['leaveCount'] ?>" data-trip="<?= (int)($row['tripCount'] ?? 0) ?>">
                         <th class="mtx-name" scope="row">
                             <a class="mtx-person" href="<?= Url::to(['report', 'CheckinRecordSearch[emp_id]' => $row['id']]) ?>" title="ดูประวัติการลงเวลาของ <?= Html::encode($row['name']) ?>">
                                 <img class="mtx-avatar" src="<?= Html::encode($row['avatar']) ?>" alt="" loading="lazy">
                                 <span class="mtx-person__body">
-                                    <span class="mtx-name__title"><?= Html::encode($row['name']) ?></span>
+                                    <span class="mtx-name__title"><?= Html::encode($row['prefix'] . $row['name']) ?></span>
                                     <span class="mtx-name__sub">
-                                        <?= $row['position'] !== '' ? Html::encode($row['position']) : '<span class="text-muted">—</span>' ?>
+                                        <?php if ($typeShort !== ''): ?><span class="mtx-tag mtx-tag--type" title="<?= Html::encode($row['type']) ?>"><?= Html::encode($typeShort) ?></span><?php endif; ?>
+                                        <?= $row['position'] !== '' ? '<span class="mtx-name__pos">' . Html::encode($row['position']) . '</span>' : '<span class="text-muted">—</span>' ?>
                                         <?php if ($row['shift'] === 'shift'): ?><span class="mtx-tag">เวร</span><?php endif; ?>
                                     </span>
                                 </span>
@@ -353,7 +359,7 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
 .att-mtx .mtx-day__hol{color:#be123c;font-size:.5rem;line-height:1;display:inline-block}
 
 /* sticky name column (left) */
-.att-mtx .mtx-name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:.4rem .7rem;min-width:228px;max-width:248px}
+.att-mtx .mtx-name{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;padding:.4rem .7rem;min-width:260px;max-width:280px}
 .att-mtx .mtx thead .mtx-name{z-index:3;background:var(--surface-2);padding:0}
 .att-mtx .mtx tbody th.mtx-name{font-weight:400}
 /* toolbar: ค้นหา + คำใบ้ */
@@ -375,9 +381,11 @@ $tip = function ($cell, $d) use ($holidays, $weekends, $yearCE, $month, $fmtDate
 .att-mtx a.mtx-person:focus-visible{outline:none;box-shadow:0 0 0 3px var(--primary-soft)}
 .att-mtx .mtx-avatar{width:32px;height:32px;flex:none;border-radius:50%;object-fit:cover;background:var(--surface-3);border:1px solid var(--line)}
 .att-mtx .mtx-person__body{min-width:0;display:flex;flex-direction:column}
-.att-mtx .mtx-name__title{display:block;font-weight:400;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
-.att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:176px}
+.att-mtx .mtx-name__title{display:block;font-weight:400;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:208px}
+.att-mtx .mtx-name__sub{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:208px}
 .att-mtx .mtx-tag{flex:none;padding:.02rem .35rem;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-size:.66rem;font-weight:500}
+.att-mtx .mtx-tag--type{background:var(--surface);border:1px solid var(--line-strong)}
+.att-mtx .mtx-name__pos{min-width:0;overflow:hidden;text-overflow:ellipsis}
 
 /* sticky summary columns (right) — ไปราชการ, ลา, ขาด, สาย (ขวาสุด) */
 .att-mtx .mtx-sum{position:sticky;z-index:1;background:var(--surface);text-align:center;min-width:64px;width:64px;font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink-2)}

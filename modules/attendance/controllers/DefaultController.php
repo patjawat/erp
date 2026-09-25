@@ -10,92 +10,38 @@ use app\components\UserHelper;
 use app\modules\attendance\models\CheckinRecord;
 use app\modules\attendance\models\CheckinLocation;
 use app\modules\attendance\services\AttendanceService;
+use app\modules\attendance\services\AttendanceAccess;
 use app\modules\attendance\services\RosterAttendance;
 
 class DefaultController extends Controller
 {
+    /**
+     * ภาพรวมระบบลงเวลา — สำหรับผู้ดูแล (admin/hr/attendance) เท่านั้น
+     * ผู้ใช้ทั่วไปลงเวลา/ดูประวัติของตัวเองผ่าน /me → ส่งไปหน้าประวัติของฉัน
+     */
     public function actionIndex()
     {
-        $me = UserHelper::GetEmployee();
-        if (!$me) {
-            Yii::$app->session->setFlash('error', 'ไม่พบข้อมูลพนักงาน');
-            return $this->redirect(['/me']);
+        if (!\app\modules\attendance\services\WorkScheduleService::manager()) {
+            return $this->redirect(['/attendance/checkin/index']);
         }
-        $todayStart = date('Y-m-d 00:00:00');
-        $todayEnd = date('Y-m-d 23:59:59');
-        $weekStart = date('Y-m-d 00:00:00', strtotime('monday this week'));
-        $monthStart = date('Y-m-01 00:00:00');
-        $locations = [];
-        $todayCount = 0;
-        $weekCount = 0;
-        $monthCount = 0;
-        $pendingCount = 0;
-        $lastCheckin = null;
-        $statsAll = null;
-        $recentCheckinsAll = [];
-        $isAdminOrHr = Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance');
+        $today = substr(AttendanceService::now(), 0, 10);
+        // date = Y-m-d (ปุ่มเลื่อนวัน), d = วว/ดด/พ.ศ. (DatepickerThai)
+        $thai = Yii::$app->request->get('d');
+        $date = is_string($thai) && $thai !== ''
+            ? (string)\app\components\AppHelper::convertToGregorian($thai)
+            : Yii::$app->request->get('date', $today);
+        if (!is_string($date)) $date = $today;
+        $d = \DateTime::createFromFormat('!Y-m-d', $date);
+        if (!$d || $d->format('Y-m-d') !== $date || $date > $today) $date = $today;
 
-        try {
-            $locations = CheckinLocation::find()->where(['active' => 1])->all();
-            $todayCount = CheckinRecord::find()
-                ->andWhere(['emp_id' => $me->id])
-                ->andWhere(['>=', 'checkin_at', $todayStart])
-                ->andWhere(['<=', 'checkin_at', $todayEnd])
-                ->count();
-            $weekCount = CheckinRecord::find()
-                ->andWhere(['emp_id' => $me->id])
-                ->andWhere(['>=', 'checkin_at', $weekStart])
-                ->count();
-            $monthCount = CheckinRecord::find()
-                ->andWhere(['emp_id' => $me->id])
-                ->andWhere(['>=', 'checkin_at', $monthStart])
-                ->count();
-            $pendingCount = CheckinRecord::find()
-                ->andWhere(['emp_id' => $me->id])
-                ->andWhere(['status' => CheckinRecord::STATUS_PENDING])
-                ->count();
-            $lastCheckin = CheckinRecord::find()
-                ->andWhere(['emp_id' => $me->id])
-                ->orderBy(['checkin_at' => SORT_DESC])
-                ->one();
-            if ($isAdminOrHr) {
-                $statsAll = [
-                    'todayCount' => CheckinRecord::find()
-                        ->andWhere(['>=', 'checkin_at', $todayStart])
-                        ->andWhere(['<=', 'checkin_at', $todayEnd])
-                        ->count(),
-                    'weekCount' => CheckinRecord::find()
-                        ->andWhere(['>=', 'checkin_at', $weekStart])
-                        ->count(),
-                    'monthCount' => CheckinRecord::find()
-                        ->andWhere(['>=', 'checkin_at', $monthStart])
-                        ->count(),
-                    'pendingCount' => CheckinRecord::find()
-                        ->andWhere(['status' => CheckinRecord::STATUS_PENDING])
-                        ->count(),
-                ];
-                $recentCheckinsAll = CheckinRecord::find()
-                    ->with(['employee'])
-                    ->orderBy(['checkin_at' => SORT_DESC])
-                    ->limit(10)
-                    ->all();
-            }
-        } catch (\Throwable $e) {
-            // ตาราง checkin_record / checkin_location ยังไม่มี (ยังไม่รัน migration)
-        }
+        $day = \app\modules\attendance\services\AttendanceDashboard::daily($date);
+        $exceptions = \app\modules\attendance\services\AttendanceDashboard::exceptions($date);
+        $pendingCount = (int)AttendanceAccess::pendingQuery()->count();
+        $orphanCount = (int)AttendanceAccess::pendingQuery()
+            ->andWhere(['or', ['approve.emp_id' => null], ['approve.emp_id' => 0]])
+            ->count();
 
-        return $this->render('index', [
-            'employee' => $me,
-            'locations' => $locations,
-            'todayCount' => $todayCount,
-            'weekCount' => $weekCount,
-            'monthCount' => $monthCount,
-            'pendingCount' => $pendingCount,
-            'lastCheckin' => $lastCheckin,
-            'isAdminOrHr' => $isAdminOrHr,
-            'statsAll' => $statsAll,
-            'recentCheckinsAll' => $recentCheckinsAll,
-        ]);
+        return $this->render('index', compact('date', 'today', 'day', 'exceptions', 'pendingCount', 'orphanCount'));
     }
 
     /**

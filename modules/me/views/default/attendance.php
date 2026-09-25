@@ -15,7 +15,7 @@ $todayCount = isset($todayCheckinCount) ? (int)$todayCheckinCount : 0;
             </div>
         </div>
         <div class="d-flex flex-column gap-2">
-            <?= Html::a('<i class="fa-solid fa-clock me-2"></i> ลงเวลา / ประวัติ', Url::to(['/attendance/default/index']), ['class' => 'btn btn-primary rounded-4 fw-bold py-2']) ?>
+            <?= Html::a('<i class="fa-solid fa-clock me-2"></i> ลงเวลา / ประวัติ', Url::to(['/attendance/checkin/index']), ['class' => 'btn btn-primary rounded-4 fw-bold py-2']) ?>
         </div>
     </div>
 </div>

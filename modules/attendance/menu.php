@@ -1,28 +1,21 @@
 <?php
-use yii\helpers\Html;
 use yii\helpers\Url;
+
+// เมนูผู้ดูแลระบบลงเวลา (admin/hr/attendance) — หน้าของผู้ใช้ทั่วไป (ลงเวลา/ประวัติของฉัน) อยู่ใต้ /me ไม่ใช้เมนูนี้
+$items = [
+    'dashboard' => [['/attendance/default/index'], 'bi-speedometer2', 'ภาพรวม'],
+    'confirm' => [['/attendance/checkin/confirm'], 'bi-check2-square', 'ตรวจสอบลงเวลา'],
+    'report' => [['/attendance/checkin/report'], 'bi-people', 'ทั้งหน่วยงาน'],
+    'monthly' => [['/attendance/checkin/monthly'], 'bi-calendar3', 'สรุปรายเดือน'],
+    'location' => [['/attendance/location/index'], 'bi-geo-alt', 'จุดลงเวลา'],
+    'schedule' => [['/attendance/schedule/index'], 'bi-calendar-week', 'ตั้งค่าเวลาทำงาน'],
+    'import' => [['/attendance/checkin/import-form'], 'bi-upload', 'นำเข้า CSV'],
+];
 ?>
 <div class="d-flex flex-wrap gap-2">
-    <a href="<?= Url::to(['/attendance/default/index']) ?>" class="btn <?= ($active ?? '') !== 'checkin' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-clock-history"></i> ลงเวลา
+    <?php foreach ($items as $key => [$url, $icon, $label]): $on = ($active ?? '') === $key; ?>
+    <a href="<?= Url::to($url) ?>" class="btn <?= $on ? 'btn-primary' : 'btn-outline-primary' ?>"<?= $on ? ' aria-current="page"' : '' ?>>
+        <i class="bi <?= $icon ?>" aria-hidden="true"></i> <?= $label ?>
     </a>
-    <a href="<?= Url::to(['/attendance/checkin/index']) ?>" class="btn <?= ($active ?? '') !== 'history' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-list-ul"></i> ประวัติของฉัน
-    </a>
-    <a href="<?= Url::to(['/approve-v2/checkin/index']) ?>" class="btn btn-outline-primary"><i class="bi bi-check2-square"></i> ตรวจสอบลงเวลา</a>
-    <?php if (Yii::$app->user->can('admin') || Yii::$app->user->can('hr') || Yii::$app->user->can('attendance')): ?>
-    <a href="<?= Url::to(['/attendance/checkin/report']) ?>" class="btn <?= ($active ?? '') !== 'report' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-people"></i> ทั้งหน่วยงาน
-    </a>
-    <a href="<?= Url::to(['/attendance/checkin/monthly']) ?>" class="btn <?= ($active ?? '') !== 'monthly' ? 'btn-outline-primary' : 'btn-primary' ?>">
-        <i class="bi bi-calendar3"></i> สรุปรายเดือน
-    </a>
-    <a href="<?= Url::to(['/attendance/location/index']) ?>" class="btn btn-outline-primary">
-        <i class="bi bi-geo-alt"></i> จุดลงเวลา
-    </a>
-    <a href="<?= Url::to(['/attendance/schedule/index']) ?>" class="btn <?= ($active ?? '') === 'schedule' ? 'btn-primary' : 'btn-outline-primary' ?>" <?= ($active ?? '') === 'schedule' ? 'aria-current="page"' : '' ?>><i class="bi bi-calendar-week" aria-hidden="true"></i> ตั้งค่าเวลาทำงาน</a>
-    <a href="<?= Url::to(['/attendance/checkin/import-form']) ?>" class="btn btn-outline-primary">
-        <i class="bi bi-upload"></i> นำเข้า CSV
-    </a>
-    <?php endif; ?>
+    <?php endforeach; ?>
 </div>

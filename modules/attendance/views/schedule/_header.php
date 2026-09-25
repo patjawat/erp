@@ -15,5 +15,6 @@ $this->params['breadcrumbs'][] = ['label'=>'ตั้งค่าเวลาท
 <?php foreach (['departments'=>'หน่วยงาน','employees'=>'รายบุคคล','schedules'=>'ชุดเวลา'] as $key=>$label): ?>
     <?= Html::a($label, ['index','tab'=>$key], ['class'=>'nav-link'.(($tab ?? '') === $key ? ' active' : ''),'aria-current'=>($tab ?? '') === $key ? 'page' : null]) ?>
 <?php endforeach; ?>
+    <?= Html::a('ผู้ยืนยันแทน', ['reviewer'], ['class'=>'nav-link'.(($tab ?? '') === 'reviewer' ? ' active' : ''),'aria-current'=>($tab ?? '') === 'reviewer' ? 'page' : null]) ?>
 </nav>
 <?php endif; ?>

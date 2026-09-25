@@ -2,10 +2,20 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'ยืนยันการลงเวลา';
-$this->params['breadcrumbs'][] = ['label' => 'ระบบการอนุมัติ', 'url' => ['/approve-v2']];
+// context: 'approve' = กล่องอนุมัติของหัวหน้า (/approve-v2), 'attendance' = หน้าผู้ดูแลระบบลงเวลา (/attendance/checkin/confirm)
+$inAttendance = ($context ?? 'approve') === 'attendance';
+$listRoute = $inAttendance ? '/attendance/checkin/confirm' : '/approve-v2/checkin/index';
+$this->title = $inAttendance ? 'ตรวจสอบลงเวลา' : 'ยืนยันการลงเวลา';
+$this->params['breadcrumbs'][] = $inAttendance
+    ? ['label' => 'ระบบลงเวลา', 'url' => ['/attendance/default/index']]
+    : ['label' => 'ระบบการอนุมัติ', 'url' => ['/approve-v2']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+<?php if ($inAttendance): ?>
+<?php $this->beginBlock('action'); ?>
+<?= $this->render('@app/modules/attendance/menu', ['active' => 'confirm']) ?>
+<?php $this->endBlock(); ?>
+<?php endif; ?>
 <?php $this->beginBlock('page-title'); ?>
 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2 mb-2 text-center text-lg-start">
     <h4 class="fw-medium text-body d-flex align-items-center gap-2 mb-0">
@@ -15,7 +25,9 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php $this->endBlock(); ?>
 
+<?php if (!$inAttendance): ?>
 <?= $this->render('@app/modules/approveV2/tab_menu', ['menu' => 'checkin']) ?>
+<?php endif; ?>
 
 <div class="card border-0 shadow-sm rounded-3">
     <div class="card-body p-0">
@@ -31,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="col-4 col-sm-2 col-md-auto d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search"></i> ค้นหา</button>
-                    <?= Html::a('ล้าง', ['index'], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                    <?= Html::a('ล้าง', [$listRoute], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
                 </div>
             </form>
             <div class="d-flex flex-wrap align-items-center gap-2">
@@ -84,7 +96,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </td>
                         <td>
                             <div class="d-flex gap-1 justify-content-center flex-wrap">
-                                <a href="<?= Url::to(['view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm">ดู</a>
+                                <a href="<?= Url::to(['/approve-v2/checkin/view', 'id' => $item->id]) ?>" class="btn btn-outline-primary btn-sm">ดู</a>
                                 <button type="button" class="btn btn-success btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Pass">ยืนยัน</button>
                                 <button type="button" class="btn btn-outline-danger btn-sm btn-approve" data-id="<?= $item->id ?>" data-status="Reject">ไม่ยืนยัน</button>
                             </div>

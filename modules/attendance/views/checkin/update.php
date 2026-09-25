@@ -5,7 +5,7 @@ use yii\helpers\Url;
 use app\modules\attendance\services\AttendanceCorrection;
 use app\modules\attendance\services\RosterAttendance;
 $this->title = 'แก้ไขและระบุเวร #' . $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'ลงเวลา', 'url' => ['/attendance/default/index']];
+$this->params['breadcrumbs'][] = ['label' => 'ระบบลงเวลา', 'url' => ['/attendance/default/index']];
 $this->params['breadcrumbs'][] = $this->title;
 $comparison = RosterAttendance::forRecord($model);
 $selected = $values['roster_item_id'] ?? (string)($comparison['shift']['id'] ?? '');

@@ -28,14 +28,7 @@ class CheckinController extends Controller
         if (!$me) throw new \yii\web\ForbiddenHttpException('ไม่พบข้อมูลพนักงาน');
         $q = trim((string) Yii::$app->request->get('q', ''));
         $loc = (string) Yii::$app->request->get('loc', '');
-        $query = AttendanceAccess::pendingQuery()->orderBy(['approve.id' => SORT_DESC]);
-        if ($q !== '') {
-            $empIds = \app\modules\hr\models\Employees::find()
-                ->where(['or', ['like', 'fname', $q], ['like', 'lname', $q]])->select('id')->column();
-            $query->andWhere(['checkin_record.emp_id' => $empIds ?: [0]]);
-        }
-        if ($loc === 'in') $query->andWhere(['checkin_record.is_in_location' => 1]);
-        elseif ($loc === 'out') $query->andWhere(['checkin_record.is_in_location' => 0]);
+        $query = AttendanceAccess::searchPending($q, $loc);
         $dataProvider = new \yii\data\ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 20]]);
         return $this->render('index', compact('dataProvider', 'q', 'loc'));
     }

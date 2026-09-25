@@ -227,14 +227,13 @@ class CheckinRecord extends \yii\db\ActiveRecord
     }
 
     /**
-     * หา emp_id ของผู้อนุมัติ (ใช้ผู้อำนวยการจาก SiteHelper).
+     * หา emp_id ของผู้ยืนยัน: หัวหน้าหน่วย → หัวหน้ากลุ่ม → ผู้ยืนยันแทน; ไม่มอบให้ ผอ.
+     * คืน null = ให้ HR/admin/เจ้าหน้าที่ลงเวลา ยืนยันจากคิวรวม
      */
     protected function getLeaderEmpId()
     {
         $leader = $this->employee ? $this->employee->supervisorEmpId() : null;
-        // ไม่มอบหมายใบยืนยันให้ ผอ. — ปล่อยว่างให้ HR/admin เป็นผู้ยืนยันแทน
-        if ($leader && \app\components\SiteHelper::isDirectorFromSettings((int)$leader)) return null;
-        return $leader;
+        return \app\modules\attendance\services\AttendanceAccess::resolveReviewerId((int)$this->emp_id, $leader ? (int)$leader : null);
     }
 
     /**

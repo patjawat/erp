@@ -6,6 +6,7 @@ use app\modules\attendance\models\WorkSchedule;
 use app\modules\attendance\services\WorkScheduleService;
 use app\modules\attendance\services\AttendanceService;
 use app\modules\attendance\services\ScheduleDirectory;
+use app\modules\attendance\services\AttendanceAccess;
 use app\modules\hr\models\Employees;
 use app\modules\hr\models\Organization;
 use yii\data\ArrayDataProvider;
@@ -34,6 +35,43 @@ class ScheduleController extends \yii\web\Controller
         }));
         $provider = new ArrayDataProvider(['allModels'=>$rows,'pagination'=>['pageSize'=>20],'sort'=>false]);
         return $this->render('index', compact('tab','q','department','directory','today','provider','preset'));
+    }
+    /** ตั้งผู้ยืนยันแทน (กรณีไม่มีหัวหน้าในผัง / หัวหน้าถัดไปเป็น ผอ.) + โอนรายการค้างที่ยังไม่มีผู้ยืนยัน */
+    public function actionReviewer()
+    {
+        if (!WorkScheduleService::manager()) throw new \yii\web\ForbiddenHttpException('สำหรับผู้ดูแลลงเวลา');
+        $orphanQuery = fn() => \app\modules\approveV2\models\Approve::find()->alias('approve')
+            ->innerJoin('checkin_record', 'checkin_record.id = approve.from_id')
+            ->where(['approve.name' => 'checkin', 'approve.status' => 'Pending', 'approve.deleted_at' => null, 'checkin_record.status' => 'pending'])
+            ->andWhere(['or', ['approve.emp_id' => null], ['approve.emp_id' => 0]]);
+        if (Yii::$app->request->isPost) {
+            $raw = Yii::$app->request->post('fallback_reviewer');
+            if ($raw !== null && $raw !== '' && (!is_scalar($raw) || !ctype_digit((string)$raw) || !Employees::find()->where(['id' => (int)$raw])->exists())) {
+                throw new \yii\web\BadRequestHttpException('ไม่พบบุคลากรที่เลือก');
+            }
+            $empId = $raw ? (int)$raw : null;
+            if ($empId && \app\components\SiteHelper::isDirectorFromSettings($empId)) {
+                Yii::$app->session->setFlash('error', 'ผู้อำนวยการไม่ต้องยืนยันการลงเวลา กรุณาเลือกผู้อื่น');
+                return $this->redirect(['reviewer']);
+            }
+            AttendanceAccess::saveFallbackReviewerId($empId);
+            $moved = 0;
+            if ($empId && Yii::$app->request->post('reassign')) {
+                foreach ($orphanQuery()->with('checkinRecord.employee')->all() as $approve) {
+                    $record = $approve->checkinRecord;
+                    if (!$record) continue;
+                    $to = AttendanceAccess::resolveReviewerId((int)$record->emp_id, $record->employee ? ((int)$record->employee->supervisorEmpId() ?: null) : null, $empId);
+                    if ($to) { $approve->emp_id = $to; if ($approve->save(false, ['emp_id'])) $moved++; }
+                }
+            }
+            Yii::$app->session->setFlash('success', 'บันทึกผู้ยืนยันแทนแล้ว' . ($moved ? " และโอนรายการค้าง {$moved} รายการ" : ''));
+            return $this->redirect(['reviewer']);
+        }
+        $fallbackId = AttendanceAccess::fallbackReviewerId();
+        $fallback = $fallbackId ? Employees::findOne($fallbackId) : null;
+        $orphanCount = (int)$orphanQuery()->count();
+        $tab = 'reviewer';
+        return $this->render('reviewer', compact('fallback', 'orphanCount', 'tab'));
     }
     private function presetSchedule($id): ?WorkSchedule
     {
