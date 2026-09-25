@@ -13,6 +13,9 @@ use app\modules\finance\services\FinanceInboxService;
 use app\modules\finance\services\PurchaseFinanceSnapshotBuilder;
 use app\modules\finance\services\FinanceInboxReviewService;
 use app\modules\purchase\models\Order;
+use app\modules\purchase\models\Contract;
+use app\modules\purchase\models\ContractReceipt;
+use app\modules\finance\services\ContractReceiptFinanceSnapshotBuilder;
 
 /**
  * กล่องรอรับงานเจ้าหนี้ (การเงิน) — พัสดุตรวจรับ+เอกสารครบ ส่งเข้ามารอ,
@@ -25,11 +28,11 @@ class InboxController extends Controller
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
                 // ปุ่ม "ส่งการเงิน" ฝั่งพัสดุ ถือ permission accountingInboxReceive (role purchase)
-                ['allow' => true, 'actions' => ['receive-purchase'], 'roles' => ['accountingInboxReceive']],
+                ['allow' => true, 'actions' => ['receive-purchase', 'receive-contract-receipt'], 'roles' => ['accountingInboxReceive']],
                 ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['financeView']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['financeOperate']],
             ]],
-            'verbs' => ['class' => VerbFilter::class, 'actions' => ['receive-purchase' => ['POST'], 'review' => ['POST']]],
+            'verbs' => ['class' => VerbFilter::class, 'actions' => ['receive-purchase' => ['POST'], 'receive-contract-receipt' => ['POST'], 'review' => ['POST']]],
         ]);
     }
 
@@ -40,6 +43,12 @@ class InboxController extends Controller
             throw new NotFoundHttpException('ไม่พบเอกสารจัดซื้อจัดจ้างต้นทาง');
         }
         $sourceRedirect = ['/purchase/order/view', 'id' => $order->id];
+        // ใบที่มีสัญญาตรวจรับรายงวด ส่งการเงินทีละงวดจากหน้าสัญญา — ห้ามส่งทั้งใบ (จะตั้งหนี้ซ้ำเต็มวงเงิน)
+        $installment = Contract::find()->where(['order_id' => $order->id, 'deleted_at' => null])->one();
+        if ($installment && $installment->isInstallment()) {
+            Yii::$app->session->setFlash('error', 'ใบนี้ผูกสัญญาตรวจรับรายงวด — ส่งการเงินทีละงวดที่หน้าสัญญา "' . $installment->title . '" ไม่ส่งทั้งใบ');
+            return $this->redirect($sourceRedirect);
+        }
         // ส่งการเงินได้เฉพาะใบที่รับเข้าคลังแล้ว (สถานะ 6 วัสดุเข้าคลัง) เท่านั้น
         if ((int) $order->status !== 6) {
             Yii::$app->session->setFlash('error', 'ส่งการเงินได้เฉพาะใบที่รับเข้าคลังแล้ว (สถานะวัสดุเข้าคลัง) เท่านั้น');
@@ -67,6 +76,52 @@ class InboxController extends Controller
             Yii::$app->session->setFlash('error', 'ส่งเข้ากล่องรอรับของการเงินไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
             return $this->redirect($sourceRedirect);
         }
+    }
+
+    /**
+     * ส่งงวดตรวจรับของสัญญา (ตรวจรับรายงวด) เข้ากล่องรอรับ — 1 งวด = 1 รายการตั้งหนี้
+     * สำเร็จแล้วงวดเปลี่ยนเป็น "ส่งการเงินแล้ว" (แก้ไขไม่ได้จนกว่าการเงินจะตีกลับ)
+     */
+    public function actionReceiveContractReceipt($id)
+    {
+        $receipt = ContractReceipt::findOne(['id' => $id, 'deleted_at' => null]);
+        if (!$receipt || !$receipt->contract) {
+            throw new NotFoundHttpException('ไม่พบงวดตรวจรับต้นทาง');
+        }
+        $back = ['/purchase/contract/view', 'id' => $receipt->contract_id, '#' => 'receipts'];
+
+        $latest = ContractReceiptFinanceSnapshotBuilder::latestInbox((int) $receipt->id);
+        if ($latest && !ContractReceiptFinanceSnapshotBuilder::isReturned($latest)) {
+            Yii::$app->session->setFlash('info', 'งวดที่ ' . $receipt->seq . ' อยู่ในกล่องรอรับของการเงินแล้ว');
+            return $this->redirect($back);
+        }
+
+        $snapshot = (new ContractReceiptFinanceSnapshotBuilder())->build($receipt);
+        if ($snapshot['blocking_errors']) {
+            Yii::$app->session->setFlash('error', 'งวดที่ ' . $receipt->seq . ' ยังส่งการเงินไม่ได้: ' . implode(' · ', $snapshot['blocking_errors']));
+            return $this->redirect($back);
+        }
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            (new FinanceInboxService())->receive($snapshot['source'], $snapshot['payload']);
+            $receipt->status = ContractReceipt::STATUS_SENT_FINANCE;
+            $receipt->sent_finance_at = date('Y-m-d H:i:s');
+            if (!$receipt->save(false, ['status', 'sent_finance_at', 'updated_at', 'updated_by'])) {
+                throw new \RuntimeException('อัปเดตสถานะงวดไม่สำเร็จ');
+            }
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'ส่งงวดที่ ' . $receipt->seq . ' ยอด ' . number_format((float) $receipt->amount, 2)
+                . ' บาท เข้ากล่องรอรับของการเงินแล้ว');
+        } catch (\DomainException $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('info', $e->getMessage());
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e, __METHOD__);
+            Yii::$app->session->setFlash('error', 'ส่งเข้ากล่องรอรับของการเงินไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
+        }
+        return $this->redirect($back);
     }
 
     public function actionIndex()

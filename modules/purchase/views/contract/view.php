@@ -257,6 +257,8 @@ $date = function ($value) {
             </div>
         </div>
 
+        <?= $this->render('_receipts', ['model' => $model]) ?>
+
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h6 class="mb-0">

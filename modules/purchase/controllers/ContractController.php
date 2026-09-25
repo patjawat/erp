@@ -15,6 +15,9 @@ use app\modules\purchase\models\Order;
 use app\modules\purchase\models\Contract;
 use app\modules\purchase\models\ContractSearch;
 use app\modules\purchase\models\ContractMilestone;
+use app\modules\purchase\models\ContractReceipt;
+use app\modules\purchase\models\ContractReceiptItem;
+use app\modules\finance\services\ContractReceiptFinanceSnapshotBuilder;
 use app\modules\purchase\components\ContractWordExporter;
 
 /**
@@ -41,6 +44,8 @@ class ContractController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'receipt-status' => ['POST'],
+                    'receipt-delete' => ['POST'],
                 ],
             ],
         ]);
@@ -339,6 +344,215 @@ class ContractController extends Controller
         $model = Contract::findOne(['id' => $id, 'deleted_at' => null]);
         if ($model === null) {
             throw new NotFoundHttpException('ไม่พบสัญญาที่ต้องการ');
+        }
+        return $model;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+    // ตรวจรับรายงวด — สัญญาที่ออกใบสั่งซื้อเต็มวงเงินแต่ตรวจรับ/เรียกเก็บรายเดือน
+    // ═════════════════════════════════════════════════════════════════════
+
+    /** บันทึกตรวจรับงวดใหม่ */
+    public function actionReceiptCreate($contract_id)
+    {
+        $contract = $this->findModel($contract_id);
+        if (!$contract->isInstallment()) {
+            Yii::$app->session->setFlash('warning', 'สัญญานี้ตั้งรูปแบบเป็น "ตรวจรับครั้งเดียว" — แก้ไขสัญญาเลือก "ตรวจรับรายงวด" ก่อน');
+            return $this->redirect(['view', 'id' => $contract->id]);
+        }
+
+        $model = new ContractReceipt([
+            'contract_id' => $contract->id,
+            'order_id' => $contract->order_id,
+            'seq' => $contract->nextReceiptSeq(),
+            'vat_type' => $contract->orderVatType(),
+            'status' => ContractReceipt::STATUS_DRAFT,
+        ]);
+        $model->populateRelation('contract', $contract);
+
+        // ช่วงผลงานตั้งต้น = เดือนถัดจากงวดล่าสุด (หรือเดือนเริ่มสัญญา)
+        $last = ContractReceipt::find()
+            ->where(['contract_id' => $contract->id, 'deleted_at' => null])
+            ->andWhere(['<>', 'status', ContractReceipt::STATUS_CANCELLED])
+            ->andWhere(['not', ['period_end' => null]])
+            ->orderBy(['period_end' => SORT_DESC])
+            ->one();
+        $startTs = $last ? strtotime($last->period_end . ' +1 day') : strtotime($contract->start_date ?: date('Y-m-01'));
+        $model->period_start = date('Y-m-01', $startTs);
+        $model->period_end = date('Y-m-t', $startTs);
+
+        // รายการตั้งต้น: บรรทัดของใบสั่งซื้อ ปริมาณว่างให้กรอกตามจริง
+        // ราคาต่อหน่วย/หน่วยนับ: ใช้ของงวดก่อนหน้า (บรรทัดเดียวกัน) ถ้ามี — ใบสั่งซื้อจ้างเหมามักเป็น "1 งาน × วงเงินทั้งสัญญา"
+        // ซึ่งไม่ใช่ราคาต่อหน่วยจริง (ต่อครั้ง/ต่อราย) สัญญาตามปริมาณจริงจึงปล่อยราคาว่างให้กรอกในงวดแรก
+        $isUnitPrice = $contract->billing_mode === Contract::BILLING_UNIT_PRICE;
+        $lines = array_map(function ($l) use ($contract, $isUnitPrice) {
+            $prev = ContractReceiptItem::find()->alias('i')
+                ->innerJoin(['r' => ContractReceipt::tableName()], 'r.id = i.receipt_id')
+                ->where(['r.contract_id' => $contract->id, 'r.deleted_at' => null, 'i.order_item_id' => $l['order_item_id']])
+                ->andWhere(['<>', 'r.status', ContractReceipt::STATUS_CANCELLED])
+                ->orderBy(['r.seq' => SORT_DESC])
+                ->one();
+            $price = $prev ? (float) $prev->unit_price : (($isUnitPrice && $l['qty'] <= 1) ? 0.0 : $l['unit_price']);
+            return new ContractReceiptItem([
+                'order_item_id' => $l['order_item_id'],
+                'asset_item' => $l['asset_item'],
+                'item_name' => $l['item_name'],
+                'unit_name' => $prev ? $prev->unit_name : $l['unit_name'],
+                'unit_price' => $price,
+                'qty' => 0,
+            ]);
+        }, $contract->orderLines());
+
+        return $this->saveReceiptOrRender($contract, $model, $lines);
+    }
+
+    public function actionReceiptUpdate($id)
+    {
+        $model = $this->findReceipt($id);
+        $contract = $this->findModel($model->contract_id);
+        if (!$model->isEditable()) {
+            Yii::$app->session->setFlash('warning', 'งวดนี้' . ContractReceipt::statusList()[$model->status] . ' แก้ไขไม่ได้');
+            return $this->redirect(['view', 'id' => $contract->id, '#' => 'receipts']);
+        }
+        return $this->saveReceiptOrRender($contract, $model, $model->items);
+    }
+
+    /** เปลี่ยนสถานะงวด: received = ยืนยันตรวจรับ, cancelled = ยกเลิก, draft = ถอยกลับเป็นร่าง */
+    public function actionReceiptStatus($id, $to)
+    {
+        $model = $this->findReceipt($id);
+        $allowed = [
+            ContractReceipt::STATUS_DRAFT => [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_CANCELLED],
+            ContractReceipt::STATUS_RECEIVED => [ContractReceipt::STATUS_DRAFT, ContractReceipt::STATUS_CANCELLED],
+        ];
+        // ส่งการเงินแล้ว: เปิดแก้ได้เฉพาะเมื่อการเงินตีกลับ (rejected) — แล้วส่งใหม่เป็นรุ่นถัดไป
+        if ($model->status === ContractReceipt::STATUS_SENT_FINANCE
+            && ContractReceiptFinanceSnapshotBuilder::isReturned(ContractReceiptFinanceSnapshotBuilder::latestInbox((int) $model->id))) {
+            $allowed[ContractReceipt::STATUS_SENT_FINANCE] = [ContractReceipt::STATUS_RECEIVED];
+        }
+        if (!in_array($to, $allowed[$model->status] ?? [], true)) {
+            Yii::$app->session->setFlash('danger', 'เปลี่ยนสถานะงวดนี้ไม่ได้');
+        } else {
+            $model->status = $to;
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'งวดที่ ' . $model->seq . ': ' . ContractReceipt::statusList()[$to]);
+            } else {
+                Yii::$app->session->setFlash('danger', implode(' ', $model->getFirstErrors()));
+            }
+        }
+        return $this->redirect(['view', 'id' => $model->contract_id, '#' => 'receipts']);
+    }
+
+    /** ลบได้เฉพาะร่าง (ยังไม่เคยตรวจรับ/ส่งออกไปไหน) — งวดที่ตรวจรับแล้วใช้ยกเลิกแทน */
+    public function actionReceiptDelete($id)
+    {
+        $model = $this->findReceipt($id);
+        if ($model->status !== ContractReceipt::STATUS_DRAFT) {
+            Yii::$app->session->setFlash('danger', 'ลบได้เฉพาะงวดที่เป็นร่าง งวดที่ตรวจรับแล้วให้ใช้ "ยกเลิก"');
+        } else {
+            $model->delete();
+            Yii::$app->session->setFlash('success', 'ลบร่างงวดที่ ' . $model->seq . ' แล้ว');
+        }
+        return $this->redirect(['view', 'id' => $model->contract_id, '#' => 'receipts']);
+    }
+
+    /**
+     * @param ContractReceiptItem[] $lines
+     */
+    private function saveReceiptOrRender(Contract $contract, ContractReceipt $model, array $lines)
+    {
+        $locked = $model->getAttributes(['contract_id', 'order_id', 'seq', 'status', 'sent_finance_at']);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            // ช่องที่ฟอร์มห้ามเปลี่ยน (สถานะเปลี่ยนผ่านปุ่มยืนยัน/actionReceiptStatus เท่านั้น)
+            $model->setAttributes($locked, false);
+            // วันที่ในฟอร์มเป็น พ.ศ. — แปลงเป็น ค.ศ. ก่อน validate (ค่าที่แปลงไม่ได้ปล่อยให้กฎ date แจ้ง)
+            foreach (['period_start', 'period_end', 'invoice_date', 'delivered_date', 'receive_date'] as $attr) {
+                $raw = trim((string) $model->$attr);
+                $model->$attr = $raw === '' ? null : (AppHelper::normalizeDateToDb($raw) ?? $raw);
+            }
+            $model->populateRelation('contract', $contract);
+
+            // รายการจากฟอร์ม — แถวปริมาณ 0 ไม่เก็บ
+            $lines = [];
+            $lineTotal = 0.0;
+            foreach ((array) $this->request->post('lines', []) as $row) {
+                $qty = (float) ($row['qty'] ?? 0);
+                $price = (float) ($row['unit_price'] ?? 0);
+                $item = new ContractReceiptItem([
+                    'order_item_id' => ($row['order_item_id'] ?? '') !== '' ? (int) $row['order_item_id'] : null,
+                    'asset_item' => $row['asset_item'] ?? null,
+                    'item_name' => trim((string) ($row['item_name'] ?? '')) ?: 'รายการ',
+                    'unit_name' => ($row['unit_name'] ?? '') ?: null,
+                    'qty' => $qty,
+                    'unit_price' => $price,
+                ]);
+                $lines[] = $item;
+                $lineTotal += $qty * $price;
+            }
+
+            $model->applyTotals($lineTotal);
+            if ($this->request->post('confirm')) {
+                $model->status = ContractReceipt::STATUS_RECEIVED;
+            }
+
+            $valid = $model->validate();
+            if ($lineTotal <= 0) {
+                $model->addError('amount', 'กรอกปริมาณหรือยอดของงวดนี้อย่างน้อย 1 รายการ');
+                $valid = false;
+            }
+            // ห้ามเกินวงเงินสัญญา (นับงวดอื่นที่ไม่ถูกยกเลิกรวมร่าง)
+            $used = $contract->receiptUsedTotal($model->isNewRecord ? null : (int) $model->id);
+            if ((float) $contract->budget > 0 && $used + (float) $model->amount > (float) $contract->budget + 0.005) {
+                $model->addError('amount', sprintf(
+                    'ยอดงวดนี้ %s บาท เกินวงเงินคงเหลือของสัญญา %s บาท',
+                    number_format((float) $model->amount, 2),
+                    number_format((float) $contract->budget - $used, 2)
+                ));
+                $valid = false;
+            }
+
+            if ($valid) {
+                $tx = Yii::$app->db->beginTransaction();
+                try {
+                    $model->save(false);
+                    ContractReceiptItem::deleteAll(['receipt_id' => $model->id]);
+                    foreach ($lines as $item) {
+                        if ((float) $item->qty <= 0) {
+                            continue;
+                        }
+                        $item->receipt_id = $model->id;
+                        if (!$item->save()) {
+                            throw new \RuntimeException(implode(' ', $item->getFirstErrors()));
+                        }
+                    }
+                    $tx->commit();
+                    Yii::$app->session->setFlash('success', 'บันทึกงวดที่ ' . $model->seq . ' ('
+                        . ContractReceipt::statusList()[$model->status] . ') ยอด ' . number_format((float) $model->amount, 2) . ' บาท');
+                    return $this->redirect(['view', 'id' => $contract->id, '#' => 'receipts']);
+                } catch (\Throwable $e) {
+                    $tx->rollBack();
+                    $model->addError('amount', 'บันทึกไม่สำเร็จ: ' . $e->getMessage());
+                }
+            }
+            // ตรวจไม่ผ่าน: ถ้ากดยืนยันตรวจรับมา ให้สถานะกลับเป็นค่าเดิมบนฟอร์ม
+            if ($this->request->post('confirm') && $model->isNewRecord) {
+                $model->status = ContractReceipt::STATUS_DRAFT;
+            }
+        }
+
+        return $this->render('receipt-form', [
+            'contract' => $contract,
+            'model' => $model,
+            'lines' => $lines,
+            'used' => $contract->receiptUsedTotal($model->isNewRecord ? null : (int) $model->id),
+        ]);
+    }
+
+    protected function findReceipt($id): ContractReceipt
+    {
+        $model = ContractReceipt::findOne(['id' => $id, 'deleted_at' => null]);
+        if ($model === null) {
+            throw new NotFoundHttpException('ไม่พบงวดตรวจรับที่ต้องการ');
         }
         return $model;
     }

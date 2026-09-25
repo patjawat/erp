@@ -11,6 +11,11 @@ $inbox = FinanceInbox::find()->where([
     'source_id' => (string) $model->id,
     'source_version' => 1,
 ])->orderBy(['id' => SORT_DESC])->one();
+// ใบที่ผูกสัญญาตรวจรับรายงวด ส่งการเงินทีละงวดที่หน้าสัญญา — ไม่มีปุ่มส่งทั้งใบ
+$installment = \app\modules\purchase\models\Contract::find()->where(['order_id' => $model->id, 'deleted_at' => null])->one();
+if ($installment && !$installment->isInstallment()) {
+    $installment = null;
+}
 ?>
 
 <section class="card border shadow-sm mt-3" aria-labelledby="send-accounting-heading">
@@ -18,7 +23,25 @@ $inbox = FinanceInbox::find()->where([
         <h5 class="mb-0" id="send-accounting-heading">ส่งข้อมูลเจ้าหนี้ให้การเงิน</h5>
     </div>
     <div class="card-body">
-        <?php if ($inbox): ?>
+        <?php if ($installment && !$inbox): ?>
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-calendar2-range text-primary" aria-hidden="true"></i>
+                        <strong>ใบนี้ตรวจรับและส่งการเงินเป็นรายงวด</strong>
+                    </div>
+                    <p class="text-body-secondary mb-0">
+                        ผูกสัญญา "<?= Html::encode($installment->title) ?>" — บันทึกตรวจรับและส่งการเงินทีละงวดที่หน้าสัญญา
+                        (ไม่ส่งทั้งใบ เพื่อไม่ให้ตั้งหนี้เต็มวงเงินซ้ำ)
+                    </p>
+                </div>
+                <?= Html::a(
+                    '<i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>ไปที่ตรวจรับรายงวด',
+                    ['/purchase/contract/view', 'id' => $installment->id, '#' => 'receipts'],
+                    ['class' => 'btn btn-primary']
+                ) ?>
+            </div>
+        <?php elseif ($inbox): ?>
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">

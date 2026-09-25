@@ -23,7 +23,9 @@ class FinancePayableDraftService
             'vendor_id' => $vendor ? (int) $vendor->id : null,
             'vendor_code_snapshot' => $inbox->vendor_code_snapshot,
             'vendor_name_snapshot' => $vendor ? $vendor->title : (string) $inbox->vendor_name_snapshot,
-            'invoice_date' => $inbox->document_date ?: $billingDate,
+            // งวดตรวจรับของสัญญาส่งเลขใบแจ้งหนี้ผู้รับจ้างมาด้วย — เติมให้ การเงินยังแก้ได้
+            'invoice_no' => $payload['invoice_no'] ?? null,
+            'invoice_date' => ($payload['invoice_date'] ?? null) ?: ($inbox->document_date ?: $billingDate),
             'billing_date' => $billingDate,
             'due_date_basis' => FinancePayable::DUE_BASIS_BILLING_DATE,
             'credit_days' => $creditDays,

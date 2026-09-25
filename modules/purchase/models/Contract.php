@@ -118,6 +118,7 @@ class Contract extends \yii\db\ActiveRecord
             [['end_date'], 'validateEndDate'],
             [['contract_type'], 'in', 'range' => array_keys(self::typeList())],
             [['billing_mode'], 'in', 'range' => array_keys(self::billingModeList())],
+            [['billing_mode'], 'validateBillingMode'],
             [['party_type'], 'in', 'range' => array_keys(WhtRate::partyTypeList())],
             [['status'], 'in', 'range' => array_keys(self::statusList())],
             [['fine_base'], 'in', 'range' => array_keys(self::fineBaseList())],
@@ -230,6 +231,78 @@ class Contract extends \yii\db\ActiveRecord
             ->orderBy(['seq' => SORT_ASC, 'id' => SORT_ASC]);
     }
 
+    /** งวดตรวจรับจริง (ไม่รวมที่ลบ) */
+    public function getReceipts()
+    {
+        return $this->hasMany(ContractReceipt::class, ['contract_id' => 'id'])
+            ->andOnCondition(['deleted_at' => null])
+            ->orderBy(['seq' => SORT_ASC, 'id' => SORT_ASC]);
+    }
+
+    /**
+     * ยอดที่ใช้วงเงินแล้ว = ผลรวมงวดที่ไม่ถูกยกเลิก (ร่างก็นับ เพื่อกันบันทึกเกินวงเงินซ้อนกัน)
+     * @param int|null $excludeId งวดที่กำลังแก้ไข — ไม่นับตัวเอง
+     */
+    public function receiptUsedTotal(?int $excludeId = null): float
+    {
+        $q = ContractReceipt::find()
+            ->where(['contract_id' => $this->id, 'deleted_at' => null, 'status' => ContractReceipt::activeStatuses()]);
+        if ($excludeId) {
+            $q->andWhere(['<>', 'id', $excludeId]);
+        }
+        return (float) $q->sum('amount');
+    }
+
+    /** ยอดคงเหลือของวงเงินสัญญา */
+    public function receiptRemaining(): float
+    {
+        return round((float) $this->budget - $this->receiptUsedTotal(), 2);
+    }
+
+    /** เลขงวดถัดไป (นับงวดที่ยกเลิกด้วย เพื่อไม่ให้เลขซ้ำกับที่เคยออก) */
+    public function nextReceiptSeq(): int
+    {
+        return (int) ContractReceipt::find()->where(['contract_id' => $this->id])->max('seq') + 1;
+    }
+
+    /**
+     * บรรทัดของใบสั่งซื้อที่ผูก — ใช้เป็นค่าตั้งต้นรายการในงวด (ชื่อ/หน่วย/ราคาต่อหน่วย)
+     * @return array<int,array{order_item_id:int, asset_item:?string, item_name:string, unit_name:?string, unit_price:float, qty:float}>
+     */
+    public function orderLines(): array
+    {
+        if (!$this->order_id) {
+            return [];
+        }
+        $rows = [];
+        $items = Order::find()
+            ->where(['name' => 'order_item', 'category_id' => $this->order_id, 'deleted_at' => null])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+        foreach ($items as $item) {
+            $json = is_array($item->data_json) ? $item->data_json : [];
+            $rows[] = [
+                'order_item_id' => (int) $item->id,
+                'asset_item' => $item->asset_item,
+                'item_name' => (string) ($json['asset_item_name'] ?? $item->asset_item ?? 'รายการ'),
+                'unit_name' => ($json['asset_item_unit_name'] ?? '') ?: null,
+                'unit_price' => (float) $item->price,
+                'qty' => (float) $item->qty,
+            ];
+        }
+        return $rows;
+    }
+
+    /** VAT ตั้งต้นของงวด = ตามใบสั่งซื้อ */
+    public function orderVatType(): string
+    {
+        $order = $this->order_id ? Order::findOne($this->order_id) : null;
+        $vat = $order && is_array($order->data_json) ? ($order->data_json['vat'] ?? null) : null;
+        return in_array($vat, [ContractReceipt::VAT_IN, ContractReceipt::VAT_EX, ContractReceipt::VAT_NONE], true)
+            ? $vat
+            : ($this->vat_included ? ContractReceipt::VAT_IN : ContractReceipt::VAT_EX);
+    }
+
     public function getTor()
     {
         return $this->hasOne(Tor::class, ['id' => 'tor_id']);
@@ -271,6 +344,28 @@ class Contract extends \yii\db\ActiveRecord
             self::BILLING_FIXED => 'ตรวจรับรายงวด — ยอดงวดตายตัว',
             self::BILLING_UNIT_PRICE => 'ตรวจรับรายงวด — ตามปริมาณจริง',
         ];
+    }
+
+    /**
+     * ใบสั่งซื้อที่ส่งการเงินทั้งใบไปแล้ว เปลี่ยนเป็นรายงวดไม่ได้ — จะตั้งหนี้ซ้ำ (ทั้งใบ + รายงวด)
+     * และสัญญาที่มีงวดตรวจรับอยู่แล้ว ถอยกลับเป็น "ครั้งเดียว" ไม่ได้
+     */
+    public function validateBillingMode($attribute)
+    {
+        if ($this->isInstallment() && $this->order_id) {
+            $sentWhole = \app\modules\finance\models\FinanceInbox::find()->where([
+                'source_system' => 'purchase',
+                'source_id' => (string) $this->order_id,
+            ])->andWhere(['<>', 'source_type', 'contract_receipt'])->exists();
+            if ($sentWhole) {
+                $this->addError($attribute, 'ใบสั่งซื้อนี้ส่งการเงินทั้งใบไปแล้ว เปลี่ยนเป็นตรวจรับรายงวดไม่ได้');
+            }
+        }
+        if (!$this->isInstallment() && !$this->isNewRecord
+            && ContractReceipt::find()->where(['contract_id' => $this->id, 'deleted_at' => null])
+                ->andWhere(['<>', 'status', ContractReceipt::STATUS_CANCELLED])->exists()) {
+            $this->addError($attribute, 'สัญญานี้มีงวดตรวจรับแล้ว เปลี่ยนเป็น "ตรวจรับครั้งเดียว" ไม่ได้ (ยกเลิกงวดก่อน)');
+        }
     }
 
     /** ตรวจรับ/ส่งการเงินเป็นรายงวด (ห้ามส่งการเงินทั้งใบสั่งซื้อ) */
