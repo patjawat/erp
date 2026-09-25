@@ -166,6 +166,15 @@ class PurchaseDashboardService
                   AND r.thai_year = :yr AND o.status <> 8";
     }
 
+    /** ยอดงวดที่นับเป็น "เข้าคลัง": งานจ้าง/บริการนับทันที; พัสดุ (วัสดุ/ยา) นับเมื่อมีใบรับเข้าคลังผูกงวดแล้ว */
+    private function receiptStockedCase(): string
+    {
+        return "CASE WHEN JSON_EXTRACT(r.data_json, '$.stock_order_id') IS NOT NULL
+                    OR o.category_id = 'M25'
+                    OR JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_type_name')) LIKE 'จ้าง%'
+                THEN ri.amount ELSE 0 END";
+    }
+
     /**
      * นิพจน์วันที่ + เงื่อนไขสถานะ ตามมุมมอง
      * @return array [dateExpr, stageWhere]
@@ -370,11 +379,7 @@ class PurchaseDashboardService
             foreach ($rows as $idx => $r) {
                 $byKey[$r['cat'] . '|' . $r['subtype']] = $idx;
             }
-            // งานจ้าง/บริการนับเข้าคลังทันที; พัสดุ (วัสดุ/ยา) นับเมื่อมีใบรับเข้าคลังผูกงวดแล้ว
-            $stockedCase = "CASE WHEN JSON_EXTRACT(r.data_json, '$.stock_order_id') IS NOT NULL
-                    OR o.category_id = 'M25'
-                    OR JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_type_name')) LIKE 'จ้าง%'
-                THEN ri.amount ELSE 0 END";
+            $stockedCase = $this->receiptStockedCase();
             $extra = Yii::$app->db->createCommand(
                 "SELECT $cat AS cat, $subExpr AS subtype, SUM(ri.amount) AS amt, SUM($stockedCase) AS stocked_amt "
                     . $this->receiptFrom() . $monthCond . " GROUP BY cat, subtype",
@@ -437,9 +442,9 @@ class PurchaseDashboardService
      */
     public function reconcile(): array
     {
-        $received = $this->sumByStatusRaw('o.status >= ' . self::STATUS_RECEIVED . ' AND o.status <> 8')['price'];
-        $stocked  = $this->sumByStatusRaw('o.status >= ' . self::STATUS_STOCKED . ' AND o.status <> 8')['price'];
-        $pending  = $received - $stocked; // ตรวจรับแล้วแต่ยังไม่เข้าคลัง (status = 5)
+        // ใบตรวจรับรายงวดไม่นับทั้งใบ (ปิดสัญญาแล้วใบเป็นสถานะ 7 เต็มวงเงิน) — ใช้ยอดงวดด้านล่างแทน
+        $received = $this->sumByStatusRaw('o.status >= ' . self::STATUS_RECEIVED . ' AND o.status <> 8' . $this->notInstallment())['price'];
+        $stocked  = $this->sumByStatusRaw('o.status >= ' . self::STATUS_STOCKED . ' AND o.status <> 8' . $this->notInstallment())['price'];
 
         $dateExpr = "JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.gr_date'))";
         $sql = "SELECT MONTH($dateExpr) AS mth,
@@ -448,9 +453,25 @@ class PurchaseDashboardService
                 FROM orders o
                 JOIN orders i ON i.category_id = o.id AND i.name = 'order_item'
                 WHERE o.name = 'order' AND o.thai_year = :yr
-                  AND o.status >= " . self::STATUS_RECEIVED . " AND o.status <> 8
+                  AND o.status >= " . self::STATUS_RECEIVED . " AND o.status <> 8" . $this->notInstallment() . "
                 GROUP BY mth HAVING mth IS NOT NULL";
         $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+
+        if ($this->receiptsReady()) {
+            // งวดที่ตรวจรับแล้ว: เข้าคลังเมื่อผูกใบรับเข้าแล้ว (งานจ้างนับทันที) ค้างเข้าคลัง = ส่วนที่เหลือ
+            $stockedCase = $this->receiptStockedCase();
+            $extra = Yii::$app->db->createCommand(
+                "SELECT MONTH(r.receive_date) AS mth, SUM($stockedCase) AS stocked, SUM(ri.amount) - SUM($stockedCase) AS pending "
+                    . $this->receiptFrom() . " GROUP BY mth",
+                [':yr' => $this->year]
+            )->queryAll();
+            foreach ($extra as $e) {
+                $received += (float) $e['stocked'] + (float) $e['pending'];
+                $stocked += (float) $e['stocked'];
+            }
+            $rows = array_merge($rows, $extra);
+        }
+        $pending  = $received - $stocked; // ตรวจรับแล้วแต่ยังไม่เข้าคลัง
 
         $stockedM = array_fill(0, 12, 0.0);
         $pendingM = array_fill(0, 12, 0.0);
@@ -458,8 +479,8 @@ class PurchaseDashboardService
         foreach ($rows as $r) {
             $pos = $idx[(int) $r['mth']] ?? null;
             if ($pos !== null) {
-                $stockedM[$pos] = (float) $r['stocked'];
-                $pendingM[$pos] = (float) $r['pending'];
+                $stockedM[$pos] += (float) $r['stocked'];
+                $pendingM[$pos] += (float) $r['pending'];
             }
         }
 

@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use app\components\AppHelper;
 use app\modules\purchase\models\Contract;
 use app\modules\purchase\models\ContractReceipt;
+use app\modules\purchase\models\Bond;
 use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\services\ContractReceiptFinanceSnapshotBuilder;
 
@@ -77,6 +78,24 @@ $date = fn($v) => $v ? AppHelper::convertToThai($v) : '—';
                 'data' => ['method' => 'post', 'confirm' => 'เปิดสัญญาอีกครั้ง? สถานะใบสั่งซื้อจะกลับเป็นค่าก่อนปิด'],
             ]) ?>
         </div>
+        <?php
+        // ปิดสัญญาแล้ว = ถึงเวลาพิจารณาคืนหลักประกันสัญญา (ยกเว้นใบที่ได้รับยกเว้น/คืน/ยึดไปแล้ว)
+        $bondsToReturn = array_filter(Bond::forSource(Bond::SOURCE_CONTRACT, $model->id), fn($bond) => in_array($bond->status, [Bond::STATUS_PENDING, Bond::STATUS_ACTIVE], true));
+        ?>
+        <?php if ($bondsToReturn): ?>
+            <div class="alert alert-warning rounded-0 border-0 border-bottom mb-0 small">
+                <i class="bi bi-shield-exclamation me-1"></i>
+                <span class="fw-medium">หลักประกันสัญญายังไม่ได้คืน <?= count($bondsToReturn) ?> ใบ</span>
+                — ตรวจสอบระยะเวลารับประกันความชำรุดบกพร่องก่อนคืน
+                <?php foreach ($bondsToReturn as $bond): ?>
+                    <div class="mt-1">
+                        <?= Html::encode($bond->typeName()) ?> <?= Html::encode($bond->doc_no ?: '') ?>
+                        วงเงิน <?= number_format((float) $bond->amount, 2) ?> บาท
+                        <?= Html::a('คืนหลักประกัน', ['/purchase/bond/return', 'id' => $bond->id], ['class' => 'btn btn-sm btn-outline-warning ms-1 py-0']) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     <?php elseif ($model->isInstallment() && $receipts): ?>
         <?php $blockers = $model->closeBlockers(); ?>
         <div class="collapse" id="contract-close-box">

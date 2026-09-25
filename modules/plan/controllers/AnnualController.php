@@ -599,19 +599,42 @@ class AnnualController extends Controller
      */
     private function expenseActualByCategory(int $fy): array
     {
-        $sql = "
-            SELECT c.code AS cat_code, COALESCE(SUM(oi.price * oi.qty), 0) AS actual
-            FROM orders o
-            JOIN orders oi ON oi.category_id = o.id AND oi.name = 'order_item'
-            JOIN plan_order po ON po.id = o.plan_order_id AND po.deleted_at IS NULL
+        $planJoin = "JOIN plan_order po ON po.id = o.plan_order_id AND po.deleted_at IS NULL
             JOIN categorise i ON i.code = po.plan_item_id AND i.name = 'plan_item'
-            JOIN categorise c ON c.code = i.category_id AND c.name = 'plan_category'
-            WHERE o.name = 'order' AND o.thai_year = :yr AND o.status >= 5 AND o.status <> 8
-            GROUP BY c.code
+            JOIN categorise c ON c.code = i.category_id AND c.name = 'plan_category'";
+        // ใบตรวจรับรายงวด (สัญญาออกใบสั่งซื้อเต็มวงเงิน) นับเฉพาะยอดงวดที่ตรวจรับแล้วตามปีงบของงวด ไม่นับทั้งใบ
+        $receiptsReady = Yii::$app->db->getTableSchema('purchase_contract_receipt') !== null;
+        $notInstallment = $receiptsReady
+            ? " AND NOT EXISTS (SELECT 1 FROM purchase_contract pc WHERE pc.order_id = o.id AND pc.deleted_at IS NULL
+                    AND pc.billing_mode IN ('fixed', 'unit_price'))"
+            : '';
+        $receipts = $receiptsReady
+            ? "UNION ALL
+               SELECT c.code AS cat_code, ri.amount AS v
+               FROM purchase_contract_receipt r
+               JOIN orders o ON o.id = r.order_id AND o.name = 'order'
+               JOIN purchase_contract_receipt_item ri ON ri.receipt_id = r.id
+               $planJoin
+               WHERE r.deleted_at IS NULL AND r.status IN ('received', 'sent_finance') AND r.thai_year = :yr2 AND o.status <> 8"
+            : '';
+        $sql = "
+            SELECT cat_code, COALESCE(SUM(v), 0) AS actual FROM (
+                SELECT c.code AS cat_code, oi.price * oi.qty AS v
+                FROM orders o
+                JOIN orders oi ON oi.category_id = o.id AND oi.name = 'order_item'
+                $planJoin
+                WHERE o.name = 'order' AND o.thai_year = :yr AND o.status >= 5 AND o.status <> 8 $notInstallment
+                $receipts
+            ) t
+            GROUP BY cat_code
         ";
+        $params = [':yr' => $fy];
+        if ($receiptsReady) {
+            $params[':yr2'] = $fy;
+        }
         $out = [];
         try {
-            foreach (Yii::$app->db->createCommand($sql, [':yr' => $fy])->queryAll() as $r) {
+            foreach (Yii::$app->db->createCommand($sql, $params)->queryAll() as $r) {
                 $out[(string) $r['cat_code']] = (float) $r['actual'];
             }
         } catch (\Throwable $e) {
