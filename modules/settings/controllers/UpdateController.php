@@ -54,6 +54,67 @@ class UpdateController extends Controller
         return $this->render('index', [
             'version' => $version,
             'dockerConfig' => $dockerConfig,
+            'appImage' => (string) getenv('APP_IMAGE'),
+            'appBuild' => (string) getenv('APP_BUILD'),
+        ]);
+    }
+
+    /**
+     * AJAX: เวอร์ชัน stable ล่าสุดบน Docker Hub (tag รูปแบบ vX.Y.Z) — cache 1 ชม. กันยิง Docker Hub ถี่
+     */
+    public function actionAjaxLatestRelease()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $image = Yii::$app->params['dockerUpdate']['image'] ?? 'patjawat/erp:latest';
+        $repo = explode(':', $image)[0];
+
+        $latest = Yii::$app->cache->getOrSet('settings-update-latest-release:' . $repo, function () use ($repo) {
+            $url = 'https://hub.docker.com/v2/repositories/' . $repo . '/tags?page_size=100&ordering=last_updated';
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 8,
+            ]);
+            $body = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($body === false || $code !== 200) {
+                return null; // ไม่ cache ผลที่ล้มเหลว
+            }
+            $best = '';
+            foreach (json_decode($body, true)['results'] ?? [] as $tag) {
+                $name = $tag['name'] ?? '';
+                if (preg_match('/^v\d+\.\d+\.\d+$/', $name) && ($best === '' || version_compare(ltrim($name, 'v'), ltrim($best, 'v'), '>'))) {
+                    $best = $name;
+                }
+            }
+            return $best;
+        }, 3600);
+
+        if ($latest === null) {
+            Yii::$app->cache->delete('settings-update-latest-release:' . $repo);
+            return ['success' => false, 'message' => 'ตรวจสอบกับ Docker Hub ไม่ได้ (เครื่องอาจออกอินเทอร์เน็ตไม่ได้)'];
+        }
+        $current = Yii::$app->version;
+        return [
+            'success' => true,
+            'latest' => $latest,
+            'current' => $current,
+            'hasUpdate' => $latest !== '' && version_compare(ltrim($latest, 'v'), ltrim($current, 'v'), '>'),
+        ];
+    }
+
+    /**
+     * ดาวน์โหลดสคริปต์อัปเดต scripts/update.sh (เฉพาะ admin)
+     */
+    public function actionDownloadScript()
+    {
+        if (!Yii::$app->user->can('admin')) {
+            throw new \yii\web\ForbiddenHttpException('ไม่มีสิทธิ์');
+        }
+        return Yii::$app->response->sendFile(Yii::getAlias('@app/scripts/update.sh'), 'update.sh', [
+            'mimeType' => 'text/x-shellscript',
         ]);
     }
 

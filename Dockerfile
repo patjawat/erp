@@ -117,3 +117,8 @@ ENV TZ=Asia/Bangkok
 
 # Set PHP timezone configuration
 RUN echo "date.timezone=Asia/Bangkok" > /usr/local/etc/php/conf.d/timezone.ini
+
+# เลข build จาก Jenkins (--build-arg APP_BUILD=<BUILD_NUMBER>) แสดงในหน้าอัปเดตระบบ
+# วางท้ายไฟล์ เพราะ ARG ที่เปลี่ยนทุก build จะทำให้ cache ของ layer หลังจากนี้ใช้ไม่ได้
+ARG APP_BUILD=""
+ENV APP_BUILD=${APP_BUILD}
