@@ -54,10 +54,56 @@ $date = fn($v) => $v ? AppHelper::convertToThai($v) : '—';
             <i class="bi bi-clipboard-check me-1"></i>ตรวจรับรายงวด
             <span class="badge text-bg-info fw-normal ms-1"><?= Html::encode(Contract::billingModeList()[$model->billing_mode] ?? $model->billing_mode) ?></span>
         </h6>
-        <?php if ($model->isInstallment()): ?>
-            <?= Html::a('<i class="bi bi-plus-lg me-1"></i>บันทึกตรวจรับงวดใหม่', ['receipt-create', 'contract_id' => $model->id], ['class' => 'btn btn-sm btn-success']) ?>
-        <?php endif; ?>
+        <div class="d-flex flex-wrap gap-2">
+            <?php if ($model->isInstallment() && !$model->closed_at): ?>
+                <?= Html::a('<i class="bi bi-plus-lg me-1"></i>บันทึกตรวจรับงวดใหม่', ['receipt-create', 'contract_id' => $model->id], ['class' => 'btn btn-sm btn-success']) ?>
+                <?php if ($receipts): ?>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#contract-close-box" aria-expanded="false">
+                        <i class="bi bi-lock me-1"></i>ปิดสัญญา
+                    </button>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
+    <?php if ($model->closed_at): ?>
+        <div class="alert alert-secondary rounded-0 border-0 border-bottom mb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <i class="bi bi-lock-fill me-1"></i>
+                <span class="fw-medium">ปิดสัญญาเมื่อ <?= AppHelper::convertToThai(substr($model->closed_at, 0, 10)) ?></span>
+                <div class="small"><?= Html::encode($model->closed_note) ?></div>
+            </div>
+            <?= Html::a('<i class="bi bi-unlock me-1"></i>เปิดสัญญาอีกครั้ง', ['reopen', 'id' => $model->id], [
+                'class' => 'btn btn-sm btn-outline-secondary',
+                'data' => ['method' => 'post', 'confirm' => 'เปิดสัญญาอีกครั้ง? สถานะใบสั่งซื้อจะกลับเป็นค่าก่อนปิด'],
+            ]) ?>
+        </div>
+    <?php elseif ($model->isInstallment() && $receipts): ?>
+        <?php $blockers = $model->closeBlockers(); ?>
+        <div class="collapse" id="contract-close-box">
+            <div class="card-body border-bottom bg-body-tertiary">
+                <?php if ($blockers): ?>
+                    <div class="small text-danger mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>ยังปิดสัญญาไม่ได้: <?= Html::encode(implode(' · ', $blockers)) ?>
+                    </div>
+                <?php else: ?>
+                    <?= Html::beginForm(['close', 'id' => $model->id], 'post') ?>
+                    <div class="small mb-2">
+                        ปิดสัญญาเมื่อตรวจรับงวดสุดท้ายแล้ว หรือสัญญาสิ้นสุด —
+                        วงเงินที่ไม่ได้ใช้จะบันทึกเป็น <span class="fw-medium">เงินเหลือจ่าย</span>
+                        และใบสั่งซื้อจะเปลี่ยนเป็น "ส่งการเงิน"
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <?= Html::textInput('closed_note', '', ['class' => 'form-control', 'maxlength' => 300, 'placeholder' => 'หมายเหตุ เช่น สิ้นสุดสัญญา 30 ก.ย. — ใช้ไม่ครบวงเงิน']) ?>
+                        <?= Html::submitButton('<i class="bi bi-lock me-1"></i>ยืนยันปิดสัญญา', [
+                            'class' => 'btn btn-secondary',
+                            'data' => ['confirm' => 'ยืนยันปิดสัญญา? เงินเหลือจ่าย ' . number_format($remaining + $draft, 2) . ' บาท'],
+                        ]) ?>
+                    </div>
+                    <?= Html::endForm() ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
     <div class="card-body border-bottom">
         <div class="row g-2 text-center small">
             <div class="col-6 col-md-3">
@@ -135,6 +181,14 @@ $date = fn($v) => $v ? AppHelper::convertToThai($v) : '—';
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-nowrap">
+                                    <?php if (in_array($r->status, [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_SENT_FINANCE], true)): ?>
+                                        <?= Html::a('<i class="bi bi-file-earmark-word"></i>', ['receipt-word', 'id' => $r->id], [
+                                            'class' => 'btn btn-sm btn-outline-primary mb-1',
+                                            'title' => 'บันทึกรายงานผลการตรวจรับงวด (Word)',
+                                            'target' => '_blank',
+                                            'data-pjax' => 0,
+                                        ]) ?>
+                                    <?php endif; ?>
                                     <?php if ($r->status === ContractReceipt::STATUS_RECEIVED && Yii::$app->user->can('accountingInboxReceive')): ?>
                                         <?= Html::a('<i class="bi bi-send-check me-1"></i>ส่งการเงิน', ['/finance/inbox/receive-contract-receipt', 'id' => $r->id], [
                                             'class' => 'btn btn-sm btn-primary mb-1',
@@ -145,7 +199,7 @@ $date = fn($v) => $v ? AppHelper::convertToThai($v) : '—';
                                         <?php if (!empty($inbox) && Yii::$app->user->can('financeView')): ?>
                                             <?= Html::a('<i class="bi bi-eye"></i>', ['/finance/inbox/view', 'id' => $inbox->id], ['class' => 'btn btn-sm btn-outline-secondary', 'title' => 'ดูรายการในกล่องรอรับ']) ?>
                                         <?php endif; ?>
-                                        <?php if (ContractReceiptFinanceSnapshotBuilder::isReturned($inbox ?? null)): ?>
+                                        <?php if (!$model->closed_at && ContractReceiptFinanceSnapshotBuilder::isReturned($inbox ?? null)): ?>
                                             <?= Html::a('<i class="bi bi-arrow-counterclockwise me-1"></i>เปิดแก้ไขเพื่อส่งใหม่', ['receipt-status', 'id' => $r->id, 'to' => ContractReceipt::STATUS_RECEIVED], [
                                                 'class' => 'btn btn-sm btn-outline-warning',
                                                 'data' => ['method' => 'post', 'confirm' => 'การเงินตีกลับงวดที่ ' . $r->seq . ' — เปิดแก้ไขแล้วส่งใหม่ ?'],

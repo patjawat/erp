@@ -9,6 +9,8 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\SimpleType\Jc;
 use app\components\AppHelper;
 use app\modules\purchase\models\Contract;
+use app\modules\purchase\models\ContractReceipt;
+use app\modules\purchase\models\Order;
 
 /**
  * ส่งออกเอกสารงานบริหารสัญญาเป็นไฟล์ Word (.docx)
@@ -259,6 +261,138 @@ class ContractWordExporter
         self::signature($section, ['เจ้าหน้าที่พัสดุ', 'หัวหน้าเจ้าหน้าที่พัสดุ', 'ผู้อนุมัติ']);
 
         return $phpWord;
+    }
+
+    // ── บันทึกรายงานผลการตรวจรับงวด ──────────────────────────────────────────
+
+    /** ส่งไฟล์ Word "บันทึกรายงานผลการตรวจรับงวด" */
+    public static function sendReceiptReport(ContractReceipt $receipt)
+    {
+        $name = 'ตรวจรับงวด' . $receipt->seq . '_' . preg_replace('/[\\\\\/:*?"<>|]/u', '', $receipt->contract->title) . '.docx';
+        return self::sendFile(self::buildReceiptReport($receipt), $name);
+    }
+
+    /**
+     * บันทึกรายงานผลการตรวจรับพัสดุ/งานจ้างรายงวด — คณะกรรมการตรวจรับเสนอหัวหน้าหน่วยงาน
+     * รายชื่อกรรมการใช้ snapshot ของงวด (ถ้ามี) ไม่งั้นใช้กรรมการตรวจรับของใบสั่งซื้อ
+     */
+    public static function buildReceiptReport(ContractReceipt $receipt): PhpWord
+    {
+        $model = $receipt->contract;
+        $phpWord = self::newDocument();
+        $section = self::newSection($phpWord);
+        $agency = self::agencyName();
+        $order = $model->order_id ? Order::findOne($model->order_id) : null;
+        $contractNo = $model->contract_no ?: ($model->doc_no ?: '—');
+
+        $section->addText('บันทึกข้อความ', ['bold' => true, 'size' => 24], ['alignment' => Jc::CENTER]);
+        $section->addText('ส่วนราชการ  ' . ($agency ?: '[ชื่อส่วนราชการ]'), ['bold' => true], ['spaceBefore' => 120]);
+        $section->addText('ที่ ................................    วันที่  ' . self::thaiDate($receipt->receive_date ?: date('Y-m-d')), ['bold' => true]);
+        $section->addText(
+            'เรื่อง  รายงานผลการตรวจรับงวดที่ ' . $receipt->seq . ' ' . $model->title,
+            ['bold' => true],
+            ['spaceAfter' => 160]
+        );
+        $section->addText('เรียน  ผู้อำนวยการ' . ($agency ?: ''), [], ['spaceAfter' => 120]);
+
+        $section->addText(
+            'ตามที่ ' . ($agency ?: '[ชื่อส่วนราชการ]') . ' ได้ทำ' . $model->typeName()
+                . ' เลขที่ ' . $contractNo
+                . ($model->sign_date ? ' ลงวันที่ ' . self::thaiDate($model->sign_date) : '')
+                . ($order && $order->po_number ? ' (ใบสั่งซื้อ/สั่งจ้างเลขที่ ' . $order->po_number . ')' : '')
+                . ' กับ ' . $model->partyName()
+                . ' เพื่อ' . $model->title
+                . ' วงเงิน ' . number_format((float) $model->budget, 2) . ' บาท'
+                . ' โดยตรวจรับและเบิกจ่ายเป็นรายงวดตามผลงานจริง นั้น',
+            [],
+            ['alignment' => Jc::BOTH, 'indentation' => ['firstLine' => 720], 'spaceAfter' => 120]
+        );
+
+        $section->addText(
+            'บัดนี้ ผู้รับจ้างได้ส่งมอบผลงานงวดที่ ' . $receipt->seq
+                . ' ประจำช่วงวันที่ ' . self::thaiDate($receipt->period_start) . ' ถึงวันที่ ' . self::thaiDate($receipt->period_end)
+                . ($receipt->delivered_date ? ' เมื่อวันที่ ' . self::thaiDate($receipt->delivered_date) : '')
+                . ($receipt->invoice_no ? ' ตามใบแจ้งหนี้เลขที่ ' . $receipt->invoice_no
+                    . ($receipt->invoice_date ? ' ลงวันที่ ' . self::thaiDate($receipt->invoice_date) : '') : '')
+                . ' คณะกรรมการได้ตรวจรับแล้วเมื่อวันที่ ' . self::thaiDate($receipt->receive_date)
+                . ' ปรากฏว่าถูกต้องครบถ้วนตามสัญญา รายละเอียดดังนี้',
+            [],
+            ['alignment' => Jc::BOTH, 'indentation' => ['firstLine' => 720], 'spaceAfter' => 120]
+        );
+
+        $t = self::table($section);
+        $t->addRow();
+        foreach ([['รายการ', 40], ['ปริมาณ', 15], ['ราคาต่อหน่วย', 20], ['จำนวนเงิน (บาท)', 25]] as [$label, $w]) {
+            $t->addCell($w * 50, ['bgColor' => 'D9E1F2'])->addText($label, ['bold' => true], ['alignment' => Jc::CENTER]);
+        }
+        $lineTotal = 0.0;
+        foreach ($receipt->items as $item) {
+            $lineTotal += (float) $item->amount;
+            $t->addRow();
+            $t->addCell(40 * 50)->addText($item->item_name);
+            $t->addCell(15 * 50)->addText(rtrim(rtrim(number_format((float) $item->qty, 2), '0'), '.') . ($item->unit_name ? ' ' . $item->unit_name : ''), [], ['alignment' => Jc::CENTER]);
+            $t->addCell(20 * 50)->addText(number_format((float) $item->unit_price, 2), [], ['alignment' => Jc::END]);
+            $t->addCell(25 * 50)->addText(number_format((float) $item->amount, 2), [], ['alignment' => Jc::END]);
+        }
+
+        $sum = self::table($section);
+        self::row($sum, 'รวมเป็นเงิน', number_format($lineTotal, 2) . ' บาท');
+        if ($receipt->vat_type !== ContractReceipt::VAT_NONE) {
+            self::row($sum, 'ภาษีมูลค่าเพิ่ม', number_format((float) $receipt->vat_amount, 2) . ' บาท ('
+                . ($receipt->vat_type === ContractReceipt::VAT_IN ? 'รวมอยู่ในราคาแล้ว' : 'บวกเพิ่ม') . ')');
+        }
+        self::row($sum, 'ยอดเรียกเก็บงวดนี้', number_format((float) $receipt->amount, 2) . ' บาท (' . self::bahtText((float) $receipt->amount) . ')');
+        if ((float) $receipt->fine_amount > 0) {
+            self::row($sum, 'ค่าปรับ', number_format((float) $receipt->fine_amount, 2) . ' บาท');
+        }
+        $used = $model->receiptReceivedTotal();
+        self::row($sum, 'ตรวจรับสะสมถึงงวดนี้', number_format($used, 2) . ' บาท จากวงเงิน ' . number_format((float) $model->budget, 2) . ' บาท');
+        self::row($sum, 'วงเงินคงเหลือ', number_format((float) $model->budget - $used, 2) . ' บาท');
+
+        $section->addText(
+            'จึงเรียนมาเพื่อโปรดทราบ และเห็นควรส่งเอกสารให้งานการเงินดำเนินการเบิกจ่ายต่อไป',
+            [],
+            ['indentation' => ['firstLine' => 720], 'spaceBefore' => 160]
+        );
+
+        // ลายมือชื่อคณะกรรมการตรวจรับ
+        $json = is_array($receipt->data_json) ? $receipt->data_json : [];
+        $committee = $json['committee'] ?? ($order ? self::committeeOf($order) : []);
+        if ($committee) {
+            $section->addTextBreak(1);
+            $sign = $section->addTable(['width' => 100 * 50, 'unit' => 'pct']);
+            foreach (array_chunk($committee, 3) as $chunk) {
+                $sign->addRow();
+                foreach ($chunk as $c) {
+                    $cell = $sign->addCell(33 * 50);
+                    $cell->addText('ลงชื่อ .............................................', [], ['alignment' => Jc::CENTER, 'spaceBefore' => 240]);
+                    $cell->addText('(' . ($c['name'] ?: '.............................................') . ')', [], ['alignment' => Jc::CENTER]);
+                    $cell->addText($c['role'] ?: 'กรรมการ', [], ['alignment' => Jc::CENTER]);
+                }
+            }
+        } else {
+            self::signature($section, ['ประธานกรรมการ', 'กรรมการ', 'กรรมการ']);
+        }
+
+        return $phpWord;
+    }
+
+    /**
+     * รายชื่อกรรมการตรวจรับของใบสั่งซื้อ
+     * @return array<int,array{name:string, position:string, role:string}>
+     */
+    public static function committeeOf(Order $order): array
+    {
+        $out = [];
+        foreach ($order->ListCommittee() as $c) {
+            $j = is_array($c->data_json) ? $c->data_json : [];
+            $out[] = [
+                'name' => (string) ($j['emp_fullname'] ?? ''),
+                'position' => (string) ($j['emp_position'] ?? ''),
+                'role' => (string) ($j['committee_name'] ?? 'กรรมการ'),
+            ];
+        }
+        return $out;
     }
 
     // ── ทะเบียนคุมสัญญา ──────────────────────────────────────────────────────

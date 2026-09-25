@@ -92,16 +92,24 @@ class PurchaseDashboardService
         [$dateExpr, $stageWhere] = $this->stageDate($stage);
 
         $cat = $this->categoryCase();
+        $receipts = ($stage === 'gr' && $this->receiptsReady())
+            ? "UNION ALL SELECT $cat AS c, MONTH(r.receive_date) AS m, ri.amount AS v " . str_replace(':yr', ':yr2', $this->receiptFrom())
+            : '';
         $sql = "SELECT c AS cat, m AS mth, SUM(v) AS total FROM (
                     SELECT $cat AS c, MONTH($dateExpr) AS m, (i.price * i.qty) AS v
                     FROM orders o
                     JOIN orders i ON i.category_id = o.id AND i.name = 'order_item'
                     WHERE o.name = 'order' AND o.thai_year = :yr AND o.status <> 8 $stageWhere
+                    $receipts
                 ) t
                 WHERE m IS NOT NULL
                 GROUP BY c, m";
 
-        $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+        $params = [':yr' => $this->year];
+        if ($receipts) {
+            $params[':yr2'] = $this->year;
+        }
+        $rows = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         // เตรียมโครง 0 ทุกหมวด/ทุกเดือน
         $out = [];
@@ -119,6 +127,45 @@ class PurchaseDashboardService
         return $out;
     }
 
+    // ── ตรวจรับรายงวด (สัญญาที่ออกใบสั่งซื้อเต็มวงเงินแต่ตรวจรับรายเดือน) ─────────────
+    // ใบแบบนี้ "ตรวจรับ" ต้องนับจากงวดตรวจรับจริง (purchase_contract_receipt) ตามวันตรวจรับของแต่ละงวด
+    // และตัดยอดทั้งใบออกจากฝั่ง orders ไม่ให้นับซ้ำ ส่วน "ขอซื้อ" ยังนับเต็มวงเงิน (ภาระผูกพัน)
+
+    private ?bool $receiptsReady = null;
+
+    /** ตารางงวดตรวจรับมีแล้วหรือยัง (ฐานที่ยังไม่รัน migration m260925_100000 ให้ทำงานแบบเดิม) */
+    private function receiptsReady(): bool
+    {
+        if ($this->receiptsReady === null) {
+            $this->receiptsReady = Yii::$app->db->getTableSchema('purchase_contract_receipt', true) !== null;
+        }
+        return $this->receiptsReady;
+    }
+
+    /** เงื่อนไขตัดใบที่ตรวจรับรายงวดออกจากยอดตรวจรับทั้งใบ */
+    private function notInstallment(string $alias = 'o'): string
+    {
+        if (!$this->receiptsReady()) {
+            return '';
+        }
+        return " AND NOT EXISTS (SELECT 1 FROM purchase_contract pc
+                    WHERE pc.order_id = $alias.id AND pc.deleted_at IS NULL
+                      AND pc.billing_mode IN ('fixed', 'unit_price'))";
+    }
+
+    /**
+     * ชุดแถวงวดที่ตรวจรับแล้วของปีงบนี้ (ปีงบของงวด ไม่ใช่ของใบ) — o = ใบสั่งซื้อ, r = งวด, ri = รายการในงวด
+     * มูลค่า = ผลรวมรายการ (qty × unit_price) ฐานเดียวกับ order_item.price × qty ของทั้งหน้า
+     */
+    private function receiptFrom(): string
+    {
+        return "FROM purchase_contract_receipt r
+                JOIN orders o ON o.id = r.order_id AND o.name = 'order'
+                JOIN purchase_contract_receipt_item ri ON ri.receipt_id = r.id
+                WHERE r.deleted_at IS NULL AND r.status IN ('received', 'sent_finance')
+                  AND r.thai_year = :yr AND o.status <> 8";
+    }
+
     /**
      * นิพจน์วันที่ + เงื่อนไขสถานะ ตามมุมมอง
      * @return array [dateExpr, stageWhere]
@@ -128,7 +175,7 @@ class PurchaseDashboardService
         if ($stage === 'gr') {
             return [
                 "JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.gr_date'))",
-                'AND o.status >= ' . self::STATUS_RECEIVED,
+                'AND o.status >= ' . self::STATUS_RECEIVED . $this->notInstallment(),
             ];
         }
         // ขอซื้อ: วันที่ทำใบขอซื้อ (fallback order_date แล้วค่อย created_at)
@@ -153,15 +200,23 @@ class PurchaseDashboardService
         $cat = $this->categoryCase();
         $subExpr = "COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_type_name')), ''), '(ไม่ระบุ)')";
 
+        $receipts = ($stage === 'gr' && $this->receiptsReady())
+            ? "UNION ALL SELECT $cat AS c, $subExpr AS s, MONTH(r.receive_date) AS m, ri.amount AS v " . str_replace(':yr', ':yr2', $this->receiptFrom())
+            : '';
         $sql = "SELECT c AS cat, s AS subtype, m AS mth, SUM(v) AS total FROM (
                     SELECT $cat AS c, $subExpr AS s, MONTH($dateExpr) AS m, (i.price * i.qty) AS v
                     FROM orders o
                     JOIN orders i ON i.category_id = o.id AND i.name = 'order_item'
                     WHERE o.name = 'order' AND o.thai_year = :yr AND o.status <> 8 $stageWhere
+                    $receipts
                 ) t
                 WHERE m IS NOT NULL
                 GROUP BY c, s, m";
-        $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+        $params = [':yr' => $this->year];
+        if ($receipts) {
+            $params[':yr2'] = $this->year;
+        }
+        $rows = Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         $idx = array_flip(self::FISCAL_MONTHS);
         $bySub = []; // catKey => subtype => [12]
@@ -239,16 +294,24 @@ class PurchaseDashboardService
                 FROM orders o
                 JOIN orders i ON i.category_id = o.id AND i.name = 'order_item'
                 WHERE o.name = 'order' AND o.thai_year = :yr
-                  AND o.status >= " . self::STATUS_RECEIVED . " AND o.status <> 8
+                  AND o.status >= " . self::STATUS_RECEIVED . " AND o.status <> 8" . $this->notInstallment() . "
                 GROUP BY cat";
         $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+        if ($this->receiptsReady()) {
+            // ใบตรวจรับรายงวด: นับยอดงวดที่ตรวจรับแล้วในปีงบนี้ + นับใบละ 1
+            $rows = array_merge($rows, Yii::$app->db->createCommand(
+                "SELECT $cat AS cat, SUM(ri.amount) AS total, COUNT(DISTINCT o.id) AS cnt " . $this->receiptFrom() . " GROUP BY cat",
+                [':yr' => $this->year]
+            )->queryAll());
+        }
         $out = [];
         foreach (array_keys(self::CATEGORIES) as $k) {
             $out[$k] = ['total' => 0.0, 'cnt' => 0];
         }
         foreach ($rows as $r) {
             if (isset($out[$r['cat']])) {
-                $out[$r['cat']] = ['total' => (float) $r['total'], 'cnt' => (int) $r['cnt']];
+                $out[$r['cat']]['total'] += (float) $r['total'];
+                $out[$r['cat']]['cnt'] += (int) $r['cnt'];
             }
         }
         return $out;
@@ -283,6 +346,9 @@ class PurchaseDashboardService
             $recvCond = "o.status >= $recv";
             $stockCond = "o.status >= $stock";
         }
+        // ใบตรวจรับรายงวด: ตรวจรับ/เข้าคลังนับจากงวดแทนทั้งใบ (เติมด้านล่าง)
+        $recvCond .= $this->notInstallment();
+        $stockCond .= $this->notInstallment();
 
         $sql = "SELECT $cat AS cat, $subExpr AS subtype,
                     COUNT(DISTINCT CASE WHEN $orderedCond THEN o.id END) AS cnt,
@@ -295,6 +361,29 @@ class PurchaseDashboardService
                 GROUP BY cat, subtype
                 ORDER BY ordered DESC";
         $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+
+        if ($this->receiptsReady()) {
+            // งวดที่ตรวจรับแล้ว: งานจ้าง/บริการไม่มีขั้นรับเข้าคลัง จึงนับเป็น "เข้าคลัง" ด้วย ไม่ให้ค้างเข้าคลังผิด ๆ
+            $monthCond = ($month !== null && in_array($month, self::FISCAL_MONTHS, true))
+                ? ' AND MONTH(r.receive_date) = ' . (int) $month : '';
+            $byKey = [];
+            foreach ($rows as $idx => $r) {
+                $byKey[$r['cat'] . '|' . $r['subtype']] = $idx;
+            }
+            $extra = Yii::$app->db->createCommand(
+                "SELECT $cat AS cat, $subExpr AS subtype, SUM(ri.amount) AS amt " . $this->receiptFrom() . $monthCond . " GROUP BY cat, subtype",
+                [':yr' => $this->year]
+            )->queryAll();
+            foreach ($extra as $e) {
+                $key = $e['cat'] . '|' . $e['subtype'];
+                if (!isset($byKey[$key])) {
+                    $rows[] = ['cat' => $e['cat'], 'subtype' => $e['subtype'], 'cnt' => 0, 'ordered' => 0, 'received' => 0, 'stocked' => 0];
+                    $byKey[$key] = count($rows) - 1;
+                }
+                $rows[$byKey[$key]]['received'] += (float) $e['amt'];
+                $rows[$byKey[$key]]['stocked'] += (float) $e['amt'];
+            }
+        }
 
         $out = [];
         foreach (self::CATEGORIES as $k => $meta) {
@@ -384,8 +473,16 @@ class PurchaseDashboardService
         $pr = $this->sumByStatus('<> 8');
         // อยู่ระหว่างดำเนินการ (ยังไม่ตรวจรับ): status 1-4 หรือยังไม่ตั้งสถานะ
         $inProgress = $this->sumByStatusRaw("(o.status IS NULL OR (o.status BETWEEN 1 AND 4))");
-        // ตรวจรับแล้ว
-        $received = $this->sumByStatusRaw('o.status >= ' . self::STATUS_RECEIVED . ' AND o.status <> 8');
+        // ตรวจรับแล้ว (ใบตรวจรับรายงวดนับยอดงวดที่ตรวจรับแล้วแทนทั้งใบ)
+        $received = $this->sumByStatusRaw('o.status >= ' . self::STATUS_RECEIVED . ' AND o.status <> 8' . $this->notInstallment());
+        if ($this->receiptsReady()) {
+            $r = Yii::$app->db->createCommand(
+                'SELECT COUNT(DISTINCT o.id) AS cnt, IFNULL(SUM(ri.amount), 0) AS price ' . $this->receiptFrom(),
+                [':yr' => $this->year]
+            )->queryOne();
+            $received['total'] += (int) $r['cnt'];
+            $received['price'] += (float) $r['price'];
+        }
 
         $plan = $this->planRevenueTotal();
         $planUsedPct = $plan > 0 ? round(($pr['price'] / $plan) * 100, 1) : null;

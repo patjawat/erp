@@ -253,6 +253,54 @@ class Contract extends \yii\db\ActiveRecord
         return (float) $q->sum('amount');
     }
 
+    /** ยอดที่ตรวจรับแล้วจริง (ตรวจรับแล้ว + ส่งการเงินแล้ว) */
+    public function receiptReceivedTotal(): float
+    {
+        return (float) ContractReceipt::find()
+            ->where(['contract_id' => $this->id, 'deleted_at' => null,
+                'status' => [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_SENT_FINANCE]])
+            ->sum('amount');
+    }
+
+    public function lastReceiptDate(): ?string
+    {
+        $d = ContractReceipt::find()
+            ->where(['contract_id' => $this->id, 'deleted_at' => null,
+                'status' => [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_SENT_FINANCE]])
+            ->max('receive_date');
+        return $d ?: null;
+    }
+
+    /**
+     * เหตุที่ยังปิดสัญญาไม่ได้ (ว่าง = ปิดได้)
+     * ต้องไม่มีร่างค้าง และทุกงวดที่ตรวจรับแล้วต้องส่งการเงินแล้ว — ไม่งั้นจะมีงวดที่ไม่มีใครตั้งหนี้
+     * @return string[]
+     */
+    public function closeBlockers(): array
+    {
+        $errors = [];
+        if (!$this->isInstallment()) {
+            $errors[] = 'ปิดสัญญาได้เฉพาะสัญญาตรวจรับรายงวด';
+        }
+        if ($this->closed_at) {
+            $errors[] = 'สัญญานี้ปิดไปแล้ว';
+        }
+        $counts = ContractReceipt::find()->select(['status', 'n' => 'COUNT(*)'])
+            ->where(['contract_id' => $this->id, 'deleted_at' => null])
+            ->groupBy('status')->asArray()->all();
+        $by = array_column($counts, 'n', 'status');
+        if (!empty($by[ContractReceipt::STATUS_DRAFT])) {
+            $errors[] = 'มีงวดที่เป็นร่าง ' . $by[ContractReceipt::STATUS_DRAFT] . ' งวด (ยืนยันหรือลบก่อน)';
+        }
+        if (!empty($by[ContractReceipt::STATUS_RECEIVED])) {
+            $errors[] = 'มีงวดที่ตรวจรับแล้วแต่ยังไม่ส่งการเงิน ' . $by[ContractReceipt::STATUS_RECEIVED] . ' งวด';
+        }
+        if (empty($by[ContractReceipt::STATUS_SENT_FINANCE])) {
+            $errors[] = 'ยังไม่มีงวดที่ส่งการเงิน';
+        }
+        return $errors;
+    }
+
     /** ยอดคงเหลือของวงเงินสัญญา */
     public function receiptRemaining(): float
     {

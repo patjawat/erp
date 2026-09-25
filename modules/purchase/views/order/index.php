@@ -88,6 +88,28 @@ if ($searchModel->date_between == 'pr_create_date') {
                     </tr>
                 </thead>
                 <tbody class="align-middle table-group-divider">
+                    <?php
+                    // ใบที่ตรวจรับรายงวด: โหลดความคืบหน้างวดของทั้งหน้าในคิวรีเดียว (order_id => สรุปงวด)
+                    $installmentMap = [];
+                    $pageIds = array_map(fn($o) => (int) $o->id, $dataProvider->getModels());
+                    if ($pageIds && Yii::$app->db->getTableSchema('purchase_contract_receipt') !== null) {
+                        $rows = (new \yii\db\Query())
+                            ->select([
+                                'pc.order_id', 'pc.id AS contract_id', 'pc.budget', 'pc.closed_at',
+                                'n' => new \yii\db\Expression("COUNT(CASE WHEN r.status IN ('received','sent_finance') THEN 1 END)"),
+                                'amt' => new \yii\db\Expression("IFNULL(SUM(CASE WHEN r.status IN ('received','sent_finance') THEN r.amount END), 0)"),
+                                'last' => new \yii\db\Expression("MAX(CASE WHEN r.status IN ('received','sent_finance') THEN r.receive_date END)"),
+                            ])
+                            ->from(['pc' => 'purchase_contract'])
+                            ->leftJoin(['r' => 'purchase_contract_receipt'], 'r.contract_id = pc.id AND r.deleted_at IS NULL')
+                            ->where(['pc.order_id' => $pageIds, 'pc.deleted_at' => null, 'pc.billing_mode' => ['fixed', 'unit_price']])
+                            ->groupBy(['pc.id'])
+                            ->all();
+                        foreach ($rows as $row) {
+                            $installmentMap[(int) $row['order_id']] = $row;
+                        }
+                    }
+                    ?>
                     <?php foreach ($dataProvider->getModels() as $key => $item): ?>
                         <?php
                         $priceAfterVat = $item->calculateVAT()['priceAfterVAT'];
@@ -128,7 +150,24 @@ if ($searchModel->date_between == 'pr_create_date') {
 
                             <td class="text-center"><?= $item->budgetTypeName() ?></td>
                             <td><?= $item->data_json['pq_purchase_type_name'] ?? '-' ?></td>
-                            <td><?= isset($item->data_json['gr_date']) ? AppHelper::convertToThai($item->data_json['gr_date'] ?? null) : ''; ?></td>
+                            <?php if (isset($installmentMap[(int) $item->id])): $ins = $installmentMap[(int) $item->id]; ?>
+                                <td class="small">
+                                    <?= Html::a(
+                                        '<i class="bi bi-calendar2-range me-1"></i>ตรวจรับ ' . (int) $ins['n'] . ' งวด',
+                                        ['/purchase/contract/view', 'id' => $ins['contract_id'], '#' => 'receipts'],
+                                        ['data-pjax' => 0, 'title' => 'ตรวจรับรายงวด — ดูที่หน้าสัญญา']
+                                    ) ?>
+                                    <?php if ((float) $ins['budget'] > 0): ?>
+                                        <div class="text-muted"><?= number_format((float) $ins['amt'] / (float) $ins['budget'] * 100, 0) ?>% ของวงเงิน</div>
+                                    <?php endif; ?>
+                                    <?php if ($ins['last']): ?>
+                                        <div class="text-muted">ล่าสุด <?= AppHelper::convertToThai($ins['last']) ?></div>
+                                    <?php endif; ?>
+                                    <?php if ($ins['closed_at']): ?><span class="badge text-bg-secondary">ปิดสัญญา</span><?php endif; ?>
+                                </td>
+                            <?php else: ?>
+                                <td><?= isset($item->data_json['gr_date']) ? AppHelper::convertToThai($item->data_json['gr_date'] ?? null) : ''; ?></td>
+                            <?php endif; ?>
                             <td class="fw-light align-middle">
                                 <?php echo $item->StackApprove($steps) ?>
                             </td>

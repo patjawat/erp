@@ -46,6 +46,8 @@ class ContractController extends Controller
                     'delete' => ['POST'],
                     'receipt-status' => ['POST'],
                     'receipt-delete' => ['POST'],
+                    'close' => ['POST'],
+                    'reopen' => ['POST'],
                 ],
             ],
         ]);
@@ -360,6 +362,10 @@ class ContractController extends Controller
             Yii::$app->session->setFlash('warning', 'สัญญานี้ตั้งรูปแบบเป็น "ตรวจรับครั้งเดียว" — แก้ไขสัญญาเลือก "ตรวจรับรายงวด" ก่อน');
             return $this->redirect(['view', 'id' => $contract->id]);
         }
+        if ($contract->closed_at) {
+            Yii::$app->session->setFlash('warning', 'สัญญานี้ปิดแล้ว — เปิดสัญญาอีกครั้งก่อนบันทึกงวดเพิ่ม');
+            return $this->redirect(['view', 'id' => $contract->id, '#' => 'receipts']);
+        }
 
         $model = new ContractReceipt([
             'contract_id' => $contract->id,
@@ -410,6 +416,10 @@ class ContractController extends Controller
     {
         $model = $this->findReceipt($id);
         $contract = $this->findModel($model->contract_id);
+        if ($contract->closed_at) {
+            Yii::$app->session->setFlash('warning', 'สัญญานี้ปิดแล้ว — เปิดสัญญาอีกครั้งก่อนแก้ไขงวด');
+            return $this->redirect(['view', 'id' => $contract->id, '#' => 'receipts']);
+        }
         if (!$model->isEditable()) {
             Yii::$app->session->setFlash('warning', 'งวดนี้' . ContractReceipt::statusList()[$model->status] . ' แก้ไขไม่ได้');
             return $this->redirect(['view', 'id' => $contract->id, '#' => 'receipts']);
@@ -421,6 +431,10 @@ class ContractController extends Controller
     public function actionReceiptStatus($id, $to)
     {
         $model = $this->findReceipt($id);
+        if ($model->contract && $model->contract->closed_at) {
+            Yii::$app->session->setFlash('warning', 'สัญญานี้ปิดแล้ว — เปิดสัญญาอีกครั้งก่อนเปลี่ยนสถานะงวด');
+            return $this->redirect(['view', 'id' => $model->contract_id, '#' => 'receipts']);
+        }
         $allowed = [
             ContractReceipt::STATUS_DRAFT => [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_CANCELLED],
             ContractReceipt::STATUS_RECEIVED => [ContractReceipt::STATUS_DRAFT, ContractReceipt::STATUS_CANCELLED],
@@ -441,6 +455,13 @@ class ContractController extends Controller
             }
         }
         return $this->redirect(['view', 'id' => $model->contract_id, '#' => 'receipts']);
+    }
+
+    /** ดาวน์โหลด "บันทึกรายงานผลการตรวจรับงวด" (Word) */
+    public function actionReceiptWord($id)
+    {
+        $model = $this->findReceipt($id);
+        return ContractWordExporter::sendReceiptReport($model);
     }
 
     /** ลบได้เฉพาะร่าง (ยังไม่เคยตรวจรับ/ส่งออกไปไหน) — งวดที่ตรวจรับแล้วใช้ยกเลิกแทน */
@@ -494,6 +515,12 @@ class ContractController extends Controller
             if ($this->request->post('confirm')) {
                 $model->status = ContractReceipt::STATUS_RECEIVED;
             }
+            // snapshot กรรมการตรวจรับของงวด (พิมพ์ลงบันทึกรายงานผล) — กรรมการในใบสั่งซื้อเปลี่ยนภายหลังได้
+            $json = is_array($model->data_json) ? $model->data_json : [];
+            if (empty($json['committee']) && $contract->order_id && ($order = Order::findOne($contract->order_id))) {
+                $json['committee'] = ContractWordExporter::committeeOf($order);
+                $model->data_json = $json;
+            }
 
             $valid = $model->validate();
             if ($lineTotal <= 0) {
@@ -546,6 +573,86 @@ class ContractController extends Controller
             'lines' => $lines,
             'used' => $contract->receiptUsedTotal($model->isNewRecord ? null : (int) $model->id),
         ]);
+    }
+
+    /**
+     * ปิดสัญญาตรวจรับรายงวด — เมื่อทุกงวดส่งการเงินแล้ว
+     * ยอดวงเงินที่ไม่ได้ใช้ = เงินเหลือจ่าย (คืนภาระผูกพัน) บันทึกไว้ใน closed_note
+     * ใบสั่งซื้อขยับเป็น 7 "ส่งการเงิน" (เก็บสถานะเดิมไว้ใน data_json เพื่อเปิดสัญญาคืนได้)
+     */
+    public function actionClose($id)
+    {
+        $model = $this->findModel($id);
+        $back = ['view', 'id' => $model->id, '#' => 'receipts'];
+        $check = $model->closeBlockers();
+        if ($check) {
+            Yii::$app->session->setFlash('danger', 'ยังปิดสัญญาไม่ได้: ' . implode(' · ', $check));
+            return $this->redirect($back);
+        }
+
+        $received = $model->receiptReceivedTotal();
+        $leftover = round((float) $model->budget - $received, 2);
+        $note = trim((string) $this->request->post('closed_note', ''));
+        $summary = 'ตรวจรับรวม ' . number_format($received, 2) . ' บาท'
+            . ($leftover > 0 ? ' · เงินเหลือจ่าย ' . number_format($leftover, 2) . ' บาท' : '');
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $json = is_array($model->data_json) ? $model->data_json : [];
+            $order = $model->order_id ? Order::findOne($model->order_id) : null;
+            if ($order) {
+                $json['order_status_before_close'] = $order->status;
+                if ((int) $order->status < 7) {
+                    $order->status = 7;
+                    $order->save(false, ['status']);
+                }
+            }
+            $json['closed_leftover'] = $leftover;
+            $json['closed_received'] = $received;
+            $model->data_json = $json;
+            $model->closed_at = date('Y-m-d H:i:s');
+            $model->closed_note = mb_substr($summary . ($note !== '' ? ' — ' . $note : ''), 0, 500);
+            $model->status = Contract::STATUS_RECEIVED;
+            $model->receive_date = $model->lastReceiptDate() ?: $model->receive_date;
+            $model->save(false, ['data_json', 'closed_at', 'closed_note', 'status', 'receive_date', 'updated_at', 'updated_by']);
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'ปิดสัญญาแล้ว — ' . $summary);
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e, __METHOD__);
+            Yii::$app->session->setFlash('danger', 'ปิดสัญญาไม่สำเร็จ: ' . $e->getMessage());
+        }
+        return $this->redirect($back);
+    }
+
+    /** เปิดสัญญาที่ปิดไปแล้วคืน (เช่น มีงวดตกหล่น) — คืนสถานะใบสั่งซื้อเป็นค่าก่อนปิด */
+    public function actionReopen($id)
+    {
+        $model = $this->findModel($id);
+        if (!$model->closed_at) {
+            return $this->redirect(['view', 'id' => $model->id, '#' => 'receipts']);
+        }
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            $json = is_array($model->data_json) ? $model->data_json : [];
+            $order = $model->order_id ? Order::findOne($model->order_id) : null;
+            if ($order && isset($json['order_status_before_close'])) {
+                $order->status = $json['order_status_before_close'];
+                $order->save(false, ['status']);
+            }
+            unset($json['order_status_before_close'], $json['closed_leftover'], $json['closed_received']);
+            $model->data_json = $json;
+            $model->closed_at = null;
+            $model->closed_note = null;
+            $model->status = Contract::STATUS_ACTIVE;
+            $model->save(false, ['data_json', 'closed_at', 'closed_note', 'status', 'updated_at', 'updated_by']);
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'เปิดสัญญาอีกครั้งแล้ว — บันทึกงวดเพิ่มได้');
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('danger', 'เปิดสัญญาไม่สำเร็จ: ' . $e->getMessage());
+        }
+        return $this->redirect(['view', 'id' => $model->id, '#' => 'receipts']);
     }
 
     protected function findReceipt($id): ContractReceipt
