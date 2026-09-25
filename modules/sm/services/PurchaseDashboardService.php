@@ -370,8 +370,14 @@ class PurchaseDashboardService
             foreach ($rows as $idx => $r) {
                 $byKey[$r['cat'] . '|' . $r['subtype']] = $idx;
             }
+            // งานจ้าง/บริการนับเข้าคลังทันที; พัสดุ (วัสดุ/ยา) นับเมื่อมีใบรับเข้าคลังผูกงวดแล้ว
+            $stockedCase = "CASE WHEN JSON_EXTRACT(r.data_json, '$.stock_order_id') IS NOT NULL
+                    OR o.category_id = 'M25'
+                    OR JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_type_name')) LIKE 'จ้าง%'
+                THEN ri.amount ELSE 0 END";
             $extra = Yii::$app->db->createCommand(
-                "SELECT $cat AS cat, $subExpr AS subtype, SUM(ri.amount) AS amt " . $this->receiptFrom() . $monthCond . " GROUP BY cat, subtype",
+                "SELECT $cat AS cat, $subExpr AS subtype, SUM(ri.amount) AS amt, SUM($stockedCase) AS stocked_amt "
+                    . $this->receiptFrom() . $monthCond . " GROUP BY cat, subtype",
                 [':yr' => $this->year]
             )->queryAll();
             foreach ($extra as $e) {
@@ -381,7 +387,7 @@ class PurchaseDashboardService
                     $byKey[$key] = count($rows) - 1;
                 }
                 $rows[$byKey[$key]]['received'] += (float) $e['amt'];
-                $rows[$byKey[$key]]['stocked'] += (float) $e['amt'];
+                $rows[$byKey[$key]]['stocked'] += (float) $e['stocked_amt'];
             }
         }
 

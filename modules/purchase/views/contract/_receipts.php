@@ -170,6 +170,15 @@ $date = fn($v) => $v ? AppHelper::convertToThai($v) : '—';
                                 <td class="text-end small"><?= (float) $r->wht_amount > 0 ? number_format((float) $r->wht_amount, 2) : '—' ?></td>
                                 <td>
                                     <span class="badge text-bg-<?= $b['color'] ?>"><?= $b['label'] ?></span>
+                                    <?php if (!$cancelled && $r->status !== ContractReceipt::STATUS_DRAFT && $r->isGoods()): ?>
+                                        <div class="small mt-1">
+                                            <?php if ($r->isStocked()): ?>
+                                                <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-box-seam me-1"></i>เข้าคลัง <?= Html::encode($r->stockOrderNo()) ?></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split me-1"></i>รอรับเข้าคลัง</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <?php if ($r->status === ContractReceipt::STATUS_SENT_FINANCE): ?>
                                         <?php $inbox = ContractReceiptFinanceSnapshotBuilder::latestInbox((int) $r->id); ?>
                                         <?php if ($inbox): ?>

@@ -232,6 +232,48 @@ class ContractReceipt extends \yii\db\ActiveRecord
         return (int) date('Y', $ts) + 543 + ((int) date('n', $ts) >= 10 ? 1 : 0);
     }
 
+    /**
+     * งวดของ "พัสดุที่ต้องรับเข้าคลัง" (วัสดุ/ยา แบ่งส่งหลายงวด) — งานจ้าง/บริการไม่ต้องรับเข้าคลัง
+     * จำแนกจากใบสั่งซื้อ: ประเภท M25 (บริการ) หรือชื่อประเภทขึ้นต้น "จ้าง" = งานจ้าง
+     */
+    public function isGoods(): bool
+    {
+        $order = $this->order_id ? Order::findOne($this->order_id) : null;
+        if (!$order) {
+            return false;
+        }
+        $typeName = is_array($order->data_json) ? (string) ($order->data_json['order_type_name'] ?? '') : '';
+        return (string) $order->category_id !== 'M25' && mb_strpos($typeName, 'จ้าง') !== 0;
+    }
+
+    /** รับเข้าคลังแล้ว (ใบรับเข้า inventoryV2 ผูกงวดนี้ไว้) */
+    public function isStocked(): bool
+    {
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        return !empty($json['stock_order_id']);
+    }
+
+    public function stockOrderNo(): ?string
+    {
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        return $json['stock_order_no'] ?? null;
+    }
+
+    /** บันทึก/ล้างการผูกใบรับเข้าคลัง — เรียกจาก inventoryV2 ReceiveController */
+    public function markStocked(?int $stockOrderId, ?string $stockOrderNo): void
+    {
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        if ($stockOrderId) {
+            $json['stock_order_id'] = $stockOrderId;
+            $json['stock_order_no'] = $stockOrderNo;
+            $json['stocked_at'] = date('Y-m-d H:i:s');
+        } else {
+            unset($json['stock_order_id'], $json['stock_order_no'], $json['stocked_at']);
+        }
+        $this->data_json = $json;
+        $this->save(false, ['data_json', 'updated_at', 'updated_by']);
+    }
+
     /** ยอดสุทธิที่จะจ่ายผู้รับจ้าง = ยอดเรียกเก็บ − ค่าปรับ − ภาษีหัก ณ ที่จ่าย */
     public function netPayable(): float
     {

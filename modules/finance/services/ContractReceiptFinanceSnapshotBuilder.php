@@ -98,6 +98,11 @@ class ContractReceiptFinanceSnapshotBuilder
                 'plan_item_id' => $order->plan_item_id ?? null,
             ],
             'source_status_snapshot' => $receipt->status,
+            'evidence' => [
+                'goods' => $receipt->isGoods(),
+                'inventory_received' => $receipt->isGoods() ? $receipt->isStocked() : null,
+                'stock_order_no' => $receipt->stockOrderNo(),
+            ],
             'captured_at' => date(DATE_ATOM),
         ];
 
@@ -119,6 +124,10 @@ class ContractReceiptFinanceSnapshotBuilder
         }
         if ($amount <= 0) {
             $errors[] = 'ยอดเรียกเก็บของงวดต้องมากกว่า 0';
+        }
+        // พัสดุ (วัสดุ/ยา) ต้องรับเข้าคลังก่อนส่งการเงิน — กติกาเดียวกับใบสั่งซื้อปกติ (สถานะ 6)
+        if ($receipt->isGoods() && !$receipt->isStocked()) {
+            $errors[] = 'พัสดุงวดนี้ยังไม่ได้รับเข้าคลัง (รับเข้าที่คลัง → รับจากใบสั่งซื้อ → เลือกงวดนี้)';
         }
 
         return [

@@ -369,6 +369,20 @@ public function getToWarehouse()
     }
 
     /**
+     * งวดตรวจรับของสัญญา (purchase_contract_receipt.id) ที่ใบรับเข้านี้รับเข้าคลัง — data_json['po_receipt_id']
+     * ใช้กับพัสดุที่สั่งซื้อเต็มวงเงินแต่ส่งมอบ/ตรวจรับเป็นงวด
+     * @return int|null
+     */
+    public function getPoReceiptId()
+    {
+        $json = $this->data_json;
+        if (is_string($json)) {
+            $json = json_decode($json, true) ?: [];
+        }
+        return (!empty($json['po_receipt_id'])) ? (int) $json['po_receipt_id'] : null;
+    }
+
+    /**
      * รายการค่าใช้จ่ายและใบเสร็จแนบ (เก็บใน data_json['expenses'])
      * แต่ละรายการ: ['description' => string, 'amount' => number, 'receipt_path' => string|null]
      * @return array

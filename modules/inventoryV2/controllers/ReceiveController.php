@@ -12,6 +12,7 @@ use app\modules\inventoryV2\models\StockItem;
 use app\modules\inventoryV2\models\StockOrder;
 use app\modules\inventoryV2\models\StockOrderSearch;
 use app\modules\purchase\models\Order as PurchaseOrder;
+use app\modules\purchase\models\ContractReceipt;
 use app\modules\filemanager\models\Uploads;
 use app\modules\filemanager\components\FileManagerHelper;
 use yii\db\Expression;
@@ -482,7 +483,157 @@ class ReceiveController extends Controller
             }
         }
 
+        // งวดตรวจรับของสัญญา (พัสดุสั่งเต็มวงเงินแต่ส่งมอบเป็นงวด) ที่ยังไม่รับเข้าคลัง
+        foreach ($this->pendingContractReceipts($allowedCodes) as $row) {
+            if ($q !== '' && mb_stripos(implode(' ', [$row['po_number'], $row['vendor_title'], $row['asset_type_title'], $row['receipt_label']]), $q) === false) {
+                continue;
+            }
+            $results[] = $row;
+        }
+
         return ['results' => $results];
+    }
+
+    /**
+     * งวดตรวจรับของสัญญาที่เป็นพัสดุรับเข้าคลัง และยังไม่มีใบรับเข้าผูก
+     * id ขึ้นต้นด้วย "r" แยกจากใบสั่งซื้อปกติ (actionPendingPoItems รู้จักรูปแบบนี้)
+     */
+    protected function pendingContractReceipts(array $allowedCodes): array
+    {
+        if (\Yii::$app->db->getTableSchema('purchase_contract_receipt') === null) {
+            return [];
+        }
+        $receipts = ContractReceipt::find()->alias('r')
+            ->innerJoin(['pc' => 'purchase_contract'], 'pc.id = r.contract_id AND pc.deleted_at IS NULL')
+            ->where(['r.deleted_at' => null, 'r.status' => [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_SENT_FINANCE]])
+            ->andWhere(['pc.billing_mode' => ['fixed', 'unit_price']])
+            ->andWhere(new \yii\db\Expression("JSON_EXTRACT(r.data_json, '$.stock_order_id') IS NULL"))
+            ->orderBy(['r.receive_date' => SORT_DESC])
+            ->limit(100)
+            ->all();
+
+        $stockedIds = $this->getStockedReceiptIds();
+        $out = [];
+        foreach ($receipts as $r) {
+            if (isset($stockedIds[(int) $r->id]) || !$r->isGoods()) {
+                continue;
+            }
+            $order = PurchaseOrder::findOne($r->order_id);
+            if (!$order || (!empty($allowedCodes) && !in_array($order->category_id, $allowedCodes, true))) {
+                continue;
+            }
+            $label = 'งวดที่ ' . $r->seq . ($r->receive_date ? ' ตรวจรับ ' . AppHelper::convertToThai($r->receive_date) : '');
+            $out[] = [
+                'id' => 'r' . $r->id,
+                'is_receipt' => true,
+                'receipt_label' => $label,
+                'po_number' => ($order->po_number ?: '-') . ' · ' . $label,
+                'pq_number' => $order->pq_number,
+                'vendor_title' => $order->vendor ? $order->vendor->title : ($order->vendor_name ?: '-'),
+                'asset_type_title' => $order->assetType ? $order->assetType->title : '-',
+                'item_count' => count($r->items),
+                'total_amount' => (float) $r->amount,
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * งวดตรวจรับที่มีใบรับเข้าคลัง (ไม่ยกเลิก) ผูกอยู่แล้ว — กันรับเข้าซ้ำ
+     * @return array map purchase_contract_receipt.id => [เลขที่ใบรับเข้า]
+     */
+    protected function getStockedReceiptIds(): array
+    {
+        $rows = StockOrder::find()
+            ->select(['order_no', 'data_json'])
+            ->where(['order_type' => StockOrder::ORDER_TYPE_IN])
+            ->andWhere(['<>', 'status', StockOrder::STATUS_CANCELLED])
+            ->andWhere(['like', 'data_json', 'po_receipt_id'])
+            ->asArray()
+            ->all();
+        $map = [];
+        foreach ($rows as $row) {
+            $json = is_array($row['data_json']) ? $row['data_json'] : (json_decode((string) $row['data_json'], true) ?: []);
+            if (!empty($json['po_receipt_id'])) {
+                $map[(int) $json['po_receipt_id']][] = (string) $row['order_no'];
+            }
+        }
+        return $map;
+    }
+
+    /** รายการของงวดตรวจรับ (ปริมาณของงวดนั้น) ในรูปแบบเดียวกับ actionPendingPoItems */
+    protected function contractReceiptItems(int $receiptId): array
+    {
+        $r = ContractReceipt::findOne(['id' => $receiptId, 'deleted_at' => null]);
+        if (!$r || !in_array($r->status, [ContractReceipt::STATUS_RECEIVED, ContractReceipt::STATUS_SENT_FINANCE], true)) {
+            return ['success' => false, 'message' => 'ไม่พบงวดตรวจรับ หรือยังไม่ได้ยืนยันตรวจรับ'];
+        }
+        $stocked = $this->getStockedReceiptIds();
+        if ($r->isStocked() || isset($stocked[$receiptId])) {
+            return ['success' => false, 'message' => 'งวดนี้รับเข้าคลังแล้ว (' . implode(', ', $stocked[$receiptId] ?? [$r->stockOrderNo()]) . ')'];
+        }
+        $order = PurchaseOrder::findOne($r->order_id);
+        $warehouseId = (int) $this->request->get('warehouse_id');
+        $warehouse = $warehouseId ? Warehouse::findOne($warehouseId) : null;
+        $contactId = null;
+        if ($order && !empty($order->vendor_id)) {
+            $vendor = Vendor::findOne(['code' => $order->vendor_id, 'name' => 'vendor']);
+            $contactId = $vendor ? $vendor->id : null;
+        }
+
+        $items = [];
+        $skipped = [];
+        $categoryId = null;
+        foreach ($r->items as $line) {
+            $stockItem = $line->asset_item ? StockItem::findOne(['item_code' => $line->asset_item]) : null;
+            if (!$stockItem) {
+                $skipped[] = ['name' => $line->item_name, 'reason' => 'ไม่พบพัสดุนี้ในระบบคลัง'];
+                continue;
+            }
+            if ($warehouse && !$warehouse->allowsItemType($stockItem->category_id)) {
+                $skipped[] = ['name' => $stockItem->item_name, 'reason' => 'คลังที่เลือกไม่รับพัสดุประเภทนี้'];
+                continue;
+            }
+            if ($categoryId === null && (string) $stockItem->category_id !== '') {
+                $categoryId = (string) $stockItem->category_id;
+            }
+            $items[] = [
+                'item_code' => $stockItem->item_code,
+                'item_name' => $stockItem->item_name,
+                'unit_name' => $stockItem->unitName ?: '-',
+                'category_title' => $stockItem->categoryType ? $stockItem->categoryType->title : '-',
+                'image_url' => '',
+                'qty' => (float) $line->qty,
+                'unit_price' => (float) $line->unit_price,
+                'lot_number' => '',
+                'expiry_date' => '',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'order_id' => $r->order_id,
+            'receipt_id' => (int) $r->id,
+            'po_number' => ($order->po_number ?? '') . '/งวด' . $r->seq,
+            'delivery_note_no' => (string) $r->invoice_no,
+            'contact_id' => $contactId,
+            'category_id' => $categoryId,
+            'items' => $items,
+            'skipped_items' => $skipped,
+        ];
+    }
+
+    /** ผูก/ล้างสถานะ "รับเข้าคลังแล้ว" ของงวดตรวจรับ ตามใบรับเข้า */
+    protected function syncContractReceiptStock(StockOrder $model, bool $stocked): void
+    {
+        $receiptId = $model->getPoReceiptId();
+        if (!$receiptId) {
+            return;
+        }
+        $r = ContractReceipt::findOne($receiptId);
+        if ($r) {
+            $r->markStocked($stocked ? (int) $model->id : null, $stocked ? (string) $model->order_no : null);
+        }
     }
 
     /**
@@ -494,6 +645,11 @@ class ReceiveController extends Controller
     public function actionPendingPoItems($id)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // "r123" = งวดตรวจรับของสัญญา (ดู pendingContractReceipts)
+        if (is_string($id) && preg_match('/^r(\d+)$/', $id, $m)) {
+            return $this->contractReceiptItems((int) $m[1]);
+        }
 
         $order = PurchaseOrder::findOne(['id' => $id, 'name' => 'order']);
         if (!$order) {
@@ -610,6 +766,15 @@ class ReceiveController extends Controller
                 if ($poOrderId) {
                     $json['po_order_id'] = $poOrderId;
                 }
+                // รับเข้าจากงวดตรวจรับของสัญญา (ส่งมอบเป็นงวด) — กันรับงวดเดียวซ้ำ
+                $poReceiptId = (int) $this->request->post('po_receipt_id', 0);
+                if ($poReceiptId > 0) {
+                    $stockedMap = $this->getStockedReceiptIds();
+                    if (isset($stockedMap[$poReceiptId])) {
+                        throw new \Exception('งวดนี้รับเข้าคลังแล้ว (' . implode(', ', $stockedMap[$poReceiptId]) . ') ไม่สามารถรับเข้าซ้ำได้');
+                    }
+                    $json['po_receipt_id'] = $poReceiptId;
+                }
                 $model->data_json = $json;
                 if (!$isDraft) {
                     // เวลาที่ของเข้าคลังจริง = วันที่รับเข้าที่กรอก (order_date) ไม่ใช่เวลาที่กดบันทึก
@@ -723,7 +888,12 @@ class ReceiveController extends Controller
                         }
                     }
 
-                    $this->markPoOrderReceived($poOrderId);
+                    // งวดตรวจรับของสัญญา: ผูกงวด ไม่เปลี่ยนสถานะใบสั่งซื้อ (ใบรายงวดไม่ได้ปิดทีเดียวทั้งใบ)
+                    if ($model->getPoReceiptId()) {
+                        $this->syncContractReceiptStock($model, true);
+                    } else {
+                        $this->markPoOrderReceived($poOrderId);
+                    }
                     $this->saveExpenseItemsAndReceipts($model);
                     $transaction->commit();
                     return [
@@ -981,7 +1151,11 @@ class ReceiveController extends Controller
                     }
                 }
 
-                $this->markPoOrderReceived($poOrderId);
+                if ($model->getPoReceiptId()) {
+                    $this->syncContractReceiptStock($model, true);
+                } else {
+                    $this->markPoOrderReceived($poOrderId);
+                }
                 $this->saveExpenseItemsAndReceipts($model);
                 $transaction->commit();
                 return [
@@ -1090,6 +1264,7 @@ class ReceiveController extends Controller
             $model->status = 'CANCELLED';
             if ($model->save(false)) { // ใช้ false เพื่อข้าม validation บางตัวถ้าจำเป็น
                 $this->revertPoOrderPending($model->getPoOrderId());
+                $this->syncContractReceiptStock($model, false);
                 $transaction->commit();
                 \Yii::$app->session->setFlash('success', 'ยกเลิกเอกสารและคืนสต็อกเรียบร้อยแล้ว');
             } else {
@@ -1154,6 +1329,7 @@ class ReceiveController extends Controller
             }
 
             $poOrderId = $model->getPoOrderId();
+            $this->syncContractReceiptStock($model, false);
 
             if (!$model->delete()) {
                 throw new \Exception('ไม่สามารถลบใบรับเข้าได้');

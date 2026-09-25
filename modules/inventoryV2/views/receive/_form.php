@@ -106,6 +106,7 @@ foreach ($items as $it) {
                     <input type="text" class="form-control" id="deliveryNoteNoInput" name="delivery_note_no" value="<?= Html::encode($deliveryNoteNo) ?>" placeholder="เลขที่เอกสารส่งของจากผู้ขาย (ถ้ามี)">
                 </div>
                 <?= Html::hiddenInput('po_order_id', $poOrderId, ['id' => 'poOrderIdInput']) ?>
+                <?= Html::hiddenInput('po_receipt_id', '', ['id' => 'poReceiptIdInput']) ?>
                 <div class="col-md-12">
                     <?= $form->field($model, 'contact_id')->widget(TomSelectWidget::class, [
                         'items' => $listVendors,
@@ -1914,8 +1915,13 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 return;
             }
             var rows = results.map(function(po) {
+                // งวดตรวจรับของสัญญา (id "r…") — ไม่มีปุ่มนำออก (งวดยกเลิกได้ที่หน้าสัญญา)
+                var dismissBtn = po.is_receipt ? '' :
+                    '<button type="button" class="btn btn-sm btn-outline-danger po-pick-row__dismiss" ' +
+                        'data-id="' + po.id + '" data-po="' + escapeHtml(po.po_number || '-') + '" ' +
+                        'title="นำออกจากรายการรอรับเข้าคลัง (ไม่ลบใบสั่งซื้อ)"><i class="bi bi-trash"></i></button>';
                 return '<div class="po-pick-row" data-id="' + po.id + '">' +
-                    '<div class="po-pick-row__icon"><i class="bi bi-file-earmark-text"></i></div>' +
+                    '<div class="po-pick-row__icon"><i class="bi ' + (po.is_receipt ? 'bi-calendar2-range' : 'bi-file-earmark-text') + '"></i></div>' +
                     '<div class="po-pick-row__main">' +
                         '<div class="po-pick-row__title">' +
                             '<span class="po-pick-row__code">' + escapeHtml(po.po_number || '-') + '</span>' +
@@ -1927,9 +1933,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                             Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท' +
                         '</div>' +
                     '</div>' +
-                    '<button type="button" class="btn btn-sm btn-outline-danger po-pick-row__dismiss" ' +
-                        'data-id="' + po.id + '" data-po="' + escapeHtml(po.po_number || '-') + '" ' +
-                        'title="นำออกจากรายการรอรับเข้าคลัง (ไม่ลบใบสั่งซื้อ)"><i class="bi bi-trash"></i></button>' +
+                    dismissBtn +
                     '<span class="po-pick-row__cta">เลือก <i class="bi bi-chevron-right"></i></span>' +
                 '</div>';
             }).join('');
@@ -2018,6 +2022,7 @@ $(document).off('click', '#btnAddRow').on('click', '#btnAddRow', function(e) {
                 $('#stockorder-ref').val(detail.po_number || '');
                 $('#deliveryNoteNoInput').val(detail.delivery_note_no || '');
                 $('#poOrderIdInput').val(detail.order_id);
+                $('#poReceiptIdInput').val(detail.receipt_id || '');
                 // เลขที่ใบรับเข้า: ไม่ auto-fill — เว้นว่างได้ ถ้าเว้นว่างระบบจะออกเลข RCV- ให้อัตโนมัติ
 
                 var sourceTypeEl = document.getElementById('stockorder-source_type');
