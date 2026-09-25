@@ -108,22 +108,20 @@ class OrderController extends Controller
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pq_purchase_type')"), $searchModel->pq_purchase_type]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.order_type_name')"), $searchModel->order_type_name]);
         $dataProvider->query->andFilterWhere(['=', new Expression("JSON_EXTRACT(data_json, '$.pq_budget_type')"), $searchModel->q_budget_type]);
-        //ค้นหาช่วบงวันที่
-        if ($searchModel->date_between) {
-            try {
-                $dateStart = AppHelper::convertToGregorian($searchModel->date_start);
-                $dateEnd = AppHelper::convertToGregorian($searchModel->date_end);
-
-                $jsonDateField = "DATE(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.\"{$searchModel->date_between}\"')))";
-
-                $dataProvider->query->andFilterWhere([
-                    'between',
-                    new Expression($jsonDateField),
-                    $dateStart,
-                    $dateEnd,
-                ]);
-            } catch (\Throwable $th) {
-                // handle error
+        // ค้นหาช่วงวันที่: กรอกวันที่แต่ไม่เลือก "ประเภทการค้นหา" เดิมถูกข้ามเงียบ ๆ → ใช้วันที่สั่งซื้อเป็นค่าเริ่มต้น
+        // รับได้ทั้งกรอกครบสองช่องหรือช่องเดียว (andFilterWhere between จะทิ้งเงื่อนไขทั้งก้อนถ้าขาดช่องใดช่องหนึ่ง)
+        $dateStart = AppHelper::normalizeDateToDb($searchModel->date_start);
+        $dateEnd = AppHelper::normalizeDateToDb($searchModel->date_end);
+        if ($dateStart || $dateEnd) {
+            if (!in_array($searchModel->date_between, ['po_date', 'gr_date'], true)) {
+                $searchModel->date_between = 'po_date';
+            }
+            $jsonDateField = new Expression("DATE(JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.\"{$searchModel->date_between}\"')))");
+            if ($dateStart) {
+                $dataProvider->query->andWhere(['>=', $jsonDateField, $dateStart]);
+            }
+            if ($dateEnd) {
+                $dataProvider->query->andWhere(['<=', $jsonDateField, $dateEnd]);
             }
         }
 

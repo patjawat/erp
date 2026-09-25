@@ -64,7 +64,7 @@ if ($searchModel->date_between == 'pr_create_date') {
                 <span class="badge bg-secondary-subtle text-secondary-emphasis">
                     <?php echo number_format($dataProvider->getTotalCount(), 0) ?></span> รายการ
             </h6>
-            <h6 class="text-white">มูลค่า <?= number_format($sumTotal ?? 0, 2) ?> บาท</h6>
+            <h6 class="text-white">มูลค่ารวมทุกหน้า <?= number_format($sumTotal ?? 0, 2) ?> บาท</h6>
         </div>
     </div>
 
@@ -200,6 +200,22 @@ if ($searchModel->date_between == 'pr_create_date') {
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
+                <?php if ($dataProvider->getCount() > 0): ?>
+                <tfoot class="table-group-divider">
+                    <tr class="fw-semibold">
+                        <td colspan="10" class="text-end">
+                            รวมหน้านี้ (<?= number_format($dataProvider->getCount()) ?> รายการ)
+                            <?php if ($dataProvider->getTotalCount() > $dataProvider->getCount()): ?>
+                                <div class="small text-muted fw-normal">
+                                    ยอดบนหัวตาราง <?= number_format($sumTotal ?? 0, 2) ?> บาท คือรวมทุกหน้า <?= number_format($dataProvider->getTotalCount()) ?> รายการ
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-end"><?= number_format($totalPrice, 2) ?></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+                <?php endif; ?>
             </table>
         </div>
     </div>

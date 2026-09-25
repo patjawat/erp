@@ -95,8 +95,8 @@ class PurchaseDashboardService
         } else {
             // ขอซื้อ: วันที่ทำใบขอซื้อ (fallback order_date แล้วค่อย created_at)
             $dateExpr = "COALESCE(
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''),
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''),
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''), 'null'),
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''), 'null'),
                 DATE(o.created_at)
             )";
             $stageWhere = '';
@@ -201,8 +201,8 @@ class PurchaseDashboardService
         if ($month !== null && in_array($month, self::FISCAL_MONTHS, true)) {
             // รายเดือน: ขอซื้อยึดเดือนของ pr_create_date, ตรวจรับ/เข้าคลังยึดเดือนของ gr_date
             $prMonth = "MONTH(COALESCE(
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''),
-                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''),
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''), 'null'),
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''), 'null'),
                 DATE(o.created_at)
             )) = $month";
             $grMonth = "MONTH(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.gr_date'))) = $month";
