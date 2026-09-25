@@ -46,6 +46,16 @@ $expenseActive = in_array($active, $expenseKeys, true);
         </ul>
     </div>
 
+    <a href="<?= Url::to(['/plan/investment']) ?>"
+        class="btn <?= $active !== 'investment' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-building-gear me-1"></i>แผนลงทุน
+    </a>
+
+    <a href="<?= Url::to(['/plan/annual/commitment']) ?>"
+        class="btn <?= $active !== 'commitment' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-paperclip me-1"></i>ภาระผูกพัน &amp; รอจัดสรร
+    </a>
+
     <div class="dropdown">
         <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle"
             type="button" id="planSettingMenu" data-bs-toggle="dropdown" aria-expanded="false">

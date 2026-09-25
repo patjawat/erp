@@ -42,27 +42,121 @@ class AnnualController extends Controller
         ]);
     }
 
-    /** หน้ากรอกข้อมูลสภาพคล่อง: เงินคงเหลือยกมา/แยกประเภท (แนบ) + แนบ1 กองทุนรอจัดสรร + แนบ2 ภาระผูกพัน */
+    /** หน้ากรอกข้อมูลสภาพคล่อง: เงินคงเหลือยกมา/แยกประเภท — แนบ 1/2 ย้ายไปหน้า commitment (บรรทัดตามแบบฟอร์มเขต) */
     public function actionLiquidity($year = null)
     {
         $year = (int) ($year ?: PlanHelper::currentPlanYear());
-        $ledger = PlanAnnualLedger::forYear($year);
-        $reserve = PlanAnnualAttachment::find()
-            ->where(['fiscal_year' => $year, 'kind' => PlanAnnualAttachment::KIND_RESERVE])
-            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
-        $commitment = PlanAnnualAttachment::find()
-            ->where(['fiscal_year' => $year, 'kind' => PlanAnnualAttachment::KIND_COMMITMENT])
-            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])->all();
 
         return $this->render('liquidity', [
             'year' => $year,
-            'ledger' => $ledger,
-            'reserve' => $reserve,
-            'commitment' => $commitment,
+            'ledger' => PlanAnnualLedger::forYear($year),
+            'reserveSum' => PlanAnnualAttachment::sumByYear(PlanAnnualAttachment::KIND_RESERVE, [$year])[$year],
+            'commitmentSum' => PlanAnnualAttachment::sumByYear(PlanAnnualAttachment::KIND_COMMITMENT, [$year])[$year],
         ]);
     }
 
-    /** บันทึกข้อมูลสภาพคล่อง (ledger + แนบ1/แนบ2) */
+    /**
+     * ภาระผูกพัน & รอจัดสรร (เมนู 1.5 ของเขต): แนบ 1 กองทุนรอจัดสรร (4) + แนบ 2 ภาระผูกพัน (5)
+     * บรรทัดตายตัวตามแบบฟอร์มเขต กรอก 3 ปีคู่กัน ($year..$year+2)
+     */
+    public function actionCommitment($year = null)
+    {
+        $year = (int) ($year ?: PlanHelper::currentPlanYear());
+        $years = [$year, $year + 1, $year + 2];
+
+        $amounts = [];   // [kind][code][fy] => amount
+        $legacy = [];    // [kind] => PlanAnnualAttachment[] (รายการเดิมนอกแบบฟอร์ม)
+        foreach (PlanAnnualAttachment::find()->where(['fiscal_year' => $years])
+            ->orderBy(['fiscal_year' => SORT_ASC, 'sort_order' => SORT_ASC, 'id' => SORT_ASC])->all() as $r) {
+            if ($r->line_code === null || $r->line_code === '') {
+                $legacy[$r->kind][] = $r;
+            } else {
+                $amounts[$r->kind][$r->line_code][(int) $r->fiscal_year] = ($amounts[$r->kind][$r->line_code][(int) $r->fiscal_year] ?? 0) + (float) $r->amount;
+            }
+        }
+
+        return $this->render('commitment', [
+            'year' => $year,
+            'years' => $years,
+            'amounts' => $amounts,
+            'legacy' => $legacy,
+        ]);
+    }
+
+    /** บันทึกแนบ 1/2 — เขียนทับเฉพาะแถวที่มีรหัสบรรทัด; รายการเดิมย้ายเข้าบรรทัด/ลบ ตามที่ผู้ใช้เลือก */
+    public function actionCommitmentSave()
+    {
+        $post = Yii::$app->request->post();
+        $year = (int) ($post['year'] ?? PlanHelper::currentPlanYear());
+        $years = [$year, $year + 1, $year + 2];
+        $num = fn ($v) => (float) str_replace([',', ' '], '', (string) $v);
+        $kinds = [PlanAnnualAttachment::KIND_RESERVE, PlanAnnualAttachment::KIND_COMMITMENT];
+
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            // ยอดที่กรอก [kind][code][fy]
+            $in = [];
+            foreach ($kinds as $kind) {
+                foreach (PlanAnnualAttachment::lines($kind) as $code => $_) {
+                    foreach ($years as $fy) {
+                        $in[$kind][$code][$fy] = $num($post['line'][$kind][$code][$fy] ?? 0);
+                    }
+                }
+            }
+
+            // รายการเดิม: move = รหัสบรรทัด (บวกยอดเข้าบรรทัดนั้น), 'delete' = ลบทิ้ง, ว่าง = คงไว้
+            $moved = 0;
+            foreach ((array) ($post['legacy'] ?? []) as $id => $action) {
+                $action = (string) $action;
+                $row = PlanAnnualAttachment::findOne((int) $id);
+                if (!$row || $row->line_code || !in_array((int) $row->fiscal_year, $years, true) || $action === '') {
+                    continue;
+                }
+                if ($action !== 'delete') {
+                    if (!isset($in[$row->kind][$action])) {
+                        continue;
+                    }
+                    $in[$row->kind][$action][(int) $row->fiscal_year] += (float) $row->amount;
+                }
+                $row->delete();
+                $moved++;
+            }
+
+            foreach ($kinds as $kind) {
+                PlanAnnualAttachment::deleteAll(['and', ['fiscal_year' => $years, 'kind' => $kind], ['not', ['line_code' => null]]]);
+                $i = 0;
+                foreach (PlanAnnualAttachment::lines($kind) as $code => [$title]) {
+                    $i++;
+                    foreach ($years as $fy) {
+                        $amt = $in[$kind][$code][$fy];
+                        if ($amt == 0) {
+                            continue;
+                        }
+                        $m = new PlanAnnualAttachment([
+                            'fiscal_year' => $fy,
+                            'kind' => $kind,
+                            'line_code' => $code,
+                            'name' => $title,
+                            'amount' => $amt,
+                            'sort_order' => $i,
+                        ]);
+                        if (!$m->save()) {
+                            throw new \RuntimeException(implode(' ', $m->getErrorSummary(true)));
+                        }
+                    }
+                }
+            }
+            $tx->commit();
+            Yii::$app->session->setFlash('success', "บันทึกภาระผูกพัน & รอจัดสรร ปี {$year}–" .($year + 2) . ' แล้ว' . ($moved ? " (จัดการรายการเดิม $moved รายการ)" : ''));
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', 'บันทึกไม่สำเร็จ: ' . $e->getMessage());
+        }
+        return $this->redirect(['commitment', 'year' => $year]);
+    }
+
+    /** บันทึกข้อมูลสภาพคล่อง (ledger) */
     public function actionLiquiditySave()
     {
         $post = Yii::$app->request->post();
@@ -74,25 +168,6 @@ class AnnualController extends Controller
         }
         $ledger->note = (string) ($post['ledger']['note'] ?? '') ?: null;
         $ledger->save();
-
-        foreach ([PlanAnnualAttachment::KIND_RESERVE, PlanAnnualAttachment::KIND_COMMITMENT] as $kind) {
-            PlanAnnualAttachment::deleteAll(['fiscal_year' => $year, 'kind' => $kind]);
-            $i = 0;
-            foreach ((array) ($post[$kind] ?? []) as $r) {
-                $name = trim((string) ($r['name'] ?? ''));
-                if ($name === '') {
-                    continue;
-                }
-                (new PlanAnnualAttachment([
-                    'fiscal_year' => $year,
-                    'kind' => $kind,
-                    'name' => $name,
-                    'amount' => (float) str_replace([',', ' '], '', (string) ($r['amount'] ?? 0)),
-                    'note' => trim((string) ($r['note'] ?? '')) ?: null,
-                    'sort_order' => $i++,
-                ]))->save();
-            }
-        }
 
         Yii::$app->session->setFlash('success', "บันทึกข้อมูลสภาพคล่องปี $year แล้ว");
         return $this->redirect(['liquidity', 'year' => $year]);

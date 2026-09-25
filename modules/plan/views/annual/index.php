@@ -49,7 +49,8 @@ $fmt = fn($v) => number_format((float) $v, 2);
     <div class="d-flex gap-2 flex-wrap">
         <a href="<?= Url::to(['excel', 'year' => $year]) ?>" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
         <a href="<?= Url::to(['income', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>แก้ไขแผนรายรับ</a>
-        <a href="<?= Url::to(['liquidity', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-wallet2 me-1"></i>ยกมา / แนบ 1-2</a>
+        <a href="<?= Url::to(['liquidity', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-wallet2 me-1"></i>เงินคงเหลือยกมา</a>
+        <a href="<?= Url::to(['commitment', 'year' => $year]) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-paperclip me-1"></i>แนบ 1-2</a>
     </div>
     <form method="get" class="d-flex gap-2 align-items-end">
         <div><label class="form-label mb-0 small">ปีงบเริ่มแผน (พ.ศ.)</label>
