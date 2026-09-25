@@ -63,6 +63,21 @@ class CheckinController extends Controller
         ]);
     }
 
+    /** รูปยืนยันตัวตน — เปิดได้เฉพาะเจ้าของ/หัวหน้าที่ยืนยัน/admin/hr/attendance (ไฟล์อยู่นอก webroot) */
+    public function actionPhoto($id)
+    {
+        $model = CheckinRecord::findOne((int)$id);
+        if (!$model || !\app\modules\attendance\services\AttendanceAccess::canView($model)) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบรูป');
+        }
+        $abs = \app\modules\attendance\services\AttendancePhoto::absolutePath($model->photo_path);
+        if (!$abs) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบรูป (รูปถูกลบตามอายุการเก็บ ' . \app\modules\attendance\services\AttendancePhoto::RETENTION_DAYS . ' วัน)');
+        }
+        Yii::$app->response->headers->set('Cache-Control', 'private, max-age=3600');
+        return Yii::$app->response->sendFile($abs, 'checkin-' . $model->id . '.' . pathinfo($abs, PATHINFO_EXTENSION), ['inline' => true, 'mimeType' => mime_content_type($abs) ?: 'image/jpeg']);
+    }
+
     public function actionView($id)
     {
         $model = CheckinRecord::find()->where(['id' => $id])->with(['employee', 'location', 'approver'])->one();

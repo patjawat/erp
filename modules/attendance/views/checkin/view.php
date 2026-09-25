@@ -37,7 +37,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr><th class="text-muted">จุดลงเวลา</th><td><?= Html::encode($model->location->name) ?></td></tr>
                 <?php endif; ?>
                 <?php if ($model->photo_path): ?>
-                <tr><th class="text-muted">รูปถ่าย</th><td><a href="<?= Url::to('@web/' . $model->photo_path) ?>" target="_blank" rel="noopener">ดูรูป</a></td></tr>
+                <tr><th class="text-muted">รูปยืนยันตัวตน</th><td>
+                    <a href="<?= Url::to(['/attendance/checkin/photo', 'id' => $model->id]) ?>" target="_blank" rel="noopener">
+                        <img src="<?= Url::to(['/attendance/checkin/photo', 'id' => $model->id]) ?>" alt="รูปยืนยันตัวตนตอนลงเวลา" class="img-fluid rounded border" style="max-width: 240px" loading="lazy">
+                    </a>
+                    <div class="small text-body-secondary mt-1">เก็บ <?= \app\modules\attendance\services\AttendancePhoto::RETENTION_DAYS ?> วัน แล้วลบอัตโนมัติ</div>
+                </td></tr>
                 <?php endif; ?>
                 <?php if ($model->approved_at): ?>
                 <tr><th class="text-muted">ผู้อนุมัติ</th><td><?= Html::encode($model->approver ? $model->approver->fname . ' ' . $model->approver->lname : '-') ?></td></tr>

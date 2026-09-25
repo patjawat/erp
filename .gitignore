@@ -45,6 +45,7 @@ doc_receive/*
 modules/filemanager/fileupload/*
 modules/km/uploads/*
 modules/complaint/uploads/*
+modules/attendance/uploads/*
 .cursor
 .serena
 ngrok.exe

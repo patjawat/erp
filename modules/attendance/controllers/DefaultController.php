@@ -178,19 +178,18 @@ class DefaultController extends Controller
             return ['url' => null, 'error' => 'ไม่พบข้อมูลพนักงาน'];
         }
         $file = UploadedFile::getInstanceByName('file');
-        if (!$file || $file->error !== UPLOAD_ERR_OK || $file->size > 5 * 1024 * 1024 || !@getimagesize($file->tempName) || !in_array(strtolower($file->extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-            return ['url' => null, 'error' => 'กรุณาเลือกไฟล์รูปภาพ'];
+        if (!$file) {
+            return ['url' => null, 'error' => 'กรุณาถ่ายรูปก่อนลงเวลา'];
         }
-        $dir = Yii::getAlias('@webroot/uploads/checkin');
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        try {
+            // ย่อ 640px + ประทับเวลา + เก็บนอก webroot — 'url' คือ path สัมพัทธ์ที่ส่งกลับมากับ save
+            return ['url' => \app\modules\attendance\services\AttendancePhoto::store($file, (int)$me->id)];
+        } catch (\DomainException $e) {
+            return ['url' => null, 'error' => $e->getMessage()];
+        } catch (\Throwable $e) {
+            Yii::error($e, __METHOD__);
+            return ['url' => null, 'error' => 'บันทึกรูปไม่สำเร็จ กรุณาลองใหม่'];
         }
-        $name = date('Ymd_His') . '_' . $me->id . '_' . substr(md5(uniqid('', true)), 0, 8) . '.' . $file->extension;
-        $path = $dir . '/' . $name;
-        if ($file->saveAs($path)) {
-            return ['url' => 'uploads/checkin/' . $name];
-        }
-        return ['url' => null, 'error' => 'บันทึกไฟล์ไม่สำเร็จ'];
     }
 
     /**

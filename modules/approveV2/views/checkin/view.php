@@ -30,6 +30,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?php if (!$model->is_in_location && $model->out_of_location_reason): ?>
                 <tr><th class="text-muted">เหตุผลนอกบริเวณ</th><td><?= nl2br(Html::encode($model->out_of_location_reason)) ?></td></tr>
                 <?php endif; ?>
+                <?php if ($model->photo_path): ?>
+                <tr><th class="text-muted">รูปยืนยันตัวตน</th><td>
+                    <a href="<?= \yii\helpers\Url::to(['/attendance/checkin/photo', 'id' => $model->id]) ?>" target="_blank" rel="noopener">
+                        <img src="<?= \yii\helpers\Url::to(['/attendance/checkin/photo', 'id' => $model->id]) ?>" alt="รูปยืนยันตัวตนตอนลงเวลา" class="img-fluid rounded border" style="max-width: 240px" loading="lazy">
+                    </a>
+                </td></tr>
+                <?php endif; ?>
                 <?php if ($model->lat !== null && $model->lng !== null): ?>
                 <tr><th class="text-muted">พิกัด</th><td><?= Html::encode($model->lat . ', ' . $model->lng) ?></td></tr>
                 <?php endif; ?>

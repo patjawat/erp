@@ -33,9 +33,9 @@ class AttendanceService
         $reason = trim((string)($input['out_of_location_reason'] ?? ''));
         if (mb_strlen($reason) > 2000) throw new \DomainException('เหตุผลยาวได้ไม่เกิน 2,000 ตัวอักษร');
         $photo = (string)($input['photo_path'] ?? '');
-        if ($method === 'photo' && (!preg_match('~^uploads/checkin/\d{8}_\d{6}_' . (int)$employee->id . '_[a-f0-9]{8}\.(jpg|jpeg|png|gif|webp)$~D', $photo)
-            || !is_file(Yii::getAlias('@webroot/' . $photo)))) {
-            throw new \DomainException('กรุณาอัปโหลดรูปถ่ายของคุณก่อนลงเวลา');
+        $photoOk = $photo !== '' && AttendancePhoto::isValidPath($photo, (int)$employee->id);
+        if ($method === 'photo' && !$photoOk) {
+            throw new \DomainException('กรุณาถ่ายรูปยืนยันตัวตนก่อนลงเวลา');
         }
         $db = Yii::$app->db;
         $tx = $db->beginTransaction();
@@ -71,6 +71,8 @@ class AttendanceService
             }
             $validation = CheckinLocation::validateClockIn($input['lat'] ?? null, $input['lng'] ?? null, $token, $reason);
             if (!$validation['ok']) throw new \DomainException($validation['message']);
+            // นอกพื้นที่ต้องมีรูปยืนยันตัวตน (ข้อความมีคำว่า "ถ่ายรูป" ให้หน้าจอเปิดช่องถ่ายรูปเอง)
+            if (!$validation['inside'] && !$photoOk) throw new \DomainException('ลงเวลานอกพื้นที่ กรุณาถ่ายรูปยืนยันตัวตน');
             $candidates = RosterAttendance::candidates((int)$employee->id, $at);
             $shiftId = $automatic ? '' : (string)($input['roster_item_id'] ?? '');
             $shift = null;
@@ -116,7 +118,7 @@ class AttendanceService
             $record->is_in_location = $validation['inside'] ? 1 : 0;
             $record->out_of_location_reason = $validation['inside'] ? null : $reason;
             $record->qr_token = $token ?: null;
-            $record->photo_path = $method === 'photo' ? $photo : null;
+            $record->photo_path = $photoOk ? $photo : null;
             $attendance = RosterAttendance::evaluate($at, $type, $shift);
             // ปกติ = ยืนยันอัตโนมัติ เวลาแสดงทันที; ผิดปกติ = รอหัวหน้ายืนยัน (นอกพื้นที่/สาย/ออกก่อน/ไม่ตรงเวร)
             $reasons = [];

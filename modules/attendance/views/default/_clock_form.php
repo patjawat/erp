@@ -7,7 +7,7 @@ $qr=Yii::$app->request->get('qr_token',''); $qr=is_string($qr)?$qr:'';
 $me=\app\components\UserHelper::GetEmployee();
 $this->registerCssFile('@web/css/attendance.css?v='.filemtime(Yii::getAlias('@webroot/css/attendance.css')),['depends'=>[\app\assets\AppAsset::class]],'attendance-ui');
 $this->registerJsFile('@web/js/attendance-clock.js?v='.filemtime(Yii::getAlias('@webroot/js/attendance-clock.js')),['depends'=>[\yii\web\JqueryAsset::class]]);
-$config=['saveUrl'=>Url::to(['/attendance/default/save']),'positionUrl'=>Url::to(['/attendance/default/position']),'shiftsUrl'=>Url::to(['/attendance/default/shifts']),'employeeId'=>$me->id??0,'autoStart'=>$autoStart??false];
+$config=['saveUrl'=>Url::to(['/attendance/default/save']),'positionUrl'=>Url::to(['/attendance/default/position']),'shiftsUrl'=>Url::to(['/attendance/default/shifts']),'uploadUrl'=>Url::to(['/attendance/default/upload-photo']),'employeeId'=>$me->id??0,'autoStart'=>$autoStart??false];
 $this->registerJs('window.AttendanceClock.mount('.Json::htmlEncode($id).','.Json::htmlEncode($config).');');
 $uiId = Json::htmlEncode($id);
 // Presentation only: mirror already-rendered times, without requests or changing submission behavior.
@@ -53,6 +53,15 @@ JS);
 <div data-role="reason-panel" class="d-none">
 <label for="<?= $id ?>-reason" class="form-label">เหตุผลลงเวลานอกพื้นที่</label>
 <?= Html::textarea('out_of_location_reason','',['id'=>$id.'-reason','class'=>'form-control','rows'=>3,'maxlength'=>2000]) ?>
+<div class="attendance-photo mt-3">
+    <span class="form-label d-block">รูปยืนยันตัวตน <span class="text-danger">*</span></span>
+    <label for="<?= $id ?>-photo" class="attendance-photo-pick btn btn-outline-primary w-100">
+        <i class="bi bi-camera" aria-hidden="true"></i> <span data-role="photo-label">ถ่ายรูปตัวเอง</span>
+    </label>
+    <input type="file" id="<?= $id ?>-photo" data-role="photo-input" class="visually-hidden" accept="image/*" capture="user">
+    <img data-role="photo-preview" class="attendance-photo-preview d-none" alt="ตัวอย่างรูปที่ถ่าย">
+    <div class="form-text">ระบบย่อรูปและประทับเวลาให้อัตโนมัติ เก็บ 90 วัน</div>
+</div>
 </div>
 <div data-role="result" class="alert d-none mb-0" role="alert" tabindex="-1"></div>
 <noscript><p class="text-danger">กรุณาเปิด JavaScript เพื่อใช้ GPS และบันทึกเวลา</p></noscript>

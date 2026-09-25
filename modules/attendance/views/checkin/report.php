@@ -161,7 +161,7 @@ $pagination = $dataProvider->getPagination();
                             <?php if (empty($m->photo_path)): ?>
                                 <span class="text-muted" title="ไม่มีรูป"><i class="bi bi-image"></i></span>
                             <?php else: ?>
-                                <?= Html::a('<i class="bi bi-image-fill text-primary"></i>', Url::to('@web/' . $m->photo_path), ['target' => '_blank', 'rel' => 'noopener', 'title' => 'ดูรูป']) ?>
+                                <?= Html::a('<i class="bi bi-image-fill text-primary"></i>', Url::to(['/attendance/checkin/photo', 'id' => $m->id]), ['target' => '_blank', 'rel' => 'noopener', 'title' => 'ดูรูป']) ?>
                             <?php endif; ?>
                         </td>
                         <td><?= $statusBadge($m->status, $m->getStatusLabel()) ?></td>

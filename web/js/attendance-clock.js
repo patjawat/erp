@@ -6,6 +6,7 @@
             if (!form || form.dataset.mounted) return;
             form.dataset.mounted = '1';
             var $form = $(form), busy = false, needsReason = false, requestId, offset = 0, startedAt = 0;
+            var photoBlob = null, photoPath = null, photoUrl = null; // รูปยืนยันตัวตน (เฉพาะนอกพื้นที่)
             var storageKey = 'attendance-request-' + config.employeeId;
             function role(name) { return $form.find('[data-role="' + name + '"]'); }
             function showDay(summary) {
@@ -25,7 +26,7 @@
                 return requestId;
             }
             function message(text, ok) { role('result').removeClass('d-none alert-success alert-danger').addClass(ok ? 'alert-success' : 'alert-danger').text(text).trigger('focus'); }
-            function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารออนุมัติ' : 'ลงเวลา'); }
+            function state() { role('submit').prop('disabled', busy).text(busy ? 'กำลังดำเนินการ…' : needsReason ? 'ส่งลงเวลารอยืนยัน' : 'ลงเวลา'); }
             // The mobile module's global submit listener pops a full-screen "กำลังบันทึก…" overlay
             // that only hides on a real page load; this AJAX form never navigates, so dismiss it ourselves.
             function hideMobileLoader() { try { if (window.hideMobileLoader) window.hideMobileLoader(); } catch (e) { /* overlay not present outside mobile layout */ } }
@@ -42,6 +43,57 @@
                         reject(new Error(e.code === 1 ? 'ไม่อนุญาต GPS กรุณาเปิดสิทธิ์ตำแหน่งของเว็บไซต์แล้วลองใหม่' : e.code === 3 ? 'อ่าน GPS หมดเวลา กรุณาเปิดตำแหน่งและลองใหม่' : 'หาตำแหน่งไม่ได้ กรุณาเปิด GPS แล้วลองใหม่'));
                     }, {enableHighAccuracy:true,timeout:20000,maximumAge:0});
                 });
+            }
+            // ย่อรูปบนเครื่องก่อนส่ง (ด้านยาว 640px, JPEG) — ส่งแค่ ~50KB แม้เน็ตมือถือช้า; เซิร์ฟเวอร์ย่อซ้ำ + ประทับเวลาอีกชั้น
+            function compressPhoto(file) {
+                var MAX = 640;
+                function draw(src, w, h) {
+                    var scale = Math.min(1, MAX / Math.max(w, h));
+                    var canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(w * scale)); canvas.height = Math.max(1, Math.round(h * scale));
+                    canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
+                    return new Promise(function (resolve) { canvas.toBlob(function (b) { resolve(b || file); }, 'image/jpeg', 0.8); });
+                }
+                if (window.createImageBitmap) {
+                    return createImageBitmap(file, {imageOrientation: 'from-image'}).then(function (bmp) { return draw(bmp, bmp.width, bmp.height); }).catch(function () { return file; });
+                }
+                return new Promise(function (resolve) {
+                    var img = new Image(), url = URL.createObjectURL(file);
+                    img.onload = function () { URL.revokeObjectURL(url); draw(img, img.naturalWidth, img.naturalHeight).then(resolve); };
+                    img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+                    img.src = url;
+                });
+            }
+            function resetPhoto() {
+                photoBlob = null; photoPath = null;
+                if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
+                role('photo-preview').addClass('d-none').removeAttr('src');
+                role('photo-label').text('ถ่ายรูปตัวเอง');
+                role('photo-input').val('');
+            }
+            role('photo-input').on('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                role('photo-label').text('กำลังเตรียมรูป…');
+                compressPhoto(file).then(function (blob) {
+                    photoBlob = blob; photoPath = null; // รูปใหม่ต้องอัปโหลดใหม่
+                    if (photoUrl) URL.revokeObjectURL(photoUrl);
+                    photoUrl = URL.createObjectURL(blob);
+                    role('photo-preview').attr('src', photoUrl).removeClass('d-none');
+                    role('photo-label').text('ถ่ายใหม่');
+                });
+            });
+            function uploadPhoto() {
+                if (photoPath) return Promise.resolve(photoPath);
+                var fd = new FormData();
+                fd.append('file', photoBlob, 'checkin.jpg');
+                if (window.yii) fd.append(window.yii.getCsrfParam(), window.yii.getCsrfToken());
+                return $.ajax({url: config.uploadUrl, type: 'POST', data: fd, processData: false, contentType: false, dataType: 'json', timeout: 60000})
+                    .then(function (r) {
+                        if (!r || !r.url) throw new Error((r && r.error) || 'อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่');
+                        photoPath = r.url;
+                        return photoPath;
+                    });
             }
             function clock() { role('clock').text(new Intl.DateTimeFormat('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(Date.now()+offset))); }
             clock();
@@ -79,6 +131,7 @@
                 if (busy) return;
                 var reason = $form.find('[name="out_of_location_reason"]').val().trim();
                 if (needsReason && !reason) { message('กรุณาระบุเหตุผลลงเวลานอกพื้นที่'); $form.find('textarea').trigger('focus'); return; }
+                if (needsReason && !photoBlob) { message('กรุณาถ่ายรูปยืนยันตัวตนก่อนส่งลงเวลา'); return; }
                 busy = true; startedAt = Date.now(); state();
                 try {
                     var coords = await locate();
@@ -89,13 +142,17 @@
                     role('gps').text((position.inside ? 'อยู่ในพื้นที่: ' : 'อยู่นอกพื้นที่: ')+(position.location || 'จุดลงเวลา'));
                     needsReason = !position.inside;
                     role('reason-panel').toggleClass('d-none', !needsReason);
-                    if (needsReason && !reason) { message('อยู่นอกพื้นที่ กรุณาระบุเหตุผลแล้วส่งลงเวลารออนุมัติ'); $form.find('textarea').trigger('focus'); return; }
+                    if (needsReason && (!reason || !photoBlob)) { message('อยู่นอกพื้นที่ กรุณาระบุเหตุผลและถ่ายรูปยืนยันตัวตน แล้วส่งลงเวลารอยืนยัน'); if (!reason) $form.find('textarea').trigger('focus'); return; }
                     data.method = data.qr_token ? 'qrcode' : 'manual'; data.out_of_location_reason = reason; data.request_id = key();
+                    if (needsReason) {
+                        role('gps').text('กำลังส่งรูปยืนยันตัวตน');
+                        data.photo_path = await uploadPhoto();
+                    }
                     role('gps').text('กำลังบันทึกเวลา กรุณารอผล');
                     var result = await ajax(config.saveUrl, data, 30000);
                     if (!result.success) {
                         message(result.message || 'บันทึกไม่สำเร็จ กรุณาลองใหม่');
-                        if ((result.message || '').indexOf('เหตุผล') !== -1) { needsReason=true; role('reason-panel').removeClass('d-none'); }
+                        if (/เหตุผล|ถ่ายรูป/.test(result.message || '')) { needsReason=true; role('reason-panel').removeClass('d-none'); }
                         return;
                     }
                     message(result.message+(result.location ? ' · '+result.location : ''), true);
@@ -103,7 +160,7 @@
                     role('pending-latest').toggleClass('d-none', result.status !== 'pending');
                     showDay(result.day_summary);
                     role('gps').text('');
-                    needsReason=false; role('reason-panel').addClass('d-none'); $form.find('textarea').val('');
+                    needsReason=false; role('reason-panel').addClass('d-none'); $form.find('textarea').val(''); resetPhoto();
                     try { sessionStorage.removeItem(storageKey); } catch (e) { /* Storage may be disabled. */ }
                     requestId=null;
                 } catch (error) {

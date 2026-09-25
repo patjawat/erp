@@ -93,3 +93,8 @@
         display: none;
     }
 }
+
+/* รูปยืนยันตัวตน (ลงเวลานอกพื้นที่) */
+.attendance-photo-pick { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.attendance-photo-preview { display: block; max-width: 160px; margin-top: .5rem; border-radius: 8px; border: 1px solid var(--bs-border-color); }
+.attendance-photo-preview.d-none { display: none !important; }
