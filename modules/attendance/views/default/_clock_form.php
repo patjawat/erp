@@ -55,10 +55,23 @@ JS);
 <?= Html::textarea('out_of_location_reason','',['id'=>$id.'-reason','class'=>'form-control','rows'=>3,'maxlength'=>2000]) ?>
 <div class="attendance-photo mt-3">
     <span class="form-label d-block">รูปยืนยันตัวตน <span class="text-danger">*</span></span>
-    <label for="<?= $id ?>-photo" class="attendance-photo-pick btn btn-outline-primary w-100">
-        <i class="bi bi-camera" aria-hidden="true"></i> <span data-role="photo-label">ถ่ายรูปตัวเอง</span>
-    </label>
+    <div class="d-flex gap-2">
+        <button type="button" data-role="camera-open" class="attendance-photo-pick btn btn-outline-primary flex-grow-1">
+            <i class="bi bi-camera" aria-hidden="true"></i> <span data-role="photo-label">เปิดกล้องถ่ายรูป</span>
+        </button>
+        <label for="<?= $id ?>-photo" class="attendance-photo-pick btn btn-outline-secondary" title="แนบรูปจากเครื่อง">
+            <i class="bi bi-image" aria-hidden="true"></i> แนบรูป
+        </label>
+    </div>
     <input type="file" id="<?= $id ?>-photo" data-role="photo-input" class="visually-hidden" accept="image/*" capture="user">
+    <!-- กล้องในหน้า (getUserMedia) — Telegram บางเครื่องไม่เปิดกล้องจาก input capture -->
+    <div data-role="camera-panel" class="attendance-camera d-none mt-2">
+        <video data-role="camera-video" playsinline autoplay muted></video>
+        <div class="d-flex gap-2 mt-2">
+            <button type="button" data-role="camera-shot" class="btn btn-primary flex-grow-1"><i class="bi bi-camera-fill" aria-hidden="true"></i> ถ่าย</button>
+            <button type="button" data-role="camera-close" class="btn btn-outline-secondary">ยกเลิก</button>
+        </div>
+    </div>
     <img data-role="photo-preview" class="attendance-photo-preview d-none" alt="ตัวอย่างรูปที่ถ่าย">
     <div class="form-text">ระบบย่อรูปและประทับเวลาให้อัตโนมัติ เก็บ 90 วัน</div>
 </div>

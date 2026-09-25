@@ -7,7 +7,7 @@ use yii\web\UploadedFile;
 
 /**
  * รูปยืนยันตัวตนตอนลงเวลานอกพื้นที่
- * - เก็บนอก webroot (modules/attendance/uploads/YYYY/MM/<file>.jpg) ดูผ่าน controller ที่ตรวจสิทธิ์
+ * - เก็บนอก webroot (modules/filemanager/fileupload/attendance-photo/YYYY/MM/<file>.jpg) ดูผ่าน controller ที่ตรวจสิทธิ์
  * - ย่อด้านยาวไม่เกิน 640px, JPEG, ลบ EXIF (พิกัด/รุ่นเครื่อง) โดยการ re-encode
  * - ประทับเวลาเซิร์ฟเวอร์ (watermark) มุมล่าง
  * - เก็บ 90 วัน แล้วลบไฟล์ (ข้อมูลลงเวลายังอยู่ แค่รูปหมดอายุ)
@@ -22,7 +22,8 @@ class AttendancePhoto
 
     public static function basePath(): string
     {
-        return Yii::getAlias('@app/modules/attendance/uploads');
+        // ใต้ fileupload ของ filemanager = ที่เก็บไฟล์อัปโหลดหลักของ ERP (www-data เขียนได้ใน image + รพ. mount เป็น volume ถาวร)
+        return Yii::getAlias('@app/modules/filemanager/fileupload/attendance-photo');
     }
 
     /** path ที่ถูกต้องตามรูปแบบและเป็นของพนักงานคนนี้ (กันส่ง path คนอื่นมาอ้าง) */
@@ -67,7 +68,10 @@ class AttendancePhoto
 
         $sub = substr($now, 0, 4) . '/' . substr($now, 5, 2);
         $dir = self::basePath() . '/' . $sub;
-        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) throw new \DomainException('สร้างโฟลเดอร์เก็บรูปไม่สำเร็จ');
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            Yii::error('attendance photo: mkdir failed ' . $dir . ' (ตรวจสิทธิ์เขียนของ www-data)', __METHOD__);
+            throw new \DomainException('สร้างโฟลเดอร์เก็บรูปไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ');
+        }
         $name = str_replace(['-', ':', ' '], ['', '', '_'], $now) . '_' . $empId . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.jpg';
         $ok = imagejpeg($img, $dir . '/' . $name, self::QUALITY);
         imagedestroy($img);

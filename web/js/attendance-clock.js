@@ -45,15 +45,15 @@
                 });
             }
             // ย่อรูปบนเครื่องก่อนส่ง (ด้านยาว 640px, JPEG) — ส่งแค่ ~50KB แม้เน็ตมือถือช้า; เซิร์ฟเวอร์ย่อซ้ำ + ประทับเวลาอีกชั้น
+            function drawToBlob(src, w, h, fallback) {
+                var scale = Math.min(1, 640 / Math.max(w, h));
+                var canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(w * scale)); canvas.height = Math.max(1, Math.round(h * scale));
+                canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
+                return new Promise(function (resolve) { canvas.toBlob(function (b) { resolve(b || fallback); }, 'image/jpeg', 0.8); });
+            }
             function compressPhoto(file) {
-                var MAX = 640;
-                function draw(src, w, h) {
-                    var scale = Math.min(1, MAX / Math.max(w, h));
-                    var canvas = document.createElement('canvas');
-                    canvas.width = Math.max(1, Math.round(w * scale)); canvas.height = Math.max(1, Math.round(h * scale));
-                    canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
-                    return new Promise(function (resolve) { canvas.toBlob(function (b) { resolve(b || file); }, 'image/jpeg', 0.8); });
-                }
+                function draw(src, w, h) { return drawToBlob(src, w, h, file); }
                 if (window.createImageBitmap) {
                     return createImageBitmap(file, {imageOrientation: 'from-image'}).then(function (bmp) { return draw(bmp, bmp.width, bmp.height); }).catch(function () { return file; });
                 }
@@ -68,21 +68,59 @@
                 photoBlob = null; photoPath = null;
                 if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
                 role('photo-preview').addClass('d-none').removeAttr('src');
-                role('photo-label').text('ถ่ายรูปตัวเอง');
+                role('photo-label').text('เปิดกล้องถ่ายรูป');
                 role('photo-input').val('');
+                stopCamera();
+            }
+            function setPhoto(blob) {
+                photoBlob = blob; photoPath = null; // รูปใหม่ต้องอัปโหลดใหม่
+                if (photoUrl) URL.revokeObjectURL(photoUrl);
+                photoUrl = URL.createObjectURL(blob);
+                role('photo-preview').attr('src', photoUrl).removeClass('d-none');
+                role('photo-label').text('ถ่ายใหม่');
             }
             role('photo-input').on('change', function () {
                 var file = this.files && this.files[0];
                 if (!file) return;
+                stopCamera();
                 role('photo-label').text('กำลังเตรียมรูป…');
-                compressPhoto(file).then(function (blob) {
-                    photoBlob = blob; photoPath = null; // รูปใหม่ต้องอัปโหลดใหม่
-                    if (photoUrl) URL.revokeObjectURL(photoUrl);
-                    photoUrl = URL.createObjectURL(blob);
-                    role('photo-preview').attr('src', photoUrl).removeClass('d-none');
-                    role('photo-label').text('ถ่ายใหม่');
-                });
+                compressPhoto(file).then(setPhoto);
             });
+            // กล้องในหน้า: Telegram (โดยเฉพาะ Android) มักไม่เปิดกล้องจาก <input capture> — ใช้ getUserMedia เป็นหลัก
+            var stream = null;
+            function stopCamera() {
+                if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+                role('camera-panel').addClass('d-none');
+                var v = role('camera-video')[0]; if (v) v.srcObject = null;
+            }
+            role('camera-open').on('click', function () {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    message('เครื่องนี้เปิดกล้องในหน้าไม่ได้ กรุณากด "แนบรูป" แล้วเลือกถ่ายรูปหรือรูปจากเครื่อง');
+                    return;
+                }
+                stopCamera();
+                navigator.mediaDevices.getUserMedia({video: {facingMode: 'user', width: {ideal: 1280}, height: {ideal: 960}}, audio: false})
+                    .then(function (s) {
+                        stream = s;
+                        var v = role('camera-video')[0];
+                        v.srcObject = s;
+                        role('camera-panel').removeClass('d-none');
+                        var p = v.play(); if (p && p.catch) p.catch(function () { /* autoplay+muted ควรเล่นได้ */ });
+                    })
+                    .catch(function (e) {
+                        message(e && e.name === 'NotAllowedError'
+                            ? 'ไม่ได้รับอนุญาตให้ใช้กล้อง กรุณาอนุญาตกล้องให้ Telegram/เบราว์เซอร์ หรือกด "แนบรูป"'
+                            : 'เปิดกล้องไม่ได้ กรุณากด "แนบรูป" แล้วเลือกถ่ายรูปหรือรูปจากเครื่อง');
+                    });
+            });
+            role('camera-shot').on('click', function () {
+                var v = role('camera-video')[0];
+                if (!v || !v.videoWidth) { message('กล้องยังไม่พร้อม กรุณารอสักครู่แล้วกดถ่ายอีกครั้ง'); return; }
+                drawToBlob(v, v.videoWidth, v.videoHeight, null).then(function (blob) { stopCamera(); setPhoto(blob); });
+            });
+            role('camera-close').on('click', stopCamera);
+            $form.closest('.modal').one('hidden.bs.modal.attendance-camera', stopCamera);
+            window.addEventListener('pagehide', stopCamera);
             function uploadPhoto() {
                 if (photoPath) return Promise.resolve(photoPath);
                 var fd = new FormData();
