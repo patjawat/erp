@@ -56,6 +56,11 @@ $expenseActive = in_array($active, $expenseKeys, true);
         <i class="bi bi-paperclip me-1"></i>ภาระผูกพัน &amp; รอจัดสรร
     </a>
 
+    <a href="<?= Url::to(['/plan/icu']) ?>"
+        class="btn <?= $active !== 'icu' ? 'btn-outline-primary' : 'btn-primary' ?>">
+        <i class="bi bi-heart-pulse me-1"></i>ICU 3 มิติ
+    </a>
+
     <div class="dropdown">
         <button class="btn <?= $active !== 'setting' ? 'btn-outline-primary' : 'btn-primary' ?> dropdown-toggle"
             type="button" id="planSettingMenu" data-bs-toggle="dropdown" aria-expanded="false">
