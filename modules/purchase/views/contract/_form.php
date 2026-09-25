@@ -10,6 +10,8 @@ use app\modules\purchase\models\Contract;
 use app\modules\purchase\models\WhtRate;
 use app\modules\purchase\models\ContractMilestone;
 use app\modules\purchase\components\ContractCalculator;
+use app\components\AppHelper;
+use app\widgets\datepicker\DatepickerThai;
 
 /** @var yii\web\View $this */
 /** @var app\modules\purchase\models\Contract $model */
@@ -47,6 +49,16 @@ foreach (WhtRate::find()->where(['active' => 1])->all() as $rate) {
 }
 
 $rows = $milestones ?: [];
+
+// ช่องวันที่ทุกช่องกรอกเป็น พ.ศ. (วว/ดด/พ.ศ.) ตามมาตรฐาน ERP — ฐานข้อมูลเก็บ ค.ศ.
+// controller แปลงกลับก่อน validate; ปิด client validation เพราะกฎ date ของ model คาดรูปแบบ ค.ศ.
+$thai = fn($value) => $value ? AppHelper::convertToThai($value) : '';
+$dateField = function ($form, $attr, $hint = null) use ($model, $thai) {
+    $field = $form->field($model, $attr, ['enableClientValidation' => false])->widget(DatepickerThai::class, [
+        'options' => ['value' => $thai($model->$attr), 'placeholder' => 'วว/ดด/พ.ศ.', 'autocomplete' => 'off'],
+    ]);
+    return $hint ? $field->hint($hint) : $field;
+};
 $form = ActiveForm::begin([
     'id' => 'contract-form',
     'options' => ['autocomplete' => 'off'],
@@ -110,6 +122,10 @@ $form = ActiveForm::begin([
             <div class="col-md-3">
                 <?= $form->field($model, 'status')->dropDownList(Contract::statusList()) ?>
             </div>
+            <div class="col-md-6">
+                <?= $form->field($model, 'billing_mode')->dropDownList(Contract::billingModeList())
+                    ->hint('สัญญาที่ออกใบสั่งซื้อเต็มวงเงินแต่ตรวจรับ/เบิกจ่ายเป็นรายเดือน เลือก "รายงวด"') ?>
+            </div>
 
             <div class="col-md-5">
                 <?= $form->field($model, 'vendor_id')->dropDownList(Contract::listVendor(), [
@@ -155,16 +171,15 @@ $form = ActiveForm::begin([
     <!-- ─── กำหนดเวลาและค่าปรับ ─────────────────────────────────────── -->
     <div class="tab-pane fade" id="tab-time">
         <div class="row g-3">
-            <div class="col-md-3"><?= $form->field($model, 'sign_date')->input('date') ?></div>
-            <div class="col-md-3"><?= $form->field($model, 'start_date')->input('date') ?></div>
-            <div class="col-md-3"><?= $form->field($model, 'end_date')->input('date') ?></div>
-            <div class="col-md-3"><?= $form->field($model, 'warranty_end')->input('date') ?></div>
+            <div class="col-md-3"><?= $dateField($form, 'sign_date') ?></div>
+            <div class="col-md-3"><?= $dateField($form, 'start_date') ?></div>
+            <div class="col-md-3"><?= $dateField($form, 'end_date') ?></div>
+            <div class="col-md-3"><?= $dateField($form, 'warranty_end') ?></div>
 
             <div class="col-md-3">
-                <?= $form->field($model, 'delivery_date')->input('date')
-                    ->hint('วันที่ผู้ขายส่งมอบครบถ้วน — ค่าปรับหยุดนับที่วันนี้') ?>
+                <?= $dateField($form, 'delivery_date', 'วันที่ผู้ขายส่งมอบครบถ้วน — ค่าปรับหยุดนับที่วันนี้') ?>
             </div>
-            <div class="col-md-3"><?= $form->field($model, 'receive_date')->input('date') ?></div>
+            <div class="col-md-3"><?= $dateField($form, 'receive_date') ?></div>
 
             <div class="col-md-3">
                 <?= $form->field($model, 'fine_rate')->input('number', ['step' => '0.0001', 'min' => 0])
@@ -225,8 +240,8 @@ $form = ActiveForm::begin([
                                     'step' => '0.01',
                                     'min' => 0,
                                 ]) ?></td>
-                            <td><?= Html::input('date', "milestones[$i][due_date]", $row->due_date, ['class' => 'form-control ms-due']) ?></td>
-                            <td><?= Html::input('date', "milestones[$i][delivered_date]", $row->delivered_date, ['class' => 'form-control ms-delivered']) ?></td>
+                            <td><?= Html::textInput("milestones[$i][due_date]", $thai($row->due_date), ['class' => 'form-control ms-date ms-due', 'placeholder' => 'วว/ดด/พ.ศ.', 'autocomplete' => 'off']) ?></td>
+                            <td><?= Html::textInput("milestones[$i][delivered_date]", $thai($row->delivered_date), ['class' => 'form-control ms-date ms-delivered', 'placeholder' => 'วว/ดด/พ.ศ.', 'autocomplete' => 'off']) ?></td>
                             <td><?= Html::dropDownList("milestones[$i][status]", $row->status, ContractMilestone::statusList(), ['class' => 'form-select']) ?></td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-danger ms-row-remove" title="ลบงวด">
@@ -264,8 +279,8 @@ $form = ActiveForm::begin([
         <td><input type="text" name="milestones[__I__][detail]" class="form-control"></td>
         <td><input type="number" name="milestones[__I__][percent]" class="form-control text-end ms-percent" step="0.01" min="0"></td>
         <td><input type="number" name="milestones[__I__][amount]" class="form-control text-end ms-amount" step="0.01" min="0"></td>
-        <td><input type="date" name="milestones[__I__][due_date]" class="form-control ms-due"></td>
-        <td><input type="date" name="milestones[__I__][delivered_date]" class="form-control ms-delivered"></td>
+        <td><input type="text" name="milestones[__I__][due_date]" class="form-control ms-date ms-due" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
+        <td><input type="text" name="milestones[__I__][delivered_date]" class="form-control ms-date ms-delivered" placeholder="วว/ดด/พ.ศ." autocomplete="off"></td>
         <td>
             <select name="milestones[__I__][status]" class="form-select">
                 <?php foreach (ContractMilestone::statusList() as $value => $label): ?>
@@ -305,6 +320,7 @@ $ids = [
     'title' => Html::getInputId($model, 'title'),
     'egp' => Html::getInputId($model, 'egp_no'),
     'sign' => Html::getInputId($model, 'sign_date'),
+    'start' => Html::getInputId($model, 'start_date'),
     'warranty' => Html::getInputId($model, 'warranty_end'),
     'year' => Html::getInputId($model, 'thai_year'),
 ];
@@ -358,10 +374,21 @@ $js = <<<JS
     }
 
     // ── ตัวอย่างค่าปรับ ─────────────────────────────────────────────────
+    // ช่องวันที่เป็น พ.ศ. วว/ดด/ปปปป -> Date (ค.ศ.)
+    function parseThai(str) {
+        var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\$/.exec((str || '').trim());
+        return m ? new Date(parseInt(m[3], 10) - 543, parseInt(m[2], 10) - 1, parseInt(m[1], 10)) : null;
+    }
+    // ค.ศ. Y-m-d (จากใบสั่งซื้อ) -> พ.ศ. วว/ดด/ปปปป
+    function toThai(ymd) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd || '');
+        return m ? m[3] + '/' + m[2] + '/' + (parseInt(m[1], 10) + 543) : ymd;
+    }
+
     function daysBetween(fromStr, toStr) {
         if (!fromStr || !toStr) return 0;
-        var from = new Date(fromStr), to = new Date(toStr);
-        if (isNaN(from) || isNaN(to) || to <= from) return 0;
+        var from = parseThai(fromStr), to = parseThai(toStr);
+        if (!from || !to || to <= from) return 0;
         return Math.floor((to - from) / 86400000);
     }
 
@@ -442,6 +469,7 @@ $js = <<<JS
         var index = \$('#milestone-body tr').length;
         var html = document.getElementById('milestone-template').innerHTML.replace(/__I__/g, index);
         \$('#milestone-body').append(html);
+        if (typeof thaiDatepicker === 'function') thaiDatepicker(\$('#milestone-body tr:last .ms-date'));
         renumber();
         renderSum();
     });
@@ -475,11 +503,12 @@ $js = <<<JS
         if (node) node.addEventListener('change', function () { renderWht(); renderSum(); renderFine(); });
         if (node) node.addEventListener('input', function () { renderWht(); renderSum(); renderFine(); });
     });
+    // ช่องวันที่ยิง change ผ่าน jQuery (datepicker) — ต้องผูกด้วย jQuery ไม่ใช่ addEventListener
     ['fineRate', 'fineBase', 'endDate', 'delivery', 'receive'].forEach(function (key) {
         var node = el(key);
-        if (node) node.addEventListener('change', renderFine);
-        if (node) node.addEventListener('input', renderFine);
+        if (node) \$(node).on('change input', renderFine);
     });
+    if (typeof thaiDatepicker === 'function') thaiDatepicker(\$('#milestone-body .ms-date'));
 
     // เลือกผู้ขายจากทะเบียน = เติมชื่อที่จะพิมพ์ลงเอกสารให้ แต่ยังพิมพ์ทับได้
     var vendorSelect = el('vendorId');
@@ -494,15 +523,16 @@ $js = <<<JS
     // ── รับค่าจากหน้าต่างเลือกใบสั่งซื้อ ─────────────────────────────────
     window.contractApplyOrder = function (data) {
         var map = {
-            orderId: 'order_id', title: 'title', vendorId: 'vendor_id', vendorName: 'vendor_name',
-            egp: 'egp_no', budget: 'budget', sign: 'sign_date', endDate: 'end_date',
+            orderId: 'order_id', title: 'title', type: 'contract_type', vendorId: 'vendor_id', vendorName: 'vendor_name',
+            egp: 'egp_no', budget: 'budget', sign: 'sign_date', start: 'start_date', endDate: 'end_date',
             delivery: 'delivery_date', receive: 'receive_date', warranty: 'warranty_end', year: 'thai_year'
         };
+        var dateKeys = ['sign', 'start', 'endDate', 'delivery', 'receive', 'warranty'];
         Object.keys(map).forEach(function (key) {
             var node = el(key);
             var value = data[map[key]];
             if (!node || value === null || value === undefined || value === '') return;
-            node.value = value;
+            node.value = dateKeys.indexOf(key) >= 0 ? toThai(value) : value;
             \$(node).trigger('change');
         });
 

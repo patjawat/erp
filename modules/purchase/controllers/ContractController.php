@@ -140,6 +140,14 @@ class ContractController extends Controller
      */
     private function saveWithMilestones(Contract $model): bool
     {
+        // ฟอร์มส่งวันที่เป็น พ.ศ. วว/ดด/ปปปป — แปลงเป็น ค.ศ. ก่อน validate
+        // ค่าที่แปลงไม่ได้ปล่อยไว้ตามเดิมให้กฎ date ของ model แจ้งผิด แทนที่จะหายเงียบ
+        foreach (['sign_date', 'start_date', 'end_date', 'delivery_date', 'receive_date', 'warranty_end'] as $attr) {
+            $raw = trim((string) $model->$attr);
+            $model->$attr = $raw === '' ? null : (AppHelper::normalizeDateToDb($raw) ?? $raw);
+        }
+        $toDb = fn($v) => AppHelper::normalizeDateToDb(trim((string) $v));
+
         $tx = Yii::$app->db->beginTransaction();
         try {
             if (!$model->save()) {
@@ -164,9 +172,9 @@ class ContractController extends Controller
                     'detail' => $detail ?: null,
                     'percent' => ($row['percent'] ?? '') !== '' ? (float) $row['percent'] : null,
                     'amount' => $amount,
-                    'due_date' => $due ?: null,
-                    'delivered_date' => ($row['delivered_date'] ?? '') ?: null,
-                    'receive_date' => ($row['receive_date'] ?? '') ?: null,
+                    'due_date' => $toDb($due),
+                    'delivered_date' => $toDb($row['delivered_date'] ?? ''),
+                    'receive_date' => $toDb($row['receive_date'] ?? ''),
                     'status' => $row['status'] ?? ContractMilestone::STATUS_PENDING,
                 ]);
                 if (!$item->save()) {
@@ -213,6 +221,8 @@ class ContractController extends Controller
 
         $model->order_id = $snapshot['order_id'];
         $model->title = $snapshot['title'] ?: $model->title;
+        $model->contract_type = $snapshot['contract_type'];
+        $model->start_date = $snapshot['start_date'];
         $model->vendor_id = $snapshot['vendor_id'];
         $model->vendor_name = $snapshot['vendor_name'];
         $model->egp_no = $snapshot['egp_no'];

@@ -117,6 +117,7 @@ class Contract extends \yii\db\ActiveRecord
             ],
             [['end_date'], 'validateEndDate'],
             [['contract_type'], 'in', 'range' => array_keys(self::typeList())],
+            [['billing_mode'], 'in', 'range' => array_keys(self::billingModeList())],
             [['party_type'], 'in', 'range' => array_keys(WhtRate::partyTypeList())],
             [['status'], 'in', 'range' => array_keys(self::statusList())],
             [['fine_base'], 'in', 'range' => array_keys(self::fineBaseList())],
@@ -157,6 +158,7 @@ class Contract extends \yii\db\ActiveRecord
             'order_id' => 'ใบสั่งซื้อที่ผูก',
             'tor_id' => 'TOR ที่ใช้',
             'contract_type' => 'ประเภทสัญญา',
+            'billing_mode' => 'รูปแบบการตรวจรับ',
             'vendor_id' => 'คู่สัญญา',
             'vendor_name' => 'ชื่อคู่สัญญา',
             'party_type' => 'ประเภทผู้รับเงิน',
@@ -253,6 +255,28 @@ class Contract extends \yii\db\ActiveRecord
             self::TYPE_LEASE => 'สัญญาเช่า',
             self::TYPE_AGREEMENT => 'ข้อตกลง',
         ];
+    }
+
+    /** ตรวจรับครั้งเดียว — ใช้ขั้นตอนตรวจรับของใบสั่งซื้อเดิม */
+    const BILLING_LUMP = 'lump';
+    /** งวดยอดตายตัวตามสัญญา (รปภ., ทำความสะอาด) */
+    const BILLING_FIXED = 'fixed';
+    /** ราคาต่อหน่วย × ปริมาณจริง ไม่เกินวงเงิน (ฟอกไต, CT) */
+    const BILLING_UNIT_PRICE = 'unit_price';
+
+    public static function billingModeList()
+    {
+        return [
+            self::BILLING_LUMP => 'ตรวจรับครั้งเดียว',
+            self::BILLING_FIXED => 'ตรวจรับรายงวด — ยอดงวดตายตัว',
+            self::BILLING_UNIT_PRICE => 'ตรวจรับรายงวด — ตามปริมาณจริง',
+        ];
+    }
+
+    /** ตรวจรับ/ส่งการเงินเป็นรายงวด (ห้ามส่งการเงินทั้งใบสั่งซื้อ) */
+    public function isInstallment(): bool
+    {
+        return in_array($this->billing_mode, [self::BILLING_FIXED, self::BILLING_UNIT_PRICE], true);
     }
 
     public function typeName()
@@ -450,17 +474,47 @@ class Contract extends \yii\db\ActiveRecord
                 ->scalar();
         }
 
+        // ใบสั่งซื้อกรอก "-" ไว้แทนค่าว่างในหลายช่อง (เลข e-GP, ชื่อโครงการ) — ห้ามไหลลงสัญญา
+        $text = function ($value) {
+            $value = trim((string) $value);
+            return ($value === '' || $value === '-') ? null : $value;
+        };
+
+        // ชื่อสัญญา: ชื่อโครงการ -> ชื่อรายการแรกในใบ (เช่น "จ้างเหมาบริการฟอกเลือดฯ")
+        // ห้ามถอยไปใช้ order_type_name เพราะเป็นชื่อประเภทพัสดุ ("จ้างเหมาอื่นๆ") ไม่ใช่ชื่องาน
+        $title = $text($json['pq_project_name'] ?? null);
+        if ($title === null) {
+            $firstItem = Order::find()
+                ->where(['name' => 'order_item', 'category_id' => $order->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->one();
+            $itemJson = $firstItem && is_array($firstItem->data_json) ? $firstItem->data_json : [];
+            $title = $text($itemJson['asset_item_name'] ?? null);
+        }
+
+        // ประเภทสัญญาจากประเภทพัสดุ/วิธีได้มา: "จ้าง..." = จ้าง, "เช่า..." = เช่า, นอกนั้น = ซื้อขาย
+        $kind = ($json['order_type_name'] ?? '') . ' ' . ($json['pq_method_get_name'] ?? '');
+        $contractType = self::TYPE_BUY;
+        if (mb_strpos($kind, 'เช่า') !== false) {
+            $contractType = self::TYPE_LEASE;
+        } elseif (mb_strpos($kind, 'จ้าง') !== false) {
+            $contractType = self::TYPE_HIRE;
+        }
+
         return [
             'order_id' => $order->id,
             'po_number' => $order->po_number,
             'pr_number' => $order->pr_number,
             'gr_number' => $order->gr_number,
-            'title' => $json['pq_project_name'] ?? ($json['order_type_name'] ?? ''),
+            'title' => $title ?? '',
+            'contract_type' => $contractType,
             'vendor_id' => $order->vendor_id,
             'vendor_name' => $vendorName ?: null,
-            'egp_no' => $json['pq_egp_number'] ?? null,
+            'egp_no' => $text($json['pq_egp_number'] ?? null),
             'budget' => $total,
             'sign_date' => $date($json['signing_date'] ?? null),
+            // วันเริ่มนับระยะเวลา = วันลงนาม (แก้ได้ในฟอร์ม)
+            'start_date' => $date($json['signing_date'] ?? null),
             'end_date' => $date($json['due_date'] ?? null),
             'delivery_date' => $date($json['delivery_date'] ?? null),
             'receive_date' => $date($json['gr_date'] ?? null),
