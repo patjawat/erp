@@ -38,8 +38,11 @@ class OrderSearch extends Order
     public function rules()
     {
         return [
-            [['id', 'asset_item', 'vendor_id', 'qty', 'status', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
+            [['id', 'asset_item', 'qty', 'status', 'created_by', 'updated_by', 'deleted_by'], 'integer'],
             [[
+                // รหัสผู้ขายเป็นข้อความ (V282 / เลขผู้เสียภาษีขึ้นต้น 0) — ห้ามตรวจเป็น integer
+                // เพราะตรวจไม่ผ่านแล้ว search() คืนผลโดยไม่ใส่ตัวกรองใดเลย
+                'vendor_id',
                 'ref',
                 'name',
                 'category_id',

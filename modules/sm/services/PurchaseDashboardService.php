@@ -89,18 +89,7 @@ class PurchaseDashboardService
      */
     public function monthlyByCategory(string $stage): array
     {
-        if ($stage === 'gr') {
-            $dateExpr = "JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.gr_date'))";
-            $stageWhere = 'AND o.status >= ' . self::STATUS_RECEIVED;
-        } else {
-            // ขอซื้อ: วันที่ทำใบขอซื้อ (fallback order_date แล้วค่อย created_at)
-            $dateExpr = "COALESCE(
-                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''), 'null'),
-                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''), 'null'),
-                DATE(o.created_at)
-            )";
-            $stageWhere = '';
-        }
+        [$dateExpr, $stageWhere] = $this->stageDate($stage);
 
         $cat = $this->categoryCase();
         $sql = "SELECT c AS cat, m AS mth, SUM(v) AS total FROM (
@@ -126,6 +115,85 @@ class PurchaseDashboardService
             if ($k !== null && $pos !== null && isset($out[$k])) {
                 $out[$k][$pos] = (float) $r['total'];
             }
+        }
+        return $out;
+    }
+
+    /**
+     * นิพจน์วันที่ + เงื่อนไขสถานะ ตามมุมมอง
+     * @return array [dateExpr, stageWhere]
+     */
+    private function stageDate(string $stage): array
+    {
+        if ($stage === 'gr') {
+            return [
+                "JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.gr_date'))",
+                'AND o.status >= ' . self::STATUS_RECEIVED,
+            ];
+        }
+        // ขอซื้อ: วันที่ทำใบขอซื้อ (fallback order_date แล้วค่อย created_at)
+        return [
+            "COALESCE(
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.pr_create_date')), ''), 'null'),
+                NULLIF(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_date')), ''), 'null'),
+                DATE(o.created_at)
+            )",
+            '',
+        ];
+    }
+
+    /**
+     * ยอดรายเดือนแยกประเภทพัสดุย่อย (order_type_name) ภายในแต่ละหมวด สำหรับกราฟแท่งแบบเจาะหมวด
+     * ประเภทย่อยที่มูลค่าทั้งปีน้อยกว่าอันดับ $top รวมเป็น "อื่นๆ" กันกราฟสีเยอะจนอ่านไม่ออก
+     * @return array [ catKey => [ ['name' => ประเภทย่อย, 'data' => [12 ค่าเรียงตามปีงบ]], ... ], ... ]
+     */
+    public function monthlyBySubType(string $stage, int $top = 8): array
+    {
+        [$dateExpr, $stageWhere] = $this->stageDate($stage);
+        $cat = $this->categoryCase();
+        $subExpr = "COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(o.data_json, '$.order_type_name')), ''), '(ไม่ระบุ)')";
+
+        $sql = "SELECT c AS cat, s AS subtype, m AS mth, SUM(v) AS total FROM (
+                    SELECT $cat AS c, $subExpr AS s, MONTH($dateExpr) AS m, (i.price * i.qty) AS v
+                    FROM orders o
+                    JOIN orders i ON i.category_id = o.id AND i.name = 'order_item'
+                    WHERE o.name = 'order' AND o.thai_year = :yr AND o.status <> 8 $stageWhere
+                ) t
+                WHERE m IS NOT NULL
+                GROUP BY c, s, m";
+        $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
+
+        $idx = array_flip(self::FISCAL_MONTHS);
+        $bySub = []; // catKey => subtype => [12]
+        foreach ($rows as $r) {
+            $pos = $idx[(int) $r['mth']] ?? null;
+            if ($pos === null || !isset(self::CATEGORIES[$r['cat']])) {
+                continue;
+            }
+            $bySub[$r['cat']][$r['subtype']] ??= array_fill(0, 12, 0.0);
+            $bySub[$r['cat']][$r['subtype']][$pos] += (float) $r['total'];
+        }
+
+        $out = [];
+        foreach (array_keys(self::CATEGORIES) as $k) {
+            $subs = $bySub[$k] ?? [];
+            uasort($subs, fn($a, $b) => array_sum($b) <=> array_sum($a));
+            $series = [];
+            $other = array_fill(0, 12, 0.0);
+            $n = 0;
+            foreach ($subs as $name => $data) {
+                if ($n++ < $top) {
+                    $series[] = ['name' => $name, 'data' => array_map(fn($v) => round($v, 2), $data)];
+                } else {
+                    foreach ($data as $p => $v) {
+                        $other[$p] += $v;
+                    }
+                }
+            }
+            if (array_sum($other) > 0) {
+                $series[] = ['name' => 'อื่นๆ', 'data' => array_map(fn($v) => round($v, 2), $other)];
+            }
+            $out[$k] = $series;
         }
         return $out;
     }
@@ -376,33 +444,62 @@ class PurchaseDashboardService
         ])->queryScalar();
     }
 
-    /** แผนแยกหมวด (best-effort จากฟิลด์ใน plan_order) */
-    public function planByCategory(): array
+    /**
+     * รายการแผน (plan_item) ที่นับเป็นหมวด ยา/เวชภัณฑ์ — อยู่ใต้ 2.3 ค่าวัสดุ แต่ฝั่งจัดซื้อแยกเป็นหมวดของตัวเอง
+     * P93 วัสดุเภสัชกรรม นับเป็นวัสดุ (ผู้ใช้ยืนยัน 2026-09-25)
+     */
+    public const PLAN_DRUG_ITEMS = ['P92'];
+
+    /**
+     * แผนรายเดือนแยกหมวด — ยอดจาก month_1..12 (เดือนปฏิทิน: month_10 = ต.ค.)
+     * ไม่ใช้ budget_total เพราะแบบฟอร์มแผนกรอกเป็นรายเดือน และ budget_total ไม่ได้ถูกคำนวณเก็บไว้
+     *
+     * จำแนกหมวดผ่าน plan_item -> plan_category (ห้ามใช้ plan_type_id/plan_category_id บน plan_order ที่ปนเปื้อน)
+     * นับเฉพาะแผนที่เป็นงานจัดซื้อจัดจ้าง — เงินเดือน/ค่าสาธารณูปโภค/ค่าใช้จ่ายอื่นไม่เกี่ยวกับพัสดุ จึงตัดออก
+     * @return array [ catKey => [12 ค่าเรียงตามปีงบ], ... ]
+     */
+    public function planMonthlyByCategory(): array
     {
         $out = [];
         foreach (array_keys(self::CATEGORIES) as $k) {
-            $out[$k] = 0.0;
+            $out[$k] = array_fill(0, 12, 0.0);
         }
         if (!$this->tableExists('plan_order')) {
             return $out;
         }
-        // จำแนกหมวดของบรรทัดแผน: มี wage_type -> งานจ้าง, มี asset_group/asset_type -> ครุภัณฑ์, อื่น ๆ -> วัสดุ
+        $drug = "'" . implode("','", self::PLAN_DRUG_ITEMS) . "'";
         $catExpr = "CASE
-            WHEN wage_type_id IS NOT NULL OR plan_category_id LIKE 'PER%' THEN 'wage'
-            WHEN asset_group_id IS NOT NULL OR asset_type_id IS NOT NULL THEN 'asset'
-            ELSE 'material'
+            WHEN p.plan_item_id IN ($drug) THEN 'drug'
+            WHEN pc.code = 'OPS_03' THEN 'material'
+            WHEN pc.code IN ('INV_01', 'INV_03') THEN 'asset'
+            WHEN pc.code = 'OPS_05' AND (pi.title LIKE 'ค่าจ้าง%' OR pi.title LIKE 'ค่าซ่อม%') THEN 'wage'
         END";
-        $sql = "SELECT $catExpr AS cat, IFNULL(SUM(budget_total), 0) AS total
-                FROM plan_order
-                WHERE thai_year = :yr AND deleted_at IS NULL
+        $months = [];
+        foreach (self::FISCAL_MONTHS as $m) {
+            $months[] = "IFNULL(SUM(p.month_$m), 0) AS m$m";
+        }
+        $sql = "SELECT $catExpr AS cat, " . implode(', ', $months) . "
+                FROM plan_order p
+                JOIN categorise pi ON pi.name = 'plan_item' AND pi.code = p.plan_item_id
+                LEFT JOIN categorise pc ON pc.name = 'plan_category' AND pc.code = pi.category_id
+                WHERE p.thai_year = :yr AND p.deleted_at IS NULL
                 GROUP BY cat";
         $rows = Yii::$app->db->createCommand($sql, [':yr' => $this->year])->queryAll();
         foreach ($rows as $r) {
-            if (isset($out[$r['cat']])) {
-                $out[$r['cat']] = (float) $r['total'];
+            if (!isset($out[$r['cat']])) {
+                continue;
+            }
+            foreach (self::FISCAL_MONTHS as $pos => $m) {
+                $out[$r['cat']][$pos] = (float) $r["m$m"];
             }
         }
         return $out;
+    }
+
+    /** แผนทั้งปีแยกหมวด (ผลรวมแผนรายเดือน) */
+    public function planByCategory(): array
+    {
+        return array_map('array_sum', $this->planMonthlyByCategory());
     }
 
     /**
