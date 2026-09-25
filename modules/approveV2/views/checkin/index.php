@@ -86,7 +86,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td><?= $record->employee ? Html::encode($record->employee->departmentName()) : '-' ?></td>
                         <td><?= Yii::$app->formatter->asDatetime($record->checkin_at, 'php:d/m/Y H:i') ?></td>
                         <td><?= Html::encode($record->getMethodLabel()) ?></td>
-                        <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : 'นอกบริเวณ' ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div>
+                        <td><?= $record->is_in_location ? 'อยู่ในบริเวณ' : Html::encode($record->locationSummary()) ?><div class="small text-body-secondary"><?= Html::encode($record->out_of_location_reason ?? '') ?></div>
+                            <?php if (!$record->is_in_location && $record->mapUrl()): ?><a href="<?= Html::encode($record->mapUrl()) ?>" target="_blank" rel="noopener" class="small me-2"><i class="bi bi-geo-alt" aria-hidden="true"></i> แผนที่</a><?php endif; ?>
                             <?php if ($record->photo_path): ?><a href="<?= Url::to(['/attendance/checkin/photo', 'id' => $record->id]) ?>" target="_blank" rel="noopener" class="small"><i class="bi bi-person-bounding-box" aria-hidden="true"></i> ดูรูป</a><?php endif; ?></td>
                         <td>
                             <?php $td = $record->timeDetail(); ?>

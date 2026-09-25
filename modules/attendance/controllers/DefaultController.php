@@ -116,7 +116,7 @@ class DefaultController extends Controller
             $record = AttendanceService::record($me, $input, true);
             return ['success' => true, 'id' => $record->id, 'checkin_at' => $record->checkin_at,
                 'duplicate' => $record->wasDuplicate, 'status' => $record->status,
-                'location' => $record->location->name ?? null,
+                'location' => $record->locationSummary(),
                 'message' => ($record->wasDuplicate ? 'บันทึกไว้แล้ว ไม่สร้างรายการซ้ำ: ' : 'บันทึกเวลาสำเร็จ: ') . $record->checkin_at . ' · ' . $record->getStatusLabel() . (RosterAttendance::forRecord($record)['shift'] ? '' : ' · รอตรวจสอบเวลางาน/ตารางเวร'),
                 'attendance' => RosterAttendance::forRecord($record), 'day_summary'=>$this->daySummary((int)$me->id)];
         } catch (\DomainException $e) {
@@ -164,7 +164,11 @@ class DefaultController extends Controller
         $token = $input['qr_token'] ?? '';
         if (!is_string($token)) return ['success'=>false,'message'=>'QR ไม่ถูกต้อง'];
         $result = CheckinLocation::validateClockIn($input['lat']??null, $input['lng']??null, $token, 'ตรวจตำแหน่งก่อนบันทึก');
-        return ['success'=>$result['ok'],'inside'=>$result['inside']??false,'message'=>$result['message']??'', 'location'=>$result['location']->name??null];
+        $name = $result['location']->name ?? null;
+        $inside = $result['inside'] ?? false;
+        // นอกพื้นที่: location คือ "จุดใกล้สุด" ที่ใช้วัดระยะ — แสดงเป็นระยะห่าง ไม่ใช่ชื่อจุดที่ลงเวลา
+        $label = $inside || !$name ? $name : 'ห่างจาก' . $name . ' ' . \app\modules\attendance\models\CheckinRecord::distanceText((float)($result['meta']['distance_m'] ?? 0));
+        return ['success'=>$result['ok'],'inside'=>$inside,'message'=>$result['message']??'', 'location'=>$label];
     }
 
     /**

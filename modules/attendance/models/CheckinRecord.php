@@ -154,6 +154,34 @@ class CheckinRecord extends \yii\db\ActiveRecord
         return $labels[$this->check_type] ?? $this->check_type;
     }
 
+    /**
+     * สถานที่ลงเวลาแบบอ่านง่าย — location_id ของรายการนอกพื้นที่คือ "จุดที่ใกล้ที่สุด" ที่ใช้วัดระยะ
+     * ไม่ใช่ที่ที่ลงเวลาจริง จึงต้องแสดงเป็น "นอกพื้นที่ · ห่างจาก <จุด> X กม." (พิกัดจริงอยู่ที่ lat/lng)
+     */
+    public function locationSummary(): string
+    {
+        $name = $this->location->name ?? null;
+        if ($this->is_in_location) return $name ?? 'ในพื้นที่';
+        if (!$name) return 'นอกพื้นที่';
+        $json = is_array($this->data_json) ? $this->data_json : [];
+        $meters = $json['geofence']['distance_m'] ?? null;
+        if ($meters === null && $this->lat !== null && $this->lng !== null && $this->location->lat !== null) {
+            $meters = CheckinLocation::haversineDistance((float)$this->location->lat, (float)$this->location->lng, (float)$this->lat, (float)$this->lng);
+        }
+        return 'นอกพื้นที่' . ($meters !== null ? ' · ห่างจาก' . $name . ' ' . self::distanceText((float)$meters) : '');
+    }
+
+    public static function distanceText(float $meters): string
+    {
+        return $meters >= 1000 ? number_format($meters / 1000, $meters >= 10000 ? 0 : 1) . ' กม.' : number_format($meters) . ' ม.';
+    }
+
+    /** ลิงก์เปิดพิกัดจริงบน Google Maps */
+    public function mapUrl(): ?string
+    {
+        return ($this->lat !== null && $this->lng !== null) ? 'https://www.google.com/maps?q=' . rawurlencode($this->lat . ',' . $this->lng) : null;
+    }
+
     public function getStatusLabel()
     {
         $labels = [

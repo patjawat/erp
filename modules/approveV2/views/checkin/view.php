@@ -38,7 +38,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 </td></tr>
                 <?php endif; ?>
                 <?php if ($model->lat !== null && $model->lng !== null): ?>
-                <tr><th class="text-muted">พิกัด</th><td><?= Html::encode($model->lat . ', ' . $model->lng) ?></td></tr>
+                <tr><th class="text-muted">สถานที่</th><td><?= Html::encode($model->locationSummary()) ?></td></tr>
+                <tr><th class="text-muted">พิกัดที่ลงเวลา</th><td><?= Html::a(Html::encode($model->lat . ', ' . $model->lng) . ' <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>', $model->mapUrl(), ['target' => '_blank', 'rel' => 'noopener', 'title' => 'เปิดตำแหน่งจริงบนแผนที่']) ?></td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

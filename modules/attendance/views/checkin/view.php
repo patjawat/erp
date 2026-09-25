@@ -31,11 +31,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr><th class="text-muted">ประเภทการลง</th><td><?= Html::encode($model->getCheckTypeLabel()) ?></td></tr>
                 <tr><th class="text-muted">สถานะ</th><td><span class="badge <?= $model->status === 'approved' ? 'text-bg-success' : ($model->status === 'rejected' ? 'text-bg-danger' : 'text-bg-warning text-dark') ?>"><?= Html::encode($model->getStatusLabel()) ?></span></td></tr>
                 <?php if ($model->lat !== null && $model->lng !== null): ?>
-                <tr><th class="text-muted">พิกัด</th><td><?= Html::encode($model->lat . ', ' . $model->lng) ?></td></tr>
+                <tr><th class="text-muted">พิกัดที่ลงเวลา</th><td><?= Html::a(Html::encode($model->lat . ', ' . $model->lng) . ' <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>', $model->mapUrl(), ['target' => '_blank', 'rel' => 'noopener', 'title' => 'เปิดตำแหน่งจริงบนแผนที่']) ?></td></tr>
                 <?php endif; ?>
-                <?php if ($model->location): ?>
-                <tr><th class="text-muted">จุดลงเวลา</th><td><?= Html::encode($model->location->name) ?></td></tr>
-                <?php endif; ?>
+                <tr><th class="text-muted"><?= $model->is_in_location ? 'จุดลงเวลา' : 'สถานที่' ?></th><td><?= Html::encode($model->locationSummary()) ?></td></tr>
                 <?php if ($model->photo_path): ?>
                 <tr><th class="text-muted">รูปยืนยันตัวตน</th><td>
                     <a href="<?= Url::to(['/attendance/checkin/photo', 'id' => $model->id]) ?>" target="_blank" rel="noopener">

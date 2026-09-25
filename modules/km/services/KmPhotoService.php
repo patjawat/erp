@@ -26,15 +26,30 @@ class KmPhotoService
         'image/gif' => 'gif',
     ];
 
+    /**
+     * ใต้ fileupload ของ filemanager — production image ให้ www-data เขียนได้เฉพาะ modules/filemanager
+     * และ รพ. mount เป็น volume ถาวร (เดิม modules/km/uploads สร้างโฟลเดอร์ไม่ได้บน production)
+     */
     public static function basePath(): string
+    {
+        return Yii::getAlias('@app/modules/filemanager/fileupload/km');
+    }
+
+    /** ที่เก็บเดิม — อ่านอย่างเดียว เผื่อมีไฟล์ที่อัปโหลดไว้ก่อนย้าย */
+    public static function legacyBasePath(): string
     {
         return Yii::getAlias('@app/modules/km/uploads');
     }
 
-    /** absolute path ของไฟล์จาก path สัมพัทธ์ที่เก็บใน DB */
+    /** absolute path ของไฟล์จาก path สัมพัทธ์ที่เก็บใน DB (หาในที่ใหม่ก่อน แล้ว fallback ที่เดิม) */
     public static function absolutePath(string $relative): string
     {
-        return self::basePath() . '/' . ltrim($relative, '/');
+        $relative = ltrim($relative, '/');
+        $path = self::basePath() . '/' . $relative;
+        if (!is_file($path) && is_file(self::legacyBasePath() . '/' . $relative)) {
+            return self::legacyBasePath() . '/' . $relative;
+        }
+        return $path;
     }
 
     /**

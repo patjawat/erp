@@ -35,14 +35,30 @@ class ComplaintFileService
 
     public const IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+    /**
+     * ใต้ fileupload ของ filemanager — production image ให้ www-data เขียนได้เฉพาะ modules/filemanager
+     * และ รพ. mount เป็น volume ถาวร (เดิม modules/complaint/uploads สร้างโฟลเดอร์ไม่ได้บน production)
+     */
     public static function basePath(): string
+    {
+        return Yii::getAlias('@app/modules/filemanager/fileupload/complaint');
+    }
+
+    /** ที่เก็บเดิม — อ่านอย่างเดียว เผื่อมีไฟล์ที่อัปโหลดไว้ก่อนย้าย */
+    public static function legacyBasePath(): string
     {
         return Yii::getAlias('@app/modules/complaint/uploads');
     }
 
+    /** หาในที่ใหม่ก่อน แล้ว fallback ที่เดิม */
     public static function absolutePath(string $relative): string
     {
-        return self::basePath() . '/' . ltrim($relative, '/');
+        $relative = ltrim($relative, '/');
+        $path = self::basePath() . '/' . $relative;
+        if (!is_file($path) && is_file(self::legacyBasePath() . '/' . $relative)) {
+            return self::legacyBasePath() . '/' . $relative;
+        }
+        return $path;
     }
 
     /**

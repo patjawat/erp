@@ -19,13 +19,20 @@ $isToday = $date === $today;
 $prev = date('Y-m-d', strtotime($date . ' -1 day'));
 $next = date('Y-m-d', strtotime($date . ' +1 day'));
 $pct = fn($n, $d) => $d > 0 ? round($n * 100 / $d) : 0;
+$dash = '<span class="text-body-tertiary">–</span>';
+// แถวบน: ทุกคนอยู่สถานะเดียว (รวมกันเท่ากับบุคลากรทั้งหมด) — [ป้าย, ค่า, ไอคอน, สี, คำอธิบาย, ลิงก์]
 $kpis = [
-    ['บุคลากรทั้งหมด', $day['total'], 'คน', 'bi-people', 'secondary', 'สถานะปฏิบัติงาน'],
-    ['ลงเวลาแล้ว', $day['present'], 'คน', 'bi-person-check', 'success', $pct($day['present'], $day['total']) . '% ของบุคลากร'],
-    ['ลา', $day['leave'], 'คน', 'bi-calendar-x', 'info', 'ใบลาที่อนุมัติแล้ว'],
-    ['ยังไม่ลงเวลา', $day['missing'], 'คน', 'bi-person-dash', 'danger', 'รวมผู้ที่หยุดตามเวร/วันหยุด'],
-    ['มาสาย', $day['late'], 'คน', 'bi-alarm', 'warning', 'ออกก่อน ' . (int)$day['early'] . ' คน'],
-    ['นอกพื้นที่', $day['outside'], 'คน', 'bi-geo', 'warning', 'ลงเวลานอกจุดที่กำหนด'],
+    ['บุคลากรทั้งหมด', $day['total'], 'bi-people', 'secondary', 'สถานะปฏิบัติงาน', null],
+    ['ลงเวลาแล้ว', $day['present'], 'bi-person-check', 'success', $pct($day['present'], $day['total']) . '% ของบุคลากร', null],
+    ['ลา / ไปราชการ', $day['leave'] + $day['trip'], 'bi-calendar-x', 'info', 'ลา ' . (int)$day['leave'] . ' · ไปราชการ ' . (int)$day['trip'], null],
+    ['ยังไม่ลงเวลา', $day['missing'], 'bi-person-dash', 'danger', 'มีเวร/วันทำงาน แต่ยังไม่ลงเวลา', null],
+    ['หยุด', $day['off'], 'bi-moon', 'secondary', 'หยุดตามเวร/วันหยุด', null],
+    ['ยังไม่ตั้งเวลาทำงาน', $day['unset'], 'bi-question-circle', 'warning', 'ไม่มีตารางเวร/ชุดเวลา จึงประเมินการขาดไม่ได้', ['/attendance/schedule/index']],
+];
+// แถวล่าง: ความผิดปกติที่ต้องติดตาม
+$flags = [
+    ['มาสาย', $day['late'], 'bi-alarm', 'warning', 'ออกก่อน ' . (int)$day['early'] . ' คน', null],
+    ['นอกพื้นที่', $day['outside'], 'bi-geo', 'warning', 'ลงเวลานอกจุดที่กำหนด', null],
 ];
 $badge = function ($r) {
     $map = ['approved' => ['success', 'ยืนยันแล้ว'], 'rejected' => ['danger', 'ไม่ยืนยัน'], 'pending' => ['warning', 'รอยืนยัน']];
@@ -71,30 +78,38 @@ $badge = function ($r) {
     <?php endif; ?>
 
     <!-- KPI (นับเป็นคน) -->
-    <section aria-label="สรุปการลงเวลา">
-        <div class="att-kpi-grid">
-            <?php foreach ($kpis as [$label, $value, $unit, $icon, $color, $hint]): ?>
-            <div class="card bg-body border h-100">
-                <div class="card-body d-flex align-items-start gap-3 py-3">
-                    <span class="att-kpi-icon bg-<?= $color ?>-subtle text-<?= $color ?>-emphasis"><i class="bi <?= $icon ?>" aria-hidden="true"></i></span>
-                    <div class="min-w-0">
-                        <div class="small text-body-secondary"><?= $label ?></div>
-                        <div class="att-num fs-4 fw-bold text-body lh-sm"><?= number_format((int)$value) ?> <span class="fs-6 fw-normal text-body-secondary"><?= $unit ?></span></div>
-                        <div class="small text-body-secondary"><?= Html::encode($hint) ?></div>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-            <a class="card bg-body border h-100 text-decoration-none att-kpi-link" href="<?= Url::to(['/attendance/checkin/confirm']) ?>">
-                <div class="card-body d-flex align-items-start gap-3 py-3">
-                    <span class="att-kpi-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
-                    <div class="min-w-0 flex-grow-1">
-                        <div class="small text-body-secondary">รอยืนยัน (ทุกวัน)</div>
-                        <div class="att-num fs-4 fw-bold text-body lh-sm"><?= number_format($pendingCount) ?> <span class="fs-6 fw-normal text-body-secondary">รายการ</span></div>
-                        <div class="small text-primary">ไปหน้าตรวจสอบ <i class="bi bi-arrow-right" aria-hidden="true"></i></div>
-                    </div>
-                </div>
-            </a>
+    <?php
+    $card = function ($label, $value, $icon, $color, $hint, $url, $unit = 'คน') {
+        $tag = $url ? 'a' : 'div';
+        $attr = $url ? ' href="' . Html::encode(Url::to($url)) . '"' : '';
+        return '<' . $tag . ' class="card bg-body border h-100 text-decoration-none' . ($url ? ' att-kpi-link' : '') . '"' . $attr . '>'
+            . '<div class="card-body d-flex align-items-start gap-3 py-3">'
+            . '<span class="att-kpi-icon bg-' . $color . '-subtle text-' . $color . '-emphasis"><i class="bi ' . $icon . '" aria-hidden="true"></i></span>'
+            . '<div class="min-w-0 flex-grow-1">'
+            . '<div class="small text-body-secondary">' . Html::encode($label) . '</div>'
+            . '<div class="att-num fs-4 fw-bold text-body lh-sm">' . number_format((int)$value) . ' <span class="fs-6 fw-normal text-body-secondary">' . $unit . '</span></div>'
+            . '<div class="small ' . ($url ? 'text-primary' : 'text-body-secondary') . '">' . Html::encode($hint) . ($url ? ' <i class="bi bi-arrow-right" aria-hidden="true"></i>' : '') . '</div>'
+            . '</div></div></' . $tag . '>';
+    };
+    ?>
+    <section aria-label="สถานะบุคลากรวันนี้">
+        <div class="att-kpi-grid att-kpi-grid--6">
+            <?php foreach ($kpis as [$label, $value, $icon, $color, $hint, $url]) echo $card($label, $value, $icon, $color, $hint, $url); ?>
+        </div>
+    </section>
+
+    <?php if ($day['unset'] > 0 && $day['unset'] >= $day['total'] / 2): ?>
+    <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-0" role="status">
+        <span><i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            บุคลากร <strong><?= number_format($day['unset']) ?> คน</strong> ยังไม่มีตารางเวรหรือชุดเวลาทำงาน ระบบจึงนับการขาดและมาสายให้ไม่ได้ กำหนดเวลาทำงานรายหน่วยงานเพื่อให้ภาพรวมครบ</span>
+        <?= Html::a('ตั้งค่าเวลาทำงาน', ['/attendance/schedule/index'], ['class' => 'btn btn-sm btn-outline-primary']) ?>
+    </div>
+    <?php endif; ?>
+
+    <section aria-label="รายการผิดปกติ">
+        <div class="att-kpi-grid att-kpi-grid--3">
+            <?php foreach ($flags as [$label, $value, $icon, $color, $hint, $url]) echo $card($label, $value, $icon, $color, $hint, $url); ?>
+            <?= $card('รอยืนยัน (ทุกวัน)', $pendingCount, 'bi-hourglass-split', 'warning', 'ไปหน้าตรวจสอบ', ['/attendance/checkin/confirm'], 'รายการ') ?>
         </div>
     </section>
 
@@ -120,8 +135,10 @@ $badge = function ($r) {
                                     <th scope="col">หน่วยงาน</th>
                                     <th scope="col" class="text-end">บุคลากร</th>
                                     <th scope="col" class="text-end">ลงเวลาแล้ว</th>
-                                    <th scope="col" class="text-end">ลา</th>
+                                    <th scope="col" class="text-end">ลา/ราชการ</th>
                                     <th scope="col" class="text-end">ยังไม่ลงเวลา</th>
+                                    <th scope="col" class="text-end d-none d-md-table-cell">หยุด</th>
+                                    <th scope="col" class="text-end d-none d-md-table-cell" title="ยังไม่มีตารางเวร/ชุดเวลาทำงาน">ไม่ตั้งเวลา</th>
                                     <th scope="col" class="text-end d-none d-md-table-cell">สาย</th>
                                     <th scope="col" class="text-end d-none d-md-table-cell">นอกพื้นที่</th>
                                 </tr>
@@ -137,8 +154,10 @@ $badge = function ($r) {
                                     </td>
                                     <td class="text-end att-num"><?= $u['staff'] ?></td>
                                     <td class="text-end att-num"><?= $u['present'] ?></td>
-                                    <td class="text-end att-num"><?= $u['leave'] ?: '<span class="text-body-tertiary">–</span>' ?></td>
-                                    <td class="text-end att-num"><?= $u['missing'] ? '<span class="fw-semibold text-danger-emphasis">' . $u['missing'] . '</span>' : '<span class="text-body-tertiary">–</span>' ?></td>
+                                    <td class="text-end att-num"><?= ($u['leave'] + $u['trip']) ?: $dash ?></td>
+                                    <td class="text-end att-num"><?= $u['missing'] ? '<span class="fw-semibold text-danger-emphasis">' . $u['missing'] . '</span>' : $dash ?></td>
+                                    <td class="text-end att-num d-none d-md-table-cell"><?= $u['off'] ?: $dash ?></td>
+                                    <td class="text-end att-num d-none d-md-table-cell"><?= $u['unset'] ? '<span class="text-body-secondary">' . $u['unset'] . '</span>' : $dash ?></td>
                                     <td class="text-end att-num d-none d-md-table-cell"><?= $u['late'] ? '<span class="text-warning-emphasis">' . $u['late'] . '</span>' : '<span class="text-body-tertiary">–</span>' ?></td>
                                     <td class="text-end att-num d-none d-md-table-cell"><?= $u['outside'] ? '<span class="text-warning-emphasis">' . $u['outside'] . '</span>' : '<span class="text-body-tertiary">–</span>' ?></td>
                                 </tr>
@@ -199,8 +218,10 @@ $badge = function ($r) {
 </div>
 
 <style>
-.att-overview .att-kpi-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .75rem; }
-@media (max-width: 1399.98px) { .att-overview .att-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.att-overview .att-kpi-grid { display: grid; gap: .75rem; }
+.att-overview .att-kpi-grid--6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.att-overview .att-kpi-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1399.98px) { .att-overview .att-kpi-grid--6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 767.98px)  { .att-overview .att-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .att-overview .card { border-radius: 10px; border-color: var(--bs-border-color-translucent) !important; }
 .att-overview .att-kpi-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 38px; height: 38px; border-radius: 8px; font-size: 1.1rem; }
