@@ -35,8 +35,9 @@ class ChequePrintService
         $oy = (float) $tpl->calibrate_offset_y;
 
         $pdf = new Fpdi();
-        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.json');
-        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.json');
+        // ต้องใช้ไฟล์นิยามฟอนต์ .php ของ FPDF (ไฟล์ .json เป็นของ mPDF ใช้กับ FPDI ไม่ได้ → error)
+        $pdf->AddFont('THSarabunNew', '', 'THSarabunNew.php');
+        $pdf->AddFont('THSarabunNew', 'B', 'THSarabunNew Bold.php');
         $pdf->SetAutoPageBreak(false);
         $orientation = $w >= $h ? 'L' : 'P';
         $pdf->AddPage($orientation, [$w, $h]);
@@ -87,6 +88,21 @@ class ChequePrintService
                     $pdf->SetLineWidth(0.4);
                     $pdf->Line($startX, $y, $endX, $y);
                 }
+                continue;
+            }
+
+            // A/C PAYEE ONLY: ขีดคร่อม 2 เส้นทแยง (//) ด้านซ้าย + ข้อความ (รูปแบบ 5 ในคู่มือ)
+            if ($key === 'ac_payee') {
+                if (empty($values['ac_payee'])) {
+                    continue;
+                }
+                $size = (float) ($f['font_size'] ?? 14);
+                $pdf->SetLineWidth(0.5);
+                // เส้นทแยงคู่ขนานจากล่างซ้าย → บนขวา
+                $pdf->Line($x - 11, $y + 1.5, $x - 4, $y - 6.5);
+                $pdf->Line($x - 7, $y + 1.5, $x, $y - 6.5);
+                $pdf->SetFont('THSarabunNew', 'B', $size);
+                $pdf->Text($x, $y, iconv('UTF-8', 'cp874//IGNORE', $values['ac_payee']));
                 continue;
             }
 
