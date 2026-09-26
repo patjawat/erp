@@ -85,10 +85,10 @@ class FinanceInbox extends ActiveRecord
     public static function statusOptions(): array
     {
         return [
-            self::STATUS_PENDING_REVIEW => 'รอตรวจสอบ',
-            self::STATUS_NEEDS_INFORMATION => 'รอข้อมูลเพิ่มเติม',
-            self::STATUS_ACCEPTED => 'รับรองแล้ว',
-            self::STATUS_REJECTED => 'ไม่รับรายการ',
+            self::STATUS_PENDING_REVIEW => 'รอรับ',
+            self::STATUS_NEEDS_INFORMATION => 'ส่งคืนให้แก้ไข',
+            self::STATUS_ACCEPTED => 'รับแล้ว',
+            self::STATUS_REJECTED => 'ไม่รับ',
         ];
     }
 

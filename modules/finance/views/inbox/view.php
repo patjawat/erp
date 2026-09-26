@@ -151,85 +151,42 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
             </div>
         </section>
 
-        <section class="card border shadow-sm mt-3" aria-labelledby="review-decision-heading">
-            <div class="card-header bg-body"><h5 class="mb-0" id="review-decision-heading">ผลการตรวจสอบ</h5></div>
+        <section class="card border shadow-sm mt-3" aria-labelledby="receive-heading">
+            <div class="card-header bg-body"><h5 class="mb-0" id="receive-heading">การรับเอกสาร</h5></div>
             <div class="card-body">
-                <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('financeOperate')): ?>
+                <?php if ($model->payable): ?>
+                    <p class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i>รับแล้ว — เข้าทะเบียนเจ้าหนี้</p>
+                    <?= Html::a('<i class="bi bi-journal-text me-1"></i>' . Html::encode($model->payable->payable_no),
+                        ['/finance/payable/view', 'id' => $model->payable->id], ['class' => 'btn btn-outline-primary w-100']) ?>
+                <?php elseif (in_array($model->status, [FinanceInbox::STATUS_PENDING_REVIEW, FinanceInbox::STATUS_ACCEPTED], true) && Yii::$app->user->can('financeOperate')): ?>
                     <?php if ($messages): ?>
-                        <div class="alert alert-warning" role="alert">
-                            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
-                            ข้อมูลขั้นต่ำยังไม่ครบ จึงยังตั้งเจ้าหนี้ไม่ได้ — ขอข้อมูลเพิ่มเติมหรือให้ต้นทางส่งเอกสารใหม่
+                        <div class="alert alert-warning small" role="alert">
+                            <i class="bi bi-exclamation-triangle me-1"></i>ข้อมูลจากพัสดุยังไม่ครบ รับไม่ได้ — ส่งคืนพัสดุให้แก้ไข
                         </div>
                     <?php else: ?>
-                        <div class="d-grid mb-2">
-                            <?= Html::a(
-                                '<i class="bi bi-person-check me-1" aria-hidden="true"></i>รับรอง &amp; ตั้งเจ้าหนี้',
-                                ['/finance/payable/create', 'inbox_id' => $model->id],
-                                ['class' => 'btn btn-success']
-                            ) ?>
-                        </div>
-                        <div class="form-text mb-3">กรอกเลขใบแจ้งหนี้ ผู้ขาย และเครดิต เมื่อบันทึกจะรับรองเอกสารและตั้งเจ้าหนี้ (ร่าง) พร้อมกัน</div>
+                        <?= Html::beginForm(['receive', 'id' => $model->id], 'post') ?>
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check2 me-1"></i>รับเอกสาร</button>
+                        <?= Html::endForm() ?>
+                        <div class="form-text">บิลเข้าทะเบียนเจ้าหนี้ทันที — เลขใบแจ้งหนี้/ภาษีหัก ณ ที่จ่าย แก้ภายหลังได้ที่หน้าบิล</div>
                     <?php endif; ?>
 
-                    <?= Html::beginForm(['review', 'id' => $model->id], 'post') ?>
-                    <label class="form-label" for="finance-review-note">หมายเหตุ (กรณีขอข้อมูลเพิ่ม/ไม่รับ)</label>
-                    <textarea class="form-control mb-2" id="finance-review-note" name="note" rows="3"
-                              placeholder="ระบุสิ่งที่ต้องแก้ไขหรือเหตุผลที่ไม่รับรายการ"></textarea>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-outline-warning" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_REQUEST_INFORMATION ?>">
-                            <i class="bi bi-arrow-return-left me-1" aria-hidden="true"></i>ขอข้อมูลเพิ่มเติม
-                        </button>
-                        <button class="btn btn-outline-danger" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_REJECT ?>">
-                            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>ไม่รับรายการ
-                        </button>
-                    </div>
-                    <?= Html::endForm() ?>
-                <?php elseif ($model->status !== FinanceInbox::STATUS_PENDING_REVIEW): ?>
-                    <div class="d-flex gap-2 align-items-start">
-                        <i class="bi bi-lock" aria-hidden="true"></i>
-                        <div>
-                            <strong>ดำเนินการแล้ว</strong>
-                            <div class="text-body-secondary">หากต้องแก้ไข ให้ระบบต้นทางส่งเอกสารเป็นรุ่นใหม่</div>
-                        </div>
-                    </div>
+                    <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW): ?>
+                        <details class="mt-3">
+                            <summary class="small text-body-secondary">ส่งคืนพัสดุ / ไม่รับ</summary>
+                            <?= Html::beginForm(['review', 'id' => $model->id], 'post', ['class' => 'mt-2']) ?>
+                            <textarea class="form-control form-control-sm mb-2" name="note" rows="2" required
+                                      placeholder="เหตุผล / สิ่งที่ต้องแก้ไข"></textarea>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-warning flex-fill" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_REQUEST_INFORMATION ?>">ส่งคืนให้แก้ไข</button>
+                                <button class="btn btn-sm btn-outline-danger flex-fill" type="submit" name="decision" value="<?= FinanceInboxReview::DECISION_REJECT ?>">ไม่รับ</button>
+                            </div>
+                            <?= Html::endForm() ?>
+                        </details>
+                    <?php endif; ?>
                 <?php else: ?>
-                    <div class="d-flex gap-2 align-items-start">
-                        <i class="bi bi-lock" aria-hidden="true"></i>
-                        <div><strong>รอผู้จัดทำบัญชีตรวจสอบ</strong><div class="text-body-secondary">คุณมีสิทธิ์ดูข้อมูล แต่ไม่มีสิทธิ์บันทึกผลการตรวจสอบ</div></div>
-                    </div>
+                    <p class="text-body-secondary mb-0"><?= Html::encode(FinanceInbox::statusOptions()[$model->status] ?? $model->status) ?></p>
                 <?php endif; ?>
             </div>
         </section>
-
-        <?php if ($model->status === FinanceInbox::STATUS_ACCEPTED): ?>
-            <section class="card border shadow-sm mt-3">
-                <div class="card-header bg-body"><h5 class="mb-0">ทะเบียนเจ้าหนี้</h5></div>
-                <div class="card-body">
-                    <?php if ($model->payable): ?>
-                        <p class="text-body-secondary">สร้างร่างทะเบียนเจ้าหนี้จากรายการนี้แล้ว</p>
-                        <?= Html::a(
-                            '<i class="bi bi-eye me-1" aria-hidden="true"></i>ดู ' . Html::encode($model->payable->payable_no),
-                            ['/finance/payable/view', 'id' => $model->payable->id],
-                            ['class' => 'btn btn-outline-primary']
-                        ) ?>
-                    <?php elseif (Yii::$app->user->can('financeOperate')): ?>
-                        <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนตั้งเจ้าหนี้</p>
-                        <?= Html::a(
-                            '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>ตั้งเจ้าหนี้ (สร้างร่าง)',
-                            ['/finance/payable/create', 'inbox_id' => $model->id],
-                            ['class' => 'btn btn-primary']
-                        ) ?>
-                    <?php else: ?>
-                        <div class="d-flex gap-2 align-items-start text-body-secondary">
-                            <i class="bi bi-lock" aria-hidden="true"></i><span>รอผู้จัดทำบัญชีสร้างร่างทะเบียนเจ้าหนี้</span>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </section>
-        <?php endif; ?>
-
-        <div class="alert alert-secondary mt-3 mb-0">
-            กด "รับรอง &amp; ตั้งเจ้าหนี้" เพื่อรับรองเอกสารและตั้งเป็นเจ้าหนี้ (ร่าง) พร้อมกัน จากนั้นให้หัวหน้าอนุมัติเข้าทะเบียนคุม
-        </div>
     </div>
 </div>

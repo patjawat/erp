@@ -3,9 +3,15 @@
 use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\finance\components\ThaiDate;
 use app\modules\finance\models\FinanceInbox;
 
-$this->title = 'กล่องรับงานบัญชี';
+/** @var yii\web\View $this */
+/** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var array $counts */
+/** @var string|null $status */
+
+$this->title = 'กล่องรอรับ';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -13,40 +19,46 @@ $this->beginBlock('page-title');
 echo Html::encode($this->title);
 $this->endBlock();
 $this->beginBlock('sub-title');
-echo 'สำเนารายการจากระบบต้นทางสำหรับตรวจสอบก่อนตั้งเจ้าหนี้และลงบัญชี';
+echo 'เอกสารที่พัสดุส่งมา — กด "รับ" แล้วบิลเข้าทะเบียนเจ้าหนี้ทันที';
 $this->endBlock();
 $this->beginBlock('page-action');
 echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'inbox']);
 $this->endBlock();
 
 $total = array_sum(array_map(static fn($row) => (int) $row['count'], $counts));
+$canReceive = Yii::$app->user->can('financeOperate');
+$isPendingView = $status === FinanceInbox::STATUS_PENDING_REVIEW;
 ?>
 
-<div class="alert alert-info d-flex gap-2 align-items-start" role="status">
-    <i class="bi bi-shield-check fs-5" aria-hidden="true"></i>
-    <div>
-        <strong>โหมดตรวจสอบคู่ขนาน</strong>
-        <div>รายการในหน้านี้ยังไม่สร้างเจ้าหนี้ ไม่ลงบัญชี และไม่เปลี่ยนข้อมูลในระบบต้นทาง</div>
-    </div>
-</div>
+<?php foreach (['success' => 'success', 'error' => 'danger', 'warning' => 'warning'] as $key => $cls): ?>
+    <?php if ($flash = Yii::$app->session->getFlash($key)): ?>
+        <div class="alert alert-<?= $cls ?> alert-dismissible fade show"><?= Html::encode($flash) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <?php endif; ?>
+<?php endforeach; ?>
 
-<nav class="d-flex flex-wrap gap-2 mb-3" aria-label="กรองสถานะกล่องรับบัญชี">
-    <a class="btn <?= $status ? 'btn-outline-secondary' : 'btn-secondary' ?>" href="<?= Url::to(['index']) ?>">
-        ทั้งหมด <span class="badge text-bg-secondary ms-1"><?= number_format($total) ?></span>
-    </a>
+<nav class="d-flex flex-wrap gap-2 mb-3" aria-label="กรองสถานะ">
     <?php foreach (FinanceInbox::statusOptions() as $value => $label): ?>
         <?php $count = (int) ($counts[$value]['count'] ?? 0); ?>
-        <a class="btn <?= $status === $value ? 'btn-primary' : 'btn-outline-primary' ?>"
+        <a class="btn btn-sm <?= $status === $value ? 'btn-primary' : 'btn-outline-primary' ?>"
            href="<?= Url::to(['index', 'status' => $value]) ?>">
             <?= Html::encode($label) ?> <span class="badge text-bg-secondary ms-1"><?= number_format($count) ?></span>
         </a>
     <?php endforeach; ?>
+    <a class="btn btn-sm <?= $status === 'all' ? 'btn-secondary' : 'btn-outline-secondary' ?>" href="<?= Url::to(['index', 'status' => 'all']) ?>">
+        ทั้งหมด <span class="badge text-bg-secondary ms-1"><?= number_format($total) ?></span>
+    </a>
 </nav>
 
-<section class="card border shadow-sm" aria-labelledby="finance-inbox-list-heading">
-    <div class="card-header bg-body d-flex justify-content-between align-items-center gap-3">
-        <h5 class="mb-0" id="finance-inbox-list-heading">รายการจากระบบต้นทาง</h5>
+<?= Html::beginForm(['receive-bulk'], 'post', ['id' => 'receive-bulk-form']) ?>
+<section class="card border shadow-sm">
+    <div class="card-header bg-body d-flex justify-content-between align-items-center gap-2 flex-wrap">
         <span class="text-body-secondary small"><?= number_format($dataProvider->getTotalCount()) ?> รายการ</span>
+        <?php if ($canReceive && $isPendingView && $dataProvider->getTotalCount() > 0): ?>
+            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('รับเอกสารที่เลือกเข้าทะเบียนเจ้าหนี้?');">
+                <i class="bi bi-check2-all me-1"></i>รับที่เลือก
+            </button>
+        <?php endif; ?>
     </div>
     <div class="table-responsive">
         <?= GridView::widget([
@@ -55,26 +67,25 @@ $total = array_sum(array_map(static fn($row) => (int) $row['count'], $counts));
             'tableOptions' => ['class' => 'table table-hover align-middle mb-0'],
             'columns' => [
                 [
-                    'attribute' => 'received_at',
-                    'label' => 'รับเมื่อ',
-                    'value' => static fn($model) => \app\modules\finance\components\ThaiDate::datetime($model->received_at),
+                    'class' => 'yii\grid\CheckboxColumn',
+                    'name' => 'ids',
+                    'visible' => $canReceive && $isPendingView,
+                    'checkboxOptions' => static fn(FinanceInbox $m) => ['value' => $m->id, 'disabled' => (bool) $m->validationMessages()],
+                    'headerOptions' => ['style' => 'width:36px'],
+                ],
+                [
+                    'label' => 'ส่งมาเมื่อ',
+                    'value' => static fn(FinanceInbox $m) => ThaiDate::datetime($m->received_at),
                     'contentOptions' => ['class' => 'text-nowrap'],
                 ],
                 [
-                    'label' => 'เอกสารต้นทาง',
+                    'label' => 'เอกสาร',
                     'format' => 'raw',
-                    'value' => static function (FinanceInbox $model) {
-                        $no = $model->source_document_no ?: $model->source_id;
-                        return Html::a(Html::encode($no), ['view', 'id' => $model->id], ['class' => 'fw-semibold'])
-                            . '<div class="small text-body-secondary">'
-                            . Html::encode($model->source_system . ' · ' . $model->source_type . ' · รุ่น ' . $model->source_version)
-                            . '</div>';
-                    },
+                    'value' => static fn(FinanceInbox $m) => Html::a(Html::encode($m->source_document_no ?: $m->source_id), ['view', 'id' => $m->id], ['class' => 'fw-semibold']),
                 ],
                 [
-                    'attribute' => 'vendor_name_snapshot',
-                    'label' => 'ผู้แทนจำหน่าย',
-                    'value' => static fn(FinanceInbox $model) => $model->vendor_name_snapshot ?: 'รอตรวจสอบ',
+                    'label' => 'บริษัท',
+                    'value' => static fn(FinanceInbox $m) => $m->vendor_name_snapshot ?: '-',
                 ],
                 [
                     'attribute' => 'amount',
@@ -84,40 +95,37 @@ $total = array_sum(array_map(static fn($row) => (int) $row['count'], $counts));
                     'headerOptions' => ['class' => 'text-end'],
                 ],
                 [
-                    'label' => 'ผลตรวจเบื้องต้น',
+                    'label' => 'สถานะ',
                     'format' => 'raw',
-                    'value' => static function (FinanceInbox $model) {
-                        $count = count($model->validationMessages());
-                        return $count === 0
-                            ? '<span class="badge bg-success-subtle text-success-emphasis">ข้อมูลขั้นต่ำครบ</span>'
-                            : '<span class="badge bg-warning-subtle text-warning-emphasis">พบ ' . $count . ' จุด</span>';
+                    'value' => static function (FinanceInbox $m) {
+                        $html = Html::tag('span', Html::encode(FinanceInbox::statusOptions()[$m->status] ?? $m->status),
+                            ['class' => 'badge ' . FinanceInbox::statusBadgeClass($m->status)]);
+                        if ($m->status === FinanceInbox::STATUS_PENDING_REVIEW && $m->validationMessages()) {
+                            $html .= ' <span class="badge bg-warning-subtle text-warning-emphasis" title="' . Html::encode(implode(' / ', $m->validationMessages())) . '">ข้อมูลไม่ครบ</span>';
+                        }
+                        return $html;
                     },
                 ],
                 [
-                    'attribute' => 'status',
-                    'label' => 'สถานะ',
+                    'label' => '',
                     'format' => 'raw',
-                    'value' => static fn(FinanceInbox $model) => Html::tag(
-                        'span',
-                        Html::encode(FinanceInbox::statusOptions()[$model->status] ?? $model->status),
-                        ['class' => 'badge ' . FinanceInbox::statusBadgeClass($model->status)]
-                    ),
-                ],
-                [
-                    'class' => 'yii\grid\ActionColumn',
-                    'template' => '{view}',
-                    'contentOptions' => ['class' => 'text-end'],
-                    'buttons' => [
-                        'view' => static fn($url) => Html::a(
-                            '<i class="bi bi-eye" aria-hidden="true"></i><span class="visually-hidden">ดูรายละเอียด</span>',
-                            $url,
-                            ['class' => 'btn btn-sm btn-outline-primary', 'aria-label' => 'ดูรายละเอียด']
-                        ),
-                    ],
+                    'contentOptions' => ['class' => 'text-end text-nowrap'],
+                    'value' => static function (FinanceInbox $m) use ($canReceive) {
+                        if ($m->status === FinanceInbox::STATUS_PENDING_REVIEW && $canReceive && !$m->validationMessages()) {
+                            return Html::a('<i class="bi bi-check2 me-1"></i>รับ', ['receive', 'id' => $m->id],
+                                ['class' => 'btn btn-sm btn-success', 'data-method' => 'post']);
+                        }
+                        if ($m->payable) {
+                            return Html::a(Html::encode($m->payable->payable_no), ['/finance/payable/view', 'id' => $m->payable->id],
+                                ['class' => 'btn btn-sm btn-outline-primary']);
+                        }
+                        return Html::a('ดู', ['view', 'id' => $m->id], ['class' => 'btn btn-sm btn-outline-secondary']);
+                    },
                 ],
             ],
-            'emptyText' => 'ยังไม่มีรายการจากระบบต้นทาง ระบบพัสดุและคลังยังทำงานได้ตามปกติ',
+            'emptyText' => $isPendingView ? 'ไม่มีเอกสารรอรับ' : 'ไม่มีรายการ',
             'emptyTextOptions' => ['class' => 'text-center text-body-secondary py-5'],
         ]) ?>
     </div>
 </section>
+<?= Html::endForm() ?>

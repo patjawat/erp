@@ -12,6 +12,7 @@ use app\modules\finance\models\FinanceInbox;
 use app\modules\finance\services\FinanceInboxService;
 use app\modules\finance\services\PurchaseFinanceSnapshotBuilder;
 use app\modules\finance\services\FinanceInboxReviewService;
+use app\modules\finance\services\FinancePayableReceiveService;
 use app\modules\purchase\models\Order;
 use app\modules\purchase\models\Contract;
 use app\modules\purchase\models\ContractReceipt;
@@ -30,9 +31,12 @@ class InboxController extends Controller
                 // ปุ่ม "ส่งการเงิน" ฝั่งพัสดุ ถือ permission accountingInboxReceive (role purchase)
                 ['allow' => true, 'actions' => ['receive-purchase', 'receive-contract-receipt'], 'roles' => ['accountingInboxReceive']],
                 ['allow' => true, 'actions' => ['index', 'view'], 'roles' => ['financeView']],
-                ['allow' => true, 'actions' => ['review'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['review', 'receive', 'receive-bulk'], 'roles' => ['financeOperate']],
             ]],
-            'verbs' => ['class' => VerbFilter::class, 'actions' => ['receive-purchase' => ['POST'], 'receive-contract-receipt' => ['POST'], 'review' => ['POST']]],
+            'verbs' => ['class' => VerbFilter::class, 'actions' => [
+                'receive-purchase' => ['POST'], 'receive-contract-receipt' => ['POST'], 'review' => ['POST'],
+                'receive' => ['POST'], 'receive-bulk' => ['POST'],
+            ]],
         ]);
     }
 
@@ -127,7 +131,8 @@ class InboxController extends Controller
     public function actionIndex()
     {
         $query = FinanceInbox::find()->orderBy(['received_at' => SORT_DESC, 'id' => SORT_DESC]);
-        $status = Yii::$app->request->get('status');
+        // ค่าเริ่มต้นแสดงเฉพาะที่รอรับ (status=all = ทั้งหมด)
+        $status = Yii::$app->request->get('status', FinanceInbox::STATUS_PENDING_REVIEW);
         $sourceSystem = Yii::$app->request->get('source_system');
         if ($status && isset(FinanceInbox::statusOptions()[$status])) {
             $query->andWhere(['status' => $status]);
@@ -141,6 +146,51 @@ class InboxController extends Controller
             'counts' => $counts,
             'status' => $status,
         ]);
+    }
+
+    /** การเงินรับเอกสาร 1 รายการ → เข้าทะเบียนเจ้าหนี้ทันที */
+    public function actionReceive($id)
+    {
+        return $this->receiveMany([(int) $id]);
+    }
+
+    /** รับเอกสารหลายรายการที่ติ๊กเลือก */
+    public function actionReceiveBulk()
+    {
+        return $this->receiveMany(array_map('intval', (array) Yii::$app->request->post('ids', [])));
+    }
+
+    private function receiveMany(array $ids)
+    {
+        $ids = array_values(array_filter($ids));
+        if (!$ids) {
+            Yii::$app->session->setFlash('warning', 'ยังไม่ได้เลือกเอกสารที่จะรับ');
+            return $this->redirect(['index']);
+        }
+        $service = new FinancePayableReceiveService();
+        $done = [];
+        $errors = [];
+        foreach (FinanceInbox::find()->where(['id' => $ids])->all() as $inbox) {
+            $tx = Yii::$app->db->beginTransaction();
+            try {
+                $done[] = $service->receive($inbox)->payable_no;
+                $tx->commit();
+            } catch (\DomainException $e) {
+                $tx->rollBack();
+                $errors[] = $e->getMessage();
+            } catch (\Throwable $e) {
+                $tx->rollBack();
+                Yii::error($e, __METHOD__);
+                $errors[] = 'รับเอกสาร ' . ($inbox->source_document_no ?: '#' . $inbox->id) . ' ไม่สำเร็จ';
+            }
+        }
+        if ($done) {
+            Yii::$app->session->setFlash('success', 'รับเอกสารเข้าทะเบียนเจ้าหนี้แล้ว ' . count($done) . ' รายการ (' . implode(', ', $done) . ')');
+        }
+        if ($errors) {
+            Yii::$app->session->setFlash('error', implode(' · ', $errors));
+        }
+        return $this->redirect(['index']);
     }
 
     public function actionReview($id)

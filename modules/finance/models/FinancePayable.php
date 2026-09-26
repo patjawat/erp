@@ -53,7 +53,7 @@ class FinancePayable extends ActiveRecord
     {
         return [
             [[
-                'finance_inbox_id', 'vendor_id', 'vendor_name_snapshot', 'invoice_no',
+                'finance_inbox_id', 'vendor_id', 'vendor_name_snapshot',
                 'invoice_date', 'billing_date', 'due_date_basis', 'credit_days',
                 'due_date', 'gross_amount', 'net_amount', 'status',
             ], 'required'],
