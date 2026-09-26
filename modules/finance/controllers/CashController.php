@@ -356,6 +356,9 @@ class CashController extends Controller
         if ($id && $v->is_closed) {
             return ['ok' => false, 'message' => 'ใบสำคัญนี้อยู่ในงวดที่ปิดบัญชีแล้ว แก้ไขไม่ได้'];
         }
+        if ($id && self::isPayableVoucher($v->id)) {
+            return ['ok' => false, 'message' => 'ใบสำคัญนี้สร้างจากรอบจ่ายเจ้าหนี้ — แก้ไขไม่ได้ ถ้าบันทึกผิดให้ยกเลิกรอบจ่ายที่งานเจ้าหนี้'];
+        }
 
         $v->fiscal_year = (int) ($post['fiscal_year'] ?? 0);
         $v->pay_date = AppHelper::normalizeDateToDb($post['pay_date'] ?? null);
@@ -473,6 +476,9 @@ class CashController extends Controller
         }
         if ($v->is_closed) {
             Yii::$app->session->setFlash('error', 'ใบสำคัญนี้อยู่ในงวดที่ปิดบัญชีแล้ว ลบไม่ได้');
+        } elseif (self::isPayableVoucher($v->id)) {
+            // ลบตรงนี้จะ CASCADE ลบการตัดหนี้ทิ้งเงียบ ๆ (หนี้กลับมาค้าง แต่เช็ค/หนังสือนำส่งยังอยู่)
+            Yii::$app->session->setFlash('error', 'ใบสำคัญนี้สร้างจากรอบจ่ายเจ้าหนี้ — ให้ยกเลิกที่รอบจ่ายในงานเจ้าหนี้แทน');
         } else {
             $year = $v->fiscal_year;
             $v->delete(); // FK CASCADE ลบบรรทัดใน finance_cash_txn ให้เอง
@@ -480,6 +486,12 @@ class CashController extends Controller
             return $this->redirect(['expense', 'fiscal_year' => $year]);
         }
         return $this->redirect(['expense']);
+    }
+
+    /** ใบสำคัญที่ผูกกับการตัดหนี้เจ้าหนี้ (สร้างจากรอบจ่าย) — แก้/ลบจากหน้านี้ไม่ได้ */
+    private static function isPayableVoucher(int $voucherId): bool
+    {
+        return \app\modules\finance\models\FinancePayableSettlement::find()->where(['cash_voucher_id' => $voucherId])->exists();
     }
 
     /** สายบรรพบุรุษของหมวด [group, category, account] สำหรับ preselect cascade */

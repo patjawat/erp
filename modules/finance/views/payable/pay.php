@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\modules\finance\services\FinancePayablePaymentService;
 
 /** @var yii\web\View $this */
 /** @var string $mode */
@@ -12,6 +13,7 @@ use yii\helpers\Url;
 /** @var array $accounts */
 /** @var array $accountMeta */
 /** @var array $templates */
+/** @var array $categoryOptions [กลุ่ม => [id => หมวด]] */
 
 $this->title = 'จ่ายชำระเจ้าหนี้';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -91,8 +93,8 @@ $thDate = function ($d) {
             <div class="row g-3">
                 <div class="col-md-3"><label class="form-label small mb-1">วันที่จ่าย</label>
                     <input type="text" class="form-control form-control-sm" name="pay_date" value="<?= $today ?>" placeholder="วว/ดด/ปปปป"></div>
-                <div class="col-md-5"><label class="form-label small mb-1">บัญชีจ่าย</label>
-                    <select class="form-select form-select-sm" name="cash_account_id" id="cash-account">
+                <div class="col-md-5"><label class="form-label small mb-1">บัญชีจ่าย <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" name="cash_account_id" id="cash-account" required>
                         <option value="">— เลือกบัญชีจ่าย —</option>
                         <?php foreach (($accounts ?? []) as $aid => $alabel): ?>
                             <option value="<?= $aid ?>"
@@ -139,17 +141,25 @@ $thDate = function ($d) {
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr><th style="width:40px" class="text-center">จ่าย</th><th>เลขที่ใบส่งของ</th><th class="text-center">ครบกำหนด</th><th class="text-end">คงค้าง</th><th class="text-end" style="width:180px">จ่ายครั้งนี้</th></tr>
+                    <tr><th style="width:40px" class="text-center">จ่าย</th><th>เลขที่ใบส่งของ</th><th class="text-center">ครบกำหนด</th>
+                        <th style="min-width:220px">หมวดรายจ่าย (ใบสำคัญจ่าย) <span class="text-danger">*</span></th>
+                        <th class="text-end">คงค้าง</th><th class="text-end" style="width:180px">จ่ายครั้งนี้</th></tr>
                 </thead>
                 <tbody>
                     <?php if (!$rows): ?>
-                        <tr><td colspan="5" class="text-center text-body-secondary py-4">ไม่มีบิลค้าง</td></tr>
+                        <tr><td colspan="6" class="text-center text-body-secondary py-4">ไม่มีบิลค้าง</td></tr>
                     <?php endif; ?>
+                    <?php $defaultCat = $rows ? FinancePayablePaymentService::vendorCategoryId((int) $rows[0]['vendor_id']) : null; ?>
                     <?php foreach ($rows as $r): $out = (float) $r['outstanding']; ?>
                         <tr>
                             <td class="text-center"><input type="checkbox" class="form-check-input pay-check" checked data-id="<?= $r['id'] ?>"></td>
                             <td><?= Html::encode($r['invoice_no'] ?: ($r['payable_no'] ?: '#' . $r['id'])) ?></td>
                             <td class="text-center"><?= $thDate($r['due_date']) ?></td>
+                            <td class="p-1">
+                                <?= Html::dropDownList("category[{$r['id']}]", $defaultCat, $categoryOptions ?? [], [
+                                    'class' => 'form-select form-select-sm pay-category', 'prompt' => '— เลือกหมวด —', 'data-id' => $r['id'],
+                                ]) ?>
+                            </td>
                             <td class="text-end fw-semibold"><?= $fmt($out) ?></td>
                             <td class="text-end p-1">
                                 <input type="text" inputmode="decimal" class="form-control form-control-sm text-end pay-amount"
@@ -159,13 +169,13 @@ $thDate = function ($d) {
                     <?php endforeach; ?>
                 </tbody>
                 <?php if ($rows): ?>
-                <tfoot class="table-primary fw-bold"><tr><td colspan="4" class="text-end">ยอดจ่ายครั้งนี้ (เช็ค)</td><td class="text-end"><span id="pay-total">0.00</span></td></tr></tfoot>
+                <tfoot class="table-primary fw-bold"><tr><td colspan="5" class="text-end">ยอดจ่ายครั้งนี้ (เช็ค)</td><td class="text-end"><span id="pay-total">0.00</span></td></tr></tfoot>
                 <?php endif; ?>
             </table>
         </div>
         <?php if ($rows): ?>
         <div class="card-footer d-flex justify-content-end">
-            <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกจ่าย + ออกเช็ค/หนังสือนำส่ง', ['class' => 'btn btn-primary']) ?>
+            <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกจ่าย + ใบสำคัญจ่าย/เช็ค/หนังสือนำส่ง', ['class' => 'btn btn-primary']) ?>
         </div>
         <?php endif; ?>
     </section>

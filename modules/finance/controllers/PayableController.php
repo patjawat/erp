@@ -23,6 +23,7 @@ use app\modules\finance\models\FinanceChequeTemplate;
 use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\services\FinancePayableDraftService;
 use app\modules\finance\services\FinancePayableApprovalService;
+use app\modules\finance\services\FinancePayablePaymentService;
 use app\modules\accounting\models\AccountingChartAccount;
 use app\modules\sm\models\Vendor;
 
@@ -189,6 +190,7 @@ class PayableController extends Controller
             'accounts' => ArrayHelper::map($accounts, 'id', fn(FinanceCashAccount $a) => $a->label()),
             'accountMeta' => $accountMeta,
             'templates' => FinanceChequeTemplate::activeList(),
+            'categoryOptions' => FinancePayablePaymentService::categoryOptions(),
         ]);
     }
 
@@ -276,7 +278,7 @@ class PayableController extends Controller
     private function outstandingBills(string $vendor): array
     {
         $sql = "
-            SELECT p.id, p.payable_no, p.invoice_no, p.due_date, p.gross_amount,
+            SELECT p.id, p.vendor_id, p.payable_no, p.invoice_no, p.due_date, p.gross_amount,
                    p.withholding_tax_amount, p.net_amount, COALESCE(s.paid, 0) AS paid,
                    (p.net_amount - COALESCE(s.paid, 0)) AS outstanding
             FROM {{%finance_payable}} p
@@ -288,103 +290,50 @@ class PayableController extends Controller
         return Yii::$app->db->createCommand($sql, [':a' => FinancePayable::STATUS_APPROVED, ':v' => $vendor])->queryAll();
     }
 
-    /** บันทึกรอบจ่าย: สร้าง batch + settlement ผูก payment_id */
+    /** บันทึกรอบจ่าย: ตัดหนี้ + ใบสำคัญจ่ายเงินบำรุง + เช็ค (ทรานแซกชันเดียว) */
     private function processPayment($req)
     {
         $vendor = trim((string) $req->post('vendor', ''));
-        $settleDate = AppHelper::normalizeDateToDb((string) $req->post('pay_date')) ?: date('Y-m-d');
-        $lines = (array) $req->post('pay', []);
-
-        $selected = [];
-        $gross = $wht = $net = 0.0;
-        foreach ($lines as $pid => $amt) {
-            $pid = (int) $pid;
-            $amt = (float) str_replace([',', ' '], '', (string) $amt);
-            if ($amt <= 0) {
-                continue;
-            }
-            $p = FinancePayable::findOne(['id' => $pid, 'status' => FinancePayable::STATUS_APPROVED]);
-            if (!$p) {
-                continue;
-            }
-            $out = $p->getOutstanding();
-            if ($amt > $out + 0.005) {
-                $amt = $out;
-            }
-            if ($amt <= 0) {
-                continue;
-            }
-            $selected[] = ['p' => $p, 'amt' => $amt];
-            $gross += (float) $p->gross_amount;
-            $wht += (float) $p->withholding_tax_amount;
-            $net += $amt;
+        $categories = (array) $req->post('category', []);
+        $lines = [];
+        foreach ((array) $req->post('pay', []) as $pid => $amt) {
+            $lines[(int) $pid] = [
+                'amount' => (float) str_replace([',', ' '], '', (string) $amt),
+                'category_id' => (int) ($categories[$pid] ?? 0),
+            ];
         }
-        if (!$selected) {
-            Yii::$app->session->setFlash('error', 'ยังไม่ได้เลือกบิลที่จะจ่าย');
-            return $this->redirect(['pay', 'vendor' => $vendor]);
-        }
-
-        // บัญชีจ่าย: ถ้าเลือกจากทะเบียน ให้ดึงธนาคาร/สาขามาเติมอัตโนมัติ
-        $accountId = (int) $req->post('cash_account_id', 0) ?: null;
-        $bankName = trim((string) $req->post('bank_name', '')) ?: null;
-        $bankBranch = trim((string) $req->post('bank_branch', '')) ?: null;
-        if ($accountId) {
-            $acc = FinanceCashAccount::findOne($accountId);
-            if ($acc) {
-                $bankName = $acc->bank_name ?: $bankName;
-                $bankBranch = $acc->branch ?: $bankBranch;
-            }
-        }
-        $payMethod = (string) $req->post('pay_method', 'cheque');
-        $chequeNo = trim((string) $req->post('cheque_no', '')) ?: null;
+        $head = [
+            'vendor' => $vendor,
+            'pay_date' => AppHelper::normalizeDateToDb((string) $req->post('pay_date')) ?: date('Y-m-d'),
+            'cash_account_id' => (int) $req->post('cash_account_id', 0),
+            'pay_method' => (string) $req->post('pay_method', 'cheque'),
+            'cheque_no' => $req->post('cheque_no'),
+            'bank_name' => $req->post('bank_name'),
+            'bank_branch' => $req->post('bank_branch'),
+            'doc_no' => $req->post('doc_no'),
+            'subject' => $req->post('subject'),
+            'note' => $req->post('note'),
+            'template_id' => $req->post('template_id'),
+            'cheque_book_no' => $req->post('cheque_book_no'),
+            'is_ac_payee' => (bool) $req->post('is_ac_payee'),
+        ];
 
         $tx = Yii::$app->db->beginTransaction();
         try {
-            $pay = new FinancePayablePayment([
-                'vendor_name_snapshot' => $vendor ?: $selected[0]['p']->vendor_name_snapshot,
-                'vendor_id' => (int) $selected[0]['p']->vendor_id,
-                'cash_account_id' => $accountId,
-                'pay_date' => $settleDate,
-                'pay_method' => $payMethod,
-                'bank_name' => $bankName,
-                'bank_branch' => $bankBranch,
-                'cheque_no' => $chequeNo,
-                'doc_no' => trim((string) $req->post('doc_no', '')) ?: null,
-                'subject' => trim((string) $req->post('subject', '')) ?: null,
-                'gross_total' => $gross,
-                'wht_total' => $wht,
-                'net_total' => $net,
-                'note' => trim((string) $req->post('note', '')) ?: null,
-            ]);
-            $pay->save(false);
-            foreach ($selected as $s) {
-                (new FinancePayableSettlement([
-                    'payable_id' => $s['p']->id,
-                    'payment_id' => $pay->id,
-                    'amount' => $s['amt'],
-                    'settle_date' => $settleDate,
-                    'note' => $pay->cheque_no ? ('เช็ค ' . $pay->cheque_no) : null,
-                ]))->save(false);
-            }
-
-            // จ่ายด้วยเช็ค → บันทึกเช็คเข้าทะเบียนคุมเช็คอัตโนมัติ
-            if ($payMethod === 'cheque' && $chequeNo) {
-                $cheque = FinanceCheque::fromPayment($pay);
-                $cheque->template_id = (int) $req->post('template_id', 0) ?: null;
-                $cheque->cheque_book_no = trim((string) $req->post('cheque_book_no', '')) ?: null;
-                $cheque->is_ac_payee = $req->post('is_ac_payee') ? 1 : 0;
-                $cheque->status = FinanceCheque::STATUS_DRAFT;
-                $cheque->save(false);
-            }
+            $pay = (new FinancePayablePaymentService())->pay($lines, $head);
             $tx->commit();
-            Yii::$app->session->setFlash('success', 'บันทึกจ่ายชำระ ' . count($selected) . ' บิล รวม ' . number_format($net, 2) . ' บาท');
+            Yii::$app->session->setFlash('success', 'บันทึกจ่ายชำระ ' . count($pay->settlements) . ' บิล รวม '
+                . number_format((float) $pay->net_total, 2) . ' บาท และออกใบสำคัญจ่ายเงินบำรุงแล้ว');
             return $this->redirect(['letter', 'id' => $pay->id]);
+        } catch (\DomainException $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
         } catch (\Throwable $e) {
             $tx->rollBack();
             Yii::error($e, __METHOD__);
             Yii::$app->session->setFlash('error', 'บันทึกจ่ายชำระไม่สำเร็จ');
-            return $this->redirect(['pay', 'vendor' => $vendor]);
         }
+        return $this->redirect(['pay', 'vendor' => $vendor]);
     }
 
     /** การเงินส่งเจ้าหนี้ (อนุมัติแล้ว) ให้บัญชีลงบันทึก */
