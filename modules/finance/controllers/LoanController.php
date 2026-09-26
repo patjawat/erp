@@ -3,6 +3,7 @@
 namespace app\modules\finance\controllers;
 
 use app\components\AppHelper;
+use app\components\SiteHelper;
 use app\modules\finance\models\FinanceLoan;
 use app\modules\finance\models\FinanceLoanFollowup;
 use app\modules\finance\models\FinanceLoanImportForm;
@@ -11,6 +12,8 @@ use app\modules\finance\models\FinanceLoanSearch;
 use app\modules\finance\models\FinanceLoanSettlement;
 use app\modules\finance\services\FinanceLoanFollowupService;
 use app\modules\finance\services\FinanceLoanImportService;
+use app\modules\finance\services\FinanceLoanMonthlyRegister;
+use app\modules\finance\services\FinanceLoanMonthlyRegisterExcel;
 use app\modules\finance\services\FinanceLoanSettlementService;
 use Yii;
 use yii\filters\AccessControl;
@@ -259,6 +262,51 @@ class LoanController extends Controller
             ->column();
 
         return $this->render('register', compact('loans', 'fiscalYear', 'month', 'months'));
+    }
+
+    /**
+     * ทะเบียนคุมเอกสารแทนตัวเงิน สัญญารับรองการยืมเงิน ประจำเดือน
+     * หน้าพิมพ์ตามแบบ Excel เดิมของงานการเงิน และส่งออกเป็นไฟล์ Excel ได้
+     */
+    public function actionMonthlyRegister($month = null, $format = null)
+    {
+        $month = preg_match('/^\d{4}-\d{2}$/', (string) $month) ? $month : date('Y-m');
+        $report = FinanceLoanMonthlyRegister::build($month);
+        $site = SiteHelper::getInfo();
+        $signers = $this->monthlyRegisterSigners($site);
+
+        if ($format === 'xlsx') {
+            $path = FinanceLoanMonthlyRegisterExcel::write($report, $site, $signers);
+            $response = Yii::$app->response->sendFile($path, 'ทะเบียนคุมเงินยืม ' . FinanceLoanMonthlyRegister::monthLabel($month) . '.xlsx', [
+                'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+            $response->on(\yii\web\Response::EVENT_AFTER_SEND, static fn() => @unlink($path));
+            return $response;
+        }
+
+        $this->layout = false;
+        return $this->render('monthly-register', compact('report', 'site', 'signers'));
+    }
+
+    /** ผู้จัดทำ = ผู้ใช้ที่สั่งพิมพ์ / ผู้อนุมัติ = ผู้อำนวยการจากข้อมูลหน่วยงาน */
+    private function monthlyRegisterSigners(array $site): array
+    {
+        $person = static function ($employee): array {
+            if (!$employee) {
+                return ['name' => '', 'position' => ''];
+            }
+            return [
+                'name' => method_exists($employee, 'fullname') ? (string) $employee->fullname() : '',
+                'position' => method_exists($employee, 'positionName') ? (string) ($employee->positionName() ?: '') : '',
+            ];
+        };
+        $director = $person($site['director'] ?? null);
+        $director['position'] = trim((string) ($site['director_position'] ?? ''))
+            ?: ('ผู้อำนวยการ' . trim((string) ($site['company_name'] ?? '')));
+        return [
+            'preparer' => $person(Yii::$app->user->identity->employee ?? null),
+            'director' => $director,
+        ];
     }
 
     /** ทะเบียนลูกหนี้ค้างชำระ เรียงตามค้างนานที่สุด */

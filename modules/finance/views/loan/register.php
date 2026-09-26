@@ -71,6 +71,9 @@ foreach ($loans as $loan) {
                     <i class="bi bi-printer me-1" aria-hidden="true"></i> พิมพ์
                 </button>
             </div>
+            <div class="col-12 col-lg-2 d-grid">
+                <?= Html::a('<i class="bi bi-calendar3 me-1"></i> แบบรายเดือน', ['monthly-register', 'month' => $month ?: null], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
+            </div>
         </form>
     </div>
 </section>

@@ -31,6 +31,7 @@ $isFiltered = (bool) array_filter([$searchModel->q, $searchModel->status, $searc
         <?= Html::a('<i class="bi bi-plus-circle me-1"></i> เพิ่มใบยืม', ['create'], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('<i class="bi bi-hourglass-split me-1"></i> ลูกหนี้ค้าง', ['outstanding'], ['class' => 'btn btn-outline-danger']) ?>
         <?= Html::a('<i class="bi bi-table me-1"></i> ทะเบียนคุม', ['register'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::a('<i class="bi bi-calendar3 me-1"></i> ทะเบียนคุมรายเดือน', ['monthly-register'], ['class' => 'btn btn-outline-secondary', 'target' => '_blank']) ?>
         <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์เอกสาร', ['/finance/loan-document/index'], ['class' => 'btn btn-outline-primary']) ?>
         <?= Html::a('<i class="bi bi-file-earmark-arrow-up me-1"></i> นำเข้าจากไฟล์', ['import'], ['class' => 'btn btn-outline-secondary']) ?>
         <?php if (Yii::$app->user->can('financeAdmin')): ?>
