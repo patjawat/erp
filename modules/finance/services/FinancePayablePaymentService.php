@@ -115,7 +115,8 @@ class FinancePayablePaymentService
             $cheque = FinanceCheque::fromPayment($pay);
             $cheque->template_id = $req['template_id'] ?? null;
             $cheque->cheque_book_no = $req['cheque_book_no'] ?? null;
-            $cheque->is_ac_payee = !empty($req['is_ac_payee']) ? 1 : 0;
+            // ติ๊ก A/C PAYEE → รูปแบบ ac_payee (ขีดฆ่า+คร่อม+ข้อความ) ไม่ติ๊ก → ระบุชื่อ (ขีดฆ่าอย่างเดียว)
+            $cheque->form_type = !empty($req['is_ac_payee']) ? FinanceCheque::FORM_AC_PAYEE : FinanceCheque::FORM_NAMED;
             $cheque->status = FinanceCheque::STATUS_DRAFT;
             $cheque->save(false);
         }

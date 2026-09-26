@@ -45,6 +45,37 @@ class FinanceCheque extends ActiveRecord
         ];
     }
 
+    // รูปแบบการเขียนเช็ค (ตามคู่มือ 1-6) — คุมการขีดฆ่า "หรือผู้ถือ" + ขีดคร่อม + ข้อความ
+    public const FORM_BEARER = 'bearer';         // ผู้ถือ: ไม่ขีดฆ่า ไม่คร่อม
+    public const FORM_NAMED = 'named';           // ระบุชื่อ: ขีดฆ่า "หรือผู้ถือ"
+    public const FORM_CROSSED = 'crossed';       // ขีดคร่อมทั่วไป: ขีดฆ่า + คร่อม 2 เส้น
+    public const FORM_AC_PAYEE = 'ac_payee';     // A/C PAYEE ONLY: ขีดฆ่า + คร่อม + ข้อความ
+    public const FORM_AC_BANK = 'ac_payee_bank'; // คร่อมเฉพาะธนาคาร: ขีดฆ่า + คร่อม + ชื่อธนาคาร
+
+    public static function formTypeOptions(): array
+    {
+        return [
+            self::FORM_AC_PAYEE => 'A/C PAYEE ONLY (โอนเข้าบัญชีผู้รับเท่านั้น)',
+            self::FORM_NAMED => 'ระบุชื่อ (ขีดฆ่า "หรือผู้ถือ")',
+            self::FORM_CROSSED => 'ขีดคร่อมทั่วไป (เข้าบัญชีเท่านั้น)',
+            self::FORM_AC_BANK => 'คร่อมเฉพาะธนาคาร',
+            self::FORM_BEARER => 'ผู้ถือ (จ่ายสด/ไม่ขีดฆ่า)',
+        ];
+    }
+
+    /** คืน [strike(ขีดฆ่าหรือผู้ถือ), cross(ขีดคร่อม), text(ข้อความในคร่อม)] ตาม form_type */
+    public static function resolveForm(string $ft, string $bankName = ''): array
+    {
+        switch ($ft) {
+            case self::FORM_BEARER:   return [false, false, ''];
+            case self::FORM_NAMED:    return [true, false, ''];
+            case self::FORM_CROSSED:  return [true, true, ''];
+            case self::FORM_AC_BANK:  return [true, true, trim($bankName) !== '' ? $bankName : 'A/C PAYEE ONLY'];
+            case self::FORM_AC_PAYEE:
+            default:                  return [true, true, 'A/C PAYEE ONLY'];
+        }
+    }
+
     /** ลำดับการเดินสถานะที่อนุญาต (ไม่รวม void ซึ่งทำได้ทุกสถานะที่ยังไม่ยกเลิก) */
     public const FLOW = [
         self::STATUS_DRAFT => [self::STATUS_PRINTED],
@@ -90,6 +121,8 @@ class FinanceCheque extends ActiveRecord
             [['status'], 'in', 'range' => array_keys(self::statusOptions())],
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
             [['is_ac_payee'], 'default', 'value' => 1],
+            [['form_type'], 'in', 'range' => array_keys(self::formTypeOptions())],
+            [['form_type'], 'default', 'value' => self::FORM_AC_PAYEE],
             [['cheque_book_no', 'cheque_no'], 'string', 'max' => 50],
             [['payee_name', 'amount_text', 'void_reason', 'note'], 'string', 'max' => 255],
         ];
@@ -105,6 +138,7 @@ class FinanceCheque extends ActiveRecord
             'amount' => 'จำนวนเงิน',
             'amount_text' => 'จำนวนเงินตัวอักษร',
             'is_ac_payee' => 'ขีดคร่อม A/C PAYEE ONLY',
+            'form_type' => 'รูปแบบเช็ค',
             'status' => 'สถานะ',
             'void_reason' => 'เหตุผลยกเลิก',
             'note' => 'หมายเหตุ',
@@ -120,6 +154,8 @@ class FinanceCheque extends ActiveRecord
         if ($this->amount !== null && $this->amount !== '') {
             $this->amount_text = BahtText::convert($this->amount);
         }
+        // sync is_ac_payee จาก form_type (เพื่อความเข้ากันได้กับส่วนที่อ้าง is_ac_payee)
+        $this->is_ac_payee = in_array($this->form_type, [self::FORM_AC_PAYEE, self::FORM_AC_BANK], true) ? 1 : 0;
         $uid = (Yii::$app->has('user') && !Yii::$app->user->isGuest) ? Yii::$app->user->id : null;
         $now = time();
         if ($insert) {
@@ -205,6 +241,7 @@ class FinanceCheque extends ActiveRecord
         $cheque->cheque_date = $pay->pay_date;
         $cheque->payee_name = $pay->vendor_name_snapshot;
         $cheque->amount = $pay->net_total;
+        $cheque->form_type = self::FORM_AC_PAYEE;
         $cheque->status = self::STATUS_DRAFT;
         return $cheque;
     }

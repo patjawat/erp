@@ -58,7 +58,7 @@ $thDate = fn($d) => $d ? (date_create($d) ? date_create($d)->format('d/m/') . ((
                     <tr><th>ตัวอักษร</th><td><?= Html::encode($cheque->amount_text) ?></td></tr>
                     <tr><th>บัญชีจ่าย</th><td><?= $cheque->cashAccount ? Html::encode($cheque->cashAccount->label()) : '–' ?></td></tr>
                     <tr><th>ธนาคาร/แม่แบบ</th><td><?= $cheque->template ? Html::encode($cheque->template->bank_name . ' — ' . $cheque->template->name) : '–' ?></td></tr>
-                    <tr><th>ขีดคร่อม A/C PAYEE ONLY</th><td><?= $cheque->is_ac_payee ? '<span class="text-success">พิมพ์</span>' : '<span class="text-muted">ไม่พิมพ์</span>' ?></td></tr>
+                    <tr><th>รูปแบบเช็ค</th><td><?= Html::encode(FinanceCheque::formTypeOptions()[$cheque->form_type] ?? $cheque->form_type) ?></td></tr>
                     <?php if ($cheque->payment_id): ?>
                         <tr><th>รอบจ่ายเจ้าหนี้</th><td><a href="<?= Url::to(['/finance/payable/letter', 'id' => $cheque->payment_id]) ?>">หนังสือนำส่ง #<?= (int) $cheque->payment_id ?></a></td></tr>
                     <?php endif; ?>

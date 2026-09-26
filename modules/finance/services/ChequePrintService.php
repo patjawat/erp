@@ -6,6 +6,7 @@ use Yii;
 use setasign\Fpdi\Fpdi;
 use app\modules\finance\components\BahtText;
 use app\modules\finance\models\FinanceChequeTemplate;
+use app\modules\finance\models\FinanceCheque;
 
 /**
  * พิมพ์ข้อความลงบนแผ่นเช็ค (overlay) ด้วย FPDI/FPDF
@@ -56,6 +57,12 @@ class ChequePrintService
 
         $values = $this->fieldValues($data);
 
+        // รูปแบบเช็ค → คุมการขีดฆ่า "หรือผู้ถือ" / ขีดคร่อม / ข้อความในคร่อม
+        [$doStrike, $doCross, $crossText] = FinanceCheque::resolveForm(
+            (string) ($data['form_type'] ?? FinanceCheque::FORM_AC_PAYEE),
+            (string) ($data['bank_name'] ?? '')
+        );
+
         // วัดตำแหน่ง "ท้ายชื่อผู้รับ" ไว้ก่อน เพื่อลากเส้นขีดฆ่าต่อจากชื่อไปจนคร่อม "หรือผู้ถือ"
         $payeeEndX = null;
         foreach ($tpl->layout() as $f) {
@@ -82,6 +89,9 @@ class ChequePrintService
             // ขีดฆ่า "หรือผู้ถือ": ลากเส้นจากท้ายชื่อผู้รับ → ปลายบรรทัด (field.x=ปลายเส้น, field.y=ระดับเส้น)
             // กันเติมชื่อ/ข้อความแทรก และคร่อมทับ "หรือผู้ถือ/or bearer" ที่พิมพ์มาบนเช็ค
             if ($key === 'strike_bearer') {
+                if (!$doStrike) {
+                    continue;
+                }
                 $endX = $x;
                 $startX = $payeeEndX !== null ? $payeeEndX + 2 : $endX - ($pitch > 0 ? $pitch : 40) / 100 * $w;
                 if ($endX > $startX) {
@@ -91,18 +101,19 @@ class ChequePrintService
                 continue;
             }
 
-            // A/C PAYEE ONLY: ขีดคร่อม 2 เส้นทแยง (//) ด้านซ้าย + ข้อความ (รูปแบบ 5 ในคู่มือ)
+            // ขีดคร่อม: เส้นทแยงคู่ขนาน (//) + ข้อความ (A/C PAYEE ONLY / ชื่อธนาคาร) ตามรูปแบบเช็ค
             if ($key === 'ac_payee') {
-                if (empty($values['ac_payee'])) {
+                if (!$doCross) {
                     continue;
                 }
-                $size = (float) ($f['font_size'] ?? 14);
                 $pdf->SetLineWidth(0.5);
                 // เส้นทแยงคู่ขนานจากล่างซ้าย → บนขวา
                 $pdf->Line($x - 11, $y + 1.5, $x - 4, $y - 6.5);
                 $pdf->Line($x - 7, $y + 1.5, $x, $y - 6.5);
-                $pdf->SetFont('THSarabunNew', 'B', $size);
-                $pdf->Text($x, $y, iconv('UTF-8', 'cp874//IGNORE', $values['ac_payee']));
+                if ($crossText !== '') {
+                    $pdf->SetFont('THSarabunNew', 'B', (float) ($f['font_size'] ?? 14));
+                    $pdf->Text($x, $y, iconv('UTF-8', 'cp874//IGNORE', $crossText));
+                }
                 continue;
             }
 

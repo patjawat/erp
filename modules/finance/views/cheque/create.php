@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use app\widgets\datepicker\DatepickerThai;
+use app\modules\finance\models\FinanceCheque;
 
 /** @var yii\web\View $this */
 /** @var app\modules\finance\models\FinanceCheque $cheque */
@@ -100,11 +101,14 @@ $isEditJs = $isEdit ? 'true' : 'false';
                             <span id="ck-bahttext" class="fw-semibold ms-1">—</span>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="is_ac_payee" id="ck-ac" value="1" <?= $cheque->is_ac_payee ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="ck-ac">พิมพ์ขีดคร่อม A/C PAYEE ONLY</label>
-                        </div>
+                    <div class="col-md-7">
+                        <label class="form-label small">รูปแบบเช็ค</label>
+                        <select name="form_type" id="ck-form" class="form-select">
+                            <?php foreach (FinanceCheque::formTypeOptions() as $fk => $fv): ?>
+                                <option value="<?= $fk ?>" <?= ($cheque->form_type ?: FinanceCheque::FORM_AC_PAYEE) === $fk ? 'selected' : '' ?>><?= Html::encode($fv) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">คุมการขีดฆ่า "หรือผู้ถือ" + ขีดคร่อมอัตโนมัติ (ตามคู่มือ)</div>
                     </div>
                 </div>
                 <div class="mt-3 d-flex gap-2">
@@ -162,7 +166,7 @@ $js = <<<JS
   }
   var amount=document.getElementById('ck-amount'), baht=document.getElementById('ck-bahttext');
   var payee=document.getElementById('ck-payee'), tpl=document.getElementById('ck-tpl');
-  var date=document.getElementById('ck-date'), ac=document.getElementById('ck-ac');
+  var date=document.getElementById('ck-date'), form=document.getElementById('ck-form');
   var frame=document.getElementById('ck-preview'), base='{$previewBase}';
   var acc=document.getElementById('ck-acc'), no=document.getElementById('ck-no'), noHint=document.getElementById('ck-no-hint');
   var book=document.getElementById('ck-book'), bookHint=document.getElementById('ck-book-hint');
@@ -212,12 +216,12 @@ $js = <<<JS
     var d=toYmd(date.value); if(d) q.set('d',d);
     q.set('p', payee.value||'');
     q.set('a', String(amount.value).replace(/[,\\s]/g,'')||'0');
-    q.set('ac', ac.checked?'1':'0');
+    q.set('ft', form.value||'ac_payee');
     frame.src = base+'?'+q.toString();
   }
   amount.addEventListener('input', updBaht);
   document.getElementById('ck-refresh').addEventListener('click', updPreview);
-  [payee,amount,date,tpl,ac].forEach(function(el){ el.addEventListener('change', updPreview); });
+  [payee,amount,date,tpl,form].forEach(function(el){ el.addEventListener('change', updPreview); });
   if(window.jQuery){ jQuery(date).on('change', updPreview); } // datepicker ไทยยิง change ผ่าน jQuery
   if(acc){ acc.addEventListener('change', function(){ fetchBooks(); updPreview(); }); }
   if(book){ book.addEventListener('change', applyBook); }

@@ -75,7 +75,7 @@ class ChequeController extends Controller
     /** ออกเช็คใหม่เอง (ไม่ผ่านจ่ายเจ้าหนี้) — คีย์ข้อมูล → บันทึกทะเบียน → พิมพ์ */
     public function actionCreate()
     {
-        $cheque = new FinanceCheque(['status' => FinanceCheque::STATUS_DRAFT, 'is_ac_payee' => 1]);
+        $cheque = new FinanceCheque(['status' => FinanceCheque::STATUS_DRAFT, 'form_type' => FinanceCheque::FORM_AC_PAYEE]);
         $req = Yii::$app->request;
 
         if ($req->isPost) {
@@ -91,7 +91,7 @@ class ChequeController extends Controller
             $cheque->cheque_date = AppHelper::normalizeDateToDb((string) $req->post('cheque_date', '')) ?: null;
             $cheque->payee_name = trim((string) $req->post('payee_name', ''));
             $cheque->amount = (float) str_replace([',', ' '], '', (string) $req->post('amount', '0'));
-            $cheque->is_ac_payee = $req->post('is_ac_payee') ? 1 : 0;
+            $cheque->form_type = (string) $req->post('form_type', FinanceCheque::FORM_AC_PAYEE);
 
             if ($cheque->validate()) {
                 // กันเลขเช็คซ้ำต่อบัญชี (unique index) ให้ error สวย ๆ แทน exception
@@ -135,7 +135,7 @@ class ChequeController extends Controller
             $cheque->cheque_date = AppHelper::normalizeDateToDb((string) $req->post('cheque_date', '')) ?: null;
             $cheque->payee_name = trim((string) $req->post('payee_name', ''));
             $cheque->amount = (float) str_replace([',', ' '], '', (string) $req->post('amount', '0'));
-            $cheque->is_ac_payee = $req->post('is_ac_payee') ? 1 : 0;
+            $cheque->form_type = (string) $req->post('form_type', FinanceCheque::FORM_AC_PAYEE);
 
             if ($cheque->validate()) {
                 // กันเลขเช็คซ้ำต่อบัญชี (ยกเว้นใบนี้เอง)
@@ -446,7 +446,8 @@ class ChequeController extends Controller
             'cheque_date' => $cheque->cheque_date,
             'payee' => $cheque->payee_name,
             'amount' => (float) $cheque->amount,
-            'print_ac_payee' => (int) $cheque->is_ac_payee === 1,
+            'form_type' => $cheque->form_type,
+            'bank_name' => $cheque->cashAccount->bank_name ?? '',
         ], false);
     }
 
@@ -493,7 +494,8 @@ class ChequeController extends Controller
             'cheque_date' => $req->get('d', date('Y-m-d')),
             'payee' => $req->get('p', 'ตัวอย่าง ผู้รับเงิน จำกัด'),
             'amount' => (float) $req->get('a', 53460),
-            'print_ac_payee' => $req->get('ac', '1') === '1',
+            'form_type' => $req->get('ft', FinanceCheque::FORM_AC_PAYEE),
+            'bank_name' => $req->get('bank', ''),
         ];
     }
 
