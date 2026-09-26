@@ -492,7 +492,113 @@ class PeriodController extends Controller
         $empId = (int) $this->request->post('emp_id');
         $day = (int) $this->request->post('day');
         $unitShiftId = (int) $this->request->post('unit_shift_id');
-        if (!$empId || !$day || !$unitShiftId) {
+        $mode = (string) $this->request->post('mode', 'toggle');
+
+        $result = $this->applyCell($period, $empId, $day, $unitShiftId, $mode);
+        if ($result['status'] !== 'success') {
+            return $result;
+        }
+        return $result + [
+            'counts' => $this->dayCounts($period, $day),
+            'summary' => $this->summary($period),
+            'empTotals' => $this->employeeTotals($period, $empId),
+        ];
+    }
+
+    /**
+     * ลงเวรหลายช่องในคำขอเดียว — ใช้กับโหมด "เลือกช่วง" และ "เติมรูปแบบ"
+     * ทุกช่องเป็นแบบแทนที่ (ช่องนั้นจะเหลือเวรเดียวตามที่ส่งมา · shift=0 คือล้างช่อง)
+     * ช่องที่ติดปัญหาข้ามไป ไม่ยกเลิกทั้งชุด เพราะผู้ใช้เห็นผลรายช่องบนจออยู่แล้ว
+     */
+    public function actionAssignBatch()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $period = Period::findOne((int) $this->request->post('period_id'));
+        if (!$period) {
+            return ['status' => 'error', 'message' => 'ไม่พบรอบเวร'];
+        }
+        if (!RosterAccess::canManageUnit((int) $period->unit_id)) {
+            return ['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์จัดเวรของหน่วยงานนี้'];
+        }
+        if (!$period->isEditable()) {
+            return ['status' => 'error', 'message' => 'รอบเวรนี้ถูกล็อกแล้ว (' . $period->getStatusLabel() . ')'];
+        }
+
+        $cells = $this->request->post('cells');
+        if (!is_array($cells) || !$cells) {
+            return ['status' => 'error', 'message' => 'ยังไม่ได้เลือกช่อง'];
+        }
+        if (count($cells) > 2000) {
+            return ['status' => 'error', 'message' => 'เลือกช่องมากเกินไปในครั้งเดียว'];
+        }
+
+        $results = [];
+        $warnings = [];
+        $errors = [];
+        $days = [];
+        $emps = [];
+        foreach ($cells as $cell) {
+            $empId = (int) ($cell['emp'] ?? 0);
+            $day = (int) ($cell['day'] ?? 0);
+            $shiftId = (int) ($cell['shift'] ?? 0);
+            $res = $this->applyCell($period, $empId, $day, $shiftId, $shiftId ? 'replace' : 'clear');
+            $results[] = [
+                'emp' => $empId,
+                'day' => $day,
+                'status' => $res['status'],
+                'items' => $res['items'] ?? null,
+            ];
+            if ($res['status'] !== 'success') {
+                $errors[] = 'วันที่ ' . $day . ': ' . ($res['message'] ?? 'บันทึกไม่สำเร็จ');
+                continue;
+            }
+            $days[$day] = true;
+            $emps[$empId] = true;
+            foreach ($res['warnings'] ?? [] as $w) {
+                $warnings[] = 'วันที่ ' . $day . ': ' . $w;
+            }
+        }
+
+        $counts = [];
+        foreach (array_keys($days) as $day) {
+            $counts[$day] = $this->dayCounts($period, $day);
+        }
+        $empTotals = [];
+        foreach (array_keys($emps) as $empId) {
+            $empTotals[$empId] = $this->employeeTotals($period, $empId);
+        }
+
+        return [
+            'status' => 'success',
+            'cells' => $results,
+            'counts' => $counts,
+            'empTotals' => $empTotals,
+            'summary' => $this->summary($period),
+            'warnings' => array_slice($warnings, 0, 20),
+            'warningTotal' => count($warnings),
+            'errors' => array_slice($errors, 0, 20),
+            'errorTotal' => count($errors),
+        ];
+    }
+
+    /**
+     * ลงเวรหนึ่งช่อง (คน × วัน) — แกนกลางของทุกวิธีลงเวร
+     *
+     * mode:
+     *   toggle   มีอยู่แล้ว = เอาออก ไม่มี = เพิ่ม (โหมดปากกาเดิม ใส่ได้หลายเวรต่อช่อง เช่น ช/บ)
+     *   add      ให้มีเวรนี้ในช่อง ถ้ามีแล้วไม่ทำอะไร (เพิ่มเวรที่สองโดยไม่ลบของเดิม)
+     *   replace  ช่องนี้เหลือเวรนี้เวรเดียว (โหมดพิมพ์รหัส/กล่องเลือก — พิมพ์ทับได้เลยไม่ต้องลบก่อน)
+     *   clear    ล้างทุกเวรในช่อง
+     *
+     * คืน items = เวรทั้งหมดในช่องหลังทำเสร็จ ให้หน้าจอวาดตามจริง ไม่ต้องเดาจาก action
+     */
+    private function applyCell(Period $period, int $empId, int $day, int $unitShiftId, string $mode): array
+    {
+        if (!in_array($mode, ['toggle', 'add', 'replace', 'clear'], true)) {
+            $mode = 'toggle';
+        }
+        if (!$empId || !$day || (!$unitShiftId && $mode !== 'clear')) {
             return ['status' => 'error', 'message' => 'ข้อมูลไม่ครบ'];
         }
         if (!$this->isEmployeeOnPeriod($period, $empId)) {
@@ -501,6 +607,25 @@ class PeriodController extends Controller
         if ($day < 1 || $day > $period->daysInMonth()) {
             return ['status' => 'error', 'message' => 'วันที่อยู่นอกรอบเวรนี้'];
         }
+        $workDate = $period->dateOfDay($day);
+        $cellQuery = static function () use ($period, $empId, $workDate) {
+            return Item::find()->where([
+                'period_id' => $period->id,
+                'emp_id' => $empId,
+                'work_date' => $workDate,
+            ])->andWhere(['<>', 'status', Item::STATUS_CANCELLED]);
+        };
+        $cellItems = static function () use ($cellQuery): array {
+            return array_map('intval', $cellQuery()->select('unit_shift_id')->column());
+        };
+
+        if ($mode === 'clear') {
+            foreach ($cellQuery()->all() as $old) {
+                $old->delete();
+            }
+            return ['status' => 'success', 'action' => 'removed', 'items' => [], 'warnings' => []];
+        }
+
         $unitShift = UnitShift::findOne(['id' => $unitShiftId, 'unit_id' => $period->unit_id]);
         if (!$unitShift) {
             return ['status' => 'error', 'message' => 'ไม่พบเวรนี้ในหน่วยงาน'];
@@ -508,7 +633,6 @@ class PeriodController extends Controller
         if (!$period->coversShift($unitShiftId)) {
             return ['status' => 'error', 'message' => 'เวรนี้ไม่ได้อยู่ในแผ่นนี้ — ไปจัดที่แผ่นที่ครอบเวรนี้'];
         }
-        $workDate = $period->dateOfDay($day);
 
         $existing = Item::findOne([
             'period_id' => $period->id,
@@ -517,20 +641,24 @@ class PeriodController extends Controller
             'unit_shift_id' => $unitShiftId,
         ]);
 
-        if ($existing) {
+        if ($existing && $mode === 'toggle') {
             $existing->delete();
-            return [
-                'status' => 'success',
-                'action' => 'removed',
-                'counts' => $this->dayCounts($period, $day),
-                'summary' => $this->summary($period),
-                'empTotals' => $this->employeeTotals($period, $empId),
-            ];
+            return ['status' => 'success', 'action' => 'removed', 'items' => $cellItems(), 'warnings' => []];
+        }
+        if ($existing) {
+            // add/replace เวรที่มีอยู่แล้ว — replace ต้องล้างเวรอื่นในช่องออก
+            if ($mode === 'replace') {
+                foreach ($cellQuery()->andWhere(['<>', 'unit_shift_id', $unitShiftId])->all() as $old) {
+                    $old->delete();
+                }
+            }
+            return ['status' => 'success', 'action' => 'kept', 'items' => $cellItems(), 'warnings' => []];
         }
 
         // เวรเดียวกัน วันเดียวกัน คนเดียวกัน มีได้ครั้งเดียว แม้จะอยู่คนละแผ่น
         // แต่กริดแสดงเฉพาะเวรของแผ่นตัวเอง ช่องจึงดูว่างทั้งที่ชนอยู่กับอีกแผ่น
         // ถ้าปล่อยให้ unique rule เด้งเอง ผู้ใช้จะเห็นแค่ "จัดเวรไว้แล้ว" ทั้งที่ตรงหน้าไม่มีอะไร
+        // (ตรวจก่อนลบของเดิมในโหมด replace — ชนแล้วช่องต้องไม่ว่างหายไปเฉยๆ)
         $conflict = Item::find()
             ->where(['emp_id' => $empId, 'work_date' => $workDate, 'unit_shift_id' => $unitShiftId])
             ->andWhere(['<>', 'period_id', $period->id])
@@ -555,16 +683,29 @@ class PeriodController extends Controller
             ];
         }
 
-        $item = new Item([
-            'period_id' => $period->id,
-            'emp_id' => $empId,
-            'work_date' => $workDate,
-            'unit_shift_id' => $unitShiftId,
-            'is_extra' => $unitShift->shiftType && $unitShift->shiftType->is_extra ? 1 : 0,
-        ]);
-        if (!$item->save()) {
-            $first = array_values($item->getFirstErrors());
-            return ['status' => 'error', 'message' => $first[0] ?? 'บันทึกไม่สำเร็จ'];
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($mode === 'replace') {
+                foreach ($cellQuery()->all() as $old) {
+                    $old->delete();
+                }
+            }
+            $item = new Item([
+                'period_id' => $period->id,
+                'emp_id' => $empId,
+                'work_date' => $workDate,
+                'unit_shift_id' => $unitShiftId,
+                'is_extra' => $unitShift->shiftType && $unitShift->shiftType->is_extra ? 1 : 0,
+            ]);
+            if (!$item->save()) {
+                $transaction->rollBack();
+                $first = array_values($item->getFirstErrors());
+                return ['status' => 'error', 'message' => $first[0] ?? 'บันทึกไม่สำเร็จ'];
+            }
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
         }
 
         // ตรวจกฎ "หลัง" บันทึก เพราะกฎเป็นคำเตือน ไม่ใช่เงื่อนไขการบันทึก
@@ -580,10 +721,8 @@ class PeriodController extends Controller
             'status' => 'success',
             'action' => 'added',
             'itemId' => $item->id,
+            'items' => $cellItems(),
             'warnings' => $warnings,
-            'counts' => $this->dayCounts($period, $day),
-            'summary' => $this->summary($period),
-            'empTotals' => $this->employeeTotals($period, $empId),
         ];
     }
 
