@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\widgets\datepicker\DatepickerThai;
 
 /** @var yii\web\View $this */
 /** @var app\modules\finance\models\FinanceCheque $cheque */
@@ -75,7 +76,11 @@ $bookCreate = Url::to(['book-create']);
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">วันที่สั่งจ่าย</label>
-                        <input type="text" name="cheque_date" id="ck-date" class="form-control" value="<?= Html::encode($dateVal) ?>" placeholder="วว/ดด/ปปปป">
+                        <?= DatepickerThai::widget([
+                            'name' => 'cheque_date',
+                            'value' => $dateVal,
+                            'options' => ['id' => 'ck-date', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                        ]) ?>
                     </div>
                     <div class="col-md-8">
                         <label class="form-label small">จ่ายให้ (ชื่อผู้รับ) <span class="text-danger">*</span></label>
@@ -207,6 +212,7 @@ $js = <<<JS
   amount.addEventListener('input', updBaht);
   document.getElementById('ck-refresh').addEventListener('click', updPreview);
   [payee,amount,date,tpl,ac].forEach(function(el){ el.addEventListener('change', updPreview); });
+  if(window.jQuery){ jQuery(date).on('change', updPreview); } // datepicker ไทยยิง change ผ่าน jQuery
   if(acc){ acc.addEventListener('change', function(){ fetchBooks(); updPreview(); }); }
   if(book){ book.addEventListener('change', applyBook); }
   updBaht(); updPreview(); if(acc && acc.value) fetchBooks();

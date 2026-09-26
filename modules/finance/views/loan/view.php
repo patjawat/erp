@@ -22,7 +22,7 @@ $this->beginBlock('page-title'); ?>
 <?php $this->endBlock();
 $this->beginBlock('sub-title'); ?><?= Html::encode($model->borrower_name) ?><?= $model->borrower_position ? ' · ' . Html::encode($model->borrower_position) : '' ?><?php $this->endBlock();
 
-$date = fn($value, $fallback = '—') => $value ? Yii::$app->formatter->asDate($value, 'php:d/m/Y') : $fallback;
+$date = fn($value, $fallback = '—') => $value ? \app\modules\finance\components\ThaiDate::date($value) : $fallback;
 $registerTotals = $model->registerTotals();
 $columns = FinanceLoanItemKind::registerColumnOptions();
 ?>
@@ -264,7 +264,7 @@ $columns = FinanceLoanItemKind::registerColumnOptions();
                         <i class="bi <?= $isLetter ? 'bi-envelope-paper' : 'bi-send' ?> me-1" aria-hidden="true"></i>
                         <?= Html::encode($followup->channelLabel()) ?><?= $followup->letter_seq ? ' ครั้งที่ ' . (int) $followup->letter_seq : '' ?>
                     </span>
-                    <span class="small text-body-secondary text-nowrap"><?= $followup->notified_at ? Yii::$app->formatter->asDatetime($followup->notified_at, 'php:d/m/Y H:i') : '—' ?></span>
+                    <span class="small text-body-secondary text-nowrap"><?= $followup->notified_at ? \app\modules\finance\components\ThaiDate::datetime($followup->notified_at) : '—' ?></span>
                 </div>
                 <div class="small text-body-secondary">
                     <?= Html::encode($followup->stageLabel()) ?>

@@ -92,7 +92,7 @@ $isFiltered = (bool) array_filter([$searchModel->q, $searchModel->status, $searc
                 ],
                 ['attribute' => 'borrower_name', 'contentOptions' => ['class' => 'text-nowrap']],
                 ['attribute' => 'purpose', 'label' => 'วัตถุประสงค์'],
-                ['attribute' => 'due_at', 'label' => 'ครบกำหนด', 'format' => ['date', 'php:d/m/Y'], 'contentOptions' => ['class' => 'text-nowrap']],
+                ['attribute' => 'due_at', 'label' => 'ครบกำหนด', 'value' => static fn($model) => \app\modules\finance\components\ThaiDate::date($model->due_at), 'contentOptions' => ['class' => 'text-nowrap']],
                 ['attribute' => 'approved_amount', 'label' => 'ยอดยืม', 'format' => ['decimal', 2], 'headerOptions' => ['class' => 'text-end'], 'contentOptions' => ['class' => 'text-end text-nowrap font-monospace']],
                 ['attribute' => 'outstanding_amount', 'label' => 'คงเหลือ', 'format' => ['decimal', 2], 'headerOptions' => ['class' => 'text-end'], 'contentOptions' => ['class' => 'text-end text-nowrap fw-semibold font-monospace']],
                 ['attribute' => 'status', 'format' => 'raw', 'value' => static fn(FinanceLoan $m) => Html::tag('span', Html::encode($m->statusLabel()), ['class' => 'badge bg-secondary-subtle text-secondary-emphasis'])],
@@ -118,7 +118,7 @@ $isFiltered = (bool) array_filter([$searchModel->q, $searchModel->status, $searc
             <div class="d-flex justify-content-between align-items-end gap-2">
                 <div class="small">
                     <span class="badge bg-secondary-subtle text-secondary-emphasis mb-1"><?= Html::encode($model->statusLabel()) ?></span>
-                    <div class="text-body-secondary">ครบกำหนด <?= $model->due_at ? Yii::$app->formatter->asDate($model->due_at, 'php:d/m/Y') : 'ไม่ระบุ' ?></div>
+                    <div class="text-body-secondary">ครบกำหนด <?= $model->due_at ? \app\modules\finance\components\ThaiDate::date($model->due_at) : 'ไม่ระบุ' ?></div>
                 </div>
                 <div class="text-end">
                     <div class="text-body-secondary small">คงเหลือ</div>

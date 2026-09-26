@@ -20,7 +20,7 @@ $this->beginBlock('sub-title'); ?>เรียงตามค้างนาน�
 $this->beginBlock('page-action'); echo $this->render('@app/modules/finance/menu', ['active' => 'loan']); $this->endBlock();
 
 $sum = static fn(array $rows) => array_sum(array_map(static fn(FinanceLoan $l) => (float) $l->outstanding_amount, $rows));
-$date = fn($value) => $value ? Yii::$app->formatter->asDate($value, 'php:d/m/Y') : '—';
+$date = fn($value) => $value ? \app\modules\finance\components\ThaiDate::date($value) : '—';
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

@@ -68,7 +68,7 @@ $this->endBlock();
                 <div class="alert alert-info d-flex gap-2 align-items-start">
                     <i class="bi bi-send-check" aria-hidden="true"></i>
                     <div class="flex-grow-1"><strong>ส่งบัญชีแล้ว — รอบัญชีลงบันทึก</strong>
-                        <div>ส่งเมื่อ <?= Yii::$app->formatter->asDatetime($model->sent_accounting_at, 'php:d/m/Y H:i') ?> น.</div></div>
+                        <div>ส่งเมื่อ <?= \app\modules\finance\components\ThaiDate::datetime($model->sent_accounting_at) ?> น.</div></div>
                 </div>
             <?php else: ?>
                 <div class="alert alert-success d-flex gap-2 align-items-start">
@@ -134,7 +134,7 @@ $this->endBlock();
                         <div class="list-group-item py-3">
                             <div class="d-flex justify-content-between gap-3 flex-wrap">
                                 <strong><?= Html::encode(FinancePayableReview::decisionOptions()[$review->decision] ?? $review->decision) ?></strong>
-                                <time class="small text-body-secondary"><?= Yii::$app->formatter->asDatetime($review->created_at, 'php:d/m/Y H:i') ?></time>
+                                <time class="small text-body-secondary"><?= \app\modules\finance\components\ThaiDate::datetime($review->created_at) ?></time>
                             </div>
                             <div class="small text-body-secondary mt-1"><?= Html::encode($review->note ?: 'ไม่มีหมายเหตุ') ?></div>
                         </div>

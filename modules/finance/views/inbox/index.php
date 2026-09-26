@@ -57,7 +57,7 @@ $total = array_sum(array_map(static fn($row) => (int) $row['count'], $counts));
                 [
                     'attribute' => 'received_at',
                     'label' => 'รับเมื่อ',
-                    'format' => ['datetime', 'php:d/m/Y H:i'],
+                    'value' => static fn($model) => \app\modules\finance\components\ThaiDate::datetime($model->received_at),
                     'contentOptions' => ['class' => 'text-nowrap'],
                 ],
                 [

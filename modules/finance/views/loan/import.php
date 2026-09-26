@@ -58,7 +58,7 @@ $this->beginBlock('sub-title'); ?>ตรวจสอบข้อมูลที�
 <?php if ($preview): ?>
 <?php
 $displayRows = array_slice($preview['rows'], 0, 100);
-$date = fn($value) => $value ? Yii::$app->formatter->asDate($value, 'php:d/m/Y') : '—';
+$date = fn($value) => $value ? \app\modules\finance\components\ThaiDate::date($value) : '—';
 ?>
 <section class="card border" aria-labelledby="preview-heading">
     <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">

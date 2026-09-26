@@ -438,6 +438,7 @@ class PayableController extends Controller
         $service = new FinancePayableDraftService();
         $model = $service->prepare($inbox);
         if ($model->load(Yii::$app->request->post())) {
+            $this->normalizeFormDates($model);
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 // รอตรวจ → รับรองเอกสารในจังหวะเดียวกับตั้งเจ้าหนี้ (transaction เดียว)
@@ -476,6 +477,7 @@ class PayableController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         }
         if ($model->load(Yii::$app->request->post())) {
+            $this->normalizeFormDates($model);
             try {
                 (new FinancePayableDraftService())->update($model);
                 Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขร่างทะเบียนเจ้าหนี้แล้ว');
@@ -550,6 +552,14 @@ class PayableController extends Controller
                 static fn(AccountingChartAccount $account) => $account->category === '1' ? 'สินทรัพย์/สินค้าคงคลัง' : 'ค่าใช้จ่าย'
             ),
         ]);
+    }
+
+    /** ช่องวันที่ในฟอร์มเป็น พ.ศ. (วว/ดด/พ.ศ.) → ค.ศ. Y-m-d ก่อนคำนวณ/validate */
+    private function normalizeFormDates(FinancePayable $model): void
+    {
+        foreach (['invoice_date', 'billing_date'] as $attr) {
+            $model->$attr = AppHelper::normalizeDateToDb($model->$attr);
+        }
     }
 
     private function findPayable($id): FinancePayable

@@ -38,7 +38,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                     <dt class="col-sm-4 text-body-secondary">รหัสต้นทาง</dt><dd class="col-sm-8"><?= Html::encode($model->source_id) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">ผู้แทนจำหน่าย</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_name_snapshot ?: 'รอตรวจสอบ') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">รหัสผู้แทนจำหน่าย</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_code_snapshot ?: 'ไม่ระบุ') ?></dd>
-                    <dt class="col-sm-4 text-body-secondary">วันที่เอกสาร</dt><dd class="col-sm-8"><?= $model->document_date ? Yii::$app->formatter->asDate($model->document_date, 'php:d/m/Y') : 'ไม่ระบุ' ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">วันที่เอกสาร</dt><dd class="col-sm-8"><?= $model->document_date ? \app\modules\finance\components\ThaiDate::date($model->document_date) : 'ไม่ระบุ' ?></dd>
                     <dt class="col-sm-4 text-body-secondary">ยอดเงิน</dt><dd class="col-sm-8 fw-semibold"><?= $model->amount !== null ? Yii::$app->formatter->asDecimal($model->amount, 2) . ' บาท' : 'ไม่ระบุ' ?></dd>
                 </dl>
             </div>
@@ -121,7 +121,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                                     <?php endif; ?>
                                 </div>
                                 <div class="small text-body-secondary text-sm-end text-nowrap">
-                                    <?= Yii::$app->formatter->asDatetime($review->created_at, 'php:d/m/Y H:i') ?><br>
+                                    <?= \app\modules\finance\components\ThaiDate::datetime($review->created_at) ?><br>
                                     ผู้ใช้งาน #<?= Html::encode((string) ($review->created_by ?: '-')) ?>
                                 </div>
                             </div>

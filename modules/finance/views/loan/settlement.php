@@ -107,13 +107,13 @@ $before = round(max(0, $before), 2);
             <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-body-secondary">ยอดเงินยืม</span><span class="font-monospace"><?= number_format($loan->approved_amount, 2) ?></span></div>
             <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-body-secondary">ส่งใช้แล้ว</span><span class="font-monospace"><?= number_format($loan->voucher_amount + $loan->cash_return_amount, 2) ?></span></div>
             <div class="d-flex justify-content-between py-2 fw-semibold"><span>คงเหลือปัจจุบัน</span><span class="font-monospace"><?= number_format($loan->outstanding_amount, 2) ?></span></div>
-            <div class="text-body-secondary small mt-2">กำหนดการคืน <?= $loan->due_at ? Yii::$app->formatter->asDate($loan->due_at, 'php:d/m/Y') : 'ยังไม่กำหนด' ?></div>
+            <div class="text-body-secondary small mt-2">กำหนดการคืน <?= $loan->due_at ? \app\modules\finance\components\ThaiDate::date($loan->due_at) : 'ยังไม่กำหนด' ?></div>
         </div>
         <?php if ($loan->settlements): ?>
         <ul class="list-group list-group-flush">
             <?php foreach ($loan->settlements as $row): ?>
             <li class="list-group-item d-flex justify-content-between gap-2 small<?= (int) $row->seq === (int) $settlement->seq ? ' bg-body-tertiary fw-semibold' : '' ?>">
-                <span>ครั้งที่ <?= (int) $row->seq ?> · <?= Yii::$app->formatter->asDate($row->settled_at, 'php:d/m/Y') ?></span>
+                <span>ครั้งที่ <?= (int) $row->seq ?> · <?= \app\modules\finance\components\ThaiDate::date($row->settled_at) ?></span>
                 <span class="font-monospace"><?= number_format($row->totalAmount(), 2) ?></span>
             </li>
             <?php endforeach; ?>

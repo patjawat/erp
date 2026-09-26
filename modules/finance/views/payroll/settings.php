@@ -1,5 +1,6 @@
 <?php
 
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 
 $this->title = 'ตั้งค่ารายการเงินเดือน';
@@ -74,8 +75,8 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/finance/menu'
     <div class="card-body px-3 px-md-4 border-bottom">
         <?= Html::beginForm(['create-contribution-rule'], 'post', ['class' => 'row g-3', 'aria-label' => 'เพิ่มกฎประกันสังคม']) ?>
         <div class="col-md-4"><label class="form-label" for="rule-name">ชื่อกฎ</label><input class="form-control" id="rule-name" name="name" maxlength="255" required placeholder="เช่น ประกันสังคม ม.33 ปี 2572–2574"></div>
-        <div class="col-md-2"><label class="form-label" for="rule-from">มีผลตั้งแต่</label><input class="form-control" type="date" id="rule-from" name="effective_from" required></div>
-        <div class="col-md-2"><label class="form-label" for="rule-to">สิ้นสุด</label><input class="form-control" type="date" id="rule-to" name="effective_to"><div class="form-text">เว้นว่างหากไม่มีกำหนด</div></div>
+        <div class="col-md-2"><label class="form-label" for="rule-from">มีผลตั้งแต่</label><?= DatepickerThai::widget(['name' => 'effective_from', 'options' => ['id' => 'rule-from', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.', 'required' => true]]) ?></div>
+        <div class="col-md-2"><label class="form-label" for="rule-to">สิ้นสุด</label><?= DatepickerThai::widget(['name' => 'effective_to', 'options' => ['id' => 'rule-to', 'class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.']]) ?><div class="form-text">เว้นว่างหากไม่มีกำหนด</div></div>
         <div class="col-md-2"><label class="form-label" for="rule-min">ฐานขั้นต่ำ</label><input class="form-control" type="number" id="rule-min" name="minimum_wage_base" min="0" step="0.01" required></div>
         <div class="col-md-2"><label class="form-label" for="rule-max">ฐานสูงสุด</label><input class="form-control" type="number" id="rule-max" name="maximum_wage_base" min="0" step="0.01" required></div>
         <div class="col-md-2"><label class="form-label" for="employee-rate">ลูกจ้าง (%)</label><input class="form-control" type="number" id="employee-rate" name="employee_rate" min="0" max="100" step="0.0001" required></div>
@@ -89,7 +90,7 @@ $this->beginBlock('page-action'); echo $this->render('@app/modules/finance/menu'
             <thead><tr><th>ช่วงวันที่มีผล</th><th>ชื่อกฎ</th><th class="text-end">ฐานค่าจ้าง</th><th class="text-end">ลูกจ้าง</th><th class="text-end">นายจ้าง</th><th>อ้างอิง</th></tr></thead>
             <tbody>
             <?php foreach ($contributionRules as $rule): ?>
-                <tr><td class="text-nowrap"><?= Yii::$app->formatter->asDate($rule['effective_from'], 'php:d/m/Y') ?> – <?= $rule['effective_to'] ? Yii::$app->formatter->asDate($rule['effective_to'], 'php:d/m/Y') : 'ไม่มีกำหนด' ?></td>
+                <tr><td class="text-nowrap"><?= \app\modules\finance\components\ThaiDate::date($rule['effective_from']) ?> – <?= $rule['effective_to'] ? \app\modules\finance\components\ThaiDate::date($rule['effective_to']) : 'ไม่มีกำหนด' ?></td>
                     <td><strong><?= Html::encode($rule['name']) ?></strong><div class="small"><span class="badge bg-success-subtle text-success-emphasis">ใช้งาน</span></div></td>
                     <td class="text-end text-nowrap"><?= number_format($rule['minimum_wage_base'], 2) ?> – <?= number_format($rule['maximum_wage_base'], 2) ?></td>
                     <td class="text-end"><?= number_format($rule['employee_rate'] * 100, 2) ?>%</td><td class="text-end"><?= number_format($rule['employer_rate'] * 100, 2) ?>%</td><td class="small text-body-secondary"><?= Html::encode($rule['legal_reference'] ?: 'ไม่ระบุ') ?></td></tr>

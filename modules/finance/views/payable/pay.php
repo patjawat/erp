@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use app\modules\finance\services\FinancePayablePaymentService;
+use app\widgets\datepicker\DatepickerThai;
 
 /** @var yii\web\View $this */
 /** @var string $mode */
@@ -92,7 +93,11 @@ $thDate = function ($d) {
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3"><label class="form-label small mb-1">วันที่จ่าย</label>
-                    <input type="text" class="form-control form-control-sm" name="pay_date" value="<?= $today ?>" placeholder="วว/ดด/ปปปป"></div>
+                    <?= DatepickerThai::widget([
+                        'name' => 'pay_date',
+                        'value' => $today,
+                        'options' => ['class' => 'form-control form-control-sm', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                    ]) ?></div>
                 <div class="col-md-5"><label class="form-label small mb-1">บัญชีจ่าย <span class="text-danger">*</span></label>
                     <select class="form-select form-select-sm" name="cash_account_id" id="cash-account" required>
                         <option value="">— เลือกบัญชีจ่าย —</option>

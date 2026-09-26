@@ -30,7 +30,8 @@ $monthLabel = static function (string $ym) use ($thaiMonths): string {
     [$year, $mm] = explode('-', $ym);
     return ($thaiMonths[$mm] ?? $mm) . ' ' . ((int) $year + 543);
 };
-$date = static fn($value) => $value ? Yii::$app->formatter->asDate($value, 'php:d/m/y') : '';
+// ทะเบียนใช้ปี 2 หลักแบบ พ.ศ. (เช่น 26/09/69)
+$date = static fn($value) => $value && ($ts = strtotime((string) $value)) ? date('d/m/', $ts) . substr((string) ((int) date('Y', $ts) + 543), -2) : '';
 $columns = FinanceLoanItemKind::registerColumnOptions();
 
 $totals = ['approved' => 0.0, 'voucher' => 0.0, 'cash' => 0.0, 'outstanding' => 0.0];

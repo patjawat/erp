@@ -1,5 +1,7 @@
 <?php
 
+use app\components\AppHelper;
+use app\widgets\datepicker\DatepickerThai;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
@@ -64,7 +66,12 @@ $err = fn($a) => $book->hasErrors($a) ? '<div class="text-danger small mt-1">' .
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">วันที่รับเล่ม</label>
-                        <input type="text" name="received_date" class="form-control" value="<?= Html::encode($book->received_date) ?>" placeholder="วว/ดด/ปปปป">
+                        <?= DatepickerThai::widget([
+                            'name' => 'received_date',
+                            'value' => preg_match('/^\d{4}-\d{2}-\d{2}/', (string) $book->received_date)
+                                ? AppHelper::convertToThai($book->received_date) : (string) $book->received_date,
+                            'options' => ['class' => 'form-control', 'autocomplete' => 'off', 'placeholder' => 'วว/ดด/พ.ศ.'],
+                        ]) ?>
                     </div>
                     <div class="col-md-8">
                         <label class="form-label small">หมายเหตุ</label>

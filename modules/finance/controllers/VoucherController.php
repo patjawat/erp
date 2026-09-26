@@ -33,6 +33,8 @@ class VoucherController extends Controller
         catch (\DomainException $e) { Yii::$app->session->setFlash('warning', $e->getMessage()); return $this->redirect(['index']); }
 
         if ($model->load(Yii::$app->request->post())) {
+            // ช่องวันที่เป็น พ.ศ. (วว/ดด/พ.ศ.) → ค.ศ. ก่อน validate
+            $model->requested_payment_date = \app\components\AppHelper::normalizeDateToDb($model->requested_payment_date);
             try {
                 $service->create($payable, $model);
                 Yii::$app->session->setFlash('success', 'สร้างร่างฎีกาแล้ว โดยยังไม่มีการอนุมัติหรือจ่ายเงินจริง');

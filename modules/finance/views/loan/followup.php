@@ -84,7 +84,7 @@ $this->beginBlock('sub-title'); ?><?= Html::encode($loan->contract_no) ?> · <?=
             <div class="mt-3">
                 <span class="badge <?= $loan->dueBadgeClass() ?>"><?= Html::encode($loan->dueLabel()) ?></span>
                 <div class="text-body-secondary small mt-2">
-                    ครบกำหนด <?= $loan->due_at ? Yii::$app->formatter->asDate($loan->due_at, 'php:d/m/Y') : 'ไม่ระบุ' ?>
+                    ครบกำหนด <?= $loan->due_at ? \app\modules\finance\components\ThaiDate::date($loan->due_at) : 'ไม่ระบุ' ?>
                 </div>
             </div>
         </div>
@@ -99,8 +99,8 @@ $this->beginBlock('sub-title'); ?><?= Html::encode($loan->contract_no) ?> · <?=
             <li class="list-group-item small">
                 <div class="fw-semibold">ครั้งที่ <?= (int) $previous->letter_seq ?> · <?= Html::encode($previous->letter_no ?: 'ไม่ระบุเลขที่') ?></div>
                 <div class="text-body-secondary">
-                    ลงวันที่ <?= $previous->letter_date ? Yii::$app->formatter->asDate($previous->letter_date, 'php:d/m/Y') : '—' ?>
-                    <?= $previous->new_due_at ? ' · กำหนดใหม่ ' . Yii::$app->formatter->asDate($previous->new_due_at, 'php:d/m/Y') : '' ?>
+                    ลงวันที่ <?= $previous->letter_date ? \app\modules\finance\components\ThaiDate::date($previous->letter_date) : '—' ?>
+                    <?= $previous->new_due_at ? ' · กำหนดใหม่ ' . \app\modules\finance\components\ThaiDate::date($previous->new_due_at) : '' ?>
                 </div>
             </li>
             <?php endforeach; ?>

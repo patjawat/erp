@@ -115,7 +115,7 @@ $this->endBlock();
                 [
                     'attribute' => 'due_date',
                     'label' => 'วันครบกำหนด',
-                    'format' => ['date', 'php:d/m/Y'],
+                    'value' => static fn(FinancePayable $model) => \app\modules\finance\components\ThaiDate::date($model->due_date),
                     'contentOptions' => ['class' => 'text-nowrap'],
                 ],
                 [

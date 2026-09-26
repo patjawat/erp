@@ -70,7 +70,7 @@ class FinanceLoanTelegramService
             'ยอดคงเหลือ: ' . number_format($loan->outstanding_amount, 2) . ' บาท',
         ];
         if ($letter->new_due_at) {
-            $lines[] = 'ขอให้ส่งใช้ภายใน: ' . Yii::$app->formatter->asDate($letter->new_due_at, 'php:d/m/Y');
+            $lines[] = 'ขอให้ส่งใช้ภายใน: ' . \app\modules\finance\components\ThaiDate::date($letter->new_due_at);
         }
         return $this->sendToEmp(
             (int) $loan->borrower_emp_id,
@@ -142,7 +142,7 @@ class FinanceLoanTelegramService
             'ยอดคงเหลือ: ' . number_format($loan->outstanding_amount, 2) . ' บาท',
         ];
         if ($loan->due_at) {
-            $lines[] = 'ครบกำหนด: ' . Yii::$app->formatter->asDate($loan->due_at, 'php:d/m/Y');
+            $lines[] = 'ครบกำหนด: ' . \app\modules\finance\components\ThaiDate::date($loan->due_at);
             $overdue = $loan->daysOverdue();
             if ($overdue > 0) {
                 $lines[] = 'เกินกำหนดมาแล้ว: ' . $overdue . ' วัน';

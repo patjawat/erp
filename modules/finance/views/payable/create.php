@@ -54,8 +54,11 @@ $this->endBlock();
 
                 <div class="row g-3">
                     <div class="col-md-6"><?= $form->field($model, 'invoice_no')->textInput(['maxlength' => true])->label('เลขที่ใบแจ้งหนี้') ?></div>
-                    <div class="col-md-6"><?= $form->field($model, 'invoice_date')->input('date')->label('วันที่ใบแจ้งหนี้') ?></div>
-                    <div class="col-md-6"><?= $form->field($model, 'billing_date')->input('date')->label('วันที่รับวางบิล (ประมาณการ)')->hint('ยืนยันวันวางบิลจริงภายหลังที่เมนู "รับวางบิล" — ระบบจะคำนวณวันครบกำหนดใหม่') ?></div>
+                    <div class="col-md-6"><?= $this->render('@app/modules/finance/views/_date_field', ['model' => $model, 'attr' => 'invoice_date', 'label' => 'วันที่ใบแจ้งหนี้']) ?></div>
+                    <div class="col-md-6"><?= $this->render('@app/modules/finance/views/_date_field', [
+                        'model' => $model, 'attr' => 'billing_date', 'label' => 'วันที่รับวางบิล (ประมาณการ)',
+                        'hint' => 'ยืนยันวันวางบิลจริงภายหลังที่เมนู "รับวางบิล" — ระบบจะคำนวณวันครบกำหนดใหม่',
+                    ]) ?></div>
                     <div class="col-md-6">
                         <?= $form->field($model, 'credit_days')->input('number', ['min' => 0, 'max' => 3650])->label('จำนวนวันเครดิต') ?>
                         <div class="form-text">ดึงจากทะเบียนผู้ขายให้อัตโนมัติ ถ้ายังไม่เคยตั้ง ระบบจะบันทึกค่านี้กลับไปเก็บที่ผู้ขายให้</div>

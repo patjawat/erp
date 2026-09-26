@@ -942,7 +942,8 @@ class PayrollController extends Controller
     public function actionCreateContributionRule()
     {
         $request = Yii::$app->request;
-        $from = (string) $request->post('effective_from'); $to = trim((string) $request->post('effective_to')) ?: null;
+        // ช่องวันที่เป็น พ.ศ. (วว/ดด/พ.ศ.) → ค.ศ.
+        $from = (string) AppHelper::normalizeDateToDb($request->post('effective_from')); $to = AppHelper::normalizeDateToDb($request->post('effective_to')) ?: null;
         $minimum = (float) $request->post('minimum_wage_base'); $maximum = (float) $request->post('maximum_wage_base');
         $employeeRate = (float) $request->post('employee_rate') / 100; $employerRate = (float) $request->post('employer_rate') / 100;
         if (!$this->validDate($from) || ($to && !$this->validDate($to)) || ($to && $to < $from) || $minimum < 0 || $maximum <= $minimum || $employeeRate < 0 || $employerRate < 0) {

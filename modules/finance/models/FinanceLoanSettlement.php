@@ -71,7 +71,7 @@ class FinanceLoanSettlement extends ActiveRecord
     {
         $loan = $this->loan;
         if ($loan && $this->settled_at && $this->settled_at < $loan->borrowed_at) {
-            $this->addError('settled_at', 'วันที่ส่งใช้ต้องไม่ก่อนวันที่ยืม (' . Yii::$app->formatter->asDate($loan->borrowed_at, 'php:d/m/Y') . ')');
+            $this->addError('settled_at', 'วันที่ส่งใช้ต้องไม่ก่อนวันที่ยืม (' . \app\modules\finance\components\ThaiDate::date($loan->borrowed_at) . ')');
         }
     }
 
