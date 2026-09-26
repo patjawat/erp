@@ -183,9 +183,16 @@ class PeriodController extends Controller
             $approver = $directorId ? Employees::findOne($directorId) : null;
         }
 
+        // ตำแหน่ง ผอ. ในเอกสารราชการต้องระบุหน่วยงานต่อท้าย เช่น "ผู้อำนวยการโรงพยาบาล..."
+        $approved = $describe($approver, $directorPosition);
+        $orgName = trim((string) RosterAccess::siteSetting('company_name'));
+        if (trim($approved['position']) === 'ผู้อำนวยการ' && $orgName !== '') {
+            $approved['position'] = 'ผู้อำนวยการ' . $orgName;
+        }
+
         return [
             'prepared' => $describe($preparer),
-            'approved' => $describe($approver, $directorPosition),
+            'approved' => $approved,
         ];
     }
 

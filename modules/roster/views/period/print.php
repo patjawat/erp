@@ -31,16 +31,6 @@ $unitShiftList = array_values($unitShifts);
         <div><?= Html::encode($period->title) ?> ประจำเดือน<?= Html::encode($period->monthLabel()) ?></div>
     </div>
 
-    <div class="d-flex flex-wrap gap-3 mb-2 small">
-        <?php foreach ($unitShiftList as $unitShift): ?>
-            <span>
-                <span class="print-chip <?= $unitShift->cellClass() ?>"><?= Html::encode($unitShift->displayShort()) ?></span>
-                <?= Html::encode($unitShift->displayName()) ?>
-                <?= Html::encode($unitShift->timeRangeLabel()) ?>
-            </span>
-        <?php endforeach; ?>
-    </div>
-
     <table class="table table-bordered table-sm align-middle print-grid">
         <thead>
             <tr>
@@ -114,7 +104,20 @@ $unitShiftList = array_values($unitShifts);
         ['role' => 'ผู้อนุมัติ', 'who' => $signatories['approved'] ?? ['name' => '', 'position' => '']],
     ];
     ?>
-    <div class="d-flex justify-content-end gap-5 mt-4 pt-4 small">
+    <div class="d-flex justify-content-between align-items-start gap-4 mt-3 small print-footer">
+        <?php // คำอธิบายรหัสเวร — ล่างซ้าย คู่กับช่องลงนามด้านขวา ?>
+        <div class="print-legend">
+            <div class="fw-bold mb-1">รหัสเวร</div>
+            <?php foreach ($unitShiftList as $unitShift): ?>
+                <div class="print-legend-item">
+                    <span class="print-chip <?= $unitShift->cellClass() ?>"><?= Html::encode($unitShift->displayShort()) ?></span>
+                    <?= Html::encode($unitShift->displayName()) ?>
+                    <?= Html::encode($unitShift->timeRangeLabel()) ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <div class="d-flex gap-5 pt-3 flex-shrink-0">
         <?php foreach ($signBlocks as $block): ?>
             <div class="text-center">
                 <div>ลงชื่อ ..............................................</div>
@@ -129,16 +132,31 @@ $unitShiftList = array_values($unitShifts);
                 <div class="mt-1"><?= $block['role'] ?></div>
             </div>
         <?php endforeach; ?>
+        </div>
     </div>
 </div>
 
 <?php
+// ฟอนต์เอกสารราชการ TH Sarabun New — ประกาศเองทั้งตัวปกติ/ตัวหนา
+// (web/css/thsarabunnew.css มีแค่น้ำหนักปกติ ตัวหนาจะถูกเบราว์เซอร์ทำหนาปลอม)
+$fontBase = Yii::getAlias('@web') . '/fonts/THSarabunNew';
+$this->registerCss(<<<CSS
+@font-face { font-family: 'THSarabunNew'; font-weight: normal; src: url('{$fontBase}/THSarabunNew.ttf') format('truetype'); }
+@font-face { font-family: 'THSarabunNew'; font-weight: bold; src: url('{$fontBase}/THSarabunNew-Bold.ttf') format('truetype'); }
+CSS);
 $this->registerCss(<<<'CSS'
 @page { size: A4 landscape; margin: 8mm; }
-.roster-print { font-size: 10px; }
-.print-org { font-size: 13px; }
-.print-grid td, .print-grid th { padding: 1px 2px !important; font-size: 9px; line-height: 1.3; }
+/* Sarabun ตัวเล็กกว่าฟอนต์ทั่วไป จึงตั้งขนาดใหญ่ขึ้นราว 1.4 เท่า */
+.roster-print, .roster-print * { font-family: 'THSarabunNew', sans-serif !important; }
+.roster-print { font-size: 14px; }
+.roster-print h5 { font-size: 20px; }
+.print-org { font-size: 20px; }
+.print-grid td, .print-grid th { padding: 0 2px !important; font-size: 13px; line-height: 1.2; }
 .print-chip { display: inline-block; min-width: 13px; padding: 0 2px; border-radius: 2px; font-weight: 700; }
+.print-legend { columns: 2; column-gap: 24px; }
+.print-legend .fw-bold { column-span: all; }
+.print-legend-item { break-inside: avoid; white-space: nowrap; margin-bottom: 2px; }
+.print-footer { page-break-inside: avoid; }
 @media print {
     .print-grid { page-break-inside: auto; }
     .print-grid tr { page-break-inside: avoid; }
