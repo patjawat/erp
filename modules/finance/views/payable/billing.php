@@ -35,8 +35,53 @@ $thDate = fn($d) => $d ? AppHelper::convertToThai($d) : '–';
 <?php endforeach; ?>
 
 <?php if ($mode === 'vendors'): ?>
-    <div class="alert alert-info d-flex gap-2"><i class="bi bi-info-circle"></i>
-        <span>บิลที่อนุมัติเข้าทะเบียนแล้วแต่ผู้ขายยังไม่มาวางบิล — เลือกเจ้าหนี้แล้วติ๊กบิลที่ผู้ขายนำมาวาง ระบบจะคำนวณวันครบกำหนดใหม่จากวันวางบิล และบิลจะพร้อมดึงไปจ่าย</span></div>
+    <?php
+    // ขั้นตอนของบิลก่อนมาถึงหน้านี้ — ให้ผู้ใช้เห็นว่าบิลมาจากไหน
+    $steps = [
+        ['icon' => 'bi-box-seam', 'label' => 'พัสดุส่งการเงิน'],
+        ['icon' => 'bi-inbox', 'label' => 'รับรอง & ตั้งเจ้าหนี้', 'note' => 'ร่าง'],
+        ['icon' => 'bi-send', 'label' => 'ส่งตรวจอนุมัติ'],
+        ['icon' => 'bi-check2-circle', 'label' => 'อนุมัติเข้าทะเบียน'],
+        ['icon' => 'bi-receipt', 'label' => 'รับวางบิล', 'current' => true],
+        ['icon' => 'bi-cash-stack', 'label' => 'จ่ายชำระ'],
+    ];
+    ?>
+    <section class="card border mb-3" aria-label="ขั้นตอนของบิลเจ้าหนี้">
+        <div class="card-body py-3">
+            <ol class="list-unstyled d-flex flex-wrap align-items-center gap-2 mb-0 small">
+                <?php foreach ($steps as $i => $s): ?>
+                    <?php if ($i > 0): ?><li aria-hidden="true" class="text-body-secondary"><i class="bi bi-chevron-right"></i></li><?php endif; ?>
+                    <li class="px-2 py-1 rounded-pill border <?= !empty($s['current']) ? 'bg-primary text-white border-primary' : 'bg-body' ?>"
+                        <?= !empty($s['current']) ? 'aria-current="step"' : '' ?>>
+                        <i class="bi <?= $s['icon'] ?> me-1"></i><?= Html::encode($s['label']) ?>
+                    </li>
+                <?php endforeach; ?>
+            </ol>
+            <div class="form-text mt-2">หน้านี้แสดงเฉพาะบิลที่ <strong>อนุมัติเข้าทะเบียนแล้ว</strong> และผู้ขายยังไม่มาวางบิล — ติ๊กบิลที่ผู้ขายนำมาวาง ระบบจะคำนวณวันครบกำหนดใหม่จากวันวางบิล แล้วบิลจะพร้อมดึงไปจ่าย</div>
+        </div>
+    </section>
+
+    <?php
+    $notApproved = $notApproved ?? [];
+    $pendingLabels = [
+        FinancePayable::STATUS_DRAFT => 'ร่าง (ยังไม่ส่งตรวจ)',
+        FinancePayable::STATUS_PENDING_APPROVAL => 'รอตรวจอนุมัติ',
+        FinancePayable::STATUS_NEEDS_REVISION => 'ส่งกลับแก้ไข',
+    ];
+    ?>
+    <?php if (array_sum($notApproved) > 0): ?>
+        <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-hourglass-split"></i>
+            <span>มีบิลที่ยังไม่อนุมัติเข้าทะเบียน <strong><?= number_format(array_sum($notApproved)) ?></strong> รายการ จึงยังไม่ขึ้นในหน้านี้:</span>
+            <?php foreach ($pendingLabels as $st => $lbl): ?>
+                <?php if (!empty($notApproved[$st])): ?>
+                    <a href="<?= Url::to(['index', 'status' => $st]) ?>" class="btn btn-sm btn-outline-dark">
+                        <?= Html::encode($lbl) ?> <span class="badge text-bg-dark ms-1"><?= number_format($notApproved[$st]) ?></span>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
     <section class="card border shadow-sm">
         <div class="card-header bg-body"><h5 class="mb-0">เจ้าหนี้ที่มีบิลรอวางบิล</h5></div>
         <div class="table-responsive">

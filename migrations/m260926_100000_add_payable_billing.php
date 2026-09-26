@@ -7,7 +7,8 @@ use yii\db\Migration;
  * ตั้งเจ้าหนี้ → (ผู้ขายมาวางบิล) การเงินบันทึกรับวางบิล → ดึงบิลที่วางแล้วไปจ่าย
  * บันทึกรับวางบิลจะยึดวันวางบิลจริงเป็น billing_date แล้วคำนวณวันครบกำหนดใหม่
  *
- * รายการเดิมทั้งหมดถือว่าวางบิลแล้ว ณ billing_date (ไม่ให้หายจากหน้าจ่ายชำระ)
+ * รายการเดิมที่อนุมัติเข้าทะเบียนแล้วถือว่าวางบิลแล้ว ณ billing_date (ไม่ให้หายจากหน้าจ่ายชำระ)
+ * ส่วนร่าง/รออนุมัติ ต้องผ่านขั้นรับวางบิลตามปกติหลังอนุมัติ
  */
 class m260926_100000_add_payable_billing extends Migration
 {
@@ -18,7 +19,7 @@ class m260926_100000_add_payable_billing extends Migration
         $this->addColumn('{{%finance_payable}}', 'billing_ref', $this->string(60)->null()->comment('เลขที่ใบวางบิลของผู้ขาย'));
         $this->createIndex('idx-finance_payable-billed', '{{%finance_payable}}', 'billed_at');
 
-        $this->execute("UPDATE {{%finance_payable}} SET billed_at = CONCAT(billing_date, ' 00:00:00') WHERE billing_date IS NOT NULL");
+        $this->execute("UPDATE {{%finance_payable}} SET billed_at = CONCAT(billing_date, ' 00:00:00') WHERE status = 'approved' AND billing_date IS NOT NULL");
     }
 
     public function safeDown()

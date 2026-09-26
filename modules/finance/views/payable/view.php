@@ -22,7 +22,7 @@ $this->endBlock();
 
 <div class="row g-3">
     <div class="col-xl-8">
-        <?php if (in_array($model->status, [FinancePayable::STATUS_DRAFT, FinancePayable::STATUS_NEEDS_REVISION], true) && Yii::$app->user->can('accountingPrepare')): ?>
+        <?php if (in_array($model->status, [FinancePayable::STATUS_DRAFT, FinancePayable::STATUS_NEEDS_REVISION], true) && Yii::$app->user->can('financeOperate')): ?>
             <section class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" aria-label="ขั้นตอนถัดไป">
                 <div class="d-flex gap-2 align-items-start">
                     <i class="bi bi-send-check mt-1" aria-hidden="true"></i>
@@ -35,7 +35,7 @@ $this->endBlock();
                     <?= Html::endForm() ?>
                 </div>
             </section>
-        <?php elseif ($model->status === FinancePayable::STATUS_PENDING_APPROVAL && (Yii::$app->user->can('accountingReview') || Yii::$app->user->can('accountingApprove'))): ?>
+        <?php elseif ($model->status === FinancePayable::STATUS_PENDING_APPROVAL && (Yii::$app->user->can('financeOperate') || Yii::$app->user->can('financeApprove'))): ?>
             <section class="card border shadow-sm mb-3" aria-labelledby="approval-heading">
                 <div class="card-header bg-body"><h5 class="mb-0" id="approval-heading">ตรวจอนุมัติรายการ</h5></div>
                 <div class="card-body">
@@ -44,12 +44,12 @@ $this->endBlock();
                     <label for="approval-note" class="form-label">หมายเหตุหรือสิ่งที่ต้องแก้ไข</label>
                     <?= Html::textarea('note', '', ['id' => 'approval-note', 'class' => 'form-control', 'rows' => 3, 'placeholder' => 'จำเป็นเมื่อส่งกลับแก้ไข']) ?>
                     <div class="d-flex flex-wrap gap-2 mt-3">
-                        <?php if (Yii::$app->user->can('accountingApprove')): ?>
+                        <?php if (Yii::$app->user->can('financeApprove')): ?>
                             <?= Html::submitButton('<i class="bi bi-check-circle me-1" aria-hidden="true"></i>อนุมัติเข้าทะเบียน', [
                                 'class' => 'btn btn-success', 'name' => 'decision', 'value' => FinancePayableReview::DECISION_APPROVE,
                             ]) ?>
                         <?php endif; ?>
-                        <?php if (Yii::$app->user->can('accountingReview')): ?>
+                        <?php if (Yii::$app->user->can('financeOperate')): ?>
                             <?= Html::submitButton('<i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>ส่งกลับแก้ไข', [
                                 'class' => 'btn btn-outline-danger', 'name' => 'decision', 'value' => FinancePayableReview::DECISION_REQUEST_REVISION,
                             ]) ?>

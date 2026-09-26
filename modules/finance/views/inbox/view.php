@@ -154,7 +154,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
         <section class="card border shadow-sm mt-3" aria-labelledby="review-decision-heading">
             <div class="card-header bg-body"><h5 class="mb-0" id="review-decision-heading">ผลการตรวจสอบ</h5></div>
             <div class="card-body">
-                <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('accountingPrepare')): ?>
+                <?php if ($model->status === FinanceInbox::STATUS_PENDING_REVIEW && Yii::$app->user->can('financeOperate')): ?>
                     <?php if ($messages): ?>
                         <div class="alert alert-warning" role="alert">
                             <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
@@ -212,7 +212,7 @@ $payload = is_array($model->payload_json) ? $model->payload_json : json_decode((
                             ['/finance/payable/view', 'id' => $model->payable->id],
                             ['class' => 'btn btn-outline-primary']
                         ) ?>
-                    <?php elseif (Yii::$app->user->can('accountingPrepare')): ?>
+                    <?php elseif (Yii::$app->user->can('financeOperate')): ?>
                         <p class="text-body-secondary">ตรวจข้อมูลใบแจ้งหนี้ การวางบิล และผู้ขายก่อนตั้งเจ้าหนี้</p>
                         <?= Html::a(
                             '<i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>ตั้งเจ้าหนี้ (สร้างร่าง)',

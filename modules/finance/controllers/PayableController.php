@@ -235,7 +235,15 @@ class PayableController extends Controller
                 ->from(FinancePayable::tableName())
                 ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null])
                 ->groupBy('vendor_name_snapshot')->orderBy(['first_date' => SORT_ASC])->all();
-            return $this->render('billing', ['mode' => 'vendors', 'vendors' => $vendors]);
+            // บิลที่ยังไม่ถึงขั้นวางบิล (ยังไม่อนุมัติเข้าทะเบียน) — บอกผู้ใช้ว่าค้างอยู่ขั้นไหน
+            $notApproved = FinancePayable::find()->select(['status', 'n' => 'COUNT(*)'])
+                ->where(['status' => [FinancePayable::STATUS_DRAFT, FinancePayable::STATUS_PENDING_APPROVAL, FinancePayable::STATUS_NEEDS_REVISION]])
+                ->groupBy('status')->asArray()->all();
+            return $this->render('billing', [
+                'mode' => 'vendors',
+                'vendors' => $vendors,
+                'notApproved' => ArrayHelper::map($notApproved, 'status', 'n'),
+            ]);
         }
         $rows = FinancePayable::find()
             ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null, 'vendor_name_snapshot' => $vendor])
