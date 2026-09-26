@@ -33,6 +33,9 @@ $isFiltered = (bool) array_filter([$searchModel->q, $searchModel->status, $searc
         <?= Html::a('<i class="bi bi-table me-1"></i> ทะเบียนคุม', ['register'], ['class' => 'btn btn-outline-secondary']) ?>
         <?= Html::a('<i class="bi bi-printer me-1"></i> พิมพ์เอกสาร', ['/finance/loan-document/index'], ['class' => 'btn btn-outline-primary']) ?>
         <?= Html::a('<i class="bi bi-file-earmark-arrow-up me-1"></i> นำเข้าจากไฟล์', ['import'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?php if (Yii::$app->user->can('financeAdmin')): ?>
+        <?= Html::a('<i class="bi bi-gear me-1"></i> ตั้งค่า', ['/finance/loan-setting/index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?php endif; ?>
     </div>
 </div>
 
