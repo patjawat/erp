@@ -102,7 +102,19 @@ $this->endBlock();
                     <dt class="col-sm-4 text-body-secondary">รหัสผู้แทนจำหน่าย</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_code_snapshot ?: '-') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เลขที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Html::encode($model->invoice_no) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">วันที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></dd>
-                    <dt class="col-sm-4 text-body-secondary">วันที่รับวางบิล</dt><dd class="col-sm-8"><?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">วันที่รับวางบิล</dt><dd class="col-sm-8">
+                        <?php if ($model->isBilled()): ?>
+                            <?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?>
+                            <?php if ($model->billing_ref): ?><span class="text-body-secondary small ms-1">(ใบวางบิล <?= Html::encode($model->billing_ref) ?>)</span><?php endif; ?>
+                        <?php elseif ($model->status === FinancePayable::STATUS_APPROVED): ?>
+                            <span class="badge bg-warning-subtle text-warning-emphasis">รอวางบิล</span>
+                            <?php if (Yii::$app->user->can('financeOperate')): ?>
+                                <?= Html::a('บันทึกรับวางบิล', ['billing', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-sm btn-link p-0 ms-1']) ?>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="text-body-secondary">ประมาณการ <?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?> (ยืนยันตอนรับวางบิล)</span>
+                        <?php endif; ?>
+                    </dd>
                     <dt class="col-sm-4 text-body-secondary">วันเครดิต</dt><dd class="col-sm-8"><?= number_format($model->credit_days) ?> วัน</dd>
                     <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/finance/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>

@@ -10,6 +10,7 @@ use app\modules\finance\models\FinancePayable;
 /** @var string $q */
 /** @var string $status */
 /** @var string $payment */
+/** @var string $billing */
 
 $this->title = 'ทะเบียนคุมเจ้าหนี้';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -47,6 +48,14 @@ $this->endBlock();
                 <option value="unpaid" <?= $payment === 'unpaid' ? 'selected' : '' ?>>ยังไม่จ่าย</option>
                 <option value="partial" <?= $payment === 'partial' ? 'selected' : '' ?>>จ่ายบางส่วน</option>
                 <option value="paid" <?= $payment === 'paid' ? 'selected' : '' ?>>จ่ายครบ</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label small mb-1">วางบิล</label>
+            <select name="billing" class="form-select form-select-sm" style="min-width:130px">
+                <option value="">ทั้งหมด</option>
+                <option value="unbilled" <?= $billing === 'unbilled' ? 'selected' : '' ?>>รอวางบิล</option>
+                <option value="billed" <?= $billing === 'billed' ? 'selected' : '' ?>>วางบิลแล้ว</option>
             </select>
         </div>
         <div class="d-flex gap-2">
@@ -122,6 +131,19 @@ $this->endBlock();
                     'value' => static fn(FinancePayable $model) => $model->getOutstanding(),
                     'contentOptions' => ['class' => 'text-end text-nowrap fw-semibold'],
                     'headerOptions' => ['class' => 'text-end'],
+                ],
+                [
+                    'label' => 'วางบิล',
+                    'format' => 'raw',
+                    'contentOptions' => ['class' => 'text-nowrap'],
+                    'value' => static function (FinancePayable $model) {
+                        if ($model->isBilled()) {
+                            return '<span class="badge bg-success-subtle text-success-emphasis">วางแล้ว</span>';
+                        }
+                        return $model->status === FinancePayable::STATUS_APPROVED
+                            ? '<span class="badge bg-warning-subtle text-warning-emphasis">รอวางบิล</span>'
+                            : '<span class="text-body-secondary">—</span>';
+                    },
                 ],
                 [
                     'label' => 'การจ่าย',
