@@ -67,6 +67,7 @@ $pct = fn ($v) => $total > 0 ? number_format($v / $total * 100, 1) . '%' : '0%';
             <?= Html::endForm() ?>
         <?php endif; ?>
         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>พิมพ์</button>
+        <a href="<?= Url::to(['excel', 'year' => $year, 'tab' => $tab]) ?>" class="btn btn-sm btn-outline-success<?= $count ? '' : ' disabled' ?>" data-pjax="0"><i class="bi bi-file-earmark-excel me-1"></i>ส่งออก Excel</a>
         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#invModal" data-item=""><i class="bi bi-plus-lg me-1"></i>เพิ่มรายการลงทุน<?= $is3 ? ' 3 ปี' : ' 1 ปี' ?></button>
     </div>
 </div></div>
@@ -95,34 +96,34 @@ $pct = fn ($v) => $total > 0 ? number_format($v / $total * 100, 1) . '%' : '0%';
         </div>
 
         <div class="table-responsive">
-            <table class="table table-sm table-bordered align-middle mb-0" style="font-size:.9rem">
+            <table class="table table-sm table-bordered table-hover align-middle mb-0 inv-table">
                 <thead class="table-light text-center align-middle">
                     <?php if ($is3): ?>
                         <tr>
                             <th rowspan="2" style="width:44px">ลำดับ</th>
-                            <th rowspan="2">รายการ</th>
+                            <th rowspan="2" class="col-name">รายการ</th>
                             <th rowspan="2" style="width:70px">หน่วยนับ</th>
-                            <th rowspan="2" style="width:110px">ราคาต่อหน่วย</th>
+                            <th rowspan="2" style="width:100px">ราคาต่อหน่วย</th>
                             <?php foreach ($years as $y): ?><th colspan="2">ปีงบประมาณ <?= $y ?></th><?php endforeach; ?>
                             <th colspan="2">รวม <?= $year ?>–<?= $year + 2 ?></th>
-                            <th rowspan="2" style="width:100px">แหล่งเงิน</th>
-                            <th rowspan="2" style="width:170px">สอดคล้องนโยบายด้านใด</th>
-                            <th rowspan="2" class="d-print-none" style="width:74px"></th>
+                            <th rowspan="2" style="width:90px">แหล่งเงิน</th>
+                            <th rowspan="2" style="width:150px">สอดคล้องนโยบายด้านใด</th>
+                            <th rowspan="2" class="d-print-none" style="width:56px"></th>
                         </tr>
                         <tr>
-                            <?php for ($i = 0; $i < 4; $i++): ?><th style="width:60px">จำนวน</th><th style="width:110px">เป็นเงิน</th><?php endfor; ?>
+                            <?php for ($i = 0; $i < 4; $i++): ?><th style="width:52px">จำนวน</th><th style="width:100px">เป็นเงิน</th><?php endfor; ?>
                         </tr>
                     <?php else: ?>
                         <tr>
                             <th style="width:44px">ลำดับ</th>
-                            <th>รายการ</th>
+                            <th class="col-name">รายการ</th>
                             <th style="width:120px">ราคาต่อหน่วย (บาท)</th>
                             <th style="width:80px">จำนวนหน่วย</th>
                             <th style="width:130px">รวมเป็นเงิน (บาท)</th>
                             <th style="width:110px">แหล่งเงิน</th>
                             <th style="width:100px">ประเภทงบ</th>
                             <th style="width:190px">สอดคล้องนโยบายด้านใด</th>
-                            <th class="d-print-none" style="width:74px"></th>
+                            <th class="d-print-none" style="width:56px"></th>
                         </tr>
                     <?php endif; ?>
                 </thead>
@@ -153,7 +154,7 @@ $pct = fn ($v) => $total > 0 ? number_format($v / $total * 100, 1) . '%' : '0%';
                         ?>
                         <tr>
                             <td class="text-center"><?= $no ?></td>
-                            <td><?= Html::encode($it->name) ?><?php if ($it->note): ?><div class="small text-body-secondary"><?= Html::encode($it->note) ?></div><?php endif; ?></td>
+                            <td class="col-name"><?= Html::encode($it->name) ?><?php if ($it->note): ?><div class="small text-body-secondary"><?= Html::encode($it->note) ?></div><?php endif; ?></td>
                             <?php if ($is3): ?>
                                 <td class="text-center"><?= Html::encode((string) $it->unit) ?></td>
                                 <td class="text-end"><?= $fmt($it->unit_price) ?></td>
@@ -224,6 +225,15 @@ $pct = fn ($v) => $total > 0 ? number_format($v / $total * 100, 1) . '%' : '0%';
         </div>
     </div>
 </div>
+
+<style>
+.inv-table { font-size: .875rem; }
+.inv-table th { white-space: nowrap; }
+.inv-table .col-name { min-width: 260px; }
+.inv-table td.text-end { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.inv-table td.small { line-height: 1.3; }
+@media print { .inv-table { font-size: 11px; } .inv-table .col-name { min-width: 0; } }
+</style>
 
 <!-- ฟอร์มเพิ่ม/แก้ไขรายการลงทุน -->
 <div class="modal fade" id="invModal" tabindex="-1" aria-hidden="true">
