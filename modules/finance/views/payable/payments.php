@@ -28,6 +28,7 @@ $thDate = function ($d) {
     return $t ? $t->format('d/m/') . ((int) $t->format('Y') + 543) : '–';
 };
 $canCancel = Yii::$app->user->can('financeOperate');
+$canApprove = Yii::$app->user->can('financeApprove');
 ?>
 
 <?php foreach (['success' => 'success', 'error' => 'danger'] as $key => $cls): ?>
@@ -66,7 +67,8 @@ $canCancel = Yii::$app->user->can('financeOperate');
                     'label' => 'บิล',
                     'contentOptions' => ['class' => 'text-center'],
                     'headerOptions' => ['class' => 'text-center'],
-                    'value' => static fn(FinancePayablePayment $m) => $m->isCancelled() ? count($m->cancelledLines()) : count($m->settlements),
+                    'value' => static fn(FinancePayablePayment $m) => $m->isCancelled() ? count($m->cancelledLines())
+                        : ($m->status === 'paid' ? count($m->settlements) : count($m->requestedLines())),
                 ],
                 [
                     'label' => 'เช็ค',
@@ -101,15 +103,33 @@ $canCancel = Yii::$app->user->can('financeOperate');
                 [
                     'label' => 'สถานะ',
                     'format' => 'raw',
-                    'value' => static fn(FinancePayablePayment $m) => $m->isCancelled()
-                        ? '<span class="badge bg-danger-subtle text-danger-emphasis" title="' . Html::encode($m->cancel_reason) . '">ยกเลิกแล้ว</span>'
-                        : '<span class="badge bg-success-subtle text-success-emphasis">จ่ายแล้ว</span>',
+                    'value' => static function (FinancePayablePayment $m) {
+                        [$label, $cls] = $m->statusBadge();
+                        $why = $m->isCancelled() ? $m->cancel_reason : ($m->status === 'rejected' ? $m->reject_reason : '');
+                        return '<span class="badge ' . $cls . '" title="' . Html::encode((string) $why) . '">' . $label . '</span>';
+                    },
                 ],
                 [
                     'label' => '',
                     'format' => 'raw',
                     'contentOptions' => ['class' => 'text-end text-nowrap'],
-                    'value' => static function (FinancePayablePayment $m) use ($canCancel) {
+                    'value' => static function (FinancePayablePayment $m) use ($canCancel, $canApprove) {
+                        if ($m->isPending()) {
+                            if (!$canApprove) {
+                                return '<span class="small text-body-secondary">รอผู้อนุมัติ</span>';
+                            }
+                            return Html::beginForm(['approve-payment', 'id' => $m->id], 'post', ['class' => 'd-inline'])
+                                . Html::submitButton('<i class="bi bi-check2-circle"></i> อนุมัติ', ['class' => 'btn btn-sm btn-success',
+                                    'onclick' => "return confirm('อนุมัติรอบจ่ายนี้? ระบบจะตัดหนี้และออกใบสำคัญจ่าย/เช็ค');"])
+                                . Html::endForm() . ' '
+                                . Html::beginForm(['reject-payment', 'id' => $m->id], 'post', ['class' => 'd-inline reject-payment-form'])
+                                . Html::hiddenInput('reason', '')
+                                . Html::submitButton('ไม่อนุมัติ', ['class' => 'btn btn-sm btn-outline-danger'])
+                                . Html::endForm();
+                        }
+                        if ($m->status === 'rejected') {
+                            return '';
+                        }
                         $html = Html::a('<i class="bi bi-file-earmark-text"></i> หนังสือนำส่ง', ['letter', 'id' => $m->id],
                             ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']);
                         if ($canCancel && !$m->isCancelled()) {
@@ -133,6 +153,13 @@ $this->registerJs(<<<JS
 document.querySelectorAll('.cancel-payment-form').forEach(function(f){
   f.addEventListener('submit', function(e){
     const reason = window.prompt('ยกเลิกรอบจ่ายนี้? ยอดหนี้จะกลับมาค้าง ใบสำคัญจ่ายจะถูกลบ และเช็คจะถูกยกเลิก\\n\\nระบุเหตุผล:');
+    if(!reason || !reason.trim()){ e.preventDefault(); return; }
+    f.querySelector('input[name=reason]').value = reason.trim();
+  });
+});
+document.querySelectorAll('.reject-payment-form').forEach(function(f){
+  f.addEventListener('submit', function(e){
+    const reason = window.prompt('ไม่อนุมัติรอบจ่ายนี้ — ระบุเหตุผล:');
     if(!reason || !reason.trim()){ e.preventDefault(); return; }
     f.querySelector('input[name=reason]').value = reason.trim();
   });

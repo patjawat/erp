@@ -15,6 +15,7 @@ use app\widgets\datepicker\DatepickerThai;
 /** @var array $accountMeta */
 /** @var array $templates */
 /** @var array $categoryOptions [กลุ่ม => [id => หมวด]] */
+/** @var array $locked [payable_id => true] บิลในรอบจ่ายที่รออนุมัติ */
 
 $this->title = 'จ่ายชำระเจ้าหนี้';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
@@ -150,6 +151,16 @@ $thDate = function ($d) {
                     <?php endif; ?>
                     <?php $defaultCat = $rows ? FinancePayablePaymentService::vendorCategoryId((int) $rows[0]['vendor_id']) : null; ?>
                     <?php foreach ($rows as $r): $out = (float) $r['outstanding']; ?>
+                        <?php if (isset($locked[$r['id']])): ?>
+                            <tr class="text-body-secondary">
+                                <td></td>
+                                <td><?= Html::encode($r['invoice_no'] ?: ($r['payable_no'] ?: '#' . $r['id'])) ?></td>
+                                <td class="text-center"><?= $thDate($r['due_date']) ?></td>
+                                <td colspan="2"><span class="badge bg-warning-subtle text-warning-emphasis">อยู่ในรอบจ่ายที่รออนุมัติ</span></td>
+                                <td class="text-end"><?= $fmt($out) ?></td>
+                            </tr>
+                            <?php continue; ?>
+                        <?php endif; ?>
                         <tr>
                             <td class="text-center"><input type="checkbox" class="form-check-input pay-check" checked data-id="<?= $r['id'] ?>"></td>
                             <td><?= Html::encode($r['invoice_no'] ?: ($r['payable_no'] ?: '#' . $r['id'])) ?></td>
@@ -174,7 +185,8 @@ $thDate = function ($d) {
         </div>
         <?php if ($rows): ?>
         <div class="card-footer d-flex justify-content-end">
-            <?= Html::submitButton('<i class="bi bi-save me-1"></i> บันทึกจ่าย + ใบสำคัญจ่าย/เช็ค/หนังสือนำส่ง', ['class' => 'btn btn-primary']) ?>
+            <span class="small text-body-secondary me-auto align-self-center">บันทึกแล้วส่งให้ผู้อนุมัติ — อนุมัติแล้วระบบจึงตัดหนี้และออกใบสำคัญจ่าย/เช็ค/หนังสือนำส่ง</span>
+            <?= Html::submitButton('<i class="bi bi-send me-1"></i> บันทึกรอบจ่าย (ส่งอนุมัติ)', ['class' => 'btn btn-primary']) ?>
         </div>
         <?php endif; ?>
     </section>

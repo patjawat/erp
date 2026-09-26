@@ -67,6 +67,36 @@ class FinancePayablePayment extends ActiveRecord
         return !empty($this->cancelled_at);
     }
 
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /** ป้ายสถานะรอบจ่าย [ข้อความ, class badge] */
+    public function statusBadge(): array
+    {
+        if ($this->isCancelled()) {
+            return ['ยกเลิกแล้ว', 'bg-danger-subtle text-danger-emphasis'];
+        }
+        return match ($this->status) {
+            'pending' => ['รออนุมัติ', 'bg-warning-subtle text-warning-emphasis'],
+            'rejected' => ['ไม่อนุมัติ', 'bg-secondary-subtle text-secondary-emphasis'],
+            default => ['จ่ายแล้ว', 'bg-success-subtle text-success-emphasis'],
+        };
+    }
+
+    /** บิล/ยอดที่ขอจ่าย (ก่อนอนุมัติ) — [['payable' => FinancePayable, 'amount' => float]] */
+    public function requestedLines(): array
+    {
+        $out = [];
+        foreach ((array) ((json_decode((string) $this->request_json, true) ?: [])['lines'] ?? []) as $ln) {
+            if ($p = FinancePayable::findOne((int) $ln['payable_id'])) {
+                $out[] = ['payable' => $p, 'amount' => (float) $ln['amount']];
+            }
+        }
+        return $out;
+    }
+
     /** ใบสำคัญจ่ายเงินบำรุงที่ออกจากรอบนี้ (รอบจ่ายเก่าก่อนเชื่อม mophcash จะไม่มี) */
     public function getVoucher(): ?FinanceCashVoucher
     {

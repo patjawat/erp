@@ -14,7 +14,8 @@ use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\sm\models\Vendor;
 
 /**
- * รอบจ่ายเจ้าหนี้ → ตัดหนี้ (settlement) + ใบสำคัญจ่ายเงินบำรุง (mophcash) + เช็ค ในทรานแซกชันเดียว
+ * รอบจ่ายเจ้าหนี้: บันทึกขอจ่าย (รออนุมัติ) → ผู้อนุมัติอีกคนกดอนุมัติ →
+ * ตัดหนี้ (settlement) + ใบสำคัญจ่ายเงินบำรุง (mophcash) + เช็ค ในทรานแซกชันเดียว
  *
  * ใบสำคัญจ่าย: 1 บรรทัดต่อบิล = ยอดก่อนหักภาษี (ยอดตัด + WHT ส่วนของบิล) ลงหมวดรายจ่ายที่เลือก
  * WHT แยกไว้ที่หัวใบ, net_amount = เงินที่ออกจริง = ผลรวมยอดตัดหนี้
@@ -25,13 +26,140 @@ class FinancePayablePaymentService
     /** กุญแจใน vendor.data_json สำหรับจำหมวดรายจ่ายที่ใช้ล่าสุดของผู้ขาย */
     public const VENDOR_CATEGORY_KEY = 'cash_out_category_id';
 
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_PAID = 'paid';
+    public const STATUS_REJECTED = 'rejected';
+
     /**
+     * ขอจ่าย (บันทึกรอบจ่าย "รออนุมัติ") — ยังไม่ตัดหนี้ ไม่ออกใบสำคัญ/เช็ค
      * @param array $lines [payable_id => ['amount' => float, 'category_id' => int]]
      * @param array $head  pay_date(Y-m-d), cash_account_id, pay_method, cheque_no, bank_name, bank_branch,
      *                     doc_no, subject, note, template_id, cheque_book_no, is_ac_payee, vendor
      * @throws \DomainException
      */
-    public function pay(array $lines, array $head): FinancePayablePayment
+    public function request(array $lines, array $head): FinancePayablePayment
+    {
+        $selected = $this->selectLines($lines, false);
+        $locked = self::pendingPayableIds();
+        foreach ($selected as $s) {
+            if (isset($locked[$s['p']->id])) {
+                throw new \DomainException('บิล ' . ($s['p']->invoice_no ?: $s['p']->payable_no) . ' อยู่ในรอบจ่ายที่รออนุมัติแล้ว');
+            }
+        }
+        $account = $this->account($head);
+        $first = $selected[0]['p'];
+        $net = array_sum(array_column($selected, 'amt'));
+        $wht = array_sum(array_column($selected, 'wht'));
+
+        $pay = new FinancePayablePayment([
+            'vendor_name_snapshot' => trim((string) ($head['vendor'] ?? '')) ?: $first->vendor_name_snapshot,
+            'vendor_id' => (int) $first->vendor_id,
+            'cash_account_id' => $account->id,
+            'pay_date' => (string) $head['pay_date'],
+            'pay_method' => (string) ($head['pay_method'] ?? 'cheque'),
+            'bank_name' => $account->bank_name ?: (trim((string) ($head['bank_name'] ?? '')) ?: null),
+            'bank_branch' => $account->branch ?: (trim((string) ($head['bank_branch'] ?? '')) ?: null),
+            'cheque_no' => trim((string) ($head['cheque_no'] ?? '')) ?: null,
+            'doc_no' => trim((string) ($head['doc_no'] ?? '')) ?: null,
+            'subject' => trim((string) ($head['subject'] ?? '')) ?: null,
+            'gross_total' => round($net + $wht, 2),
+            'wht_total' => round($wht, 2),
+            'net_total' => round($net, 2),
+            'note' => trim((string) ($head['note'] ?? '')) ?: null,
+            'status' => self::STATUS_PENDING,
+            'request_json' => json_encode([
+                'lines' => array_map(static fn($s) => ['payable_id' => $s['p']->id, 'amount' => $s['amt'], 'category_id' => $s['category_id']], $selected),
+                'template_id' => (int) ($head['template_id'] ?? 0) ?: null,
+                'cheque_book_no' => trim((string) ($head['cheque_book_no'] ?? '')) ?: null,
+                'is_ac_payee' => !empty($head['is_ac_payee']),
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+        $pay->save(false);
+        $this->rememberVendorCategory($first, (int) $selected[0]['category_id']);
+        return $pay;
+    }
+
+    /**
+     * อนุมัติรอบจ่าย → ตัดหนี้ + ใบสำคัญจ่ายเงินบำรุง + เช็ค (ผู้อนุมัติต้องไม่ใช่ผู้บันทึก)
+     * @throws \DomainException
+     */
+    public function approve(FinancePayablePayment $pay): void
+    {
+        if ($pay->status !== self::STATUS_PENDING) {
+            throw new \DomainException('รอบจ่ายนี้ไม่อยู่ในสถานะรออนุมัติ');
+        }
+        $userId = Yii::$app->has('user') && !Yii::$app->user->isGuest ? (int) Yii::$app->user->id : null;
+        if ($userId !== null && (int) $pay->created_by === $userId) {
+            throw new \DomainException('ผู้บันทึกรอบจ่ายอนุมัติรายการของตนเองไม่ได้ — ให้ผู้อนุมัติอีกคนเป็นผู้กด');
+        }
+        $req = json_decode((string) $pay->request_json, true) ?: [];
+        $lines = [];
+        foreach ((array) ($req['lines'] ?? []) as $ln) {
+            $lines[(int) $ln['payable_id']] = ['amount' => $ln['amount'], 'category_id' => $ln['category_id']];
+        }
+        $selected = $this->selectLines($lines, true);
+
+        $voucher = $this->createVoucher($pay, $selected);
+        foreach ($selected as $s) {
+            (new FinancePayableSettlement([
+                'payable_id' => $s['p']->id,
+                'payment_id' => $pay->id,
+                'cash_voucher_id' => $voucher->id,
+                'amount' => $s['amt'],
+                'settle_date' => $pay->pay_date,
+                'note' => $pay->cheque_no ? ('เช็ค ' . $pay->cheque_no) : null,
+            ]))->save(false);
+        }
+        // จ่ายด้วยเช็ค → บันทึกเช็คเข้าทะเบียนคุมเช็คอัตโนมัติ
+        if ($pay->pay_method === 'cheque' && $pay->cheque_no) {
+            $cheque = FinanceCheque::fromPayment($pay);
+            $cheque->template_id = $req['template_id'] ?? null;
+            $cheque->cheque_book_no = $req['cheque_book_no'] ?? null;
+            $cheque->is_ac_payee = !empty($req['is_ac_payee']) ? 1 : 0;
+            $cheque->status = FinanceCheque::STATUS_DRAFT;
+            $cheque->save(false);
+        }
+        $pay->status = self::STATUS_PAID;
+        $pay->approved_at = time();
+        $pay->approved_by = $userId;
+        $pay->save(false, ['status', 'approved_at', 'approved_by']);
+    }
+
+    /** ไม่อนุมัติรอบจ่าย — บิลกลับไปจ่ายรอบใหม่ได้ */
+    public function reject(FinancePayablePayment $pay, string $reason): void
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new \DomainException('กรุณาระบุเหตุผลที่ไม่อนุมัติ');
+        }
+        if ($pay->status !== self::STATUS_PENDING) {
+            throw new \DomainException('รอบจ่ายนี้ไม่อยู่ในสถานะรออนุมัติ');
+        }
+        $pay->status = self::STATUS_REJECTED;
+        $pay->rejected_at = time();
+        $pay->rejected_by = Yii::$app->has('user') && !Yii::$app->user->isGuest ? Yii::$app->user->id : null;
+        $pay->reject_reason = mb_substr($reason, 0, 255);
+        $pay->save(false, ['status', 'rejected_at', 'rejected_by', 'reject_reason']);
+    }
+
+    /** บิลที่อยู่ในรอบจ่ายรออนุมัติ: [payable_id => true] (ห้ามเลือกซ้ำ) */
+    public static function pendingPayableIds(): array
+    {
+        $ids = [];
+        foreach (FinancePayablePayment::find()->select('request_json')->where(['status' => self::STATUS_PENDING])->column() as $json) {
+            foreach ((array) ((json_decode((string) $json, true) ?: [])['lines'] ?? []) as $ln) {
+                $ids[(int) $ln['payable_id']] = true;
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * ตรวจบิล/ยอด/หมวด → [['p' => FinancePayable, 'amt', 'wht', 'category_id']]
+     * $strict = ตอนอนุมัติ: ยอดขอจ่ายต้องไม่เกินคงค้างปัจจุบัน (ไม่ตัดยอดให้เงียบ ๆ)
+     * @throws \DomainException
+     */
+    private function selectLines(array $lines, bool $strict): array
     {
         $selected = [];
         foreach ($lines as $pid => $ln) {
@@ -43,7 +171,13 @@ class FinancePayablePaymentService
             if (!$p) {
                 continue;
             }
-            $amt = min($amt, round($p->getOutstanding(), 2));
+            $out = round($p->getOutstanding(), 2);
+            if ($amt > $out + 0.005) {
+                if ($strict) {
+                    throw new \DomainException('ยอดคงค้างของบิล ' . ($p->invoice_no ?: $p->payable_no) . ' เปลี่ยนไปแล้ว (คงค้าง ' . number_format($out, 2) . ') — ไม่อนุมัติรอบนี้แล้วบันทึกใหม่');
+                }
+                $amt = $out;
+            }
             if ($amt <= 0) {
                 continue;
             }
@@ -59,64 +193,17 @@ class FinancePayablePaymentService
         if (!$selected) {
             throw new \DomainException('ยังไม่ได้เลือกบิลที่จะจ่าย');
         }
+        return $selected;
+    }
+
+    private function account(array $head): FinanceCashAccount
+    {
         $accountId = (int) ($head['cash_account_id'] ?? 0);
         $account = $accountId ? FinanceCashAccount::findOne($accountId) : null;
         if (!$account) {
             throw new \DomainException('กรุณาเลือกบัญชีจ่าย (ใช้ลงใบสำคัญจ่ายและตัดยอดเงินคงเหลือ)');
         }
-        $payDate = (string) $head['pay_date'];
-        $payMethod = (string) ($head['pay_method'] ?? 'cheque');
-        $chequeNo = trim((string) ($head['cheque_no'] ?? '')) ?: null;
-        $first = $selected[0]['p'];
-        $vendorName = trim((string) ($head['vendor'] ?? '')) ?: $first->vendor_name_snapshot;
-
-        $net = array_sum(array_column($selected, 'amt'));
-        $wht = array_sum(array_column($selected, 'wht'));
-        $gross = $net + $wht;
-
-        $pay = new FinancePayablePayment([
-            'vendor_name_snapshot' => $vendorName,
-            'vendor_id' => (int) $first->vendor_id,
-            'cash_account_id' => $account->id,
-            'pay_date' => $payDate,
-            'pay_method' => $payMethod,
-            'bank_name' => $account->bank_name ?: (trim((string) ($head['bank_name'] ?? '')) ?: null),
-            'bank_branch' => $account->branch ?: (trim((string) ($head['bank_branch'] ?? '')) ?: null),
-            'cheque_no' => $chequeNo,
-            'doc_no' => trim((string) ($head['doc_no'] ?? '')) ?: null,
-            'subject' => trim((string) ($head['subject'] ?? '')) ?: null,
-            'gross_total' => round($gross, 2),
-            'wht_total' => round($wht, 2),
-            'net_total' => round($net, 2),
-            'note' => trim((string) ($head['note'] ?? '')) ?: null,
-        ]);
-        $pay->save(false);
-
-        $voucher = $this->createVoucher($pay, $selected);
-
-        foreach ($selected as $s) {
-            (new FinancePayableSettlement([
-                'payable_id' => $s['p']->id,
-                'payment_id' => $pay->id,
-                'cash_voucher_id' => $voucher->id,
-                'amount' => $s['amt'],
-                'settle_date' => $payDate,
-                'note' => $chequeNo ? ('เช็ค ' . $chequeNo) : null,
-            ]))->save(false);
-        }
-
-        // จ่ายด้วยเช็ค → บันทึกเช็คเข้าทะเบียนคุมเช็คอัตโนมัติ
-        if ($payMethod === 'cheque' && $chequeNo) {
-            $cheque = FinanceCheque::fromPayment($pay);
-            $cheque->template_id = (int) ($head['template_id'] ?? 0) ?: null;
-            $cheque->cheque_book_no = trim((string) ($head['cheque_book_no'] ?? '')) ?: null;
-            $cheque->is_ac_payee = !empty($head['is_ac_payee']) ? 1 : 0;
-            $cheque->status = FinanceCheque::STATUS_DRAFT;
-            $cheque->save(false);
-        }
-
-        $this->rememberVendorCategory($first, (int) $selected[0]['category_id']);
-        return $pay;
+        return $account;
     }
 
     /**
@@ -132,6 +219,9 @@ class FinancePayablePaymentService
         }
         if ($pay->isCancelled()) {
             throw new \DomainException('รอบจ่ายนี้ถูกยกเลิกไปแล้ว');
+        }
+        if ($pay->status !== self::STATUS_PAID) {
+            throw new \DomainException('ยกเลิกได้เฉพาะรอบจ่ายที่อนุมัติแล้ว — รอบที่รออนุมัติให้กด "ไม่อนุมัติ"');
         }
         $voucher = $pay->getVoucher();
         if ($voucher && $voucher->is_closed) {

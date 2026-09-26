@@ -35,13 +35,14 @@ class PayableController extends Controller
             'access' => ['class' => AccessControl::class, 'rules' => [
                 ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter', 'payments'], 'roles' => ['financeView']],
                 ['allow' => true, 'actions' => ['cancel-payment'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['approve-payment', 'reject-payment'], 'roles' => ['financeApprove']],
                 ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting', 'send-accounting-bulk'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['financeApprove', 'financeOperate']],
                 ['allow' => true, 'actions' => ['pay', 'billing'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
-                'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'cancel-payment' => ['POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
+                'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'cancel-payment' => ['POST'], 'approve-payment' => ['POST'], 'reject-payment' => ['POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
             ]],
         ]);
     }
@@ -183,6 +184,7 @@ class PayableController extends Controller
             'mode' => 'bills',
             'vendor' => $vendor,
             'rows' => $this->outstandingBills($vendor),
+            'locked' => FinancePayablePaymentService::pendingPayableIds(),
             'today' => date('d/m/') . ((int) date('Y') + 543),
             'accounts' => ArrayHelper::map($accounts, 'id', fn(FinanceCashAccount $a) => $a->label()),
             'accountMeta' => $accountMeta,
@@ -209,6 +211,47 @@ class PayableController extends Controller
             'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30]]),
             'q' => $q,
         ]);
+    }
+
+    /** อนุมัติรอบจ่าย → ตัดหนี้ + ใบสำคัญจ่าย + เช็ค */
+    public function actionApprovePayment($id)
+    {
+        $pay = $this->findPayment($id);
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            (new FinancePayablePaymentService())->approve($pay);
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'อนุมัติรอบจ่าย #' . $pay->id . ' แล้ว — ตัดหนี้และออกใบสำคัญจ่าย/เช็คเรียบร้อย');
+        } catch (\DomainException $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e, __METHOD__);
+            Yii::$app->session->setFlash('error', 'อนุมัติรอบจ่ายไม่สำเร็จ');
+        }
+        return $this->redirect(['payments']);
+    }
+
+    public function actionRejectPayment($id)
+    {
+        $pay = $this->findPayment($id);
+        try {
+            (new FinancePayablePaymentService())->reject($pay, (string) Yii::$app->request->post('reason', ''));
+            Yii::$app->session->setFlash('success', 'ไม่อนุมัติรอบจ่าย #' . $pay->id . ' — บิลกลับไปเลือกจ่ายรอบใหม่ได้');
+        } catch (\DomainException $e) {
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        }
+        return $this->redirect(['payments']);
+    }
+
+    private function findPayment($id): FinancePayablePayment
+    {
+        $pay = FinancePayablePayment::findOne($id);
+        if (!$pay) {
+            throw new NotFoundHttpException('ไม่พบรอบจ่ายเจ้าหนี้');
+        }
+        return $pay;
     }
 
     /** ยกเลิกรอบจ่าย: คืนยอดคงค้าง + ลบใบสำคัญจ่าย + ยกเลิกเช็ค */
@@ -240,6 +283,10 @@ class PayableController extends Controller
         $pay = FinancePayablePayment::findOne($id);
         if (!$pay) {
             throw new NotFoundHttpException('ไม่พบรอบจ่ายเจ้าหนี้');
+        }
+        if ($pay->status !== FinancePayablePaymentService::STATUS_PAID) {
+            Yii::$app->session->setFlash('error', 'รอบจ่าย #' . $pay->id . ' ยังไม่ได้อนุมัติ — พิมพ์หนังสือนำส่งได้หลังอนุมัติ');
+            return $this->redirect(['payments']);
         }
         $this->layout = false; // หน้าเอกสารพิมพ์ standalone
         return $this->render('letter', [
@@ -312,11 +359,11 @@ class PayableController extends Controller
 
         $tx = Yii::$app->db->beginTransaction();
         try {
-            $pay = (new FinancePayablePaymentService())->pay($lines, $head);
+            $pay = (new FinancePayablePaymentService())->request($lines, $head);
             $tx->commit();
-            Yii::$app->session->setFlash('success', 'บันทึกจ่ายชำระ ' . count($pay->settlements) . ' บิล รวม '
-                . number_format((float) $pay->net_total, 2) . ' บาท และออกใบสำคัญจ่ายเงินบำรุงแล้ว');
-            return $this->redirect(['letter', 'id' => $pay->id]);
+            Yii::$app->session->setFlash('success', 'บันทึกรอบจ่าย #' . $pay->id . ' รวม ' . number_format((float) $pay->net_total, 2)
+                . ' บาท แล้ว — รอผู้อนุมัติกดอนุมัติ จึงจะตัดหนี้และออกใบสำคัญจ่าย/เช็ค');
+            return $this->redirect(['payments']);
         } catch (\DomainException $e) {
             $tx->rollBack();
             Yii::$app->session->setFlash('error', $e->getMessage());
