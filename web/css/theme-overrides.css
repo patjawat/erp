@@ -1,0 +1,21 @@
+/*
+ * theme-overrides.css — กฎกันชนระดับธีม (โหลดท้ายสุดใน AppAsset ให้ชนะ cascade)
+ * ห้ามแก้ custom.css (ไฟล์ Bootstrap คอมไพล์) — เพิ่ม override ที่นี่แทน
+ */
+
+/* dropdown: รายการที่เลือก (active) ต้องอ่านออกทุกหน้า
+   แก้ปัญหา custom.css ให้ตัวอักษรขาวบนพื้นอ่อน = มองไม่เห็น */
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active,
+.dropdown-menu > li.active > a.dropdown-item {
+  background-color: #eef0ff !important;
+  color: #3d3fa4 !important;
+  font-weight: 600;
+}
+
+/* hover/focus ของ dropdown ให้คุมโทนอ่านออกเช่นกัน */
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+  background-color: #f3f4ff !important;
+  color: #2f3168 !important;
+}

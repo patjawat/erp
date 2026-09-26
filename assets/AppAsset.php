@@ -34,6 +34,7 @@ class AppAsset extends AssetBundle
         'libs/magnific-popup/magnific-popup.css',
         // 'libs/font-awesome/all.min.css',
         'libs/font-awesome/fontawesome-free-7.1.0-web/css/all.min.css',
+        'css/theme-overrides.css', // กฎกันชนระดับธีม — ต้องอยู่ท้ายสุดเพื่อชนะ cascade
     ];
 
     public $js = [
