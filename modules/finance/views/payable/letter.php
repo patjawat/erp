@@ -111,7 +111,13 @@ $hasWht = (float) $pay->wht_total > 0.005;
         <a href="<?= \yii\helpers\Url::to(['/finance/cheque/print', 'id' => $cheque->id]) ?>" target="_blank">🧾 พิมพ์เช็ค</a>
     <?php endif; ?>
     <a href="<?= \yii\helpers\Url::to(['pay']) ?>">← กลับหน้าจ่ายชำระ</a>
+    <a href="<?= \yii\helpers\Url::to(['payments']) ?>">รายการรอบจ่าย</a>
 </div>
+<?php if ($pay->isCancelled()): ?>
+    <div class="toolbar" style="background:#fde2e1;color:#8a1c1c">
+        ⚠️ รอบจ่ายนี้ถูกยกเลิกแล้ว (<?= date('d/m/', $pay->cancelled_at) . ((int) date('Y', $pay->cancelled_at) + 543) ?>) — <?= Html::encode($pay->cancel_reason) ?> · หนังสือนี้ใช้ไม่ได้
+    </div>
+<?php endif; ?>
 
 <div class="page">
     <div class="head">

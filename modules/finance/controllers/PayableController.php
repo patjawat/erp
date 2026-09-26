@@ -33,14 +33,15 @@ class PayableController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter', 'payments'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['cancel-payment'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting', 'send-accounting-bulk'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['review'], 'roles' => ['financeApprove', 'financeOperate']],
                 ['allow' => true, 'actions' => ['pay', 'billing'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
                 'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
-                'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
+                'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'cancel-payment' => ['POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
             ]],
         ]);
     }
@@ -240,6 +241,43 @@ class PayableController extends Controller
             ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null, 'vendor_name_snapshot' => $vendor])
             ->orderBy(['invoice_date' => SORT_ASC, 'id' => SORT_ASC])->all();
         return $this->render('billing', ['mode' => 'bills', 'vendor' => $vendor, 'rows' => $rows]);
+    }
+
+    /** รายการรอบจ่ายเจ้าหนี้ (ล่าสุดก่อน) — ดูหนังสือนำส่ง/ใบสำคัญ/เช็ค และยกเลิกรอบจ่าย */
+    public function actionPayments()
+    {
+        $q = trim((string) Yii::$app->request->get('q', ''));
+        $query = FinancePayablePayment::find()->orderBy(['pay_date' => SORT_DESC, 'id' => SORT_DESC]);
+        if ($q !== '') {
+            $query->andWhere(['or', ['like', 'vendor_name_snapshot', $q], ['like', 'cheque_no', $q], ['like', 'doc_no', $q]]);
+        }
+        return $this->render('payments', [
+            'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30]]),
+            'q' => $q,
+        ]);
+    }
+
+    /** ยกเลิกรอบจ่าย: คืนยอดคงค้าง + ลบใบสำคัญจ่าย + ยกเลิกเช็ค */
+    public function actionCancelPayment($id)
+    {
+        $pay = FinancePayablePayment::findOne($id);
+        if (!$pay) {
+            throw new NotFoundHttpException('ไม่พบรอบจ่ายเจ้าหนี้');
+        }
+        $tx = Yii::$app->db->beginTransaction();
+        try {
+            (new FinancePayablePaymentService())->cancel($pay, (string) Yii::$app->request->post('reason', ''));
+            $tx->commit();
+            Yii::$app->session->setFlash('success', 'ยกเลิกรอบจ่าย #' . $pay->id . ' แล้ว — ยอดหนี้กลับมาค้าง ใบสำคัญจ่ายถูกลบ และเช็คถูกยกเลิก');
+        } catch (\DomainException $e) {
+            $tx->rollBack();
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            $tx->rollBack();
+            Yii::error($e, __METHOD__);
+            Yii::$app->session->setFlash('error', 'ยกเลิกรอบจ่ายไม่สำเร็จ');
+        }
+        return $this->redirect(['payments']);
     }
 
     /** หนังสือนำส่งชำระเงิน (พิมพ์) จากรอบจ่าย */

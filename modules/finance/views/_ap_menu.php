@@ -23,6 +23,7 @@ $items = [
     ['key' => 'payable', 'label' => 'ทะเบียนคุมเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
     ['key' => 'billing', 'label' => 'รับวางบิล', 'icon' => 'bi-receipt', 'url' => ['/finance/payable/billing'], 'badge' => $billingPending],
     ['key' => 'aging', 'label' => 'เจ้าหนี้ค้างชำระ', 'icon' => 'bi-hourglass-split', 'url' => ['/finance/payable/aging']],
+    ['key' => 'payments', 'label' => 'รอบจ่าย', 'icon' => 'bi-clock-history', 'url' => ['/finance/payable/payments']],
     ['key' => 'cheque', 'label' => 'พิมพ์เช็ค', 'icon' => 'bi-cash-stack', 'url' => ['/finance/cheque']],
 ];
 ?>

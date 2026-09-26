@@ -119,6 +119,53 @@ class FinancePayablePaymentService
         return $pay;
     }
 
+    /**
+     * ยกเลิกรอบจ่าย: คืนยอดคงค้าง (ลบการตัดหนี้) + ลบใบสำคัญจ่าย + ยกเลิกเช็ค (คงเลขไว้ในทะเบียน)
+     * แถวรอบจ่ายเก็บไว้เป็นหลักฐาน พร้อม snapshot บิลที่เคยจ่าย
+     * @throws \DomainException
+     */
+    public function cancel(FinancePayablePayment $pay, string $reason): void
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new \DomainException('กรุณาระบุเหตุผลที่ยกเลิกรอบจ่าย');
+        }
+        if ($pay->isCancelled()) {
+            throw new \DomainException('รอบจ่ายนี้ถูกยกเลิกไปแล้ว');
+        }
+        $voucher = $pay->getVoucher();
+        if ($voucher && $voucher->is_closed) {
+            throw new \DomainException('ใบสำคัญจ่ายของรอบนี้อยู่ในงวดที่ปิดบัญชีประจำวันแล้ว ยกเลิกไม่ได้');
+        }
+        $cheque = $pay->getCheque();
+        if ($cheque && $cheque->status === FinanceCheque::STATUS_CLEARED) {
+            throw new \DomainException('เช็คของรอบนี้ขึ้นเงินแล้ว ยกเลิกไม่ได้');
+        }
+
+        $snapshot = [];
+        foreach ($pay->paidLines() as $ln) {
+            $snapshot[] = [
+                'payable_id' => $ln['payable']->id,
+                'payable_no' => $ln['payable']->payable_no,
+                'invoice_no' => $ln['payable']->invoice_no,
+                'amount' => $ln['amount'],
+            ];
+        }
+        FinancePayableSettlement::deleteAll(['payment_id' => $pay->id]);
+        if ($voucher) {
+            $voucher->delete(); // FK CASCADE ลบบรรทัดใน finance_cash_txn
+        }
+        if ($cheque && $cheque->status !== FinanceCheque::STATUS_VOID) {
+            $cheque->void('ยกเลิกรอบจ่ายเจ้าหนี้: ' . $reason);
+        }
+
+        $pay->cancelled_at = time();
+        $pay->cancelled_by = Yii::$app->has('user') && !Yii::$app->user->isGuest ? Yii::$app->user->id : null;
+        $pay->cancel_reason = mb_substr($reason, 0, 255);
+        $pay->cancel_snapshot = json_encode($snapshot, JSON_UNESCAPED_UNICODE);
+        $pay->save(false, ['cancelled_at', 'cancelled_by', 'cancel_reason', 'cancel_snapshot']);
+    }
+
     /** ใบสำคัญจ่าย (header) + บรรทัด OUT ต่อบิล */
     private function createVoucher(FinancePayablePayment $pay, array $selected): FinanceCashVoucher
     {

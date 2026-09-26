@@ -62,6 +62,31 @@ class FinancePayablePayment extends ActiveRecord
         return $this->hasMany(FinancePayableSettlement::class, ['payment_id' => 'id']);
     }
 
+    public function isCancelled(): bool
+    {
+        return !empty($this->cancelled_at);
+    }
+
+    /** ใบสำคัญจ่ายเงินบำรุงที่ออกจากรอบนี้ (รอบจ่ายเก่าก่อนเชื่อม mophcash จะไม่มี) */
+    public function getVoucher(): ?FinanceCashVoucher
+    {
+        $vid = FinancePayableSettlement::find()->select('cash_voucher_id')
+            ->where(['payment_id' => $this->id])->andWhere(['not', ['cash_voucher_id' => null]])->scalar();
+        return $vid ? FinanceCashVoucher::findOne((int) $vid) : null;
+    }
+
+    public function getCheque(): ?FinanceCheque
+    {
+        return FinanceCheque::find()->where(['payment_id' => $this->id])->orderBy(['id' => SORT_DESC])->one();
+    }
+
+    /** บิลที่เคยจ่ายก่อนยกเลิก (จาก snapshot) — [[payable_id, payable_no, invoice_no, amount]] */
+    public function cancelledLines(): array
+    {
+        $rows = json_decode((string) $this->cancel_snapshot, true);
+        return is_array($rows) ? $rows : [];
+    }
+
     /** บิลที่จ่ายในรอบนี้ พร้อมยอดที่จ่าย — คืน list ของ [payable, amount] */
     public function paidLines(): array
     {
