@@ -25,7 +25,7 @@ $this->beginBlock('page-title');
 echo Html::encode($this->title);
 $this->endBlock();
 $this->beginBlock('page-action');
-echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'aging']);
+echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'pay']);
 $this->endBlock();
 
 $fmt = fn($v) => number_format((float) $v, 2);

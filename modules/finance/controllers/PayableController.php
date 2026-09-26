@@ -11,21 +11,13 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use app\components\AppHelper;
 use app\components\SiteHelper;
-use app\modules\finance\models\FinanceInbox;
-use app\modules\finance\models\FinanceInboxReview;
 use app\modules\finance\models\FinancePayable;
-use app\modules\finance\models\FinancePayableReview;
-use app\modules\finance\services\FinanceInboxReviewService;
-use app\modules\finance\models\FinancePayableSettlement;
 use app\modules\finance\models\FinancePayablePayment;
 use app\modules\finance\models\FinanceCheque;
 use app\modules\finance\models\FinanceChequeTemplate;
 use app\modules\finance\models\FinanceCashAccount;
 use app\modules\finance\services\FinancePayableDraftService;
-use app\modules\finance\services\FinancePayableApprovalService;
 use app\modules\finance\services\FinancePayablePaymentService;
-use app\modules\accounting\models\AccountingChartAccount;
-use app\modules\sm\models\Vendor;
 
 class PayableController extends Controller
 {
@@ -36,13 +28,10 @@ class PayableController extends Controller
                 ['allow' => true, 'actions' => ['index', 'view', 'aging', 'letter', 'payments'], 'roles' => ['financeView']],
                 ['allow' => true, 'actions' => ['cancel-payment'], 'roles' => ['financeOperate']],
                 ['allow' => true, 'actions' => ['approve-payment', 'reject-payment'], 'roles' => ['financeApprove']],
-                ['allow' => true, 'actions' => ['create', 'update', 'submit', 'send-accounting', 'send-accounting-bulk'], 'roles' => ['financeOperate']],
-                ['allow' => true, 'actions' => ['review'], 'roles' => ['financeApprove', 'financeOperate']],
-                ['allow' => true, 'actions' => ['pay', 'billing'], 'roles' => ['financeOperate']],
+                ['allow' => true, 'actions' => ['create', 'update', 'send-accounting', 'send-accounting-bulk', 'pay', 'billing'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
-                'create' => ['GET', 'POST'], 'update' => ['GET', 'POST'], 'submit' => ['POST'], 'review' => ['POST'],
-                'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'cancel-payment' => ['POST'], 'approve-payment' => ['POST'], 'reject-payment' => ['POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
+                'update' => ['GET', 'POST'], 'pay' => ['GET', 'POST'], 'billing' => ['GET', 'POST'], 'cancel-payment' => ['POST'], 'approve-payment' => ['POST'], 'reject-payment' => ['POST'], 'send-accounting' => ['POST'], 'send-accounting-bulk' => ['POST'],
             ]],
         ]);
     }
@@ -56,7 +45,7 @@ class PayableController extends Controller
     {
         $req = Yii::$app->request;
         $q = trim((string) $req->get('q', ''));
-        $status = (string) $req->get('status', '');
+        $sent = (string) $req->get('sent', '');
         $payment = (string) $req->get('payment', '');
         $billing = (string) $req->get('billing', '');
 
@@ -68,8 +57,10 @@ class PayableController extends Controller
                 ['like', 'payable_no', $q],
             ]);
         }
-        if ($status !== '' && isset(FinancePayable::statusOptions()[$status])) {
-            $query->andWhere(['status' => $status]);
+        if ($sent === 'yes') {
+            $query->andWhere(['not', ['sent_accounting_at' => null]]);
+        } elseif ($sent === 'no') {
+            $query->andWhere(['sent_accounting_at' => null]);
         }
         if ($billing === 'unbilled') {
             $query->andWhere(['status' => FinancePayable::STATUS_APPROVED, 'billing_id' => null]);
@@ -91,7 +82,7 @@ class PayableController extends Controller
         return $this->render('index', [
             'dataProvider' => new ActiveDataProvider(['query' => $query, 'pagination' => ['pageSize' => 30]]),
             'q' => $q,
-            'status' => $status,
+            'sent' => $sent,
             'payment' => $payment,
             'billing' => $billing,
         ]);
@@ -375,26 +366,22 @@ class PayableController extends Controller
         return $this->redirect(['pay', 'vendor' => $vendor]);
     }
 
-    /** การเงินส่งเจ้าหนี้ (อนุมัติแล้ว) ให้บัญชีลงบันทึก */
+    /** การเงินส่งบิลให้บัญชีลงบันทึก */
     public function actionSendAccounting($id)
     {
         $model = $this->findPayable($id);
-        if ($model->status !== FinancePayable::STATUS_APPROVED) {
-            Yii::$app->session->setFlash('warning', 'ส่งบัญชีได้เฉพาะรายการที่อนุมัติเข้าทะเบียนแล้ว');
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
         if ($model->isSentAccounting()) {
-            Yii::$app->session->setFlash('info', 'รายการนี้ส่งบัญชีไปแล้ว');
-            return $this->redirect(['view', 'id' => $model->id]);
+            Yii::$app->session->setFlash('info', 'บิลนี้ส่งบัญชีไปแล้ว');
+        } else {
+            $model->sent_accounting_at = date('Y-m-d H:i:s');
+            $model->sent_accounting_by = Yii::$app->user->id;
+            $model->save(false, ['sent_accounting_at', 'sent_accounting_by']);
+            Yii::$app->session->setFlash('success', 'ส่ง ' . $model->payable_no . ' ให้บัญชีแล้ว');
         }
-        $model->sent_accounting_at = date('Y-m-d H:i:s');
-        $model->sent_accounting_by = Yii::$app->user->id;
-        $model->save(false, ['sent_accounting_at', 'sent_accounting_by']);
-        Yii::$app->session->setFlash('success', 'ส่งให้บัญชีลงบันทึกแล้ว');
-        return $this->redirect(['view', 'id' => $model->id]);
+        return $this->redirect(Yii::$app->request->referrer ?: ['view', 'id' => $model->id]);
     }
 
-    /** ส่งบัญชีทีละหลายรายการ (เลือกจากทะเบียนคุมเจ้าหนี้) */
+    /** ส่งบัญชีทีละหลายรายการ (เลือกจากทะเบียนเจ้าหนี้) */
     public function actionSendAccountingBulk()
     {
         $ids = array_values(array_filter(array_map('intval', (array) Yii::$app->request->post('ids', []))));
@@ -402,67 +389,18 @@ class PayableController extends Controller
             Yii::$app->session->setFlash('warning', 'ยังไม่ได้เลือกรายการที่จะส่งบัญชี');
             return $this->redirect(['index']);
         }
-        $now = date('Y-m-d H:i:s');
-        $userId = Yii::$app->user->id;
-        $done = 0;
-        $skipped = 0;
-        foreach (FinancePayable::find()->where(['id' => $ids])->all() as $model) {
-            if ($model->status !== FinancePayable::STATUS_APPROVED || $model->isSentAccounting()) {
-                $skipped++;
-                continue;
-            }
-            $model->sent_accounting_at = $now;
-            $model->sent_accounting_by = $userId;
-            $model->save(false, ['sent_accounting_at', 'sent_accounting_by']);
-            $done++;
-        }
-        Yii::$app->session->setFlash(
-            $done ? 'success' : 'warning',
-            "ส่งบัญชีแล้ว {$done} รายการ" . ($skipped ? " (ข้าม {$skipped} รายการที่ยังไม่อนุมัติหรือส่งแล้ว)" : '')
+        $done = FinancePayable::updateAll(
+            ['sent_accounting_at' => date('Y-m-d H:i:s'), 'sent_accounting_by' => Yii::$app->user->id],
+            ['id' => $ids, 'status' => FinancePayable::STATUS_APPROVED, 'sent_accounting_at' => null]
         );
+        Yii::$app->session->setFlash($done ? 'success' : 'warning', "ส่งบัญชีแล้ว {$done} รายการ");
         return $this->redirect(['index']);
     }
 
+    /** ตั้งเจ้าหนี้ทำที่กล่องรอรับ (ปุ่ม "รับ") แล้ว — ลิงก์เดิมพาไปหน้ารายการในกล่อง */
     public function actionCreate($inbox_id)
     {
-        $inbox = $this->findInbox($inbox_id);
-        $existing = FinancePayable::findOne(['finance_inbox_id' => $inbox->id]);
-        if ($existing) {
-            return $this->redirect(['view', 'id' => $existing->id]);
-        }
-        // ตั้งเจ้าหนี้ได้จากรายการที่ยังรอตรวจ (จะรับรองให้พร้อมกัน) หรือรายการที่รับรองแล้ว
-        if (!in_array($inbox->status, [FinanceInbox::STATUS_PENDING_REVIEW, FinanceInbox::STATUS_ACCEPTED], true)) {
-            Yii::$app->session->setFlash('warning', 'ตั้งเจ้าหนี้ได้เฉพาะรายการที่รอตรวจหรือรับรองแล้ว');
-            return $this->redirect(['/finance/inbox/view', 'id' => $inbox->id]);
-        }
-
-        $service = new FinancePayableDraftService();
-        $model = $service->prepare($inbox);
-        if ($model->load(Yii::$app->request->post())) {
-            $this->normalizeFormDates($model);
-            $transaction = Yii::$app->db->beginTransaction();
-            try {
-                // รอตรวจ → รับรองเอกสารในจังหวะเดียวกับตั้งเจ้าหนี้ (transaction เดียว)
-                if ($inbox->status === FinanceInbox::STATUS_PENDING_REVIEW) {
-                    (new FinanceInboxReviewService())->review($inbox, FinanceInboxReview::DECISION_ACCEPT, 'รับรองและตั้งเจ้าหนี้');
-                    $inbox->refresh();
-                }
-                $service->create($inbox, $model);
-                $transaction->commit();
-                Yii::$app->session->setFlash('success', 'รับรองเอกสารและตั้งเจ้าหนี้ (ร่างทะเบียนเจ้าหนี้) เรียบร้อยแล้ว');
-                return $this->redirect(['view', 'id' => $model->id]);
-            } catch (\DomainException $e) {
-                $transaction->rollBack();
-                $inbox->refresh();
-                $model->addError($this->domainErrorAttribute($e), $e->getMessage());
-            } catch (\Throwable $e) {
-                $transaction->rollBack();
-                $inbox->refresh();
-                Yii::error($e, __METHOD__);
-                $model->addError('invoice_no', 'รับรองและตั้งเจ้าหนี้ไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
-            }
-        }
-        return $this->renderForm($model, $inbox);
+        return $this->redirect(['/finance/inbox/view', 'id' => (int) $inbox_id]);
     }
 
     public function actionView($id)
@@ -470,121 +408,59 @@ class PayableController extends Controller
         return $this->render('view', ['model' => $this->findPayable($id)]);
     }
 
+    /** แก้ข้อมูลบิล: เลขใบแจ้งหนี้ / วันที่ใบแจ้งหนี้ / เครดิต / ภาษีหัก ณ ที่จ่าย / หมายเหตุ */
     public function actionUpdate($id)
     {
         $model = $this->findPayable($id);
-        if (!in_array($model->status, [FinancePayable::STATUS_DRAFT, FinancePayable::STATUS_NEEDS_REVISION], true)) {
-            Yii::$app->session->setFlash('warning', 'รายการสถานะนี้ไม่สามารถแก้ไขได้');
+        if ($reason = $this->lockReason($model)) {
+            Yii::$app->session->setFlash('warning', $reason);
             return $this->redirect(['view', 'id' => $model->id]);
         }
-        if ($model->load(Yii::$app->request->post())) {
-            $this->normalizeFormDates($model);
-            try {
-                (new FinancePayableDraftService())->update($model);
-                Yii::$app->session->setFlash('success', 'บันทึกการแก้ไขร่างทะเบียนเจ้าหนี้แล้ว');
+        $req = Yii::$app->request;
+        if ($req->isPost) {
+            $post = (array) $req->post('FinancePayable', []);
+            $invoiceNo = FinancePayableDraftService::normalizeInvoiceNo((string) ($post['invoice_no'] ?? ''));
+            $model->invoice_no = $invoiceNo !== '' ? $invoiceNo : null;
+            $model->invoice_date = AppHelper::normalizeDateToDb($post['invoice_date'] ?? null) ?: $model->invoice_date;
+            $model->credit_days = max(0, (int) ($post['credit_days'] ?? $model->credit_days));
+            $model->withholding_tax_amount = round((float) str_replace(',', '', (string) ($post['withholding_tax_amount'] ?? 0)), 2);
+            $model->note = trim((string) ($post['note'] ?? '')) ?: null;
+            $model->net_amount = round((float) $model->gross_amount - (float) $model->withholding_tax_amount, 2);
+            $model->due_date = FinancePayableDraftService::calculateDueDate((string) $model->billing_date, (int) $model->credit_days);
+
+            if ($model->invoice_no && FinancePayable::find()->where(['vendor_id' => $model->vendor_id, 'invoice_no' => $model->invoice_no])
+                    ->andWhere(['<>', 'id', $model->id])->exists()) {
+                $model->addError('invoice_no', 'เลขใบแจ้งหนี้นี้ซ้ำกับบิลอื่นของบริษัทเดียวกัน');
+            }
+            if ((float) $model->withholding_tax_amount < 0 || (float) $model->withholding_tax_amount > (float) $model->gross_amount) {
+                $model->addError('withholding_tax_amount', 'ภาษีหัก ณ ที่จ่ายต้องไม่ติดลบและไม่เกินยอดหนี้');
+            }
+            if (!$model->hasErrors()) {
+                $model->save(false);
+                Yii::$app->session->setFlash('success', 'บันทึกข้อมูลบิลแล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
-            } catch (\DomainException $e) {
-                $model->addError($this->domainErrorAttribute($e), $e->getMessage());
-            } catch (\Throwable $e) {
-                Yii::error($e, __METHOD__);
-                $model->addError('invoice_no', 'บันทึกการแก้ไขไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
             }
         }
-        return $this->renderForm($model, $model->inbox);
+        return $this->render('update', ['model' => $model]);
     }
 
-    public function actionSubmit($id)
+    /** เหตุผลที่แก้ข้อมูลบิลไม่ได้ (null = แก้ได้) */
+    private function lockReason(FinancePayable $model): ?string
     {
-        $model = $this->findPayable($id);
-        try {
-            (new FinancePayableApprovalService())->decide($model, FinancePayableReview::DECISION_SUBMIT);
-            Yii::$app->session->setFlash('success', 'ส่งรายการให้ผู้ตรวจอนุมัติแล้ว');
-        } catch (\DomainException $e) {
-            Yii::$app->session->setFlash('warning', $e->getMessage());
-        } catch (\Throwable $e) {
-            Yii::error($e, __METHOD__);
-            Yii::$app->session->setFlash('error', 'ส่งรายการตรวจอนุมัติไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
+        if ($model->isSentAccounting()) {
+            return 'บิลนี้ส่งบัญชีแล้ว แก้ข้อมูลไม่ได้';
         }
-        return $this->redirect(['view', 'id' => $model->id]);
-    }
-
-    public function actionReview($id)
-    {
-        $model = $this->findPayable($id);
-        $decision = (string) Yii::$app->request->post('decision');
-        $requiredPermission = $decision === FinancePayableReview::DECISION_APPROVE ? 'financeApprove' : 'financeOperate';
-        if (!Yii::$app->user->can($requiredPermission)) {
-            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ดำเนินการตัดสินใจนี้');
+        if ($model->getPaidAmount() > 0.005 || isset(FinancePayablePaymentService::pendingPayableIds()[$model->id])) {
+            return 'บิลนี้มีการจ่ายหรืออยู่ในรอบจ่ายแล้ว แก้ข้อมูลไม่ได้';
         }
-        try {
-            (new FinancePayableApprovalService())->decide($model, $decision, (string) Yii::$app->request->post('note'));
-            Yii::$app->session->setFlash('success', $decision === FinancePayableReview::DECISION_APPROVE
-                ? 'อนุมัติรายการเข้าสู่ทะเบียนเจ้าหนี้แล้ว' : 'ส่งรายการกลับให้ผู้จัดทำแก้ไขแล้ว');
-        } catch (\DomainException $e) {
-            Yii::$app->session->setFlash('warning', $e->getMessage());
-        } catch (\Throwable $e) {
-            Yii::error($e, __METHOD__);
-            Yii::$app->session->setFlash('error', 'บันทึกผลการตรวจอนุมัติไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ');
-        }
-        return $this->redirect(['view', 'id' => $model->id]);
-    }
-
-    private function renderForm(FinancePayable $model, FinanceInbox $inbox)
-    {
-        $vendors = Vendor::find()->where(['name' => 'vendor', 'active' => 1])->orderBy(['title' => SORT_ASC])->all();
-        $service = new FinancePayableDraftService();
-        $invoiceDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $model->invoice_date) ? $model->invoice_date : date('Y-m-d');
-        try {
-            $chartVersion = $service->activeHospitalChart($invoiceDate);
-            $accounts = $service->eligibleAccounts($invoiceDate);
-        } catch (\DomainException $e) {
-            $chartVersion = null;
-            $accounts = [];
-        }
-        return $this->render('create', [
-            'model' => $model,
-            'inbox' => $inbox,
-            'vendors' => ArrayHelper::map($vendors, 'id', static fn(Vendor $vendor) => $vendor->title . ' (' . $vendor->code . ')'),
-            'chartVersion' => $chartVersion,
-            'accountOptions' => ArrayHelper::map(
-                $accounts,
-                'id',
-                static fn(AccountingChartAccount $account) => $account->code . ' — ' . $account->name,
-                static fn(AccountingChartAccount $account) => $account->category === '1' ? 'สินทรัพย์/สินค้าคงคลัง' : 'ค่าใช้จ่าย'
-            ),
-        ]);
-    }
-
-    /** ช่องวันที่ในฟอร์มเป็น พ.ศ. (วว/ดด/พ.ศ.) → ค.ศ. Y-m-d ก่อนคำนวณ/validate */
-    private function normalizeFormDates(FinancePayable $model): void
-    {
-        foreach (['invoice_date', 'billing_date'] as $attr) {
-            $model->$attr = AppHelper::normalizeDateToDb($model->$attr);
-        }
+        return null;
     }
 
     private function findPayable($id): FinancePayable
     {
         $model = FinancePayable::findOne($id);
         if (!$model) {
-            throw new NotFoundHttpException('ไม่พบทะเบียนเจ้าหนี้');
-        }
-        return $model;
-    }
-
-    private function domainErrorAttribute(\DomainException $exception): string
-    {
-        $message = $exception->getMessage();
-        return str_contains($message, 'บัญชี') || str_contains($message, 'ผัง')
-            ? 'accounting_chart_account_id'
-            : 'invoice_no';
-    }
-
-    private function findInbox($id): FinanceInbox
-    {
-        $model = FinanceInbox::findOne($id);
-        if (!$model) {
-            throw new NotFoundHttpException('ไม่พบรายการในกล่องรับบัญชี');
+            throw new NotFoundHttpException('ไม่พบบิลในทะเบียนเจ้าหนี้');
         }
         return $model;
     }

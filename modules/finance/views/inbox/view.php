@@ -16,7 +16,7 @@ $this->beginBlock('sub-title');
 echo Html::encode($model->source_system . ' · ' . $model->source_type . ' · รุ่น ' . $model->source_version);
 $this->endBlock();
 $this->beginBlock('page-action');
-echo Html::a('<i class="bi bi-arrow-left me-1" aria-hidden="true"></i>กลับกล่องรับ', ['index'], ['class' => 'btn btn-outline-secondary']);
+echo $this->render('@app/modules/finance/views/_ap_menu', ['active' => 'inbox']);
 $this->endBlock();
 
 $messages = $model->validationMessages();
