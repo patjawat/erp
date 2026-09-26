@@ -52,8 +52,10 @@ $payItems = [
         <ul class="dropdown-menu shadow-sm">
             <?php foreach ($payItems as $p): $pActive = $active === $p['key']; ?>
                 <li>
-                    <a class="dropdown-item d-flex align-items-center justify-content-between <?= $pActive ? 'active' : '' ?>" href="<?= Url::to($p['url']) ?>">
-                        <span><i class="bi <?= Html::encode($p['icon']) ?> me-2" aria-hidden="true"></i><?= Html::encode($p['label']) ?></span>
+                    <?php // ไม่ใช้ class .active ของธีม (บางหน้าให้ตัวอักษรขาวมองไม่เห็น) — กำหนดสีเองให้อ่านออกเสมอ ?>
+                    <a class="dropdown-item d-flex align-items-center justify-content-between" href="<?= Url::to($p['url']) ?>"
+                       style="<?= $pActive ? 'background-color:#eef0ff;color:#3d3fa4;font-weight:600;' : '' ?>">
+                        <span><i class="bi <?= $pActive ? 'bi-check2' : Html::encode($p['icon']) ?> me-2" aria-hidden="true"></i><?= Html::encode($p['label']) ?></span>
                         <?php if (!empty($p['badge'])): ?>
                             <span class="badge rounded-pill text-bg-danger ms-3"><?= number_format($p['badge']) ?></span>
                         <?php endif; ?>
