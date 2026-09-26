@@ -177,6 +177,36 @@ $this->endBlock();
                             : '<span class="text-body-secondary">—</span>';
                     },
                 ],
+                [
+                    'label' => 'จัดการ',
+                    'format' => 'raw',
+                    'contentOptions' => ['class' => 'text-end text-nowrap'],
+                    'headerOptions' => ['class' => 'text-end'],
+                    'value' => static function (FinancePayable $model) {
+                        $operate = Yii::$app->user->can('financeOperate');
+                        $approved = $model->status === FinancePayable::STATUS_APPROVED;
+                        $btn = static fn(string $icon, string $title, $url, string $cls = 'btn-outline-secondary', array $opt = []) =>
+                            Html::a('<i class="bi ' . $icon . '"></i>', $url, array_merge(
+                                ['class' => 'btn btn-sm ' . $cls, 'title' => $title, 'aria-label' => $title, 'data-bs-toggle' => 'tooltip'],
+                                $opt
+                            ));
+                        $html = $btn('bi-eye', 'ดูรายละเอียด', ['view', 'id' => $model->id]);
+                        if ($operate && $approved && !$model->isBilled()) {
+                            $html .= $btn('bi-receipt', 'รับวางบิล', ['billing', 'vendor' => $model->vendor_name_snapshot], 'btn-outline-warning');
+                        }
+                        if ($operate && $approved && $model->isBilled() && $model->getOutstanding() > 0.005) {
+                            $html .= $btn('bi-cash-stack', 'จ่ายชำระ', ['pay', 'vendor' => $model->vendor_name_snapshot], 'btn-outline-primary');
+                        }
+                        $html .= $btn('bi-printer', 'พิมพ์ใบอนุมัติจ่าย', ['/finance/payable-doc/open', 'payable_id' => $model->id],
+                            'btn-outline-secondary open-modal', ['data-size' => 'modal-xl']);
+                        if ($operate && $approved && !$model->isSentAccounting()) {
+                            $html .= $btn('bi-send', 'ส่งบัญชี', ['send-accounting', 'id' => $model->id], 'btn-outline-success', [
+                                'data-method' => 'post', 'data-confirm' => 'ยืนยันส่งเจ้าหนี้รายนี้ให้บัญชีลงบันทึก?',
+                            ]);
+                        }
+                        return '<div class="btn-group" role="group">' . $html . '</div>';
+                    },
+                ],
             ],
             'emptyText' => 'ยังไม่มีร่างทะเบียนเจ้าหนี้ ให้เริ่มจากรับรองรายการในกล่องรับงานบัญชี',
             'emptyTextOptions' => ['class' => 'text-center text-body-secondary py-5'],

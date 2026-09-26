@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use app\components\AppHelper;
 use app\modules\finance\models\FinancePayable;
 use app\modules\finance\models\FinancePayableReview;
 
@@ -101,10 +102,10 @@ $this->endBlock();
                     <dt class="col-sm-4 text-body-secondary">ผู้แทนจำหน่าย</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_name_snapshot) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">รหัสผู้แทนจำหน่าย</dt><dd class="col-sm-8"><?= Html::encode($model->vendor_code_snapshot ?: '-') ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เลขที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Html::encode($model->invoice_no) ?></dd>
-                    <dt class="col-sm-4 text-body-secondary">วันที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">วันที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= AppHelper::convertToThai($model->invoice_date) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">วันที่รับวางบิล</dt><dd class="col-sm-8">
                         <?php if ($model->isBilled()): ?>
-                            <?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?>
+                            <?= AppHelper::convertToThai($model->billing_date) ?>
                             <?php if ($model->billing_ref): ?><span class="text-body-secondary small ms-1">(ใบวางบิล <?= Html::encode($model->billing_ref) ?>)</span><?php endif; ?>
                         <?php elseif ($model->status === FinancePayable::STATUS_APPROVED): ?>
                             <span class="badge bg-warning-subtle text-warning-emphasis">รอวางบิล</span>
@@ -112,11 +113,11 @@ $this->endBlock();
                                 <?= Html::a('บันทึกรับวางบิล', ['billing', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-sm btn-link p-0 ms-1']) ?>
                             <?php endif; ?>
                         <?php else: ?>
-                            <span class="text-body-secondary">ประมาณการ <?= Yii::$app->formatter->asDate($model->billing_date, 'php:d/m/Y') ?> (ยืนยันตอนรับวางบิล)</span>
+                            <span class="text-body-secondary">ประมาณการ <?= AppHelper::convertToThai($model->billing_date) ?> (ยืนยันตอนรับวางบิล)</span>
                         <?php endif; ?>
                     </dd>
                     <dt class="col-sm-4 text-body-secondary">วันเครดิต</dt><dd class="col-sm-8"><?= number_format($model->credit_days) ?> วัน</dd>
-                    <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= AppHelper::convertToThai($model->due_date) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/finance/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">บัญชีเดบิตหลัก</dt><dd class="col-sm-8"><?php if ($model->account_code_snapshot): ?><span class="font-monospace"><?= Html::encode($model->account_code_snapshot) ?></span><div class="small text-body-secondary"><?= Html::encode($model->account_name_snapshot) ?></div><?php else: ?><span class="text-danger">ยังไม่ได้เลือก</span><?php endif; ?></dd>
                 </dl>
@@ -148,7 +149,48 @@ $this->endBlock();
             <div class="card-body">
                 <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-body-secondary">ยอดหนี้</span><strong><?= Yii::$app->formatter->asDecimal($model->gross_amount, 2) ?></strong></div>
                 <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-body-secondary">ภาษีหัก ณ ที่จ่าย</span><span><?= Yii::$app->formatter->asDecimal($model->withholding_tax_amount, 2) ?></span></div>
-                <div class="d-flex justify-content-between pt-3"><span>ยอดสุทธิประมาณการ</span><strong><?= Yii::$app->formatter->asDecimal($model->net_amount, 2) ?></strong></div>
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>ยอดสุทธิประมาณการ</span><strong><?= Yii::$app->formatter->asDecimal($model->net_amount, 2) ?></strong></div>
+                <?php $paidAmount = $model->getPaidAmount(); $payState = $model->paymentStatus(); ?>
+                <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-body-secondary">จ่ายแล้ว</span><span><?= Yii::$app->formatter->asDecimal($paidAmount, 2) ?></span></div>
+                <div class="d-flex justify-content-between align-items-center pt-3">
+                    <span>คงค้าง <span class="badge ms-1 <?= FinancePayable::paymentStatusBadgeClass($payState) ?>"><?= Html::encode(FinancePayable::paymentStatusLabel($payState)) ?></span></span>
+                    <strong class="fs-5 <?= $model->getOutstanding() > 0.005 ? 'text-danger' : 'text-success' ?>"><?= Yii::$app->formatter->asDecimal($model->getOutstanding(), 2) ?></strong>
+                </div>
+                <?php if ($model->status === FinancePayable::STATUS_APPROVED && $model->isBilled() && $model->getOutstanding() > 0.005 && Yii::$app->user->can('financeOperate')): ?>
+                    <?= Html::a('<i class="bi bi-cash-stack me-1"></i>จ่ายชำระ', ['pay', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-primary w-100 mt-3']) ?>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <section class="card border shadow-sm mt-3" aria-labelledby="payment-history-heading">
+            <div class="card-header bg-body"><h5 class="mb-0" id="payment-history-heading">ประวัติการจ่าย</h5></div>
+            <div class="list-group list-group-flush">
+                <?php if (!$model->settlements): ?>
+                    <div class="list-group-item py-4 text-center text-body-secondary">ยังไม่มีการจ่าย</div>
+                <?php endif; ?>
+                <?php foreach ($model->settlements as $s): ?>
+                    <?php $pay = $s->payment_id ? \app\modules\finance\models\FinancePayablePayment::findOne($s->payment_id) : null; ?>
+                    <?php $cheque = $pay ? $pay->getCheque() : null; ?>
+                    <div class="list-group-item py-3">
+                        <div class="d-flex justify-content-between gap-2">
+                            <span><?= AppHelper::convertToThai($s->settle_date) ?></span>
+                            <strong><?= Yii::$app->formatter->asDecimal($s->amount, 2) ?></strong>
+                        </div>
+                        <div class="small text-body-secondary mt-1 d-flex flex-wrap gap-2">
+                            <?php if ($pay): ?>
+                                <?= Html::a('รอบจ่าย #' . $pay->id, ['letter', 'id' => $pay->id], ['target' => '_blank']) ?>
+                            <?php endif; ?>
+                            <?php if ($s->cash_voucher_id && $s->cashVoucher): ?>
+                                <?= Html::a('ใบสำคัญ #' . $s->cash_voucher_id, ['/finance/cash/expense', 'fiscal_year' => $s->cashVoucher->fiscal_year]) ?>
+                            <?php endif; ?>
+                            <?php if ($cheque): ?>
+                                <?= Html::a('เช็ค ' . Html::encode($cheque->cheque_no), ['/finance/cheque/view', 'id' => $cheque->id]) ?>
+                            <?php elseif ($s->note): ?>
+                                <span><?= Html::encode($s->note) ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </section>
     </div>
