@@ -433,12 +433,12 @@ class LoanController extends Controller
             }
             $item = new FinanceLoanItem();
             $item->setAttributes([
-                'item_kind_id' => $row['item_kind_id'] ?: null,
+                'item_kind_id' => ($row['item_kind_id'] ?? '') ?: null,
                 'label' => $row['label'] ?? null,
-                'persons' => $row['persons'] !== '' ? $row['persons'] : null,
-                'units' => $row['units'] !== '' ? $row['units'] : null,
-                'rate' => $row['rate'] !== '' ? $row['rate'] : null,
-                'amount' => $row['amount'] !== '' ? $row['amount'] : 0,
+                'persons' => ($row['persons'] ?? '') !== '' ? $row['persons'] : null,
+                'units' => ($row['units'] ?? '') !== '' ? $row['units'] : null,
+                'rate' => ($row['rate'] ?? '') !== '' ? $row['rate'] : null,
+                'amount' => ($row['amount'] ?? '') !== '' ? $row['amount'] : 0,
                 'note' => $row['note'] ?? null,
                 'sort_order' => count($rows) * 10,
             ], false);
@@ -466,7 +466,7 @@ class LoanController extends Controller
             $item = ($id && isset($existing[$id])) ? $existing[$id] : new FinanceLoanItem(['loan_id' => $loan->id]);
             unset($existing[$id]);
             $item->setAttributes([
-                'item_kind_id' => $row['item_kind_id'] ?: null,
+                'item_kind_id' => ($row['item_kind_id'] ?? '') ?: null,
                 'label' => trim((string) ($row['label'] ?? '')) ?: null,
                 'persons' => ($row['persons'] ?? '') !== '' ? $row['persons'] : null,
                 'units' => ($row['units'] ?? '') !== '' ? $row['units'] : null,
