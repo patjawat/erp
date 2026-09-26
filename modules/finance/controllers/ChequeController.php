@@ -25,7 +25,7 @@ class ChequeController extends Controller
     {
         return array_merge(parent::behaviors(), [
             'access' => ['class' => AccessControl::class, 'rules' => [
-                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print', 'next-cheque-no', 'book-index', 'books-by-account'], 'roles' => ['financeView']],
+                ['allow' => true, 'actions' => ['index', 'view', 'template', 'preview', 'test-print', 'print', 'next-cheque-no', 'book-index', 'books-by-account', 'report'], 'roles' => ['financeView']],
                 ['allow' => true, 'actions' => ['create', 'update', 'calibrate', 'create-template', 'upload-background', 'status', 'void', 'book-create', 'book-close'], 'roles' => ['financeOperate']],
             ]],
             'verbs' => ['class' => VerbFilter::class, 'actions' => [
@@ -177,6 +177,65 @@ class ChequeController extends Controller
             $out[] = ['id' => $b->id, 'label' => $b->label(), 'next' => $b->nextNo(), 'remaining' => $b->remaining()];
         }
         return $out;
+    }
+
+    /** รายงานเช็ค / เช็คคงค้าง (+ Export Excel) */
+    public function actionReport($from = null, $to = null, $account_id = null, $status = '', $format = null)
+    {
+        $fromDb = AppHelper::normalizeDateToDb((string) $from) ?: null;
+        $toDb = AppHelper::normalizeDateToDb((string) $to) ?: null;
+        $accountId = (int) $account_id ?: null;
+
+        // เงื่อนไขขอบเขต (วันที่+บัญชี) ใช้ร่วมทั้งสรุปและตาราง
+        $scope = function () use ($fromDb, $toDb, $accountId) {
+            $q = FinanceCheque::find();
+            if ($fromDb) {
+                $q->andWhere(['>=', 'cheque_date', $fromDb]);
+            }
+            if ($toDb) {
+                $q->andWhere(['<=', 'cheque_date', $toDb]);
+            }
+            if ($accountId) {
+                $q->andWhere(['cash_account_id' => $accountId]);
+            }
+            return $q;
+        };
+
+        // สรุปจำนวน/ยอด แยกตามสถานะ (ในขอบเขต)
+        $summary = [];
+        foreach ($scope()->select(['status', 'c' => 'COUNT(*)', 's' => 'SUM(amount)'])->groupBy('status')->asArray()->all() as $r) {
+            $summary[$r['status']] = ['count' => (int) $r['c'], 'sum' => (float) $r['s']];
+        }
+        $outstanding = [
+            'count' => ($summary[FinanceCheque::STATUS_PRINTED]['count'] ?? 0) + ($summary[FinanceCheque::STATUS_HANDED]['count'] ?? 0),
+            'sum' => ($summary[FinanceCheque::STATUS_PRINTED]['sum'] ?? 0) + ($summary[FinanceCheque::STATUS_HANDED]['sum'] ?? 0),
+        ];
+
+        // ตารางตามตัวกรองสถานะ (outstanding = printed+handed)
+        $query = $scope()->orderBy(['cheque_date' => SORT_DESC, 'id' => SORT_DESC]);
+        if ($status === 'outstanding') {
+            $query->andWhere(['status' => [FinanceCheque::STATUS_PRINTED, FinanceCheque::STATUS_HANDED]]);
+        } elseif (isset(FinanceCheque::statusOptions()[$status])) {
+            $query->andWhere(['status' => $status]);
+        }
+        $rows = $query->all();
+
+        if ($format === 'xlsx') {
+            $acc = $accountId ? FinanceCashAccount::findOne($accountId) : null;
+            $path = (new \app\modules\finance\services\ChequeReportExcel())->build($rows, [
+                'from' => $fromDb, 'to' => $toDb,
+                'account' => $acc ? $acc->label() : 'ทุกบัญชี',
+            ]);
+            return Yii::$app->response->sendFile($path, 'รายงานเช็ค.xlsx', ['inline' => false]);
+        }
+
+        return $this->render('report', [
+            'rows' => $rows,
+            'summary' => $summary,
+            'outstanding' => $outstanding,
+            'accounts' => $this->payingAccounts(),
+            'filter' => ['from' => $from, 'to' => $to, 'account_id' => $accountId, 'status' => $status],
+        ]);
     }
 
     /** ทะเบียนเล่มเช็ค */
