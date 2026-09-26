@@ -71,9 +71,9 @@ class PayableController extends Controller
             $query->andWhere(['status' => $status]);
         }
         if ($billing === 'unbilled') {
-            $query->andWhere(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null]);
+            $query->andWhere(['status' => FinancePayable::STATUS_APPROVED, 'billing_id' => null]);
         } elseif ($billing === 'billed') {
-            $query->andWhere(['not', ['billed_at' => null]]);
+            $query->andWhere(['not', ['billing_id' => null]]);
         }
         // กรองตามสถานะการจ่าย (คำนวณจากยอดตัดหนี้)
         if (in_array($payment, ['unpaid', 'partial', 'paid'], true)) {
@@ -168,11 +168,7 @@ class PayableController extends Controller
 
         $vendor = trim((string) $req->get('vendor', ''));
         if ($vendor === '') {
-            return $this->render('pay', [
-                'mode' => 'vendors',
-                'vendors' => $this->outstandingVendors(),
-                'unbilled' => (int) FinancePayable::find()->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null])->count(),
-            ]);
+            return $this->render('pay', ['mode' => 'vendors', 'vendors' => $this->outstandingVendors()]);
         }
         // บัญชีจ่าย (ธนาคาร/เงินฝากคลัง) + meta สำหรับ autofill ธนาคาร/สาขา
         $accounts = FinanceCashAccount::find()->where(['is_active' => 1])
@@ -195,60 +191,10 @@ class PayableController extends Controller
         ]);
     }
 
-    /** รับวางบิล: เลือกเจ้าหนี้ → ติ๊กบิลที่ผู้ขายนำมาวาง → บันทึกวันวางบิลจริง (คำนวณวันครบกำหนดใหม่) */
+    /** ย้ายไปทะเบียนรับวางบิล (/finance/billing) */
     public function actionBilling()
     {
-        $req = Yii::$app->request;
-        $vendor = trim((string) ($req->isPost ? $req->post('vendor', '') : $req->get('vendor', '')));
-
-        if ($req->isPost) {
-            $billingDate = AppHelper::normalizeDateToDb((string) $req->post('billing_date'));
-            $ids = array_values(array_filter(array_map('intval', (array) $req->post('ids', []))));
-            if (!$billingDate || !$ids) {
-                Yii::$app->session->setFlash('error', !$billingDate ? 'กรุณาระบุวันที่รับวางบิล' : 'ยังไม่ได้เลือกบิลที่วาง');
-                return $this->redirect(['billing', 'vendor' => $vendor]);
-            }
-            $tx = Yii::$app->db->beginTransaction();
-            try {
-                $done = 0;
-                foreach (FinancePayable::find()->where(['id' => $ids, 'vendor_name_snapshot' => $vendor])->all() as $p) {
-                    $p->markBilled($billingDate, (string) $req->post('billing_ref', ''));
-                    $done++;
-                }
-                $tx->commit();
-                Yii::$app->session->setFlash('success', "บันทึกรับวางบิล {$done} รายการ — คำนวณวันครบกำหนดใหม่ตามวันวางบิลแล้ว");
-                return $this->redirect(['pay', 'vendor' => $vendor]);
-            } catch (\DomainException $e) {
-                $tx->rollBack();
-                Yii::$app->session->setFlash('error', $e->getMessage());
-            } catch (\Throwable $e) {
-                $tx->rollBack();
-                Yii::error($e, __METHOD__);
-                Yii::$app->session->setFlash('error', 'บันทึกรับวางบิลไม่สำเร็จ');
-            }
-            return $this->redirect(['billing', 'vendor' => $vendor]);
-        }
-
-        if ($vendor === '') {
-            $vendors = (new \yii\db\Query())
-                ->select(['vendor' => 'vendor_name_snapshot', 'bills' => 'COUNT(*)', 'total' => 'SUM(net_amount)', 'first_date' => 'MIN(invoice_date)'])
-                ->from(FinancePayable::tableName())
-                ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null])
-                ->groupBy('vendor_name_snapshot')->orderBy(['first_date' => SORT_ASC])->all();
-            // บิลที่ยังไม่ถึงขั้นวางบิล (ยังไม่อนุมัติเข้าทะเบียน) — บอกผู้ใช้ว่าค้างอยู่ขั้นไหน
-            $notApproved = FinancePayable::find()->select(['status', 'n' => 'COUNT(*)'])
-                ->where(['status' => [FinancePayable::STATUS_DRAFT, FinancePayable::STATUS_PENDING_APPROVAL, FinancePayable::STATUS_NEEDS_REVISION]])
-                ->groupBy('status')->asArray()->all();
-            return $this->render('billing', [
-                'mode' => 'vendors',
-                'vendors' => $vendors,
-                'notApproved' => ArrayHelper::map($notApproved, 'status', 'n'),
-            ]);
-        }
-        $rows = FinancePayable::find()
-            ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null, 'vendor_name_snapshot' => $vendor])
-            ->orderBy(['invoice_date' => SORT_ASC, 'id' => SORT_ASC])->all();
-        return $this->render('billing', ['mode' => 'bills', 'vendor' => $vendor, 'rows' => $rows]);
+        return $this->redirect(['/finance/billing/index']);
     }
 
     /** รายการรอบจ่ายเจ้าหนี้ (ล่าสุดก่อน) — ดูหนังสือนำส่ง/ใบสำคัญ/เช็ค และยกเลิกรอบจ่าย */
@@ -313,7 +259,7 @@ class PayableController extends Controller
             FROM {{%finance_payable}} p
             LEFT JOIN (SELECT payable_id, SUM(amount) paid FROM {{%finance_payable_settlement}} GROUP BY payable_id) s
               ON s.payable_id = p.id
-            WHERE p.status = :a AND p.billed_at IS NOT NULL AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            WHERE p.status = :a AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
             GROUP BY p.vendor_name_snapshot
             ORDER BY earliest_due ASC
         ";
@@ -330,7 +276,7 @@ class PayableController extends Controller
             FROM {{%finance_payable}} p
             LEFT JOIN (SELECT payable_id, SUM(amount) paid FROM {{%finance_payable_settlement}} GROUP BY payable_id) s
               ON s.payable_id = p.id
-            WHERE p.status = :a AND p.billed_at IS NOT NULL AND p.vendor_name_snapshot = :v AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
+            WHERE p.status = :a AND p.vendor_name_snapshot = :v AND (p.net_amount - COALESCE(s.paid, 0)) > 0.005
             ORDER BY p.due_date ASC, p.id ASC
         ";
         return Yii::$app->db->createCommand($sql, [':a' => FinancePayable::STATUS_APPROVED, ':v' => $vendor])->queryAll();

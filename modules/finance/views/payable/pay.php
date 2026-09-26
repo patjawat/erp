@@ -46,13 +46,7 @@ $thDate = function ($d) {
 
 <?php if (($mode ?? '') === 'vendors'): ?>
     <!-- ===== เลือกเจ้าหนี้ ===== -->
-    <div class="alert alert-info d-flex gap-2"><i class="bi bi-info-circle"></i><span>เลือกเจ้าหนี้ที่ต้องการจ่าย แล้วติ๊กบิลที่จะจ่ายในรอบนี้ (จ่ายบางบิล/บางส่วนได้) — แสดงเฉพาะบิลที่ผู้ขายวางบิลแล้ว</span></div>
-    <?php if (!empty($unbilled)): ?>
-        <div class="alert alert-warning d-flex justify-content-between align-items-center gap-2 flex-wrap">
-            <span><i class="bi bi-receipt me-1"></i>มีบิลรอวางบิล <?= number_format($unbilled) ?> รายการ (ยังดึงมาจ่ายไม่ได้)</span>
-            <a href="<?= Url::to(['billing']) ?>" class="btn btn-sm btn-warning">ไปรับวางบิล</a>
-        </div>
-    <?php endif; ?>
+    <div class="alert alert-info d-flex gap-2"><i class="bi bi-info-circle"></i><span>เลือกเจ้าหนี้ที่ต้องการจ่าย แล้วติ๊กบิลที่จะจ่ายในรอบนี้ (จ่ายบางบิล/บางส่วนได้)</span></div>
     <section class="card border shadow-sm">
         <div class="card-header bg-body"><h5 class="mb-0">เจ้าหนี้ที่มีบิลค้างชำระ</h5></div>
         <div class="table-responsive">

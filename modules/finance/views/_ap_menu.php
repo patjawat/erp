@@ -15,13 +15,13 @@ $inboxPending = (int) FinanceInbox::find()
 
 // บิลที่อนุมัติเข้าทะเบียนแล้วแต่ผู้ขายยังไม่มาวางบิล
 $billingPending = (int) FinancePayable::find()
-    ->where(['status' => FinancePayable::STATUS_APPROVED, 'billed_at' => null])
+    ->where(['status' => FinancePayable::STATUS_APPROVED, 'billing_id' => null])
     ->count();
 
 $items = [
     ['key' => 'inbox', 'label' => 'กล่องรอรับ', 'icon' => 'bi-inbox', 'url' => ['/finance/inbox'], 'badge' => $inboxPending],
     ['key' => 'payable', 'label' => 'ทะเบียนคุมเจ้าหนี้', 'icon' => 'bi-journal-text', 'url' => ['/finance/payable']],
-    ['key' => 'billing', 'label' => 'รับวางบิล', 'icon' => 'bi-receipt', 'url' => ['/finance/payable/billing'], 'badge' => $billingPending],
+    ['key' => 'billing', 'label' => 'ทะเบียนรับวางบิล', 'icon' => 'bi-receipt', 'url' => ['/finance/billing'], 'badge' => $billingPending],
     ['key' => 'aging', 'label' => 'เจ้าหนี้ค้างชำระ', 'icon' => 'bi-hourglass-split', 'url' => ['/finance/payable/aging']],
     ['key' => 'payments', 'label' => 'รอบจ่าย', 'icon' => 'bi-clock-history', 'url' => ['/finance/payable/payments']],
     ['key' => 'cheque', 'label' => 'พิมพ์เช็ค', 'icon' => 'bi-cash-stack', 'url' => ['/finance/cheque']],

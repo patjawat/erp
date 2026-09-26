@@ -192,9 +192,9 @@ $this->endBlock();
                             ));
                         $html = $btn('bi-eye', 'ดูรายละเอียด', ['view', 'id' => $model->id]);
                         if ($operate && $approved && !$model->isBilled()) {
-                            $html .= $btn('bi-receipt', 'รับวางบิล', ['billing', 'vendor' => $model->vendor_name_snapshot], 'btn-outline-warning');
+                            $html .= $btn('bi-receipt', 'รับวางบิล', ['/finance/billing/create', 'vendor' => $model->vendor_name_snapshot], 'btn-outline-warning');
                         }
-                        if ($operate && $approved && $model->isBilled() && $model->getOutstanding() > 0.005) {
+                        if ($operate && $approved && $model->getOutstanding() > 0.005) {
                             $html .= $btn('bi-cash-stack', 'จ่ายชำระ', ['pay', 'vendor' => $model->vendor_name_snapshot], 'btn-outline-primary');
                         }
                         $html .= $btn('bi-printer', 'พิมพ์ใบอนุมัติจ่าย', ['/finance/payable-doc/open', 'payable_id' => $model->id],

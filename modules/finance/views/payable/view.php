@@ -26,12 +26,12 @@ $this->endBlock();
             <section class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" aria-label="ขั้นตอนถัดไป">
                 <div class="d-flex gap-2 align-items-start">
                     <i class="bi bi-send-check mt-1" aria-hidden="true"></i>
-                    <div><strong><?= $model->accounting_chart_account_id ? 'พร้อมส่งตรวจอนุมัติ' : 'ต้องเลือกบัญชีก่อนส่ง' ?></strong><div>ยืนยันข้อมูลผู้ขาย ใบแจ้งหนี้ ยอดเงิน วันครบกำหนด และบัญชีเดบิตหลักก่อนส่ง</div></div>
+                    <div><strong>พร้อมส่งตรวจอนุมัติ</strong><div>ยืนยันข้อมูลผู้ขาย ใบแจ้งหนี้ ยอดเงิน และวันครบกำหนดก่อนส่ง<?= $model->accounting_chart_account_id ? '' : ' — บัญชีเดบิตหลักยังไม่เลือก (เว้นไว้ได้ งานบัญชีผูกผังบัญชีภายหลัง)' ?></div></div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 flex-shrink-0">
                     <?= Html::a('<i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไขร่าง', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
                     <?= Html::beginForm(['submit', 'id' => $model->id], 'post') ?>
-                    <?= Html::submitButton('<i class="bi bi-send me-1" aria-hidden="true"></i>ส่งตรวจอนุมัติ', ['class' => 'btn btn-primary', 'disabled' => !$model->accounting_chart_account_id]) ?>
+                    <?= Html::submitButton('<i class="bi bi-send me-1" aria-hidden="true"></i>ส่งตรวจอนุมัติ', ['class' => 'btn btn-primary']) ?>
                     <?= Html::endForm() ?>
                 </div>
             </section>
@@ -104,22 +104,20 @@ $this->endBlock();
                     <dt class="col-sm-4 text-body-secondary">เลขที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= Html::encode($model->invoice_no) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">วันที่ใบแจ้งหนี้</dt><dd class="col-sm-8"><?= AppHelper::convertToThai($model->invoice_date) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">วันที่รับวางบิล</dt><dd class="col-sm-8">
-                        <?php if ($model->isBilled()): ?>
+                        <?php if ($model->isBilled() && $model->billing): ?>
                             <?= AppHelper::convertToThai($model->billing_date) ?>
-                            <?php if ($model->billing_ref): ?><span class="text-body-secondary small ms-1">(ใบวางบิล <?= Html::encode($model->billing_ref) ?>)</span><?php endif; ?>
-                        <?php elseif ($model->status === FinancePayable::STATUS_APPROVED): ?>
+                            <?= Html::a('(' . Html::encode($model->billing->billing_no) . ')', ['/finance/billing/view', 'id' => $model->billing_id], ['class' => 'small ms-1']) ?>
+                        <?php else: ?>
                             <span class="badge bg-warning-subtle text-warning-emphasis">รอวางบิล</span>
                             <?php if (Yii::$app->user->can('financeOperate')): ?>
-                                <?= Html::a('บันทึกรับวางบิล', ['billing', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-sm btn-link p-0 ms-1']) ?>
+                                <?= Html::a('บันทึกรับวางบิล', ['/finance/billing/create', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-sm btn-link p-0 ms-1']) ?>
                             <?php endif; ?>
-                        <?php else: ?>
-                            <span class="text-body-secondary">ประมาณการ <?= AppHelper::convertToThai($model->billing_date) ?> (ยืนยันตอนรับวางบิล)</span>
                         <?php endif; ?>
                     </dd>
                     <dt class="col-sm-4 text-body-secondary">วันเครดิต</dt><dd class="col-sm-8"><?= number_format($model->credit_days) ?> วัน</dd>
                     <dt class="col-sm-4 text-body-secondary">วันครบกำหนด</dt><dd class="col-sm-8 fw-semibold"><?= AppHelper::convertToThai($model->due_date) ?></dd>
                     <dt class="col-sm-4 text-body-secondary">เอกสารต้นทาง</dt><dd class="col-sm-8"><?= Html::a(Html::encode($model->source_document_no), ['/finance/inbox/view', 'id' => $model->finance_inbox_id]) ?></dd>
-                    <dt class="col-sm-4 text-body-secondary">บัญชีเดบิตหลัก</dt><dd class="col-sm-8"><?php if ($model->account_code_snapshot): ?><span class="font-monospace"><?= Html::encode($model->account_code_snapshot) ?></span><div class="small text-body-secondary"><?= Html::encode($model->account_name_snapshot) ?></div><?php else: ?><span class="text-danger">ยังไม่ได้เลือก</span><?php endif; ?></dd>
+                    <dt class="col-sm-4 text-body-secondary">บัญชีเดบิตหลัก</dt><dd class="col-sm-8"><?php if ($model->account_code_snapshot): ?><span class="font-monospace"><?= Html::encode($model->account_code_snapshot) ?></span><div class="small text-body-secondary"><?= Html::encode($model->account_name_snapshot) ?></div><?php else: ?><span class="text-body-secondary">ยังไม่ได้เลือก (งานบัญชีผูกผังบัญชีภายหลัง)</span><?php endif; ?></dd>
                 </dl>
             </div>
         </section>
@@ -156,7 +154,7 @@ $this->endBlock();
                     <span>คงค้าง <span class="badge ms-1 <?= FinancePayable::paymentStatusBadgeClass($payState) ?>"><?= Html::encode(FinancePayable::paymentStatusLabel($payState)) ?></span></span>
                     <strong class="fs-5 <?= $model->getOutstanding() > 0.005 ? 'text-danger' : 'text-success' ?>"><?= Yii::$app->formatter->asDecimal($model->getOutstanding(), 2) ?></strong>
                 </div>
-                <?php if ($model->status === FinancePayable::STATUS_APPROVED && $model->isBilled() && $model->getOutstanding() > 0.005 && Yii::$app->user->can('financeOperate')): ?>
+                <?php if ($model->status === FinancePayable::STATUS_APPROVED && $model->getOutstanding() > 0.005 && Yii::$app->user->can('financeOperate')): ?>
                     <?= Html::a('<i class="bi bi-cash-stack me-1"></i>จ่ายชำระ', ['pay', 'vendor' => $model->vendor_name_snapshot], ['class' => 'btn btn-primary w-100 mt-3']) ?>
                 <?php endif; ?>
             </div>

@@ -32,9 +32,8 @@ use app\modules\accounting\models\AccountingJournalDraft;
  * @property string|null $source_document_no
  * @property string $status
  * @property string|null $note
- * @property string|null $billed_at เวลาบันทึกรับวางบิล (null = ยังไม่วางบิล)
- * @property int|null $billed_by
- * @property string|null $billing_ref เลขที่ใบวางบิลของผู้ขาย
+ * @property int|null $billing_id ใบรับวางบิล (null = ยังไม่วางบิล)
+ * @property FinancePayableBilling|null $billing
  */
 class FinancePayable extends ActiveRecord
 {
@@ -63,7 +62,6 @@ class FinancePayable extends ActiveRecord
             [['gross_amount', 'vat_amount', 'withholding_tax_amount', 'net_amount'], 'number', 'min' => 0],
             [['note'], 'string'],
             [['payable_no'], 'string', 'max' => 50],
-            [['billing_ref'], 'string', 'max' => 60],
             [['vendor_code_snapshot', 'invoice_no', 'source_document_no'], 'string', 'max' => 100],
             [['vendor_name_snapshot'], 'string', 'max' => 255],
             [['account_code_snapshot'], 'string', 'max' => 30],
@@ -196,30 +194,15 @@ class FinancePayable extends ActiveRecord
 
     // ---- รับวางบิล ---------------------------------------------------------
 
-    /** ผู้ขายมาวางบิลแล้วหรือยัง (บิลที่วางแล้วเท่านั้นที่ดึงไปจ่ายได้) */
+    /** บริษัทมาวางบิลแล้วหรือยัง (ผูกกับใบรับวางบิลในทะเบียนรับวางบิล) */
     public function isBilled(): bool
     {
-        return !empty($this->billed_at);
+        return !empty($this->billing_id);
     }
 
-    /**
-     * บันทึกรับวางบิล: ยึดวันวางบิลจริงเป็น billing_date แล้วคำนวณวันครบกำหนดใหม่ตามเครดิต
-     * @throws \DomainException
-     */
-    public function markBilled(string $billingDate, ?string $billingRef): void
+    public function getBilling()
     {
-        if ($this->status !== self::STATUS_APPROVED) {
-            throw new \DomainException('รับวางบิลได้เฉพาะรายการที่อนุมัติเข้าทะเบียนแล้ว');
-        }
-        if ($this->isBilled()) {
-            throw new \DomainException('รายการนี้บันทึกรับวางบิลแล้ว');
-        }
-        $this->billing_date = $billingDate;
-        $this->due_date = \app\modules\finance\services\FinancePayableDraftService::calculateDueDate($billingDate, (int) $this->credit_days);
-        $this->billing_ref = $billingRef !== null && trim($billingRef) !== '' ? trim($billingRef) : null;
-        $this->billed_at = date('Y-m-d H:i:s');
-        $this->billed_by = Yii::$app->has('user') && !Yii::$app->user->isGuest ? Yii::$app->user->id : null;
-        $this->save(false, ['billing_date', 'due_date', 'billing_ref', 'billed_at', 'billed_by', 'updated_at', 'updated_by']);
+        return $this->hasOne(FinancePayableBilling::class, ['id' => 'billing_id']);
     }
 
     // ---- ส่งต่อบัญชี (การเงิน → บัญชี) ------------------------------------

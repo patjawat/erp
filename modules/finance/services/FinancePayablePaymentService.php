@@ -40,7 +40,7 @@ class FinancePayablePaymentService
                 continue;
             }
             $p = FinancePayable::findOne(['id' => (int) $pid, 'status' => FinancePayable::STATUS_APPROVED]);
-            if (!$p || !$p->isBilled()) {
+            if (!$p) {
                 continue;
             }
             $amt = min($amt, round($p->getOutstanding(), 2));
