@@ -27,7 +27,7 @@ $subItems = [
     ['key' => 'pay', 'label' => 'จ่ายชำระ', 'url' => ['/finance/payable/pay']],
     ['key' => 'payments', 'label' => 'รอบจ่าย' . ($approvalPending ? " (รออนุมัติ {$approvalPending})" : ''), 'url' => ['/finance/payable/payments']],
     ['key' => 'aging', 'label' => 'เจ้าหนี้ค้างชำระ', 'url' => ['/finance/payable/aging']],
-    ['key' => 'cheque', 'label' => 'เช็ค', 'url' => ['/finance/cheque']],
+    ['key' => 'cheque', 'label' => 'พิมพ์เช็ค', 'url' => ['/finance/cheque']],
 ];
 ?>
 <nav class="d-flex flex-wrap gap-2 mb-2" aria-label="เมนูงานเจ้าหนี้">
