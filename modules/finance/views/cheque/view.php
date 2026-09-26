@@ -69,6 +69,9 @@ $thDate = fn($d) => $d ? (date_create($d) ? date_create($d)->format('d/m/') . ((
             </div>
             <div class="card-footer d-flex gap-2 flex-wrap">
                 <a href="<?= Url::to(['print', 'id' => $cheque->id]) ?>" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer me-1"></i>พิมพ์เช็ค</a>
+                <?php if ($cheque->status === FinanceCheque::STATUS_DRAFT): ?>
+                    <a href="<?= Url::to(['update', 'id' => $cheque->id]) ?>" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>แก้ไข</a>
+                <?php endif; ?>
                 <a href="<?= Url::to(['index']) ?>" class="btn btn-link">← กลับทะเบียน</a>
             </div>
         </div>

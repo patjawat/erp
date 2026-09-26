@@ -9,7 +9,8 @@ use app\widgets\datepicker\DatepickerThai;
 /** @var array $accounts */
 /** @var array $templates */
 
-$this->title = 'ออกเช็คใหม่';
+$isEdit = $isEdit ?? false;
+$this->title = $isEdit ? 'แก้ไขเช็ค' : 'ออกเช็คใหม่';
 $this->params['breadcrumbs'][] = ['label' => 'การเงิน', 'url' => ['/finance/dashboard']];
 $this->params['breadcrumbs'][] = ['label' => 'ทะเบียนคุมเช็ค', 'url' => ['/finance/cheque']];
 $this->params['breadcrumbs'][] = $this->title;
@@ -31,6 +32,7 @@ $previewBase = Url::to(['preview']);
 $nextBase = Url::to(['next-cheque-no']);
 $booksBase = Url::to(['books-by-account']);
 $bookCreate = Url::to(['book-create']);
+$isEditJs = $isEdit ? 'true' : 'false';
 ?>
 
 <div class="row g-3">
@@ -39,9 +41,9 @@ $bookCreate = Url::to(['book-create']);
             <div class="alert alert-danger"><?= implode('<br>', $cheque->getErrorSummary(true)) ?></div>
         <?php endif; ?>
         <div class="card shadow-sm">
-            <div class="card-header fw-semibold"><i class="bi bi-cash-stack me-1"></i>ออกเช็คใหม่</div>
+            <div class="card-header fw-semibold"><i class="bi bi-cash-stack me-1"></i><?= Html::encode($this->title) ?></div>
             <div class="card-body">
-                <?= Html::beginForm(['create'], 'post') ?>
+                <?= Html::beginForm($isEdit ? ['update', 'id' => $cheque->id] : ['create'], 'post') ?>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label small">บัญชีจ่าย <span class="text-danger">*</span></label>
@@ -69,7 +71,7 @@ $bookCreate = Url::to(['book-create']);
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small">เล่มเช็ค</label>
-                        <select name="book_id" id="ck-book" class="form-select">
+                        <select name="book_id" id="ck-book" class="form-select" data-current="<?= (int) $cheque->book_id ?>">
                             <option value="">— เลือกบัญชีก่อน —</option>
                         </select>
                         <div id="ck-book-hint" class="form-text"></div>
@@ -106,7 +108,7 @@ $bookCreate = Url::to(['book-create']);
                     </div>
                 </div>
                 <div class="mt-3 d-flex gap-2">
-                    <?= Html::submitButton('<i class="bi bi-save me-1"></i>บันทึกเข้าทะเบียน', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::submitButton('<i class="bi bi-save me-1"></i>' . ($isEdit ? 'บันทึกการแก้ไข' : 'บันทึกเข้าทะเบียน'), ['class' => 'btn btn-primary']) ?>
                     <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-outline-secondary']) ?>
                 </div>
                 <?= Html::endForm() ?>
@@ -165,12 +167,13 @@ $js = <<<JS
   var acc=document.getElementById('ck-acc'), no=document.getElementById('ck-no'), noHint=document.getElementById('ck-no-hint');
   var book=document.getElementById('ck-book'), bookHint=document.getElementById('ck-book-hint');
   var nextBase='{$nextBase}', booksBase='{$booksBase}', bookCreate='{$bookCreate}';
+  var isEdit={$isEditJs}; // โหมดแก้ไข: ห้ามทับเลขเช็คเดิม
   function fetchNextNo(){ // สำรอง: เลขล่าสุดของบัญชี (กรณีไม่มีเล่ม)
     if(!acc.value){ noHint.textContent=''; return; }
     fetch(nextBase+'?account_id='+encodeURIComponent(acc.value),{headers:{'X-Requested-With':'XMLHttpRequest'}})
       .then(function(r){return r.json();})
       .then(function(d){
-        if(d && d.next){ if(!no.value) no.value=d.next; noHint.innerHTML='เลขถัดไปในทะเบียน: <b>'+d.next+'</b>'; }
+        if(d && d.next){ if(!no.value && !isEdit) no.value=d.next; noHint.innerHTML='เลขถัดไปในทะเบียน: <b>'+d.next+'</b>'; }
         else { noHint.textContent='ยังไม่มีเลขเช็คในบัญชีนี้ — กรอกเลขเริ่มต้นเอง'; }
       }).catch(function(){ noHint.textContent=''; });
   }
@@ -179,8 +182,9 @@ $js = <<<JS
     if(!opt || !opt.value){ bookHint.textContent=''; return; }
     var rem=opt.getAttribute('data-remaining'), nx=opt.getAttribute('data-next');
     bookHint.innerHTML='คงเหลือในเล่ม: <b>'+rem+'</b> ใบ';
-    if(nx){ no.value=nx; noHint.innerHTML='เลขถัดไปในเล่ม: <b>'+nx+'</b>'; }
-    else { noHint.innerHTML='<span class="text-danger">เล่มนี้ใช้หมดแล้ว</span>'; }
+    if(nx && !isEdit){ no.value=nx; noHint.innerHTML='เลขถัดไปในเล่ม: <b>'+nx+'</b>'; }
+    else if(nx){ noHint.innerHTML='เลขถัดไปในเล่ม: <b>'+nx+'</b>'; }
+    else if(!isEdit){ noHint.innerHTML='<span class="text-danger">เล่มนี้ใช้หมดแล้ว</span>'; }
     updPreview();
   }
   function fetchBooks(){
@@ -190,7 +194,9 @@ $js = <<<JS
       .then(function(list){
         if(list && list.length){
           var h=''; list.forEach(function(b){ h+='<option value="'+b.id+'" data-next="'+(b.next||'')+'" data-remaining="'+b.remaining+'">'+b.label+'</option>'; });
-          book.innerHTML=h; applyBook();
+          book.innerHTML=h;
+          var cur=book.getAttribute('data-current'); if(isEdit && cur && cur!=='0'){ book.value=cur; }
+          applyBook();
         } else {
           book.innerHTML='<option value="">— ไม่มีเล่ม (ใช้เลขล่าสุดบัญชี) —</option>';
           bookHint.innerHTML='<a href="'+bookCreate+'">+ รับเล่มเช็คเข้า</a>'; fetchNextNo();
